@@ -1,27 +1,29 @@
-# 🐺 Fenrir Ledger
+# ᛟ Fenrir Ledger
 
 **Break free from fee traps. Harvest every reward. Let no chain hold.**
 
-> *In Norse mythology, Fenrir is the great wolf who shatters the chains the gods forged to bind him. Fenrir Ledger breaks the invisible chains of forgotten annual fees, expired promotions, and wasted sign-up bonuses that silently devour your wallet.*
+> *In Norse mythology, Fenrir is the great wolf who shatters the chains the gods forged to bind him.*
+> *Fenrir Ledger breaks the invisible chains of forgotten annual fees, expired promotions,*
+> *and wasted sign-up bonuses that silently devour your wallet.*
 
 ---
 
-Fenrir Ledger is a credit card churn tracker for rewards optimizers. It watches over your card portfolio — every opening date, every promo deadline, every annual fee renewal — and howls before the trap snaps shut. Add your cards, set your thresholds, and Fenrir does the rest: reminding you to spend, transfer, downgrade, or close before you lose a single dollar to a fee you didn't choose to pay.
+Track every fee-wyrm in your portfolio. Every chain forged, every promo deadline, every fee-serpent's strike date — Fenrir watches and howls before the trap snaps shut. Add your cards, name your thresholds, and the wolf does the rest: reminding you to spend, transfer, downgrade, or close before you lose a single dollar to a fee you didn't choose to pay.
 
-**Status**: Sprint 1 complete. Running locally.
+*Sprint 1 complete. Sprint 2 in progress — the Saga Ledger theme is live.*
 
 ---
 
-## The Pack (Team)
+## The Pack
 
-| Role | Agent | Model | Skill |
-|------|-------|-------|-------|
+| Role | Wolf | Model | Scroll |
+|------|------|-------|--------|
 | Product Owner | Freya | Sonnet | [SKILL](fenrir-ledger-team/product-owner/SKILL.md) |
 | UX Designer | Luna | Sonnet | [SKILL](fenrir-ledger-team/ux-designer/SKILL.md) |
 | Principal Engineer | FiremanDecko | Sonnet | [SKILL](fenrir-ledger-team/principal-engineer/SKILL.md) |
 | QA Tester | Loki | Haiku | [SKILL](fenrir-ledger-team/qa-tester/SKILL.md) |
 
-## Workflow
+## The Pipeline
 
 ```mermaid
 graph LR
@@ -61,90 +63,110 @@ graph LR
     class ship healthy
 ```
 
-Kanban method · Max 5 stories/sprint · Deployment story mandatory every sprint
+Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 ---
 
-## Key Docs
+## The Scrolls
 
-### 🗺️ Project Foundation
-- [Product Brief](product-brief.md) — What we're building, why, for whom, and the prioritized backlog
-- [Patient Zero](patient-zero.md) — Team composition, pipeline summary, and quick-reference setup
+### ᛟ Foundation
 
-### 🎨 Design (Freya + Luna output)
-- `design/product-design-brief.md` — Problem statement, user flows, visual direction, acceptance criteria *(not yet created)*
-- `design/wireframes.md` — UI wireframes and layout specs *(not yet created)*
-- `design/interactions.md` — Interaction patterns and state transitions *(not yet created)*
+- [Product Brief](product-brief.md) — What the wolf hunts, why, and for whom. The prioritized backlog.
+- [Patient Zero](patient-zero.md) — Pack composition, pipeline summary, quick-reference setup.
 
-### 🏗️ Architecture + Development (FiremanDecko output)
-- [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, tech stack decisions
-- `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
-- [architecture/sprint-plan.md](architecture/sprint-plan.md) — Current sprint stories with technical notes
+### ᚱ The Saga Ledger — Design
+
+*Freya + Luna's domain. The visual soul of the wolf.*
+
+- [design/product-design-brief.md](design/product-design-brief.md) — Design philosophy, three pillars, aesthetic direction
+- [design/theme-system.md](design/theme-system.md) — Color palette, typography, CSS tokens, Tailwind extensions
+- [design/mythology-map.md](design/mythology-map.md) — Nine Realms → card states, Norns, Huginn & Muninn, Hati & Sköll
+- [design/copywriting.md](design/copywriting.md) — Kennings, Edda quotes, empty states, action labels, error voice
+- [design/easter-eggs.md](design/easter-eggs.md) — Gleipnir Hunt, Konami howl, Loki mode, console ASCII, all hidden lore
+- [design/interactions.md](design/interactions.md) — Animations, saga-enter stagger, status ring, Howl panel patterns
+- [design/wireframes.md](design/wireframes.md) — Layout specs, component hierarchy, responsive breakpoints
+- [design/implementation-brief.md](design/implementation-brief.md) — FiremanDecko integration plan, wave strategy, open questions
+
+### ᚲ The Forge — Architecture + Development
+
+*FiremanDecko's domain. Where the chains are forged.*
+
+- [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, data flow diagrams
+- [architecture/sprint-plan.md](architecture/sprint-plan.md) — Current sprint's stories, acceptance criteria, technical notes
 - [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001, ADR-002, ADR-003)
-- [development/src/](development/src/) — Next.js source code
-- [development/implementation-plan.md](development/implementation-plan.md) — What was built and how
-- [development/qa-handoff.md](development/qa-handoff.md) — Handoff notes for QA: what to deploy, what to test
-- [development/scripts/](development/scripts/) — Build and deploy scripts
+- `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
+- [development/src/](development/src/) — The forge itself. Next.js source code lives here.
+- [development/implementation-plan.md](development/implementation-plan.md) — Ordered task breakdown, what was built
+- [development/qa-handoff.md](development/qa-handoff.md) — Handoff to Loki: deploy steps, test focus, known limits
+- [development/scripts/](development/scripts/) — Idempotent build and deploy scripts
 
-### 🎭 Quality (Loki output)
-- `quality/test-plan.md` — Test strategy and coverage plan *(not yet created)*
-- `quality/test-cases.md` — Detailed test cases against acceptance criteria *(not yet created)*
-- `quality/quality-report.md` — Ship / No Ship recommendation *(not yet created)*
-- `quality/scripts/` — Idempotent deploy and test scripts *(not yet created)*
+### ᛏ Loki's Domain — Quality
 
-### 🔧 Team Operations
+*The trickster tests. His verdicts are final.*
+
+- `quality/test-plan.md` — Test strategy and coverage plan *(not yet forged)*
+- `quality/test-cases.md` — Detailed test cases against acceptance criteria *(not yet forged)*
+- `quality/quality-report.md` — Ship / No Ship verdict *(not yet forged)*
+- `quality/scripts/` — Idempotent deploy and test scripts *(not yet forged)*
+
+### ᚠ Pack Operations
+
 - [Pipeline](fenrir-ledger-team/pipeline/SKILL.md) — Full Kanban workflow orchestration
-- [Git Convention](fenrir-ledger-team/git-commit/SKILL.md) — Commit message format and pre-commit checklist
-- [Mermaid Style Guide](fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md) — Diagram conventions for all team members
+- [Git Convention](fenrir-ledger-team/git-commit/SKILL.md) — Commit format and pre-commit oaths
+- [Mermaid Style Guide](fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md) — Diagram conventions for all pack members
 
-### 📋 Templates
+### ᛁ Templates
+
 - [Create Product Brief](prompts/create-product-brief.md) — Prompt template for generating product briefs (ZeroForge convention)
 
 ---
 
-## FiremanDecko — Principal Engineer (Sprint 1)
-
-### Quick Start
+## The Forge — Quick Start
 
 ```bash
-# 1. Clone and set up
+# Clone the pack's work
 git clone https://github.com/declanshanaghy/fenrir-ledger.git
 cd fenrir-ledger
+
+# Prepare the forge (idempotent)
 ./development/scripts/setup-local.sh
 
-# 2. Start the dev server
+# Stoke the fire
 cd development/src && npm run dev
 
-# 3. Open http://localhost:3000
+# Open http://localhost:3000
 ```
 
-### Sprint 1 Artifacts
+### Sprint 1 — Forged Artifacts
 
-**Architecture**
-- [Sprint Plan](architecture/sprint-plan.md) — 5 stories with acceptance criteria and technical notes
+**The Architecture**
+- [Sprint Plan](architecture/sprint-plan.md) — 5 stories, acceptance criteria, technical notes
 - [System Design](architecture/system-design.md) — Component architecture, data model, data flow diagrams
-- [ADR-001: Tech Stack](architecture/adrs/ADR-001-tech-stack.md) — Next.js + TypeScript + Tailwind + shadcn/ui decision
+- [ADR-001: Tech Stack](architecture/adrs/ADR-001-tech-stack.md) — Why Next.js + TypeScript + Tailwind + shadcn/ui
 - [ADR-002: Data Model](architecture/adrs/ADR-002-data-model.md) — Household-scoped schema from day one
-- [ADR-003: Local Storage](architecture/adrs/ADR-003-local-storage.md) — localStorage for Sprint 1 + migration path
+- [ADR-003: Local Storage](architecture/adrs/ADR-003-local-storage.md) — localStorage for Sprint 1 + the migration path
 
-**Implementation**
+**The Implementation**
 - [Implementation Plan](development/implementation-plan.md) — Ordered task breakdown
-- [QA Handoff](development/qa-handoff.md) — Files created, test focus areas, known limitations
+- [QA Handoff](development/qa-handoff.md) — Files created, test focus areas, known limits
 - [Setup Script](development/scripts/setup-local.sh) — Idempotent local dev setup
-- [Source Code](development/src/) — Next.js project root (all Next.js files live here)
+- [Source Code](development/src/) — Next.js project root
 
 ---
 
 ## Lineage
 
-Fenrir Ledger was forged from [ZeroForge](https://github.com/declanshanaghy/zeroforge) — a reusable AI agent team starter kit — with structural improvements carried forward from [Vulcan Brownout](https://github.com/declanshanaghy/vulcan-brownout), including explicit input/output file mappings per agent, a flat output directory structure (no sprint subdirectories), and the `patient-zero.md` quick-reference pattern.
+Fenrir Ledger was forged from [ZeroForge](https://github.com/declanshanaghy/zeroforge) — a reusable AI agent team starter kit — with structural improvements carried forward from [Vulcan Brownout](https://github.com/declanshanaghy/vulcan-brownout): explicit input/output file mappings per agent, a flat output directory structure, and the `patient-zero.md` quick-reference pattern.
+
+*"Though it looks like silk ribbon, no chain is stronger."*
+— Prose Edda, Gylfaginning
 
 ---
 
-## Conventions
+## The Pack's Oaths
 
-* **Diagrams**: All Mermaid, following the [mermaid-style-guide.md](fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md)
-* **Commits**: Strict format per [git-commit/SKILL.md](fenrir-ledger-team/git-commit/SKILL.md)
-* **Secrets**: `.env` file, never committed, `.env.example` as template
-* **Sprints**: Max 5 stories, idempotent deployment scripts every sprint
-* **Output structure**: Each role writes to its top-level folder (`design/`, `architecture/`, `development/`, `quality/`). Git tracks history — files are overwritten each sprint, no sprint subdirectories.
+- **Diagrams**: All Mermaid, following the [mermaid-style-guide.md](fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md)
+- **Commits**: Strict format per [git-commit/SKILL.md](fenrir-ledger-team/git-commit/SKILL.md)
+- **Secrets**: `.env` file, never committed, `.env.example` as the template
+- **Sprints**: Max 5 stories. The forge-script runs every sprint. No exceptions.
+- **Output**: Each wolf writes to its top-level folder (`design/`, `architecture/`, `development/`, `quality/`). Git tracks the history — files are overwritten each sprint, no subdirectories.
