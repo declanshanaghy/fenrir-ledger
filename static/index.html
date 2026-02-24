@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════╗
+  ║          F E N R I R   L E D G E R                  ║
+  ║    Break free. Harvest every reward. Let no          ║
+  ║    chain hold.                                       ║
+  ╠══════════════════════════════════════════════════════╣
+  ║  Forged by FiremanDecko in the fires of Muspelheim. ║
+  ║  Debugged by Loki (mostly for fun).                  ║
+  ║  Warded by Freya's seiðr.                            ║
+  ║  Designed by Luna under the light of Bifröst.        ║
+  ╠══════════════════════════════════════════════════════╣
+  ║  Gleipnir was made of six impossible things.         ║
+  ║  Can you find them all?                              ║
+  ╚══════════════════════════════════════════════════════╝
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Break free from fee traps. Harvest every reward. Let no chain hold. Gleipnir breaks." />
+  <meta name="fenrir:runes" content="ᚠᛖᚾᚱᛁᚱ" />
+  <meta property="og:title" content="Fenrir Ledger — Break the Chain" />
+  <meta property="og:description" content="The wolf tracks what the gods hope you forget." />
+  <meta property="og:image" content="icon.png" />
+  <title>Fenrir Ledger — Break the Chain. Harvest Every Reward.</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Custom Properties ─────────────────────────────── */
+    :root {
+      --void: #07070d;
+      --forge: #0f1018;
+      --chain: #13151f;
+      --border: #1e2235;
+      --border-strong: #2a2d45;
+      --gold: #c9920a;
+      --gold-bright: #f0b429;
+      --gold-dim: #8a6a00;
+      --gold-glow: rgba(201, 146, 10, 0.15);
+      --text-saga: #e8e4d4;
+      --text-rune: #8a8578;
+      --text-void: #3d3d52;
+      --teal-asgard: #0a8c6e;
+      --amber-hati: #f59e0b;
+      --fire-muspel: #c94a0a;
+      --red-ragnarok: #ef4444;
+      --stone-hel: #8a8578;
+      --font-display: 'Cinzel Decorative', serif;
+      --font-heading: 'Cinzel', serif;
+      --font-body: 'Source Serif 4', serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius: 3px;
+      --max-width: 1100px;
+    }
+
+    /* ── Global Reset & Base ───────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--void);
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201, 146, 10, 0.06) 0%, transparent 60%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      background-attachment: fixed;
+      color: var(--text-saga);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.7;
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .rune-rule {
+      width: 80px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 24px auto;
+      border: none;
+    }
+
+    section { padding: 100px 0; }
+
+    /* ── Animations ────────────────────────────────────── */
+    .saga-reveal > * {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: saga-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .saga-reveal > *:nth-child(1) { animation-delay: 100ms; }
+    .saga-reveal > *:nth-child(2) { animation-delay: 180ms; }
+    .saga-reveal > *:nth-child(3) { animation-delay: 260ms; }
+    .saga-reveal > *:nth-child(4) { animation-delay: 340ms; }
+    .saga-reveal > *:nth-child(5) { animation-delay: 420ms; }
+    .saga-reveal > *:nth-child(n+6) { animation-delay: 500ms; }
+
+    @keyframes saga-enter {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes gold-pulse {
+      0%, 100% { box-shadow: 0 0 12px rgba(201, 146, 10, 0.3); }
+      50%       { box-shadow: 0 0 28px rgba(201, 146, 10, 0.6), 0 0 48px rgba(201, 146, 10, 0.2); }
+    }
+
+    @keyframes rune-drift {
+      0%   { opacity: 0.06; transform: translateY(0px); }
+      50%  { opacity: 0.10; transform: translateY(-6px); }
+      100% { opacity: 0.06; transform: translateY(0px); }
+    }
+
+    .chain-card {
+      transition: transform 160ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out;
+    }
+    .chain-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 0 1px var(--gold), 0 0 28px rgba(201, 146, 10, 0.2), 0 8px 32px rgba(0,0,0,0.5);
+      border-color: var(--gold);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .saga-reveal > * { animation: none; opacity: 1; transform: none; }
+      .chain-card { transition: none; }
+      .site-nav { transition: none; }
+    }
+
+    /* ── Navigation ────────────────────────────────────── */
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid transparent;
+      background-color: rgba(7, 7, 13, 0);
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
+      transition: background-color 220ms ease-out, border-color 220ms ease-out, backdrop-filter 220ms ease-out;
+    }
+    .site-nav.scrolled {
+      background-color: rgba(7, 7, 13, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom-color: rgba(201, 146, 10, 0.25);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-logo img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+    .nav-wordmark {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    /* ── Buttons ───────────────────────────────────────── */
+    .btn {
+      display: inline-block;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-radius: var(--radius);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background-color 150ms ease-out, border-color 150ms ease-out, transform 100ms ease-out;
+      text-align: center;
+    }
+    .btn-gold {
+      background-color: var(--gold);
+      color: #07070d;
+      animation: gold-pulse 2.8s ease-in-out infinite;
+    }
+    .btn-gold:hover {
+      background-color: var(--gold-bright);
+      border-color: rgba(240, 180, 41, 0.4);
+    }
+    .btn-gold:active {
+      transform: translateY(1px);
+    }
+    .btn-sm {
+      font-size: 13px;
+      padding: 10px 22px;
+    }
+    .btn-lg {
+      font-size: 14px;
+      padding: 15px 36px;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+    }
+
+    @media (max-width: 639px) {
+      .nav-wordmark { display: none; }
+      .btn-sm { font-size: 12px; padding: 8px 14px; }
+    }
+
+    /* ── Hero ──────────────────────────────────────────── */
+    .hero-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 80px 0;
+    }
+    .hero-inner {
+      display: flex;
+      align-items: center;
+      gap: 64px;
+    }
+    .hero-icon-wrap {
+      flex-shrink: 0;
+    }
+    .hero-icon {
+      width: 260px;
+      height: 260px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 24px rgba(201, 146, 10, 0.25));
+      transition: filter 400ms ease-out;
+    }
+    .hero-icon:hover {
+      filter: drop-shadow(0 0 40px rgba(201, 146, 10, 0.45));
+    }
+    .hero-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .hero-eyebrow {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--gold);
+      letter-spacing: 0.4em;
+      opacity: 0.7;
+      margin-bottom: 16px;
+    }
+    .hero-h1 {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: clamp(38px, 6vw, 72px);
+      color: var(--text-saga);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      margin: 0 0 24px;
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.1),
+        0 -1px 0 rgba(0,0,0,0.8),
+        2px 2px 4px rgba(0,0,0,0.9),
+        -1px -1px 2px rgba(201, 146, 10, 0.15);
+    }
+    .hero-tagline {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: clamp(17px, 2.2vw, 22px);
+      color: var(--text-saga);
+      line-height: 1.5;
+      margin: 0 0 16px;
+    }
+    .hero-sub {
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: clamp(14px, 1.8vw, 17px);
+      color: var(--text-rune);
+      line-height: 1.8;
+      max-width: 520px;
+      margin: 0 0 40px;
+    }
+    .hero-cta {
+      margin-bottom: 0;
+    }
+    .hero-quote-wrap {
+      margin-top: 32px;
+    }
+    .hero-quote {
+      margin: 0;
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-style: italic;
+      font-size: 13px;
+      color: var(--text-void);
+      letter-spacing: 0.02em;
+      line-height: 1.6;
+    }
+    .hero-quote cite {
+      display: block;
+      margin-top: 4px;
+      font-style: normal;
+      font-size: 12px;
+      color: var(--text-void);
+      opacity: 0.7;
+    }
+
+    @media (max-width: 1023px) {
+      .hero-inner {
+        flex-direction: column;
+        text-align: center;
+        gap: 40px;
+      }
+      .hero-icon { width: 160px; height: 160px; }
+      .hero-sub { max-width: 100%; margin-left: auto; margin-right: auto; }
+      .hero-cta { display: block; text-align: center; }
+      .rune-rule { margin: 24px auto; }
+    }
+
+    /* ── Section Headings (shared) ─────────────────────── */
+    .section-heading {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+    .section-pre-rune {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    .section-heading h2 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: clamp(24px, 3.5vw, 36px);
+      color: var(--text-saga);
+      letter-spacing: 0.06em;
+      margin: 0 0 16px;
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.05),
+        1px 1px 3px rgba(0,0,0,0.7);
+    }
+    .section-sub {
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-style: italic;
+      font-size: 17px;
+      color: var(--text-rune);
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ── Chains Section ────────────────────────────────── */
+    .chains-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .problem-card {
+      background: var(--forge);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 36px 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .card-rune {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 28px;
+      margin-bottom: 20px;
+      line-height: 1;
+    }
+    .card-name {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--text-saga);
+      letter-spacing: 0.05em;
+      margin: 0 0 12px;
+    }
+    .card-desc {
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--text-rune);
+      line-height: 1.75;
+      margin: 0;
+    }
+    .chains-closing {
+      text-align: center;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-style: italic;
+      font-size: 19px;
+      color: var(--gold);
+      letter-spacing: 0.02em;
+      margin-top: 56px;
+    }
+
+    @media (max-width: 1023px) {
+      .chains-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 639px) {
+      .chains-grid { grid-template-columns: 1fr; }
+      .problem-card { padding: 28px 24px; }
+    }
+
+    /* ── Features Section ──────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--chain);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 32px 28px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    .feature-card:hover {
+      background-color: rgba(201, 146, 10, 0.04);
+    }
+    .feature-name {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text-saga);
+      letter-spacing: 0.08em;
+      margin: 12px 0 8px;
+    }
+
+    @media (max-width: 1023px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 639px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Sagas Section ─────────────────────────────────── */
+    .sagas-section {
+      background: var(--forge);
+    }
+    .steps-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+    }
+    .step {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 16px;
+    }
+    .step-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-circle span {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      line-height: 1;
+    }
+    .step-number {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-void);
+      letter-spacing: 0.2em;
+      margin-top: 12px;
+    }
+    .step-heading {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--text-saga);
+      letter-spacing: 0.04em;
+      margin: 16px 0 10px;
+    }
+    .step-desc {
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: 14px;
+      color: var(--text-rune);
+      line-height: 1.75;
+      max-width: 260px;
+      margin: 0 auto;
+    }
+    .step-connector {
+      flex-shrink: 0;
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--gold), var(--border));
+      align-self: center;
+      margin-bottom: 120px;
+    }
+
+    @media (max-width: 1023px) {
+      .steps-wrap {
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+      }
+      .step-connector {
+        width: 1px;
+        height: 40px;
+        background: linear-gradient(180deg, var(--gold), var(--border));
+        margin: 0;
+      }
+      .step { padding: 0; max-width: 360px; }
+    }
+
+    /* ── Footer ────────────────────────────────────────── */
+    .site-footer {
+      background: var(--chain);
+      border-top: 1px solid var(--border);
+      padding: 72px 0 48px;
+    }
+    .footer-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .footer-logo {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--gold);
+      letter-spacing: 0.15em;
+      margin-bottom: 24px;
+    }
+    .footer-quote {
+      margin: 0 auto 40px;
+      max-width: 440px;
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-style: italic;
+      font-size: 16px;
+      color: var(--text-rune);
+      line-height: 1.7;
+    }
+    .footer-quote cite {
+      display: block;
+      margin-top: 6px;
+      font-style: normal;
+      font-size: 13px;
+      opacity: 0.7;
+    }
+    .footer-runes {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      color: var(--text-void);
+      letter-spacing: 0.5em;
+      display: block;
+      margin-bottom: 40px;
+    }
+    .footer-cta {
+      margin-bottom: 56px;
+    }
+    .footer-rule {
+      border: none;
+      border-top: 1px solid var(--border);
+      width: 100%;
+      max-width: 320px;
+      margin: 0 auto 32px;
+    }
+    .footer-credit {
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: 12px;
+      color: var(--text-void);
+      letter-spacing: 0.05em;
+      margin: 0;
+    }
+    .footer-credit [title] {
+      cursor: help;
+      border-bottom: 1px dotted var(--text-void);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navigation ──────────────────────────────────────── -->
+  <nav class="site-nav">
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo">
+        <img src="icon.png" alt="Fenrir Ledger" width="40" height="40" />
+        <span class="nav-wordmark">FENRIR LEDGER</span>
+      </a>
+      <a href="https://fenrir-ledger.vercel.app" target="_blank" rel="noopener" class="btn btn-gold btn-sm">
+        Enter the Ledger
+      </a>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ── Hero ──────────────────────────────────────────── -->
+    <section class="hero-section">
+      <div class="container hero-inner">
+        <!-- Left: Wolf icon -->
+        <div class="hero-icon-wrap">
+          <img src="icon.png" alt="" aria-hidden="true" class="hero-icon" />
+        </div>
+        <!-- Right: Text content -->
+        <div class="hero-text saga-reveal">
+          <span class="hero-eyebrow">ᚠ · ᛟ · ᛏ</span>
+          <h1 class="hero-h1">FENRIR LEDGER</h1>
+          <p class="hero-tagline">The wolf was not bound. You are.</p>
+          <p class="hero-sub">
+            Every annual fee is Gleipnir — the ribbon forged to look like nothing,
+            to hold like iron. Fáfnir hoards your gold inside it.
+            Fenrir Ledger was built to find the chains before they tighten.
+          </p>
+          <a href="https://fenrir-ledger.vercel.app" target="_blank" rel="noopener" class="btn btn-gold btn-lg hero-cta">
+            Break the Chain
+          </a>
+          <div class="hero-quote-wrap">
+            <div class="rune-rule"></div>
+            <blockquote class="hero-quote">
+              "Though it looks like silk ribbon, no chain is stronger."
+              <cite>— Prose Edda, Gylfaginning</cite>
+            </blockquote>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── The Chains (Problem) ───────────────────────────── -->
+    <section class="chains-section">
+      <div class="container">
+        <!-- Heading group -->
+        <div class="section-heading">
+          <span class="section-pre-rune" style="color: var(--fire-muspel)">ᚺ</span>
+          <h2>THE CHAINS THEY FORGED FOR YOU</h2>
+          <p class="section-sub">
+            Fáfnir's traps are not loud. They arrive like silk.
+            They hold like iron. Three chains wait for every wolf.
+          </p>
+          <div class="rune-rule"></div>
+        </div>
+
+        <!-- Cards grid -->
+        <div class="chains-grid saga-reveal">
+
+          <!-- Card 1: Fee-Serpent -->
+          <div class="chain-card problem-card" style="border-left: 3px solid var(--fire-muspel);">
+            <span class="card-rune" style="color: var(--fire-muspel)">ᚲ</span>
+            <h3 class="card-name">The Fee-Serpent</h3>
+            <p class="card-desc">
+              The annual fee asks nothing when you open the card.
+              It waits. One year later it strikes — while you sleep,
+              while you spend, while you forget you forged the chain.
+              By then, Fáfnir has already taken his tithe.
+            </p>
+          </div>
+
+          <!-- Card 2: Promo Tide -->
+          <div class="chain-card problem-card" style="border-left: 3px solid var(--amber-hati);">
+            <span class="card-rune" style="color: var(--amber-hati)">ᚺ</span>
+            <h3 class="card-name">The Promo Tide</h3>
+            <p class="card-desc">
+              The welcome-mead flows for exactly one season.
+              Earn the threshold spend or watch Hati swallow the moon.
+              When the promo window closes, the gold that was yours
+              returns to the dragon's hoard, unclaimed.
+            </p>
+          </div>
+
+          <!-- Card 3: Unclaimed Plunder -->
+          <div class="chain-card problem-card" style="border-left: 3px solid var(--stone-hel);">
+            <span class="card-rune" style="color: var(--stone-hel)">ᚠ</span>
+            <h3 class="card-name">The Unclaimed Plunder</h3>
+            <p class="card-desc">
+              The opening plunder was yours. The sign-up bonus,
+              the statement credits, the Skuld-set deadline —
+              all faded unmet, untracked, unreached.
+              The wolf who does not hunt goes hungry.
+            </p>
+          </div>
+
+        </div><!-- /chains-grid -->
+
+        <!-- Closing statement -->
+        <p class="chains-closing">
+          Fáfnir set these traps. Fenrir was bred to spring them.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── The Wolf's Gifts (Features) ───────────────────── -->
+    <section class="features-section">
+      <div class="container">
+        <div class="section-heading">
+          <span class="section-pre-rune" style="color: var(--gold)">ᛊ</span>
+          <h2>WHAT THE WOLF WATCHES</h2>
+          <p class="section-sub">
+            Six gifts from the great wolf's ledger.
+            Every chain tracked. Every deadline watched.
+            Every reward that is yours — kept.
+          </p>
+          <div class="rune-rule"></div>
+        </div>
+
+        <div class="features-grid saga-reveal">
+
+          <div class="chain-card feature-card">
+            <span class="card-rune" style="color: var(--fire-muspel)">ᚲ</span>
+            <h3 class="feature-name">Sköll &amp; Hati</h3>
+            <p class="card-desc">
+              Two wolves chase your deadlines.
+              Sköll hunts the annual fee; Hati runs the promo moon.
+              Watch them close. The moment they catch it, Ragnarök begins.
+            </p>
+          </div>
+
+          <div class="chain-card feature-card">
+            <span class="card-rune" style="color: var(--amber-hati)">ᚺ</span>
+            <h3 class="feature-name">The Norns' Weave</h3>
+            <p class="card-desc">
+              Urd records what was. Verdandi shows what is.
+              Skuld reveals what shall be — your open bonus windows,
+              your promo cliffs, your spend thresholds. The Norns weave
+              whether you watch or not.
+            </p>
+          </div>
+
+          <div class="chain-card feature-card">
+            <span class="card-rune" style="color: var(--gold)">ᛟ</span>
+            <h3 class="feature-name">The Ledger of Fates</h3>
+            <p class="card-desc">
+              Every debt-chain in your Pack, named and weighed.
+              Reward balances, credit limits, fee schedules —
+              the complete war-spoils of a churner who misses nothing.
+            </p>
+          </div>
+
+          <div class="chain-card feature-card">
+            <span class="card-rune" style="color: var(--teal-asgard)">ᛏ</span>
+            <h3 class="feature-name">Valhalla</h3>
+            <p class="card-desc">
+              Closed cards are not forgotten. They are honored.
+              The Hall of the Honored Dead records every chain broken,
+              every fee avoided, every dragon slain. A warrior counts
+              their kills. So does the ledger.
+            </p>
+          </div>
+
+          <div class="chain-card feature-card">
+            <span class="card-rune" style="color: var(--fire-muspel)">ᛉ</span>
+            <h3 class="feature-name">The Howl</h3>
+            <p class="card-desc">
+              When chains tighten, Fenrir howls.
+              Huginn and Muninn carry warnings before the fee-serpent
+              strikes — days counted, thresholds flagged, windows
+              closing. The wolf does not sleep when the chains move.
+            </p>
+          </div>
+
+          <div class="chain-card feature-card">
+            <span class="card-rune" style="color: var(--text-rune)">ᛗ</span>
+            <h3 class="feature-name">The Nine Realms</h3>
+            <p class="card-desc">
+              Each card lives in a realm — Asgard to Muspelheim,
+              Vanaheim to Hel. The realm tells the story at a glance:
+              earning, warning, burning, or honored dead.
+              No badge more complex than the cosmos needs to be.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── The Sagas (How It Works) ───────────────────────── -->
+    <section class="sagas-section">
+      <div class="container">
+        <div class="section-heading">
+          <span class="section-pre-rune" style="color: var(--gold)">ᛞ</span>
+          <h2>THREE RUNES TO FREEDOM</h2>
+          <p class="section-sub">
+            The wolf does not rush blindly. Three deliberate movements.
+            Three runes carved. One chain broken.
+          </p>
+          <div class="rune-rule"></div>
+        </div>
+
+        <div class="steps-wrap saga-reveal">
+
+          <!-- Step 1 -->
+          <div class="step">
+            <div class="step-circle" style="background: rgba(201,146,10,0.08); border-color: var(--gold);">
+              <span style="color: var(--gold);">ᛏ</span>
+            </div>
+            <span class="step-number">01</span>
+            <h3 class="step-heading">Forge Your Chains</h3>
+            <p class="step-desc">
+              Name every debt-chain in your pack. The plastic runes,
+              the issuers who smile as Gleipnir tightens.
+              Annual fees, bonus deadlines, spend thresholds —
+              enter them all. The ledger opens to receive them.
+            </p>
+          </div>
+
+          <!-- Connector -->
+          <div class="step-connector" aria-hidden="true"></div>
+
+          <!-- Step 2 -->
+          <div class="step">
+            <div class="step-circle" style="background: rgba(245,158,11,0.07); border-color: var(--amber-hati);">
+              <span style="color: var(--amber-hati);">ᚺ</span>
+            </div>
+            <span class="step-number">02</span>
+            <h3 class="step-heading">Watch the Norns Weave</h3>
+            <p class="step-desc">
+              Urd, Verdandi, Skuld — what was, what is, what shall be.
+              The Howl warns when chains grow taut.
+              Sköll runs behind the sun. Hati behind the moon.
+              The wolf watches. Always.
+            </p>
+          </div>
+
+          <!-- Connector -->
+          <div class="step-connector" aria-hidden="true"></div>
+
+          <!-- Step 3 -->
+          <div class="step">
+            <div class="step-circle" style="background: rgba(10,140,110,0.08); border-color: var(--teal-asgard);">
+              <span style="color: var(--teal-asgard);">ᛊ</span>
+            </div>
+            <span class="step-number">03</span>
+            <h3 class="step-heading">Break Free</h3>
+            <p class="step-desc">
+              Close before the fee. Claim before the window closes.
+              Slay Fáfnir and harvest the dragon's gold.
+              Mark the chain broken. Watch it descend to Valhalla —
+              honored, rewarded, never forgotten.
+            </p>
+          </div>
+
+        </div><!-- /steps-wrap -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+
+      <div class="footer-logo">ᛟ FENRIR LEDGER</div>
+
+      <blockquote class="footer-quote">
+        "Though it looks like silk ribbon, no chain is stronger."
+        <cite>— Prose Edda, Gylfaginning</cite>
+      </blockquote>
+
+      <div class="footer-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
+
+      <a href="https://fenrir-ledger.vercel.app" target="_blank" rel="noopener"
+         class="btn btn-gold btn-sm footer-cta">
+        Enter the Ledger
+      </a>
+
+      <hr class="footer-rule" />
+
+      <p class="footer-credit">
+        <span data-gleipnir="breath-of-a-fish" class="copyright-c">©</span> 2026 Fenrir Ledger ·
+        Forged by FiremanDecko · Guarded by Freya · Tested by
+        <span title="Son of the wolf. Father of chaos. Father of Fenrir. Of course he's QA.">Loki</span>
+      </p>
+
+    </div>
+  </footer>
+
+  <script>
+(function() {
+  var nav = document.querySelector('.site-nav');
+  if (!nav) return;
+  window.addEventListener('scroll', function() {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+})();
+  </script>
+
+</body>
+</html>

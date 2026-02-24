@@ -8,16 +8,21 @@
 
 ## Current State Assessment
 
-Sprint 1 delivered a working foundation:
+Sprint 1 delivered a working foundation. Sprint 2 design integration is underway:
 
 - ✅ Next.js App Router + TypeScript + Tailwind + shadcn/ui
 - ✅ `Card` type, `CardStatus` type, `localStorage` persistence
 - ✅ Basic dashboard with card list and status indicators
 - ✅ Card CRUD (add, edit, delete)
-- ⚠️ Default shadcn theme (white background, gray palette, system fonts)
-- ⚠️ Generic copy ("Loading your cards...", "+ Add card")
-- ⚠️ No animation layer
-- ⚠️ No Norse mythology in UX
+- ✅ Persistent app shell with collapsible sidebar navigation (Sprint 2)
+- ✅ Saga Ledger theme applied: void-black bg, gold accents, Cinzel/Source Serif fonts (Sprint 2)
+- ✅ Deployed to Vercel: https://fenrir-ledger.vercel.app
+- ✅ Static marketing site built at `/static/index.html` (GitHub Pages)
+- ✅ Next.js upgraded to 15.1.12 (CVE-2025-66478 fix)
+- ⚠️ Norse copy pass not yet complete (generic copy remains in some areas)
+- ⚠️ No animation layer (Sprint 3)
+- ⚠️ The Howl panel not yet built (Sprint 3)
+- ⚠️ Valhalla route not yet built (Sprint 3)
 
 **The existing data model and business logic are untouched by this design system.** The `Card` type, `CardStatus`, `storage.ts`, `card-utils.ts` — none of these change. This is a pure presentation-layer upgrade.
 

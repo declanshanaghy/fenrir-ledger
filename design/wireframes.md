@@ -6,48 +6,50 @@ Layout specs, component hierarchy, and responsive breakpoints. All wireframes ar
 
 ## Dashboard — "The Ledger of Fates"
 
+> **Sprint 2 update**: The app now uses a persistent shell with a collapsible left sidebar for navigation. The horizontal header-only layout is superseded. The `ADD CARD` button lives in the top-right of the content header only — it was removed from the summary bar.
+
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ HEADER (sticky, blurs on scroll)                                            │
-│                                                                             │
-│  ᛟ  FENRIR LEDGER          [The Howl 🔴 3]  [Forge a Chain ▶]             │
-│      Ledger of Fates                                                        │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────┬──────────────────────────────────────────────────────────┐
+│  SIDEBAR         │  CONTENT HEADER                                          │
+│  (272px fixed)   │                                                          │
+│                  │  CARDS                                    [ADD CARD ▶]  │
+│  ᛟ FENRIR LEDGER │                                                          │
+│  Credit Card     ├──────────────────────────────────────────────────────────┤
+│  Tracker         │                                                          │
+│                  │  SUMMARY BAR                                             │
+│  ──────────────  │  14 cards  ·  3 need attention                          │
+│                  │                                                          │
+│  [▣] Cards  ←   │  ┌─────────────────┐  ┌─────────────────┐               │
+│  (active, gold)  │  │ [●] RING        │  │ [●] RING        │  ...          │
+│                  │  │                 │  │                 │               │
+│                  │  │  Chase          │  │  Amex Gold      │               │
+│  (future routes  │  │  Sapphire Pref  │  │                 │               │
+│   added here as  │  │                 │  │  Promo Expiring │               │
+│   sprints ship)  │  │  Fee Due Soon   │  │  Mar 3          │               │
+│                  │  │  Feb 14         │  │                 │               │
+│                  │  └─────────────────┘  └─────────────────┘               │
+│  ──────────────  │                                                          │
+│  [⊞] Collapse   │  (card grid: 2-col tablet, 3-col desktop, 1-col mobile)  │
+└──────────────────┴──────────────────────────────────────────────────────────┘
+```
 
-┌────────────────────────────────────────────┐  ┌────────────────────────────┐
-│  SUMMARY BAR                               │  │  THE HOWL                  │
-│                                            │  │  ══════════════════════    │
-│  ᚠ 14 chains  ·  $4,200 plunder  ·        │  │  ᚲ  Sköll is 12 days       │
-│  3 chains in Muspelheim                    │  │     behind the sun         │
-└────────────────────────────────────────────┘  │                            │
-                                                │  Chase Sapphire Preferred  │
-┌─────────────────────────────────────────────┐ │  Fee due Feb 14            │
-│  CARD GRID (2-col desktop, 1-col mobile)    │ │  ──────────────────────    │
-│                                             │ │  ᚺ  Hati is 23 days        │
-│  ┌─────────────────┐  ┌─────────────────┐  │ │     behind the moon        │
-│  │ [●] RING        │  │ [●] RING        │  │ │                            │
-│  │                 │  │                 │  │ │  Amex Gold                 │
-│  │  Chase          │  │  Amex           │  │ │  Promo expires Mar 3       │
-│  │  Sapphire Pref  │  │  Gold           │  │ │  ──────────────────────    │
-│  │                 │  │                 │  │ │  ᚺ  Hati is 31 days        │
-│  │  ᚲ MUSPELHEIM   │  │  ᚺ Hati runs   │  │ │     behind the moon        │
-│  │  Fee: Feb 14    │  │  Promo: Mar 3   │  │ │                            │
-│  │                 │  │                 │  │ │  Citi Double Cash          │
-│  │  $550 limit     │  │  75k pts        │  │ │  Promo expires Mar 14      │
-│  │  $95 fee        │  │  $250 credit    │  │ └────────────────────────────┘
-│  └─────────────────┘  └─────────────────┘  │
-│                                             │
-│  ┌─────────────────┐  ┌─────────────────┐  │
-│  │ [●] RING        │  │ [+] ADD CHAIN   │  │
-│  │                 │  │                 │  │
-│  │  Citi           │  │  Forge a new    │  │
-│  │  Double Cash    │  │  chain          │  │
-│  │                 │  │                 │  │
-│  │  ᛊ ASGARD-BOUND │  │  [+ Forge]      │  │
-│  │  Earning 2%     │  │                 │  │
-│  └─────────────────┘  └─────────────────┘  │
-└─────────────────────────────────────────────┘
+**Sidebar specs:**
+- Width: `272px` expanded · collapses to icon-only rail on "Collapse"
+- Logo: `ᛟ FENRIR LEDGER` (Cinzel Decorative, gold) + `Credit Card Tracker` (Source Serif italic, muted)
+- Active nav item: gold background highlight, gold text
+- Collapse button pinned to sidebar bottom
+- Mobile: hidden by default; toggled as an overlay drawer
 
+**Content area:**
+- Page title left in Cinzel, gold (`CARDS`, `ADD CARD`, etc.)
+- `ADD CARD` top-right — sole Add Card entry point (not duplicated in summary bar)
+- Summary bar: `{N} cards · {N} need attention` — card count bold white, attention count amber
+
+**The Howl panel** *(Sprint 3 — not yet built)*:
+- Slides in from right when urgent cards exist
+- Fixed right sidebar (desktop), bottom drawer (mobile)
+
+```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ FOOTER                                                                      │
 │ Forged by FiremanDecko · Guarded by Freya · Tested by Loki [7x to unlock] │
@@ -224,6 +226,80 @@ Empty state:
 
 ---
 
+## Marketing Site — `/static/index.html`
+
+> **Sprint 2 addition**: A static single-page marketing site lives at `/static/` and is served via GitHub Pages. Six sections, no framework, no build step. All CSS inline. Single scroll-listener `<script>`. Built by FiremanDecko from Luna's spec.
+
+**Live at**: GitHub Pages (root of `/static/` branch or directory, TBD on Pages config)
+**App link**: https://fenrir-ledger.vercel.app
+
+**Section map:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ NAV (sticky, glassmorphism on scroll)                                       │
+│ [ᛟ wolf icon]  FENRIR LEDGER                         [Enter the Ledger ▶] │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ HERO (100vh)                                                                │
+│                                                                             │
+│  [wolf medallion]    FENRIR LEDGER  ← Cinzel Decorative 900, carved-stone  │
+│  260px × 260px       The wolf was not bound. You are.                      │
+│                      Every annual fee is Gleipnir...                        │
+│                                                   [Break the Chain ▶]      │
+│                      "Though it looks like silk ribbon..." — Prose Edda    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ THE CHAINS THEY FORGED FOR YOU  (3-col problem cards)                      │
+│                                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐            │
+│  │ ᚲ               │  │ ᚺ               │  │ ᚠ               │            │
+│  │ The Fee-Serpent │  │ The Promo Tide  │  │ The Unclaimed   │            │
+│  │ (fire-muspel)   │  │ (amber-hati)    │  │ Plunder (stone) │            │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘            │
+│  "Fáfnir set these traps. Fenrir was bred to spring them."                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ WHAT THE WOLF WATCHES  (6-feature grid, 3×2)                               │
+│                                                                             │
+│  ᚲ Sköll & Hati     ᚺ The Norns' Weave   ᛟ The Ledger of Fates           │
+│  ᛏ Valhalla         ᛉ The Howl            ᛗ The Nine Realms               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ THREE RUNES TO FREEDOM  (steps, forge-bg surface)                          │
+│                                                                             │
+│  [ᛏ]──────────[ᚺ]──────────[ᛊ]                                            │
+│   01            02            03                                            │
+│ Forge Your   Watch the     Break Free                                      │
+│  Chains      Norns Weave                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ FOOTER                                                                      │
+│ ᛟ FENRIR LEDGER                                                             │
+│ "Though it looks like silk ribbon..." — Prose Edda                         │
+│ ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ                    [Enter the Ledger ▶]                     │
+│ © 2026 Fenrir Ledger · Forged by FiremanDecko · Guarded by Freya ·        │
+│ Tested by Loki  ← hover "Loki" for easter egg tooltip                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Assets in `/static/`:**
+| File | Purpose |
+|------|---------|
+| `index.html` | Full site — HTML + CSS + inline JS |
+| `icon.png` | Wolf medallion (hero + nav logo) |
+| `favicon.ico` | Multi-size ICO: 16/32/48/64px |
+| `icon-192.png` | PWA manifest icon |
+| `icon-512.png` | PWA manifest icon |
+| `.nojekyll` | Disables Jekyll on GitHub Pages |
+
+---
+
 ## Responsive Breakpoints
 
 | Breakpoint | Layout | Card Grid | Howl Panel |
@@ -248,14 +324,22 @@ Full-width, same structure as desktop card but:
 
 ## Navigation Structure
 
-```
-Header (always visible):
-  ← Logo: "ᛟ FENRIR LEDGER"
-  → The Howl badge (urgent count)
-  → [Forge a Chain] CTA
-  → [⋮] Menu → Valhalla / The Ravens / About
+> **Sprint 2 update**: Navigation moved from a top header to a persistent left sidebar.
 
-Mobile: hamburger drawer with same items
+```
+Sidebar (always visible, collapsible):
+  ↑ Logo: "ᛟ FENRIR LEDGER" + "Credit Card Tracker" subtitle
+  ↑ Nav items (grow as routes ship):
+    · Cards (active: /  )
+    · Valhalla (Sprint 3: /valhalla)
+    · The Ravens (Sprint 4: /settings)
+  ↓ [Collapse] button (icon-only rail when collapsed)
+
+Content header (per-page):
+  ← Page title (Cinzel, gold)
+  → [ADD CARD] primary CTA (cards page only)
+
+Mobile: sidebar hidden by default; hamburger toggle opens overlay drawer
 ```
 
 ---
