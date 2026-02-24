@@ -289,7 +289,12 @@
       /* Ice-blue wolf-eye glow */
       filter: drop-shadow(0 0 30px rgba(91, 158, 201, 0.45))
               drop-shadow(0 0 60px rgba(91, 158, 201, 0.2));
-      animation: ice-breathe 4s ease-in-out infinite;
+      /* Run saga-enter first (overriding the .saga-reveal > * rule which
+         ice-breathe would have clobbered), then start ice-breathe after
+         the reveal completes (100ms delay + 450ms duration = 550ms). */
+      animation:
+        saga-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) 100ms forwards,
+        ice-breathe 4s ease-in-out 550ms infinite;
       margin-bottom: 40px;
     }
 
