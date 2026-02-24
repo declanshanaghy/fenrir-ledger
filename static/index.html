@@ -605,7 +605,7 @@
         <img src="icon.png" alt="Fenrir Ledger" width="40" height="40" />
         <span class="nav-wordmark">FENRIR LEDGER</span>
       </a>
-      <a href="https://fenrir-ledger.vercel.app" target="_blank" rel="noopener" class="btn btn-gold btn-sm">
+      <a href="#" data-app-link target="_blank" rel="noopener" class="btn btn-gold btn-sm">
         Enter the Ledger
       </a>
     </div>
@@ -630,7 +630,7 @@
             to hold like iron. Fáfnir hoards your gold inside it.
             Fenrir Ledger was built to find the chains before they tighten.
           </p>
-          <a href="https://fenrir-ledger.vercel.app" target="_blank" rel="noopener" class="btn btn-gold btn-lg hero-cta">
+          <a href="#" data-app-link target="_blank" rel="noopener" class="btn btn-gold btn-lg hero-cta">
             Break the Chain
           </a>
           <div class="hero-quote-wrap">
@@ -875,7 +875,7 @@
 
       <div class="footer-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
 
-      <a href="https://fenrir-ledger.vercel.app" target="_blank" rel="noopener"
+      <a href="#" data-app-link target="_blank" rel="noopener"
          class="btn btn-gold btn-sm footer-cta">
         Enter the Ledger
       </a>
@@ -893,6 +893,15 @@
 
   <script>
 (function() {
+  /* ── App URL — change this one value to update all CTA links ── */
+  var APP_URL = 'https://fenrir-ledger.vercel.app';
+
+  /* Wire every [data-app-link] element to APP_URL */
+  document.querySelectorAll('[data-app-link]').forEach(function(el) {
+    el.href = APP_URL;
+  });
+
+  /* Scroll nav glassmorphism */
   var nav = document.querySelector('.site-nav');
   if (!nav) return;
   window.addEventListener('scroll', function() {
