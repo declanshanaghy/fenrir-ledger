@@ -78,6 +78,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 *Freya + Luna's domain. The visual soul of the wolf.*
 
+- [design/README.md](design/README.md) — The wolf speaks. A guide to the full design system, in the voice of Fenrir.
 - [design/product-design-brief.md](design/product-design-brief.md) — Design philosophy, three pillars, aesthetic direction
 - [design/theme-system.md](design/theme-system.md) — Color palette, typography, CSS tokens, Tailwind extensions
 - [design/mythology-map.md](design/mythology-map.md) — Nine Realms → card states, Norns, Huginn & Muninn, Hati & Sköll
