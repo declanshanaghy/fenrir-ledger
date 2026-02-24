@@ -91,8 +91,9 @@ export function formatCurrency(cents: number): string {
  */
 export function formatDate(isoDate: string): string {
   if (!isoDate) return "";
-  // Parse as local date to avoid timezone shift
-  const [year, month, day] = isoDate.split("-").map(Number);
+  // Parse as local date to avoid timezone shift.
+  // Default values satisfy noUncheckedIndexedAccess — format is guaranteed YYYY-MM-DD.
+  const [year = 0, month = 0, day = 0] = isoDate.split("-").map(Number);
   const date = new Date(year, month - 1, day);
   return new Intl.DateTimeFormat("en-US", {
     month: "short",

@@ -217,7 +217,7 @@ export function CardForm({ initialValues }: CardFormProps) {
         <div className="space-y-1.5">
           <Label htmlFor="issuerId">Issuer *</Label>
           <Select
-            defaultValue={defaultValues.issuerId}
+            {...(defaultValues.issuerId !== undefined && { defaultValue: defaultValues.issuerId })}
             onValueChange={(v) => setValue("issuerId", v)}
           >
             <SelectTrigger id="issuerId">
@@ -342,7 +342,7 @@ export function CardForm({ initialValues }: CardFormProps) {
             <div className="space-y-1.5">
               <Label htmlFor="bonusType">Bonus Type *</Label>
               <Select
-                defaultValue={defaultValues.bonusType}
+                {...(defaultValues.bonusType !== undefined && { defaultValue: defaultValues.bonusType })}
                 onValueChange={(v) =>
                   setValue(
                     "bonusType",
@@ -430,7 +430,7 @@ export function CardForm({ initialValues }: CardFormProps) {
           <div className="space-y-1.5">
             <Label htmlFor="status">Card Status</Label>
             <Select
-              defaultValue={defaultValues.status}
+              {...(defaultValues.status !== undefined && { defaultValue: defaultValues.status })}
               onValueChange={(v) =>
                 setValue(
                   "status",
