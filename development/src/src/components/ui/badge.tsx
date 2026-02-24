@@ -4,26 +4,30 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-sm border px-2.5 py-0.5 text-xs font-mono font-semibold tracking-wide transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+          "border-transparent bg-primary text-primary-foreground hover:bg-gold-bright",
         secondary:
           "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
-        // Fenrir Ledger custom status variants
+          "border-transparent bg-realm-muspel/20 text-realm-muspel border-realm-muspel/30",
+        outline:
+          "border-border text-foreground",
+
+        // ── Fenrir Ledger — Norse realm status variants ──────────────────
+        // Colors follow design/theme-system.md status palette.
+        // Labels (Active / Fee Approaching / etc.) are Wave 2 — see design/implementation-brief.md Story 3.
         active:
-          "border-transparent bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+          "border-transparent bg-realm-asgard/20 text-realm-asgard border-realm-asgard/25",
         fee_approaching:
-          "border-transparent bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+          "border-transparent bg-realm-muspel/20 text-realm-muspel border-realm-muspel/30 animate-muspel-pulse",
         promo_expiring:
-          "border-transparent bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+          "border-transparent bg-realm-hati/20 text-realm-hati border-realm-hati/25",
         closed:
-          "border-transparent bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+          "border-transparent bg-realm-hel/10 text-realm-hel border-realm-hel/20",
       },
     },
     defaultVariants: {

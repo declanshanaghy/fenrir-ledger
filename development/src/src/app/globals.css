@@ -3,59 +3,54 @@
 @tailwind utilities;
 
 @layer base {
+  /*
+   * Fenrir Ledger — Saga Ledger Theme
+   * Dark-only. No light mode. The wolf does not need the sun.
+   *
+   * All surface, text, and status tokens follow design/theme-system.md.
+   * shadcn/ui component tokens are remapped to the Norse palette.
+   */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
+    /* ── Surfaces ───────────────────────────────────────────── */
+    --background:           240 40% 4%;     /* #07070d — void-black */
+    --foreground:           40  22% 87%;    /* #e8e4d4 — aged parchment */
 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --card:                 236 26% 8%;     /* #0f1018 — forge */
+    --card-foreground:      40  22% 87%;
+
+    --popover:              234 22% 10%;    /* #13151f — chain */
+    --popover-foreground:   40  22% 87%;
+
+    /* ── Brand ──────────────────────────────────────────────── */
+    --primary:              38  93% 41%;    /* #c9920a — gold */
+    --primary-foreground:   240 40% 4%;
+
+    /* ── Secondary / Muted ──────────────────────────────────── */
+    --secondary:            232 28% 16%;    /* #1e2235 — rune-border */
+    --secondary-foreground: 40  22% 87%;
+
+    --muted:                232 24% 22%;    /* #2a2d45 — iron-border */
+    --muted-foreground:     35  7%  51%;    /* #8a8578 — rune text */
+
+    --accent:               232 24% 22%;
+    --accent-foreground:    40  22% 87%;
+
+    /* ── Status / Destructive ───────────────────────────────── */
+    --destructive:          22  88% 41%;    /* #c94a0a — Muspelheim fire */
+    --destructive-foreground: 40 22% 87%;
+
+    /* ── Structure ──────────────────────────────────────────── */
+    --border:               232 28% 16%;    /* #1e2235 */
+    --input:                232 24% 22%;    /* #2a2d45 */
+    --ring:                 38  93% 41%;    /* gold focus ring */
+    --radius:               0.25rem;        /* sharp, angular — not pill */
+
+    /* ── Charts (Norse palette) ─────────────────────────────── */
+    --chart-1:              38  93% 41%;    /* gold */
+    --chart-2:              163 83% 29%;    /* teal-asgard */
+    --chart-3:              22  88% 41%;    /* muspel */
+    --chart-4:              38  90% 51%;    /* amber-hati */
+    --chart-5:              0   79% 59%;    /* ragnarok red */
   }
 }
 
@@ -63,7 +58,74 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
+
+  html {
+    scroll-behavior: smooth;
   }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body), serif;
+
+    /* Layered background: subtle gold radial glow + noise texture */
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -5%, rgba(201, 146, 10, 0.07) 0%, transparent 65%);
+  }
+
+  /* Typography scale */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), serif;
+  }
+
+  /* Monospace numbers — all numeric data */
+  [data-slot="amount"],
+  [data-slot="date"],
+  [data-slot="count"],
+  .font-mono {
+    font-family: var(--font-mono), monospace;
+  }
+
+  /* Input focus: gold ring treatment */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [data-radix-select-trigger]:focus-visible {
+    outline: none;
+    border-color: hsl(var(--primary));
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.4),
+      0 0 12px hsl(var(--primary) / 0.12);
+  }
+}
+
+/* ── Saga Reveal Animation ──────────────────────────────────────────────── */
+/*
+ * Staggered entrance for dashboard elements.
+ * Apply .saga-reveal to a container; direct children animate in sequence.
+ */
+.saga-reveal > * {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: saga-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.saga-reveal > *:nth-child(1) { animation-delay: 0ms;   }
+.saga-reveal > *:nth-child(2) { animation-delay: 60ms;  }
+.saga-reveal > *:nth-child(3) { animation-delay: 120ms; }
+.saga-reveal > *:nth-child(4) { animation-delay: 180ms; }
+.saga-reveal > *:nth-child(n+5) { animation-delay: 240ms; }
+
+@keyframes saga-enter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Gold Pulse (urgent status) ─────────────────────────────────────────── */
+@keyframes muspel-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+.animate-muspel-pulse {
+  animation: muspel-pulse 1.8s ease-in-out infinite;
 }

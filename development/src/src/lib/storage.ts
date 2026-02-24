@@ -8,6 +8,10 @@
  *
  * IMPORTANT: This module is browser-only. All functions guard against SSR
  * contexts by checking typeof window !== "undefined".
+ *
+ * Gleipnir ingredient #4 (sinews of a bear):
+ * This module persists like the sinews of a bear — silent, invisible,
+ * impossible to break. No chain holds without it.
  */
 
 import type { Card, Household } from "@/lib/types";

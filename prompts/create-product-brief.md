@@ -61,7 +61,7 @@ After I've answered all questions, produce the product brief in this exact forma
 
 ---
 
-IMPORTANT: Include ALL of the standard technical constraints listed above (Mermaid diagrams, idempotent deployment scripts, .env secrets management) regardless of the project type — these are ZeroForge team conventions that apply to every project.
+IMPORTANT: Include ALL of the standard technical constraints listed above (Mermaid diagrams, idempotent deployment scripts, YAML config management) regardless of the project type — these are Fenrir Ledger team conventions that apply to every project.
 ```
 
 ---

@@ -9,8 +9,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { CardForm } from "@/components/cards/CardForm";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import {
   migrateIfNeeded,
   initializeDefaultHousehold,
@@ -30,7 +30,6 @@ export default function EditCardPage() {
 
     const found = getCardById(params.id);
     if (!found) {
-      // Card not found — redirect to dashboard
       router.replace("/");
       return;
     }
@@ -41,32 +40,20 @@ export default function EditCardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Nav header */}
-      <header className="border-b">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
-          <Link
-            href="/"
-            className="text-muted-foreground hover:text-foreground transition-colors text-sm"
-          >
-            ← Back
-          </Link>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">🐺 Fenrir Ledger</h1>
-          </div>
-        </div>
-      </header>
+      <SiteHeader backHref="/" maxWidth="max-w-2xl" />
 
-      {/* Main content */}
       <main className="max-w-2xl mx-auto px-4 py-8">
         {isLoading ? (
-          <div className="flex items-center justify-center py-24 text-muted-foreground">
-            Loading card...
+          <div className="flex items-center justify-center py-24 text-muted-foreground font-body italic">
+            Consulting the runes...
           </div>
         ) : card ? (
           <>
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold">Edit card</h2>
-              <p className="text-muted-foreground mt-1">
+            <div className="mb-8">
+              <h1 className="font-display text-2xl text-gold tracking-wide">
+                Amend the Record
+              </h1>
+              <p className="font-body text-muted-foreground mt-1 italic">
                 {card.cardName}
               </p>
             </div>

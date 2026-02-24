@@ -6,41 +6,28 @@
  * Renders the CardForm in "new card" mode (no initialValues).
  */
 
-import Link from "next/link";
-import { CardForm } from "@/components/cards/CardForm";
-import { migrateIfNeeded, initializeDefaultHousehold } from "@/lib/storage";
 import { useEffect } from "react";
+import { CardForm } from "@/components/cards/CardForm";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { migrateIfNeeded, initializeDefaultHousehold } from "@/lib/storage";
 
 export default function NewCardPage() {
   useEffect(() => {
-    // Ensure storage is initialized before the form tries to save
     migrateIfNeeded();
     initializeDefaultHousehold();
   }, []);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Nav header */}
-      <header className="border-b">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
-          <Link
-            href="/"
-            className="text-muted-foreground hover:text-foreground transition-colors text-sm"
-          >
-            ← Back
-          </Link>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">🐺 Fenrir Ledger</h1>
-          </div>
-        </div>
-      </header>
+      <SiteHeader backHref="/" maxWidth="max-w-2xl" />
 
-      {/* Main content */}
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold">Add a card</h2>
-          <p className="text-muted-foreground mt-1">
-            Track a new credit card in your portfolio.
+        <div className="mb-8">
+          <h1 className="font-display text-2xl text-gold tracking-wide">
+            Forge a New Chain
+          </h1>
+          <p className="font-body text-muted-foreground mt-1 italic">
+            Add this card to your portfolio.
           </p>
         </div>
 

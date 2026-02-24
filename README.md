@@ -23,7 +23,45 @@ Fenrir Ledger is a credit card churn tracker for rewards optimizers. It watches 
 
 ## Workflow
 
-PO + UX Designer → Design Brief → Principal Engineer → System Design + API Contracts + Implementation → QA Tester → Acceptance. Kanban method. Max 5 stories/sprint. Deployment story mandatory every sprint.
+```mermaid
+graph LR
+    classDef primary fill:#03A9F4,stroke:#0288D1,color:#FFF
+    classDef healthy fill:#4CAF50,stroke:#388E3C,color:#FFF
+    classDef warning fill:#FF9800,stroke:#F57C00,color:#FFF
+    classDef neutral fill:#F5F5F5,stroke:#E0E0E0,color:#212121
+
+    %% Roles
+    po(Freya<br/>Product Owner)
+    ux(Luna<br/>UX Designer)
+    eng(FiremanDecko<br/>Principal Engineer)
+    qa(Loki<br/>QA Tester)
+
+    %% Artifacts
+    brief[Design Brief]
+    sysdesign[System Design<br/>+ API Contracts]
+    impl[Implementation]
+    ship([Accepted ✓])
+
+    %% Pipeline
+    po -->|collaborates| ux
+    ux -->|produces| brief
+    brief -->|handed off| eng
+    eng -->|produces| sysdesign
+    sysdesign -->|guides| impl
+    impl -->|tested by| qa
+    qa -->|ship / no-ship| ship
+
+    class po primary
+    class ux primary
+    class eng primary
+    class qa warning
+    class brief neutral
+    class sysdesign neutral
+    class impl neutral
+    class ship healthy
+```
+
+Kanban method · Max 5 stories/sprint · Deployment story mandatory every sprint
 
 ---
 

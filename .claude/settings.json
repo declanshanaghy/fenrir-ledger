@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "playwright@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true
+  }
+}
