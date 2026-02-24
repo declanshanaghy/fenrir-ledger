@@ -8,7 +8,7 @@
 
 Fenrir Ledger is a credit card churn tracker for rewards optimizers. It watches over your card portfolio — every opening date, every promo deadline, every annual fee renewal — and howls before the trap snaps shut. Add your cards, set your thresholds, and Fenrir does the rest: reminding you to spend, transfer, downgrade, or close before you lose a single dollar to a fee you didn't choose to pay.
 
-**Status**: Project initialized. Sprint 1 not started.
+**Status**: Sprint 1 complete. Running locally.
 
 ---
 
@@ -61,6 +61,39 @@ PO + UX Designer → Design Brief → Principal Engineer → System Design + API
 
 ### 📋 Templates
 - [Create Product Brief](prompts/create-product-brief.md) — Prompt template for generating product briefs (ZeroForge convention)
+
+---
+
+## FiremanDecko — Principal Engineer (Sprint 1)
+
+### Quick Start
+
+```bash
+# 1. Clone and set up
+git clone https://github.com/declanshanaghy/fenrir-ledger.git
+cd fenrir-ledger
+./development/scripts/setup-local.sh
+
+# 2. Start the dev server
+cd development/src && npm run dev
+
+# 3. Open http://localhost:3000
+```
+
+### Sprint 1 Artifacts
+
+**Architecture**
+- [Sprint Plan](architecture/sprint-plan.md) — 5 stories with acceptance criteria and technical notes
+- [System Design](architecture/system-design.md) — Component architecture, data model, data flow diagrams
+- [ADR-001: Tech Stack](architecture/adrs/ADR-001-tech-stack.md) — Next.js + TypeScript + Tailwind + shadcn/ui decision
+- [ADR-002: Data Model](architecture/adrs/ADR-002-data-model.md) — Household-scoped schema from day one
+- [ADR-003: Local Storage](architecture/adrs/ADR-003-local-storage.md) — localStorage for Sprint 1 + migration path
+
+**Implementation**
+- [Implementation Plan](development/implementation-plan.md) — Ordered task breakdown
+- [QA Handoff](development/qa-handoff.md) — Files created, test focus areas, known limitations
+- [Setup Script](development/scripts/setup-local.sh) — Idempotent local dev setup
+- [Source Code](development/src/) — Next.js project root (all Next.js files live here)
 
 ---
 
