@@ -39,14 +39,14 @@ PO + UX Designer → Design Brief → Principal Engineer → System Design + API
 - `design/interactions.md` — Interaction patterns and state transitions *(not yet created)*
 
 ### 🏗️ Architecture + Development (FiremanDecko output)
-- `architecture/system-design.md` — Component architecture, data model, tech stack decisions *(not yet created)*
-- `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(not yet created)*
-- `architecture/sprint-plan.md` — Current sprint stories with technical notes *(not yet created)*
-- `architecture/adrs/` — Architecture Decision Records (accumulate across sprints) *(not yet created)*
-- `development/src/` — Source code *(not yet created)*
-- `development/implementation-plan.md` — What was built and how *(not yet created)*
-- `development/qa-handoff.md` — Handoff notes for QA: what to deploy, what to test *(not yet created)*
-- `development/scripts/` — Build and deploy scripts *(not yet created)*
+- [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, tech stack decisions
+- `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
+- [architecture/sprint-plan.md](architecture/sprint-plan.md) — Current sprint stories with technical notes
+- [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001, ADR-002, ADR-003)
+- [development/src/](development/src/) — Next.js source code
+- [development/implementation-plan.md](development/implementation-plan.md) — What was built and how
+- [development/qa-handoff.md](development/qa-handoff.md) — Handoff notes for QA: what to deploy, what to test
+- [development/scripts/](development/scripts/) — Build and deploy scripts
 
 ### 🎭 Quality (Loki output)
 - `quality/test-plan.md` — Test strategy and coverage plan *(not yet created)*
