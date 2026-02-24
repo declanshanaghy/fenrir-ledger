@@ -27,23 +27,34 @@ When spawning agents, use the model specified above for each role.
 
 ## Kanban Board
 
-```
-┌────────────┐  ┌────────────┐  ┌──────────────────────┐  ┌────────────┐
-│  BACKLOG   │→ │  DESIGN    │→ │        BUILD         │→ │  VALIDATE  │
-│            │  │            │  │                      │  │            │
-│ PO writes  │  │ PO + UX    │  │ Principal Engineer   │  │ QA Tester  │
-│ stories    │  │ collaborate │  │ designs architecture │  │ validates  │
-│            │  │            │  │ and implements code  │  │ (devil's   │
-│            │  │            │  │ (asks PO/UX if       │  │  advocate, │
-│            │  │            │  │  unclear)            │  │  idempotent│
-│            │  │            │  │                      │  │  scripts)  │
-└────────────┘  └────────────┘  └──────────────────────┘  └────────────┘
-                                                                  │
-                                                                  ▼
-                                                           ┌────────────┐
-                                                           │    DONE    │
-                                                           │ Ship / Hold│
-                                                           └────────────┘
+*The pack hunts in order. No wolf runs ahead of the chain.*
+
+```mermaid
+graph LR
+    classDef primary fill:#03A9F4,stroke:#0288D1,color:#FFF
+    classDef warning fill:#FF9800,stroke:#F57C00,color:#FFF
+    classDef healthy fill:#4CAF50,stroke:#388E3C,color:#FFF
+    classDef neutral fill:#F5F5F5,stroke:#E0E0E0,color:#212121
+
+    %% Stages
+    backlog[ᚠ Backlog<br/>Freya writes<br/>the stories]
+    design[ᚱ Design<br/>Freya + Luna<br/>collaborate]
+    build[ᚲ Build<br/>FiremanDecko<br/>forges the chain]
+    validate[ᛏ Validate<br/>Loki tests<br/>the binding]
+    done([ᛟ Done<br/>Ship / Hold])
+
+    %% Flow
+    backlog -->|story pulled| design
+    design -->|brief handed off| build
+    build -->|asks if unclear| design
+    build -->|implementation ready| validate
+    validate -->|ship / no-ship| done
+
+    class backlog neutral
+    class design primary
+    class build primary
+    class validate warning
+    class done healthy
 ```
 
 ## Pipeline Execution

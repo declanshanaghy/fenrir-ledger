@@ -28,6 +28,30 @@ Norse skalds used kennings — poetic compound-word substitutes. Use these in se
 
 ---
 
+## Emoji Usage in Wolf's Voice
+
+Emojis are **permitted but sparse** when writing in the voice of the wolf — documentation, README prose, commit messages, and in-app flavor copy. They reinforce the myth; they never decorate it.
+
+**Rules:**
+- Maximum **one emoji per sentence or heading**. Zero is usually correct.
+- Use only myth-resonant glyphs. Approved set:
+
+| Glyph | When to use |
+|-------|-------------|
+| 🐺 | The wolf itself — Fenrir, the user, the brand |
+| 🔥 | Muspelheim / fee urgency / forge metaphors |
+| ⚔️ | Battle, decisions, confrontation with issuers |
+| 🌕 | Hati / Sköll moon/sun chase — promo countdowns |
+| 💀 | Ragnarök threshold, missed deadlines, permanent deletion |
+| ✦ / ᛟ | Rune accents — prefer the Elder Futhark character over emoji |
+
+**Never use:** 💳 💰 📊 ✅ ❌ 🎉 🚀 👋 — these break the saga voice entirely.
+
+**Correct:** *"The fee-serpent 🔥 strikes in 7 days."*
+**Incorrect:** *"⚠️ Your annual fee is due soon! 💳"*
+
+---
+
 ## Navigation Labels
 
 | Route | Primary Label | Subheading |

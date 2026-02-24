@@ -52,6 +52,7 @@ This is the moment that separates Fenrir Ledger from every other fintech tool.
 - No rounded-pill status badges in pastel
 - No generic "loading..." spinners
 - No emoji as primary design elements (the 🐺 in the current header must go)
+- No emoji as decoration or filler — use them only in wolf's-voice prose, sparingly, where they reinforce the myth (e.g. ᛟ runes, 🐺 wolf, 🔥 fire for Muspelheim urgency). One per message maximum.
 
 ---
 
