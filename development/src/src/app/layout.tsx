@@ -24,6 +24,7 @@ import {
   JetBrains_Mono,
 } from "next/font/google";
 import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
+import { AppShell } from "@/components/layout/AppShell";
 import "./globals.css";
 
 // ── Fonts ────────────────────────────────────────────────────────────────────
@@ -89,10 +90,10 @@ export default function RootLayout({
         jetbrainsMono.variable,
       ].join(" ")}
     >
-      <body className="min-h-screen bg-background text-foreground antialiased">
+      <body className="bg-background text-foreground antialiased">
         {/* Easter egg #4 — console ASCII art (client-only, once per session) */}
         <ConsoleSignature />
-        {children}
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

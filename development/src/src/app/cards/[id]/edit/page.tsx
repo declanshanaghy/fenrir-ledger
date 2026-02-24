@@ -10,7 +10,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { CardForm } from "@/components/cards/CardForm";
-import { SiteHeader } from "@/components/layout/SiteHeader";
 import {
   migrateIfNeeded,
   initializeDefaultHousehold,
@@ -39,29 +38,25 @@ export default function EditCardPage() {
   }, [params.id, router]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader backHref="/" maxWidth="max-w-2xl" />
-
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-24 text-muted-foreground font-body italic">
-            Loading...
+    <div className="max-w-2xl mx-auto px-6 py-6">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24 text-muted-foreground font-body italic">
+          Loading...
+        </div>
+      ) : card ? (
+        <>
+          <div className="mb-8">
+            <h1 className="font-display text-2xl text-gold tracking-wide">
+              Edit Card
+            </h1>
+            <p className="font-body text-muted-foreground mt-1 italic">
+              {card.cardName}
+            </p>
           </div>
-        ) : card ? (
-          <>
-            <div className="mb-8">
-              <h1 className="font-display text-2xl text-gold tracking-wide">
-                Edit Card
-              </h1>
-              <p className="font-body text-muted-foreground mt-1 italic">
-                {card.cardName}
-              </p>
-            </div>
 
-            <CardForm initialValues={card} />
-          </>
-        ) : null}
-      </main>
+          <CardForm initialValues={card} />
+        </>
+      ) : null}
     </div>
   );
 }

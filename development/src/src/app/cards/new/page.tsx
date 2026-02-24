@@ -8,7 +8,6 @@
 
 import { useEffect } from "react";
 import { CardForm } from "@/components/cards/CardForm";
-import { SiteHeader } from "@/components/layout/SiteHeader";
 import { migrateIfNeeded, initializeDefaultHousehold } from "@/lib/storage";
 
 export default function NewCardPage() {
@@ -18,21 +17,17 @@ export default function NewCardPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader backHref="/" maxWidth="max-w-2xl" />
+    <div className="max-w-2xl mx-auto px-6 py-6">
+      <div className="mb-8">
+        <h1 className="font-display text-2xl text-gold tracking-wide">
+          Add New Card
+        </h1>
+        <p className="font-body text-muted-foreground mt-1 italic">
+          Add this card to your portfolio.
+        </p>
+      </div>
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="font-display text-2xl text-gold tracking-wide">
-            Add New Card
-          </h1>
-          <p className="font-body text-muted-foreground mt-1 italic">
-            Add this card to your portfolio.
-          </p>
-        </div>
-
-        <CardForm />
-      </main>
+      <CardForm />
     </div>
   );
 }

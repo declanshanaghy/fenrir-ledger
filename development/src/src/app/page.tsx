@@ -10,7 +10,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Dashboard } from "@/components/dashboard/Dashboard";
-import { SiteHeader } from "@/components/layout/SiteHeader";
 import { initializeDefaultHousehold, getCards, migrateIfNeeded } from "@/lib/storage";
 import { DEFAULT_HOUSEHOLD_ID } from "@/lib/constants";
 import type { Card } from "@/lib/types";
@@ -28,27 +27,26 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader maxWidth="max-w-6xl">
+    <div className="px-6 py-6">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-display text-xl text-gold tracking-wide">Cards</h1>
         <Link
           href="/cards/new"
           className="inline-flex items-center justify-center rounded-sm text-sm font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-gold-bright h-9 px-4 py-2"
         >
           Add Card
         </Link>
-      </SiteHeader>
+      </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-24 text-muted-foreground font-body italic">
-            Loading...
-          </div>
-        ) : (
-          <div className="saga-reveal">
-            <Dashboard cards={cards} />
-          </div>
-        )}
-      </main>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24 text-muted-foreground font-body italic">
+          Loading...
+        </div>
+      ) : (
+        <div className="saga-reveal">
+          <Dashboard cards={cards} />
+        </div>
+      )}
     </div>
   );
 }
