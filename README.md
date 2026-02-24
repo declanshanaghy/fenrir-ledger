@@ -134,7 +134,7 @@ cd fenrir-ledger
 # Stoke the fire
 cd development/src && npm run dev
 
-# Open http://localhost:9000
+# Open http://localhost:9999
 ```
 
 ### Sprint 1 — Forged Artifacts
