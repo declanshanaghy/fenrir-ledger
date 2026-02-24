@@ -163,6 +163,12 @@ Fenrir Ledger was forged from [ZeroForge](https://github.com/declanshanaghy/zero
 
 ---
 
+## License
+
+Copyright (C) 2026 Declan Shanaghy. Licensed under the [GNU Affero General Public License v3.0](LICENSE.md).
+
+---
+
 ## The Pack's Oaths
 
 - **Diagrams**: All Mermaid, following the [mermaid-style-guide.md](fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md)

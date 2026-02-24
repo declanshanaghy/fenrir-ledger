@@ -52,7 +52,9 @@ This is the moment that separates Fenrir Ledger from every other fintech tool.
 - No rounded-pill status badges in pastel
 - No generic "loading..." spinners
 - No emoji as primary design elements (the 🐺 in the current header must go)
-- No emoji as decoration or filler — use them only in wolf's-voice prose, sparingly, where they reinforce the myth (e.g. ᛟ runes, 🐺 wolf, 🔥 fire for Muspelheim urgency). One per message maximum.
+- No emoji in functional copy (buttons, labels, badges, errors) — ever
+- No kennings or realm names in buttons, form labels, or error messages
+- No Norse vocabulary where plain English is faster to parse
 
 ---
 
@@ -76,7 +78,12 @@ This is the moment that separates Fenrir Ledger from every other fintech tool.
 
 **Who**: Power users — spreadsheet warriors who track 5–20+ cards, know their issuer rules cold, and check their portfolio regularly (including mobile, on the go).
 
-**Tone**: Respect their intelligence. Write for the wolf, not the tourist. Copy is terse, allusive, mythic. Error messages name the problem and give the path forward. Empty states pull from the Eddas. Labels use kennings where they aid, not obscure.
+**Tone**: Two registers, one product.
+
+- **Functional copy** (buttons, labels, badges, errors, tooltips, aria-labels): 100% plain English. Zero kennings, zero realm names. The user is a power optimizer — every millisecond of confusion is a failure.
+- **Atmospheric copy** (page headings, subheadings, empty states, loading states, docs, marketing): Norse saga voice. Kennings, Edda quotes, realm metaphors. This is the soul of the brand.
+
+The mythology rewards exploration. It never blocks a task.
 
 ---
 
