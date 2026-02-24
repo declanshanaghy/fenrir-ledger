@@ -34,7 +34,7 @@ export default function DashboardPage() {
           href="/cards/new"
           className="inline-flex items-center justify-center rounded-sm text-sm font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-gold-bright h-9 px-4 py-2"
         >
-          Forge a Chain
+          Add Card
         </Link>
       </SiteHeader>
 
@@ -44,7 +44,9 @@ export default function DashboardPage() {
             The Norns are weaving...
           </div>
         ) : (
-          <Dashboard cards={cards} />
+          <div className="saga-reveal">
+            <Dashboard cards={cards} />
+          </div>
         )}
       </main>
     </div>

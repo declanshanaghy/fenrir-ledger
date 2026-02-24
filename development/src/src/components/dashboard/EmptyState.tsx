@@ -43,7 +43,7 @@ export function EmptyState() {
         href="/cards/new"
         className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-10 px-6"
       >
-        Forge a Chain
+        Add Card
       </Link>
     </div>
   );

@@ -56,10 +56,18 @@ export const KNOWN_ISSUERS: Issuer[] = [
   { id: "other", name: "Other" },
 ];
 
-/** Status display labels */
+/** Status display labels — plain English (Voice 1: functional) */
 export const STATUS_LABELS: Record<string, string> = {
   active: "Active",
-  fee_approaching: "Fee Approaching",
+  fee_approaching: "Fee Due Soon",
   promo_expiring: "Promo Expiring",
   closed: "Closed",
+};
+
+/** Status tooltip text — Norse realm flavor (Voice 2: atmospheric) */
+export const STATUS_TOOLTIPS: Record<string, string> = {
+  active: "Asgard-bound — rewards flowing, no urgent deadlines",
+  fee_approaching: "Muspelheim — annual fee due soon, fire approaches",
+  promo_expiring: "Hati approaches — promo deadline draws near",
+  closed: "In Valhalla — rewards harvested, chain broken",
 };

@@ -39,7 +39,7 @@ export function CardTile({ card }: CardTileProps) {
 
   return (
     <Link href={`/cards/${card.id}/edit`} className="block group">
-      <Card className="h-full transition-shadow group-hover:shadow-md cursor-pointer">
+      <Card className="h-full border border-secondary hover:border-gold/30 transition-colors transition-shadow duration-200 group-hover:shadow-card-hover cursor-pointer">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">

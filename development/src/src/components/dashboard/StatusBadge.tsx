@@ -5,7 +5,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import type { CardStatus } from "@/lib/types";
-import { STATUS_LABELS } from "@/lib/constants";
+import { STATUS_LABELS, STATUS_TOOLTIPS } from "@/lib/constants";
 
 interface StatusBadgeProps {
   status: CardStatus;
@@ -14,10 +14,17 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const label = STATUS_LABELS[status] ?? status;
+  const tooltip = STATUS_TOOLTIPS[status];
 
   return (
-    <Badge variant={status} className={className}>
-      {label}
-    </Badge>
+    <span title={tooltip}>
+      <Badge
+        variant={status}
+        className={className}
+        aria-label={`Card status: ${label}`}
+      >
+        {label}
+      </Badge>
+    </span>
   );
 }
