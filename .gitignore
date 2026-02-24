@@ -32,3 +32,4 @@ Thumbs.db
 # Testing
 coverage/
 .playwright-mcp/
+.vercel
