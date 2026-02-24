@@ -21,16 +21,21 @@ Fenrir Ledger is a personal finance tool for credit card churners and rewards op
 5. **Action Recommendations** — For each card approaching a decision point, suggest: close, downgrade to no-fee version, keep (with ROI justification), or transfer credits.
 6. **Reward Tracking** — Log rewards earned (points, miles, cashback) per card and calculate net value after annual fees.
 
+## Tech Stack
+
+- **Framework**: Next.js (App Router) + TypeScript
+- **Frontend**: React (latest)
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Hosting**: Vercel (future — not in Sprint 1 scope); Root Directory configured to `development/src/`
+- **Data model**: Household-scoped from day one (single-user UI initially; multi-user sharing is future)
+- **Auth**: Future — OIDC via Google, Facebook, etc. (not in Sprint 1)
+
 ## Technical Constraints
 
 - Max stories per sprint: 5
 - Code review required
 - All diagrams (architecture, flow, sequence, state, etc.) must use Mermaid syntax
 - Every sprint must include stories for idempotent deployment scripts
-- All secrets stored in a `.env` file — loaded at runtime
-- The `.env` file MUST be in `.gitignore` — never committed to the repo
-- A `.env.example` template with placeholder values must be committed for reference
-- Local-first data storage — user data stays on their device by default
 - Mobile-responsive design (churners check this on the go)
 
 ## Target Users
@@ -44,15 +49,20 @@ Credit card churners and rewards optimizers — people who strategically open cr
 - Positive user feedback on deadline awareness and reward harvesting
 - Support for managing 20+ simultaneous cards without performance issues
 
-## Sprint 1+ Backlog (Prioritized)
+## Sprint 1 Backlog
 
 1. Card CRUD operations + local storage
 2. Dashboard with card status indicators
-3. Reminder engine with configurable lead times
-4. Timeline visualization
-5. Action recommendation logic
-6. Reward value tracking + net ROI calculation
-7. Data export (CSV/JSON)
-8. Multi-device sync (future — requires backend)
-9. Bank API integration for auto-detection (future)
-10. Shared household card tracking (future)
+
+## Future
+
+- Reminder engine with configurable lead times
+- Timeline visualization
+- Action recommendation logic
+- Reward value tracking + net ROI calculation
+- Data export (CSV/JSON)
+- Multi-device sync (requires backend)
+- Bank API integration for auto-detection
+- Shared household card tracking (OIDC login — Google, Facebook, etc.)
+- Vercel hosting + deployment pipeline
+- Smart reminders / notification engine
