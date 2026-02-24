@@ -56,16 +56,19 @@ const config: Config = {
 
         // ── Saga Ledger direct color tokens ───────────────────────────────
         // Surfaces
-        void:  "#07070d",
-        forge: "#0f1018",
-        chain: "#13151f",
+        void:  "#12100e",
+        forge: "#1c1917",
+        chain: "#242120",
 
         // Gold
         gold: {
-          dim:     "#8a6a00",
-          DEFAULT: "#c9920a",
-          bright:  "#f0b429",
+          dim:     "#8a6a10",
+          DEFAULT: "#d4a520",
+          bright:  "#f0c040",
         },
+
+        // Ice blue (wolf's eye — atmospheric accent only)
+        ice: "#5b9ec9",
 
         // Norse realm status colors
         realm: {
@@ -77,8 +80,8 @@ const config: Config = {
         },
 
         // Text
-        saga: "#e8e4d4",         // primary text
-        rune: "#8a8578",         // secondary text
+        saga: "#f0ede4",         // primary text — lighter parchment
+        rune: "#a09888",         // secondary text — lighter stone gray
       },
 
       // ── Typography ────────────────────────────────────────────────────────
@@ -98,12 +101,12 @@ const config: Config = {
 
       // ── Shadows ───────────────────────────────────────────────────────────
       boxShadow: {
-        "gold-sm": "0 0 8px rgba(201, 146, 10, 0.20)",
-        "gold-md": "0 0 20px rgba(201, 146, 10, 0.25)",
-        "gold-lg": "0 0 40px rgba(201, 146, 10, 0.30)",
+        "gold-sm": "0 0 8px rgba(212, 165, 32, 0.20)",
+        "gold-md": "0 0 20px rgba(212, 165, 32, 0.25)",
+        "gold-lg": "0 0 40px rgba(212, 165, 32, 0.30)",
         "muspel":  "0 0 20px rgba(201, 74, 10, 0.35)",
         "card-hover":
-          "0 0 0 1px #2a2d45, 0 0 20px rgba(201, 146, 10, 0.18)",
+          "0 0 0 1px #4a4540, 0 0 20px rgba(212, 165, 32, 0.18)",
       },
     },
   },

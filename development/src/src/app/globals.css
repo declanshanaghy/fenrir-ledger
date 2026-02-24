@@ -12,41 +12,41 @@
    */
   :root {
     /* ── Surfaces ───────────────────────────────────────────── */
-    --background:           240 40% 4%;     /* #07070d — void-black */
-    --foreground:           40  22% 87%;    /* #e8e4d4 — aged parchment */
+    --background:           28  15% 7%;     /* #12100e — warm charcoal */
+    --foreground:           40  27% 91%;    /* #f0ede4 — light parchment */
 
-    --card:                 236 26% 8%;     /* #0f1018 — forge */
-    --card-foreground:      40  22% 87%;
+    --card:                 25  14% 10%;    /* #1c1917 — forge */
+    --card-foreground:      40  27% 91%;
 
-    --popover:              234 22% 10%;    /* #13151f — chain */
-    --popover-foreground:   40  22% 87%;
+    --popover:              20  9%  13%;    /* #242120 — chain */
+    --popover-foreground:   40  27% 91%;
 
     /* ── Brand ──────────────────────────────────────────────── */
-    --primary:              38  93% 41%;    /* #c9920a — gold */
-    --primary-foreground:   240 40% 4%;
+    --primary:              42  75% 48%;    /* #d4a520 — brighter gold */
+    --primary-foreground:   28  15% 7%;
 
     /* ── Secondary / Muted ──────────────────────────────────── */
-    --secondary:            232 28% 16%;    /* #1e2235 — rune-border */
-    --secondary-foreground: 40  22% 87%;
+    --secondary:            22  8%  20%;    /* #3a3530 — stone border */
+    --secondary-foreground: 40  27% 91%;
 
-    --muted:                232 24% 22%;    /* #2a2d45 — iron-border */
-    --muted-foreground:     35  7%  51%;    /* #8a8578 — rune text */
+    --muted:                20  7%  27%;    /* #4a4540 — emphasized border */
+    --muted-foreground:     30  11% 58%;    /* #a09888 — lighter stone gray */
 
-    --accent:               232 24% 22%;
-    --accent-foreground:    40  22% 87%;
+    --accent:               20  7%  27%;
+    --accent-foreground:    40  27% 91%;
 
     /* ── Status / Destructive ───────────────────────────────── */
     --destructive:          22  88% 41%;    /* #c94a0a — Muspelheim fire */
-    --destructive-foreground: 40 22% 87%;
+    --destructive-foreground: 40 27% 91%;
 
     /* ── Structure ──────────────────────────────────────────── */
-    --border:               232 28% 16%;    /* #1e2235 */
-    --input:                232 24% 22%;    /* #2a2d45 */
-    --ring:                 38  93% 41%;    /* gold focus ring */
+    --border:               22  8%  20%;    /* #3a3530 — stone seam */
+    --input:                20  7%  27%;    /* #4a4540 */
+    --ring:                 42  75% 48%;    /* gold focus ring */
     --radius:               0.25rem;        /* sharp, angular — not pill */
 
     /* ── Charts (Norse palette) ─────────────────────────────── */
-    --chart-1:              38  93% 41%;    /* gold */
+    --chart-1:              42  75% 48%;    /* gold */
     --chart-2:              163 83% 29%;    /* teal-asgard */
     --chart-3:              22  88% 41%;    /* muspel */
     --chart-4:              38  90% 51%;    /* amber-hati */
@@ -67,9 +67,10 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body), serif;
 
-    /* Layered background: subtle gold radial glow + noise texture */
+    /* Layered background: subtle gold radial glow + warm stone grain texture */
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -5%, rgba(201, 146, 10, 0.07) 0%, transparent 65%);
+      radial-gradient(ellipse 80% 50% at 50% -5%, rgba(212, 165, 32, 0.07) 0%, transparent 65%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23s)' opacity='0.05'/%3E%3C/svg%3E");
   }
 
   /* Typography scale */
