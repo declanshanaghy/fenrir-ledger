@@ -105,7 +105,7 @@
       border: none;
     }
 
-    section { padding: 100px 0; }
+    section { padding: 56px 0; }
 
     /* ── Animations ────────────────────────────────────── */
     .saga-reveal > * {
@@ -241,10 +241,7 @@
 
     /* ── Hero — Full-Width Cinematic Banner ────────────── */
     .hero-section {
-      min-height: 90vh;
       padding: 0;
-      display: flex;
-      align-items: center;
       position: relative;
       overflow: hidden;
       /* Main atmospheric gradient — deep blue-black sky to warm stone */
@@ -270,33 +267,43 @@
       z-index: 0;
     }
 
-    /* Centered column — not side-by-side */
+    /* Two-column grid: icon top-left, text right */
     .hero-inner {
       position: relative;
       z-index: 1;
       width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 80px 24px;
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 12px 40px;
+      align-items: start;
+      text-align: left;
+      padding: 40px 24px;
     }
 
     .hero-icon {
-      width: 260px;
-      height: 260px;
+      grid-column: 1;
+      grid-row: 1 / span 7;
+      width: 160px;
+      height: 160px;
       object-fit: contain;
+      align-self: start;
       /* Ice-blue wolf-eye glow */
       filter: drop-shadow(0 0 30px rgba(91, 158, 201, 0.45))
               drop-shadow(0 0 60px rgba(91, 158, 201, 0.2));
-      /* Run saga-enter first (overriding the .saga-reveal > * rule which
-         ice-breathe would have clobbered), then start ice-breathe after
-         the reveal completes (100ms delay + 450ms duration = 550ms). */
+      /* Run saga-enter first, then ice-breathe after reveal completes */
       animation:
         saga-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) 100ms forwards,
         ice-breathe 4s ease-in-out 550ms infinite;
-      margin-bottom: 40px;
+      margin-bottom: 0;
     }
+
+    /* All text children go in column 2 */
+    .hero-eyebrow,
+    .hero-h1,
+    .hero-tagline,
+    .hero-sub,
+    .hero-cta,
+    .hero-quote-wrap { grid-column: 2; }
 
     .hero-eyebrow {
       display: block;
@@ -305,7 +312,7 @@
       color: var(--gold);
       letter-spacing: 0.4em;
       opacity: 0.7;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
     }
 
     .hero-h1 {
@@ -315,7 +322,7 @@
       color: var(--text-saga);
       line-height: 1.05;
       letter-spacing: 0.02em;
-      margin: 0 0 24px;
+      margin: 0 0 16px;
       text-shadow:
         0 1px 0 rgba(255,255,255,0.12),
         0 -1px 0 rgba(0,0,0,0.8),
@@ -330,7 +337,7 @@
       font-size: clamp(17px, 2.2vw, 22px);
       color: var(--text-saga);
       line-height: 1.5;
-      margin: 0 0 16px;
+      margin: 0 0 12px;
     }
 
     .hero-sub {
@@ -339,8 +346,8 @@
       font-size: clamp(14px, 1.8vw, 17px);
       color: var(--text-rune);
       line-height: 1.8;
-      max-width: 560px;
-      margin: 0 auto 40px;
+      max-width: 640px;
+      margin: 0 0 24px;
     }
 
     .hero-cta {
@@ -348,7 +355,7 @@
     }
 
     .hero-quote-wrap {
-      margin-top: 32px;
+      margin-top: 20px;
     }
 
     .hero-quote {
@@ -372,18 +379,36 @@
     }
 
     @media (min-width: 1024px) {
-      .hero-icon { width: 320px; height: 320px; }
+      .hero-inner { grid-template-columns: 220px 1fr; }
+      .hero-icon { width: 200px; height: 200px; }
     }
 
     @media (max-width: 639px) {
-      .hero-icon { width: 180px; height: 180px; }
-      .hero-section { min-height: 80vh; }
+      .hero-inner {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .hero-icon {
+        grid-column: 1;
+        grid-row: auto;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 16px;
+        justify-self: center;
+      }
+      .hero-eyebrow,
+      .hero-h1,
+      .hero-tagline,
+      .hero-sub,
+      .hero-cta,
+      .hero-quote-wrap { grid-column: 1; }
+      .hero-sub { margin-left: auto; margin-right: auto; }
     }
 
     /* ── Section Headings (shared) ─────────────────────── */
     .section-heading {
       text-align: center;
-      margin-bottom: 64px;
+      margin-bottom: 40px;
     }
     .section-pre-rune {
       display: block;
