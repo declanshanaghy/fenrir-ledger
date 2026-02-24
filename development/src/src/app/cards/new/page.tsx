@@ -24,7 +24,7 @@ export default function NewCardPage() {
       <main className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="font-display text-2xl text-gold tracking-wide">
-            Forge a New Chain
+            Add New Card
           </h1>
           <p className="font-body text-muted-foreground mt-1 italic">
             Add this card to your portfolio.

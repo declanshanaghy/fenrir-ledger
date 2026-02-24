@@ -45,13 +45,13 @@ export default function EditCardPage() {
       <main className="max-w-2xl mx-auto px-4 py-8">
         {isLoading ? (
           <div className="flex items-center justify-center py-24 text-muted-foreground font-body italic">
-            Consulting the runes...
+            Loading...
           </div>
         ) : card ? (
           <>
             <div className="mb-8">
               <h1 className="font-display text-2xl text-gold tracking-wide">
-                Amend the Record
+                Edit Card
               </h1>
               <p className="font-body text-muted-foreground mt-1 italic">
                 {card.cardName}

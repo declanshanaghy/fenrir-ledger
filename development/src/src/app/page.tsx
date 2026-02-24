@@ -41,7 +41,7 @@ export default function DashboardPage() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         {isLoading ? (
           <div className="flex items-center justify-center py-24 text-muted-foreground font-body italic">
-            The Norns are weaving...
+            Loading...
           </div>
         ) : (
           <div className="saga-reveal">

@@ -17,26 +17,12 @@ export function EmptyState() {
       // Easter egg #1 — Gleipnir Hunt, ingredient 6 of 6
       aria-description="the spittle of a bird"
     >
-      {/* Rune cluster — Fehu (wealth) + Othala (home/portfolio) */}
-      <div
-        className="text-5xl text-gold/30 mb-6 tracking-widest font-mono select-none"
-        aria-hidden="true"
-      >
-        ᚠ ᛟ ᚱ
-      </div>
-
       <h2 className="font-display text-2xl text-gold mb-3 tracking-wide">
-        No chains yet
+        No cards yet
       </h2>
 
-      <p className="font-body text-muted-foreground mb-2 max-w-md italic leading-relaxed">
-        Before Gleipnir was forged, Fenrir roamed free.
-        <br />
-        Before your first card is added, no chain can be broken.
-      </p>
-
-      <p className="font-body text-muted-foreground/60 mb-8 text-sm">
-        Add your first card, wolf.
+      <p className="font-body text-muted-foreground mb-8 max-w-md italic leading-relaxed">
+        Add your first card to start tracking fees, bonuses, and deadlines.
       </p>
 
       <Link

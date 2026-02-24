@@ -60,11 +60,11 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Ledger of Fates — Fenrir Ledger",
+    default: "Fenrir Ledger",
     template: "%s — Fenrir Ledger",
   },
   description:
-    "Break free from fee traps. Harvest every reward. Let no chain hold. Gleipnir breaks.",
+    "Track your credit card fees, sign-up bonuses, and deadlines. Never miss a fee or lose a reward.",
   // Easter egg #7 — runic cipher: ᚠᛖᚾᚱᛁᚱ = FENRIR in Elder Futhark
   other: {
     "fenrir:runes": "ᚠᛖᚾᚱᛁᚱ",

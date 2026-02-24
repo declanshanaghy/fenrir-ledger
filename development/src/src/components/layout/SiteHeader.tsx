@@ -40,10 +40,10 @@ export function SiteHeader({
 
           <Link href="/" className="flex flex-col leading-tight group">
             <span className="font-display text-gold tracking-widest uppercase text-sm group-hover:text-gold-bright transition-colors">
-              ᛟ Fenrir Ledger
+              Fenrir Ledger
             </span>
             <span className="font-body text-muted-foreground text-xs italic">
-              Ledger of Fates
+              Credit Card Tracker
             </span>
           </Link>
         </div>
