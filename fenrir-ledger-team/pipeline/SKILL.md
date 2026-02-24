@@ -1,11 +1,11 @@
 ---
 name: fenrir-ledger-pipeline
-description: "Kanban orchestration pipeline for the Fenrir Ledger team. Runs all 5 agents in the defined workflow: Product Owner + UX Designer collaborate → Architect interprets → Lead Dev implements → QA Tester validates with idempotent scripts. Use this skill to execute a full feature cycle, process a product brief, or run the complete team workflow."
+description: "Kanban orchestration pipeline for the Fenrir Ledger team. Runs all 4 agents in the defined workflow: Product Owner + UX Designer collaborate → Principal Engineer designs and implements → QA Tester validates with idempotent scripts. Use this skill to execute a full feature cycle, process a product brief, or run the complete team workflow."
 ---
 
 # Fenrir Ledger Team Pipeline — Kanban Workflow
 
-This pipeline orchestrates the five Fenrir Ledger team agents in a Kanban flow. Work moves through the board from left to right, with each stage building on the previous stage's output.
+This pipeline orchestrates the four Fenrir Ledger team agents in a Kanban flow. Work moves through the board from left to right, with each stage building on the previous stage's output.
 
 ## Diagrams
 
@@ -18,33 +18,32 @@ Every agent must read this guide before creating diagrams in any deliverable.
 
 | Agent | Name | Model | Rationale |
 |-------|------|-------|-----------|
-| Product Owner | **Freya** | **Opus** | Strategic thinking, product vision, priority calls |
-| Architect | **FiremanDecko** | **Opus** | Complex technical decisions, system design |
-| Lead Developer | **ArsonWells** | **Sonnet** | Fast, high-quality code implementation |
+| Product Owner | **Freya** | **Sonnet** | Strategic thinking, product vision, priority calls |
 | UX Designer | **Luna** | **Sonnet** | Rapid wireframing, interaction design |
-| QA Tester | **Loki** | **Sonnet** | Efficient test script generation, validation |
+| Principal Engineer | **FiremanDecko** | **Sonnet** | Complex technical decisions, system design, and implementation |
+| QA Tester | **Loki** | **Haiku** | Efficient test script generation, validation |
 
 When spawning agents, use the model specified above for each role.
 
 ## Kanban Board
 
 ```
-┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐
-│  BACKLOG   │→ │  DESIGN    │→ │ ARCHITECT  │→ │   BUILD    │→ │  VALIDATE  │
-│            │  │            │  │            │  │            │  │            │
-│ PO writes  │  │ PO + UX    │  │ Architect  │  │ Lead Dev   │  │ QA Tester  │
-│ stories    │  │ collaborate │  │ interprets │  │ implements │  │ validates  │
-│            │  │            │  │ (asks PO/  │  │ (best      │  │ (devil's   │
-│            │  │            │  │  UX if     │  │  practices)│  │  advocate,  │
-│            │  │            │  │  unclear)  │  │            │  │  idempotent │
-│            │  │            │  │            │  │            │  │  scripts)  │
-└────────────┘  └────────────┘  └────────────┘  └────────────┘  └────────────┘
-                                                                       │
-                                                                       ▼
-                                                                ┌────────────┐
-                                                                │    DONE    │
-                                                                │ Ship / Hold│
-                                                                └────────────┘
+┌────────────┐  ┌────────────┐  ┌──────────────────────┐  ┌────────────┐
+│  BACKLOG   │→ │  DESIGN    │→ │        BUILD         │→ │  VALIDATE  │
+│            │  │            │  │                      │  │            │
+│ PO writes  │  │ PO + UX    │  │ Principal Engineer   │  │ QA Tester  │
+│ stories    │  │ collaborate │  │ designs architecture │  │ validates  │
+│            │  │            │  │ and implements code  │  │ (devil's   │
+│            │  │            │  │ (asks PO/UX if       │  │  advocate, │
+│            │  │            │  │  unclear)            │  │  idempotent│
+│            │  │            │  │                      │  │  scripts)  │
+└────────────┘  └────────────┘  └──────────────────────┘  └────────────┘
+                                                                  │
+                                                                  ▼
+                                                           ┌────────────┐
+                                                           │    DONE    │
+                                                           │ Ship / Hold│
+                                                           └────────────┘
 ```
 
 ## Pipeline Execution
@@ -68,40 +67,31 @@ These two agents collaborate together to produce a **Product Design Brief** that
 - Market fit and differentiation
 - Wireframes (ASCII)
 - Acceptance criteria (testable)
-- Open questions for the Architect
+- Open questions for the Principal Engineer
 
 This is a conversation between two perspectives — the PO brings the business/user context, the UX Designer brings the interaction and visual expertise. They should push back on each other where appropriate.
 
 **Output**: Product Design Brief saved to the sprint directory.
 
-### Stage 2: ARCHITECT — Technical Interpretation
+### Stage 2: BUILD — Principal Engineer Design + Implementation
 
-Read: `fenrir-ledger-team/architect/SKILL.md`
+Read: `fenrir-ledger-team/principal-engineer/SKILL.md`
 
-The Architect receives the Product Design Brief and translates it into a technical solution.
+The Principal Engineer receives the Product Design Brief and produces both the technical architecture and the working implementation.
 
-**Important**: If anything in the brief is ambiguous or technically concerning, the Architect asks the UX Designer or Product Owner directly before proceeding. Frame questions clearly with context, options, and impact.
+**Important**: If anything in the brief is ambiguous or technically concerning, the Principal Engineer asks the UX Designer or Product Owner directly before proceeding. Frame questions clearly with context, options, and impact.
 
 **Output**:
 - Architecture Decision Records (ADRs)
 - System design with component diagrams
 - API contracts (endpoints, message formats, data shapes)
 - Sprint stories (max 5) with technical notes
-- Delegation brief for the Lead Developer
-
-### Stage 3: BUILD — Lead Developer Implementation
-
-Read: `fenrir-ledger-team/lead-dev/SKILL.md`
-
-The Lead Developer receives the Architect's delegation and implements using the latest and greatest best practices for the architecture. Does not reinvent the architecture — implements what was specified.
-
-**Output**:
 - Working code files in the project structure
 - Implementation plan documenting what was built
 - Code specifications for each module
 - Handoff notes for QA Tester (how to deploy, what to test)
 
-### Stage 4: VALIDATE — QA Tester
+### Stage 3: VALIDATE — QA Tester
 
 Read: `fenrir-ledger-team/qa-tester/SKILL.md`
 
@@ -161,6 +151,6 @@ sprints/sprint-{N}/
 
 1. **WIP Limit**: One story moves through the pipeline at a time. Don't start the next story until the current one reaches DONE or is explicitly parked.
 2. **Pull, Don't Push**: Each stage pulls work when ready, doesn't have work pushed onto it.
-3. **Blocker Escalation**: If any stage is blocked, escalate to the previous stage (Architect asks PO/UX, Lead Dev asks Architect, QA asks Lead Dev).
+3. **Blocker Escalation**: If any stage is blocked, escalate to the previous stage (Principal Engineer asks PO/UX, QA asks Principal Engineer).
 4. **Max 5 Stories per Sprint**: From the product brief. The PO enforces this constraint.
 5. **Definition of Done**: A story is DONE when QA signs off with a Ship recommendation and all idempotent test scripts pass.

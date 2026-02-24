@@ -82,8 +82,7 @@ When customizing ZeroForge, replace these placeholders across all files:
 | `fenrir-ledger` | Kebab-case slug for file/dir names | vulcan-brownout |
 | `fenrir-ledger-team` | Path to the team directory | vulcan-brownout-team |
 | `Freya` | Product Owner's name | Freya |
-| `FiremanDecko` | Architect's name | FiremanDecko |
-| `ArsonWells` | Lead Developer's name | ArsonWells |
+| `FiremanDecko` | Principal Engineer's name | FiremanDecko |
 | `Luna` | UX Designer's name | Luna |
 | `Loki` | QA Tester's name | Loki |
 | `Credit card churners and rewards optimizers` | Target user description | Home Assistant users |

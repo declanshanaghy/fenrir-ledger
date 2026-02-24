@@ -10,23 +10,20 @@ Fenrir Ledger is a credit card churn tracker for rewards optimizers. It watches 
 
 **Status**: Project initialized. Sprint 1 not started.
 
-> ⚠️ **Git push is disabled in this environment.** Agents must commit locally only. The repo owner (Dek) handles all pushes to GitHub manually.
-
 ---
 
 ## The Pack (Team)
 
 | Role | Agent | Model | Skill |
 |------|-------|-------|-------|
-| Product Owner | Freya | Opus | [SKILL](fenrir-ledger-team/product-owner/SKILL.md) |
+| Product Owner | Freya | Sonnet | [SKILL](fenrir-ledger-team/product-owner/SKILL.md) |
 | UX Designer | Luna | Sonnet | [SKILL](fenrir-ledger-team/ux-designer/SKILL.md) |
-| Architect | FiremanDecko | Opus | [SKILL](fenrir-ledger-team/architect/SKILL.md) |
-| Lead Developer | ArsonWells | Sonnet | [SKILL](fenrir-ledger-team/lead-dev/SKILL.md) |
-| QA Tester | Loki | Sonnet | [SKILL](fenrir-ledger-team/qa-tester/SKILL.md) |
+| Principal Engineer | FiremanDecko | Sonnet | [SKILL](fenrir-ledger-team/principal-engineer/SKILL.md) |
+| QA Tester | Loki | Haiku | [SKILL](fenrir-ledger-team/qa-tester/SKILL.md) |
 
 ## Workflow
 
-PO + UX Designer → Design Brief → Architect → System Design + API Contracts → Lead Dev → Implementation → QA Tester → Acceptance. Kanban method. Max 5 stories/sprint. Deployment story mandatory every sprint.
+PO + UX Designer → Design Brief → Principal Engineer → System Design + API Contracts + Implementation → QA Tester → Acceptance. Kanban method. Max 5 stories/sprint. Deployment story mandatory every sprint.
 
 ---
 
@@ -41,14 +38,11 @@ PO + UX Designer → Design Brief → Architect → System Design + API Contract
 - `design/wireframes.md` — UI wireframes and layout specs *(not yet created)*
 - `design/interactions.md` — Interaction patterns and state transitions *(not yet created)*
 
-### 🏗️ Architecture (FiremanDecko output)
+### 🏗️ Architecture + Development (FiremanDecko output)
 - `architecture/system-design.md` — Component architecture, data model, tech stack decisions *(not yet created)*
 - `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(not yet created)*
 - `architecture/sprint-plan.md` — Current sprint stories with technical notes *(not yet created)*
-- `architecture/delegation-brief.md` — Handoff spec for the Lead Developer *(not yet created)*
 - `architecture/adrs/` — Architecture Decision Records (accumulate across sprints) *(not yet created)*
-
-### ⚡ Development (ArsonWells output)
 - `development/src/` — Source code *(not yet created)*
 - `development/implementation-plan.md` — What was built and how *(not yet created)*
 - `development/qa-handoff.md` — Handoff notes for QA: what to deploy, what to test *(not yet created)*
