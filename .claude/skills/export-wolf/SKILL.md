@@ -345,7 +345,7 @@ Create it now using this template:
 Insert a new `.session-card` `<a>` element inside `<div id="sessions">`, **before any existing entries** (most recent first):
 
 ```html
-<a class="session-card" href="{{NAME}}.html">
+<a class="session-card" href="https://fenrir-ledger.vercel.app/sessions/{{NAME}}.html">
   <span class="card-rune">{{PRIMARY_RUNE}}</span>
   <p class="card-title">{{SESSION_TITLE}}</p>
   <p class="card-meta">{{DATE}} · {{TOTAL_ACTS}} acts · {{TOTAL_FILES}} files</p>
