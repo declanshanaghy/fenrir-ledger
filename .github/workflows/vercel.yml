@@ -31,6 +31,8 @@ jobs:
         run: |
           mkdir -p development/src/public/static
           cp -r static/. development/src/public/static/
+          mkdir -p development/src/public/sessions
+          cp -r sessions/. development/src/public/sessions/
 
       - name: Build
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
