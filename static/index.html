@@ -583,6 +583,19 @@
       max-width: 260px;
       margin: 0 auto;
     }
+    .step-log-link {
+      display: inline-block;
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.5;
+      text-decoration: none;
+      transition: opacity 200ms ease-out;
+    }
+    .step-log-link:hover { opacity: 1; }
     .step-connector {
       flex-shrink: 0;
       width: 60px;
@@ -897,6 +910,7 @@
               The ledger opens and holds everything you give it —
               annual fees, bonus windows, spending targets, all of it.
             </p>
+            <a href="/sessions/" class="step-log-link">ᛏ Session Chronicles →</a>
           </div>
 
           <!-- Connector -->
