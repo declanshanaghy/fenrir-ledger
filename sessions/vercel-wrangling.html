@@ -341,10 +341,26 @@
       margin-top: 6px;
       opacity: 0.6;
     }
+
+    /* ── Back nav ── */
+    .back-nav { padding: 24px 0 0; }
+    .back-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--gold-bright); }
   </style>
 </head>
 <body>
 <div class="page">
+
+  <nav class="back-nav" aria-label="Return to archive">
+    <a href="https://fenrir-ledger.vercel.app/sessions/" class="back-link">← ᛏ Session Archive</a>
+  </nav>
 
   <!-- ── Header ────────────────────────────────────────────────────── -->
   <header class="session-header">

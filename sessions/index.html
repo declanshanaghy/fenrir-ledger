@@ -194,6 +194,43 @@
       border-bottom: 1px solid var(--rune-border);
     }
 
+    /* ── Marketing banner ── */
+    .marketing-banner {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: var(--forge);
+      border: 1px solid var(--rune-border);
+      border-left: 3px solid var(--gold-dim);
+      padding: 18px 22px;
+      margin-top: 40px;
+      text-decoration: none;
+    }
+    .marketing-banner:hover { border-color: var(--gold); }
+    .marketing-rune {
+      font-size: 28px;
+      color: var(--gold);
+      opacity: 0.5;
+      flex-shrink: 0;
+      transition: opacity 0.2s;
+    }
+    .marketing-banner:hover .marketing-rune { opacity: 0.9; }
+    .marketing-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--gold-bright);
+      display: block;
+      margin-bottom: 5px;
+    }
+    .marketing-voice {
+      font-family: 'Source Serif 4', serif;
+      font-size: 0.82rem;
+      font-style: italic;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
     /* ── Footer ── */
     .session-footer {
       margin-top: 72px;
@@ -231,6 +268,15 @@
       <span>THE WOLF REMEMBERS EVERYTHING</span>
     </div>
   </header>
+
+  <!-- ── Marketing site link ────────────────────────────────────────── -->
+  <a class="marketing-banner" href="https://fenrir-ledger.vercel.app/static" target="_blank" rel="noopener">
+    <span class="marketing-rune">ᚱ</span>
+    <div>
+      <span class="marketing-title">Visit the Marketing Site →</span>
+      <p class="marketing-voice">Read the runes. Know what was built, why it was built, and what hunts next.</p>
+    </div>
+  </a>
 
   <!-- ── Chronicles ─────────────────────────────────────────────────── -->
   <p class="section-label">Chronicles</p>

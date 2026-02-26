@@ -155,6 +155,10 @@ Fonts (Google Fonts):
 <body>
 <div class="page">
 
+  <nav class="back-nav" aria-label="Return to archive">
+    <a href="https://fenrir-ledger.vercel.app/sessions/" class="back-link">← ᛏ Session Archive</a>
+  </nav>
+
   <!-- 1. Session Header -->
   <header class="session-header">
     <span class="header-runes">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ ᛊ</span>
@@ -246,6 +250,7 @@ Fonts (Google Fonts):
   - `.chip-mem` for memory/design doc writes
 - Roman numerals for act numbers: I II III IV V VI VII VIII IX X
 - The `footer-text` and `footer-sub` classes come from wireframes-modals.html — read that file to get their exact CSS
+- Always include `.back-nav` CSS and the `<nav class="back-nav">` block at the top of `.page` — it links back to the archive at `https://fenrir-ledger.vercel.app/sessions/`
 - Session title should be title-cased and evocative, not mechanical. Example: "Cat's Footfall & The Silent Sync" not "easter-egg-cat-modal-sync-indicator"
 - Emoji usage: wolf 🐺, rune ᚠ, chain ⛓, cat 🐾, sound 🔊 — use sparingly and only where thematically appropriate
 
