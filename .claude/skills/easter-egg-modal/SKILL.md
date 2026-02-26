@@ -205,7 +205,6 @@ import {
 import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "{{STORAGE_KEY}}";
-const FRAGMENT_NUMBER = {{N}};
 const TOTAL_FRAGMENTS = 6;
 
 interface {{COMPONENT}}Props {
@@ -307,7 +306,7 @@ export function {{COMPONENT}}({ open, onClose }: {{COMPONENT}}Props) {
 
             <div className="border-t border-[#1e2235] pt-3 mt-1">
               <p className="font-mono text-[0.7rem] text-[#c9920a]">
-                Fragment {FRAGMENT_NUMBER} of {TOTAL_FRAGMENTS} found
+                Fragment {found} of {TOTAL_FRAGMENTS} found
               </p>
               {found === TOTAL_FRAGMENTS && (
                 <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">

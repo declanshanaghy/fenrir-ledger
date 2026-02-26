@@ -23,7 +23,6 @@ import {
 import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "egg:gleipnir-2";
-const FRAGMENT_NUMBER = 2;
 const TOTAL_FRAGMENTS = 6;
 
 interface GleipnirWomansBeardProps {
@@ -125,7 +124,7 @@ export function GleipnirWomansBeard({ open, onClose }: GleipnirWomansBeardProps)
 
             <div className="border-t border-[#1e2235] pt-3 mt-1">
               <p className="font-mono text-[0.7rem] text-[#c9920a]">
-                Fragment {FRAGMENT_NUMBER} of {TOTAL_FRAGMENTS} found
+                Fragment {found} of {TOTAL_FRAGMENTS} found
               </p>
               {found === TOTAL_FRAGMENTS && (
                 <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">
