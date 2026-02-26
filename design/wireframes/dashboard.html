@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Dashboard — The Ledger of Fates</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in design/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; min-height: 100vh; }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 272px 1fr;
+      grid-template-rows: 1fr auto;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────────────── */
+    .sidebar {
+      grid-row: 1 / 3;
+      border-right: 1px solid;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .sidebar-logo { padding-bottom: 16px; border-bottom: 1px solid; }
+    .sidebar-logo h2 { font-size: 14px; font-weight: bold; }
+    .sidebar-logo p { font-size: 12px; }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .nav-item { display: block; padding: 8px 12px; border: 1px solid transparent; text-decoration: none; }
+    .nav-item.active { border: 1px solid; font-weight: bold; }
+    .nav-item.future { opacity: 0.4; font-style: italic; }
+    .sidebar-footer { border-top: 1px solid; padding-top: 16px; }
+
+    /* ── Content ─────────────────────────────────────────────────────── */
+    .content { display: flex; flex-direction: column; }
+    .content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid;
+    }
+    .summary-bar { padding: 10px 24px; border-bottom: 1px solid; font-size: 13px; }
+
+    /* Card grid: 3-col desktop, 2-col tablet, 1-col mobile */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      padding: 24px;
+      align-content: start;
+    }
+
+    /* ── Card Panel ──────────────────────────────────────────────────── */
+    .card {
+      border: 1px solid;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .card-ring {
+      width: 48px; height: 48px;
+      border: 2px solid;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; text-align: center; flex-shrink: 0;
+    }
+    .card-badge { border: 1px solid; padding: 2px 6px; font-size: 11px; }
+    .card-title { font-weight: bold; font-size: 13px; }
+    .card-issuer { font-size: 12px; }
+    .card-rule { border-top: 1px solid; }
+    .card-deadline { font-size: 12px; }
+    .card-stats { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 12px; }
+    .card-actions { display: flex; justify-content: space-between; gap: 8px; }
+    .card-placeholder { text-align: center; padding: 40px 0; opacity: 0.35; font-style: italic; }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    .app-footer {
+      grid-column: 2;
+      border-top: 1px solid;
+      padding: 12px 24px;
+      font-size: 12px;
+    }
+
+    /* ── Generic ─────────────────────────────────────────────────────── */
+    button { border: 1px solid; padding: 6px 14px; cursor: pointer; background: none; font-size: 13px; }
+    .label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ── Sidebar (272px fixed, collapsible to icon rail) ──────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h2>ᛟ FENRIR LEDGER</h2>
+      <p>Credit Card Tracker</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#">Cards  ← active route</a>
+      <a class="nav-item future" href="#">Valhalla (Sprint 3)</a>
+      <a class="nav-item future" href="#">The Ravens (Sprint 4)</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button>[⊞ Collapse]</button>
+      <p class="note">Collapses to icon-only rail. Mobile: hidden by default, toggled as overlay drawer.</p>
+    </div>
+  </aside>
+
+  <!-- ── Content area ──────────────────────────────────────────────── -->
+  <main class="content">
+
+    <header class="content-header">
+      <h1>CARDS</h1>
+      <button>[ADD CARD ▶]</button>
+    </header>
+
+    <div class="summary-bar">
+      <strong>14 cards</strong> · <strong>3 need attention</strong>
+      <span class="note"> — card count bold, attention count accent color</span>
+    </div>
+
+    <!-- Card grid: 3-col desktop | 2-col tablet | 1-col mobile -->
+    <div class="card-grid">
+
+      <!-- Card: fee_approaching -->
+      <article class="card">
+        <div class="card-header">
+          <div class="card-ring">◉<br/><small>rune</small></div>
+          <span class="card-badge">FEE DUE</span>
+        </div>
+        <div class="card-title">CHASE SAPPHIRE PREFERRED</div>
+        <div class="card-issuer">Chase</div>
+        <div class="card-rule"></div>
+        <div class="card-deadline">Annual fee due: Feb 14, 2026<br/>12 days remaining</div>
+        <div class="card-rule"></div>
+        <div class="card-stats">
+          <span>Credit limit</span><span>$15,000</span>
+          <span>Annual fee</span><span>$95</span>
+          <span>Sign-up bonus</span><span>75,000 pts / $4k spend</span>
+        </div>
+        <div class="card-actions">
+          <button>View Record</button>
+          <button>[···]</button>
+        </div>
+      </article>
+
+      <!-- Card: promo_expiring -->
+      <article class="card">
+        <div class="card-header">
+          <div class="card-ring">◉<br/><small>rune</small></div>
+          <span class="card-badge">PROMO EXPIRING</span>
+        </div>
+        <div class="card-title">AMEX GOLD</div>
+        <div class="card-issuer">American Express</div>
+        <div class="card-rule"></div>
+        <div class="card-deadline">Promo expires: Mar 3, 2026<br/>23 days remaining</div>
+        <div class="card-rule"></div>
+        <div class="card-stats">
+          <span>Credit limit</span><span>$20,000</span>
+          <span>Annual fee</span><span>$250</span>
+          <span>Sign-up bonus</span><span>90,000 pts / $6k spend</span>
+        </div>
+        <div class="card-actions">
+          <button>View Record</button>
+          <button>[···]</button>
+        </div>
+      </article>
+
+      <!-- Card: active -->
+      <article class="card">
+        <div class="card-header">
+          <div class="card-ring">◉<br/><small>rune</small></div>
+          <span class="card-badge">ACTIVE</span>
+        </div>
+        <div class="card-title">CHASE FREEDOM UNLIMITED</div>
+        <div class="card-issuer">Chase</div>
+        <div class="card-rule"></div>
+        <div class="card-deadline">No urgent deadlines</div>
+        <div class="card-rule"></div>
+        <div class="card-stats">
+          <span>Credit limit</span><span>$10,000</span>
+          <span>Annual fee</span><span>$0</span>
+          <span>Sign-up bonus</span><span>20,000 pts / $500 spend</span>
+        </div>
+        <div class="card-actions">
+          <button>View Record</button>
+          <button>[···]</button>
+        </div>
+      </article>
+
+      <!-- Placeholder cards -->
+      <article class="card"><div class="card-placeholder">Card N</div></article>
+      <article class="card"><div class="card-placeholder">Card N+1</div></article>
+      <article class="card"><div class="card-placeholder">Card N+2</div></article>
+
+    </div><!-- /.card-grid -->
+
+    <p class="note" style="padding: 0 24px 16px;">Card grid: 3-col desktop (>1024px) · 2-col tablet (640–1024px) · 1-col mobile (<640px)</p>
+
+  </main><!-- /main -->
+
+  <!-- ── Footer ──────────────────────────────────────────────────────── -->
+  <footer class="app-footer">
+    Forged by FiremanDecko · Guarded by Freya · Tested by Loki [click 7× for Loki Mode] · ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ · © Fenrir Ledger
+  </footer>
+
+</div><!-- /.app-shell -->
+
+</body>
+</html>

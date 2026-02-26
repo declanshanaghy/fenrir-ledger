@@ -109,6 +109,8 @@ CSS-first where possible. Framer Motion for the pieces that require orchestratio
 
 The spatial blueprint. Where the sidebar lives (`272px`, collapsible). How the card grid adapts across breakpoints (1 column → 2 → 3). The Howl panel's position and z-index. The header's structure: brand mark left, user cluster right, nothing in the center to distract.
 
+Wireframes are standalone HTML5 documents in `design/wireframes/`. They carry no theme styling — no colors, no custom fonts, no decorative rules — so they remain valid regardless of how the theme evolves. The `wireframes.md` index links to each file and records the key layout decisions behind them.
+
 The wireframes define the container before the soul is poured in. FiremanDecko works from these. When a layout decision is in dispute, this document settles it.
 
 ---

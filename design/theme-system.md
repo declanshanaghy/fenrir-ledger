@@ -223,3 +223,11 @@ Rune glyphs appear in:
 - Section separator decorations
 - The Howl panel header
 - Valhalla Archive card tombstones
+
+---
+
+## Easter Egg Modal
+
+When a hidden easter egg is triggered, it is revealed through a themed modal dialog that applies all Saga Ledger tokens — gold glow border, Cinzel Decorative headline, two-column artifact layout, and animated entry.
+
+See [`easter-egg-modal.md`](./easter-egg-modal.md) for the full template spec, React integration guide, and accessibility notes.

@@ -269,3 +269,14 @@ Page titles are atmospheric (Voice 2) — they set scene without blocking intera
 ## Footer
 
 *Forged by FiremanDecko · Guarded by Freya · Tested by Loki*
+
+---
+
+## Magic Numbers
+
+Significant numeric constants in the codebase that carry intentional meaning. Do not change these without cause — they are part of the hidden lore.
+
+| Value | Where used | Meaning |
+|---|---|---|
+| `9653` | Easter egg z-index layer | **W-O-L-F** on a phone keypad (9=W, 6=O, 5=L, 3=F). The wolf always rises above everything else. |
+| `7` | Loki Mode click count | Loki has 7 known children in Norse myth. Only a true devotee counts. |

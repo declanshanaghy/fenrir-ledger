@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Marketing Site — /static/index.html</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in design/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* ── Section wrappers ────────────────────────────────────────── */
+    section { border-bottom: 1px solid; padding: 32px 48px; }
+    .section-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; margin-bottom: 8px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+
+    /* ── Nav ─────────────────────────────────────────────────────── */
+    nav.site-nav {
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 48px;
+      z-index: 10;
+    }
+    .nav-brand { font-weight: bold; }
+    button { border: 1px solid; padding: 7px 16px; cursor: pointer; background: none; font-family: inherit; font-size: 13px; }
+
+    /* ── Hero ─────────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      gap: 48px;
+      padding: 48px;
+    }
+    .hero-medallion {
+      width: 260px; height: 260px;
+      border: 2px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; text-align: center;
+      flex-shrink: 0;
+    }
+    .hero-copy { display: flex; flex-direction: column; gap: 16px; }
+    .hero-copy h1 { font-size: 36px; font-weight: bold; }
+    .hero-copy p { font-size: 16px; max-width: 480px; }
+    .hero-copy blockquote { font-style: italic; font-size: 13px; border-left: 2px solid; padding-left: 12px; }
+
+    /* ── 3-col grid ──────────────────────────────────────────────── */
+    .card-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+    .feature-card { border: 1px solid; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .feature-card .rune { font-size: 20px; }
+
+    /* ── 3×2 feature grid ────────────────────────────────────────── */
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+    .feature-tile { border: 1px solid; padding: 14px; }
+
+    /* ── Steps ───────────────────────────────────────────────────── */
+    .steps { display: flex; align-items: flex-start; gap: 0; margin-top: 16px; }
+    .step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 16px; }
+    .step-rune { font-size: 24px; border: 1px solid; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+    .step-connector { width: 40px; border-top: 1px solid; align-self: center; margin-top: -8px; }
+    .step-number { font-size: 11px; opacity: 0.5; }
+
+    /* ── Footer ──────────────────────────────────────────────────── */
+    footer.site-footer { padding: 32px 48px; }
+    .footer-grid { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: end; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Sticky nav ────────────────────────────────────────────────── -->
+  <nav class="site-nav" aria-label="Site navigation">
+    <div class="nav-brand">[ᛟ wolf icon]  FENRIR LEDGER</div>
+    <button>[Enter the Ledger ▶]</button>
+  </nav>
+  <p class="note" style="padding: 4px 48px;">Nav: transparent at top, glassmorphism backdrop-blur on scroll. Sticky.</p>
+
+  <!-- ── Hero (100vh) ─────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-medallion">
+      Wolf medallion<br/>260 × 260 px<br/>(icon.png)
+    </div>
+    <div class="hero-copy">
+      <h1>FENRIR LEDGER</h1>
+      <p>The wolf was not bound. You are.<br/>Every annual fee is Gleipnir…</p>
+      <button>[Break the Chain ▶]  ← primary CTA</button>
+      <blockquote>"Though it looks like silk ribbon, no chain is stronger." — Prose Edda</blockquote>
+    </div>
+  </section>
+
+  <!-- ── Section: The Chains They Forged For You ──────────────────── -->
+  <section>
+    <div class="section-label">Section 2</div>
+    <h2>THE CHAINS THEY FORGED FOR YOU</h2>
+    <p class="note">3-column problem cards. Each highlights a pain point.</p>
+    <div class="card-row">
+      <div class="feature-card">
+        <div class="rune">ᚲ</div>
+        <strong>The Fee-Serpent</strong>
+        <p>Annual fees that strike before you notice. fire-muspel color in implementation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="rune">ᚺ</div>
+        <strong>The Promo Tide</strong>
+        <p>Sign-up bonuses that expire unclaimed. amber-hati color in implementation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="rune">ᚠ</div>
+        <strong>The Unclaimed Plunder</strong>
+        <p>Rewards that vanish unused. stone-hel color in implementation.</p>
+      </div>
+    </div>
+    <p class="note" style="margin-top:12px;">"Fáfnir set these traps. Fenrir was bred to spring them."</p>
+  </section>
+
+  <!-- ── Section: What the Wolf Watches ──────────────────────────── -->
+  <section>
+    <div class="section-label">Section 3</div>
+    <h2>WHAT THE WOLF WATCHES</h2>
+    <p class="note">6-feature grid, 3×2</p>
+    <div class="feature-grid">
+      <div class="feature-tile"><strong>ᚲ Sköll &amp; Hati</strong><br/><small>Fee + promo deadline tracking</small></div>
+      <div class="feature-tile"><strong>ᚺ The Norns' Weave</strong><br/><small>Reminder engine (Urd, Verdandi, Skuld)</small></div>
+      <div class="feature-tile"><strong>ᛟ The Ledger of Fates</strong><br/><small>Full portfolio overview</small></div>
+      <div class="feature-tile"><strong>ᛏ Valhalla</strong><br/><small>Archive of closed cards + plunder</small></div>
+      <div class="feature-tile"><strong>ᛉ The Howl</strong><br/><small>Urgent alert panel</small></div>
+      <div class="feature-tile"><strong>ᛗ The Nine Realms</strong><br/><small>Norse-mapped card status system</small></div>
+    </div>
+  </section>
+
+  <!-- ── Section: Three Runes to Freedom ─────────────────────────── -->
+  <section>
+    <div class="section-label">Section 4</div>
+    <h2>THREE RUNES TO FREEDOM</h2>
+    <p class="note">Steps section, forge-bg surface in implementation</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-rune">ᛏ</div>
+        <div class="step-number">01</div>
+        <strong>Forge Your Chains</strong>
+        <small>Add your cards to the ledger</small>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-rune">ᚺ</div>
+        <div class="step-number">02</div>
+        <strong>Watch the Norns Weave</strong>
+        <small>Deadlines surface automatically</small>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-rune">ᛊ</div>
+        <div class="step-number">03</div>
+        <strong>Break Free</strong>
+        <small>Harvest rewards. Close the chain. Repeat.</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ────────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div>
+        <strong>ᛟ FENRIR LEDGER</strong><br/>
+        <em>"Though it looks like silk ribbon…" — Prose Edda</em><br/>
+        <small>ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</small>
+      </div>
+      <div>
+        <button>[Enter the Ledger ▶]</button>
+      </div>
+    </div>
+    <p style="margin-top: 16px; font-size: 12px;">
+      © 2026 Fenrir Ledger · Forged by FiremanDecko · Guarded by Freya · Tested by
+      <span title="Loki Mode: click 7 times">Loki</span>
+      <span class="note"> ← hover "Loki" shows easter egg tooltip; click 7× triggers Loki Mode</span>
+    </p>
+    <p class="note">© hover on ©: CSS ::after reveals "The breath of a fish" (Gleipnir Hunt #5)</p>
+  </footer>
+
+</body>
+</html>

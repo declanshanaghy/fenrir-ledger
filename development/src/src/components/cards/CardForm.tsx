@@ -8,7 +8,7 @@
  * All money values are entered as dollars in the form but stored as cents.
  */
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,7 +38,7 @@ import {
 
 import type { Card, CardStatus } from "@/lib/types";
 import { saveCard, deleteCard } from "@/lib/storage";
-import { computeCardStatus, dollarsToCents, centsToDollars } from "@/lib/card-utils";
+import { computeCardStatus, dollarsToCents, centsToDollars, generateId } from "@/lib/card-utils";
 import { KNOWN_ISSUERS, DEFAULT_HOUSEHOLD_ID } from "@/lib/constants";
 
 // ─── Zod validation schema ────────────────────────────────────────────────────
@@ -65,15 +65,6 @@ const cardFormSchema = z
         "Must be a valid dollar amount"
       ),
     annualFeeDate: z.string().optional().default(""),
-    promoPeriodMonths: z
-      .string()
-      .optional()
-      .transform((v) => v ?? "")
-      .refine(
-        (v) => v === "" || (!isNaN(parseInt(v)) && parseInt(v) >= 0),
-        "Must be a valid number of months"
-      ),
-    hasSignUpBonus: z.boolean().default(false),
     bonusType: z.enum(["points", "miles", "cashback"]).optional(),
     bonusAmount: z.string().optional().default(""),
     bonusSpendRequirement: z.string().optional().default(""),
@@ -81,19 +72,7 @@ const cardFormSchema = z
     bonusMet: z.boolean().default(false),
     status: z.enum(["active", "fee_approaching", "promo_expiring", "closed"]).optional(),
     notes: z.string().optional().default(""),
-  })
-  .refine(
-    (data) => {
-      if (data.hasSignUpBonus) {
-        return !!data.bonusType && data.bonusDeadline !== "";
-      }
-      return true;
-    },
-    {
-      message: "Bonus type and deadline are required when sign-up bonus is enabled",
-      path: ["bonusType"],
-    }
-  );
+  });
 
 type CardFormValues = z.infer<typeof cardFormSchema>;
 
@@ -110,6 +89,19 @@ export function CardForm({ initialValues }: CardFormProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Precompute today + derived defaults (used for new cards)
+  const todayStr = new Date().toISOString().split("T")[0];
+  const feeDateDefault = (() => {
+    const d = new Date(todayStr + "T00:00:00");
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString().split("T")[0];
+  })();
+  const deadlineDefault = (() => {
+    const d = new Date(todayStr + "T00:00:00");
+    d.setMonth(d.getMonth() + 3);
+    return d.toISOString().split("T")[0];
+  })();
+
   // Map Card → form default values
   const defaultValues: Partial<CardFormValues> = initialValues
     ? {
@@ -119,10 +111,6 @@ export function CardForm({ initialValues }: CardFormProps) {
         creditLimit: centsToDollars(initialValues.creditLimit),
         annualFee: centsToDollars(initialValues.annualFee),
         annualFeeDate: initialValues.annualFeeDate ?? "",
-        promoPeriodMonths: initialValues.promoPeriodMonths
-          ? String(initialValues.promoPeriodMonths)
-          : "",
-        hasSignUpBonus: !!initialValues.signUpBonus,
         bonusType: initialValues.signUpBonus?.type ?? undefined,
         bonusAmount: initialValues.signUpBonus
           ? centsToDollars(initialValues.signUpBonus.amount)
@@ -136,7 +124,9 @@ export function CardForm({ initialValues }: CardFormProps) {
         notes: initialValues.notes ?? "",
       }
     : {
-        hasSignUpBonus: false,
+        openDate: todayStr,
+        annualFeeDate: feeDateDefault,
+        bonusDeadline: deadlineDefault,
         bonusMet: false,
         notes: "",
       };
@@ -150,9 +140,29 @@ export function CardForm({ initialValues }: CardFormProps) {
   } = useForm<CardFormValues>({
     resolver: zodResolver(cardFormSchema),
     defaultValues,
+    shouldFocusError: false, // We handle scroll+focus manually via scrollToFirstError
   });
 
-  const hasSignUpBonus = watch("hasSignUpBonus");
+  const openDate = watch("openDate");
+
+  // When openDate changes (user edits it), auto-derive annualFeeDate and bonusDeadline.
+  // Skip on initial render so stored values aren't clobbered in edit mode.
+  const prevOpenDate = useRef<string>(defaultValues.openDate ?? "");
+  useEffect(() => {
+    if (!openDate || openDate === prevOpenDate.current) return;
+    prevOpenDate.current = openDate;
+
+    const base = new Date(openDate + "T00:00:00");
+    if (isNaN(base.getTime())) return;
+
+    const feeDate = new Date(base);
+    feeDate.setFullYear(feeDate.getFullYear() + 1);
+    setValue("annualFeeDate", feeDate.toISOString().split("T")[0]);
+
+    const deadline = new Date(base);
+    deadline.setMonth(deadline.getMonth() + 3);
+    setValue("bonusDeadline", deadline.toISOString().split("T")[0]);
+  }, [openDate, setValue]);
 
   const onSubmit = (data: CardFormValues) => {
     setIsSubmitting(true);
@@ -162,7 +172,7 @@ export function CardForm({ initialValues }: CardFormProps) {
 
       // Build the Card object
       const card: Card = {
-        id: initialValues?.id ?? crypto.randomUUID(),
+        id: initialValues?.id ?? generateId(),
         householdId: initialValues?.householdId ?? DEFAULT_HOUSEHOLD_ID,
         issuerId: data.issuerId,
         cardName: data.cardName,
@@ -170,10 +180,8 @@ export function CardForm({ initialValues }: CardFormProps) {
         creditLimit: dollarsToCents(data.creditLimit ?? ""),
         annualFee: dollarsToCents(data.annualFee ?? ""),
         annualFeeDate: data.annualFeeDate ?? "",
-        promoPeriodMonths: data.promoPeriodMonths
-          ? parseInt(data.promoPeriodMonths, 10)
-          : 0,
-        signUpBonus: data.hasSignUpBonus && data.bonusType
+        promoPeriodMonths: 0,
+        signUpBonus: data.bonusType
           ? {
               type: data.bonusType,
               amount: dollarsToCents(data.bonusAmount ?? ""),
@@ -207,11 +215,27 @@ export function CardForm({ initialValues }: CardFormProps) {
     router.push("/");
   };
 
+  // Team norm: on validation failure, scroll the first invalid field into view.
+  // Each form field must have an id matching its react-hook-form field name.
+  // See memory/team-norms.md for the full pattern.
+  const scrollToFirstError = (errs: Record<string, unknown>) => {
+    const elements = Object.keys(errs)
+      .map((key) => document.getElementById(key))
+      .filter((el): el is HTMLElement => el !== null)
+      .sort((a, b) =>
+        a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+      );
+    if (elements.length > 0) {
+      elements[0]!.scrollIntoView({ behavior: "smooth", block: "center" });
+      elements[0]!.focus();
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* ── Basic Info ──────────────────────────────────────────── */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Card Details</h2>
+    <form onSubmit={handleSubmit(onSubmit, scrollToFirstError)} className="space-y-4">
+      {/* ── Card Details (full width) ───────────────────────────── */}
+      <fieldset className="border border-border rounded-md p-4 space-y-4">
+        <legend className="text-xs font-bold uppercase tracking-wider px-1.5">Card Details</legend>
 
         {/* Issuer */}
         <div className="space-y-1.5">
@@ -238,7 +262,7 @@ export function CardForm({ initialValues }: CardFormProps) {
 
         {/* Card name */}
         <div className="space-y-1.5">
-          <Label htmlFor="cardName">Card Name *</Label>
+          <Label htmlFor="cardName">Card name *</Label>
           <Input
             id="cardName"
             placeholder="e.g. Sapphire Preferred"
@@ -251,7 +275,7 @@ export function CardForm({ initialValues }: CardFormProps) {
 
         {/* Open date */}
         <div className="space-y-1.5">
-          <Label htmlFor="openDate">Open Date *</Label>
+          <Label htmlFor="openDate">Date opened *</Label>
           <Input id="openDate" type="date" {...register("openDate")} />
           {errors.openDate && (
             <p className="text-sm text-destructive">{errors.openDate.message}</p>
@@ -260,31 +284,41 @@ export function CardForm({ initialValues }: CardFormProps) {
 
         {/* Credit limit */}
         <div className="space-y-1.5">
-          <Label htmlFor="creditLimit">Credit Limit ($)</Label>
-          <Input
-            id="creditLimit"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="e.g. 5000"
-            {...register("creditLimit")}
-          />
+          <Label htmlFor="creditLimit">Credit limit</Label>
+          <Select
+            {...(defaultValues.creditLimit ? { defaultValue: defaultValues.creditLimit } : {})}
+            onValueChange={(v) => setValue("creditLimit", v)}
+          >
+            <SelectTrigger id="creditLimit">
+              <SelectValue placeholder="Select limit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">Not set</SelectItem>
+              {Array.from({ length: 10 }, (_, i) => (i + 1) * 1000).map((v) => (
+                <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
+              ))}
+              {Array.from({ length: 18 }, (_, i) => 15000 + i * 5000).map((v) => (
+                <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errors.creditLimit && (
             <p className="text-sm text-destructive">
               {errors.creditLimit.message}
             </p>
           )}
         </div>
-      </section>
+      </fieldset>
 
-      {/* ── Annual Fee ─────────────────────────────────────────── */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Annual Fee</h2>
+      {/* ── Annual Fee + Sign-up Bonus (side by side) ─────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Annual fee amount */}
+        {/* Annual Fee */}
+        <fieldset className="border border-border rounded-md p-4 space-y-4">
+          <legend className="text-xs font-bold uppercase tracking-wider px-1.5">Annual Fee</legend>
+
           <div className="space-y-1.5">
-            <Label htmlFor="annualFee">Annual Fee Amount ($)</Label>
+            <Label htmlFor="annualFee">Annual fee</Label>
             <Input
               id="annualFee"
               type="number"
@@ -300,135 +334,106 @@ export function CardForm({ initialValues }: CardFormProps) {
             )}
           </div>
 
-          {/* Annual fee date */}
           <div className="space-y-1.5">
-            <Label htmlFor="annualFeeDate">Next Fee Due Date</Label>
+            <Label htmlFor="annualFeeDate">Annual fee date</Label>
             <Input id="annualFeeDate" type="date" {...register("annualFeeDate")} />
           </div>
-        </div>
+        </fieldset>
 
-        {/* Promo period */}
-        <div className="space-y-1.5">
-          <Label htmlFor="promoPeriodMonths">Promo Period (months)</Label>
-          <Input
-            id="promoPeriodMonths"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="e.g. 12"
-            {...register("promoPeriodMonths")}
-          />
-        </div>
-      </section>
+        {/* Sign-up Bonus */}
+        <fieldset className="border border-border rounded-md p-4 space-y-4">
+          <legend className="text-xs font-bold uppercase tracking-wider px-1.5">Sign-up Bonus</legend>
 
-      {/* ── Sign-Up Bonus ──────────────────────────────────────── */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="hasSignUpBonus"
-            checked={hasSignUpBonus}
-            onCheckedChange={(checked) =>
-              setValue("hasSignUpBonus", checked === true)
-            }
-          />
-          <Label htmlFor="hasSignUpBonus" className="cursor-pointer">
-            This card has a sign-up bonus
-          </Label>
-        </div>
-
-        {hasSignUpBonus && (
-          <div className="pl-6 space-y-4 border-l-2 border-muted">
-            {/* Bonus type */}
-            <div className="space-y-1.5">
-              <Label htmlFor="bonusType">Bonus Type *</Label>
-              <Select
-                {...(defaultValues.bonusType !== undefined && { defaultValue: defaultValues.bonusType })}
-                onValueChange={(v) =>
-                  setValue(
-                    "bonusType",
-                    v as "points" | "miles" | "cashback"
-                  )
-                }
-              >
-                <SelectTrigger id="bonusType">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="points">Points</SelectItem>
-                  <SelectItem value="miles">Miles</SelectItem>
-                  <SelectItem value="cashback">Cashback ($)</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.bonusType && (
-                <p className="text-sm text-destructive">
-                  {errors.bonusType.message}
-                </p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Bonus amount */}
-              <div className="space-y-1.5">
-                <Label htmlFor="bonusAmount">Bonus Amount</Label>
-                <Input
-                  id="bonusAmount"
-                  type="number"
-                  min="0"
-                  step="1"
-                  placeholder="e.g. 60000"
-                  {...register("bonusAmount")}
-                />
-              </div>
-
-              {/* Spend requirement */}
-              <div className="space-y-1.5">
-                <Label htmlFor="bonusSpendRequirement">
-                  Spend Requirement ($)
-                </Label>
-                <Input
-                  id="bonusSpendRequirement"
-                  type="number"
-                  min="0"
-                  step="1"
-                  placeholder="e.g. 4000"
-                  {...register("bonusSpendRequirement")}
-                />
-              </div>
-            </div>
-
-            {/* Deadline */}
-            <div className="space-y-1.5">
-              <Label htmlFor="bonusDeadline">Spend Deadline *</Label>
-              <Input
-                id="bonusDeadline"
-                type="date"
-                {...register("bonusDeadline")}
-              />
-            </div>
-
-            {/* Bonus met */}
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="bonusMet"
-                checked={watch("bonusMet")}
-                onCheckedChange={(checked) =>
-                  setValue("bonusMet", checked === true)
-                }
-              />
-              <Label htmlFor="bonusMet" className="cursor-pointer">
-                Spend requirement has been met
-              </Label>
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="bonusType">Bonus type</Label>
+            <Select
+              {...(defaultValues.bonusType !== undefined && { defaultValue: defaultValues.bonusType })}
+              onValueChange={(v) =>
+                setValue("bonusType", v as "points" | "miles" | "cashback")
+              }
+            >
+              <SelectTrigger id="bonusType">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="points">Points</SelectItem>
+                <SelectItem value="miles">Miles</SelectItem>
+                <SelectItem value="cashback">Cashback ($)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        )}
-      </section>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="bonusAmount">Bonus amount</Label>
+            <Input
+              id="bonusAmount"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="e.g. 60000"
+              {...register("bonusAmount")}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="bonusSpendRequirement">Minimum spend</Label>
+            <Select
+              {...(defaultValues.bonusSpendRequirement
+                ? { defaultValue: defaultValues.bonusSpendRequirement }
+                : {})}
+              onValueChange={(v) => setValue("bonusSpendRequirement", v)}
+            >
+              <SelectTrigger id="bonusSpendRequirement">
+                <SelectValue placeholder="Select amount" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="100">$100</SelectItem>
+                <SelectItem value="500">$500</SelectItem>
+                <SelectItem value="1000">$1,000</SelectItem>
+                <SelectItem value="2000">$2,000</SelectItem>
+                <SelectItem value="3000">$3,000</SelectItem>
+                <SelectItem value="4000">$4,000</SelectItem>
+                <SelectItem value="5000">$5,000</SelectItem>
+                <SelectItem value="6000">$6,000</SelectItem>
+                <SelectItem value="7000">$7,000</SelectItem>
+                <SelectItem value="8000">$8,000</SelectItem>
+                <SelectItem value="9000">$9,000</SelectItem>
+                <SelectItem value="10000">$10,000</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="bonusDeadline">Bonus deadline</Label>
+            <Input
+              id="bonusDeadline"
+              type="date"
+              {...register("bonusDeadline")}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="bonusMet"
+              checked={watch("bonusMet")}
+              onCheckedChange={(checked) =>
+                setValue("bonusMet", checked === true)
+              }
+            />
+            <Label htmlFor="bonusMet" className="cursor-pointer">
+              Minimum spend met
+            </Label>
+          </div>
+        </fieldset>
+
+      </div>
 
       {/* ── Status (edit mode only) ────────────────────────────── */}
       {isEditMode && (
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold">Status</h2>
+        <fieldset className="border border-border rounded-md p-4 space-y-4">
+          <legend className="text-xs font-bold uppercase tracking-wider px-1.5">Status</legend>
           <div className="space-y-1.5">
-            <Label htmlFor="status">Card Status</Label>
+            <Label htmlFor="status">Card status</Label>
             <Select
               {...(defaultValues.status !== undefined && { defaultValue: defaultValues.status })}
               onValueChange={(v) =>
@@ -453,19 +458,19 @@ export function CardForm({ initialValues }: CardFormProps) {
               manually mark this card as closed.
             </p>
           </div>
-        </section>
+        </fieldset>
       )}
 
-      {/* ── Notes ─────────────────────────────────────────────── */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Notes</h2>
+      {/* ── Notes (full width) ─────────────────────────────────── */}
+      <fieldset className="border border-border rounded-md p-4 space-y-4">
+        <legend className="text-xs font-bold uppercase tracking-wider px-1.5">Notes</legend>
         <Textarea
           id="notes"
           placeholder="Any notes about this card..."
           rows={3}
           {...register("notes")}
         />
-      </section>
+      </fieldset>
 
       {/* ── Actions ───────────────────────────────────────────── */}
       <div className="flex items-center justify-between pt-2">
