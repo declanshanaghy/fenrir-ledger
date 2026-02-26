@@ -40,7 +40,7 @@ Do not proceed past this step unless `convert --version` succeeds.
 If the user specified a format (e.g. "generate as WEBP", "PNG please"), use that value,
 uppercased, as `{{FORMAT}}`. If no format was specified, default to `PNG`.
 
-Supported values: `PNG`, `WEBP`, `JPEG`, `AVIF`.
+Supported values: `PNG`, `WEBP`, `JPEG`, `GIF`.
 
 ### Egg Number (1–6)
 
@@ -129,26 +129,23 @@ Thin radial guide lines from beak tip to each droplet, opacity 0.08.
 
 ## Step 5 — Convert SVG to {{FORMAT}}
 
+Use the bundled conversion script. The script handles all format-specific ImageMagick flags
+and validates its own inputs. `{{FORMAT_LOWER}}` is `{{FORMAT}}` lowercased (e.g. `png`, `webp`).
+
 ```bash
-convert \
-  -background "#07070d" \
-  -flatten \
+bash .claude/skills/easter-egg-modal/scripts/convert-svg.sh \
   ./tmp/gleipnir-{{N}}.svg \
-  ./development/src/public/easter-eggs/gleipnir-{{N}}.{{FORMAT_LOWER}}
+  ./development/src/public/easter-eggs/gleipnir-{{N}}.{{FORMAT_LOWER}} \
+  {{FORMAT}}
 ```
 
-Where `{{FORMAT_LOWER}}` is `{{FORMAT}}` lowercased (e.g. `png`, `webp`).
-
-The `-background` + `-flatten` flags ensure the SVG transparent canvas composites correctly
-against the void background color.
-
-Verify the output file exists and is non-zero bytes:
-
-```bash
-ls -lh ./development/src/public/easter-eggs/gleipnir-{{N}}.{{FORMAT_LOWER}}
-```
-
-If the file is missing or zero bytes, report the ImageMagick error and stop.
+The script:
+- Validates `{{FORMAT}}` is one of `PNG`, `WEBP`, `JPEG`, `GIF` (exits 2 if unsupported)
+- Applies void background `#07070d` and flattens transparency for all formats
+- Adds `-quality 90` for WEBP and JPEG
+- Adds `-colors 256 -dither Riemersma` for GIF palette reduction
+- Creates the output directory if it does not exist
+- Exits non-zero with a descriptive message on any failure — do not proceed if it fails
 
 ---
 
