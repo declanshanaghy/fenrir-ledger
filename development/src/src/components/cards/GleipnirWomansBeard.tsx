@@ -1,0 +1,177 @@
+"use client";
+
+/**
+ * GleipnirWomansBeard — Gleipnir Fragment 2 of 6
+ *
+ * Shown when the user discovers: "The Beard of a Woman"
+ * One of the six impossible things woven into Gleipnir — the ribbon that bound Fenrir.
+ *
+ * Trigger:  See design/easter-eggs.md #1 — The Gleipnir Hunt
+ * Storage:  localStorage key "egg:gleipnir-2"
+ * Image:    /easter-eggs/gleipnir-2.svg
+ * z-index:  9653 (W-O-L-F on a phone keypad)
+ */
+
+import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
+const STORAGE_KEY = "egg:gleipnir-2";
+const FRAGMENT_NUMBER = 2;
+const TOTAL_FRAGMENTS = 6;
+
+interface GleipnirWomansBeardProps {
+  /** Control open state externally (e.g. from the trigger site). */
+  open: boolean;
+  onClose: () => void;
+}
+
+export function GleipnirWomansBeard({ open, onClose }: GleipnirWomansBeardProps) {
+  const [found, setFound] = useState(0);
+
+  useEffect(() => {
+    if (open) {
+      // Mark this fragment found
+      localStorage.setItem(STORAGE_KEY, "1");
+
+      // Count total found
+      const count = Array.from({ length: TOTAL_FRAGMENTS }, (_, i) =>
+        localStorage.getItem(`egg:gleipnir-${i + 1}`)
+      ).filter(Boolean).length;
+      setFound(count);
+    }
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      {/*
+       * Overrides: w-[92vw] max-w-[680px] override Dialog defaults.
+       * p-0 gap-0 override p-6 gap-4.
+       * z-index 9653 = W-O-L-F on a phone keypad (see copywriting.md Magic Numbers).
+       */}
+      <DialogContent
+        className="w-[92vw] max-w-[680px] p-0 gap-0 flex flex-col
+                   bg-[#0f1018] border border-[#2a2d45]
+                   [&>button]:text-[#8a8578] [&>button]:hover:text-[#e8e4d4]"
+        style={{ zIndex: 9653 }}
+      >
+        {/* ── Header ──────────────────────────────────────────────────── */}
+        {/* pr-10 clears the built-in X button */}
+        <div className="px-6 pt-5 pb-4 pr-10 text-center border-b border-[#1e2235]">
+          <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-[#c9920a] mb-2">
+            <span aria-hidden="true">ᚠ ᛖ ᚾ ᚱ</span>
+            {" · "}Easter Egg Discovered{" · "}
+            <span aria-hidden="true">ᛁ ᚱ ᛊ</span>
+          </p>
+
+          <DialogTitle className="font-display text-[clamp(1.1rem,3.5vw,1.6rem)] font-bold text-[#f0b429] leading-tight">
+            The Beard of a Woman
+          </DialogTitle>
+        </div>
+
+        {/* Accessible description */}
+        <DialogDescription className="sr-only">
+          You have found Gleipnir fragment 2 of 6: The Beard of a Woman.
+          One of the six impossible things woven into the ribbon that bound the great wolf.
+        </DialogDescription>
+
+        {/* ── Two-column body ─────────────────────────────────────────── */}
+        {/*
+         * Desktop: image left | divider | text right
+         * Mobile:  stacked (image top, text bottom)
+         */}
+        <div className="flex flex-col md:grid md:grid-cols-[1fr_1px_1fr] bg-[#13151f]">
+
+          {/* Left — artifact image (SVG served from /public/easter-eggs/) */}
+          <div className="flex items-center justify-center p-6 md:p-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/easter-eggs/gleipnir-2.svg"
+              alt="The Beard of a Woman — Gleipnir artifact"
+              className="w-full max-w-[200px] md:max-w-[240px] aspect-square object-contain"
+            />
+          </div>
+
+          {/* Vertical divider — desktop only */}
+          <div
+            className="hidden md:block"
+            style={{
+              background:
+                "linear-gradient(to bottom, transparent, #2a2d45 20%, #2a2d45 80%, transparent)",
+            }}
+            aria-hidden="true"
+          />
+
+          {/* Right — discovery text */}
+          <div className="flex flex-col justify-center gap-3 px-6 py-6 md:px-8">
+            <p className="font-body text-sm text-[#e8e4d4] leading-relaxed">
+              One of the six impossible things woven into{" "}
+              <span className="text-[#f0b429] italic">Gleipnir</span> — the only
+              chain strong enough to bind the great wolf. Though it looks like silk
+              ribbon, no chain is stronger.
+            </p>
+
+            <p className="font-body text-xs italic text-[#8a8578] leading-relaxed">
+              &ldquo;The dwarves of Svartálfaheimr gathered six things that do not
+              exist. From these they wove Gleipnir. When Fenrir felt its touch, he
+              knew at last what true binding was.&rdquo;
+            </p>
+
+            <div className="border-t border-[#1e2235] pt-3 mt-1">
+              <p className="font-mono text-[0.7rem] text-[#c9920a]">
+                Fragment {FRAGMENT_NUMBER} of {TOTAL_FRAGMENTS} found
+              </p>
+              {found === TOTAL_FRAGMENTS && (
+                <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">
+                  ✦ Gleipnir is complete. The wolf stirs.
+                </p>
+              )}
+            </div>
+          </div>
+
+        </div>
+
+        {/* ── Footer ──────────────────────────────────────────────────── */}
+        <div className="flex justify-center px-6 py-4 border-t border-[#1e2235]">
+          <DialogClose asChild>
+            <Button
+              className="px-10 font-heading text-sm font-semibold tracking-widest uppercase
+                         bg-[#c9920a] text-[#07070d] hover:bg-[#f0b429]
+                         rounded-none min-h-[44px]"
+            >
+              OK
+            </Button>
+          </DialogClose>
+        </div>
+
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Hook — wire this at the trigger site.
+ *
+ * Usage:
+ *   const { open, trigger, dismiss } = useGleipnirFragment2();
+ *   // Call trigger() when the hidden ingredient text is discovered.
+ *   // Render: <GleipnirWomansBeard open={open} onClose={dismiss} />
+ */
+export function useGleipnirFragment2() {
+  const [open, setOpen] = useState(false);
+
+  function trigger() {
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      localStorage.setItem(STORAGE_KEY, "1");
+      setOpen(true);
+    }
+  }
+
+  return { open, trigger, dismiss: () => setOpen(false) };
+}

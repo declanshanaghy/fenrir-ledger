@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>The Beard of a Woman</title>
+  <desc>They told me: this does not exist. I laughed. A wolf does not fear what does not exist. Then I felt it — impossibly fine, impossibly strong. Woven from absence. The beard of a woman. The most impossible thing is the thing that is there when it should not be.</desc>
+
+  <defs>
+    <!-- Gradients in user-space so all strands share the same vertical gold cycle -->
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#c9920a"/>
+      <stop offset="25%"  stop-color="#f0b429"/>
+      <stop offset="50%"  stop-color="#c9920a"/>
+      <stop offset="75%"  stop-color="#f0b429"/>
+      <stop offset="100%" stop-color="#c9920a"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#f0b429"/>
+      <stop offset="25%"  stop-color="#c9920a"/>
+      <stop offset="50%"  stop-color="#f0b429"/>
+      <stop offset="75%"  stop-color="#c9920a"/>
+      <stop offset="100%" stop-color="#f0b429"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#c9920a"/>
+      <stop offset="33%"  stop-color="#f0b429"/>
+      <stop offset="66%"  stop-color="#c9920a"/>
+      <stop offset="100%" stop-color="#f0b429"/>
+    </linearGradient>
+
+    <!-- Soft glow for diamonds -->
+    <filter id="diamond-glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Hair-thin glow halo behind each strand -->
+    <filter id="strand-glow" x="-20%" y="-2%" width="140%" height="104%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- ── Background void ──────────────────────────────────────────────── -->
+  <rect width="1024" height="1024" fill="#07070d"/>
+
+  <!-- ── Outer ring ────────────────────────────────────────────────────── -->
+  <circle cx="512" cy="512" r="440" fill="none" stroke="#c9920a" stroke-width="1" opacity="0.18"/>
+
+  <!--
+    Three-strand braid topology (right-hand braid):
+    Lane positions: L=220  C=512  R=804
+    Crossing y-intervals: 204px  (crossings at y=204,408,612,816,1024-ends)
+
+    y=0:    Strand A @ L(220)   Strand B @ C(512)   Strand C @ R(804)
+    y=204:  B↔C cross → A @ L   C @ C   B @ R
+    y=408:  A↔C cross → C @ L   A @ C   B @ R
+    y=612:  A↔B cross → C @ L   B @ C   A @ R
+    y=816:  B↔C cross → B @ L   C @ C   A @ R
+    y=1024: A↔C cross → B @ L   A @ C   C @ R
+
+    Strand A path: (220,0)→(220,204)→(512,408)→(804,612)→(804,816)→(512,1024)
+    Strand B path: (512,0)→(804,204)→(804,408)→(512,612)→(220,816)→(220,1024)
+    Strand C path: (804,0)→(512,204)→(220,408)→(220,612)→(512,816)→(804,1024)
+
+    Crossing midpoints (= knotwork diamond centres):
+      seg1: B↔C at (658, 102)
+      seg2: A↔C at (366, 306)
+      seg3: A↔B at (658, 510)
+      seg4: B↔C at (366, 714)
+      seg5: A↔C at (658, 920)
+  -->
+
+  <!-- ── Strand glow halos (drawn first, behind everything) ────────────── -->
+  <path d="M 220,0 L 220,204 C 220,306 512,306 512,408 C 512,510 804,510 804,612 L 804,816 C 804,920 512,920 512,1024"
+        fill="none" stroke="#c9920a" stroke-width="18" stroke-linecap="round"
+        opacity="0.07" filter="url(#strand-glow)"/>
+  <path d="M 512,0 C 512,102 804,102 804,204 L 804,408 C 804,510 512,510 512,612 C 512,714 220,714 220,816 L 220,1024"
+        fill="none" stroke="#f0b429" stroke-width="18" stroke-linecap="round"
+        opacity="0.07" filter="url(#strand-glow)"/>
+  <path d="M 804,0 C 804,102 512,102 512,204 C 512,306 220,306 220,408 L 220,612 C 220,714 512,714 512,816 C 512,920 804,920 804,1024"
+        fill="none" stroke="#c9920a" stroke-width="18" stroke-linecap="round"
+        opacity="0.07" filter="url(#strand-glow)"/>
+
+  <!-- ── Strand B (drawn first — appears under C at seg1/seg4 crossings) ── -->
+  <path d="M 512,0 C 512,102 804,102 804,204 L 804,408 C 804,510 512,510 512,612 C 512,714 220,714 220,816 L 220,1024"
+        fill="none" stroke="url(#g2)" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- ── Strand A (drawn second) ──────────────────────────────────────── -->
+  <path d="M 220,0 L 220,204 C 220,306 512,306 512,408 C 512,510 804,510 804,612 L 804,816 C 804,920 512,920 512,1024"
+        fill="none" stroke="url(#g1)" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- ── Strand C (drawn last — on top at its crossing segments) ─────── -->
+  <path d="M 804,0 C 804,102 512,102 512,204 C 512,306 220,306 220,408 L 220,612 C 220,714 512,714 512,816 C 512,920 804,920 804,1024"
+        fill="none" stroke="url(#g3)" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- ── Norse knotwork diamonds at each crossing ──────────────────────── -->
+  <!-- Segment 1 (658,102) — B↔C -->
+  <polygon points="658,88 674,102 658,116 642,102"
+           fill="#f0b429" opacity="0.95" filter="url(#diamond-glow)"/>
+  <polygon points="658,94 668,102 658,110 648,102"
+           fill="#07070d" opacity="0.6"/>
+  <polygon points="658,88 674,102 658,116 642,102"
+           fill="none" stroke="#f0b429" stroke-width="1" opacity="0.9"/>
+
+  <!-- Segment 2 (366,306) — A↔C -->
+  <polygon points="366,292 382,306 366,320 350,306"
+           fill="#f0b429" opacity="0.95" filter="url(#diamond-glow)"/>
+  <polygon points="366,298 376,306 366,314 356,306"
+           fill="#07070d" opacity="0.6"/>
+  <polygon points="366,292 382,306 366,320 350,306"
+           fill="none" stroke="#f0b429" stroke-width="1" opacity="0.9"/>
+
+  <!-- Segment 3 (658,510) — A↔B -->
+  <polygon points="658,496 674,510 658,524 642,510"
+           fill="#f0b429" opacity="0.95" filter="url(#diamond-glow)"/>
+  <polygon points="658,502 668,510 658,518 648,510"
+           fill="#07070d" opacity="0.6"/>
+  <polygon points="658,496 674,510 658,524 642,510"
+           fill="none" stroke="#f0b429" stroke-width="1" opacity="0.9"/>
+
+  <!-- Segment 4 (366,714) — B↔C -->
+  <polygon points="366,700 382,714 366,728 350,714"
+           fill="#f0b429" opacity="0.95" filter="url(#diamond-glow)"/>
+  <polygon points="366,706 376,714 366,722 356,714"
+           fill="#07070d" opacity="0.6"/>
+  <polygon points="366,700 382,714 366,728 350,714"
+           fill="none" stroke="#f0b429" stroke-width="1" opacity="0.9"/>
+
+  <!-- Segment 5 (658,920) — A↔C -->
+  <polygon points="658,906 674,920 658,934 642,920"
+           fill="#f0b429" opacity="0.95" filter="url(#diamond-glow)"/>
+  <polygon points="658,912 668,920 658,928 648,920"
+           fill="#07070d" opacity="0.6"/>
+  <polygon points="658,906 674,920 658,934 642,920"
+           fill="none" stroke="#f0b429" stroke-width="1" opacity="0.9"/>
+
+  <!-- ── Rune watermark — bottom-left, persistent signature ──────────── -->
+  <text x="32" y="988" font-size="80" fill="#c9920a" opacity="0.22"
+        font-family="serif" aria-hidden="true">ᛒ</text>
+
+</svg>
