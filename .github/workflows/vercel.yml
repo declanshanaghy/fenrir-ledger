@@ -27,6 +27,11 @@ jobs:
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
+      - name: Copy static site into Next.js public/static/
+        run: |
+          mkdir -p development/src/public/static
+          cp -r static/. development/src/public/static/
+
       - name: Build
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
