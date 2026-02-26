@@ -1,7 +1,6 @@
 ---
 name: easter-egg-modal
 description: This skill should be used when the user asks to "generate an easter egg modal", "create a Gleipnir fragment modal", "build easter egg component", "make an easter egg screen", or provides an egg number (1–6) referring to the six Gleipnir ingredients. Generates a TSX modal component with an inline SVG artifact image for the specified Fenrir Ledger easter egg. No external tools required.
-version: 2.0.0
 ---
 
 # Easter Egg Modal Generator — Fenrir Ledger
