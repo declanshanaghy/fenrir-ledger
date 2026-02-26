@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { TopBar } from "./TopBar";
 import { SideNav } from "./SideNav";
+import { SyncIndicator } from "./SyncIndicator";
 
 const STORAGE_KEY = "fenrir:sidenav-collapsed";
 
@@ -55,6 +56,7 @@ export function AppShell({ children }: AppShellProps) {
         <SideNav collapsed={collapsed} onToggle={handleToggle} />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
+      <SyncIndicator />
     </div>
   );
 }

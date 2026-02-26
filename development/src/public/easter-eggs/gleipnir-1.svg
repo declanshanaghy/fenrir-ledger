@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>The Sound of a Cat's Footfall</title>
+  <desc>I have hunted every creature that breathes. I know the sound of hooves on frost, of ravens lifting from the dead. But the cat — the cat makes no sound at all. They took that silence and wove it into the chain. I did not hear it coming. I still do not.</desc>
+
+  <defs>
+    <!-- Soft glow behind the paw pads — gold warmth bleeding into void -->
+    <filter id="pad-glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Even softer halo for the outermost glow ring -->
+    <filter id="halo" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- ── Void background ──────────────────────────────────────────────── -->
+  <rect width="1024" height="1024" fill="#07070d"/>
+
+  <!-- ── Outer ring ────────────────────────────────────────────────────── -->
+  <circle cx="512" cy="512" r="440" fill="none" stroke="#c9920a" stroke-width="1" opacity="0.18"/>
+
+  <!--
+    Silence ripples: 5 concentric arcs radiating from paw centre (512, 488).
+    Represent the absence of sound expanding outward — heard by no one.
+    Opacity: 0.18 → 0.13 → 0.09 → 0.06 → 0.04
+  -->
+  <circle cx="512" cy="488" r="105" fill="none" stroke="#c9920a" stroke-width="1"   opacity="0.18"/>
+  <circle cx="512" cy="488" r="168" fill="none" stroke="#c9920a" stroke-width="0.8" opacity="0.13"/>
+  <circle cx="512" cy="488" r="231" fill="none" stroke="#c9920a" stroke-width="0.8" opacity="0.09"/>
+  <circle cx="512" cy="488" r="294" fill="none" stroke="#c9920a" stroke-width="0.6" opacity="0.06"/>
+  <circle cx="512" cy="488" r="357" fill="none" stroke="#c9920a" stroke-width="0.6" opacity="0.04"/>
+
+  <!--
+    Ground line — dashed, at y=570, spanning full width.
+    The ground that was not disturbed. The wolf heard nothing.
+  -->
+  <line x1="0" y1="570" x2="1024" y2="570"
+        stroke="#1e2235" stroke-width="1"
+        stroke-dasharray="10 16" opacity="0.55"/>
+
+  <!--
+    Paw print centred at (512, 488).
+    Anatomy:
+      Heel pad   — large, centred at (512, 516), rx=64 ry=56
+      Toe beans  — four ovals arcing above the heel:
+        Left outer  (426, 416) rx=30 ry=26
+        Left inner  (480, 394) rx=30 ry=26
+        Right inner (546, 394) rx=30 ry=26
+        Right outer (600, 416) rx=30 ry=26
+  -->
+
+  <!-- Glow halos — drawn first so pads sit on top -->
+  <ellipse cx="512" cy="516" rx="80" ry="70"  fill="#c9920a" opacity="0.10" filter="url(#halo)"/>
+  <ellipse cx="426" cy="416" rx="38" ry="34"  fill="#c9920a" opacity="0.10" filter="url(#pad-glow)"/>
+  <ellipse cx="480" cy="394" rx="38" ry="34"  fill="#c9920a" opacity="0.10" filter="url(#pad-glow)"/>
+  <ellipse cx="546" cy="394" rx="38" ry="34"  fill="#c9920a" opacity="0.10" filter="url(#pad-glow)"/>
+  <ellipse cx="600" cy="416" rx="38" ry="34"  fill="#c9920a" opacity="0.10" filter="url(#pad-glow)"/>
+
+  <!-- Solid pads — toe beans -->
+  <ellipse cx="426" cy="416" rx="30" ry="26" fill="#c9920a"/>
+  <ellipse cx="480" cy="394" rx="30" ry="26" fill="#c9920a"/>
+  <ellipse cx="546" cy="394" rx="30" ry="26" fill="#c9920a"/>
+  <ellipse cx="600" cy="416" rx="30" ry="26" fill="#c9920a"/>
+
+  <!-- Solid pad — heel -->
+  <ellipse cx="512" cy="516" rx="64" ry="56" fill="#c9920a"/>
+
+  <!-- Inner highlight on heel — slight catch-light, gold-bright -->
+  <ellipse cx="498" cy="502" rx="22" ry="18" fill="#f0b429" opacity="0.30"/>
+
+  <!-- Inner highlights on toe beans -->
+  <ellipse cx="421" cy="411" rx="9" ry="8" fill="#f0b429" opacity="0.28"/>
+  <ellipse cx="475" cy="389" rx="9" ry="8" fill="#f0b429" opacity="0.28"/>
+  <ellipse cx="541" cy="389" rx="9" ry="8" fill="#f0b429" opacity="0.28"/>
+  <ellipse cx="595" cy="411" rx="9" ry="8" fill="#f0b429" opacity="0.28"/>
+
+  <!-- ── Rune watermark — bottom-left, persistent signature ──────────── -->
+  <text x="32" y="988" font-size="80" fill="#c9920a" opacity="0.22"
+        font-family="serif" aria-hidden="true">ᚲ</text>
+
+</svg>

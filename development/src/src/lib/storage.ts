@@ -156,12 +156,15 @@ function getAllCards(): Card[] {
 /**
  * Writes the full cards array to localStorage.
  * Internal helper — use saveCard() or deleteCard() for individual operations.
+ *
+ * Dispatches "fenrir:sync" so the SyncIndicator pulses on every real write.
  */
 function setAllCards(cards: Card[]): void {
   if (!isBrowser()) return;
 
   try {
     localStorage.setItem(STORAGE_KEYS.CARDS, JSON.stringify(cards));
+    window.dispatchEvent(new CustomEvent("fenrir:sync"));
   } catch (err) {
     console.error("[FenrirLedger] Failed to save cards:", err);
     throw new Error("Failed to save cards. Storage may be full.");

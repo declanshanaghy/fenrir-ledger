@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ᚠ Session Chronicle: Cat's Footfall &amp; The Silent Sync · Fenrir Ledger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void:        #07070d;
+      --forge:       #0f1018;
+      --chain:       #13151f;
+      --rune-border: #1e2235;
+      --iron-border: #2a2d45;
+      --gold-dim:    #8a6a00;
+      --gold:        #c9920a;
+      --gold-bright: #f0b429;
+      --teal:        #0a8c6e;
+      --amber:       #f59e0b;
+      --fire:        #c94a0a;
+      --violet:      #a78bfa;
+      --text:        #e8e4d4;
+      --muted:       #8a8578;
+      --subtle:      #3d3d52;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Source Serif 4', serif;
+      font-size: 16px;
+      color: var(--text);
+      background-color: var(--void);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -5%, rgba(201,146,10,0.09) 0%, transparent 65%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      background-attachment: fixed;
+      min-height: 100vh;
+      line-height: 1.7;
+    }
+
+    .page { max-width: 880px; margin: 0 auto; padding: 0 28px 100px; }
+
+    /* ── Header ── */
+    .session-header {
+      text-align: center;
+      padding: 72px 0 52px;
+      border-bottom: 1px solid var(--rune-border);
+    }
+    .header-runes {
+      display: block;
+      font-size: 22px;
+      letter-spacing: 0.5em;
+      color: var(--gold);
+      opacity: 0.55;
+      margin-bottom: 20px;
+    }
+    .session-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.6rem, 5vw, 2.6rem);
+      font-weight: 700;
+      color: var(--gold-bright);
+      text-shadow: 0 0 48px rgba(201,146,10,0.35);
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+    .session-subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .session-meta {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px 28px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--subtle);
+    }
+    .session-meta .val { color: var(--gold); }
+
+    /* ── TOC ── */
+    .toc {
+      margin: 40px 0 0;
+      padding: 20px 24px;
+      background: var(--forge);
+      border: 1px solid var(--rune-border);
+      border-left: 3px solid var(--gold-dim);
+    }
+    .toc-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .toc-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 6px 24px;
+    }
+    .toc-list li a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toc-list li a:hover { color: var(--gold-bright); }
+    .toc-rune { color: var(--gold); opacity: 0.6; font-size: 0.9rem; }
+    .toc-num { color: var(--subtle); font-size: 0.65rem; }
+
+    /* ── Timeline ── */
+    .timeline {
+      position: relative;
+      padding-top: 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 23px;
+      top: 56px;
+      bottom: 60px;
+      width: 1px;
+      background: linear-gradient(to bottom,
+        var(--gold) 0%,
+        var(--iron-border) 60%,
+        transparent 100%);
+    }
+
+    /* ── Entry ── */
+    .entry { display: flex; gap: 24px; }
+
+    .entry-rune {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      background: var(--forge);
+      border: 1px solid var(--iron-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      position: relative;
+      z-index: 1;
+      cursor: default;
+    }
+    .entry-rune:hover { border-color: var(--gold); }
+
+    .entry-body { flex: 1; min-width: 0; }
+
+    .act-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--subtle);
+      margin-bottom: 4px;
+    }
+    .entry-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--gold-bright);
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
+
+    /* ── User message ── */
+    .user-msg {
+      background: var(--chain);
+      border: 1px solid var(--iron-border);
+      border-left: 3px solid var(--gold);
+      padding: 14px 18px;
+      margin-bottom: 14px;
+    }
+    .msg-role {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .role-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 9px;
+      border: 1px solid;
+    }
+    .badge-fireman { color: var(--amber);  border-color: #f59e0b55; background: rgba(245,158,11,0.07); }
+    .badge-system  { color: var(--fire);   border-color: #c94a0a55; background: rgba(201,74,10,0.07); }
+
+    .msg-text {
+      font-size: 0.9rem;
+      color: var(--text);
+      white-space: pre-wrap;
+      line-height: 1.65;
+    }
+
+    /* ── Work card ── */
+    .work-card {
+      background: var(--forge);
+      border: 1px solid var(--rune-border);
+      padding: 18px 20px;
+    }
+    .work-body {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+    .work-body p { margin-bottom: 8px; }
+    .work-body p:last-child { margin-bottom: 0; }
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; color: var(--muted); }
+    .hl   { color: var(--gold-bright); font-weight: 600; }
+
+    /* ── Change list ── */
+    .changes {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin: 12px 0;
+    }
+    .changes li {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+    }
+    .changes li::before { content: '→'; color: var(--gold); flex-shrink: 0; }
+    .old { text-decoration: line-through; color: var(--subtle); }
+    .new { color: var(--gold-bright); }
+
+    /* ── Code block ── */
+    .code-block {
+      background: #050508;
+      border: 1px solid var(--rune-border);
+      border-left: 2px solid var(--gold-dim);
+      padding: 14px 16px;
+      margin: 14px 0;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.77rem;
+      line-height: 1.65;
+      color: var(--text);
+    }
+    .ca { color: #6ee7b7; }
+    .cr { color: #fca5a5; opacity: 0.5; }
+    .cc { color: var(--subtle); }
+
+    /* ── File chips ── */
+    .file-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding-top: 14px;
+      border-top: 1px solid var(--rune-border);
+      margin-top: 16px;
+    }
+    .chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      padding: 3px 10px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .chip-mod  { color: var(--gold);   border-color: var(--gold-dim);    background: rgba(201,146,10,0.06); }
+    .chip-new  { color: var(--teal);   border-color: rgba(10,140,110,.4); background: rgba(10,140,110,0.06); }
+    .chip-mem  { color: var(--violet); border-color: rgba(167,139,250,.4);background: rgba(167,139,250,0.06); }
+
+    /* ── Norm callout ── */
+    .norm-box {
+      background: rgba(10,140,110,0.06);
+      border: 1px solid rgba(10,140,110,0.3);
+      border-left: 3px solid var(--teal);
+      padding: 14px 18px;
+      margin: 14px 0;
+    }
+    .norm-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--teal);
+      margin-bottom: 10px;
+    }
+    .norm-body {
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── Section divider ── */
+    .rune-hr {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0;
+    }
+    .rune-hr::before, .rune-hr::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--rune-border);
+    }
+    .rune-hr span {
+      font-size: 16px;
+      color: var(--gold);
+      opacity: 0.3;
+      letter-spacing: 0.4em;
+    }
+
+    /* ── Footer ── */
+    .session-footer {
+      margin-top: 72px;
+      padding-top: 40px;
+      border-top: 1px solid var(--rune-border);
+      text-align: center;
+    }
+    .footer-cipher {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      letter-spacing: 0.5em;
+      color: var(--gold);
+      opacity: 0.35;
+      margin-bottom: 14px;
+    }
+    .footer-text {
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      color: var(--subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      line-height: 2;
+    }
+    .footer-text .hl { color: var(--gold-dim); }
+
+    /* ── Back link ── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--subtle);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      margin-top: 52px;
+      margin-bottom: 0;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--gold); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <a class="back-link" href="index.html">← Session Archive</a>
+
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <header class="session-header">
+    <span class="header-runes" aria-hidden="true">ᚲ ᛊ ᚾ ᚠ ᛖ ᚾ ᚱ</span>
+    <h1 class="session-title">Cat's Footfall &amp; The Silent Sync</h1>
+    <p class="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+    <div class="session-meta">
+      <div>Date <span class="val">2026-02-26</span></div>
+      <div>Session <span class="val">cat-easter-egg</span></div>
+      <div>Acts <span class="val">IV</span></div>
+      <div>Files changed <span class="val">4</span></div>
+      <div>Model <span class="val">Claude Sonnet 4.6</span></div>
+    </div>
+  </header>
+
+  <!-- ── Table of Contents ─────────────────────────────────────────── -->
+  <nav class="toc" aria-label="Session acts">
+    <div class="toc-title">Chronicle of Acts</div>
+    <ul class="toc-list">
+      <li><a href="#act1"><span class="toc-rune">ᚲ</span><span class="toc-num">I</span> The Paw Print Is Forged</a></li>
+      <li><a href="#act2"><span class="toc-rune">ᚹ</span><span class="toc-num">II</span> The Hunt for the Indicator</a></li>
+      <li><a href="#act3"><span class="toc-rune">ᚦ</span><span class="toc-num">III</span> The False Sign Unmasked</a></li>
+      <li><a href="#act4"><span class="toc-rune">ᚾ</span><span class="toc-num">IV</span> The Silent Pulse Is Born</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Timeline ──────────────────────────────────────────────────── -->
+  <div class="timeline">
+
+    <!-- ── Act I ── -->
+    <section class="entry" id="act1">
+      <div class="entry-rune" title="The Paw Print Is Forged">ᚲ</div>
+      <div class="entry-body">
+        <p class="act-label">Act I · Easter Egg</p>
+        <h2 class="entry-title">The Paw Print Is Forged 🐾</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-system">Session Restore</span>
+          </div>
+          <p class="msg-text">Conversation compacted. Resuming from prior session — gleipnir-1.svg was already written. GleipnirWomansBeard.tsx, AboutModal.tsx, and gleipnir-2.svg were in prior context. Egg 1's TSX component still needed writing.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Picking up mid-flight from the previous session, FiremanDecko completed Gleipnir Fragment 1 by writing <span class="hl">GleipnirCatFootfall.tsx</span> — the modal component and hook that fires when the silence is broken. The SVG artifact (<span class="mono">gleipnir-1.svg</span>, 4.5 KB) was already in place; the TSX completes the pair.</p>
+            <p>The component follows the same fade-in/fade-out howl pattern as Fragment 2: <span class="mono">useGleipnirFragment1()</span> constructs <span class="mono">new Audio()</span> inside the user-gesture handler, fades to <span class="mono">0.25</span> volume over 500 ms, and fades out on dismiss over 600 ms — all without touching the Web Audio API.</p>
+          </div>
+
+          <div class="code-block">
+            <pre><span class="cc">// Fragment counter reads actual localStorage state — not hardcoded</span>
+<span class="ca">const count = Array.from({ length: TOTAL_FRAGMENTS }, (_, i) =></span>
+<span class="ca">  localStorage.getItem(`egg:gleipnir-${i + 1}`)</span>
+<span class="ca">).filter(Boolean).length;</span>
+<span class="ca">setFound(count);</span></pre>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-new">✦ src/components/cards/GleipnirCatFootfall.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᚲ ᛊ ᛁ</span></div>
+
+    <!-- ── Act II ── -->
+    <section class="entry" id="act2">
+      <div class="entry-rune" title="The Hunt for the Indicator">ᚹ</div>
+      <div class="entry-body">
+        <p class="act-label">Act II · Investigation</p>
+        <h2 class="entry-title">The Hunt for the Indicator</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">Inspec the main page and find the silent background sync indicator</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>The wolf searched every corner of the rendered app: <span class="mono">page.tsx</span>, <span class="mono">Dashboard.tsx</span>, <span class="mono">TopBar.tsx</span>, <span class="mono">AppShell.tsx</span>, <span class="mono">SideNav.tsx</span>. Nothing. The silent background sync indicator described in <span class="mono">design/easter-eggs.md</span> as a "tooltip on the silent background sync indicator (bottom-right corner)" does not exist in the codebase — it was a planned element that had never been built.</p>
+            <p>The easter-eggs design doc places Gleipnir Fragment 1's trigger there. The indicator must be created before the egg can be wired. The proposal: a tiny dim dot, fixed bottom-right, pulsing gold when syncing. <span class="mono">cursor-default</span> — no affordance. A tooltip reveals the fragment text on hover. A click triggers the egg.</p>
+          </div>
+
+          <div class="norm-box">
+            <p class="norm-label">Design Decision</p>
+            <p class="norm-body">Click (not hover) triggers the egg — browser autoplay policy requires <span class="mono">new Audio().play()</span> to be called inside a direct user-gesture handler. Same pattern as the Women's Beard button in the About modal.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᚦ ᚱ ᛁ</span></div>
+
+    <!-- ── Act III ── -->
+    <section class="entry" id="act3">
+      <div class="entry-rune" title="The False Sign Unmasked">ᚦ</div>
+      <div class="entry-body">
+        <p class="act-label">Act III · Investigation</p>
+        <h2 class="entry-title">The False Sign Unmasked</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">What is this element in the page? &lt;div role="status" class="nextjs-toast nextjs-static-indicator-toast-wrapper"&gt;...Static route...&lt;/div&gt;</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>The element is Next.js's built-in <span class="hl">Static Route Indicator</span> — a dev-mode overlay injected automatically by the framework showing whether the current route is statically or dynamically rendered. The lightning bolt is the Next.js logo. It appears only during <span class="mono">next dev</span> and is stripped in production builds.</p>
+            <p>FiremanDecko also corrected the wolf's assumption: this indicator appears bottom-<span class="hl">left</span>, not bottom-right. The bottom-right corner is clear. The real sync indicator can live there in production with no conflict.</p>
+          </div>
+
+          <div class="code-block">
+            <pre><span class="cc">// Disable Next.js dev indicator in next.config.ts if needed:</span>
+const nextConfig = {
+  devIndicators: {
+<span class="ca">    appIsrStatus: false,  // hides the Static/Dynamic indicator</span>
+  },
+};</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᚾ ᛊ ᛜ</span></div>
+
+    <!-- ── Act IV ── -->
+    <section class="entry" id="act4">
+      <div class="entry-rune" title="The Silent Pulse Is Born">ᚾ</div>
+      <div class="entry-body">
+        <p class="act-label">Act IV · New Feature</p>
+        <h2 class="entry-title">The Silent Pulse Is Born 🔊</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">FYI the nextJS Static Route Indicator is on the bottom left. Yes fire up FiremanDecko to build the silent background sync indicator. FAke some syncing activity so we can see how it animates. Define the interaction for the easter egg integration first. Any qustions?
+
+— [After the spec was presented] —
+
+fuckin do it ya mad yoke</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Three files touched in one pass. <span class="hl">SyncIndicator.tsx</span> is the new component — a fixed bottom-right dot that idles as near-invisible iron (<span class="mono">#2a2d45</span>) and pulses gold (<span class="mono">#c9920a</span>) with a <span class="mono">animate-ping</span> ring when syncing. A CSS group-hover tooltip (no Radix dep needed) floats above the dot on hover, revealing the fragment text in gold mono: <em>The sound of a cat's footfall</em>. Clicking the dot — <span class="mono">cursor-default</span>, no visible affordance — fires <span class="mono">useGleipnirFragment1()</span> if not yet discovered.</p>
+            <p>Sync pulses are real <em>and</em> fake. <span class="mono">storage.ts</span> now dispatches a <span class="mono">fenrir:sync</span> CustomEvent after every <span class="mono">setAllCards()</span> write. <span class="mono">SyncIndicator</span> listens for it — so saving or deleting a card triggers a genuine pulse. A <span class="mono">setInterval</span> at 45-second intervals provides the ambient fake cadence, and an immediate pulse fires on mount so the animation is visible from the first page load.</p>
+          </div>
+
+          <div class="code-block">
+            <pre><span class="cc">// storage.ts — real sync event on every card write</span>
+localStorage.setItem(STORAGE_KEYS.CARDS, JSON.stringify(cards));
+<span class="ca">window.dispatchEvent(new CustomEvent("fenrir:sync"));</span>
+
+<span class="cc">// SyncIndicator.tsx — listens for real + fires fake cadence</span>
+<span class="ca">useEffect(() => {</span>
+<span class="ca">  pulse(); // immediate on mount</span>
+<span class="ca">  const id = setInterval(pulse, 45_000);</span>
+<span class="ca">  window.addEventListener("fenrir:sync", pulse);</span>
+<span class="ca">  return () => { clearInterval(id); window.removeEventListener("fenrir:sync", pulse); };</span>
+<span class="ca">}, [pulse]);</span></pre>
+          </div>
+
+          <ul class="changes">
+            <li>Dot idle colour <span class="old">#1e2235 (rune-border)</span> → <span class="new">#2a2d45 (iron-border) — slightly more visible</span></li>
+            <li>Tooltip: CSS group-hover <span class="new">no Radix @radix-ui/react-tooltip dep required</span></li>
+            <li>Audio: triggered inside <span class="mono">onClick</span> handler <span class="new">browser autoplay policy satisfied</span></li>
+          </ul>
+
+          <div class="file-chips">
+            <span class="chip chip-new">✦ src/components/layout/SyncIndicator.tsx</span>
+            <span class="chip chip-mod">◈ src/lib/storage.ts</span>
+            <span class="chip chip-mod">◈ src/components/layout/AppShell.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /timeline -->
+
+  <!-- ── Footer ─────────────────────────────────────────────────────── -->
+  <footer class="session-footer">
+    <p class="footer-cipher">ᚲ ᛊ ᚾ ᛁ ᚠ ᛖ ᚾ ᚱ</p>
+    <p class="footer-text">
+      Cat's Footfall &amp; The Silent Sync · Fenrir Ledger Session Chronicle ·
+      <span class="hl">The wolf heard nothing. That was the point.</span>
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ᛟ Session Archive · Fenrir Ledger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void:        #07070d;
+      --forge:       #0f1018;
+      --chain:       #13151f;
+      --rune-border: #1e2235;
+      --iron-border: #2a2d45;
+      --gold-dim:    #8a6a00;
+      --gold:        #c9920a;
+      --gold-bright: #f0b429;
+      --teal:        #0a8c6e;
+      --amber:       #f59e0b;
+      --fire:        #c94a0a;
+      --violet:      #a78bfa;
+      --text:        #e8e4d4;
+      --muted:       #8a8578;
+      --subtle:      #3d3d52;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Source Serif 4', serif;
+      font-size: 16px;
+      color: var(--text);
+      background-color: var(--void);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -5%, rgba(201,146,10,0.09) 0%, transparent 65%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      background-attachment: fixed;
+      min-height: 100vh;
+      line-height: 1.7;
+    }
+
+    .page { max-width: 960px; margin: 0 auto; padding: 0 28px 100px; }
+
+    /* ── Header ── */
+    .session-header {
+      text-align: center;
+      padding: 72px 0 52px;
+      border-bottom: 1px solid var(--rune-border);
+    }
+    .header-runes {
+      display: block;
+      font-size: 22px;
+      letter-spacing: 0.5em;
+      color: var(--gold);
+      opacity: 0.55;
+      margin-bottom: 20px;
+    }
+    .session-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.6rem, 5vw, 2.6rem);
+      font-weight: 700;
+      color: var(--gold-bright);
+      text-shadow: 0 0 48px rgba(201,146,10,0.35);
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+    .session-subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .session-meta {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px 28px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--subtle);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Session grid ── */
+    .index-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      padding-top: 48px;
+    }
+
+    .session-card {
+      background: var(--forge);
+      border: 1px solid var(--iron-border);
+      padding: 22px 24px;
+      text-decoration: none;
+      display: block;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .session-card:hover {
+      border-color: var(--gold);
+      background: var(--chain);
+    }
+    .session-card:hover .card-rune { opacity: 0.85; }
+
+    .card-rune {
+      font-size: 30px;
+      color: var(--gold);
+      opacity: 0.4;
+      margin-bottom: 12px;
+      display: block;
+      transition: opacity 0.2s;
+      line-height: 1;
+    }
+    .card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--gold-bright);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+    .card-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem;
+      color: var(--subtle);
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+    }
+    .card-excerpt {
+      font-family: 'Source Serif 4', serif;
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-style: italic;
+      line-height: 1.6;
+    }
+    .card-arrow {
+      position: absolute;
+      bottom: 16px;
+      right: 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--gold);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .session-card:hover .card-arrow { opacity: 1; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      border: 1px dashed var(--rune-border);
+      color: var(--subtle);
+    }
+    .empty-rune {
+      font-size: 40px;
+      display: block;
+      margin-bottom: 16px;
+      color: var(--gold);
+      opacity: 0.2;
+    }
+    .empty-text {
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .empty-sub {
+      font-family: 'Source Serif 4', serif;
+      font-size: 0.82rem;
+      font-style: italic;
+      color: var(--subtle);
+      margin-top: 8px;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--subtle);
+      margin-top: 52px;
+      margin-bottom: 0;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--rune-border);
+    }
+
+    /* ── Footer ── */
+    .session-footer {
+      margin-top: 72px;
+      padding-top: 40px;
+      border-top: 1px solid var(--rune-border);
+      text-align: center;
+    }
+    .footer-cipher {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      letter-spacing: 0.5em;
+      color: var(--gold);
+      opacity: 0.35;
+      margin-bottom: 14px;
+    }
+    .footer-text {
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      color: var(--subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      line-height: 2;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <header class="session-header">
+    <span class="header-runes" aria-hidden="true">ᛟ ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ ᛊ ᛟ</span>
+    <h1 class="session-title">Session Archive</h1>
+    <p class="session-subtitle">Fenrir Ledger · Chronicle of the Pack</p>
+    <div class="session-meta">
+      <span>THE WOLF REMEMBERS EVERYTHING</span>
+    </div>
+  </header>
+
+  <!-- ── Chronicles ─────────────────────────────────────────────────── -->
+  <p class="section-label">Chronicles</p>
+
+  <div class="index-grid" id="sessions">
+
+    <!-- Sessions are prepended here by the export-wolf skill, newest first -->
+
+    <a class="session-card" href="cat-easter-egg.html">
+      <span class="card-rune">ᚲ</span>
+      <p class="card-title">Cat's Footfall &amp; The Silent Sync</p>
+      <p class="card-meta">2026-02-26 · IV acts · 4 files</p>
+      <p class="card-excerpt">Gleipnir Fragment 1 is completed and the silent background sync indicator forged — a pulsing gold dot that whispers the wolf's first secret to those curious enough to hover.</p>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <a class="session-card" href="wireframes-modals.html">
+      <span class="card-rune">ᚹ</span>
+      <p class="card-title">Wireframes &amp; Modals</p>
+      <p class="card-meta">2026-02-25 · VI acts · 6 files</p>
+      <p class="card-excerpt">The CardForm is forged: credit limit select, fieldset layout, scroll-to-error, and the About modal with its Gleipnir ingredient list.</p>
+      <span class="card-arrow">→</span>
+    </a>
+
+  </div>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────── -->
+  <footer class="session-footer">
+    <p class="footer-cipher">ᛟ ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ ᛊ ᛟ</p>
+    <p class="footer-text">Fenrir Ledger · Session Archive · The wolf remembers everything.</p>
+  </footer>
+
+</div>
+</body>
+</html>
