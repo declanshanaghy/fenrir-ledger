@@ -205,7 +205,7 @@ Use this template exactly, substituting all `{{...}}` placeholders:
  * z-index:  9653 (W-O-L-F on a phone keypad)
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -355,12 +355,42 @@ export function {{COMPONENT}}({ open, onClose }: {{COMPONENT}}Props) {
  *   // Call trigger() when the hidden ingredient text is discovered.
  *   // Render: <{{COMPONENT}} open={open} onClose={dismiss} />
  *
- * Audio: plays /sounds/fenrir-howl.mp3 at volume 0.25 on first discovery.
- * The Audio constructor is called inside trigger() — the direct user-gesture
- * handler — so browsers permit playback without an autoplay policy violation.
+ * Audio: plays /sounds/fenrir-howl.mp3 with fade-in on discovery and fade-out
+ * on dismiss. The Audio constructor is called inside trigger() — the direct
+ * user-gesture handler — so browsers permit playback without an autoplay
+ * policy violation.
  */
+
+const HOWL_TARGET_VOLUME = 0.25; // max volume during playback
+const FADE_STEP_MS = 40;         // interval between volume steps
+
+function fadeIn(audio: HTMLAudioElement) {
+  audio.volume = 0;
+  const step = HOWL_TARGET_VOLUME / (500 / FADE_STEP_MS); // reach target in ~500ms
+  const id = setInterval(() => {
+    const next = Math.min(audio.volume + step, HOWL_TARGET_VOLUME);
+    audio.volume = next;
+    if (next >= HOWL_TARGET_VOLUME) clearInterval(id);
+  }, FADE_STEP_MS);
+}
+
+function fadeOut(audio: HTMLAudioElement, onDone: () => void) {
+  const step = audio.volume / (600 / FADE_STEP_MS); // reach 0 in ~600ms
+  const id = setInterval(() => {
+    const next = Math.max(audio.volume - step, 0);
+    audio.volume = next;
+    if (next <= 0) {
+      clearInterval(id);
+      audio.pause();
+      audio.currentTime = 0;
+      onDone();
+    }
+  }, FADE_STEP_MS);
+}
+
 export function useGleipnirFragment{{N}}() {
   const [open, setOpen] = useState(false);
+  const howlRef = useRef<HTMLAudioElement | null>(null);
 
   function trigger() {
     if (!localStorage.getItem(STORAGE_KEY)) {
@@ -370,15 +400,26 @@ export function useGleipnirFragment{{N}}() {
       // Play within the user-gesture call stack so browsers allow it.
       try {
         const howl = new Audio("/sounds/fenrir-howl.mp3");
-        howl.volume = 0.25;
+        howl.volume = 0;
         howl.play().catch(() => {/* silently ignore if still blocked */});
+        fadeIn(howl);
+        howlRef.current = howl;
       } catch {
         // Audio API unavailable (SSR guard, headless env, etc.)
       }
     }
   }
 
-  return { open, trigger, dismiss: () => setOpen(false) };
+  function dismiss() {
+    const howl = howlRef.current;
+    if (howl) {
+      howlRef.current = null;
+      fadeOut(howl, () => {}); // fade then stop; setOpen runs immediately
+    }
+    setOpen(false);
+  }
+
+  return { open, trigger, dismiss };
 }
 ```
 
