@@ -90,16 +90,16 @@ export function CardForm({ initialValues }: CardFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Precompute today + derived defaults (used for new cards)
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = new Date().toISOString().split("T")[0] ?? "";
   const feeDateDefault = (() => {
     const d = new Date(todayStr + "T00:00:00");
     d.setFullYear(d.getFullYear() + 1);
-    return d.toISOString().split("T")[0];
+    return d.toISOString().split("T")[0] ?? "";
   })();
   const deadlineDefault = (() => {
     const d = new Date(todayStr + "T00:00:00");
     d.setMonth(d.getMonth() + 3);
-    return d.toISOString().split("T")[0];
+    return d.toISOString().split("T")[0] ?? "";
   })();
 
   // Map Card → form default values
@@ -107,11 +107,11 @@ export function CardForm({ initialValues }: CardFormProps) {
     ? {
         issuerId: initialValues.issuerId,
         cardName: initialValues.cardName,
-        openDate: initialValues.openDate,
+        openDate: initialValues.openDate ?? "",
         creditLimit: centsToDollars(initialValues.creditLimit),
         annualFee: centsToDollars(initialValues.annualFee),
         annualFeeDate: initialValues.annualFeeDate ?? "",
-        bonusType: initialValues.signUpBonus?.type ?? undefined,
+        ...(initialValues.signUpBonus ? { bonusType: initialValues.signUpBonus.type } : {}),
         bonusAmount: initialValues.signUpBonus
           ? centsToDollars(initialValues.signUpBonus.amount)
           : "",
@@ -157,11 +157,11 @@ export function CardForm({ initialValues }: CardFormProps) {
 
     const feeDate = new Date(base);
     feeDate.setFullYear(feeDate.getFullYear() + 1);
-    setValue("annualFeeDate", feeDate.toISOString().split("T")[0]);
+    setValue("annualFeeDate", feeDate.toISOString().split("T")[0] ?? "");
 
     const deadline = new Date(base);
     deadline.setMonth(deadline.getMonth() + 3);
-    setValue("bonusDeadline", deadline.toISOString().split("T")[0]);
+    setValue("bonusDeadline", deadline.toISOString().split("T")[0] ?? "");
   }, [openDate, setValue]);
 
   const onSubmit = (data: CardFormValues) => {
