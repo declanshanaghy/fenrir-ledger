@@ -10,7 +10,9 @@
 
 ---
 
-### [ᛟ Enter the Ledger →](https://fenrir-ledger.vercel.app) &nbsp;|&nbsp; [ᚱ Visit the Marketing Site →](https://declanshanaghy.github.io/fenrir-ledger/)
+### [ᛟ Enter the Ledger →](https://fenrir-ledger.vercel.app)
+### [ᚱ Visit the Marketing Site →](https://fenrir-ledger.vercel.app/static)
+### [ᛏ Session Chronicles →](https://fenrir-ledger.vercel.app/sessions)
 
 ---
 
