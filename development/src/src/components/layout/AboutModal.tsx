@@ -16,6 +16,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  GleipnirWomansBeard,
+  useGleipnirFragment2,
+} from "@/components/cards/GleipnirWomansBeard";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"] as const;
 
@@ -58,7 +62,14 @@ interface AboutModalProps {
 }
 
 export function AboutModal({ open, onOpenChange }: AboutModalProps) {
+  const {
+    open: beardOpen,
+    trigger: triggerBeard,
+    dismiss: dismissBeard,
+  } = useGleipnirFragment2();
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/*
        * Override DialogContent defaults via tailwind-merge:
@@ -149,9 +160,22 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
                   <span className="font-mono text-[10px] text-gold shrink-0 w-5 text-right">
                     {ROMAN[i]}
                   </span>
-                  <span className="font-body text-sm text-foreground leading-snug">
-                    {ingredient}
-                  </span>
+                  {i === 1 ? (
+                    /* Gleipnir fragment II — The Beard of a Woman.
+                     * Intentionally indistinguishable from the surrounding text.
+                     * cursor-default hides the affordance; the wolf rewards curiosity. */
+                    <button
+                      type="button"
+                      onClick={triggerBeard}
+                      className="font-body text-sm text-foreground leading-snug bg-transparent border-0 p-0 text-left cursor-default hover:text-gold transition-colors"
+                    >
+                      {ingredient}
+                    </button>
+                  ) : (
+                    <span className="font-body text-sm text-foreground leading-snug">
+                      {ingredient}
+                    </span>
+                  )}
                 </li>
               ))}
             </ol>
@@ -170,5 +194,10 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
 
       </DialogContent>
     </Dialog>
+
+    {/* Gleipnir fragment II — rendered outside the About Dialog to avoid
+        stacking context conflicts. Opens on top of the About modal (z-index 9653). */}
+    <GleipnirWomansBeard open={beardOpen} onClose={dismissBeard} />
+    </>
   );
 }
