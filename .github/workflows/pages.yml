@@ -1,10 +1,11 @@
-name: Deploy Marketing Site to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
       - 'static/**'
+      - 'sessions/**'
   workflow_dispatch:
 
 permissions:
@@ -29,10 +30,19 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Build combined artifact
+        run: |
+          mkdir -p _site
+          # Marketing site at root
+          cp -r static/. _site/
+          # Session archive at /sessions/
+          mkdir -p _site/sessions
+          cp -r sessions/. _site/sessions/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: static/
+          path: _site/
 
       - name: Deploy to GitHub Pages
         id: deployment
