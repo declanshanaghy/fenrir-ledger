@@ -1,5 +1,7 @@
 # ᛟ Fenrir Ledger
 
+[![Deploy to Vercel](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel.yml/badge.svg)](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel.yml)
+
 **Break free from fee traps. Harvest every reward. Let no chain hold.**
 
 > *In Norse mythology, Fenrir is the great wolf who shatters the chains the gods forged to bind him.*
