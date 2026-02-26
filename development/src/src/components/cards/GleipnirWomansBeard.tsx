@@ -169,6 +169,15 @@ export function useGleipnirFragment2() {
     if (!localStorage.getItem(STORAGE_KEY)) {
       localStorage.setItem(STORAGE_KEY, "1");
       setOpen(true);
+
+      // Play within the user-gesture call stack so browsers allow it.
+      try {
+        const howl = new Audio("/sounds/fenrir-howl.mp3");
+        howl.volume = 0.25;
+        howl.play().catch(() => {/* silently ignore if still blocked */});
+      } catch {
+        // Audio API unavailable (SSR guard, headless env, etc.)
+      }
     }
   }
 

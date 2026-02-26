@@ -40,11 +40,22 @@ Call these resolved values:
 
 ---
 
-## Step 2 — Prepare Directory
+## Step 2 — Prepare Directories
 
 ```bash
 mkdir -p ./development/src/public/easter-eggs
+mkdir -p ./development/src/public/sounds
 ```
+
+Verify the howl audio file is present:
+
+```bash
+ls ./development/src/public/sounds/fenrir-howl.mp3
+```
+
+If the file is missing, stop and tell the user:
+> `public/sounds/fenrir-howl.mp3` is required for the easter egg howl.
+> Copy it into the project: `cp /path/to/fenrir-howl.mp3 development/src/public/sounds/`
 
 ---
 
@@ -343,6 +354,10 @@ export function {{COMPONENT}}({ open, onClose }: {{COMPONENT}}Props) {
  *   const { open, trigger, dismiss } = useGleipnirFragment{{N}}();
  *   // Call trigger() when the hidden ingredient text is discovered.
  *   // Render: <{{COMPONENT}} open={open} onClose={dismiss} />
+ *
+ * Audio: plays /sounds/fenrir-howl.mp3 at volume 0.25 on first discovery.
+ * The Audio constructor is called inside trigger() — the direct user-gesture
+ * handler — so browsers permit playback without an autoplay policy violation.
  */
 export function useGleipnirFragment{{N}}() {
   const [open, setOpen] = useState(false);
@@ -351,6 +366,15 @@ export function useGleipnirFragment{{N}}() {
     if (!localStorage.getItem(STORAGE_KEY)) {
       localStorage.setItem(STORAGE_KEY, "1");
       setOpen(true);
+
+      // Play within the user-gesture call stack so browsers allow it.
+      try {
+        const howl = new Audio("/sounds/fenrir-howl.mp3");
+        howl.volume = 0.25;
+        howl.play().catch(() => {/* silently ignore if still blocked */});
+      } catch {
+        // Audio API unavailable (SSR guard, headless env, etc.)
+      }
     }
   }
 
