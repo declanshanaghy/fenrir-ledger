@@ -360,27 +360,25 @@
     }
     .footer-text .hl { color: var(--gold-dim); }
 
-    /* ── Back link ── */
+    /* ── Back nav ── */
+    .back-nav { padding: 24px 0 0; }
     .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--subtle);
+      font-size: 0.72rem;
+      color: var(--muted);
       text-decoration: none;
-      letter-spacing: 0.08em;
-      margin-top: 52px;
-      margin-bottom: 0;
+      letter-spacing: 0.06em;
       transition: color 0.2s;
     }
-    .back-link:hover { color: var(--gold); }
+    .back-link:hover { color: var(--gold-bright); }
   </style>
 </head>
 <body>
 <div class="page">
 
-  <a class="back-link" href="https://fenrir-ledger.vercel.app/sessions/">← ᛏ Session Archive</a>
+  <nav class="back-nav" aria-label="Return to archive">
+    <a href="https://fenrir-ledger.vercel.app/sessions/" class="back-link">← ᛏ Session Archive</a>
+  </nav>
 
   <!-- ── Header ─────────────────────────────────────────────────────── -->
   <header class="session-header">
