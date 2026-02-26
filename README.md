@@ -10,17 +10,32 @@
 
 ---
 
+<table><tr>
+<td align="center" width="33%">
+
+### ᛟ
+**[Enter the Ledger →](https://fenrir-ledger.vercel.app)**
+
 *The wolf does not wait. Step into the forge and name your chains before they name you.*
 
-### [ᛟ Enter the Ledger →](https://fenrir-ledger.vercel.app)
+</td>
+<td align="center" width="33%">
+
+### ᚱ
+**[Visit the Marketing Site →](https://fenrir-ledger.vercel.app/static)**
 
 *Read the runes. Know what was built, why it was built, and what hunts next.*
 
-### [ᚱ Visit the Marketing Site →](https://fenrir-ledger.vercel.app/static)
+</td>
+<td align="center" width="33%">
+
+### ᛏ
+**[Session Chronicles →](https://fenrir-ledger.vercel.app/sessions)**
 
 *Every session forged in fire, recorded in runes. The wolf remembers what the gods tried to bury.*
 
-### [ᛏ Session Chronicles →](https://fenrir-ledger.vercel.app/sessions)
+</td>
+</tr></table>
 
 ---
 
