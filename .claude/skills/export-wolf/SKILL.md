@@ -332,7 +332,7 @@ Create it now using this template:
   </div>
 
   <footer class="session-footer">
-    <p class="footer-cipher">ᛟ ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ ᛊ ᛟ</p>
+    <p class="footer-cipher">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</p>
     <p class="footer-text">Fenrir Ledger Session Archive</p>
   </footer>
 </div>

@@ -33,3 +33,6 @@ Thumbs.db
 coverage/
 .playwright-mcp/
 .vercel
+
+# Temp files
+tmp/
