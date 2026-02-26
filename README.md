@@ -10,8 +10,16 @@
 
 ---
 
+*The wolf does not wait. Step into the forge and name your chains before they name you.*
+
 ### [ᛟ Enter the Ledger →](https://fenrir-ledger.vercel.app)
+
+*Read the runes. Know what was built, why it was built, and what hunts next.*
+
 ### [ᚱ Visit the Marketing Site →](https://fenrir-ledger.vercel.app/static)
+
+*Every session forged in fire, recorded in runes. The wolf remembers what the gods tried to bury.*
+
 ### [ᛏ Session Chronicles →](https://fenrir-ledger.vercel.app/sessions)
 
 ---
