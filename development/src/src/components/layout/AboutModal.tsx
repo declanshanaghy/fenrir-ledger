@@ -21,7 +21,7 @@ import {
   useGleipnirFragment2,
 } from "@/components/cards/GleipnirWomansBeard";
 
-const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"] as const;
+const ROMAN = ["I", "II", "III", "IV", "V", "VI"] as const;
 
 const TEAM = [
   {
@@ -47,13 +47,12 @@ const TEAM = [
 ] as const;
 
 const INGREDIENTS = [
-  "The sound of a cat's footstep",
+  "The sound of a cat's footfall",
   "The beard of a woman",
   "The roots of a mountain",
   "The sinews of a bear",
   "The breath of a fish",
   "The spittle of a bird",
-  "The first debt willingly forgiven",
 ] as const;
 
 interface AboutModalProps {
@@ -94,8 +93,8 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
 
         {/* Accessible description — screen readers only */}
         <DialogDescription className="sr-only">
-          The Fenrir Ledger team and the seven impossible things used to forge
-          this app into existence.
+          The Fenrir Ledger team and the six impossible things woven into
+          Gleipnir — the chain that bound the great wolf.
         </DialogDescription>
 
         {/* ── Two-column body ───────────────────────────────────────── */}
@@ -150,9 +149,9 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
             {/* Separator */}
             <div className="border-t border-border mb-5" aria-hidden="true" />
 
-            {/* Seven Impossible Things */}
+            {/* Six Impossible Things */}
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-3">
-              Bound by Seven Impossible Things
+              Gleipnir was made of:
             </p>
             <ol className="flex flex-col gap-2 list-none">
               {INGREDIENTS.map((ingredient, i) => (

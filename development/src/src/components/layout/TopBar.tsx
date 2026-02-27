@@ -9,7 +9,7 @@
  * Mock user is hardcoded; swap with auth context when auth arrives.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
 import { AboutModal } from "@/components/layout/AboutModal";
 
@@ -20,6 +20,30 @@ const MOCK_USER = {
 
 export function TopBar() {
   const [aboutOpen, setAboutOpen] = useState(false);
+
+  // Easter Egg #9 — The Forgemaster's Signature.
+  // `?` (Shift+/) opens the About modal from anywhere on the page.
+  // Guard: skip when focus is inside a text input so typing is never stolen.
+  // No-op when the modal is already open (do not toggle it closed).
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== "?") return;
+
+      // Skip if a form field has focus — same pattern as KonamiHowl.tsx.
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+      // Only open; never close via this shortcut.
+      setAboutOpen((current) => {
+        if (current) return current; // already open — do nothing
+        e.preventDefault();
+        return true;
+      });
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <>
