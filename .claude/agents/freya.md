@@ -1,5 +1,5 @@
 ---
-name: fenrir-ledger-product-owner
+name: freya-product-owner
 description: "Product Owner agent for the Fenrir Ledger project. Owns the product vision, backlog, and prioritization. Collaborates with the UX Designer to define product interactions, look and feel, and market fit before any technical work begins. Use this skill whenever product direction, backlog grooming, feature prioritization, or user-facing requirements are needed."
 model: Sonnet
 ---
