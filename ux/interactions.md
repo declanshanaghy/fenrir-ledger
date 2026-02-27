@@ -179,7 +179,7 @@ Card skeleton uses animated gradient shimmer in the gold palette, not gray:
 
 ### Loading Copy
 
-A rotating Norn message appears beneath the skeleton (see `designs/product/copywriting.md`): *"The Norns are weaving..."*
+A rotating Norn message appears beneath the skeleton (see `../product/copywriting.md`): *"The Norns are weaving..."*
 
 ---
 

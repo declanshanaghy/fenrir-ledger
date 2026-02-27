@@ -25,7 +25,7 @@ The visual language of the Saga Ledger. All tokens should be implemented as CSS 
 | `gold-bright` | `#f0b429` | Hover states, active indicators, callouts |
 | `gold-glow` | `rgba(201, 146, 10, 0.15)` | Subtle background glow on card hover |
 
-### Status Colors (Norse Realms — see `designs/product/mythology-map.md`)
+### Status Colors (Norse Realms — see `../product/mythology-map.md`)
 
 | Name | Hex | Realm | CardStatus mapping |
 |------|-----|-------|--------------------|
