@@ -1,8 +1,8 @@
-# System Design: Fenrir Ledger Sprint 1
+# System Design: Fenrir Ledger (Sprint 2 — Current)
 
 ## Overview
 
-Fenrir Ledger Sprint 1 is a client-side-only Next.js application. No backend, no API, no authentication. All data is persisted in the browser's localStorage behind a typed abstraction layer. The app runs at `http://localhost:3000` during Sprint 1.
+Fenrir Ledger is a client-side Next.js 15 application. As of Sprint 2, all data is persisted in the browser's localStorage behind a typed abstraction layer. The app is deployed to Vercel at https://fenrir-ledger.vercel.app. Sprint 3 will introduce OIDC authentication and Supabase server-side persistence (see ADR-004).
 
 ---
 
@@ -23,6 +23,12 @@ graph TD
     browser -->|HTTP GET /cards/new| newpage[Add Card Page\n/app/cards/new/page.tsx]
     browser -->|HTTP GET /cards/id/edit| editpage[Edit Card Page\n/app/cards/id/edit/page.tsx]
 
+    %% App shell
+    dashpage --> appshell[AppShell\nlayout wrapper]
+    appshell --> topbar[TopBar]
+    appshell --> sidenav[SideNav]
+    appshell --> footer[Footer]
+
     %% Dashboard page components
     dashpage --> dashboard[Dashboard Component]
     dashboard --> cardtile[CardTile Component]
@@ -32,6 +38,15 @@ graph TD
     %% Form pages
     newpage --> cardform[CardForm Component]
     editpage --> cardform
+    cardform --> gleipnir[Gleipnir Fragment\nComponents]
+
+    %% Easter eggs
+    appshell --> konami[KonamiHowl]
+    footer --> lokimode[Loki Mode trigger]
+    footer --> fishbreath[GleipnirFishBreath modal]
+
+    %% Layout
+    appshell --> consolesig[ConsoleSignature\nclient-only, console art]
 
     %% Shared lib
     dashboard -->|reads| storage[storage.ts\nLocalStorage Abstraction]
@@ -48,10 +63,19 @@ graph TD
     class editpage primary
     class dashboard primary
     class cardform primary
+    class appshell primary
+    class topbar primary
+    class sidenav primary
+    class footer primary
     class storage healthy
     class ls background
     class types neutral
     class cardutils neutral
+    class konami warning
+    class lokimode warning
+    class fishbreath warning
+    class consolesig neutral
+    class gleipnir neutral
 ```
 
 ### Data Flow: Load Dashboard
@@ -91,7 +115,7 @@ sequenceDiagram
     F->>V: validate(formData)
     V-->>F: ValidationResult
     alt validation fails
-        F-->>U: Show field errors
+        F-->>U: Show field errors (scroll to first)
     else validation passes
         F->>CU: computeCardStatus(newCard)
         CU-->>F: CardStatus
@@ -165,8 +189,8 @@ stateDiagram-v2
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `fenrir_ledger:schema_version` | string (integer) | Schema version number. Sprint 1 = `"1"` |
-| `fenrir_ledger:households` | JSON string (Household[]) | All households. Sprint 1 has exactly one. |
+| `fenrir_ledger:schema_version` | string (integer) | Schema version number. Sprint 2 = `"1"` (unchanged from Sprint 1) |
+| `fenrir_ledger:households` | JSON string (Household[]) | All households. Single default household in Sprint 2. |
 | `fenrir_ledger:cards` | JSON string (Card[]) | All cards across all households. |
 
 ---
@@ -178,13 +202,13 @@ development/src/
 ├── .env.example                     # Committed placeholder env template
 ├── .env.local                       # Local secrets (gitignored)
 ├── next.config.ts                   # Next.js configuration
-├── tailwind.config.ts               # Tailwind configuration
+├── tailwind.config.ts               # Tailwind configuration (Saga Ledger theme extensions)
 ├── components.json                  # shadcn/ui configuration
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx               # Root layout (fonts, global styles)
+│   │   ├── layout.tsx               # Root layout (fonts, global styles, metadata)
 │   │   ├── page.tsx                 # Dashboard (/) — "use client"
-│   │   ├── globals.css              # Tailwind base + shadcn/ui CSS vars
+│   │   ├── globals.css              # Saga Ledger theme: void-black bg, gold accents, Norse fonts
 │   │   └── cards/
 │   │       ├── new/
 │   │       │   └── page.tsx         # Add card page — "use client"
@@ -200,20 +224,37 @@ development/src/
 │   │   │   ├── select.tsx
 │   │   │   ├── badge.tsx
 │   │   │   ├── dialog.tsx
+│   │   │   ├── checkbox.tsx
 │   │   │   └── textarea.tsx
+│   │   ├── layout/
+│   │   │   ├── AppShell.tsx         # Root layout wrapper: TopBar + SideNav + main content + Footer
+│   │   │   ├── TopBar.tsx           # Mobile top bar with hamburger menu
+│   │   │   ├── SiteHeader.tsx       # Desktop site header (logo, actions)
+│   │   │   ├── SideNav.tsx          # Collapsible sidebar navigation
+│   │   │   ├── Footer.tsx           # Footer with Loki easter egg + GleipnirFishBreath trigger
+│   │   │   ├── ConsoleSignature.tsx # Console ASCII art (client-only, runs once per session)
+│   │   │   ├── KonamiHowl.tsx       # Konami code easter egg
+│   │   │   ├── AboutModal.tsx       # About/credits modal
+│   │   │   └── ForgeMasterEgg.tsx   # Additional easter egg component
 │   │   ├── dashboard/
 │   │   │   ├── Dashboard.tsx        # "use client" — reads cards from storage
 │   │   │   ├── CardTile.tsx         # Card display tile with status badge
-│   │   │   ├── StatusBadge.tsx      # Color-coded status badge
-│   │   │   └── EmptyState.tsx       # Prompt shown when card list is empty
+│   │   │   ├── StatusBadge.tsx      # Realm-mapped status badge
+│   │   │   └── EmptyState.tsx       # Saga Ledger empty state with Gleipnir copy
 │   │   └── cards/
 │   │       ├── CardForm.tsx         # "use client" — shared add/edit form
-│   │       └── CardListItem.tsx     # Compact list item (used in mobile views)
+│   │       ├── GleipnirFishBreath.tsx    # Gleipnir ingredient easter egg fragment
+│   │       ├── GleipnirBearSinews.tsx
+│   │       ├── GleipnirBirdSpittle.tsx
+│   │       ├── GleipnirCatFootfall.tsx
+│   │       ├── GleipnirMountainRoots.tsx
+│   │       └── GleipnirWomansBeard.tsx
 │   └── lib/
 │       ├── types.ts                 # TypeScript interfaces: Household, Card, etc.
 │       ├── storage.ts               # localStorage abstraction layer
 │       ├── card-utils.ts            # Pure functions: computeCardStatus, etc.
-│       └── constants.ts             # STORAGE_KEY_PREFIX, DEFAULT_HOUSEHOLD, etc.
+│       ├── constants.ts             # STORAGE_KEY_PREFIX, DEFAULT_HOUSEHOLD, etc.
+│       └── utils.ts                 # General utility helpers (shadcn cn())
 ```
 
 ---
@@ -230,7 +271,19 @@ Defines all magic values: storage key prefixes, default household ID, status thr
 The localStorage abstraction. All reads/writes to `window.localStorage` go through here. Wraps operations in try/catch. Calls `migrateIfNeeded()` on module load.
 
 ### `src/lib/card-utils.ts`
-Pure utility functions. `computeCardStatus(card, today)` is deterministic and takes an optional `today` parameter for testability.
+Pure utility functions. `computeCardStatus(card, today)` is deterministic and takes an optional `today` parameter for testability. `getRealmLabel()` is deferred to Sprint 3.
+
+### `src/components/layout/AppShell.tsx`
+Root layout wrapper providing the persistent shell: TopBar (mobile), SiteHeader (desktop), SideNav (collapsible), main content slot, Footer. Also mounts ConsoleSignature and easter egg components.
+
+### `src/components/layout/Footer.tsx`
+Three-column footer. Contains the Loki Mode 7-click trigger and the GleipnirFishBreath "Breath of a Fish" easter egg hover trigger.
+
+### `src/components/layout/ConsoleSignature.tsx`
+Client-only component that prints Elder Futhark ASCII art spelling ᚠᛖᚾᚱᛁᚱ (FENRIR) to the browser console once per session.
+
+### `src/components/layout/KonamiHowl.tsx`
+Listens for the Konami code sequence and triggers a full-screen howl animation.
 
 ### `src/app/page.tsx` (Dashboard)
 Client component. On mount: calls `initializeDefaultHousehold()`, loads all cards for the default household, renders the `Dashboard` component.
@@ -239,10 +292,13 @@ Client component. On mount: calls `initializeDefaultHousehold()`, loads all card
 Renders the card grid, summary counts, and empty state. Receives `cards: Card[]` as props. All data-fetching is in the parent page.
 
 ### `src/components/dashboard/CardTile.tsx`
-Displays a single card. Shows issuer, name, status badge, annual fee date, sign-up bonus deadline. Clicking navigates to `/cards/[id]/edit`.
+Displays a single card with the Saga Ledger theme. Shows issuer, name, status badge, annual fee date, sign-up bonus deadline. Clicking navigates to `/cards/[id]/edit`.
+
+### `src/components/dashboard/StatusBadge.tsx`
+Renders a Norse realm-labelled badge for the card's status. Color and label are mapped to the Saga Ledger realm vocabulary. `getRealmLabel()` integration deferred to Sprint 3.
 
 ### `src/components/cards/CardForm.tsx`
-Shared form for both add and edit flows. Accepts `initialValues?: Card` for edit mode. Uses `react-hook-form` + Zod. On submit: generates/preserves card ID, computes status, calls `saveCard()`, redirects to dashboard.
+Shared form for both add and edit flows. Accepts `initialValues?: Card` for edit mode. Uses `react-hook-form` + Zod. On submit: generates/preserves card ID, computes status, calls `saveCard()`, redirects to dashboard. Scroll-to-first-error on validation failure.
 
 ---
 
@@ -251,24 +307,29 @@ Shared form for both add and edit flows. Accepts `initialValues?: Card` for edit
 ### Runtime
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `next` | latest | Framework |
-| `react` | latest | UI |
-| `react-dom` | latest | DOM renderer |
-| `react-hook-form` | ^7.x | Form state management |
-| `zod` | ^3.x | Schema validation |
-| `@hookform/resolvers` | ^3.x | Bridge between react-hook-form and Zod |
+| `next` | ^15.1.12 | Framework (upgraded from latest for CVE-2025-66478 fix) |
+| `react` | ^19.0.0 | UI |
+| `react-dom` | ^19.0.0 | DOM renderer |
+| `react-hook-form` | ^7.54.2 | Form state management |
+| `zod` | ^3.24.1 | Schema validation |
+| `@hookform/resolvers` | ^3.9.1 | Bridge between react-hook-form and Zod |
+| `lucide-react` | ^0.469.0 | Icon set |
+| `class-variance-authority` | ^0.7.1 | Component variant management |
+| `clsx` | ^2.1.1 | Conditional class names |
+| `tailwind-merge` | ^2.6.0 | Tailwind class deduplication |
+| `tailwindcss-animate` | ^1.0.7 | Animation utilities |
 
 ### Dev
 | Package | Version | Purpose |
 |---------|---------|---------|
 | `typescript` | ^5.x | Type checking |
-| `tailwindcss` | ^3.x | Styling |
+| `tailwindcss` | ^3.4.1 | Styling |
 | `eslint` | ^8.x | Linting |
-| `@types/react` | latest | React type definitions |
-| `@types/node` | latest | Node.js type definitions |
+| `@types/react` | ^19 | React type definitions |
+| `@types/node` | ^20 | Node.js type definitions |
 
 ### shadcn/ui (copy-owned, not a package dependency)
-Components installed via `npx shadcn@latest add`: `button`, `card`, `input`, `label`, `select`, `badge`, `dialog`, `textarea`
+Components installed via `npx shadcn@latest add`: `button`, `card`, `input`, `label`, `select`, `badge`, `dialog`, `textarea`, `checkbox`
 
 ---
 
@@ -282,4 +343,21 @@ Components installed via `npx shadcn@latest add`: `button`, `card`, `input`, `la
 | All money amounts | Stored as integer cents (not floats) to avoid floating-point errors |
 | All dates | Stored as ISO 8601 strings (YYYY-MM-DD for dates, full ISO for timestamps) |
 | Card IDs | Generated with `crypto.randomUUID()` |
-| Household ID | Hardcoded `"default-household"` in Sprint 1 |
+| Household ID | Hardcoded `"default-household"` in Sprint 2; replaced by real UUID in Sprint 3 (ADR-004) |
+| Vercel Root Directory | Set to `development/src/` |
+| Font loading | `next/font/google` with `display: 'swap'` on all four Norse typefaces |
+
+---
+
+## Sprint 3 Planned Changes
+
+The following architectural changes are planned for Sprint 3 (see ADR-004):
+- Replace localStorage persistence with Supabase PostgreSQL
+- Add Auth.js v5 OIDC authentication (Google provider)
+- Add Next.js middleware for session-protected routes
+- Add API routes: `/api/cards`, `/api/households`
+- Add Framer Motion animation layer
+- Add `HowlPanel.tsx` (urgent cards sidebar)
+- Add `StatusRing.tsx` (SVG deadline ring)
+- Add `/valhalla` route (closed cards archive)
+- Implement `getRealmLabel()` in `src/lib/realm-utils.ts`
