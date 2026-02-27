@@ -3,10 +3,11 @@
 /**
  * Footer — persistent application footer.
  *
- * Three-column layout (collapses to single column on mobile):
- *   Left:   ᛟ FENRIR LEDGER wordmark + brand tagline
- *   Centre: Footer nav ("About" link — opens AboutModal)
- *   Right:  Team colophon + copyright line
+ * Single flex row, maximum 2 lines tall:
+ *   Left:   ᛟ FENRIR LEDGER · brand tagline
+ *   Right:  team colophon + copyright line (easter egg triggers intact)
+ *
+ * No border. No nav links. No About dialog.
  *
  * Easter eggs wired here:
  *   #5 — Gleipnir Fragment 5 "The Breath of a Fish": hover the © symbol.
@@ -19,10 +20,12 @@
  *
  * Touch accessibility:
  *   © and "Loki" both have min-touch-target padding (44×44 px effective area).
+ *
+ * Mobile (< 640 px):
+ *   flex-col — both cells stack on two lines, both left-aligned.
  */
 
 import { useRef, useState } from "react";
-import { AboutModal } from "@/components/layout/AboutModal";
 import {
   GleipnirFishBreath,
   useGleipnirFragment5,
@@ -98,9 +101,6 @@ function LokiToast({ visible }: LokiToastProps) {
 // ── Footer ───────────────────────────────────────────────────────────────────
 
 export function Footer() {
-  // About modal state — local to Footer; TopBar manages its own independently.
-  const [aboutOpen, setAboutOpen] = useState(false);
-
   // Easter egg #5 — Gleipnir Fragment: "The Breath of a Fish"
   const { open: fishOpen, trigger: triggerFish, dismiss: dismissFish } =
     useGleipnirFragment5();
@@ -147,125 +147,87 @@ export function Footer() {
       <LokiToast visible={lokiToastVisible} />
 
       {/* ── Footer shell ────────────────────────────────────────────────── */}
+      {/*
+       * No border-top. No border-bottom. Padding small enough to keep
+       * the footer under ~2 lines tall at 11 px rendered size.
+       */}
       <footer
         role="contentinfo"
         aria-label="App footer"
-        className="border-t border-border bg-background/80 backdrop-blur-sm px-6 py-6"
+        className="bg-background/80 backdrop-blur-sm px-6 py-1.5"
       >
         {/*
-         * Three-column grid:
-         *   Desktop:  brand (1fr) | nav (auto) | credits (1fr)
-         *   Mobile:   stacked single column
+         * Single flex row:
+         *   Desktop:  left cell (brand) | right cell (colophon + ©)
+         *   Mobile:   flex-col — both lines left-aligned
          */}
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-[1fr_auto_1fr] md:gap-8 md:items-start">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-0.5 sm:gap-0">
 
-          {/* ── Column 1: Brand ─────────────────────────────────────────── */}
-          <div className="flex flex-col gap-1.5">
-            <span
-              className="font-heading text-gold tracking-[0.08em] uppercase text-sm font-bold"
-              aria-label="Fenrir Ledger"
-            >
+          {/* ── Left: wordmark · tagline ─────────────────────────────────── */}
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+            <span className="font-heading tracking-[0.06em] uppercase font-bold text-[11px]">
               ᛟ FENRIR LEDGER
             </span>
-            <span className="font-body text-xs text-muted-foreground italic leading-snug max-w-[240px]">
-              Break free. Harvest every reward. Let no chain hold.
-            </span>
-          </div>
+            <span aria-hidden="true">&nbsp;·&nbsp;</span>
+            <span>Break free. Harvest every reward. Let no chain hold.</span>
+          </span>
 
-          {/* ── Column 2: Nav (centred) ──────────────────────────────────── */}
-          <nav
-            aria-label="Footer navigation"
-            className="flex flex-col gap-2 md:items-center"
-          >
-            <button
-              type="button"
-              onClick={() => setAboutOpen(true)}
-              className="font-body text-sm text-muted-foreground underline underline-offset-2
-                         hover:text-foreground transition-colors text-left
-                         min-h-[44px] min-w-[44px] flex items-center"
-              aria-label="Open About dialog"
+          {/* ── Right: colophon · © ──────────────────────────────────────── */}
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+            {/*
+             * Team colophon. "Loki" is Easter Egg #3 — Loki Mode trigger.
+             * No visual affordance in default state (discoverable only).
+             * data-loki-trigger is a semantic marker for testing.
+             * Padding expands the effective touch target to ≥ 44×44 px.
+             */}
+            Forged by FiremanDecko
+            <span aria-hidden="true">&nbsp;·&nbsp;</span>
+            Guarded by Freya
+            <span aria-hidden="true">&nbsp;·&nbsp;</span>
+            Tested by{" "}
+            <span
+              data-loki-trigger
+              role="button"
+              tabIndex={0}
+              aria-label="Loki"
+              onClick={handleLokiClick}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") handleLokiClick();
+              }}
+              className="cursor-default underline decoration-dotted
+                         hover:text-foreground transition-colors
+                         inline-flex items-center justify-center
+                         px-2 py-3 -my-3 -mx-2"
+              title="Tested by Loki"
             >
-              About
-            </button>
-          </nav>
+              Loki
+            </span>
+            <span aria-hidden="true">&nbsp;&mdash;&nbsp;</span>
+            {/*
+             * Easter egg #5 — Gleipnir Fragment "The Breath of a Fish".
+             * data-gleipnir="breath-of-a-fish" is the semantic marker.
+             * onMouseEnter fires the fragment trigger (first hover only).
+             * The CSS ::after tooltip is injected via globals.css.
+             * Touch: onTouchStart fires for touch devices.
+             * Padding expands the touch target to ≥ 44×44 px.
+             */}
+            <span
+              data-gleipnir="breath-of-a-fish"
+              className="gleipnir-copyright-symbol
+                         inline-flex items-center justify-center
+                         px-2 py-3 -my-3 -mx-2
+                         cursor-default relative"
+              aria-label="Copyright"
+              onMouseEnter={triggerFish}
+              onTouchStart={triggerFish}
+            >
+              ©
+            </span>
+            <span>&nbsp;2026 Fenrir Ledger</span>
+          </span>
 
-          {/* ── Column 3: Credits + copyright (right-aligned on desktop) ── */}
-          <div className="flex flex-col gap-1.5 md:items-end md:text-right">
-
-            {/* Team colophon */}
-            <p className="font-body text-xs text-muted-foreground">
-              Forged by FiremanDecko
-              <span aria-hidden="true"> &nbsp;·&nbsp; </span>
-              Guarded by Freya
-              <span aria-hidden="true"> &nbsp;·&nbsp; </span>
-              Tested by{" "}
-              {/*
-               * Easter egg #3 — Loki Mode trigger.
-               * No visual affordance in default state (discoverable only).
-               * data-loki-trigger is a semantic marker for testing.
-               * Padding expands the effective touch target to ≥ 44×44 px.
-               */}
-              <span
-                data-loki-trigger
-                role="button"
-                tabIndex={0}
-                aria-label="Loki"
-                onClick={handleLokiClick}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") handleLokiClick();
-                }}
-                className="cursor-default underline decoration-dotted
-                           hover:text-foreground transition-colors
-                           inline-flex items-center justify-center
-                           px-2 py-3 -my-3 -mx-2"
-                title="Tested by Loki"
-              >
-                Loki
-              </span>
-            </p>
-
-            {/* Copyright line */}
-            <p className="font-mono text-[11px] text-muted-foreground flex items-center gap-1 md:justify-end">
-              {/*
-               * Easter egg #5 — Gleipnir Fragment "The Breath of a Fish".
-               * data-gleipnir="breath-of-a-fish" is the semantic marker.
-               * onMouseEnter fires the fragment trigger (first hover only).
-               * The CSS ::after tooltip is injected via globals.css.
-               * Touch: onTouchStart fires for touch devices.
-               * Padding expands the touch target to ≥ 44×44 px.
-               */}
-              <span
-                data-gleipnir="breath-of-a-fish"
-                className="gleipnir-copyright-symbol
-                           inline-flex items-center justify-center
-                           px-2 py-3 -my-3 -mx-2
-                           cursor-default relative"
-                aria-label="Copyright"
-                onMouseEnter={triggerFish}
-                onTouchStart={triggerFish}
-              >
-                ©
-              </span>
-              <span>2026 Fenrir Ledger</span>
-            </p>
-
-          </div>
         </div>
-
-        {/* Hairline rule below the grid */}
-        <hr
-          aria-hidden="true"
-          className="border-t border-border mt-5"
-        />
       </footer>
-
-      {/* ── About modal ─────────────────────────────────────────────────── */}
-      {/*
-       * Rendered outside the footer element to avoid stacking context issues.
-       * This is the same pattern TopBar.tsx uses for its own About modal
-       * instance. Both are independent — each manages its own open state.
-       */}
-      <AboutModal open={aboutOpen} onOpenChange={setAboutOpen} />
 
       {/* ── Gleipnir Fragment 5 modal ────────────────────────────────────── */}
       <GleipnirFishBreath open={fishOpen} onClose={dismissFish} />
