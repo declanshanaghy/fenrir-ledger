@@ -133,12 +133,12 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 *FiremanDecko's domain. Where the chains are forged.*
 
 - [development/README.md](development/README.md) — Index of all development artifacts: source code, scripts, implementation plan, QA handoff, and technical specs
-- [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, data flow diagrams
-- [architecture/sprint-plan.md](architecture/sprint-plan.md) — Current sprint's stories, acceptance criteria, technical notes
-- [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001, ADR-002, ADR-003)
-- [architecture/adrs/ADR-004-oidc-auth-and-persistence.md](architecture/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR-004: OIDC auth + Supabase persistence
+- [designs/architecture/system-design.md](designs/architecture/system-design.md) — Component architecture, data model, data flow diagrams
+- [designs/architecture/sprint-plan.md](designs/architecture/sprint-plan.md) — Current sprint's stories, acceptance criteria, technical notes
+- [designs/architecture/adrs/](designs/architecture/adrs/) — Architecture Decision Records (ADR-001, ADR-002, ADR-003)
+- [designs/architecture/adrs/ADR-004-oidc-auth-and-persistence.md](designs/architecture/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR-004: OIDC auth + Supabase persistence
 - [development/spec-auth-oidc-google.md](development/spec-auth-oidc-google.md) — Technical spec: Google OIDC login (Iteration 1)
-- `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
+- `designs/architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
 - [development/src/](development/src/) — The forge itself. Next.js source code lives here.
 - [development/implementation-plan.md](development/implementation-plan.md) — Ordered task breakdown, what was built
 - [development/qa-handoff.md](development/qa-handoff.md) — Handoff to Loki: deploy steps, test focus, known limits
@@ -201,11 +201,11 @@ cd development/src && npm run dev
 ### Sprint 1 — Forged Artifacts
 
 **The Architecture**
-- [Sprint Plan](architecture/sprint-plan.md) — 5 stories, acceptance criteria, technical notes
-- [System Design](architecture/system-design.md) — Component architecture, data model, data flow diagrams
-- [ADR-001: Tech Stack](architecture/adrs/ADR-001-tech-stack.md) — Why Next.js + TypeScript + Tailwind + shadcn/ui
-- [ADR-002: Data Model](architecture/adrs/ADR-002-data-model.md) — Household-scoped schema from day one
-- [ADR-003: Local Storage](architecture/adrs/ADR-003-local-storage.md) — localStorage for Sprint 1 + the migration path
+- [Sprint Plan](designs/architecture/sprint-plan.md) — 5 stories, acceptance criteria, technical notes
+- [System Design](designs/architecture/system-design.md) — Component architecture, data model, data flow diagrams
+- [ADR-001: Tech Stack](designs/architecture/adrs/ADR-001-tech-stack.md) — Why Next.js + TypeScript + Tailwind + shadcn/ui
+- [ADR-002: Data Model](designs/architecture/adrs/ADR-002-data-model.md) — Household-scoped schema from day one
+- [ADR-003: Local Storage](designs/architecture/adrs/ADR-003-local-storage.md) — localStorage for Sprint 1 + the migration path
 
 **The Implementation**
 - [Implementation Plan](development/implementation-plan.md) — Ordered task breakdown
@@ -236,4 +236,4 @@ Copyright (C) 2026 Declan Shanaghy. Licensed under the [GNU Affero General Publi
 - **Commits**: Strict format per [git-commit/SKILL.md](.claude/skills/git-commit/SKILL.md)
 - **Secrets**: `.env` file, never committed, `.env.example` as the template
 - **Sprints**: Max 5 stories. The forge-script runs every sprint. No exceptions.
-- **Output**: Each wolf writes to its top-level folder (`designs/`, `architecture/`, `development/`, `quality/`). Git tracks the history — files are overwritten each sprint, no subdirectories.
+- **Output**: Each wolf writes to its top-level folder (`designs/`, `development/`, `quality/`). Git tracks the history — files are overwritten each sprint, no subdirectories.
