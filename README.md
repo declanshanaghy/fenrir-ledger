@@ -105,6 +105,13 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [Product Brief](product-brief.md) — What the wolf hunts, why, and for whom. The prioritized backlog.
 - [Patient Zero](patient-zero.md) — Pack composition, pipeline summary, quick-reference setup.
 
+### ᚢ Freya — Product Owner
+
+*The voice of the user. Nothing moves downstream without her word.*
+
+- [fenrir-ledger-team/product-owner/backlog/README.md](fenrir-ledger-team/product-owner/backlog/README.md) — Groomed backlog index
+- [fenrir-ledger-team/product-owner/backlog/story-auth-oidc-google.md](fenrir-ledger-team/product-owner/backlog/story-auth-oidc-google.md) — P1: OIDC Authentication — Google Login (Iteration 1)
+
 ### ᚱ The Saga Ledger — Design
 
 *Freya + Luna's domain. The visual soul of the wolf.*
