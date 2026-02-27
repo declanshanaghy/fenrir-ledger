@@ -71,6 +71,12 @@ export interface Card {
   createdAt: string;
   /** UTC ISO 8601 timestamp when this record was last modified */
   updatedAt: string;
+  /**
+   * UTC ISO 8601 timestamp when this card was soft-deleted.
+   * Absent (undefined) means the card is active in storage.
+   * Set by deleteCard(); never cleared. UI-facing reads filter this out.
+   */
+  deletedAt?: string;
 }
 
 /**
@@ -89,6 +95,12 @@ export interface Household {
   createdAt: string;
   /** UTC ISO 8601 timestamp when this household was last modified */
   updatedAt: string;
+  /**
+   * UTC ISO 8601 timestamp when this household was soft-deleted.
+   * Absent (undefined) means the household is active in storage.
+   * Symmetry with Card.deletedAt — reserved for future multi-household support.
+   */
+  deletedAt?: string;
 }
 
 /** Known card issuers for the issuer dropdown */

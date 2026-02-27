@@ -70,7 +70,6 @@ If the file is missing, stop and tell the user:
 > Copy it into the project: `cp /path/to/fenrir-howl.mp3 development/src/public/sounds/`
 
 ---
-
 ## Step 3 — Create the SVG Artifact Image
 
 Write a 1024×1024 SVG file directly to:

@@ -9,6 +9,12 @@
  * IMPORTANT: This module is browser-only. All functions guard against SSR
  * contexts by checking typeof window !== "undefined".
  *
+ * Two-layer architecture:
+ *   Private raw helpers — return ALL records, including soft-deleted ones.
+ *     getAllCards(), getAllHouseholdsRaw(), getRawCardById()
+ *   Public UI API — always filter out records where deletedAt is set.
+ *     getCards(), getCardById(), getHouseholds(), getAllCardsGlobal()
+ *
  * Gleipnir ingredient #4 (sinews of a bear):
  * This module persists like the sinews of a bear — silent, invisible,
  * impossible to break. No chain holds without it.
@@ -38,6 +44,9 @@ function isBrowser(): boolean {
  *
  * Version history:
  *   0 → 1: Initial schema (Sprint 1). No data to migrate — fresh install.
+ *   1 → 2: Added optional deletedAt field to Card and Household for soft-delete
+ *           support. No data transformation needed — absent field === undefined
+ *           by design. (No migration step required pre-launch; see team norms.)
  */
 export function migrateIfNeeded(): void {
   if (!isBrowser()) return;
@@ -69,18 +78,26 @@ function runMigrations(fromVersion: number, toVersion: number): void {
     // Fresh install — no data to transform
   }
 
+  // Version 1 → 2: Added deletedAt (optional) to Card and Household.
+  // No data transformation needed — existing records without the field are
+  // treated as non-deleted by the undefined check in the public API.
+  if (fromVersion < 2 && toVersion >= 2) {
+    // No-op: optional field, absence === undefined === not deleted
+  }
+
   // Future migrations:
-  // if (fromVersion < 2 && toVersion >= 2) { ... }
+  // if (fromVersion < 3 && toVersion >= 3) { ... }
 }
 
 // ─── Household Operations ─────────────────────────────────────────────────────
 
 /**
- * Reads all households from localStorage.
+ * Reads ALL households from localStorage, including soft-deleted ones.
+ * Private raw helper — use getHouseholds() for UI-facing reads.
  *
- * @returns Array of Household objects. Empty array if none exist or on error.
+ * @returns Array of all Household objects. Empty array if none exist or on error.
  */
-export function getHouseholds(): Household[] {
+function getAllHouseholdsRaw(): Household[] {
   if (!isBrowser()) return [];
 
   try {
@@ -94,11 +111,24 @@ export function getHouseholds(): Household[] {
 }
 
 /**
- * Writes the full households array to localStorage.
+ * Reads active (non-deleted) households from localStorage.
+ * Filters out any household with a deletedAt timestamp set.
  *
- * @param households - Complete array of Household objects to persist
+ * @returns Array of active Household objects. Empty array if none exist or on error.
  */
-export function saveHouseholds(households: Household[]): void {
+export function getHouseholds(): Household[] {
+  return getAllHouseholdsRaw().filter((h) => !h.deletedAt);
+}
+
+/**
+ * Writes the full households array to localStorage.
+ * Private helper — use saveCard(), deleteCard(), or initializeDefaultHousehold()
+ * for all public mutation operations.
+ *
+ * @param households - Complete array of Household objects to persist (all records,
+ *   including soft-deleted ones)
+ */
+function setAllHouseholds(households: Household[]): void {
   if (!isBrowser()) return;
 
   try {
@@ -119,7 +149,7 @@ export function saveHouseholds(households: Household[]): void {
 export function initializeDefaultHousehold(): Household {
   if (!isBrowser()) return DEFAULT_HOUSEHOLD;
 
-  const households = getHouseholds();
+  const households = getAllHouseholdsRaw();
   const existing = households.find((h) => h.id === DEFAULT_HOUSEHOLD_ID);
 
   if (existing) {
@@ -132,7 +162,7 @@ export function initializeDefaultHousehold(): Household {
       const updated = households.map((h) =>
         h.id === DEFAULT_HOUSEHOLD_ID ? backfilled : h
       );
-      saveHouseholds(updated);
+      setAllHouseholds(updated);
       return backfilled;
     }
     return existing;
@@ -145,15 +175,16 @@ export function initializeDefaultHousehold(): Household {
     updatedAt: now,
   };
 
-  saveHouseholds([...households, newHousehold]);
+  setAllHouseholds([...households, newHousehold]);
   return newHousehold;
 }
 
 // ─── Card Operations ──────────────────────────────────────────────────────────
 
 /**
- * Reads all cards from localStorage (all households).
- * Internal helper — use getCards(householdId) for filtered results.
+ * Reads ALL cards from localStorage (all households), including soft-deleted ones.
+ * Private raw helper — use getCards(householdId) or getAllCardsGlobal() for
+ * UI-facing reads.
  */
 function getAllCards(): Card[] {
   if (!isBrowser()) return [];
@@ -170,7 +201,7 @@ function getAllCards(): Card[] {
 
 /**
  * Writes the full cards array to localStorage.
- * Internal helper — use saveCard() or deleteCard() for individual operations.
+ * Private helper — use saveCard() or deleteCard() for individual operations.
  *
  * Dispatches "fenrir:sync" so the SyncIndicator pulses on every real write.
  */
@@ -187,27 +218,39 @@ function setAllCards(cards: Card[]): void {
 }
 
 /**
- * Reads all cards across all households.
+ * Reads a single card by ID, including soft-deleted cards.
+ * Private raw helper — use getCardById() for UI-facing reads.
+ *
+ * @param id - The card ID
+ * @returns The Card object (deleted or not), or undefined if not found
+ */
+function getRawCardById(id: string): Card | undefined {
+  return getAllCards().find((c) => c.id === id);
+}
+
+/**
+ * Reads all active (non-deleted) cards across all households.
  *
  * Used by easter eggs (e.g. KonamiHowl) that need a cross-household snapshot
  * without caring about household boundaries.
  *
- * @returns All Card objects in storage, unsorted.
+ * @returns All non-deleted Card objects in storage, unsorted.
  */
 export function getAllCardsGlobal(): Card[] {
-  return getAllCards();
+  return getAllCards().filter((c) => !c.deletedAt);
 }
 
 /**
- * Reads all cards for a given household, sorted by most recently updated.
+ * Reads all active (non-deleted) cards for a given household, sorted by most
+ * recently updated.
  *
  * @param householdId - The household to filter by
- * @returns Array of Card objects for the household
+ * @returns Array of active Card objects for the household
  */
 export function getCards(householdId: string): Card[] {
   const all = getAllCards();
   return all
-    .filter((c) => c.householdId === householdId)
+    .filter((c) => c.householdId === householdId && !c.deletedAt)
     .sort(
       (a, b) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
@@ -215,14 +258,15 @@ export function getCards(householdId: string): Card[] {
 }
 
 /**
- * Reads a single card by ID.
+ * Reads a single active (non-deleted) card by ID.
+ * Returns undefined if the card does not exist or has been soft-deleted.
  *
  * @param id - The card ID
- * @returns The Card object, or undefined if not found
+ * @returns The Card object, or undefined if not found or soft-deleted
  */
 export function getCardById(id: string): Card | undefined {
-  const all = getAllCards();
-  return all.find((c) => c.id === id);
+  const card = getRawCardById(id);
+  return card?.deletedAt ? undefined : card;
 }
 
 /**
@@ -261,12 +305,22 @@ export function saveCard(card: Card): void {
 }
 
 /**
- * Deletes a card by ID.
- * No-op if the card does not exist.
+ * Soft-deletes a card by setting its deletedAt timestamp.
+ * The record is retained in localStorage; it will no longer appear in any
+ * UI-facing read (getCards, getCardById, getAllCardsGlobal).
+ * No-op if the card does not exist or is already soft-deleted.
  *
- * @param id - The card ID to delete
+ * @param id - The card ID to soft-delete
  */
 export function deleteCard(id: string): void {
   const all = getAllCards();
-  setAllCards(all.filter((c) => c.id !== id));
+  const index = all.findIndex((c) => c.id === id);
+  if (index < 0) return;
+
+  const card = all[index]!;
+  if (card.deletedAt) return; // Already soft-deleted — no-op
+
+  const updated = [...all];
+  updated[index] = { ...card, deletedAt: new Date().toISOString() };
+  setAllCards(updated);
 }
