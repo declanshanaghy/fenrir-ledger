@@ -5,7 +5,9 @@
  *
  * Trigger:  `?` (Shift+/) pressed anywhere outside a form field.
  * Storage:  localStorage key "egg:forgemaster" — fires once only.
- * z-index:  9653 (W-O-L-F on a phone keypad).
+ * Audio:    fenrir-howl.mp3 plays unconditionally when the modal opens.
+ *           The `?` keypress counts as a user gesture, bypassing autoplay
+ *           restrictions.
  *
  * Content:
  *   - Inline forge/anvil SVG artifact
@@ -15,17 +17,12 @@
  * Listener is self-contained here. Mount this component once in AppShell.
  * If the egg has already been discovered (localStorage key set), pressing `?`
  * does nothing — no modal, no side effects.
+ *
+ * Modal rendering is delegated to EasterEggModal (shared shell for all eggs).
  */
 
 import { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { EasterEggModal } from "@/components/easter-eggs/EasterEggModal";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -309,122 +306,55 @@ export function ForgeMasterEgg() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && dismiss()}>
-      {/*
-       * Overrides: w-[92vw] max-w-[680px] override Dialog defaults.
-       * p-0 gap-0 override p-6 gap-4.
-       * z-index 9653 = W-O-L-F on a phone keypad (see copywriting.md Magic Numbers).
-       */}
-      <DialogContent
-        className="w-[92vw] max-w-[680px] p-0 gap-0 flex flex-col
-                   bg-[#0f1018] border border-[#2a2d45]
-                   [&>button]:text-[#8a8578] [&>button]:hover:text-[#e8e4d4]"
-        style={{ zIndex: 9653 }}
-      >
-        {/* ── Header ──────────────────────────────────────────────────── */}
-        {/* pr-10 clears the built-in X button */}
-        <div className="px-6 pt-5 pb-4 pr-10 text-center border-b border-[#1e2235]">
-          <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-[#c9920a] mb-2">
-            <span aria-hidden="true">ᚠ ᛖ ᚾ ᚱ</span>
-            {" · "}Easter Egg Discovered{" · "}
-            <span aria-hidden="true">ᛁ ᚱ ᛊ</span>
+    <EasterEggModal
+      open={open}
+      onClose={dismiss}
+      title="The Forgemaster's Signature"
+      description="You have found Easter Egg 9: The Forgemaster's Signature. The four members of the Fenrir Ledger pack, and their Gleipnir fragment progress."
+      image={<ForgeAnvilArtifact />}
+      audioSrc="/sounds/fenrir-howl.mp3"
+    >
+      {/* The Pack */}
+      <div>
+        <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#8a8578] mb-2.5">
+          The Pack
+        </p>
+        <div className="flex flex-col gap-2">
+          {TEAM.map((member) => (
+            <div key={member.name} className="flex items-baseline gap-2">
+              <span className="font-heading text-xs font-bold uppercase tracking-wide text-[#f0b429]">
+                {member.name}
+              </span>
+              <span className="font-mono text-[10px] text-[#8a8578]">
+                {member.role}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Lore line */}
+      <p className="font-body text-xs italic text-[#8a8578] leading-relaxed">
+        &ldquo;Forged in the fires of Muspelheim. No chain holds the wolf
+        that built the chain.&rdquo;
+      </p>
+
+      {/* Gleipnir fragment count */}
+      <div className="border-t border-[#1e2235] pt-3">
+        <p className="font-mono text-[0.7rem] text-[#c9920a]">
+          {fragmentsFound} of {TOTAL_FRAGMENTS} Gleipnir fragments found
+        </p>
+        {fragmentsFound === TOTAL_FRAGMENTS && (
+          <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">
+            ✦ Gleipnir is complete. The wolf stirs.
           </p>
-
-          <DialogTitle className="font-display text-[clamp(1.1rem,3.5vw,1.6rem)] font-bold text-[#f0b429] leading-tight">
-            The Forgemaster&apos;s Signature
-          </DialogTitle>
-        </div>
-
-        {/* Accessible description */}
-        <DialogDescription className="sr-only">
-          You have found Easter Egg 9: The Forgemaster&apos;s Signature.
-          The four members of the Fenrir Ledger pack, and their Gleipnir fragment progress.
-        </DialogDescription>
-
-        {/* ── Two-column body ─────────────────────────────────────────── */}
-        {/*
-         * Desktop: image left | divider | text right
-         * Mobile:  stacked (image top, text bottom)
-         */}
-        <div className="flex flex-col md:grid md:grid-cols-[1fr_1px_1fr] bg-[#13151f]">
-
-          {/* Left — forge artifact SVG */}
-          <div className="flex items-center justify-center p-6 md:p-8">
-            <ForgeAnvilArtifact />
-          </div>
-
-          {/* Vertical divider — desktop only */}
-          <div
-            className="hidden md:block"
-            style={{
-              background:
-                "linear-gradient(to bottom, transparent, #2a2d45 20%, #2a2d45 80%, transparent)",
-            }}
-            aria-hidden="true"
-          />
-
-          {/* Right — discovery text */}
-          <div className="flex flex-col justify-center gap-4 px-6 py-6 md:px-8">
-
-            {/* The Pack */}
-            <div>
-              <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#8a8578] mb-2.5">
-                The Pack
-              </p>
-              <div className="flex flex-col gap-2">
-                {TEAM.map((member) => (
-                  <div key={member.name} className="flex items-baseline gap-2">
-                    <span className="font-heading text-xs font-bold uppercase tracking-wide text-[#f0b429]">
-                      {member.name}
-                    </span>
-                    <span className="font-mono text-[10px] text-[#8a8578]">
-                      {member.role}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Lore line */}
-            <p className="font-body text-xs italic text-[#8a8578] leading-relaxed">
-              &ldquo;Forged in the fires of Muspelheim. No chain holds the wolf
-              that built the chain.&rdquo;
-            </p>
-
-            {/* Gleipnir fragment count */}
-            <div className="border-t border-[#1e2235] pt-3">
-              <p className="font-mono text-[0.7rem] text-[#c9920a]">
-                {fragmentsFound} of {TOTAL_FRAGMENTS} Gleipnir fragments found
-              </p>
-              {fragmentsFound === TOTAL_FRAGMENTS && (
-                <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">
-                  ✦ Gleipnir is complete. The wolf stirs.
-                </p>
-              )}
-              {fragmentsFound === 0 && (
-                <p className="font-mono text-[0.6rem] text-[#3d3d52] mt-1">
-                  Six impossible things wait to be found.
-                </p>
-              )}
-            </div>
-
-          </div>
-        </div>
-
-        {/* ── Footer ──────────────────────────────────────────────────── */}
-        <div className="flex justify-center px-6 py-4 border-t border-[#1e2235]">
-          <DialogClose asChild>
-            <Button
-              className="px-10 font-heading text-sm font-semibold tracking-widest uppercase
-                         bg-[#c9920a] text-[#07070d] hover:bg-[#f0b429]
-                         rounded-none min-h-[44px]"
-            >
-              So it is written
-            </Button>
-          </DialogClose>
-        </div>
-
-      </DialogContent>
-    </Dialog>
+        )}
+        {fragmentsFound === 0 && (
+          <p className="font-mono text-[0.6rem] text-[#3d3d52] mt-1">
+            Six impossible things wait to be found.
+          </p>
+        )}
+      </div>
+    </EasterEggModal>
   );
 }
