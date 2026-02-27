@@ -7,6 +7,8 @@ description: "Documentation sync skill for team agents. Updates all Markdown fil
 
 Your job: make the documentation in the owned directory accurate, complete, and well-indexed.
 
+This skill is designed to run in parallel across all agents. **Do not touch `README.md` at the repo root** — that is updated by the session coordinator after all agents complete, using the sync reports produced in Step 7.
+
 ---
 
 ## Project Configuration
@@ -92,7 +94,7 @@ For each file flagged for deletion in Step 4:
 
 1. Confirm it contains nothing of current or historical value that isn't captured elsewhere.
 2. Delete the file.
-3. Search for all links to this file across the entire `{DEST}/` tree **and** in the top-level `README.md`. Remove every link. Do not leave dangling references.
+3. Search for all links to this file across the entire `{DEST}/` tree. Remove every link. Do not leave dangling references inside your own directory.
 
 Be conservative: if in doubt, update the file and mark it deprecated rather than deleting it.
 
@@ -117,19 +119,30 @@ Format each entry as:
 
 ---
 
-## Step 7 — Check the top-level `README.md`
+## Step 7 — Write sync report
 
-Open `README.md` at the repo root. Verify:
+Write `{DEST}/.sync-report.md` summarising what this run changed. The session coordinator reads all four reports after agents complete and uses them to update the root `README.md`.
 
-1. There is a section that covers `{DEST}`. Find the heading for that section.
-2. **The section heading must itself be a hyperlink to `{DEST}/README.md`.** If it is plain text, convert it to a link. Example:
-   ```markdown
-   ### [Design](ux/README.md)
-   ```
-3. Within that section, verify there is a link to `{DEST}/README.md`. It must appear **at the top of the link list** for that section, before any other entries.
-4. If the link to `{DEST}/README.md` is missing, add it as the first item.
-5. If there are links in the top-level README pointing to files you deleted in Step 5, remove those links.
-6. Do **not** restructure or rewrite sections you don't own. Make surgical edits only.
+Format:
+
+```markdown
+# doc-sync report — {ROLE} — {DATE}
+
+## Files changed
+- `{DEST}/foo.md` — brief description of what changed and why
+- `{DEST}/bar.md` — deleted (reason)
+
+## Files unchanged
+- `{DEST}/baz.md` — verified current, no edits needed
+
+## README.md hints
+<!-- Tell the coordinator what (if anything) needs updating in the root README for your section. -->
+- Added link to `{DEST}/foo.md` in DEST/README.md — root README should reflect this
+- Deleted `{DEST}/bar.md` — root README link to this file should be removed
+- No root README changes needed  ← use this if nothing changed
+```
+
+Include `{DEST}/.sync-report.md` in the git commit for this run.
 
 ---
 
@@ -137,6 +150,8 @@ Open `README.md` at the repo root. Verify:
 
 **Accuracy over completeness.** One accurate document is worth more than ten partially-correct ones.
 
-**Surgical edits.** You own `{DEST}/` and the top-level README entry for your area. Do not modify content in other directories unless you are removing a dangling link to a file you deleted.
+**Surgical edits.** You own `{DEST}/` only. Do not modify files outside your directory.
 
 **The README is a live index.** It should always reflect what's actually in the directory right now — no dead links, no missing entries.
+
+**The root README is the coordinator's job.** After all parallel doc-sync runs complete, the session coordinator reads every `{DEST}/.sync-report.md` and makes targeted edits to the root `README.md` based on the hints provided.

@@ -133,8 +133,8 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 *FiremanDecko's domain. Where the chains are forged.*
 
 - [development/README.md](development/README.md) — Index of all development artifacts: source code, scripts, implementation plan, QA handoff, and technical specs
-- [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, data flow diagrams
-- [architecture/sprint-plan.md](architecture/sprint-plan.md) — Current sprint's stories, acceptance criteria, technical notes
+- [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, data flow diagrams (updated through Sprint 2)
+- [architecture/sprint-plan.md](architecture/sprint-plan.md) — Rolling multi-sprint plan: Sprint 1 (historical), Sprint 2 (delivered), Sprint 3–4 (upcoming)
 - [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001, ADR-002, ADR-003)
 - [architecture/adrs/ADR-004-oidc-auth-and-persistence.md](architecture/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR-004: OIDC auth + Supabase persistence
 - [development/spec-auth-oidc-google.md](development/spec-auth-oidc-google.md) — Technical spec: Google OIDC login (Iteration 1)
