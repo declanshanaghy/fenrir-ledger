@@ -1,5 +1,9 @@
 # Quality Assurance — Fenrir Ledger
 
+- [README.md](README.md) — This index. Overview of QA artifacts, test execution guide, and quality metrics.
+
+---
+
 This directory contains all QA artifacts: test plans, test cases, test scripts, and quality reports.
 
 ---

@@ -109,8 +109,8 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 *The voice of the user. Nothing moves downstream without her word.*
 
-- [fenrir-ledger-team/product-owner/backlog/README.md](fenrir-ledger-team/product-owner/backlog/README.md) — Groomed backlog index
-- [fenrir-ledger-team/product-owner/backlog/story-auth-oidc-google.md](fenrir-ledger-team/product-owner/backlog/story-auth-oidc-google.md) — P1: OIDC Authentication — Google Login (Iteration 1)
+- [design/backlog/README.md](design/backlog/README.md) — Groomed backlog index
+- [design/backlog/story-auth-oidc-google.md](design/backlog/story-auth-oidc-google.md) — P1: OIDC Authentication — Google Login (Iteration 1)
 
 ### ᚱ The Saga Ledger — Design
 
@@ -134,8 +134,8 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, data flow diagrams
 - [architecture/sprint-plan.md](architecture/sprint-plan.md) — Current sprint's stories, acceptance criteria, technical notes
 - [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001, ADR-002, ADR-003)
-- [fenrir-ledger-team/principal-engineer/adrs/ADR-004-oidc-auth-and-persistence.md](fenrir-ledger-team/principal-engineer/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR-004: OIDC auth + Supabase persistence
-- [fenrir-ledger-team/principal-engineer/specs/spec-auth-oidc-google.md](fenrir-ledger-team/principal-engineer/specs/spec-auth-oidc-google.md) — Technical spec: Google OIDC login (Iteration 1)
+- [architecture/adrs/ADR-004-oidc-auth-and-persistence.md](architecture/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR-004: OIDC auth + Supabase persistence
+- [development/spec-auth-oidc-google.md](development/spec-auth-oidc-google.md) — Technical spec: Google OIDC login (Iteration 1)
 - `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
 - [development/README.md](development/README.md) — Index of all development artifacts: source code, scripts, implementation plan, QA handoff
 - [development/src/](development/src/) — The forge itself. Next.js source code lives here.
@@ -143,7 +143,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [development/qa-handoff.md](development/qa-handoff.md) — Handoff to Loki: deploy steps, test focus, known limits
 - [development/scripts/](development/scripts/) — Idempotent build and deploy scripts
 
-### ᛏ Loki's Domain — Quality
+### ᛏ [Loki's Domain — Quality](quality/README.md)
 
 *The trickster tests. His verdicts are final.*
 
@@ -158,7 +158,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 - [Pipeline](design/pipeline.md) — Full Kanban workflow orchestration
 - [Git Convention](.claude/skills/git-commit/SKILL.md) — Commit format and pre-commit oaths
-- [Mermaid Style Guide](fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md) — Diagram conventions for all pack members
+- [Mermaid Style Guide](design/ux-assets/mermaid-style-guide.md) — Diagram conventions for all pack members
 
 ### ᛁ Templates
 
