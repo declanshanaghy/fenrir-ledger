@@ -22,6 +22,8 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Marketing Site | [wireframes/marketing-site.html](wireframes/marketing-site.html) | 5-section static page: nav, hero, problems, features, steps, footer |
 | Easter Egg Modal | [wireframes/easter-egg-modal.html](wireframes/easter-egg-modal.html) | Reusable discovery dialog triggered by any easter egg — see [easter-egg-modal.md](easter-egg-modal.md) |
 | About Modal | [wireframes/about-modal.html](wireframes/about-modal.html) | Two-column dialog: wolf logo left, team pack + seven impossible ingredients right |
+| Loki Mode (Easter Egg #3) | [wireframes/loki-mode.html](wireframes/loki-mode.html) | Side-by-side normal vs active states, scrambled card grid, random realm badges, toast, timer, footer trigger |
+| LCARS Mode (Easter Egg #6) | [wireframes/lcars-mode.html](wireframes/lcars-mode.html) | LCARS overlay on dashboard header: elbow blocks + 4 data lines, z:9653, 5s auto-dismiss |
 
 ---
 
