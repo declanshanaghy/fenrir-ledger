@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ᚲ Session Chronicle: Breaking the Gleipnir · Fenrir Ledger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void:        #07070d;
+      --forge:       #0f1018;
+      --chain:       #13151f;
+      --rune-border: #1e2235;
+      --iron-border: #2a2d45;
+      --gold-dim:    #8a6a00;
+      --gold:        #c9920a;
+      --gold-bright: #f0b429;
+      --teal:        #0a8c6e;
+      --amber:       #f59e0b;
+      --fire:        #c94a0a;
+      --violet:      #a78bfa;
+      --text:        #e8e4d4;
+      --muted:       #8a8578;
+      --subtle:      #3d3d52;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Source Serif 4', serif;
+      font-size: 16px;
+      color: var(--text);
+      background-color: var(--void);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -5%, rgba(201,146,10,0.09) 0%, transparent 65%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      background-attachment: fixed;
+      min-height: 100vh;
+      line-height: 1.7;
+    }
+
+    .page { max-width: 880px; margin: 0 auto; padding: 0 28px 100px; }
+
+    /* ── Header ── */
+    .session-header {
+      text-align: center;
+      padding: 72px 0 52px;
+      border-bottom: 1px solid var(--rune-border);
+    }
+    .header-runes {
+      display: block;
+      font-size: 22px;
+      letter-spacing: 0.5em;
+      color: var(--gold);
+      opacity: 0.55;
+      margin-bottom: 20px;
+    }
+    .session-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.6rem, 5vw, 2.6rem);
+      font-weight: 700;
+      color: var(--gold-bright);
+      text-shadow: 0 0 48px rgba(201,146,10,0.35);
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+    .session-subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .session-meta {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px 28px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--subtle);
+    }
+    .session-meta .val { color: var(--gold); }
+
+    /* ── TOC ── */
+    .toc {
+      margin: 40px 0 0;
+      padding: 20px 24px;
+      background: var(--forge);
+      border: 1px solid var(--rune-border);
+      border-left: 3px solid var(--gold-dim);
+    }
+    .toc-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .toc-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 6px 24px;
+    }
+    .toc-list li a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toc-list li a:hover { color: var(--gold-bright); }
+    .toc-rune { color: var(--gold); opacity: 0.6; font-size: 0.9rem; }
+    .toc-num { color: var(--subtle); font-size: 0.65rem; }
+
+    /* ── Timeline ── */
+    .timeline {
+      position: relative;
+      padding-top: 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 23px;
+      top: 56px;
+      bottom: 60px;
+      width: 1px;
+      background: linear-gradient(to bottom,
+        var(--gold) 0%,
+        var(--iron-border) 60%,
+        transparent 100%);
+    }
+
+    /* ── Entry ── */
+    .entry { display: flex; gap: 24px; }
+
+    .entry-rune {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      background: var(--forge);
+      border: 1px solid var(--iron-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      position: relative;
+      z-index: 1;
+      cursor: default;
+    }
+    .entry-rune:hover { border-color: var(--gold); }
+
+    .entry-body { flex: 1; min-width: 0; }
+
+    .act-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--subtle);
+      margin-bottom: 4px;
+    }
+    .entry-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--gold-bright);
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
+
+    /* ── User message ── */
+    .user-msg {
+      background: var(--chain);
+      border: 1px solid var(--iron-border);
+      border-left: 3px solid var(--gold);
+      padding: 14px 18px;
+      margin-bottom: 14px;
+    }
+    .msg-role {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .role-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 9px;
+      border: 1px solid;
+    }
+    .badge-fireman { color: var(--amber);  border-color: #f59e0b55; background: rgba(245,158,11,0.07); }
+    .badge-luna    { color: var(--violet); border-color: rgba(167,139,250,.5); background: rgba(167,139,250,0.07); }
+    .badge-loki    { color: var(--fire);   border-color: #c94a0a55; background: rgba(201,74,10,0.07); }
+    .badge-system  { color: var(--fire);   border-color: #c94a0a55; background: rgba(201,74,10,0.07); }
+
+    .msg-text {
+      font-size: 0.9rem;
+      color: var(--text);
+      white-space: pre-wrap;
+      line-height: 1.65;
+    }
+
+    /* ── Work card ── */
+    .work-card {
+      background: var(--forge);
+      border: 1px solid var(--rune-border);
+      padding: 18px 20px;
+    }
+    .work-body {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+    .work-body p { margin-bottom: 8px; }
+    .work-body p:last-child { margin-bottom: 0; }
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; color: var(--muted); }
+    .hl   { color: var(--gold-bright); font-weight: 600; }
+
+    /* ── Change list ── */
+    .changes {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin: 12px 0;
+    }
+    .changes li {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+    }
+    .changes li::before { content: '→'; color: var(--gold); flex-shrink: 0; }
+    .old { text-decoration: line-through; color: var(--subtle); }
+    .new { color: var(--gold-bright); }
+
+    /* ── Code block ── */
+    .code-block {
+      background: #050508;
+      border: 1px solid var(--rune-border);
+      border-left: 2px solid var(--gold-dim);
+      padding: 14px 16px;
+      margin: 14px 0;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.77rem;
+      line-height: 1.65;
+      color: var(--text);
+    }
+    .ca { color: #6ee7b7; }
+    .cr { color: #fca5a5; opacity: 0.5; }
+    .cc { color: var(--subtle); }
+
+    /* ── File chips ── */
+    .file-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding-top: 14px;
+      border-top: 1px solid var(--rune-border);
+      margin-top: 16px;
+    }
+    .chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      padding: 3px 10px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .chip-mod  { color: var(--gold);   border-color: var(--gold-dim);    background: rgba(201,146,10,0.06); }
+    .chip-new  { color: var(--teal);   border-color: rgba(10,140,110,.4); background: rgba(10,140,110,0.06); }
+    .chip-mem  { color: var(--violet); border-color: rgba(167,139,250,.4);background: rgba(167,139,250,0.06); }
+
+    /* ── Norm callout ── */
+    .norm-box {
+      background: rgba(10,140,110,0.06);
+      border: 1px solid rgba(10,140,110,0.3);
+      border-left: 3px solid var(--teal);
+      padding: 14px 18px;
+      margin: 14px 0;
+    }
+    .norm-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--teal);
+      margin-bottom: 10px;
+    }
+    .norm-body {
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── Section divider ── */
+    .rune-hr {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0;
+    }
+    .rune-hr::before, .rune-hr::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--rune-border);
+    }
+    .rune-hr span {
+      font-size: 16px;
+      color: var(--gold);
+      opacity: 0.3;
+      letter-spacing: 0.4em;
+    }
+
+    /* ── Footer ── */
+    .session-footer {
+      margin-top: 72px;
+      padding-top: 40px;
+      border-top: 1px solid var(--rune-border);
+      text-align: center;
+    }
+    .footer-cipher {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      letter-spacing: 0.5em;
+      color: var(--gold);
+      opacity: 0.35;
+      margin-bottom: 14px;
+    }
+    .footer-text {
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      color: var(--subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      line-height: 2;
+    }
+    .footer-text .hl { color: var(--gold-dim); }
+
+    /* ── Back nav ── */
+    .back-nav { padding: 24px 0 0; }
+    .back-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--gold-bright); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="back-nav" aria-label="Return to archive">
+    <a href="https://fenrir-ledger.vercel.app/sessions/" class="back-link">← ᛏ Session Archive</a>
+  </nav>
+
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <header class="session-header">
+    <span class="header-runes" aria-hidden="true">ᚲ ᚱ ᛚ ᚢ ᛒ ᛊ ᚾ ᚠ</span>
+    <h1 class="session-title">Breaking the Gleipnir</h1>
+    <p class="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+    <div class="session-meta">
+      <div>Date <span class="val">2026-02-26</span></div>
+      <div>Session <span class="val">breaking-the-gleipnir</span></div>
+      <div>Acts <span class="val">XI</span></div>
+      <div>Files changed <span class="val">26</span></div>
+      <div>Model <span class="val">Claude Sonnet 4.6</span></div>
+    </div>
+  </header>
+
+  <!-- ── Table of Contents ─────────────────────────────────────────── -->
+  <nav class="toc" aria-label="Session acts">
+    <div class="toc-title">Chronicle of Acts</div>
+    <ul class="toc-list">
+      <li><a href="#act1"><span class="toc-rune">ᚢ</span><span class="toc-num">I</span> Statusline Reforged</a></li>
+      <li><a href="#act2"><span class="toc-rune">ᚲ</span><span class="toc-num">II</span> The Shared Modal Shell</a></li>
+      <li><a href="#act3"><span class="toc-rune">ᚠ</span><span class="toc-num">III</span> The Skill Is Rewritten</a></li>
+      <li><a href="#act4"><span class="toc-rune">ᚱ</span><span class="toc-num">IV</span> Roots of a Mountain</a></li>
+      <li><a href="#act5"><span class="toc-rune">ᚢ</span><span class="toc-num">V</span> Three More Fragments</a></li>
+      <li><a href="#act6"><span class="toc-rune">ᛟ</span><span class="toc-num">VI</span> The Lore Is Corrected</a></li>
+      <li><a href="#act7"><span class="toc-rune">ᚠ</span><span class="toc-num">VII</span> The Wolf's Mark</a></li>
+      <li><a href="#act8"><span class="toc-rune">ᛁ</span><span class="toc-num">VIII</span> The Footer Is Forged</a></li>
+      <li><a href="#act9"><span class="toc-rune">ᛊ</span><span class="toc-num">IX</span> Transparent Backgrounds</a></li>
+      <li><a href="#act10"><span class="toc-rune">ᚲ</span><span class="toc-num">X</span> The Forgemaster Extracted</a></li>
+      <li><a href="#act11"><span class="toc-rune">ᛚ</span><span class="toc-num">XI</span> Loki Hunts the Eggs</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Timeline ──────────────────────────────────────────────────── -->
+  <div class="timeline">
+
+    <!-- ── Act I ── -->
+    <section class="entry" id="act1">
+      <div class="entry-rune" title="Statusline Reforged">ᚢ</div>
+      <div class="entry-body">
+        <p class="act-label">Act I · Tooling</p>
+        <h2 class="entry-title">Statusline Reforged</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">Simplify the output from ~/.claude/statusline-command.sh with the following changes — use basename(CWD) to shorten the path being shown, remove the time, align model followed by context usage on the extreme right.
+
+[Then, after sharing an image:]
+
+Make it like this image</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Two passes over <span class="mono">~/.claude/statusline-command.sh</span>. The first stripped the time, reduced the CWD to a basename, and right-aligned model and context percentage using <span class="mono">tput cols</span> padding. The second matched a shared screenshot: a two-line layout with <span class="hl">[Model] 📁 dirname | 🌿 branch</span> on line one and a gold/dim context progress bar, cost, and elapsed time on line two.</p>
+            <p>The progress bar uses <span class="mono">█</span> for filled slots and <span class="mono">░</span> for empty — ten characters wide, constructed with <span class="mono">printf '%*s' | tr</span>. Cost is printed as <span class="mono">$0.08</span> in yellow. Elapsed time reads from <span class="mono">.cost.total_duration_ms</span>.</p>
+          </div>
+
+          <div class="code-block">
+            <pre><span class="cc"># Line 1: [Model] 📁 dirname | 🌿 branch[!?]</span>
+<span class="ca">line1="${cyan}[${model}]${reset} 📁 ${dir}"</span>
+<span class="ca">if [ -n "$git_branch" ]; then</span>
+<span class="ca">  line1="${line1} | 🌿 ${git_branch}${git_dirty}${git_untracked}"</span>
+<span class="ca">fi</span>
+
+<span class="cc"># Line 2: ████░░░░░░ 42% | $0.08 | ⏱ 7m 3s</span>
+<span class="ca">line2="${green}${bar_filled}${dim}${bar_empty}${reset} ${used_pct}% | ${yellow}${cost_fmt}${reset} | ⏱ ${mins}m ${secs}s"</span></pre>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-mod">◈ ~/.claude/statusline-command.sh</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᚲ ᛊ ᛁ</span></div>
+
+    <!-- ── Act II ── -->
+    <section class="entry" id="act2">
+      <div class="entry-rune" title="The Shared Modal Shell">ᚲ</div>
+      <div class="entry-body">
+        <p class="act-label">Act II · Architecture</p>
+        <h2 class="entry-title">The Shared Modal Shell</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">fenrir-howl.mp3 didn't trigger when the forgemaster easter egg dialog was shown. Update the dialog to ensure the sound always plays. Also ensure that the dialog is re-used for every easter egg. Not re-implemented for every easter egg.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>FiremanDecko created <span class="hl">EasterEggModal.tsx</span> — the single shared modal shell for all easter eggs. It accepts <span class="mono">image</span>, <span class="mono">audioSrc</span>, <span class="mono">title</span>, <span class="mono">description</span>, and <span class="mono">children</span> props. Audio plays automatically on open (the triggering keypress satisfies browser autoplay gesture policy) and pauses on close. The Dialog structure, the gold header with runic eyebrow, the two-column layout, the dismiss button — all live here once.</p>
+            <p>ForgeMasterEgg.tsx was stripped of its own dialog boilerplate and now renders through <span class="mono">&lt;EasterEggModal audioSrc="/sounds/fenrir-howl.mp3" ...&gt;</span>. Going forward every new easter egg renders the same shell — no dialog reimplementation required.</p>
+          </div>
+
+          <div class="code-block">
+            <pre><span class="cc">// EasterEggModal.tsx — all eggs use this shell</span>
+<span class="ca">export function EasterEggModal({</span>
+<span class="ca">  open, onClose, title, description,</span>
+<span class="ca">  image, audioSrc, children,</span>
+<span class="ca">}: EasterEggModalProps) {</span>
+<span class="ca">  // plays on open, pauses on close — inside user gesture</span>
+<span class="ca">  useEffect(() => {</span>
+<span class="ca">    if (open && audioSrc) { /* fade in */ }</span>
+<span class="ca">    else { /* fade out */ }</span>
+<span class="ca">  }, [open, audioSrc]);</span>
+  ...
+}</pre>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-new">✦ src/components/easter-eggs/EasterEggModal.tsx</span>
+            <span class="chip chip-mod">◈ src/components/layout/ForgeMasterEgg.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᚠ ᛖ ᚾ</span></div>
+
+    <!-- ── Act III ── -->
+    <section class="entry" id="act3">
+      <div class="entry-rune" title="The Skill Is Rewritten">ᚠ</div>
+      <div class="entry-body">
+        <p class="act-label">Act III · Documentation</p>
+        <h2 class="entry-title">The Skill Is Rewritten</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">Update the easter-egg-modal SKILL to reflect this new approach to reuse a Component</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>The <span class="mono">easter-egg-modal</span> skill was significantly trimmed. Its Step 4 template previously scaffolded a full <span class="mono">Dialog/DialogContent/Button</span> structure with inline audio fade logic — 168 lines of repeated boilerplate. All of that is gone. The new template renders only <span class="mono">&lt;EasterEggModal&gt;</span> with its four props and a fragment-count footer as children.</p>
+            <p>The hook template lost its <span class="mono">howlRef</span>, <span class="mono">fadeIn</span>, and <span class="mono">fadeOut</span> helpers — audio is now EasterEggModal's responsibility. A new props reference table documents every prop the shared shell accepts. The "do not re-implement the modal structure" rule is stated explicitly at the top of Step 4.</p>
+          </div>
+
+          <ul class="changes">
+            <li>Step 4 template <span class="old">168-line Dialog scaffold</span> → <span class="new">EasterEggModal wrapper, ~30 lines</span></li>
+            <li>Hook template <span class="old">fadeIn/fadeOut/howlRef</span> → <span class="new">open state + localStorage gate only</span></li>
+            <li><span class="new">Added EasterEggModal props table to skill reference</span></li>
+          </ul>
+
+          <div class="file-chips">
+            <span class="chip chip-mod">◈ .claude/skills/easter-egg-modal/SKILL.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᚱ ᛟ ᛏ</span></div>
+
+    <!-- ── Act IV ── -->
+    <section class="entry" id="act4">
+      <div class="entry-rune" title="Roots of a Mountain">ᚱ</div>
+      <div class="entry-body">
+        <p class="act-label">Act IV · Easter Egg</p>
+        <h2 class="entry-title">Roots of a Mountain</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">/easter-egg-modal 3
+
+We need a trigger for the Roots of a mountain easter-egg - do it the first time the user collapses the sidebar.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>The skill generated <span class="hl">gleipnir-3.svg</span> — an inverted mountain silhouette with apex at <span class="mono">(512, 820)</span> and a full branching root system radiating from four foothill nodes. Opacity fades from <span class="mono">0.70</span> at the trunk to <span class="mono">0.15</span> at the finest tips. A gold glow node marks the apex convergence. The ᚱ rune watermarks the bottom-left.</p>
+            <p>The component <span class="hl">GleipnirMountainRoots.tsx</span> wraps <span class="mono">EasterEggModal</span> with the fragment counter in children. The trigger was wired into <span class="mono">AppShell.handleToggle</span>: when <span class="mono">next === true</span> (collapsing, not expanding), <span class="mono">triggerRoots()</span> fires. The hook's localStorage gate (<span class="mono">egg:gleipnir-3</span>) ensures it fires exactly once per user, regardless of how many subsequent collapses occur.</p>
+          </div>
+
+          <div class="code-block">
+            <pre><span class="cc">// AppShell.tsx — first sidebar collapse fires the egg</span>
+<span class="ca">function handleToggle() {</span>
+<span class="ca">  const next = !collapsed;</span>
+<span class="ca">  setCollapsed(next);</span>
+<span class="ca">  localStorage.setItem(STORAGE_KEY, String(next));</span>
+<span class="ca">  // Easter egg #3 — The Roots of a Mountain: first sidebar collapse</span>
+<span class="ca">  if (next) triggerRoots();</span>
+<span class="ca">}</span></pre>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-new">✦ development/src/public/easter-eggs/gleipnir-3.svg</span>
+            <span class="chip chip-new">✦ src/components/cards/GleipnirMountainRoots.tsx</span>
+            <span class="chip chip-mod">◈ src/components/layout/AppShell.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᚢ ᛊ ᛚ</span></div>
+
+    <!-- ── Act V ── -->
+    <section class="entry" id="act5">
+      <div class="entry-rune" title="Three More Fragments">ᚢ</div>
+      <div class="entry-body">
+        <p class="act-label">Act V · Easter Eggs</p>
+        <h2 class="entry-title">Three More Fragments</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">/easter-egg-modal 4
+
+/easter-egg-modal 6
+
+/easter-egg-modal 5</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Three Gleipnir fragments generated in a single session. <span class="hl">Fragment 4 — The Sinews of a Bear</span> (<span class="mono">gleipnir-4.svg</span>): a diagonal crosshatch of curved gold and iron sinew strands across the full canvas; a bright gold convergence knot with a Gaussian glow at the centre; four heavier anchor strands radiating to each corner. Rune: ᚢ. Trigger: TBD.</p>
+            <p><span class="hl">Fragment 5 — The Breath of a Fish</span> (<span class="mono">gleipnir-5.svg</span>): eleven gold stroke-only bubbles rising in a gentle S-curve from the base to the apex, opacity fading from <span class="mono">0.85</span> at the largest to <span class="mono">0.12</span> at the smallest. Dim iron water-surface ellipse at the base. Rune: ᛚ. Trigger: <span class="mono">onMouseEnter</span> on the footer <span class="mono">©</span> symbol.</p>
+            <p><span class="hl">Fragment 6 — The Spittle of a Bird</span> (<span class="mono">gleipnir-6.svg</span>): a gold beak silhouette pointing right, tip at <span class="mono">(560, 512)</span>; thirteen droplets sprayed at −30° to +30° fading from opacity <span class="mono">0.85</span> near the beak to <span class="mono">0.20</span> at the outer edge; faint radial guide lines from tip to each droplet. Rune: ᛊ. Trigger: TBD.</p>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-new">✦ development/src/public/easter-eggs/gleipnir-4.svg</span>
+            <span class="chip chip-new">✦ src/components/cards/GleipnirBearSinews.tsx</span>
+            <span class="chip chip-new">✦ development/src/public/easter-eggs/gleipnir-5.svg</span>
+            <span class="chip chip-new">✦ src/components/cards/GleipnirFishBreath.tsx</span>
+            <span class="chip chip-new">✦ development/src/public/easter-eggs/gleipnir-6.svg</span>
+            <span class="chip chip-new">✦ src/components/cards/GleipnirBirdSpittle.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᛟ ᚱ ᛞ</span></div>
+
+    <!-- ── Act VI ── -->
+    <section class="entry" id="act6">
+      <div class="entry-rune" title="The Lore Is Corrected">ᛟ</div>
+      <div class="entry-body">
+        <p class="act-label">Act VI · Design</p>
+        <h2 class="entry-title">The Lore Is Corrected</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">Update the Location for "Sinews of a bear" to "TBD - more UI elements need to be finished"
+Update the Location for "Spittle of a bird" to TBD
+
+Update the Location for "Roots of a mountain" to "First time collapse of the Sidebar Menu"
+
+Update the Location for "Spittle of a bird" to "TBD — more UI elements need to be finished"</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Four location entries updated across both the design doc and the skill's placement table. Fragment 3's location was set to its exact implementation truth: <em>First time collapse of the Sidebar Menu</em>. Fragments 4 and 6 acknowledged honest incompleteness — more UI surface is needed before a home can be chosen.</p>
+            <p>All three files were kept in sync: <span class="mono">design/easter-eggs.md</span>, <span class="mono">.claude/skills/easter-egg-modal/SKILL.md</span>, and the inline comment in <span class="mono">GleipnirMountainRoots.tsx</span>. The wolf does not like inconsistent records.</p>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-mod">◈ design/easter-eggs.md</span>
+            <span class="chip chip-mod">◈ .claude/skills/easter-egg-modal/SKILL.md</span>
+            <span class="chip chip-mod">◈ src/components/cards/GleipnirMountainRoots.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᚠ ᛁ ᚱ</span></div>
+
+    <!-- ── Act VII ── -->
+    <section class="entry" id="act7">
+      <div class="entry-rune" title="The Wolf's Mark">ᚠ</div>
+      <div class="entry-body">
+        <p class="act-label">Act VII · Bugfix</p>
+        <h2 class="entry-title">The Wolf's Mark</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">Failed to load resource: the server responded with a status of 404 (Not Found) — fetch("http://localhost:9653/favicon.ico"…)</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>No favicon existed. In Next.js App Router, placing <span class="mono">icon.svg</span> in <span class="mono">app/</span> causes the framework to inject a <span class="mono">&lt;link rel="icon"&gt;</span> tag automatically — modern browsers stop requesting <span class="mono">/favicon.ico</span>, ending the 404 entirely.</p>
+            <p>The icon is a gold <span class="hl">ᚠ Fehu rune</span> on a void-black rounded square: a vertical stave from y=4 to y=28 at x=12, two right-branching diagonal strokes. Fehu is the first rune of FENRIR — fitting as the app's permanent mark. Stroke width 2.5 on the stave, 2 on the branches, all in <span class="mono">#c9920a</span>.</p>
+          </div>
+
+          <div class="norm-box">
+            <p class="norm-label">Decision</p>
+            <p class="norm-body">SVG favicon over ICO — SVG scales perfectly at any size, matches the dark Nordic design system, and lets Next.js handle injection automatically without a build step.</p>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-new">✦ src/app/icon.svg</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᛁ ᛊ ᚾ</span></div>
+
+    <!-- ── Act VIII ── -->
+    <section class="entry" id="act8">
+      <div class="entry-rune" title="The Footer Is Forged">ᛁ</div>
+      <div class="entry-body">
+        <p class="act-label">Act VIII · Feature</p>
+        <h2 class="entry-title">The Footer Is Forged</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-luna">Luna</span>
+          </div>
+          <p class="msg-text">Luna: generate a wireframe for the Footer. Then hand off to FiremanDecko to implement.
+
+[After first implementation:]
+
+The footer is too Tall. It must be only 2 lines tall in small font size so it's unobtrusive.
+Remove the link to the About dialog. Remove the separator line at the bottom.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Luna specified the wireframe, FiremanDecko built it, Luna reviewed and demanded a compact revision, FiremanDecko complied. The final footer is <span class="hl">two lines tall at 11px</span> — barely a whisper at the bottom of the page. It is a flex row: copyright symbol on the left (the hover trigger for Fragment 5), project name centred, GitHub link on the right.</p>
+            <p>Both easter egg triggers survived the cut: the Loki 7-click counter and the <span class="mono">©</span> hover for <em>The Breath of a Fish</em>. What was removed: the three-column grid, the About dialog link, the top separator line, and the excessive <span class="mono">py-6</span> padding (reduced to <span class="mono">py-1.5</span>).</p>
+          </div>
+
+          <ul class="changes">
+            <li>Layout <span class="old">three-column grid</span> → <span class="new">single flex row</span></li>
+            <li>About dialog link <span class="old">present</span> → <span class="new">removed</span></li>
+            <li>Top separator <span class="old">present</span> → <span class="new">removed</span></li>
+            <li>Padding <span class="old">py-6</span> → <span class="new">py-1.5</span></li>
+            <li>Font size <span class="old">standard</span> → <span class="new">11px / text-[11px]</span></li>
+          </ul>
+
+          <div class="file-chips">
+            <span class="chip chip-new">✦ src/components/layout/Footer.tsx</span>
+            <span class="chip chip-mod">◈ src/components/layout/AppShell.tsx</span>
+            <span class="chip chip-mod">◈ design/wireframes.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᛊ ᚲ ᚾ</span></div>
+
+    <!-- ── Act IX ── -->
+    <section class="entry" id="act9">
+      <div class="entry-rune" title="Transparent Backgrounds">ᛊ</div>
+      <div class="entry-body">
+        <p class="act-label">Act IX · Bugfix</p>
+        <h2 class="entry-title">Transparent Backgrounds</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">Update the Easter Egg shared modal so that the SVG is displayed with a dark background to match the dialog or a transparent background. If the SVGs need to be edited, adjust them then update the easter-egg-modal skill to specify that the SVG must have a transparent background.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>The mismatch was visible: SVGs had <span class="mono">fill="#07070d"</span> background rects while the modal's image column is <span class="mono">bg-[#13151f]</span> (chain) — a darker slab against a slightly lighter surround. The fix was simpler than custom-matching colours: strip the background rect from all six SVGs and the inline anvil in <span class="mono">ForgeMasterEgg.tsx</span>, and let the modal's own column colour show through.</p>
+            <p>SVGs 1 and 2 had the comment <em>Background void</em>; SVGs 3, 4, 5, 6 had <em>Background</em>. The anvil in <span class="mono">ForgeMasterEgg.tsx</span> had the comment <em>Background — void black</em>. Intentional <span class="mono">#07070d</span> fills on design elements — hardie/pritchel holes, rune engravings — were left untouched. The skill's background rule was rewritten to explicitly ban background rects and explain the reason.</p>
+          </div>
+
+          <div class="code-block">
+            <pre><span class="cc"><!-- Before: background rect in every SVG --></span>
+<span class="cr">&lt;rect width="1024" height="1024" fill="#07070d"/&gt;</span>
+
+<span class="cc"><!-- After: removed — modal's bg-[#13151f] shows through cleanly --></span></pre>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-mod">◈ development/src/public/easter-eggs/gleipnir-1.svg</span>
+            <span class="chip chip-mod">◈ development/src/public/easter-eggs/gleipnir-2.svg</span>
+            <span class="chip chip-mod">◈ development/src/public/easter-eggs/gleipnir-3.svg</span>
+            <span class="chip chip-mod">◈ development/src/public/easter-eggs/gleipnir-4.svg</span>
+            <span class="chip chip-mod">◈ development/src/public/easter-eggs/gleipnir-5.svg</span>
+            <span class="chip chip-mod">◈ development/src/public/easter-eggs/gleipnir-6.svg</span>
+            <span class="chip chip-mod">◈ src/components/layout/ForgeMasterEgg.tsx</span>
+            <span class="chip chip-mod">◈ .claude/skills/easter-egg-modal/SKILL.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᚲ ᛞ ᛁ</span></div>
+
+    <!-- ── Act X ── -->
+    <section class="entry" id="act10">
+      <div class="entry-rune" title="The Forgemaster Extracted">ᚲ</div>
+      <div class="entry-body">
+        <p class="act-label">Act X · Refactor</p>
+        <h2 class="entry-title">The Forgemaster Extracted</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p class="msg-text">Update the easter egg skill to accept an easter egg name OR an easter egg number. Update ForgeMasterEgg.tsx so it references its SVG file rather than having it inline.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>The 200-line <span class="mono">ForgeAnvilArtifact</span> function was excised from <span class="mono">ForgeMasterEgg.tsx</span> entirely. Its JSX — with React-style attribute names like <span class="mono">strokeWidth</span> and <span class="mono">stopColor</span> — was converted to standard SVG attributes and written to <span class="mono">public/easter-eggs/forgemaster.svg</span>. The component now renders a simple <span class="mono">&lt;img src="/easter-eggs/forgemaster.svg"&gt;</span> in the image prop. No background rect.</p>
+            <p>The skill was updated so engineers may invoke it with either a number (<span class="mono">3</span>) or a name keyword (<span class="mono">"mountain"</span>, <span class="mono">"fish"</span>, <span class="mono">"bear sinews"</span>). The lookup table gained a <em>Name keywords</em> column. Four examples show both input styles. Ambiguous input requests clarification before proceeding.</p>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-new">✦ development/src/public/easter-eggs/forgemaster.svg</span>
+            <span class="chip chip-mod">◈ src/components/layout/ForgeMasterEgg.tsx</span>
+            <span class="chip chip-mod">◈ .claude/skills/easter-egg-modal/SKILL.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rune-hr"><span>ᛚ ᛟ ᚲ</span></div>
+
+    <!-- ── Act XI ── -->
+    <section class="entry" id="act11">
+      <div class="entry-rune" title="Loki Hunts the Eggs">ᛚ</div>
+      <div class="entry-body">
+        <p class="act-label">Act XI · Testing</p>
+        <h2 class="entry-title">Loki Hunts the Eggs</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-loki">Loki</span>
+          </div>
+          <p class="msg-text">Loki: update the playwright tests to hunt for the easter eggs. ensure you have strict assertions on these things.
+How the easter egg is triggered. Does it match the behaviour described in easter-eggs.md
+Easter egg display: correct SVG file? correct DESC text? correct number of easter eggs found?
+Evaluate what makes sense to assert on beyond this to ensure the tests are not too brittle. e.g: EXACT text match for DESC shouldn't be necessary, mainly ensure that the first 30 or so characters matches.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Loki delivered <span class="hl">test-easter-eggs.spec.ts</span> — 22 test cases across 8 suites in the <span class="mono">quality/scripts/</span> directory. Each implemented egg is tested against three dimensions: trigger mechanism matches the spec in <span class="mono">design/easter-eggs.md</span>, modal surfaces the correct SVG filename, and the fragment counter resolves to a valid <span class="mono">/\d+ of 6/</span> pattern.</p>
+            <p>The assertion strategy is calibrated for maintainability: exact matches for modal titles, SVG <span class="mono">src</span> filenames, and the dismiss button text <em>"So it is written"</em>; partial (~30 character) matches for visible description copy; regex for fragment counts. Audio playback, CSS animation state, and exact fragment numbers are intentionally omitted — these would make the suite brittle without adding confidence. One-time gate behaviour is verified: each egg is triggered once, dismissed, then retriggered — modal must not reopen.</p>
+          </div>
+
+          <div class="norm-box">
+            <p class="norm-label">Assertion Strategy</p>
+            <p class="norm-body">
+              Exact: modal titles, SVG src filenames, button text "So it is written".<br>
+              Partial (~30 chars): visible eyebrow and description text.<br>
+              Regex: <span class="mono">/\d+ of 6/</span> for fragment count lines.<br>
+              Skipped: audio playback, CSS animation state, exact fragment numbers.
+            </p>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-new">✦ quality/scripts/test-easter-eggs.spec.ts</span>
+            <span class="chip chip-mod">◈ quality/test-plan.md</span>
+            <span class="chip chip-mod">◈ quality/test-cases.md</span>
+            <span class="chip chip-mod">◈ quality/EASTER-EGGS-AUDIT.md</span>
+            <span class="chip chip-mod">◈ quality/README.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /timeline -->
+
+  <!-- ── Footer ─────────────────────────────────────────────────────── -->
+  <footer class="session-footer">
+    <p class="footer-cipher">ᚲ ᚱ ᛚ ᚢ ᛒ ᛊ ᚾ</p>
+    <p class="footer-text">
+      Breaking the Gleipnir · Fenrir Ledger Session Chronicle ·
+      <span class="hl">Six impossible things. All of them now named. Most of them woven.</span>
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>
