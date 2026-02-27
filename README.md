@@ -127,17 +127,17 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [design/implementation-brief.md](design/implementation-brief.md) — FiremanDecko integration plan, wave strategy, open questions
 - [design/easter-egg-modal.md](design/easter-egg-modal.md) — Shared modal template for all easter egg discovery moments
 
-### ᚲ The Forge — Architecture + Development
+### ᚲ [The Forge — Architecture + Development](development/README.md)
 
 *FiremanDecko's domain. Where the chains are forged.*
 
+- [development/README.md](development/README.md) — Index of all development artifacts: source code, scripts, implementation plan, QA handoff, and technical specs
 - [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, data flow diagrams
 - [architecture/sprint-plan.md](architecture/sprint-plan.md) — Current sprint's stories, acceptance criteria, technical notes
 - [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001, ADR-002, ADR-003)
 - [architecture/adrs/ADR-004-oidc-auth-and-persistence.md](architecture/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR-004: OIDC auth + Supabase persistence
 - [development/spec-auth-oidc-google.md](development/spec-auth-oidc-google.md) — Technical spec: Google OIDC login (Iteration 1)
 - `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
-- [development/README.md](development/README.md) — Index of all development artifacts: source code, scripts, implementation plan, QA handoff
 - [development/src/](development/src/) — The forge itself. Next.js source code lives here.
 - [development/implementation-plan.md](development/implementation-plan.md) — Ordered task breakdown, what was built
 - [development/qa-handoff.md](development/qa-handoff.md) — Handoff to Loki: deploy steps, test focus, known limits
