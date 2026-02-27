@@ -16,12 +16,12 @@ This table maps role names and agent name aliases to their owned output director
 
 | ROLE / AGENT NAME | DEST | AGENT FILE |
 |---|---|---|
-| `product-owner` / `freya` | `designs/product/` | `.claude/agents/freya.md` |
-| `ux-designer` / `luna` | `designs/ux-design/` | `.claude/agents/luna.md` |
-| `principal-engineer` / `firemandecko` | `designs/architecture/` | `.claude/agents/fireman-decko.md` |
+| `product-owner` / `freya` | `product/` | `.claude/agents/freya.md` |
+| `ux-designer` / `luna` | `ux/` | `.claude/agents/luna.md` |
+| `principal-engineer` / `firemandecko` | `architecture/` | `.claude/agents/fireman-decko.md` |
 | `qa-tester` / `loki` | `quality/` | `.claude/agents/loki.md` |
 
-> **Shared index:** `designs/README.md` is the umbrella index for the entire `designs/` tree. Each agent should also update `designs/README.md` in Step 7 (in addition to the root `README.md`) when their subdirectory changes.
+> **Shared manifesto:** `ux/README.md` is the design system manifesto covering all three design domains. Luna owns it; the other roles link to it from their own READMEs.
 
 ---
 
@@ -124,7 +124,7 @@ Open `README.md` at the repo root. Verify:
 1. There is a section that covers `{DEST}`. Find the heading for that section.
 2. **The section heading must itself be a hyperlink to `{DEST}/README.md`.** If it is plain text, convert it to a link. Example:
    ```markdown
-   ### [Design](designs/README.md)
+   ### [Design](ux/README.md)
    ```
 3. Within that section, verify there is a link to `{DEST}/README.md`. It must appear **at the top of the link list** for that section, before any other entries.
 4. If the link to `{DEST}/README.md` is missing, add it as the first item.

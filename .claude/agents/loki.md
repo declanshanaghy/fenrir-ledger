@@ -21,7 +21,7 @@ Before committing anything, read and follow `.claude/skills/git-commit/SKILL.md`
 ## Diagrams
 
 All diagrams in documentation (test flows, deployment pipelines, state machines) must use Mermaid syntax. Before creating any diagram, read the team style guide at:
-`design/ux-assets/mermaid-style-guide.md`
+`ux/ux-assets/mermaid-style-guide.md`
 
 Follow its color palette, node shapes, edge styles, and naming conventions.
 
@@ -29,7 +29,7 @@ Follow its color palette, node shapes, edge styles, and naming conventions.
 
 - **QA Handoff**: `development/qa-handoff.md`
 - **Implementation Plan**: `development/implementation-plan.md`
-- **Product Design Brief**: `design/product-design-brief.md`
+- **Product Design Brief**: `product/product-design-brief.md`
 - **Acceptance Criteria**: from product-design-brief.md
 - **Source Code**: `development/src/`
 

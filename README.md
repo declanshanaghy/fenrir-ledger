@@ -109,36 +109,36 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 *The voice of the user. Nothing moves downstream without her word.*
 
-- [designs/product/README.md](designs/product/README.md) — Product domain index: mythology map, copywriting guide, backlog
-- [designs/product/backlog/README.md](designs/product/backlog/README.md) — Groomed backlog index
-- [designs/product/backlog/story-auth-oidc-google.md](designs/product/backlog/story-auth-oidc-google.md) — P1: OIDC Authentication — Google Login (Iteration 1)
+- [product/README.md](product/README.md) — Product domain index: mythology map, copywriting guide, backlog
+- [product/backlog/README.md](product/backlog/README.md) — Groomed backlog index
+- [product/backlog/story-auth-oidc-google.md](product/backlog/story-auth-oidc-google.md) — P1: OIDC Authentication — Google Login (Iteration 1)
 
-### [ᚱ The Saga Ledger — Design](designs/README.md)
+### [ᚱ The Saga Ledger — Design](ux/README.md)
 
 *Freya + Luna's domain. The visual soul of the wolf.*
 
-- [designs/README.md](designs/README.md) — The wolf speaks. A guide to the full design system, in the voice of Fenrir.
-- [designs/product-design-brief.md](designs/product-design-brief.md) — Design philosophy, three pillars, aesthetic direction
-- [designs/ux-design/theme-system.md](designs/ux-design/theme-system.md) — Color palette, typography, CSS tokens, Tailwind extensions
-- [designs/product/mythology-map.md](designs/product/mythology-map.md) — Nine Realms → card states, Norns, Huginn & Muninn, Hati & Sköll
-- [designs/product/copywriting.md](designs/product/copywriting.md) — Kennings, Edda quotes, empty states, action labels, error voice
-- [designs/ux-design/easter-eggs.md](designs/ux-design/easter-eggs.md) — Gleipnir Hunt, Konami howl, Loki mode, console ASCII, all hidden lore
-- [designs/ux-design/interactions.md](designs/ux-design/interactions.md) — Animations, saga-enter stagger, status ring, Howl panel patterns
-- [designs/ux-design/wireframes.md](designs/ux-design/wireframes.md) — Layout specs, component hierarchy, responsive breakpoints
-- [designs/architecture/implementation-brief.md](designs/architecture/implementation-brief.md) — FiremanDecko integration plan, wave strategy, open questions
-- [designs/ux-design/easter-egg-modal.md](designs/ux-design/easter-egg-modal.md) — Shared modal template for all easter egg discovery moments
+- [ux/README.md](ux/README.md) — The wolf speaks. A guide to the full design system, in the voice of Fenrir.
+- [product/product-design-brief.md](product/product-design-brief.md) — Design philosophy, three pillars, aesthetic direction
+- [ux/theme-system.md](ux/theme-system.md) — Color palette, typography, CSS tokens, Tailwind extensions
+- [product/mythology-map.md](product/mythology-map.md) — Nine Realms → card states, Norns, Huginn & Muninn, Hati & Sköll
+- [product/copywriting.md](product/copywriting.md) — Kennings, Edda quotes, empty states, action labels, error voice
+- [ux/easter-eggs.md](ux/easter-eggs.md) — Gleipnir Hunt, Konami howl, Loki mode, console ASCII, all hidden lore
+- [ux/interactions.md](ux/interactions.md) — Animations, saga-enter stagger, status ring, Howl panel patterns
+- [ux/wireframes.md](ux/wireframes.md) — Layout specs, component hierarchy, responsive breakpoints
+- [architecture/implementation-brief.md](architecture/implementation-brief.md) — FiremanDecko integration plan, wave strategy, open questions
+- [ux/easter-egg-modal.md](ux/easter-egg-modal.md) — Shared modal template for all easter egg discovery moments
 
 ### ᚲ [The Forge — Architecture + Development](development/README.md)
 
 *FiremanDecko's domain. Where the chains are forged.*
 
 - [development/README.md](development/README.md) — Index of all development artifacts: source code, scripts, implementation plan, QA handoff, and technical specs
-- [designs/architecture/system-design.md](designs/architecture/system-design.md) — Component architecture, data model, data flow diagrams
-- [designs/architecture/sprint-plan.md](designs/architecture/sprint-plan.md) — Current sprint's stories, acceptance criteria, technical notes
-- [designs/architecture/adrs/](designs/architecture/adrs/) — Architecture Decision Records (ADR-001, ADR-002, ADR-003)
-- [designs/architecture/adrs/ADR-004-oidc-auth-and-persistence.md](designs/architecture/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR-004: OIDC auth + Supabase persistence
+- [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, data flow diagrams
+- [architecture/sprint-plan.md](architecture/sprint-plan.md) — Current sprint's stories, acceptance criteria, technical notes
+- [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001, ADR-002, ADR-003)
+- [architecture/adrs/ADR-004-oidc-auth-and-persistence.md](architecture/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR-004: OIDC auth + Supabase persistence
 - [development/spec-auth-oidc-google.md](development/spec-auth-oidc-google.md) — Technical spec: Google OIDC login (Iteration 1)
-- `designs/architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
+- `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
 - [development/src/](development/src/) — The forge itself. Next.js source code lives here.
 - [development/implementation-plan.md](development/implementation-plan.md) — Ordered task breakdown, what was built
 - [development/qa-handoff.md](development/qa-handoff.md) — Handoff to Loki: deploy steps, test focus, known limits
@@ -157,9 +157,9 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 ### ᚠ Pack Operations
 
-- [Pipeline](designs/architecture/pipeline.md) — Full Kanban workflow orchestration
+- [Pipeline](architecture/pipeline.md) — Full Kanban workflow orchestration
 - [Git Convention](.claude/skills/git-commit/SKILL.md) — Commit format and pre-commit oaths
-- [Mermaid Style Guide](designs/ux-design/ux-assets/mermaid-style-guide.md) — Diagram conventions for all pack members
+- [Mermaid Style Guide](ux/ux-assets/mermaid-style-guide.md) — Diagram conventions for all pack members
 
 ### ᛁ Templates
 
@@ -201,11 +201,11 @@ cd development/src && npm run dev
 ### Sprint 1 — Forged Artifacts
 
 **The Architecture**
-- [Sprint Plan](designs/architecture/sprint-plan.md) — 5 stories, acceptance criteria, technical notes
-- [System Design](designs/architecture/system-design.md) — Component architecture, data model, data flow diagrams
-- [ADR-001: Tech Stack](designs/architecture/adrs/ADR-001-tech-stack.md) — Why Next.js + TypeScript + Tailwind + shadcn/ui
-- [ADR-002: Data Model](designs/architecture/adrs/ADR-002-data-model.md) — Household-scoped schema from day one
-- [ADR-003: Local Storage](designs/architecture/adrs/ADR-003-local-storage.md) — localStorage for Sprint 1 + the migration path
+- [Sprint Plan](architecture/sprint-plan.md) — 5 stories, acceptance criteria, technical notes
+- [System Design](architecture/system-design.md) — Component architecture, data model, data flow diagrams
+- [ADR-001: Tech Stack](architecture/adrs/ADR-001-tech-stack.md) — Why Next.js + TypeScript + Tailwind + shadcn/ui
+- [ADR-002: Data Model](architecture/adrs/ADR-002-data-model.md) — Household-scoped schema from day one
+- [ADR-003: Local Storage](architecture/adrs/ADR-003-local-storage.md) — localStorage for Sprint 1 + the migration path
 
 **The Implementation**
 - [Implementation Plan](development/implementation-plan.md) — Ordered task breakdown
@@ -232,8 +232,8 @@ Copyright (C) 2026 Declan Shanaghy. Licensed under the [GNU Affero General Publi
 
 ## The Pack's Oaths
 
-- **Diagrams**: All Mermaid, following the [mermaid-style-guide.md](designs/ux-design/ux-assets/mermaid-style-guide.md)
+- **Diagrams**: All Mermaid, following the [mermaid-style-guide.md](ux/ux-assets/mermaid-style-guide.md)
 - **Commits**: Strict format per [git-commit/SKILL.md](.claude/skills/git-commit/SKILL.md)
 - **Secrets**: `.env` file, never committed, `.env.example` as the template
 - **Sprints**: Max 5 stories. The forge-script runs every sprint. No exceptions.
-- **Output**: Each wolf writes to its top-level folder (`designs/`, `development/`, `quality/`). Git tracks the history — files are overwritten each sprint, no subdirectories.
+- **Output**: Each wolf writes to its top-level folder (`product/`, `ux/`, `architecture/`, `development/`, `quality/`). Git tracks the history — files are overwritten each sprint, no subdirectories.

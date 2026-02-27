@@ -218,7 +218,7 @@ Use this template exactly, substituting all `{{...}}` placeholders:
  * Shown when the user discovers: "{{TITLE}}"
  * One of the six impossible things woven into Gleipnir — the ribbon that bound Fenrir.
  *
- * Trigger:  See design/easter-eggs.md #1 — The Gleipnir Hunt
+ * Trigger:  See ux/easter-eggs.md #1 — The Gleipnir Hunt
  * Storage:  localStorage key "{{STORAGE_KEY}}"
  * Image:    /easter-eggs/gleipnir-{{N}}.svg
  */
@@ -342,13 +342,13 @@ Output a concise summary for the engineer showing:
 1. **Image path** (as referenced in the component): `/easter-eggs/gleipnir-{{N}}.svg`
 2. **Component import**: `import { {{COMPONENT}}, useGleipnirFragment{{N}} } from "@/components/cards/{{COMPONENT}}"`
 3. **Trigger site hook usage** (copy-paste example)
-4. **Which placement location** to trigger this from (see `design/easter-eggs.md` placement table)
+4. **Which placement location** to trigger this from (see `ux/easter-eggs.md` placement table)
 
 ---
 
 ## Reference Data
 
-### Gleipnir Placement Map (from `design/easter-eggs.md`)
+### Gleipnir Placement Map (from `ux/easter-eggs.md`)
 
 | # | Ingredient | Where to wire the trigger |
 |---|-----------|--------------------------|
@@ -371,7 +371,7 @@ Output a concise summary for the engineer showing:
 | `audioSrc?` | `string` | Audio URL played on open (e.g. `/sounds/fenrir-howl.mp3`) |
 | `children` | `ReactNode` | Discovery copy — right column |
 
-### Design Tokens (from `design/theme-system.md`)
+### Design Tokens (from `ux/theme-system.md`)
 
 | Token | Value | Role |
 |-------|-------|------|
@@ -388,4 +388,4 @@ Output a concise summary for the engineer showing:
 ### z-index: 9653
 
 The easter egg modal uses z-index 9653 — W-O-L-F on a phone keypad.
-This is a magic number documented in `design/copywriting.md`.
+This is a magic number documented in `product/copywriting.md`.
