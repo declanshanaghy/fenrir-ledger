@@ -29,9 +29,9 @@ jobs:
 
       - name: Copy static site into Next.js public/static/
         run: |
-          mkdir -p development/src/public/static
+          rm -f development/src/public/static development/src/public/sessions
+          mkdir -p development/src/public/static development/src/public/sessions
           cp -r static/. development/src/public/static/
-          mkdir -p development/src/public/sessions
           cp -r sessions/. development/src/public/sessions/
 
       - name: Build
