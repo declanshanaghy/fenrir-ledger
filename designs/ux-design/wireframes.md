@@ -3,7 +3,7 @@
 Wireframes are standalone HTML5 documents. They use only structural layout — no colors, no custom fonts, no shadows, no decorative borders. Theme styling is defined in `theme-system.md` and applied separately by the engineer. If the theme changes, the wireframes remain valid.
 
 **Convention:**
-- All wireframe files live in `design/wireframes/`
+- All wireframe files live in `designs/ux-design/wireframes/`
 - Link to them from any `.md` file that references a layout (`[Wireframe](wireframes/foo.html)`)
 - The HTML files use semantic elements (`<nav>`, `<main>`, `<aside>`, `<section>`, `<form>`, `<fieldset>`) to convey structure
 - Permitted CSS: `display: flex/grid`, `border: 1px solid`, `width/height`, `padding/margin`, `font-size`, `font-weight`
