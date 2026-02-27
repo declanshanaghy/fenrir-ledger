@@ -22,10 +22,10 @@ Hidden references for the wolves who look closely. None of these should obstruct
 |-----------|----------|
 | *Sound of a cat's footfall* | Tooltip on the silent background sync indicator (bottom-right corner) |
 | *Beard of a woman* | About modal — listed under "Built from..." in fine print |
-| *Roots of a mountain* | Comment in `storage.ts`: `// Fenrir Ledger persists like the roots of a mountain` |
-| *Sinews of a bear* | Error boundary fallback component, in a `data-gleipnir` attribute |
+| *Roots of a mountain* | First time collapse of the Sidebar Menu |
+| *Sinews of a bear* | TBD — more UI elements need to be finished |
 | *Breath of a fish* | Footer — mouse-hover on the copyright `©` symbol reveals it via CSS `::after` |
-| *Spittle of a bird* | Empty state for "no cards" — in the HTML as an invisible `aria-description` |
+| *Spittle of a bird* | TBD — more UI elements need to be finished |
 
 **Unlock mechanic**: A `localStorage` key `gleipnir-found` stores a Set of found ingredients. When all six are found, the page briefly shimmers (CSS `@keyframes gleipnir-shimmer`) and the Valhalla page gains a new special entry:
 

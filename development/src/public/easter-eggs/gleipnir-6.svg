@@ -2,9 +2,6 @@
   <title>The Spittle of a Bird</title>
   <desc>I have eaten birds. Whole. Feathers, hollow bones, the lot. Birds do not spit — they are too small, too clean, too fast. They told me the dwarves collected it over a thousand years from the corners of beaks. A thousand years of nothing, gathered into a strand that holds a god's wolf still. I respect it.</desc>
 
-  <!-- Background -->
-  <rect width="1024" height="1024" fill="#07070d"/>
-
   <!-- Outer ring -->
   <circle cx="512" cy="512" r="440" stroke="#c9920a" stroke-width="1" fill="none" opacity="0.18"/>
 

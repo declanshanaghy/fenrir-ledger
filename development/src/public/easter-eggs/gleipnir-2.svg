@@ -44,9 +44,6 @@
     </filter>
   </defs>
 
-  <!-- ── Background void ──────────────────────────────────────────────── -->
-  <rect width="1024" height="1024" fill="#07070d"/>
-
   <!-- ── Outer ring ────────────────────────────────────────────────────── -->
   <circle cx="512" cy="512" r="440" fill="none" stroke="#c9920a" stroke-width="1" opacity="0.18"/>
 

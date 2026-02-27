@@ -1,13 +1,13 @@
 ---
 name: easter-egg-modal
-description: This skill should be used when the user asks to "generate an easter egg modal", "create a Gleipnir fragment modal", "build easter egg component", "make an easter egg screen", or provides an egg number (1–6) referring to the six Gleipnir ingredients. Generates a TSX modal component with an inline SVG artifact image for the specified Fenrir Ledger easter egg. No external tools required.
+description: This skill should be used when the user asks to "generate an easter egg modal", "create a Gleipnir fragment modal", "build easter egg component", "make an easter egg screen", or provides an egg number (1–6) OR an egg name (e.g. "cat", "mountain", "fish") referring to the six Gleipnir ingredients. Generates a TSX component that wraps the shared EasterEggModal shell and an inline SVG artifact image for the specified Fenrir Ledger easter egg. No external tools required.
 ---
 
 # Easter Egg Modal Generator — Fenrir Ledger
 
-Generates a fully-styled TSX modal component for one of the six Gleipnir fragment easter eggs.
-Each egg includes a unique SVG artifact image written directly to the public directory and
-referenced via `<img>` in the component. No ImageMagick or external tools required.
+Generates a Gleipnir fragment discovery component for one of the six impossible ingredients.
+Each egg uses the **shared `EasterEggModal` shell** (`@/components/easter-eggs/EasterEggModal`)
+so modal structure, audio, and styling are never re-implemented per egg.
 
 ---
 
@@ -17,19 +17,31 @@ referenced via `<img>` in the component. No ImageMagick or external tools requir
 
 SVG is the only image format — no conversion step.
 
-### Egg Number (1–6)
+### Egg Identifier — Number OR Name
 
-The user provides a number from 1 to 6 referring to the six impossible ingredients used to
-forge Gleipnir (the ribbon that bound Fenrir). Select the matching row from this table:
+The user may provide either:
+- A **number** `1`–`6`, OR
+- An **egg name** — any word or phrase from the ingredient title, case-insensitive
 
-| # | Component Name            | Title                          | Storage key              | Rune |
-|---|---------------------------|--------------------------------|--------------------------|------|
-| 1 | `GleipnirCatFootfall`     | The Sound of a Cat's Footfall  | `egg:gleipnir-1`         | ᚲ    |
-| 2 | `GleipnirWomansBeard`     | The Beard of a Woman           | `egg:gleipnir-2`         | ᛒ    |
-| 3 | `GleipnirMountainRoots`   | The Roots of a Mountain        | `egg:gleipnir-3`         | ᚱ    |
-| 4 | `GleipnirBearSinews`      | The Sinews of a Bear           | `egg:gleipnir-4`         | ᚢ    |
-| 5 | `GleipnirFishBreath`      | The Breath of a Fish           | `egg:gleipnir-5`         | ᛚ    |
-| 6 | `GleipnirBirdSpittle`     | The Spittle of a Bird          | `egg:gleipnir-6`         | ᛊ    |
+Match the user's input (number or name keyword) to the correct row in this table:
+
+| # | Component Name            | Title                          | Name keywords                          | Storage key      | Rune |
+|---|---------------------------|--------------------------------|----------------------------------------|------------------|------|
+| 1 | `GleipnirCatFootfall`     | The Sound of a Cat's Footfall  | cat, footfall, sound                   | `egg:gleipnir-1` | ᚲ    |
+| 2 | `GleipnirWomansBeard`     | The Beard of a Woman           | beard, woman                           | `egg:gleipnir-2` | ᛒ    |
+| 3 | `GleipnirMountainRoots`   | The Roots of a Mountain        | roots, mountain                        | `egg:gleipnir-3` | ᚱ    |
+| 4 | `GleipnirBearSinews`      | The Sinews of a Bear           | sinews, sinew, bear                    | `egg:gleipnir-4` | ᚢ    |
+| 5 | `GleipnirFishBreath`      | The Breath of a Fish           | breath, fish                           | `egg:gleipnir-5` | ᛚ    |
+| 6 | `GleipnirBirdSpittle`     | The Spittle of a Bird          | spittle, bird                          | `egg:gleipnir-6` | ᛊ    |
+
+**Examples:**
+- `3` → egg #3 (The Roots of a Mountain)
+- `"mountain"` → egg #3
+- `"cat's footfall"` → egg #1
+- `"fish"` → egg #5
+- `"bear sinews"` → egg #4
+
+If the input is ambiguous or matches nothing, ask the user to clarify before proceeding.
 
 Call these resolved values:
 - `{{N}}` — the egg number (1–6)
@@ -67,7 +79,7 @@ Write a 1024×1024 SVG file directly to:
 ### Universal design rules (apply to every egg)
 
 - **Viewbox**: `viewBox="0 0 1024 1024"`
-- **Background**: filled rect `#07070d` (void) covering the full 1024×1024
+- **Background**: **transparent — do NOT add a background `<rect>`**. The `EasterEggModal` image column provides a `#13151f` (chain) dark backdrop. Adding a background rect creates a visible colour mismatch.
 - **Primary shapes**: gold `#c9920a`; highlights and glow: `#f0b429`
 - **Structural lines**: dim iron `#1e2235`
 - **Outer ring**: `<circle cx="512" cy="512" r="440"/>` stroke `#c9920a` opacity `0.18` strokeWidth `1` no fill
@@ -188,6 +200,14 @@ The visual read: *something impossibly small, impossibly precise, impossibly pow
 Write the component to:
 `development/src/src/components/cards/{{COMPONENT}}.tsx`
 
+**Do not re-implement the modal structure.** Use `EasterEggModal` from
+`@/components/easter-eggs/EasterEggModal` — it owns the dialog shell, audio playback,
+accessibility, and all design tokens. This component's only jobs are:
+1. Render the SVG artifact as the `image` prop.
+2. Supply the discovery copy as `children`.
+3. Track and display the Gleipnir fragment count.
+4. Expose a `useGleipnirFragment{{N}}` hook for trigger-site wiring.
+
 Use this template exactly, substituting all `{{...}}` placeholders:
 
 ```tsx
@@ -202,18 +222,10 @@ Use this template exactly, substituting all `{{...}}` placeholders:
  * Trigger:  See design/easter-eggs.md #1 — The Gleipnir Hunt
  * Storage:  localStorage key "{{STORAGE_KEY}}"
  * Image:    /easter-eggs/gleipnir-{{N}}.svg
- * z-index:  9653 (W-O-L-F on a phone keypad)
  */
 
-import { useEffect, useRef, useState } from "react";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { EasterEggModal } from "@/components/easter-eggs/EasterEggModal";
 
 const STORAGE_KEY = "{{STORAGE_KEY}}";
 const TOTAL_FRAGMENTS = 6;
@@ -229,10 +241,7 @@ export function {{COMPONENT}}({ open, onClose }: {{COMPONENT}}Props) {
 
   useEffect(() => {
     if (open) {
-      // Mark this fragment found
-      localStorage.setItem(STORAGE_KEY, "1");
-
-      // Count total found
+      // Count total found (this fragment was already written by the hook's trigger()).
       const count = Array.from({ length: TOTAL_FRAGMENTS }, (_, i) =>
         localStorage.getItem(`egg:gleipnir-${i + 1}`)
       ).filter(Boolean).length;
@@ -241,109 +250,45 @@ export function {{COMPONENT}}({ open, onClose }: {{COMPONENT}}Props) {
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      {/*
-       * Overrides: w-[92vw] max-w-[680px] override Dialog defaults.
-       * p-0 gap-0 override p-6 gap-4.
-       * z-index 9653 = W-O-L-F on a phone keypad (see copywriting.md Magic Numbers).
-       */}
-      <DialogContent
-        className="w-[92vw] max-w-[680px] p-0 gap-0 flex flex-col
-                   bg-[#0f1018] border border-[#2a2d45]
-                   [&>button]:text-[#8a8578] [&>button]:hover:text-[#e8e4d4]"
-        style={{ zIndex: 9653 }}
-      >
-        {/* ── Header ──────────────────────────────────────────────────── */}
-        {/* pr-10 clears the built-in X button */}
-        <div className="px-6 pt-5 pb-4 pr-10 text-center border-b border-[#1e2235]">
-          <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-[#c9920a] mb-2">
-            <span aria-hidden="true">ᚠ ᛖ ᚾ ᚱ</span>
-            {" · "}Easter Egg Discovered{" · "}
-            <span aria-hidden="true">ᛁ ᚱ ᛊ</span>
+    <EasterEggModal
+      open={open}
+      onClose={onClose}
+      title="{{TITLE}}"
+      description={`You have found Gleipnir fragment {{N}} of 6: {{TITLE}}. One of the six impossible things woven into the ribbon that bound the great wolf.`}
+      image={
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src="/easter-eggs/gleipnir-{{N}}.svg"
+          alt="{{TITLE}} — Gleipnir artifact"
+          className="w-full max-w-[200px] md:max-w-[240px] aspect-square object-contain"
+        />
+      }
+      audioSrc="/sounds/fenrir-howl.mp3"
+    >
+      <p className="font-body text-sm text-[#e8e4d4] leading-relaxed">
+        One of the six impossible things woven into{" "}
+        <span className="text-[#f0b429] italic">Gleipnir</span> — the only
+        chain strong enough to bind the great wolf. Though it looks like silk
+        ribbon, no chain is stronger.
+      </p>
+
+      <p className="font-body text-xs italic text-[#8a8578] leading-relaxed">
+        &ldquo;The dwarves of Svartálfaheimr gathered six things that do not
+        exist. From these they wove Gleipnir. When Fenrir felt its touch, he
+        knew at last what true binding was.&rdquo;
+      </p>
+
+      <div className="border-t border-[#1e2235] pt-3 mt-1">
+        <p className="font-mono text-[0.7rem] text-[#c9920a]">
+          Fragment {found} of {TOTAL_FRAGMENTS} found
+        </p>
+        {found === TOTAL_FRAGMENTS && (
+          <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">
+            ✦ Gleipnir is complete. The wolf stirs.
           </p>
-
-          <DialogTitle className="font-display text-[clamp(1.1rem,3.5vw,1.6rem)] font-bold text-[#f0b429] leading-tight">
-            {{TITLE}}
-          </DialogTitle>
-        </div>
-
-        {/* Accessible description */}
-        <DialogDescription className="sr-only">
-          You have found Gleipnir fragment {{N}} of 6: {{TITLE}}.
-          One of the six impossible things woven into the ribbon that bound the great wolf.
-        </DialogDescription>
-
-        {/* ── Two-column body ─────────────────────────────────────────── */}
-        {/*
-         * Desktop: image left | divider | text right
-         * Mobile:  stacked (image top, text bottom)
-         */}
-        <div className="flex flex-col md:grid md:grid-cols-[1fr_1px_1fr] bg-[#13151f]">
-
-          {/* Left — artifact image (SVG served from /public/easter-eggs/) */}
-          <div className="flex items-center justify-center p-6 md:p-8">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/easter-eggs/gleipnir-{{N}}.svg"
-              alt="{{TITLE}} — Gleipnir artifact"
-              className="w-full max-w-[200px] md:max-w-[240px] aspect-square object-contain"
-            />
-          </div>
-
-          {/* Vertical divider — desktop only */}
-          <div
-            className="hidden md:block"
-            style={{
-              background:
-                "linear-gradient(to bottom, transparent, #2a2d45 20%, #2a2d45 80%, transparent)",
-            }}
-            aria-hidden="true"
-          />
-
-          {/* Right — discovery text */}
-          <div className="flex flex-col justify-center gap-3 px-6 py-6 md:px-8">
-            <p className="font-body text-sm text-[#e8e4d4] leading-relaxed">
-              One of the six impossible things woven into{" "}
-              <span className="text-[#f0b429] italic">Gleipnir</span> — the only
-              chain strong enough to bind the great wolf. Though it looks like silk
-              ribbon, no chain is stronger.
-            </p>
-
-            <p className="font-body text-xs italic text-[#8a8578] leading-relaxed">
-              &ldquo;The dwarves of Svartálfaheimr gathered six things that do not
-              exist. From these they wove Gleipnir. When Fenrir felt its touch, he
-              knew at last what true binding was.&rdquo;
-            </p>
-
-            <div className="border-t border-[#1e2235] pt-3 mt-1">
-              <p className="font-mono text-[0.7rem] text-[#c9920a]">
-                Fragment {found} of {TOTAL_FRAGMENTS} found
-              </p>
-              {found === TOTAL_FRAGMENTS && (
-                <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">
-                  ✦ Gleipnir is complete. The wolf stirs.
-                </p>
-              )}
-            </div>
-          </div>
-
-        </div>
-
-        {/* ── Footer ──────────────────────────────────────────────────── */}
-        <div className="flex justify-center px-6 py-4 border-t border-[#1e2235]">
-          <DialogClose asChild>
-            <Button
-              className="px-10 font-heading text-sm font-semibold tracking-widest uppercase
-                         bg-[#c9920a] text-[#07070d] hover:bg-[#f0b429]
-                         rounded-none min-h-[44px]"
-            >
-              OK
-            </Button>
-          </DialogClose>
-        </div>
-
-      </DialogContent>
-    </Dialog>
+        )}
+      </div>
+    </EasterEggModal>
   );
 }
 
@@ -355,67 +300,20 @@ export function {{COMPONENT}}({ open, onClose }: {{COMPONENT}}Props) {
  *   // Call trigger() when the hidden ingredient text is discovered.
  *   // Render: <{{COMPONENT}} open={open} onClose={dismiss} />
  *
- * Audio: plays /sounds/fenrir-howl.mp3 with fade-in on discovery and fade-out
- * on dismiss. The Audio constructor is called inside trigger() — the direct
- * user-gesture handler — so browsers permit playback without an autoplay
- * policy violation.
+ * Audio and modal structure are handled by EasterEggModal — do not add them here.
+ * The trigger() call is the user-gesture entry point; browsers allow audio from there.
  */
-
-const HOWL_TARGET_VOLUME = 0.25; // max volume during playback
-const FADE_STEP_MS = 40;         // interval between volume steps
-
-function fadeIn(audio: HTMLAudioElement) {
-  audio.volume = 0;
-  const step = HOWL_TARGET_VOLUME / (500 / FADE_STEP_MS); // reach target in ~500ms
-  const id = setInterval(() => {
-    const next = Math.min(audio.volume + step, HOWL_TARGET_VOLUME);
-    audio.volume = next;
-    if (next >= HOWL_TARGET_VOLUME) clearInterval(id);
-  }, FADE_STEP_MS);
-}
-
-function fadeOut(audio: HTMLAudioElement, onDone: () => void) {
-  const step = audio.volume / (600 / FADE_STEP_MS); // reach 0 in ~600ms
-  const id = setInterval(() => {
-    const next = Math.max(audio.volume - step, 0);
-    audio.volume = next;
-    if (next <= 0) {
-      clearInterval(id);
-      audio.pause();
-      audio.currentTime = 0;
-      onDone();
-    }
-  }, FADE_STEP_MS);
-}
-
 export function useGleipnirFragment{{N}}() {
   const [open, setOpen] = useState(false);
-  const howlRef = useRef<HTMLAudioElement | null>(null);
 
   function trigger() {
     if (!localStorage.getItem(STORAGE_KEY)) {
       localStorage.setItem(STORAGE_KEY, "1");
       setOpen(true);
-
-      // Play within the user-gesture call stack so browsers allow it.
-      try {
-        const howl = new Audio("/sounds/fenrir-howl.mp3");
-        howl.volume = 0;
-        howl.play().catch(() => {/* silently ignore if still blocked */});
-        fadeIn(howl);
-        howlRef.current = howl;
-      } catch {
-        // Audio API unavailable (SSR guard, headless env, etc.)
-      }
     }
   }
 
   function dismiss() {
-    const howl = howlRef.current;
-    if (howl) {
-      howlRef.current = null;
-      fadeOut(howl, () => {}); // fade then stop; setOpen runs immediately
-    }
     setOpen(false);
   }
 
@@ -457,10 +355,22 @@ Output a concise summary for the engineer showing:
 |---|-----------|--------------------------|
 | 1 | Sound of a cat's footfall | Tooltip on the silent background sync indicator (bottom-right corner) |
 | 2 | Beard of a woman | About modal — listed under "Built from…" |
-| 3 | Roots of a mountain | Comment in `storage.ts` — add a `data-gleipnir` attr to the storage indicator |
-| 4 | Sinews of a bear | Error boundary fallback component — `data-gleipnir` attribute |
+| 3 | Roots of a mountain | First time collapse of the Sidebar Menu |
+| 4 | Sinews of a bear | TBD — more UI elements need to be finished |
 | 5 | Breath of a fish | Footer — hover on the `©` symbol |
-| 6 | Spittle of a bird | Empty state for "no cards" — invisible `aria-description` |
+| 6 | Spittle of a bird | TBD — more UI elements need to be finished |
+
+### EasterEggModal Props (from `src/components/easter-eggs/EasterEggModal.tsx`)
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| `open` | `boolean` | Dialog open state |
+| `onClose` | `() => void` | Called on dismiss |
+| `title` | `string` | Cinzel Decorative headline |
+| `description?` | `string` | sr-only text for screen readers |
+| `image?` | `ReactNode` | Artifact image — left column |
+| `audioSrc?` | `string` | Audio URL played on open (e.g. `/sounds/fenrir-howl.mp3`) |
+| `children` | `ReactNode` | Discovery copy — right column |
 
 ### Design Tokens (from `design/theme-system.md`)
 

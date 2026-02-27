@@ -15,9 +15,6 @@
     </filter>
   </defs>
 
-  <!-- Background -->
-  <rect width="1024" height="1024" fill="#07070d"/>
-
   <!-- Outer ring -->
   <circle cx="512" cy="512" r="440" stroke="#c9920a" stroke-width="1" fill="none" opacity="0.18"/>
 

@@ -46,11 +46,11 @@ async function clearEggStorage(page: any, keys: string[]) {
 // ── Helper: Clear all egg storage ────────────────────────────────────────
 
 async function clearAllEggStorage(page: any) {
-  await page.evaluate(() => {
-    localStorage.removeItem(EGG_STORAGE_KEYS.gleipnir_3);
-    localStorage.removeItem(EGG_STORAGE_KEYS.gleipnir_5);
-    localStorage.removeItem(EGG_STORAGE_KEYS.forgemaster);
-  });
+  await page.evaluate((keys: string[]) => {
+    for (const key of keys) {
+      localStorage.removeItem(key);
+    }
+  }, Object.values(EGG_STORAGE_KEYS));
 }
 
 // ── Helper: Simulate keyboard sequence ──────────────────────────────────

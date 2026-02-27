@@ -2,9 +2,6 @@
   <title>The Roots of a Mountain</title>
   <desc>Mountains do not have roots. Every child of Yggdrasil knows this. Rock simply is — it does not grip, it does not reach. And yet the dwarves found them: deep below Niðavellir, older than the stone itself. They are still down there. So am I.</desc>
 
-  <!-- Background -->
-  <rect width="1024" height="1024" fill="#07070d"/>
-
   <!-- Outer ring -->
   <circle cx="512" cy="512" r="440" stroke="#c9920a" stroke-width="1" fill="none" opacity="0.18"/>
 
