@@ -1,4 +1,4 @@
-# 🐺 The Saga Ledger — Design
+# The Saga Ledger — Design
 
 > *"Though it looks like silk ribbon, no chain is stronger."*
 > — Prose Edda, Gylfaginning
@@ -17,20 +17,22 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 
 ## Index
 
-- [README.md](README.md) — This file. The entry point to the full design system.
 - [product-design-brief.md](product-design-brief.md) — Design philosophy, three pillars, aesthetic direction, key decisions.
-- [theme-system.md](theme-system.md) — Color palette, typography, CSS custom properties, Tailwind config extensions.
-- [mythology-map.md](mythology-map.md) — Norse cosmology mapped to every UI state, character, and feature.
-- [copywriting.md](copywriting.md) — Two-voice rule, kennings, status badge copy, action labels, empty states, Edda quotes.
-- [easter-eggs.md](easter-eggs.md) — All hidden references: Gleipnir Hunt, Konami Howl, Loki Mode, console ASCII, and more.
-- [interactions.md](interactions.md) — Animation philosophy, saga-enter stagger, status ring, Howl panel, easter egg keyframes.
-- [wireframes.md](wireframes.md) — Layout specs, component hierarchy, responsive breakpoints, z-index table, wireframe index.
-- [implementation-brief.md](implementation-brief.md) — FiremanDecko integration plan: wave strategy, sprint stories, open questions.
-- [easter-egg-modal.md](easter-egg-modal.md) — Shared modal template for all easter egg discovery moments.
-- [pipeline.md](pipeline.md) — Kanban orchestration: model assignments, stage gates, WIP limits, handoff chain.
-- [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) — Mermaid diagram conventions for all pack members.
-- [backlog/README.md](backlog/README.md) — Freya's groomed backlog index: all stories ready for sprint planning.
-- [backlog/story-auth-oidc-google.md](backlog/story-auth-oidc-google.md) — P1-Critical: OIDC Authentication — Google Login (Iteration 1).
+- [product/README.md](product/README.md) — Freya's domain: mythology map, copywriting guide, and groomed backlog.
+- [product/mythology-map.md](product/mythology-map.md) — Norse cosmology mapped to every UI state, character, and feature.
+- [product/copywriting.md](product/copywriting.md) — Two-voice rule, kennings, status badge copy, action labels, empty states, Edda quotes.
+- [product/backlog/README.md](product/backlog/README.md) — Freya's groomed backlog index: all stories ready for sprint planning.
+- [product/backlog/story-auth-oidc-google.md](product/backlog/story-auth-oidc-google.md) — P1-Critical: OIDC Authentication — Google Login (Iteration 1).
+- [ux-design/README.md](ux-design/README.md) — Luna's domain: visual system, interactions, wireframes, and easter eggs.
+- [ux-design/theme-system.md](ux-design/theme-system.md) — Color palette, typography, CSS custom properties, Tailwind config extensions.
+- [ux-design/easter-eggs.md](ux-design/easter-eggs.md) — All hidden references: Gleipnir Hunt, Konami Howl, Loki Mode, console ASCII, and more.
+- [ux-design/interactions.md](ux-design/interactions.md) — Animation philosophy, saga-enter stagger, status ring, Howl panel, easter egg keyframes.
+- [ux-design/wireframes.md](ux-design/wireframes.md) — Layout specs, component hierarchy, responsive breakpoints, z-index table, wireframe index.
+- [ux-design/easter-egg-modal.md](ux-design/easter-egg-modal.md) — Shared modal template for all easter egg discovery moments.
+- [ux-design/ux-assets/mermaid-style-guide.md](ux-design/ux-assets/mermaid-style-guide.md) — Mermaid diagram conventions for all pack members.
+- [architecture/README.md](architecture/README.md) — FiremanDecko's domain: implementation brief and pipeline.
+- [architecture/implementation-brief.md](architecture/implementation-brief.md) — FiremanDecko integration plan: wave strategy, sprint stories, open questions.
+- [architecture/pipeline.md](architecture/pipeline.md) — Kanban orchestration: model assignments, stage gates, WIP limits, handoff chain.
 
 ---
 
@@ -46,7 +48,7 @@ Read this first. It establishes what the wolf is, what it hunts, and what it ref
 
 ---
 
-### ᚠ [Theme System](theme-system.md)
+### ᚠ [Theme System](ux-design/theme-system.md)
 
 *The colors of the Nine Realms. The typefaces of the saga. The tokens that make it real.*
 
@@ -61,7 +63,7 @@ The theme system holds the CSS custom properties, Tailwind extensions, and desig
 
 ---
 
-### ᛗ [Mythology Map](mythology-map.md)
+### ᛗ [Mythology Map](product/mythology-map.md)
 
 *Nine Realms. Two wolves. Three Norns. One ledger.*
 
@@ -80,7 +82,7 @@ If a new UI state needs a home, it finds it here first.
 
 ---
 
-### ᚺ [Copywriting Guide](copywriting.md)
+### ᚺ [Copywriting Guide](product/copywriting.md)
 
 *The two-voice rule. The kennings. The Edda quotes. The oaths.*
 
@@ -96,7 +98,7 @@ The copywriting guide holds the full vocabulary: kennings (`fee-wyrm`, `debt-cha
 
 ---
 
-### ᛞ [Easter Eggs](easter-eggs.md)
+### ᛞ [Easter Eggs](ux-design/easter-eggs.md)
 
 *The hidden lore. The Gleipnir Hunt. The Konami howl. The Loki mode. The console inscription.*
 
@@ -112,7 +114,7 @@ None of these interrupt the task. All of them reward the curious.
 
 ---
 
-### ᚲ [Interactions](interactions.md)
+### ᚲ [Interactions](ux-design/interactions.md)
 
 *Motion as myth. The stagger. The status ring. The Howl panel.*
 
@@ -122,19 +124,19 @@ CSS-first where possible. Framer Motion for the pieces that require orchestratio
 
 ---
 
-### ᛏ [Wireframes](wireframes.md)
+### ᛏ [Wireframes](ux-design/wireframes.md)
 
 *The layout of the war room. Component hierarchy. Responsive rune-lines.*
 
 The spatial blueprint. Where the sidebar lives (`272px`, collapsible). How the card grid adapts across breakpoints (1 column → 2 → 3). The Howl panel's position and z-index. The header's structure: brand mark left, user cluster right, nothing in the center to distract.
 
-Wireframes are standalone HTML5 documents in `design/wireframes/`. They carry no theme styling — no colors, no custom fonts, no decorative rules — so they remain valid regardless of how the theme evolves. The `wireframes.md` index links to each file and records the key layout decisions behind them.
+Wireframes are standalone HTML5 documents in `designs/ux-design/wireframes/`. They carry no theme styling — no colors, no custom fonts, no decorative rules — so they remain valid regardless of how the theme evolves. The `wireframes.md` index links to each file and records the key layout decisions behind them.
 
 The wireframes define the container before the soul is poured in. FiremanDecko works from these. When a layout decision is in dispute, this document settles it.
 
 ---
 
-### ᚱ [Implementation Brief](implementation-brief.md)
+### ᚱ [Implementation Brief](architecture/implementation-brief.md)
 
 *The handoff from Freya and Luna to FiremanDecko. The forge strategy.*
 
@@ -149,23 +151,23 @@ Open questions are logged here. Retrofit decisions are reasoned here. If somethi
 
 ---
 
-### ᛟ [Easter Egg Modal](easter-egg-modal.md)
+### ᛟ [Easter Egg Modal](ux-design/easter-egg-modal.md)
 
 *The shared modal template for every easter egg discovery moment.*
 
-The full design spec and React integration guide for the reusable `EasterEggModal` component: gold glow border, Cinzel Decorative headline, two-column artifact layout, animated entry via `saga-enter` easing. All design tokens come from `theme-system.md`. Every easter egg that surfaces a discovery dialog uses this template.
+The full design spec and React integration guide for the reusable `EasterEggModal` component: gold glow border, Cinzel Decorative headline, two-column artifact layout, animated entry via `saga-enter` easing. All design tokens come from `ux-design/theme-system.md`. Every easter egg that surfaces a discovery dialog uses this template.
 
 ---
 
-### ᚹ [Pipeline](pipeline.md)
+### ᚹ [Pipeline](architecture/pipeline.md)
 
 *The Kanban orchestration contract. How the pack hunts in order.*
 
-The workflow definition for all four agents — model assignments, stage gates, WIP limits, and the `design/ → development/ → quality/` handoff chain. Read this to understand how work moves through the forge from backlog to ship.
+The workflow definition for all four agents — model assignments, stage gates, WIP limits, and the `designs/ → development/ → quality/` handoff chain. Read this to understand how work moves through the forge from backlog to ship.
 
 ---
 
-### ᛉ [Mermaid Style Guide](ux-assets/mermaid-style-guide.md)
+### ᛉ [Mermaid Style Guide](ux-design/ux-assets/mermaid-style-guide.md)
 
 *How the pack draws its diagrams. One style, all wolves.*
 
@@ -173,7 +175,7 @@ The canonical reference for Mermaid syntax conventions across all four agents: c
 
 ---
 
-### ᚢ [Freya's Backlog](backlog/README.md)
+### ᚢ [Freya's Backlog](product/backlog/README.md)
 
 *The wolf's queue. Groomed, prioritized, ready to hunt.*
 
@@ -181,7 +183,7 @@ Freya's sprint-ready backlog: all stories that have been written, prioritized, a
 
 Current stories:
 
-- [OIDC Authentication — Google Login (Iteration 1)](backlog/story-auth-oidc-google.md) — P1-Critical, Sprint 3 target. Sign in with Google, server-side persistence, household scoping. Engineering response and ADR complete.
+- [OIDC Authentication — Google Login (Iteration 1)](product/backlog/story-auth-oidc-google.md) — P1-Critical, Sprint 3 target. Sign in with Google, server-side persistence, household scoping. Engineering response and ADR complete.
 
 ---
 

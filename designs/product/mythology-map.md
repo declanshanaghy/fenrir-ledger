@@ -71,7 +71,7 @@ Gleipnir is the magical ribbon that bound Fenrir — made of six impossible thin
 
 - Cards are "chains" in copy and visual metaphor
 - Successfully closing a card before the fee = "breaking Gleipnir"
-- The six ingredients are hidden throughout the UI as easter eggs (see [`easter-eggs.md`](easter-eggs.md))
+- The six ingredients are hidden throughout the UI as easter eggs (see [`easter-eggs.md`](../ux-design/easter-eggs.md))
 - The Gleipnir Hunt: a discoverable collectible game for power users
 
 ---
@@ -122,7 +122,7 @@ From `README.md` — the development team is The Pack:
 | Principal Engineer | **FiremanDecko** | The forge master — echoes of Völundr (master craftsman) |
 | QA Tester | **Loki** | Shapeshifter, trickster, chaos agent — perfect for QA |
 
-> **Loki easter egg**: Loki was the father of Fenrir. He is also the QA tester. Of course he is. See [`easter-eggs.md`](easter-eggs.md) for the Loki Mode implementation.
+> **Loki easter egg**: Loki was the father of Fenrir. He is also the QA tester. Of course he is. See [`easter-eggs.md`](../ux-design/easter-eggs.md) for the Loki Mode implementation.
 
 ---
 
@@ -155,4 +155,4 @@ Ragnarök is the Norse apocalypse — when Fenrir breaks free and swallows Odin.
 - **Visual**: Background gradient shifts to deep red, gold accents turn blood orange
 - **Copy**: *"Ragnarök approaches. Multiple chains tighten."*
 - **Easter egg mode**: Konami code during Ragnarök state → wolf howl animation at maximum intensity
-- See [`easter-eggs.md`](easter-eggs.md) for the Ragnarök threshold easter egg
+- See [`easter-eggs.md`](../ux-design/easter-eggs.md) for the Ragnarök threshold easter egg

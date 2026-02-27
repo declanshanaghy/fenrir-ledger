@@ -183,7 +183,7 @@ but must respect the Saga Ledger design system (dark Nordic War Room aesthetic, 
 background, gold accent, Cinzel display font). A Product Design Brief collaboration with Luna is
 required before this story enters the "Ready" column.
 
-Suggested sign-in page copy direction (kenning style, per `design/copywriting.md`):
+Suggested sign-in page copy direction (kenning style, per [`designs/product/copywriting.md`](../copywriting.md)):
 - Headline: "Name yourself before the wolf names you."
 - Sub-copy: "Sign in to guard your chain-ledger."
 - Button label: "Enter with Google"

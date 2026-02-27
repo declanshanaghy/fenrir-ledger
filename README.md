@@ -109,23 +109,24 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 *The voice of the user. Nothing moves downstream without her word.*
 
-- [design/backlog/README.md](design/backlog/README.md) — Groomed backlog index
-- [design/backlog/story-auth-oidc-google.md](design/backlog/story-auth-oidc-google.md) — P1: OIDC Authentication — Google Login (Iteration 1)
+- [designs/product/README.md](designs/product/README.md) — Product domain index: mythology map, copywriting guide, backlog
+- [designs/product/backlog/README.md](designs/product/backlog/README.md) — Groomed backlog index
+- [designs/product/backlog/story-auth-oidc-google.md](designs/product/backlog/story-auth-oidc-google.md) — P1: OIDC Authentication — Google Login (Iteration 1)
 
-### [ᚱ The Saga Ledger — Design](design/README.md)
+### [ᚱ The Saga Ledger — Design](designs/README.md)
 
 *Freya + Luna's domain. The visual soul of the wolf.*
 
-- [design/README.md](design/README.md) — The wolf speaks. A guide to the full design system, in the voice of Fenrir.
-- [design/product-design-brief.md](design/product-design-brief.md) — Design philosophy, three pillars, aesthetic direction
-- [design/theme-system.md](design/theme-system.md) — Color palette, typography, CSS tokens, Tailwind extensions
-- [design/mythology-map.md](design/mythology-map.md) — Nine Realms → card states, Norns, Huginn & Muninn, Hati & Sköll
-- [design/copywriting.md](design/copywriting.md) — Kennings, Edda quotes, empty states, action labels, error voice
-- [design/easter-eggs.md](design/easter-eggs.md) — Gleipnir Hunt, Konami howl, Loki mode, console ASCII, all hidden lore
-- [design/interactions.md](design/interactions.md) — Animations, saga-enter stagger, status ring, Howl panel patterns
-- [design/wireframes.md](design/wireframes.md) — Layout specs, component hierarchy, responsive breakpoints
-- [design/implementation-brief.md](design/implementation-brief.md) — FiremanDecko integration plan, wave strategy, open questions
-- [design/easter-egg-modal.md](design/easter-egg-modal.md) — Shared modal template for all easter egg discovery moments
+- [designs/README.md](designs/README.md) — The wolf speaks. A guide to the full design system, in the voice of Fenrir.
+- [designs/product-design-brief.md](designs/product-design-brief.md) — Design philosophy, three pillars, aesthetic direction
+- [designs/ux-design/theme-system.md](designs/ux-design/theme-system.md) — Color palette, typography, CSS tokens, Tailwind extensions
+- [designs/product/mythology-map.md](designs/product/mythology-map.md) — Nine Realms → card states, Norns, Huginn & Muninn, Hati & Sköll
+- [designs/product/copywriting.md](designs/product/copywriting.md) — Kennings, Edda quotes, empty states, action labels, error voice
+- [designs/ux-design/easter-eggs.md](designs/ux-design/easter-eggs.md) — Gleipnir Hunt, Konami howl, Loki mode, console ASCII, all hidden lore
+- [designs/ux-design/interactions.md](designs/ux-design/interactions.md) — Animations, saga-enter stagger, status ring, Howl panel patterns
+- [designs/ux-design/wireframes.md](designs/ux-design/wireframes.md) — Layout specs, component hierarchy, responsive breakpoints
+- [designs/architecture/implementation-brief.md](designs/architecture/implementation-brief.md) — FiremanDecko integration plan, wave strategy, open questions
+- [designs/ux-design/easter-egg-modal.md](designs/ux-design/easter-egg-modal.md) — Shared modal template for all easter egg discovery moments
 
 ### ᚲ [The Forge — Architecture + Development](development/README.md)
 
@@ -156,9 +157,9 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 ### ᚠ Pack Operations
 
-- [Pipeline](design/pipeline.md) — Full Kanban workflow orchestration
+- [Pipeline](designs/architecture/pipeline.md) — Full Kanban workflow orchestration
 - [Git Convention](.claude/skills/git-commit/SKILL.md) — Commit format and pre-commit oaths
-- [Mermaid Style Guide](design/ux-assets/mermaid-style-guide.md) — Diagram conventions for all pack members
+- [Mermaid Style Guide](designs/ux-design/ux-assets/mermaid-style-guide.md) — Diagram conventions for all pack members
 
 ### ᛁ Templates
 
@@ -231,8 +232,8 @@ Copyright (C) 2026 Declan Shanaghy. Licensed under the [GNU Affero General Publi
 
 ## The Pack's Oaths
 
-- **Diagrams**: All Mermaid, following the [mermaid-style-guide.md](design/ux-assets/mermaid-style-guide.md)
+- **Diagrams**: All Mermaid, following the [mermaid-style-guide.md](designs/ux-design/ux-assets/mermaid-style-guide.md)
 - **Commits**: Strict format per [git-commit/SKILL.md](.claude/skills/git-commit/SKILL.md)
 - **Secrets**: `.env` file, never committed, `.env.example` as the template
 - **Sprints**: Max 5 stories. The forge-script runs every sprint. No exceptions.
-- **Output**: Each wolf writes to its top-level folder (`design/`, `architecture/`, `development/`, `quality/`). Git tracks the history — files are overwritten each sprint, no subdirectories.
+- **Output**: Each wolf writes to its top-level folder (`designs/`, `architecture/`, `development/`, `quality/`). Git tracks the history — files are overwritten each sprint, no subdirectories.
