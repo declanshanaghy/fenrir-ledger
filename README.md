@@ -176,6 +176,11 @@ cd development/src && npm run dev
 - Easter Egg #5 (HTML source signature) — JSDoc comment block in `development/src/src/app/layout.tsx`
 - Easter Egg #7 (Runic meta tag cipher) — `metadata.other["fenrir:runes"]` in `layout.tsx`
 - Easter Egg #2 (Konami Code Howl) — `development/src/src/components/layout/KonamiHowl.tsx` (↑↑↓↓←→←→BA)
+- Easter Egg #3 (Loki Mode) — Footer "Loki" span: 7 clicks shuffles card grid + random realm badges for 5 s
+- Easter Egg #1 Fragment 5 (Breath of a Fish) — Footer © hover triggers `GleipnirFishBreath` modal
+
+**Footer Component**
+- [Footer.tsx](development/src/src/components/layout/Footer.tsx) — Three-column layout, brand wordmark, About nav, team colophon, both easter eggs wired
 
 ---
 
