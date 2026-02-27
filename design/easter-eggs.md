@@ -184,7 +184,7 @@ The `<meta name="description">` is:
 
 ## 9. The Forgemaster's Signature (About Modal)
 
-A hidden keyboard shortcut `?` (shift+/) opens a minimal About modal:
+A hidden keyboard shortcut `?` (shift+/) triggers the easter egg.
 
 > **Fenrir Ledger**
 > *Sprint [N] · Built with the fires of Muspelheim*

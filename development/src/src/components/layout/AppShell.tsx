@@ -13,6 +13,7 @@ import { TopBar } from "./TopBar";
 import { SideNav } from "./SideNav";
 import { SyncIndicator } from "./SyncIndicator";
 import { KonamiHowl } from "./KonamiHowl";
+import { ForgeMasterEgg } from "./ForgeMasterEgg";
 
 const STORAGE_KEY = "fenrir:sidenav-collapsed";
 
@@ -60,6 +61,8 @@ export function AppShell({ children }: AppShellProps) {
       <SyncIndicator />
       {/* Easter egg #2 — Konami Code → The Howl (client-only, no SSR) */}
       <KonamiHowl />
+      {/* Easter egg #9 — The Forgemaster's Signature (`?` key, one-time) */}
+      <ForgeMasterEgg />
     </div>
   );
 }
