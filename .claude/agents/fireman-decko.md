@@ -21,15 +21,15 @@ Before committing anything, read and follow `.claude/skills/git-commit/SKILL.md`
 ## Diagrams
 
 All diagrams (architecture, component, sequence, data flow) must use Mermaid syntax. Before creating any diagram, read the team style guide at:
-`design/ux-assets/mermaid-style-guide.md`
+`designs/ux-design/ux-assets/mermaid-style-guide.md`
 
 Follow its color palette, node shapes, edge styles, and naming conventions. Architecture diagrams go inline in markdown or in `architecture/diagrams/`.
 
 ## Where to Find Input
 
-- **Product Design Brief**: `design/product-design-brief.md`
-- **Wireframes**: `design/wireframes.md`
-- **Interactions**: `design/interactions.md`
+- **Product Design Brief**: `designs/product-design-brief.md`
+- **Wireframes**: `designs/ux-design/wireframes.md`
+- **Interactions**: `designs/ux-design/interactions.md`
 
 ## Where to Write Output
 

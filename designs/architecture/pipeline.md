@@ -10,7 +10,7 @@ This pipeline orchestrates the four Fenrir Ledger team agents in a Kanban flow. 
 ## Diagrams
 
 All diagrams produced by any team member must use Mermaid syntax following the style guide at:
-`design/ux-assets/mermaid-style-guide.md`
+`designs/ux-design/ux-assets/mermaid-style-guide.md`
 
 Every agent must read this guide before creating diagrams in any deliverable.
 
@@ -132,27 +132,31 @@ All scripts must be idempotent — running them twice produces the same result w
 Each wolf writes to its top-level folder. Git tracks the history — files are overwritten each sprint. No sprint subdirectories.
 
 ```
-design/
-├── product-design-brief.md    # PO + UX collaboration output
-├── wireframes.md              # UX wireframes
-├── interactions.md            # UX interaction specs
-└── backlog/                   # Freya's groomed stories
-
-architecture/
-├── adrs/                      # Architecture Decision Records
-├── system-design.md           # System design doc
-└── sprint-plan.md             # Current sprint stories + technical notes
+designs/
+├── product-design-brief.md        # PO + UX collaboration output (shared)
+├── product/
+│   ├── copywriting.md             # Norse copy, kennings, empty states
+│   └── mythology-map.md           # Nine Realms → CardStatus mapping
+├── ux-design/
+│   ├── wireframes.md              # UX wireframes
+│   ├── interactions.md            # UX interaction specs
+│   ├── theme-system.md            # Visual tokens, palette, typography
+│   ├── easter-eggs.md             # Easter egg specifications
+│   └── ux-assets/                 # Mermaid style guide and other assets
+└── architecture/
+    ├── pipeline.md                # This file — team Kanban workflow
+    └── implementation-brief.md    # FiremanDecko integration plan
 
 development/
-├── implementation-plan.md     # What was built and how
-├── qa-handoff.md              # Handoff notes for Loki
-└── src/                       # Next.js source code
+├── implementation-plan.md         # What was built and how
+├── qa-handoff.md                  # Handoff notes for Loki
+└── src/                           # Next.js source code
 
 quality/
-├── test-plan.md               # Test plan
-├── test-cases.md              # Detailed test cases
-├── EASTER-EGGS-AUDIT.md       # Final quality report
-└── scripts/                   # Idempotent test/deploy scripts
+├── test-plan.md                   # Test plan
+├── test-cases.md                  # Detailed test cases
+├── EASTER-EGGS-AUDIT.md           # Final quality report
+└── scripts/                       # Idempotent test/deploy scripts
     ├── test-easter-eggs.spec.ts
     └── ...
 ```
