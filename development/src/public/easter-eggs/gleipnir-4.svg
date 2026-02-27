@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>The Sinews of a Bear</title>
+  <desc>I have torn bears apart. I know what sinew looks like — thick ropes of it, bloody and strong. What they wove into Gleipnir was not that. It was the invisible sinew — the force that makes a bear a bear, that binds muscle to will. I felt it tighten and I knew I could not match it.</desc>
+
+  <defs>
+    <!-- Glow filter for the convergence knot -->
+    <filter id="knot-glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="knot-glow-soft" x="-150%" y="-150%" width="400%" height="400%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#07070d"/>
+
+  <!-- Outer ring -->
+  <circle cx="512" cy="512" r="440" stroke="#c9920a" stroke-width="1" fill="none" opacity="0.18"/>
+
+  <!-- ── SINEW CROSSHATCH ──────────────────────────────────────────────────── -->
+  <!-- Diagonal strands top-left → bottom-right (gold), curved with cubic beziers -->
+  <!-- Each path curves slightly to feel biological, not geometric -->
+
+  <!-- Gold strands — NW to SE direction -->
+  <path d="M -60 60 C 100 120 300 200 512 512 S 800 820 1084 980" fill="none" stroke="#c9920a" stroke-width="1.5" opacity="0.55"/>
+  <path d="M -60 220 C 80 300 260 380 480 560 S 780 760 1084 900" fill="none" stroke="#c9920a" stroke-width="1.5" opacity="0.48"/>
+  <path d="M -60 380 C 60 440 220 500 420 600 S 720 740 1084 820" fill="none" stroke="#c9920a" stroke-width="1.5" opacity="0.42"/>
+  <path d="M -60 540 C 40 580 180 620 380 680 S 680 760 1084 820" fill="none" stroke="#c9920a" stroke-width="1.4" opacity="0.35"/>
+  <path d="M -60 700 C 40 720 160 740 340 780 S 660 840 1084 900" fill="none" stroke="#c9920a" stroke-width="1.3" opacity="0.28"/>
+  <path d="M -60 860 C 60 870 200 880 380 900 S 700 940 1084 980" fill="none" stroke="#c9920a" stroke-width="1.2" opacity="0.22"/>
+  <path d="M 100 -60 C 200 80 340 240 512 512 S 700 760 840 1084" fill="none" stroke="#c9920a" stroke-width="1.5" opacity="0.50"/>
+  <path d="M 300 -60 C 380 80 460 240 520 500 S 640 780 780 1084" fill="none" stroke="#c9920a" stroke-width="1.4" opacity="0.44"/>
+  <path d="M 500 -60 C 540 100 560 280 530 500 S 540 760 580 1084" fill="none" stroke="#c9920a" stroke-width="1.3" opacity="0.38"/>
+  <path d="M 700 -60 C 700 100 640 300 560 512 S 480 740 460 1084" fill="none" stroke="#c9920a" stroke-width="1.3" opacity="0.32"/>
+  <path d="M 900 -60 C 860 100 760 300 620 512 S 440 740 340 1084" fill="none" stroke="#c9920a" stroke-width="1.2" opacity="0.26"/>
+
+  <!-- Iron strands — NE to SW direction (counter-diagonal) -->
+  <path d="M 1084 60 C 900 140 680 260 512 512 S 300 780 -60 960" fill="none" stroke="#1e2235" stroke-width="1.5" opacity="0.80"/>
+  <path d="M 1084 220 C 920 300 700 400 540 560 S 280 760 -60 900" fill="none" stroke="#1e2235" stroke-width="1.5" opacity="0.75"/>
+  <path d="M 1084 380 C 940 440 760 500 580 600 S 300 740 -60 820" fill="none" stroke="#1e2235" stroke-width="1.4" opacity="0.68"/>
+  <path d="M 1084 540 C 960 580 800 620 620 680 S 320 760 -60 820" fill="none" stroke="#1e2235" stroke-width="1.4" opacity="0.60"/>
+  <path d="M 1084 700 C 980 720 820 740 640 780 S 340 840 -60 900" fill="none" stroke="#1e2235" stroke-width="1.3" opacity="0.52"/>
+  <path d="M 1084 860 C 980 870 820 880 620 900 S 320 940 -60 980" fill="none" stroke="#1e2235" stroke-width="1.2" opacity="0.42"/>
+  <path d="M 924 -60 C 820 80 680 260 512 512 S 280 760 184 1084" fill="none" stroke="#1e2235" stroke-width="1.5" opacity="0.70"/>
+  <path d="M 724 -60 C 640 80 560 240 500 500 S 380 780 244 1084" fill="none" stroke="#1e2235" stroke-width="1.4" opacity="0.63"/>
+  <path d="M 524 -60 C 480 100 460 280 490 500 S 480 760 444 1084" fill="none" stroke="#1e2235" stroke-width="1.3" opacity="0.55"/>
+  <path d="M 324 -60 C 320 100 360 300 440 512 S 540 740 564 1084" fill="none" stroke="#1e2235" stroke-width="1.3" opacity="0.48"/>
+  <path d="M 124 -60 C 160 100 260 300 400 512 S 560 740 684 1084" fill="none" stroke="#1e2235" stroke-width="1.2" opacity="0.40"/>
+
+  <!-- ── FOUR ANCHOR STRANDS from knot to corners (heavier) ──────────────── -->
+  <path d="M 512 512 C 420 460 280 340 60 60" fill="none" stroke="#c9920a" stroke-width="2.5" opacity="0.65"/>
+  <path d="M 512 512 C 600 460 740 340 964 60" fill="none" stroke="#c9920a" stroke-width="2.5" opacity="0.65"/>
+  <path d="M 512 512 C 420 560 280 680 60 964" fill="none" stroke="#c9920a" stroke-width="2.5" opacity="0.65"/>
+  <path d="M 512 512 C 600 560 740 680 964 964" fill="none" stroke="#c9920a" stroke-width="2.5" opacity="0.65"/>
+
+  <!-- ── CONVERGENCE KNOT at (512, 512) ──────────────────────────────────── -->
+  <!-- Soft glow halo behind the knot -->
+  <circle cx="512" cy="512" r="36" fill="#c9920a" opacity="0.12" filter="url(#knot-glow-soft)"/>
+  <!-- Outer ring -->
+  <circle cx="512" cy="512" r="28" fill="none" stroke="#c9920a" stroke-width="1" opacity="0.40"/>
+  <!-- Inner filled knot -->
+  <circle cx="512" cy="512" r="18" fill="#f0b429" opacity="0.90" filter="url(#knot-glow)"/>
+  <!-- Knot centre point -->
+  <circle cx="512" cy="512" r="5" fill="#07070d" opacity="0.70"/>
+
+  <!-- Rune watermark: bottom-left, persistent signature -->
+  <text x="32" y="988" font-size="80" fill="#c9920a" opacity="0.22" font-family="serif">ᚢ</text>
+</svg>

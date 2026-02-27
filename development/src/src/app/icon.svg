@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Fenrir Ledger favicon — ᚠ Fehu rune on void background -->
+  <rect width="32" height="32" rx="4" fill="#07070d"/>
+  <!-- Fehu rune: vertical stave with two right-branching diagonals in upper half -->
+  <!-- Stave -->
+  <line x1="12" y1="4" x2="12" y2="28" stroke="#c9920a" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Upper diagonal branch (higher) -->
+  <line x1="12" y1="8" x2="21" y2="13" stroke="#c9920a" stroke-width="2" stroke-linecap="round"/>
+  <!-- Lower diagonal branch -->
+  <line x1="12" y1="15" x2="21" y2="20" stroke="#c9920a" stroke-width="2" stroke-linecap="round"/>
+</svg>

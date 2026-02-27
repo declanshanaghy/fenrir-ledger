@@ -1,0 +1,112 @@
+"use client";
+
+/**
+ * GleipnirFishBreath — Gleipnir Fragment 5 of 6
+ *
+ * Shown when the user discovers: "The Breath of a Fish"
+ * One of the six impossible things woven into Gleipnir — the ribbon that bound Fenrir.
+ *
+ * Trigger:  Footer — hover on the © symbol (see design/easter-eggs.md)
+ * Storage:  localStorage key "egg:gleipnir-5"
+ * Image:    /easter-eggs/gleipnir-5.svg
+ */
+
+import { useEffect, useState } from "react";
+import { EasterEggModal } from "@/components/easter-eggs/EasterEggModal";
+
+const STORAGE_KEY = "egg:gleipnir-5";
+const TOTAL_FRAGMENTS = 6;
+
+interface GleipnirFishBreathProps {
+  /** Control open state externally (e.g. from the trigger site). */
+  open: boolean;
+  onClose: () => void;
+}
+
+export function GleipnirFishBreath({ open, onClose }: GleipnirFishBreathProps) {
+  const [found, setFound] = useState(0);
+
+  useEffect(() => {
+    if (open) {
+      // Count total found (this fragment was already written by the hook's trigger()).
+      const count = Array.from({ length: TOTAL_FRAGMENTS }, (_, i) =>
+        localStorage.getItem(`egg:gleipnir-${i + 1}`)
+      ).filter(Boolean).length;
+      setFound(count);
+    }
+  }, [open]);
+
+  return (
+    <EasterEggModal
+      open={open}
+      onClose={onClose}
+      title="The Breath of a Fish"
+      description="You have found Gleipnir fragment 5 of 6: The Breath of a Fish. One of the six impossible things woven into the ribbon that bound the great wolf."
+      image={
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src="/easter-eggs/gleipnir-5.svg"
+          alt="The Breath of a Fish — Gleipnir artifact"
+          className="w-full max-w-[200px] md:max-w-[240px] aspect-square object-contain"
+        />
+      }
+      audioSrc="/sounds/fenrir-howl.mp3"
+    >
+      <p className="font-body text-sm text-[#e8e4d4] leading-relaxed">
+        One of the six impossible things woven into{" "}
+        <span className="text-[#f0b429] italic">Gleipnir</span> — the only
+        chain strong enough to bind the great wolf. Though it looks like silk
+        ribbon, no chain is stronger.
+      </p>
+
+      <p className="font-body text-xs italic text-[#8a8578] leading-relaxed">
+        &ldquo;The dwarves of Svartálfaheimr gathered six things that do not
+        exist. From these they wove Gleipnir. When Fenrir felt its touch, he
+        knew at last what true binding was.&rdquo;
+      </p>
+
+      <div className="border-t border-[#1e2235] pt-3 mt-1">
+        <p className="font-mono text-[0.7rem] text-[#c9920a]">
+          Fragment {found} of {TOTAL_FRAGMENTS} found
+        </p>
+        {found === TOTAL_FRAGMENTS && (
+          <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">
+            ✦ Gleipnir is complete. The wolf stirs.
+          </p>
+        )}
+      </div>
+    </EasterEggModal>
+  );
+}
+
+/**
+ * Hook — wire this at the trigger site.
+ *
+ * Usage:
+ *   const { open, trigger, dismiss } = useGleipnirFragment5();
+ *   // Call trigger() when the user hovers the © symbol in the footer.
+ *   // Render: <GleipnirFishBreath open={open} onClose={dismiss} />
+ *
+ * Trigger location (design/easter-eggs.md):
+ *   Footer — mouse-hover on the copyright © symbol.
+ *   Wire onMouseEnter on the © element to call trigger().
+ *
+ * Audio and modal structure are handled by EasterEggModal — do not add them here.
+ * The trigger() call is the user-gesture entry point; browsers allow audio from there.
+ */
+export function useGleipnirFragment5() {
+  const [open, setOpen] = useState(false);
+
+  function trigger() {
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      localStorage.setItem(STORAGE_KEY, "1");
+      setOpen(true);
+    }
+  }
+
+  function dismiss() {
+    setOpen(false);
+  }
+
+  return { open, trigger, dismiss };
+}

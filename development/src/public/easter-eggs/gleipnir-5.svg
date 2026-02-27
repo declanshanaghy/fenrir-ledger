@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>The Breath of a Fish</title>
+  <desc>The fish does not breathe. I have drowned prey in rivers. I have watched them — they take in water, not air. There is no breath there. And yet the dwarves gathered it. They said: we found it between the gills, in the current's memory. I believe them now.</desc>
+
+  <defs>
+    <!-- Glow for the largest bubble -->
+    <filter id="bubble-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feFlood flood-color="#c9920a" flood-opacity="0.30" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#07070d"/>
+
+  <!-- Outer ring -->
+  <circle cx="512" cy="512" r="440" stroke="#c9920a" stroke-width="1" fill="none" opacity="0.18"/>
+
+  <!-- Water surface at y=940 — wide flat ellipse -->
+  <ellipse cx="512" cy="940" rx="360" ry="14" fill="#1e2235" opacity="0.40"/>
+
+  <!-- ── 11 BUBBLES rising bottom→top, S-curve centres ─────────────────── -->
+  <!-- S-curve: starts centre-right at bottom, drifts left mid-way, returns centre-right near top -->
+  <!-- Bubble 1 (bottom, largest): r=32, cx≈530, cy=880 -->
+  <circle cx="530" cy="880" r="32" fill="none" stroke="#c9920a" stroke-width="1.8" opacity="0.85" filter="url(#bubble-glow)"/>
+
+  <!-- Bubble 2: r=28, drift left -->
+  <circle cx="510" cy="800" r="28" fill="none" stroke="#c9920a" stroke-width="1.6" opacity="0.78"/>
+
+  <!-- Bubble 3: r=24 -->
+  <circle cx="488" cy="726" r="24" fill="none" stroke="#c9920a" stroke-width="1.5" opacity="0.70"/>
+
+  <!-- Bubble 4: r=20, leftmost drift -->
+  <circle cx="472" cy="658" r="20" fill="none" stroke="#c9920a" stroke-width="1.4" opacity="0.62"/>
+
+  <!-- Bubble 5: r=17, starting back toward centre -->
+  <circle cx="480" cy="594" r="17" fill="none" stroke="#c9920a" stroke-width="1.3" opacity="0.54"/>
+
+  <!-- Bubble 6: r=14, midpoint -->
+  <circle cx="498" cy="534" r="14" fill="none" stroke="#c9920a" stroke-width="1.2" opacity="0.47"/>
+
+  <!-- Bubble 7: r=12, drifting right -->
+  <circle cx="518" cy="478" r="12" fill="none" stroke="#c9920a" stroke-width="1.1" opacity="0.40"/>
+
+  <!-- Bubble 8: r=10 -->
+  <circle cx="534" cy="428" r="10" fill="none" stroke="#c9920a" stroke-width="1.0" opacity="0.33"/>
+
+  <!-- Bubble 9: r=8 -->
+  <circle cx="542" cy="382" r="8" fill="none" stroke="#c9920a" stroke-width="0.9" opacity="0.27"/>
+
+  <!-- Bubble 10: r=7, tapering back toward centre -->
+  <circle cx="528" cy="340" r="7" fill="none" stroke="#c9920a" stroke-width="0.8" opacity="0.20"/>
+
+  <!-- Bubble 11 (top, smallest): r=6 -->
+  <circle cx="516" cy="302" r="6" fill="none" stroke="#c9920a" stroke-width="0.7" opacity="0.12"/>
+
+  <!-- Rune watermark: bottom-left, persistent signature -->
+  <text x="32" y="988" font-size="80" fill="#c9920a" opacity="0.22" font-family="serif">ᛚ</text>
+</svg>

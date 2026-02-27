@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>The Roots of a Mountain</title>
+  <desc>Mountains do not have roots. Every child of Yggdrasil knows this. Rock simply is — it does not grip, it does not reach. And yet the dwarves found them: deep below Niðavellir, older than the stone itself. They are still down there. So am I.</desc>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#07070d"/>
+
+  <!-- Outer ring -->
+  <circle cx="512" cy="512" r="440" stroke="#c9920a" stroke-width="1" fill="none" opacity="0.18"/>
+
+  <!-- Surface of the earth — dim iron line -->
+  <line x1="0" y1="190" x2="1024" y2="190" stroke="#1e2235" stroke-width="1.5" opacity="0.7"/>
+
+  <!-- Inverted mountain silhouette: base at top (y≈200), apex pointing down at (512, 820) -->
+  <!-- Main peak apex at (512,820); base spans from (80,195) to (944,195) with foothills -->
+  <polygon
+    points="80,195 260,195 340,255 420,215 512,820 604,215 684,255 764,195 944,195"
+    fill="#1e2235"
+    stroke="#c9920a"
+    stroke-width="1.5"
+    opacity="0.55"
+  />
+
+  <!-- ROOT SYSTEM — branching from the inverted apex (512,820) and foothill tips -->
+
+  <!-- === TRUNK from apex (512, 820) going down === -->
+  <!-- Level 1: trunk -->
+  <line x1="512" y1="820" x2="512" y2="920" stroke="#c9920a" stroke-width="2.5" opacity="0.70"/>
+  <!-- Level 2: two main branches from trunk end -->
+  <!-- Left branch: angle -28° from vertical -->
+  <line x1="512" y1="920" x2="459" y2="996" stroke="#c9920a" stroke-width="1.5" opacity="0.50"/>
+  <!-- Right branch: angle +28° from vertical -->
+  <line x1="512" y1="920" x2="565" y2="996" stroke="#c9920a" stroke-width="1.5" opacity="0.50"/>
+  <!-- Level 3 left sub-branches -->
+  <line x1="459" y1="996" x2="432" y2="1042" stroke="#c9920a" stroke-width="1" opacity="0.28"/>
+  <line x1="459" y1="996" x2="477" y2="1044" stroke="#c9920a" stroke-width="1" opacity="0.28"/>
+  <!-- Level 3 right sub-branches -->
+  <line x1="565" y1="996" x2="547" y2="1044" stroke="#c9920a" stroke-width="1" opacity="0.28"/>
+  <line x1="565" y1="996" x2="593" y2="1042" stroke="#c9920a" stroke-width="1" opacity="0.28"/>
+  <!-- Level 4 tips (finest) -->
+  <line x1="432" y1="1042" x2="419" y2="1060" stroke="#c9920a" stroke-width="0.7" opacity="0.15"/>
+  <line x1="432" y1="1042" x2="442" y2="1062" stroke="#c9920a" stroke-width="0.7" opacity="0.15"/>
+  <line x1="477" y1="1044" x2="467" y2="1063" stroke="#c9920a" stroke-width="0.7" opacity="0.15"/>
+  <line x1="477" y1="1044" x2="488" y2="1062" stroke="#c9920a" stroke-width="0.7" opacity="0.15"/>
+  <line x1="547" y1="1044" x2="537" y2="1063" stroke="#c9920a" stroke-width="0.7" opacity="0.15"/>
+  <line x1="547" y1="1044" x2="558" y2="1062" stroke="#c9920a" stroke-width="0.7" opacity="0.15"/>
+  <line x1="593" y1="1042" x2="582" y2="1062" stroke="#c9920a" stroke-width="0.7" opacity="0.15"/>
+  <line x1="593" y1="1042" x2="605" y2="1060" stroke="#c9920a" stroke-width="0.7" opacity="0.15"/>
+
+  <!-- === LEFT FOOTHILL roots from approx (340, 255) going down-left === -->
+  <line x1="340" y1="255" x2="290" y2="360" stroke="#c9920a" stroke-width="2" opacity="0.60"/>
+  <line x1="290" y1="360" x2="240" y2="436" stroke="#c9920a" stroke-width="1.3" opacity="0.42"/>
+  <line x1="290" y1="360" x2="320" y2="445" stroke="#c9920a" stroke-width="1.3" opacity="0.42"/>
+  <line x1="240" y1="436" x2="210" y2="492" stroke="#c9920a" stroke-width="0.8" opacity="0.22"/>
+  <line x1="240" y1="436" x2="254" y2="496" stroke="#c9920a" stroke-width="0.8" opacity="0.22"/>
+  <line x1="320" y1="445" x2="300" y2="502" stroke="#c9920a" stroke-width="0.8" opacity="0.22"/>
+  <line x1="320" y1="445" x2="338" y2="500" stroke="#c9920a" stroke-width="0.8" opacity="0.22"/>
+
+  <!-- === RIGHT FOOTHILL roots from approx (684, 255) going down-right === -->
+  <line x1="684" y1="255" x2="734" y2="360" stroke="#c9920a" stroke-width="2" opacity="0.60"/>
+  <line x1="734" y1="360" x2="704" y2="445" stroke="#c9920a" stroke-width="1.3" opacity="0.42"/>
+  <line x1="734" y1="360" x2="784" y2="436" stroke="#c9920a" stroke-width="1.3" opacity="0.42"/>
+  <line x1="704" y1="445" x2="686" y2="500" stroke="#c9920a" stroke-width="0.8" opacity="0.22"/>
+  <line x1="704" y1="445" x2="724" y2="502" stroke="#c9920a" stroke-width="0.8" opacity="0.22"/>
+  <line x1="784" y1="436" x2="770" y2="496" stroke="#c9920a" stroke-width="0.8" opacity="0.22"/>
+  <line x1="784" y1="436" x2="814" y2="492" stroke="#c9920a" stroke-width="0.8" opacity="0.22"/>
+
+  <!-- === FAR LEFT edge roots from base corner (80, 195) === -->
+  <line x1="80" y1="195" x2="55" y2="310" stroke="#c9920a" stroke-width="1.8" opacity="0.55"/>
+  <line x1="55" y1="310" x2="30" y2="390" stroke="#c9920a" stroke-width="1.1" opacity="0.38"/>
+  <line x1="55" y1="310" x2="82" y2="388" stroke="#c9920a" stroke-width="1.1" opacity="0.38"/>
+  <line x1="30" y1="390" x2="18" y2="440" stroke="#c9920a" stroke-width="0.7" opacity="0.20"/>
+  <line x1="82" y1="388" x2="70" y2="440" stroke="#c9920a" stroke-width="0.7" opacity="0.20"/>
+  <line x1="82" y1="388" x2="98" y2="438" stroke="#c9920a" stroke-width="0.7" opacity="0.20"/>
+
+  <!-- === FAR RIGHT edge roots from base corner (944, 195) === -->
+  <line x1="944" y1="195" x2="969" y2="310" stroke="#c9920a" stroke-width="1.8" opacity="0.55"/>
+  <line x1="969" y1="310" x2="994" y2="390" stroke="#c9920a" stroke-width="1.1" opacity="0.38"/>
+  <line x1="969" y1="310" x2="942" y2="388" stroke="#c9920a" stroke-width="1.1" opacity="0.38"/>
+  <line x1="994" y1="390" x2="1006" y2="440" stroke="#c9920a" stroke-width="0.7" opacity="0.20"/>
+  <line x1="942" y1="388" x2="954" y2="440" stroke="#c9920a" stroke-width="0.7" opacity="0.20"/>
+  <line x1="942" y1="388" x2="926" y2="438" stroke="#c9920a" stroke-width="0.7" opacity="0.20"/>
+
+  <!-- Apex convergence glow — the deepest root point -->
+  <circle cx="512" cy="820" r="6" fill="#f0b429" opacity="0.55"/>
+  <circle cx="512" cy="820" r="14" fill="none" stroke="#c9920a" stroke-width="1" opacity="0.25"/>
+
+  <!-- Rune watermark: bottom-left, small, persistent signature -->
+  <text x="32" y="988" font-size="80" fill="#c9920a" opacity="0.22" font-family="serif">ᚱ</text>
+</svg>

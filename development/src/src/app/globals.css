@@ -190,3 +190,45 @@ body.konami-shake {
 body.konami-shake-mobile {
   animation: saga-shake-mobile 400ms ease-in-out;
 }
+
+/* ── Gleipnir Hunt — Fragment #5 "The Breath of a Fish" ─────────────────────
+ *
+ * The © symbol in the Footer has class .gleipnir-copyright-symbol.
+ * On :hover, a CSS ::after pseudo-element reveals the fragment phrase.
+ *
+ * The ::after is CSS-only — no DOM node, no ARIA announcement.
+ * pointer-events: none ensures the tooltip does not intercept mouse events.
+ *
+ * Touch devices: the fragment trigger fires on onTouchStart in Footer.tsx.
+ * The CSS tooltip does not appear on touch (hover pseudoclass is not active),
+ * which is correct — the modal itself provides the reveal.
+ *
+ * Positioning: appears above the © character, centered horizontally.
+ */
+.gleipnir-copyright-symbol {
+  position: relative;
+}
+
+.gleipnir-copyright-symbol::after {
+  content: '"The breath of a fish"';
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+
+  /* Typography */
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: #d4a520;
+
+  /* Invisible by default; fades in on hover */
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.gleipnir-copyright-symbol:hover::after {
+  opacity: 1;
+}

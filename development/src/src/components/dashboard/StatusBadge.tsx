@@ -10,10 +10,16 @@ import { STATUS_LABELS, STATUS_TOOLTIPS } from "@/lib/constants";
 interface StatusBadgeProps {
   status: CardStatus;
   className?: string;
+  /**
+   * Loki Mode override label.
+   * When present, this realm name is shown instead of the normal status label.
+   * The badge variant (color) is preserved so the visual still makes sense.
+   */
+  lokiLabel?: string | undefined;
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const label = STATUS_LABELS[status] ?? status;
+export function StatusBadge({ status, className, lokiLabel }: StatusBadgeProps) {
+  const label = lokiLabel ?? (STATUS_LABELS[status] ?? status);
   const tooltip = STATUS_TOOLTIPS[status];
 
   return (

@@ -18,6 +18,12 @@ import { KNOWN_ISSUERS } from "@/lib/constants";
 
 interface CardTileProps {
   card: CreditCard;
+  /**
+   * Loki Mode override: when present, the status badge shows this realm name
+   * instead of the normal functional status label.
+   * Set to `undefined` in normal operation.
+   */
+  lokiLabel?: string | undefined;
 }
 
 /**
@@ -28,7 +34,7 @@ function getIssuerName(issuerId: string): string {
   return issuer?.name ?? issuerId;
 }
 
-export function CardTile({ card }: CardTileProps) {
+export function CardTile({ card, lokiLabel }: CardTileProps) {
   const hasAnnualFee = card.annualFee > 0 && card.annualFeeDate;
   const hasBonus = card.signUpBonus && !card.signUpBonus.met;
   const feeDays = hasAnnualFee ? daysUntil(card.annualFeeDate) : null;
@@ -50,7 +56,11 @@ export function CardTile({ card }: CardTileProps) {
                 {card.cardName}
               </CardTitle>
             </div>
-            <StatusBadge status={card.status} className="shrink-0" />
+            <StatusBadge
+              status={card.status}
+              className="shrink-0"
+              lokiLabel={lokiLabel}
+            />
           </div>
         </CardHeader>
 

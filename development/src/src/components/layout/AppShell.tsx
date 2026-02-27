@@ -14,6 +14,11 @@ import { SideNav } from "./SideNav";
 import { SyncIndicator } from "./SyncIndicator";
 import { KonamiHowl } from "./KonamiHowl";
 import { ForgeMasterEgg } from "./ForgeMasterEgg";
+import { Footer } from "./Footer";
+import {
+  GleipnirMountainRoots,
+  useGleipnirFragment3,
+} from "@/components/cards/GleipnirMountainRoots";
 
 const STORAGE_KEY = "fenrir:sidenav-collapsed";
 
@@ -24,6 +29,7 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { open: rootsOpen, trigger: triggerRoots, dismiss: dismissRoots } = useGleipnirFragment3();
 
   // Read persisted state after mount to avoid SSR mismatch
   useEffect(() => {
@@ -36,6 +42,8 @@ export function AppShell({ children }: AppShellProps) {
     const next = !collapsed;
     setCollapsed(next);
     localStorage.setItem(STORAGE_KEY, String(next));
+    // Easter egg #3 — The Roots of a Mountain: first sidebar collapse
+    if (next) triggerRoots();
   }
 
   // Suppress layout until client state is known to avoid flash
@@ -56,13 +64,20 @@ export function AppShell({ children }: AppShellProps) {
       <TopBar />
       <div className="flex flex-1 overflow-hidden">
         <SideNav collapsed={collapsed} onToggle={handleToggle} />
-        <main className="flex-1 overflow-auto">{children}</main>
+        {/* Main content + footer in a scrollable column */}
+        <div className="flex flex-col flex-1 overflow-auto">
+          <main className="flex-1">{children}</main>
+          {/* Footer — sits below all page content, above the viewport baseline */}
+          <Footer />
+        </div>
       </div>
       <SyncIndicator />
       {/* Easter egg #2 — Konami Code → The Howl (client-only, no SSR) */}
       <KonamiHowl />
       {/* Easter egg #9 — The Forgemaster's Signature (`?` key, one-time) */}
       <ForgeMasterEgg />
+      {/* Easter egg #3 — The Roots of a Mountain (first sidebar collapse, one-time) */}
+      <GleipnirMountainRoots open={rootsOpen} onClose={dismissRoots} />
     </div>
   );
 }

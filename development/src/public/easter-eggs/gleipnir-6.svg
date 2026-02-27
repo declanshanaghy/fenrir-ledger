@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>The Spittle of a Bird</title>
+  <desc>I have eaten birds. Whole. Feathers, hollow bones, the lot. Birds do not spit — they are too small, too clean, too fast. They told me the dwarves collected it over a thousand years from the corners of beaks. A thousand years of nothing, gathered into a strand that holds a god's wolf still. I respect it.</desc>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#07070d"/>
+
+  <!-- Outer ring -->
+  <circle cx="512" cy="512" r="440" stroke="#c9920a" stroke-width="1" fill="none" opacity="0.18"/>
+
+  <!-- ── BIRD BEAK SILHOUETTE pointing right, upper tip at (560, 512) ─────── -->
+  <!-- Upper mandible: curves from base (460, 488) to tip (560, 512) -->
+  <!-- Lower mandible: curves from base (460, 528) to tip (560, 512) -->
+  <path
+    d="M 460 488 C 490 492 530 504 560 512 C 530 520 490 524 460 528 C 452 522 450 514 460 488 Z"
+    fill="none"
+    stroke="#c9920a"
+    stroke-width="2"
+    opacity="0.85"
+  />
+
+  <!-- ── DROPLET SPRAY from tip (560, 512) ──────────────────────────────── -->
+  <!-- 13 droplets at varied angles -30° to +30°, distances 30–160px -->
+  <!-- Radial guide lines (very faint) -->
+  <line x1="560" y1="512" x2="686" y2="449" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="700" y2="472" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="714" y2="498" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="710" y2="512" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="706" y2="528" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="694" y2="548" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="678" y2="567" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="620" y2="452" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="636" y2="466" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="648" y2="488" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="648" y2="536" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="636" y2="556" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+  <line x1="560" y1="512" x2="618" y2="568" stroke="#c9920a" stroke-width="0.5" opacity="0.07"/>
+
+  <!-- Droplets: near beak (bright, larger) fading to outer edge (dim, smaller) -->
+  <!-- Near cluster — high opacity, r 5–7 -->
+  <circle cx="592" cy="493" r="6" fill="#c9920a" opacity="0.85"/>
+  <circle cx="598" cy="507" r="7" fill="#c9920a" opacity="0.82"/>
+  <circle cx="596" cy="521" r="5" fill="#c9920a" opacity="0.80"/>
+  <circle cx="586" cy="531" r="4" fill="#c9920a" opacity="0.76"/>
+  <circle cx="584" cy="496" r="4" fill="#c9920a" opacity="0.74"/>
+
+  <!-- Mid cluster — medium opacity, r 3–5 -->
+  <circle cx="636" cy="468" r="5" fill="#c9920a" opacity="0.62"/>
+  <circle cx="648" cy="490" r="4" fill="#c9920a" opacity="0.58"/>
+  <circle cx="652" cy="512" r="5" fill="#c9920a" opacity="0.55"/>
+  <circle cx="646" cy="534" r="3" fill="#c9920a" opacity="0.52"/>
+  <circle cx="634" cy="554" r="4" fill="#c9920a" opacity="0.49"/>
+
+  <!-- Outer droplets — low opacity, r 2–3 -->
+  <circle cx="688" cy="451" r="3" fill="#c9920a" opacity="0.35"/>
+  <circle cx="704" cy="476" r="2" fill="#c9920a" opacity="0.28"/>
+  <circle cx="712" cy="512" r="3" fill="#c9920a" opacity="0.22"/>
+  <!-- Bonus dim far droplet -->
+  <circle cx="700" cy="546" r="2" fill="#c9920a" opacity="0.20"/>
+
+  <!-- Rune watermark: bottom-left, persistent signature -->
+  <text x="32" y="988" font-size="80" fill="#c9920a" opacity="0.22" font-family="serif">ᛊ</text>
+</svg>
