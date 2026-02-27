@@ -6,6 +6,8 @@ Freya shapes the vision before the forge ever heats. Nothing moves downstream un
 
 ## Index
 
+- [README.md](README.md) — This index: all product artifacts owned by Freya.
+- [product-design-brief.md](product-design-brief.md) — The Saga Ledger product design brief: design philosophy, aesthetic direction, information architecture, target audience, tone rules, and key design decisions.
 - [mythology-map.md](mythology-map.md) — Norse cosmology mapped to every card state, team role, and UI feature in Fenrir Ledger.
 - [copywriting.md](copywriting.md) — The two-voice rule, kenning vocabulary, status badge copy, action labels, empty states, and Edda quotes.
 - [backlog/README.md](backlog/README.md) — Freya's groomed backlog index: all stories written, prioritized, and cleared for engineering.

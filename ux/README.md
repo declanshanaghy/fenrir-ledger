@@ -30,6 +30,7 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [wireframes.md](wireframes.md) — Layout specs, component hierarchy, responsive breakpoints, z-index table, wireframe index.
 - [easter-egg-modal.md](easter-egg-modal.md) — Shared modal template for all easter egg discovery moments.
 - [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) — Mermaid diagram conventions for all pack members.
+- [.sync-report.md](.sync-report.md) — Latest doc-sync run report: files changed, verified, and root README hints.
 - [../architecture/README.md](../architecture/README.md) — FiremanDecko's domain: implementation brief, pipeline, system design, sprint plan, and ADRs.
 - [../architecture/implementation-brief.md](../architecture/implementation-brief.md) — FiremanDecko integration plan: wave strategy, sprint stories, open questions.
 - [../architecture/pipeline.md](../architecture/pipeline.md) — Kanban orchestration: model assignments, stage gates, WIP limits, handoff chain.
