@@ -36,3 +36,6 @@ coverage/
 
 # Temp files
 tmp/
+
+# doc-sync run artifacts (ephemeral, coordinator reads then discards)
+.sync-report.md
