@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Konami Code — The Howl</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in design/theme-system.md.
+       Z-index: 9653 (easter egg layer — W-O-L-F on a phone keypad) */
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+
+    /* ─────────────────────────────────────────────
+       SECTION WRAPPER — one section per diagram panel
+       ───────────────────────────────────────────── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 10px;
+      border: 1px solid;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    /* ─────────────────────────────────────────────
+       PANEL 1: ACTIVE HOWL STATE
+       Shows the viewport at the moment Konami fires.
+       ───────────────────────────────────────────── */
+    .panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 12px;
+      border: 1px solid;
+      margin-bottom: 16px;
+    }
+
+    .diagram-section {
+      margin-bottom: 48px;
+    }
+
+    /* Simulated viewport shell */
+    .viewport-shell {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      height: 560px;
+      border: 2px solid;
+      overflow: hidden;
+    }
+
+    /* ── Background page content (muted to show overlay nature) ── */
+    .page-bg {
+      position: absolute;
+      inset: 0;
+      padding: 16px;
+      opacity: 0.3;
+      /* opacity: 0.3 signals "content beneath the overlay" per wireframe convention */
+    }
+
+    .bg-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .bg-card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .bg-card {
+      border: 1px solid;
+      padding: 12px;
+      height: 120px;
+    }
+
+    .bg-card-title {
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .bg-card-meta {
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .bg-card-status {
+      font-size: 10px;
+      border: 1px solid;
+      display: inline-block;
+      padding: 2px 4px;
+      margin-top: 4px;
+    }
+
+    /* ── FENRIR AWAKENS status band — fixed top, z: 9653 ── */
+    .status-band {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 44px;
+      border: 2px solid;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      border-bottom: 2px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9653;
+      /* Theme: Cinzel Decorative, blood-orange text (#c9920a → shifts to blood orange during howl).
+         Full width. Disappears after 3 seconds (fade out). */
+    }
+
+    .status-band-text {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+    }
+
+    .status-band-z-label {
+      position: absolute;
+      right: 8px;
+      font-size: 10px;
+      font-style: italic;
+      opacity: 0.7;
+    }
+
+    /* ── Wolf silhouette overlay — rises from bottom, z: 9653 ── */
+    .wolf-silhouette {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 320px;   /* final resting height after animation completes */
+      border: 2px solid;
+      border-bottom: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9653;
+      /* Animation: @keyframes wolf-rise — translateY(100%) → translateY(0)
+         Duration: 600ms, easing: cubic-bezier(0.16, 1, 0.3, 1) (same as saga-enter)
+         Viewport shake: @keyframes saga-shake fires simultaneously (3 quick horizontal nudges)
+         Full-width — bleeds to both edges.
+         Theme: wolf-head silhouette SVG/PNG, centered in placeholder below. */
+    }
+
+    .wolf-placeholder-box {
+      border: 2px dashed;
+      width: 260px;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px;
+    }
+
+    .wolf-placeholder-label {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .wolf-overlay-annotation {
+      margin-top: 12px;
+      font-size: 10px;
+      text-align: center;
+      width: 340px;
+    }
+
+    /* Viewport shake annotation badge */
+    .shake-badge {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      border: 1px solid;
+      padding: 4px 6px;
+      font-size: 10px;
+    }
+
+    /* ── Z-index annotation layer ── */
+    .z-index-badge {
+      position: absolute;
+      top: 52px;         /* just below status band */
+      right: 8px;
+      border: 1px solid;
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      z-index: 9654;     /* label sits above egg layer for annotation purposes only */
+    }
+
+    /* ─────────────────────────────────────────────
+       ANNOTATION BLOCK — below the viewport
+       ───────────────────────────────────────────── */
+    .annotation-block {
+      max-width: 900px;
+      border: 1px solid;
+      padding: 14px 16px;
+      margin-top: 12px;
+    }
+
+    .annotation-block h3 {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .annotation-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .annotation-table th,
+    .annotation-table td {
+      border: 1px solid;
+      padding: 5px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .annotation-table th {
+      font-weight: 700;
+    }
+
+    /* ─────────────────────────────────────────────
+       PANEL 2: RAGNAROK PULSE VARIANT
+       ───────────────────────────────────────────── */
+    .variant-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 10px;
+      border: 1px solid;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+
+    .ragnarok-viewport {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      height: 560px;
+      border: 2px solid;
+      overflow: hidden;
+    }
+
+    /* Ragnarök flash overlay — single keyframe, full-viewport, translucent red fill */
+    .ragnarok-flash {
+      position: absolute;
+      inset: 0;
+      border: 4px dashed;
+      /* Theme: background flashes deep red (#3d0000 → transparent) once.
+         @keyframes ragnarok-pulse: opacity 1 → 0, duration 800ms.
+         Only fires when user has ≥ 1 overdue card at moment Konami code is entered. */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9652;  /* one below wolf silhouette so wolf still reads over it */
+    }
+
+    .ragnarok-flash-label {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-align: center;
+      padding: 16px;
+      border: 2px solid;
+    }
+
+    .ragnarok-z-badge {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      border: 1px solid;
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* Overdue card indicator */
+    .overdue-marker {
+      position: absolute;
+      top: 52px;
+      left: 8px;
+      border: 2px solid;
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* ─────────────────────────────────────────────
+       PANEL 3: STATE FLOW DIAGRAM (Mermaid inline)
+       ───────────────────────────────────────────── */
+    .flow-section {
+      max-width: 900px;
+      border: 1px solid;
+      padding: 14px 16px;
+      margin-bottom: 48px;
+    }
+
+    .flow-section h3 {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .mermaid-placeholder {
+      border: 1px dashed;
+      padding: 16px;
+      font-size: 11px;
+      font-family: monospace;
+      white-space: pre;
+      line-height: 1.5;
+    }
+
+    /* ─────────────────────────────────────────────
+       PANEL 4: Z-INDEX LAYER MAP
+       ───────────────────────────────────────────── */
+    .layer-map {
+      max-width: 900px;
+      border: 1px solid;
+      padding: 14px 16px;
+      margin-bottom: 48px;
+    }
+
+    .layer-map h3 {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .layer-row {
+      display: flex;
+      align-items: center;
+      border: 1px solid;
+      margin-bottom: 4px;
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+
+    .layer-z {
+      font-weight: 700;
+      width: 72px;
+      flex-shrink: 0;
+    }
+
+    .layer-name {
+      flex: 1;
+    }
+
+    .layer-highlight {
+      font-weight: 700;
+      border-left: 3px solid;
+      padding-left: 6px;
+    }
+
+    /* ─────────────────────────────────────────────
+       PAGE WRAPPER
+       ───────────────────────────────────────────── */
+    .page-wrapper {
+      padding: 24px;
+    }
+
+    .page-heading {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .page-subheading {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .page-meta {
+      font-size: 11px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid;
+      padding-bottom: 12px;
+    }
+
+    .section-divider {
+      border: none;
+      border-top: 1px solid;
+      margin: 32px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- ══════════════════════════════════════════════
+       PAGE HEADER
+       ══════════════════════════════════════════════ -->
+  <h1 class="page-heading">Wireframe: Konami Code — The Howl</h1>
+  <p class="page-subheading">Easter Egg #2 &mdash; Trigger: ↑ ↑ ↓ ↓ ← → ← → B A</p>
+  <p class="page-meta note">
+    Sprint 2 &nbsp;|&nbsp; Z-layer: 9653 (W-O-L-F on phone keypad) &nbsp;|&nbsp;
+    See: design/easter-eggs.md §2 &nbsp;|&nbsp; design/wireframes.md §Z-Index Layers
+  </p>
+
+
+  <!-- ══════════════════════════════════════════════
+       PANEL 1 — ACTIVE HOWL STATE
+       Full viewport at moment Konami fires.
+       ══════════════════════════════════════════════ -->
+  <div class="diagram-section">
+    <div class="section-label">Panel 1 — Active Howl State (Konami fires, no overdue cards)</div>
+
+    <div class="viewport-shell">
+
+      <!-- Background page content (opacity: 0.3 — visible beneath overlay) -->
+      <div class="page-bg">
+        <div class="bg-header">
+          <span>ᛟ FENRIR LEDGER</span>
+          <span>4 cards &middot; 1 needs attention</span>
+        </div>
+        <div class="bg-card-grid">
+          <div class="bg-card">
+            <div class="bg-card-title">Chase Sapphire Reserve</div>
+            <div class="bg-card-meta">Fee: $550 &middot; Due 2026-04-01</div>
+            <div class="bg-card-status">ACTIVE</div>
+          </div>
+          <div class="bg-card">
+            <div class="bg-card-title">Amex Platinum</div>
+            <div class="bg-card-meta">Fee: $695 &middot; Due 2026-03-15</div>
+            <div class="bg-card-status">FEE APPROACHING</div>
+          </div>
+          <div class="bg-card">
+            <div class="bg-card-title">Citi Double Cash</div>
+            <div class="bg-card-meta">Promo ends 2026-05-22</div>
+            <div class="bg-card-status">PROMO EXPIRING</div>
+          </div>
+        </div>
+        <p class="note" style="margin-top: 10px;">Background cards at opacity: 0.3 — content is visible but recedes behind overlay</p>
+      </div>
+      <!-- /page-bg -->
+
+      <!-- FENRIR AWAKENS status band — fixed top, z: 9653 -->
+      <div class="status-band" role="status" aria-live="assertive">
+        <span class="status-band-text">FENRIR AWAKENS</span>
+        <span class="status-band-z-label">z: 9653 &nbsp;|&nbsp; 3s duration, then fade out</span>
+        <!--
+          Theme implementation notes:
+          - font: Cinzel Decorative, font-weight: 700, letter-spacing: 0.25em
+          - text color: blood orange (shifts from gold #c9920a → #c94020 during howl)
+          - background: void-black (#07070d) at 96% opacity so page is just visible beneath
+          - full-width, fixed to top of viewport
+          - aria-live="assertive" so screen readers announce it immediately
+          - disappears after 3s via @keyframes howl-band-fade (opacity 1 → 0)
+        -->
+      </div>
+
+      <!-- Z-index annotation badge -->
+      <div class="z-index-badge">z: 9653 — Easter Egg Layer</div>
+
+      <!-- Viewport shake annotation -->
+      <div class="shake-badge">
+        &#x21C4; saga-shake<br />3 nudges, 400ms
+      </div>
+
+      <!-- Wolf silhouette — rises from bottom, z: 9653 -->
+      <div class="wolf-silhouette" role="img" aria-label="Wolf head silhouette rising from the bottom of the viewport">
+        <div class="wolf-placeholder-box">
+          <div>
+            <div class="wolf-placeholder-label">[Wolf silhouette — rises from bottom]</div>
+            <p class="note" style="margin-top: 6px;">
+              SVG wolf-head, full viewport width.<br />
+              Centered horizontally, anchored at bottom edge.
+            </p>
+          </div>
+        </div>
+        <p class="wolf-overlay-annotation note">
+          @keyframes wolf-rise: translateY(100%) → translateY(0)<br />
+          600ms &middot; cubic-bezier(0.16, 1, 0.3, 1) &middot; fill: both<br />
+          Fires simultaneously with saga-shake on the &lt;body&gt; element.<br />
+          Theme: silhouette fill matches gold accent (#c9920a).<br />
+          Optional audio: plays only if AudioContext already running — never autoplay.
+        </p>
+      </div>
+      <!-- /wolf-silhouette -->
+
+    </div>
+    <!-- /viewport-shell -->
+
+    <!-- Annotation block for Panel 1 -->
+    <div class="annotation-block">
+      <h3>Panel 1 — Interaction Notes</h3>
+      <table class="annotation-table">
+        <thead>
+          <tr>
+            <th>Element</th>
+            <th>Z-index</th>
+            <th>Duration / Trigger</th>
+            <th>Behavior</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Background card grid</td>
+            <td>0</td>
+            <td>Always visible</td>
+            <td>opacity: 0.3 during howl (CSS class applied to root). Restores after 3s.</td>
+          </tr>
+          <tr>
+            <td>FENRIR AWAKENS band</td>
+            <td>9653</td>
+            <td>3 seconds</td>
+            <td>Full-width top band. Blood-orange text, Cinzel Decorative. aria-live="assertive". Fades out after 3s.</td>
+          </tr>
+          <tr>
+            <td>Wolf silhouette</td>
+            <td>9653</td>
+            <td>600ms rise + 3s hold + 400ms fade</td>
+            <td>Rises from bottom via wolf-rise keyframe. Full viewport width. Stays for 3s then fades.</td>
+          </tr>
+          <tr>
+            <td>Viewport shake</td>
+            <td>n/a</td>
+            <td>400ms (3 nudges)</td>
+            <td>@keyframes saga-shake on &lt;body&gt; — horizontal nudges ±6px. Does not affect z-stack.</td>
+          </tr>
+          <tr>
+            <td>Audio (optional)</td>
+            <td>n/a</td>
+            <td>On trigger, if allowed</td>
+            <td>Plays only when AudioContext is already running. Never autoplay. Respects prefers-reduced-motion.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- /annotation-block -->
+  </div>
+  <!-- /diagram-section Panel 1 -->
+
+
+  <hr class="section-divider" />
+
+
+  <!-- ══════════════════════════════════════════════
+       PANEL 2 — RAGNAROK PULSE VARIANT
+       Fires when user has ≥ 1 overdue card at moment
+       Konami code is entered.
+       ══════════════════════════════════════════════ -->
+  <div class="diagram-section">
+    <div class="variant-label">Panel 2 — Ragnarok Pulse Variant (overdue cards exist)</div>
+    <p class="note" style="margin-bottom: 10px;">
+      Condition: user has at least 1 overdue card when Konami code fires.
+      The background flashes deep red once before the wolf rises.
+      All other elements identical to Panel 1.
+    </p>
+
+    <div class="ragnarok-viewport">
+
+      <!-- Background page content (opacity: 0.3) -->
+      <div class="page-bg">
+        <div class="bg-header">
+          <span>ᛟ FENRIR LEDGER</span>
+          <span>4 cards &middot; 2 need attention</span>
+        </div>
+        <div class="bg-card-grid">
+          <div class="bg-card">
+            <div class="bg-card-title">Chase Sapphire Reserve</div>
+            <div class="bg-card-meta">Fee OVERDUE — 2026-02-10</div>
+            <div class="bg-card-status">OVERDUE</div>
+          </div>
+          <div class="bg-card">
+            <div class="bg-card-title">Amex Platinum</div>
+            <div class="bg-card-meta">Fee OVERDUE — 2026-01-15</div>
+            <div class="bg-card-status">OVERDUE</div>
+          </div>
+          <div class="bg-card">
+            <div class="bg-card-title">Citi Double Cash</div>
+            <div class="bg-card-meta">Promo ends 2026-05-22</div>
+            <div class="bg-card-status">ACTIVE</div>
+          </div>
+        </div>
+        <p class="note" style="margin-top: 10px;">Two overdue cards present — triggers Ragnarök pulse before wolf rises</p>
+      </div>
+      <!-- /page-bg -->
+
+      <!-- Overdue card indicator -->
+      <div class="overdue-marker">2 OVERDUE CARDS — Pulse fires</div>
+
+      <!-- Ragnarok pulse flash — single keyframe, fires BEFORE wolf-rise -->
+      <div class="ragnarok-flash">
+        <div class="ragnarok-flash-label">
+          [ RAGNAROK PULSE ]<br />
+          <span class="note">
+            Full-viewport deep-red flash.<br />
+            @keyframes ragnarok-pulse: opacity 1 → 0<br />
+            800ms &middot; ease-out &middot; fires once before wolf-rise<br />
+            Theme: fill #3d0000 (deep red) at 60% opacity.<br />
+            z: 9652 — behind wolf (9653) but above page (0)
+          </span>
+        </div>
+        <div class="ragnarok-z-badge">z: 9652 — Ragnarok pulse</div>
+      </div>
+      <!-- /ragnarok-flash -->
+
+      <!-- FENRIR AWAKENS band (same as Panel 1) -->
+      <div class="status-band" role="status" aria-live="assertive">
+        <span class="status-band-text">FENRIR AWAKENS</span>
+        <span class="status-band-z-label">z: 9653 &nbsp;|&nbsp; 3s duration</span>
+      </div>
+
+      <!-- Wolf silhouette (same as Panel 1, fires after ragnarok-pulse completes) -->
+      <div class="wolf-silhouette" role="img" aria-label="Wolf head silhouette rising from the bottom of the viewport">
+        <div class="wolf-placeholder-box">
+          <div>
+            <div class="wolf-placeholder-label">[Wolf silhouette — rises from bottom]</div>
+            <p class="note" style="margin-top: 6px;">
+              Same as Panel 1.<br />
+              Fires after ragnarok-pulse (800ms delay).
+            </p>
+          </div>
+        </div>
+        <p class="wolf-overlay-annotation note">
+          Ragnarok variant note: if Ragnarok Threshold (Easter Egg #8) is also active,
+          the howl plays at double intensity and gold accents are blood-orange throughout.
+          See easter-eggs.md §8.
+        </p>
+      </div>
+      <!-- /wolf-silhouette -->
+
+    </div>
+    <!-- /ragnarok-viewport -->
+
+    <!-- Annotation block for Panel 2 -->
+    <div class="annotation-block">
+      <h3>Panel 2 — Ragnarok Pulse Notes</h3>
+      <table class="annotation-table">
+        <thead>
+          <tr>
+            <th>Element</th>
+            <th>Z-index</th>
+            <th>Timing relative to Konami trigger</th>
+            <th>Condition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Ragnarok pulse flash</td>
+            <td>9652</td>
+            <td>0ms — fires immediately on trigger</td>
+            <td>Only when ≥ 1 overdue card exists at moment code is entered.</td>
+          </tr>
+          <tr>
+            <td>Wolf silhouette rise</td>
+            <td>9653</td>
+            <td>800ms delay (after pulse fade)</td>
+            <td>Always fires (same as Panel 1). Sequence: pulse → shake + rise.</td>
+          </tr>
+          <tr>
+            <td>FENRIR AWAKENS band</td>
+            <td>9653</td>
+            <td>0ms — fires immediately with pulse</td>
+            <td>Always fires. Blood-orange intensity increased in this variant.</td>
+          </tr>
+          <tr>
+            <td>Ragnarok Threshold cross-trigger</td>
+            <td>n/a</td>
+            <td>Pre-existing state</td>
+            <td>If Easter Egg #8 is also active (≥ 3 fee_approaching/overdue), audio plays at double intensity. See easter-eggs.md §8.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- /annotation-block -->
+  </div>
+  <!-- /diagram-section Panel 2 -->
+
+
+  <hr class="section-divider" />
+
+
+  <!-- ══════════════════════════════════════════════
+       PANEL 3 — STATE FLOW DIAGRAM
+       Mermaid state diagram (inline, pre-rendered reference)
+       ══════════════════════════════════════════════ -->
+  <div class="flow-section">
+    <h3>Panel 3 — Howl State Machine (Mermaid — see design/wireframes/konami-howl.md for rendered version)</h3>
+    <p class="note" style="margin-bottom: 10px;">
+      The following Mermaid source describes the state transitions for The Howl sequence.
+      Render at: https://mermaid.live or any Mermaid-compatible markdown viewer.
+    </p>
+    <div class="mermaid-placeholder">
+stateDiagram-v2
+    classDef critical fill:#F44336,stroke:#D32F2F,color:#FFF
+    classDef warning fill:#FF9800,stroke:#F57C00,color:#FFF
+    classDef healthy fill:#4CAF50,stroke:#388E3C,color:#FFF
+    classDef primary fill:#03A9F4,stroke:#0288D1,color:#FFF
+
+    [*] --> Idle: Page loaded
+
+    Idle --> SequenceListening: Any arrow/B/A key pressed
+    SequenceListening --> SequenceListening: Correct next key in ↑↑↓↓←→←→BA
+    SequenceListening --> Idle: Wrong key (reset sequence)
+
+    SequenceListening --> CheckOverdue: Full sequence ↑↑↓↓←→←→BA complete
+    CheckOverdue --> HowlWithPulse: Overdue cards exist
+    CheckOverdue --> HowlStandard: No overdue cards
+
+    HowlWithPulse --> RagnarokFlash: Immediately (0ms)
+    RagnarokFlash --> WolfRise: 800ms delay (after pulse)
+    WolfRise --> HowlActive: Rise animation starts
+    HowlActive --> FadeOut: 3s hold complete
+    FadeOut --> Idle: Fade complete (400ms)
+
+    HowlStandard --> WolfRise: Immediately (0ms)
+
+    class CheckOverdue warning
+    class HowlWithPulse critical
+    class RagnarokFlash critical
+    class HowlStandard primary
+    class HowlActive primary
+    </div>
+  </div>
+  <!-- /flow-section -->
+
+
+  <!-- ══════════════════════════════════════════════
+       PANEL 4 — Z-INDEX LAYER MAP
+       Shows where the easter egg layer sits relative
+       to all other layers in the app.
+       ══════════════════════════════════════════════ -->
+  <div class="layer-map">
+    <h3>Panel 4 — Z-Index Layer Map (from design/wireframes.md)</h3>
+    <p class="note" style="margin-bottom: 10px;">Highlighted rows are active during The Howl.</p>
+
+    <div class="layer-row">
+      <span class="layer-z">z: 0</span>
+      <span class="layer-name">Page content (base)</span>
+    </div>
+    <div class="layer-row">
+      <span class="layer-z">z: 10</span>
+      <span class="layer-name">Cards — hover-lifted</span>
+    </div>
+    <div class="layer-row">
+      <span class="layer-z">z: 50</span>
+      <span class="layer-name">Howl Panel sidebar</span>
+    </div>
+    <div class="layer-row">
+      <span class="layer-z">z: 100</span>
+      <span class="layer-name">Header — sticky nav</span>
+    </div>
+    <div class="layer-row">
+      <span class="layer-z">z: 200</span>
+      <span class="layer-name">Modal overlay (dialog backdrop)</span>
+    </div>
+    <div class="layer-row">
+      <span class="layer-z">z: 210</span>
+      <span class="layer-name">Modal (dialog)</span>
+    </div>
+    <div class="layer-row">
+      <span class="layer-z">z: 300</span>
+      <span class="layer-name">Toast — notifications</span>
+    </div>
+    <div class="layer-row layer-highlight">
+      <span class="layer-z">z: 9652</span>
+      <span class="layer-name">Ragnarok pulse flash [ACTIVE — Panel 2 only]</span>
+    </div>
+    <div class="layer-row layer-highlight">
+      <span class="layer-z">z: 9653</span>
+      <span class="layer-name">Wolf silhouette &amp; FENRIR AWAKENS band [ACTIVE — Panels 1 &amp; 2] &mdash; W-O-L-F on phone keypad</span>
+    </div>
+
+    <p class="note" style="margin-top: 10px;">
+      9653 = W(9) O(6) L(5) F(3) on a standard phone keypad.
+      The Ragnarök pulse sits at 9652 so the wolf silhouette always renders above it.
+      All other app layers (modals, toasts, header) are fully obscured during the howl by design.
+    </p>
+  </div>
+  <!-- /layer-map -->
+
+
+  <!-- ══════════════════════════════════════════════
+       PANEL 5 — ACCESSIBILITY &amp; RESPONSIVE NOTES
+       ══════════════════════════════════════════════ -->
+  <div class="annotation-block" style="margin-bottom: 48px;">
+    <h3>Panel 5 — Accessibility &amp; Responsive Behavior</h3>
+    <table class="annotation-table">
+      <thead>
+        <tr>
+          <th>Concern</th>
+          <th>Requirement</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>prefers-reduced-motion</td>
+          <td>
+            When OS/browser has reduced-motion enabled: skip wolf-rise, saga-shake, and ragnarok-pulse animations.
+            FENRIR AWAKENS band still appears (no animation) for the 3s duration so the user is not excluded from the easter egg.
+          </td>
+        </tr>
+        <tr>
+          <td>Screen readers</td>
+          <td>
+            status-band uses role="status" + aria-live="assertive". Wolf silhouette uses role="img" + aria-label.
+            No interactive elements added during howl — keyboard focus is not moved.
+          </td>
+        </tr>
+        <tr>
+          <td>Audio</td>
+          <td>
+            Optional. Only plays if AudioContext is already running (never autoplay).
+            Must be accompanied by a user gesture previously in the session.
+          </td>
+        </tr>
+        <tr>
+          <td>Mobile (&lt; 640px)</td>
+          <td>
+            Wolf silhouette: full viewport width, height capped at 50vh so status band remains readable.
+            FENRIR AWAKENS band: font-size scales down to 14px on mobile.
+            saga-shake: reduced to ±3px on mobile to avoid layout jank on small displays.
+          </td>
+        </tr>
+        <tr>
+          <td>Dismissal</td>
+          <td>
+            Howl is purely presentational — no dismiss button required.
+            Sequence completes and all overlays fade automatically after ~3.8s total.
+            ESC key does NOT dismiss (user cannot accidentally skip the experience).
+          </td>
+        </tr>
+        <tr>
+          <td>Trigger listener cleanup</td>
+          <td>
+            useEffect cleanup removes the keydown listener on unmount.
+            Sequence ref resets to [] on component unmount.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <!-- /accessibility notes -->
+
+</div>
+<!-- /page-wrapper -->
+</body>
+</html>

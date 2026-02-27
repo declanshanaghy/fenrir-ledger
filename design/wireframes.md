@@ -24,6 +24,7 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | About Modal | [wireframes/about-modal.html](wireframes/about-modal.html) | Two-column dialog: wolf logo left, team pack + seven impossible ingredients right |
 | Loki Mode (Easter Egg #3) | [wireframes/loki-mode.html](wireframes/loki-mode.html) | Side-by-side normal vs active states, scrambled card grid, random realm badges, toast, timer, footer trigger |
 | LCARS Mode (Easter Egg #6) | [wireframes/lcars-mode.html](wireframes/lcars-mode.html) | LCARS overlay on dashboard header: elbow blocks + 4 data lines, z:9653, 5s auto-dismiss |
+| Konami Code — The Howl (Easter Egg #2) | [wireframes/konami-howl.html](wireframes/konami-howl.html) | Easter Egg #2: wolf silhouette overlay, FENRIR AWAKENS band, Ragnarok pulse variant, z-index layer map |
 
 ---
 
