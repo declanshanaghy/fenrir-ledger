@@ -182,7 +182,6 @@ open http://localhost:3000
 | No action recommendations | No "close / downgrade / keep" suggestions |
 | No reward tracking | Cannot track rewards earned per card |
 | Requires Node.js 18+ | May not work on older environments |
-| `@radix-ui/react-checkbox` not installed | Checkbox in CardForm requires this package |
 
 ## Sprint 1 Environment Variables
 
@@ -206,3 +205,152 @@ cd development/src && npm run lint
 ./development/scripts/setup-local.sh
 ./development/scripts/setup-local.sh
 ```
+
+---
+
+# QA Handoff — Sprint 2
+
+**From**: FiremanDecko (Principal Engineer)
+**To**: Loki (QA Tester)
+**Sprint**: 2
+**Date**: 2026-02-27
+
+---
+
+## What Was Implemented
+
+### Story 2.1 — Saga Ledger Theme
+Dark Nordic War Room aesthetic applied across the entire app. Void-black background (`#07070d`), gold accent (`#c9920a`), Norse typography (Cinzel Decorative, Cinzel, Source Serif 4, JetBrains Mono). CSS variables replaced in `globals.css`; Tailwind extended in `tailwind.config.ts`.
+
+### Story 2.2 — App Shell and Layout Components
+Full application shell with `AppShell.tsx`, `SiteHeader.tsx`, `SideNav.tsx`, `TopBar.tsx`, and `Footer.tsx`. Three-column footer hosts easter egg trigger points. All pages render within the shell.
+
+### Story 2.3 — Easter Eggs Layer
+Five easter eggs implemented:
+- **Egg #4** (Console ASCII): FENRIR rune art in browser console via `ConsoleSignature.tsx`
+- **Egg #5** (HTML Source Signature): JSDoc comment in page source via `layout.tsx`
+- **Egg #7** (Runic Meta Tag): `fenrir:runes` meta tag in `<head>` via `layout.tsx`
+- **Egg #2** (Konami Code Howl): ↑↑↓↓←→←→BA triggers howl overlay via `KonamiHowl.tsx`
+- **Egg #3** (Loki Mode): 7 clicks on "Loki" in footer shuffles card grid + random realm badges for 5 s
+- **Egg #1 Fragment 5** (Fish Breath): Hovering © in footer reveals `GleipnirFishBreath` modal
+
+### Story 2.4 — Shared Easter Egg Modal
+Reusable `EasterEggModal.tsx` component used by all Gleipnir fragment modals. Accepts title, rune, and content as props. Keyboard accessible.
+
+### Story 2.5 — Forgemaster Egg
+`ForgeMasterEgg.tsx` extracted into its own component and wired into the footer area.
+
+### Supporting Components
+- `AboutModal.tsx` — "About" dialog accessible from the nav
+- `SyncIndicator.tsx` — data sync state indicator (idle state in Sprint 2)
+
+---
+
+## Files Created / Modified (Sprint 2)
+
+| File | Description |
+|------|-------------|
+| `development/src/src/app/globals.css` | Saga Ledger CSS variables (replaced shadcn defaults) |
+| `development/src/tailwind.config.ts` | Extended with Norse color palette and font families |
+| `development/src/src/app/layout.tsx` | HTML source signature (JSDoc) + runic meta tag added |
+| `development/src/src/components/layout/AppShell.tsx` | Root application shell wrapper |
+| `development/src/src/components/layout/SiteHeader.tsx` | Brand header component |
+| `development/src/src/components/layout/SideNav.tsx` | Left navigation rail |
+| `development/src/src/components/layout/TopBar.tsx` | Secondary top bar |
+| `development/src/src/components/layout/Footer.tsx` | Three-column footer with egg trigger points |
+| `development/src/src/components/layout/ConsoleSignature.tsx` | FENRIR rune art console output (Egg #4) |
+| `development/src/src/components/layout/KonamiHowl.tsx` | Konami code howl overlay (Egg #2) |
+| `development/src/src/components/layout/ForgeMasterEgg.tsx` | Forgemaster easter egg component |
+| `development/src/src/components/layout/AboutModal.tsx` | About dialog modal |
+| `development/src/src/components/layout/SyncIndicator.tsx` | Sync state indicator |
+| `development/src/src/components/easter-eggs/EasterEggModal.tsx` | Shared modal for Gleipnir fragments |
+| `development/src/src/components/cards/GleipnirFishBreath.tsx` | Fragment 5: Breath of a Fish (Egg #1) |
+| `development/src/src/components/cards/GleipnirMountainRoots.tsx` | Fragment 1: Roots of a Mountain |
+| `development/src/src/components/cards/GleipnirCatFootfall.tsx` | Fragment 2: Sound of a Cat's Footfall |
+| `development/src/src/components/cards/GleipnirBirdSpittle.tsx` | Fragment 3: Spittle of a Bird |
+| `development/src/src/components/cards/GleipnirBearSinews.tsx` | Fragment 4: Sinews of a Bear |
+| `development/src/src/components/cards/GleipnirWomansBeard.tsx` | Fragment 6: Beard of a Woman |
+
+---
+
+## How to Deploy (Sprint 2 — Local)
+
+Same as Sprint 1. The dev server port is `9999` (configured in `package.json`).
+
+```bash
+# From repo root
+./development/scripts/setup-local.sh
+
+# Start dev server
+cd development/src
+npm run dev
+
+# Open browser
+open http://localhost:9999
+```
+
+---
+
+## Test Focus Areas (Sprint 2)
+
+### Easter Eggs
+
+1. **Egg #4 — Console ASCII**
+   - Open browser DevTools console
+   - Load or refresh the page
+   - Verify FENRIR rune art appears (6 glyphs, 7 lines each, followed by rune label line)
+
+2. **Egg #5 — HTML Source Signature**
+   - Press Cmd+U (macOS) or Ctrl+U (Windows/Linux) to view page source
+   - Verify JSDoc signature comment is present in the HTML
+
+3. **Egg #7 — Runic Meta Tag**
+   - View page source
+   - Verify `<meta name="fenrir:runes" ...>` is present in the `<head>`
+
+4. **Egg #2 — Konami Code Howl**
+   - Focus the page
+   - Enter sequence: ↑ ↑ ↓ ↓ ← → ← → B A
+   - Verify howl overlay animation appears and dismisses
+
+5. **Egg #3 — Loki Mode**
+   - Click the "Loki" text in the footer exactly 7 times rapidly
+   - Verify card grid shuffles and realm badges randomize
+   - Verify effect lasts approximately 5 seconds then reverts
+
+6. **Egg #1 Fragment 5 — Fish Breath**
+   - Hover over the copyright symbol (©) in the footer
+   - Verify `GleipnirFishBreath` modal appears
+   - Verify modal closes on dismiss
+
+### Theme / Layout
+
+7. **Dark Norse theme active**
+   - Verify background is near-black (void-black `#07070d`)
+   - Verify gold accent (`#c9920a`) on interactive elements
+   - Verify Norse fonts applied (Cinzel for headings, JetBrains Mono for data)
+
+8. **App shell layout**
+   - Verify sidebar navigation renders
+   - Verify all Sprint 1 pages (/, /cards/new, /cards/[id]/edit) render within the shell
+   - Verify mobile layout collapses correctly (no horizontal overflow at 375px)
+
+9. **About modal**
+   - Verify "About" trigger opens the modal
+   - Verify modal closes on Escape or close button
+
+---
+
+## Known Limitations (Sprint 2)
+
+| Limitation | Impact |
+|-----------|--------|
+| All Sprint 1 limitations | Carry forward unchanged |
+| No Framer Motion animations | Saga-enter stagger, StatusRing, HowlPanel planned for Sprint 3 |
+| No Valhalla route | Closed cards archive planned for Sprint 3 |
+| Gleipnir Hunt incomplete | Only Fragment 5 (Fish Breath) is fully wired; other 5 fragments have components but may lack trigger points |
+| SyncIndicator always idle | Real sync state requires backend (future sprint) |
+
+## Sprint 2 Environment Variables
+
+Sprint 2 requires no additional environment variables. No secrets introduced.

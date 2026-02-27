@@ -225,3 +225,150 @@
 | `NEXT_PUBLIC_APP_VERSION` | No | App version string for display |
 
 Sprint 1 has no required environment variables. The `.env.example` file documents the template.
+
+---
+
+# Implementation Plan: Fenrir Ledger Sprint 2
+
+Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic) and the Easter Eggs layer. All Sprint 1 features remain intact.
+
+## Sprint 2 Tasks (ordered)
+
+---
+
+### Task 2.1: Saga Ledger Theme — Globals and Tailwind
+
+- **File(s)**: `development/src/src/app/globals.css`, `development/src/tailwind.config.ts`
+- **Depends on**: Sprint 1 complete
+- **Implementation Notes**:
+  - Replace shadcn/ui default CSS variables with Saga Ledger tokens (void-black `#07070d`, gold accent `#c9920a`, etc.)
+  - Extend Tailwind with custom color palette and font families (Cinzel Decorative, Cinzel, Source Serif 4, JetBrains Mono)
+  - Apply dark mode as default; no light mode toggle in Sprint 2
+- **Definition of Done**: App renders with dark Norse War Room aesthetic at `http://localhost:9999`
+
+---
+
+### Task 2.2: App Shell — Layout Components
+
+- **File(s)**: `development/src/src/components/layout/AppShell.tsx`, `SiteHeader.tsx`, `SideNav.tsx`, `TopBar.tsx`, `Footer.tsx`
+- **Depends on**: Task 2.1
+- **Implementation Notes**:
+  - `AppShell.tsx` wraps all pages; provides sidebar + main content layout
+  - `SiteHeader.tsx` — top-level brand header
+  - `SideNav.tsx` — left navigation rail
+  - `TopBar.tsx` — secondary top bar with utility actions
+  - `Footer.tsx` — three-column footer; hosts easter egg trigger points
+- **Definition of Done**: All pages render within the shell; no layout regressions on mobile
+
+---
+
+### Task 2.3: Easter Egg #4 — Console ASCII Art (FENRIR Runes)
+
+- **File(s)**: `development/src/src/components/layout/ConsoleSignature.tsx`
+- **Depends on**: Task 2.2
+- **Implementation Notes**:
+  - Outputs Elder Futhark rune glyphs spelling ᚠᛖᚾᚱᛁᚱ (FENRIR) to browser console on app load
+  - Each glyph is 8 chars wide, 7 lines tall, drawn with ASCII line art
+  - Followed by a `runeLabel` line naming each rune
+  - Use `\\` for literal backslashes in JS template literals
+- **Definition of Done**: Opening browser console shows the FENRIR rune art
+
+---
+
+### Task 2.4: Easter Egg #5 — HTML Source Signature
+
+- **File(s)**: `development/src/src/app/layout.tsx`
+- **Depends on**: Task 2.2
+- **Implementation Notes**:
+  - JSDoc comment block injected into the HTML source
+  - Visible only when viewing page source (Cmd+U / Ctrl+U)
+- **Definition of Done**: Viewing page source reveals the signature comment
+
+---
+
+### Task 2.5: Easter Egg #7 — Runic Meta Tag Cipher
+
+- **File(s)**: `development/src/src/app/layout.tsx`
+- **Depends on**: Task 2.4
+- **Implementation Notes**:
+  - `metadata.other["fenrir:runes"]` contains an Elder Futhark encoded message
+  - Rendered as a `<meta>` tag in the HTML head
+- **Definition of Done**: `<meta name="fenrir:runes" ...>` present in page source
+
+---
+
+### Task 2.6: Easter Egg #2 — Konami Code Howl
+
+- **File(s)**: `development/src/src/components/layout/KonamiHowl.tsx`
+- **Depends on**: Task 2.2
+- **Implementation Notes**:
+  - Listens for the Konami sequence: ↑↑↓↓←→←→BA
+  - On match: displays a full-screen howl overlay animation
+  - Wired into `AppShell.tsx`
+- **Definition of Done**: Entering the Konami sequence triggers the howl overlay
+
+---
+
+### Task 2.7: Easter Egg #3 — Loki Mode
+
+- **File(s)**: `development/src/src/components/layout/Footer.tsx`
+- **Depends on**: Task 2.2
+- **Implementation Notes**:
+  - Clicking the "Loki" span in the footer 7 times triggers Loki Mode
+  - Effect: shuffles the card grid and displays random realm badges for 5 seconds
+- **Definition of Done**: Seven rapid clicks on "Loki" in the footer triggers the shuffle
+
+---
+
+### Task 2.8: Easter Egg #1 Fragments — Gleipnir Hunt
+
+- **File(s)**: `development/src/src/components/cards/GleipnirFishBreath.tsx`, `GleipnirMountainRoots.tsx`, `GleipnirCatFootfall.tsx`, `GleipnirBirdSpittle.tsx`, `GleipnirBearSinews.tsx`, `GleipnirWomansBeard.tsx`
+- **Depends on**: Task 2.2
+- **Implementation Notes**:
+  - Six fragment components, each representing one ingredient of Gleipnir
+  - Fragment 5 (Fish Breath) triggered by hovering the footer copyright (©)
+  - Each fragment uses the shared `EasterEggModal` component
+- **Definition of Done**: Hovering © in footer reveals Fish Breath modal; other fragments have trigger points wired
+
+---
+
+### Task 2.9: Shared Easter Egg Modal
+
+- **File(s)**: `development/src/src/components/easter-eggs/EasterEggModal.tsx`
+- **Depends on**: Task 2.2
+- **Implementation Notes**:
+  - Reusable modal wrapper for all Gleipnir fragment reveals
+  - Accepts title, rune, and content as props
+  - Handles open/close state; accessible via keyboard
+- **Definition of Done**: All Gleipnir fragments render correctly through this modal
+
+---
+
+### Task 2.10: Forgemaster Easter Egg
+
+- **File(s)**: `development/src/src/components/layout/ForgeMasterEgg.tsx`
+- **Depends on**: Task 2.9
+- **Implementation Notes**:
+  - Extracted from Footer.tsx into its own component for clarity
+  - Wired into the app shell footer area
+- **Definition of Done**: Forgemaster egg triggers and displays correctly
+
+---
+
+### Task 2.11: Supporting Layout Components
+
+- **File(s)**: `development/src/src/components/layout/AboutModal.tsx`, `SyncIndicator.tsx`
+- **Depends on**: Task 2.2
+- **Implementation Notes**:
+  - `AboutModal.tsx` — "About" dialog accessible from the nav
+  - `SyncIndicator.tsx` — visual indicator for data sync state (future use; renders idle state in Sprint 2)
+- **Definition of Done**: About modal opens and closes correctly; SyncIndicator renders without errors
+
+## Known Limitations (Sprint 2)
+
+| Limitation | Notes |
+|-----------|-------|
+| All Sprint 1 limitations | Carry forward unchanged |
+| No Framer Motion animations | Motion planned for Sprint 3 (saga-enter stagger, StatusRing, HowlPanel) |
+| No Valhalla route | Closed cards archive planned for Sprint 3 |
+| Gleipnir Hunt incomplete | Not all 6 fragment trigger points are fully wired; tracked in QA handoff |
