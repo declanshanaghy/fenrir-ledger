@@ -105,7 +105,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [Product Brief](product-brief.md) — What the wolf hunts, why, and for whom. The prioritized backlog.
 - [Patient Zero](patient-zero.md) — Pack composition, pipeline summary, quick-reference setup.
 
-### ᚢ Freya — Product Owner
+### ᚢ [Freya — Product Owner](product/README.md)
 
 *The voice of the user. Nothing moves downstream without her word.*
 
