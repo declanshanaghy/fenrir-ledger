@@ -249,3 +249,12 @@ Overall quality assessment.
 - Item deleted while UI is showing it
 - Network timeout during data fetch
 - Rapid user interaction (button mashing, fast scrolling)
+
+---
+
+## Sprint 2 Deliverables: Easter Eggs Test Suite
+
+- [quality/test-plan.md](../quality/test-plan.md) — 283-line test strategy covering 5 eggs, scope, environment, risks
+- [quality/test-cases.md](../quality/test-cases.md) — 480-line TC-* format specifications (22 test cases)
+- [quality/scripts/test-easter-eggs.spec.ts](../quality/scripts/test-easter-eggs.spec.ts) — 596-line Playwright automation
+- [quality/EASTER-EGGS-AUDIT.md](../quality/EASTER-EGGS-AUDIT.md) — Final verdict: READY TO SHIP ✓ (0 defects)
