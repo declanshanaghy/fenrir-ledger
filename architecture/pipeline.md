@@ -10,7 +10,7 @@ This pipeline orchestrates the four Fenrir Ledger team agents in a Kanban flow. 
 ## Diagrams
 
 All diagrams produced by any team member must use Mermaid syntax following the style guide at:
-`designs/ux-design/ux-assets/mermaid-style-guide.md`
+`../ux/ux-assets/mermaid-style-guide.md`
 
 Every agent must read this guide before creating diagrams in any deliverable.
 
@@ -132,20 +132,21 @@ All scripts must be idempotent — running them twice produces the same result w
 Each wolf writes to its top-level folder. Git tracks the history — files are overwritten each sprint. No sprint subdirectories.
 
 ```
-designs/
-├── product-design-brief.md        # PO + UX collaboration output (shared)
-├── product/
-│   ├── copywriting.md             # Norse copy, kennings, empty states
-│   └── mythology-map.md           # Nine Realms → CardStatus mapping
-├── ux-design/
-│   ├── wireframes.md              # UX wireframes
-│   ├── interactions.md            # UX interaction specs
-│   ├── theme-system.md            # Visual tokens, palette, typography
-│   ├── easter-eggs.md             # Easter egg specifications
-│   └── ux-assets/                 # Mermaid style guide and other assets
-└── architecture/
-    ├── pipeline.md                # This file — team Kanban workflow
-    └── implementation-brief.md    # FiremanDecko integration plan
+ux/
+├── wireframes.md              # UX wireframes
+├── interactions.md            # UX interaction specs
+├── theme-system.md            # Visual tokens, palette, typography
+├── easter-eggs.md             # Easter egg specifications
+└── ux-assets/                 # Mermaid style guide and other assets
+
+product/
+├── product-design-brief.md    # PO + UX collaboration output (shared)
+├── copywriting.md             # Norse copy, kennings, empty states
+└── mythology-map.md           # Nine Realms → CardStatus mapping
+
+architecture/
+├── pipeline.md                # This file — team Kanban workflow
+└── implementation-brief.md    # FiremanDecko integration plan
 
 development/
 ├── implementation-plan.md         # What was built and how

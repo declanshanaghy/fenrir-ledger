@@ -104,10 +104,10 @@ The mythology rewards exploration. It never blocks a task.
 
 | File | Contents |
 |------|----------|
-| [`theme-system.md`](theme-system.md) | Color palette, typography, CSS tokens, Tailwind config |
+| [`theme-system.md`](../ux/theme-system.md) | Color palette, typography, CSS tokens, Tailwind config |
 | [`mythology-map.md`](mythology-map.md) | Norse myth → UI feature mapping (realms, characters, kennings) |
 | [`copywriting.md`](copywriting.md) | All UI copy, empty states, kennings, Edda quotes |
-| [`easter-eggs.md`](easter-eggs.md) | Hidden references: Gleipnir hunt, Konami howl, console art, Loki mode |
-| [`interactions.md`](interactions.md) | Animations, micro-interactions, state transitions |
-| [`wireframes.md`](wireframes.md) | Layout specs, component hierarchy, responsive notes |
-| [`implementation-brief.md`](implementation-brief.md) | FiremanDecko integration plan: sprint breakdown, retrofit strategy |
+| [`easter-eggs.md`](../ux/easter-eggs.md) | Hidden references: Gleipnir hunt, Konami howl, console art, Loki mode |
+| [`interactions.md`](../ux/interactions.md) | Animations, micro-interactions, state transitions |
+| [`wireframes.md`](../ux/wireframes.md) | Layout specs, component hierarchy, responsive notes |
+| [`implementation-brief.md`](../architecture/implementation-brief.md) | FiremanDecko integration plan: sprint breakdown, retrofit strategy |

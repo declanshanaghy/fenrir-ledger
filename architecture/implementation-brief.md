@@ -55,7 +55,7 @@ Sprint 1 delivered a working foundation. Sprint 2 design integration is complete
 **"Replace shadcn defaults with the Saga Ledger theme"**
 
 **Files to modify**:
-- `development/src/src/app/globals.css` — Replace all `:root` and `.dark` CSS variables with the Saga Ledger token set (see `designs/ux-design/theme-system.md`)
+- `development/src/src/app/globals.css` — Replace all `:root` and `.dark` CSS variables with the Saga Ledger token set (see `../ux/theme-system.md`)
 - `development/src/tailwind.config.ts` — Add `colors`, `fontFamily`, `boxShadow` extensions
 - `development/src/src/app/layout.tsx` — Add `next/font/google` imports for Cinzel, Cinzel Decorative, Source Serif 4, JetBrains Mono; apply font variables to `<html>`; add background texture CSS; add HTML source comment signature (easter egg #5)
 
@@ -157,7 +157,7 @@ export function getRealmLabel(status: CardStatus, daysRemaining?: number): {
 - `Dashboard.tsx` (or equivalent) — Empty state: Gleipnir text (see `copywriting.md`)
 - Form labels in add/edit card — Apply kenning micro-copy
 - Button text — "Bind the Chain", "Forge a Chain", etc.
-- `layout.tsx` — `<title>` and `<meta description>` per `designs/product/copywriting.md`
+- `layout.tsx` — `<title>` and `<meta description>` per `../product/copywriting.md`
 
 **No structural changes** — copy-only pass. This can be done by search-and-replace + careful review.
 
@@ -209,7 +209,7 @@ export function getRealmLabel(status: CardStatus, daysRemaining?: number): {
 - Gleipnir Hunt full implementation (#1) — this is a larger story, may split
 - Star Trek LCARS mode (#6) — optional/bonus
 
-> **Note**: Easter Eggs #2 (Konami Code Howl) and #3 (Loki Mode) shipped in Sprint 2 and are not repeated here. See `designs/ux-design/easter-eggs.md` implementation priority table for the full status of all eggs.
+> **Note**: Easter Eggs #2 (Konami Code Howl) and #3 (Loki Mode) shipped in Sprint 2 and are not repeated here. See `../ux/easter-eggs.md` implementation priority table for the full status of all eggs.
 
 ---
 

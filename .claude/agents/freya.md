@@ -21,7 +21,7 @@ Before committing anything, read and follow `.claude/skills/git-commit/SKILL.md`
 ## Diagrams
 
 All diagrams in documentation must use Mermaid syntax. Before creating any diagram, read the team style guide at:
-`designs/ux-design/ux-assets/mermaid-style-guide.md`
+`ux/ux-assets/mermaid-style-guide.md`
 
 Follow its color palette, node shapes, edge styles, and naming conventions.
 
@@ -31,9 +31,9 @@ Follow its color palette, node shapes, edge styles, and naming conventions.
 
 ## Where to Write Output (with Luna)
 
-- **Product Design Brief**: `designs/product-design-brief.md`
-- **Wireframes**: `designs/ux-design/wireframes.md` (Luna leads)
-- **Interactions**: `designs/ux-design/interactions.md` (Luna leads)
+- **Product Design Brief**: `product/product-design-brief.md`
+- **Wireframes**: `ux/wireframes.md` (Luna leads)
+- **Interactions**: `ux/interactions.md` (Luna leads)
 
 Git tracks history — overwrite files each sprint. No sprint subdirectories.
 
