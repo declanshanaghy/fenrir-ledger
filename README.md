@@ -49,10 +49,10 @@ Track every fee-wyrm in your portfolio. Every chain forged, every promo deadline
 
 | Role | Wolf | Model | Scroll |
 |------|------|-------|--------|
-| Product Owner | Freya | Sonnet | [SKILL](fenrir-ledger-team/product-owner/SKILL.md) |
-| UX Designer | Luna | Sonnet | [SKILL](fenrir-ledger-team/ux-designer/SKILL.md) |
-| Principal Engineer | FiremanDecko | Sonnet | [SKILL](fenrir-ledger-team/principal-engineer/SKILL.md) |
-| QA Tester | Loki | Haiku | [SKILL](fenrir-ledger-team/qa-tester/SKILL.md) |
+| Product Owner | Freya | Sonnet | [AGENT](.claude/agents/freya.md) |
+| UX Designer | Luna | Sonnet | [AGENT](.claude/agents/luna.md) |
+| Principal Engineer | FiremanDecko | Sonnet | [AGENT](.claude/agents/fireman-decko.md) |
+| QA Tester | Loki | Haiku | [AGENT](.claude/agents/loki.md) |
 
 ## The Pipeline
 
@@ -143,8 +143,8 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 ### ᚠ Pack Operations
 
-- [Pipeline](fenrir-ledger-team/pipeline/SKILL.md) — Full Kanban workflow orchestration
-- [Git Convention](fenrir-ledger-team/git-commit/SKILL.md) — Commit format and pre-commit oaths
+- [Pipeline](design/pipeline.md) — Full Kanban workflow orchestration
+- [Git Convention](.claude/skills/git-commit/SKILL.md) — Commit format and pre-commit oaths
 - [Mermaid Style Guide](fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md) — Diagram conventions for all pack members
 
 ### ᛁ Templates
@@ -204,7 +204,7 @@ Copyright (C) 2026 Declan Shanaghy. Licensed under the [GNU Affero General Publi
 ## The Pack's Oaths
 
 - **Diagrams**: All Mermaid, following the [mermaid-style-guide.md](fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md)
-- **Commits**: Strict format per [git-commit/SKILL.md](fenrir-ledger-team/git-commit/SKILL.md)
+- **Commits**: Strict format per [git-commit/SKILL.md](.claude/skills/git-commit/SKILL.md)
 - **Secrets**: `.env` file, never committed, `.env.example` as the template
 - **Sprints**: Max 5 stories. The forge-script runs every sprint. No exceptions.
 - **Output**: Each wolf writes to its top-level folder (`design/`, `architecture/`, `development/`, `quality/`). Git tracks the history — files are overwritten each sprint, no subdirectories.

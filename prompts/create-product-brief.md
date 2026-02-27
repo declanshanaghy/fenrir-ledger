@@ -70,7 +70,7 @@ IMPORTANT: Include ALL of the standard technical constraints listed above (Merma
 
 1. Save the output as `product-brief.md` in your project root
 2. Run the search-and-replace to customize your ZeroForge template (see README.md)
-3. Start the pipeline by reading `fenrir-ledger-team/pipeline/SKILL.md`
+3. Start the pipeline by reading `design/pipeline.md`
 
 ## Placeholder Reference
 
