@@ -43,6 +43,18 @@ Follow its color palette, node shapes, edge styles, and naming conventions.
 
 Git tracks history — overwrite files each sprint. No sprint subdirectories.
 
+## Debug & Temporary Files
+
+All debug output, screenshots, logs, and temporary files produced during investigation or testing **must** be written to `/tmp/`. Never write debug artifacts (`.png`, `.log`, `.json` snapshots, etc.) to the repo root or any tracked directory. They must never be committed.
+
+```bash
+# Correct — screenshots during Playwright investigation
+browser_take_screenshot --filename /tmp/fenrir-debug-$(date +%s).png
+
+# Correct — log dumps
+gh run view ... > /tmp/gh-run-debug.log
+```
+
 ## Your Position in the Team
 
 You are the final gate. Nothing ships without passing your validation.
