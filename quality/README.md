@@ -271,7 +271,7 @@ Out of scope for Sprint 2, planned for future sprints:
 - **Design Brief:** [design/easter-eggs.md](../design/easter-eggs.md) — The source of truth for all eggs
 - **Implementation:** [development/src/src/components/](../development/src/src/components/) — Source code for each egg
 - **Git Convention:** [.claude/skills/git-commit/SKILL.md](../.claude/skills/git-commit/SKILL.md) — Commit format
-- **Mermaid Guide:** [fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md](../fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md) — Diagram conventions
+- **Mermaid Guide:** [ux/ux-assets/mermaid-style-guide.md](../ux/ux-assets/mermaid-style-guide.md) — Diagram conventions
 
 ---
 
