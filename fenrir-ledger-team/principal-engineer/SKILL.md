@@ -44,6 +44,37 @@ Follow its color palette, node shapes, edge styles, and naming conventions. Arch
 
 Git tracks history — overwrite files each sprint. No sprint subdirectories.
 
+## Product Launch Strategy
+
+Fenrir Ledger follows a staged launch model. Understand this before designing any architecture or writing any spec:
+
+1. **Incubate MVP** — Core functionality with localStorage + Google OIDC auth. Ship fast.
+2. **Early Access** — Real users, auth on, no backend. Collect feedback.
+3. **Integrate Feedback** — Refine based on actual usage.
+4. **Loop** — Repeat until the product is well-validated across multiple feedback rounds.
+5. **GA** — Remote storage, multi-device sync, and data migration ship here.
+
+### What Is In Scope for MVP
+
+**Google OIDC authentication (Auth.js v5) is included in the MVP.** Auth establishes the identity model and authorization patterns the data layer will depend on when remote storage arrives at GA. localStorage data must be scoped to the authenticated user's household ID from day one. The session JWT (`{ sub, householdId, name, email }`) is the source of truth for identity in all UI and storage logic.
+
+Design the localStorage layer so that swapping the storage backend at GA requires changing the data access layer only — the auth and authorization model must not need to change.
+
+### Hard Constraints Until GA
+
+Do not design, spec, or implement any of the following until the team has received **multiple rounds of real user feedback** and explicitly declared the product ready for GA:
+
+- **Remote / server-side storage** (Supabase, Postgres, any database)
+- **Additional OIDC providers** beyond Google (Microsoft, Apple, GitHub, etc.)
+- **Data migration tooling** (localStorage export, import wizards, migration scripts)
+- **Multi-device sync**
+
+If a Product Design Brief includes any of the above, push back and ask Freya to confirm GA has been declared. Do not begin technical design until that confirmation is received.
+
+ADR-004 covers the full auth + persistence architecture for GA planning — treat it as a forward-looking design artifact. The auth portion (Google OIDC, Auth.js v5, JWT sessions) is actionable now; the persistence portion (Supabase, schema, RLS) is not.
+
+Rationale is in `product-brief.md` under **Product Launch Strategy**.
+
 ## Your Position in the Team
 
 You sit between the product/design pair and QA. You interpret, design, and implement.

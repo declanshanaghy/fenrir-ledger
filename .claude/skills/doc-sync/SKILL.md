@@ -28,21 +28,7 @@ The ROLE parameter determines which directory we will write docs in (DEST):
 
 ---
 
-## Step 2 — Understand current project state
-
-Read `CLAUDE.md` (repo root) before touching any file. It is the authoritative source of truth for the current architecture.
-
-Pay particular attention to:
-- **Version and simplified architecture**: Fixed 15% threshold, `device_class=battery` only, no filtering/sorting/pagination/configurable thresholds/notifications.
-- **Min HA Version** and **Integration Domain**.
-- **Directory layout** — what lives where.
-- **WebSocket protocol** — exactly two commands (`query_entities`, `subscribe`).
-
-This understanding is what you use to judge whether documentation content is accurate or stale.
-
----
-
-## Step 3 — Collect all .md files in DEST
+## Step 2 — Collect all .md files in DEST
 
 Find every `.md` file under `{DEST}/`, recursively. Skip anything in .gitignore — they contain generated or third-party content:
 
@@ -61,18 +47,18 @@ Build a list of all surviving `.md` paths relative to the repo root.
 
 ---
 
-## Step 4 — Read and assess each file
+## Step 3 — Read and assess each file
 
-Read every file from Step 3. For each file, ask:
+Read every file from the Step 2, one by one. For each file, ask:
 
 **Does this content still accurately describe the current project?**
 
 A document is **stale** if it would mislead someone reading it today. Concrete signals:
 
-- References features that were removed in v6.0.0 (configurable thresholds, per-device rules, filtering controls, sorting controls, cursor pagination, infinite scroll, notification service, SPRINT3-INDEX) — without making clear those were removed.
+- References features that were removed in previous revisions, without making clear those were removed.
 - References files, scripts, or artifacts that no longer exist on disk.
 - Contains a sprint plan, bug triage, or quality report for a sprint that is fully superseded and the content has zero forward relevance.
-- Describes architecture or API shapes that contradict `architecture/api-contracts.md` or `CLAUDE.md`.
+- Describes architecture or API shapes that contradict `architecture/adrs` or `architecture/system-design.md`.
 
 A document is **current** if:
 - It accurately describes something that exists and works today, OR
@@ -82,7 +68,7 @@ A document is **current** if:
 
 ---
 
-## Step 5 — Update stale content
+## Step 4 — Update stale content
 
 For each file that is stale but salvageable (content is mostly right, just outdated in places):
 
@@ -91,13 +77,13 @@ For each file that is stale but salvageable (content is mostly right, just outda
 - Update any file links within the document that now point to deleted or moved files.
 - Keep the document's existing structure and voice — you are editing, not rewriting.
 
-For a file that is entirely obsolete — its entire purpose relates to something that no longer exists and keeping it would only confuse — mark it for deletion in Step 6.
+For a file that is entirely obsolete — its entire purpose relates to something that no longer exists and keeping it would only confuse — mark it for deletion in Step 5.
 
 ---
 
-## Step 6 — Remove fully obsolete files
+## Step 5 — Remove fully obsolete files
 
-For each file flagged for deletion in Step 5:
+For each file flagged for deletion in Step 4:
 
 1. Confirm it contains nothing of current or historical value that isn't captured elsewhere.
 2. Delete the file.
@@ -107,9 +93,9 @@ Be conservative: if in doubt, update the file and mark it deprecated rather than
 
 ---
 
-## Step 7 — Maintain `{DEST}/README.md`
+## Step 6 — Maintain `{DEST}/README.md`
 
-The README is the index for everything in this directory. After Step 5 and Step 6, it must:
+The README is the index for everything in this directory. After Step 4 and Step 5, it must:
 
 - **Exist.** Create it if it doesn't.
 - **Link every surviving `.md` file** in `{DEST}/` (recursively, skipping the excluded directories from Step 3). One entry per file.
@@ -125,7 +111,7 @@ Format each entry as:
 
 ---
 
-## Step 8 — Check the top-level `README.md`
+## Step 7 — Check the top-level `README.md`
 
 Open `README.md` at the repo root. Verify:
 
@@ -142,7 +128,5 @@ Open `README.md` at the repo root. Verify:
 **Accuracy over completeness.** One accurate document is worth more than ten partially-correct ones.
 
 **Surgical edits.** You own `{DEST}/` and the top-level README entry for your area. Do not modify content in other directories unless you are removing a dangling link to a file you deleted.
-
-**Labels beat deletions.** When historical context is genuinely useful, add a `> **Note**: This feature was removed in v6.0.0 (simplified architecture).` blockquote rather than deleting the whole document. Future agents reading ADRs and past design decisions benefit from understanding why things were tried and later removed.
 
 **The README is a live index.** It should always reflect what's actually in the directory right now — no dead links, no missing entries.
