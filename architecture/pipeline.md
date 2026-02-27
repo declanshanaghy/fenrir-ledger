@@ -38,20 +38,23 @@ graph LR
 
     %% Stages
     backlog[ᚠ Backlog<br/>Freya writes<br/>the stories]
-    design[ᚱ Design<br/>Freya + Luna<br/>collaborate]
+    product[ᚢ Product<br/>Freya defines<br/>what &amp; why]
+    ux[ᚱ UX Design<br/>Luna draws<br/>the runes]
     build[ᚲ Build<br/>FiremanDecko<br/>forges the chain]
     validate[ᛏ Validate<br/>Loki tests<br/>the binding]
     done([ᛟ Done<br/>Ship / Hold])
 
     %% Flow
-    backlog -->|story pulled| design
-    design -->|brief handed off| build
-    build -->|asks if unclear| design
+    backlog -->|story pulled| product
+    product -->|product brief| ux
+    ux -->|ux artifacts| build
+    build -->|asks if unclear| ux
     build -->|implementation ready| validate
     validate -->|ship / no-ship| done
 
     class backlog neutral
-    class design primary
+    class product primary
+    class ux primary
     class build primary
     class validate warning
     class done healthy
@@ -65,26 +68,33 @@ The pipeline accepts:
 - A **feature request or story** (for new work)
 - A **change request** (for modifications)
 
-### Stage 1: DESIGN — Product Owner + UX Designer
+### Stage 1: PRODUCT — Product Owner (Freya)
 
-Read both agent skills:
-- `.claude/agents/freya.md`
-- `.claude/agents/luna.md`
+Read: `.claude/agents/freya.md`
 
-These two agents collaborate together to produce a **Product Design Brief** that covers:
+Freya defines what to build and why. She produces the **Product Design Brief** covering:
 - Problem statement and target user
-- User interactions and flows
-- Look and feel direction
-- Market fit and differentiation
-- Wireframes (ASCII)
-- Acceptance criteria (testable)
+- Desired outcome and acceptance criteria (testable)
+- Priority, constraints, and sprint target
 - Open questions for the Principal Engineer
 
-This is a conversation between two perspectives — the PO brings the business/user context, the UX Designer brings the interaction and visual expertise. They should push back on each other where appropriate.
+**Output**: `product/product-design-brief.md`
 
-**Output**: Product Design Brief saved to the sprint directory.
+### Stage 2: UX DESIGN — UX Designer (Luna)
 
-### Stage 2: BUILD — Principal Engineer Design + Implementation
+Read: `.claude/agents/luna.md`
+
+Luna reads Freya's product brief and independently produces all UX artifacts. She does not edit `product/` — her output lives entirely in `ux/`.
+
+- Wireframes (HTML5, no theme styling) → `ux/wireframes/`
+- Interaction specs and user flows → `ux/interactions.md`
+- Component recommendations and look & feel direction
+
+If Freya's brief is ambiguous about UX requirements, Luna asks before producing wireframes.
+
+**Output**: `ux/wireframes/`, `ux/interactions.md`, and related `ux/` files.
+
+### Stage 3: BUILD — Principal Engineer Design + Implementation
 
 Read: `.claude/agents/fireman-decko.md`
 
@@ -102,7 +112,7 @@ The Principal Engineer receives the Product Design Brief and produces both the t
 - Code specifications for each module
 - Handoff notes for QA Tester (how to deploy, what to test)
 
-### Stage 3: VALIDATE — QA Tester
+### Stage 4: VALIDATE — QA Tester
 
 Read: `.claude/agents/loki.md`
 
@@ -140,7 +150,7 @@ ux/
 └── ux-assets/                 # Mermaid style guide and other assets
 
 product/
-├── product-design-brief.md    # PO + UX collaboration output (shared)
+├── product-design-brief.md    # Freya's product brief (Luna reads, does not edit)
 ├── copywriting.md             # Norse copy, kennings, empty states
 └── mythology-map.md           # Nine Realms → CardStatus mapping
 
@@ -166,6 +176,6 @@ quality/
 
 1. **WIP Limit**: One story moves through the pipeline at a time. Don't start the next story until the current one reaches DONE or is explicitly parked.
 2. **Pull, Don't Push**: Each stage pulls work when ready, doesn't have work pushed onto it.
-3. **Blocker Escalation**: If any stage is blocked, escalate to the previous stage (Principal Engineer asks PO/UX, QA asks Principal Engineer).
+3. **Blocker Escalation**: If any stage is blocked, escalate to the previous stage (FiremanDecko asks Luna or Freya, Loki asks FiremanDecko).
 4. **Max 5 Stories per Sprint**: From the product brief. The PO enforces this constraint.
 5. **Definition of Done**: A story is DONE when QA signs off with a Ship recommendation and all idempotent test scripts pass.
