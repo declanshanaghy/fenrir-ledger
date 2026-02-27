@@ -23,7 +23,7 @@ Before committing anything, read and follow `.claude/skills/git-commit/SKILL.md`
 All diagrams (architecture, component, sequence, data flow) must use Mermaid syntax. Before creating any diagram, read the team style guide at:
 `designs/ux-design/ux-assets/mermaid-style-guide.md`
 
-Follow its color palette, node shapes, edge styles, and naming conventions. Architecture diagrams go inline in markdown or in `architecture/diagrams/`.
+Follow its color palette, node shapes, edge styles, and naming conventions. Architecture diagrams go inline in markdown or in `designs/architecture/diagrams/`.
 
 ## Where to Find Input
 
@@ -33,10 +33,10 @@ Follow its color palette, node shapes, edge styles, and naming conventions. Arch
 
 ## Where to Write Output
 
-- **System Design**: `architecture/system-design.md`
-- **API Contracts**: `architecture/api-contracts.md`
-- **Sprint Plan**: `architecture/sprint-plan.md`
-- **ADRs**: `architecture/adrs/ADR-NNN-title.md`
+- **System Design**: `designs/architecture/system-design.md`
+- **API Contracts**: `designs/architecture/api-contracts.md`
+- **Sprint Plan**: `designs/architecture/sprint-plan.md`
+- **ADRs**: `designs/architecture/adrs/ADR-NNN-title.md`
 - **Source Code**: `development/src/` — this is the Next.js project root. All Next.js files (`package.json`, `next.config.ts`, `app/`, `components/`, etc.) live here. Vercel must be configured with Root Directory set to `development/src/`.
 - **Implementation Plan**: `development/implementation-plan.md`
 - **QA Handoff**: `development/qa-handoff.md`

@@ -30,9 +30,15 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [ux-design/wireframes.md](ux-design/wireframes.md) — Layout specs, component hierarchy, responsive breakpoints, z-index table, wireframe index.
 - [ux-design/easter-egg-modal.md](ux-design/easter-egg-modal.md) — Shared modal template for all easter egg discovery moments.
 - [ux-design/ux-assets/mermaid-style-guide.md](ux-design/ux-assets/mermaid-style-guide.md) — Mermaid diagram conventions for all pack members.
-- [architecture/README.md](architecture/README.md) — FiremanDecko's domain: implementation brief and pipeline.
+- [architecture/README.md](architecture/README.md) — FiremanDecko's domain: implementation brief, pipeline, system design, sprint plan, and ADRs.
 - [architecture/implementation-brief.md](architecture/implementation-brief.md) — FiremanDecko integration plan: wave strategy, sprint stories, open questions.
 - [architecture/pipeline.md](architecture/pipeline.md) — Kanban orchestration: model assignments, stage gates, WIP limits, handoff chain.
+- [architecture/system-design.md](architecture/system-design.md) — Component architecture, data flow diagrams, file structure, and dependency table for the current sprint.
+- [architecture/sprint-plan.md](architecture/sprint-plan.md) — Sprint stories with acceptance criteria, technical notes, and complexity estimates for the current sprint.
+- [architecture/adrs/ADR-001-tech-stack.md](architecture/adrs/ADR-001-tech-stack.md) — ADR: Next.js + TypeScript + Tailwind CSS + shadcn/ui stack selection.
+- [architecture/adrs/ADR-002-data-model.md](architecture/adrs/ADR-002-data-model.md) — ADR: household-scoped data model from Sprint 1 to avoid future schema breakage.
+- [architecture/adrs/ADR-003-local-storage.md](architecture/adrs/ADR-003-local-storage.md) — ADR: localStorage for Sprint 1 persistence with a documented migration path to a server-side backend.
+- [architecture/adrs/ADR-004-oidc-auth-and-persistence.md](architecture/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR: Auth.js v5, JWT sessions, Supabase PostgreSQL, and multi-tenant isolation strategy.
 
 ---
 
