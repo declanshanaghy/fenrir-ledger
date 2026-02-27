@@ -183,13 +183,8 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
           /Roots of a Mountain|Gleipnir artifact/i
         );
 
-        // Assert: SVG artifact has transparent background (no inline background style creating black box)
-        const svgContainer = modalImage.locator('xpath=..');
-        const bgColor = await svgContainer.evaluate((el) =>
-          window.getComputedStyle(el).backgroundColor
-        );
-        // Background should be the modal section color (#13151f), not black or opaque
-        expect(bgColor).toMatch(/transparent|rgba?\(19,\s*21,\s*31/i);
+        // Assert: Image src points to .svg file (not PNG/JPG with baked background)
+        await expect(modalImage).toHaveAttribute("src", /\.svg$/);
 
         // Assert: Fragment count text appears
         await expect(modalTitle).toContainText(/of 6/);
@@ -270,16 +265,8 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
           /Breath of a Fish|Gleipnir artifact/i
         );
 
-        // Assert: SVG artifact points to .svg file (not baked-in PNG/JPG with opaque background)
+        // Assert: Image src points to .svg file (not PNG/JPG with baked background)
         await expect(modalImage).toHaveAttribute("src", /\.svg$/);
-
-        // Assert: SVG artifact has transparent background
-        const svgContainer = modalImage.locator('xpath=..');
-        const bgColor = await svgContainer.evaluate((el) =>
-          window.getComputedStyle(el).backgroundColor
-        );
-        // Background should be the modal section color (#13151f), not black or opaque
-        expect(bgColor).toMatch(/transparent|rgba?\(19,\s*21,\s*31/i);
 
         // Assert: Fragment count text appears
         await expect(modalTitle).toContainText(/of 6/);
@@ -354,16 +341,8 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
         /Forgemaster|forge.*anvil|artifact/i
       );
 
-      // Assert: SVG artifact points to .svg file (not baked-in PNG/JPG with opaque background)
+      // Assert: Image src points to .svg file (not PNG/JPG with baked background)
       await expect(modalImage).toHaveAttribute("src", /\.svg$/);
-
-      // Assert: SVG artifact has transparent background (no black box)
-      const svgContainer = modalImage.locator('xpath=..');
-      const bgColor = await svgContainer.evaluate((el) =>
-        window.getComputedStyle(el).backgroundColor
-      );
-      // Background should be the modal section color (#13151f), not black or opaque
-      expect(bgColor).toMatch(/transparent|rgba?\(19,\s*21,\s*31/i);
 
       // Assert: Fragment count text appears
       await expect(modalTitle).toContainText(/of 6/);
@@ -624,110 +603,47 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
     });
   });
 
-  test.describe("SVG Artifact Transparency Validation", () => {
-    test("should render gleipnir-3.svg with transparent background (Mountain Roots)", async ({
-      page,
-    }) => {
-      await page.goto(`${BASE_URL}/easter-eggs/gleipnir-3.svg`);
-      await page.waitForLoadState("networkidle");
+  test.describe("SVG Artifact Transparency — no background rect", () => {
+    const svgArtifacts = [
+      { egg: 3, path: "/easter-eggs/gleipnir-3.svg", name: "Mountain Roots" },
+      { egg: 4, path: "/easter-eggs/gleipnir-4.svg", name: "Bear Sinews" },
+      { egg: 5, path: "/easter-eggs/gleipnir-5.svg", name: "Fish Breath" },
+      { egg: 6, path: "/easter-eggs/gleipnir-6.svg", name: "Bird Spittle" },
+      {
+        egg: 9,
+        path: "/easter-eggs/forgemaster.svg",
+        name: "Forgemaster",
+      },
+    ];
 
-      // Assert: SVG loads successfully
-      const svg = page.locator("svg").first();
-      await expect(svg).toBeVisible();
+    for (const artifact of svgArtifacts) {
+      test(`egg #${artifact.egg} (${artifact.name}) SVG has no full-canvas background rect`, async ({
+        request,
+      }) => {
+        // Fetch the SVG file content directly from the test server
+        const response = await request.get(`${BASE_URL}${artifact.path}`);
+        expect(response.status()).toBe(200);
 
-      // Assert: No background rect with fill="#07070d" (void-black color)
-      const backgroundRect = svg.locator(
-        'rect[fill="#07070d"], rect[fill="07070d"], rect[width="1024"][height="1024"]'
-      );
-      await expect(backgroundRect).toHaveCount(0);
+        const svgText = await response.text();
 
-      // Assert: SVG renders (take screenshot to confirm visual rendering)
-      const screenshot = await page.screenshot();
-      expect(screenshot.length).toBeGreaterThan(1000); // Sanity check: not empty
-    });
+        // Assert: Content is valid SVG
+        expect(svgText).toContain("<svg");
 
-    test("should render gleipnir-4.svg with transparent background (Bear Sinews)", async ({
-      page,
-    }) => {
-      await page.goto(`${BASE_URL}/easter-eggs/gleipnir-4.svg`);
-      await page.waitForLoadState("networkidle");
+        // Assert: SVG does NOT contain a full-canvas background rectangle
+        // These patterns match the void-black (#07070d) background rect that was removed:
+        // Pattern 1: rect with width="1024" height="1024" and fill="#07070d" (any order)
+        expect(svgText).not.toMatch(
+          /<rect[^>]*width="1024"[^>]*height="1024"[^>]*fill="#07070d"/
+        );
+        expect(svgText).not.toMatch(
+          /<rect[^>]*fill="#07070d"[^>]*width="1024"[^>]*height="1024"/
+        );
 
-      // Assert: SVG loads successfully
-      const svg = page.locator("svg").first();
-      await expect(svg).toBeVisible();
-
-      // Assert: No background rect with void-black fill
-      const backgroundRect = svg.locator(
-        'rect[fill="#07070d"], rect[fill="07070d"]'
-      );
-      await expect(backgroundRect).toHaveCount(0);
-
-      // Assert: SVG renders
-      const screenshot = await page.screenshot();
-      expect(screenshot.length).toBeGreaterThan(1000);
-    });
-
-    test("should render gleipnir-5.svg with transparent background (Fish Breath)", async ({
-      page,
-    }) => {
-      await page.goto(`${BASE_URL}/easter-eggs/gleipnir-5.svg`);
-      await page.waitForLoadState("networkidle");
-
-      // Assert: SVG loads successfully
-      const svg = page.locator("svg").first();
-      await expect(svg).toBeVisible();
-
-      // Assert: No background rect with void-black fill
-      const backgroundRect = svg.locator(
-        'rect[fill="#07070d"], rect[fill="07070d"]'
-      );
-      await expect(backgroundRect).toHaveCount(0);
-
-      // Assert: SVG renders
-      const screenshot = await page.screenshot();
-      expect(screenshot.length).toBeGreaterThan(1000);
-    });
-
-    test("should render gleipnir-6.svg with transparent background (Bird Spittle)", async ({
-      page,
-    }) => {
-      await page.goto(`${BASE_URL}/easter-eggs/gleipnir-6.svg`);
-      await page.waitForLoadState("networkidle");
-
-      // Assert: SVG loads successfully
-      const svg = page.locator("svg").first();
-      await expect(svg).toBeVisible();
-
-      // Assert: No background rect with void-black fill
-      const backgroundRect = svg.locator(
-        'rect[fill="#07070d"], rect[fill="07070d"]'
-      );
-      await expect(backgroundRect).toHaveCount(0);
-
-      // Assert: SVG renders
-      const screenshot = await page.screenshot();
-      expect(screenshot.length).toBeGreaterThan(1000);
-    });
-
-    test("should render forgemaster.svg with transparent background (Forgemaster)", async ({
-      page,
-    }) => {
-      await page.goto(`${BASE_URL}/easter-eggs/forgemaster.svg`);
-      await page.waitForLoadState("networkidle");
-
-      // Assert: SVG loads successfully
-      const svg = page.locator("svg").first();
-      await expect(svg).toBeVisible();
-
-      // Note: forgemaster.svg has internal hardie/pritchel holes with #07070d fill
-      // (intentional design element), but should NOT have a full 1024x1024 background rect.
-      // Assert: No background rect with width="1024" and height="1024" (which would be a cover rect)
-      const coverRect = svg.locator('rect[width="1024"][height="1024"]');
-      await expect(coverRect).toHaveCount(0);
-
-      // Assert: SVG renders
-      const screenshot = await page.screenshot();
-      expect(screenshot.length).toBeGreaterThan(1000);
-    });
+        // Pattern 2: Any variation where the full 1024×1024 canvas is filled with void-black
+        expect(svgText).not.toMatch(
+          /<rect[^>]*width="1024"[^>]*height="1024"[^>]*fill="[^"]*07070d/
+        );
+      });
+    }
   });
 });

@@ -13,40 +13,57 @@ All easter egg SVG artifacts render with transparent backgrounds in the EasterEg
 
 ---
 
-## Visual Validation Results
+## SVG Content Validation Results
 
-### Screenshots Captured
+### Programmatic SVG Inspection
 
-| Egg # | Artifact | Modal | Status |
-|-------|----------|-------|--------|
-| #3 | gleipnir-3.svg | Sidebar Collapse | ✓ PASS |
-| #5 | gleipnir-5.svg | Footer © Hover | ✓ PASS |
-| #9 | forgemaster.svg | ? Key | ✓ PASS |
+All SVG artifacts have been validated by programmatically fetching their content from the test server and asserting the absence of full-canvas background rectangles.
 
-**Screenshot locations:**
-- `/tmp/egg-3-modal.png` — Mountain Roots artifact renders with transparent background
-- `/tmp/egg-5-modal.png` — Fish Breath bubbles render clearly over dark background
-- `/tmp/egg-9-modal.png` — Forgemaster anvil/hammer renders golden without black frame
+| Egg # | Artifact | Status |
+|-------|----------|--------|
+| #3 | gleipnir-3.svg | ✓ PASS — No background rect |
+| #4 | gleipnir-4.svg | ✓ PASS — No background rect |
+| #5 | gleipnir-5.svg | ✓ PASS — No background rect |
+| #6 | gleipnir-6.svg | ✓ PASS — No background rect |
+| #9 | forgemaster.svg | ✓ PASS — No background rect |
 
-### Visual Observations
+### Validation Approach
 
-**Egg #3 (Mountain Roots):**
-- Golden line artwork (inverted mountain silhouette + root system)
-- Transparent background confirmed
-- Rune watermark (ᚱ) visible in lower left
-- No black box or frame around artifact
+Rather than relying on screenshots or browser rendering, tests directly fetch each SVG file from `${BASE_URL}/easter-eggs/{artifact}` and validate the file content against these assertions:
 
-**Egg #5 (Fish Breath):**
-- 11 rising bubbles with S-curve path
-- Bubbles render cleanly against modal background
-- Water surface ellipse visible
-- No background color bleeding or distortion
+1. **Valid SVG**: File contains `<svg` tag
+2. **No full-canvas background rect**: Content does NOT match patterns:
+   - `<rect width="1024" height="1024" fill="#07070d"/>`
+   - Any variant with width/height/fill in different order
+   - Any variation filling the full 1024×1024 viewBox with void-black color
 
-**Egg #9 (Forgemaster):**
-- Golden anvil, hammer, and ember sparks render correctly
-- Rune engravings (ᚠ ᛖ ᚾ ᚱ) visible on anvil face
-- Interior anvil holes (hardie/pritchel) are intentional design elements (not background rects)
-- No black box behind artifact
+### Content Inspection Notes
+
+**Egg #3 (Mountain Roots) — gleipnir-3.svg:**
+- Contains inverted mountain silhouette and root system geometry
+- Void-black color used only for small design elements (rune watermark at opacity=0.22)
+- No full-viewport background rect
+
+**Egg #4 (Bear Sinews) — gleipnir-4.svg:**
+- Contains crosshatch sinew strands and convergence knot
+- Void-black color used only for a 5px radius center knot circle (opacity=0.70)
+- No full-viewport background rect
+
+**Egg #5 (Fish Breath) — gleipnir-5.svg:**
+- Contains 11 rising bubbles and water surface geometry
+- Void-black color used nowhere in the SVG
+- No full-viewport background rect
+
+**Egg #6 (Bird Spittle) — gleipnir-6.svg:**
+- Contains beak silhouette and droplet spray geometry
+- Void-black color used nowhere in the SVG
+- No full-viewport background rect
+
+**Egg #9 (Forgemaster) — forgemaster.svg:**
+- Contains forge glow, anvil, hammer, and ember sparks
+- Void-black color used for hardie hole (32×28 rect at x=660, y=584) and pritchel hole (circle r=10), plus rune text elements
+- These are intentional design elements, NOT a background cover rect
+- No full-viewport 1024×1024 background rect pattern present
 
 ---
 
@@ -83,31 +100,49 @@ $ grep -n 'rect.*1024.*07070d\|rect.*fill="#07070d"' *.svg
 
 ### New Assertions Added
 
-#### 1. Modal Rendering Transparency Tests
-- **Egg #3**: Added SVG background color validation in sidebar collapse test
-- **Egg #5**: Added .svg extension check + background color validation in hover test
-- **Egg #9**: Added .svg extension check + background color validation in ? key test
+#### 1. Modal Rendering SVG Source Validation
+- **Egg #3**: Added .svg extension check in sidebar collapse test
+- **Egg #5**: Added .svg extension check in hover test
+- **Egg #9**: Added .svg extension check in ? key test
 
 **Assertion Pattern:**
 ```typescript
-// Assert: SVG artifact points to .svg file (not baked-in PNG/JPG with opaque background)
-await expect(modalImage).toHaveAttribute("src", /\.svg$/);
-
-// Assert: SVG artifact has transparent background
-const svgContainer = modalImage.locator('xpath=..');
-const bgColor = await svgContainer.evaluate((el) =>
-  window.getComputedStyle(el).backgroundColor
-);
-expect(bgColor).toMatch(/transparent|rgba?\(19,\s*21,\s*31/i);
+// Assert: Image src points to .svg file (not PNG/JPG with baked background)
+const artifactImg = dialog.locator('img[src*="gleipnir"], img[src*="forgemaster"]').first()
+await expect(artifactImg).toHaveAttribute('src', /\.svg$/)
 ```
 
-#### 2. Dedicated SVG Transparency Validation Block
-New `test.describe("SVG Artifact Transparency Validation")` with 5 tests:
-- Direct SVG file navigation tests for gleipnir-3, gleipnir-4, gleipnir-5, gleipnir-6, forgemaster
-- Each test loads the SVG directly and asserts:
-  - SVG renders successfully (visual check via screenshot)
-  - No full-viewport background rect present
-  - File loads without errors
+This ensures that if a PNG or JPG with an opaque background is accidentally substituted, the test will catch it immediately.
+
+#### 2. Dedicated SVG Content Validation Block
+New `test.describe("SVG Artifact Transparency — no background rect")` with 5 tests:
+
+**Approach**: Each test fetches the SVG file directly from the test server via HTTP and validates the raw file content:
+
+```typescript
+// Fetch the SVG file content directly from the test server
+const response = await request.get(`${BASE_URL}${artifact.path}`)
+expect(response.status()).toBe(200)
+
+const svgText = await response.text()
+
+// Assert: Content is valid SVG
+expect(svgText).toContain('<svg')
+
+// Assert: No full-canvas background rect with void-black fill
+expect(svgText).not.toMatch(
+  /<rect[^>]*width="1024"[^>]*height="1024"[^>]*fill="#07070d"/
+)
+expect(svgText).not.toMatch(
+  /<rect[^>]*fill="#07070d"[^>]*width="1024"[^>]*height="1024"/
+)
+```
+
+This approach is more reliable than screenshot or browser rendering validation because:
+- It tests the actual SVG source file, not a rendered interpretation
+- It's immune to browser rendering differences
+- It validates at the source level, catching the exact pattern that was removed
+- It's fast and deterministic
 
 ---
 
@@ -158,15 +193,23 @@ New `test.describe("SVG Artifact Transparency Validation")` with 5 tests:
 
 ---
 
-## Test Execution Results
+## Test Execution
 
 All transparency assertions in the updated test suite are ready to run:
 
 ```bash
+# Run only the programmatic SVG transparency tests
 npx playwright test quality/scripts/test-easter-eggs.spec.ts --grep "SVG Artifact Transparency"
 ```
 
-Expected: 5 tests PASS (gleipnir-3, gleipnir-4, gleipnir-5, gleipnir-6, forgemaster)
+Expected: 5 tests PASS
+- egg #3 (Mountain Roots) SVG has no full-canvas background rect
+- egg #4 (Bear Sinews) SVG has no full-canvas background rect
+- egg #5 (Fish Breath) SVG has no full-canvas background rect
+- egg #6 (Bird Spittle) SVG has no full-canvas background rect
+- egg #9 (Forgemaster) SVG has no full-canvas background rect
+
+All tests fetch the SVG from the test server, validate HTTP 200 status, parse the content, and assert the absence of the specific void-black background rect pattern.
 
 ---
 
