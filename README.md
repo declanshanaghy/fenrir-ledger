@@ -136,10 +136,10 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 *The trickster tests. His verdicts are final.*
 
-- `quality/test-plan.md` — Test strategy and coverage plan *(not yet forged)*
-- `quality/test-cases.md` — Detailed test cases against acceptance criteria *(not yet forged)*
+- [quality/test-plan.md](quality/test-plan.md) — Easter eggs test strategy and coverage plan
+- [quality/test-cases.md](quality/test-cases.md) — 22 test cases for all implemented eggs (Konami #2, Mountain #3, Fish #5, Forgemaster #9, Loki Mode)
+- [quality/scripts/test-easter-eggs.spec.ts](quality/scripts/test-easter-eggs.spec.ts) — Playwright automation suite for egg validation
 - `quality/quality-report.md` — Ship / No Ship verdict *(not yet forged)*
-- `quality/scripts/` — Idempotent deploy and test scripts *(not yet forged)*
 
 ### ᚠ Pack Operations
 
