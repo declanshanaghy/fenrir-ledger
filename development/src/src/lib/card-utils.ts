@@ -4,30 +4,100 @@
  * Pure functions for card status computation and display formatting.
  * All functions are deterministic and accept an optional `today` parameter
  * to make them fully testable without mocking Date.
+ *
+ * Date storage convention: all date fields (openDate, annualFeeDate,
+ * signUpBonus.deadline, createdAt, updatedAt) are full UTC ISO 8601 strings,
+ * e.g. "2025-03-15T00:00:00.000Z". The display layer converts to local
+ * timezone using isoToLocalDateString() / formatDate().
  */
 
 import type { Card, CardStatus } from "@/lib/types";
 import { FEE_APPROACHING_DAYS, PROMO_EXPIRING_DAYS } from "@/lib/constants";
 
+// ─── Date Conversion Helpers ──────────────────────────────────────────────────
+
+/**
+ * Converts a full UTC ISO 8601 string to a YYYY-MM-DD string in the user's
+ * local timezone. Used to populate HTML <input type="date"> elements.
+ *
+ * @param iso - Full UTC ISO 8601 string (e.g. "2025-03-15T00:00:00.000Z")
+ * @returns YYYY-MM-DD string in local timezone, or "" if input is empty/invalid
+ */
+export function isoToLocalDateString(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Converts a YYYY-MM-DD string (as entered by an HTML date picker in local
+ * timezone) to a full UTC ISO 8601 string at midnight UTC for that local date.
+ *
+ * The conversion treats the date as a local-timezone date at 00:00:00 local,
+ * then converts to UTC. This preserves the user's intended calendar date
+ * regardless of their timezone offset.
+ *
+ * @param dateStr - YYYY-MM-DD string from a date input
+ * @returns Full UTC ISO 8601 string, or "" if input is empty/invalid
+ */
+export function localDateStringToIso(dateStr: string): string {
+  if (!dateStr) return "";
+  // Parse as local date by constructing with time component to avoid UTC shift.
+  const d = new Date(dateStr + "T00:00:00");
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString();
+}
+
+// ─── Date Calculation Helpers ─────────────────────────────────────────────────
+
 /**
  * Computes the number of days until a future date.
  *
- * @param isoDate - Date string in YYYY-MM-DD format
+ * Accepts both full UTC ISO 8601 strings ("2025-03-15T00:00:00.000Z") and
+ * legacy YYYY-MM-DD strings for backward compatibility with any data that was
+ * stored before the ISO 8601 migration.
+ *
+ * @param isoDate - Date string (full ISO 8601 UTC or YYYY-MM-DD)
  * @param today - Reference date (defaults to current date). Accepts Date or string.
  * @returns Number of days until the date. Negative means the date is in the past.
  */
 export function daysUntil(isoDate: string, today?: Date): number {
   if (!isoDate) return Infinity;
-  const target = new Date(isoDate + "T00:00:00");
+
+  let target: Date;
+  // Detect legacy YYYY-MM-DD format (10 chars, no T separator)
+  if (isoDate.length === 10 && !isoDate.includes("T")) {
+    // Parse as local date to avoid timezone-induced day shift
+    target = new Date(isoDate + "T00:00:00");
+  } else {
+    target = new Date(isoDate);
+  }
+
+  if (isNaN(target.getTime())) return Infinity;
+
   const reference = today ?? new Date();
+  // Compare at day resolution in local timezone
   const referenceDate = new Date(
     reference.getFullYear(),
     reference.getMonth(),
     reference.getDate()
   );
-  const diffMs = target.getTime() - referenceDate.getTime();
+  // Target day in local timezone
+  const targetDate = new Date(
+    target.getFullYear(),
+    target.getMonth(),
+    target.getDate()
+  );
+
+  const diffMs = targetDate.getTime() - referenceDate.getTime();
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
+
+// ─── Status Computation ───────────────────────────────────────────────────────
 
 /**
  * Computes the display status for a card based on its dates.
@@ -66,6 +136,8 @@ export function computeCardStatus(card: Card, today?: Date): CardStatus {
   return "active";
 }
 
+// ─── Display Formatters ───────────────────────────────────────────────────────
+
 /**
  * Formats a number of cents as a USD currency string.
  *
@@ -84,17 +156,29 @@ export function formatCurrency(cents: number): string {
 }
 
 /**
- * Formats a YYYY-MM-DD date string as a human-readable date.
+ * Formats a date string as a human-readable date in the user's local timezone.
  *
- * @param isoDate - Date string in YYYY-MM-DD format
+ * Accepts both full UTC ISO 8601 strings and legacy YYYY-MM-DD strings for
+ * backward compatibility.
+ *
+ * @param isoDate - Full UTC ISO 8601 string or YYYY-MM-DD string
  * @returns Formatted date string (e.g. "Jan 15, 2026"). Empty string for empty input.
  */
 export function formatDate(isoDate: string): string {
   if (!isoDate) return "";
-  // Parse as local date to avoid timezone shift.
-  // Default values satisfy noUncheckedIndexedAccess — format is guaranteed YYYY-MM-DD.
-  const [year = 0, month = 0, day = 0] = isoDate.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
+
+  let date: Date;
+  // Detect legacy YYYY-MM-DD format (10 chars, no T separator)
+  if (isoDate.length === 10 && !isoDate.includes("T")) {
+    // Parse as local date to avoid timezone-induced day shift
+    const [year = 0, month = 0, day = 0] = isoDate.split("-").map(Number);
+    date = new Date(year, month - 1, day);
+  } else {
+    date = new Date(isoDate);
+  }
+
+  if (isNaN(date.getTime())) return "";
+
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
@@ -116,6 +200,8 @@ export function formatDaysUntil(days: number): string {
   return `${Math.abs(days)} days ago`;
 }
 
+// ─── ID Generation ────────────────────────────────────────────────────────────
+
 /**
  * Generates a UUID v4. Uses crypto.randomUUID() when available (HTTPS / secure
  * contexts) and falls back to crypto.getRandomValues() which works everywhere.
@@ -131,6 +217,8 @@ export function generateId(): string {
   const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0"));
   return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
 }
+
+// ─── Money Conversion Helpers ─────────────────────────────────────────────────
 
 /**
  * Converts a dollar string entered in a form input to integer cents.

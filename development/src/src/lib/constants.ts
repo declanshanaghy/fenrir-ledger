@@ -27,6 +27,7 @@ export const DEFAULT_HOUSEHOLD: Household = {
   id: DEFAULT_HOUSEHOLD_ID,
   name: "My Household",
   createdAt: new Date(0).toISOString(), // Epoch — stable across runs
+  updatedAt: new Date(0).toISOString(), // Epoch — stable across runs
 };
 
 /**

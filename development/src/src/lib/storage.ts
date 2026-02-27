@@ -112,6 +112,7 @@ export function saveHouseholds(households: Household[]): void {
 /**
  * Initializes the default household if it does not already exist.
  * Idempotent — safe to call on every page load.
+ * Backfills updatedAt for households that predate the field.
  *
  * @returns The default Household object
  */
@@ -122,12 +123,26 @@ export function initializeDefaultHousehold(): Household {
   const existing = households.find((h) => h.id === DEFAULT_HOUSEHOLD_ID);
 
   if (existing) {
+    // Backfill updatedAt if missing (pre-migration household records)
+    if (!existing.updatedAt) {
+      const backfilled: Household = {
+        ...existing,
+        updatedAt: existing.createdAt,
+      };
+      const updated = households.map((h) =>
+        h.id === DEFAULT_HOUSEHOLD_ID ? backfilled : h
+      );
+      saveHouseholds(updated);
+      return backfilled;
+    }
     return existing;
   }
 
+  const now = new Date().toISOString();
   const newHousehold: Household = {
     ...DEFAULT_HOUSEHOLD,
-    createdAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
   };
 
   saveHouseholds([...households, newHousehold]);
@@ -213,6 +228,7 @@ export function getCardById(id: string): Card | undefined {
 /**
  * Saves a card (insert or update).
  * Recomputes the card status before saving.
+ * Auto-sets createdAt on insert and always refreshes updatedAt.
  *
  * If a card with the same ID exists, it is replaced.
  * If no card with that ID exists, the card is appended.
@@ -221,17 +237,19 @@ export function getCardById(id: string): Card | undefined {
  */
 export function saveCard(card: Card): void {
   const all = getAllCards();
+  const now = new Date().toISOString();
+  const existingIndex = all.findIndex((c) => c.id === card.id);
+  const isInsert = existingIndex < 0;
 
-  // Recompute status before saving
+  // Recompute status before saving; auto-manage timestamps
   const cardWithStatus: Card = {
     ...card,
     status: computeCardStatus(card),
-    updatedAt: new Date().toISOString(),
+    createdAt: isInsert ? now : (card.createdAt || now),
+    updatedAt: now,
   };
 
-  const existingIndex = all.findIndex((c) => c.id === card.id);
-
-  if (existingIndex >= 0) {
+  if (!isInsert) {
     // Update existing
     const updated = [...all];
     updated[existingIndex] = cardWithStatus;

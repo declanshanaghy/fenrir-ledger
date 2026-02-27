@@ -38,7 +38,14 @@ import {
 
 import type { Card, CardStatus } from "@/lib/types";
 import { saveCard, deleteCard } from "@/lib/storage";
-import { computeCardStatus, dollarsToCents, centsToDollars, generateId } from "@/lib/card-utils";
+import {
+  computeCardStatus,
+  dollarsToCents,
+  centsToDollars,
+  generateId,
+  isoToLocalDateString,
+  localDateStringToIso,
+} from "@/lib/card-utils";
 import { KNOWN_ISSUERS, DEFAULT_HOUSEHOLD_ID } from "@/lib/constants";
 
 // ─── Zod validation schema ────────────────────────────────────────────────────
@@ -102,15 +109,17 @@ export function CardForm({ initialValues }: CardFormProps) {
     return d.toISOString().split("T")[0] ?? "";
   })();
 
-  // Map Card → form default values
+  // Map Card → form default values.
+  // Date fields stored as UTC ISO are converted to local YYYY-MM-DD for
+  // <input type="date"> display via isoToLocalDateString().
   const defaultValues: Partial<CardFormValues> = initialValues
     ? {
         issuerId: initialValues.issuerId,
         cardName: initialValues.cardName,
-        openDate: initialValues.openDate ?? "",
+        openDate: isoToLocalDateString(initialValues.openDate) || initialValues.openDate || "",
         creditLimit: centsToDollars(initialValues.creditLimit),
         annualFee: centsToDollars(initialValues.annualFee),
-        annualFeeDate: initialValues.annualFeeDate ?? "",
+        annualFeeDate: isoToLocalDateString(initialValues.annualFeeDate) || initialValues.annualFeeDate || "",
         ...(initialValues.signUpBonus ? { bonusType: initialValues.signUpBonus.type } : {}),
         bonusAmount: initialValues.signUpBonus
           ? centsToDollars(initialValues.signUpBonus.amount)
@@ -118,7 +127,9 @@ export function CardForm({ initialValues }: CardFormProps) {
         bonusSpendRequirement: initialValues.signUpBonus
           ? centsToDollars(initialValues.signUpBonus.spendRequirement)
           : "",
-        bonusDeadline: initialValues.signUpBonus?.deadline ?? "",
+        bonusDeadline: initialValues.signUpBonus?.deadline
+          ? (isoToLocalDateString(initialValues.signUpBonus.deadline) || initialValues.signUpBonus.deadline)
+          : "",
         bonusMet: initialValues.signUpBonus?.met ?? false,
         status: initialValues.status,
         notes: initialValues.notes ?? "",
@@ -170,23 +181,30 @@ export function CardForm({ initialValues }: CardFormProps) {
     try {
       const now = new Date().toISOString();
 
+      // Convert local YYYY-MM-DD strings from date pickers to UTC ISO strings.
+      // localDateStringToIso() treats the picker value as a local-timezone date
+      // and converts to a full UTC ISO 8601 timestamp.
+      const openDateIso = localDateStringToIso(data.openDate) || data.openDate;
+      const annualFeeDateIso = localDateStringToIso(data.annualFeeDate ?? "") || data.annualFeeDate || "";
+      const bonusDeadlineIso = localDateStringToIso(data.bonusDeadline ?? "") || data.bonusDeadline || "";
+
       // Build the Card object
       const card: Card = {
         id: initialValues?.id ?? generateId(),
         householdId: initialValues?.householdId ?? DEFAULT_HOUSEHOLD_ID,
         issuerId: data.issuerId,
         cardName: data.cardName,
-        openDate: data.openDate,
+        openDate: openDateIso,
         creditLimit: dollarsToCents(data.creditLimit ?? ""),
         annualFee: dollarsToCents(data.annualFee ?? ""),
-        annualFeeDate: data.annualFeeDate ?? "",
+        annualFeeDate: annualFeeDateIso,
         promoPeriodMonths: 0,
         signUpBonus: data.bonusType
           ? {
               type: data.bonusType,
               amount: dollarsToCents(data.bonusAmount ?? ""),
               spendRequirement: dollarsToCents(data.bonusSpendRequirement ?? ""),
-              deadline: data.bonusDeadline ?? "",
+              deadline: bonusDeadlineIso,
               met: data.bonusMet ?? false,
             }
           : null,
