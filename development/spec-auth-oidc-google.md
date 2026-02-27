@@ -1,7 +1,7 @@
 # Technical Spec: OIDC Authentication — Google Login (Iteration 1)
 
-**Story**: `fenrir-ledger-team/product-owner/backlog/story-auth-oidc-google.md`
-**ADR**: `fenrir-ledger-team/principal-engineer/adrs/ADR-004-oidc-auth-and-persistence.md`
+**Story**: `design/backlog/story-auth-oidc-google.md`
+**ADR**: `architecture/adrs/ADR-004-oidc-auth-and-persistence.md`
 **Date**: 2026-02-27
 **Status**: Draft — pending Freya approval of ADR-004 decisions
 

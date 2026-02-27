@@ -23,12 +23,12 @@ Before committing anything, read and follow `.claude/skills/git-commit/SKILL.md`
 All UX-related reference materials, style guides, and reusable assets live in:
 
 ```
-ux-designer/ux-assets/
+design/ux-assets/
 ├── mermaid-style-guide.md   # Mermaid diagram conventions, colors, patterns
 └── (future assets: color tokens, icon sets, component library, etc.)
 ```
 
-**Before producing any diagram**, read `fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md` and follow its conventions. All diagrams across the entire project use Mermaid syntax — this is a product-level requirement.
+**Before producing any diagram**, read `design/ux-assets/mermaid-style-guide.md` and follow its conventions. All diagrams across the entire project use Mermaid syntax — this is a product-level requirement.
 
 ## Your Position in the Team
 

@@ -21,7 +21,7 @@ Before committing anything, read and follow `.claude/skills/git-commit/SKILL.md`
 ## Diagrams
 
 All diagrams (architecture, component, sequence, data flow) must use Mermaid syntax. Before creating any diagram, read the team style guide at:
-`fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md`
+`design/ux-assets/mermaid-style-guide.md`
 
 Follow its color palette, node shapes, edge styles, and naming conventions. Architecture diagrams go inline in markdown or in `architecture/diagrams/`.
 
