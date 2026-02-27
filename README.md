@@ -133,6 +133,8 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, data flow diagrams
 - [architecture/sprint-plan.md](architecture/sprint-plan.md) — Current sprint's stories, acceptance criteria, technical notes
 - [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001, ADR-002, ADR-003)
+- [fenrir-ledger-team/principal-engineer/adrs/ADR-004-oidc-auth-and-persistence.md](fenrir-ledger-team/principal-engineer/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR-004: OIDC auth + Supabase persistence
+- [fenrir-ledger-team/principal-engineer/specs/spec-auth-oidc-google.md](fenrir-ledger-team/principal-engineer/specs/spec-auth-oidc-google.md) — Technical spec: Google OIDC login (Iteration 1)
 - `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
 - [development/src/](development/src/) — The forge itself. Next.js source code lives here.
 - [development/implementation-plan.md](development/implementation-plan.md) — Ordered task breakdown, what was built

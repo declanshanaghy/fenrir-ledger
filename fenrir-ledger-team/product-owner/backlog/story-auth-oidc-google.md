@@ -202,3 +202,158 @@ Suggested sign-in page copy direction (kenning style, per `design/copywriting.md
 - **Acceptable trade-off**: Specific database/backend service — Principal Engineer proposes, Freya
   approves before implementation begins.
 - **Deferred by product**: localStorage migration wizard — log a follow-up story in the backlog.
+
+---
+
+## Engineering Response
+
+**From**: FiremanDecko (Principal Engineer)
+**Date**: 2026-02-27
+**Status**: Recommendations provided — awaiting Freya approval before Sprint 3 planning begins
+
+Full ADR and technical spec have been written:
+- **ADR**: `fenrir-ledger-team/principal-engineer/adrs/ADR-004-oidc-auth-and-persistence.md`
+- **Spec**: `fenrir-ledger-team/principal-engineer/specs/spec-auth-oidc-google.md`
+
+---
+
+### Answers to Open Questions (1–7)
+
+**1. Auth library choice**
+
+Recommendation: **Auth.js v5 (`next-auth@beta`)**.
+
+It is the right tool for Next.js App Router. It handles the Google OIDC flow, JWT sessions, HttpOnly
+cookie management, CSRF protection, and Vercel preview URL strategy in a single library with no
+lock-in. Clerk is eliminated because its opinionated component system conflicts with the Saga Ledger
+design system and its cost model is wrong for this stage. Lucia requires more boilerplate for a
+problem Auth.js already solves. Custom OIDC is not justified.
+
+Auth.js v5 is still RC but is production-stable and is the official App Router-first release.
+
+**2. Session strategy**
+
+Recommendation: **JWT sessions (stateless)**.
+
+We need `householdId` on every API call to scope database queries. A JWT payload containing
+`{ sub, householdId, name, email }` gives us that without a DB round-trip per request. Database
+sessions add a `sessions` table and a lookup on every request for a benefit we don't need today
+(individual session revocation). That feature is deferred; the architecture allows adding a JWT
+blocklist later without a full rewrite.
+
+Sessions are HttpOnly cookies by default in Auth.js — the non-negotiable is met.
+
+**3. Backend data store**
+
+Recommendation: **Supabase (PostgreSQL)**.
+
+True Postgres is the right model for relational household→cards data. Supabase's free tier covers
+development and early production. The Vercel integration auto-populates environment variables.
+Row Level Security gives us a defence-in-depth isolation layer (see Q6). The Auth.js Supabase
+adapter and `@supabase/supabase-js` client are both mature.
+
+PlanetScale is eliminated (ended free tier — minimum $39/month). Vercel Postgres (Neon) is
+viable but thinner ecosystem and no RLS. Firebase Firestore fights our relational schema.
+
+This decision gates the sprint — **Freya must approve this choice before Sprint 3 planning**.
+
+**4. localStorage migration**
+
+Recommendation: **Defer entirely to Iteration 5**.
+
+There are no public users with Sprint-1 localStorage data to migrate. Wiring a migration hook
+now adds non-trivial scope and requires a Luna-designed UI surface. The `storage.ts` abstraction
+and localStorage keys remain intact — they are the read path for the Iteration 5 import wizard.
+`storage.ts` becomes dead code in Sprint 3 (not called, not deleted).
+
+A separate backlog story is logged for the migration wizard (Iteration 5 per your story table).
+
+**5. Household naming on first sign-in**
+
+Recommendation: **Agree with Freya's proposal** — `"{Google display name}'s Household"`.
+
+The Google `name` claim is used. This is editable in future sprints (household rename flow).
+
+**6. Multi-tenant isolation**
+
+Recommendation: **API layer as primary enforcement + Supabase RLS as defence in depth**.
+
+Every API route handler extracts `householdId` from the JWT and injects it into every query as
+an explicit `WHERE household_id = ?` clause. This is testable and code-reviewable.
+
+RLS policies (`app.household_id` Postgres configuration parameter) are added as a fallback that
+catches any query that accidentally omits the WHERE clause. The service role key (which bypasses
+RLS) is never used in application code — only in migration scripts.
+
+**Caveat**: Supabase's PgBouncer connection pooler may complicate the `set_config` approach for
+RLS in transaction mode. If it proves fragile during Sprint 3, the fallback is API-layer-only
+isolation (drop RLS policies, keep all WHERE clauses). This is flagged as an open question in the
+spec.
+
+**7. Vercel preview deployment URLs**
+
+Recommendation: Use **`AUTH_TRUST_HOST=1`** for Vercel preview environments.
+
+- Production: `NEXTAUTH_URL=https://fenrir-ledger.vercel.app` (explicit, no trust host)
+- Preview: `AUTH_TRUST_HOST=1`, `NEXTAUTH_URL` not set (Auth.js reads `X-Forwarded-Host`)
+- Development: `NEXTAUTH_URL=http://localhost:9653`
+
+This is the documented Auth.js v5 / Vercel pattern. It does not weaken CSRF protection.
+
+**Important caveat**: Google OAuth requires redirect URIs to be pre-registered. Dynamic preview
+URLs cannot be pre-registered individually. This means Google sign-in will not work on preview
+deployments unless we use a fixed custom domain for previews. Options are discussed in the spec
+(see Open Question #3). **This needs a Freya decision before Sprint 3 starts.**
+
+---
+
+### New Open Questions (surfaced by engineering)
+
+**OQ-1: Sign-in page UX spec**
+A Luna wireframe is required for the sign-in page before that story is "Ready". Copy direction
+is in this story; the visual spec (logo placement, button styling, background treatment) is pending.
+The sign-in page can be scoped as its own story in Sprint 3.
+
+**OQ-2: Supabase project setup**
+Should there be separate Supabase projects for dev, preview, and production, or a single project
+with environment-scoped tables? Recommendation: separate dev and production projects. Preview
+deployments share dev. **Needs Freya/DevOps confirmation.**
+
+**OQ-3: Google OAuth and preview deployments**
+Google OAuth redirect URIs must be pre-registered. Dynamic Vercel preview URLs cannot be
+pre-registered. Decision options:
+  (a) Preview deployments cannot run Google OAuth — only production OIDC works. Preview tests
+      mock or skip auth. (Simplest. Recommended.)
+  (b) Add a fixed custom domain for preview (`preview.fenrir-ledger.com`). (More infrastructure.)
+  (c) Use a separate Google OAuth app for development that has `localhost` registered, plus a
+      production app for `fenrir-ledger.vercel.app`. (Already standard practice — probably already
+      implied by having separate `GOOGLE_CLIENT_ID` values per environment.)
+**Decision needed before Sprint 3 planning.**
+
+---
+
+### Blockers Before Sprint 3 Can Start
+
+1. **Freya approves data store decision (Supabase)** — gates everything.
+2. **Freya approves auth library (Auth.js v5)** — gates Sprint 3 story writing.
+3. **Luna produces sign-in page wireframe** — gates that story entering "Ready".
+4. **Decision on Google OAuth and preview deployments** (OQ-3 above).
+5. **Supabase project created** — someone must click "New Project" and copy the credentials into
+   Vercel before the sprint can be validated in a test environment.
+
+---
+
+### Sprint 3 Story Scope Estimate
+
+This feature set requires more than one sprint story. Suggested breakdown (max 5 stories total):
+
+| Story | Scope | Complexity |
+|-------|-------|-----------|
+| 3.1 | Supabase schema + migration SQL + deployment script | M |
+| 3.2 | Auth.js v5 config + Google OIDC + session JWT | M |
+| 3.3 | Middleware + protected routes + sign-in page | M |
+| 3.4 | API routes for cards (GET list, POST, GET by id, PUT, DELETE) + household API | L |
+| 3.5 | Dashboard migration: swap localStorage reads for API calls | M |
+
+These map neatly to 5 stories — exactly the sprint max. The deployment script story (3.1) must
+land before any auth story is testable in QA's environment.
