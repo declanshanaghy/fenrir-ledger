@@ -172,6 +172,18 @@ function setAllCards(cards: Card[]): void {
 }
 
 /**
+ * Reads all cards across all households.
+ *
+ * Used by easter eggs (e.g. KonamiHowl) that need a cross-household snapshot
+ * without caring about household boundaries.
+ *
+ * @returns All Card objects in storage, unsorted.
+ */
+export function getAllCardsGlobal(): Card[] {
+  return getAllCards();
+}
+
+/**
  * Reads all cards for a given household, sorted by most recently updated.
  *
  * @param householdId - The household to filter by

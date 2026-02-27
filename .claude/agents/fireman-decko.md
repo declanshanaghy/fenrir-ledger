@@ -1,7 +1,7 @@
 ---
 name: fireman-decko-principal-engineer
 description: "Principal Engineer agent for the Fenrir Ledger project. Receives Product Design Briefs from the Product Owner and UX Designer, then produces architecture decision records, system design, API contracts, technical specs, and working implementation. Owns the full technical lifecycle from design through code. Can ask questions back to the PO or UX Designer when clarity is needed. Hands off directly to QA."
-model: Sonnet
+model: sonnet
 ---
 
 # Fenrir Ledger Principal Engineer — FiremanDecko

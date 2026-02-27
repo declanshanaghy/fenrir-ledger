@@ -69,23 +69,35 @@ Hidden references for the wolves who look closely. None of these should obstruct
 
 **Implementation**: In `layout.tsx` (or a `console-signature.ts` utility imported on client-side only):
 
+The art uses ASCII-drawn Elder Futhark rune glyphs spelling **ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ** (F-E-N-R-I-R). Each glyph is 8 characters wide, 7 lines tall, drawn with `|`, `/`, `\`, `-` to approximate the rune shapes:
+
+| Rune | Name | Shape |
+|------|------|-------|
+| ᚠ | Fehu | Vertical stave, two right-branching diagonals in upper half |
+| ᛖ | Ehwaz | Two parallel staves, X-crossing between |
+| ᚾ | Naudiz | Two staves, single diagonal connecting upper-left to lower-right |
+| ᚱ | Raidho | Stave, angular P-bump (`|--` / `|  \`), diagonal leg |
+| ᛁ | Isa | Pure vertical stave (ice — still, unbending) |
+| ᚱ | Raidho | (same as above) |
+
 ```typescript
 // Only runs in browser, only runs once per session
 if (typeof window !== 'undefined' && !sessionStorage.getItem('console-signed')) {
   sessionStorage.setItem('console-signed', '1')
-  console.log(
-    '%c' + `
-███████████ ██████████ ██████   █████ ███████████   █████ ███████████
-░░███░░░░░░█░░███░░░░░█░░██████ ░░███ ░░███░░░░░███ ░░███ ░░███░░░░░███
- ░███   █ ░  ░███  █ ░  ░███░███ ░███  ░███    ░███  ░███  ░███    ░███
- ░███████    ░██████    ░███░░███░███  ░██████████   ░███  ░██████████
- ░███░░░█    ░███░░█    ░███ ░░██████  ░███░░░░░███  ░███  ░███░░░░░███
- ░███  ░     ░███ ░   █ ░███  ░░█████  ░███    ░███  ░███  ░███    ░███
- █████       ██████████ █████  ░░█████ █████   █████ █████ █████   █████
-░░░░░       ░░░░░░░░░░ ░░░░░    ░░░░░ ░░░░░   ░░░░░ ░░░░░ ░░░░░   ░░░░░
-`,
-    'color: #c9920a; font-family: monospace; font-size: 11px; line-height: 1.2'
-  )
+
+  const art = `
+   |      | |    |   |   |--       |      |--
+   |\\     |/|    |\\  |   |  \\      |      |  \\
+   | \\    | |    | \\ |   |--       |      |--
+   |\\     |\\|    |  \\|   |  \\      |      |  \\
+   | \\    | |    |   |   |   \\     |      |   \\
+   |      | |    |   |   |         |      |
+   |      | |    |   |   |         |      |
+`
+  const runeLabel = `  ᚠ FEHU    ᛖ EHWAZ   ᚾ NAUDIZ   ᚱ RAIDHO    ᛁ ISA    ᚱ RAIDHO`
+
+  console.log('%c' + art, 'color: #c9920a; font-family: monospace; font-size: 11px; line-height: 1.3')
+  console.log('%c' + runeLabel, 'color: #c9920a; font-family: monospace; font-size: 10px; letter-spacing: 1px')
   console.log('%cYou opened the forge, mortal. 🐺', 'color: #f0b429; font-size: 14px; font-family: monospace;')
   console.log('%cFenrir sees all chains. Including yours.', 'color: #8a8578; font-size: 12px; font-family: monospace;')
   console.log('%c ', 'font-size: 4px;')

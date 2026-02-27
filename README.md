@@ -169,6 +169,16 @@ cd development/src && npm run dev
 # Open http://localhost:9999
 ```
 
+### Sprint 2 — Forged Artifacts (In Progress)
+
+**Easter Eggs Implemented**
+- Easter Egg #4 (Console ASCII art) — `development/src/src/components/layout/ConsoleSignature.tsx`
+- Easter Egg #5 (HTML source signature) — JSDoc comment block in `development/src/src/app/layout.tsx`
+- Easter Egg #7 (Runic meta tag cipher) — `metadata.other["fenrir:runes"]` in `layout.tsx`
+- Easter Egg #2 (Konami Code Howl) — `development/src/src/components/layout/KonamiHowl.tsx` (↑↑↓↓←→←→BA)
+
+---
+
 ### Sprint 1 — Forged Artifacts
 
 **The Architecture**

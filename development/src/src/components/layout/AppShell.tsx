@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import { TopBar } from "./TopBar";
 import { SideNav } from "./SideNav";
 import { SyncIndicator } from "./SyncIndicator";
+import { KonamiHowl } from "./KonamiHowl";
 
 const STORAGE_KEY = "fenrir:sidenav-collapsed";
 
@@ -57,6 +58,8 @@ export function AppShell({ children }: AppShellProps) {
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
       <SyncIndicator />
+      {/* Easter egg #2 — Konami Code → The Howl (client-only, no SSR) */}
+      <KonamiHowl />
     </div>
   );
 }

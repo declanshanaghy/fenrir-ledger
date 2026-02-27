@@ -130,3 +130,63 @@
 .animate-muspel-pulse {
   animation: muspel-pulse 1.8s ease-in-out infinite;
 }
+
+/* ── Konami Howl — Easter Egg #2 ─────────────────────────────────────────
+ *
+ * wolf-rise: wolf silhouette slides up from below the viewport.
+ * saga-shake: horizontal viewport nudge (applied to <body>).
+ * ragnarok-pulse: full-viewport deep-red flash (overdue cards present).
+ * howl-band-fade: FENRIR AWAKENS band fades out after 3 s.
+ * howl-wolf-fade: wolf silhouette fades out after hold period.
+ *
+ * Z-index: 9653 = W-O-L-F on a phone keypad.
+ * Ragnarok pulse sits at 9652 so the wolf always renders above it.
+ *
+ * All animations respect prefers-reduced-motion — see KonamiHowl component.
+ */
+
+@keyframes wolf-rise {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes saga-shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-6px); }
+  40%  { transform: translateX(6px); }
+  60%  { transform: translateX(-4px); }
+  80%  { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes saga-shake-mobile {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-3px); }
+  40%  { transform: translateX(3px); }
+  60%  { transform: translateX(-2px); }
+  80%  { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes ragnarok-pulse {
+  0%   { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+@keyframes howl-band-fade {
+  0%,  70% { opacity: 1; }
+  100%      { opacity: 0; }
+}
+
+@keyframes howl-element-fade {
+  0%,  70% { opacity: 1; }
+  100%      { opacity: 0; }
+}
+
+/* Body shake classes — applied transiently by KonamiHowl */
+body.konami-shake {
+  animation: saga-shake 400ms ease-in-out;
+}
+body.konami-shake-mobile {
+  animation: saga-shake-mobile 400ms ease-in-out;
+}
