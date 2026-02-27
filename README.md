@@ -41,7 +41,7 @@
 
 Track every fee-wyrm in your portfolio. Every chain forged, every promo deadline, every fee-serpent's strike date — Fenrir watches and howls before the trap snaps shut. Add your cards, name your thresholds, and the wolf does the rest: reminding you to spend, transfer, downgrade, or close before you lose a single dollar to a fee you didn't choose to pay.
 
-*Sprint 1 complete. Sprint 2 in progress — the Saga Ledger theme is live.*
+*Sprint 2 complete — the Saga Ledger theme is live and six easter eggs are shipped. Sprint 3 next: animations, Howl panel, Valhalla.*
 
 ---
 
@@ -125,6 +125,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [design/interactions.md](design/interactions.md) — Animations, saga-enter stagger, status ring, Howl panel patterns
 - [design/wireframes.md](design/wireframes.md) — Layout specs, component hierarchy, responsive breakpoints
 - [design/implementation-brief.md](design/implementation-brief.md) — FiremanDecko integration plan, wave strategy, open questions
+- [design/easter-egg-modal.md](design/easter-egg-modal.md) — Shared modal template for all easter egg discovery moments
 
 ### ᚲ The Forge — Architecture + Development
 
@@ -145,10 +146,12 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 *The trickster tests. His verdicts are final.*
 
-- [quality/test-plan.md](quality/test-plan.md) — Easter eggs test strategy and coverage plan
-- [quality/test-cases.md](quality/test-cases.md) — 22 test cases for all implemented eggs (Konami #2, Mountain #3, Fish #5, Forgemaster #9, Loki Mode)
-- [quality/scripts/test-easter-eggs.spec.ts](quality/scripts/test-easter-eggs.spec.ts) — Playwright automation suite for egg validation
-- `quality/quality-report.md` — Ship / No Ship verdict *(not yet forged)*
+- [quality/README.md](quality/README.md) — Index of all QA artifacts and test execution guide
+- [quality/test-plan.md](quality/test-plan.md) — Easter eggs test strategy and coverage plan (283 lines)
+- [quality/test-cases.md](quality/test-cases.md) — 22 test cases for all implemented eggs (Konami #2, Mountain #3, Fish #5, Forgemaster #9, Loki Mode) (480 lines)
+- [quality/EASTER-EGGS-AUDIT.md](quality/EASTER-EGGS-AUDIT.md) — Final verdict report: READY TO SHIP, 0 defects (369 lines)
+- [quality/easter-eggs-transparency-report.md](quality/easter-eggs-transparency-report.md) — SVG artifact validation and background transparency audit (236 lines)
+- [quality/scripts/test-easter-eggs.spec.ts](quality/scripts/test-easter-eggs.spec.ts) — Playwright automation suite, 22 tests across 8 test suites (596 lines)
 
 ### ᚠ Pack Operations
 
@@ -178,7 +181,7 @@ cd development/src && npm run dev
 # Open http://localhost:9999
 ```
 
-### Sprint 2 — Forged Artifacts (In Progress)
+### Sprint 2 — Forged Artifacts
 
 **Easter Eggs Implemented**
 - Easter Egg #4 (Console ASCII art) — `development/src/src/components/layout/ConsoleSignature.tsx`

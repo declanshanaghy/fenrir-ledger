@@ -130,6 +130,22 @@ Open questions are logged here. Retrofit decisions are reasoned here. If somethi
 
 ---
 
+### ᛟ [Easter Egg Modal](easter-egg-modal.md)
+
+*The shared modal template for every easter egg discovery moment.*
+
+The full design spec and React integration guide for the reusable `EasterEggModal` component: gold glow border, Cinzel Decorative headline, two-column artifact layout, animated entry via `saga-enter` easing. All design tokens come from `theme-system.md`. Every easter egg that surfaces a discovery dialog uses this template.
+
+---
+
+### ᚹ [Pipeline](pipeline.md)
+
+*The Kanban orchestration contract. How the pack hunts in order.*
+
+The workflow definition for all four agents — model assignments, stage gates, WIP limits, and the `design/ → development/ → quality/` handoff chain. Read this to understand how work moves through the forge from backlog to ship.
+
+---
+
 ## The Wolf's Law for Design
 
 *Follow these or answer to Fenrir.*

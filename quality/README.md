@@ -25,12 +25,18 @@ This directory contains all QA artifacts: test plans, test cases, test scripts, 
   - 22 detailed test cases (TC-E2-001 through TC-FRAG-002)
   - Each includes: category, priority, type, preconditions, steps, expected result, idempotency
 
-#### Quality Report
+#### Quality Reports
 - **[EASTER-EGGS-AUDIT.md](EASTER-EGGS-AUDIT.md)** — 369-line comprehensive audit
   - Executive summary and egg-by-egg verdict
   - Edge case testing, SVG validation, accessibility audit
   - Test execution guide with commands
   - Final sign-off: READY TO SHIP with 0 defects
+
+- **[easter-eggs-transparency-report.md](easter-eggs-transparency-report.md)** — 236-line SVG validation report
+  - Programmatic SVG transparency inspection
+  - Background rect removal verification
+  - Rendering quality assessment
+  - Approved for Sprint 2 deployment
 
 ---
 

@@ -8,7 +8,7 @@
 
 ## Current State Assessment
 
-Sprint 1 delivered a working foundation. Sprint 2 design integration is underway:
+Sprint 1 delivered a working foundation. Sprint 2 design integration is complete:
 
 - ✅ Next.js App Router + TypeScript + Tailwind + shadcn/ui
 - ✅ `Card` type, `CardStatus` type, `localStorage` persistence
@@ -19,6 +19,13 @@ Sprint 1 delivered a working foundation. Sprint 2 design integration is underway
 - ✅ Deployed to Vercel: https://fenrir-ledger.vercel.app
 - ✅ Static marketing site built at `/static/index.html` (GitHub Pages)
 - ✅ Next.js upgraded to 15.1.12 (CVE-2025-66478 fix)
+- ✅ Easter Egg #4 (Console ASCII art) — `ConsoleSignature.tsx` (Sprint 2)
+- ✅ Easter Egg #5 (HTML source signature) — JSDoc block in `layout.tsx` (Sprint 2)
+- ✅ Easter Egg #7 (Runic meta tag) — `metadata.other["fenrir:runes"]` in `layout.tsx` (Sprint 2)
+- ✅ Easter Egg #2 (Konami Code Howl) — `KonamiHowl.tsx` (Sprint 2)
+- ✅ Easter Egg #3 (Loki Mode) — Footer "Loki" 7-click shuffle (Sprint 2)
+- ✅ Easter Egg #1 Fragment 5 (Breath of a Fish) — Footer © hover → `GleipnirFishBreath` modal (Sprint 2)
+- ✅ Footer component — `Footer.tsx`, three-column layout with both easter eggs wired (Sprint 2)
 - ⚠️ Norse copy pass not yet complete (generic copy remains in some areas)
 - ⚠️ No animation layer (Sprint 3)
 - ⚠️ The Howl panel not yet built (Sprint 3)
@@ -189,11 +196,8 @@ export function getRealmLabel(status: CardStatus, daysRemaining?: number): {
 - Net value calculation (rewards - fees paid)
 - Entry animation: cards "descend" into the hall
 
-### Story 5: Easter Eggs Layer A (Low-Effort)
-- Console ASCII art (easter egg #4)
-- HTML source comment (#5)
-- Runic meta tag (#7)
-- `?` shortcut → About modal (#9)
+### Story 5: Easter Eggs Layer B (Sprint 3 Remaining)
+- `?` shortcut → About modal (#9) — eggs #4, #5, #7, #2, #3, and fragment #1.5 all shipped in Sprint 2
 
 ---
 

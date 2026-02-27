@@ -233,16 +233,17 @@ When the user's active card count hits certain numbers, a one-time toast appears
 
 ## Easter Egg Implementation Priority
 
-| # | Easter Egg | Complexity | Sprint |
-|---|-----------|-----------|--------|
-| 4 | Console ASCII art | Low | Sprint 2 |
-| 5 | HTML source signature | Low | Sprint 2 |
-| 7 | Runic meta tag cipher | Trivial | Sprint 2 |
-| 2 | Konami code howl | Medium | Sprint 2 |
-| 9 | About modal (`?` key) | Medium | Sprint 2 |
-| 3 | Loki mode | Medium | Sprint 3 |
-| 10 | Wolf's Hunger meter | Medium | Sprint 3 |
-| 11 | Card count milestones | Low | Sprint 3 |
-| 1 | Gleipnir Hunt (full) | High | Sprint 4 |
-| 8 | Ragnarök threshold | Medium | Sprint 3 |
-| 6 | Star Trek LCARS mode | High | Sprint 4 |
+| # | Easter Egg | Complexity | Sprint | Status |
+|---|-----------|-----------|--------|--------|
+| 4 | Console ASCII art | Low | Sprint 2 | Done — `ConsoleSignature.tsx` |
+| 5 | HTML source signature | Low | Sprint 2 | Done — `layout.tsx` JSDoc block |
+| 7 | Runic meta tag cipher | Trivial | Sprint 2 | Done — `metadata.other["fenrir:runes"]` in `layout.tsx` |
+| 2 | Konami code howl | Medium | Sprint 2 | Done — `KonamiHowl.tsx` |
+| 3 | Loki mode | Medium | Sprint 2 | Done — Footer "Loki" 7-click shuffle |
+| 1 (frag 5) | Gleipnir — Breath of a Fish | Low | Sprint 2 | Done — Footer © hover → `GleipnirFishBreath` modal |
+| 9 | About modal (`?` key) | Medium | Sprint 3 | Backlog |
+| 10 | Wolf's Hunger meter | Medium | Sprint 3 | Backlog |
+| 11 | Card count milestones | Low | Sprint 3 | Backlog |
+| 8 | Ragnarök threshold | Medium | Sprint 3 | Backlog |
+| 1 | Gleipnir Hunt (full, remaining 5 fragments) | High | Sprint 4 | Backlog |
+| 6 | Star Trek LCARS mode | High | Sprint 4 | Backlog |
