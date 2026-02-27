@@ -115,7 +115,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 ### [ᚱ The Saga Ledger — Design](ux/README.md)
 
-*Freya + Luna's domain. The visual soul of the wolf.*
+*Luna's domain. The visual soul of the wolf.*
 
 - [ux/README.md](ux/README.md) — The wolf speaks. A guide to the full design system, in the voice of Fenrir.
 - [product/product-design-brief.md](product/product-design-brief.md) — Design philosophy, three pillars, aesthetic direction
