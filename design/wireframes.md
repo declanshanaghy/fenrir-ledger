@@ -26,6 +26,7 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | LCARS Mode (Easter Egg #6) | [wireframes/lcars-mode.html](wireframes/lcars-mode.html) | LCARS overlay on dashboard header: elbow blocks + 4 data lines, z:9653, 5s auto-dismiss |
 | Konami Code — The Howl (Easter Egg #2) | [wireframes/konami-howl.html](wireframes/konami-howl.html) | Easter Egg #2: wolf silhouette overlay, FENRIR AWAKENS band, Ragnarok pulse variant, z-index layer map |
 | Ragnarok Threshold (Easter Egg #8) | [wireframes/ragnarok-threshold.html](wireframes/ragnarok-threshold.html) | Full dashboard in Ragnarok state: red radial overlay, altered page title, altered Howl header, 4 warning cards; threshold logic diagram |
+| App Footer | [wireframes/footer.html](wireframes/footer.html) | Three-column footer: brand wordmark + tagline, nav links (About), team credits + © copyright; Easter Egg #5 (© hover → "Breath of a Fish") and Easter Egg #3 (Loki 7-click) both anchored here |
 
 ---
 
