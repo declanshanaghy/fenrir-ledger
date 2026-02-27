@@ -2,76 +2,13 @@
 
 Fenrir-themed modal dialog shown when the user discovers a hidden easter egg. Applies full Saga Ledger design tokens: void background, gold accent border glow, Cinzel Decorative headline, animated entry.
 
-**Standalone file**: [`wireframes/easter-egg-modal.html`](./wireframes/easter-egg-modal.html) (wireframe also embedded below)
+**Template file**: [`wireframes/easter-egg-modal.html`](./wireframes/easter-egg-modal.html)
 
 ---
 
-## Wireframe
+## Structure
 
-<div class="eew-root">
-<style>
-.eew-root{font-family:sans-serif;font-size:14px;padding:2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.eew-root *{box-sizing:border-box;margin:0;padding:0;}
-.eew-backdrop{position:relative;width:min(680px,92vw);}
-.eew-modal{position:relative;width:100%;border:1px solid;}
-.eew-modal-header{padding:1.5rem 2rem 1rem;text-align:center;border-bottom:1px solid;}
-.eew-eyebrow{display:flex;align-items:center;justify-content:space-between;font-size:0.7rem;font-weight:500;text-transform:uppercase;margin-bottom:0.5rem;}
-.eew-eyebrow-runes{flex:1;text-align:center;letter-spacing:0.25em;}
-.eew-title{font-size:clamp(1.4rem,4vw,2rem);font-weight:700;}
-.eew-body{margin:1.25rem;border:1px solid;display:grid;grid-template-columns:1fr 1px 1fr;min-height:200px;}
-.eew-col-image{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;gap:0.75rem;}
-.eew-image-placeholder{width:100%;aspect-ratio:4/3;max-width:200px;border:1px dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;font-size:0.7rem;text-transform:uppercase;}
-.eew-image-icon{font-size:2rem;opacity:0.35;}
-.eew-divider{width:1px;border-left:1px solid;}
-.eew-col-text{display:flex;flex-direction:column;justify-content:center;padding:1.5rem;gap:0.75rem;}
-.eew-text-label{font-size:0.65rem;text-transform:uppercase;}
-.eew-text-block{display:flex;flex-direction:column;gap:0.5rem;}
-.eew-line{height:0.875rem;border:1px solid;opacity:0.3;}
-.eew-line:nth-child(1){width:92%;}
-.eew-line:nth-child(2){width:78%;}
-.eew-line:nth-child(3){width:85%;}
-.eew-line:nth-child(4){width:60%;}
-.eew-footer{display:flex;justify-content:center;padding:1rem 2rem 1.5rem;border-top:1px solid;}
-.eew-btn-ok{padding:0.625rem 2.5rem;font-size:0.875rem;font-weight:600;text-transform:uppercase;border:1px solid;cursor:pointer;background:none;font-family:inherit;}
-.eew-btn-close{position:absolute;top:0.75rem;right:0.75rem;width:1.75rem;height:1.75rem;border:1px solid;cursor:pointer;display:flex;align-items:center;justify-content:center;background:none;font-family:inherit;}
-.eew-note{font-size:11px;font-style:italic;opacity:0.6;margin-top:0.5rem;}
-</style>
-<div class="eew-backdrop">
-  <div class="eew-modal">
-    <button class="eew-btn-close" aria-label="Dismiss">×</button>
-    <header class="eew-modal-header">
-      <p class="eew-eyebrow">
-        <span class="eew-eyebrow-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ</span>
-        Easter Egg Discovered
-        <span class="eew-eyebrow-runes" aria-hidden="true">ᛁ ᚱ ᛊ</span>
-      </p>
-      <h1 class="eew-title" id="egg-title">[EASTER EGG TITLE]</h1>
-    </header>
-    <div class="eew-body">
-      <div class="eew-col-image">
-        <div class="eew-image-placeholder">
-          <span class="eew-image-icon">ᚠ</span>
-          <span>Image Placeholder</span>
-        </div>
-      </div>
-      <div class="eew-divider" aria-hidden="true"></div>
-      <div class="eew-col-text">
-        <span class="eew-text-label">Discovery Text</span>
-        <div class="eew-text-block">
-          <div class="eew-line"></div>
-          <div class="eew-line"></div>
-          <div class="eew-line"></div>
-          <div class="eew-line"></div>
-        </div>
-      </div>
-    </div>
-    <footer class="eew-footer">
-      <button class="eew-btn-ok" type="button">OK</button>
-    </footer>
-  </div>
-</div>
-<p class="eew-note">Wireframe — easter-egg-modal · z-index 9653 (W-O-L-F) · standalone: <a href="./wireframes/easter-egg-modal.html">wireframes/easter-egg-modal.html</a></p>
-</div>
+See [wireframes/easter-egg-modal.html](./wireframes/easter-egg-modal.html).
 
 ---
 
