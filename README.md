@@ -112,7 +112,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [design/backlog/README.md](design/backlog/README.md) — Groomed backlog index
 - [design/backlog/story-auth-oidc-google.md](design/backlog/story-auth-oidc-google.md) — P1: OIDC Authentication — Google Login (Iteration 1)
 
-### ᚱ The Saga Ledger — Design
+### [ᚱ The Saga Ledger — Design](design/README.md)
 
 *Freya + Luna's domain. The visual soul of the wolf.*
 
@@ -231,7 +231,7 @@ Copyright (C) 2026 Declan Shanaghy. Licensed under the [GNU Affero General Publi
 
 ## The Pack's Oaths
 
-- **Diagrams**: All Mermaid, following the [mermaid-style-guide.md](fenrir-ledger-team/ux-designer/ux-assets/mermaid-style-guide.md)
+- **Diagrams**: All Mermaid, following the [mermaid-style-guide.md](design/ux-assets/mermaid-style-guide.md)
 - **Commits**: Strict format per [git-commit/SKILL.md](.claude/skills/git-commit/SKILL.md)
 - **Secrets**: `.env` file, never committed, `.env.example` as the template
 - **Sprints**: Max 5 stories. The forge-script runs every sprint. No exceptions.

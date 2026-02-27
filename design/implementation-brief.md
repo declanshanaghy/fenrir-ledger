@@ -203,12 +203,12 @@ export function getRealmLabel(status: CardStatus, daysRemaining?: number): {
 
 ## Sprint 4 Stories (Deep Mythology)
 
-- Konami code wolf howl (#2)
-- Loki mode (#3)
 - Ragnarök threshold mode (#8)
 - Card count milestone toasts (#11)
 - Gleipnir Hunt full implementation (#1) — this is a larger story, may split
 - Star Trek LCARS mode (#6) — optional/bonus
+
+> **Note**: Easter Eggs #2 (Konami Code Howl) and #3 (Loki Mode) shipped in Sprint 2 and are not repeated here. See `easter-eggs.md` implementation priority table for the full status of all eggs.
 
 ---
 

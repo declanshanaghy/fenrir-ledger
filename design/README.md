@@ -15,6 +15,25 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 
 ---
 
+## Index
+
+- [README.md](README.md) — This file. The entry point to the full design system.
+- [product-design-brief.md](product-design-brief.md) — Design philosophy, three pillars, aesthetic direction, key decisions.
+- [theme-system.md](theme-system.md) — Color palette, typography, CSS custom properties, Tailwind config extensions.
+- [mythology-map.md](mythology-map.md) — Norse cosmology mapped to every UI state, character, and feature.
+- [copywriting.md](copywriting.md) — Two-voice rule, kennings, status badge copy, action labels, empty states, Edda quotes.
+- [easter-eggs.md](easter-eggs.md) — All hidden references: Gleipnir Hunt, Konami Howl, Loki Mode, console ASCII, and more.
+- [interactions.md](interactions.md) — Animation philosophy, saga-enter stagger, status ring, Howl panel, easter egg keyframes.
+- [wireframes.md](wireframes.md) — Layout specs, component hierarchy, responsive breakpoints, z-index table, wireframe index.
+- [implementation-brief.md](implementation-brief.md) — FiremanDecko integration plan: wave strategy, sprint stories, open questions.
+- [easter-egg-modal.md](easter-egg-modal.md) — Shared modal template for all easter egg discovery moments.
+- [pipeline.md](pipeline.md) — Kanban orchestration: model assignments, stage gates, WIP limits, handoff chain.
+- [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) — Mermaid diagram conventions for all pack members.
+- [backlog/README.md](backlog/README.md) — Freya's groomed backlog index: all stories ready for sprint planning.
+- [backlog/story-auth-oidc-google.md](backlog/story-auth-oidc-google.md) — P1-Critical: OIDC Authentication — Google Login (Iteration 1).
+
+---
+
 ## The Scrolls of Design
 
 ### ᛊ [Product Design Brief](product-design-brief.md)
@@ -143,6 +162,26 @@ The full design spec and React integration guide for the reusable `EasterEggModa
 *The Kanban orchestration contract. How the pack hunts in order.*
 
 The workflow definition for all four agents — model assignments, stage gates, WIP limits, and the `design/ → development/ → quality/` handoff chain. Read this to understand how work moves through the forge from backlog to ship.
+
+---
+
+### ᛉ [Mermaid Style Guide](ux-assets/mermaid-style-guide.md)
+
+*How the pack draws its diagrams. One style, all wolves.*
+
+The canonical reference for Mermaid syntax conventions across all four agents: color palette, node shapes, edge styles, diagram type selection, and examples of good vs. bad diagrams. Every team member must read this before producing any diagram.
+
+---
+
+### ᚢ [Freya's Backlog](backlog/README.md)
+
+*The wolf's queue. Groomed, prioritized, ready to hunt.*
+
+Freya's sprint-ready backlog: all stories that have been written, prioritized, and cleared for engineering. The index links to each story file with its priority, status, and sprint target.
+
+Current stories:
+
+- [OIDC Authentication — Google Login (Iteration 1)](backlog/story-auth-oidc-google.md) — P1-Critical, Sprint 3 target. Sign in with Google, server-side persistence, household scoping. Engineering response and ADR complete.
 
 ---
 
