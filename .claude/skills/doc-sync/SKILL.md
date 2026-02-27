@@ -142,7 +142,7 @@ Format:
 - No root README changes needed  ← use this if nothing changed
 ```
 
-Include `{DEST}/.sync-report.md` in the git commit for this run.
+`{DEST}/.sync-report.md` is gitignored — do not add it to the commit. It exists only for the coordinator to read during the current session.
 
 ---
 
