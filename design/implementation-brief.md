@@ -26,7 +26,8 @@ Sprint 1 delivered a working foundation. Sprint 2 design integration is complete
 - ✅ Easter Egg #3 (Loki Mode) — Footer "Loki" 7-click shuffle (Sprint 2)
 - ✅ Easter Egg #1 Fragment 5 (Breath of a Fish) — Footer © hover → `GleipnirFishBreath` modal (Sprint 2)
 - ✅ Footer component — `Footer.tsx`, three-column layout with both easter eggs wired (Sprint 2)
-- ⚠️ Norse copy pass not yet complete (generic copy remains in some areas)
+- ⚠️ Norse copy pass not yet complete (generic copy remains in some areas — Stories 3–4 partially delivered)
+- ⚠️ `getRealmLabel()` / `realm-utils.ts` not yet implemented (deferred to Sprint 3)
 - ⚠️ No animation layer (Sprint 3)
 - ⚠️ The Howl panel not yet built (Sprint 3)
 - ⚠️ Valhalla route not yet built (Sprint 3)
@@ -106,8 +107,8 @@ Sprint 1 delivered a working foundation. Sprint 2 design integration is complete
 **"Apply realm vocabulary to card status badges"**
 
 **Files to modify / create**:
-- `development/src/src/components/dashboard/CardStatusBadge.tsx` — New component (or refactor existing badge)
-- `development/src/src/lib/card-utils.ts` — Add `getRealmLabel(status, daysRemaining)` utility function
+- `development/src/src/components/dashboard/StatusBadge.tsx` — Shipped as `StatusBadge.tsx`; realm label wiring via `getRealmLabel()` still pending
+- `development/src/src/lib/card-utils.ts` — Add `getRealmLabel(status, daysRemaining)` utility function (pending)
 
 **Do not change**: `CardStatus` type in `types.ts`. The Norse vocabulary is display-only.
 
@@ -229,12 +230,12 @@ export function getRealmLabel(status: CardStatus, daysRemaining?: number): {
 |------|--------|---------|
 | `src/components/dashboard/HowlPanel.tsx` | S3 | Urgent sidebar |
 | `src/components/dashboard/StatusRing.tsx` | S3 | SVG deadline ring |
-| `src/components/dashboard/CardStatusBadge.tsx` | S2 | Realm status badge |
+| `src/components/dashboard/StatusBadge.tsx` | S2 | Realm status badge (shipped as `StatusBadge.tsx`, not `CardStatusBadge.tsx`) |
 | `src/components/layout/Footer.tsx` | S2 | Footer with Loki easter egg trigger |
 | `src/app/valhalla/page.tsx` | S3 | Closed cards archive |
-| `src/lib/console-signature.ts` | S2 | Console ASCII (client-only) |
+| `src/components/layout/ConsoleSignature.tsx` | S2 | Console ASCII (client-only) — shipped as component, not lib utility |
 | `src/lib/easter-eggs.ts` | S3 | Konami code, Loki mode, event listeners |
-| `src/lib/realm-utils.ts` | S2 | `getRealmLabel()` and Norse display helpers |
+| `src/lib/realm-utils.ts` | S3 | `getRealmLabel()` and Norse display helpers — not yet implemented (Norse copy pass deferred) |
 | `public/cursors/wolf-paw.svg` | S4 | Custom cursor asset |
 
 ---
