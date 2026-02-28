@@ -131,9 +131,33 @@ node_modules/
 Thumbs.db
 ```
 
-## Branch Naming (future sprints)
+## Branch Workflow (mandatory)
 
-When branches are used:
-- `sprint-N/story-description` for feature work
-- `fix/short-description` for bug fixes
-- `chore/short-description` for maintenance
+**NEVER commit directly to `main`.** All work — features, fixes, docs, chores — happens on a branch.
+
+### Before starting any work
+1. Ensure you are on `main` and it is up to date:
+   ```bash
+   git checkout main && git pull origin main
+   ```
+2. Create a branch:
+   ```bash
+   git checkout -b <type>/<short-description>
+   ```
+3. Do your work, commit, and push the branch.
+4. Open a PR against `main`.
+5. Merge only via PR — never `git push origin main` directly.
+
+### Branch naming convention
+- `feat/short-description` — new feature or story work
+- `fix/short-description` — bug fix
+- `chore/short-description` — maintenance, config, tooling
+- `docs/short-description` — documentation only
+
+### Examples
+```
+feat/loki-mode-easter-egg
+fix/card-form-scroll-on-error
+chore/update-gitignore-playwright
+docs/adr-007-storage-strategy
+```
