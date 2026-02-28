@@ -61,10 +61,10 @@ export function getRealmDescription(status: CardStatus): string {
     case "active":
       return "Asgard-bound — rewards flowing, no urgent deadlines";
     case "fee_approaching":
-      return "Muspelheim — annual fee due soon, fire approaches";
+      return "Muspelheim — annual fee due in N days";
     case "promo_expiring":
-      return "Hati approaches — promo deadline draws near";
+      return "Hati approaches — promo deadline in N days";
     case "closed":
-      return "In Valhalla — rewards harvested, chain broken";
+      return "In Valhalla — rewards harvested";
   }
 }
