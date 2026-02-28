@@ -1,6 +1,11 @@
 # ᛟ Fenrir Ledger
 
 [![Deploy to Vercel](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel.yml/badge.svg)](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel.yml)
+[![Last Commit](https://img.shields.io/github/last-commit/declanshanaghy/fenrir-ledger?color=c9920a&logo=git&logoColor=white)](https://github.com/declanshanaghy/fenrir-ledger/commits/main)
+[![License: ELv2](https://img.shields.io/badge/license-ELv2-brightgreen)](LICENSE.md)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
 **Break free from fee traps. Harvest every reward. Let no chain hold.**
 
