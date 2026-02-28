@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: TopBar — OIDC Profile Display</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* ── Page layout ─────────────────────────────────────────────────── */
+    .page { display: flex; flex-direction: column; gap: 48px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* ── TopBar shell ─────────────────────────────────────────────────── */
+    /*
+     * h-14 = 56px tall. Sticky. z-index 100 (see wireframes.md z-index table).
+     * Full viewport width. Border-bottom separates it from page content.
+     * Implementation: border-b border-border bg-background/90 backdrop-blur-sm
+     */
+    .topbar {
+      height: 56px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: relative; /* establishes stacking context for the dropdown */
+    }
+
+    /* ── Brand wordmark (left) ──────────────────────────────────────── */
+    /*
+     * Clicking the wordmark opens the About modal.
+     * This is the "About / help" trigger — no separate "?" button.
+     * Implementation: <button> with aria-label="About Fenrir Ledger"
+     */
+    .topbar-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 0;
+      text-align: left;
+    }
+    .topbar-brand .brand-name {
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .topbar-brand .brand-sub {
+      font-size: 11px;
+      font-style: italic;
+    }
+
+    /* ── User cluster (right) ─────────────────────────────────────────── */
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ── Profile trigger button ───────────────────────────────────────── */
+    /*
+     * The entire avatar+email row is a single <button> that toggles the dropdown.
+     * aria-haspopup="true" aria-expanded="false|true"
+     * Touch target: min 44×44px (padding expands the hit area beyond the 32px avatar)
+     */
+    .profile-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: 1px solid;
+      cursor: pointer;
+      padding: 6px 10px;
+      /* min touch target: 44px height */
+      min-height: 44px;
+    }
+
+    /* ── Avatar circle (32px visual) ─────────────────────────────────── */
+    /*
+     * Implementation notes:
+     * - If session.user.picture is set: render <img> inside this circle
+     *   alt="{session.user.name}'s profile photo"
+     * - If no picture: render rune glyph ᛟ inside this circle
+     *   Container: aria-label="Profile avatar"
+     *   Rune: aria-hidden="true"
+     *   Rune styled with gold CSS token (--color-gold: #c9920a) + Noto Sans Runic
+     * Implementation: rounded-full border border-gold/40 bg-secondary
+     */
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border: 1px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      font-size: 14px;
+    }
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    /* Rune fallback placeholder (wireframe uses dashed border to indicate placeholder) */
+    .avatar-rune-placeholder {
+      border: 1px dashed;
+      font-size: 14px;
+    }
+
+    /* ── Email text (desktop only — hidden on mobile) ─────────────────── */
+    /*
+     * Displayed: desktop (≥640px)
+     * Hidden:    mobile (<640px) — use display:none at <640px
+     * Implementation: class="hidden sm:block"
+     * Source: session.user.email from the OIDC id_token
+     */
+    .profile-email {
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    /* ── Dropdown caret ───────────────────────────────────────────────── */
+    .dropdown-caret {
+      font-size: 10px;
+      margin-left: 2px;
+    }
+
+    /* ── Profile dropdown ─────────────────────────────────────────────── */
+    /*
+     * position: absolute; right: 0; top: calc(100% + 4px)
+     * z-index: 100 (header layer — see wireframes.md z-index table)
+     * min-width: 220px
+     * role="menu" aria-label="User menu"
+     * Opens on: click/tap of .profile-trigger, or Enter/Space while focused
+     * Closes on: click outside, Escape key (focus returns to .profile-trigger)
+     */
+    .profile-dropdown {
+      position: absolute;
+      right: 16px;
+      top: calc(100% + 4px);
+      width: 240px;
+      border: 1px solid;
+      z-index: 100;
+    }
+
+    /* Profile info block inside dropdown */
+    .dropdown-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+    }
+    .dropdown-avatar {
+      width: 40px;
+      height: 40px;
+      border: 1px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      font-size: 18px;
+    }
+    .dropdown-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .dropdown-identity {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0; /* allow text truncation */
+    }
+    .dropdown-name {
+      font-size: 13px;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dropdown-email {
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Hairline divider */
+    .dropdown-rule { border-top: 1px solid; }
+
+    /* Sign Out menu item */
+    /*
+     * role="menuitem"
+     * Calls signOut({ callbackUrl: "/api/auth/signin" })
+     * No confirmation dialog — action is immediate.
+     * Implementation: full-width button, left-aligned text, hover state defined in theme.
+     */
+    .dropdown-signout {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 12px 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    /* ── Generic utilities ─────────────────────────────────────────────── */
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note-block {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.6;
+      border: 1px dashed;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+    .scenario-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .scenario-col { display: flex; flex-direction: column; gap: 8px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+
+    /* Mobile simulation frame */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      padding: 0;
+      position: relative;
+    }
+    .mobile-frame .topbar {
+      /* same height, but email is hidden */
+    }
+    .mobile-email-hidden {
+      display: none; /* hidden at mobile width */
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 1 — Desktop, dropdown closed
+       Avatar source: session.user.picture (Google profile photo URL)
+       Email source:  session.user.email
+       Name source:   session.user.name
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 — Desktop · Dropdown closed · Avatar: Google picture URL</div>
+
+    <div class="topbar" role="banner">
+
+      <!-- Brand wordmark — click opens About modal -->
+      <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
+        <span class="brand-name">ᛟ Fenrir Ledger</span>
+        <span class="brand-sub">Credit Card Tracker</span>
+      </button>
+
+      <!-- User cluster -->
+      <div class="topbar-user">
+        <!--
+          Profile trigger: single <button> wrapping avatar + email + caret.
+          aria-haspopup="true" aria-expanded="false" (closed state)
+          aria-controls="user-menu-1"
+        -->
+        <button
+          class="profile-trigger"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="user-menu-1"
+        >
+          <!-- Avatar: Google picture URL present -->
+          <div class="avatar" aria-label="Profile avatar">
+            <!-- Implementation: <img src="{session.user.picture}" alt="{session.user.name}'s profile photo" /> -->
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
+                 alt="Declan Shanaghy's profile photo" />
+          </div>
+          <!-- Email — desktop only (hidden sm:hidden in implementation below sm breakpoint) -->
+          <span class="profile-email">declan@example.com</span>
+          <!-- Caret signals dropdown affordance -->
+          <span class="dropdown-caret" aria-hidden="true">▾</span>
+        </button>
+      </div>
+
+    </div><!-- /.topbar -->
+
+    <p class="note-block">
+      Desktop (≥640px): avatar circle (32px) + email text + caret ▾ all visible in the header bar.<br/>
+      The entire trigger is one &lt;button&gt; — clicking anywhere on it (avatar, email, caret) opens the dropdown.<br/>
+      Touch target: min-height 44px via padding (visual avatar remains 32px).
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 2 — Desktop, dropdown OPEN
+       Shows the profile dropdown anchored to the right of the header.
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 — Desktop · Dropdown open</div>
+
+    <!-- Full-width topbar with dropdown overlaid -->
+    <div class="topbar" style="position: relative;" role="banner">
+
+      <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
+        <span class="brand-name">ᛟ Fenrir Ledger</span>
+        <span class="brand-sub">Credit Card Tracker</span>
+      </button>
+
+      <div class="topbar-user">
+        <!--
+          Trigger: aria-expanded="true" when open.
+          Dropdown is positioned absolute relative to .topbar.
+        -->
+        <button
+          class="profile-trigger"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="true"
+          aria-controls="user-menu-2"
+        >
+          <div class="avatar" aria-label="Profile avatar">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
+                 alt="Declan Shanaghy's profile photo" />
+          </div>
+          <span class="profile-email">declan@example.com</span>
+          <span class="dropdown-caret" aria-hidden="true">▾</span>
+        </button>
+      </div>
+
+      <!-- ── Profile dropdown ──────────────────────────────────────────── -->
+      <!--
+        position: absolute; right: 16px; top: calc(100% + 4px)
+        z-index: 100 (header layer)
+        role="menu" aria-label="User menu"
+        id bound to aria-controls on the trigger
+      -->
+      <div id="user-menu-2" class="profile-dropdown" role="menu" aria-label="User menu">
+
+        <!-- Profile info block (not a menu item — purely informational) -->
+        <div class="dropdown-profile" aria-hidden="true">
+          <!-- Larger avatar (40px) inside dropdown -->
+          <div class="dropdown-avatar">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
+                 alt="" /><!-- alt="" — decorative duplicate; name+email are the accessible identity -->
+          </div>
+          <div class="dropdown-identity">
+            <!-- session.user.name -->
+            <div class="dropdown-name">Declan Shanaghy</div>
+            <!-- session.user.email — always shown in dropdown regardless of viewport -->
+            <div class="dropdown-email">declan@example.com</div>
+          </div>
+        </div>
+
+        <!-- Hairline divider -->
+        <div class="dropdown-rule" aria-hidden="true"></div>
+
+        <!-- Sign Out action -->
+        <!--
+          role="menuitem"
+          Calls: signOut({ callbackUrl: "/api/auth/signin" })
+          No confirmation dialog. Action is immediate.
+          Focus: on dropdown open, first focusable item is Sign Out.
+          Keyboard: Tab stays within menu; Escape closes and returns focus to trigger.
+        -->
+        <button
+          class="dropdown-signout"
+          type="button"
+          role="menuitem"
+        >
+          Sign Out
+        </button>
+
+      </div><!-- /.profile-dropdown -->
+
+    </div><!-- /.topbar -->
+
+    <p class="note-block">
+      Dropdown anchors to the right edge of the header, 4px below the topbar bottom border.<br/>
+      Clicking outside the dropdown or pressing Escape closes it; focus returns to the profile trigger.<br/>
+      The profile info block (avatar + name + email) inside the dropdown is <em>not</em> a menu item — it is aria-hidden informational content. Only Sign Out is role="menuitem".<br/>
+      Email inside the dropdown is always shown regardless of viewport — this is the only place mobile users see their email confirmed.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 3 — Desktop, dropdown closed, FALLBACK AVATAR
+       session.user.picture is null or undefined.
+       Fallback: ᛟ rune glyph rendered inside the avatar circle.
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 — Desktop · No picture URL · Rune fallback avatar</div>
+
+    <div class="topbar" role="banner">
+
+      <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
+        <span class="brand-name">ᛟ Fenrir Ledger</span>
+        <span class="brand-sub">Credit Card Tracker</span>
+      </button>
+
+      <div class="topbar-user">
+        <button
+          class="profile-trigger"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="user-menu-3"
+        >
+          <!--
+            Rune fallback: no <img> — render ᛟ glyph.
+            Implementation:
+              Container: aria-label="Profile avatar"
+              Rune span: aria-hidden="true"
+              CSS: Noto Sans Runic font; color: var(--color-gold) (#c9920a)
+          -->
+          <div class="avatar avatar-rune-placeholder" aria-label="Profile avatar">
+            <span aria-hidden="true">ᛟ</span>
+          </div>
+          <span class="profile-email">declan@example.com</span>
+          <span class="dropdown-caret" aria-hidden="true">▾</span>
+        </button>
+      </div>
+
+    </div><!-- /.topbar -->
+
+    <p class="note-block">
+      Fallback condition: session.user.picture is null, undefined, or empty string.<br/>
+      The ᛟ rune (Othala) is rendered in the avatar circle using Noto Sans Runic + gold CSS token (#c9920a).<br/>
+      The rune is aria-hidden="true"; the container div carries aria-label="Profile avatar".<br/>
+      The dashed border in this wireframe indicates "fallback / placeholder" — the real implementation uses the same solid border as the photo variant.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 4 — Mobile (375px), dropdown closed
+       Email hidden in the header bar. Avatar only.
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 4 — Mobile 375px · Dropdown closed · Email hidden in bar</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">375px frame</div>
+        <div class="mobile-frame">
+          <div class="topbar" role="banner">
+
+            <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
+              <span class="brand-name">ᛟ Fenrir Ledger</span>
+              <span class="brand-sub">Credit Card Tracker</span>
+            </button>
+
+            <div class="topbar-user">
+              <!--
+                Mobile trigger: avatar only — email span is display:none below 640px.
+                The trigger <button> still carries the full accessible label.
+                aria-label on the trigger: "Open user menu" or inferred from aria-haspopup + context.
+              -->
+              <button
+                class="profile-trigger"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="user-menu-mobile"
+                aria-label="Open user menu, signed in as declan@example.com"
+              >
+                <div class="avatar" aria-label="Profile avatar">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
+                       alt="Declan Shanaghy's profile photo" />
+                </div>
+                <!-- Email hidden on mobile — display:none below 640px -->
+                <span class="profile-email mobile-email-hidden">declan@example.com</span>
+                <span class="dropdown-caret" aria-hidden="true">▾</span>
+              </button>
+            </div>
+
+          </div><!-- /.topbar -->
+        </div><!-- /.mobile-frame -->
+      </div>
+
+      <div class="scenario-col" style="max-width:400px;">
+        <div class="col-label">Mobile rules</div>
+        <p class="note">
+          Below 640px (Tailwind sm breakpoint):<br/>
+          • Email span: <code>display: none</code> (Tailwind: <code>hidden sm:block</code>)<br/>
+          • Caret ▾ remains visible<br/>
+          • Avatar stays 32px visual / 44px touch target<br/>
+          • Brand wordmark may wrap to two lines — acceptable<br/>
+          • Trigger aria-label includes email so screen readers announce identity even when email is visually hidden
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 5 — Mobile (375px), dropdown OPEN
+       Dropdown shows full name + email — only place on mobile
+       where the user can confirm their signed-in email address.
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 5 — Mobile 375px · Dropdown open · Email visible inside dropdown</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">375px frame</div>
+        <div class="mobile-frame" style="position: relative;">
+          <div class="topbar" role="banner" style="position: relative;">
+
+            <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
+              <span class="brand-name">ᛟ Fenrir Ledger</span>
+              <span class="brand-sub">Credit Card Tracker</span>
+            </button>
+
+            <div class="topbar-user">
+              <button
+                class="profile-trigger"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded="true"
+                aria-controls="user-menu-mobile-open"
+                aria-label="Open user menu, signed in as declan@example.com"
+              >
+                <div class="avatar" aria-label="Profile avatar">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
+                       alt="Declan Shanaghy's profile photo" />
+                </div>
+                <span class="profile-email mobile-email-hidden">declan@example.com</span>
+                <span class="dropdown-caret" aria-hidden="true">▾</span>
+              </button>
+            </div>
+
+            <!-- Dropdown — same structure as desktop, right-anchored -->
+            <!--
+              On mobile the dropdown width is constrained to not overflow the 375px frame.
+              max-width: calc(100vw - 32px) in implementation.
+              Positioned absolute, right: 0 relative to .topbar.
+            -->
+            <div id="user-menu-mobile-open" class="profile-dropdown" role="menu" aria-label="User menu"
+                 style="right: 0; width: 220px;">
+
+              <div class="dropdown-profile" aria-hidden="true">
+                <div class="dropdown-avatar">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
+                       alt="" />
+                </div>
+                <div class="dropdown-identity">
+                  <div class="dropdown-name">Declan Shanaghy</div>
+                  <!-- Email always visible inside dropdown — this is how mobile users see their email -->
+                  <div class="dropdown-email">declan@example.com</div>
+                </div>
+              </div>
+
+              <div class="dropdown-rule" aria-hidden="true"></div>
+
+              <button class="dropdown-signout" type="button" role="menuitem">
+                Sign Out
+              </button>
+
+            </div><!-- /.profile-dropdown -->
+
+          </div><!-- /.topbar -->
+        </div><!-- /.mobile-frame -->
+      </div>
+
+      <div class="scenario-col" style="max-width:400px;">
+        <div class="col-label">Mobile dropdown rules</div>
+        <p class="note">
+          Mobile dropdown width: <code>max-width: calc(100vw - 32px)</code> — prevents overflow at 375px.<br/>
+          Right-anchored: <code>right: 0</code> relative to .topbar.<br/>
+          Email is always shown in the dropdown profile block — this is the mobile user's only visual confirmation of their signed-in address.<br/>
+          Sign Out button has a minimum 44px touch target height.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       INTERACTION SPECIFICATION
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Interaction Specification — Profile Dropdown</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1;">
+
+      <p style="font-weight:bold; margin-bottom:8px;">Trigger</p>
+      <p style="margin-bottom:12px;">Click or tap on the profile trigger button (avatar + email row on desktop; avatar only on mobile). Keyboard: Enter or Space while the trigger is focused.</p>
+
+      <p style="font-weight:bold; margin-bottom:8px;">Open behavior</p>
+      <ul style="padding-left:18px; display:flex; flex-direction:column; gap:4px; margin-bottom:12px; font-size:12px;">
+        <li>Dropdown appears below the topbar, right-anchored.</li>
+        <li><code>aria-expanded</code> on trigger changes to <code>true</code>.</li>
+        <li>Focus moves to the Sign Out button (first and only menu item).</li>
+        <li>An invisible backdrop covers the page behind the dropdown — click on backdrop closes.</li>
+        <li>Backdrop z-index sits between header (100) and the dropdown — do not use a full-screen opaque backdrop; the user should see the page behind.</li>
+      </ul>
+
+      <p style="font-weight:bold; margin-bottom:8px;">Close behavior</p>
+      <ul style="padding-left:18px; display:flex; flex-direction:column; gap:4px; margin-bottom:12px; font-size:12px;">
+        <li>Escape key: closes dropdown, focus returns to trigger.</li>
+        <li>Click / tap outside the dropdown: closes dropdown.</li>
+        <li>Tab past the last menu item: closes dropdown (no focus trap — user moves on).</li>
+        <li>Clicking Sign Out: signs the user out — dropdown closes as part of navigation away.</li>
+      </ul>
+
+      <p style="font-weight:bold; margin-bottom:8px;">Sign Out action</p>
+      <ul style="padding-left:18px; display:flex; flex-direction:column; gap:4px; margin-bottom:0; font-size:12px;">
+        <li>Calls <code>signOut({ callbackUrl: "/api/auth/signin" })</code>.</li>
+        <li>No confirmation dialog — the action is immediate and intentional.</li>
+        <li>Session cookie is cleared server-side. Redirect to sign-in page.</li>
+        <li>Navigating back to "/" while signed out redirects to sign-in (protected route).</li>
+      </ul>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ACCESSIBILITY SUMMARY
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Accessibility Requirements — Non-Negotiable (WCAG 2.1 AA)</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size:12px;">
+      <table style="border-collapse:collapse; width:100%;">
+        <thead>
+          <tr style="border-bottom:1px solid;">
+            <th style="text-align:left; padding:6px 8px;">Element</th>
+            <th style="text-align:left; padding:6px 8px;">Requirement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Brand wordmark button</td>
+            <td style="padding:6px 8px;"><code>aria-label="About Fenrir Ledger"</code></td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Profile trigger button</td>
+            <td style="padding:6px 8px;"><code>aria-haspopup="true"</code>, <code>aria-expanded="true|false"</code>, <code>aria-controls="{menu-id}"</code>. On mobile, <code>aria-label</code> includes email address (email is visually hidden).</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Avatar with picture</td>
+            <td style="padding:6px 8px;"><code>&lt;img alt="{name}'s profile photo" /&gt;</code></td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Avatar without picture (rune)</td>
+            <td style="padding:6px 8px;">Container: <code>aria-label="Profile avatar"</code>. Rune glyph: <code>aria-hidden="true"</code>.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Profile dropdown</td>
+            <td style="padding:6px 8px;"><code>role="menu"</code>, <code>aria-label="User menu"</code>, <code>id</code> bound to trigger's <code>aria-controls</code>.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Sign Out button</td>
+            <td style="padding:6px 8px;"><code>role="menuitem"</code>. Min 44×44px touch target.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Profile info block in dropdown</td>
+            <td style="padding:6px 8px;"><code>aria-hidden="true"</code> — name and email are surfaced via trigger <code>aria-label</code> on mobile.</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px;">Keyboard</td>
+            <td style="padding:6px 8px;">Escape closes dropdown, focus returns to trigger. Tab moves focus out of menu (closes). Enter/Space on trigger toggles.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="note" style="text-align:center; padding-bottom: 24px;">
+    Wireframe — topbar.html · Fenrir Ledger · z-index 100 (header layer) · No theme styling applied
+  </p>
+
+</div><!-- /.page -->
+
+</body>
+</html>

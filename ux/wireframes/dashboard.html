@@ -11,16 +11,86 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: sans-serif; font-size: 14px; min-height: 100vh; }
 
+    /*
+     * App shell: 3 rows × 2 columns.
+     *
+     *   row 1 (auto):  TopBar — spans both columns (full width, sticky)
+     *   row 2 (1fr):   Sidebar | Content
+     *   row 3 (auto):  [gap] | Footer
+     *
+     * TopBar was added in Sprint 3.1 (OIDC auth). It carries the brand
+     * wordmark (About trigger) on the left and the OIDC profile cluster
+     * (avatar + email + dropdown) on the right.
+     * See: ux/wireframes/topbar.html for the full TopBar component spec.
+     */
     .app-shell {
       display: grid;
       grid-template-columns: 272px 1fr;
-      grid-template-rows: 1fr auto;
+      grid-template-rows: auto 1fr auto;
       min-height: 100vh;
     }
 
+    /* ── TopBar ───────────────────────────────────────────────────────── */
+    /*
+     * Spans both columns (full width). Sticky at z-index 100.
+     * h-14 = 56px. border-bottom separates from content below.
+     * Full specification: ux/wireframes/topbar.html
+     */
+    .topbar {
+      grid-column: 1 / 3;
+      grid-row: 1;
+      height: 56px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 0;
+      text-align: left;
+    }
+    .topbar-brand .brand-name { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; }
+    .topbar-brand .brand-sub  { font-size: 11px; font-style: italic; }
+    .topbar-user { display: flex; align-items: center; gap: 10px; }
+    .profile-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: 1px solid;
+      cursor: pointer;
+      padding: 6px 10px;
+      min-height: 44px;
+    }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border: 1px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      font-size: 14px;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .profile-email { font-size: 12px; white-space: nowrap; }
+    .dropdown-caret { font-size: 10px; }
+
     /* ── Sidebar ─────────────────────────────────────────────────────── */
     .sidebar {
-      grid-row: 1 / 3;
+      grid-row: 2 / 4;
       border-right: 1px solid;
       padding: 16px;
       display: flex;
@@ -84,6 +154,7 @@
     /* ── Footer ──────────────────────────────────────────────────────── */
     .app-footer {
       grid-column: 2;
+      grid-row: 3;
       border-top: 1px solid;
       padding: 12px 24px;
       font-size: 12px;
@@ -98,6 +169,52 @@
 <body>
 
 <div class="app-shell">
+
+  <!-- ── TopBar (full width, sticky, row 1) ────────────────────────── -->
+  <!--
+    Spans both columns. Carries brand wordmark (About trigger) left
+    and OIDC profile cluster right (avatar + email + dropdown).
+    Full component spec: ux/wireframes/topbar.html
+    Implementation: development/src/src/components/layout/TopBar.tsx
+    z-index: 100 (header layer — see wireframes.md z-index table)
+    Sprint 3.1: wired to Auth.js v5 session via useSession()
+  -->
+  <header class="topbar" role="banner">
+
+    <!-- Left: brand wordmark — click opens About modal -->
+    <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
+      <span class="brand-name">ᛟ Fenrir Ledger</span>
+      <span class="brand-sub">Credit Card Tracker</span>
+    </button>
+
+    <!-- Right: OIDC profile cluster -->
+    <div class="topbar-user">
+      <!--
+        Profile trigger: avatar (32px) + email (desktop, ≥640px) + caret.
+        Email hidden below 640px (Tailwind: hidden sm:block).
+        Clicking opens the profile dropdown (see topbar.html scenarios 2 & 5).
+        aria-label on mobile includes email so screen readers announce identity.
+        Full dropdown spec: ux/wireframes/topbar.html
+      -->
+      <button
+        class="profile-trigger"
+        type="button"
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-label="Open user menu, signed in as user@example.com"
+      >
+        <!-- Avatar: <img> if session.user.picture available; ᛟ rune fallback otherwise -->
+        <div class="avatar" aria-label="Profile avatar">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
+               alt="User's profile photo" />
+        </div>
+        <!-- Email — desktop only (hidden sm:hidden in Tailwind below sm breakpoint) -->
+        <span class="profile-email">user@example.com</span>
+        <span class="dropdown-caret" aria-hidden="true">▾</span>
+      </button>
+    </div>
+
+  </header><!-- /.topbar -->
 
   <!-- ── Sidebar (272px fixed, collapsible to icon rail) ──────────── -->
   <aside class="sidebar">

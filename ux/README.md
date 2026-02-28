@@ -28,6 +28,7 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [easter-eggs.md](easter-eggs.md) — All hidden references: Gleipnir Hunt, Konami Howl, Loki Mode, console ASCII, and more.
 - [interactions.md](interactions.md) — Animation philosophy, saga-enter stagger, status ring, Howl panel, easter egg keyframes.
 - [wireframes.md](wireframes.md) — Layout specs, component hierarchy, responsive breakpoints, z-index table, wireframe index.
+- [wireframes/topbar.html](wireframes/topbar.html) — TopBar: OIDC profile display — avatar, email, dropdown, Sign Out; 5 scenarios (desktop/mobile, picture/rune fallback).
 - [easter-egg-modal.md](easter-egg-modal.md) — Shared modal template for all easter egg discovery moments.
 - [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) — Mermaid diagram conventions for all pack members.
 - [.sync-report.md](.sync-report.md) — Latest doc-sync run report: files changed, verified, and root README hints.

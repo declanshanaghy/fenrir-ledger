@@ -15,7 +15,8 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 | View | File | Description |
 |------|------|-------------|
-| Dashboard — The Ledger of Fates | [wireframes/dashboard.html](wireframes/dashboard.html) | Sidebar shell, card grid, summary bar, footer |
+| TopBar — OIDC Profile Display | [wireframes/topbar.html](wireframes/topbar.html) | Global sticky header: brand wordmark left, OIDC profile cluster right (avatar + email + dropdown); 5 scenarios: desktop closed/open, rune fallback, mobile closed/open |
+| Dashboard — The Ledger of Fates | [wireframes/dashboard.html](wireframes/dashboard.html) | TopBar (row 1) + sidebar shell + card grid + summary bar + footer |
 | Add / Edit Card — Forge a Chain | [wireframes/add-card.html](wireframes/add-card.html) | Multi-section form: identity, fee, welcome bonus, notes |
 | Valhalla — Hall of the Honored Dead | [wireframes/valhalla.html](wireframes/valhalla.html) | Tombstone cards, filter bar, empty state |
 | The Howl Panel | [wireframes/howl-panel.html](wireframes/howl-panel.html) | Alert sidebar: active and empty variants |
@@ -30,11 +31,38 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## TopBar — OIDC Profile Display
+
+[→ topbar.html](wireframes/topbar.html)
+
+Added Sprint 3.1. Full-width sticky header that spans both the sidebar and content columns. The single shared header replaces the previous per-page content header for brand identity purposes.
+
+Key layout decisions:
+- Height: `56px` (`h-14`). Sticky, `z-index: 100` (header layer).
+- Grid placement: `grid-column: 1 / 3; grid-row: 1` — spans the full width above sidebar and content.
+- **Left:** Brand wordmark (`ᛟ FENRIR LEDGER` + italic subtitle). The entire wordmark is a `<button>` that opens the About modal — this is the About/help trigger. No separate `?` button.
+- **Right:** OIDC profile cluster — one `<button>` containing: avatar circle (32px) + email (desktop) + caret ▾.
+- **Avatar:** `<img>` when `session.user.picture` is available; ᛟ rune glyph (Noto Sans Runic, gold token) as fallback when picture is null.
+- **Email source:** `session.user.email` from the OIDC id_token. Shown inline in the header on desktop (≥640px); hidden on mobile (the dropdown is the only mobile surface for the email).
+- **Profile dropdown:** triggered by clicking the profile cluster button. Contains: 40px avatar + name + email (always shown regardless of viewport) + hairline rule + Sign Out button. Positioned `absolute, right: 0, top: calc(100% + 4px)`, z-index 100.
+- **Sign Out:** moves from the persistent header into the profile dropdown. Calls `signOut({ callbackUrl: "/api/auth/signin" })`. No confirmation dialog.
+- **Mobile (< 640px):** email hidden in the header bar. Trigger `aria-label` includes the email so screen readers still announce identity. Dropdown width: `max-width: calc(100vw - 32px)`.
+
+**Wireframe scenarios:**
+1. Desktop — dropdown closed, picture URL present
+2. Desktop — dropdown open
+3. Desktop — dropdown closed, rune fallback (no picture)
+4. Mobile 375px — dropdown closed (avatar only)
+5. Mobile 375px — dropdown open (email visible inside dropdown)
+
+---
+
 ## Dashboard — The Ledger of Fates
 
 [→ dashboard.html](wireframes/dashboard.html)
 
 Key layout decisions:
+- **TopBar row added (Sprint 3.1):** App shell now has 3 rows — `auto` (TopBar) · `1fr` (sidebar + content) · `auto` (footer). TopBar spans both columns.
 - Persistent left sidebar: `272px` fixed, collapses to icon-only rail
 - Logo: `ᛟ FENRIR LEDGER` + `Credit Card Tracker` subtitle
 - Active nav item highlighted (gold in implementation)
