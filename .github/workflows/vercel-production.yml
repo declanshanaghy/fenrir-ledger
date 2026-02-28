@@ -1,8 +1,14 @@
-name: Deploy to Vercel
+name: Deploy to Vercel — Production
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'development/src/**'
+      - 'static/**'
+      - 'sessions/**'
+      - '.github/workflows/**'
+      - 'vercel.json'
   workflow_dispatch:
 
 env:
@@ -27,9 +33,9 @@ jobs:
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Copy static site into Next.js public/static/
+      - name: Copy static site into Next.js public/
         run: |
-          rm -f development/src/public/static development/src/public/sessions
+          rm -rf development/src/public/static development/src/public/sessions
           mkdir -p development/src/public/static development/src/public/sessions
           cp -r static/. development/src/public/static/
           cp -r sessions/. development/src/public/sessions/
