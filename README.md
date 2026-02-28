@@ -149,6 +149,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 *The trickster tests. His verdicts are final.*
 
 - [quality/README.md](quality/README.md) — Index of all QA artifacts and test execution guide
+- [quality/story-3.1-verdict.md](quality/story-3.1-verdict.md) — QA verdict: Story 3.1 (Google OIDC Auth + per-household localStorage) — READY TO SHIP ✓ (0 defects)
 - [quality/story-3.5-verdict.md](quality/story-3.5-verdict.md) — QA verdict: Story 3.5 (Valhalla Archive + Close Card) — HOLD (DEF-001: wrong gleipnir fragment)
 - [quality/story-3.3-verdict.md](quality/story-3.3-verdict.md) — QA verdict: Story 3.3 (Framer Motion + Card Animations) — SHIP ✓ (0 defects)
 - [quality/story-3.2-verdict.md](quality/story-3.2-verdict.md) — QA verdict: Story 3.2 (Norse Copy Pass) — HOLD for copy fixes (3 tooltip defects)
@@ -185,6 +186,20 @@ cd development/src && npm run dev
 
 # Open http://localhost:9999
 ```
+
+### Sprint 3 — Story 3.1 — Google OIDC Auth (Auth.js v5 + per-household localStorage)
+
+- [src/auth.ts](development/src/src/auth.ts) — Auth.js v5 configuration: Google provider, JWT strategy, householdId from sub claim
+- [src/middleware.ts](development/src/src/middleware.ts) — Route protection: /, /cards/*, /valhalla require auth; /api/auth/* is public
+- [src/app/api/auth/[...nextauth]/route.ts](development/src/src/app/api/auth/[...nextauth]/route.ts) — Auth.js route handler
+- [next-auth.d.ts](development/src/next-auth.d.ts) — TypeScript module augmentations for Session, User, JWT types
+- [src/components/layout/AuthProvider.tsx](development/src/src/components/layout/AuthProvider.tsx) — SessionProvider wrapper
+- [src/lib/storage.ts](development/src/src/lib/storage.ts) — Refactored to per-household keys: fenrir_ledger:{householdId}:cards
+- [src/lib/constants.ts](development/src/src/lib/constants.ts) — DEFAULT_HOUSEHOLD_ID removed/deprecated
+- [.env.example](development/src/.env.example) — Google OAuth + Auth.js environment variables
+- [architecture/adrs/ADR-004-oidc-auth-localStorage.md](architecture/adrs/ADR-004-oidc-auth-localStorage.md) — Decision record: Auth.js v5 choice, JWT strategy, per-household namespacing
+- [implementation-plan.md](development/implementation-plan.md) — Story 3.1 tasks documented
+- [qa-handoff.md](development/qa-handoff.md) — Story 3.1 QA handoff with full test matrix
 
 ### Sprint 3 — Story 3.5 — Valhalla Archive + Close Card Action
 
