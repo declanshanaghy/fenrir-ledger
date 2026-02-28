@@ -8,7 +8,25 @@ This directory contains all QA artifacts: test plans, test cases, test scripts, 
 
 ---
 
-## Current Sprint Deliverables (Sprint 2)
+## Current Sprint Deliverables (Sprint 3)
+
+### Story 3.1 — Google OIDC Auth (Auth.js v5 + per-household localStorage)
+
+**Status:** READY TO SHIP ✓ | 0 Defects Found
+
+#### Quality Report
+- **[story-3.1-verdict.md](story-3.1-verdict.md)** — 436-line comprehensive code review
+  - Auth.js v5 configuration, JWT strategy, `householdId` derivation from Google `sub` claim
+  - Per-household localStorage key namespacing (e.g., `fenrir_ledger:{householdId}:cards`)
+  - Route protection middleware, session threading through all pages
+  - Security analysis, TypeScript type augmentations, .env.example safety
+  - Build verification (PASS), regression check (no issues)
+  - 18 review sections covering every critical component
+  - Final verdict: READY TO SHIP with 0 defects
+
+---
+
+## Previous Sprint Deliverables (Sprint 2)
 
 ### Easter Eggs Test Suite
 
