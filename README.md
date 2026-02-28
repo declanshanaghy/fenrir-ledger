@@ -183,6 +183,16 @@ cd development/src && npm run dev
 # Open http://localhost:9999
 ```
 
+### Sprint 3 — Story 3.2 — Norse Copy Pass
+
+- [realm-utils.ts](development/src/src/lib/realm-utils.ts) — `getRealmLabel()` and `getRealmDescription()`: authoritative CardStatus → Norse realm mapping
+- [StatusBadge.tsx](development/src/src/components/dashboard/StatusBadge.tsx) — tooltips now use `getRealmDescription()` directly
+- [EmptyState.tsx](development/src/src/components/dashboard/EmptyState.tsx) — Gleipnir empty state copy applied
+- [implementation-plan.md](development/implementation-plan.md) — Story 3.2 tasks documented
+- [qa-handoff.md](development/qa-handoff.md) — Story 3.2 QA handoff with full test matrix
+
+---
+
 ### Sprint 2 — Forged Artifacts
 
 **Easter Eggs Implemented**
