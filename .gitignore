@@ -31,6 +31,8 @@ Thumbs.db
 
 # Testing
 coverage/
+test-results/
+playwright-report/
 .playwright-mcp/
 .vercel
 
