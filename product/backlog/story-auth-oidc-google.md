@@ -59,17 +59,21 @@ Note: cross-device sync is explicitly deferred until GA. localStorage remains th
 
 ### In Scope
 
-- Google OIDC sign-in / sign-out via NextAuth.js (or equivalent Next.js-compatible auth library)
-- Server-side session management (JWT or database session — see Open Questions)
-- Household creation on first sign-in (replace `"default-household"` with a real UUID scoped to
-  the authenticated user's Google `sub` claim)
-- All card data reads and writes scoped to the authenticated household — unauthenticated users see
-  a sign-in gate, not the dashboard
+- Google OIDC sign-in via Authorization Code + PKCE (public client — no client secret)
+- Tokens (`id_token`, `access_token`, `refresh_token`) stored in localStorage under the
+  key `fenrir:auth`; no server-side session, no cookies
+- `id_token` claims (`sub`, `name`, `email`, `picture`) used to derive and display user
+  identity throughout the app
+- Household creation on first sign-in (replace `"default-household"` with a real UUID
+  derived from the Google `sub` claim)
+- All card data reads and writes scoped to the authenticated household — unauthenticated
+  users see a sign-in gate, not the dashboard
 - Protected routes: `/`, `/cards/new`, `/cards/[id]/edit` require authentication
-- Sign-out flow clears the session and redirects to a landing/sign-in page
+- Sign-out flow clears `fenrir:auth` from localStorage and redirects to a landing/sign-in
+  page
 - Mobile-responsive sign-in page (minimum 375 px)
-- `.env.example` updated with required OIDC environment variable placeholders
-  (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`)
+- `.env.example` updated with required OIDC environment variable placeholder
+  (`NEXT_PUBLIC_GOOGLE_CLIENT_ID`)
 
 ### Out of Scope (Iteration 1)
 
@@ -87,7 +91,7 @@ Note: cross-device sync is explicitly deferred until GA. localStorage remains th
 
 | Iteration | Scope |
 |-----------|-------|
-| Iteration 2 | Microsoft (Entra / Azure AD) OIDC provider — same NextAuth adapter pattern |
+| Iteration 2 | Microsoft (Entra / Azure AD) OIDC provider — same PKCE public-client pattern |
 | Iteration 3 | Generic OIDC provider support (GitHub, Apple, etc.) — "Sign in with any OIDC" |
 | Iteration 4 | Household sharing — invite a partner by email; shared card portfolio |
 | Iteration 5 | localStorage migration wizard — offer to import Sprint-1-era local data on first sign-in |
@@ -115,8 +119,8 @@ This is P1-Critical for three compounding reasons:
 |------------|--------|-------|
 | `Household` entity with `id` field | Done (Sprint 1) | `development/src/src/lib/types.ts` |
 | `householdId` on every `Card` | Done (Sprint 1) | All card storage already scoped |
-| Vercel hosting | Done (Sprint 2) | Vercel deployment live; environment variable injection for OIDC secrets needs verification |
-| `.env.example` pattern | Done (Sprint 1) | Already in place; needs new OIDC var slots |
+| Vercel hosting | Done (Sprint 2) | Vercel deployment live; `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is the only env var required |
+| `.env.example` pattern | Done (Sprint 1) | Already in place; needs `NEXT_PUBLIC_GOOGLE_CLIENT_ID` slot added |
 
 localStorage remains the data layer. The household ID derived from the Google `sub` claim is used
 as the localStorage namespace key, replacing the hardcoded `"default-household"` string. No
@@ -128,53 +132,56 @@ backend data store is introduced in this story.
 
 - [ ] Unauthenticated users navigating to `/` are redirected to a sign-in page
 - [ ] Sign-in page renders correctly on mobile (375 px min width) and desktop
-- [ ] "Sign in with Google" button initiates the Google OIDC flow
+- [ ] "Sign in with Google" button initiates the Google OIDC Authorization Code + PKCE flow
 - [ ] After successful Google auth, user is redirected to the dashboard (`/`)
-- [ ] On first sign-in, a `householdId` is derived from the user's Google `sub` claim and stored
-      in the session; subsequent sign-ins reuse the same value
-- [ ] The localStorage namespace key is the authenticated `householdId` — not `"default-household"`
-- [ ] All card reads and writes in `storage.ts` use the session `householdId` as the namespace
-- [ ] "Sign out" clears the session and redirects to the sign-in page
+- [ ] On first sign-in, a `householdId` is derived from the user's Google `sub` claim; subsequent
+      sign-ins reuse the same value
+- [ ] Tokens are stored in localStorage under the key `fenrir:auth` — no cookies are set
+- [ ] The localStorage namespace key for card data is the authenticated `householdId`, not
+      `"default-household"`
+- [ ] All card reads and writes in `storage.ts` use the `householdId` from the decoded id_token
+- [ ] User's `name` and `picture` claims from the id_token are accessible to the header component
+      for display
+- [ ] "Sign out" clears `fenrir:auth` from localStorage and redirects to the sign-in page
 - [ ] After sign-out, navigating to `/` redirects back to the sign-in page (no stale session)
-- [ ] `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` are
-      documented in `.env.example` with placeholder values and comments
-- [ ] No OIDC credentials or secrets appear in any committed file
+- [ ] `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is documented in `.env.example` with a placeholder and comment
+- [ ] No client secret or private key appears in any committed file
 - [ ] `npm run build` passes with zero errors post-implementation
 - [ ] TypeScript strict mode: zero new type errors introduced
-- [ ] Session token is not exposed in client-side JavaScript (HttpOnly cookie or equivalent)
 
 ---
 
 ## Open Questions for Principal Engineer
 
-1. **Auth library choice**: Auth.js v5 (`next-auth@beta`) is the product-preferred choice for
-   Next.js App Router. Are there constraints (bundle size, license, Vercel compatibility) that
-   favor an alternative (Clerk, Lucia, custom)?
+1. **PKCE implementation**: Confirm the chosen approach for executing Authorization Code + PKCE
+   from a Next.js client (no server-side callback route). Options include a lightweight OIDC
+   client library (e.g. `oidc-client-ts`) or a hand-rolled PKCE flow. Product preference: use a
+   maintained library to handle code verifier / challenge generation and token exchange.
 
-2. **Session strategy**: JWT (stateless) is preferred — it keeps `householdId` available on
-   every request without a round-trip. HttpOnly cookie is non-negotiable. Confirm this works
-   cleanly when the JWT payload only needs `{ sub, householdId, name, email }`.
+2. **localStorage key structure under `fenrir:auth`**: Confirm the exact shape of the stored
+   object. Product preference: `{ id_token, access_token, refresh_token, expires_at }`. The
+   `householdId` is derived at runtime from the decoded `id_token.sub` — it is not stored
+   separately.
 
-3. **localStorage namespace key**: Confirm the scheme for keying localStorage to the
-   authenticated user. Product preference: use the Google `sub` claim (a stable, opaque UUID-like
-   string) as the `householdId`. Existing keys under `"default-household"` are orphaned — not
-   migrated automatically (that is Iteration 5).
+3. **localStorage namespace key for card data**: Product preference: use the Google `sub` claim
+   (stable, opaque) as the `householdId`. Existing keys under `"default-household"` are orphaned
+   — not migrated automatically (that is Iteration 5).
 
 4. **localStorage migration**: Existing Sprint-1 local data lives under `"default-household"`.
-   Product preference is to defer migration to Iteration 5. Confirm the migration hook does not
-   need to be wired now vs. later — `storage.ts` orphaned keys under the old namespace should
-   simply remain inert.
+   Product preference is to defer migration to Iteration 5. Confirm `storage.ts` orphaned keys
+   under the old namespace simply remain inert — no cleanup required in this story.
 
 5. **Household naming on first sign-in**: Product preference: `"{Google display name}'s
-   Household"` derived from the Google `name` claim. Editable in a future sprint.
+   Household"` derived from the `name` claim in the id_token. Editable in a future sprint.
 
-6. **Vercel environment variables**: `NEXTAUTH_URL` must match the deployment URL. How is this
-   handled across preview deployments vs. production? Auth.js v5 supports `AUTH_TRUST_HOST=1`
-   for Vercel preview environments — confirm this is the right pattern.
+6. **Token refresh**: `access_token` expiry is typically 1 hour for Google. Confirm whether the
+   PKCE flow includes silent refresh using `refresh_token`, or whether the user is asked to
+   re-authenticate after expiry. Product preference: silent refresh in the background; fall back
+   to re-authentication only if refresh fails.
 
 7. **Google OAuth and preview deployments**: Google OAuth redirect URIs must be pre-registered.
    Dynamic Vercel preview URLs cannot be pre-registered. Product preference: option (a) — preview
-   deployments cannot run Google OAuth; production OIDC works; preview tests mock or skip auth.
+   deployments cannot run Google OAuth; production OIDC only; preview tests mock or skip auth.
    Confirm or propose an alternative before Sprint 3 starts.
 
 ---
@@ -195,16 +202,23 @@ Suggested sign-in page copy direction (kenning style, per [`copywriting.md`](../
 
 ## Handoff Notes for Principal Engineer
 
+- **Non-negotiable**: Authorization Code + PKCE public client — no client secret is used or
+  stored anywhere in the codebase or environment.
+- **Non-negotiable**: Tokens stored in localStorage under `fenrir:auth` — no server-side session,
+  no cookies.
 - **Non-negotiable**: `Household.id` must become a real UUID derived from the Google `sub` claim.
   The hardcoded `"default-household"` string is retired on this story.
-- **Non-negotiable**: Session token must be HttpOnly (not readable by client-side JS).
-- **Non-negotiable**: localStorage remains the data layer. No backend database is introduced.
-- **Non-negotiable**: localStorage namespace key switches from `"default-household"` to the
-  authenticated `householdId`. Data under the old key is orphaned (not migrated — Iteration 5).
-- **Acceptable trade-off**: JWT vs. database sessions — Principal Engineer decides; JWT is
-  preferred since it keeps `householdId` in-token without a round-trip.
-- **Acceptable trade-off**: Exact localStorage key scheme — Principal Engineer proposes a
-  namespacing pattern; Freya approves before implementation begins.
+- **Non-negotiable**: localStorage remains the card data layer. No backend database is introduced.
+- **Non-negotiable**: localStorage namespace key for card data switches from `"default-household"`
+  to the authenticated `householdId`. Data under the old key is orphaned (not migrated —
+  Iteration 5).
+- **Non-negotiable**: `id_token` claims `name`, `email`, and `picture` must be accessible to the
+  site header component — these drive the signed-in identity display (see Product Design Brief,
+  "Signed-In User Identity — Header Profile").
+- **Acceptable trade-off**: Choice of PKCE client library — Principal Engineer selects; product
+  requirement is that it handles code verifier / challenge generation and token exchange correctly.
+- **Acceptable trade-off**: Silent refresh strategy — Principal Engineer proposes; product
+  preference is background refresh, fall back to re-auth on failure.
 - **Deferred by product**: localStorage migration wizard — tracked as Iteration 5 in the backlog.
 - **Deferred by product**: Remote storage, multi-device sync, and any database — GA only.
 
@@ -212,8 +226,8 @@ Suggested sign-in page copy direction (kenning style, per [`copywriting.md`](../
 
 ## Pre-Sprint 3 Decisions Needed
 
-1. **Auth library confirmed**: Auth.js v5 (`next-auth@beta`) — awaiting Principal Engineer
-   feasibility check on App Router compatibility and Vercel preview environment handling.
+1. **PKCE client library confirmed**: Principal Engineer selects a PKCE/OIDC library (e.g.
+   `oidc-client-ts`) — awaiting feasibility check before this story enters "Ready".
 2. **Luna produces sign-in page wireframe** — gates the auth story entering "Ready".
 3. **Google OAuth and preview deployments**: Product preference is option (a) — preview
    deployments cannot run Google OAuth; production OIDC only. Confirm or counter-propose.
