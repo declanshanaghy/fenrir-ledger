@@ -254,10 +254,30 @@
       letter-spacing: 0.14em;
       line-height: 2;
     }
+    /* ── Top nav ── */
+    .top-nav {
+      display: flex;
+      justify-content: flex-end;
+      padding: 24px 0 0;
+    }
+    .app-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+    .app-link:hover { color: var(--gold-bright); }
   </style>
 </head>
 <body>
 <div class="page">
+
+  <!-- ── Top nav: link to the live app ─────────────────────────────── -->
+  <nav class="top-nav" aria-label="Open the app">
+    <a href="/" class="app-link" data-testid="open-ledger-link">ᛟ Open the Ledger →</a>
+  </nav>
 
   <!-- ── Header ─────────────────────────────────────────────────────── -->
   <header class="session-header">
@@ -270,7 +290,7 @@
   </header>
 
   <!-- ── Marketing site link ────────────────────────────────────────── -->
-  <a class="marketing-banner" href="https://fenrir-ledger.vercel.app/static" target="_blank" rel="noopener">
+  <a class="marketing-banner" href="../static/" target="_blank" rel="noopener">
     <span class="marketing-rune">ᚱ</span>
     <div>
       <span class="marketing-title">Visit the Marketing Site →</span>
@@ -285,7 +305,15 @@
 
     <!-- Sessions are prepended here by the export-wolf skill, newest first -->
 
-    <a class="session-card" href="https://fenrir-ledger.vercel.app/sessions/breaking-the-gleipnir.html">
+    <a class="session-card" href="./the-wolf-signs-in-valhalla-opens.html">
+      <span class="card-rune">ᛁ</span>
+      <p class="card-title">The Wolf Signs In &amp; Valhalla Opens</p>
+      <p class="card-meta">2026-02-27 · XIV acts · 38 files</p>
+      <p class="card-excerpt">Sprint 3 completes in full — the wolf gains a Google identity, the hall of the fallen opens its gates, and cards learn to dance.</p>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <a class="session-card" href="./breaking-the-gleipnir.html">
       <span class="card-rune">ᚲ</span>
       <p class="card-title">Breaking the Gleipnir</p>
       <p class="card-meta">2026-02-26 · XI acts · 26 files</p>
@@ -293,14 +321,15 @@
       <span class="card-arrow">→</span>
     </a>
 
-    <a class="session-card" href="https://fenrir-ledger.vercel.app/sessions/vercel-wrangling.html">
+    <a class="session-card" href="./vercel-wrangling.html">
       <span class="card-rune">ᛞ</span>
       <p class="card-title">Vercel Wrangling &amp; the README Forge</p>
       <p class="card-meta">2026-02-26 · XI acts · 5 files</p>
       <p class="card-excerpt">The wolf tames the deployment pipeline, hunts down broken image paths, and carves three gates into the README.</p>
+      <span class="card-arrow">→</span>
     </a>
 
-    <a class="session-card" href="https://fenrir-ledger.vercel.app/sessions/cat-easter-egg.html">
+    <a class="session-card" href="./cat-easter-egg.html">
       <span class="card-rune">ᚲ</span>
       <p class="card-title">Cat's Footfall &amp; The Silent Sync</p>
       <p class="card-meta">2026-02-26 · IV acts · 4 files</p>
@@ -308,7 +337,7 @@
       <span class="card-arrow">→</span>
     </a>
 
-    <a class="session-card" href="https://fenrir-ledger.vercel.app/sessions/wireframes-modals.html">
+    <a class="session-card" href="./wireframes-modals.html">
       <span class="card-rune">ᚹ</span>
       <p class="card-title">Wireframes &amp; Modals</p>
       <p class="card-meta">2026-02-25 · VI acts · 6 files</p>
