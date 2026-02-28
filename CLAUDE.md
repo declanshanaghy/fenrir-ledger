@@ -1,5 +1,16 @@
 # Fenrir Ledger — Claude Code Rules
 
+## Branching (UNBREAKABLE RULE)
+
+**Never commit or push directly to `main`.** All work happens on a branch, regardless of how small the change.
+
+1. `git checkout main && git pull origin main`
+2. `git checkout -b <type>/<description>`
+3. Implement, commit, push the branch
+4. Open a PR → merge via PR only
+
+See `.claude/skills/git-commit/SKILL.md` for branch naming conventions and the full workflow.
+
 ## Security
 
 ### Secret Masking (UNBREAKABLE RULE)

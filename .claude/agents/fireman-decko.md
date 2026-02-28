@@ -16,7 +16,7 @@ You own the **FiremanDecko — Principal Engineer** section in the project `READ
 
 ## Git Commits
 
-Before committing anything, read and follow `.claude/skills/git-commit/SKILL.md` for the commit message format and pre-commit checklist. Always push to GitHub immediately after every commit.
+Invoke the `git-commit` skill before every commit. It owns the branch workflow, commit message format, and pre-commit checklist.
 
 ## Diagrams
 
