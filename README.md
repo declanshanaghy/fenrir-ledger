@@ -251,6 +251,14 @@ cd development/src && npm run dev
 - [realm-utils.ts](development/src/src/lib/realm-utils.ts) — `getRealmLabel()` and `getRealmDescription()`: authoritative CardStatus → Norse realm mapping
 - [StatusBadge.tsx](development/src/src/components/dashboard/StatusBadge.tsx) — tooltips now use `getRealmDescription()` directly
 - [EmptyState.tsx](development/src/src/components/dashboard/EmptyState.tsx) — Gleipnir empty state copy applied
+- [SiteHeader.tsx](development/src/src/components/layout/SiteHeader.tsx) — replaced "Credit Card Tracker" tagline with atmospheric "Break free. Harvest every reward."
+- [TopBar.tsx](development/src/src/components/layout/TopBar.tsx) — same tagline replacement in top bar logo
+- [AboutModal.tsx](development/src/src/components/layout/AboutModal.tsx) — same tagline replacement in About modal logo column
+- [layout.tsx (root)](development/src/src/app/layout.tsx) — `title.default` updated to "Ledger of Fates — Fenrir Ledger" per copywriting.md
+- [app/cards/new/layout.tsx](development/src/src/app/cards/new/layout.tsx) — route segment layout sets title: "Add Card"
+- [app/cards/\[id\]/edit/layout.tsx](development/src/src/app/cards/%5Bid%5D/edit/layout.tsx) — route segment layout sets title: "Edit Card"
+- [app/valhalla/layout.tsx](development/src/src/app/valhalla/layout.tsx) — route segment layout sets title: "Valhalla"
+- [app/sign-in/layout.tsx](development/src/src/app/sign-in/layout.tsx) — route segment layout sets title: "Sign In"
 - [implementation-plan.md](development/implementation-plan.md) — Story 3.2 tasks documented
 - [qa-handoff.md](development/qa-handoff.md) — Story 3.2 QA handoff with full test matrix
 
