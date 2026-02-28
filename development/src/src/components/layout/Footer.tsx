@@ -167,8 +167,10 @@ export function Footer() {
           <span className="text-[11px] text-muted-foreground whitespace-nowrap">
             <a
               href="/static"
+              target="_blank"
+              rel="noopener noreferrer"
               className="font-heading tracking-[0.06em] uppercase font-bold text-[11px] hover:text-foreground transition-colors"
-              aria-label="Fenrir Ledger — visit the marketing site"
+              aria-label="Fenrir Ledger — visit the marketing site (opens in new tab)"
             >
               ᛟ FENRIR LEDGER
             </a>
