@@ -4,15 +4,17 @@
 **Sprint**: 3
 **Story**: 3.5 — Valhalla Archive + Close Card Action
 **Date**: 2026-02-27
-**Verdict**: **HOLD FOR FIX** (1 defect found)
+**Verdict**: **READY TO SHIP** (DEF-001 fixed and verified)
 
 ---
 
 ## Executive Summary
 
-Story 3.5 implements the Valhalla archive route (`/valhalla`) and a "Close Card" action that moves cards to a memorial hall instead of deleting them. The implementation is **functionally sound** with excellent data integrity and UI logic. However, a **single defect** has been identified in the Gleipnir Hunt easter egg layer: the wrong fragment string is embedded in the Valhalla empty state.
+Story 3.5 implements the Valhalla archive route (`/valhalla`) and a "Close Card" action that moves cards to a memorial hall instead of deleting them. The implementation is **functionally sound** with excellent data integrity and UI logic.
 
-The defect is **low-severity** (P3) but must be fixed before ship because it directly affects the Sprint 4 easter egg hunt mechanic.
+**DEF-001 has been fixed**: The Gleipnir Hunt easter egg fragment in the Valhalla empty state has been corrected from "the spittle of a bird" to "the beard of a woman", restoring proper 1:1 fragment-to-location mapping for the Sprint 4 hunt system.
+
+**Build Status**: Clean build verified. Zero TypeScript errors, zero lint errors. `/valhalla` route present and functional.
 
 ---
 
@@ -21,9 +23,10 @@ The defect is **low-severity** (P3) but must be fixed before ship because it dir
 | Category | Count |
 |----------|-------|
 | **Test Areas Audited** | 9 |
-| **Passed** | 8 |
-| **Failed** | 1 |
+| **Passed** | 9 |
+| **Failed** | 0 |
 | **Build Status** | ✓ Success |
+| **Re-verification** | ✓ DEF-001 Fixed |
 
 ---
 
@@ -97,69 +100,33 @@ The defect is **low-severity** (P3) but must be fixed before ship because it dir
 
 ## Defects Found
 
-### DEF-001: Wrong Gleipnir Fragment in Valhalla Empty State
+None. DEF-001 has been resolved.
+
+### DEF-001: Wrong Gleipnir Fragment in Valhalla Empty State — FIXED
 
 **Severity**: P3 Medium
 **Category**: Easter Eggs / Product Design
 **Type**: Data Integrity
-**Status**: Open
+**Status**: RESOLVED
 
-#### Description
+#### What Was Wrong
 
-The Valhalla empty state (when no cards have been closed) embeds the wrong Gleipnir Hunt fragment in its `aria-description` attribute.
+The Valhalla empty state originally embedded the wrong Gleipnir Hunt fragment in its `aria-description` attribute (Fragment 3: "the spittle of a bird" instead of Fragment 6: "the beard of a woman").
 
-#### Current Implementation
+#### Fix Applied
 
-`development/src/src/app/valhalla/page.tsx` line 234:
-
-```typescript
-aria-description="the spittle of a bird"
-```
-
-#### Expected Implementation
-
-Per the product design and mythology map, the Valhalla empty state should embed **Fragment 6: Beard of a Woman**.
-
-From `design/easter-eggs.md` and sprint 2 handoff (lines 271-272):
-- Fragment 1: Roots of a Mountain (GleipnirMountainRoots.tsx)
-- Fragment 2: Sound of a Cat's Footfall (GleipnirCatFootfall.tsx)
-- Fragment 3: Spittle of a Bird (GleipnirBirdSpittle.tsx) ← Current (WRONG)
-- Fragment 4: Sinews of a Bear (GleipnirBearSinews.tsx)
-- Fragment 5: Breath of a Fish (GleipnirFishBreath.tsx)
-- Fragment 6: Beard of a Woman (GleipnirWomansBeard.tsx) ← Expected (CORRECT)
-
-#### Root Cause
-
-The developer mistakenly used the aria-description string from Fragment 3 instead of Fragment 6. This is likely a copy-paste error during implementation.
-
-#### Impact
-
-1. **Immediate**: Screen reader users will encounter the wrong fragment text when the Valhalla empty state is announced.
-2. **Sprint 4**: The Gleipnir Hunt detection mechanic (scheduled for Sprint 4) will be designed to hunt for all 6 fragments. When the hunt system scans the app for `aria-description="the spittle of a bird"`, it will find both:
-   - GleipnirBirdSpittle.tsx (correct, Fragment 3)
-   - ValhallaEmptyState (incorrect, Fragment 3 again)
-
-   This creates a duplicate hunt target and breaks the intended 1:1 fragment-to-location mapping.
-
-#### Steps to Reproduce
-
-1. Open the app with zero closed cards in localStorage
-2. Navigate to `/valhalla`
-3. Inspect the empty state `<div>` element
-4. Read the `aria-description` attribute
-5. Verify it reads "the spittle of a bird" (current, wrong)
-
-#### Fix Required
-
-Change line 234 in `development/src/src/app/valhalla/page.tsx`:
+`development/src/src/app/valhalla/page.tsx` line 234 now correctly reads:
 
 ```typescript
-// Before:
-aria-description="the spittle of a bird"
-
-// After:
 aria-description="the beard of a woman"
 ```
+
+#### Verification
+
+- Source code inspection: CORRECT
+- Build output: Clean (zero errors, zero lint warnings)
+- `/valhalla` route: Present and functional in build manifest
+- Fragment mapping: Now properly 1:1 for Sprint 4 Gleipnir Hunt system
 
 ---
 
@@ -193,9 +160,9 @@ aria-description="the beard of a woman"
 
 ## Recommendation
 
-**HOLD FOR FIX** — Ship only after DEF-001 is corrected.
+**READY TO SHIP** — All defects resolved, all tests passing, build clean.
 
-The fix is trivial (one-line string change) but must be completed before merge to avoid creating a ghost duplicate in the easter egg hunt system. After the fix is applied and verified, the story is production-ready.
+DEF-001 has been corrected. The easter egg fragment mapping is now accurate for the Sprint 4 Gleipnir Hunt system. Story 3.5 is production-ready.
 
 ---
 
@@ -212,4 +179,6 @@ The fix is trivial (one-line string change) but must be completed before merge t
 
 **QA Tester**: Loki (devil's advocate)
 **Test Date**: 2026-02-27
-**Next Action**: Developer fixes DEF-001, Loki re-verifies, story proceeds to merge.
+**Re-verification Date**: 2026-02-27
+**Verdict**: ✓ READY TO SHIP
+**Next Action**: Story approved for merge to main.
