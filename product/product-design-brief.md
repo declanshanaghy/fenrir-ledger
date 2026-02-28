@@ -74,80 +74,100 @@ This is the moment that separates Fenrir Ledger from every other fintech tool.
 
 ---
 
-## Signed-In User Identity — Header Profile
+## User Identity — Header Profile
 
-The site header must surface the authenticated user's identity at all times. The current
-header shows only a `?` button and a "Log out" button — no user identity is displayed.
-Once OIDC authentication ships, that gap is a trust and orientation failure: the wolf
-must know who roams the hall.
+Fenrir Ledger has two user states: **anonymous** and **signed-in**. Both states are
+fully supported. The header must surface the correct identity affordance for each.
 
-### What the Header Must Show
+### Anonymous State (default for all users)
+
+An anonymous user has no account. Their `householdId` is a locally-generated UUID
+stored in localStorage under `fenrir:household`. The app works identically for anonymous
+and signed-in users — the only difference is data persistence scope.
+
+In the anonymous state the header shows:
+
+- The rune ᛟ (Othalan — heritage, ownership) in an SVG placeholder circle
+- No name, no email, no "Sign out" button
+- An optional, non-blocking "Sync to cloud" affordance (see Cloud Sync Upsell below)
+
+The rune avatar is not a broken state. It is the wolf unnamed — present, powerful,
+unchained.
+
+**Atmospheric copy for anonymous state:**
+- Avatar tooltip: *"The wolf runs unnamed."*
+- No dropdown in anonymous state; the avatar is non-interactive until sign-in ships.
+
+### Signed-In State (future — unlocks cloud sync)
+
+Once OIDC authentication ships at GA, a signed-in user's header shows their Google
+identity. The gap between anonymous and signed-in must feel like an upgrade, not a
+correction.
 
 | Element | Source | Fallback |
 |---------|--------|----------|
-| Avatar | `picture` claim from OIDC id_token | Norse rune ᛟ (Othalan — heritage, ownership) in SVG circle |
+| Avatar | `picture` claim from OIDC id_token | Norse rune ᛟ (Othalan) in SVG circle |
 | Name | `name` claim from OIDC id_token | Email prefix (everything before `@`) |
 | Email | `email` claim — shown in dropdown only | — |
 
-### Interaction Pattern
+Interaction pattern for signed-in state:
 
-- Avatar and name are always visible in the header (no overflow to a collapsed menu on
-  desktop; on mobile ≥ 375 px the name may truncate with ellipsis but the avatar is
-  always shown).
+- Avatar and name are always visible in the header (on mobile ≥ 375 px the name may
+  truncate with ellipsis but the avatar is always shown).
 - Clicking the avatar or name opens a compact profile dropdown containing:
   - Full name (non-editable in Iteration 1)
   - Email address
-  - "Sign out" action (replaces the standalone "Log out" button — do not show both)
+  - "Sign out" action
 - The dropdown is dismissed by clicking outside it or pressing Escape.
-- The `?` help button may remain alongside the profile — it is not replaced by this
-  feature.
 
-### Avatar Rendering Rules
+Avatar rendering rules for signed-in state:
 
-1. **Google profile picture available**: render an `<img>` with the `picture` URL from
-   the OIDC id_token. Apply `rounded-full` (circular crop). Size: 32 × 32 px on desktop,
-   28 × 28 px on mobile. Border: `1px solid rgba(201,146,10,0.4)` (faint gold ring —
-   Gleipnir echo: the chain that marks you).
-2. **No picture claim / image load error**: render the rune ᛟ in an SVG placeholder
-   circle of identical size. Background fill: `#07070d` (void-black). Rune color:
-   `#c9920a` (gold), `font-family: Cinzel`. This is the "identity without a face" state.
+1. **Google profile picture available**: `<img>` with `picture` URL. `rounded-full`.
+   Size: 32 × 32 px desktop, 28 × 28 px mobile.
+   Border: `1px solid rgba(201,146,10,0.4)` (faint gold ring — Gleipnir echo).
+2. **No picture claim / image load error**: rune ᛟ SVG circle, same size.
+   Background: `#07070d` (void-black). Rune: `#c9920a` (gold), Cinzel font.
+
+**Atmospheric copy for signed-in state:**
+- Dropdown header line: *"The wolf is named."*
+- Sign-out label (functional, no kennings): "Sign out"
+
+### Cloud Sync Upsell
+
+Login is surfaced as a non-blocking upsell only — it must never gate any feature. The
+upsell copy pattern (for future implementation):
+
+- Banner or settings option: *"Keep your ledger safe across all your devices."*
+- CTA: "Sign in to sync" (functional Voice 1 label)
+- Dismissible; once dismissed, not shown again until user navigates to settings.
 
 ### Responsive Requirements
 
-- **Desktop (≥ 768 px)**: avatar + truncated name (max ~20 characters) visible in the
-  header bar.
-- **Mobile (375–767 px)**: avatar only in the header bar; name hidden from the bar but
-  shown inside the profile dropdown.
+- **Desktop (≥ 768 px)**: avatar + truncated name (max ~20 characters) for signed-in;
+  rune avatar alone for anonymous.
+- **Mobile (375–767 px)**: avatar only in header bar; name shown inside dropdown
+  (signed-in state).
 - Touch target for the avatar/name trigger: minimum 44 × 44 px (per team norms).
-
-### Atmospheric Copy
-
-- Dropdown header line: *"The wolf is named."*
-- Sign-out button label (plain English — functional copy, no kennings): "Sign out"
 
 ### Mythology Frame
 
-The header profile is not a "user account widget." It is proof that Fenrir knows its
-hunter. Odin bound Fenrir because he feared what it was — the header names the wolf so
-the chain-breaker cannot be anonymous. The gold avatar ring deliberately echoes
-Gleipnir: the binding that marks you.
+In the anonymous state, the wolf runs unnamed — free, unchained, untracked. The rune ᛟ
+is not a placeholder awaiting a real identity; it is identity in its purest form.
+The gold avatar ring (signed-in state) echoes Gleipnir: the binding that marks you.
+Signing in is not required to belong to the hall.
 
 ### Acceptance Criteria
 
-- [ ] Authenticated user's Google avatar (`picture` claim) renders as a circular image
-      in the header at all breakpoints ≥ 375 px
-- [ ] When `picture` claim is absent or the image fails to load, the rune ᛟ fallback
-      renders in an identical-size circle with gold `#c9920a` on void-black `#07070d`
-- [ ] User's `name` claim is visible alongside the avatar on desktop (≥ 768 px);
-      truncated with ellipsis beyond ~20 characters
-- [ ] Clicking the avatar or name opens a dropdown showing: full name, email, and
-      "Sign out"
-- [ ] Clicking outside the dropdown or pressing Escape closes it without signing out
-- [ ] "Sign out" in the dropdown triggers the existing sign-out flow; no standalone
-      "Log out" button remains in the header
-- [ ] Touch target for the avatar/name trigger is ≥ 44 × 44 px on all breakpoints
-- [ ] Layout holds at 375 px mobile width with no horizontal overflow
-- [ ] No avatar, name, or email is visible when the user is unauthenticated
+- [ ] Anonymous user sees the rune ᛟ avatar in the header at all breakpoints ≥ 375 px
+- [ ] Rune ᛟ avatar renders with gold `#c9920a` on void-black `#07070d`, circular crop
+- [ ] No name, email, or "Sign out" is visible in the anonymous state
+- [ ] No sign-in gate, redirect, or modal blocks an anonymous user from using any feature
+- [ ] The locally-generated `householdId` UUID is stored under `fenrir:household` in
+      localStorage on first anonymous visit
+- [ ] All card data is scoped to the anonymous `householdId` exactly as it would be for
+      a signed-in user
+- [ ] Layout holds at 375 px mobile width with no horizontal overflow in both states
+- [ ] Touch target for the avatar is ≥ 44 × 44 px on all breakpoints
 
 ---
 
@@ -175,7 +195,9 @@ The mythology rewards exploration. It never blocks a task.
 | Empty states | Edda quotes + myth context | The emotional hook that makes the brand memorable |
 | Easter eggs | Discoverable, not obtrusive | Reward exploration; never break task flow |
 | Wikipedia enrichment | `.myth-link` class on Norse proper nouns | Faint gold dotted underline + `cursor: help` links curious users to myth context; see `mythology-map.md` |
-| Signed-in identity display | Avatar + name in header; rune ᛟ fallback | Trust signal: the wolf knows who roams the hall; eliminates anonymous session ambiguity |
+| Authentication model | Anonymous-first; login is optional cloud-sync upsell | Zero friction on first use; no login gate in MVP; householdId is a locally-generated UUID |
+| Anonymous identity display | Rune ᛟ avatar in header; non-interactive | The wolf runs unnamed — present and powerful, not broken or incomplete |
+| Signed-in identity display (future) | Avatar + name in header; rune ᛟ fallback | Trust signal: the wolf knows who roams the hall; upgrade state, not required state |
 
 ---
 

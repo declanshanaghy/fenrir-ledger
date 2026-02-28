@@ -11,4 +11,5 @@ Freya shapes the vision before the forge ever heats. Nothing moves downstream un
 - [mythology-map.md](mythology-map.md) — Norse cosmology mapped to every card state, team role, and UI feature in Fenrir Ledger.
 - [copywriting.md](copywriting.md) — The two-voice rule, kenning vocabulary, status badge copy, action labels, empty states, and Edda quotes.
 - [backlog/README.md](backlog/README.md) — Freya's groomed backlog index: all stories written, prioritized, and cleared for engineering.
-- [backlog/story-auth-oidc-google.md](backlog/story-auth-oidc-google.md) — P1-Critical: OIDC Authentication via Google Login (Iteration 1) — Auth.js v5, localStorage-scoped to authenticated householdId, no remote storage.
+- [backlog/story-auth-oidc-google.md](backlog/story-auth-oidc-google.md) — P3-Medium (GA-deferred): Optional Login — Google OIDC + Cloud Sync Upsell; anonymous users need no login; householdId is a locally-generated UUID.
+- [handoff-to-luna-anon-auth.md](handoff-to-luna-anon-auth.md) — Handoff to Luna: anonymous-first auth + cloud sync upsell wireframe requirements.

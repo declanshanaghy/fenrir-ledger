@@ -115,8 +115,10 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 *The voice of the user. Nothing moves downstream without her word.*
 
 - [product/README.md](product/README.md) — Product domain index: mythology map, copywriting guide, backlog
+- [product/product-design-brief.md](product/product-design-brief.md) — Design philosophy, anonymous-first identity model, header states
 - [product/backlog/README.md](product/backlog/README.md) — Groomed backlog index
-- [product/backlog/story-auth-oidc-google.md](product/backlog/story-auth-oidc-google.md) — P1: OIDC Authentication — Google Login (Iteration 1)
+- [product/backlog/story-auth-oidc-google.md](product/backlog/story-auth-oidc-google.md) — P3 (GA-deferred): Optional Login — Google OIDC + Cloud Sync Upsell
+- [product/handoff-to-luna-anon-auth.md](product/handoff-to-luna-anon-auth.md) — Handoff to Luna: anonymous-first auth + cloud sync upsell UX brief
 
 ### [ᚱ The Saga Ledger — Design](ux/README.md)
 

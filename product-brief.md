@@ -25,28 +25,48 @@ Fenrir Ledger is a personal finance tool for credit card churners and rewards op
 
 Fenrir Ledger follows a staged launch model designed to validate product-market fit before introducing infrastructure complexity:
 
-1. **Incubate MVP** — Core functionality with localStorage + Google OIDC auth. Ship fast, iterate.
-2. **Early Access** — Open to real users. Collect feedback. Auth on, backend off.
+1. **Incubate MVP** — Core functionality with anonymous localStorage use. No login required. Ship fast, iterate.
+2. **Early Access** — Open to real users. Collect feedback. Login optional, backend off.
 3. **Integrate Feedback** — Refine the product based on actual usage patterns.
 4. **Loop** — Repeat steps 1–3 until the product is well-validated.
-5. **GA (General Availability)** — Remote storage, multi-device sync, and data migration ship here.
+5. **GA (General Availability)** — Remote storage, multi-device sync, and data migration ship here. Login becomes the gateway to cloud sync.
+
+### Anonymous-First Design
+
+**Users can open Fenrir Ledger and start tracking cards immediately — no login required.**
+
+The app works fully offline and anonymously, forever, as a free tier. localStorage is the primary data store for all users.
+
+For anonymous users:
+- A `householdId` is generated as a UUID on first use and persisted in localStorage under `fenrir:household`
+- All card data is keyed to this locally-generated UUID, exactly as it would be for a logged-in user
+- The user never sees a sign-in gate or redirect
+
+Login is optional and surfaced as an upsell: when a logged-in account is supported in a future release, users will be prompted to sign in to unlock cloud sync and multi-device access. Until that feature ships, the upsell is informational only and must never block the user.
 
 ### What Ships in MVP
 
-**Google OIDC authentication is included in the MVP.** Auth establishes the identity model the data layer will rely on when remote storage arrives at GA. It also enables authorization patterns in the local UI and localStorage scoping (data is keyed to the authenticated user's household). Shipping auth early means the data model is right from day one — retrofitting identity onto an existing dataset is far more expensive.
+**Authentication is not required in the MVP.** The priority is zero friction: a user lands on the dashboard, adds their first card, and the app is immediately useful. No account creation. No OAuth redirect. No waiting.
 
-Auth in MVP means:
-- Sign-in with Google (Auth.js v5)
-- localStorage data scoped to the authenticated user's household ID
-- Protected routes — unauthenticated users land on a sign-in gate
-- HttpOnly session cookie — no client-JS token exposure
+The `householdId` field exists on every `Card` from Sprint 1. For anonymous users it is populated with a locally-generated UUID — the data model is already correct and will require no structural change when cloud sync arrives.
+
+### Login as Cloud Sync Upsell (Future)
+
+When remote storage ships at GA, logged-in users gain:
+- Cloud backup of their card portfolio
+- Multi-device access (desktop + mobile in sync)
+- Optional household sharing with a partner
+
+The upsell surface is a non-blocking banner or settings option: "Sync your data to the cloud — sign in to keep your ledger safe across devices."
+
+Login in this model is a feature unlock, not a gate.
 
 ### Constraints Until GA
 
 **Remote storage and data migration are explicitly deferred until the team has received multiple rounds of real user feedback and declared the product ready for GA.**
 
 Rationale:
-- localStorage is sufficient for single-device use through the entire validation cycle. Auth gives us identity without needing a backend.
+- localStorage is sufficient for single-device use through the entire validation cycle. No auth is required to provide identity — a locally-generated UUID is enough for namespacing.
 - Introducing a database (Supabase, Postgres, etc.) adds secrets management, deployment ops, RLS, and billing complexity — all before we know whether the product is worth it.
 - Data migration tooling belongs in the sprint where we know what users actually need, not before.
 - These concerns all resolve naturally at GA when the product is proven and the user base justifies the investment.
@@ -55,15 +75,16 @@ Rationale:
 - Remote / server-side storage (Supabase, Postgres, any DB)
 - Data migration tooling or localStorage export wizards
 - Multi-device sync
+- Required authentication / sign-in gates
 
 ## Tech Stack
 
 - **Framework**: Next.js (App Router) + TypeScript
 - **Frontend**: React (latest)
 - **Styling**: Tailwind CSS + shadcn/ui
-- **Hosting**: Vercel (future — not in Sprint 1 scope); Root Directory configured to `development/src/`
+- **Hosting**: Vercel; Root Directory configured to `development/src/`
 - **Data model**: Household-scoped from day one (single-user UI initially; multi-user sharing is future)
-- **Auth**: Future — OIDC via Google, Facebook, etc. (not in Sprint 1)
+- **Auth**: Optional — OIDC via Google surfaced as cloud-sync upsell at GA; not a gate in MVP
 
 ## Technical Constraints
 
@@ -79,7 +100,7 @@ Credit card churners and rewards optimizers — people who strategically open cr
 
 ## Success Metrics
 
-- User can add a card and see reminders within 2 minutes of first use
+- User can add a card and see reminders within 2 minutes of first use — no login required
 - Zero missed annual fee deadlines for active users
 - Positive user feedback on deadline awareness and reward harvesting
 - Support for managing 20+ simultaneous cards without performance issues
@@ -96,8 +117,8 @@ Credit card churners and rewards optimizers — people who strategically open cr
 - Action recommendation logic
 - Reward value tracking + net ROI calculation
 - Data export (CSV/JSON)
-- Multi-device sync (requires backend)
+- Optional login — upsell for cloud sync (requires backend)
+- Multi-device sync (requires backend + login)
 - Bank API integration for auto-detection
-- Shared household card tracking (OIDC login — Google, Facebook, etc.)
-- Vercel hosting + deployment pipeline
+- Shared household card tracking (requires login)
 - Smart reminders / notification engine
