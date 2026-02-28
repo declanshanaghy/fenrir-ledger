@@ -50,7 +50,7 @@ export function GleipnirFishBreath({ open, onClose }: GleipnirFishBreathProps) {
           className="w-full max-w-[200px] md:max-w-[240px] aspect-square object-contain"
         />
       }
-      audioSrc="/sounds/fenrir-howl.mp3"
+      audioSrc="/sounds/fenrir-growl.mp3"
     >
       <p className="font-body text-sm text-[#e8e4d4] leading-relaxed">
         One of the six impossible things woven into{" "}

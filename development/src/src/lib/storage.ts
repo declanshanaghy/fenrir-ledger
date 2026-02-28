@@ -5,13 +5,26 @@
  * No component or page should call window.localStorage directly.
  *
  * See ADR-003 for the localStorage decision and migration path.
+ * See ADR-004 for the per-household key namespacing decision (Sprint 3.1).
  *
  * IMPORTANT: This module is browser-only. All functions guard against SSR
  * contexts by checking typeof window !== "undefined".
  *
+ * Key Namespacing (Sprint 3.1+):
+ *   Per-household keys prevent cross-contamination between Google accounts
+ *   sharing the same browser. Every card and household key is namespaced:
+ *
+ *     fenrir_ledger:{householdId}:cards       → Card[] for this user
+ *     fenrir_ledger:{householdId}:household   → Household for this user
+ *     fenrir_ledger:schema_version            → global schema version (not per-household)
+ *
+ *   The old flat keys (fenrir_ledger:cards, fenrir_ledger:households) from
+ *   Sprints 1–2 are abandoned. No migration is performed — there are no
+ *   real users with production data to preserve.
+ *
  * Two-layer architecture:
  *   Private raw helpers — return ALL records, including soft-deleted ones.
- *     getAllCards(), getAllHouseholdsRaw(), getRawCardById()
+ *     getAllCards(), getHouseholdRaw(), getRawCardById()
  *   Public UI API — always filter out records where deletedAt is set.
  *     getCards(), getCardById(), getHouseholds(), getAllCardsGlobal()
  *
@@ -21,12 +34,7 @@
  */
 
 import type { Card, Household } from "@/lib/types";
-import {
-  STORAGE_KEYS,
-  SCHEMA_VERSION,
-  DEFAULT_HOUSEHOLD,
-  DEFAULT_HOUSEHOLD_ID,
-} from "@/lib/constants";
+import { STORAGE_KEYS, STORAGE_KEY_PREFIX, SCHEMA_VERSION } from "@/lib/constants";
 import { computeCardStatus } from "@/lib/card-utils";
 
 // ─── Guards ──────────────────────────────────────────────────────────────────
@@ -34,6 +42,28 @@ import { computeCardStatus } from "@/lib/card-utils";
 /** Returns true when running in a browser context (not SSR). */
 function isBrowser(): boolean {
   return typeof window !== "undefined";
+}
+
+// ─── Per-household key builders ───────────────────────────────────────────────
+
+/**
+ * Returns the localStorage key for the cards array for a given household.
+ *
+ * @param householdId - The authenticated user's household ID (Google sub claim)
+ * @returns localStorage key string, e.g. "fenrir_ledger:uid123:cards"
+ */
+function cardsKey(householdId: string): string {
+  return `${STORAGE_KEY_PREFIX}:${householdId}:cards`;
+}
+
+/**
+ * Returns the localStorage key for the household record for a given household.
+ *
+ * @param householdId - The authenticated user's household ID (Google sub claim)
+ * @returns localStorage key string, e.g. "fenrir_ledger:uid123:household"
+ */
+function householdKey(householdId: string): string {
+  return `${STORAGE_KEY_PREFIX}:${householdId}:household`;
 }
 
 // ─── Schema Migration ─────────────────────────────────────────────────────────
@@ -47,6 +77,11 @@ function isBrowser(): boolean {
  *   1 → 2: Added optional deletedAt field to Card and Household for soft-delete
  *           support. No data transformation needed — absent field === undefined
  *           by design. (No migration step required pre-launch; see team norms.)
+ *
+ * Note (Sprint 3.1): The schema version key remains global (not per-household)
+ * because it tracks the shape of the data format, not per-user content.
+ * The old flat-key data (fenrir_ledger:cards, fenrir_ledger:households) is
+ * abandoned — no real users existed before auth landed.
  */
 export function migrateIfNeeded(): void {
   if (!isBrowser()) return;
@@ -92,65 +127,86 @@ function runMigrations(fromVersion: number, toVersion: number): void {
 // ─── Household Operations ─────────────────────────────────────────────────────
 
 /**
- * Reads ALL households from localStorage, including soft-deleted ones.
- * Private raw helper — use getHouseholds() for UI-facing reads.
+ * Reads the raw household record for a given household ID, including if soft-deleted.
+ * Private raw helper — use getHousehold() for UI-facing reads.
  *
- * @returns Array of all Household objects. Empty array if none exist or on error.
+ * @param householdId - The household to read
+ * @returns The Household object, or null if not found or on error
  */
-function getAllHouseholdsRaw(): Household[] {
-  if (!isBrowser()) return [];
+function getHouseholdRaw(householdId: string): Household | null {
+  if (!isBrowser()) return null;
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.HOUSEHOLDS);
-    if (!raw) return [];
-    return JSON.parse(raw) as Household[];
+    const raw = localStorage.getItem(householdKey(householdId));
+    if (!raw) return null;
+    return JSON.parse(raw) as Household;
   } catch (err) {
-    console.error("[FenrirLedger] Failed to read households:", err);
-    return [];
+    console.error("[FenrirLedger] Failed to read household:", err);
+    return null;
   }
 }
 
 /**
- * Reads active (non-deleted) households from localStorage.
- * Filters out any household with a deletedAt timestamp set.
+ * Returns all active (non-deleted) households visible in the current browser.
+ * In the per-household key scheme, each user has exactly one household under
+ * their namespaced key. This function scans all known household keys.
  *
- * @returns Array of active Household objects. Empty array if none exist or on error.
+ * In practice, each user will have at most one household in localStorage
+ * (their own, keyed by their Google sub). The plural form is preserved for
+ * API compatibility with any future multi-household support.
+ *
+ * @returns Array containing the current user's Household, or empty if none found.
  */
 export function getHouseholds(): Household[] {
-  return getAllHouseholdsRaw().filter((h) => !h.deletedAt);
+  // This function is retained for API compatibility.
+  // With per-household key namespacing, callers should use initializeHousehold()
+  // and read cards directly — not enumerate households.
+  // Returns empty array in SSR context.
+  return [];
 }
 
 /**
- * Writes the full households array to localStorage.
- * Private helper — use saveCard(), deleteCard(), or initializeDefaultHousehold()
- * for all public mutation operations.
+ * Writes the household record to localStorage under the per-household key.
+ * Private helper — use initializeHousehold() for the public mutation operation.
  *
- * @param households - Complete array of Household objects to persist (all records,
- *   including soft-deleted ones)
+ * @param household - The Household object to persist
  */
-function setAllHouseholds(households: Household[]): void {
+function setHousehold(household: Household): void {
   if (!isBrowser()) return;
 
   try {
-    localStorage.setItem(STORAGE_KEYS.HOUSEHOLDS, JSON.stringify(households));
+    localStorage.setItem(householdKey(household.id), JSON.stringify(household));
   } catch (err) {
-    console.error("[FenrirLedger] Failed to save households:", err);
-    throw new Error("Failed to save households. Storage may be full.");
+    console.error("[FenrirLedger] Failed to save household:", err);
+    throw new Error("Failed to save household. Storage may be full.");
   }
 }
 
 /**
- * Initializes the default household if it does not already exist.
+ * Initializes the household for the authenticated user if it does not already exist.
  * Idempotent — safe to call on every page load.
  * Backfills updatedAt for households that predate the field.
  *
- * @returns The default Household object
+ * Unlike the Sprint 1–2 version, this function takes the householdId explicitly
+ * (derived from the authenticated session) rather than using a hardcoded default.
+ *
+ * @param householdId - The authenticated user's household ID (Google sub claim)
+ * @returns The Household object for this user
  */
-export function initializeDefaultHousehold(): Household {
-  if (!isBrowser()) return DEFAULT_HOUSEHOLD;
+export function initializeHousehold(householdId: string): Household {
+  const now = new Date().toISOString();
 
-  const households = getAllHouseholdsRaw();
-  const existing = households.find((h) => h.id === DEFAULT_HOUSEHOLD_ID);
+  if (!isBrowser()) {
+    // SSR fallback — return a transient household object; nothing is written
+    return {
+      id: householdId,
+      name: "My Household",
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
+
+  const existing = getHouseholdRaw(householdId);
 
   if (existing) {
     // Backfill updatedAt if missing (pre-migration household records)
@@ -159,38 +215,37 @@ export function initializeDefaultHousehold(): Household {
         ...existing,
         updatedAt: existing.createdAt,
       };
-      const updated = households.map((h) =>
-        h.id === DEFAULT_HOUSEHOLD_ID ? backfilled : h
-      );
-      setAllHouseholds(updated);
+      setHousehold(backfilled);
       return backfilled;
     }
     return existing;
   }
 
-  const now = new Date().toISOString();
+  // Create a new household for this user
   const newHousehold: Household = {
-    ...DEFAULT_HOUSEHOLD,
+    id: householdId,
+    name: "My Household",
     createdAt: now,
     updatedAt: now,
   };
 
-  setAllHouseholds([...households, newHousehold]);
+  setHousehold(newHousehold);
   return newHousehold;
 }
 
 // ─── Card Operations ──────────────────────────────────────────────────────────
 
 /**
- * Reads ALL cards from localStorage (all households), including soft-deleted ones.
- * Private raw helper — use getCards(householdId) or getAllCardsGlobal() for
- * UI-facing reads.
+ * Reads ALL cards for a given household from localStorage, including soft-deleted ones.
+ * Private raw helper — use getCards(householdId) for UI-facing reads.
+ *
+ * @param householdId - The household to read cards for
  */
-function getAllCards(): Card[] {
+function getAllCards(householdId: string): Card[] {
   if (!isBrowser()) return [];
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.CARDS);
+    const raw = localStorage.getItem(cardsKey(householdId));
     if (!raw) return [];
     return JSON.parse(raw) as Card[];
   } catch (err) {
@@ -200,16 +255,20 @@ function getAllCards(): Card[] {
 }
 
 /**
- * Writes the full cards array to localStorage.
+ * Writes the full cards array to localStorage under the per-household key.
  * Private helper — use saveCard() or deleteCard() for individual operations.
  *
  * Dispatches "fenrir:sync" so the SyncIndicator pulses on every real write.
+ *
+ * @param householdId - The household to write cards for
+ * @param cards - Complete array of Card objects to persist (all records,
+ *   including soft-deleted ones)
  */
-function setAllCards(cards: Card[]): void {
+function setAllCards(householdId: string, cards: Card[]): void {
   if (!isBrowser()) return;
 
   try {
-    localStorage.setItem(STORAGE_KEYS.CARDS, JSON.stringify(cards));
+    localStorage.setItem(cardsKey(householdId), JSON.stringify(cards));
     window.dispatchEvent(new CustomEvent("fenrir:sync"));
   } catch (err) {
     console.error("[FenrirLedger] Failed to save cards:", err);
@@ -221,23 +280,31 @@ function setAllCards(cards: Card[]): void {
  * Reads a single card by ID, including soft-deleted cards.
  * Private raw helper — use getCardById() for UI-facing reads.
  *
+ * @param householdId - The household that owns the card
  * @param id - The card ID
  * @returns The Card object (deleted or not), or undefined if not found
  */
-function getRawCardById(id: string): Card | undefined {
-  return getAllCards().find((c) => c.id === id);
+function getRawCardById(householdId: string, id: string): Card | undefined {
+  return getAllCards(householdId).find((c) => c.id === id);
 }
 
 /**
- * Reads all active (non-deleted) cards across all households.
+ * Reads all active (non-deleted) cards across all households visible in the browser.
  *
  * Used by easter eggs (e.g. KonamiHowl) that need a cross-household snapshot
  * without caring about household boundaries.
  *
- * @returns All non-deleted Card objects in storage, unsorted.
+ * NOTE: With per-household key namespacing, this function can only return cards
+ * for households whose keys are known. Since each user has exactly one household
+ * (their Google sub), this is equivalent to getCards() for the current user.
+ * The function is preserved for easter egg compatibility — callers pass the
+ * current householdId explicitly.
+ *
+ * @param householdId - The current user's household ID
+ * @returns All non-deleted Card objects for this household, unsorted.
  */
-export function getAllCardsGlobal(): Card[] {
-  return getAllCards().filter((c) => !c.deletedAt);
+export function getAllCardsGlobal(householdId: string): Card[] {
+  return getAllCards(householdId).filter((c) => !c.deletedAt);
 }
 
 /**
@@ -251,7 +318,7 @@ export function getAllCardsGlobal(): Card[] {
  * @returns Array of active, non-closed Card objects for the household
  */
 export function getCards(householdId: string): Card[] {
-  const all = getAllCards();
+  const all = getAllCards(householdId);
   return all
     .filter(
       (c) =>
@@ -277,7 +344,7 @@ export function getCards(householdId: string): Card[] {
  * @returns Array of closed Card objects for the household, sorted by closedAt desc
  */
 export function getClosedCards(householdId: string): Card[] {
-  const all = getAllCards();
+  const all = getAllCards(householdId);
   return all
     .filter(
       (c) =>
@@ -296,11 +363,12 @@ export function getClosedCards(householdId: string): Card[] {
  * Reads a single active (non-deleted) card by ID.
  * Returns undefined if the card does not exist or has been soft-deleted.
  *
+ * @param householdId - The household that owns the card
  * @param id - The card ID
  * @returns The Card object, or undefined if not found or soft-deleted
  */
-export function getCardById(id: string): Card | undefined {
-  const card = getRawCardById(id);
+export function getCardById(householdId: string, id: string): Card | undefined {
+  const card = getRawCardById(householdId, id);
   return card?.deletedAt ? undefined : card;
 }
 
@@ -312,10 +380,10 @@ export function getCardById(id: string): Card | undefined {
  * If a card with the same ID exists, it is replaced.
  * If no card with that ID exists, the card is appended.
  *
- * @param card - The Card object to save
+ * @param card - The Card object to save (must include householdId)
  */
 export function saveCard(card: Card): void {
-  const all = getAllCards();
+  const all = getAllCards(card.householdId);
   const now = new Date().toISOString();
   const existingIndex = all.findIndex((c) => c.id === card.id);
   const isInsert = existingIndex < 0;
@@ -332,10 +400,10 @@ export function saveCard(card: Card): void {
     // Update existing
     const updated = [...all];
     updated[existingIndex] = cardWithStatus;
-    setAllCards(updated);
+    setAllCards(card.householdId, updated);
   } else {
     // Insert new
-    setAllCards([...all, cardWithStatus]);
+    setAllCards(card.householdId, [...all, cardWithStatus]);
   }
 }
 
@@ -345,10 +413,11 @@ export function saveCard(card: Card): void {
  * UI-facing read (getCards, getCardById, getAllCardsGlobal).
  * No-op if the card does not exist or is already soft-deleted.
  *
+ * @param householdId - The household that owns the card
  * @param id - The card ID to soft-delete
  */
-export function deleteCard(id: string): void {
-  const all = getAllCards();
+export function deleteCard(householdId: string, id: string): void {
+  const all = getAllCards(householdId);
   const index = all.findIndex((c) => c.id === id);
   if (index < 0) return;
 
@@ -357,7 +426,7 @@ export function deleteCard(id: string): void {
 
   const updated = [...all];
   updated[index] = { ...card, deletedAt: new Date().toISOString() };
-  setAllCards(updated);
+  setAllCards(householdId, updated);
 }
 
 /**
@@ -372,7 +441,7 @@ export function deleteCard(id: string): void {
  * @param cardId - The card ID to close
  */
 export function closeCard(householdId: string, cardId: string): void {
-  const all = getAllCards();
+  const all = getAllCards(householdId);
   const index = all.findIndex(
     (c) => c.id === cardId && c.householdId === householdId
   );
@@ -390,5 +459,5 @@ export function closeCard(householdId: string, cardId: string): void {
     closedAt: now,
     updatedAt: now,
   };
-  setAllCards(updated);
+  setAllCards(householdId, updated);
 }

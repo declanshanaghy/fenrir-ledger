@@ -5,14 +5,16 @@
  *
  * Loads the card by ID from localStorage and renders CardForm in edit mode.
  * Redirects to / if the card is not found.
+ * Reads the authenticated session to obtain householdId for all storage calls.
  */
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { CardForm } from "@/components/cards/CardForm";
 import {
   migrateIfNeeded,
-  initializeDefaultHousehold,
+  initializeHousehold,
   getCardById,
 } from "@/lib/storage";
 import type { Card } from "@/lib/types";
@@ -20,14 +22,24 @@ import type { Card } from "@/lib/types";
 export default function EditCardPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [card, setCard] = useState<Card | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    migrateIfNeeded();
-    initializeDefaultHousehold();
+    if (status === "loading") return;
 
-    const found = getCardById(params.id);
+    const householdId = session?.user?.householdId;
+    if (!householdId) {
+      // Session resolved but no householdId — redirect to root
+      router.replace("/");
+      return;
+    }
+
+    migrateIfNeeded();
+    initializeHousehold(householdId);
+
+    const found = getCardById(householdId, params.id);
     if (!found) {
       router.replace("/");
       return;
@@ -35,7 +47,7 @@ export default function EditCardPage() {
 
     setCard(found);
     setIsLoading(false);
-  }, [params.id, router]);
+  }, [params.id, router, session, status]);
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-6">
@@ -56,7 +68,10 @@ export default function EditCardPage() {
             </p>
           </div>
 
-          <CardForm initialValues={card} />
+          <CardForm
+            initialValues={card}
+            householdId={card.householdId}
+          />
         </>
       ) : null}
     </div>

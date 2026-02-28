@@ -162,7 +162,7 @@ export function GleipnirCatFootfall({ open, onClose }: GleipnirCatFootfallProps)
  *   // Call trigger() when the hidden ingredient text is discovered.
  *   // Render: <GleipnirCatFootfall open={open} onClose={dismiss} />
  *
- * Audio: plays /sounds/fenrir-howl.mp3 with fade-in on discovery and fade-out
+ * Audio: plays /sounds/fenrir-growl.mp3 with fade-in on discovery and fade-out
  * on dismiss. The Audio constructor is called inside trigger() — the direct
  * user-gesture handler — so browsers permit playback without an autoplay
  * policy violation.
@@ -206,7 +206,7 @@ export function useGleipnirFragment1() {
 
       // Play within the user-gesture call stack so browsers allow it.
       try {
-        const howl = new Audio("/sounds/fenrir-howl.mp3");
+        const howl = new Audio("/sounds/fenrir-growl.mp3");
         howl.volume = 0;
         howl.play().catch(() => {/* silently ignore if still blocked */});
         fadeIn(howl);

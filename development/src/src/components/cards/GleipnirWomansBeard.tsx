@@ -200,7 +200,7 @@ export function useGleipnirFragment2() {
 
       // Play within the user-gesture call stack so browsers allow it.
       try {
-        const howl = new Audio("/sounds/fenrir-howl.mp3");
+        const howl = new Audio("/sounds/fenrir-growl.mp3");
         howl.volume = 0;
         howl.play().catch(() => {/* silently ignore if still blocked */});
         fadeIn(howl);

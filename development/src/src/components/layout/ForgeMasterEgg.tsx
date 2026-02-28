@@ -5,7 +5,7 @@
  *
  * Trigger:  `?` (Shift+/) pressed anywhere outside a form field.
  * Storage:  localStorage key "egg:forgemaster" — fires once only.
- * Audio:    fenrir-howl.mp3 plays unconditionally when the modal opens.
+ * Audio:    fenrir-growl.mp3 plays unconditionally when the modal opens.
  *           The `?` keypress counts as a user gesture, bypassing autoplay
  *           restrictions.
  *
@@ -90,7 +90,7 @@ export function ForgeMasterEgg() {
           className="w-full max-w-[200px] md:max-w-[240px] aspect-square object-contain"
         />
       }
-      audioSrc="/sounds/fenrir-howl.mp3"
+      audioSrc="/sounds/fenrir-growl.mp3"
     >
       {/* The Pack */}
       <div>

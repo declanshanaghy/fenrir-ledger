@@ -8,7 +8,7 @@
  *   - Cinzel Decorative title
  *   - Two-column body: image left | divider | children right
  *   - Footer "So it is written" dismiss button
- *   - Optional howl: pass audioSrc="/sounds/fenrir-howl.mp3" to play on open
+ *   - Optional howl: pass audioSrc="/sounds/fenrir-growl.mp3" to play on open
  *
  * Accessibility:
  *   - DialogTitle maps to the supplied `title` prop (screen-reader visible).
@@ -25,7 +25,7 @@
  *   title="The Forgemaster's Signature"
  *   description="You have found Easter Egg 9."
  *   image={<ForgeAnvilArtifact />}
- *   audioSrc="/sounds/fenrir-howl.mp3"
+ *   audioSrc="/sounds/fenrir-growl.mp3"
  * >
  *   <p className="font-body text-xs">...</p>
  * </EasterEggModal>
@@ -63,7 +63,7 @@ export interface EasterEggModalProps {
    * Path to an audio file played when the modal opens.
    * The caller's keypress counts as a user gesture, bypassing autoplay
    * restrictions. Pass undefined to suppress audio.
-   * Example: "/sounds/fenrir-howl.mp3"
+   * Example: "/sounds/fenrir-growl.mp3"
    */
   audioSrc?: string;
   /** Discovery text, lore, and reward details — rendered in the right column. */

@@ -7,6 +7,9 @@
  * from deleted cards: they are honored in Valhalla, not erased. Deleted cards
  * (deletedAt set) do not appear here.
  *
+ * Reads the authenticated session to obtain householdId (Google sub claim),
+ * then loads all closed cards from localStorage under the per-household key.
+ *
  * Layout:
  *  - Sepia-tinted page wrapper (CSS filter: sepia(0.15))
  *  - Page heading: "Valhalla" / subhead: "Hall of the Honored Dead"
@@ -21,10 +24,11 @@
  */
 
 import { useEffect, useState, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { getClosedCards, initializeDefaultHousehold, migrateIfNeeded } from "@/lib/storage";
+import { getClosedCards, initializeHousehold, migrateIfNeeded } from "@/lib/storage";
 import { formatDate, formatCurrency } from "@/lib/card-utils";
-import { KNOWN_ISSUERS, DEFAULT_HOUSEHOLD_ID } from "@/lib/constants";
+import { KNOWN_ISSUERS } from "@/lib/constants";
 import { getRealmLabel } from "@/lib/realm-utils";
 import type { Card } from "@/lib/types";
 
@@ -256,19 +260,28 @@ function ValhallaEmptyState() {
  * renders tombstone entries with Framer Motion saga-enter stagger.
  */
 export default function ValhallaPage() {
+  const { data: session, status } = useSession();
   const [allClosed, setAllClosed] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [issuerFilter, setIssuerFilter] = useState<string>("all");
   const [sort, setSort] = useState<SortKey>("closed_date_desc");
 
-  // Load closed cards from localStorage on mount
+  // Load closed cards from localStorage on mount (after session resolves)
   useEffect(() => {
+    if (status === "loading") return;
+
+    const householdId = session?.user?.householdId;
+    if (!householdId) {
+      setIsLoading(false);
+      return;
+    }
+
     migrateIfNeeded();
-    initializeDefaultHousehold();
-    const loaded = getClosedCards(DEFAULT_HOUSEHOLD_ID);
+    initializeHousehold(householdId);
+    const loaded = getClosedCards(householdId);
     setAllClosed(loaded);
     setIsLoading(false);
-  }, []);
+  }, [session, status]);
 
   // Derive unique issuers present in closed cards for the filter dropdown
   const uniqueIssuers = useMemo(() => {
@@ -356,7 +369,7 @@ export default function ValhallaPage() {
       )}
 
       {/* Content */}
-      {isLoading ? (
+      {isLoading || status === "loading" ? (
         <p className="text-sm text-muted-foreground italic font-body">
           Consulting the runes...
         </p>

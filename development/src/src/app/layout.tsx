@@ -25,6 +25,7 @@ import {
 } from "next/font/google";
 import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
 import { AppShell } from "@/components/layout/AppShell";
+import { AuthProvider } from "@/components/layout/AuthProvider";
 import "./globals.css";
 
 // ── Fonts ────────────────────────────────────────────────────────────────────
@@ -91,9 +92,12 @@ export default function RootLayout({
       ].join(" ")}
     >
       <body className="bg-background text-foreground antialiased">
-        {/* Easter egg #4 — console ASCII art (client-only, once per session) */}
-        <ConsoleSignature />
-        <AppShell>{children}</AppShell>
+        {/* Auth.js v5 SessionProvider — must wrap all client components that use useSession() */}
+        <AuthProvider>
+          {/* Easter egg #4 — console ASCII art (client-only, once per session) */}
+          <ConsoleSignature />
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
       </body>
     </html>
   );

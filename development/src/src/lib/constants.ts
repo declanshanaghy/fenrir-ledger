@@ -2,34 +2,31 @@
  * Fenrir Ledger — Application Constants
  *
  * All magic values are defined here. No magic strings or numbers elsewhere.
+ *
+ * Sprint 3.1 change: DEFAULT_HOUSEHOLD_ID and DEFAULT_HOUSEHOLD have been removed.
+ * The householdId is now always derived from the authenticated session (Google sub claim).
+ * See ADR-004 for the decision.
  */
 
-import type { CardStatus, Household, Issuer } from "@/lib/types";
+import type { CardStatus, Issuer } from "@/lib/types";
 import { getRealmDescription } from "@/lib/realm-utils";
 
 /** localStorage key prefix — prevents collisions with other apps on localhost */
 export const STORAGE_KEY_PREFIX = "fenrir_ledger";
 
-/** localStorage key names */
+/**
+ * Global localStorage key names (not per-household).
+ * Per-household keys are constructed dynamically in storage.ts using
+ * `${STORAGE_KEY_PREFIX}:{householdId}:cards` and
+ * `${STORAGE_KEY_PREFIX}:{householdId}:household`.
+ */
 export const STORAGE_KEYS = {
+  /** Global schema version key — not namespaced by household */
   SCHEMA_VERSION: `${STORAGE_KEY_PREFIX}:schema_version`,
-  HOUSEHOLDS: `${STORAGE_KEY_PREFIX}:households`,
-  CARDS: `${STORAGE_KEY_PREFIX}:cards`,
 } as const;
 
 /** Current schema version. Increment when Card or Household interfaces change. */
 export const SCHEMA_VERSION = 1;
-
-/** Default household used in Sprint 1 (single-user mode) */
-export const DEFAULT_HOUSEHOLD_ID = "default-household";
-
-/** Default household object — created on first app load */
-export const DEFAULT_HOUSEHOLD: Household = {
-  id: DEFAULT_HOUSEHOLD_ID,
-  name: "My Household",
-  createdAt: new Date(0).toISOString(), // Epoch — stable across runs
-  updatedAt: new Date(0).toISOString(), // Epoch — stable across runs
-};
 
 /**
  * Days before annual fee date to show "fee_approaching" status.

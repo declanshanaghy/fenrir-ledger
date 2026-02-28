@@ -3,29 +3,44 @@
 /**
  * Dashboard Page — root route (/)
  *
- * Initializes the default household on first load (idempotent).
- * Loads all cards from localStorage and renders the Dashboard component.
+ * Reads the authenticated session to obtain householdId (Google sub claim),
+ * then loads all cards from localStorage under the per-household key.
+ *
+ * The session is always present here because the middleware redirects
+ * unauthenticated requests to the Google OAuth flow before reaching this page.
  */
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { CardSkeletonGrid } from "@/components/dashboard/CardSkeletonGrid";
-import { initializeDefaultHousehold, getCards, migrateIfNeeded } from "@/lib/storage";
-import { DEFAULT_HOUSEHOLD_ID } from "@/lib/constants";
+import { initializeHousehold, getCards, migrateIfNeeded } from "@/lib/storage";
 import type { Card } from "@/lib/types";
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Wait for the session to resolve before reading localStorage
+    if (status === "loading") return;
+
+    const householdId = session?.user?.householdId;
+    if (!householdId) {
+      // Session resolved but no householdId — should not happen in normal flow
+      // (middleware guarantees auth), but guard defensively.
+      setIsLoading(false);
+      return;
+    }
+
     migrateIfNeeded();
-    initializeDefaultHousehold();
-    const loaded = getCards(DEFAULT_HOUSEHOLD_ID);
+    initializeHousehold(householdId);
+    const loaded = getCards(householdId);
     setCards(loaded);
     setIsLoading(false);
-  }, []);
+  }, [session, status]);
 
   return (
     <div className="px-6 py-6">
@@ -40,7 +55,7 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {isLoading ? (
+      {isLoading || status === "loading" ? (
         /* Skeleton shimmer grid — replaces plain loading text.
            CardSkeletonGrid renders a structural mirror of the real card grid
            with a Norse gold shimmer animation (saga-shimmer in globals.css).

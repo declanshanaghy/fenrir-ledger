@@ -4,17 +4,24 @@
  * Add Card Page — /cards/new
  *
  * Renders the CardForm in "new card" mode (no initialValues).
+ * Reads the authenticated session to obtain householdId and passes it
+ * to CardForm so newly created cards are namespaced correctly.
  */
 
 import { useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { CardForm } from "@/components/cards/CardForm";
-import { migrateIfNeeded, initializeDefaultHousehold } from "@/lib/storage";
+import { migrateIfNeeded, initializeHousehold } from "@/lib/storage";
 
 export default function NewCardPage() {
+  const { data: session, status } = useSession();
+  const householdId = session?.user?.householdId ?? "";
+
   useEffect(() => {
+    if (status === "loading" || !householdId) return;
     migrateIfNeeded();
-    initializeDefaultHousehold();
-  }, []);
+    initializeHousehold(householdId);
+  }, [householdId, status]);
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-6">
@@ -28,7 +35,8 @@ export default function NewCardPage() {
         </p>
       </div>
 
-      <CardForm />
+      {/* Only render form once session has resolved and householdId is available */}
+      {householdId && <CardForm householdId={householdId} />}
     </div>
   );
 }

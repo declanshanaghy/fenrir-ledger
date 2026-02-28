@@ -33,6 +33,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import { getAllCardsGlobal } from "@/lib/storage";
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -97,6 +98,7 @@ function WolfSilhouette() {
 type HowlPhase = "idle" | "pulse" | "rising" | "holding" | "fading";
 
 export function KonamiHowl() {
+  const { data: session } = useSession();
   const sequenceRef = useRef<string[]>([]);
   const [phase, setPhase] = useState<HowlPhase>("idle");
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -130,7 +132,9 @@ export function KonamiHowl() {
     clearTimeouts();
 
     // Check for overdue / approaching cards.
-    const cards = getAllCardsGlobal();
+    // householdId from session — empty string when no session (easter egg still works, just no overdue check)
+    const householdId = session?.user?.householdId ?? "";
+    const cards = householdId ? getAllCardsGlobal(householdId) : [];
     const overdue = cards.some(
       (c) => c.status === "fee_approaching" || c.status === "promo_expiring"
     );
@@ -172,7 +176,7 @@ export function KonamiHowl() {
         document.body.classList.remove("konami-shake", "konami-shake-mobile");
       }, 400);
     }
-  }, [clearTimeouts, schedule]);
+  }, [clearTimeouts, schedule, session]);
 
   // Keydown listener — tracks the sequence and fires on completion.
   useEffect(() => {

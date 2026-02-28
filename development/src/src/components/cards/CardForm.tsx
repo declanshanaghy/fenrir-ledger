@@ -6,6 +6,9 @@
  * Used by both /cards/new and /cards/[id]/edit.
  * Uses react-hook-form + Zod for validation.
  * All money values are entered as dollars in the form but stored as cents.
+ *
+ * Sprint 3.1: householdId is now a required prop derived from the authenticated
+ * session. The form no longer uses the hardcoded DEFAULT_HOUSEHOLD_ID constant.
  */
 
 import { useState, useEffect, useRef } from "react";
@@ -46,7 +49,7 @@ import {
   isoToLocalDateString,
   localDateStringToIso,
 } from "@/lib/card-utils";
-import { KNOWN_ISSUERS, DEFAULT_HOUSEHOLD_ID } from "@/lib/constants";
+import { KNOWN_ISSUERS } from "@/lib/constants";
 
 // ─── Zod validation schema ────────────────────────────────────────────────────
 
@@ -88,9 +91,15 @@ type CardFormValues = z.infer<typeof cardFormSchema>;
 interface CardFormProps {
   /** If provided, the form is in edit mode with these initial values */
   initialValues?: Card;
+  /**
+   * The authenticated user's household ID (Google sub claim).
+   * Required for all storage operations — must be derived from the session
+   * by the parent page and passed down.
+   */
+  householdId: string;
 }
 
-export function CardForm({ initialValues }: CardFormProps) {
+export function CardForm({ initialValues, householdId }: CardFormProps) {
   const router = useRouter();
   const isEditMode = !!initialValues;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -189,10 +198,11 @@ export function CardForm({ initialValues }: CardFormProps) {
       const annualFeeDateIso = localDateStringToIso(data.annualFeeDate ?? "") || data.annualFeeDate || "";
       const bonusDeadlineIso = localDateStringToIso(data.bonusDeadline ?? "") || data.bonusDeadline || "";
 
-      // Build the Card object
+      // Build the Card object. householdId comes from the authenticated session
+      // (passed as a prop), not from a hardcoded constant.
       const card: Card = {
         id: initialValues?.id ?? generateId(),
-        householdId: initialValues?.householdId ?? DEFAULT_HOUSEHOLD_ID,
+        householdId: initialValues?.householdId ?? householdId,
         issuerId: data.issuerId,
         cardName: data.cardName,
         openDate: openDateIso,
@@ -230,7 +240,8 @@ export function CardForm({ initialValues }: CardFormProps) {
 
   const handleDelete = () => {
     if (!initialValues?.id) return;
-    deleteCard(initialValues.id);
+    // deleteCard now takes (householdId, cardId) — use the prop householdId
+    deleteCard(householdId, initialValues.id);
     router.push("/");
   };
 
@@ -240,8 +251,8 @@ export function CardForm({ initialValues }: CardFormProps) {
    * The record is preserved; it is NOT deleted.
    */
   const handleClose = () => {
-    if (!initialValues?.id || !initialValues?.householdId) return;
-    closeCard(initialValues.householdId, initialValues.id);
+    if (!initialValues?.id) return;
+    closeCard(householdId, initialValues.id);
     router.push("/");
   };
 

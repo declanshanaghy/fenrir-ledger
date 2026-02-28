@@ -953,3 +953,251 @@ Expected: zero TypeScript errors, zero lint errors, `/valhalla` route present in
 | Cards closed via old status dropdown lack `closedAt` | Show "—" for closed date; still appear in Valhalla — acceptable |
 | Gleipnir fragment #6 `aria-description` not yet wired | Text is embedded; hunt detection mechanic is Sprint 4 |
 | No `prefers-reduced-motion` guard on stagger | Framer Motion `useReducedMotion` deferred — same as Story 3.3 |
+
+---
+
+# QA Handoff — Sprint 3, Story 3.1
+
+**From**: FiremanDecko (Principal Engineer)
+**To**: Loki (QA Tester)
+**Sprint**: 3
+**Story**: 3.1 — Google OIDC Auth (Auth.js v5 + localStorage scoped to householdId)
+**Date**: 2026-02-27
+
+---
+
+## What Was Implemented
+
+### 1. ADR-004 — OIDC Auth + Per-Household localStorage Namespacing
+
+New ADR at `architecture/adrs/ADR-004-oidc-auth-localStorage.md`. Documents five sub-decisions: auth library (Auth.js v5), JWT session strategy, `sub` as `householdId`, per-household localStorage key scheme, Vercel preview deployment approach.
+
+### 2. Auth.js v5 installation
+
+`next-auth@beta` (v5.0.0-beta.30) installed as a production dependency.
+
+### 3. `auth.ts` — Auth.js configuration
+
+- Google OAuth provider configured
+- JWT session strategy (stateless, HttpOnly cookie)
+- `jwt()` callback: embeds `token.householdId = profile.sub` on initial sign-in
+- `session()` callback: surfaces `session.user.householdId` from `token.householdId`
+
+### 4. `app/api/auth/[...nextauth]/route.ts` — API route handler
+
+Mounts Auth.js request handlers at `/api/auth/*`. All OAuth callbacks route through here.
+
+### 5. `next-auth.d.ts` — TypeScript type augmentation
+
+Project-root declaration file augments `@auth/core/types` Session and User interfaces, and `next-auth/jwt` JWT interface to include `householdId`. Placed at project root (not `src/`) to ensure tsconfig picks it up.
+
+### 6. `AuthProvider.tsx` — SessionProvider wrapper
+
+Client component wrapping `SessionProvider` from `next-auth/react`. Imported in root layout to give all client components access to `useSession()`.
+
+### 7. `middleware.ts` — Route protection
+
+Auth.js middleware guards all routes except `/api/auth/*`. Unauthenticated requests are redirected to `/api/auth/signin?callbackUrl=...` which initiates the Google OAuth flow.
+
+### 8. `storage.ts` refactored — per-household keys
+
+All localStorage keys are now namespaced by `householdId`:
+- `fenrir_ledger:{householdId}:cards` — card data per user
+- `fenrir_ledger:{householdId}:household` — household record per user
+- `fenrir_ledger:schema_version` — global schema version (unchanged)
+
+`deleteCard` and `getCardById` signatures now take `(householdId, id)`.
+`getAllCardsGlobal` now takes `(householdId)`.
+`initializeHousehold(householdId)` replaces `initializeDefaultHousehold()`.
+
+### 9. `constants.ts` updated
+
+`DEFAULT_HOUSEHOLD_ID` and `DEFAULT_HOUSEHOLD` removed. `STORAGE_KEYS` reduced to `SCHEMA_VERSION` only.
+
+### 10. Pages and components threaded with `householdId`
+
+All pages use `useSession()` to obtain `householdId` and pass it to storage functions.
+`CardForm.tsx` now accepts `householdId` as a required prop.
+`KonamiHowl.tsx` uses `useSession()` for the Ragnarök card-check.
+`TopBar.tsx` shows real user name from session and wires sign-out.
+
+---
+
+## Files Created / Modified (Story 3.1)
+
+| File | Action | Description |
+|------|--------|-------------|
+| `architecture/adrs/ADR-004-oidc-auth-localStorage.md` | Created | Auth architecture decision record |
+| `development/src/package.json` | Modified | Added `next-auth@beta` dependency |
+| `development/src/package-lock.json` | Modified | Updated lock file |
+| `development/src/next-auth.d.ts` | Created | TypeScript augmentation for Session/User/JWT types |
+| `development/src/src/auth.ts` | Created | Auth.js v5 configuration (Google provider, JWT callbacks) |
+| `development/src/src/app/api/auth/[...nextauth]/route.ts` | Created | Auth.js API route handler |
+| `development/src/src/middleware.ts` | Created | Route protection middleware |
+| `development/src/src/components/layout/AuthProvider.tsx` | Created | SessionProvider client wrapper |
+| `development/src/src/app/layout.tsx` | Modified | Wrapped children in `<AuthProvider>` |
+| `development/src/src/lib/storage.ts` | Modified | Per-household key namespacing; updated function signatures |
+| `development/src/src/lib/constants.ts` | Modified | Removed DEFAULT_HOUSEHOLD_ID/DEFAULT_HOUSEHOLD; trimmed STORAGE_KEYS |
+| `development/src/src/app/page.tsx` | Modified | Uses `useSession()` for householdId |
+| `development/src/src/app/valhalla/page.tsx` | Modified | Uses `useSession()` for householdId |
+| `development/src/src/app/cards/new/page.tsx` | Modified | Uses `useSession()`, passes householdId to CardForm |
+| `development/src/src/app/cards/[id]/edit/page.tsx` | Modified | Uses `useSession()`, passes householdId to CardForm |
+| `development/src/src/components/cards/CardForm.tsx` | Modified | Accepts `householdId` prop; updated deleteCard/closeCard calls |
+| `development/src/src/components/layout/KonamiHowl.tsx` | Modified | Uses `useSession()` for getAllCardsGlobal |
+| `development/src/src/components/layout/TopBar.tsx` | Modified | Real session user name; signOut() wired |
+| `development/src/.env.example` | Modified | Added Google OAuth + Auth.js variables |
+| `development/implementation-plan.md` | Modified | Story 3.1 section added |
+| `development/qa-handoff.md` | Modified | This section |
+
+---
+
+## How to Deploy (Story 3.1)
+
+### Environment variables required
+
+Create `development/src/.env.local` from the example:
+
+```bash
+cp development/src/.env.example development/src/.env.local
+```
+
+Edit `.env.local` and fill in real values:
+
+```
+GOOGLE_CLIENT_ID=<your Google OAuth client ID>
+GOOGLE_CLIENT_SECRET=<your Google OAuth client secret>
+AUTH_SECRET=<output of: openssl rand -hex 32>
+AUTH_URL=http://localhost:9653
+AUTH_TRUST_HOST=true
+```
+
+### Google OAuth setup (one-time)
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create or select a project
+3. APIs & Services → Credentials → Create OAuth client ID
+4. Application type: **Web application**
+5. Authorized redirect URIs:
+   - `http://localhost:9653/api/auth/callback/google` (local dev)
+   - `https://fenrir-ledger.vercel.app/api/auth/callback/google` (production)
+6. Copy the Client ID and Client Secret into `.env.local`
+
+### Start the dev server
+
+```bash
+cd development/src
+npm run dev
+# open http://localhost:9653
+```
+
+The app immediately redirects to Google's OAuth consent screen on first visit.
+
+---
+
+## Test Focus Areas (Story 3.1)
+
+### 1. Authentication gate — happy path
+
+1. Open a fresh browser tab to `http://localhost:9653`
+2. Verify immediate redirect to Google sign-in (not the app dashboard)
+3. Sign in with a Google account
+4. Verify redirect back to `http://localhost:9653` (dashboard)
+5. Verify the dashboard loads with the signed-in user's name in the TopBar
+
+### 2. TopBar user display
+
+1. After signing in, verify the TopBar shows:
+   - Initials derived from the Google account name (e.g. "DS" for "Declan Shanaghy")
+   - Full name visible at ≥640px viewport width
+   - Log out button present
+
+### 3. Sign-out flow
+
+1. Click "Log out" in the TopBar
+2. Verify redirect to the sign-in page (or Google OAuth page)
+3. Verify navigating back to `http://localhost:9653` requires re-authentication
+
+### 4. Per-household localStorage namespacing
+
+1. Sign in as User A
+2. Add two cards
+3. Open DevTools → Application → Local Storage
+4. Verify cards are stored under key `fenrir_ledger:{sub-of-user-A}:cards` (not the old flat `fenrir_ledger:cards` key)
+5. Verify the old flat `fenrir_ledger:cards` key does NOT exist (or is empty)
+
+### 5. Data isolation between accounts (if two Google accounts available)
+
+1. Sign in as User A — add a card called "User A Card"
+2. Sign out
+3. Sign in as User B
+4. Verify the dashboard is empty (User B's data is isolated from User A's)
+5. Add a card called "User B Card"
+6. Sign out, sign back in as User A — verify only "User A Card" appears
+
+### 6. Card CRUD with auth
+
+1. Sign in
+2. Add a card — verify it saves and appears on the dashboard
+3. Edit the card — verify changes persist
+4. Close the card — verify it moves to Valhalla
+5. Delete a card — verify it disappears everywhere
+6. Reload the page — verify card state persists correctly
+
+### 7. Valhalla with auth
+
+1. Sign in and close a card
+2. Navigate to `/valhalla`
+3. Verify the closed card tombstone appears
+4. Sign out, sign in as a different account — verify Valhalla is empty for the new account
+
+### 8. Protected routes
+
+1. Attempt to visit `/cards/new` in an incognito window (no session)
+2. Verify redirect to Google sign-in
+3. Attempt to visit `/valhalla` without a session
+4. Verify redirect to Google sign-in
+
+### 9. Session persistence across page refresh
+
+1. Sign in
+2. Add a card
+3. Close the browser tab; reopen `http://localhost:9653`
+4. Verify the session is still active (no re-authentication required within the JWT expiry window)
+5. Verify the card is still present
+
+### 10. Konami Howl — Ragnarök pulse with auth
+
+1. Sign in and ensure at least one card has `fee_approaching` or `promo_expiring` status
+2. Enter the Konami sequence (↑↑↓↓←→←→BA)
+3. Verify the deep-red Ragnarök pulse fires before the wolf rises (indicates `getAllCardsGlobal` found overdue cards via the authenticated session)
+
+### 11. Build verification
+
+```bash
+cd development/src && npm run build
+```
+
+Expected: zero TypeScript errors, zero lint errors, `/api/auth/[...nextauth]` route present in build output.
+
+---
+
+## Known Limitations (Story 3.1)
+
+| Limitation | Impact |
+|-----------|--------|
+| Google OAuth only works on production domain | Preview Vercel deployments redirect to an error page when signing in — acceptable; use for UI-only review |
+| No custom sign-in page | Users see Google's hosted consent screen, not a branded Fenrir Ledger page |
+| Old flat-key localStorage data orphaned | Sprint 1–2 data under `fenrir_ledger:cards` is unreachable — no real users, acceptable |
+| JWT cannot be individually revoked | Session expires on JWT TTL (default ~30 days); no per-session revocation |
+| `householdId` is opaque in DevTools | Google sub value is numeric string, not human-readable |
+
+## Story 3.1 Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GOOGLE_CLIENT_ID` | Yes | Google OAuth 2.0 client ID |
+| `GOOGLE_CLIENT_SECRET` | Yes | Google OAuth 2.0 client secret |
+| `AUTH_SECRET` | Yes | JWT signing secret — generate with `openssl rand -hex 32` |
+| `AUTH_URL` | Yes | Canonical app origin (`http://localhost:9653` for local dev) |
+| `AUTH_TRUST_HOST` | Recommended | Set to `true` for Vercel preview deployments |
+| `NEXT_PUBLIC_APP_VERSION` | No | App version string for display |

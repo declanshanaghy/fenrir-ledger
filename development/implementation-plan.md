@@ -761,3 +761,166 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 | `closedAt` absent on cards closed via the old status dropdown | Cards manually set to `status: "closed"` before this story have no `closedAt`; they appear in Valhalla but show "—" for closed date. Acceptable. |
 | Gleipnir fragment #6 (`aria-description`) not yet wired to hunt mechanic | The `aria-description` attribute on the empty state carries the fragment text but the Gleipnir Hunt detection system is Sprint 4 work. |
 | `prefers-reduced-motion` not guarded | Framer Motion `useReducedMotion` hook not wired — deferred from Story 3.3, still open. |
+
+---
+
+# Implementation Plan: Fenrir Ledger Sprint 3 — Story 3.1
+
+## Story 3.1: Google OIDC Auth (Auth.js v5 + localStorage scoped to householdId)
+
+### Prerequisites
+
+- Sprint 3, Stories 3.2, 3.3, and 3.5 complete
+- Google Cloud project with OAuth consent screen configured
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SECRET`, `AUTH_URL` in `.env.local`
+
+### Tasks (ordered)
+
+---
+
+### Task 3.1.1: Write ADR-004
+
+- **File(s)**: `architecture/adrs/ADR-004-oidc-auth-localStorage.md`
+- **Depends on**: Nothing
+- **Implementation Notes**:
+  - Documents five sub-decisions: auth library (Auth.js v5), session strategy (JWT), householdId derivation (Google sub), localStorage key namespacing (per-household), Vercel preview deployment approach
+  - Auth.js v5 chosen over Clerk (vendor lock-in), Lucia (needs DB), custom OAuth (security risk)
+  - JWT strategy chosen over DB sessions (no additional infrastructure)
+  - `sub` claim chosen as householdId for stability across email/name changes
+  - Per-household keys (`fenrir_ledger:{householdId}:cards`) chosen over flat keys
+- **Definition of Done**: ADR-004 file exists; covers all five sub-decisions
+
+---
+
+### Task 3.1.2: Install next-auth@beta
+
+- **File(s)**: `development/src/package.json`, `development/src/package-lock.json`
+- **Depends on**: Nothing
+- **Implementation Notes**:
+  - `cd development/src && npm install next-auth@beta`
+  - Installs as a production dependency
+- **Definition of Done**: `next-auth` at version `^5.0.0-beta.x` in `dependencies`
+
+---
+
+### Task 3.1.3: Create `auth.ts` and API route handler
+
+- **File(s)**:
+  - `development/src/src/auth.ts`
+  - `development/src/src/app/api/auth/[...nextauth]/route.ts`
+  - `development/src/next-auth.d.ts` (TypeScript augmentation — project root, not `src/`)
+- **Depends on**: Task 3.1.2
+- **Implementation Notes**:
+  - `auth.ts`: Google provider, `session: { strategy: "jwt" }`, JWT callback embeds `token.householdId = profile.sub`, session callback surfaces `session.user.householdId`
+  - `route.ts`: re-exports `{ GET, POST } = handlers` from `@/auth`
+  - `next-auth.d.ts`: augments `@auth/core/types` Session and User interfaces; augments `next-auth/jwt` JWT interface
+  - Type augmentation file must live at project root (not in `src/`) for the tsconfig `include` patterns to pick it up at compile time
+- **Edge Cases**: `auth.d.ts` inside `src/` is not reliably picked up by the bundler compilation; the project-root placement is required
+- **Definition of Done**: `npm run build` passes; `session.user.householdId` is typed correctly
+
+---
+
+### Task 3.1.4: Create `AuthProvider.tsx` and wrap root layout
+
+- **File(s)**:
+  - `development/src/src/components/layout/AuthProvider.tsx`
+  - `development/src/src/app/layout.tsx` (modified)
+- **Depends on**: Task 3.1.3
+- **Implementation Notes**:
+  - `AuthProvider.tsx`: thin `"use client"` wrapper around `SessionProvider` from `next-auth/react`
+  - `layout.tsx`: wraps `<AppShell>` and `<ConsoleSignature>` inside `<AuthProvider>`
+  - Required because `SessionProvider` uses React Context — must be a client component
+  - The root layout is a Server Component; `AuthProvider` is the client boundary
+- **Definition of Done**: All pages that call `useSession()` have a `SessionProvider` ancestor
+
+---
+
+### Task 3.1.5: Create middleware for route protection
+
+- **File(s)**: `development/src/src/middleware.ts`
+- **Depends on**: Task 3.1.3
+- **Implementation Notes**:
+  - Uses Auth.js `auth()` as the middleware wrapper
+  - `/api/auth/*` passes through without auth check
+  - All other routes: if no session, redirect to `/api/auth/signin?callbackUrl=...`
+  - Matcher excludes Next.js internals, static assets, and image files
+  - `AUTH_TRUST_HOST=true` in env allows Vercel preview deployments to not reject the dynamic hostname
+- **Edge Cases**: Sign-in redirect must include the `callbackUrl` parameter so users land back on the originally requested page after Google authentication
+- **Definition of Done**: Unauthenticated requests to `/`, `/cards/new`, `/valhalla` redirect to Google sign-in
+
+---
+
+### Task 3.1.6: Refactor `storage.ts` — per-household keys
+
+- **File(s)**: `development/src/src/lib/storage.ts`, `development/src/src/lib/constants.ts`
+- **Depends on**: Nothing (independent of auth wiring)
+- **Implementation Notes**:
+  - New private key builders: `cardsKey(householdId)` → `fenrir_ledger:{householdId}:cards`, `householdKey(householdId)` → `fenrir_ledger:{householdId}:household`
+  - Schema version key remains global: `fenrir_ledger:schema_version`
+  - `getAllCards(householdId)` and `setAllCards(householdId, cards)` now take `householdId` as first argument
+  - `deleteCard` signature changes from `(id)` to `(householdId, id)`
+  - `getCardById` signature changes from `(id)` to `(householdId, id)`
+  - `getAllCardsGlobal` signature changes from `()` to `(householdId)` (easter egg compatibility)
+  - `initializeDefaultHousehold()` replaced by `initializeHousehold(householdId)`
+  - `constants.ts`: `DEFAULT_HOUSEHOLD_ID` and `DEFAULT_HOUSEHOLD` removed; `STORAGE_KEYS` reduced to `SCHEMA_VERSION` only
+  - Old flat keys (`fenrir_ledger:cards`, `fenrir_ledger:households`) abandoned — no migration (no real users)
+- **Edge Cases**: `getHouseholds()` retained for API compatibility but returns `[]` — callers should use `initializeHousehold()` directly
+- **Definition of Done**: `npm run build` passes; no references to `DEFAULT_HOUSEHOLD_ID` remain
+
+---
+
+### Task 3.1.7: Thread `householdId` from session through all pages and components
+
+- **File(s)**:
+  - `development/src/src/app/page.tsx`
+  - `development/src/src/app/valhalla/page.tsx`
+  - `development/src/src/app/cards/new/page.tsx`
+  - `development/src/src/app/cards/[id]/edit/page.tsx`
+  - `development/src/src/components/cards/CardForm.tsx`
+  - `development/src/src/components/layout/KonamiHowl.tsx`
+  - `development/src/src/components/layout/TopBar.tsx`
+- **Depends on**: Tasks 3.1.4, 3.1.6
+- **Implementation Notes**:
+  - All pages: `const { data: session, status } = useSession()` to get `householdId`; `useEffect` waits for `status !== "loading"` before reading localStorage
+  - `CardForm.tsx`: `householdId` added as required prop; `DEFAULT_HOUSEHOLD_ID` import removed; `deleteCard(householdId, id)` updated to new signature
+  - `KonamiHowl.tsx`: `useSession()` to get householdId for `getAllCardsGlobal(householdId)`
+  - `TopBar.tsx`: `useSession()` to get user name for display; `signOut()` for logout
+  - Pages render `<CardForm householdId={householdId} />` only when householdId is available
+- **Edge Cases**: Pages must show loading skeleton while `status === "loading"` to avoid a flash of empty state before session resolves
+- **Definition of Done**: No uses of `DEFAULT_HOUSEHOLD_ID` remain; all storage calls pass `householdId` from session
+
+---
+
+### Task 3.1.8: Update `.env.example`
+
+- **File(s)**: `development/src/.env.example`
+- **Depends on**: Task 3.1.3
+- **Implementation Notes**:
+  - Add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SECRET`, `AUTH_URL`, `AUTH_TRUST_HOST`
+  - Include setup instructions for Google Cloud Console credentials
+  - Include the correct callback URL format for both local dev and production
+- **Definition of Done**: `.env.example` committed; `.env.local` is gitignored
+
+---
+
+### Task 3.1.9: Build verification
+
+- **File(s)**: N/A (verification step)
+- **Depends on**: Tasks 3.1.1–3.1.8
+- **Implementation Notes**:
+  - `cd development/src && npm run build`
+  - Zero TypeScript errors, zero lint errors
+  - Build output must include `/api/auth/[...nextauth]` route
+- **Definition of Done**: `npm run build` completes with no errors; all 7 routes present
+
+---
+
+## Known Limitations (Sprint 3 — Story 3.1)
+
+| Limitation | Notes |
+|-----------|-------|
+| Google OAuth only works on production domain | Preview Vercel deployments cannot complete the OAuth flow (no dynamic redirect URI support in Google Console). `AUTH_TRUST_HOST=true` mitigates the host validation issue but the redirect URI mismatch remains. |
+| No sign-in page UI | Auth.js redirects directly to Google's hosted consent screen. No custom branded sign-in page. |
+| Old flat-key localStorage data orphaned | Data written by Sprints 1–2 under `fenrir_ledger:cards` is unreachable after this change. Acceptable — no production users. |
+| JWT cannot be individually revoked | Revoking access requires signing out of Google or waiting for token expiry. Acceptable for a personal tool. |
+| `householdId` is opaque in DevTools | The Google `sub` value (e.g. "115304845638166398388") is not human-readable in localStorage DevTools. Acceptable. |
