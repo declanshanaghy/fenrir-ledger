@@ -138,6 +138,7 @@ function AuthCallbackContent() {
           access_token: string;
           id_token: string;
           expires_in: number;
+          refresh_token?: string; // only present on first consent (access_type=offline)
         };
 
         // Decode id_token to get user profile claims.
@@ -146,6 +147,7 @@ function AuthCallbackContent() {
         const session: FenrirSession = {
           access_token: tokens.access_token,
           id_token: tokens.id_token,
+          ...(tokens.refresh_token ? { refresh_token: tokens.refresh_token } : {}),
           expires_at: Date.now() + tokens.expires_in * 1000,
           user: {
             sub: claims.sub,

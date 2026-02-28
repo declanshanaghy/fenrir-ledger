@@ -130,6 +130,11 @@ export interface FenrirSession {
   access_token: string;
   /** Google OIDC id token (signed JWT from Google) */
   id_token: string;
+  /**
+   * Google OAuth2 refresh token — only returned on first consent (access_type=offline).
+   * Stored so Google remembers the grant and skips the consent screen on re-auth.
+   */
+  refresh_token?: string;
   /** Unix timestamp (ms) when this session expires — Date.now() + expires_in * 1000 */
   expires_at: number;
   /** Decoded claims from the id_token */

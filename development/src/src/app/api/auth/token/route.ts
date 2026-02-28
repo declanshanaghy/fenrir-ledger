@@ -126,6 +126,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Forward Google's response (status + body) unchanged.
   const responseBody = await googleResponse.text();
+  if (!googleResponse.ok) {
+    console.error(`[Fenrir] Token proxy: Google returned ${googleResponse.status}:`, responseBody);
+  }
   return new NextResponse(responseBody, {
     status: googleResponse.status,
     headers: { "Content-Type": "application/json" },

@@ -91,6 +91,9 @@ function SignInContent() {
       redirect_uri: redirectUri,
       response_type: "code",
       scope: "openid email profile",
+      // offline access → Google issues a refresh token on first consent and
+      // remembers the grant. Subsequent sign-ins skip the consent screen entirely.
+      access_type: "offline",
       code_challenge: challenge,
       code_challenge_method: "S256",
       state,
