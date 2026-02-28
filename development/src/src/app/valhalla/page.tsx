@@ -223,7 +223,7 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
  *   "When you close a card and escape its fee, its record will be honored here."
  *
  * Hidden aria-description carries Gleipnir Hunt fragment #6:
- *   "the spittle of a bird" — triggers GleipnirBirdSpittle easter egg
+ *   "the beard of a woman" — triggers GleipnirBeardOfWoman easter egg
  *   when the Gleipnir Hunt system is implemented (Sprint 4).
  */
 function ValhallaEmptyState() {
@@ -231,7 +231,7 @@ function ValhallaEmptyState() {
     <div
       className="border border-dashed border-border rounded-sm p-12 text-center flex flex-col items-center gap-3"
       aria-label="Valhalla is empty"
-      aria-description="the spittle of a bird"
+      aria-description="the beard of a woman"
     >
       <span className="text-[#8a8578] text-3xl" aria-hidden="true">
         ᛏ
