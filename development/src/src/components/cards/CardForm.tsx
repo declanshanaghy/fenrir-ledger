@@ -514,23 +514,16 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
       </fieldset>
 
       {/* ── Actions ───────────────────────────────────────────── */}
-      <div className="flex items-center justify-between pt-2">
-        <div className="flex gap-3">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? "Saving..."
-              : isEditMode
-              ? "Save changes"
-              : "Add card"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push("/")}
-          >
-            Cancel
-          </Button>
-        </div>
+      {/*
+       * Button layout convention (design system):
+       * Left  — destructive actions (Close Card, Delete) — edit mode only
+       * Right — [Cancel] [Primary action] — always right-aligned
+       * This matches the global form button rule: positive action far right,
+       * Cancel immediately to its left, destructive actions isolated on left.
+       */}
+      <div className="flex items-center pt-2">
+        {/* Left slot — destructive actions (edit mode only) */}
+        <div className="flex gap-2">
 
         {/* Close Card + Delete buttons — edit mode only */}
         {isEditMode && initialValues?.status !== "closed" && (
@@ -627,6 +620,26 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             </DialogContent>
           </Dialog>
         )}
+
+        </div>{/* /left slot */}
+
+        {/* Right slot — Cancel + primary action, always right-aligned */}
+        <div className="flex gap-3 ml-auto">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/")}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting
+              ? "Saving..."
+              : isEditMode
+              ? "Save changes"
+              : "Add card"}
+          </Button>
+        </div>
       </div>
     </form>
   );
