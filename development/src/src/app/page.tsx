@@ -6,12 +6,12 @@
  * Reads the authenticated session to obtain householdId (Google sub claim),
  * then loads all cards from localStorage under the per-household key.
  *
- * The session is always present here because the middleware redirects
- * unauthenticated requests to the Google OAuth flow before reaching this page.
+ * Session is always present here because AuthContext redirects
+ * unauthenticated users to /sign-in before reaching this page.
  */
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { CardSkeletonGrid } from "@/components/dashboard/CardSkeletonGrid";
@@ -19,7 +19,7 @@ import { initializeHousehold, getCards, migrateIfNeeded } from "@/lib/storage";
 import type { Card } from "@/lib/types";
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useAuth();
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -27,10 +27,10 @@ export default function DashboardPage() {
     // Wait for the session to resolve before reading localStorage
     if (status === "loading") return;
 
-    const householdId = session?.user?.householdId;
+    const householdId = session?.user?.sub;
     if (!householdId) {
       // Session resolved but no householdId — should not happen in normal flow
-      // (middleware guarantees auth), but guard defensively.
+      // (AuthContext guarantees auth), but guard defensively.
       setIsLoading(false);
       return;
     }

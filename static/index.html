@@ -1005,8 +1005,18 @@
 
   <script>
 (function() {
-  /* ── App URL — change this one value to update all CTA links ── */
-  var APP_URL = 'https://fenrir-ledger.vercel.app';
+  /*
+   * ── App URL — resolved at runtime ────────────────────────────────────
+   * When served from a real server (dev, Vercel, any other host) the app
+   * lives at the same origin as this page, so window.location.origin is
+   * always correct and requires no hardcoding.
+   *
+   * When opened as a local file (file://) there is no server, so fall
+   * back to the production Vercel URL.
+   */
+  var APP_URL = window.location.protocol === 'file:'
+    ? 'https://fenrir-ledger.vercel.app'
+    : window.location.origin;
 
   /* Wire every [data-app-link] element to APP_URL */
   document.querySelectorAll('[data-app-link]').forEach(function(el) {

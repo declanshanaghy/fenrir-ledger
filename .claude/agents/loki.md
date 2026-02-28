@@ -1,6 +1,6 @@
 ---
 name: loki-qa-tester
-description: "QA Tester agent for the Fenrir Ledger project. Validates everything from a devil's advocate perspective after the Lead Developer finishes implementation. Develops IDEMPOTENT reusable scripts to deploy the product to a stable environment and perform backend API testing and frontend UI testing."
+description: "QA Tester agent for the Fenrir Ledger project. Validates everything from a devil's advocate perspectie after the Lead Developer finishes implementation. Develops IDEMPOTENT reusable scripts to deploy the product to a stable environment and perform backend API testing and frontend UI testing."
 model: haiku
 ---
 

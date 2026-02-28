@@ -10,7 +10,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/hooks/useAuth";
 import { CardForm } from "@/components/cards/CardForm";
 import {
   migrateIfNeeded,
@@ -22,14 +22,14 @@ import type { Card } from "@/lib/types";
 export default function EditCardPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status } = useAuth();
   const [card, setCard] = useState<Card | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (status === "loading") return;
 
-    const householdId = session?.user?.householdId;
+    const householdId = session?.user?.sub;
     if (!householdId) {
       // Session resolved but no householdId — redirect to root
       router.replace("/");

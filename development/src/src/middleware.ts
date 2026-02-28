@@ -1,45 +1,22 @@
 /**
- * Fenrir Ledger — Route Protection Middleware
+ * Fenrir Ledger — Next.js Middleware
  *
- * All routes except /api/auth/* require an authenticated session.
- * Unauthenticated users are redirected directly to the Google OAuth
- * consent screen (no custom sign-in page).
+ * Auth is fully client-side (PKCE + localStorage). The server has no session
+ * to inspect, so this middleware does nothing except define the matcher pattern
+ * so Next.js knows which routes to process.
  *
- * Auth.js v5 middleware integrates via the exported `auth` function.
- * When a request arrives without a valid session, auth() returns null
- * and we redirect to the sign-in URL.
+ * Route protection is handled by AuthContext on the client:
+ *  - On mount, AuthContext reads "fenrir:auth" from localStorage.
+ *  - If missing or expired, it redirects to /sign-in.
  *
- * See ADR-004 for the authentication architecture decision.
- *
- * Protected routes:
- *   /                  — dashboard
- *   /cards/*           — card add/edit pages
- *   /valhalla          — Valhalla archive
- *
- * Public routes:
- *   /api/auth/*        — Auth.js callback and sign-in endpoints
+ * See ADR-005 for the auth architecture migration decision.
  */
 
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
-export default auth(function middleware(req) {
-  const { nextUrl } = req;
-
-  // Allow Auth.js API routes through without authentication check
-  if (nextUrl.pathname.startsWith("/api/auth")) {
-    return NextResponse.next();
-  }
-
-  // If no session, redirect to Google sign-in
-  if (!req.auth) {
-    const signInUrl = new URL("/api/auth/signin", nextUrl.origin);
-    signInUrl.searchParams.set("callbackUrl", nextUrl.href);
-    return NextResponse.redirect(signInUrl);
-  }
-
+export function middleware(/* req: NextRequest */) {
   return NextResponse.next();
-});
+}
 
 /**
  * Matcher — apply middleware to all routes except:

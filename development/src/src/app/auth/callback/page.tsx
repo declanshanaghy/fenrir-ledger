@@ -1,0 +1,248 @@
+"use client";
+
+/**
+ * Auth Callback Page — /auth/callback
+ *
+ * Handles the redirect from Google's OAuth2 consent screen.
+ * Expected URL params: ?code=<auth_code>&state=<csrf_state>
+ *
+ * Flow:
+ *  1. Read { verifier, state, callbackUrl } from sessionStorage.
+ *  2. Verify the state param matches to prevent CSRF.
+ *  3. POST to Google's token endpoint with code + code_verifier (PKCE).
+ *  4. Decode the id_token JWT payload (base64url middle segment).
+ *  5. Build a FenrirSession and write it to localStorage("fenrir:auth").
+ *  6. Redirect to callbackUrl (default: /).
+ *
+ * No server involvement. No client_secret. Public client / PKCE.
+ *
+ * See ADR-005 for the auth architecture decision.
+ */
+
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { setSession } from "@/lib/auth/session";
+import type { FenrirSession } from "@/lib/types";
+
+/** sessionStorage key written by /sign-in */
+const PKCE_SESSION_KEY = "fenrir:pkce";
+
+/** Google token endpoint */
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+
+// ── id_token decoder ──────────────────────────────────────────────────────────
+
+interface IdTokenClaims {
+  sub: string;
+  email: string;
+  name: string;
+  picture: string;
+  exp: number;
+}
+
+/**
+ * Decodes the payload of a JWT without verifying the signature.
+ * Safe here because the token was received directly from Google's token
+ * endpoint over HTTPS and the exchange was PKCE-protected.
+ */
+function decodeIdToken(idToken: string): IdTokenClaims {
+  const parts = idToken.split(".");
+  if (parts.length !== 3) {
+    throw new Error("Invalid id_token format");
+  }
+  // Restore base64url padding before decoding.
+  const payload = parts[1]!.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
+  const decoded = atob(padded);
+  return JSON.parse(decoded) as IdTokenClaims;
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+type CallbackStatus = "exchanging" | "success" | "error";
+
+function AuthCallbackContent() {
+  const searchParams = useSearchParams();
+  const [callbackStatus, setCallbackStatus] = useState<CallbackStatus>("exchanging");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+
+  useEffect(() => {
+    const code = searchParams.get("code");
+    const stateParam = searchParams.get("state");
+    const errorParam = searchParams.get("error");
+
+    // Google returned an error (e.g., access_denied)
+    if (errorParam) {
+      setErrorMessage(`Google returned: ${errorParam}`);
+      setCallbackStatus("error");
+      return;
+    }
+
+    if (!code || !stateParam) {
+      setErrorMessage("Missing code or state in callback URL.");
+      setCallbackStatus("error");
+      return;
+    }
+
+    // Read PKCE transient values stored by /sign-in
+    const raw = sessionStorage.getItem(PKCE_SESSION_KEY);
+    if (!raw) {
+      setErrorMessage("PKCE session data missing. Please try signing in again.");
+      setCallbackStatus("error");
+      return;
+    }
+
+    let pkceData: { verifier: string; state: string; callbackUrl: string };
+    try {
+      pkceData = JSON.parse(raw) as typeof pkceData;
+    } catch {
+      setErrorMessage("Corrupt PKCE session data.");
+      setCallbackStatus("error");
+      return;
+    }
+
+    // CSRF check
+    if (pkceData.state !== stateParam) {
+      setErrorMessage("State mismatch — possible CSRF attack. Please sign in again.");
+      setCallbackStatus("error");
+      return;
+    }
+
+    // Clean up PKCE transient data immediately after reading.
+    sessionStorage.removeItem(PKCE_SESSION_KEY);
+
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      setErrorMessage("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured.");
+      setCallbackStatus("error");
+      return;
+    }
+
+    const redirectUri = `${window.location.origin}/auth/callback`;
+
+    // Exchange code for tokens
+    async function exchangeCode() {
+      try {
+        const body = new URLSearchParams({
+          code: code!,
+          client_id: clientId!,
+          redirect_uri: redirectUri,
+          grant_type: "authorization_code",
+          code_verifier: pkceData.verifier,
+        });
+
+        const response = await fetch(GOOGLE_TOKEN_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: body.toString(),
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Token exchange failed (${response.status}): ${text}`);
+        }
+
+        const tokens = (await response.json()) as {
+          access_token: string;
+          id_token: string;
+          expires_in: number;
+        };
+
+        // Decode id_token to get user profile claims.
+        const claims = decodeIdToken(tokens.id_token);
+
+        const session: FenrirSession = {
+          access_token: tokens.access_token,
+          id_token: tokens.id_token,
+          expires_at: Date.now() + tokens.expires_in * 1000,
+          user: {
+            sub: claims.sub,
+            email: claims.email,
+            name: claims.name,
+            picture: claims.picture,
+          },
+        };
+
+        setSession(session);
+        setCallbackStatus("success");
+
+        // Redirect to the original destination.
+        const destination = pkceData.callbackUrl || "/";
+        window.location.href = destination;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error("[Fenrir] Auth callback error:", message);
+        setErrorMessage(message);
+        setCallbackStatus("error");
+      }
+    }
+
+    exchangeCode();
+    // Run only once on mount — searchParams content is stable for callback.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="text-center flex flex-col items-center gap-4">
+        {callbackStatus === "exchanging" && (
+          <>
+            <p className="font-display text-gold tracking-wide text-sm">
+              Binding the oath...
+            </p>
+            <p className="text-muted-foreground font-body italic text-xs">
+              Securing your passage through the Bifröst.
+            </p>
+          </>
+        )}
+
+        {callbackStatus === "success" && (
+          <>
+            <p className="font-display text-gold tracking-wide text-sm">
+              The wolf is named.
+            </p>
+            <p className="text-muted-foreground font-body italic text-xs">
+              Entering the hall...
+            </p>
+          </>
+        )}
+
+        {callbackStatus === "error" && (
+          <>
+            <p className="font-heading text-sm text-destructive uppercase tracking-wide">
+              The Bifröst trembled
+            </p>
+            <p className="text-muted-foreground font-body text-xs max-w-xs">
+              {errorMessage}
+            </p>
+            <a
+              href="/sign-in"
+              className="mt-2 text-sm text-gold hover:text-gold-bright font-heading tracking-wide underline underline-offset-4"
+            >
+              Return to the gate
+            </a>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// useSearchParams requires Suspense in Next.js 15 App Router static export.
+export default function AuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
+          <div className="text-center flex flex-col items-center gap-4">
+            <p className="font-display text-gold tracking-wide text-sm">
+              Binding the oath...
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <AuthCallbackContent />
+    </Suspense>
+  );
+}

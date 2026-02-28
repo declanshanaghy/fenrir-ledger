@@ -116,3 +116,29 @@ export interface Issuer {
   id: string;
   name: string;
 }
+
+/**
+ * FenrirSession — the auth session stored in localStorage under "fenrir:auth".
+ *
+ * Populated from Google's token endpoint response and the decoded id_token.
+ * No cookies. No server-side session. Public client / PKCE.
+ *
+ * See ADR-005 for the auth architecture migration decision.
+ */
+export interface FenrirSession {
+  /** Google OAuth2 access token */
+  access_token: string;
+  /** Google OIDC id token (signed JWT from Google) */
+  id_token: string;
+  /** Unix timestamp (ms) when this session expires — Date.now() + expires_in * 1000 */
+  expires_at: number;
+  /** Decoded claims from the id_token */
+  user: {
+    /** Google account immutable ID — used as householdId */
+    sub: string;
+    email: string;
+    name: string;
+    /** Google CDN avatar URL — render with referrerPolicy="no-referrer" */
+    picture: string;
+  };
+}

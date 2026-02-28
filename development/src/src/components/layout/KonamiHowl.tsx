@@ -33,7 +33,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/hooks/useAuth";
 import { getAllCardsGlobal } from "@/lib/storage";
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -98,7 +98,7 @@ function WolfSilhouette() {
 type HowlPhase = "idle" | "pulse" | "rising" | "holding" | "fading";
 
 export function KonamiHowl() {
-  const { data: session } = useSession();
+  const { data: session } = useAuth();
   const sequenceRef = useRef<string[]>([]);
   const [phase, setPhase] = useState<HowlPhase>("idle");
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -133,7 +133,7 @@ export function KonamiHowl() {
 
     // Check for overdue / approaching cards.
     // householdId from session — empty string when no session (easter egg still works, just no overdue check)
-    const householdId = session?.user?.householdId ?? "";
+    const householdId = session?.user?.sub ?? "";
     const cards = householdId ? getAllCardsGlobal(householdId) : [];
     const overdue = cards.some(
       (c) => c.status === "fee_approaching" || c.status === "promo_expiring"

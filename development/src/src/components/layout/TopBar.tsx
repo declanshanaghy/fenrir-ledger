@@ -4,37 +4,101 @@
  * TopBar — full-width sticky application header.
  *
  * Left:  Fenrir logo — click to open the About modal.
- * Right: Avatar (initials from Google name) + user name + logout button.
+ * Right: Google avatar (or ᛟ rune fallback) + email + dropdown.
  *
- * Sprint 3.1: wired to Auth.js v5 session via useSession().
- * The mock user is replaced with real session data.
- * The logout button calls signOut() to invalidate the JWT cookie.
+ * Dropdown contents: full name + email + "Sign out" button.
+ * Mobile: avatar-only in bar; name + email visible inside dropdown.
+ * Desktop: avatar + truncated email in bar; full name + email in dropdown.
+ *
+ * OIDC profile from FenrirSession.user:
+ *   picture → <img referrerPolicy="no-referrer"> (required for Google CDN)
+ *   email   → displayed next to avatar (desktop), inside dropdown (mobile)
+ *   name    → inside dropdown only
+ *
+ * Fallback: ᛟ rune in a gold-ringed circle if picture is absent or errors.
+ *
+ * Sign out clears localStorage session and redirects to /sign-in.
  */
 
-import { useState } from "react";
-import { useSession, signOut } from "next-auth/react";
-import { LogOut } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { AboutModal } from "@/components/layout/AboutModal";
 
-/**
- * Derives initials from a display name string.
- * "Declan Shanaghy" → "DS"
- * "Alice" → "A"
- * Falls back to "?" if the name is empty or unavailable.
- */
-function getInitials(name: string | null | undefined): string {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return (parts[0]?.[0] ?? "?").toUpperCase();
-  return ((parts[0]?.[0] ?? "") + (parts[parts.length - 1]?.[0] ?? "")).toUpperCase();
+// ── Avatar component ──────────────────────────────────────────────────────────
+
+interface AvatarProps {
+  picture: string | undefined;
+  name: string | undefined;
+  size?: number;
 }
 
-export function TopBar() {
-  const { data: session } = useSession();
-  const [aboutOpen, setAboutOpen] = useState(false);
+/**
+ * Renders the Google profile picture with a ᛟ rune fallback.
+ * Uses referrerPolicy="no-referrer" — required for Google CDN avatar URLs.
+ */
+function Avatar({ picture, size = 32 }: AvatarProps) {
+  const [imgError, setImgError] = useState(false);
+  const showRune = !picture || imgError;
 
-  const userName = session?.user?.name ?? "";
-  const initials = getInitials(userName);
+  return (
+    <div
+      className="rounded-full border border-gold/40 bg-secondary flex items-center justify-center shrink-0 overflow-hidden"
+      style={{ width: size, height: size }}
+    >
+      {showRune ? (
+        <span className="text-gold font-mono" style={{ fontSize: size * 0.5 }}>
+          ᛟ
+        </span>
+      ) : (
+        // Google CDN requires referrerPolicy="no-referrer"; next/image does not support this prop.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={picture}
+          alt="Profile"
+          referrerPolicy="no-referrer"
+          width={size}
+          height={size}
+          className="rounded-full object-cover w-full h-full"
+          onError={() => setImgError(true)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── TopBar ────────────────────────────────────────────────────────────────────
+
+export function TopBar() {
+  const { data: session, signOut } = useAuth();
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const user = session?.user;
+
+  // Close dropdown when clicking outside.
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownOpen]);
+
+  // Close dropdown on Escape.
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setDropdownOpen(false);
+    }
+    if (dropdownOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [dropdownOpen]);
 
   return (
     <>
@@ -56,35 +120,67 @@ export function TopBar() {
         </button>
 
         {/* User area */}
-        <div className="flex items-center gap-3">
-          {/* Avatar — initials from Google display name */}
-          <div className="h-8 w-8 rounded-full border border-gold/40 bg-secondary flex items-center justify-center shrink-0">
-            <span className="text-xs font-mono font-semibold text-gold">
-              {initials}
+        {user && (
+          <div className="relative flex items-center" ref={dropdownRef}>
+            {/* Email — desktop only, truncated */}
+            <span className="text-xs text-muted-foreground font-body hidden md:block mr-3 max-w-[200px] truncate">
+              {user.email}
             </span>
+
+            {/* Avatar button — opens dropdown */}
+            <button
+              type="button"
+              onClick={() => setDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+              aria-label={`${user.name} — open account menu`}
+              aria-expanded={dropdownOpen}
+              aria-haspopup="true"
+              style={{ minWidth: 44, minHeight: 44, justifyContent: "center" }}
+            >
+              <Avatar picture={user.picture} name={user.name} size={32} />
+            </button>
+
+            {/* Dropdown */}
+            {dropdownOpen && (
+              <div
+                role="menu"
+                aria-label="Account menu"
+                className={[
+                  "absolute right-0 top-full mt-2",
+                  "w-64 border border-border bg-background/95 backdrop-blur-sm",
+                  "rounded-sm shadow-lg z-50",
+                  "flex flex-col",
+                ].join(" ")}
+              >
+                {/* Profile header */}
+                <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+                  <Avatar picture={user.picture} name={user.name} size={40} />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-heading text-foreground truncate">
+                      {user.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-mono truncate">
+                      {user.email}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Sign out */}
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    signOut();
+                  }}
+                  className="px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 text-left transition-colors font-body"
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
-
-          {/* Name */}
-          {userName && (
-            <span className="text-sm text-foreground font-body hidden sm:block">
-              {userName}
-            </span>
-          )}
-
-          {/* Divider */}
-          <div className="w-px h-5 bg-border hidden sm:block" />
-
-          {/* Logout — calls Auth.js signOut() */}
-          <button
-            type="button"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            title="Log out"
-            onClick={() => signOut({ callbackUrl: "/api/auth/signin" })}
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:block">Log out</span>
-          </button>
-        </div>
+        )}
 
       </header>
 

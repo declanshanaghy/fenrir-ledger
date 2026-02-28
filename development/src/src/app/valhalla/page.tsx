@@ -24,7 +24,7 @@
  */
 
 import { useEffect, useState, useMemo } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/hooks/useAuth";
 import { AnimatePresence, motion } from "framer-motion";
 import { getClosedCards, initializeHousehold, migrateIfNeeded } from "@/lib/storage";
 import { formatDate, formatCurrency } from "@/lib/card-utils";
@@ -260,7 +260,7 @@ function ValhallaEmptyState() {
  * renders tombstone entries with Framer Motion saga-enter stagger.
  */
 export default function ValhallaPage() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useAuth();
   const [allClosed, setAllClosed] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [issuerFilter, setIssuerFilter] = useState<string>("all");
@@ -270,7 +270,7 @@ export default function ValhallaPage() {
   useEffect(() => {
     if (status === "loading") return;
 
-    const householdId = session?.user?.householdId;
+    const householdId = session?.user?.sub;
     if (!householdId) {
       setIsLoading(false);
       return;

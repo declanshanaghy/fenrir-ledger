@@ -9,13 +9,13 @@
  */
 
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/hooks/useAuth";
 import { CardForm } from "@/components/cards/CardForm";
 import { migrateIfNeeded, initializeHousehold } from "@/lib/storage";
 
 export default function NewCardPage() {
-  const { data: session, status } = useSession();
-  const householdId = session?.user?.householdId ?? "";
+  const { data: session, status } = useAuth();
+  const householdId = session?.user?.sub ?? "";
 
   useEffect(() => {
     if (status === "loading" || !householdId) return;
