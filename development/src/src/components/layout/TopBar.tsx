@@ -221,7 +221,7 @@ export function TopBar() {
             Fenrir Ledger
           </span>
           <span className="font-body text-muted-foreground text-xs italic">
-            Credit Card Tracker
+            Break free. Harvest every reward.
           </span>
         </a>
 
