@@ -131,7 +131,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [product/copywriting.md](product/copywriting.md) — Kennings, Edda quotes, empty states, action labels, error voice
 - [ux/easter-eggs.md](ux/easter-eggs.md) — Gleipnir Hunt, Konami howl, Loki mode, console ASCII, all hidden lore
 - [ux/interactions.md](ux/interactions.md) — Animations, saga-enter stagger, status ring, Howl panel patterns
-- [ux/wireframes.md](ux/wireframes.md) — Layout specs, component hierarchy, responsive breakpoints
+- [ux/wireframes.md](ux/wireframes.md) — Layout specs, component hierarchy, responsive breakpoints, form action button alignment convention
 - [ux/wireframes/topbar.html](ux/wireframes/topbar.html) — TopBar: anonymous ᛟ rune + upsell prompt, signed-in avatar, avatar transition (Sprint 3.2)
 - [ux/wireframes/upsell-banner.html](ux/wireframes/upsell-banner.html) — Cloud sync upsell banner: dismissible, dashboard-only (Sprint 3.2)
 - [ux/wireframes/sign-in.html](ux/wireframes/sign-in.html) — Sign-in page: optional upgrade, "Continue without signing in" first-class CTA (Sprint 3.2)

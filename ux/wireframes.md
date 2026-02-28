@@ -168,7 +168,9 @@ Two-column form layout. Four fieldset panels:
 | Welcome Mead | Right (row 2) | Bonus type (radio), Bonus amount + unit, Spend requirement (cents), Skuld's deadline, Toll paid (checkbox) |
 | Skald's Notes | Full width (row 3) | Free text, 3 rows |
 
-Form actions (bottom right): `[Hold]` · `[Bind the Chain ▶]`
+Form actions follow the global button alignment convention (see [Form Action Button Layout](#form-action-button-layout)):
+- **Add mode**: `[Cancel]` · `[Add Card ▶]` — right-aligned, nothing on the left.
+- **Edit mode**: `[Delete card]` isolated left · `[Cancel]` · `[Save changes ▶]` right.
 
 Edit mode: title reads "REFORGE THIS CHAIN". Pre-populates all fields.
 
@@ -256,6 +258,53 @@ Content header (per-page):
 - `[ADD CARD]` primary CTA right (cards page only)
 
 Mobile: sidebar hidden by default; hamburger toggle opens overlay drawer.
+
+---
+
+## Form Action Button Layout
+
+Applies to all forms, dialogs, and modals across the product.
+
+### Rule
+
+- **Primary action** (Save, Add Card, Confirm, Continue, OK, etc.) — far **right** of the action row.
+- **Cancel** — immediately to the **left of the primary action**, with a visible gap (16px) between them.
+- **Destructive actions** (Delete, Close Card) — when present alongside Cancel + primary — isolated on the **left** of the action row, separated from the right group.
+- **Single-dismiss dialogs** (OK-only, Close-only) — sole button is right-aligned in the footer. Exception: easter egg discovery modals use centered alignment intentionally (see `easter-egg-modal.html`).
+
+### Desktop layout
+
+```
+Edit form (destructive + cancel + primary):
+[ Delete card ]                       [ Cancel ]  [ Save changes ]
+ ←— left ——————————————————————————————————————————— right —→
+
+Add form (no destructive actions):
+                                      [ Cancel ]  [ Add Card ]
+                                      ←————————————— right —→
+
+Dialog footer (two-button confirmation):
+                                      [ Cancel ]  [ Confirm ]
+```
+
+### Mobile (< 640px)
+
+Stack vertically. Primary action on top, Cancel below it, destructive action at the bottom.
+
+```
+[ Save changes ]   ← top (primary)
+[ Cancel ]
+[ Delete card ]    ← bottom (destructive, only in edit mode)
+```
+
+### Applies to
+
+| Wireframe | Mode | Left | Right |
+|---|---|---|---|
+| `add-card.html` | Add | — | `[Cancel]` · `[Add Card]` |
+| `add-card.html` | Edit | `[Delete card]` | `[Cancel]` · `[Save changes]` |
+| `about-modal.html` | — | — | `[Close]` |
+| Dialog footers | — | — | `[Cancel]` · `[Confirm]` |
 
 ---
 

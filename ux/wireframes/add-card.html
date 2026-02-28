@@ -60,9 +60,47 @@
     .full-width { grid-column: 1 / -1; }
 
     /* ── Form actions ─────────────────────────────────────────────── */
-    .form-actions { display: flex; justify-content: flex-end; gap: 12px; padding-top: 8px; border-top: 1px solid; }
+    /*
+     * Button alignment convention (see wireframes.md — Form Action Button Layout):
+     *   Desktop: destructive actions isolated on the LEFT; Cancel + primary action
+     *   right-aligned with a visible gap between Cancel and primary.
+     *   Mobile (< 640px): stack vertically, primary action on top.
+     *
+     * Add mode (no destructive actions):
+     *   [ nothing on left ]           [ Cancel ]  [ Add Card ]
+     *
+     * Edit mode (destructive + cancel + save):
+     *   [ Delete card ]               [ Cancel ]  [ Save changes ]
+     *    ← left                                       right →
+     */
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid;
+    }
+    /* Spacer pushes the destructive group to the left edge */
+    .form-actions .actions-left { margin-right: auto; }
+    /* Visible gap between Cancel and the primary action */
+    .form-actions .actions-right { display: flex; gap: 8px; align-items: center; }
+    .btn-cancel-gap { margin-left: 16px; }
+
     button { border: 1px solid; padding: 8px 20px; cursor: pointer; background: none; font-size: 13px; font-family: inherit; }
     .btn-primary { font-weight: bold; }
+    .btn-destructive { font-size: 13px; }
+
+    /* Mobile action stacking (< 640px) */
+    @media (max-width: 639px) {
+      .form-actions {
+        flex-direction: column-reverse; /* primary action ends up on top */
+        align-items: stretch;
+      }
+      .form-actions .actions-left { margin-right: 0; order: 3; } /* destructive last */
+      .form-actions .actions-right { flex-direction: column-reverse; gap: 8px; order: 1; }
+      .form-actions .actions-right button { margin-left: 0 !important; width: 100%; }
+    }
 
     .note { font-size: 11px; font-style: italic; opacity: 0.6; }
   </style>
@@ -200,10 +238,51 @@
     </div><!-- /.form-grid -->
 
     <!-- ── Actions ─────────────────────────────────────────────────── -->
+    <!--
+      ADD MODE (no destructive actions):
+        Nothing on left.  Right side: [Cancel]  [Add Card]
+
+      EDIT MODE (destructive + cancel + save):
+        Left: [Delete card]           Right: [Cancel]  [Save changes]
+
+      Both modes share this same .form-actions wrapper — the left group
+      is empty in add mode and populated in edit mode.
+      Mobile (< 640px): stack vertically, primary action on top.
+    -->
     <div class="form-actions" style="margin-top: 16px;">
-      <button type="button">[Save Draft]</button>
-      <button type="submit" class="btn-primary">[Save Card ▶]</button>
+
+      <!-- Left group — destructive actions (edit mode only; empty in add mode) -->
+      <div class="actions-left">
+        <!-- EDIT MODE ONLY — rendered when editing an existing card -->
+        <!--
+          "Delete card" is isolated on the left to prevent accidental clicks.
+          It is NOT grouped with Cancel or Save.
+          In add mode this div is empty — no placeholder shown.
+        -->
+        <!-- <button type="button" class="btn-destructive">[Delete card]</button> -->
+        <p class="note">Edit mode only: [Delete card] appears here (left-isolated)</p>
+      </div>
+
+      <!-- Right group — Cancel + primary action -->
+      <div class="actions-right">
+        <!--
+          Cancel navigates back to the dashboard without saving.
+          Sits immediately to the left of the primary action with a gap.
+        -->
+        <button type="button">[Cancel]</button>
+        <!--
+          Gap between Cancel and primary action — achieved via margin-left on primary.
+          In add mode: label is "Add Card". In edit mode: label is "Save changes".
+        -->
+        <button type="submit" class="btn-primary" style="margin-left: 16px;">[Add Card ▶]</button>
+        <!-- EDIT MODE label: [Save changes ▶] -->
+      </div>
+
     </div>
+    <p class="note" style="margin-top: 4px;">
+      Edit mode: left group shows [Delete card]; right group primary button reads [Save changes ▶].
+      Mobile (&lt;640px): stack vertically — [Add Card] / [Save changes] on top, [Cancel] below, [Delete card] at bottom.
+    </p>
 
   </form>
 
