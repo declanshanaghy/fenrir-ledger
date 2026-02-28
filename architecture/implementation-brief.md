@@ -213,6 +213,40 @@ export function getRealmLabel(status: CardStatus, daysRemaining?: number): {
 
 ---
 
+## Standing UI Conventions
+
+### Button Alignment (global rule, applies to all sprints)
+
+Every form and dialog in the application follows one layout rule. This rule must be respected in any component that renders action buttons — including `CardForm.tsx`, any confirmation dialogs, and future panels.
+
+**Rule summary**:
+- **Primary / positive action** (Save, Add, Continue, OK) — far right.
+- **Cancel** — immediately left of the primary action.
+- **Destructive action** (Close Card, Delete) — isolated on the far left, only when co-present with a primary action.
+- **Mobile** — stack vertically, primary button on top.
+
+**Desktop layout**:
+
+```
+[ Destructive ]                    [ Cancel ] [ Primary ]
+```
+
+**Mobile layout** (stacked):
+
+```
+[ Primary     ]
+[ Cancel      ]
+[ Destructive ]
+```
+
+Implementation notes:
+- Use `justify-between` on the row container when a destructive action is present; `justify-end` otherwise.
+- Collapse to `flex-col md:flex-row` with reversed stacking order on mobile.
+- Touch targets min 44 x 44 px per team norms.
+- See `ux/wireframes.md` for the full visual specification.
+
+---
+
 ## Files That Do Not Change (Hands Off)
 
 | File | Why |

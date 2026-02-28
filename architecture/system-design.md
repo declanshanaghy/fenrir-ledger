@@ -302,6 +302,40 @@ Shared form for both add and edit flows. Accepts `initialValues?: Card` for edit
 
 ---
 
+## UI Patterns and Component Conventions
+
+### Button Alignment
+
+All form and dialog action buttons follow a single global rule. This convention applies to every form, dialog, and confirmation panel in the application.
+
+| Position | Button type | Examples |
+|----------|-------------|---------|
+| Far right | Primary / positive action | Save, Add, Continue, OK |
+| Immediately left of primary | Cancel | Cancel |
+| Far left (isolated) | Destructive action (only when co-present with primary) | Close Card, Delete |
+
+**Desktop layout** (single row):
+
+```
+[ Destructive ]                    [ Cancel ] [ Primary ]
+```
+
+**Mobile layout** (stacked, primary on top):
+
+```
+[ Primary     ]
+[ Cancel      ]
+[ Destructive ]
+```
+
+Implementation guidance:
+- Use `justify-between` on the button row container when a destructive action is present; `justify-end` otherwise.
+- On mobile apply `flex-col md:flex-row` with `md:justify-end` (or `md:justify-between` when destructive is present).
+- Touch targets must be at least 44 x 44 px (see team norms).
+- See `ux/wireframes.md` for the full visual specification.
+
+---
+
 ## Dependencies
 
 ### Runtime
