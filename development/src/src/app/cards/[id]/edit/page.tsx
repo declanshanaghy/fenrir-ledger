@@ -3,9 +3,12 @@
 /**
  * Edit Card Page — /cards/[id]/edit
  *
- * Loads the card by ID from localStorage and renders CardForm in edit mode.
+ * Anonymous-first: accessible without a signed-in session.
+ * Loads the card by ID from localStorage using the householdId from AuthContext
+ * (works for both anonymous and authenticated users).
  * Redirects to / if the card is not found.
- * Reads the authenticated session to obtain householdId for all storage calls.
+ *
+ * See ADR-006 for the anonymous-first auth model.
  */
 
 import { useEffect, useState } from "react";
@@ -22,16 +25,15 @@ import type { Card } from "@/lib/types";
 export default function EditCardPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { data: session, status } = useAuth();
+  const { householdId, status } = useAuth();
   const [card, setCard] = useState<Card | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (status === "loading") return;
 
-    const householdId = session?.user?.sub;
     if (!householdId) {
-      // Session resolved but no householdId — redirect to root
+      // No householdId available — redirect to root as a safety fallback
       router.replace("/");
       return;
     }
@@ -47,7 +49,7 @@ export default function EditCardPage() {
 
     setCard(found);
     setIsLoading(false);
-  }, [params.id, router, session, status]);
+  }, [params.id, router, householdId, status]);
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-6">

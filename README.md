@@ -147,8 +147,9 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [development/README.md](development/README.md) — Index of all development artifacts: source code, scripts, implementation plan, QA handoff, and technical specs
 - [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, data flow diagrams (updated through Sprint 2)
 - [architecture/sprint-plan.md](architecture/sprint-plan.md) — Rolling multi-sprint plan: Sprint 1 (historical), Sprint 2 (delivered), Sprint 3–4 (upcoming)
-- [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001, ADR-002, ADR-003)
-- [architecture/adrs/ADR-004-oidc-auth-and-persistence.md](architecture/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR-004: OIDC auth + Supabase persistence
+- [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001 through ADR-006)
+- [architecture/adrs/ADR-005-auth-pkce-public-client.md](architecture/adrs/ADR-005-auth-pkce-public-client.md) — ADR-005: PKCE public client auth, localStorage session
+- [architecture/adrs/ADR-006-anonymous-first-auth.md](architecture/adrs/ADR-006-anonymous-first-auth.md) — ADR-006: Anonymous-first auth pivot, householdId from localStorage, cloud sync upsell
 - [development/spec-auth-oidc-google.md](development/spec-auth-oidc-google.md) — Technical spec: Google OIDC login (Iteration 1)
 - `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
 - [development/src/](development/src/) — The forge itself. Next.js source code lives here.
@@ -198,6 +199,18 @@ cd development/src && npm run dev
 
 # Open http://localhost:9999
 ```
+
+### Sprint 3 — Anonymous-First Auth + Cloud Sync Upsell
+
+- [src/lib/auth/household.ts](development/src/src/lib/auth/household.ts) — Anonymous householdId: `getOrCreateAnonHouseholdId()`, `fenrir:household` localStorage key
+- [src/contexts/AuthContext.tsx](development/src/src/contexts/AuthContext.tsx) — `"anonymous"` status; no redirects; `householdId` in context value
+- [src/hooks/useAuth.ts](development/src/src/hooks/useAuth.ts) — `householdId` exposed directly; updated AuthStatus type
+- [src/components/layout/UpsellBanner.tsx](development/src/src/components/layout/UpsellBanner.tsx) — Dismissible cloud sync upsell banner (dashboard only)
+- [src/components/layout/TopBar.tsx](development/src/src/components/layout/TopBar.tsx) — Anonymous ᛟ rune avatar + upsell panel; signed-in dropdown with "The wolf is named."
+- [src/components/layout/AppShell.tsx](development/src/src/components/layout/AppShell.tsx) — UpsellBanner injected on `/` route
+- [src/app/sign-in/page.tsx](development/src/src/app/sign-in/page.tsx) — Opt-in upgrade surface; "Continue without signing in" full-width CTA; two data variants
+- [architecture/adrs/ADR-006-anonymous-first-auth.md](architecture/adrs/ADR-006-anonymous-first-auth.md) — Decision record: anonymous-first pivot, migration prompt deferred
+- [development/src/LOKI-TEST-PLAN-anon-auth.md](development/src/LOKI-TEST-PLAN-anon-auth.md) — QA test plan: 7 suites, 30 test cases
 
 ### Sprint 3 — Story 3.1 — Google OIDC Auth (Auth.js v5 + per-household localStorage)
 

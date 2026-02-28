@@ -3,11 +3,20 @@
 /**
  * AppShell — the persistent application frame.
  *
- * Renders the TopBar, collapsible SideNav, and the main content slot.
+ * Renders the TopBar, dismissible UpsellBanner (dashboard only),
+ * collapsible SideNav, and the main content slot.
  * Collapse state is persisted to localStorage so it survives navigation.
+ *
+ * Layout grid:
+ *   Row 1: TopBar (full width)
+ *   Row 2: UpsellBanner (full width, dashboard-only, anonymous users only)
+ *   Row 3: SideNav (left) + main content + Footer (right)
+ *
+ * See ux/wireframes/upsell-banner.html for the banner grid placement spec.
  */
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { TopBar } from "./TopBar";
 import { SideNav } from "./SideNav";
@@ -15,6 +24,7 @@ import { SyncIndicator } from "./SyncIndicator";
 import { KonamiHowl } from "./KonamiHowl";
 import { ForgeMasterEgg } from "./ForgeMasterEgg";
 import { Footer } from "./Footer";
+import { UpsellBanner } from "./UpsellBanner";
 import {
   GleipnirMountainRoots,
   useGleipnirFragment3,
@@ -29,6 +39,7 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
   const { open: rootsOpen, trigger: triggerRoots, dismiss: dismissRoots } = useGleipnirFragment3();
 
   // Read persisted state after mount to avoid SSR mismatch
@@ -46,6 +57,9 @@ export function AppShell({ children }: AppShellProps) {
     if (next) triggerRoots();
   }
 
+  // The upsell banner is shown on the dashboard (/) only.
+  const isDashboard = pathname === "/";
+
   // Suppress layout until client state is known to avoid flash
   if (!mounted) {
     return (
@@ -62,6 +76,12 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="flex flex-col h-screen bg-background">
       <TopBar />
+
+      {/* Upsell banner — dashboard only, anonymous users only.
+          Sits between TopBar and the sidebar/content split.
+          The banner component itself handles the isAnonymous + dismissed checks. */}
+      {isDashboard && <UpsellBanner />}
+
       <div className="flex flex-1 overflow-hidden">
         <SideNav collapsed={collapsed} onToggle={handleToggle} />
         {/* Main content + footer in a scrollable column */}

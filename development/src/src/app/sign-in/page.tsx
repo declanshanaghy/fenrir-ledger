@@ -3,41 +3,65 @@
 /**
  * Sign-In Page — /sign-in
  *
- * Presents a "Sign in with Google" button that initiates the Authorization
- * Code + PKCE flow. No credentials are collected here — the browser
- * redirects to Google's consent screen.
+ * Anonymous-first: this page is a voluntary upgrade destination, NOT a gate.
+ * Users arrive here by clicking "Sign in to sync" in the upsell banner or
+ * avatar prompt. They may leave via "Continue without signing in".
+ *
+ * If the user already has a valid session, redirect to / immediately.
+ *
+ * Two variants based on existing local card count:
+ *   Variant A (no cards): generic sync benefits messaging.
+ *   Variant B (has cards): subheading references the card count; prepares
+ *              the user for the migration prompt that fires post-OAuth.
  *
  * Flow:
- *  1. Generate code_verifier, code_challenge (S256), and state.
- *  2. Store { verifier, state, callbackUrl } in sessionStorage.
- *  3. Redirect to accounts.google.com/o/oauth2/v2/auth with PKCE params.
+ *  1. User taps "Sign in to Google".
+ *  2. Generate code_verifier, code_challenge (S256), and state.
+ *  3. Store { verifier, state, callbackUrl: "/" } in sessionStorage.
+ *  4. Redirect to accounts.google.com/o/oauth2/v2/auth with PKCE params.
+ *  5. /auth/callback handles the return, writes session, navigates to /.
  *
- * The /auth/callback page handles the return redirect from Google.
+ * "Continue without signing in" navigates to /.
+ * Does NOT set the dismiss flag for the upsell banner.
  *
- * Copy: Norse atmospheric — Voice 2 from product/copywriting.md.
+ * See ux/wireframes/sign-in.html for the full wireframe spec.
+ * See ADR-005 for the PKCE auth implementation.
+ * See ADR-006 for the anonymous-first model.
  */
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/auth/pkce";
 import { isSessionValid } from "@/lib/auth/session";
+import { getAnonHouseholdId } from "@/lib/auth/household";
+import { getCards } from "@/lib/storage";
 
 /** sessionStorage key for PKCE transient state */
 const PKCE_SESSION_KEY = "fenrir:pkce";
 
+// ── Sign-in content ───────────────────────────────────────────────────────────
+
 function SignInContent() {
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/";
+  const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [alreadyAuthed, setAlreadyAuthed] = useState(false);
+  const [cardCount, setCardCount] = useState(0);
 
-  // If there's already a valid session, bounce to callbackUrl immediately.
   useEffect(() => {
+    // If there's already a valid session, redirect to dashboard immediately.
     if (isSessionValid()) {
       setAlreadyAuthed(true);
-      window.location.href = callbackUrl;
+      router.replace("/");
+      return;
     }
-  }, [callbackUrl]);
+
+    // Count local cards to determine which variant to show.
+    const anonId = getAnonHouseholdId();
+    if (anonId) {
+      const cards = getCards(anonId);
+      setCardCount(cards.length);
+    }
+  }, [router]);
 
   async function handleSignIn() {
     setIsRedirecting(true);
@@ -47,9 +71,10 @@ function SignInContent() {
     const state = generateState();
 
     // Persist PKCE transient values in sessionStorage (survives the redirect).
+    // callbackUrl is always "/" — after OAuth, user lands on the dashboard.
     sessionStorage.setItem(
       PKCE_SESSION_KEY,
-      JSON.stringify({ verifier, state, callbackUrl })
+      JSON.stringify({ verifier, state, callbackUrl: "/" })
     );
 
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -74,6 +99,7 @@ function SignInContent() {
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   }
 
+  // Already signed in — transitioning to dashboard
   if (alreadyAuthed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -84,33 +110,71 @@ function SignInContent() {
     );
   }
 
+  // Determine which content variant to show
+  const hasLocalCards = cardCount > 0;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm flex flex-col items-center gap-8">
+    <div className="min-h-screen flex flex-col bg-background">
 
-        {/* Brand */}
-        <div className="text-center">
-          <h1 className="font-display text-3xl text-gold tracking-widest uppercase mb-2">
-            Fenrir Ledger
+      {/* TopBar stub — identical to dashboard anonymous state */}
+      {/* Note: the full AppShell TopBar wraps this page via layout.tsx,
+          so we do not render a standalone TopBar here. The layout handles it. */}
+
+      {/* Content: center the sign-in card */}
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        <main
+          className={[
+            "w-full max-w-[400px]",
+            "border border-border bg-background/60 backdrop-blur-sm",
+            "p-8 flex flex-col gap-5",
+            "rounded-sm",
+          ].join(" ")}
+          aria-labelledby="signin-heading"
+        >
+          {/* Atmospheric eyebrow (Voice 2) — sets emotional frame */}
+          <p
+            className="text-xs text-gold/60 uppercase tracking-[0.12em] italic font-heading"
+            aria-hidden="true"
+          >
+            {hasLocalCards ? "Your ledger awaits a name" : "An invitation, not a demand"}
+          </p>
+
+          {/* Page heading (Voice 2) */}
+          <h1
+            id="signin-heading"
+            className="font-display text-2xl text-gold tracking-wide"
+          >
+            {hasLocalCards ? "Your chains are already here." : "Name the wolf."}
           </h1>
-          <p className="font-body text-muted-foreground text-sm italic">
-            Break free. Harvest every reward. Let no chain hold.
-          </p>
-        </div>
 
-        {/* Divider — runic */}
-        <div className="flex items-center gap-3 w-full">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-gold/40 text-xs font-mono tracking-widest">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
-        {/* Sign-in card */}
-        <div className="w-full border border-border bg-background/60 backdrop-blur-sm p-8 flex flex-col items-center gap-6 rounded-sm">
-          <p className="font-body text-foreground text-sm text-center leading-relaxed">
-            The wolf is named. Prove yourself to the hall.
+          {/* Atmospheric subheading (Voice 2) */}
+          <p className="text-sm text-muted-foreground italic font-body leading-relaxed">
+            {hasLocalCards
+              ? `Sign in and we'll offer to add your ${cardCount} local card${cardCount === 1 ? "" : "s"} to your cloud account.`
+              : "Your chains are already here. Sign in to carry them everywhere."}
           </p>
 
+          {/* Feature list (Voice 1 — plain English) */}
+          <div
+            className="flex flex-col gap-3"
+            aria-label="What signing in gives you"
+          >
+            {hasLocalCards ? (
+              <>
+                <FeatureItem>Keep your existing cards — or start a fresh cloud account</FeatureItem>
+                <FeatureItem>Back up all your cards and deadlines to the cloud</FeatureItem>
+                <FeatureItem>Access your ledger from any device</FeatureItem>
+              </>
+            ) : (
+              <>
+                <FeatureItem>Back up your cards and deadlines to the cloud</FeatureItem>
+                <FeatureItem>Access your ledger from any device</FeatureItem>
+                <FeatureItem>Your local data is always preserved — signing in adds to it</FeatureItem>
+              </>
+            )}
+          </div>
+
+          {/* Primary CTA (Voice 1) */}
           <button
             type="button"
             onClick={handleSignIn}
@@ -118,44 +182,70 @@ function SignInContent() {
             className={[
               "w-full flex items-center justify-center gap-3",
               "border border-border rounded-sm px-4 py-3",
-              "bg-secondary text-foreground",
+              "bg-primary text-primary-foreground",
               "font-heading text-sm tracking-wide",
               "transition-colors",
               isRedirecting
                 ? "opacity-50 cursor-not-allowed"
-                : "hover:border-gold/50 hover:text-gold",
+                : "hover:bg-gold-bright",
             ].join(" ")}
+            style={{ minHeight: 46 }}
           >
-            {/* Google G mark */}
             <GoogleGlyph />
-            {isRedirecting ? "Crossing the Bifröst..." : "Sign in with Google"}
+            {isRedirecting ? "Crossing the Bifröst..." : "Sign in to Google"}
           </button>
-        </div>
 
-        {/* Footer note */}
-        <p className="text-xs text-muted-foreground font-body text-center">
-          Your session is stored locally. No data leaves this device.
-        </p>
+          {/* Divider */}
+          <div className="flex items-center gap-3" aria-hidden="true">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground font-body">or</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
 
+          {/* Secondary CTA (Voice 1) — NON-NEGOTIABLE prominence.
+              Full-width outlined button, same visual weight as primary.
+              This is a first-class exit path, not an afterthought. */}
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className={[
+              "w-full px-4 py-3",
+              "border border-border rounded-sm",
+              "text-sm font-heading tracking-wide text-foreground",
+              "hover:border-gold/40 hover:text-gold transition-colors",
+              "bg-transparent",
+            ].join(" ")}
+            style={{ minHeight: 46 }}
+          >
+            Continue without signing in
+          </button>
+
+          {/* Atmospheric footnote (Voice 2) */}
+          <p className="text-xs text-muted-foreground italic text-center font-body leading-relaxed">
+            {hasLocalCards
+              ? "Your local chains are safe either way. The ledger was already written before you named yourself."
+              : "The ledger is already written. Signing in only shares it further."}
+          </p>
+
+        </main>
       </div>
     </div>
   );
 }
 
-// useSearchParams requires Suspense in Next.js 15 App Router static export.
-export default function SignInPage() {
+// ── Feature item helper ────────────────────────────────────────────────────────
+
+function FeatureItem({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <p className="text-muted-foreground font-body italic text-sm">
-            Crossing the Bifröst...
-          </p>
-        </div>
-      }
-    >
-      <SignInContent />
-    </Suspense>
+    <div className="flex items-start gap-2 text-xs text-foreground font-body leading-relaxed">
+      <div
+        className="w-4 h-4 rounded-full border border-gold/40 flex items-center justify-center text-gold shrink-0 mt-0.5"
+        aria-hidden="true"
+      >
+        <span className="text-[8px]">✓</span>
+      </div>
+      <span>{children}</span>
+    </div>
   );
 }
 
@@ -187,5 +277,23 @@ function GoogleGlyph() {
         fill="#EA4335"
       />
     </svg>
+  );
+}
+
+// ── Page export ───────────────────────────────────────────────────────────────
+
+export default function SignInPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <p className="text-muted-foreground font-body italic text-sm">
+            Crossing the Bifröst...
+          </p>
+        </div>
+      }
+    >
+      <SignInContent />
+    </Suspense>
   );
 }

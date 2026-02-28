@@ -3,9 +3,11 @@
 /**
  * Add Card Page — /cards/new
  *
- * Renders the CardForm in "new card" mode (no initialValues).
- * Reads the authenticated session to obtain householdId and passes it
- * to CardForm so newly created cards are namespaced correctly.
+ * Anonymous-first: accessible without a signed-in session.
+ * Reads householdId from AuthContext (works for both anonymous and
+ * authenticated users). Passes householdId to CardForm for storage namespacing.
+ *
+ * See ADR-006 for the anonymous-first auth model.
  */
 
 import { useEffect } from "react";
@@ -14,8 +16,7 @@ import { CardForm } from "@/components/cards/CardForm";
 import { migrateIfNeeded, initializeHousehold } from "@/lib/storage";
 
 export default function NewCardPage() {
-  const { data: session, status } = useAuth();
-  const householdId = session?.user?.sub ?? "";
+  const { householdId, status } = useAuth();
 
   useEffect(() => {
     if (status === "loading" || !householdId) return;
@@ -35,8 +36,10 @@ export default function NewCardPage() {
         </p>
       </div>
 
-      {/* Only render form once session has resolved and householdId is available */}
-      {householdId && <CardForm householdId={householdId} />}
+      {/* Only render form once householdId is resolved (status !== "loading") */}
+      {status !== "loading" && householdId && (
+        <CardForm householdId={householdId} />
+      )}
     </div>
   );
 }

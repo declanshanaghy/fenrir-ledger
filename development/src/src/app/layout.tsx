@@ -92,7 +92,7 @@ export default function RootLayout({
       ].join(" ")}
     >
       <body className="bg-background text-foreground antialiased">
-        {/* PKCE AuthProvider — reads localStorage session, redirects to /sign-in if expired */}
+        {/* AuthProvider — anonymous-first. No redirects. Resolves householdId for all users. */}
         <AuthProvider>
           {/* Easter egg #4 — console ASCII art (client-only, once per session) */}
           <ConsoleSignature />

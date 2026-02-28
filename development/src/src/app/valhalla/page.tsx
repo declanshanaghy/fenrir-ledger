@@ -7,8 +7,9 @@
  * from deleted cards: they are honored in Valhalla, not erased. Deleted cards
  * (deletedAt set) do not appear here.
  *
- * Reads the authenticated session to obtain householdId (Google sub claim),
- * then loads all closed cards from localStorage under the per-household key.
+ * Anonymous-first: accessible without a signed-in session.
+ * Reads householdId from AuthContext (anonymous or authenticated) and loads
+ * all closed cards from localStorage under the per-household key.
  *
  * Layout:
  *  - Sepia-tinted page wrapper (CSS filter: sepia(0.15))
@@ -260,17 +261,16 @@ function ValhallaEmptyState() {
  * renders tombstone entries with Framer Motion saga-enter stagger.
  */
 export default function ValhallaPage() {
-  const { data: session, status } = useAuth();
+  const { householdId, status } = useAuth();
   const [allClosed, setAllClosed] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [issuerFilter, setIssuerFilter] = useState<string>("all");
   const [sort, setSort] = useState<SortKey>("closed_date_desc");
 
-  // Load closed cards from localStorage on mount (after session resolves)
+  // Load closed cards from localStorage on mount (after auth resolves)
   useEffect(() => {
     if (status === "loading") return;
 
-    const householdId = session?.user?.sub;
     if (!householdId) {
       setIsLoading(false);
       return;
@@ -281,7 +281,7 @@ export default function ValhallaPage() {
     const loaded = getClosedCards(householdId);
     setAllClosed(loaded);
     setIsLoading(false);
-  }, [session, status]);
+  }, [householdId, status]);
 
   // Derive unique issuers present in closed cards for the filter dropdown
   const uniqueIssuers = useMemo(() => {
