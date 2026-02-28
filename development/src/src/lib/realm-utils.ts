@@ -16,31 +16,71 @@
 import type { CardStatus } from "@/lib/types";
 
 /**
- * Returns the Norse realm name for a given CardStatus.
+ * Full realm label descriptor returned by getRealmLabel().
  *
- * Used as tooltip flavor text and in the Loki Mode easter egg.
- * Never used as the primary status badge label — badges stay functional
- * (Voice 1). Realm names are Voice 2: atmospheric only.
- *
- * Mapping (from product/mythology-map.md):
- *   active         → Asgard   (home of gods, abundance — rewards flowing)
- *   fee_approaching → Muspelheim (fire, destruction — fee due soon)
- *   promo_expiring  → Jötunheimr (chaos, unpredictability — deadline approaching)
- *   closed          → Valhalla   (hall of heroes — rewards harvested)
- *
- * @param status - The CardStatus to map.
- * @returns The Norse realm name string.
+ * label      — Short realm name (e.g. "Asgard-bound")
+ * sublabel   — Atmospheric one-liner, may include daysRemaining interpolation
+ * rune       — Elder Futhark rune character for this realm
+ * colorClass — Tailwind text color class using the Norse realm palette
  */
-export function getRealmLabel(status: CardStatus): string {
+export interface RealmLabel {
+  label: string;
+  sublabel: string;
+  rune: string;
+  colorClass: string;
+}
+
+/**
+ * Returns the full RealmLabel descriptor for a given CardStatus.
+ *
+ * Used in detail views, Valhalla, and Loki Mode wherever the full realm
+ * vocabulary is needed. Never used as the primary status badge label —
+ * badges stay functional (Voice 1). Realm names are Voice 2: atmospheric.
+ *
+ * Mapping (from product/mythology-map.md and ux/interactions.md):
+ *   active          → Asgard-bound   (teal   ᛊ  — rewards flowing)
+ *   fee_approaching → Muspelheim     (orange ᚲ  — Sköll chasing the sun)
+ *   promo_expiring  → Hati approaches(amber  ᚺ  — Hati chasing the moon)
+ *   closed          → In Valhalla    (stone  ᛏ  — chain broken)
+ *
+ * @param status       - The CardStatus to map.
+ * @param daysRemaining - Optional days remaining; interpolated into sublabel
+ *                        for fee_approaching and promo_expiring.
+ * @returns Full RealmLabel descriptor.
+ */
+export function getRealmLabel(
+  status: CardStatus,
+  daysRemaining?: number
+): RealmLabel {
   switch (status) {
     case "active":
-      return "Asgard";
+      return {
+        label: "Asgard-bound",
+        sublabel: "Rewards flowing — no urgent deadlines",
+        rune: "ᛊ",
+        colorClass: "text-realm-asgard",
+      };
     case "fee_approaching":
-      return "Muspelheim";
+      return {
+        label: "Muspelheim",
+        sublabel: `Sköll is ${daysRemaining ?? 0} days behind the sun`,
+        rune: "ᚲ",
+        colorClass: "text-realm-muspel",
+      };
     case "promo_expiring":
-      return "Jötunheimr";
+      return {
+        label: "Hati approaches",
+        sublabel: `Hati is ${daysRemaining ?? 0} days behind the moon`,
+        rune: "ᚺ",
+        colorClass: "text-realm-hati",
+      };
     case "closed":
-      return "Valhalla";
+      return {
+        label: "In Valhalla",
+        sublabel: "Chain broken — rewards harvested",
+        rune: "ᛏ",
+        colorClass: "text-realm-hel",
+      };
   }
 }
 

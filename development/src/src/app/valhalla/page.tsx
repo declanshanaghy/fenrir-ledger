@@ -171,7 +171,7 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
           <span
             className="text-[#8a8578] text-lg shrink-0"
             aria-hidden="true"
-            title={getRealmLabel("closed")}
+            title={getRealmLabel("closed").sublabel}
           >
             ᛏ
           </span>
