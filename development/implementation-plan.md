@@ -471,3 +471,128 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 | All Sprint 1 + Sprint 2 limitations | Carry forward unchanged |
 | Realm labels not shown on primary badges | By design — Voice 1 rule; realm names are tooltip/atmospheric only |
 | No per-card sub-realm differentiation | `active` maps to one realm; Vanaheim/Midgard/Asgard sub-states are future work |
+
+---
+
+# Implementation Plan: Fenrir Ledger Sprint 3 — Story 3.3
+
+## Story 3.3: Framer Motion + Card Animations
+
+### Prerequisites
+
+- Sprint 3, Story 3.2 complete (realm-utils, Norse copy pass)
+- `framer-motion` installed as a production dependency
+- `ux/interactions.md` reviewed — animation specs and timings
+
+### Tasks (ordered)
+
+---
+
+### Task 3.3.1: Install framer-motion
+
+- **File(s)**: `development/src/package.json`, `development/src/package-lock.json`
+- **Depends on**: Nothing
+- **Implementation Notes**:
+  - `cd development/src && npm install framer-motion`
+  - Installs as a production dependency (not devDependency)
+  - All Framer Motion components must be in `"use client"` boundaries (per ADR-001)
+- **Definition of Done**: `framer-motion` appears in `dependencies` in `package.json`; `npm run build` passes
+
+---
+
+### Task 3.3.2: Add `saga-shimmer` CSS keyframe to globals.css
+
+- **File(s)**: `development/src/src/app/globals.css`
+- **Depends on**: Nothing
+- **Implementation Notes**:
+  - Add `@keyframes saga-shimmer` and `.skeleton` class
+  - Gradient: `#0f1018 → #1e2235 → #2a2d45 → #1e2235 → #0f1018` (gold-tinted Norse palette)
+  - `background-size: 800px 100%` with `animation: saga-shimmer 1.4s ease-in-out infinite`
+  - Spec from `ux/interactions.md` — Loading States section
+- **Edge Cases**: Gradient colors must be hex literals (not CSS variables) to allow background-position animation
+- **Definition of Done**: `.skeleton` class animates a gold shimmer in the browser
+
+---
+
+### Task 3.3.3: Create `CardSkeletonGrid` component
+
+- **File(s)**: `development/src/src/components/dashboard/CardSkeletonGrid.tsx`
+- **Depends on**: Task 3.3.2
+- **Implementation Notes**:
+  - Pure client component (`"use client"`)
+  - `CardSkeletonGrid({ count = 6 })` — renders `count` skeleton tiles in the card grid layout
+  - `SkeletonTile` — structural mirror of `CardTile` with `.skeleton` divs replacing data
+  - Includes summary header skeleton and "The Norns are weaving..." caption beneath grid
+  - Grid breakpoints match real card grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`
+  - No external library dependencies — CSS animation only
+- **Edge Cases**: `count` should default to 6 (two rows on desktop); do not render more than 12
+- **Definition of Done**: Component renders a shimmer skeleton grid that structurally matches the real card grid
+
+---
+
+### Task 3.3.4: Create `AnimatedCardGrid` component
+
+- **File(s)**: `development/src/src/components/dashboard/AnimatedCardGrid.tsx`
+- **Depends on**: Task 3.3.1
+- **Implementation Notes**:
+  - `"use client"` directive required (Framer Motion)
+  - Uses `AnimatePresence mode="popLayout"` + `motion.div` with `variants`
+  - Per-card variant factory `makeCardVariants(staggerDelay)` returns:
+    - `hidden`: `opacity:0, y:20, scale:1`
+    - `visible`: `opacity:1, y:0, scale:1` with stagger delay + expo-out easing
+    - `exit`: `opacity:0, y:24, scale:0.95, filter:"sepia(1) brightness(0.4)"` duration 0.5s ease-in
+  - Stagger: `index * 0.07s`, capped at 0.56s (8 cards) to prevent sluggish feeling on large portfolios
+  - `layout` prop on `motion.div` enables smooth grid reflow when a card is deleted
+  - `renderCard` prop pattern avoids prop drilling; renders any card node
+- **Edge Cases**:
+  - Variant factory pattern (not inline initial/animate/exit + transition) required to give enter and exit different durations — `exit` is not a valid key in Framer Motion's per-property `Transition` type
+  - `filter` exit value is a valid CSS filter string; Framer Motion forwards it to inline style
+- **Definition of Done**: Cards stagger in on load; deleted card descends with sepia fade before DOM removal
+
+---
+
+### Task 3.3.5: Wire `AnimatedCardGrid` into `Dashboard.tsx`
+
+- **File(s)**: `development/src/src/components/dashboard/Dashboard.tsx`
+- **Depends on**: Task 3.3.4
+- **Implementation Notes**:
+  - Replace the raw `<div className="grid ...">` with `<AnimatedCardGrid>`
+  - `renderCard` callback passes `card` and `lokiLabel` to `CardTile` — Loki Mode unaffected
+  - Remove `key` from `CardTile` (now owned by `motion.div` in `AnimatedCardGrid`)
+- **Edge Cases**: `AnimatedCardGrid` must receive the same `displayCards` (loki-shuffled or normal) — no change to Loki Mode logic
+- **Definition of Done**: Dashboard renders animated grid; Loki Mode still works
+
+---
+
+### Task 3.3.6: Wire `CardSkeletonGrid` into `page.tsx`
+
+- **File(s)**: `development/src/src/app/page.tsx`
+- **Depends on**: Task 3.3.3
+- **Implementation Notes**:
+  - Replace `isLoading` branch (plain "The Norns are weaving..." div) with `<CardSkeletonGrid count={6} />`
+  - Remove the `.saga-reveal` wrapper div from the loaded branch — Framer Motion handles stagger now
+  - The "The Norns are weaving..." copy moves to a caption inside `CardSkeletonGrid`
+- **Edge Cases**: `.saga-reveal` CSS class remains in `globals.css` (used elsewhere potentially); only the wrapper div in `page.tsx` is removed
+- **Definition of Done**: Dashboard page shows shimmer skeleton during load, then transitions to animated card grid
+
+---
+
+### Task 3.3.7: Build Verification
+
+- **File(s)**: N/A (verification step)
+- **Depends on**: Tasks 3.3.1–3.3.6
+- **Implementation Notes**:
+  - `cd development/src && npm run build`
+  - Zero TypeScript errors, zero lint errors
+- **Definition of Done**: `npm run build` completes with no errors
+
+---
+
+## Known Limitations (Sprint 3 — Story 3.3)
+
+| Limitation | Notes |
+|-----------|-------|
+| All Sprint 1 + Sprint 2 + Story 3.2 limitations | Carry forward unchanged |
+| Skeleton loading window is very brief on fast devices | localStorage read is synchronous; skeleton may flash for < 1 frame — acceptable |
+| Tiwaz rune (ᛏ) placeholder after Valhalla exit not implemented | Spec mentions a brief ᛏ rune where the card was; deferred to S3/S4 easter egg layer |
+| No `prefers-reduced-motion` guard on card animations | Framer Motion respects `useReducedMotion` hook; not wired in this story — future work |

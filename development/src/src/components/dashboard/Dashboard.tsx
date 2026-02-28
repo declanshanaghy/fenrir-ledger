@@ -17,6 +17,7 @@
 import { useEffect, useState } from "react";
 import { CardTile } from "./CardTile";
 import { EmptyState } from "./EmptyState";
+import { AnimatedCardGrid } from "./AnimatedCardGrid";
 import type { Card } from "@/lib/types";
 import { LOKI_REALM_NAMES } from "@/components/layout/Footer";
 
@@ -107,16 +108,18 @@ export function Dashboard({ cards }: DashboardProps) {
         )}
       </div>
 
-      {/* Card grid — responsive: 1 col mobile, 2 col tablet, 3 col desktop */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {displayCards.map((card) => (
+      {/* Card grid — animated via AnimatedCardGrid (Framer Motion)
+           - saga-enter stagger on load
+           - Valhalla exit animation on delete                          */}
+      <AnimatedCardGrid
+        cards={displayCards}
+        renderCard={(card) => (
           <CardTile
-            key={card.id}
             card={card}
             lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
           />
-        ))}
-      </div>
+        )}
+      />
     </div>
   );
 }

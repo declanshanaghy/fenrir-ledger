@@ -10,6 +10,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Dashboard } from "@/components/dashboard/Dashboard";
+import { CardSkeletonGrid } from "@/components/dashboard/CardSkeletonGrid";
 import { initializeDefaultHousehold, getCards, migrateIfNeeded } from "@/lib/storage";
 import { DEFAULT_HOUSEHOLD_ID } from "@/lib/constants";
 import type { Card } from "@/lib/types";
@@ -40,14 +41,15 @@ export default function DashboardPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-24 text-muted-foreground font-body italic">
-          {/* Voice 2: atmospheric loading copy from copywriting.md */}
-          The Norns are weaving...
-        </div>
+        /* Skeleton shimmer grid — replaces plain loading text.
+           CardSkeletonGrid renders a structural mirror of the real card grid
+           with a Norse gold shimmer animation (saga-shimmer in globals.css).
+           "The Norns are weaving..." caption still appears beneath the grid. */
+        <CardSkeletonGrid count={6} />
       ) : (
-        <div className="saga-reveal">
-          <Dashboard cards={cards} />
-        </div>
+        /* saga-reveal CSS class is no longer needed here — Framer Motion
+           AnimatedCardGrid inside Dashboard handles the staggered entrance. */
+        <Dashboard cards={cards} />
       )}
     </div>
   );

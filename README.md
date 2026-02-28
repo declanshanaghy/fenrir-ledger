@@ -41,7 +41,7 @@
 
 Track every fee-wyrm in your portfolio. Every chain forged, every promo deadline, every fee-serpent's strike date — Fenrir watches and howls before the trap snaps shut. Add your cards, name your thresholds, and the wolf does the rest: reminding you to spend, transfer, downgrade, or close before you lose a single dollar to a fee you didn't choose to pay.
 
-*Sprint 2 complete — the Saga Ledger theme is live and six easter eggs are shipped. Sprint 3 next: animations, Howl panel, Valhalla.*
+*Sprint 3 in progress — Story 3.2 (Norse copy pass) and Story 3.3 (Framer Motion card animations) shipped. StatusRing, HowlPanel, and Valhalla route next.*
 
 ---
 
@@ -183,6 +183,14 @@ cd development/src && npm run dev
 
 # Open http://localhost:9999
 ```
+
+### Sprint 3 — Story 3.3 — Framer Motion + Card Animations
+
+- [AnimatedCardGrid.tsx](development/src/src/components/dashboard/AnimatedCardGrid.tsx) — saga-enter stagger + Valhalla exit via Framer Motion variants
+- [CardSkeletonGrid.tsx](development/src/src/components/dashboard/CardSkeletonGrid.tsx) — Norse gold shimmer skeleton loading state
+- [globals.css](development/src/src/app/globals.css) — `saga-shimmer` keyframe + `.skeleton` class added
+- [implementation-plan.md](development/implementation-plan.md) — Story 3.3 tasks documented
+- [qa-handoff.md](development/qa-handoff.md) — Story 3.3 QA handoff with full test matrix
 
 ### Sprint 3 — Story 3.2 — Norse Copy Pass
 

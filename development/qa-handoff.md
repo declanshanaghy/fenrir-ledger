@@ -527,3 +527,202 @@ Expected: zero TypeScript errors, zero lint errors, all pages build successfully
 | Realm labels not on primary badges | By design — Voice 1 rule keeps badges functional |
 | `active` maps to a single realm (Asgard) | Vanaheim/Midgard sub-states not yet differentiated — future work |
 | Loading state flicker depends on device speed | The "Norns are weaving..." text may be too brief to read on fast devices — acceptable |
+
+---
+
+# QA Handoff — Sprint 3, Story 3.3
+
+**From**: FiremanDecko (Principal Engineer)
+**To**: Loki (QA Tester)
+**Sprint**: 3
+**Story**: 3.3 — Framer Motion + Card Animations
+**Date**: 2026-02-27
+
+---
+
+## What Was Implemented
+
+### `framer-motion` installed
+
+`framer-motion` added to `dependencies` in `package.json`. All Framer Motion components
+are in `"use client"` boundaries per ADR-001.
+
+### `saga-shimmer` CSS keyframe + `.skeleton` class in `globals.css`
+
+Gold-palette shimmer animation for skeleton loading tiles. The gradient sweeps from
+void-black (`#0f1018`) through midnight blue (`#1e2235`) to slate (`#2a2d45`) and back,
+giving a Norse gold-tinged pulse rather than a neutral gray flash.
+
+### `CardSkeletonGrid` component — shimmer loading state
+
+New component at `development/src/src/components/dashboard/CardSkeletonGrid.tsx`.
+
+- Renders a configurable number of skeleton card tiles (default: 6)
+- Each `SkeletonTile` is a structural mirror of `CardTile` — same height, same row layout
+- Includes a skeleton summary header row (count + attention count placeholders)
+- "The Norns are weaving..." italic caption appears beneath the skeleton grid
+- No Framer Motion dependency — CSS animation only
+
+### `AnimatedCardGrid` component — Framer Motion stagger + exit
+
+New component at `development/src/src/components/dashboard/AnimatedCardGrid.tsx`.
+
+Two animations:
+
+**Saga-enter stagger (page load)**
+- Initial: `opacity: 0, y: 20`
+- Animate: `opacity: 1, y: 0`
+- Duration: 400ms, easing: `cubic-bezier(0.16, 1, 0.3, 1)` (expo-out)
+- Stagger: each card delays by `index × 0.07s`, capped at 0.56s
+
+**Card Sent to Valhalla exit (delete)**
+- Exit: `opacity: 0, y: 24, scale: 0.95, filter: sepia(1) brightness(0.4)`
+- Duration: 500ms, easing: `ease-in`
+- Card descends and desaturates before DOM removal
+- `mode="popLayout"` ensures the grid reflows smoothly after exit
+
+### `Dashboard.tsx` — wired to `AnimatedCardGrid`
+
+Replaced the raw `<div className="grid ...">` with `<AnimatedCardGrid>`.
+Loki Mode logic unchanged — `displayCards` (shuffled or normal) passes through identically.
+
+### `page.tsx` — wired to `CardSkeletonGrid`
+
+Replaced the plain "The Norns are weaving..." div loading state with `<CardSkeletonGrid count={6} />`.
+Removed the `.saga-reveal` wrapper div — Framer Motion now owns the stagger.
+
+---
+
+## Files Created / Modified (Story 3.3)
+
+| File | Action | Description |
+|------|--------|-------------|
+| `development/src/package.json` | Modified | Added `framer-motion` to dependencies |
+| `development/src/package-lock.json` | Modified | Lock file updated for `framer-motion` |
+| `development/src/src/app/globals.css` | Modified | Added `@keyframes saga-shimmer` and `.skeleton` class |
+| `development/src/src/components/dashboard/CardSkeletonGrid.tsx` | Created | Shimmer skeleton loading grid |
+| `development/src/src/components/dashboard/AnimatedCardGrid.tsx` | Created | Framer Motion stagger entrance + Valhalla exit |
+| `development/src/src/components/dashboard/Dashboard.tsx` | Modified | Uses `AnimatedCardGrid` instead of raw grid div |
+| `development/src/src/app/page.tsx` | Modified | Uses `CardSkeletonGrid` for loading state; removed `.saga-reveal` wrapper |
+| `development/implementation-plan.md` | Modified | Story 3.3 tasks documented |
+| `development/qa-handoff.md` | Modified | This section |
+
+---
+
+## How to Deploy (Story 3.3)
+
+Same as Story 3.2. No new environment variables.
+
+```bash
+cd development/src
+npm run dev
+# open http://localhost:9653
+```
+
+---
+
+## Test Focus Areas (Story 3.3)
+
+### 1. Skeleton loading state
+
+The skeleton is only visible during the brief window between page mount and
+the `useEffect` localStorage read completing. On most devices this is < 50ms.
+
+**To reliably observe the skeleton:**
+1. Open DevTools → Network tab → set throttling to "Slow 3G"
+2. Hard-refresh the dashboard (`Cmd+Shift+R` / `Ctrl+Shift+F5`)
+3. The skeleton grid should be visible for 1–2 seconds before cards appear
+
+**Expected skeleton behavior:**
+- 6 skeleton tiles render in the card grid layout (1 col / 2 col / 3 col responsive)
+- Each tile has the same height as a real `CardTile` (~216px)
+- Shimmer animation sweeps left-to-right with a gold-tinted dark gradient
+- "The Norns are weaving..." italic caption appears beneath the skeleton grid
+- Skeleton is replaced by the real card grid once loading completes
+
+**Regression check:**
+- Verify "The Norns are weaving..." text no longer appears as a standalone centered div (it now lives inside `CardSkeletonGrid`)
+
+---
+
+### 2. Saga-enter stagger animation (page load)
+
+After the skeleton resolves and cards appear:
+
+- Cards animate in sequentially — first card appears immediately, each subsequent card staggered by ~70ms
+- Each card starts at `opacity: 0, y: 20px` and resolves to `opacity: 1, y: 0`
+- Duration: ~400ms per card; expo-out easing (fast settle, no bounce)
+- With 6 cards: last card begins animating at ~350ms; full grid visible by ~750ms
+
+**How to test with a full portfolio:**
+1. Ensure several cards exist in localStorage
+2. Hard-refresh the page
+3. Observe sequential card appearance (not simultaneous)
+
+**Edge case — large portfolio:**
+- Add 9+ cards
+- Verify stagger delay caps at ~560ms for cards beyond index 8 (all appear in a cluster)
+
+---
+
+### 3. Card exit animation (delete → Valhalla)
+
+When a card is deleted:
+
+1. Navigate to `/cards/[id]/edit` for any existing card
+2. Click "Delete card" → confirm in the dialog
+3. Observe the dashboard after redirect
+
+**Expected behavior:**
+- After the delete redirect, the deleted card should no longer appear
+- When cards are deleted while already on the dashboard (if future implementation allows inline delete), the card should animate out: descend with sepia desaturation before disappearing from the grid
+
+**Note for this sprint:** Card deletion navigates to the dashboard via redirect, so the exit animation fires after the redirect when the grid reloads without the deleted card. The remaining cards re-enter with the stagger animation. This is the correct behavior for the current architecture.
+
+**To test the exit animation more directly:**
+- Observe the Framer Motion animation in a local dev build where you can add a `console.log` in `makeCardVariants` to confirm the `exit` variant is being applied. Alternatively, use React DevTools → Framer Motion panel.
+
+---
+
+### 4. Loki Mode regression — animated grid
+
+Loki Mode must still function after the `AnimatedCardGrid` integration:
+
+1. Click "Loki" in the footer 7 times rapidly
+2. Verify the card grid shuffles into a new order (cards re-animate with stagger)
+3. Verify status badges show random Norse realm names
+4. Wait ~5 seconds — verify order restores (cards re-animate back into original order)
+
+---
+
+### 5. Responsive layout — skeleton + animated grid
+
+At each breakpoint, verify both the skeleton and real grid use the correct column count:
+
+| Viewport | Skeleton columns | Real grid columns |
+|----------|-----------------|-------------------|
+| < 640px (mobile) | 1 | 1 |
+| 640px–1023px (tablet) | 2 | 2 |
+| ≥ 1024px (desktop) | 3 | 3 |
+
+---
+
+### 6. Build verification
+
+```bash
+cd development/src && npm run build
+```
+
+Expected: zero TypeScript errors, zero lint errors, all pages build successfully.
+`framer-motion` bundle contributes ~43 kB to the `/` route First Load JS (see build output).
+
+---
+
+## Known Limitations (Story 3.3)
+
+| Limitation | Impact |
+|-----------|--------|
+| Skeleton window is very brief on fast devices | localStorage read is synchronous; skeleton may flash for < 1 frame — use network throttling to observe |
+| Card exit animation not visible on delete-then-redirect flow | Delete navigates away; exit plays when the new card list renders (without the deleted card). No user-visible regression. |
+| Tiwaz rune (ᛏ) placeholder after Valhalla exit not implemented | Spec calls for a brief ᛏ rune appearing where the card was; deferred to S3/S4 easter egg layer |
+| No `prefers-reduced-motion` guard | Framer Motion's `useReducedMotion` hook not wired; animations play regardless of OS accessibility setting — deferred |

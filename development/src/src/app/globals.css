@@ -122,6 +122,33 @@
   }
 }
 
+/* ── Skeleton Shimmer Loading State ────────────────────────────────────────
+ *
+ * Gold-palette shimmer used by CardSkeletonGrid while card data loads.
+ * Spec from ux/interactions.md — Loading States section.
+ *
+ * .skeleton — apply to any placeholder element.
+ * The gradient sweeps from void-black → midnight blue → slate → back,
+ * giving a Norse gold-tinged pulse rather than a neutral gray flash.
+ */
+@keyframes saga-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #0f1018 0%,
+    #1e2235 40%,
+    #2a2d45 50%,
+    #1e2235 60%,
+    #0f1018 100%
+  );
+  background-size: 800px 100%;
+  animation: saga-shimmer 1.4s ease-in-out infinite;
+}
+
 /* ── Gold Pulse (urgent status) ─────────────────────────────────────────── */
 @keyframes muspel-pulse {
   0%, 100% { opacity: 1; }
