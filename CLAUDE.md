@@ -17,11 +17,11 @@ masked = secret[0..3] + "x".repeat(secret.length - 8) + secret[-4..]
 
 **Examples:**
 
-| Secret length | Raw (never output) | Masked output |
-|---|---|---|
-| 32 chars | `cefkfXCxcchvZoN8VBJXUehmkEh3GmDu` | `cefkxxxxxxxxxxxxxxxxxxxxxxxxGmDu` |
-| 40 chars | `ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcd1234` | `ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1234` |
-| 20 chars | `AKIAIOSFODNN7EXAMPLE` | `AKIAxxxxxxxxEXAMPLE` → wait, 20-8=12 x's: `AKIAxxxxxxxxxxxxPLE` |
+| Secret length | Example masked output |
+|---|---|
+| 32 chars | `ABCDxxxxxxxxxxxxxxxxxxxxxxxxWXYZ` |
+| 40 chars | `ABCDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxWXYZ` |
+| 20 chars | `ABCDxxxxxxxxxxxxxxxxWXYZ` → 20-8=12 x's: `ABCDxxxxxxxxxxxxWXYZ` |
 
 **Applies to:**
 - API keys (Vercel, Google, AWS, GitHub tokens, etc.)
