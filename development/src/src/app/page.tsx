@@ -9,7 +9,14 @@
  * users, or the anonymous UUID from localStorage("fenrir:household")).
  * Loads all active cards from localStorage under the per-household key.
  *
- * See ADR-006 for the anonymous-first auth model.
+ * Layout (Sprint 3.4 — HowlPanel):
+ *   Desktop (lg+): two-column flex row.
+ *     Left: card grid (flex-1, min-w-0)
+ *     Right: HowlPanel sidebar (w-72, shrink-0) — slides in when urgent cards exist
+ *   Mobile (< lg): single column. Bell button (ᚲ) in header opens HowlPanel
+ *     as a fixed bottom sheet via AnimatedHowlPanel mobileOpen prop.
+ *
+ * See AnimatedHowlPanel in components/layout/HowlPanel.tsx for animation spec.
  */
 
 import { useEffect, useState } from "react";
@@ -17,6 +24,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { CardSkeletonGrid } from "@/components/dashboard/CardSkeletonGrid";
+import { AnimatedHowlPanel } from "@/components/layout/HowlPanel";
 import { initializeHousehold, getCards, migrateIfNeeded } from "@/lib/storage";
 import type { Card } from "@/lib/types";
 
@@ -24,6 +32,8 @@ export default function DashboardPage() {
   const { householdId, status } = useAuth();
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // Mobile HowlPanel bottom-sheet visibility
+  const [mobileHowlOpen, setMobileHowlOpen] = useState(false);
 
   useEffect(() => {
     // Wait for auth state to resolve before reading localStorage
@@ -38,30 +48,89 @@ export default function DashboardPage() {
     setIsLoading(false);
   }, [householdId, status]);
 
+  const urgentCount = cards.filter(
+    (c) => c.status === "fee_approaching" || c.status === "promo_expiring"
+  ).length;
+
+  const loaded = !isLoading && status !== "loading";
+
   return (
     <div className="px-6 py-6">
-      <div className="flex items-center justify-between mb-6">
+      {/* Page header: title + actions */}
+      <div className="flex items-center justify-between mb-6 gap-3">
         {/* Voice 2: atmospheric page heading from copywriting.md navigation labels */}
-        <h1 className="font-display text-xl text-gold tracking-wide">The Ledger of Fates</h1>
-        <Link
-          href="/cards/new"
-          className="inline-flex items-center justify-center rounded-sm text-sm font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-gold-bright h-9 px-4 py-2"
-        >
-          Add Card
-        </Link>
+        <h1 className="font-display text-xl text-gold tracking-wide">
+          The Ledger of Fates
+        </h1>
+
+        <div className="flex items-center gap-2">
+          {/* Mobile bell button — ᚲ Kenaz rune as urgency indicator.
+              Shown only on mobile (lg:hidden) when urgent cards exist.
+              On desktop the HowlPanel is inline; no button needed. */}
+          {loaded && urgentCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setMobileHowlOpen(true)}
+              aria-label={`${urgentCount} urgent card${urgentCount === 1 ? "" : "s"} — open urgent panel`}
+              className="lg:hidden relative inline-flex items-center justify-center h-9 w-9 rounded-sm border border-border text-muted-foreground hover:border-gold/50 hover:text-gold transition-colors"
+            >
+              <span
+                aria-hidden="true"
+                className="text-base leading-none"
+                style={{ fontFamily: "serif" }}
+              >
+                ᚲ
+              </span>
+              {/* Urgent count badge */}
+              <span
+                className="absolute -top-1.5 -right-1.5 h-4 w-4 flex items-center justify-center rounded-full bg-[#c94a0a] text-[10px] font-mono font-bold text-white"
+                aria-hidden="true"
+              >
+                {urgentCount}
+              </span>
+            </button>
+          )}
+
+          <Link
+            href="/cards/new"
+            className="inline-flex items-center justify-center rounded-sm text-sm font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-gold-bright h-9 px-4 py-2"
+          >
+            Add Card
+          </Link>
+        </div>
       </div>
 
-      {isLoading || status === "loading" ? (
-        /* Skeleton shimmer grid — replaces plain loading text.
-           CardSkeletonGrid renders a structural mirror of the real card grid
-           with a Norse gold shimmer animation (saga-shimmer in globals.css).
-           "The Norns are weaving..." caption still appears beneath the grid. */
-        <CardSkeletonGrid count={6} />
-      ) : (
-        /* saga-reveal CSS class is no longer needed here — Framer Motion
-           AnimatedCardGrid inside Dashboard handles the staggered entrance. */
-        <Dashboard cards={cards} />
-      )}
+      {/* Main content row: card grid + HowlPanel side-by-side on desktop */}
+      <div className="flex gap-6 items-start">
+        {/* Card grid — takes all available space */}
+        <div className="flex-1 min-w-0">
+          {!loaded ? (
+            /* Skeleton shimmer grid — replaces plain loading text.
+               CardSkeletonGrid renders a structural mirror of the real card grid
+               with a Norse gold shimmer animation (saga-shimmer in globals.css).
+               "The Norns are weaving..." caption still appears beneath the grid. */
+            <CardSkeletonGrid count={6} />
+          ) : (
+            /* saga-reveal CSS class is no longer needed here — Framer Motion
+               AnimatedCardGrid inside Dashboard handles the staggered entrance. */
+            <Dashboard cards={cards} />
+          )}
+        </div>
+
+        {/* HowlPanel — desktop inline sidebar + mobile bottom sheet.
+            AnimatedHowlPanel handles both:
+              - Desktop: AnimatePresence slide-in from right (hidden lg:flex inside)
+              - Mobile: fixed bottom sheet when mobileOpen === true
+            The outer div reserves the sidebar slot on lg+ so the card grid
+            doesn't jump when the panel appears/disappears. */}
+        {loaded && (
+          <AnimatedHowlPanel
+            cards={cards}
+            mobileOpen={mobileHowlOpen}
+            onMobileClose={() => setMobileHowlOpen(false)}
+          />
+        )}
+      </div>
     </div>
   );
 }

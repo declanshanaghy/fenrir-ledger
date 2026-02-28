@@ -302,6 +302,24 @@ body.konami-shake-mobile {
   opacity: 1;
 }
 
+/* ── Howl Panel — Raven Warning Shake ──────────────────────────────────────
+ *
+ * raven-warn: brief shake on the raven icon when a new urgent card appears.
+ * Applied once via JavaScript (class added then removed after animation).
+ *
+ * Spec from ux/interactions.md — The Howl Panel section.
+ */
+@keyframes raven-warn {
+  0%,  100% { transform: rotate(0deg); }
+  20%        { transform: rotate(-12deg); }
+  40%        { transform: rotate(10deg); }
+  60%        { transform: rotate(-6deg); }
+  80%        { transform: rotate(4deg); }
+}
+.raven-icon--warning {
+  animation: raven-warn 0.6s ease-out;
+}
+
 /* ── Mythology Links ────────────────────────────────────────────────────── */
 /*
  * Subtly visible enrichment links to Wikipedia for Norse proper nouns
