@@ -140,7 +140,9 @@ test.describe("Session Archive — /sessions/", () => {
     await cards.nth(0).click();
 
     // Chronicle page must have a back-nav link pointing to the archive index
-    const backLink = page.locator('.back-link[href="./index.html"]');
+    // Per design spec: root-relative /sessions/ so it resolves correctly
+    // regardless of whether the URL has a trailing slash.
+    const backLink = page.locator('.back-link[href="/sessions/"]');
     await expect(backLink).toBeVisible();
 
     // Chronicle must have an <h1> with content
@@ -166,8 +168,8 @@ test.describe("Session Archive — /sessions/", () => {
 
     await cards.nth(1).click();
 
-    // Chronicle back-link still present
-    const backLink2 = page.locator('.back-link[href="./index.html"]');
+    // Chronicle back-link still present (root-relative per design spec)
+    const backLink2 = page.locator('.back-link[href="/sessions/"]');
     await expect(backLink2).toBeVisible();
 
     // Navigate back again
@@ -191,8 +193,9 @@ test.describe("Session Archive — /sessions/", () => {
       expect(href).not.toBeNull();
       // Must NOT be an absolute URL to fenrir-ledger.vercel.app
       expect(href).not.toContain("fenrir-ledger.vercel.app");
-      // Must start with "./" (relative to the directory)
-      expect(href!.startsWith("./")).toBe(true);
+      // Per design spec: root-relative paths so links resolve correctly
+      // regardless of trailing slash on the /sessions URL.
+      expect(href!.startsWith("/sessions/")).toBe(true);
     }
   });
 

@@ -148,6 +148,61 @@ Yggdrasil is the world tree connecting all nine realms. In a future sprint, the 
 
 ---
 
+## Wikipedia Enrichment Links — `.myth-link`
+
+Norse proper nouns visible in the UI (realms, deities, creatures, objects) are enriched with subtle Wikipedia links using the `.myth-link` CSS class. These reward curious users without cluttering the interface.
+
+### Design Contract
+
+- **Color**: `inherit` — no text color change
+- **Underline**: `1px dotted rgba(212, 165, 32, 0.38)` — faint gold dotted underline at 38% opacity
+- **Cursor**: `help` — hints informational, not navigational
+- **Hover**: underline opacity rises to 85% (`rgba(212, 165, 32, 0.85)`)
+- **Focus**: same as hover; `outline: none` (gold border-box handles focus ring)
+- **All links**: `target="_blank" rel="noopener noreferrer"` + `aria-label="[Term] on Wikipedia"`
+- **Not on functional copy** — buttons, labels, errors, badges never carry myth-links
+
+### CSS class (defined in `globals.css` and `static/index.html`)
+
+```css
+.myth-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(212, 165, 32, 0.38);
+  cursor: help;
+  transition: border-bottom-color 0.15s ease;
+}
+.myth-link:hover, .myth-link:focus-visible {
+  border-bottom-color: rgba(212, 165, 32, 0.85);
+  outline: none;
+}
+```
+
+### Wikipedia URL Reference Table
+
+| Term | Wikipedia URL |
+|------|--------------|
+| Fenrir | https://en.wikipedia.org/wiki/Fenrir |
+| Gleipnir | https://en.wikipedia.org/wiki/Gleipnir |
+| Valhalla | https://en.wikipedia.org/wiki/Valhalla |
+| Norns | https://en.wikipedia.org/wiki/Norns |
+| Sköll | https://en.wikipedia.org/wiki/Sk%C3%B6ll |
+| Hati | https://en.wikipedia.org/wiki/Hati_Hr%C3%B3%C3%B0vitnisson |
+| Prose Edda | https://en.wikipedia.org/wiki/Prose_Edda |
+| Gylfaginning | https://en.wikipedia.org/wiki/Gylfaginning |
+| Freyja | https://en.wikipedia.org/wiki/Freyja |
+| Loki | https://en.wikipedia.org/wiki/Loki |
+| Nine Realms | https://en.wikipedia.org/wiki/Cosmology_of_Norse_mythology |
+| Svartálfaheimr | https://en.wikipedia.org/wiki/Svartal%C3%A1fheim |
+| Yggdrasil | https://en.wikipedia.org/wiki/Yggdrasil |
+| Odin | https://en.wikipedia.org/wiki/Odin |
+| Valkyries | https://en.wikipedia.org/wiki/Valkyrie |
+| Ragnarök | https://en.wikipedia.org/wiki/Ragnar%C3%B6k |
+| Huginn and Muninn | https://en.wikipedia.org/wiki/Huginn_and_Muninn |
+| Fáfnir | https://en.wikipedia.org/wiki/F%C3%A1fnir |
+
+---
+
 ## Ragnarök → The End State
 
 Ragnarök is the Norse apocalypse — when Fenrir breaks free and swallows Odin. In Fenrir Ledger, Ragnarök is triggered when the user has multiple overdue cards simultaneously.

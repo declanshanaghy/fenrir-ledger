@@ -314,7 +314,15 @@ export default function ValhallaPage() {
       {/* Page heading — Voice 2: atmospheric (from product/copywriting.md) */}
       <header className="mb-6 border-b border-border pb-4">
         <h1 className="font-display text-xl text-gold tracking-wide mb-1">
-          Valhalla
+          <a
+            className="myth-link"
+            href="https://en.wikipedia.org/wiki/Valhalla"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Valhalla on Wikipedia"
+          >
+            Valhalla
+          </a>
         </h1>
         <p className="text-sm text-muted-foreground font-body italic">
           Hall of the Honored Dead

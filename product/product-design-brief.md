@@ -97,6 +97,7 @@ The mythology rewards exploration. It never blocks a task.
 | Animations | CSS-first, subtle but orchestrated | One well-timed page load reveal > scattered micro-interactions |
 | Empty states | Edda quotes + myth context | The emotional hook that makes the brand memorable |
 | Easter eggs | Discoverable, not obtrusive | Reward exploration; never break task flow |
+| Wikipedia enrichment | `.myth-link` class on Norse proper nouns | Faint gold dotted underline + `cursor: help` links curious users to myth context; see `mythology-map.md` |
 
 ---
 

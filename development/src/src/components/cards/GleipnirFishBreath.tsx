@@ -54,15 +54,52 @@ export function GleipnirFishBreath({ open, onClose }: GleipnirFishBreathProps) {
     >
       <p className="font-body text-sm text-[#e8e4d4] leading-relaxed">
         One of the six impossible things woven into{" "}
-        <span className="text-[#f0b429] italic">Gleipnir</span> — the only
-        chain strong enough to bind the great wolf. Though it looks like silk
-        ribbon, no chain is stronger.
+        <a
+          className="myth-link"
+          href="https://en.wikipedia.org/wiki/Gleipnir"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Gleipnir on Wikipedia"
+          style={{ color: "#f0b429", fontStyle: "italic" }}
+        >
+          Gleipnir
+        </a>{" "}
+        — the only chain strong enough to bind the great wolf. Though it looks
+        like silk ribbon, no chain is stronger.
       </p>
 
       <p className="font-body text-xs italic text-[#8a8578] leading-relaxed">
-        &ldquo;The dwarves of Svartálfaheimr gathered six things that do not
-        exist. From these they wove Gleipnir. When Fenrir felt its touch, he
-        knew at last what true binding was.&rdquo;
+        &ldquo;The dwarves of{" "}
+        <a
+          className="myth-link"
+          href="https://en.wikipedia.org/wiki/Svartal%C3%A1fheim"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Svartálfaheimr on Wikipedia"
+        >
+          Svartálfaheimr
+        </a>{" "}
+        gathered six things that do not exist. From these they wove{" "}
+        <a
+          className="myth-link"
+          href="https://en.wikipedia.org/wiki/Gleipnir"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Gleipnir on Wikipedia"
+        >
+          Gleipnir
+        </a>
+        . When{" "}
+        <a
+          className="myth-link"
+          href="https://en.wikipedia.org/wiki/Fenrir"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Fenrir on Wikipedia"
+        >
+          Fenrir
+        </a>{" "}
+        felt its touch, he knew at last what true binding was.&rdquo;
       </p>
 
       <div className="border-t border-[#1e2235] pt-3 mt-1">

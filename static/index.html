@@ -687,6 +687,23 @@
       cursor: help;
       border-bottom: 1px dotted var(--text-void);
     }
+
+    /* ── Mythology Links ─────────────────────────────────── */
+    /* Subtly visible enrichment links to Wikipedia for Norse
+       proper nouns. Dotted gold underline + cursor:help.
+       No color change. No bold. Just a faint invitation.    */
+    .myth-link {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px dotted rgba(212, 165, 32, 0.38);
+      cursor: help;
+      transition: border-bottom-color 0.15s ease;
+    }
+    .myth-link:hover,
+    .myth-link:focus-visible {
+      border-bottom-color: rgba(212, 165, 32, 0.85);
+      outline: none;
+    }
   </style>
 </head>
 <body>
@@ -729,7 +746,7 @@
           <div class="rune-rule"></div>
           <blockquote class="hero-quote">
             "Though it looks like silk ribbon, no chain is stronger."
-            <cite>— Prose Edda, Gylfaginning</cite>
+            <cite>— <a class="myth-link" href="https://en.wikipedia.org/wiki/Prose_Edda" target="_blank" rel="noopener noreferrer" aria-label="Prose Edda on Wikipedia">Prose Edda</a>, <a class="myth-link" href="https://en.wikipedia.org/wiki/Gylfaginning" target="_blank" rel="noopener noreferrer" aria-label="Gylfaginning on Wikipedia">Gylfaginning</a></cite>
           </blockquote>
         </div>
       </div>
@@ -773,7 +790,7 @@
               Every sign-up offer has an expiration. Spend threshold by this date.
               Earn the bonus before the window closes. Miss it, and the points
               that were practically yours vanish — not stolen, just quietly allowed
-              to expire. Hati runs. The moon doesn't wait.
+              to expire. <a class="myth-link" href="https://en.wikipedia.org/wiki/Hati_Hr%C3%B3%C3%B0vitnisson" target="_blank" rel="noopener noreferrer" aria-label="Hati on Wikipedia">Hati</a> runs. The moon doesn't wait.
             </p>
           </div>
 
@@ -815,10 +832,10 @@
 
           <div class="chain-card feature-card">
             <span class="card-rune" style="color: var(--fire-muspel)">ᚲ</span>
-            <h3 class="feature-name">Sköll &amp; Hati</h3>
+            <h3 class="feature-name"><a class="myth-link" href="https://en.wikipedia.org/wiki/Sk%C3%B6ll" target="_blank" rel="noopener noreferrer" aria-label="Sköll on Wikipedia">Sköll</a> &amp; <a class="myth-link" href="https://en.wikipedia.org/wiki/Hati_Hr%C3%B3%C3%B0vitnisson" target="_blank" rel="noopener noreferrer" aria-label="Hati on Wikipedia">Hati</a></h3>
             <p class="card-desc">
               Two deadline trackers named for the wolves who chase the sun and moon
-              across the sky. Sköll watches your annual fee dates; Hati watches your
+              across the sky. <a class="myth-link" href="https://en.wikipedia.org/wiki/Sk%C3%B6ll" target="_blank" rel="noopener noreferrer" aria-label="Sköll on Wikipedia">Sköll</a> watches your annual fee dates; <a class="myth-link" href="https://en.wikipedia.org/wiki/Hati_Hr%C3%B3%C3%B0vitnisson" target="_blank" rel="noopener noreferrer" aria-label="Hati on Wikipedia">Hati</a> watches your
               promo windows. Each one counts down. When either catches its prey,
               the cost is real.
             </p>
@@ -826,11 +843,11 @@
 
           <div class="chain-card feature-card">
             <span class="card-rune" style="color: var(--amber-hati)">ᚺ</span>
-            <h3 class="feature-name">The Norns' Weave</h3>
+            <h3 class="feature-name">The <a class="myth-link" href="https://en.wikipedia.org/wiki/Norns" target="_blank" rel="noopener noreferrer" aria-label="Norns on Wikipedia">Norns</a>' Weave</h3>
             <p class="card-desc">
               Past, present, and future — what you've spent, where your balances
               stand today, and what needs to happen before each deadline closes.
-              The Norns have always known the shape of fate.
+              The <a class="myth-link" href="https://en.wikipedia.org/wiki/Norns" target="_blank" rel="noopener noreferrer" aria-label="Norns on Wikipedia">Norns</a> have always known the shape of fate.
               The ledger makes it readable.
             </p>
           </div>
@@ -848,7 +865,7 @@
 
           <div class="chain-card feature-card">
             <span class="card-rune" style="color: var(--teal-asgard)">ᛏ</span>
-            <h3 class="feature-name">Valhalla</h3>
+            <h3 class="feature-name"><a class="myth-link" href="https://en.wikipedia.org/wiki/Valhalla" target="_blank" rel="noopener noreferrer" aria-label="Valhalla on Wikipedia">Valhalla</a></h3>
             <p class="card-desc">
               Closed cards don't disappear. They're archived — every fee you avoided,
               every bonus you collected, every card you closed at exactly the right moment.
@@ -869,9 +886,9 @@
 
           <div class="chain-card feature-card">
             <span class="card-rune" style="color: var(--text-rune)">ᛗ</span>
-            <h3 class="feature-name">The Nine Realms</h3>
+            <h3 class="feature-name">The <a class="myth-link" href="https://en.wikipedia.org/wiki/Cosmology_of_Norse_mythology" target="_blank" rel="noopener noreferrer" aria-label="Nine Realms of Norse cosmology on Wikipedia">Nine Realms</a></h3>
             <p class="card-desc">
-              Each card carries a status badge drawn from the Nine Realms —
+              Each card carries a status badge drawn from the <a class="myth-link" href="https://en.wikipedia.org/wiki/Cosmology_of_Norse_mythology" target="_blank" rel="noopener noreferrer" aria-label="Nine Realms of Norse cosmology on Wikipedia">Nine Realms</a> —
               a single word that tells you exactly where it stands.
               Earning, warning, burning, or closed with honor.
               A glance at the dashboard and you know the state of every chain.
@@ -922,10 +939,10 @@
               <span style="color: var(--amber-hati);">ᚺ</span>
             </div>
             <span class="step-number">02</span>
-            <h3 class="step-heading">Watch the Norns Weave</h3>
+            <h3 class="step-heading">Watch the <a class="myth-link" href="https://en.wikipedia.org/wiki/Norns" target="_blank" rel="noopener noreferrer" aria-label="Norns on Wikipedia">Norns</a> Weave</h3>
             <p class="step-desc">
               The dashboard shows every active card, every approaching deadline,
-              every open reward window. Sköll and Hati count the days.
+              every open reward window. <a class="myth-link" href="https://en.wikipedia.org/wiki/Sk%C3%B6ll" target="_blank" rel="noopener noreferrer" aria-label="Sköll on Wikipedia">Sköll</a> and <a class="myth-link" href="https://en.wikipedia.org/wiki/Hati_Hr%C3%B3%C3%B0vitnisson" target="_blank" rel="noopener noreferrer" aria-label="Hati on Wikipedia">Hati</a> count the days.
               The Howl fires when something needs your attention. Check it
               the way you'd check a flight status — occasionally, but always before it matters.
             </p>
@@ -944,7 +961,7 @@
             <p class="step-desc">
               Close before the fee hits. Claim before the window closes.
               Collect what you earned and mark the card closed.
-              It moves to Valhalla — honored, recorded, done.
+              It moves to <a class="myth-link" href="https://en.wikipedia.org/wiki/Valhalla" target="_blank" rel="noopener noreferrer" aria-label="Valhalla on Wikipedia">Valhalla</a> — honored, recorded, done.
               Then open the next one. The strategy compounds.
             </p>
           </div>
@@ -963,7 +980,7 @@
 
       <blockquote class="footer-quote">
         "Though it looks like silk ribbon, no chain is stronger."
-        <cite>— Prose Edda, Gylfaginning</cite>
+        <cite>— <a class="myth-link" href="https://en.wikipedia.org/wiki/Prose_Edda" target="_blank" rel="noopener noreferrer" aria-label="Prose Edda on Wikipedia">Prose Edda</a>, <a class="myth-link" href="https://en.wikipedia.org/wiki/Gylfaginning" target="_blank" rel="noopener noreferrer" aria-label="Gylfaginning on Wikipedia">Gylfaginning</a></cite>
       </blockquote>
 
       <div class="footer-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
@@ -979,8 +996,8 @@
 
       <p class="footer-credit">
         <span data-gleipnir="breath-of-a-fish" class="copyright-c">©</span> 2026 Fenrir Ledger ·
-        Forged by FiremanDecko · Guarded by Freya · Tested by
-        <span title="Son of the wolf. Father of chaos. Father of Fenrir. Of course he's QA.">Loki</span>
+        Forged by FiremanDecko · Guarded by <a class="myth-link" href="https://en.wikipedia.org/wiki/Freyja" target="_blank" rel="noopener noreferrer" aria-label="Freyja on Wikipedia">Freya</a> · Tested by
+        <a class="myth-link" href="https://en.wikipedia.org/wiki/Loki" target="_blank" rel="noopener noreferrer" title="Son of Loki, the trickster — father of Fenrir. Of course he's QA." aria-label="Loki on Wikipedia">Loki</a>
       </p>
 
     </div>

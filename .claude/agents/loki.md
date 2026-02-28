@@ -82,6 +82,10 @@ Don't test to confirm it works. Test to prove it doesn't. Assume:
 - Every "it should work" is a bug waiting to happen
 - If it's not in an automated test, it doesn't count
 
+**Never test against implemented behaviour. Test against design specs.**
+
+Tests that validate what the code currently does are worthless — they will pass even when the code is wrong. Every test assertion must be derived from the design spec, wireframes, or product requirements. If the spec says a link must resolve to `/sessions/`, assert `/sessions/` — not whatever the code currently outputs.
+
 ## Test Environment
 
 ### Predefined Test Server

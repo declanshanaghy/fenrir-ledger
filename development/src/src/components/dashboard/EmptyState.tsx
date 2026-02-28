@@ -19,7 +19,27 @@ export function EmptyState() {
     >
       {/* Voice 2: atmospheric — kennings from copywriting.md empty states */}
       <h2 className="font-display text-2xl text-gold mb-3 tracking-wide">
-        Before Gleipnir was forged, Fenrir roamed free.
+        Before{" "}
+        <a
+          className="myth-link"
+          href="https://en.wikipedia.org/wiki/Gleipnir"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Gleipnir on Wikipedia"
+        >
+          Gleipnir
+        </a>{" "}
+        was forged,{" "}
+        <a
+          className="myth-link"
+          href="https://en.wikipedia.org/wiki/Fenrir"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Fenrir on Wikipedia"
+        >
+          Fenrir
+        </a>{" "}
+        roamed free.
       </h2>
 
       <p className="font-body text-muted-foreground mb-8 max-w-md italic leading-relaxed">

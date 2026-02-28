@@ -259,3 +259,32 @@ body.konami-shake-mobile {
 .gleipnir-copyright-symbol:hover::after {
   opacity: 1;
 }
+
+/* ── Mythology Links ────────────────────────────────────────────────────── */
+/*
+ * Subtly visible enrichment links to Wikipedia for Norse proper nouns
+ * (realms, deities, creatures, objects) rendered in the UI.
+ *
+ * Design contract (design/mythology-map.md):
+ *   - Dotted gold underline at 38% opacity — faint but findable
+ *   - cursor: help — hints that this is informational, not navigational
+ *   - No text color change. No font weight change. No underline on hover.
+ *   - On hover/focus: underline darkens to 85% opacity.
+ *   - All links open in a new tab (target="_blank" rel="noopener noreferrer")
+ *
+ * Usage: <a className="myth-link" href="https://en.wikipedia.org/wiki/Fenrir"
+ *            target="_blank" rel="noopener noreferrer"
+ *            aria-label="Fenrir on Wikipedia">Fenrir</a>
+ */
+.myth-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(212, 165, 32, 0.38);
+  cursor: help;
+  transition: border-bottom-color 0.15s ease;
+}
+.myth-link:hover,
+.myth-link:focus-visible {
+  border-bottom-color: rgba(212, 165, 32, 0.85);
+  outline: none;
+}
