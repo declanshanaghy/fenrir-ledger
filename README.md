@@ -240,9 +240,10 @@ cd development/src && npm run dev
 
 ### Sprint 3 — Story 3.3 — Framer Motion + Card Animations
 
-- [AnimatedCardGrid.tsx](development/src/src/components/dashboard/AnimatedCardGrid.tsx) — saga-enter stagger + Valhalla exit via Framer Motion variants
+- [AnimatedCardGrid.tsx](development/src/src/components/dashboard/AnimatedCardGrid.tsx) — saga-enter stagger + Valhalla exit via Framer Motion variants; `useReducedMotion()` collapses all motion when user prefers reduced motion
+- [CardTile.tsx](development/src/src/components/dashboard/CardTile.tsx) — `motion.div` wrapper with `whileHover={{ y: -2 }}` lift; `useReducedMotion()` disables transform; `.card-chain` CSS class for gold glow
 - [CardSkeletonGrid.tsx](development/src/src/components/dashboard/CardSkeletonGrid.tsx) — Norse gold shimmer skeleton loading state
-- [globals.css](development/src/src/app/globals.css) — `saga-shimmer` keyframe + `.skeleton` class added
+- [globals.css](development/src/src/app/globals.css) — `.card-chain` hover gold glow + `@media prefers-reduced-motion` rules for both `.card-chain` and `.saga-reveal`
 - [implementation-plan.md](development/implementation-plan.md) — Story 3.3 tasks documented
 - [qa-handoff.md](development/qa-handoff.md) — Story 3.3 QA handoff with full test matrix
 
