@@ -149,6 +149,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 *The trickster tests. His verdicts are final.*
 
 - [quality/README.md](quality/README.md) — Index of all QA artifacts and test execution guide
+- [quality/story-3.3-verdict.md](quality/story-3.3-verdict.md) — QA verdict: Story 3.3 (Framer Motion + Card Animations) — SHIP ✓ (0 defects)
 - [quality/story-3.2-verdict.md](quality/story-3.2-verdict.md) — QA verdict: Story 3.2 (Norse Copy Pass) — HOLD for copy fixes (3 tooltip defects)
 - [quality/test-plan.md](quality/test-plan.md) — Easter eggs test strategy and coverage plan (283 lines)
 - [quality/test-cases.md](quality/test-cases.md) — 22 test cases for all implemented eggs (Konami #2, Mountain #3, Fish #5, Forgemaster #9, Loki Mode) (480 lines)
