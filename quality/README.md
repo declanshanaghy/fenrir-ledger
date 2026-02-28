@@ -10,6 +10,21 @@ This directory contains all QA artifacts: test plans, test cases, test scripts, 
 
 ## Current Sprint Deliverables (Sprint 3)
 
+### Story 3.2 — Anonymous-First Auth + Cloud Sync Upsell
+
+**Status:** READY TO SHIP ✓ | 0 Defects Found
+
+#### Quality Report
+- **[story-3.2-anon-auth-verdict.md](story-3.2-anon-auth-verdict.md)** — 400-line comprehensive QA verdict
+  - 24 test cases across 7 suites (Anonymous First Load, Household ID, Upsell Banner, Sign-In Page, Mobile)
+  - 100% pass rate: all anonymous state, banner behavior, navigation, mobile responsiveness working
+  - Code review: AppShell, UpsellBanner, AuthContext, TopBar, Sign-In page all verified ✓
+  - Build clean: 0 TypeScript errors, 0 console errors, stable dev server
+  - Edge cases: browser state, navigation flows, viewport responsiveness all tested
+  - Final verdict: READY TO SHIP with 0 defects
+
+---
+
 ### Story 3.1 — Google OIDC Auth (Auth.js v5 + per-household localStorage)
 
 **Status:** READY TO SHIP ✓ | 0 Defects Found

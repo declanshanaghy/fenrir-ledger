@@ -162,6 +162,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 *The trickster tests. His verdicts are final.*
 
 - [quality/README.md](quality/README.md) — Index of all QA artifacts and test execution guide
+- [quality/story-3.2-anon-auth-verdict.md](quality/story-3.2-anon-auth-verdict.md) — QA verdict: Story 3.2 (Anonymous-First Auth + Cloud Sync Upsell) — READY TO SHIP ✓ (0 defects, 24/24 tests pass)
 - [quality/story-3.1-verdict.md](quality/story-3.1-verdict.md) — QA verdict: Story 3.1 (Google OIDC Auth + per-household localStorage) — READY TO SHIP ✓ (0 defects)
 - [quality/story-3.5-verdict.md](quality/story-3.5-verdict.md) — QA verdict: Story 3.5 (Valhalla Archive + Close Card) — HOLD (DEF-001: wrong gleipnir fragment)
 - [quality/story-3.3-verdict.md](quality/story-3.3-verdict.md) — QA verdict: Story 3.3 (Framer Motion + Card Animations) — SHIP ✓ (0 defects)
@@ -211,6 +212,7 @@ cd development/src && npm run dev
 - [src/app/sign-in/page.tsx](development/src/src/app/sign-in/page.tsx) — Opt-in upgrade surface; "Continue without signing in" full-width CTA; two data variants
 - [architecture/adrs/ADR-006-anonymous-first-auth.md](architecture/adrs/ADR-006-anonymous-first-auth.md) — Decision record: anonymous-first pivot, migration prompt deferred
 - [development/src/LOKI-TEST-PLAN-anon-auth.md](development/src/LOKI-TEST-PLAN-anon-auth.md) — QA test plan: 7 suites, 30 test cases
+- [quality/story-3.2-anon-auth-verdict.md](quality/story-3.2-anon-auth-verdict.md) — QA verdict: READY TO SHIP ✓ (24/24 tests pass, 0 defects)
 
 ### Sprint 3 — Story 3.1 — Google OIDC Auth (Auth.js v5 + per-household localStorage)
 
