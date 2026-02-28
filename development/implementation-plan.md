@@ -372,3 +372,102 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 | No Framer Motion animations | Motion planned for Sprint 3 (saga-enter stagger, StatusRing, HowlPanel) |
 | No Valhalla route | Closed cards archive planned for Sprint 3 |
 | Gleipnir Hunt incomplete | Not all 6 fragment trigger points are fully wired; tracked in QA handoff |
+
+---
+
+# Implementation Plan: Fenrir Ledger Sprint 3 — Story 3.2
+
+## Story 3.2: Norse Copy Pass + `getRealmLabel()`
+
+### Prerequisites
+
+- Sprint 2 complete (Saga Ledger theme, App Shell, Easter Eggs layer)
+- `product/mythology-map.md` and `product/copywriting.md` reviewed
+
+### Tasks (ordered)
+
+---
+
+### Task 3.2.1: Create `realm-utils.ts`
+
+- **File(s)**: `development/src/src/lib/realm-utils.ts`
+- **Depends on**: Nothing (pure utility, no component dependencies)
+- **Implementation Notes**:
+  - `getRealmLabel(status: CardStatus): string` — returns Norse realm name for each status
+    - `active` → `"Asgard"`
+    - `fee_approaching` → `"Muspelheim"`
+    - `promo_expiring` → `"Jötunheimr"`
+    - `closed` → `"Valhalla"`
+  - `getRealmDescription(status: CardStatus): string` — returns atmospheric tooltip copy
+  - Both functions are switch-exhaustive over `CardStatus`; TypeScript enforces coverage
+  - No default branch — intentional: TypeScript will error if a new status is added but not handled
+- **Edge Cases**: New `CardStatus` values added in future sprints must have entries here; omitting them causes a TypeScript compile error (desired)
+- **Definition of Done**: File exists, both functions exported, `npm run build` passes
+
+---
+
+### Task 3.2.2: Wire `realm-utils.ts` into `constants.ts`
+
+- **File(s)**: `development/src/src/lib/constants.ts`
+- **Depends on**: Task 3.2.1
+- **Implementation Notes**:
+  - `STATUS_TOOLTIPS` record delegates to `getRealmDescription()` instead of duplicating strings
+  - Type tightened from `Record<string, string>` to `Record<CardStatus, string>`
+  - This ensures `STATUS_TOOLTIPS` always stays in sync with `realm-utils.ts`
+- **Edge Cases**: Circular import — `realm-utils.ts` must NOT import from `constants.ts`
+- **Definition of Done**: `constants.ts` compiles; `STATUS_TOOLTIPS` values match `getRealmDescription()` output
+
+---
+
+### Task 3.2.3: Update `StatusBadge.tsx` to use `realm-utils.ts`
+
+- **File(s)**: `development/src/src/components/dashboard/StatusBadge.tsx`
+- **Depends on**: Task 3.2.1
+- **Implementation Notes**:
+  - Replace `STATUS_TOOLTIPS[status]` lookup with direct call to `getRealmDescription(status)`
+  - Badge label remains `STATUS_LABELS[status]` (Voice 1: functional, plain English)
+  - Loki Mode `lokiLabel` override still works — it only replaces the label, not the tooltip
+- **Edge Cases**: `lokiLabel` is display-only; tooltip always shows realm description regardless
+- **Definition of Done**: Tooltip on each badge shows atmospheric realm copy; no regression in badge colors or labels
+
+---
+
+### Task 3.2.4: Norse Copy Pass — Empty State, Page Headings, Loading States
+
+- **File(s)**:
+  - `development/src/src/components/dashboard/EmptyState.tsx`
+  - `development/src/src/app/page.tsx`
+  - `development/src/src/app/cards/new/page.tsx`
+  - `development/src/src/app/cards/[id]/edit/page.tsx`
+- **Depends on**: Nothing (copy-only changes)
+- **Implementation Notes**:
+  - `EmptyState.tsx`: heading → "Before Gleipnir was forged, Fenrir roamed free." / body → "Before your first card is added, no chain can be broken." (from `copywriting.md` no-cards empty state)
+  - `page.tsx` heading: "Cards" → "The Ledger of Fates" (from `copywriting.md` navigation labels)
+  - `page.tsx` loading: "Loading..." → "The Norns are weaving..."
+  - `cards/new/page.tsx` heading: "Add New Card" → "Forge a New Chain" / subhead: "Add a card to your portfolio."
+  - `cards/[id]/edit/page.tsx` heading: "Edit Card" → `{card.cardName}` / subhead: "Card record" / loading: "Consulting the runes..."
+  - All button labels unchanged (Voice 1: functional)
+  - All form field labels unchanged (Voice 1: functional)
+- **Edge Cases**: Long card names in the edit page heading — existing `font-display` truncates gracefully; no change needed
+- **Definition of Done**: All changed text matches `copywriting.md` canonical copy exactly
+
+---
+
+### Task 3.2.5: Build Verification
+
+- **File(s)**: N/A (verification step)
+- **Depends on**: Tasks 3.2.1–3.2.4
+- **Implementation Notes**:
+  - `cd development/src && npm run build`
+  - Zero TypeScript errors, zero lint errors
+- **Definition of Done**: `npm run build` completes with no errors
+
+---
+
+## Known Limitations (Sprint 3 — Story 3.2)
+
+| Limitation | Notes |
+|-----------|-------|
+| All Sprint 1 + Sprint 2 limitations | Carry forward unchanged |
+| Realm labels not shown on primary badges | By design — Voice 1 rule; realm names are tooltip/atmospheric only |
+| No per-card sub-realm differentiation | `active` maps to one realm; Vanaheim/Midgard/Asgard sub-states are future work |

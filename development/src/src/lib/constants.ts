@@ -4,7 +4,8 @@
  * All magic values are defined here. No magic strings or numbers elsewhere.
  */
 
-import type { Household, Issuer } from "@/lib/types";
+import type { CardStatus, Household, Issuer } from "@/lib/types";
+import { getRealmDescription } from "@/lib/realm-utils";
 
 /** localStorage key prefix — prevents collisions with other apps on localhost */
 export const STORAGE_KEY_PREFIX = "fenrir_ledger";
@@ -65,10 +66,14 @@ export const STATUS_LABELS: Record<string, string> = {
   closed: "Closed",
 };
 
-/** Status tooltip text — Norse realm flavor (Voice 2: atmospheric) */
-export const STATUS_TOOLTIPS: Record<string, string> = {
-  active: "Asgard-bound — rewards flowing, no urgent deadlines",
-  fee_approaching: "Muspelheim — annual fee due soon, fire approaches",
-  promo_expiring: "Hati approaches — promo deadline draws near",
-  closed: "In Valhalla — rewards harvested, chain broken",
+/**
+ * Status tooltip text — Norse realm flavor (Voice 2: atmospheric).
+ * Authoritative source is realm-utils.ts getRealmDescription().
+ * This record delegates to that function for consistency.
+ */
+export const STATUS_TOOLTIPS: Record<CardStatus, string> = {
+  active: getRealmDescription("active"),
+  fee_approaching: getRealmDescription("fee_approaching"),
+  promo_expiring: getRealmDescription("promo_expiring"),
+  closed: getRealmDescription("closed"),
 };

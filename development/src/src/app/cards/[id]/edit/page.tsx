@@ -41,16 +41,18 @@ export default function EditCardPage() {
     <div className="max-w-2xl mx-auto px-6 py-6">
       {isLoading ? (
         <div className="flex items-center justify-center py-24 text-muted-foreground font-body italic">
-          Loading...
+          {/* Voice 2: atmospheric loading copy from copywriting.md */}
+          Consulting the runes...
         </div>
       ) : card ? (
         <>
           <div className="mb-8">
+            {/* Voice 2: atmospheric page heading from copywriting.md navigation labels */}
             <h1 className="font-display text-2xl text-gold tracking-wide">
-              Edit Card
+              {card.cardName}
             </h1>
             <p className="font-body text-muted-foreground mt-1 italic">
-              {card.cardName}
+              Card record
             </p>
           </div>
 

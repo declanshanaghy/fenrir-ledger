@@ -29,7 +29,8 @@ export default function DashboardPage() {
   return (
     <div className="px-6 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-xl text-gold tracking-wide">Cards</h1>
+        {/* Voice 2: atmospheric page heading from copywriting.md navigation labels */}
+        <h1 className="font-display text-xl text-gold tracking-wide">The Ledger of Fates</h1>
         <Link
           href="/cards/new"
           className="inline-flex items-center justify-center rounded-sm text-sm font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-gold-bright h-9 px-4 py-2"
@@ -40,7 +41,8 @@ export default function DashboardPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24 text-muted-foreground font-body italic">
-          Loading...
+          {/* Voice 2: atmospheric loading copy from copywriting.md */}
+          The Norns are weaving...
         </div>
       ) : (
         <div className="saga-reveal">

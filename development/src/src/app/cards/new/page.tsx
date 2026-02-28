@@ -19,11 +19,12 @@ export default function NewCardPage() {
   return (
     <div className="max-w-2xl mx-auto px-6 py-6">
       <div className="mb-8">
+        {/* Voice 2: atmospheric page heading from copywriting.md navigation labels */}
         <h1 className="font-display text-2xl text-gold tracking-wide">
-          Add New Card
+          Forge a New Chain
         </h1>
         <p className="font-body text-muted-foreground mt-1 italic">
-          Add this card to your portfolio.
+          Add a card to your portfolio.
         </p>
       </div>
 

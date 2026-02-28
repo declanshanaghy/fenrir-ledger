@@ -354,3 +354,176 @@ open http://localhost:9999
 ## Sprint 2 Environment Variables
 
 Sprint 2 requires no additional environment variables. No secrets introduced.
+
+---
+
+# QA Handoff — Sprint 3, Story 3.2
+
+**From**: FiremanDecko (Principal Engineer)
+**To**: Loki (QA Tester)
+**Sprint**: 3
+**Story**: 3.2 — Norse Copy Pass + `getRealmLabel()`
+**Date**: 2026-02-27
+
+---
+
+## What Was Implemented
+
+### `getRealmLabel()` and `getRealmDescription()` in `realm-utils.ts`
+
+New utility module at `development/src/src/lib/realm-utils.ts` provides the authoritative
+mapping from `CardStatus` to Norse realm vocabulary.
+
+- `getRealmLabel(status)` — returns the realm name string:
+  - `active` → `"Asgard"`
+  - `fee_approaching` → `"Muspelheim"`
+  - `promo_expiring` → `"Jötunheimr"`
+  - `closed` → `"Valhalla"`
+- `getRealmDescription(status)` — returns atmospheric tooltip copy (Voice 2)
+
+Both functions are switch-exhaustive with no default branch, so adding a new `CardStatus`
+without updating `realm-utils.ts` produces a TypeScript compile error.
+
+### `StatusBadge.tsx` — tooltip wired to `getRealmDescription()`
+
+The badge tooltip now calls `getRealmDescription()` directly instead of looking up
+`STATUS_TOOLTIPS[status]` from `constants.ts`. Badge labels are unchanged (Voice 1).
+
+### `constants.ts` — `STATUS_TOOLTIPS` delegates to `realm-utils.ts`
+
+`STATUS_TOOLTIPS` now builds its values from `getRealmDescription()`, making `realm-utils.ts`
+the single source of truth. Type tightened from `Record<string, string>` to
+`Record<CardStatus, string>`.
+
+### Norse copy pass — page headings, empty state, loading states
+
+| Location | Before | After |
+|----------|--------|-------|
+| Dashboard page heading (`/`) | "Cards" | "The Ledger of Fates" |
+| Dashboard loading state | "Loading..." | "The Norns are weaving..." |
+| Add card page heading (`/cards/new`) | "Add New Card" | "Forge a New Chain" |
+| Add card page subheading | "Add this card to your portfolio." | "Add a card to your portfolio." |
+| Edit card page heading (`/cards/[id]/edit`) | "Edit Card" | `{card.cardName}` |
+| Edit card page subheading | `{card.cardName}` | "Card record" |
+| Edit card loading state | "Loading..." | "Consulting the runes..." |
+| Empty state heading | "No cards yet" | "Before Gleipnir was forged, Fenrir roamed free." |
+| Empty state body | "Add your first card to start tracking fees, bonuses, and deadlines." | "Before your first card is added, no chain can be broken." |
+
+**Not changed** (Voice 1 — functional, correct as-is):
+- All button labels (Add Card, Save, Cancel, Delete, etc.)
+- All form field labels and placeholders
+- Status badge primary labels (Active, Fee Due Soon, Promo Expiring, Closed)
+- Navigation item labels (Cards)
+- Confirmation dialog copy (already aligned with `copywriting.md`)
+
+---
+
+## Files Created / Modified (Story 3.2)
+
+| File | Action | Description |
+|------|--------|-------------|
+| `development/src/src/lib/realm-utils.ts` | Created | New: `getRealmLabel()` and `getRealmDescription()` |
+| `development/src/src/lib/constants.ts` | Modified | `STATUS_TOOLTIPS` now delegates to `getRealmDescription()`; type tightened |
+| `development/src/src/components/dashboard/StatusBadge.tsx` | Modified | Tooltip uses `getRealmDescription()` directly |
+| `development/src/src/components/dashboard/EmptyState.tsx` | Modified | Norse copy: Gleipnir heading and body |
+| `development/src/src/app/page.tsx` | Modified | Heading → "The Ledger of Fates"; loading → "The Norns are weaving..." |
+| `development/src/src/app/cards/new/page.tsx` | Modified | Heading → "Forge a New Chain" |
+| `development/src/src/app/cards/[id]/edit/page.tsx` | Modified | Heading → card name; subhead → "Card record"; loading → "Consulting the runes..." |
+| `development/implementation-plan.md` | Modified | Story 3.2 section added |
+| `development/qa-handoff.md` | Modified | This section |
+
+---
+
+## How to Deploy (Story 3.2)
+
+Same as Sprint 2. No new environment variables.
+
+```bash
+cd development/src
+npm run dev
+# open http://localhost:9999
+```
+
+---
+
+## Test Focus Areas (Story 3.2)
+
+### 1. Realm tooltip copy on status badges
+
+For each card status, hover the status badge and verify the tooltip:
+
+| Badge label | Expected tooltip |
+|-------------|-----------------|
+| Active | "Asgard-bound — rewards flowing, no urgent deadlines" |
+| Fee Due Soon | "Muspelheim — annual fee due soon, fire approaches" |
+| Promo Expiring | "Hati approaches — promo deadline draws near" |
+| Closed | "In Valhalla — rewards harvested, chain broken" |
+
+To trigger each status:
+- **Active**: add a card with no upcoming deadlines
+- **Fee Due Soon**: add a card with annual fee date within 60 days
+- **Promo Expiring**: add a card with bonus deadline within 30 days
+- **Closed**: edit an existing card and set status to "Closed"
+
+### 2. Badge labels unchanged (Voice 1)
+
+Verify status badge text (not tooltip) still reads plain English:
+- "Active" (not "Asgard")
+- "Fee Due Soon" (not "Muspelheim")
+- "Promo Expiring" (not "Jötunheimr")
+- "Closed" (not "Valhalla")
+
+### 3. Dashboard page heading
+
+- Navigate to `/`
+- Verify page heading reads "The Ledger of Fates" (not "Cards")
+
+### 4. Dashboard loading state
+
+- Hard refresh the page (Cmd+Shift+R / Ctrl+Shift+F5)
+- Verify loading text reads "The Norns are weaving..." (not "Loading...")
+
+### 5. Add card page heading
+
+- Navigate to `/cards/new`
+- Verify heading reads "Forge a New Chain"
+- Verify subheading reads "Add a card to your portfolio."
+
+### 6. Edit card page heading
+
+- Navigate to `/cards/[id]/edit` for an existing card (e.g., "Sapphire Preferred")
+- Verify heading reads the card name (e.g., "Sapphire Preferred")
+- Verify subheading reads "Card record"
+- Verify loading state (if briefly visible) reads "Consulting the runes..."
+
+### 7. Empty state copy
+
+- Open the app with no cards (or clear localStorage)
+- Verify empty state heading reads: "Before Gleipnir was forged, Fenrir roamed free."
+- Verify empty state body reads: "Before your first card is added, no chain can be broken."
+- Verify the "Add Card" button is still present and functional
+
+### 8. Loki Mode realm badges still work
+
+- Click "Loki" in the footer 7 times
+- Verify card grid shuffles and badges show random Norse realm names from `LOKI_REALM_NAMES`
+- Verify the Loki Mode labels appear in the badge (not the normal status labels)
+- Verify tooltips still show the realm description from `getRealmDescription()` regardless of Loki label
+
+### 9. Build verification
+
+```bash
+cd development/src && npm run build
+```
+
+Expected: zero TypeScript errors, zero lint errors, all pages build successfully.
+
+---
+
+## Known Limitations (Story 3.2)
+
+| Limitation | Impact |
+|-----------|--------|
+| Realm labels not on primary badges | By design — Voice 1 rule keeps badges functional |
+| `active` maps to a single realm (Asgard) | Vanaheim/Midgard sub-states not yet differentiated — future work |
+| Loading state flicker depends on device speed | The "Norns are weaving..." text may be too brief to read on fast devices — acceptable |
