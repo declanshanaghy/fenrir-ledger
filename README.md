@@ -226,7 +226,7 @@ Fenrir Ledger was forged from [ZeroForge](https://github.com/declanshanaghy/zero
 
 ## License
 
-Copyright (C) 2026 Declan Shanaghy. Licensed under the [GNU Affero General Public License v3.0](LICENSE.md).
+Copyright (C) 2026 Declan Shanaghy. Licensed under the [Elastic License 2.0 (ELv2)](LICENSE.md) — free for personal use; no competing hosted/managed service.
 
 ---
 
