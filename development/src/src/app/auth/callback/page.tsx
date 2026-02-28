@@ -9,12 +9,13 @@
  * Flow:
  *  1. Read { verifier, state, callbackUrl } from sessionStorage.
  *  2. Verify the state param matches to prevent CSRF.
- *  3. POST to Google's token endpoint with code + code_verifier (PKCE).
+ *  3. POST to /api/auth/token (server proxy) with code + code_verifier (PKCE).
+ *     The server proxy forwards the request to Google with the client_secret,
+ *     keeping the secret off the browser. The browser still owns the full
+ *     PKCE flow (verifier, challenge, state).
  *  4. Decode the id_token JWT payload (base64url middle segment).
  *  5. Build a FenrirSession and write it to localStorage("fenrir:auth").
  *  6. Redirect to callbackUrl (default: /).
- *
- * No server involvement. No client_secret. Public client / PKCE.
  *
  * See ADR-005 for the auth architecture decision.
  */
@@ -27,8 +28,8 @@ import type { FenrirSession } from "@/lib/types";
 /** sessionStorage key written by /sign-in */
 const PKCE_SESSION_KEY = "fenrir:pkce";
 
-/** Google token endpoint */
-const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+/** Server-side token exchange proxy — keeps client_secret off the browser. */
+const TOKEN_PROXY_URL = "/api/auth/token";
 
 // ── id_token decoder ──────────────────────────────────────────────────────────
 
@@ -111,30 +112,21 @@ function AuthCallbackContent() {
     // Clean up PKCE transient data immediately after reading.
     sessionStorage.removeItem(PKCE_SESSION_KEY);
 
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      setErrorMessage("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured.");
-      setCallbackStatus("error");
-      return;
-    }
-
     const redirectUri = `${window.location.origin}/auth/callback`;
 
-    // Exchange code for tokens
+    // Exchange code for tokens via the server-side proxy.
+    // The proxy adds the client_secret before forwarding to Google — the secret
+    // never touches the browser.
     async function exchangeCode() {
       try {
-        const body = new URLSearchParams({
-          code: code!,
-          client_id: clientId!,
-          redirect_uri: redirectUri,
-          grant_type: "authorization_code",
-          code_verifier: pkceData.verifier,
-        });
-
-        const response = await fetch(GOOGLE_TOKEN_URL, {
+        const response = await fetch(TOKEN_PROXY_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: body.toString(),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code: code!,
+            code_verifier: pkceData.verifier,
+            redirect_uri: redirectUri,
+          }),
         });
 
         if (!response.ok) {
