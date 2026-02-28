@@ -59,6 +59,7 @@ jobs:
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.preview_url }}
           BRANCH_NAME: ${{ github.ref_name }}
+          BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         with:
           script: |
             // Find the open PR for this branch, if any
@@ -75,10 +76,17 @@ jobs:
             }
 
             const prNumber = pulls[0].number;
+
+            // Append bypass param so the URL is accessible without Vercel login.
+            const bypass = process.env.BYPASS_SECRET;
+            const accessUrl = bypass
+              ? `${process.env.PREVIEW_URL}?x-vercel-protection-bypass=${bypass}`
+              : process.env.PREVIEW_URL;
+
             const body = [
               '## Vercel Preview',
               '',
-              `🔍 **Preview URL:** ${process.env.PREVIEW_URL}`,
+              `🔍 **Preview URL:** ${accessUrl}`,
               '',
               `_Updated on push to \`${process.env.BRANCH_NAME}\`_`,
             ].join('\n');

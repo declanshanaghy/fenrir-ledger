@@ -30,6 +30,7 @@ import {
   GleipnirFishBreath,
   useGleipnirFragment5,
 } from "@/components/cards/GleipnirFishBreath";
+import { AboutModal } from "@/components/layout/AboutModal";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -105,6 +106,8 @@ export function Footer() {
   const { open: fishOpen, trigger: triggerFish, dismiss: dismissFish } =
     useGleipnirFragment5();
 
+  const [aboutOpen, setAboutOpen] = useState(false);
+
   // Easter egg #3 — Loki Mode: click counter
   const lokiClicksRef = useRef(0);
   const lokiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -165,15 +168,14 @@ export function Footer() {
 
           {/* ── Left: wordmark · tagline ─────────────────────────────────── */}
           <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-            <a
-              href="/static"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => setAboutOpen(true)}
               className="font-heading tracking-[0.06em] uppercase font-bold text-[11px] hover:text-foreground transition-colors"
-              aria-label="Fenrir Ledger — visit the marketing site (opens in new tab)"
+              aria-label="About Fenrir Ledger"
             >
               ᛟ FENRIR LEDGER
-            </a>
+            </button>
             <span aria-hidden="true">&nbsp;·&nbsp;</span>
             <span>Break free. Harvest every reward. Let no chain hold.</span>
           </span>
@@ -237,6 +239,9 @@ export function Footer() {
 
       {/* ── Gleipnir Fragment 5 modal ────────────────────────────────────── */}
       <GleipnirFishBreath open={fishOpen} onClose={dismissFish} />
+
+      {/* ── About modal ──────────────────────────────────────────────────── */}
+      <AboutModal open={aboutOpen} onOpenChange={setAboutOpen} />
     </>
   );
 }
