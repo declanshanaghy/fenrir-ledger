@@ -66,7 +66,7 @@ All implemented eggs work as designed. No blockers found. Tests are idempotent a
 - localStorage key: `egg:gleipnir-3`
 - SVG file: `/easter-eggs/gleipnir-3.svg` (exists and loads)
 - Fragment counter reads from all 6 keys dynamically
-- Modal plays fenrir-howl.mp3 on open
+- Modal plays fenrir-growl.mp3 on open
 
 ---
 
@@ -254,7 +254,7 @@ I verified all SVG files referenced in eggs exist and are loadable:
    - Toast message is the primary assert; shuffle is secondary UX
 
 3. **Audio Playback**
-   - fenrir-howl.mp3 is loaded and play() is called
+   - fenrir-growl.mp3 is loaded and play() is called
    - Can't verify actual sound output in headless tests
    - Audio failure is non-fatal (caught in error handler)
 

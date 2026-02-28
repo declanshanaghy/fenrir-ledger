@@ -118,7 +118,7 @@
   <!-- ═══════════════════════════════════════════════════════════════════
        APP FOOTER — MINIMAL REDESIGN
        ─────────────────────────────────────────────────────────────────
-       Intent: nearly invisible footer. No border, no nav, no links.
+       Intent: nearly invisible footer. No border, no nav. Wordmark links to /static.
        Maximum two lines tall at 11px. Left side = brand identity.
        Right side = colophon + copyright (easter egg triggers intact).
        ═══════════════════════════════════════════════════════════════════ -->
@@ -128,13 +128,13 @@
 
       <!-- ── Left: wordmark · tagline ─────────────────────────────────── -->
       <span class="footer-left">
-        <span class="footer-wordmark">ᛟ FENRIR LEDGER</span>
+        <a href="/static" class="footer-wordmark" aria-label="Fenrir Ledger — visit the marketing site">ᛟ FENRIR LEDGER</a>
         &nbsp;·&nbsp;
         <span class="footer-tagline">Break free. Harvest every reward. Let no chain hold.</span>
       </span>
       <!--
         Design note: wordmark and tagline share a single text line,
-        separated by a middot. No links. No hover states.
+        separated by a middot. Wordmark links to /static (marketing site).
       -->
 
       <!-- ── Right: team colophon · © ─────────────────────────────────── -->
@@ -180,7 +180,7 @@
 
     <p class="note" style="padding: 2px 0 0;">
       Layout: single flex row, left = brand, right = colophon + ©.
-      No border. No nav. No links. Font 11px. Padding 6px vertical.
+      No border. No nav. Wordmark (ᛟ FENRIR LEDGER) links to /static. Font 11px. Padding 6px vertical.
       Mobile: wraps to two stacked lines, both left-aligned.
       "Loki" (EE#3) and © (EE#5) triggers are preserved — see easter-eggs.md.
     </p>

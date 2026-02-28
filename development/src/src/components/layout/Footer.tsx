@@ -165,9 +165,13 @@ export function Footer() {
 
           {/* ── Left: wordmark · tagline ─────────────────────────────────── */}
           <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-            <span className="font-heading tracking-[0.06em] uppercase font-bold text-[11px]">
+            <a
+              href="/static"
+              className="font-heading tracking-[0.06em] uppercase font-bold text-[11px] hover:text-foreground transition-colors"
+              aria-label="Fenrir Ledger — visit the marketing site"
+            >
               ᛟ FENRIR LEDGER
-            </span>
+            </a>
             <span aria-hidden="true">&nbsp;·&nbsp;</span>
             <span>Break free. Harvest every reward. Let no chain hold.</span>
           </span>

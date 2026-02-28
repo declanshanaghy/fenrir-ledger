@@ -95,7 +95,7 @@
   - Body text mentions "six impossible things" and Gleipnir
   - Fragment counter shows "1 of 6" (or higher if other eggs have been found)
   - "So it is written" dismiss button is visible
-  - Modal plays fenrir-howl.mp3 audio
+  - Modal plays fenrir-growl.mp3 audio
 
 **Idempotent:** No — one-time gate via localStorage
 
@@ -169,7 +169,7 @@
   - Body text mentions "six impossible things" and Gleipnir
   - Fragment counter shows "1 of 6" (or higher if other eggs have been found)
   - "So it is written" dismiss button is visible
-  - Modal plays fenrir-howl.mp3 audio
+  - Modal plays fenrir-growl.mp3 audio
 
 **Idempotent:** No — one-time gate via localStorage
 
@@ -250,7 +250,7 @@
   - Fragment counter shows "N of 6" (depends on other eggs found)
   - If all 6 fragments are found, shows "Gleipnir is complete. The wolf stirs."
   - "So it is written" dismiss button is visible
-  - Modal plays fenrir-howl.mp3 audio
+  - Modal plays fenrir-growl.mp3 audio
 
 **Idempotent:** No — one-time gate via localStorage
 
