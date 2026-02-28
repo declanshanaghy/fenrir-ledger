@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Sign In — Optional Cloud Sync</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* ── Page layout ─────────────────────────────────────────────────── */
+    .page { display: flex; flex-direction: column; gap: 48px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* ── Sign-in page shell ───────────────────────────────────────────── */
+    /*
+     * Route: /sign-in
+     * This is a FULL PAGE — not a modal, not a sheet. A dedicated route.
+     * Rationale: a dedicated page signals that signing in is a considered,
+     * optional act — not an interruption or a gate. It is bookmarkable.
+     * The "Continue without signing in" back path is a first-class CTA —
+     * not a small link, not an afterthought. It must be visually prominent.
+     *
+     * Page structure:
+     *   - TopBar stub (same as dashboard — brand wordmark + ᛟ rune avatar)
+     *   - Sign-in card (centered, constrained width)
+     *     - Atmospheric eyebrow (Voice 2)
+     *     - Page heading (Voice 2)
+     *     - Feature list (what signing in gives you — Voice 1)
+     *     - Primary CTA: "Sign in to Google" (Voice 1)
+     *     - Divider: "or"
+     *     - Secondary CTA: "Continue without signing in" (Voice 1 — must be prominent)
+     *     - Atmospheric footnote (Voice 2) — no obligation framing
+     *
+     * Page title (HTML <title>): "Sign In — Fenrir Ledger"
+     *   (functional — not the place for Norse copy)
+     */
+
+    /* Page shell */
+    .signin-page {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      border: 1px solid;
+    }
+
+    /* TopBar (same as dashboard) */
+    .topbar {
+      height: 56px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .topbar-brand {
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .topbar-avatar {
+      width: 32px;
+      height: 32px;
+      border: 1px dashed;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    /* Content area — centers the sign-in card */
+    .signin-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    /* Sign-in card */
+    /*
+     * Max-width: 400px — compact enough to feel focused, not sparse.
+     * Centered vertically and horizontally in the content area.
+     * Not a modal — it renders directly in the page flow.
+     */
+    .signin-card {
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Atmospheric eyebrow (Voice 2) */
+    /*
+     * Small, uppercase, Norse saga voice.
+     * Sets the emotional frame — "this is an invitation, not a requirement."
+     * Implementation: Cinzel font, muted gold color (#c9920a at 60% opacity).
+     */
+    .signin-eyebrow {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-style: italic;
+    }
+
+    /* Page heading (Voice 2) */
+    .signin-heading {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    /* Atmospheric subheading (Voice 2) */
+    .signin-subhead {
+      font-size: 13px;
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    /* Feature list — what you get by signing in (Voice 1, plain English) */
+    .signin-features {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .signin-feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .signin-feature-icon {
+      width: 16px;
+      height: 16px;
+      border: 1px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Divider rule with separator text */
+    .signin-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+    }
+    .signin-divider-line {
+      flex: 1;
+      border-top: 1px solid;
+    }
+
+    /* Primary CTA — "Sign in to Google" */
+    /*
+     * Voice 1 — plain English. Full width.
+     * The user knows what Google is. "Sign in to Google" is unambiguous.
+     * Implementation: Google's OAuth flow. This button triggers PKCE auth flow.
+     */
+    .btn-signin-primary {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      font-family: inherit;
+      background: none;
+      /* Min touch target: satisfied by the 46px height (padding 13 + font ~20 + padding 13) */
+    }
+
+    /* Secondary CTA — "Continue without signing in" */
+    /*
+     * NON-NEGOTIABLE: This must be visually prominent.
+     * Not a tiny link. Not de-emphasized. It is a first-class exit path.
+     * Must NOT be styled in a way that makes it feel like the "wrong" choice.
+     * It is the "right" choice for many users — anonymous is the primary mode.
+     *
+     * Implementation: full-width button, outlined or ghost style —
+     * same visual weight class as the primary CTA, just secondary hierarchy.
+     * Navigates to: / (dashboard) or router.back() if referrer is dashboard.
+     */
+    .btn-signin-continue {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      font-family: inherit;
+      background: none;
+    }
+
+    /* Atmospheric footnote (Voice 2) */
+    /*
+     * Reassures the user their data is safe whether or not they sign in.
+     * Short — one sentence. Norse kenning framing optional.
+     */
+    .signin-footnote {
+      font-size: 11px;
+      font-style: italic;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Mobile frame ─────────────────────────────────────────────────── */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      position: relative;
+    }
+    .mobile-signin-content {
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .mobile-signin-card {
+      border: 1px solid;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Generic utilities ─────────────────────────────────────────────── */
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note-block {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.6;
+      border: 1px dashed;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+    .scenario-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .scenario-col { display: flex; flex-direction: column; gap: 8px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       DESIGN DECISION — Sign-in surface: Page vs. Sheet
+       Luna's choice: dedicated /sign-in PAGE (not a modal/sheet).
+
+       Rationale:
+         - A dedicated page communicates that signing in is a considered,
+           purposeful act — not a fleeting interruption. The user navigated
+           here intentionally. The wolf does not rush.
+         - A sheet/drawer feels lightweight and temporary, which risks
+           making the sync feature feel like an afterthought.
+         - A dedicated page is bookmarkable and has a stable URL,
+           which simplifies OAuth redirect handling.
+         - The "Continue without signing in" back path is ALWAYS visible
+           as a full button on the page — never hidden behind a × close.
+         - On mobile, the page fills the full viewport — no sheet z-index
+           complexity needed.
+
+       What makes this feel optional, not gate-like:
+         1. The "Continue without signing in" button is the same visual
+            weight as the primary CTA (outlined, not a small grey link).
+         2. The atmospheric copy frames sign-in as a gift, not a demand.
+         3. The page has no header nav that shows "you can't leave."
+            The TopBar brand link still works.
+  ═══════════════════════════════════════════════════════════════════ -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 1 — Desktop: Sign-in page (no anonymous data exists)
+       The "clean first sign-in" variant — user has no prior local data.
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 — Desktop · Sign-in page · No prior anonymous data</div>
+
+    <div class="signin-page">
+
+      <!-- TopBar — identical to dashboard, anonymous state -->
+      <div class="topbar" role="banner">
+        <button
+          style="background:none;border:none;cursor:pointer;text-align:left;"
+          type="button"
+          aria-label="About Fenrir Ledger"
+        >
+          <span class="topbar-brand">ᛟ Fenrir Ledger</span>
+        </button>
+        <!-- ᛟ rune avatar — anonymous state, same as dashboard -->
+        <div class="topbar-avatar" aria-label="Anonymous user"><span aria-hidden="true">ᛟ</span></div>
+      </div>
+
+      <!-- Sign-in content area -->
+      <div class="signin-content">
+
+        <!--
+          Sign-in card
+          <main> element — this is the primary page content.
+          aria-labelledby="signin-heading"
+        -->
+        <main class="signin-card" aria-labelledby="signin-heading">
+
+          <!-- Atmospheric eyebrow (Voice 2) — small, sets emotional context -->
+          <p class="signin-eyebrow" aria-hidden="true">An invitation, not a demand</p>
+
+          <!-- Heading (Voice 2) — Norse atmospheric -->
+          <!--
+            "Name the wolf" — the act of signing in "names" the user
+            (their identity is now known, their data synced).
+            This echoes the anonymous state copy "The wolf runs unnamed."
+          -->
+          <h1 class="signin-heading" id="signin-heading">Name the wolf.</h1>
+
+          <!-- Subheading (Voice 2) — short saga-voice framing -->
+          <p class="signin-subhead">
+            Your chains are already here. Sign in to carry them everywhere.
+          </p>
+
+          <!-- Feature list (Voice 1 — plain English) -->
+          <!--
+            Three concrete, honest benefits.
+            No marketing superlatives. No dark patterns.
+            The wolf does not oversell.
+          -->
+          <div class="signin-features" aria-label="What signing in gives you">
+            <div class="signin-feature-item">
+              <div class="signin-feature-icon" aria-hidden="true">✓</div>
+              <span>Back up your cards and deadlines to the cloud</span>
+            </div>
+            <div class="signin-feature-item">
+              <div class="signin-feature-icon" aria-hidden="true">✓</div>
+              <span>Access your ledger from any device</span>
+            </div>
+            <div class="signin-feature-item">
+              <div class="signin-feature-icon" aria-hidden="true">✓</div>
+              <span>Your local data is always preserved — signing in adds to it</span>
+            </div>
+          </div>
+
+          <!-- Primary CTA (Voice 1) -->
+          <!--
+            Full-width. Triggers the Google OAuth PKCE flow.
+            Implementation: onClick -> initiateGoogleOAuth() or Auth.js signIn('google').
+            After successful OAuth: navigate to /  (dashboard, signed-in state).
+            If anonymous data exists: navigate to migration prompt (modal) first.
+          -->
+          <button class="btn-signin-primary" type="button">
+            Sign in to Google
+          </button>
+
+          <!-- Divider -->
+          <div class="signin-divider" aria-hidden="true">
+            <div class="signin-divider-line"></div>
+            <span>or</span>
+            <div class="signin-divider-line"></div>
+          </div>
+
+          <!-- Secondary CTA (Voice 1) — NON-NEGOTIABLE prominence -->
+          <!--
+            "Continue without signing in" — not "Skip", not "Maybe later",
+            not a small grey link. Full-width button. Same visual weight class.
+            This is a valid, respected choice — not a fallback.
+            Implementation: router.push('/') or router.back().
+            Does NOT set the dismiss flag — user may see the upsell banner again.
+          -->
+          <button class="btn-signin-continue" type="button">
+            Continue without signing in
+          </button>
+
+          <!-- Atmospheric footnote (Voice 2) -->
+          <!--
+            Reassures: data is safe either way. Zero pressure.
+            Short — one sentence maximum.
+          -->
+          <p class="signin-footnote">
+            The ledger is already written. Signing in only shares it further.
+          </p>
+
+        </main><!-- /.signin-card -->
+
+      </div><!-- /.signin-content -->
+
+    </div><!-- /.signin-page -->
+
+    <p class="note-block">
+      Route: <code>/sign-in</code>. Full page — not a modal, not a sheet.<br/>
+      Atmospheric eyebrow and heading use Voice 2 (Norse). Feature list and CTAs use Voice 1 (plain English).<br/>
+      "Continue without signing in" is a <em>full-width outlined button</em> — same visual weight class as the primary CTA. Never a small grey link.<br/>
+      The TopBar is present and functional — brand wordmark still opens the About modal. The page does not feel like a cage.<br/>
+      HTML <code>&lt;title&gt;</code>: <code>Sign In — Fenrir Ledger</code>.<br/>
+      <code>&lt;main&gt;</code> carries <code>aria-labelledby="signin-heading"</code> for screen reader navigation.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 2 — Desktop: Sign-in page (anonymous data EXISTS)
+       The user has cards in localStorage. Signing in will trigger
+       the migration prompt after OAuth completes.
+       The sign-in page itself does NOT change — the migration prompt
+       fires afterward (see migration-prompt.html).
+       This scenario documents the awareness copy difference, if any.
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 — Desktop · Sign-in page · Anonymous data exists (N cards in local storage)</div>
+
+    <div class="signin-page">
+
+      <div class="topbar" role="banner">
+        <button style="background:none;border:none;cursor:pointer;text-align:left;" type="button" aria-label="About Fenrir Ledger">
+          <span class="topbar-brand">ᛟ Fenrir Ledger</span>
+        </button>
+        <div class="topbar-avatar" aria-label="Anonymous user"><span aria-hidden="true">ᛟ</span></div>
+      </div>
+
+      <div class="signin-content">
+
+        <main class="signin-card" aria-labelledby="signin-heading-2">
+
+          <p class="signin-eyebrow" aria-hidden="true">Your ledger awaits a name</p>
+
+          <!-- Slightly different heading — references existing data -->
+          <h1 class="signin-heading" id="signin-heading-2">Your chains are already here.</h1>
+
+          <!--
+            Subheading: explicitly mentions that existing data will be offered
+            for import. Manages expectations before OAuth completes.
+            This prevents surprise at the migration prompt.
+          -->
+          <p class="signin-subhead">
+            Sign in and we'll offer to add your 3 local cards to your cloud account.
+          </p>
+          <!--
+            Note: "3" is dynamic — replace with actual localStorage card count.
+            If count is 0, use Scenario 1 page (no data variant).
+            Threshold: show this variant when localStorage card count > 0.
+          -->
+
+          <div class="signin-features" aria-label="What signing in gives you">
+            <div class="signin-feature-item">
+              <div class="signin-feature-icon" aria-hidden="true">✓</div>
+              <span>Keep your existing cards — or start a fresh cloud account</span>
+            </div>
+            <div class="signin-feature-item">
+              <div class="signin-feature-icon" aria-hidden="true">✓</div>
+              <span>Back up all your cards and deadlines to the cloud</span>
+            </div>
+            <div class="signin-feature-item">
+              <div class="signin-feature-icon" aria-hidden="true">✓</div>
+              <span>Access your ledger from any device</span>
+            </div>
+          </div>
+
+          <button class="btn-signin-primary" type="button">
+            Sign in to Google
+          </button>
+
+          <div class="signin-divider" aria-hidden="true">
+            <div class="signin-divider-line"></div>
+            <span>or</span>
+            <div class="signin-divider-line"></div>
+          </div>
+
+          <!-- Same prominent "Continue without signing in" — no difference in this CTA -->
+          <button class="btn-signin-continue" type="button">
+            Continue without signing in
+          </button>
+
+          <p class="signin-footnote">
+            Your local chains are safe either way. The ledger was already written before you named yourself.
+          </p>
+
+        </main>
+
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      This variant is shown when <code>localStorage.getItem('fenrir:household')</code> exists and
+      the household has at least 1 card (<code>cardCount > 0</code>).<br/>
+      The subheading dynamically references the card count: <em>"your N local cards"</em>.<br/>
+      If <code>cardCount === 0</code>: show Scenario 1 (no-data variant).<br/>
+      The migration prompt dialog fires AFTER OAuth completes (not on this page). See <code>migration-prompt.html</code>.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 3 — Mobile (375px): Sign-in page
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 — Mobile 375px · Sign-in page</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">375px frame</div>
+        <div class="mobile-frame">
+
+          <!-- TopBar (mobile) -->
+          <div class="topbar" style="height: 56px;">
+            <span class="topbar-brand" style="font-size: 11px;">ᛟ Fenrir Ledger</span>
+            <div class="topbar-avatar"><span aria-hidden="true">ᛟ</span></div>
+          </div>
+
+          <!-- Sign-in content (mobile) — same card, narrower padding -->
+          <div class="mobile-signin-content">
+            <main class="mobile-signin-card" aria-labelledby="signin-heading-m">
+
+              <p class="signin-eyebrow" aria-hidden="true">An invitation, not a demand</p>
+
+              <h1 class="signin-heading" id="signin-heading-m" style="font-size: 18px;">Name the wolf.</h1>
+
+              <p class="signin-subhead" style="font-size: 12px;">
+                Your chains are already here. Sign in to carry them everywhere.
+              </p>
+
+              <!-- Feature list — compressed for mobile -->
+              <div class="signin-features">
+                <div class="signin-feature-item" style="font-size: 11px;">
+                  <div class="signin-feature-icon" aria-hidden="true">✓</div>
+                  <span>Back up your cards to the cloud</span>
+                </div>
+                <div class="signin-feature-item" style="font-size: 11px;">
+                  <div class="signin-feature-icon" aria-hidden="true">✓</div>
+                  <span>Access from any device</span>
+                </div>
+                <div class="signin-feature-item" style="font-size: 11px;">
+                  <div class="signin-feature-icon" aria-hidden="true">✓</div>
+                  <span>Local data always preserved</span>
+                </div>
+              </div>
+
+              <button class="btn-signin-primary" type="button" style="font-size: 13px;">
+                Sign in to Google
+              </button>
+
+              <div class="signin-divider" aria-hidden="true">
+                <div class="signin-divider-line"></div>
+                <span>or</span>
+                <div class="signin-divider-line"></div>
+              </div>
+
+              <button class="btn-signin-continue" type="button" style="font-size: 12px;">
+                Continue without signing in
+              </button>
+
+              <p class="signin-footnote" style="font-size: 10px;">
+                The ledger is already written. Signing in only shares it further.
+              </p>
+
+            </main>
+          </div>
+
+        </div><!-- /.mobile-frame -->
+      </div>
+
+      <div class="scenario-col" style="max-width: 380px;">
+        <div class="col-label">Mobile rules</div>
+        <p class="note">
+          The sign-in card fills most of the viewport vertically on mobile. No horizontal max-width constraint — card uses full width with 16px padding.<br/>
+          "Continue without signing in" remains full-width — never collapses to a link.<br/>
+          TopBar is present and visible. The ᛟ avatar is still tappable (opens the upsell panel, though on this page it is less relevant — the sign-in CTA is already present).<br/>
+          Consider: on the /sign-in page, tapping the ᛟ avatar does nothing (or simply shows "You're already here to sign in"). Defer to FiremanDecko for the implementation decision.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ACCESSIBILITY SUMMARY
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Accessibility Requirements</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size:12px;">
+      <table style="border-collapse:collapse; width:100%;">
+        <thead>
+          <tr style="border-bottom:1px solid;">
+            <th style="text-align:left; padding:6px 8px;">Element</th>
+            <th style="text-align:left; padding:6px 8px;">Requirement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;"><code>&lt;main&gt;</code> (sign-in card)</td>
+            <td style="padding:6px 8px;"><code>aria-labelledby</code> bound to the H1 heading id. Screen readers announce the page landmark by heading name.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">H1 heading</td>
+            <td style="padding:6px 8px;">One per page. Focusable on navigation for screen readers. Must be the first meaningful element inside <code>&lt;main&gt;</code>.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">"Sign in to Google" button</td>
+            <td style="padding:6px 8px;">Full accessible label — no icon-only. Min 44px height touch target.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">"Continue without signing in" button</td>
+            <td style="padding:6px 8px;">Same touch target as primary CTA. Must never be rendered as a link styled smaller than the primary button. The escape path is non-negotiable.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Atmospheric eyebrow</td>
+            <td style="padding:6px 8px;"><code>aria-hidden="true"</code> — decorative framing, not content the user needs to navigate by.</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px;">Feature list</td>
+            <td style="padding:6px 8px;"><code>aria-label="What signing in gives you"</code> on the container. Check icons: <code>aria-hidden="true"</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="note" style="text-align:center; padding-bottom: 24px;">
+    Wireframe — sign-in.html · Fenrir Ledger · Optional upgrade surface · No theme styling applied
+  </p>
+
+</div><!-- /.page -->
+
+</body>
+</html>

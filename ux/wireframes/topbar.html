@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wireframe: TopBar — OIDC Profile Display</title>
+  <title>Wireframe: TopBar — Anonymous + Signed-In States</title>
   <style>
     /* Layout and structure only.
        No colors, no custom fonts, no shadows, no border-radius.
@@ -75,7 +75,9 @@
 
     /* ── Profile trigger button ───────────────────────────────────────── */
     /*
-     * The entire avatar+email row is a single <button> that toggles the dropdown.
+     * The entire avatar row is a single <button> that toggles the dropdown.
+     * Anonymous state: opens the upsell prompt (not a user profile dropdown).
+     * Signed-in state: opens the user profile dropdown.
      * aria-haspopup="true" aria-expanded="false|true"
      * Touch target: min 44×44px (padding expands the hit area beyond the 32px avatar)
      */
@@ -93,14 +95,20 @@
 
     /* ── Avatar circle (32px visual) ─────────────────────────────────── */
     /*
-     * Implementation notes:
-     * - If session.user.picture is set: render <img> inside this circle
-     *   alt="{session.user.name}'s profile photo"
-     * - If no picture: render rune glyph ᛟ inside this circle
-     *   Container: aria-label="Profile avatar"
-     *   Rune: aria-hidden="true"
-     *   Rune styled with gold CSS token (--color-gold: #c9920a) + Noto Sans Runic
-     * Implementation: rounded-full border border-gold/40 bg-secondary
+     * ANONYMOUS state:
+     *   - Render ᛟ rune glyph inside this circle (NOT a generic user icon)
+     *   - Border style: 1px solid (same solid ring as signed-in avatar)
+     *   - Wireframe shows dashed border to signal "anonymous / unnamed" state
+     *   - Implementation: border-border (NOT border-gold) — the wolf is unnamed,
+     *     the gold ring is not yet earned. Signed-in state earns the gold ring.
+     *   - Rune: aria-hidden="true"; container: aria-label="Anonymous user"
+     *
+     * SIGNED-IN state:
+     *   - Render <img src="{session.user.picture}"> when picture URL is present
+     *   - Render ᛟ rune as fallback when picture is null/undefined
+     *   - Implementation: rounded-full border border-gold/40 bg-secondary
+     *     (gold ring signals named / authenticated state)
+     *   - <img> alt: "{session.user.name}'s profile photo"
      */
     .avatar {
       width: 32px;
@@ -120,31 +128,35 @@
       object-fit: cover;
       display: block;
     }
-    /* Rune fallback placeholder (wireframe uses dashed border to indicate placeholder) */
-    .avatar-rune-placeholder {
+    /* Dashed border in wireframe = anonymous / placeholder state */
+    .avatar-anon {
       border: 1px dashed;
       font-size: 14px;
     }
 
-    /* ── Email text (desktop only — hidden on mobile) ─────────────────── */
+    /* ── Email text (signed-in, desktop only) ─────────────────────────── */
     /*
-     * Displayed: desktop (≥640px)
-     * Hidden:    mobile (<640px) — use display:none at <640px
+     * Shown only in the signed-in state, desktop (≥640px).
+     * Anonymous state: no text shown next to the avatar.
      * Implementation: class="hidden sm:block"
-     * Source: session.user.email from the OIDC id_token
      */
     .profile-email {
       font-size: 12px;
       white-space: nowrap;
     }
 
-    /* ── Dropdown caret ───────────────────────────────────────────────── */
+    /* ── Dropdown caret (signed-in only) ──────────────────────────────── */
+    /*
+     * Anonymous state: NO caret. The trigger does not look like a menu —
+     * it opens the upsell prompt, not a settings menu.
+     * Signed-in state: caret ▾ signals dropdown affordance.
+     */
     .dropdown-caret {
       font-size: 10px;
       margin-left: 2px;
     }
 
-    /* ── Profile dropdown ─────────────────────────────────────────────── */
+    /* ── Profile dropdown (signed-in state) ───────────────────────────── */
     /*
      * position: absolute; right: 0; top: calc(100% + 4px)
      * z-index: 100 (header layer — see wireframes.md z-index table)
@@ -206,6 +218,14 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .dropdown-atmos {
+      font-size: 10px;
+      font-style: italic;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 0.6;
+    }
 
     /* Hairline divider */
     .dropdown-rule { border-top: 1px solid; }
@@ -213,8 +233,9 @@
     /* Sign Out menu item */
     /*
      * role="menuitem"
-     * Calls signOut({ callbackUrl: "/api/auth/signin" })
      * No confirmation dialog — action is immediate.
+     * After sign out: user is returned to the dashboard in anonymous state.
+     * Data is preserved in localStorage — the anonymous householdId is restored.
      * Implementation: full-width button, left-aligned text, hover state defined in theme.
      */
     .dropdown-signout {
@@ -226,6 +247,65 @@
       border: none;
       cursor: pointer;
       font-size: 13px;
+      font-family: inherit;
+    }
+
+    /* ── Upsell prompt panel (anonymous state — opens from avatar click) ─ */
+    /*
+     * This is NOT a full dropdown menu — it is a lightweight prompt panel.
+     * It has one message and two CTAs: "Sign in" (primary) + "Not now" (dismiss).
+     * Width: 260px on desktop; calc(100vw - 32px) on mobile.
+     * Anchored: absolute, right: 16px, top: calc(100% + 4px)
+     * z-index: 100 (header layer)
+     * Dismissed by: "Not now" button, Escape key, click outside.
+     * Does NOT dismiss the upsell banner — that is a separate surface.
+     */
+    .anon-upsell-panel {
+      position: absolute;
+      right: 16px;
+      top: calc(100% + 4px);
+      width: 260px;
+      border: 1px solid;
+      z-index: 100;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .anon-upsell-atmos {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.7;
+    }
+    .anon-upsell-desc {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .anon-upsell-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      font-family: inherit;
+    }
+    .btn-ghost {
+      display: block;
+      width: 100%;
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 12px;
+      text-align: center;
       font-family: inherit;
     }
 
@@ -255,11 +335,40 @@
       padding: 0;
       position: relative;
     }
-    .mobile-frame .topbar {
-      /* same height, but email is hidden */
-    }
     .mobile-email-hidden {
       display: none; /* hidden at mobile width */
+    }
+
+    /* Transition annotation box */
+    .transition-box {
+      border: 1px dashed;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .transition-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+    }
+    .transition-step .step-num {
+      width: 20px;
+      height: 20px;
+      border: 1px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .transition-arrow {
+      font-size: 18px;
+      text-align: center;
+      padding: 4px 0;
     }
   </style>
 </head>
@@ -268,13 +377,28 @@
 <div class="page">
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       SCENARIO 1 — Desktop, dropdown closed
-       Avatar source: session.user.picture (Google profile photo URL)
-       Email source:  session.user.email
-       Name source:   session.user.name
+       CHANGE LOG
+       This file was updated for the anonymous-first auth model (Sprint 3.2).
+       What changed:
+         - Scenarios 1–5 (OIDC-required states) are now labelled for the
+           SIGNED-IN state, which is the OPTIONAL / future state.
+         - Scenarios 6–9 are new: anonymous state variations.
+         - Scenario 3 (rune fallback) is now the DEFAULT anonymous state,
+           not a fallback for a missing Google picture.
+         - The upsell prompt panel replaces the profile dropdown in the
+           anonymous state.
+       The signed-in state (Scenarios 1–5) documents the future optional
+       experience once the user has chosen to sign in.
+  ═══════════════════════════════════════════════════════════════════ -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 1 — Anonymous state: Desktop, upsell prompt closed
+       DEFAULT state for ALL users on first load.
+       The ᛟ rune avatar is the canonical anonymous identity.
   ═══════════════════════════════════════════════════════════════════ -->
   <section class="scenario">
-    <div class="scenario-label">Scenario 1 — Desktop · Dropdown closed · Avatar: Google picture URL</div>
+    <div class="scenario-label">Scenario 1 (DEFAULT) — Anonymous · Desktop · Upsell prompt closed</div>
 
     <div class="topbar" role="banner">
 
@@ -284,51 +408,64 @@
         <span class="brand-sub">Credit Card Tracker</span>
       </button>
 
-      <!-- User cluster -->
+      <!-- User cluster — anonymous state -->
       <div class="topbar-user">
         <!--
-          Profile trigger: single <button> wrapping avatar + email + caret.
-          aria-haspopup="true" aria-expanded="false" (closed state)
-          aria-controls="user-menu-1"
+          Anonymous trigger: avatar only. No email. No caret.
+          Tapping this opens the upsell prompt panel (not a user menu).
+          aria-label must NOT reference "user menu" — it is a sync prompt.
+          Implementation: aria-label="Sign in to sync your data"
+          aria-haspopup="true" (it does open a panel)
+          aria-expanded="false" (closed state)
+          aria-controls="anon-upsell-panel"
         -->
         <button
           class="profile-trigger"
           type="button"
           aria-haspopup="true"
           aria-expanded="false"
-          aria-controls="user-menu-1"
+          aria-controls="anon-upsell-panel-1"
+          aria-label="Sign in to sync your data"
         >
-          <!-- Avatar: Google picture URL present -->
-          <div class="avatar" aria-label="Profile avatar">
-            <!-- Implementation: <img src="{session.user.picture}" alt="{session.user.name}'s profile photo" /> -->
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
-                 alt="Declan Shanaghy's profile photo" />
+          <!--
+            ᛟ rune (Othala) in avatar circle.
+            This is NOT a generic user icon, question mark, or silhouette.
+            Implementation:
+              Container: aria-label="Anonymous user"
+              Rune: aria-hidden="true"
+              Border: 1px solid border-border (NOT the gold ring — wolf unnamed)
+              Rune styled with Noto Sans Runic; color: var(--color-muted)
+                (muted, not gold — the gold ring is earned on sign-in)
+          -->
+          <div class="avatar avatar-anon" aria-label="Anonymous user">
+            <span aria-hidden="true">ᛟ</span>
           </div>
-          <!-- Email — desktop only (hidden sm:hidden in implementation below sm breakpoint) -->
-          <span class="profile-email">declan@example.com</span>
-          <!-- Caret signals dropdown affordance -->
-          <span class="dropdown-caret" aria-hidden="true">▾</span>
+          <!-- No email text in anonymous state. No caret. -->
         </button>
       </div>
 
     </div><!-- /.topbar -->
 
     <p class="note-block">
-      Desktop (≥640px): avatar circle (32px) + email text + caret ▾ all visible in the header bar.<br/>
-      The entire trigger is one &lt;button&gt; — clicking anywhere on it (avatar, email, caret) opens the dropdown.<br/>
-      Touch target: min-height 44px via padding (visual avatar remains 32px).
+      Anonymous state (default for all users on first load).<br/>
+      The ᛟ rune (Othala) is the canonical anonymous identity. No generic user icon, no question mark, no silhouette.<br/>
+      No email is shown — there is none. No dropdown caret — this is not a user menu.<br/>
+      The dashed avatar border signals "unnamed / anonymous" in the wireframe. In implementation,
+      the border uses the standard <code>border-border</code> token (not the gold ring, which is reserved for the signed-in state).<br/>
+      Clicking the avatar opens the upsell prompt panel (Scenario 2), not a profile dropdown.<br/>
+      Atmospheric copy for this state: <em>"The wolf runs unnamed."</em> — surfaced inside the upsell panel and nowhere else in the header.
     </p>
   </section>
 
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       SCENARIO 2 — Desktop, dropdown OPEN
-       Shows the profile dropdown anchored to the right of the header.
+       SCENARIO 2 — Anonymous state: Desktop, upsell prompt OPEN
+       Triggered by clicking the ᛟ rune avatar.
+       This is a lightweight prompt panel, NOT a user menu dropdown.
   ═══════════════════════════════════════════════════════════════════ -->
   <section class="scenario">
-    <div class="scenario-label">Scenario 2 — Desktop · Dropdown open</div>
+    <div class="scenario-label">Scenario 2 — Anonymous · Desktop · Upsell prompt open (via avatar click)</div>
 
-    <!-- Full-width topbar with dropdown overlaid -->
     <div class="topbar" style="position: relative;" role="banner">
 
       <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
@@ -337,16 +474,208 @@
       </button>
 
       <div class="topbar-user">
-        <!--
-          Trigger: aria-expanded="true" when open.
-          Dropdown is positioned absolute relative to .topbar.
-        -->
         <button
           class="profile-trigger"
           type="button"
           aria-haspopup="true"
           aria-expanded="true"
-          aria-controls="user-menu-2"
+          aria-controls="anon-upsell-panel-2"
+          aria-label="Sign in to sync your data"
+        >
+          <div class="avatar avatar-anon" aria-label="Anonymous user">
+            <span aria-hidden="true">ᛟ</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- ── Upsell prompt panel ────────────────────────────────────────── -->
+      <!--
+        role="dialog" (not role="menu" — this is a prompt, not a navigation list)
+        aria-label="Sign in to sync"
+        id bound to trigger's aria-controls.
+        Focus management: on open, focus moves to the "Sign in to Google" button.
+        Dismissed by: "Not now" button, Escape key, click outside.
+        Note: dismissing this panel does NOT dismiss the upsell banner on the dashboard.
+        The banner has its own separate dismiss control.
+      -->
+      <div
+        id="anon-upsell-panel-2"
+        class="anon-upsell-panel"
+        role="dialog"
+        aria-label="Sign in to sync"
+      >
+
+        <!-- Atmospheric framing (Voice 2) — Norse saga voice -->
+        <p class="anon-upsell-atmos">
+          The wolf runs unnamed. Your chains are stored here alone.
+        </p>
+
+        <!-- Functional description (Voice 1) — plain English -->
+        <p class="anon-upsell-desc">
+          Sign in to back up your cards and access them from any device.
+          Your data is already here — signing in just keeps it safe.
+        </p>
+
+        <!-- CTAs — both functional (Voice 1) -->
+        <div class="anon-upsell-actions">
+          <!--
+            Primary CTA: navigates to /sign-in page.
+            Implementation: <a href="/sign-in"> wrapped in button styling,
+            or router.push('/sign-in') onClick.
+          -->
+          <button class="btn-primary" type="button">
+            Sign in to Google
+          </button>
+          <!--
+            "Not now" closes the prompt panel only.
+            Does NOT set a permanent dismiss flag.
+            The banner on the dashboard remains visible (if not separately dismissed).
+          -->
+          <button class="btn-ghost" type="button">
+            Not now
+          </button>
+        </div>
+
+      </div><!-- /.anon-upsell-panel -->
+
+    </div><!-- /.topbar -->
+
+    <p class="note-block">
+      The upsell prompt panel is a <code>role="dialog"</code> (not a menu).<br/>
+      Atmospheric copy (<em>"The wolf runs unnamed."</em>) uses Voice 2 — Norse saga.<br/>
+      The functional description below it uses Voice 1 — plain English.<br/>
+      Both CTAs are Voice 1: "Sign in to Google" and "Not now".<br/>
+      "Not now" closes this panel only. The dismissible upsell banner on the dashboard is a separate surface with its own dismiss.<br/>
+      Clicking "Sign in to Google" navigates to <code>/sign-in</code> — dedicated page, not an embedded OAuth redirect.<br/>
+      Keyboard: Escape closes the panel; focus returns to the avatar trigger.<br/>
+      Panel width: 260px desktop; <code>calc(100vw - 32px)</code> mobile.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 3 — Anonymous state: Mobile (375px), closed
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 — Anonymous · Mobile 375px · Upsell prompt closed</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">375px frame</div>
+        <div class="mobile-frame">
+          <div class="topbar" role="banner">
+
+            <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
+              <span class="brand-name">ᛟ Fenrir Ledger</span>
+              <span class="brand-sub">Credit Card Tracker</span>
+            </button>
+
+            <div class="topbar-user">
+              <button
+                class="profile-trigger"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="anon-upsell-mobile"
+                aria-label="Sign in to sync your data"
+              >
+                <div class="avatar avatar-anon" aria-label="Anonymous user">
+                  <span aria-hidden="true">ᛟ</span>
+                </div>
+                <!-- No email, no caret — identical to desktop anonymous state -->
+              </button>
+            </div>
+
+          </div><!-- /.topbar -->
+        </div><!-- /.mobile-frame -->
+      </div>
+
+      <div class="scenario-col" style="max-width:400px;">
+        <div class="col-label">Mobile anonymous rules</div>
+        <p class="note">
+          Anonymous state is identical on mobile and desktop — just the ᛟ rune avatar, no text.<br/>
+          Touch target: min-height 44px via padding. Avatar visual remains 32px.<br/>
+          Tapping the avatar opens the upsell prompt panel (anchored right: 0, top: calc(100% + 4px)).<br/>
+          Panel width on mobile: <code>calc(100vw - 32px)</code> — prevents overflow at 375px.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 4 — Signed-in state: Desktop, dropdown closed
+       OPTIONAL future state — only reachable after user taps "Sign in to Google"
+       and completes the OAuth flow.
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 4 (OPTIONAL / FUTURE) — Signed In · Desktop · Dropdown closed · Google picture URL present</div>
+
+    <div class="topbar" role="banner">
+
+      <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
+        <span class="brand-name">ᛟ Fenrir Ledger</span>
+        <span class="brand-sub">Credit Card Tracker</span>
+      </button>
+
+      <div class="topbar-user">
+        <!--
+          Signed-in trigger: avatar + email (desktop) + caret ▾.
+          The caret signals "this is a menu" — unlike the anonymous state.
+          aria-label on mobile: "Open user menu, signed in as {email}"
+          Implementation note: gold ring border on avatar signals named state.
+        -->
+        <button
+          class="profile-trigger"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="user-menu-4"
+        >
+          <!-- Google profile picture — solid gold ring border in implementation -->
+          <div class="avatar" aria-label="Profile avatar">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
+                 alt="Declan Shanaghy's profile photo" />
+          </div>
+          <!-- Email — desktop only -->
+          <span class="profile-email">declan@example.com</span>
+          <!-- Caret — signed-in state ONLY — signals dropdown menu -->
+          <span class="dropdown-caret" aria-hidden="true">▾</span>
+        </button>
+      </div>
+
+    </div><!-- /.topbar -->
+
+    <p class="note-block">
+      Signed-in state (optional, future — after user completes Google OAuth).<br/>
+      Gold ring border on avatar: <code>border-gold/40</code> — signals named / authenticated state. This visual difference from the anonymous avatar (no gold ring) communicates state without text.<br/>
+      Atmospheric copy for signed-in state: <em>"The wolf is named."</em> — surfaced inside the profile dropdown, not in the header bar.<br/>
+      Email shown on desktop (≥640px). Hidden on mobile (dropdown is the mobile identity confirmation surface).
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 5 — Signed-in state: Desktop, dropdown OPEN
+       Shows profile dropdown with atmospheric copy + Sign Out action.
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 5 (OPTIONAL / FUTURE) — Signed In · Desktop · Dropdown open</div>
+
+    <div class="topbar" style="position: relative;" role="banner">
+
+      <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
+        <span class="brand-name">ᛟ Fenrir Ledger</span>
+        <span class="brand-sub">Credit Card Tracker</span>
+      </button>
+
+      <div class="topbar-user">
+        <button
+          class="profile-trigger"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="true"
+          aria-controls="user-menu-5"
         >
           <div class="avatar" aria-label="Profile avatar">
             <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
@@ -357,27 +686,29 @@
         </button>
       </div>
 
-      <!-- ── Profile dropdown ──────────────────────────────────────────── -->
+      <!-- ── Profile dropdown (signed-in state) ────────────────────────── -->
       <!--
-        position: absolute; right: 16px; top: calc(100% + 4px)
-        z-index: 100 (header layer)
         role="menu" aria-label="User menu"
-        id bound to aria-controls on the trigger
+        id bound to trigger's aria-controls.
+        Contains: atmospheric copy line + profile info block + divider + Sign Out.
+        Sign Out: returns user to dashboard in anonymous state.
+        Data preserved in localStorage — anonymous householdId is restored.
       -->
-      <div id="user-menu-2" class="profile-dropdown" role="menu" aria-label="User menu">
+      <div id="user-menu-5" class="profile-dropdown" role="menu" aria-label="User menu">
 
-        <!-- Profile info block (not a menu item — purely informational) -->
+        <!-- Profile info block — not a menu item, purely informational -->
         <div class="dropdown-profile" aria-hidden="true">
-          <!-- Larger avatar (40px) inside dropdown -->
           <div class="dropdown-avatar">
             <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
-                 alt="" /><!-- alt="" — decorative duplicate; name+email are the accessible identity -->
+                 alt="" /><!-- decorative duplicate -->
           </div>
           <div class="dropdown-identity">
             <!-- session.user.name -->
             <div class="dropdown-name">Declan Shanaghy</div>
             <!-- session.user.email — always shown in dropdown regardless of viewport -->
             <div class="dropdown-email">declan@example.com</div>
+            <!-- Atmospheric copy (Voice 2) — inside dropdown, never in the header bar -->
+            <div class="dropdown-atmos">The wolf is named.</div>
           </div>
         </div>
 
@@ -387,10 +718,11 @@
         <!-- Sign Out action -->
         <!--
           role="menuitem"
-          Calls: signOut({ callbackUrl: "/api/auth/signin" })
-          No confirmation dialog. Action is immediate.
-          Focus: on dropdown open, first focusable item is Sign Out.
-          Keyboard: Tab stays within menu; Escape closes and returns focus to trigger.
+          After sign out: user returns to dashboard in anonymous state.
+          The anonymous householdId in localStorage is preserved — data is NOT lost.
+          No confirmation dialog — the action is intentional and reversible (data preserved).
+          Implementation: clearSession(); router.push('/') — NOT redirect to /sign-in.
+          The app is no longer gated — returning to '/' shows the dashboard, not a sign-in page.
         -->
         <button
           class="dropdown-signout"
@@ -405,69 +737,21 @@
     </div><!-- /.topbar -->
 
     <p class="note-block">
-      Dropdown anchors to the right edge of the header, 4px below the topbar bottom border.<br/>
-      Clicking outside the dropdown or pressing Escape closes it; focus returns to the profile trigger.<br/>
-      The profile info block (avatar + name + email) inside the dropdown is <em>not</em> a menu item — it is aria-hidden informational content. Only Sign Out is role="menuitem".<br/>
-      Email inside the dropdown is always shown regardless of viewport — this is the only place mobile users see their email confirmed.
+      Signed-in profile dropdown.<br/>
+      Atmospheric line <em>"The wolf is named."</em> inside the dropdown (Voice 2). Not in the header bar itself.<br/>
+      Sign Out returns user to dashboard (anonymous state), NOT to the sign-in page — the app is not gated.<br/>
+      Anonymous householdId in localStorage is restored on sign out — data is not lost.<br/>
+      Keyboard: Escape closes; focus returns to trigger. Tab past Sign Out closes menu (no focus trap).<br/>
+      Only one menu item (Sign Out) — it receives focus immediately on dropdown open.
     </p>
   </section>
 
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       SCENARIO 3 — Desktop, dropdown closed, FALLBACK AVATAR
-       session.user.picture is null or undefined.
-       Fallback: ᛟ rune glyph rendered inside the avatar circle.
+       SCENARIO 6 — Signed-in state: Mobile (375px), dropdown closed
   ═══════════════════════════════════════════════════════════════════ -->
   <section class="scenario">
-    <div class="scenario-label">Scenario 3 — Desktop · No picture URL · Rune fallback avatar</div>
-
-    <div class="topbar" role="banner">
-
-      <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
-        <span class="brand-name">ᛟ Fenrir Ledger</span>
-        <span class="brand-sub">Credit Card Tracker</span>
-      </button>
-
-      <div class="topbar-user">
-        <button
-          class="profile-trigger"
-          type="button"
-          aria-haspopup="true"
-          aria-expanded="false"
-          aria-controls="user-menu-3"
-        >
-          <!--
-            Rune fallback: no <img> — render ᛟ glyph.
-            Implementation:
-              Container: aria-label="Profile avatar"
-              Rune span: aria-hidden="true"
-              CSS: Noto Sans Runic font; color: var(--color-gold) (#c9920a)
-          -->
-          <div class="avatar avatar-rune-placeholder" aria-label="Profile avatar">
-            <span aria-hidden="true">ᛟ</span>
-          </div>
-          <span class="profile-email">declan@example.com</span>
-          <span class="dropdown-caret" aria-hidden="true">▾</span>
-        </button>
-      </div>
-
-    </div><!-- /.topbar -->
-
-    <p class="note-block">
-      Fallback condition: session.user.picture is null, undefined, or empty string.<br/>
-      The ᛟ rune (Othala) is rendered in the avatar circle using Noto Sans Runic + gold CSS token (#c9920a).<br/>
-      The rune is aria-hidden="true"; the container div carries aria-label="Profile avatar".<br/>
-      The dashed border in this wireframe indicates "fallback / placeholder" — the real implementation uses the same solid border as the photo variant.
-    </p>
-  </section>
-
-
-  <!-- ═══════════════════════════════════════════════════════════════════
-       SCENARIO 4 — Mobile (375px), dropdown closed
-       Email hidden in the header bar. Avatar only.
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="scenario">
-    <div class="scenario-label">Scenario 4 — Mobile 375px · Dropdown closed · Email hidden in bar</div>
+    <div class="scenario-label">Scenario 6 (OPTIONAL / FUTURE) — Signed In · Mobile 375px · Dropdown closed</div>
 
     <div class="scenario-row">
       <div class="scenario-col">
@@ -481,17 +765,12 @@
             </button>
 
             <div class="topbar-user">
-              <!--
-                Mobile trigger: avatar only — email span is display:none below 640px.
-                The trigger <button> still carries the full accessible label.
-                aria-label on the trigger: "Open user menu" or inferred from aria-haspopup + context.
-              -->
               <button
                 class="profile-trigger"
                 type="button"
                 aria-haspopup="true"
                 aria-expanded="false"
-                aria-controls="user-menu-mobile"
+                aria-controls="user-menu-mobile-6"
                 aria-label="Open user menu, signed in as declan@example.com"
               >
                 <div class="avatar" aria-label="Profile avatar">
@@ -509,14 +788,11 @@
       </div>
 
       <div class="scenario-col" style="max-width:400px;">
-        <div class="col-label">Mobile rules</div>
+        <div class="col-label">Mobile signed-in rules</div>
         <p class="note">
-          Below 640px (Tailwind sm breakpoint):<br/>
-          • Email span: <code>display: none</code> (Tailwind: <code>hidden sm:block</code>)<br/>
-          • Caret ▾ remains visible<br/>
-          • Avatar stays 32px visual / 44px touch target<br/>
-          • Brand wordmark may wrap to two lines — acceptable<br/>
-          • Trigger aria-label includes email so screen readers announce identity even when email is visually hidden
+          Email hidden on mobile (<code>hidden sm:block</code>). Caret remains visible.<br/>
+          Avatar has gold ring border (signed-in state). Touch target: min 44px.<br/>
+          <code>aria-label</code> on trigger includes email — screen readers announce identity even though email is visually hidden.
         </p>
       </div>
     </div>
@@ -524,130 +800,91 @@
 
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       SCENARIO 5 — Mobile (375px), dropdown OPEN
-       Dropdown shows full name + email — only place on mobile
-       where the user can confirm their signed-in email address.
+       SCENARIO 7 — Anonymous-to-signed-in avatar TRANSITION
+       The visual moment of "naming the wolf" — when ᛟ rune becomes Google avatar.
+       This is the transition that happens after OAuth completes successfully.
   ═══════════════════════════════════════════════════════════════════ -->
   <section class="scenario">
-    <div class="scenario-label">Scenario 5 — Mobile 375px · Dropdown open · Email visible inside dropdown</div>
+    <div class="scenario-label">Scenario 7 — Avatar Transition: Anonymous ᛟ rune → Signed-In Google avatar</div>
 
-    <div class="scenario-row">
-      <div class="scenario-col">
-        <div class="col-label">375px frame</div>
-        <div class="mobile-frame" style="position: relative;">
-          <div class="topbar" role="banner" style="position: relative;">
+    <div class="transition-box">
 
-            <button class="topbar-brand" type="button" aria-label="About Fenrir Ledger">
-              <span class="brand-name">ᛟ Fenrir Ledger</span>
-              <span class="brand-sub">Credit Card Tracker</span>
+      <div class="transition-step">
+        <div class="step-num">1</div>
+        <div>
+          <strong>Pre-transition (anonymous state):</strong>
+          ᛟ rune in avatar circle. Dashed / neutral border. No email. No caret.
+        </div>
+      </div>
+
+      <div class="transition-step">
+        <div class="step-num">2</div>
+        <div>
+          <strong>OAuth completes:</strong>
+          The /sign-in page receives the Google token. Navigation returns to dashboard.
+          If anonymous data exists, the migration prompt fires before the avatar updates (see migration-prompt.html).
+        </div>
+      </div>
+
+      <div class="transition-step">
+        <div class="step-num">3</div>
+        <div>
+          <strong>Transition animation (implementation guidance):</strong>
+          The avatar circle cross-fades from the ᛟ rune to the Google profile photo.
+          The border transitions from the neutral border token to the gold ring (border-gold/40).
+          Duration: ~400ms. Easing: <code>cubic-bezier(0.16, 1, 0.3, 1)</code> (same saga-enter curve).
+          Simultaneously: email text fades in beside the avatar on desktop. Caret ▾ appears.
+        </div>
+      </div>
+
+      <div class="transition-step">
+        <div class="step-num">4</div>
+        <div>
+          <strong>Post-transition (signed-in state):</strong>
+          Google photo in avatar circle. Gold ring border. Email text (desktop). Caret ▾.
+        </div>
+      </div>
+
+      <div class="transition-arrow">↓</div>
+
+      <!-- Before state -->
+      <div class="scenario-row" style="align-items: center;">
+        <div class="scenario-col">
+          <div class="col-label">Before (Anonymous)</div>
+          <div style="height: 56px; border: 1px solid; display: flex; align-items: center; padding: 0 16px; position: relative; width: 300px;">
+            <button class="profile-trigger" type="button" style="border: none; padding: 0;">
+              <div class="avatar avatar-anon"><span aria-hidden="true">ᛟ</span></div>
             </button>
-
-            <div class="topbar-user">
-              <button
-                class="profile-trigger"
-                type="button"
-                aria-haspopup="true"
-                aria-expanded="true"
-                aria-controls="user-menu-mobile-open"
-                aria-label="Open user menu, signed in as declan@example.com"
-              >
-                <div class="avatar" aria-label="Profile avatar">
-                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
-                       alt="Declan Shanaghy's profile photo" />
-                </div>
-                <span class="profile-email mobile-email-hidden">declan@example.com</span>
-                <span class="dropdown-caret" aria-hidden="true">▾</span>
-              </button>
-            </div>
-
-            <!-- Dropdown — same structure as desktop, right-anchored -->
-            <!--
-              On mobile the dropdown width is constrained to not overflow the 375px frame.
-              max-width: calc(100vw - 32px) in implementation.
-              Positioned absolute, right: 0 relative to .topbar.
-            -->
-            <div id="user-menu-mobile-open" class="profile-dropdown" role="menu" aria-label="User menu"
-                 style="right: 0; width: 220px;">
-
-              <div class="dropdown-profile" aria-hidden="true">
-                <div class="dropdown-avatar">
-                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E"
-                       alt="" />
-                </div>
-                <div class="dropdown-identity">
-                  <div class="dropdown-name">Declan Shanaghy</div>
-                  <!-- Email always visible inside dropdown — this is how mobile users see their email -->
-                  <div class="dropdown-email">declan@example.com</div>
-                </div>
+          </div>
+        </div>
+        <div style="font-size: 24px; padding: 0 8px;">→</div>
+        <div class="scenario-col">
+          <div class="col-label">After (Signed In)</div>
+          <div style="height: 56px; border: 1px solid; display: flex; align-items: center; padding: 0 16px; position: relative; width: 300px;">
+            <button class="profile-trigger" type="button" style="border: none; padding: 0; display: flex; align-items: center; gap: 8px;">
+              <div class="avatar">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='10' fill='%23555'%3EPhoto%3C/text%3E%3C/svg%3E" alt="Profile" />
               </div>
-
-              <div class="dropdown-rule" aria-hidden="true"></div>
-
-              <button class="dropdown-signout" type="button" role="menuitem">
-                Sign Out
-              </button>
-
-            </div><!-- /.profile-dropdown -->
-
-          </div><!-- /.topbar -->
-        </div><!-- /.mobile-frame -->
+              <span class="profile-email">declan@example.com</span>
+              <span class="dropdown-caret">▾</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="scenario-col" style="max-width:400px;">
-        <div class="col-label">Mobile dropdown rules</div>
-        <p class="note">
-          Mobile dropdown width: <code>max-width: calc(100vw - 32px)</code> — prevents overflow at 375px.<br/>
-          Right-anchored: <code>right: 0</code> relative to .topbar.<br/>
-          Email is always shown in the dropdown profile block — this is the mobile user's only visual confirmation of their signed-in address.<br/>
-          Sign Out button has a minimum 44px touch target height.
-        </p>
-      </div>
-    </div>
+    </div><!-- /.transition-box -->
+
+    <p class="note-block">
+      The transition is the "naming of the wolf" moment — the most emotionally significant state change in the product.<br/>
+      Non-negotiable: the Google photo must not just snap in — it must cross-fade.<br/>
+      The gold ring border appearing is the visual signal that the user is now named and backed up.<br/>
+      If the migration prompt fires (anonymous data found), the transition happens AFTER the user makes their choice in the migration dialog.
+    </p>
   </section>
 
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       INTERACTION SPECIFICATION
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="scenario">
-    <div class="scenario-label">Interaction Specification — Profile Dropdown</div>
-
-    <div class="note-block" style="font-style: normal; opacity: 1;">
-
-      <p style="font-weight:bold; margin-bottom:8px;">Trigger</p>
-      <p style="margin-bottom:12px;">Click or tap on the profile trigger button (avatar + email row on desktop; avatar only on mobile). Keyboard: Enter or Space while the trigger is focused.</p>
-
-      <p style="font-weight:bold; margin-bottom:8px;">Open behavior</p>
-      <ul style="padding-left:18px; display:flex; flex-direction:column; gap:4px; margin-bottom:12px; font-size:12px;">
-        <li>Dropdown appears below the topbar, right-anchored.</li>
-        <li><code>aria-expanded</code> on trigger changes to <code>true</code>.</li>
-        <li>Focus moves to the Sign Out button (first and only menu item).</li>
-        <li>An invisible backdrop covers the page behind the dropdown — click on backdrop closes.</li>
-        <li>Backdrop z-index sits between header (100) and the dropdown — do not use a full-screen opaque backdrop; the user should see the page behind.</li>
-      </ul>
-
-      <p style="font-weight:bold; margin-bottom:8px;">Close behavior</p>
-      <ul style="padding-left:18px; display:flex; flex-direction:column; gap:4px; margin-bottom:12px; font-size:12px;">
-        <li>Escape key: closes dropdown, focus returns to trigger.</li>
-        <li>Click / tap outside the dropdown: closes dropdown.</li>
-        <li>Tab past the last menu item: closes dropdown (no focus trap — user moves on).</li>
-        <li>Clicking Sign Out: signs the user out — dropdown closes as part of navigation away.</li>
-      </ul>
-
-      <p style="font-weight:bold; margin-bottom:8px;">Sign Out action</p>
-      <ul style="padding-left:18px; display:flex; flex-direction:column; gap:4px; margin-bottom:0; font-size:12px;">
-        <li>Calls <code>signOut({ callbackUrl: "/api/auth/signin" })</code>.</li>
-        <li>No confirmation dialog — the action is immediate and intentional.</li>
-        <li>Session cookie is cleared server-side. Redirect to sign-in page.</li>
-        <li>Navigating back to "/" while signed out redirects to sign-in (protected route).</li>
-      </ul>
-
-    </div>
-  </section>
-
-
-  <!-- ═══════════════════════════════════════════════════════════════════
-       ACCESSIBILITY SUMMARY
+       ACCESSIBILITY SUMMARY — Both States
   ═══════════════════════════════════════════════════════════════════ -->
   <section class="scenario">
     <div class="scenario-label">Accessibility Requirements — Non-Negotiable (WCAG 2.1 AA)</div>
@@ -657,41 +894,55 @@
         <thead>
           <tr style="border-bottom:1px solid;">
             <th style="text-align:left; padding:6px 8px;">Element</th>
+            <th style="text-align:left; padding:6px 8px;">State</th>
             <th style="text-align:left; padding:6px 8px;">Requirement</th>
           </tr>
         </thead>
         <tbody>
           <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Anonymous avatar trigger</td>
+            <td style="padding:6px 8px;">Anonymous</td>
+            <td style="padding:6px 8px;"><code>aria-label="Sign in to sync your data"</code>. <code>aria-haspopup="true"</code>. <code>aria-expanded</code> reflects panel state. Min 44×44px touch target.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">ᛟ rune glyph</td>
+            <td style="padding:6px 8px;">Anonymous</td>
+            <td style="padding:6px 8px;">Container: <code>aria-label="Anonymous user"</code>. Rune glyph: <code>aria-hidden="true"</code>.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Upsell prompt panel</td>
+            <td style="padding:6px 8px;">Anonymous</td>
+            <td style="padding:6px 8px;"><code>role="dialog"</code>. <code>aria-label="Sign in to sync"</code>. Focus moves to "Sign in to Google" button on open. Escape closes; focus returns to avatar trigger.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">"Not now" button</td>
+            <td style="padding:6px 8px;">Anonymous</td>
+            <td style="padding:6px 8px;">Plain text label. Min 44px touch target. Must be as visually prominent as "Sign in to Google" — not an afterthought link.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
             <td style="padding:6px 8px;">Brand wordmark button</td>
+            <td style="padding:6px 8px;">Both</td>
             <td style="padding:6px 8px;"><code>aria-label="About Fenrir Ledger"</code></td>
           </tr>
           <tr style="border-bottom:1px solid;">
-            <td style="padding:6px 8px;">Profile trigger button</td>
-            <td style="padding:6px 8px;"><code>aria-haspopup="true"</code>, <code>aria-expanded="true|false"</code>, <code>aria-controls="{menu-id}"</code>. On mobile, <code>aria-label</code> includes email address (email is visually hidden).</td>
+            <td style="padding:6px 8px;">Profile trigger (signed-in)</td>
+            <td style="padding:6px 8px;">Signed-in</td>
+            <td style="padding:6px 8px;"><code>aria-haspopup="true"</code>. <code>aria-expanded</code>. <code>aria-controls</code>. Mobile: <code>aria-label</code> includes email.</td>
           </tr>
           <tr style="border-bottom:1px solid;">
-            <td style="padding:6px 8px;">Avatar with picture</td>
+            <td style="padding:6px 8px;">Avatar with Google photo</td>
+            <td style="padding:6px 8px;">Signed-in</td>
             <td style="padding:6px 8px;"><code>&lt;img alt="{name}'s profile photo" /&gt;</code></td>
           </tr>
           <tr style="border-bottom:1px solid;">
-            <td style="padding:6px 8px;">Avatar without picture (rune)</td>
-            <td style="padding:6px 8px;">Container: <code>aria-label="Profile avatar"</code>. Rune glyph: <code>aria-hidden="true"</code>.</td>
-          </tr>
-          <tr style="border-bottom:1px solid;">
             <td style="padding:6px 8px;">Profile dropdown</td>
-            <td style="padding:6px 8px;"><code>role="menu"</code>, <code>aria-label="User menu"</code>, <code>id</code> bound to trigger's <code>aria-controls</code>.</td>
-          </tr>
-          <tr style="border-bottom:1px solid;">
-            <td style="padding:6px 8px;">Sign Out button</td>
-            <td style="padding:6px 8px;"><code>role="menuitem"</code>. Min 44×44px touch target.</td>
-          </tr>
-          <tr style="border-bottom:1px solid;">
-            <td style="padding:6px 8px;">Profile info block in dropdown</td>
-            <td style="padding:6px 8px;"><code>aria-hidden="true"</code> — name and email are surfaced via trigger <code>aria-label</code> on mobile.</td>
+            <td style="padding:6px 8px;">Signed-in</td>
+            <td style="padding:6px 8px;"><code>role="menu"</code>. <code>aria-label="User menu"</code>. <code>id</code> bound to trigger's <code>aria-controls</code>.</td>
           </tr>
           <tr>
-            <td style="padding:6px 8px;">Keyboard</td>
-            <td style="padding:6px 8px;">Escape closes dropdown, focus returns to trigger. Tab moves focus out of menu (closes). Enter/Space on trigger toggles.</td>
+            <td style="padding:6px 8px;">Sign Out button</td>
+            <td style="padding:6px 8px;">Signed-in</td>
+            <td style="padding:6px 8px;"><code>role="menuitem"</code>. Min 44×44px touch target. Receives focus immediately on dropdown open.</td>
           </tr>
         </tbody>
       </table>
@@ -699,7 +950,7 @@
   </section>
 
   <p class="note" style="text-align:center; padding-bottom: 24px;">
-    Wireframe — topbar.html · Fenrir Ledger · z-index 100 (header layer) · No theme styling applied
+    Wireframe — topbar.html · Fenrir Ledger · Anonymous-first model (Sprint 3.2) · No theme styling applied
   </p>
 
 </div><!-- /.page -->

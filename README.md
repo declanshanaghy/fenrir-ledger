@@ -132,6 +132,11 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [ux/easter-eggs.md](ux/easter-eggs.md) — Gleipnir Hunt, Konami howl, Loki mode, console ASCII, all hidden lore
 - [ux/interactions.md](ux/interactions.md) — Animations, saga-enter stagger, status ring, Howl panel patterns
 - [ux/wireframes.md](ux/wireframes.md) — Layout specs, component hierarchy, responsive breakpoints
+- [ux/wireframes/topbar.html](ux/wireframes/topbar.html) — TopBar: anonymous ᛟ rune + upsell prompt, signed-in avatar, avatar transition (Sprint 3.2)
+- [ux/wireframes/upsell-banner.html](ux/wireframes/upsell-banner.html) — Cloud sync upsell banner: dismissible, dashboard-only (Sprint 3.2)
+- [ux/wireframes/sign-in.html](ux/wireframes/sign-in.html) — Sign-in page: optional upgrade, "Continue without signing in" first-class CTA (Sprint 3.2)
+- [ux/wireframes/migration-prompt.html](ux/wireframes/migration-prompt.html) — Post-OAuth migration modal: Import vs. Start fresh (Sprint 3.2)
+- [ux/handoff-to-fireman-anon-auth.md](ux/handoff-to-fireman-anon-auth.md) — FiremanDecko handoff: anonymous-first model, householdId, what to build
 - [architecture/implementation-brief.md](architecture/implementation-brief.md) — FiremanDecko integration plan, wave strategy, open questions
 - [ux/easter-egg-modal.md](ux/easter-egg-modal.md) — Shared modal template for all easter egg discovery moments
 

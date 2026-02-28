@@ -15,7 +15,10 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 | View | File | Description |
 |------|------|-------------|
-| TopBar — OIDC Profile Display | [wireframes/topbar.html](wireframes/topbar.html) | Global sticky header: brand wordmark left, OIDC profile cluster right (avatar + email + dropdown); 5 scenarios: desktop closed/open, rune fallback, mobile closed/open |
+| TopBar — Anonymous + Signed-In States | [wireframes/topbar.html](wireframes/topbar.html) | Global sticky header: 7 scenarios covering anonymous ᛟ rune avatar + upsell prompt, signed-in Google avatar + dropdown, and the avatar transition animation (anonymous-first model, Sprint 3.2) |
+| Cloud Sync Upsell Banner | [wireframes/upsell-banner.html](wireframes/upsell-banner.html) | Dismissible banner below TopBar on the dashboard: visible/dismissed/signed-in variants, desktop + mobile; dismiss lifecycle and localStorage flag spec |
+| Sign In — Optional Cloud Sync | [wireframes/sign-in.html](wireframes/sign-in.html) | Dedicated /sign-in page (not gated — optional upgrade); no-data and has-data variants; desktop + mobile; "Continue without signing in" is a first-class prominent CTA |
+| Migration Prompt — Anonymous to Signed-In | [wireframes/migration-prompt.html](wireframes/migration-prompt.html) | Post-OAuth modal dialog: Import N cards vs. Start fresh; reassurance copy; desktop + mobile stacked choices; state flow diagram |
 | Dashboard — The Ledger of Fates | [wireframes/dashboard.html](wireframes/dashboard.html) | TopBar (row 1) + sidebar shell + card grid + summary bar + footer |
 | Add / Edit Card — Forge a Chain | [wireframes/add-card.html](wireframes/add-card.html) | Multi-section form: identity, fee, welcome bonus, notes |
 | Valhalla — Hall of the Honored Dead | [wireframes/valhalla.html](wireframes/valhalla.html) | Tombstone cards, filter bar, empty state |
@@ -31,29 +34,84 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
-## TopBar — OIDC Profile Display
+## TopBar — Anonymous + Signed-In States
 
 [→ topbar.html](wireframes/topbar.html)
 
-Added Sprint 3.1. Full-width sticky header that spans both the sidebar and content columns. The single shared header replaces the previous per-page content header for brand identity purposes.
+Updated Sprint 3.2 (anonymous-first auth model). Full-width sticky header spanning both columns.
+
+**The default state is now anonymous.** All users see the ᛟ rune avatar on first load. The signed-in state (Google avatar + email + dropdown) is optional and only reached after the user actively chooses to sign in.
 
 Key layout decisions:
-- Height: `56px` (`h-14`). Sticky, `z-index: 100` (header layer).
-- Grid placement: `grid-column: 1 / 3; grid-row: 1` — spans the full width above sidebar and content.
-- **Left:** Brand wordmark (`ᛟ FENRIR LEDGER` + italic subtitle). The entire wordmark is a `<button>` that opens the About modal — this is the About/help trigger. No separate `?` button.
-- **Right:** OIDC profile cluster — one `<button>` containing: avatar circle (32px) + email (desktop) + caret ▾.
-- **Avatar:** `<img>` when `session.user.picture` is available; ᛟ rune glyph (Noto Sans Runic, gold token) as fallback when picture is null.
-- **Email source:** `session.user.email` from the OIDC id_token. Shown inline in the header on desktop (≥640px); hidden on mobile (the dropdown is the only mobile surface for the email).
-- **Profile dropdown:** triggered by clicking the profile cluster button. Contains: 40px avatar + name + email (always shown regardless of viewport) + hairline rule + Sign Out button. Positioned `absolute, right: 0, top: calc(100% + 4px)`, z-index 100.
-- **Sign Out:** moves from the persistent header into the profile dropdown. Calls `signOut({ callbackUrl: "/api/auth/signin" })`. No confirmation dialog.
-- **Mobile (< 640px):** email hidden in the header bar. Trigger `aria-label` includes the email so screen readers still announce identity. Dropdown width: `max-width: calc(100vw - 32px)`.
+- Height: `56px` (`h-14`). Sticky, `z-index: 100`.
+- Grid: `grid-column: 1 / 3; grid-row: 1`.
+- **Left:** Brand wordmark (`ᛟ FENRIR LEDGER` + italic subtitle) — `<button>` opens About modal.
+- **Right (anonymous):** ᛟ rune avatar only. No email. No caret. Clicking opens the upsell prompt panel (a `role="dialog"`, not a menu). Border: neutral `border-border` (no gold ring — wolf unnamed).
+- **Right (signed-in):** Google profile photo (or ᛟ rune fallback if no picture URL) + email (desktop) + caret ▾. Avatar border: `border-gold/40` (gold ring — wolf named). Clicking opens the profile dropdown.
+- **Upsell prompt panel (anonymous):** 260px panel, `role="dialog"`, anchored to avatar right edge. Contains atmospheric copy (Voice 2) + functional description (Voice 1) + "Sign in to Google" CTA + "Not now" dismiss. Does NOT set the banner dismiss flag.
+- **Profile dropdown (signed-in):** 240px, `role="menu"`. Contains avatar (40px) + name + email + atmospheric copy *"The wolf is named."* (Voice 2) + Sign Out. Sign Out returns to dashboard in anonymous state (not to /sign-in — the app is no longer gated).
+- **Avatar transition:** on sign-in completion, ᛟ rune cross-fades to Google photo; neutral border transitions to gold ring. 400ms, `cubic-bezier(0.16, 1, 0.3, 1)`.
+- **Mobile (< 640px):** anonymous state — avatar only (same as desktop, no text). Signed-in — email hidden in header bar; visible inside dropdown.
 
 **Wireframe scenarios:**
-1. Desktop — dropdown closed, picture URL present
-2. Desktop — dropdown open
-3. Desktop — dropdown closed, rune fallback (no picture)
-4. Mobile 375px — dropdown closed (avatar only)
-5. Mobile 375px — dropdown open (email visible inside dropdown)
+1. Anonymous — desktop — upsell prompt closed (DEFAULT state)
+2. Anonymous — desktop — upsell prompt open (via avatar click)
+3. Anonymous — mobile 375px — closed
+4. Signed-in — desktop — dropdown closed (optional/future)
+5. Signed-in — desktop — dropdown open (optional/future)
+6. Signed-in — mobile 375px — dropdown closed (optional/future)
+7. Avatar transition: anonymous ᛟ rune → signed-in Google photo
+
+---
+
+## Cloud Sync Upsell Banner
+
+[→ upsell-banner.html](wireframes/upsell-banner.html)
+
+Added Sprint 3.2. Dismissible banner on the dashboard (route `/`) only. Shown to anonymous users who have not dismissed it.
+
+Key layout decisions:
+- **Placement:** `grid-row: 2; grid-column: 1 / 3` — spans full width below TopBar, above sidebar/content split.
+- **Copy structure:** atmospheric line (Voice 2) + functional description (Voice 1) + "Sign in to sync" CTA + × dismiss button.
+- **"Sign in to sync"** navigates to `/sign-in` (dedicated page). Does not set the dismiss flag — banner reappears if user abandons sign-in.
+- **Dismiss:** sets `localStorage: fenrir:upsell_dismissed = 'true'`. Triggers height + opacity collapse (300ms ease). Element removed from DOM after animation.
+- **Render condition:** `isAnonymous AND !dismissed`. Signed-in users never see the banner.
+- **Mobile:** atmospheric line hidden. Description + CTA stack vertically. × is absolute top-right.
+- **Settings fallback:** `/settings` has a persistent "Sync to cloud" option for dismissed users.
+
+---
+
+## Sign In — Optional Cloud Sync
+
+[→ sign-in.html](wireframes/sign-in.html)
+
+Added Sprint 3.2. Dedicated `/sign-in` page — not a gate, an optional upgrade destination.
+
+Key layout decisions:
+- **Route:** `/sign-in`. Bookmarkable. Full page (not a modal or sheet).
+- **Sign-in card:** centered, max-width 400px. Contains: atmospheric eyebrow + Norse heading (Voice 2) + feature list (Voice 1) + "Sign in to Google" CTA + "or" divider + "Continue without signing in" CTA + atmospheric footnote (Voice 2).
+- **"Continue without signing in"** is a full-width outlined button — same visual weight class as the primary CTA. Never a small grey link. Non-negotiable.
+- **Two variants:** (1) no anonymous data — clean messaging; (2) has anonymous data — subheading dynamically references card count, sets expectation for the migration prompt.
+- **TopBar present:** brand wordmark and ᛟ avatar remain functional. Page does not feel like a cage.
+- **Mobile:** card fills full width with 16px padding. Both CTAs remain full-width.
+
+---
+
+## Migration Prompt — Anonymous to Signed-In
+
+[→ migration-prompt.html](wireframes/migration-prompt.html)
+
+Added Sprint 3.2. Post-OAuth modal dialog. Fires only when: OAuth completes AND `localStorage` contains anonymous card data (count > 0).
+
+Key layout decisions:
+- **Modal dialog:** `role="dialog"`, `aria-modal="true"`, `aria-labelledby` H1. z-index 210 (dialog layer).
+- **No × close:** user must choose one path. Both paths are safe.
+- **Escape does NOT close:** this is a required checkpoint before the signed-in dashboard renders.
+- **Semi-transparent backdrop:** dashboard visible behind modal — user sees their data is safe.
+- **Choices:** "Import N cards" (primary — merges anon data into cloud account; anon localStorage cleared after) vs. "Start fresh" (secondary — cloud account starts empty; anon data preserved in localStorage, not deleted). Both are outlined buttons, equal visual weight.
+- **"Start fresh" reassurance note:** explicit in-choice copy — *"Your N local cards will still be here if you sign out. Nothing is deleted."*
+- **Desktop:** choices side by side. **Mobile:** choices stacked vertically, "Import" on top.
+- **After choice:** navigate to dashboard in signed-in state; avatar transition fires.
 
 ---
 
