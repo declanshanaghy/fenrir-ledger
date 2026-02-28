@@ -26,7 +26,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { AboutModal } from "@/components/layout/AboutModal";
 
 // ── Avatar component ──────────────────────────────────────────────────────────
 
@@ -186,7 +185,6 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
 
 export function TopBar() {
   const { data: session, status, signOut } = useAuth();
-  const [aboutOpen, setAboutOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const avatarTriggerRef = useRef<HTMLButtonElement>(null);
@@ -211,12 +209,13 @@ export function TopBar() {
     <>
       <header className="h-14 shrink-0 border-b border-border bg-background/90 backdrop-blur-sm flex items-center justify-between px-4 z-50">
 
-        {/* Logo — click to open About modal */}
-        <button
-          type="button"
-          onClick={() => setAboutOpen(true)}
+        {/* Logo — click to visit the marketing site */}
+        <a
+          href="/static"
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex flex-col leading-tight group text-left"
-          aria-label="About Fenrir Ledger"
+          aria-label="Fenrir Ledger — visit the marketing site (opens in new tab)"
         >
           <span className="font-display text-gold tracking-widest uppercase text-sm group-hover:text-gold-bright transition-colors">
             Fenrir Ledger
@@ -224,7 +223,7 @@ export function TopBar() {
           <span className="font-body text-muted-foreground text-xs italic">
             Credit Card Tracker
           </span>
-        </button>
+        </a>
 
         {/* User cluster — conditionally renders anonymous or signed-in state */}
         <div className="relative flex items-center" ref={panelRef}>
@@ -332,8 +331,6 @@ export function TopBar() {
 
       </header>
 
-      {/* About modal — rendered outside header to avoid stacking context issues */}
-      <AboutModal open={aboutOpen} onOpenChange={setAboutOpen} />
     </>
   );
 }
