@@ -80,42 +80,49 @@ gantt
 
 ## Sprint 3 — UPCOMING
 
-**Goal**: Authentication, server-side persistence, animation layer, and remaining Norse mythology features.
+**Goal**: Google OIDC auth (localStorage-scoped), animation layer, Howl Panel + StatusRing, Valhalla archive, and the remaining Norse copy / realm utilities deferred from Sprint 2.
 
-**Planned Stories (from `implementation-brief.md` and ADR-004)**:
+**Data layer constraint**: localStorage remains the persistence layer through Sprint 3. Remote storage (Supabase, Postgres, any DB) is deferred until GA. Auth scopes localStorage to the authenticated user's `householdId` — no backend database is introduced.
 
-### Story 3.1: Auth.js v5 + Google OIDC
+**Planned Stories**:
+
+### Story 3.1: Auth.js v5 + Google OIDC (localStorage-scoped)
 - Install and configure `next-auth@beta`
 - Add `src/auth.ts`, `src/middleware.ts`
-- Google OIDC provider, JWT session strategy
+- Google OIDC provider, JWT session strategy (`{ sub, householdId, name, email }`)
 - Sign-in page (`/auth/signin`) styled with Saga Ledger theme
-- Household upsert on first sign-in: `"{name}'s Household"`
+- On first sign-in: derive `householdId` from Google `sub` claim; retire `"default-household"`
+- localStorage namespace switches to authenticated `householdId`
+- Protected routes: `/`, `/cards/new`, `/cards/[id]/edit` require auth
 - **Complexity**: L
+- **Dependency**: Luna sign-in page wireframe must be ready
 
-### Story 3.2: Supabase PostgreSQL + Data Access Layer
-- Provision Supabase project; define schema (households, cards tables)
-- Replace `storage.ts` localStorage reads/writes with Supabase client calls
-- API routes: `GET/POST /api/cards`, `PUT/DELETE /api/cards/[id]`, `GET/POST /api/households`
-- RLS policies as defence-in-depth
-- **Complexity**: L
+### Story 3.2: Norse Copy Pass + `getRealmLabel()`
+- Implement `getRealmLabel()` in `src/lib/realm-utils.ts` (deferred from Sprint 2)
+- Wire realm labels into `StatusBadge.tsx`
+- Copy pass across dashboard, empty states, form labels, and loading states
+- Apply kenning micro-copy per `copywriting.md`
+- **Complexity**: M
 
 ### Story 3.3: Framer Motion + Card Animations
 - Install `framer-motion`
 - `saga-enter` stagger animation on card grid load
-- `AnimatePresence` for card add/remove
-- Skeleton shimmer loading state
+- `AnimatePresence` for card add/remove with descend-to-Valhalla exit
+- Skeleton shimmer loading state (gold palette, not gray)
 - **Complexity**: M
 
 ### Story 3.4: The Howl Panel + StatusRing
-- `HowlPanel.tsx` — urgent cards sidebar (slide-in via Framer Motion)
+- `HowlPanel.tsx` — urgent cards sidebar (slide-in via Framer Motion, drawer on mobile)
 - `StatusRing.tsx` — SVG progress ring around card issuer initials
-- `getRealmLabel()` in `src/lib/realm-utils.ts`
+- Muspel-pulse animation when `daysRemaining <= 30`
+- Raven-warn shake on new urgent card
 - **Complexity**: M
 
 ### Story 3.5: Valhalla Archive (`/valhalla`)
 - New route: `src/app/valhalla/page.tsx`
 - Tombstone card style (darker, sepia, `ᛏ` rune)
-- Entry animation; net value calculation (rewards - fees paid)
+- Cards "descend" entry animation
+- Net value calculation (rewards - fees paid)
 - **Complexity**: M
 
 ---
@@ -126,5 +133,5 @@ gantt
 - Card count milestone toasts (easter egg #11)
 - Gleipnir Hunt full implementation (easter egg #1) — larger story, may split
 - `?` shortcut → About modal (easter egg #9)
-- localStorage migration wizard (Iteration 5, per ADR-004)
 - Star Trek LCARS mode (easter egg #6) — optional/bonus
+- localStorage migration wizard (Iteration 5 per auth story) — deferred; import `"default-household"` data on first sign-in
