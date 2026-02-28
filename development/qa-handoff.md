@@ -726,3 +726,230 @@ Expected: zero TypeScript errors, zero lint errors, all pages build successfully
 | Card exit animation not visible on delete-then-redirect flow | Delete navigates away; exit plays when the new card list renders (without the deleted card). No user-visible regression. |
 | Tiwaz rune (ᛏ) placeholder after Valhalla exit not implemented | Spec calls for a brief ᛏ rune appearing where the card was; deferred to S3/S4 easter egg layer |
 | No `prefers-reduced-motion` guard | Framer Motion's `useReducedMotion` hook not wired; animations play regardless of OS accessibility setting — deferred |
+
+---
+
+# QA Handoff — Sprint 3, Story 3.5
+
+**From**: FiremanDecko (Principal Engineer)
+**To**: Loki (QA Tester)
+**Sprint**: 3
+**Story**: 3.5 — Valhalla Archive + Close Card Action
+**Date**: 2026-02-27
+
+---
+
+## What Was Implemented
+
+### 1. `closedAt` field added to `Card` type (`types.ts`)
+
+New optional field `closedAt?: string` (UTC ISO 8601 timestamp) records when a card was explicitly closed. Distinct from `deletedAt`: a closed card is honored in Valhalla; a deleted card is gone forever.
+
+### 2. `closeCard()` and `getClosedCards()` in `storage.ts`
+
+- **`closeCard(householdId, cardId)`**: Sets `card.status = "closed"` and `card.closedAt = now`. Persists to localStorage. No-op if card is already closed, soft-deleted, or not found.
+- **`getClosedCards(householdId)`**: Returns all non-deleted cards with `status === "closed"` for the household, sorted by `closedAt` descending.
+- **`getCards(householdId)` updated**: Now excludes `status === "closed"` cards. Closed cards no longer appear in the active dashboard; they live in Valhalla only.
+
+### 3. "Close Card" action on `CardForm.tsx`
+
+In edit mode, two separate destructive actions are now available:
+
+| Action | Effect | Dialog |
+|--------|--------|--------|
+| **Close Card** | Sets `status: "closed"`, records `closedAt`, moves card to Valhalla | "Close this card? [Card Name] will be moved to Closed Cards. Its record and rewards will be preserved." |
+| **Delete card** | Hard-deletes (sets `deletedAt`), card disappears everywhere including Valhalla | "Delete this card? This will permanently remove [Card Name]. This cannot be undone." |
+
+- "Close Card" button is only shown when the card is NOT already closed (`status !== "closed"`)
+- For already-closed cards, only "Delete card" appears (no redundant Close button)
+- Both actions route back to `/` on confirmation
+
+### 4. Valhalla route — `/valhalla`
+
+New page at `development/src/src/app/valhalla/page.tsx`.
+
+- **Page heading**: "Valhalla" (Voice 2, gold, Cinzel Display)
+- **Subheading**: "Hall of the Honored Dead" (italic, muted)
+- **Atmospheric quote**: "Here lie the chain-breakers. Their rewards were harvested."
+- **Sepia tint**: `filter: sepia(0.15) brightness(0.95)` on page wrapper — distinct memorial aesthetic vs. active dashboard
+- **Filter bar**: Issuer dropdown (derived from closed card set) + Sort dropdown (closed date newest/oldest, A→Z, Z→A)
+- **Tombstone cards**:
+  - Thick left border accent `border-l-4 border-l-[#8a8578]` (stone-hel color)
+  - ᛏ Tiwaz rune + card name (uppercase) + "Closed {date}" in font-mono
+  - Meta line: `{Issuer} · Opened {date} · Held {duration}`
+  - Hairline rule
+  - Plunder grid: Rewards row (bonus summary if present) + Fee avoided row
+  - Italic epitaph copy (atmospheric)
+- **Animation**: Framer Motion `motion.article` with saga-enter stagger (same 0.07s × index, capped 0.56s, expo-out easing as `AnimatedCardGrid`)
+- **Empty state**: ᛏ rune + "The hall waits. No chain has yet been broken." + subtext — per `product/copywriting.md`
+  - `aria-description="the spittle of a bird"` — Gleipnir Hunt fragment #6 (Sprint 4 mechanic)
+- **Filter no-results**: "No cards bear this issuer's mark."
+- **Loading state**: "Consulting the runes..."
+
+### 5. Sidebar nav link to `/valhalla` in `SideNav.tsx`
+
+- New `RuneIcon` helper component renders ᛏ rune at 16×16 footprint
+- Nav item: `{ label: "Valhalla", href: "/valhalla", iconNode: <RuneIcon rune="ᛏ" /> }`
+- Active state highlights with gold left border on `/valhalla` route
+- Collapsed sidebar shows ᛏ with native title tooltip "Valhalla"
+
+---
+
+## Files Created / Modified (Story 3.5)
+
+| File | Action | Description |
+|------|--------|-------------|
+| `development/src/src/lib/types.ts` | Modified | Added `closedAt?: string` field to `Card` interface |
+| `development/src/src/lib/storage.ts` | Modified | Added `closeCard()` and `getClosedCards()`; `getCards()` now excludes closed cards |
+| `development/src/src/components/cards/CardForm.tsx` | Modified | Added "Close Card" button + confirmation dialog; imports `closeCard` |
+| `development/src/src/app/valhalla/page.tsx` | Created | Valhalla archive route — tombstone cards, filter bar, empty state |
+| `development/src/src/components/layout/SideNav.tsx` | Modified | Added `RuneIcon` component, `iconNode` nav item field, Valhalla nav link |
+| `development/implementation-plan.md` | Modified | Story 3.5 section added |
+| `development/qa-handoff.md` | Modified | This section |
+
+---
+
+## How to Deploy (Story 3.5)
+
+Same as Story 3.3. No new environment variables.
+
+```bash
+cd development/src
+npm run dev
+# open http://localhost:9653
+```
+
+Navigate to `/valhalla` directly, or click "Valhalla" in the sidebar.
+
+---
+
+## Test Focus Areas (Story 3.5)
+
+### 1. Close Card action — happy path
+
+1. Add a new card (issuer, name, date — any values)
+2. Navigate to `/cards/[id]/edit` for that card
+3. Verify "Close Card" button is visible in the actions row (to the left of "Delete card")
+4. Click "Close Card"
+5. Verify confirmation dialog appears with:
+   - Title: "Close this card?"
+   - Body mentions the card name
+   - Body says record and rewards will be preserved
+   - Buttons: "Close Card" and "Cancel"
+6. Click "Cancel" — verify dialog closes, card unchanged
+7. Click "Close Card" again → confirm "Close Card"
+8. Verify redirect to dashboard `/`
+9. Verify the closed card is **absent** from the dashboard card grid
+
+### 2. Close Card — card appears in Valhalla
+
+1. After closing a card (test 1 above), navigate to `/valhalla`
+2. Verify the tombstone entry is present:
+   - ᛏ rune displayed
+   - Card name shown in uppercase
+   - "Closed {date}" shown in font-mono (today's date)
+   - Issuer name in meta line
+   - "Opened {date}" in meta line
+   - "Held {duration}" in meta line
+   - Fee avoided in plunder row (or "$0 (no-fee card)" if no annual fee)
+   - Italic epitaph copy present
+
+### 3. Delete vs. Close distinction
+
+1. Add two cards: Card A and Card B
+2. Close Card A (using "Close Card")
+3. Delete Card B (using "Delete card")
+4. Verify:
+   - Dashboard: neither card appears (both gone from active view)
+   - Valhalla `/valhalla`: Card A appears; Card B does NOT appear
+5. Reload page — verify same result (persistence)
+
+### 4. Already-closed card in edit form
+
+1. Navigate to `/cards/[id]/edit` for a closed card
+2. Verify "Close Card" button is **NOT shown** (card already closed)
+3. Verify "Delete card" button IS shown
+4. Verify status dropdown shows "Closed" as the current value
+
+### 5. Valhalla page — empty state
+
+1. Open app with no closed cards (fresh install or all cards deleted/active)
+2. Navigate to `/valhalla`
+3. Verify:
+   - ᛏ rune displayed in the empty state
+   - Text: "The hall waits. No chain has yet been broken."
+   - Subtext about closing a card to archive it here
+   - No filter bar visible (filter bar only appears when closed cards exist)
+
+### 6. Valhalla filter — by issuer
+
+1. Close two cards from different issuers (e.g., Chase and Amex)
+2. Navigate to `/valhalla`
+3. Verify both tombstones appear with "All issuers" selected (default)
+4. Select Chase from the issuer dropdown
+5. Verify only the Chase card tombstone is shown
+6. Select Amex — verify only the Amex card shown
+7. Select "All issuers" again — verify both shown
+
+### 7. Valhalla sort
+
+1. Close three cards at different times
+2. Navigate to `/valhalla`
+3. Verify default sort: "Sort: Closed date (newest)" — most recently closed card is at the top
+4. Switch to "Sort: Closed date (oldest)" — verify order reverses
+5. Switch to "Sort: A → Z" — verify alphabetical order by card name (ascending)
+6. Switch to "Sort: Z → A" — verify reverse alphabetical
+
+### 8. Valhalla stagger animation
+
+1. Close 4+ cards
+2. Navigate to `/valhalla`
+3. Observe tombstone cards animating in with stagger:
+   - First card appears immediately
+   - Each subsequent card appears ~70ms after the previous
+   - Cards animate from `opacity: 0, y: 20px` to `opacity: 1, y: 0`
+   - Expo-out easing (cards settle quickly without bounce)
+
+### 9. Sidebar navigation
+
+1. Verify "Valhalla" nav item with ᛏ rune appears below "Cards" in the left sidebar
+2. Click "Valhalla" — verify navigation to `/valhalla`
+3. Verify the "Valhalla" nav item has the gold left border active state at `/valhalla`
+4. Verify "Cards" nav item has the gold active state at `/`
+5. Collapse the sidebar — verify ᛏ rune shows as the icon-only state
+6. Hover the collapsed ᛏ icon — verify native tooltip reads "Valhalla"
+
+### 10. Dashboard — closed cards excluded
+
+1. Close a card
+2. Navigate to `/` (dashboard)
+3. Verify the closed card does NOT appear in the card grid
+4. Verify the card count in the summary header reflects only active (non-closed) cards
+5. Reload page — confirm the closed card is still absent
+
+### 11. Sepia tint on Valhalla page
+
+1. Navigate to `/valhalla`
+2. Visually verify the page has a slightly sepia/warm-tinted, slightly dimmed background
+   compared to the active dashboard — the memorial aesthetic should be noticeable but subtle
+
+### 12. Build verification
+
+```bash
+cd development/src && npm run build
+```
+
+Expected: zero TypeScript errors, zero lint errors, `/valhalla` route present in build output.
+
+---
+
+## Known Limitations (Story 3.5)
+
+| Limitation | Impact |
+|-----------|--------|
+| No `<title>` metadata on Valhalla page | Page title in browser tab shows "Fenrir Ledger" not "Valhalla — Fenrir Ledger" — deferred to Sprint 4 (requires server component wrapper) |
+| No "View full record" button on tombstones | Edit route exists but needs a guard update for closed-card access — Sprint 4 |
+| Plunder rows are simple, not computed totals | "Net gain" calculation requires reward value tracking — future sprint |
+| Cards closed via old status dropdown lack `closedAt` | Show "—" for closed date; still appear in Valhalla — acceptable |
+| Gleipnir fragment #6 `aria-description` not yet wired | Text is embedded; hunt detection mechanic is Sprint 4 |
+| No `prefers-reduced-motion` guard on stagger | Framer Motion `useReducedMotion` deferred — same as Story 3.3 |

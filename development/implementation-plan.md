@@ -596,3 +596,168 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 | Skeleton loading window is very brief on fast devices | localStorage read is synchronous; skeleton may flash for < 1 frame — acceptable |
 | Tiwaz rune (ᛏ) placeholder after Valhalla exit not implemented | Spec mentions a brief ᛏ rune where the card was; deferred to S3/S4 easter egg layer |
 | No `prefers-reduced-motion` guard on card animations | Framer Motion respects `useReducedMotion` hook; not wired in this story — future work |
+
+---
+
+# Implementation Plan: Fenrir Ledger Sprint 3 — Story 3.5
+
+## Story 3.5: Valhalla Archive + Close Card Action
+
+### Prerequisites
+
+- Sprint 3, Stories 3.2 and 3.3 complete (realm-utils, Framer Motion animations)
+- `development/src/src/lib/types.ts` — `Card` interface reviewed
+- `development/src/src/lib/storage.ts` — existing CRUD functions reviewed
+- `ux/wireframes/valhalla.html`, `product/copywriting.md`, `ux/interactions.md` reviewed
+
+### Tasks (ordered)
+
+---
+
+### Task 3.5.1: Add `closedAt` field to `Card` type
+
+- **File(s)**: `development/src/src/lib/types.ts`
+- **Depends on**: Nothing
+- **Implementation Notes**:
+  - Add `closedAt?: string` (UTC ISO 8601 timestamp) to the `Card` interface
+  - JSDoc: records when the user explicitly closed the card via "Close Card" action
+  - Distinct from `deletedAt`: a closed card is honored in Valhalla; a deleted card is gone forever
+  - No schema migration needed — absent field === undefined === not closed (same pattern as `deletedAt`)
+- **Edge Cases**: Existing cards without `closedAt` still show in Valhalla if `status === "closed"` (set via edit form)
+- **Definition of Done**: Field added, JSDoc written, `npm run build` passes
+
+---
+
+### Task 3.5.2: Add `closeCard()` and `getClosedCards()` to `storage.ts`
+
+- **File(s)**: `development/src/src/lib/storage.ts`
+- **Depends on**: Task 3.5.1
+- **Implementation Notes**:
+  - `closeCard(householdId, cardId)`:
+    - Finds card by ID + householdId (scope check)
+    - No-op if card is soft-deleted (`deletedAt` set), already closed, or not found
+    - Sets `card.status = "closed"`, `card.closedAt = now`, `card.updatedAt = now`
+    - Calls `setAllCards()` directly (bypasses `saveCard()` to avoid `computeCardStatus()` overriding the "closed" status — though `computeCardStatus` already short-circuits on "closed")
+  - `getClosedCards(householdId)`:
+    - Returns all non-deleted cards for the household with `status === "closed"`
+    - Sorted by `closedAt` desc (falls back to `updatedAt` for cards without `closedAt`)
+  - `getCards(householdId)` modified:
+    - Now excludes `status === "closed"` cards — they belong in Valhalla, not the active dashboard
+- **Edge Cases**:
+  - A card manually set to `status: "closed"` via the edit form before this story will appear in Valhalla (no `closedAt` set, but `status === "closed"` is the filter)
+  - `getClosedCards` must NOT return soft-deleted cards (same `!c.deletedAt` guard as `getCards`)
+- **Definition of Done**: `closeCard()` and `getClosedCards()` exported; `getCards()` excludes closed; `npm run build` passes
+
+---
+
+### Task 3.5.3: Verify `computeCardStatus()` — "closed" short-circuit
+
+- **File(s)**: `development/src/src/lib/card-utils.ts` (read-only verification)
+- **Depends on**: Nothing
+- **Implementation Notes**:
+  - `computeCardStatus()` already checks `card.status === "closed"` first and returns "closed" immediately
+  - No date logic can override a closed card — confirmed correct
+  - `saveCard()` calls `computeCardStatus()` which preserves "closed" — confirmed correct
+- **Edge Cases**: None — logic already correct as implemented in Story 1.2
+- **Definition of Done**: No changes needed; confirmed via code review and build
+
+---
+
+### Task 3.5.4: Add "Close Card" action to `CardForm.tsx`
+
+- **File(s)**: `development/src/src/components/cards/CardForm.tsx`
+- **Depends on**: Task 3.5.2
+- **Implementation Notes**:
+  - Import `closeCard` from `@/lib/storage`
+  - Add `closeDialogOpen` state alongside `deleteDialogOpen`
+  - Add `handleClose()` handler: calls `closeCard(householdId, cardId)`, routes to `/`
+  - "Close Card" button visible in edit mode only, AND only when card is NOT already closed
+    (`initialValues?.status !== "closed"`)
+  - Confirmation dialog per `product/copywriting.md` — "Close this card?" / body references card name and preservation in Closed Cards
+  - Button label: "Close Card" (Voice 1: functional)
+  - Dialog action button label: "Close Card"
+  - For already-closed cards: only the "Delete" button is shown (no close button — card is already closed)
+  - Placed in the actions row, to the left of "Delete card" (less destructive → more destructive order)
+- **Edge Cases**:
+  - Must not show Close button for cards already `status: "closed"` — they're in Valhalla
+  - `initialValues?.householdId` must be passed to `closeCard()`; if undefined, handler no-ops
+- **Definition of Done**: Edit form shows "Close Card" button for active cards; confirmation dialog works; card moves to Valhalla after confirmation
+
+---
+
+### Task 3.5.5: Create `/valhalla` route — `app/valhalla/page.tsx`
+
+- **File(s)**: `development/src/src/app/valhalla/page.tsx` (new)
+- **Depends on**: Task 3.5.2
+- **Implementation Notes**:
+  - `"use client"` — localStorage read happens client-side
+  - On mount: `migrateIfNeeded()`, `initializeDefaultHousehold()`, `getClosedCards(DEFAULT_HOUSEHOLD_ID)`
+  - Page title: "Valhalla — Fenrir Ledger" (handled by Next.js metadata — not wired in this story; page heading is sufficient)
+  - Page heading: "Valhalla" (Voice 2: atmospheric, gold, Cinzel Display)
+  - Subheading: "Hall of the Honored Dead" (italic, muted)
+  - Quote: "Here lie the chain-breakers. Their rewards were harvested." (atmospheric, italic)
+  - Sepia tint: `style={{ filter: "sepia(0.15) brightness(0.95)" }}` on outermost wrapper div
+  - Filter bar (shown only when closed cards exist):
+    - Issuer dropdown — derived from unique issuers in closed cards; "All issuers" default
+    - Sort dropdown — closed date desc/asc, alpha A→Z, alpha Z→A
+  - TombstoneCard component (per card):
+    - `border-l-4 border-l-[#8a8578]` (stone-hel left accent per wireframe)
+    - `ᛏ` Tiwaz rune (aria-hidden, title="Valhalla")
+    - Card name (uppercase, Cinzel heading)
+    - Closed date (font-mono, muted)
+    - Meta line: issuer · Opened {date} · Held {duration}
+    - Hairline rule
+    - Plunder grid: Rewards (bonus summary if present) + Fee avoided rows
+    - Epitaph (atmospheric italic: fee avoided message)
+  - Framer Motion `motion.article` with saga-enter stagger (same constants as `AnimatedCardGrid`)
+  - Empty state: `ValhallaEmptyState` — ᛏ rune, heading, body (from `copywriting.md`)
+    - `aria-description="the spittle of a bird"` — Gleipnir Hunt fragment #6 hidden attribute
+  - Filter no-results state: "No cards bear this issuer's mark." (from `copywriting.md`)
+  - Loading state: "Consulting the runes..." (atmospheric)
+  - `max-w-3xl` column width — narrower than dashboard per wireframe spec
+- **Edge Cases**:
+  - Cards closed before `closedAt` field existed show "—" for closed date; `formatHeldDuration` handles missing `closedAt` gracefully
+  - `issuerFilter` resets visually but not programmatically on card list change — acceptable for Sprint 3
+- **Definition of Done**: Page renders at `/valhalla`; all closed cards shown; filter/sort work; empty state correct; `npm run build` passes
+
+---
+
+### Task 3.5.6: Add Valhalla nav link to `SideNav.tsx`
+
+- **File(s)**: `development/src/src/components/layout/SideNav.tsx`
+- **Depends on**: Task 3.5.5
+- **Implementation Notes**:
+  - Add `RuneIcon` helper component: renders an Elder Futhark rune glyph in a `<span>` sized to match the 16×16 Lucide icon footprint
+  - Extend `NavItem` interface with optional `iconNode?: React.ReactNode` field — used when a custom icon replaces the standard Lucide `icon` component
+  - Add nav item: `{ label: "Valhalla", href: "/valhalla", icon: CreditCard, iconNode: <RuneIcon rune="ᛏ" /> }`
+  - Nav item render: if `iconNode` is present, render it instead of `<Icon className="h-4 w-4 shrink-0" />`
+  - Active state highlighting (gold left border) works via `pathname === item.href` — no change needed
+  - Collapsed state (icon-only rail): native `title` tooltip shows "Valhalla" — no change needed
+- **Edge Cases**: `iconNode` is rendered outside the `Lucide Icon` pattern; it must match the same visual footprint (h-4 w-4 shrink-0) so collapsed/expanded nav item alignment stays consistent
+- **Definition of Done**: "Valhalla" nav item with ᛏ rune icon appears in sidebar; clicking navigates to `/valhalla`; active state highlights correctly; collapsed state shows rune in tooltip
+
+---
+
+### Task 3.5.7: Build Verification
+
+- **File(s)**: N/A (verification step)
+- **Depends on**: Tasks 3.5.1–3.5.6
+- **Implementation Notes**:
+  - `cd development/src && npm run build`
+  - Zero TypeScript errors, zero lint errors
+  - All 7 routes present in build output: `/`, `/_not-found`, `/cards/[id]/edit`, `/cards/new`, `/icon.svg`, `/valhalla`, plus any existing routes
+- **Definition of Done**: `npm run build` completes with no errors; `/valhalla` route present in build output
+
+---
+
+## Known Limitations (Sprint 3 — Story 3.5)
+
+| Limitation | Notes |
+|-----------|-------|
+| All prior sprint limitations | Carry forward unchanged |
+| No Valhalla metadata (`<title>` tag) | Next.js `export const metadata` requires a server component; the page is `"use client"` for localStorage. Title deferred to Sprint 4 when a server wrapper can be added. |
+| No "View full record" action on tombstones | Wireframe shows a "View full record" button; deferred — edit route at `/cards/[id]/edit` would need to render closed-card data which requires updating the edit page guard. Sprint 4 work. |
+| No reward tracking totals in plunder | Plunder section shows fee avoided and bonus summary but not a computed "net gain" — accurate totals require reward value tracking (future sprint). |
+| `closedAt` absent on cards closed via the old status dropdown | Cards manually set to `status: "closed"` before this story have no `closedAt`; they appear in Valhalla but show "—" for closed date. Acceptable. |
+| Gleipnir fragment #6 (`aria-description`) not yet wired to hunt mechanic | The `aria-description` attribute on the empty state carries the fragment text but the Gleipnir Hunt detection system is Sprint 4 work. |
+| `prefers-reduced-motion` not guarded | Framer Motion `useReducedMotion` hook not wired — deferred from Story 3.3, still open. |

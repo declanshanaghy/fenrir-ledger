@@ -241,20 +241,55 @@ export function getAllCardsGlobal(): Card[] {
 }
 
 /**
- * Reads all active (non-deleted) cards for a given household, sorted by most
- * recently updated.
+ * Reads all active (non-deleted, non-closed) cards for a given household,
+ * sorted by most recently updated. Excludes cards with status === "closed"
+ * so they do not appear on the main dashboard.
+ *
+ * Closed cards are visible via getClosedCards() and the /valhalla route.
  *
  * @param householdId - The household to filter by
- * @returns Array of active Card objects for the household
+ * @returns Array of active, non-closed Card objects for the household
  */
 export function getCards(householdId: string): Card[] {
   const all = getAllCards();
   return all
-    .filter((c) => c.householdId === householdId && !c.deletedAt)
+    .filter(
+      (c) =>
+        c.householdId === householdId &&
+        !c.deletedAt &&
+        c.status !== "closed"
+    )
     .sort(
       (a, b) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
+}
+
+/**
+ * Reads all closed (status === "closed") cards for a given household.
+ * Excludes soft-deleted cards — a deleted card is gone forever; a closed
+ * card is honored in Valhalla.
+ *
+ * Cards are sorted by closedAt descending (most recently closed first).
+ * Falls back to updatedAt for cards that predate the closedAt field.
+ *
+ * @param householdId - The household to filter by
+ * @returns Array of closed Card objects for the household, sorted by closedAt desc
+ */
+export function getClosedCards(householdId: string): Card[] {
+  const all = getAllCards();
+  return all
+    .filter(
+      (c) =>
+        c.householdId === householdId &&
+        !c.deletedAt &&
+        c.status === "closed"
+    )
+    .sort((a, b) => {
+      const aDate = a.closedAt ?? a.updatedAt;
+      const bDate = b.closedAt ?? b.updatedAt;
+      return new Date(bDate).getTime() - new Date(aDate).getTime();
+    });
 }
 
 /**
@@ -322,5 +357,38 @@ export function deleteCard(id: string): void {
 
   const updated = [...all];
   updated[index] = { ...card, deletedAt: new Date().toISOString() };
+  setAllCards(updated);
+}
+
+/**
+ * Closes a card by setting its status to "closed" and recording the closedAt
+ * timestamp. The card remains in localStorage and is visible in Valhalla
+ * (/valhalla); it will no longer appear in the active dashboard.
+ *
+ * Distinct from deleteCard(): a closed card is honored (Valhalla), not erased.
+ * No-op if the card does not exist, is already closed, or has been soft-deleted.
+ *
+ * @param householdId - The household that owns the card (used for scope check)
+ * @param cardId - The card ID to close
+ */
+export function closeCard(householdId: string, cardId: string): void {
+  const all = getAllCards();
+  const index = all.findIndex(
+    (c) => c.id === cardId && c.householdId === householdId
+  );
+  if (index < 0) return;
+
+  const card = all[index]!;
+  if (card.deletedAt) return; // Soft-deleted — no-op
+  if (card.status === "closed") return; // Already closed — no-op
+
+  const now = new Date().toISOString();
+  const updated = [...all];
+  updated[index] = {
+    ...card,
+    status: "closed",
+    closedAt: now,
+    updatedAt: now,
+  };
   setAllCards(updated);
 }

@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/dialog";
 
 import type { Card, CardStatus } from "@/lib/types";
-import { saveCard, deleteCard } from "@/lib/storage";
+import { saveCard, deleteCard, closeCard } from "@/lib/storage";
 import {
   computeCardStatus,
   dollarsToCents,
@@ -94,6 +94,7 @@ export function CardForm({ initialValues }: CardFormProps) {
   const router = useRouter();
   const isEditMode = !!initialValues;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Precompute today + derived defaults (used for new cards)
@@ -230,6 +231,17 @@ export function CardForm({ initialValues }: CardFormProps) {
   const handleDelete = () => {
     if (!initialValues?.id) return;
     deleteCard(initialValues.id);
+    router.push("/");
+  };
+
+  /**
+   * Closes the card — marks it status: "closed" with a closedAt timestamp.
+   * The card moves to Valhalla and disappears from the active dashboard.
+   * The record is preserved; it is NOT deleted.
+   */
+  const handleClose = () => {
+    if (!initialValues?.id || !initialValues?.householdId) return;
+    closeCard(initialValues.householdId, initialValues.id);
     router.push("/");
   };
 
@@ -509,8 +521,72 @@ export function CardForm({ initialValues }: CardFormProps) {
           </Button>
         </div>
 
-        {/* Delete button — edit mode only */}
-        {isEditMode && (
+        {/* Close Card + Delete buttons — edit mode only */}
+        {isEditMode && initialValues?.status !== "closed" && (
+          <div className="flex gap-2">
+            {/* Close Card — sends card to Valhalla, record preserved */}
+            <Dialog open={closeDialogOpen} onOpenChange={setCloseDialogOpen}>
+              <DialogTrigger asChild>
+                <Button type="button" variant="outline" size="sm">
+                  Close Card
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Close this card?</DialogTitle>
+                  <DialogDescription>
+                    <strong>{initialValues?.cardName}</strong> will be moved to
+                    Closed Cards. Its record and rewards will be preserved.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setCloseDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button variant="default" onClick={handleClose}>
+                    Close Card
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Delete card — hard delete, record gone forever */}
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button type="button" variant="destructive" size="sm">
+                  Delete card
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Delete this card?</DialogTitle>
+                  <DialogDescription>
+                    This will permanently remove{" "}
+                    <strong>{initialValues?.cardName}</strong> from your
+                    portfolio. This cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setDeleteDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={handleDelete}>
+                    Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+
+        {/* Delete-only button for already-closed cards */}
+        {isEditMode && initialValues?.status === "closed" && (
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
               <Button type="button" variant="destructive" size="sm">
@@ -522,8 +598,8 @@ export function CardForm({ initialValues }: CardFormProps) {
                 <DialogTitle>Delete this card?</DialogTitle>
                 <DialogDescription>
                   This will permanently remove{" "}
-                  <strong>{initialValues?.cardName}</strong> from your portfolio.
-                  This cannot be undone.
+                  <strong>{initialValues?.cardName}</strong> from your
+                  portfolio. This cannot be undone.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>

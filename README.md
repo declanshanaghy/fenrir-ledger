@@ -41,7 +41,7 @@
 
 Track every fee-wyrm in your portfolio. Every chain forged, every promo deadline, every fee-serpent's strike date — Fenrir watches and howls before the trap snaps shut. Add your cards, name your thresholds, and the wolf does the rest: reminding you to spend, transfer, downgrade, or close before you lose a single dollar to a fee you didn't choose to pay.
 
-*Sprint 3 in progress — Story 3.2 (Norse copy pass) and Story 3.3 (Framer Motion card animations) shipped. StatusRing, HowlPanel, and Valhalla route next.*
+*Sprint 3 in progress — Stories 3.2 (Norse copy pass), 3.3 (Framer Motion card animations), and 3.5 (Valhalla archive + Close Card action) shipped. StatusRing and HowlPanel next.*
 
 ---
 
@@ -184,6 +184,16 @@ cd development/src && npm run dev
 
 # Open http://localhost:9999
 ```
+
+### Sprint 3 — Story 3.5 — Valhalla Archive + Close Card Action
+
+- [app/valhalla/page.tsx](development/src/src/app/valhalla/page.tsx) — Valhalla archive route: tombstone cards, filter bar, empty state, saga-enter stagger
+- [types.ts](development/src/src/lib/types.ts) — `closedAt` field added to `Card` interface
+- [storage.ts](development/src/src/lib/storage.ts) — `closeCard()`, `getClosedCards()` added; `getCards()` excludes closed cards
+- [CardForm.tsx](development/src/src/components/cards/CardForm.tsx) — "Close Card" action + confirmation dialog added (edit mode only)
+- [SideNav.tsx](development/src/src/components/layout/SideNav.tsx) — Valhalla nav link with ᛏ RuneIcon added
+- [implementation-plan.md](development/implementation-plan.md) — Story 3.5 tasks documented
+- [qa-handoff.md](development/qa-handoff.md) — Story 3.5 QA handoff with full test matrix
 
 ### Sprint 3 — Story 3.3 — Framer Motion + Card Animations
 

@@ -20,15 +20,41 @@ interface SideNavProps {
   onToggle: () => void;
 }
 
+/**
+ * RuneIcon — renders an Elder Futhark rune glyph as a nav icon.
+ * Sized and styled to match the 16×16 Lucide icon footprint.
+ * Aria-hidden: the label text provides the accessible name.
+ */
+function RuneIcon({ rune }: { rune: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="h-4 w-4 shrink-0 flex items-center justify-center text-sm leading-none"
+      style={{ fontFamily: "serif" }}
+    >
+      {rune}
+    </span>
+  );
+}
+
 interface NavItem {
   label: string;
   href: string;
+  /** Lucide icon component or custom component accepting className */
   icon: React.ElementType;
+  /** Custom icon node — used when icon cannot be a standard Lucide component */
+  iconNode?: React.ReactNode;
   disabled?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Cards", href: "/", icon: CreditCard },
+  {
+    label: "Valhalla",
+    href: "/valhalla",
+    icon: CreditCard, // Fallback (unused when iconNode is set)
+    iconNode: <RuneIcon rune="ᛏ" />,
+  },
 ];
 
 export function SideNav({ collapsed, onToggle }: SideNavProps) {
@@ -59,7 +85,8 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground border-l-2 border-transparent"
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              {/* Render custom iconNode (rune) or fallback to Lucide icon */}
+              {item.iconNode ?? <Icon className="h-4 w-4 shrink-0" />}
               {!collapsed && (
                 <span className="font-body truncate">{item.label}</span>
               )}

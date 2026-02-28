@@ -77,6 +77,14 @@ export interface Card {
    * Set by deleteCard(); never cleared. UI-facing reads filter this out.
    */
   deletedAt?: string;
+  /**
+   * UTC ISO 8601 timestamp when the user explicitly closed this card.
+   * Absent (undefined) means the card has never been closed.
+   * Set by closeCard(); preserved on the record for Valhalla display.
+   * A closed card retains status === "closed" and appears in Valhalla (/valhalla).
+   * A closed card does NOT have deletedAt set — it is honored, not erased.
+   */
+  closedAt?: string;
 }
 
 /**
