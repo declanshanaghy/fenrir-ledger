@@ -99,6 +99,39 @@
   }
 }
 
+/* ── Card Chain: hover gold glow ────────────────────────────────────────── */
+/*
+ * Applied to each CardTile wrapper. CSS handles box-shadow and border-color
+ * transitions; the y-lift is done by Framer Motion whileHover.
+ *
+ * Spec from ux/interactions.md — Card Hover section.
+ *   transform is NOT listed here because Framer Motion owns it via whileHover.
+ *   Setting transition on transform here would conflict with Framer Motion's
+ *   inline style management, so only box-shadow and border-color are listed.
+ *
+ * .card-chain > * — target the inner Card to avoid affecting the motion.div
+ *   layout. The border and shadow are applied to the shadcn Card child.
+ */
+.card-chain {
+  transition: box-shadow 200ms ease-out;
+}
+.card-chain:hover {
+  box-shadow: 0 0 0 1px #2a2d45, 0 0 20px rgba(201, 146, 10, 0.2);
+}
+.card-chain:hover > a > div {
+  border-color: #c9920a;
+}
+
+/* Suppress card-chain CSS transitions for reduced-motion users.
+ * Framer Motion's useReducedMotion() handles the JS-driven y-lift;
+ * this rule handles the CSS transitions independently. */
+@media (prefers-reduced-motion: reduce) {
+  .card-chain,
+  .card-chain:hover {
+    transition: none;
+  }
+}
+
 /* ── Saga Reveal Animation ──────────────────────────────────────────────── */
 /*
  * Staggered entrance for dashboard elements.
@@ -119,6 +152,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Suppress saga-reveal CSS animation for reduced-motion users. */
+@media (prefers-reduced-motion: reduce) {
+  .saga-reveal > * {
+    opacity: 1;
+    transform: none;
+    animation: none;
   }
 }
 
