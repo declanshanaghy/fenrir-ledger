@@ -9,6 +9,7 @@ on:
       - 'sessions/**'
       - '.github/workflows/**'
       - 'vercel.json'
+      - 'quality/**'
   workflow_dispatch:
 
 permissions:

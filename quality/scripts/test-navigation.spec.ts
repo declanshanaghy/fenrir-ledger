@@ -176,8 +176,8 @@ test.describe("Session Archive — /sessions/", () => {
     // Navigate back again
     await page.goBack({ waitUntil: "domcontentloaded" });
 
-    // Safely back at the archive
-    expect(page.url()).toContain("/sessions/");
+    // Safely back at the archive (Vercel preview drops trailing slash)
+    expect(page.url()).toContain("/sessions");
   });
 
   test("all session card hrefs are relative (no fenrir-ledger.vercel.app absolute URLs)", async ({
