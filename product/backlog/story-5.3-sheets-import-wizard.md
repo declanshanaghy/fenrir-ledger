@@ -74,7 +74,7 @@ Validation (client-side, before submitting to the API):
 
 UI elements:
 - Animated loading indicator (existing app loading pattern — not a spinner, see interactions.md for the rune-pulse pattern if available, otherwise a simple text pulse).
-- No cancel button during this step — the request is in flight. If the user closes the modal (ESC or ×), show a confirmation: "Cancel the import? Your sheet will not be saved." Accept/dismiss.
+- No cancel button during this step — the request is in flight. If the user presses ESC or clicks ×, replace the loading view inline (within the same modal — no nested dialog) with a two-button cancellation screen: heading "Cancel the import?" + body "Your sheet will not be saved." + buttons "Yes, cancel" (closes wizard) / "Keep waiting" (returns to loading view).
 - The loading step times out at 20 seconds. If the API has not responded, surface Step 4 (error state) with message: "The Norns took too long. Try again."
 
 ### Step 3 — Preview
@@ -131,7 +131,7 @@ Then: modal closes, dashboard refreshes with new cards visible, toast from Story
 - Focus is trapped inside the wizard at all steps.
 - On step advance, focus moves to the new step's heading.
 - The loading step announces its status to screen readers: `aria-live="polite"` region with the loading message.
-- ESC dismisses the wizard at Steps 1, 3, and 4 (with confirmation at Step 2 if loading).
+- ESC dismisses the wizard at Steps 1, 3, and 4. At Step 2 (loading), ESC switches the modal to the inline cancellation screen (not a second dialog).
 - All buttons meet the 44px minimum touch target.
 - Error messages are announced immediately via `aria-live="assertive"`.
 
@@ -171,7 +171,7 @@ Then: modal closes, dashboard refreshes with new cards visible, toast from Story
 
 **Annual fee formatting**: Divide cents by 100. Show `$X` format. Use `$0` vs "No annual fee" based on `annualFee === 0`.
 
-**Cancel during loading**: A simple `useRef` to track whether the component is still mounted is sufficient. If the user cancels, set an `aborted` ref to `true` — when the fetch resolves, check the ref before advancing to Step 3.
+**Cancel during loading**: When the user presses ESC or × at Step 2, transition the wizard's `step` state to `"cancel_confirm"` — a new inline step rendered within the same modal (no `<dialog>` nested inside the wizard dialog). The cancel confirmation screen shows heading "Cancel the import?", body "Your sheet will not be saved.", and two buttons: "Yes, cancel" (closes the wizard entirely) and "Keep waiting" (reverts step back to `"loading"`). Use a `useRef` `aborted` flag: if the fetch resolves after the user has chosen "Keep waiting", check the flag before advancing to Step 3.
 
 **Import trigger**: The "Import N cards" button in Step 3 should call a prop/callback function supplied by the parent component (not navigate or dispatch directly). This decouples the wizard from the storage logic in Story 5.4.
 

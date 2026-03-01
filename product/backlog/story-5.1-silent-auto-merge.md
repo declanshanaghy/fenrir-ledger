@@ -32,7 +32,7 @@ After this ships:
 3. If yes: merge all non-duplicate cards into the Google household automatically. No dialog. No user decision required.
 4. If no: proceed directly to the signed-in dashboard. No change in behavior.
 5. A brief non-blocking toast confirms the merge ("N cards carried into your ledger.") — informational only, not a decision gate.
-6. The anonymous `fenrir:household` key is cleared (or tombstoned) after a successful merge to prevent re-merging the same cards on next sign-in.
+6. The anonymous `fenrir:household` key is cleared completely after a successful merge to prevent re-merging the same cards on next sign-in.
 
 ---
 
@@ -73,7 +73,7 @@ Does fenrir:household exist with card count > 0?
         │       into your ledger."    │
         │               │             │
         │               ▼             ▼
-        │       Clear fenrir:household (tombstone or remove)
+        │       Clear fenrir:household completely (remove key)
         │               │
         └───────────────┤
                         ▼
@@ -111,7 +111,7 @@ The existing migration prompt dialog (`MigrationPrompt` component, if it exists)
 - [ ] Each imported card has its `householdId` field updated to the Google `sub` before being saved
 - [ ] After a successful merge, a non-blocking toast displays: "N card(s) carried into your ledger." where N is the count of merged cards
 - [ ] If no mergeable cards are found (anonymous household is empty or all cards already exist in Google household), no toast is shown and the user proceeds directly to the signed-in dashboard
-- [ ] After merge, the anonymous `fenrir:household` localStorage key is cleared (or tombstoned with a `mergedAt` timestamp) so the same cards are not re-imported on the next sign-in
+- [ ] After merge, the anonymous `fenrir:household` localStorage key is removed completely so the same cards are not re-imported on the next sign-in
 - [ ] The migration is idempotent: signing out and signing back in does not re-import already-merged cards
 - [ ] If the merge operation fails (e.g., localStorage write error), the sign-in still completes and an error toast is shown; cards are not lost from the anonymous household
 - [ ] The signed-in dashboard renders correctly after a merge with the full portfolio visible
@@ -122,7 +122,7 @@ The existing migration prompt dialog (`MigrationPrompt` component, if it exists)
 
 ## Technical Notes for FiremanDecko
 
-**Where to trigger the merge**: The OAuth callback handler (the function that establishes `FenrirSession` in localStorage after the Google token exchange) is the right place. After writing `fenrir:auth`, before redirecting to the dashboard, run the merge logic.
+**Where to trigger the merge**: The `/auth/callback` page — confirmed as the location where `FenrirSession` is written to localStorage after the Google token exchange completes. After writing `fenrir:auth`, before redirecting to the dashboard, run the merge logic.
 
 **Anonymous householdId source**: Read `fenrir:household` from localStorage to get the anonymous UUID. This is the source household for the merge.
 
@@ -132,7 +132,9 @@ The existing migration prompt dialog (`MigrationPrompt` component, if it exists)
 
 **householdId rewrite**: Each imported card must have `householdId` set to the Google `sub` before `saveCard()` is called. Do not write the anonymous card to the Google namespace without this field update.
 
-**Tombstone vs. clear**: After merge, set `fenrir:household` to a tombstone value (e.g. `{ mergedAt: ISO_TIMESTAMP, mergedInto: googleSub }`) rather than deleting the key outright. This provides an audit trail and prevents re-merge logic from failing silently if the key is recreated by some other code path. Check for a `mergedAt` field in `fenrir:household` at OAuth callback time — if present, skip the merge.
+**Clearing anonymous storage**: After a successful merge, remove the `fenrir:household` key from localStorage completely (`localStorage.removeItem("fenrir:household")`). Do not use a tombstone — a clean removal is the correct behavior. Since all anonymous data has UUID primary keys and is bulk-copied into the Google household, there is no risk of re-merge: the anonymous household is simply empty after sign-in. The merge is idempotent because re-running it on an empty anonymous household is a no-op.
+
+**Merge utility module**: Implement all merge logic in a standalone utility module in the storage layer — e.g. `development/src/src/lib/merge-anonymous.ts`. This module must be the single source of truth for merging anonymous data into a signed-in household. Exporting it as a discrete module makes it testable and ensures future data types (not just cards) can be merged by adding to this one file. The `/auth/callback` page imports and calls this module — it does not inline the merge logic.
 
 **Toast pattern**: Reuse the existing toast infrastructure (Sprint 4.2 milestone toasts established the pattern). This toast is informational, auto-dismisses, does not require user action.
 
@@ -144,7 +146,7 @@ The existing migration prompt dialog (`MigrationPrompt` component, if it exists)
 
 ## Open Questions for FiremanDecko
 
-1. **OAuth callback location**: Where is the current Google OIDC callback handler implemented? Is it a Next.js route handler (`/api/auth/callback`) or client-side PKCE completion logic? The merge logic needs to be inserted at the point where the `FenrirSession` is committed to localStorage — confirm the exact location.
+1. ~~**OAuth callback location**~~ — **Resolved**: The merge fires in the `/auth/callback` page, which is the confirmed location where `FenrirSession` is written to localStorage after the Google OIDC token exchange.
 
 2. **Toast infrastructure**: Sprint 4.2 introduced milestone toasts. Is there a reusable `showToast()` utility or does this story need to integrate with a toast library (e.g. sonner, react-hot-toast)? The merge toast must use the same system.
 
