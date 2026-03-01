@@ -1,4 +1,4 @@
 {
-  "buildCommand": "mkdir -p public/sessions public/static && cp -r ../../sessions/. public/sessions/ && cp -r ../../static/. public/static/ && next build",
+  "buildCommand": "mkdir -p public/sessions public/static && ([ \"$(realpath ../../sessions 2>/dev/null)\" = \"$(realpath public/sessions 2>/dev/null)\" ] || cp -r ../../sessions/. public/sessions/) && ([ \"$(realpath ../../static 2>/dev/null)\" = \"$(realpath public/static 2>/dev/null)\" ] || cp -r ../../static/. public/static/) && next build",
   "ignoreCommand": "git diff HEAD^ HEAD --name-only | grep -qE '^(development/src/|static/|sessions/|vercel\\.json|\\.github/workflows/)'"
 }
