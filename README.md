@@ -182,6 +182,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [quality/EASTER-EGGS-AUDIT.md](quality/EASTER-EGGS-AUDIT.md) — Final verdict report: READY TO SHIP, 0 defects (369 lines)
 - [quality/easter-eggs-transparency-report.md](quality/easter-eggs-transparency-report.md) — SVG artifact validation and background transparency audit (236 lines)
 - [quality/scripts/test-easter-eggs.spec.ts](quality/scripts/test-easter-eggs.spec.ts) — Playwright automation suite, 22 tests across 8 test suites (596 lines)
+- [designs/architecture/backend-ws-qa-report.md](designs/architecture/backend-ws-qa-report.md) — QA validation: Backend/WebSocket architecture investigation — APPROVED (0 blocking issues)
 
 ### ᚠ Pack Operations
 
