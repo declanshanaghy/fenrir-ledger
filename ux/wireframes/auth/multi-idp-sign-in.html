@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Multi-IDP Sign-In Dialog</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* ── Page layout ──────────────────────────────────────────────────── */
+    .page { display: flex; flex-direction: column; gap: 56px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+    .scenario-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .scenario-col { display: flex; flex-direction: column; gap: 8px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+
+    /* ── Utility ──────────────────────────────────────────────────────── */
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note-block {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.6;
+      border: 1px dashed;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+
+    /* ── Dashboard shell (context: dialog appears over dashboard) ──────── */
+    /*
+     * The multi-IDP dialog is NOT a page — it is a modal dialog overlaid
+     * on whatever page the user is on (dashboard, settings, etc.).
+     * It is triggered by:
+     *   (a) clicking the ᛟ rune avatar in the TopBar (anonymous state)
+     *   (b) clicking "Sign in to sync" in the upsell banner
+     *   (c) the "Sync to cloud" option in Settings
+     *
+     * Design decision: modal dialog, NOT a dedicated /sign-in page.
+     * Rationale: Clerk's <SignIn> component renders as a self-contained
+     * component. Embedding it in a modal keeps the user on their current
+     * route — navigating away then back is unnecessary friction. The modal
+     * is lightweight, closeable, and never feels like a gate.
+     *
+     * This supersedes the earlier sign-in.html (dedicated page) spec,
+     * which was designed for a Google-only, hand-rolled PKCE flow.
+     * Clerk manages the OAuth handshake internally; the dialog closes when
+     * complete or when the user dismisses it.
+     */
+    .dashboard-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 340px;
+      border: 1px solid;
+      position: relative;
+    }
+    .dashboard-topbar {
+      height: 56px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .topbar-brand { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; }
+    .topbar-avatar {
+      width: 32px;
+      height: 32px;
+      border: 1px dashed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    /* Simulated dashboard content behind the dialog */
+    .dashboard-content-ghost {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      padding: 12px;
+      opacity: 0.25;
+    }
+    .ghost-card { border: 1px solid; height: 80px; }
+
+    /* ── Modal backdrop ───────────────────────────────────────────────── */
+    /*
+     * Semi-transparent backdrop over the dashboard.
+     * z-index: 200 (modal overlay layer — see wireframes.md z-index table).
+     * Click outside the dialog does NOT close it (anonymous-first pattern:
+     * user accidentally clicking outside should not interrupt them).
+     * The dedicated "Continue without signing in" dismiss is the only close path.
+     * Keyboard: Escape also triggers dismiss (same as clicking "Continue without signing in").
+     */
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Implementation: background: rgba(7,7,13, 0.8); backdrop-filter: blur(4px) */
+    }
+
+    /* ── Sign-in dialog ───────────────────────────────────────────────── */
+    /*
+     * Width: 360px desktop / full viewport - 32px padding on mobile
+     * Max-width: 400px
+     * Structure:
+     *   - Dialog header: eyebrow + close-equivalent (the dismiss back path)
+     *   - Value proposition (short — one sentence)
+     *   - Provider button list (scales from 1 to 4+ buttons)
+     *   - Divider
+     *   - "Continue without signing in" — PRIMARY dismiss, full-width, prominent
+     *   - Atmospheric footnote
+     *
+     * No close (×) button in the top-right corner.
+     * Rationale: a × button de-emphasizes the "Continue without signing in"
+     * path by offering a second, visually smaller escape. The single, prominent
+     * "Continue without signing in" button IS the dismiss. One clear path, not two.
+     * Anonymous-first: the exit must feel like a first-class choice, not a
+     * keyboard shortcut. Escape key still works (implementation detail).
+     */
+    .signin-dialog {
+      width: 100%;
+      max-width: 360px;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+      z-index: 210;
+      background: white; /* placeholder — theme token applied by engineer */
+    }
+
+    /* Dialog header */
+    /*
+     * Contains: atmospheric eyebrow (Voice 2) only.
+     * No × button — see rationale above.
+     * Border-bottom separates header from dialog body.
+     */
+    .dialog-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid;
+    }
+    .dialog-eyebrow {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-style: italic;
+    }
+    .dialog-heading {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    /* Dialog body */
+    .dialog-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Value proposition (Voice 1 — plain English) */
+    /*
+     * One sentence. The user does not need a feature list at this stage —
+     * they already tapped "Sign in to sync". They know why they're here.
+     * Short copy is respectful of their intent.
+     */
+    .dialog-value-prop {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* Provider button list */
+    /*
+     * This is the scalable core of the design.
+     *
+     * Phase 1 (now): 1 button — GitHub
+     * Phase 2 (later): 4 buttons — GitHub, Google, Apple, Magic Link
+     *
+     * Layout: vertical stack, full width.
+     * Rationale for vertical stack (not grid/row):
+     *   - With 1 button, a single full-width button looks intentional,
+     *     not sparse. The label is fully readable with no truncation.
+     *   - With 4 buttons, vertical stacking at 360px width gives each
+     *     button a comfortable 44px+ touch target with no crowding.
+     *   - A 2×2 grid with 4 providers would require icon-only buttons
+     *     on mobile, sacrificing legibility for visual symmetry.
+     *   - Vertical stacking is also the Clerk default; customising to a
+     *     grid risks breaking Clerk's rendered output unexpectedly.
+     *
+     * Each provider button:
+     *   - Full width
+     *   - Min 44px height (touch target — WCAG 2.1 AA)
+     *   - Provider icon left (16×16) + provider label center-left
+     *   - Consistent internal padding: 12px vertical, 16px horizontal
+     *   - No custom colors in wireframe — theme applies brand styles
+     *     (GitHub: dark; Google: white with border; Apple: black; Magic Link: outlined)
+     */
+    .provider-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .provider-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 44px;
+      padding: 12px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: left;
+      font-family: inherit;
+      background: none;
+    }
+    .provider-icon {
+      width: 16px;
+      height: 16px;
+      border: 1px dashed;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+    }
+
+    /* Divider */
+    .dialog-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+    }
+    .dialog-divider-line { flex: 1; border-top: 1px solid; }
+
+    /* "Continue without signing in" — the prominent dismiss */
+    /*
+     * NON-NEGOTIABLE DESIGN DECISION:
+     * "Continue without signing in" is placed BELOW the provider buttons,
+     * not above them, and NOT as a small link — it is a full-width button.
+     *
+     * Placement rationale (below, not above):
+     *   - Reading order: user reads the value prop → sees the providers →
+     *     then sees the exit. The exit does not interrupt the sign-in flow,
+     *     it concludes it. This is respectful without hiding the option.
+     *   - If placed above the providers, it would be the first thing scanned,
+     *     making the product appear to expect refusal (anti-pattern for
+     *     upsell conversion). Anonymous-first does not mean "designed to fail."
+     *
+     * Visual weight:
+     *   - Same full-width treatment as provider buttons.
+     *   - Slightly lower visual weight than provider buttons in implementation
+     *     (ghost/outline vs. filled provider buttons) but NOT a plain link.
+     *   - Font size slightly smaller (12px vs 13px) — subtle hierarchy only.
+     *
+     * Behavior: closes the dialog. User returns to their current page.
+     * Does NOT set the upsell banner dismiss flag — the banner may reappear.
+     * (The dismiss flag is only set by clicking × on the banner itself.)
+     */
+    .btn-continue {
+      width: 100%;
+      min-height: 44px;
+      padding: 12px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      font-family: inherit;
+      background: none;
+    }
+
+    /* Atmospheric footnote */
+    /*
+     * Voice 2 — Norse saga voice. One sentence. Zero pressure.
+     * Implementation: Source Serif 4, italic, muted color.
+     */
+    .dialog-footnote {
+      font-size: 10px;
+      font-style: italic;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Mobile frame ─────────────────────────────────────────────────── */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      position: relative;
+    }
+    .mobile-dashboard-shell {
+      min-height: 500px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-topbar {
+      height: 56px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+    }
+    .mobile-content-ghost {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+      opacity: 0.2;
+    }
+    .mobile-ghost-card { border: 1px solid; height: 60px; }
+    .mobile-backdrop {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      /* On mobile the dialog anchors to the bottom of the viewport (sheet-style).
+         It is still a dialog (role="dialog"), not a bottom sheet component.
+         Bottom-anchoring prevents the keyboard from covering the "Continue" button. */
+    }
+    .mobile-signin-dialog {
+      width: 100%;
+      border-top: 2px solid;
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-dialog-handle {
+      width: 32px;
+      height: 4px;
+      border: 1px solid;
+      margin: 8px auto 4px;
+    }
+    .mobile-dialog-body {
+      padding: 12px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       DESIGN DECISION RECORD — Multi-IDP dialog vs. dedicated page
+       ════════════════════════════════════════════════════════════════
+
+       The earlier sign-in.html spec used a dedicated /sign-in page.
+       That spec was designed for a hand-rolled Google PKCE flow.
+
+       With Clerk, the auth provider renders a <SignIn> component.
+       The component handles the OAuth handshake, error states, and
+       provider selection internally. Wrapping it in a dialog is the
+       natural integration point — no need for a dedicated page route.
+
+       Modal wins because:
+         1. User stays on their current page (dashboard, settings).
+            No route change = no browser history entry = no back-button
+            complication from OAuth callback URLs.
+         2. Clerk's <SignIn> is self-contained. Rendering it inside a
+            Radix <Dialog> or shadcn Dialog is standard Clerk practice.
+         3. The dialog is fast and lightweight — lower perceived cost
+            to the user than navigating to a new page.
+         4. "Continue without signing in" is even clearer in a modal —
+            it closes the modal. The user's context is preserved.
+
+       sign-in.html (dedicated page) remains valid as a fallback
+       for users who deep-link to /sign-in or arrive via email links.
+       The modal and the page can coexist.
+  ══════════════════════════════════════════════════════════════════ -->
+
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SCENARIO 1 — Desktop: Phase 1 — GitHub only (1 provider)
+       The dialog as it ships on day one with a single provider button.
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 — Desktop · Phase 1 · 1 provider (GitHub)</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">Dialog over dashboard (centered)</div>
+
+        <!-- Dashboard shell (context — the dialog sits over this) -->
+        <div class="dashboard-shell" style="width: 640px; min-height: 320px;">
+          <div class="dashboard-topbar" role="banner">
+            <span class="topbar-brand">ᛟ Fenrir Ledger</span>
+            <div class="topbar-avatar" aria-label="Anonymous user"><span aria-hidden="true">ᛟ</span></div>
+          </div>
+          <div class="dashboard-content-ghost" aria-hidden="true">
+            <div class="ghost-card"></div>
+            <div class="ghost-card"></div>
+            <div class="ghost-card"></div>
+          </div>
+
+          <!-- Modal backdrop + dialog -->
+          <div class="modal-backdrop" role="presentation">
+            <dialog
+              class="signin-dialog"
+              open
+              aria-modal="true"
+              aria-labelledby="dialog-heading-s1"
+            >
+
+              <!-- Dialog header -->
+              <div class="dialog-header">
+                <p class="dialog-eyebrow" aria-hidden="true">Carry your ledger everywhere</p>
+                <h1 class="dialog-heading" id="dialog-heading-s1">Sign in to sync your ledger</h1>
+              </div>
+
+              <!-- Dialog body -->
+              <div class="dialog-body">
+
+                <!-- Value proposition (Voice 1) -->
+                <p class="dialog-value-prop">
+                  Sign in to back up your cards and access them from any device.
+                </p>
+
+                <!-- Provider list — Phase 1: GitHub only -->
+                <!--
+                  Clerk provides the enabled providers.
+                  This list is rendered dynamically based on what is toggled
+                  on in the Clerk dashboard — no code change required to
+                  add a provider.
+
+                  Phase 1: GitHub only.
+                  A single button, full width — reads clean, not sparse.
+                -->
+                <div class="provider-list" role="group" aria-label="Sign in with a provider">
+                  <button class="provider-btn" type="button" aria-label="Sign in with GitHub">
+                    <div class="provider-icon" aria-hidden="true">GH</div>
+                    Continue with GitHub
+                  </button>
+                </div>
+
+                <!-- Divider -->
+                <div class="dialog-divider" aria-hidden="true">
+                  <div class="dialog-divider-line"></div>
+                  <span>or</span>
+                  <div class="dialog-divider-line"></div>
+                </div>
+
+                <!-- PRIMARY dismiss — NON-NEGOTIABLE prominence -->
+                <!--
+                  "Continue without signing in" is the sole dismiss action.
+                  Full-width button, not a link. Same visual weight class
+                  as the provider button (slightly lighter implementation —
+                  ghost vs. filled — but never a small text link).
+                  Behavior: closes the dialog. No flag set.
+                -->
+                <button class="btn-continue" type="button">
+                  Continue without signing in
+                </button>
+
+                <!-- Atmospheric footnote (Voice 2) -->
+                <p class="dialog-footnote">
+                  Your chains are already here. Signing in only carries them further.
+                </p>
+
+              </div><!-- /.dialog-body -->
+            </dialog>
+          </div><!-- /.modal-backdrop -->
+
+        </div><!-- /.dashboard-shell -->
+      </div>
+
+      <div class="scenario-col" style="max-width: 280px;">
+        <div class="col-label">Notes</div>
+        <p class="note">
+          Phase 1: one provider button. The layout is not sparse — a
+          single full-width button with a clear label reads purposeful,
+          not unfinished. No empty space below it; the divider and
+          "Continue without signing in" fill the rhythm.
+        </p>
+        <p class="note" style="margin-top: 8px;">
+          No × close button. The only dismiss path is "Continue without
+          signing in." Rationale: a × in the corner creates a second,
+          visually smaller exit that competes with the prominent exit below.
+          One clear path is better than two ambiguous ones.
+        </p>
+        <p class="note" style="margin-top: 8px;">
+          Escape key also closes the dialog (implementation detail —
+          handled by the Radix Dialog primitive).
+        </p>
+      </div>
+    </div>
+
+    <p class="note-block">
+      Trigger points: (a) ᛟ avatar tap in TopBar, (b) "Sign in to sync" in upsell banner, (c) Settings "Sync to cloud" option.<br/>
+      Dialog element: <code>&lt;dialog&gt;</code> with <code>aria-modal="true"</code> and <code>aria-labelledby</code> bound to H1.<br/>
+      Focus trap: on dialog open, focus moves to first interactive element (GitHub button). Tab cycles within dialog only.<br/>
+      Backdrop: <code>z-index: 200</code>; dialog: <code>z-index: 210</code>. Clicking backdrop does NOT close (anonymous-first: no accidental dismiss).
+    </p>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SCENARIO 2 — Desktop: Phase 2 — 4 providers (GitHub, Google, Apple, Magic Link)
+       The dialog after more providers are enabled in the Clerk dashboard.
+       No code change required — Clerk renders the additional buttons.
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 — Desktop · Phase 2 · 4 providers (GitHub, Google, Apple, Magic Link)</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">Dialog over dashboard (centered)</div>
+
+        <div class="dashboard-shell" style="width: 640px; min-height: 460px;">
+          <div class="dashboard-topbar" role="banner">
+            <span class="topbar-brand">ᛟ Fenrir Ledger</span>
+            <div class="topbar-avatar" aria-label="Anonymous user"><span aria-hidden="true">ᛟ</span></div>
+          </div>
+          <div class="dashboard-content-ghost" aria-hidden="true">
+            <div class="ghost-card"></div>
+            <div class="ghost-card"></div>
+            <div class="ghost-card"></div>
+          </div>
+
+          <div class="modal-backdrop" role="presentation">
+            <dialog
+              class="signin-dialog"
+              open
+              aria-modal="true"
+              aria-labelledby="dialog-heading-s2"
+            >
+
+              <div class="dialog-header">
+                <p class="dialog-eyebrow" aria-hidden="true">Carry your ledger everywhere</p>
+                <h1 class="dialog-heading" id="dialog-heading-s2">Sign in to sync your ledger</h1>
+              </div>
+
+              <div class="dialog-body">
+
+                <p class="dialog-value-prop">
+                  Sign in to back up your cards and access them from any device.
+                </p>
+
+                <!-- Provider list — Phase 2: 4 providers -->
+                <!--
+                  Vertical stack is the right choice at 4 providers.
+                  A 2×2 grid would require shorter labels or icon-only buttons.
+                  Full-width vertical buttons remain scannable and touchable
+                  at any provider count from 1 to 4.
+                  Clerk renders these in the order configured in the dashboard.
+                  UX recommendation for ordering: most common first (Google),
+                  then GitHub, Apple, Magic Link.
+                -->
+                <div class="provider-list" role="group" aria-label="Sign in with a provider">
+                  <button class="provider-btn" type="button" aria-label="Continue with Google">
+                    <div class="provider-icon" aria-hidden="true">G</div>
+                    Continue with Google
+                  </button>
+                  <button class="provider-btn" type="button" aria-label="Continue with GitHub">
+                    <div class="provider-icon" aria-hidden="true">GH</div>
+                    Continue with GitHub
+                  </button>
+                  <button class="provider-btn" type="button" aria-label="Continue with Apple">
+                    <div class="provider-icon" aria-hidden="true">A</div>
+                    Continue with Apple
+                  </button>
+                  <button class="provider-btn" type="button" aria-label="Sign in with email magic link">
+                    <div class="provider-icon" aria-hidden="true">@</div>
+                    Sign in with email
+                  </button>
+                </div>
+
+                <div class="dialog-divider" aria-hidden="true">
+                  <div class="dialog-divider-line"></div>
+                  <span>or</span>
+                  <div class="dialog-divider-line"></div>
+                </div>
+
+                <button class="btn-continue" type="button">
+                  Continue without signing in
+                </button>
+
+                <p class="dialog-footnote">
+                  Your chains are already here. Signing in only carries them further.
+                </p>
+
+              </div>
+            </dialog>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="scenario-col" style="max-width: 280px;">
+        <div class="col-label">Notes</div>
+        <p class="note">
+          4 providers fit cleanly in the vertical stack without scrolling
+          at 360px dialog width. The dialog grows taller — max content
+          height stays well within viewport bounds on both desktop and
+          mobile (measured at 375px: ~480px total dialog height,
+          leaving room above the fold on a 667px iPhone SE).
+        </p>
+        <p class="note" style="margin-top: 8px;">
+          "Continue without signing in" remains equally visible with
+          4 providers as with 1. The divider creates a clear separation —
+          the dismiss option is not buried, but it follows the sign-in
+          options in reading order (intention → exit, not exit → intention).
+        </p>
+        <p class="note" style="margin-top: 8px;">
+          Provider ordering: Clerk controls the order via dashboard config.
+          UX recommendation: most universally available provider first
+          (Google), least typical last (Magic Link). GitHub second for
+          this product's technical-user audience.
+        </p>
+      </div>
+    </div>
+
+    <p class="note-block">
+      No redesign required between Phase 1 and Phase 2. The dialog layout is identical — Clerk adds buttons.<br/>
+      If more than 4 providers are ever enabled, consider capping the visible list at 4 with a "More options" expander.
+      At 5+ providers the dialog grows tall enough to risk clipping on small mobile viewports. Defer this decision to when it is needed.
+    </p>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SCENARIO 3 — Mobile (375px): Phase 1 — GitHub only
+       The dialog anchors to the bottom of the viewport on mobile.
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 — Mobile 375px · Phase 1 · 1 provider (GitHub) · Bottom-anchored</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">375px frame</div>
+
+        <div class="mobile-frame">
+          <div class="mobile-dashboard-shell">
+
+            <!-- TopBar -->
+            <div class="mobile-topbar" role="banner">
+              <span class="topbar-brand" style="font-size: 11px;">ᛟ Fenrir Ledger</span>
+              <div class="topbar-avatar" style="width:28px;height:28px;font-size:11px;" aria-label="Anonymous user">
+                <span aria-hidden="true">ᛟ</span>
+              </div>
+            </div>
+
+            <!-- Ghost dashboard content -->
+            <div class="mobile-content-ghost" aria-hidden="true">
+              <div class="mobile-ghost-card"></div>
+              <div class="mobile-ghost-card"></div>
+            </div>
+
+            <!-- Mobile backdrop — dialog anchors to bottom -->
+            <!--
+              On mobile the dialog slides up from the bottom, anchored to
+              the viewport floor. This prevents the keyboard from covering
+              the "Continue without signing in" button when the email
+              magic link input is focused (Phase 2).
+              It is still a <dialog> element with aria-modal — not a
+              separate bottom-sheet component. The bottom-anchor is a
+              CSS position choice, not a different component type.
+              Handle at top signals "this panel can be dismissed"
+              — but the handle is decorative; the primary dismiss remains
+              the "Continue without signing in" button.
+            -->
+            <div class="mobile-backdrop">
+              <dialog
+                class="mobile-signin-dialog"
+                open
+                aria-modal="true"
+                aria-labelledby="dialog-heading-m1"
+              >
+                <!-- Drag handle (decorative) -->
+                <div class="mobile-dialog-handle" aria-hidden="true"></div>
+
+                <div class="mobile-dialog-body">
+
+                  <div>
+                    <p class="dialog-eyebrow" style="font-size:9px;" aria-hidden="true">Carry your ledger everywhere</p>
+                    <h1 class="dialog-heading" id="dialog-heading-m1" style="font-size:16px; margin-top:2px;">Sign in to sync your ledger</h1>
+                  </div>
+
+                  <p class="dialog-value-prop" style="font-size:11px;">
+                    Sign in to back up your cards and access them from any device.
+                  </p>
+
+                  <div class="provider-list" role="group" aria-label="Sign in with a provider">
+                    <button class="provider-btn" type="button" style="font-size:13px;" aria-label="Continue with GitHub">
+                      <div class="provider-icon" aria-hidden="true">GH</div>
+                      Continue with GitHub
+                    </button>
+                  </div>
+
+                  <div class="dialog-divider" aria-hidden="true">
+                    <div class="dialog-divider-line"></div>
+                    <span style="font-size:10px;">or</span>
+                    <div class="dialog-divider-line"></div>
+                  </div>
+
+                  <button class="btn-continue" type="button" style="font-size:12px;">
+                    Continue without signing in
+                  </button>
+
+                  <p class="dialog-footnote" style="font-size:9px;">
+                    Your chains are already here. Signing in only carries them further.
+                  </p>
+
+                </div>
+              </dialog>
+            </div><!-- /.mobile-backdrop -->
+
+          </div><!-- /.mobile-dashboard-shell -->
+        </div><!-- /.mobile-frame -->
+      </div>
+
+      <div class="scenario-col" style="max-width: 280px;">
+        <div class="col-label">Mobile rules</div>
+        <p class="note">
+          Bottom-anchored on mobile (slide up from floor). Centered on desktop.
+          Same <code>&lt;dialog&gt;</code> element and same content — only
+          the positioning changes via CSS (media query on the backdrop).
+        </p>
+        <p class="note" style="margin-top: 8px;">
+          All touch targets: 44×44px minimum. Provider button: 44px min-height
+          (padding 12px + font ~20px + padding 12px). "Continue without
+          signing in": same. No element below 44px.
+        </p>
+        <p class="note" style="margin-top: 8px;">
+          The drag handle (decorative bar at top) signals dismissibility
+          to mobile users accustomed to bottom sheets. It is aria-hidden —
+          the actual dismiss is the button below.
+        </p>
+        <p class="note" style="margin-top: 8px;">
+          No horizontal padding less than 16px on 375px viewport.
+          Font sizes slightly reduced vs. desktop but not below 9px for
+          decorative elements or 11px for readable copy.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SCENARIO 4 — Mobile (375px): Phase 2 — 4 providers
+       Confirms the vertical stack remains usable at 4 providers on mobile.
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 4 — Mobile 375px · Phase 2 · 4 providers · Bottom-anchored</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">375px frame</div>
+
+        <div class="mobile-frame">
+          <div class="mobile-dashboard-shell">
+            <div class="mobile-topbar" role="banner">
+              <span class="topbar-brand" style="font-size:11px;">ᛟ Fenrir Ledger</span>
+              <div class="topbar-avatar" style="width:28px;height:28px;font-size:11px;" aria-label="Anonymous user">
+                <span aria-hidden="true">ᛟ</span>
+              </div>
+            </div>
+            <!-- No ghost cards — dialog fills most of the frame at 4 providers -->
+
+            <div class="mobile-backdrop">
+              <dialog
+                class="mobile-signin-dialog"
+                open
+                aria-modal="true"
+                aria-labelledby="dialog-heading-m2"
+              >
+                <div class="mobile-dialog-handle" aria-hidden="true"></div>
+
+                <div class="mobile-dialog-body">
+
+                  <div>
+                    <p class="dialog-eyebrow" style="font-size:9px;" aria-hidden="true">Carry your ledger everywhere</p>
+                    <h1 class="dialog-heading" id="dialog-heading-m2" style="font-size:15px; margin-top:2px;">Sign in to sync your ledger</h1>
+                  </div>
+
+                  <p class="dialog-value-prop" style="font-size:11px;">
+                    Sign in to back up your cards and access them from any device.
+                  </p>
+
+                  <div class="provider-list" role="group" aria-label="Sign in with a provider">
+                    <button class="provider-btn" type="button" style="font-size:12px;" aria-label="Continue with Google">
+                      <div class="provider-icon" aria-hidden="true">G</div>
+                      Continue with Google
+                    </button>
+                    <button class="provider-btn" type="button" style="font-size:12px;" aria-label="Continue with GitHub">
+                      <div class="provider-icon" aria-hidden="true">GH</div>
+                      Continue with GitHub
+                    </button>
+                    <button class="provider-btn" type="button" style="font-size:12px;" aria-label="Continue with Apple">
+                      <div class="provider-icon" aria-hidden="true">A</div>
+                      Continue with Apple
+                    </button>
+                    <button class="provider-btn" type="button" style="font-size:12px;" aria-label="Sign in with email magic link">
+                      <div class="provider-icon" aria-hidden="true">@</div>
+                      Sign in with email
+                    </button>
+                  </div>
+
+                  <div class="dialog-divider" aria-hidden="true">
+                    <div class="dialog-divider-line"></div>
+                    <span style="font-size:10px;">or</span>
+                    <div class="dialog-divider-line"></div>
+                  </div>
+
+                  <button class="btn-continue" type="button" style="font-size:12px;">
+                    Continue without signing in
+                  </button>
+
+                  <p class="dialog-footnote" style="font-size:9px;">
+                    Your chains are already here. Signing in only carries them further.
+                  </p>
+
+                </div>
+              </dialog>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="scenario-col" style="max-width: 280px;">
+        <div class="col-label">Notes</div>
+        <p class="note">
+          At 4 providers on a 375px frame, the bottom-anchored dialog is
+          approximately 420–440px tall. On a 667px viewport (iPhone SE)
+          this leaves the dashboard content visible above (unblocked).
+          On a 568px viewport (very small mobile) the dialog fills most
+          of the screen — acceptable. "Continue without signing in" remains
+          fully visible without scrolling.
+        </p>
+        <p class="note" style="margin-top: 8px;">
+          If a 5th provider is added, measure dialog height on a 568px
+          device before shipping. May require adding a max-height +
+          overflow-y: auto on the provider list only (not the whole dialog).
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       ACCESSIBILITY SUMMARY
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Accessibility Requirements</div>
+
+    <div class="note-block" style="font-style:normal; opacity:1; font-size:12px;">
+      <table style="border-collapse:collapse; width:100%;">
+        <thead>
+          <tr style="border-bottom:1px solid;">
+            <th style="text-align:left; padding:6px 8px;">Element</th>
+            <th style="text-align:left; padding:6px 8px;">Requirement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;"><code>&lt;dialog&gt;</code></td>
+            <td style="padding:6px 8px;"><code>aria-modal="true"</code> + <code>aria-labelledby</code> bound to H1 id. Screen readers announce "Sign in to sync your ledger, dialog."</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Focus trap</td>
+            <td style="padding:6px 8px;">On dialog open, focus moves to the first provider button. Tab cycles within the dialog only (provider buttons → "Continue without signing in"). Shift+Tab reverses. No focus leaks to the backdrop or dashboard behind.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Escape key</td>
+            <td style="padding:6px 8px;">Closes dialog — same behavior as "Continue without signing in." Handled by the Radix Dialog primitive (not custom code).</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Provider buttons</td>
+            <td style="padding:6px 8px;">Each has a descriptive <code>aria-label</code> ("Continue with GitHub"). Provider icon placeholder: <code>aria-hidden="true"</code>. Min 44×44px touch target.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">"Continue without signing in"</td>
+            <td style="padding:6px 8px;">Plain text label — no <code>aria-label</code> override needed. Min 44px height. Must not be a <code>&lt;a&gt;</code> styled as a button — must be a real <code>&lt;button&gt;</code> element.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Atmospheric eyebrow</td>
+            <td style="padding:6px 8px;"><code>aria-hidden="true"</code> — decorative framing only.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Drag handle (mobile)</td>
+            <td style="padding:6px 8px;"><code>aria-hidden="true"</code> — purely decorative. Not interactive.</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px;">Focus return</td>
+            <td style="padding:6px 8px;">On dialog close (dismiss or ESC), focus returns to the element that triggered the dialog (ᛟ avatar or upsell banner CTA). Radix Dialog handles this automatically.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       COMPONENT CONTRACT — What FiremanDecko needs to implement
+  ══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Component Contract — For FiremanDecko</div>
+
+    <div class="note-block" style="font-style:normal; opacity:1; font-size:12px;">
+      <p style="margin-bottom:8px;"><strong>Component name:</strong> <code>SignInDialog</code></p>
+      <p style="margin-bottom:8px;"><strong>Trigger:</strong> <code>open: boolean</code> prop — controlled externally by the parent (TopBar, upsell banner, Settings).</p>
+      <p style="margin-bottom:8px;"><strong>On dismiss:</strong> calls <code>onClose()</code> callback. Does NOT set upsell banner dismiss flag.</p>
+      <p style="margin-bottom:8px;"><strong>Providers:</strong> rendered dynamically from Clerk's enabled providers — no hardcoded list in this component. Provider order follows Clerk dashboard config.</p>
+      <p style="margin-bottom:8px;"><strong>Post-sign-in:</strong> Clerk handles the OAuth callback. On success, call <code>onSignInSuccess()</code> → check for anonymous data → trigger migration prompt if needed.</p>
+      <p style="margin-bottom:8px;"><strong>Desktop:</strong> centered in viewport (flexbox). <strong>Mobile (&lt; 640px):</strong> anchored to bottom of viewport.</p>
+      <p style="margin-bottom:8px;"><strong>Backdrop:</strong> semi-transparent overlay. Click on backdrop does NOT close — only the "Continue without signing in" button and Escape key close the dialog.</p>
+      <p><strong>Non-negotiable:</strong> "Continue without signing in" is a <code>&lt;button&gt;</code>, full width, min 44px height, always visible without scrolling (all viewport sizes from 375px up).</p>
+    </div>
+  </section>
+
+
+  <p class="note" style="text-align:center; padding-bottom:24px;">
+    Wireframe — multi-idp-sign-in.html · Fenrir Ledger · Clerk multi-IDP sign-in dialog · No theme styling applied
+  </p>
+
+</div><!-- /.page -->
+
+</body>
+</html>

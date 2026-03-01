@@ -32,6 +32,8 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [wireframes/upsell-banner.html](wireframes/upsell-banner.html) — Cloud sync upsell banner: dismissible, dashboard-only, desktop + mobile variants.
 - [wireframes/sign-in.html](wireframes/sign-in.html) — Sign-in page: optional upgrade surface at /sign-in; no-data + has-data variants; "Continue without signing in" first-class CTA.
 - [wireframes/migration-prompt.html](wireframes/migration-prompt.html) — Post-OAuth migration modal: Import N cards vs. Start fresh; reassurance copy.
+- [wireframes/auth/multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html) — Multi-IDP sign-in dialog (Clerk): 4 scenarios (Phase 1 + Phase 2, desktop + mobile), provider button scaling spec, component contract for FiremanDecko.
+- [multi-idp-interaction-spec.md](multi-idp-interaction-spec.md) — Interaction spec: trigger points, dialog state machine, on-success flow, on-dismiss behavior, mobile rules, accessibility requirements.
 - [handoff-to-fireman-anon-auth.md](handoff-to-fireman-anon-auth.md) — FiremanDecko handoff: what changed, householdId model, what to remove/change, new UI states, open technical questions.
 - [easter-egg-modal.md](easter-egg-modal.md) — Shared modal template for all easter egg discovery moments.
 - [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) — Mermaid diagram conventions for all pack members.
