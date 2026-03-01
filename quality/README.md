@@ -8,6 +8,14 @@ This directory contains all QA artifacts: test plans, test cases, test scripts, 
 
 ---
 
+## Backend PR #41 — Backend WebSocket Import Pipeline (Stories 1-3)
+
+**Status:** PASS — READY TO SHIP | 0 Blocking Defects | 3 Low-Severity Observations
+
+- **[backend-pr41-verdict.md](backend-pr41-verdict.md)** — Full QA verdict: code review, build validation, health endpoint, HTTP error-path tests, security review
+
+---
+
 ## Current Sprint Deliverables (Sprint 3)
 
 ### Story 3.2 — Anonymous-First Auth + Cloud Sync Upsell
