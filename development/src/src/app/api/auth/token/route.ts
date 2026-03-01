@@ -23,10 +23,16 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-/** Whitelisted origins that may call this endpoint. */
+/**
+ * Whitelisted origins that may call this endpoint.
+ * VERCEL_URL is injected automatically by Vercel on every deployment
+ * (production and preview), enabling preview-branch sign-in when the
+ * redirect URI for that branch is also registered in Google Cloud Console.
+ */
 const ALLOWED_ORIGINS = new Set([
   "http://localhost:9653",
   "https://fenrir-ledger.vercel.app",
+  ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
 ]);
 
 /** Google token endpoint. */
