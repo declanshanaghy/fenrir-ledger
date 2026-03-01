@@ -348,3 +348,10 @@ body.konami-shake-mobile {
   border-bottom-color: rgba(212, 165, 32, 0.85);
   outline: none;
 }
+
+/* ── LCARS Mode — Easter Egg #10 ────────────────────────────────────────── */
+@keyframes lcars-scanline {
+  0%   { top: -2px; }
+  100% { top: 100%; }
+}
+
