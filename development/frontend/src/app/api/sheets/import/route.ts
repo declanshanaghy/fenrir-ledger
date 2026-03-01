@@ -3,7 +3,7 @@ import type { SheetImportError } from "@/lib/sheets/types";
 
 export const maxDuration = 60;
 
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:9753";
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:9753";
 
 function errorResponse(code: SheetImportError["code"], message: string, status: number = 400): NextResponse {
   return NextResponse.json({ error: { code, message } satisfies SheetImportError }, { status });

@@ -19,11 +19,12 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 FRONTEND_SCRIPT="${SCRIPT_DIR}/frontend-server.sh"
 BACKEND_SCRIPT="${SCRIPT_DIR}/backend-server.sh"
 
-# Propagate env vars so individual scripts pick them up
-export FENRIR_FRONTEND_PORT="${FENRIR_FRONTEND_PORT:-${FENRIR_PORT:-}}"
-export FENRIR_FRONTEND_DIR="${FENRIR_FRONTEND_DIR:-${FENRIR_DEV_DIR:-}}"
-export FENRIR_BACKEND_PORT="${FENRIR_BACKEND_PORT:-}"
-export FENRIR_BACKEND_DIR="${FENRIR_BACKEND_DIR:-}"
+# Propagate env vars so individual scripts pick them up.
+# Only export if a real value exists — empty strings cause parseInt("") → NaN crashes.
+[[ -n "${FENRIR_FRONTEND_PORT:-${FENRIR_PORT:-}}" ]] && export FENRIR_FRONTEND_PORT="${FENRIR_FRONTEND_PORT:-${FENRIR_PORT:-}}"
+[[ -n "${FENRIR_FRONTEND_DIR:-${FENRIR_DEV_DIR:-}}" ]] && export FENRIR_FRONTEND_DIR="${FENRIR_FRONTEND_DIR:-${FENRIR_DEV_DIR:-}}"
+[[ -n "${FENRIR_BACKEND_PORT:-}" ]] && export FENRIR_BACKEND_PORT="${FENRIR_BACKEND_PORT}"
+[[ -n "${FENRIR_BACKEND_DIR:-}" ]] && export FENRIR_BACKEND_DIR="${FENRIR_BACKEND_DIR}"
 
 action="${1:-}"
 target="${2:-}"

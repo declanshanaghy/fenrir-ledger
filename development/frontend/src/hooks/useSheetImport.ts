@@ -30,12 +30,12 @@ interface ServerMessage {
 
 /** Derive the HTTP base URL from the WS env var (ws:// -> http://, wss:// -> https://). */
 const WS_BACKEND_HTTP_URL =
-  process.env.NEXT_PUBLIC_BACKEND_WS_URL?.replace(/^ws(s?)/, "http$1") ??
+  process.env.NEXT_PUBLIC_BACKEND_WS_URL?.replace(/^ws(s?)/, "http$1") ||
   "http://localhost:9753";
 
 /** WebSocket URL for the backend. */
 const WS_BACKEND_WS_URL =
-  process.env.NEXT_PUBLIC_BACKEND_WS_URL ?? "ws://localhost:9753";
+  process.env.NEXT_PUBLIC_BACKEND_WS_URL || "ws://localhost:9753";
 
 /** Health check timeout in milliseconds. */
 const HEALTH_CHECK_TIMEOUT_MS = 2_000;
