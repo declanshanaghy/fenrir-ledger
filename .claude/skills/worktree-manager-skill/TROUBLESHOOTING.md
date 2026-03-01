@@ -81,7 +81,7 @@ Incomplete removal or manual deletion
 
 ### Solutions
 1. Check the creation output for install errors
-2. Manually run: `cd trees/<branch-name>/development/src && npm install`
+2. Manually run: `cd trees/<branch-name>/development/frontend && npm install`
 3. Verify package.json exists in worktree
 
 ---
@@ -100,5 +100,5 @@ Incomplete removal or manual deletion
 - Is git aware of it? (`git worktree list`)
 - Is the dev server running? (check status via dev-server script)
 - Is the port available? (`lsof -i TCP:<port>`)
-- Is `.env.local` present? (`ls trees/<branch>/development/src/.env.local`)
-- Did dependencies install? (`ls trees/<branch>/development/src/node_modules`)
+- Is `.env.local` present? (`ls trees/<branch>/development/frontend/.env.local`)
+- Did dependencies install? (`ls trees/<branch>/development/frontend/node_modules`)

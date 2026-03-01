@@ -296,7 +296,7 @@ package.json specifies: `"@anthropic-ai/sdk": "^0.78.0"` (backend-implementation
 model: "claude-haiku-4-5-20251001"
 ```
 
-This is the same model version used in the existing Next.js route (`development/src/src/app/api/sheets/import/route.ts`). Consistency preserved. ✓
+This is the same model version used in the existing Next.js route (`development/frontend/src/app/api/sheets/import/route.ts`). Consistency preserved. ✓
 
 ---
 

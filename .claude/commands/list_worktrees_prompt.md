@@ -47,7 +47,7 @@ For each worktree found in trees/:
 **Extract Branch/Directory Info:**
 - Worktree directory: `trees/<branch-name>`
 - Branch name from git worktree list
-- App directory: `trees/<branch-name>/development/src`
+- App directory: `trees/<branch-name>/development/frontend`
 
 **Determine Ports:**
 - Infer from worktree order or check running processes
@@ -55,7 +55,7 @@ For each worktree found in trees/:
 - Check backend ports: `lsof -i TCP:975x -sTCP:LISTEN` for ports 9754-9763
 
 **Check Environment:**
-- Check if `<worktree>/development/src/.env.local` exists
+- Check if `<worktree>/development/frontend/.env.local` exists
 - Note presence/absence (contains API keys, don't display values)
 
 ### 3. Check Dev Server Status
@@ -70,7 +70,7 @@ For each worktree:
 ### 4. Check Dependencies
 
 For each worktree:
-- Check if `<worktree>/development/src/node_modules` exists
+- Check if `<worktree>/development/frontend/node_modules` exists
 - Note if dependencies are installed or missing
 
 ### 5. Calculate Statistics
@@ -120,9 +120,9 @@ Worktree: <branch-name>
   Backend URL:     http://localhost:<BACKEND_PORT>
   Dependencies:    FE: <Installed|Missing> | BE: <Installed|Missing|N/A>
   Environment:     <.env.local present|Missing>
-  FE Logs:         trees/<branch-name>/development/src/logs/dev-server.log
+  FE Logs:         trees/<branch-name>/development/frontend/logs/dev-server.log
   BE Logs:         trees/<branch-name>/development/backend/logs/backend-server.log
-  Manage FE:       FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/src .claude/scripts/dev-server.sh <start|stop|status>
+  Manage FE:       FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/frontend .claude/scripts/dev-server.sh <start|stop|status>
   Manage BE:       FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<abs-path>/trees/<branch>/development/backend .claude/scripts/backend-server.sh <start|stop|status>
 
 ---

@@ -3,12 +3,12 @@
 #
 # Environment overrides (for worktrees):
 #   FENRIR_PORT    — port to listen on    (default: 9653)
-#   FENRIR_DEV_DIR — path to development/src  (default: auto-detected relative to this script)
+#   FENRIR_DEV_DIR — path to development/frontend  (default: auto-detected relative to this script)
 
 set -euo pipefail
 
 PORT="${FENRIR_PORT:-9653}"
-DEV_DIR="${FENRIR_DEV_DIR:-$(cd "$(dirname "$0")/../../development/src" && pwd)}"
+DEV_DIR="${FENRIR_DEV_DIR:-$(cd "$(dirname "$0")/../../development/frontend" && pwd)}"
 LOG_DIR="${DEV_DIR}/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="${LOG_DIR}/dev-server.log"

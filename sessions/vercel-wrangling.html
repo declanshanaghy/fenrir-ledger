@@ -444,7 +444,7 @@ fetch("http://192.168.1.179:9653/", { "method": "GET" });</p>
 public/index.html was served at /app/index.html, not /.
 Middleware is the correct intercept point — it runs before basePath routing.</p>
           </div>
-          <div class="code-block"><pre><span class="cc">// development/src/src/middleware.ts</span>
+          <div class="code-block"><pre><span class="cc">// development/frontend/src/middleware.ts</span>
 export function middleware(request: NextRequest) {
   if (
     process.env.NODE_ENV !== <span class="ca">"production"</span> &&
@@ -455,7 +455,7 @@ export function middleware(request: NextRequest) {
 }
 export const config = { matcher: [<span class="ca">"/"</span>] };</pre></div>
           <div class="file-chips">
-            <span class="chip chip-new">✦ development/src/src/middleware.ts</span>
+            <span class="chip chip-new">✦ development/frontend/src/middleware.ts</span>
             <span class="chip chip-mod">◈ product-brief.md</span>
           </div>
         </div>
@@ -500,13 +500,13 @@ git push --force origin main
         </div>
         <div class="work-card">
           <div class="work-body">
-            <p>With the revert complete, <span class="mono">next.config.ts</span> had no basePath — the Next.js app owned <span class="mono">/</span>. The new plan: copy <span class="mono">static/</span> into <span class="mono">development/src/public/static/</span> before build so Next.js serves it verbatim at <span class="mono">/static/*</span>. Clean, no restructuring needed.</p>
+            <p>With the revert complete, <span class="mono">next.config.ts</span> had no basePath — the Next.js app owned <span class="mono">/</span>. The new plan: copy <span class="mono">static/</span> into <span class="mono">development/frontend/public/static/</span> before build so Next.js serves it verbatim at <span class="mono">/static/*</span>. Clean, no restructuring needed.</p>
             <p>The CI step was added to <span class="mono">vercel.yml</span>. The <span class="mono">APP_URL</span> in the marketing site already pointed to the full Vercel URL — no change needed there.</p>
           </div>
           <div class="code-block"><pre><span class="ca">- name: Copy static site into Next.js public/static/</span>
   run: |
-    mkdir -p development/src/public/static
-    cp -r static/. development/src/public/static/</pre></div>
+    mkdir -p development/frontend/public/static
+    cp -r static/. development/frontend/public/static/</pre></div>
           <div class="file-chips">
             <span class="chip chip-mod">◈ .github/workflows/vercel.yml</span>
           </div>
@@ -561,8 +561,8 @@ Fixed: src="icon.png" → src="/static/icon.png" (×2) and href="favicon.ico" �
             <p>Two changes in one strike. The footer of <span class="mono">static/index.html</span> already had the <span class="mono">.step-log-link</span> CSS class defined — used it to slot in <span class="mono">ᛏ Session Chronicles →</span> between the rule and the copyright line.</p>
             <p>The Vercel workflow was extended with a second <span class="mono">cp</span> — mirroring <span class="mono">sessions/</span> into <span class="mono">public/sessions/</span> before build, so the archive lands at <span class="mono">/sessions/*</span> on the same deployment.</p>
           </div>
-          <div class="code-block"><pre><span class="ca">mkdir -p development/src/public/sessions</span>
-<span class="ca">cp -r sessions/. development/src/public/sessions/</span></pre></div>
+          <div class="code-block"><pre><span class="ca">mkdir -p development/frontend/public/sessions</span>
+<span class="ca">cp -r sessions/. development/frontend/public/sessions/</span></pre></div>
           <div class="file-chips">
             <span class="chip chip-mod">◈ static/index.html</span>
             <span class="chip chip-mod">◈ .github/workflows/vercel.yml</span>

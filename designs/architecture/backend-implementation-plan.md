@@ -12,7 +12,7 @@
 ### Existing Routes (as of Sprint 5)
 
 #### `POST /api/auth/token`
-**File:** `development/src/src/app/api/auth/token/route.ts`
+**File:** `development/frontend/src/app/api/auth/token/route.ts`
 **Purpose:** Google OAuth2 PKCE token exchange proxy. Keeps `GOOGLE_CLIENT_SECRET` server-side; the browser retains full PKCE ownership (code_verifier, code_challenge, state).
 **Execution Profile:** Fast — one outbound HTTP call to `https://oauth2.googleapis.com/token`. Typical completion in 100–300ms. No long-running operations.
 **Timeout Risk:** None. Well within Vercel Hobby 10s limit.
@@ -22,7 +22,7 @@
 ---
 
 #### `POST /api/sheets/import`
-**File:** `development/src/src/app/api/sheets/import/route.ts`
+**File:** `development/frontend/src/app/api/sheets/import/route.ts`
 **Purpose:** Full import pipeline — fetch Google Sheet as CSV, call Anthropic Claude Haiku to extract card data, validate with Zod, return card objects.
 **Execution Profile:** Long-running. Three sequential async operations:
 1. CSV fetch from Google Sheets public export URL (~200–800ms depending on sheet size and network)
@@ -375,8 +375,8 @@ export interface ImportedCard {
 
 #### Task 2.2: Port CSV fetch and prompt utilities to backend
 **Files:**
-- `development/backend/src/lib/sheets/parse-url.ts` — port from `development/src/src/lib/sheets/parse-url.ts`
-- `development/backend/src/lib/sheets/prompt.ts` — port from `development/src/src/lib/sheets/prompt.ts`
+- `development/backend/src/lib/sheets/parse-url.ts` — port from `development/frontend/src/lib/sheets/parse-url.ts`
+- `development/backend/src/lib/sheets/prompt.ts` — port from `development/frontend/src/lib/sheets/prompt.ts`
 - `development/backend/src/lib/sheets/fetch-csv.ts` — new; wraps `fetch()` with error handling
 
 **Implementation Notes:** These files are pure utility functions with no Next.js dependencies. Copy and adapt to ESM syntax with `.js` extensions on imports (required for Node.js ESM).
@@ -484,7 +484,7 @@ attachWebSocketServer(server);
 ```
 
 #### Task 2.7: Update Next.js import route to proxy to backend
-**File:** `development/src/src/app/api/sheets/import/route.ts`
+**File:** `development/frontend/src/app/api/sheets/import/route.ts`
 **Implementation Notes:** Replace the existing implementation with a thin HTTP proxy:
 ```typescript
 // Phase 2: proxy to the backend server.
@@ -500,7 +500,7 @@ const upstream = await fetch(`${backendUrl}/import`, {
 **Edge Cases:** If the backend is not running (anonymous-only deployments), return a 503 with a clear message. The frontend must handle this gracefully and fall back to a "connect Google Sheets manually" UX.
 
 #### Task 2.8: Update frontend to use WebSocket for import progress
-**File:** `development/src/src/components/sheets/ImportWizard.tsx` (or equivalent)
+**File:** `development/frontend/src/components/sheets/ImportWizard.tsx` (or equivalent)
 **Implementation Notes:** On import start:
 1. Open WebSocket to `ws://localhost:9753` (dev) or `wss://<backend-host>` (prod)
 2. Send `{ type: "import_start", payload: { url } }`
@@ -526,7 +526,7 @@ Add `NEXT_PUBLIC_BACKEND_WS_URL` to `.env.example` and the Vercel environment va
 **Tasks:**
 
 #### Task 3.1: Add `BACKEND_URL` env var to Next.js
-**Files:** `development/src/.env.example`, Vercel project settings
+**Files:** `development/frontend/.env.example`, Vercel project settings
 **Implementation Notes:**
 ```
 # URL of the Fenrir Ledger backend server (for server-side proxy use)
@@ -537,7 +537,7 @@ NEXT_PUBLIC_BACKEND_WS_URL=ws://localhost:9753
 ```
 
 #### Task 3.2: Add backend availability check to import wizard
-**File:** `development/src/src/components/sheets/ImportWizard.tsx`
+**File:** `development/frontend/src/components/sheets/ImportWizard.tsx`
 **Implementation Notes:** Before opening a WebSocket, probe the backend health endpoint via a fast HTTP request. If unavailable, show a non-blocking warning: "Live progress unavailable — import will run in the background." Fall back to the `/api/sheets/import` HTTP proxy (which returns when the import completes, no streaming).
 
 #### Task 3.3: Document the route split
@@ -594,9 +594,9 @@ This phase is intentionally left at a sketch level. It must not be planned in de
 | File | Change |
 |------|--------|
 | `development/backend/src/index.ts` | Add WebSocket server attachment |
-| `development/src/src/app/api/sheets/import/route.ts` | Replace implementation with thin HTTP proxy to backend |
-| `development/src/src/components/sheets/ImportWizard.tsx` | Add WebSocket progress handling |
-| `development/src/.env.example` | Add `BACKEND_URL` and `NEXT_PUBLIC_BACKEND_WS_URL` |
+| `development/frontend/src/app/api/sheets/import/route.ts` | Replace implementation with thin HTTP proxy to backend |
+| `development/frontend/src/components/sheets/ImportWizard.tsx` | Add WebSocket progress handling |
+| `development/frontend/.env.example` | Add `BACKEND_URL` and `NEXT_PUBLIC_BACKEND_WS_URL` |
 
 ### New Files (Phase 3)
 
@@ -655,7 +655,7 @@ FENRIR_BACKEND_PORT=9754 FENRIR_BACKEND_DIR=/path/to/worktree/development/backen
 | `FENRIR_BACKEND_PORT` | No | Override backend port (default: 9753) |
 | `NODE_ENV` | No | Set to `production` in prod deployments |
 
-#### Frontend (`development/src/.env.local`)
+#### Frontend (`development/frontend/.env.local`)
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -665,7 +665,7 @@ FENRIR_BACKEND_PORT=9754 FENRIR_BACKEND_DIR=/path/to/worktree/development/backen
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Existing | Stays in Next.js |
 
 ### `.gitignore` Rules
-Both `development/backend/.gitignore` and `development/src/.gitignore` must exclude:
+Both `development/backend/.gitignore` and `development/frontend/.gitignore` must exclude:
 ```
 .env
 .env.local

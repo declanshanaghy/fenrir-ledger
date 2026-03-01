@@ -16,7 +16,7 @@ FiremanDecko's implementation of Story 3.3 is **production-ready**. The Framer M
 ## Build Verification
 
 Build: **PASSED**
-Command: `cd development/src && npm run build`
+Command: `cd development/frontend && npm run build`
 
 ```
 ✓ Compiled successfully
@@ -39,7 +39,7 @@ Bundle impact: framer-motion adds ~43 kB to the root route. Expected and accepta
 
 ### 1. AnimatedCardGrid.tsx
 
-**File**: `development/src/src/components/dashboard/AnimatedCardGrid.tsx`
+**File**: `development/frontend/src/components/dashboard/AnimatedCardGrid.tsx`
 
 #### Saga-Enter Stagger (Page Load)
 
@@ -96,7 +96,7 @@ Implementation (lines 77–88):
 
 ### 2. CardSkeletonGrid.tsx
 
-**File**: `development/src/src/components/dashboard/CardSkeletonGrid.tsx`
+**File**: `development/frontend/src/components/dashboard/CardSkeletonGrid.tsx`
 
 #### Layout Mirroring
 
@@ -139,7 +139,7 @@ SkeletonTile (lines 24–60):
 
 ### 3. globals.css — saga-shimmer Keyframe
 
-**File**: `development/src/src/app/globals.css`
+**File**: `development/frontend/src/app/globals.css`
 
 Spec (ux/interactions.md):
 ```css
@@ -183,7 +183,7 @@ Colors in globals.css CSS variables:
 
 ### 4. Dashboard.tsx Integration
 
-**File**: `development/src/src/components/dashboard/Dashboard.tsx`
+**File**: `development/frontend/src/components/dashboard/Dashboard.tsx`
 
 #### Loki Mode Regression
 
@@ -218,7 +218,7 @@ Implementation (lines 46–125):
 
 ### 5. page.tsx Integration
 
-**File**: `development/src/src/app/page.tsx`
+**File**: `development/frontend/src/app/page.tsx`
 
 #### Skeleton Loading State
 
@@ -254,7 +254,7 @@ This is correct. The CSS `.saga-reveal` stagger approach has been replaced by Fr
 
 ### 6. package.json Dependency Check
 
-**File**: `development/src/package.json`
+**File**: `development/frontend/package.json`
 
 Line 20: `"framer-motion": "^12.34.3",`
 

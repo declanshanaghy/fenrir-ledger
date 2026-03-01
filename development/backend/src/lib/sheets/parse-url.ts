@@ -1,7 +1,7 @@
 /**
  * Google Sheets URL parsing utilities.
  *
- * Ported from the frontend: development/src/src/lib/sheets/parse-url.ts
+ * Ported from the frontend: development/frontend/src/lib/sheets/parse-url.ts
  * These are pure functions with no framework dependencies.
  */
 

@@ -1,7 +1,7 @@
 /**
  * Anthropic prompt builder for credit card data extraction.
  *
- * Ported from the frontend: development/src/src/lib/sheets/prompt.ts
+ * Ported from the frontend: development/frontend/src/lib/sheets/prompt.ts
  * The KNOWN_ISSUERS array is inlined here because the backend does not
  * have access to @/lib/constants.
  */
@@ -11,7 +11,7 @@ export const CSV_TRUNCATION_LIMIT = 100_000;
 
 /**
  * Known card issuers — inlined from the frontend constants.ts.
- * Keep in sync with development/src/src/lib/constants.ts KNOWN_ISSUERS.
+ * Keep in sync with development/frontend/src/lib/constants.ts KNOWN_ISSUERS.
  */
 const KNOWN_ISSUERS = [
   { id: "amex", name: "American Express" },

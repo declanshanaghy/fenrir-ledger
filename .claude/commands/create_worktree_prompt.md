@@ -17,7 +17,7 @@ BRANCH_NAME: $1 (required)
 PORT_OFFSET: $2 (optional, defaults to auto-calculated based on existing worktrees, starts at 1)
 WORKTREE_BASE_DIR: trees/
 WORKTREE_DIR: trees/<BRANCH_NAME>
-APP_DIR: <WORKTREE_DIR>/development/src
+APP_DIR: <WORKTREE_DIR>/development/frontend
 BACKEND_DIR: <WORKTREE_DIR>/development/backend
 BASE_FRONTEND_PORT: 9653
 BASE_BACKEND_PORT: 9753
@@ -83,26 +83,26 @@ NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
 
 ### 4. Setup Environment
 
-- Check if `development/src/.env.local` exists in main project
+- Check if `development/frontend/.env.local` exists in main project
 - If it exists:
-  - Copy it to worktree: `cp development/src/.env.local <WORKTREE_DIR>/development/src/.env.local`
+  - Copy it to worktree: `cp development/frontend/.env.local <WORKTREE_DIR>/development/frontend/.env.local`
   - Note: This preserves API keys and service configuration
 - If it doesn't exist:
-  - Check for `.env.example`: `cp development/src/.env.example <WORKTREE_DIR>/development/src/.env.local`
+  - Check for `.env.example`: `cp development/frontend/.env.example <WORKTREE_DIR>/development/frontend/.env.local`
   - Add warning to report that user needs to configure env vars
 
 ### 5. Install Dependencies
 
 - Install dependencies:
-  - `cd <WORKTREE_DIR>/development/src && npm install`
-  - Verify `<WORKTREE_DIR>/development/src/node_modules` directory was created
+  - `cd <WORKTREE_DIR>/development/frontend && npm install`
+  - Verify `<WORKTREE_DIR>/development/frontend/node_modules` directory was created
 
 ### 6. Start Dev Servers
 
 **Frontend (Next.js):**
 - Use the dev-server script with environment overrides:
   ```
-  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src <PROJECT_CWD>/.claude/scripts/dev-server.sh start
+  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/frontend <PROJECT_CWD>/.claude/scripts/dev-server.sh start
   ```
 - Wait 5 seconds for the server to start: `sleep 5`
 - Verify server is running:
@@ -124,8 +124,8 @@ NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
 
 - Verify directory structure:
   - Confirm WORKTREE_DIR exists
-  - Confirm `<WORKTREE_DIR>/development/src/.env.local` exists (or warn)
-  - Confirm `<WORKTREE_DIR>/development/src/node_modules` exists
+  - Confirm `<WORKTREE_DIR>/development/frontend/.env.local` exists (or warn)
+  - Confirm `<WORKTREE_DIR>/development/frontend/node_modules` exists
   - If backend exists: confirm `<WORKTREE_DIR>/development/backend/node_modules` exists
 - List worktrees to confirm: `git worktree list`
 - Confirm frontend dev server is responding on FRONTEND_PORT
@@ -153,7 +153,7 @@ Access URLs:
   Backend:  http://localhost:<BACKEND_PORT>  [or: not configured]
 
 Dependencies:
-  Frontend: npm packages installed at <WORKTREE_DIR>/development/src/node_modules
+  Frontend: npm packages installed at <WORKTREE_DIR>/development/frontend/node_modules
   Backend:  npm packages installed at <WORKTREE_DIR>/development/backend/node_modules [or: not configured]
 
 Environment:
@@ -161,14 +161,14 @@ Environment:
 
 Frontend Dev Server:
   Started via dev-server.sh on port <FRONTEND_PORT>
-  Logs: <WORKTREE_DIR>/development/src/logs/dev-server.log
+  Logs: <WORKTREE_DIR>/development/frontend/logs/dev-server.log
 
 Backend Server:
   Started via backend-server.sh on port <BACKEND_PORT> [or: not configured — no development/backend found]
   Logs: <WORKTREE_DIR>/development/backend/logs/backend-server.log
 
 To manage this worktree's frontend:
-  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src .claude/scripts/dev-server.sh status|restart|stop|logs
+  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/frontend .claude/scripts/dev-server.sh status|restart|stop|logs
 
 To manage this worktree's backend:
   FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/backend .claude/scripts/backend-server.sh status|restart|stop|logs

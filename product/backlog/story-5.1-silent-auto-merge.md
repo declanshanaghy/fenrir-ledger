@@ -134,7 +134,7 @@ The existing migration prompt dialog (`MigrationPrompt` component, if it exists)
 
 **Clearing anonymous storage**: After a successful merge, remove the `fenrir:household` key from localStorage completely (`localStorage.removeItem("fenrir:household")`). Do not use a tombstone — a clean removal is the correct behavior. Since all anonymous data has UUID primary keys and is bulk-copied into the Google household, there is no risk of re-merge: the anonymous household is simply empty after sign-in. The merge is idempotent because re-running it on an empty anonymous household is a no-op.
 
-**Merge utility module**: Implement all merge logic in a standalone utility module in the storage layer — e.g. `development/src/src/lib/merge-anonymous.ts`. This module must be the single source of truth for merging anonymous data into a signed-in household. Exporting it as a discrete module makes it testable and ensures future data types (not just cards) can be merged by adding to this one file. The `/auth/callback` page imports and calls this module — it does not inline the merge logic.
+**Merge utility module**: Implement all merge logic in a standalone utility module in the storage layer — e.g. `development/frontend/src/lib/merge-anonymous.ts`. This module must be the single source of truth for merging anonymous data into a signed-in household. Exporting it as a discrete module makes it testable and ensures future data types (not just cards) can be merged by adding to this one file. The `/auth/callback` page imports and calls this module — it does not inline the merge logic.
 
 **Toast pattern**: Reuse the existing toast infrastructure (Sprint 4.2 milestone toasts established the pattern). This toast is informational, auto-dismisses, does not require user action.
 

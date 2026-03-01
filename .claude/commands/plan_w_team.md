@@ -357,9 +357,9 @@ Use these files to complete the task:
 Execute these commands to validate the task is complete:
 
 <list specific commands to validate the work. Be precise about what to run>
-- Example: `cd development/src && npx tsc --noEmit` - Type-check the codebase
-- Example: `cd development/src && npx next lint` - Lint the codebase
-- Example: `cd development/src && npx next build` - Verify the build succeeds
+- Example: `cd development/frontend && npx tsc --noEmit` - Type-check the codebase
+- Example: `cd development/frontend && npx next lint` - Lint the codebase
+- Example: `cd development/frontend && npx next build` - Verify the build succeeds
 
 ## Notes
 <optional additional context, considerations, or dependencies. If new libraries are needed, specify using `npm install`>

@@ -115,7 +115,7 @@ The Valhalla empty state originally embedded the wrong Gleipnir Hunt fragment in
 
 #### Fix Applied
 
-`development/src/src/app/valhalla/page.tsx` line 234 now correctly reads:
+`development/frontend/src/app/valhalla/page.tsx` line 234 now correctly reads:
 
 ```typescript
 aria-description="the beard of a woman"

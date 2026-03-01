@@ -29,7 +29,7 @@ The sign-in page still exists at `/sign-in` but it is a destination the user nav
 
 ### 1. Auth Middleware — Remove the Gate
 
-The current middleware (`development/src/src/middleware.ts`) redirects unauthenticated users to `/sign-in` (or the NextAuth sign-in route). This must be removed or rewritten.
+The current middleware (`development/frontend/src/middleware.ts`) redirects unauthenticated users to `/sign-in` (or the NextAuth sign-in route). This must be removed or rewritten.
 
 **New behavior:**
 - No route is protected for anonymous users. All app routes (`/`, `/valhalla`, `/cards/new`, `/cards/[id]/edit`) are accessible without a session.

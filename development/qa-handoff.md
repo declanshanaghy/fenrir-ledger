@@ -1,113 +1,147 @@
-# QA Handoff -- Frontend WebSocket Import (Story 4)
+# QA Handoff -- Rename development/src to development/frontend
 
 **From**: FiremanDecko (Principal Engineer)
 **To**: Loki (QA Tester)
-**Branch**: `feat/frontend-ws-import`
+**Branch**: `chore/rename-frontend`
 **Date**: 2026-03-01
 
 ---
 
 ## What Was Implemented
 
-### Frontend WebSocket Import Progress
-
-The Google Sheets import wizard now supports real-time phase progress via WebSocket when the backend import service (port 9753) is available. If the backend is unavailable, it silently falls back to the existing HTTP `/api/sheets/import` endpoint.
-
-**Key behaviors:**
-
-1. On submit, the hook probes `GET /health` on the backend (2s timeout).
-2. If healthy: opens a WebSocket connection, sends `import_start`, and listens for phase/complete/error messages.
-3. If unhealthy or WS fails to open: falls back to existing HTTP POST logic.
-4. Cancel button sends `import_cancel` over WebSocket before closing the connection.
-5. Loading step shows dynamic Norse-flavored phase labels based on backend progress.
+Renamed the frontend project directory from `development/src` to `development/frontend` for clarity and consistency with the existing `development/backend` directory. Updated all path references across the entire codebase (55 files, approximately 150+ occurrences).
 
 ---
 
-## Files Created / Modified
+## Files Modified
 
-| File | Change |
-|------|--------|
-| `development/src/src/hooks/useSheetImport.ts` | Added WebSocket import path with health-check fallback, `importPhase` state, `ImportPhase` type export, `ServerMessage` interface, `checkBackendHealth()`, `submitViaWebSocket()`, `submitViaHttp()` (extracted from old `submit`), cancel sends `import_cancel` over WS |
-| `development/src/src/components/sheets/ImportWizard.tsx` | Added `ImportPhase` type import, `PHASE_LABELS` map, destructured `importPhase` from hook, dynamic loading text based on phase |
-| `development/src/.env.example` | Added `NEXT_PUBLIC_BACKEND_WS_URL=ws://localhost:9753` |
-| `development/qa-handoff.md` | This file |
+### Directory Rename
+- `development/src/` -> `development/frontend/` (via `git mv`)
+
+### Scripts (2 files)
+- `.claude/scripts/dev-server.sh` -- updated `FENRIR_DEV_DIR` default path
+- `development/scripts/setup-local.sh` -- updated `REPO_ROOT/development/src` references
+
+### Agent Prompts (2 files)
+- `.claude/agents/fireman-decko.md` -- updated Source Code path and Vercel Root Directory
+- `.claude/agents/loki.md` -- updated Source Code path
+
+### Commands (5 files)
+- `.claude/commands/create_worktree_prompt.md` -- updated all worktree path references
+- `.claude/commands/dev-server.md` -- updated dev server path references
+- `.claude/commands/list_worktrees_prompt.md` -- updated worktree listing paths
+- `.claude/commands/plan_w_team.md` -- updated build/lint/typecheck commands
+- `.claude/commands/remove_worktree_prompt.md` -- updated worktree removal paths
+
+### Skills (3 files)
+- `.claude/skills/easter-egg-modal/SKILL.md` -- updated public asset and component paths
+- `.claude/skills/worktree-manager-skill/REFERENCE.md` -- updated worktree reference paths
+- `.claude/skills/worktree-manager-skill/TROUBLESHOOTING.md` -- updated troubleshooting paths
+
+### CI/CD Workflows (2 files)
+- `.github/workflows/vercel-preview.yml` -- updated path triggers and working directories
+- `.github/workflows/vercel-production.yml` -- updated path triggers and working directories
+
+### Configuration (2 files)
+- `.claude/settings.local.json` -- updated build/typecheck command paths
+- `.gitignore` -- updated ignore path
+
+### Architecture and Design Docs (9 files)
+- `architecture/adrs/ADR-001-tech-stack.md`
+- `architecture/adrs/ADR-003-local-storage.md`
+- `architecture/implementation-brief.md`
+- `architecture/system-design.md`
+- `designs/architecture/adr-backend-server.md`
+- `designs/architecture/adr-clerk-auth.md`
+- `designs/architecture/backend-implementation-plan.md`
+- `designs/architecture/backend-ws-qa-report.md`
+- `designs/architecture/clerk-implementation-plan.md`
+
+### Backend References (3 files)
+- `development/backend/src/lib/sheets/parse-url.ts` -- comment path references
+- `development/backend/src/lib/sheets/prompt.ts` -- comment path references
+- `development/backend/src/ws/handlers/import.ts` -- comment path references
+
+### Frontend Docs (2 files)
+- `development/frontend/LOKI-TEST-PLAN-anon-auth.md`
+- `development/frontend/QA-SPRINT-5.md`
+
+### Development Docs (3 files)
+- `development/implementation-plan.md`
+- `development/qa-handoff.md` -- this file
+- `development/README.md`
+
+### Product and Backlog Docs (6 files)
+- `product-brief.md`
+- `product/backlog/story-5.1-silent-auto-merge.md`
+- `product/backlog/story-5.2-sheets-import-api-route.md`
+- `product/backlog/story-5.3-sheets-import-wizard.md`
+- `product/backlog/story-5.5-lcars-mode.md`
+- `product/backlog/story-branch-based-ci-cd.md`
+
+### Quality Docs (7 files)
+- `quality/README.md`
+- `quality/story-3.1-realm-utils-verdict.md`
+- `quality/story-3.1-verdict.md`
+- `quality/story-3.2-norse-copy-verdict.md`
+- `quality/story-3.3-verdict.md`
+- `quality/story-3.5-valhalla-verdict.md`
+- `quality/story-3.5-verdict.md`
+- `quality/test-plan.md`
+
+### README and Other Docs (2 files)
+- `README.md`
+- `ux/handoff-to-fireman-anon-auth.md`
+- `ux/theme-system.md`
+
+### HTML Session Logs (5 files)
+- `sessions/breaking-the-gleipnir.html`
+- `sessions/the-wolf-signs-in-valhalla-opens.html`
+- `sessions/vercel-wrangling.html`
+- `sessions/wireframes-modals.html`
+- `ux/wireframes/app/dashboard.html`
 
 ---
 
-## How to Test
+## How to Validate
 
-### Prerequisites
-
-- `npm install` in `development/src/`
-- Copy `.env.example` to `.env.local` and fill in required values
-
-### Test 1: HTTP Fallback (No Backend Running)
-
-1. Make sure no process is listening on port 9753.
-2. Start the Next.js dev server: `npm run dev` in `development/src/`.
-3. Open the import wizard (Google Sheets import).
-4. Paste a valid Google Sheets URL and click Import.
-5. **Expected**: The loading step shows "Reading the runes from your spreadsheet..." (the default/fallback text). After a brief health check delay (~2s), the import proceeds via the HTTP API route as before.
-6. The import should complete (preview step) or error (error step) normally.
-
-### Test 2: Cancel During HTTP Fallback
-
-1. Same setup as Test 1 (no backend on 9753).
-2. Start an import and immediately click Cancel.
-3. **Expected**: Import is aborted, wizard returns to entry step. No errors.
-
-### Test 3: WebSocket Happy Path (Backend Running)
-
-1. Start the backend WebSocket service on port 9753 (from PR #41).
-2. Start the Next.js dev server.
-3. Open the import wizard and submit a valid Google Sheets URL.
-4. **Expected**:
-   - Loading text changes through phases:
-     - "Connecting to the forge..."
-     - "Fetching the sacred scrolls..."
-     - "The runes are being deciphered..."
-     - "Validating the inscriptions..."
-   - On completion, the preview step shows extracted cards.
-
-### Test 4: WebSocket Cancel
-
-1. Backend running on 9753.
-2. Start an import, then click Cancel while loading.
-3. **Expected**: `import_cancel` message sent over WS (visible in backend logs), connection closed, wizard returns to entry step.
-
-### Test 5: WebSocket Error from Backend
-
-1. Backend running, but configure it to return an `import_error` message (e.g., invalid sheet URL).
-2. **Expected**: Error step shown with appropriate error code and message.
-
-### Test 6: Backend Goes Down Mid-Import
-
-1. Start the backend, begin an import.
-2. Kill the backend process while the import is in progress.
-3. **Expected**: After the 20s timeout, the wizard shows an error or returns to entry. No crash.
-
-### Test 7: TypeScript and Build
-
+### Test 1: No Remaining References
 ```bash
-cd development/src
-npx -p typescript tsc --noEmit   # Should pass
-npm run build                     # Should pass
+grep -r "development/src" . --include='*.md' --include='*.sh' --include='*.json' --include='*.ts' --include='*.yml' --include='*.html' | grep -v node_modules | grep -v '.git/' | grep -v '.next/'
 ```
+**Expected**: Zero matches.
+
+### Test 2: Build Succeeds
+```bash
+cd development/frontend && npm install && npm run build
+```
+**Expected**: Build completes with no errors.
+
+### Test 3: TypeScript Check
+```bash
+cd development/frontend && npx tsc --noEmit
+```
+**Expected**: No type errors.
+
+### Test 4: Dev Server Starts
+```bash
+.claude/scripts/dev-server.sh start
+```
+**Expected**: Dev server starts using `development/frontend/` as its root.
+
+### Test 5: CI Workflow Paths
+Verify that `.github/workflows/vercel-preview.yml` and `.github/workflows/vercel-production.yml` reference `development/frontend/**` in their path triggers and working-directory fields.
+
+### Test 6: Git Status
+```bash
+git status
+```
+**Expected**: Shows rename from `development/src/` to `development/frontend/` plus modifications to all the files listed above. No untracked files that should have been updated.
 
 ---
 
-## Env Var Reference
+## Known Considerations
 
-| Variable | Purpose | Default |
-|----------|---------|---------|
-| `NEXT_PUBLIC_BACKEND_WS_URL` | WebSocket URL for backend import service | `ws://localhost:9753` |
-
-The HTTP health-check URL is derived automatically by replacing the `ws://` protocol with `http://`.
-
----
-
-## Known Limitations
-
-- `import_progress` messages (rowsExtracted/totalRows) are received but not displayed in the UI. A progress bar could be added in a future sprint.
-- The `warning` field from the HTTP response is supported, but the WebSocket `import_complete` message does not carry a `warning` field per the current backend spec.
-- WebSocket reconnection is not implemented -- if the connection drops, the user must retry manually.
+- **Vercel Root Directory**: Must be updated in the Vercel dashboard from `development/src` to `development/frontend`. This is a manual step outside of code.
+- **MEMORY.md**: Not updated in this PR -- the orchestrator handles memory file updates separately.
+- **node_modules, .next, dist**: These directories are not tracked by git and were not modified.

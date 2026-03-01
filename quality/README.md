@@ -280,7 +280,7 @@ Out of scope for Sprint 2, planned for future sprints:
 
 4. **Check SVG files** — If image assertions fail, verify files exist:
    ```bash
-   ls -la /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/development/src/public/easter-eggs/
+   ls -la /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/development/frontend/public/easter-eggs/
    ```
 
 5. **Check server** — Tests expect `SERVER_URL` to be accessible
@@ -310,7 +310,7 @@ Out of scope for Sprint 2, planned for future sprints:
 ## Related Documentation
 
 - **Design Brief:** [design/easter-eggs.md](../design/easter-eggs.md) — The source of truth for all eggs
-- **Implementation:** [development/src/src/components/](../development/src/src/components/) — Source code for each egg
+- **Implementation:** [development/frontend/src/components/](../development/frontend/src/components/) — Source code for each egg
 - **Git Convention:** [.claude/skills/git-commit/SKILL.md](../.claude/skills/git-commit/SKILL.md) — Commit format
 - **Mermaid Guide:** [ux/ux-assets/mermaid-style-guide.md](../ux/ux-assets/mermaid-style-guide.md) — Diagram conventions
 

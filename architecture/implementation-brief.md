@@ -55,9 +55,9 @@ Sprint 1 delivered a working foundation. Sprint 2 design integration is complete
 **"Replace shadcn defaults with the Saga Ledger theme"**
 
 **Files to modify**:
-- `development/src/src/app/globals.css` — Replace all `:root` and `.dark` CSS variables with the Saga Ledger token set (see `../ux/theme-system.md`)
-- `development/src/tailwind.config.ts` — Add `colors`, `fontFamily`, `boxShadow` extensions
-- `development/src/src/app/layout.tsx` — Add `next/font/google` imports for Cinzel, Cinzel Decorative, Source Serif 4, JetBrains Mono; apply font variables to `<html>`; add background texture CSS; add HTML source comment signature (easter egg #5)
+- `development/frontend/src/app/globals.css` — Replace all `:root` and `.dark` CSS variables with the Saga Ledger token set (see `../ux/theme-system.md`)
+- `development/frontend/tailwind.config.ts` — Add `colors`, `fontFamily`, `boxShadow` extensions
+- `development/frontend/src/app/layout.tsx` — Add `next/font/google` imports for Cinzel, Cinzel Decorative, Source Serif 4, JetBrains Mono; apply font variables to `<html>`; add background texture CSS; add HTML source comment signature (easter egg #5)
 
 **Acceptance criteria**:
 - Background is `#07070d` (void-black) — not white
@@ -73,7 +73,7 @@ Sprint 1 delivered a working foundation. Sprint 2 design integration is complete
 **"Replace generic header with Saga Ledger nav"**
 
 **Files to modify**:
-- `development/src/src/app/page.tsx` — Refactor `<header>` section
+- `development/frontend/src/app/page.tsx` — Refactor `<header>` section
 
 **New header structure**:
 ```tsx
@@ -107,8 +107,8 @@ Sprint 1 delivered a working foundation. Sprint 2 design integration is complete
 **"Apply realm vocabulary to card status badges"**
 
 **Files to modify / create**:
-- `development/src/src/components/dashboard/StatusBadge.tsx` — Shipped as `StatusBadge.tsx`; realm label wiring via `getRealmLabel()` still pending
-- `development/src/src/lib/card-utils.ts` — Add `getRealmLabel(status, daysRemaining)` utility function (pending)
+- `development/frontend/src/components/dashboard/StatusBadge.tsx` — Shipped as `StatusBadge.tsx`; realm label wiring via `getRealmLabel()` still pending
+- `development/frontend/src/lib/card-utils.ts` — Add `getRealmLabel(status, daysRemaining)` utility function (pending)
 
 **Do not change**: `CardStatus` type in `types.ts`. The Norse vocabulary is display-only.
 
@@ -191,7 +191,7 @@ export function getRealmLabel(status: CardStatus, daysRemaining?: number): {
 - Responsive: drawer on mobile, sidebar on desktop
 
 ### Story 4: Valhalla Archive (`/valhalla`)
-- New route: `development/src/src/app/valhalla/page.tsx`
+- New route: `development/frontend/src/app/valhalla/page.tsx`
 - Tombstone card style (darker, sepia, `ᛏ` rune)
 - "Slain Fáfnir" copy per card
 - Net value calculation (rewards - fees paid)

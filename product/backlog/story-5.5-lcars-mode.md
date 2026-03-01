@@ -148,7 +148,7 @@ RAGNAROK THREAT LEVEL: {NONE / ELEVATED / CRITICAL}
 
 **Auto-dismiss timer**: Use `useEffect` with a `setTimeout` of 5000ms when `visible` becomes `true`. Clean up with `clearTimeout` on component unmount and on early dismiss to prevent state updates on unmounted components.
 
-**Stardate formula**: Implement as a pure utility function in a new file `development/src/src/lib/stardate.ts`. Keep it separate for testability. The formula is simple arithmetic — no dependencies.
+**Stardate formula**: Implement as a pure utility function in a new file `development/frontend/src/lib/stardate.ts`. Keep it separate for testability. The formula is simple arithmetic — no dependencies.
 
 **LCARS font**: Use `JetBrains Mono` — already loaded in the design system. No new font imports needed.
 

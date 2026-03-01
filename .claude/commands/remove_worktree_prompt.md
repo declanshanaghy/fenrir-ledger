@@ -56,7 +56,7 @@ DEV_SERVER_SCRIPT: .claude/scripts/dev-server.sh
 **Stop Frontend Dev Server:**
 - If frontend port was identified:
   ```
-  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src .claude/scripts/dev-server.sh stop
+  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/frontend .claude/scripts/dev-server.sh stop
   ```
 - Verify stopped: `FENRIR_PORT=<FRONTEND_PORT> .claude/scripts/dev-server.sh status`
 
@@ -68,7 +68,7 @@ DEV_SERVER_SCRIPT: .claude/scripts/dev-server.sh
 - Verify stopped: `FENRIR_BACKEND_PORT=<BACKEND_PORT> .claude/scripts/backend-server.sh status`
 
 - If ports couldn't be identified, try to find and kill any process in the worktree directory:
-  - `lsof -t +D <WORKTREE_DIR>/development/src | xargs kill 2>/dev/null`
+  - `lsof -t +D <WORKTREE_DIR>/development/frontend | xargs kill 2>/dev/null`
   - `lsof -t +D <WORKTREE_DIR>/development/backend | xargs kill 2>/dev/null`
 - Wait 2 seconds for processes to fully terminate
 

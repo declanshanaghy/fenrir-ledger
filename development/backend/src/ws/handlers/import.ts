@@ -23,7 +23,7 @@ import { config, assertConfig } from "../../config.js";
 
 /**
  * Zod schema for a single extracted card.
- * Ported from the frontend route: development/src/src/app/api/sheets/import/route.ts
+ * Ported from the frontend route: development/frontend/src/app/api/sheets/import/route.ts
  */
 const CardSchema = z.object({
   issuerId: z.string(),

@@ -290,7 +290,7 @@ The ADR is comprehensive and documents all decisions and trade-offs.
 
 **Command:**
 ```bash
-cd development/src && npm run build
+cd development/frontend && npm run build
 ```
 
 **Output:**

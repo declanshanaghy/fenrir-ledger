@@ -15,7 +15,7 @@ FiremanDecko's PR #6 successfully replaces generic fintech taglines with Norse-b
 ## Acceptance Criteria Results
 
 - [x] "Credit Card Tracker" tagline is removed from SiteHeader, TopBar, AboutModal
-  - **Verification**: Grep of entire `development/src/src` confirms zero occurrences of "Credit Card Tracker" anywhere.
+  - **Verification**: Grep of entire `development/frontend/src` confirms zero occurrences of "Credit Card Tracker" anywhere.
 
 - [x] New tagline "Break free. Harvest every reward." appears in all 3 components
   - **SiteHeader.tsx** (line 46): `Break free. Harvest every reward.`
@@ -40,7 +40,7 @@ FiremanDecko's PR #6 successfully replaces generic fintech taglines with Norse-b
   - **Note**: Sign In is not listed in copywriting.md page titles table (line 247–255), but the implementation is sensible and consistent with the template pattern.
 
 - [x] No generic fintech copy like "credit card tracker", "manage your cards", "track your rewards" in visible UI text
-  - **Verification**: Grep of `development/src/src` confirms zero occurrences of these phrases.
+  - **Verification**: Grep of `development/frontend/src` confirms zero occurrences of these phrases.
 
 - [x] Form field labels, button text, error messages remain in plain English (NOT replaced with Norse kennings)
   - **Form labels**: "Card name", "Issuer", "Credit limit", "Annual fee", etc. — all plain English ✓

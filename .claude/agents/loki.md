@@ -31,7 +31,7 @@ Follow its color palette, node shapes, edge styles, and naming conventions.
 - **Implementation Plan**: `development/implementation-plan.md`
 - **Product Design Brief**: `product/product-design-brief.md`
 - **Acceptance Criteria**: from product-design-brief.md
-- **Source Code**: `development/src/`
+- **Source Code**: `development/frontend/`
 
 ## Where to Write Output
 

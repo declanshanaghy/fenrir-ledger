@@ -194,7 +194,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 ## Technical Notes for FiremanDecko
 
-**Next.js route location**: `development/src/src/app/api/sheets/import/route.ts` — a standard App Router route handler using `export async function POST(request: Request)`.
+**Next.js route location**: `development/frontend/src/app/api/sheets/import/route.ts` — a standard App Router route handler using `export async function POST(request: Request)`.
 
 **CSV fetch**: Use the native `fetch()` API (available in Node 18+ and Next.js App Router edge/Node runtime). Set a `User-Agent` header to avoid being blocked by Google's CDN.
 
