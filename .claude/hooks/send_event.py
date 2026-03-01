@@ -63,7 +63,8 @@ def main():
     parser.add_argument('--server-url', default='http://localhost:4000/events', help='Server URL')
     parser.add_argument('--add-chat', action='store_true', help='Include chat transcript if available')
     parser.add_argument('--summarize', action='store_true', help='Generate AI summary of the event')
-    
+    parser.add_argument('--agent-name', default=None, help='Agent name for identity tagging (e.g. fireman-decko, loki)')
+
     args = parser.parse_args()
     
     try:
@@ -80,11 +81,20 @@ def main():
     if transcript_path:
         model_name = get_model_from_transcript(session_id, transcript_path)
 
+    # Resolve agent identity: CLI arg > env var > input payload > default
+    agent_name = (
+        args.agent_name
+        or os.environ.get('CLAUDE_AGENT_NAME')
+        or input_data.get('agent_type')
+        or 'orchestrator'
+    )
+
     # Prepare event data for server
     event_data = {
         'source_app': args.source_app,
         'session_id': session_id,
         'hook_event_type': args.event_type,
+        'agent_name': agent_name,
         'payload': input_data,
         'timestamp': int(datetime.now().timestamp() * 1000),
         'model_name': model_name
