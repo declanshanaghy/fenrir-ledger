@@ -39,8 +39,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { toast } from "sonner";
+
 import type { Card, CardStatus } from "@/lib/types";
-import { saveCard, deleteCard, closeCard } from "@/lib/storage";
+import { saveCard, deleteCard, closeCard, getCards } from "@/lib/storage";
+import { checkMilestone } from "@/lib/milestone-utils";
 import {
   computeCardStatus,
   dollarsToCents,
@@ -242,6 +245,19 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
       if (newCount === 7) {
         triggerBear();
       }
+
+      // Milestone toast — only on new card creation (not edit)
+      if (!isEditMode) {
+        const activeCards = getCards(card.householdId);
+        const milestone = checkMilestone(activeCards.length);
+        if (milestone) {
+          toast(milestone.message, {
+            duration: 5000,
+            className: "milestone-toast",
+          });
+        }
+      }
+
 
       router.push("/");
     } catch (err) {

@@ -26,6 +26,7 @@ import {
 import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { RagnarokProvider } from "@/contexts/RagnarokContext";
 import "./globals.css";
 
 // ── Fonts ────────────────────────────────────────────────────────────────────
@@ -97,9 +98,12 @@ export default function RootLayout({
       <body className="bg-background text-foreground antialiased">
         {/* AuthProvider — anonymous-first. No redirects. Resolves householdId for all users. */}
         <AuthProvider>
-          {/* Easter egg #4 — console ASCII art (client-only, once per session) */}
-          <ConsoleSignature />
-          <AppShell>{children}</AppShell>
+          {/* RagnarokProvider — activates threshold mode when ≥5 cards are urgent. */}
+          <RagnarokProvider>
+            {/* Easter egg #4 — console ASCII art (client-only, once per session) */}
+            <ConsoleSignature />
+            <AppShell>{children}</AppShell>
+          </RagnarokProvider>
         </AuthProvider>
       </body>
     </html>
