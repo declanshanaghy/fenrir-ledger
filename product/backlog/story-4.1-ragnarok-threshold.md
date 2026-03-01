@@ -5,7 +5,7 @@
 - **So that**: I feel the urgency of multiple approaching deadlines — not just one card's badge turning orange, but the entire war room going to red
 - **Priority**: P1-Critical
 - **Sprint Target**: 4
-- **Status**: Ready
+- **Status**: Done
 
 ---
 

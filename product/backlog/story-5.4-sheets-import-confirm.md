@@ -5,7 +5,7 @@
 - **So that**: I can import confidently even if I have already manually added some of my cards, knowing the app will not create duplicate entries
 - **Priority**: P2-High
 - **Sprint Target**: 5
-- **Status**: Ready
+- **Status**: Done
 
 ---
 

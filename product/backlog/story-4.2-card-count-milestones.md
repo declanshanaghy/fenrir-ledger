@@ -5,7 +5,7 @@
 - **So that**: I feel the satisfying weight of building a serious rewards portfolio — not just adding cards silently into a list
 - **Priority**: P2-High
 - **Sprint Target**: 4
-- **Status**: Ready
+- **Status**: Done
 
 ---
 

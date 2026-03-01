@@ -3,7 +3,7 @@
 **Date:** 2026-03-01
 **Author:** FiremanDecko (Principal Engineer)
 **ADR:** `designs/architecture/adr-backend-server.md`
-**Status:** Proposed
+**Status:** Accepted (Phase 1 + Phase 2 implemented)
 
 ---
 
@@ -107,7 +107,7 @@ The offset is always 100 (backend = frontend + 100). The `backend-server.sh` scr
 
 ```
 development/
-├── src/                          # Existing Next.js frontend (unchanged)
+├── frontend/                     # Next.js frontend (renamed from src/ in PR #44)
 │   ├── package.json              # Frontend deps
 │   ├── next.config.ts
 │   └── src/
@@ -115,7 +115,7 @@ development/
 │           └── api/
 │               ├── auth/token/route.ts    # Stays here (fast, stateless)
 │               └── sheets/import/route.ts # Phase 2: becomes thin proxy
-└── backend/                      # NEW — Node/TS backend server
+└── backend/                      # Node/TS backend server
     ├── package.json              # Backend deps (separate from frontend)
     ├── tsconfig.json             # Backend TypeScript config
     ├── .env.example              # Template — committed to repo
@@ -606,11 +606,34 @@ This phase is intentionally left at a sketch level. It must not be planned in de
 
 ---
 
-## The `backend-server.sh` Script
+## Dev Scripts
 
-The script already exists at `.claude/scripts/backend-server.sh`. It requires no changes for Phase 1.
+All scripts live in `.claude/scripts/`:
 
-**How it works:**
+| Script | Purpose |
+|--------|---------|
+| `services.sh` | Orchestrates both frontend and backend together (start/stop/restart/status) |
+| `frontend-server.sh` | Individual frontend dev server control (renamed from `dev-server.sh` in PR #45) |
+| `backend-server.sh` | Individual backend dev server control |
+
+### `services.sh` (recommended for local dev)
+
+```bash
+# Start both frontend and backend
+.claude/scripts/services.sh start
+
+# Stop both
+.claude/scripts/services.sh stop
+
+# Restart both
+.claude/scripts/services.sh restart
+
+# Check status of both
+.claude/scripts/services.sh status
+```
+
+### `backend-server.sh` (individual backend control)
+
 ```bash
 # Start the backend (dev mode with hot reload)
 .claude/scripts/backend-server.sh start

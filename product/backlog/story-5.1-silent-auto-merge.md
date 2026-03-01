@@ -5,7 +5,7 @@
 - **So that**: I never lose card data and never have to make a decision about whether to import or start fresh; the app always does the right thing
 - **Priority**: P1-Critical
 - **Sprint Target**: 5
-- **Status**: Ready
+- **Status**: Done
 
 ---
 

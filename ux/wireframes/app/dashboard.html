@@ -21,7 +21,7 @@
      * TopBar was added in Sprint 3.1 (OIDC auth). It carries the brand
      * wordmark (About trigger) on the left and the OIDC profile cluster
      * (avatar + email + dropdown) on the right.
-     * See: ux/wireframes/topbar.html for the full TopBar component spec.
+     * See: ux/wireframes/chrome/topbar.html for the full TopBar component spec.
      */
     .app-shell {
       display: grid;
@@ -34,7 +34,7 @@
     /*
      * Spans both columns (full width). Sticky at z-index 100.
      * h-14 = 56px. border-bottom separates from content below.
-     * Full specification: ux/wireframes/topbar.html
+     * Full specification: ux/wireframes/chrome/topbar.html
      */
     .topbar {
       grid-column: 1 / 3;
@@ -174,7 +174,7 @@
   <!--
     Spans both columns. Carries brand wordmark (About trigger) left
     and OIDC profile cluster right (avatar + email + dropdown).
-    Full component spec: ux/wireframes/topbar.html
+    Full component spec: ux/wireframes/chrome/topbar.html
     Implementation: development/frontend/src/components/layout/TopBar.tsx
     z-index: 100 (header layer — see wireframes.md z-index table)
     Sprint 3.1: wired to Auth.js v5 session via useSession()
@@ -194,7 +194,7 @@
         Email hidden below 640px (Tailwind: hidden sm:block).
         Clicking opens the profile dropdown (see topbar.html scenarios 2 & 5).
         aria-label on mobile includes email so screen readers announce identity.
-        Full dropdown spec: ux/wireframes/topbar.html
+        Full dropdown spec: ux/wireframes/chrome/topbar.html
       -->
       <button
         class="profile-trigger"

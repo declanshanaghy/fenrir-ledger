@@ -5,7 +5,7 @@
 - **So that**: I can get started quickly without manually re-entering every card I already track in a spreadsheet
 - **Priority**: P1-Critical
 - **Sprint Target**: 5
-- **Status**: Ready
+- **Status**: Done
 
 ---
 

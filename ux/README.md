@@ -28,21 +28,20 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [easter-eggs.md](easter-eggs.md) — All hidden references: Gleipnir Hunt, Konami Howl, Loki Mode, console ASCII, and more.
 - [interactions.md](interactions.md) — Animation philosophy, saga-enter stagger, status ring, Howl panel, easter egg keyframes.
 - [wireframes.md](wireframes.md) — Layout specs, component hierarchy, responsive breakpoints, z-index table, wireframe index.
-- [wireframes/topbar.html](wireframes/topbar.html) — TopBar: anonymous ᛟ rune avatar + upsell prompt, signed-in Google avatar + dropdown, avatar transition; 7 scenarios (anonymous-first model, Sprint 3.2).
-- [wireframes/upsell-banner.html](wireframes/upsell-banner.html) — Cloud sync upsell banner: dismissible, dashboard-only, desktop + mobile variants.
-- [wireframes/sign-in.html](wireframes/sign-in.html) — Sign-in page: optional upgrade surface at /sign-in; no-data + has-data variants; "Continue without signing in" first-class CTA.
-- [wireframes/migration-prompt.html](wireframes/migration-prompt.html) — Post-OAuth migration modal: Import N cards vs. Start fresh; reassurance copy.
+- [wireframes/chrome/topbar.html](wireframes/chrome/topbar.html) — TopBar: anonymous ᛟ rune avatar + upsell prompt, signed-in Google avatar + dropdown, avatar transition; 7 scenarios (anonymous-first model, Sprint 3.2).
+- [wireframes/auth/upsell-banner.html](wireframes/auth/upsell-banner.html) — Cloud sync upsell banner: dismissible, dashboard-only, desktop + mobile variants.
+- [wireframes/auth/sign-in.html](wireframes/auth/sign-in.html) — Sign-in page: optional upgrade surface at /sign-in; no-data + has-data variants; "Continue without signing in" first-class CTA.
+- [wireframes/auth/migration-prompt.html](wireframes/auth/migration-prompt.html) — Post-OAuth migration modal: Import N cards vs. Start fresh; reassurance copy.
 - [wireframes/auth/multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html) — Multi-IDP sign-in dialog (Clerk): 4 scenarios (Phase 1 + Phase 2, desktop + mobile), provider button scaling spec, component contract for FiremanDecko.
 - [multi-idp-interaction-spec.md](multi-idp-interaction-spec.md) — Interaction spec: trigger points, dialog state machine, on-success flow, on-dismiss behavior, mobile rules, accessibility requirements.
 - [handoff-to-fireman-anon-auth.md](handoff-to-fireman-anon-auth.md) — FiremanDecko handoff: what changed, householdId model, what to remove/change, new UI states, open technical questions.
 - [easter-egg-modal.md](easter-egg-modal.md) — Shared modal template for all easter egg discovery moments.
 - [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) — Mermaid diagram conventions for all pack members.
-- [wireframes/sprint-4/README.md](wireframes/sprint-4/README.md) — Sprint 4 wireframe index: 5 stories, key UX decisions, accessibility non-negotiables, FiremanDecko flexibility notes.
-- [wireframes/sprint-4/ragnarok-threshold.html](wireframes/sprint-4/ragnarok-threshold.html) — Ragnarök Threshold Mode: 3 dashboard states, overlay spec, RagnarokContext flow diagram (Story 4.1).
-- [wireframes/sprint-4/card-count-milestones.html](wireframes/sprint-4/card-count-milestones.html) — Card Count Milestone Toasts: all 5 milestones, desktop + mobile positioning, gate flow (Story 4.2).
-- [wireframes/sprint-4/gleipnir-hunt-complete.html](wireframes/sprint-4/gleipnir-hunt-complete.html) — Full Gleipnir Hunt: Fragment 4 + 6 triggers, reward Valhalla entry, DEF-001 fix (Story 4.3).
-- [wireframes/sprint-4/accessibility-polish.html](wireframes/sprint-4/accessibility-polish.html) — Accessibility polish: focus rings, skip-nav, ARIA landmarks, touch targets, reduced motion (Story 4.4).
-- [wireframes/sprint-4/wolves-hunger-about-modal.html](wireframes/sprint-4/wolves-hunger-about-modal.html) — Wolf's Hunger Meter + About Modal: hunger section, display variants, shared component spec (Story 4.5).
+- [wireframes/notifications/ragnarok-threshold.html](wireframes/notifications/ragnarok-threshold.html) — Ragnarök Threshold Mode: 3 dashboard states, overlay spec, RagnarokContext flow diagram (Story 4.1).
+- [wireframes/notifications/card-count-milestones.html](wireframes/notifications/card-count-milestones.html) — Card Count Milestone Toasts: all 5 milestones, desktop + mobile positioning, gate flow (Story 4.2).
+- [wireframes/easter-eggs/gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) — Full Gleipnir Hunt: Fragment 4 + 6 triggers, reward Valhalla entry, DEF-001 fix (Story 4.3).
+- [wireframes/accessibility/accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) — Accessibility polish: focus rings, skip-nav, ARIA landmarks, touch targets, reduced motion (Story 4.4).
+- [wireframes/cards/wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) — Wolf's Hunger Meter + About Modal: hunger section, display variants, shared component spec (Story 4.5).
 - [.sync-report.md](.sync-report.md) — Latest doc-sync run report: files changed, verified, and root README hints.
 - [../architecture/README.md](../architecture/README.md) — FiremanDecko's domain: implementation brief, pipeline, system design, sprint plan, and ADRs.
 - [../architecture/implementation-brief.md](../architecture/implementation-brief.md) — FiremanDecko integration plan: wave strategy, sprint stories, open questions.
@@ -52,7 +51,7 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [../architecture/adrs/ADR-001-tech-stack.md](../architecture/adrs/ADR-001-tech-stack.md) — ADR: Next.js + TypeScript + Tailwind CSS + shadcn/ui stack selection.
 - [../architecture/adrs/ADR-002-data-model.md](../architecture/adrs/ADR-002-data-model.md) — ADR: household-scoped data model from Sprint 1.
 - [../architecture/adrs/ADR-003-local-storage.md](../architecture/adrs/ADR-003-local-storage.md) — ADR: localStorage for Sprint 1 persistence with migration path.
-- [../architecture/adrs/ADR-004-oidc-auth-and-persistence.md](../architecture/adrs/ADR-004-oidc-auth-and-persistence.md) — ADR: Auth.js v5, JWT sessions, Supabase PostgreSQL, multi-tenant isolation.
+- [../architecture/adrs/ADR-004-oidc-auth-localStorage.md](../architecture/adrs/ADR-004-oidc-auth-localStorage.md) — ADR: Auth.js v5, JWT sessions, localStorage persistence, multi-tenant isolation.
 
 ---
 

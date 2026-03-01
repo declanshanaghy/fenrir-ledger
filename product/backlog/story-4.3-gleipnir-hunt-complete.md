@@ -5,7 +5,7 @@
 - **So that**: Finding all six and watching the app shimmer is a real, achievable reward for curious exploration — not a half-finished promise
 - **Priority**: P2-High
 - **Sprint Target**: 4
-- **Status**: Ready
+- **Status**: Done
 
 ---
 

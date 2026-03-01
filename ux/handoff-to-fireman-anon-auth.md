@@ -51,8 +51,8 @@ The `TopBar` component currently assumes an active session. It reads `session.us
 
 **New behavior:**
 - `TopBar` must handle two states: **anonymous** and **signed-in**.
-- **Anonymous state:** render only the ᛟ rune avatar button (no email, no caret). Clicking opens the upsell prompt panel (`role="dialog"`, not a dropdown menu). See `ux/wireframes/topbar.html` Scenarios 1–3.
-- **Signed-in state:** render Google photo (or rune fallback) + email (desktop) + caret ▾. Clicking opens the profile dropdown. See `ux/wireframes/topbar.html` Scenarios 4–6.
+- **Anonymous state:** render only the ᛟ rune avatar button (no email, no caret). Clicking opens the upsell prompt panel (`role="dialog"`, not a dropdown menu). See `ux/wireframes/chrome/topbar.html` Scenarios 1–3.
+- **Signed-in state:** render Google photo (or rune fallback) + email (desktop) + caret ▾. Clicking opens the profile dropdown. See `ux/wireframes/chrome/topbar.html` Scenarios 4–6.
 - **Avatar border distinction:** anonymous = `border-border` (neutral, no gold ring). Signed-in = `border-gold/40` (gold ring, wolf named). This is a visual signal of auth state.
 
 ### 4. Sign-In Page — Reframe from Gate to Upgrade
@@ -65,7 +65,7 @@ The existing `/sign-in` page (or Auth.js default sign-in page) must be replaced 
 - "Continue without signing in" navigates to `/`. It does NOT set the upsell dismiss flag.
 - If user is already signed in and lands on `/sign-in`: redirect to `/`.
 - Two variants based on localStorage card count (see Wireframe Scenario 1 vs. 2 in `sign-in.html`).
-- Full spec: `ux/wireframes/sign-in.html`.
+- Full spec: `ux/wireframes/auth/sign-in.html`.
 
 ---
 
@@ -117,7 +117,7 @@ When the user signs out, the server session is cleared. The anonymous `household
 
 ### State 1: Anonymous TopBar
 
-See `ux/wireframes/topbar.html`, Scenarios 1–3.
+See `ux/wireframes/chrome/topbar.html`, Scenarios 1–3.
 
 Component changes needed:
 - Detect anonymous state: `session === null` (or `isAnonymous` prop from context).
@@ -128,7 +128,7 @@ Component changes needed:
 
 ### State 2: Upsell Prompt Panel (from avatar click)
 
-See `ux/wireframes/topbar.html`, Scenario 2.
+See `ux/wireframes/chrome/topbar.html`, Scenario 2.
 
 A small panel positioned below the avatar (`absolute, right: 16px, top: calc(100% + 4px)`). NOT a dropdown menu — it is `role="dialog"`.
 
@@ -142,7 +142,7 @@ Close behavior: "Not now" click, Escape key, click outside. Focus returns to ava
 
 ### State 3: Upsell Banner (dashboard only)
 
-See `ux/wireframes/upsell-banner.html`.
+See `ux/wireframes/auth/upsell-banner.html`.
 
 Rendered in the app shell as `grid-row: 2; grid-column: 1 / 3` — between TopBar and the sidebar/content split.
 
@@ -158,7 +158,7 @@ Mobile: atmospheric line hidden; choices stack; × is `position: absolute; top: 
 
 ### State 4: Sign-In Page (opt-in surface)
 
-See `ux/wireframes/sign-in.html`.
+See `ux/wireframes/auth/sign-in.html`.
 
 Full page at `/sign-in`. Conditionally renders two variants based on `localStorage` card count:
 - **Variant A (no data):** generic messaging about sync benefits.
@@ -170,7 +170,7 @@ Non-negotiable elements:
 
 ### State 5: Migration Prompt Modal
 
-See `ux/wireframes/migration-prompt.html`.
+See `ux/wireframes/auth/migration-prompt.html`.
 
 Fires after OAuth completes, only if `localStorage['fenrir:household']` contains at least 1 card.
 
@@ -184,7 +184,7 @@ The "start fresh" path must include reassurance copy: *"Your N local cards will 
 
 ### State 6: Avatar Transition (anonymous → signed-in)
 
-See `ux/wireframes/topbar.html`, Scenario 7.
+See `ux/wireframes/chrome/topbar.html`, Scenario 7.
 
 When the signed-in dashboard renders after OAuth (and optionally after the migration prompt):
 - ᛟ rune cross-fades to Google photo (or rune fallback if no picture URL).
@@ -263,10 +263,10 @@ Also: the `/sign-in` page triggers the OAuth flow via Auth.js's `signIn('google'
 
 | Wireframe | File | What it specifies |
 |-----------|------|-------------------|
-| TopBar — all states | `ux/wireframes/topbar.html` | Anonymous avatar, upsell prompt panel, signed-in dropdown, avatar transition |
-| Upsell Banner | `ux/wireframes/upsell-banner.html` | Banner placement, dismiss lifecycle, mobile variant |
-| Sign In Page | `ux/wireframes/sign-in.html` | /sign-in page layout, two variants, "Continue without signing in" CTA |
-| Migration Prompt | `ux/wireframes/migration-prompt.html` | Post-OAuth modal, Import vs. Start fresh choices |
+| TopBar — all states | `ux/wireframes/chrome/topbar.html` | Anonymous avatar, upsell prompt panel, signed-in dropdown, avatar transition |
+| Upsell Banner | `ux/wireframes/auth/upsell-banner.html` | Banner placement, dismiss lifecycle, mobile variant |
+| Sign In Page | `ux/wireframes/auth/sign-in.html` | /sign-in page layout, two variants, "Continue without signing in" CTA |
+| Migration Prompt | `ux/wireframes/auth/migration-prompt.html` | Post-OAuth modal, Import vs. Start fresh choices |
 
 All wireframes are HTML5 with structural layout only — no theme colors, no custom fonts. They are self-annotated with implementation notes in HTML comments and `.note-block` elements.
 

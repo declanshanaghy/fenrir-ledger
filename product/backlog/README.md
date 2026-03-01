@@ -8,16 +8,16 @@ Groomed stories ready for sprint planning. All stories follow the format defined
 |-------|----------|--------|---------------|
 | [Branch-Based CI/CD + Vercel Preview Deployments](story-branch-based-ci-cd.md) | P2-High | Shipped | PR #9 |
 | [Optional Login — Google OIDC + Cloud Sync Upsell (Iteration 1)](story-auth-oidc-google.md) | P3-Medium | Shipped | commit 60d8f64, QA 24/24 |
-| [4.1 — Ragnarök Threshold Mode](story-4.1-ragnarok-threshold.md) | P1-Critical | Ready | Sprint 4 |
-| [4.2 — Card Count Milestone Toasts](story-4.2-card-count-milestones.md) | P2-High | Ready | Sprint 4 |
-| [4.3 — Gleipnir Hunt: Wire Fragments 4 and 6 + Unlock](story-4.3-gleipnir-hunt-complete.md) | P2-High | Ready | Sprint 4 |
-| [4.4 — Accessibility and UX Polish Pass](story-4.4-accessibility-and-ux-polish.md) | P2-High | Ready | Sprint 4 |
-| [4.5 — Wolf's Hunger Meter + About Modal Completeness](story-4.5-wolves-hunger-and-about-modal.md) | P3-Medium | Ready | Sprint 4 |
-| [5.1 — Silent Auto-Merge on Google Sign-In](story-5.1-silent-auto-merge.md) | P1-Critical | Ready | Sprint 5 |
-| [5.2 — Google Sheets Import: Anthropic Conversion API Route](story-5.2-sheets-import-api-route.md) | P1-Critical | Ready | Sprint 5 |
-| [5.3 — Google Sheets Import: Import Wizard UI](story-5.3-sheets-import-wizard.md) | P1-Critical | Ready | Sprint 5 |
-| [5.4 — Google Sheets Import: Deduplication and Persistence](story-5.4-sheets-import-confirm.md) | P2-High | Ready | Sprint 5 |
-| [5.5 — LCARS Mode: Star Trek Easter Egg](story-5.5-lcars-mode.md) | P3-Medium | Ready | Sprint 5 |
+| [4.1 — Ragnarök Threshold Mode](story-4.1-ragnarok-threshold.md) | P1-Critical | Done | Sprint 4, PR #38 |
+| [4.2 — Card Count Milestone Toasts](story-4.2-card-count-milestones.md) | P2-High | Done | Sprint 4, PR #36 |
+| [4.3 — Gleipnir Hunt: Wire Fragments 4 and 6 + Unlock](story-4.3-gleipnir-hunt-complete.md) | P2-High | Done | Sprint 4, PR #39 |
+| [4.4 — Accessibility and UX Polish Pass](story-4.4-accessibility-and-ux-polish.md) | P2-High | Done | Sprint 4, PR #40 |
+| [4.5 — Wolf's Hunger Meter + About Modal Completeness](story-4.5-wolves-hunger-and-about-modal.md) | P3-Medium | Done | Sprint 4, PR #37 |
+| [5.1 — Silent Auto-Merge on Google Sign-In](story-5.1-silent-auto-merge.md) | P1-Critical | Done | Sprint 5, PR #20 |
+| [5.2 — Google Sheets Import: Anthropic Conversion API Route](story-5.2-sheets-import-api-route.md) | P1-Critical | Done | Sprint 5, PR #19 |
+| [5.3 — Google Sheets Import: Import Wizard UI](story-5.3-sheets-import-wizard.md) | P1-Critical | Done | Sprint 5, PR #21 |
+| [5.4 — Google Sheets Import: Deduplication and Persistence](story-5.4-sheets-import-confirm.md) | P2-High | Done | Sprint 5, PR #22 |
+| [5.5 — LCARS Mode: Star Trek Easter Egg](story-5.5-lcars-mode.md) | P3-Medium | Ready | Sprint 5 (not yet merged) |
 
 ## Deferred / Future
 

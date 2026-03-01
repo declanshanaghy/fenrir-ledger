@@ -1,6 +1,6 @@
 # Future / Deferred Items
 
-Stories explicitly parked by Freya as post-Sprint 4 work. These are not forgotten — they are in the queue for the right sprint.
+Stories explicitly parked by Freya. These are not forgotten — they are in the queue for the right sprint. Last reviewed 2026-03-01 after Sprint 5 shipped.
 
 ---
 
@@ -18,13 +18,13 @@ Stories explicitly parked by Freya as post-Sprint 4 work. These are not forgotte
 
 ---
 
-## Smart Reminders / Notification Engine — Deferred to Sprint 5+
+## Smart Reminders / Notification Engine — Deferred to Sprint 6+
 
-**Why deferred**: The product brief lists this as a "Future" item. It requires either push notifications (requires a backend service) or in-browser notifications (requires the Notifications API + user permission). Neither is in scope for the localStorage-only phase. The Howl panel is the current reminder surface and is sufficient for MVP validation.
+**Why deferred**: The product brief lists this as a "Future" item. It requires either push notifications (requires a backend service) or in-browser notifications (requires the Notifications API + user permission). The backend now exists (Sprint 5), but the notification engine is still out of scope for the current phase. The Howl panel is the current reminder surface and is sufficient for MVP validation.
 
 ---
 
-## Reward Value Tracking + Net ROI — Deferred to Sprint 5+
+## Reward Value Tracking + Net ROI — Deferred to Sprint 6+
 
 **Why deferred**: The Wolf's Hunger meter (Story 4.5) surfaces existing bonus data. True reward tracking — logging ongoing spend per category, calculating net value after fees paid — requires new data model fields (`feePaid`, `rewardsEarned` log, etc.) and likely a new UI surface. This is a significant feature that deserves its own sprint, not a bolt-on to the easter egg system.
 
