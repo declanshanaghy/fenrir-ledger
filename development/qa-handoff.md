@@ -1,201 +1,86 @@
-# QA Handoff: Backend Server with WebSocket Import Pipeline
+# QA Handoff — Story 5: Route Ownership + Env Config
 
 **Date:** 2026-03-01
-**Author:** FiremanDecko (Principal Engineer)
-**Branch:** `feat/backend-ws-pipeline`
-**Stories:** Backend Stories 1-3 (Scaffold + WebSocket + Import Pipeline)
+**Engineer:** FiremanDecko
+**Branch:** `feat/route-ownership-config`
 
 ---
 
 ## What Was Built
 
-### Story 1 — Backend Scaffold (`development/backend/`)
-A new standalone Node.js + TypeScript backend server using Hono as the HTTP framework. Runs independently from the Next.js frontend on port 9753.
+This story converts the Next.js `/api/sheets/import` route from a full Anthropic import implementation into a thin HTTP proxy that delegates to the backend server. It also documents the route ownership split and adds the `BACKEND_URL` environment variable.
 
-- `package.json` — Project manifest with Hono, ws, @anthropic-ai/sdk, zod dependencies
-- `tsconfig.json` — ES2022 target, NodeNext module resolution, strict mode
-- `.env.example` — Template for ANTHROPIC_API_KEY, FENRIR_BACKEND_PORT, NODE_ENV
-- `.gitignore` — Excludes .env, node_modules/, dist/, logs/
-- `fly.toml` — Fly.io deployment configuration
-- `src/config.ts` — Environment variable resolution; assertConfig() for lazy API key validation
-- `src/routes/health.ts` — GET /health liveness probe
-- `src/index.ts` — Hono app entry point with logger, CORS, health route, import route, WebSocket
-
-### Story 2 — WebSocket Server + Types
-WebSocket server attached to the same HTTP server for duplex communication during imports.
-
-- `src/types/messages.ts` — ClientMessage, ServerMessage, ImportErrorCode, ImportedCard types
-- `src/ws/server.ts` — WebSocketServer creation and connection lifecycle management
-- `src/ws/handlers/import.ts` — WebSocket import handler with cancellation support
-
-### Story 3 — Backend Import Pipeline
-Full port of the Google Sheets import pipeline from Next.js to the backend.
-
-- `src/lib/sheets/parse-url.ts` — extractSheetId and buildCsvExportUrl (ported from frontend)
-- `src/lib/sheets/prompt.ts` — buildExtractionPrompt with inlined KNOWN_ISSUERS array
-- `src/lib/sheets/fetch-csv.ts` — CSV fetch with error handling (403/404, empty body, truncation)
-- `src/lib/anthropic/extract.ts` — Anthropic Claude Haiku call with single retry
-- `src/routes/import.ts` — HTTP POST /import endpoint for non-WebSocket clients
-
----
-
-## How to Test
-
-### Prerequisites
-- Node.js 20+
-- An `ANTHROPIC_API_KEY` in `development/backend/.env` (copy from `.env.example`)
-
-### Start the Server
-
-```bash
-# Option A: Use the backend-server.sh script
-.claude/scripts/backend-server.sh start
-
-# Option B: Direct npm run
-cd development/backend
-npm install
-npm run dev
-```
-
-### Test 1: Health Endpoint
-
-```bash
-curl http://localhost:9753/health
-```
-
-**Expected response:**
-```json
-{"status":"ok","service":"fenrir-ledger-backend","ts":"2026-03-01T...Z"}
-```
-
-### Test 2: HTTP Import (requires ANTHROPIC_API_KEY)
-
-```bash
-curl -X POST http://localhost:9753/import \
-  -H "Content-Type: application/json" \
-  -d '{"url":"https://docs.google.com/spreadsheets/d/YOUR_PUBLIC_SHEET_ID/edit"}'
-```
-
-**Expected:** JSON response with `{ cards: [...] }` or `{ error: { code, message } }`.
-
-### Test 3: HTTP Import Error Cases
-
-```bash
-# Invalid URL
-curl -X POST http://localhost:9753/import \
-  -H "Content-Type: application/json" \
-  -d '{"url":"not-a-url"}'
-# Expected: {"error":{"code":"INVALID_URL",...}}
-
-# Missing URL
-curl -X POST http://localhost:9753/import \
-  -H "Content-Type: application/json" \
-  -d '{}'
-# Expected: {"error":{"code":"INVALID_URL",...}}
-
-# Invalid JSON
-curl -X POST http://localhost:9753/import \
-  -H "Content-Type: application/json" \
-  -d 'not json'
-# Expected: {"error":{"code":"INVALID_URL","message":"Invalid JSON body."}}
-```
-
-### Test 4: WebSocket Import
-
-Use `wscat` or any WebSocket client:
-
-```bash
-npx wscat -c ws://localhost:9753
-```
-
-Then send:
-```json
-{"type":"import_start","payload":{"url":"https://docs.google.com/spreadsheets/d/YOUR_PUBLIC_SHEET_ID/edit"}}
-```
-
-**Expected messages (in order):**
-1. `{"type":"import_phase","phase":"fetching_sheet"}`
-2. `{"type":"import_phase","phase":"extracting"}`
-3. `{"type":"import_phase","phase":"validating"}`
-4. `{"type":"import_phase","phase":"done"}`
-5. `{"type":"import_complete","cards":[...]}`
-
-### Test 5: WebSocket Cancellation
-
-Send `import_start`, then immediately send:
-```json
-{"type":"import_cancel"}
-```
-
-**Expected:** The pipeline stops at the next checkpoint. No `import_complete` event is sent.
-
-### Test 6: TypeScript Type Check
-
-```bash
-cd development/backend && npm run typecheck
-```
-
-**Expected:** Exit code 0, no errors.
-
-### Test 7: Backend Server Script
-
-```bash
-.claude/scripts/backend-server.sh start
-.claude/scripts/backend-server.sh status   # Should say "Running"
-.claude/scripts/backend-server.sh start    # Should say "Already running" (idempotent)
-.claude/scripts/backend-server.sh stop
-.claude/scripts/backend-server.sh status   # Should say "Not running"
-```
-
----
-
-## Files Changed
-
-### New Files (16)
+### Files Created
 
 | File | Description |
 |------|-------------|
-| `development/backend/package.json` | Backend project manifest |
-| `development/backend/tsconfig.json` | TypeScript configuration |
-| `development/backend/.env.example` | Environment variable template |
-| `development/backend/.gitignore` | Git ignore rules for backend |
-| `development/backend/fly.toml` | Fly.io deployment config |
-| `development/backend/src/index.ts` | Server entry point (Hono + WS) |
-| `development/backend/src/config.ts` | Environment config + assertConfig() |
-| `development/backend/src/routes/health.ts` | GET /health liveness probe |
-| `development/backend/src/routes/import.ts` | POST /import HTTP endpoint |
-| `development/backend/src/types/messages.ts` | WebSocket message type definitions |
-| `development/backend/src/ws/server.ts` | WebSocket server setup |
-| `development/backend/src/ws/handlers/import.ts` | WebSocket import handler |
-| `development/backend/src/lib/sheets/parse-url.ts` | Sheet URL parsing utilities |
-| `development/backend/src/lib/sheets/prompt.ts` | Anthropic prompt builder |
-| `development/backend/src/lib/sheets/fetch-csv.ts` | CSV fetch with error handling |
-| `development/backend/src/lib/anthropic/extract.ts` | Anthropic API call wrapper |
+| `designs/architecture/route-ownership.md` | Documents which routes live in Next.js vs. backend, env var mapping, and design principles |
 
-### Modified Files (1)
+### Files Modified
 
 | File | Change |
 |------|--------|
-| `development/qa-handoff.md` | Updated with this handoff document |
+| `development/src/src/app/api/sheets/import/route.ts` | Replaced full Anthropic/Zod import implementation with thin HTTP proxy to backend `/import` endpoint |
+| `development/src/.env.example` | Added `BACKEND_URL=http://localhost:9753` with documentation comments |
+| `development/qa-handoff.md` | This file (overwritten per sprint convention) |
+
+---
+
+## How to Deploy
+
+1. Pull the `feat/route-ownership-config` branch
+2. `cd development/src && npm install`
+3. Ensure `.env.local` has `BACKEND_URL=http://localhost:9753` (or the deployed backend URL)
+4. `npm run build` -- verify successful build
+5. `npm run dev` -- start the Next.js dev server
+
+---
+
+## Testing Instructions
+
+### Acceptance Criteria Checklist
+
+- [ ] **No Anthropic SDK in route**: Open `development/src/src/app/api/sheets/import/route.ts` and verify there are no imports of `@anthropic-ai/sdk`, `zod`, `extractSheetId`, `buildCsvExportUrl`, `buildExtractionPrompt`, or `CSV_TRUNCATION_LIMIT`
+- [ ] **Thin proxy only**: The route should be under 45 lines. It accepts a URL in the body, forwards it to `BACKEND_URL/import`, and returns the response
+- [ ] **503 on backend unreachable**: With no backend running, POST to `/api/sheets/import` with `{"url": "https://docs.google.com/spreadsheets/d/test"}` and verify it returns HTTP 503 with `{"error": {"code": "FETCH_ERROR", "message": "The import service is currently unavailable. Please try again later."}}`
+- [ ] **504 on timeout**: If the backend takes over 55 seconds, the route returns 504 (hard to test manually; verify the `AbortSignal.timeout(55_000)` code is present)
+- [ ] **BACKEND_URL in .env.example**: Verify `development/src/.env.example` contains `BACKEND_URL=http://localhost:9753` with documentation
+- [ ] **Route ownership doc**: Verify `designs/architecture/route-ownership.md` contains the route table, env var table, and 4 design principles
+- [ ] **TypeScript compiles**: `cd development/src && npx tsc --noEmit` exits 0
+- [ ] **Build succeeds**: `cd development/src && npm run build` exits 0
+
+### Test Commands
+
+```bash
+# TypeScript check
+cd development/src && npx tsc --noEmit
+
+# Production build
+cd development/src && npm run build
+
+# Test 503 error (no backend running)
+cd development/src && npm run dev &
+curl -X POST http://localhost:9653/api/sheets/import \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://docs.google.com/spreadsheets/d/test"}'
+# Expected: 503 with FETCH_ERROR
+
+# Test invalid body
+curl -X POST http://localhost:9653/api/sheets/import \
+  -H "Content-Type: application/json" \
+  -d '{}'
+# Expected: 400 with INVALID_URL
+
+# Test invalid JSON
+curl -X POST http://localhost:9653/api/sheets/import \
+  -H "Content-Type: text/plain" \
+  -d 'not json'
+# Expected: 400 with INVALID_URL
+```
 
 ---
 
 ## Known Limitations
 
-1. **No frontend integration yet.** The frontend still uses the existing Next.js `/api/sheets/import` route. WebSocket client integration is Phase 2 frontend work.
-2. **No production deployment.** The `fly.toml` is ready but `fly deploy` has not been run. This is a future sprint story.
-3. **ANTHROPIC_API_KEY required for import.** The server starts without it (health-only mode), but import routes return 500 without the key.
-4. **No rate limiting.** WebSocket connections are not rate-limited. A future story should add connection limits.
-5. **No authentication.** The backend has no auth middleware. Import routes are open. This matches the frontend's anonymous-first model but should be revisited at GA.
-6. **CORS is set to `*` (allow all origins).** Appropriate for development; should be tightened for production.
-
----
-
-## Suggested Test Focus Areas
-
-1. **Health endpoint** — Verify it returns correct JSON structure.
-2. **WebSocket lifecycle** — Connect, send import_start, verify phase events arrive in order, verify import_complete contains valid card objects.
-3. **Error handling** — Invalid URLs, non-public sheets, missing API key, malformed JSON messages.
-4. **Cancellation** — Verify import_cancel interrupts the pipeline cleanly.
-5. **Type safety** — `npm run typecheck` passes with zero errors.
-6. **Idempotent start** — `backend-server.sh start` is safe to run multiple times.
+- The `NEXT_PUBLIC_BACKEND_WS_URL` env var is documented in `route-ownership.md` but not yet added to `.env.example` -- it will be added when the WebSocket client code is implemented.
+- The `@anthropic-ai/sdk` and `zod` packages remain in `package.json` as they may be used by other parts of the application or the future backend. They are no longer imported by the import route.
