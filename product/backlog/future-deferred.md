@@ -1,0 +1,63 @@
+# Future / Deferred Items
+
+Stories explicitly parked by Freya as post-Sprint 4 work. These are not forgotten — they are in the queue for the right sprint.
+
+---
+
+## LCARS Mode (Star Trek Easter Egg #6) — Deferred to Sprint 5+
+
+**Why deferred**: The Gleipnir Hunt completion, Ragnarök mode, milestone toasts, and the accessibility pass are all higher-value and more tightly integrated with existing features. LCARS mode is a standalone easter egg that requires building a temporary UI overlay with no dependencies on other Sprint 4 work. It has no user-value justification beyond delight. Sprint 4 has 5 stories already (at the team's sprint cap).
+
+**When to revisit**: Sprint 5, as the opening story if the team has capacity for pure delight work after core functionality gaps are addressed.
+
+**Spec**: See `ux/easter-eggs.md` #6. `Cmd+Shift+W` trigger, 5-second LCARS amber overlay with stardate, card counts, and a scan-line wipe exit. The full spec is written and ready — this is purely an implementation deferral.
+
+---
+
+## localStorage Migration Wizard — Explicitly and Permanently Deferred to GA
+
+**Why deferred**: The product brief is unambiguous: "Remote storage and data migration are explicitly deferred until the team has received multiple rounds of real user feedback and declared the product ready for GA." This is a product constraint, not a technical one. localStorage is sufficient for the entire validation cycle.
+
+**This cannot be moved up** regardless of sprint capacity. If FiremanDecko wants to do preparatory architectural work, he can open an ADR for review — but no user-visible migration UI will ship before GA planning is triggered.
+
+---
+
+## Smart Reminders / Notification Engine — Deferred to Sprint 5+
+
+**Why deferred**: The product brief lists this as a "Future" item. It requires either push notifications (requires a backend service) or in-browser notifications (requires the Notifications API + user permission). Neither is in scope for the localStorage-only phase. The Howl panel is the current reminder surface and is sufficient for MVP validation.
+
+---
+
+## Reward Value Tracking + Net ROI — Deferred to Sprint 5+
+
+**Why deferred**: The Wolf's Hunger meter (Story 4.5) surfaces existing bonus data. True reward tracking — logging ongoing spend per category, calculating net value after fees paid — requires new data model fields (`feePaid`, `rewardsEarned` log, etc.) and likely a new UI surface. This is a significant feature that deserves its own sprint, not a bolt-on to the easter egg system.
+
+---
+
+## Timeline View — Deferred
+
+**Why deferred**: The product brief describes a timeline view showing card opening dates, promo expiration, and fee dates on a visual axis. This is a meaningful feature but has no UX wireframe and no architecture plan. It belongs in a dedicated sprint with Luna designing it first.
+
+---
+
+## Action Recommendations (Valkyrie Engine) — Deferred
+
+**Why deferred**: The mythology-map describes a "Valkyrie" recommendation engine (keep, close, downgrade, transfer). This requires business logic that touches card ROI, issuer rules, and user preferences. It's a product feature that warrants its own design brief. Not Sprint 4.
+
+---
+
+## Optional Login / Google OIDC (Iteration 2) — Deferred to GA
+
+**Status**: Story `story-auth-oidc-google.md` exists in the backlog and is marked P3-Medium. The anonymous-first auth + cloud sync upsell banner shipped in Sprint 3. Actual OIDC authentication and backend storage are deferred to GA per the product brief. Nothing changes here.
+
+---
+
+## Wolf Paw Cursor — Deferred
+
+**Spec**: `public/cursors/wolf-paw.svg` is mentioned in the architecture brief as a Sprint 4 item. However, custom SVG cursors have inconsistent browser support (especially on mobile, where cursors don't apply) and add non-trivial asset work for minimal user impact. Deferred indefinitely unless Luna champions it with a specific UX rationale.
+
+---
+
+## Data Export (CSV/JSON) — Deferred
+
+**Why deferred**: Useful for power users who want a backup or want to switch tools. But this is pre-GA work only — during the validation cycle, localStorage data is visible via DevTools and the upsell banner will eventually prompt users toward cloud sync. No sprint target yet.
