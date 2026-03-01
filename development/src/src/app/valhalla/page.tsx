@@ -29,6 +29,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { getClosedCards, initializeHousehold, migrateIfNeeded } from "@/lib/storage";
+import { isGleipnirComplete } from "@/lib/gleipnir-utils";
+import { GleipnirBirdSpittle, useGleipnirFragment6 } from "@/components/cards/GleipnirBirdSpittle";
 import { formatDate, formatCurrency } from "@/lib/card-utils";
 import { KNOWN_ISSUERS } from "@/lib/constants";
 import { getRealmLabel } from "@/lib/realm-utils";
@@ -279,30 +281,40 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
  *   "No wolves have returned from the hunt. All chains still bind."
  *   Link back to dashboard.
  *
- * Hidden aria-description carries Gleipnir Hunt fragment #6:
- *   "the beard of a woman" — triggers GleipnirBeardOfWoman easter egg
- *   when the Gleipnir Hunt system is implemented (Sprint 4).
+ * Gleipnir Hunt fragment #6 — The Spittle of a Bird:
+ *   Triggers after 15 seconds of idle on the empty Valhalla page.
  */
 function ValhallaEmptyState() {
+  const { open: spittleOpen, trigger: triggerSpittle, dismiss: dismissSpittle } = useGleipnirFragment6();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      triggerSpittle();
+    }, 15_000);
+    return () => clearTimeout(timer);
+  }, [triggerSpittle]);
+
   return (
-    <div
-      className="border border-dashed border-border rounded-sm p-12 text-center flex flex-col items-center gap-4"
-      aria-label="Valhalla is empty"
-      aria-description="the beard of a woman"
-    >
-      <span className="text-[#8a8578] text-3xl" aria-hidden="true">
-        ᛏ
-      </span>
-      <p className="font-heading text-sm text-foreground">
-        No wolves have returned from the hunt. All chains still bind.
-      </p>
-      <Link
-        href="/"
-        className="text-xs text-muted-foreground hover:text-gold transition-colors underline underline-offset-2"
+    <>
+      <div
+        className="border border-dashed border-border rounded-sm p-12 text-center flex flex-col items-center gap-4"
+        aria-label="Valhalla is empty"
       >
-        Return to the Ledger of Fates
-      </Link>
-    </div>
+        <span className="text-[#8a8578] text-3xl" aria-hidden="true">
+          ᛏ
+        </span>
+        <p className="font-heading text-sm text-foreground">
+          No wolves have returned from the hunt. All chains still bind.
+        </p>
+        <Link
+          href="/"
+          className="text-xs text-muted-foreground hover:text-gold transition-colors underline underline-offset-2"
+        >
+          Return to the Ledger of Fates
+        </Link>
+      </div>
+      <GleipnirBirdSpittle open={spittleOpen} onClose={dismissSpittle} />
+    </>
   );
 }
 
@@ -320,6 +332,7 @@ export default function ValhallaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [issuerFilter, setIssuerFilter] = useState<string>("all");
   const [sort, setSort] = useState<SortKey>("closed_date_desc");
+  const [gleipnirComplete, setGleipnirComplete] = useState(false);
 
   // Load closed cards from localStorage on mount (after auth resolves)
   useEffect(() => {
@@ -336,6 +349,11 @@ export default function ValhallaPage() {
     setAllClosed(loaded);
     setIsLoading(false);
   }, [householdId, status]);
+
+  // Check Gleipnir completion on mount
+  useEffect(() => {
+    setGleipnirComplete(isGleipnirComplete());
+  }, []);
 
   // Derive unique issuers present in closed cards for the filter dropdown
   const uniqueIssuers = useMemo(() => {
@@ -442,6 +460,25 @@ export default function ValhallaPage() {
         </p>
       ) : (
         <div className="flex flex-col gap-4">
+          {gleipnirComplete && (
+            <article
+              className="border border-[#c9920a] border-l-4 border-l-[#f0b429] bg-background/60 backdrop-blur-sm p-4 flex flex-col gap-2.5 rounded-sm gleipnir-shimmer"
+              aria-label="Gleipnir complete"
+            >
+              <div className="flex items-baseline gap-2">
+                <span className="text-[#f0b429] text-lg" aria-hidden="true">✦</span>
+                <h2 className="font-heading text-sm font-semibold tracking-wide uppercase text-[#f0b429]">
+                  Gleipnir
+                </h2>
+              </div>
+              <p className="font-body text-xs italic text-[#e8e4d4] leading-relaxed">
+                The six impossible things are found. The ribbon is woven. The wolf is bound — and content.
+              </p>
+              <p className="font-mono text-[0.65rem] text-[#c9920a]">
+                All 6 fragments discovered
+              </p>
+            </article>
+          )}
           <AnimatePresence initial={true}>
             {displayCards.map((card, index) => (
               <TombstoneCard key={card.id} card={card} index={index} />

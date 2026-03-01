@@ -258,6 +258,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         }
       }
 
+
       router.push("/");
     } catch (err) {
       console.error("Failed to save card:", err);
