@@ -188,15 +188,52 @@ The `/orchestrate` command automates this pipeline using worktree isolation.
 Run `/orchestrate <requirements>` to trigger the full pipeline.
 
 ### Worktree Strategy
-| Phase | Branch Pattern | Worktree Path | Agents | Dev Server |
-|-------|---------------|---------------|--------|------------|
-| Product + UX | `design/<slug>` | `trees/design/<slug>/` | Freya → Luna (shared) | No |
-| Build + Validate | `feat/<slug>` | `trees/feat/<slug>/` | FiremanDecko ↔ Loki | Yes |
+| Phase | Branch Pattern | Worktree Path | Agents | Isolation |
+|-------|---------------|---------------|--------|-----------|
+| Product + UX | `design/<slug>` | `trees/design/<slug>/` | Freya → Luna (shared) | Shared worktree |
+| Build | `feat/<slug>` | `.claude/worktrees/agent-<id>/` | FiremanDecko | `isolation: "worktree"` per agent |
+| Validate | (same branch) | (same worktree path) | Loki | `run_in_background: true` |
+
+### Parallelism Strategy
+
+**Independent stories run in parallel.** The orchestrator analyzes the dependency graph:
+
+| Pattern | Execution |
+|---------|-----------|
+| No dependencies between stories | Launch all FiremanDecko agents simultaneously, each in its own worktree via `isolation: "worktree"` + `run_in_background: true` |
+| Linear dependencies (A → B → C) | Sequential — wait for A to pass QA before starting B |
+| Mixed | Parallel for independent, sequential for dependent |
+
+**Agent launch pattern for parallel builds:**
+```
+// Single message with multiple Agent calls — all launch simultaneously
+Agent({ subagent_type: "fireman-decko-principal-engineer", isolation: "worktree", run_in_background: true, ... })
+Agent({ subagent_type: "fireman-decko-principal-engineer", isolation: "worktree", run_in_background: true, ... })
+```
+
+**Agent launch pattern for parallel validation:**
+```
+// After all builds complete, launch all Loki validators simultaneously
+Agent({ subagent_type: "loki-qa-tester", run_in_background: true, ... })  // PR #1
+Agent({ subagent_type: "loki-qa-tester", run_in_background: true, ... })  // PR #2
+```
+
+### Post-PR Validation
+
+After PRs are pushed, Loki runs a **post-PR validation pass** that includes:
+1. GH Actions CI status (`gh pr checks <N> --watch`)
+2. Build verification in worktree
+3. Merge conflict detection
+4. Final code review
+
+If post-PR validation fails, FiremanDecko is resumed in the same worktree to fix.
 
 ### Retry Policy
 - Max 3 build-validate attempts per story
 - On failure: escalate to user with Loki's report
 - On success: commit, push, create PR, cleanup worktree
+- FiremanDecko and Loki alternate in the same worktree during fix loops
 
 ### Story Sequencing
-Stories execute one at a time (WIP limit 1). Each story's worktree branches from updated main after the previous story's PR merges.
+- **Independent stories**: execute in parallel across isolated worktrees
+- **Dependent stories**: execute sequentially, each branching from updated main after the previous story's PR merges

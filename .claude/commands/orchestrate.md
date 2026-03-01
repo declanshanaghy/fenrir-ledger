@@ -95,80 +95,182 @@ If the USER_PROMPT is ambiguous, ask the user to clarify before proceeding.
 
 ### Phase 4: Build/Validate Loop
 
-Execute stories **sequentially** (one at a time, WIP limit 1).
+#### Execution Strategy
 
-For each story:
+Analyze story dependency graph from Phase 3 to determine parallelism:
+
+| Dependency Pattern | Execution Mode |
+|-------------------|----------------|
+| Stories are independent (no `blockedBy`) | **Parallel** — launch all in background worktrees simultaneously |
+| Linear dependency chain (A → B → C) | **Sequential** — one at a time, WIP limit 1 |
+| Mixed (some independent, some dependent) | **Parallel independent, sequential dependent** — launch independent stories in parallel; queue dependent stories until blockers complete |
+
+#### Parallel Mode (Independent Stories)
+
+When stories have no dependencies on each other, launch **all builds simultaneously** as background subagents in isolated worktrees:
+
+```
+For each independent story — launch ALL in a single message with multiple Agent calls:
+
+  Agent({
+    subagent_type: "fireman-decko-principal-engineer",
+    isolation: "worktree",
+    run_in_background: true,
+    mode: "bypassPermissions",
+    prompt: "Implement story: <story-details>
+      Branch: feat/<story-slug>
+      Acceptance Criteria: <criteria>
+      When done: build, commit, push, create PR.
+      Write development/qa-handoff.md with implementation details."
+  })
+```
+
+**Wait for all FiremanDecko agents to complete** (they will notify automatically). Then launch **all Loki validators in parallel** as background subagents:
+
+```
+For each completed story — launch ALL in a single message:
+
+  Agent({
+    subagent_type: "loki-qa-tester",
+    run_in_background: true,
+    prompt: "Validate PR #<N> on branch <branch> in worktree at <path>.
+      Acceptance Criteria: <criteria>
+      1. Code review against acceptance criteria
+      2. Build validation: npm run build
+      3. TypeScript validation: npx tsc --noEmit
+      4. GitHub Actions status: gh pr checks <N>
+      5. If GH Actions still running, watch with timeout
+      Report format:
+        ## QA Verdict: PASS or FAIL
+        ### Code Review: items
+        ### Build: PASS/FAIL
+        ### GH Actions: PASS/FAIL/PENDING
+        ### Issues for FiremanDecko (if any): specific fixes"
+  })
+```
+
+#### Sequential Mode (Dependent Stories)
+
+For stories with dependencies, execute one at a time:
 
 ```
 retry_count = 0
 
 1. Pull latest main (previous story's PR may have merged)
-2. Create worktree: /create_worktree_prompt feat/<story-slug>
-3. Note the worktree path and port from the command output
 
 BUILD-VALIDATE LOOP:
 
-4. Spawn FiremanDecko:
+2. Spawn FiremanDecko in worktree:
    Agent({
      subagent_type: "fireman-decko-principal-engineer",
-     prompt: "Implement the following story in the worktree.
-       Story: <story-details>
+     isolation: "worktree",
+     mode: "bypassPermissions",
+     prompt: "Implement story: <story-details>
+       Branch: feat/<story-slug>
        Acceptance Criteria: <criteria>
-       Worktree Path: <path>
-       Dev Server Port: <port>
        <if retry > 0>
        IMPORTANT: This is retry #<N>. Loki found these issues:
        <loki-failure-report>
        Fix these specific issues. Do NOT rewrite from scratch.
        </if>
-       When done, write development/qa-handoff.md with:
-       - What was implemented
-       - Files created/modified
-       - Dev server port and URL
-       - Suggested test focus areas"
+       When done: build, commit, push, create PR.
+       Write development/qa-handoff.md with implementation details."
    })
 
-5. Spawn Loki:
+3. Spawn Loki to validate (background):
    Agent({
      subagent_type: "loki-qa-tester",
-     prompt: "Validate the implementation in this worktree.
-       Acceptance Criteria: <criteria>
-       Worktree Path: <path>
-       Dev Server Port: <port>
-       Read development/qa-handoff.md for implementation details.
-       Start your report with: ## QA Verdict: PASS or ## QA Verdict: FAIL"
+     run_in_background: true,
+     prompt: "Validate PR #<N> on branch <branch> in worktree at <path>.
+       <same validation steps as parallel mode>"
    })
 
-6. Parse Loki's verdict:
-   - PASS → commit, push, create PR, cleanup worktree → next story
-   - FAIL →
-     retry_count += 1
-     if retry_count >= MAX_RETRIES (3):
-       ESCALATE to user:
-         "Story '<slug>' failed QA 3 times.
-          Latest issues: <loki-report-summary>
-          Options: fix manually | skip story | abort pipeline"
-       → stop and wait for user guidance
-     else:
-       → go back to step 4 with Loki's report
+4. Parse Loki's verdict:
+   - PASS → next story
+   - FAIL → retry loop (see below)
 ```
 
-### Phase 5: Completion
+#### Fix Loop (Both Modes)
+
+When Loki reports FAIL on any story:
+
+```
+retry_count += 1
+
+if retry_count >= MAX_RETRIES (3):
+  ESCALATE to user:
+    "Story '<slug>' failed QA 3 times.
+     Latest issues: <loki-report-summary>
+     Options: fix manually | skip story | abort pipeline"
+  → stop and wait for user guidance
+
+else:
+  Resume or spawn FiremanDecko in the SAME worktree:
+    Agent({
+      subagent_type: "fireman-decko-principal-engineer",
+      prompt: "Fix issues found by Loki in worktree at <path>.
+        Branch: <branch>
+        Loki's report: <failure-details>
+        Fix ONLY the specific issues listed. Do NOT rewrite from scratch.
+        When done: rebuild, commit --amend or new commit, force-push."
+    })
+
+  Then re-run Loki validation (background).
+```
+
+**Key principle**: FiremanDecko and Loki alternate in the same worktree. FiremanDecko fixes, Loki validates. The orchestrator coordinates handoffs.
+
+### Phase 5: Post-PR Validation
+
+After PRs are created and pushed, run a **final validation pass** across all in-flight worktrees:
+
+```
+For each worktree with an open PR — launch ALL in parallel background:
+
+  Agent({
+    subagent_type: "loki-qa-tester",
+    run_in_background: true,
+    prompt: "Post-PR validation for PR #<N> (<branch>).
+      Worktree: <path>
+      1. Check GH Actions: gh pr checks <N> --watch (timeout 5 min)
+      2. Verify build passes in worktree
+      3. Check for merge conflicts with main
+      4. Final code review pass
+      Report: SHIP / FIX REQUIRED with specific issues"
+  })
+```
+
+If any post-PR validation fails, resume FiremanDecko in the same worktree to fix:
+```
+  Agent({
+    subagent_type: "fireman-decko-principal-engineer",
+    prompt: "Fix post-PR issues in worktree at <path>.
+      Branch: <branch>, PR: #<N>
+      Issues: <loki-post-pr-report>
+      Fix, commit, push. Do not force-push unless amending."
+  })
+```
+
+### Phase 6: Completion
 
 After all stories complete (or are escalated):
 
 1. **Summary report**:
    - List all stories and their final status (passed / escalated / skipped)
    - List all PRs created with links
+   - Note GH Actions status for each PR
    - Note any stories that need manual attention
 2. **Cleanup**: Verify all worktrees are removed for completed stories
+3. **Merge readiness**: Flag which PRs are ready to merge (all checks green)
 
 ## Rules
 
 1. **Never commit to main** — all work on feature branches via worktrees
-2. **One story at a time** — respect WIP limit 1
+2. **Maximize parallelism** — launch independent stories simultaneously as background subagents in isolated worktrees
 3. **Max 3 retries** — escalate to user after 3 failures on the same story
 4. **Max 5 stories** — per sprint, enforced at planning time
-5. **Worktree cleanup** — remove worktree after story PR is created
+5. **Worktree cleanup** — remove worktree after story PR is created and validated
 6. **User approval gates** — get user sign-off after Phase 2 (design) and Phase 3 (plan) before executing
 7. **Invoke git-commit skill** — use the git-commit skill for all commits
+8. **Background subagents** — always use `run_in_background: true` for Loki validators and `isolation: "worktree"` for FiremanDecko builders to maximize throughput
+9. **GH Actions validation** — every PR must have GH Actions checked before declaring SHIP
