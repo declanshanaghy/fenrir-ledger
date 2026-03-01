@@ -9,6 +9,7 @@ on:
       - 'sessions/**'
       - '.github/workflows/**'
       - 'vercel.json'
+      - 'quality/**'
   workflow_dispatch:
 
 permissions:
@@ -53,13 +54,36 @@ jobs:
           PREVIEW_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           echo "preview_url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
 
-      - name: Post or update PR comment with preview URL
-        if: success()
+      - name: Install Playwright browsers
+        working-directory: development/src
+        run: npm ci && npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests against preview
+        id: playwright
+        working-directory: development/src
+        env:
+          SERVER_URL: ${{ steps.deploy.outputs.preview_url }}
+          VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          CI: "true"
+          NODE_PATH: ./node_modules
+        run: npx playwright test --config playwright.config.ts
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: development/src/playwright-report/
+          retention-days: 14
+
+      - name: Post or update PR comment
+        if: always()
         uses: actions/github-script@v7
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.preview_url }}
           BRANCH_NAME: ${{ github.ref_name }}
-          BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          PLAYWRIGHT_OUTCOME: ${{ steps.playwright.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
           script: |
             // Find the open PR for this branch, if any
@@ -77,21 +101,37 @@ jobs:
 
             const prNumber = pulls[0].number;
 
-            // Append bypass param so the URL is accessible without Vercel login.
-            const bypass = process.env.BYPASS_SECRET;
-            const accessUrl = bypass
-              ? `${process.env.PREVIEW_URL}?x-vercel-protection-bypass=${bypass}`
-              : process.env.PREVIEW_URL;
+            // Use the plain preview URL — never append secrets to public PR comments.
+            // This is a public repo; PR comments are world-readable.
+            const previewUrl = process.env.PREVIEW_URL || '';
+
+            // Build test result line
+            const outcome = process.env.PLAYWRIGHT_OUTCOME;
+            const runUrl = process.env.RUN_URL;
+            const testLine = outcome === 'success'
+              ? '✅ All Playwright tests passed'
+              : outcome === 'failure'
+                ? `❌ Playwright tests failed — [view report](${runUrl})`
+                : outcome === 'skipped'
+                  ? '⏭️ Playwright tests skipped (deploy did not complete)'
+                  : '⚠️ Playwright tests did not run';
+
+            const deployLine = previewUrl
+              ? `🔍 **Preview URL:** ${previewUrl}`
+              : '❌ **Deployment failed** — no preview URL';
 
             const body = [
               '## Vercel Preview',
               '',
-              `🔍 **Preview URL:** ${accessUrl}`,
+              deployLine,
+              '',
+              '### Playwright Tests',
+              testLine,
               '',
               `_Updated on push to \`${process.env.BRANCH_NAME}\`_`,
             ].join('\n');
 
-            // Check for an existing bot comment to update rather than create a new one
+            // Upsert the bot comment
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,

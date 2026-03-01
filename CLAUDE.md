@@ -44,3 +44,26 @@ masked = secret[0..3] + "x".repeat(secret.length - 8) + secret[-4..]
 
 **When a tool result contains an unmasked secret**, restate it masked before continuing.
 Never re-echo the raw value in any follow-up message.
+
+### No Secrets in Public-Facing Output (UNBREAKABLE RULE)
+
+**Secrets, tokens, and bypass values MUST NEVER appear in any public-facing output —
+without exception. This includes PR comments, commit messages, issue bodies, GitHub
+Actions step summaries, Slack messages, or any other output visible to anyone with
+repo read access.**
+
+This repo is public. Every PR comment is world-readable.
+
+**Specifically forbidden:**
+- Appending `?x-vercel-protection-bypass=<secret>` (or any secret) to URLs in PR comments
+- Logging secret values in GitHub Actions `run:` steps without masking
+- Embedding secrets in artifact file names, paths, or content
+- Writing raw secret values to `$GITHUB_STEP_SUMMARY` or `$GITHUB_OUTPUT`
+
+**The bypass secret used for Playwright tests must travel only via:**
+- `extraHTTPHeaders` inside the Playwright runner (never logged)
+- GitHub Actions secrets (`${{ secrets.* }}`) — GitHub automatically masks these in logs
+
+**If you need to give a human access to a protected preview deployment**, link to the
+plain URL only. Do not append the bypass secret. The human can obtain access through
+Vercel's dashboard or by rotating their own credentials.

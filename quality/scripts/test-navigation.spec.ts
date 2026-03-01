@@ -80,19 +80,20 @@ test.describe("Marketing Site — /static/", () => {
     await expect(sessionLink).toHaveAttribute("href", "/sessions/");
   });
 
-  test("footer link from app reaches /static/", async ({ page }) => {
-    // Start at the app root (may redirect to sign-in — we check the footer
-    // link href regardless of auth state by inspecting the DOM directly).
+  test("topbar logo link from app reaches /static/", async ({ page }) => {
+    // Start at the app root (may redirect to sign-in — we check the topbar
+    // logo link href by inspecting the DOM directly).
     await goto(page, "/");
 
-    // The footer wordmark link must exist with href="/static"
-    const footerLink = page
-      .locator('footer a[href="/static"]')
+    // The topbar logo link must exist with href="/static"
+    // (Per commit beae3ff: footer now has About button, topbar has /static link)
+    const topbarLink = page
+      .locator('header a[href="/static"]')
       .first();
-    await expect(footerLink).toBeAttached();
+    await expect(topbarLink).toBeAttached();
 
     // Confirm it opens in a new tab (target="_blank")
-    await expect(footerLink).toHaveAttribute("target", "_blank");
+    await expect(topbarLink).toHaveAttribute("target", "_blank");
 
     // Navigate directly to /static/ and confirm it serves real content
     await goto(page, "/static/");
@@ -152,8 +153,8 @@ test.describe("Session Archive — /sessions/", () => {
     // Navigate back
     await page.goBack({ waitUntil: "domcontentloaded" });
 
-    // We're back at the archive
-    expect(page.url()).toContain("/sessions/");
+    // We're back at the archive (Vercel may drop trailing slash, so check without it)
+    expect(page.url()).toContain("/sessions");
     await expect(page.locator(".session-card")).toHaveCount(
       await page.locator(".session-card").count()
     );
@@ -175,8 +176,8 @@ test.describe("Session Archive — /sessions/", () => {
     // Navigate back again
     await page.goBack({ waitUntil: "domcontentloaded" });
 
-    // Safely back at the archive
-    expect(page.url()).toContain("/sessions/");
+    // Safely back at the archive (Vercel preview drops trailing slash)
+    expect(page.url()).toContain("/sessions");
   });
 
   test("all session card hrefs are relative (no fenrir-ledger.vercel.app absolute URLs)", async ({

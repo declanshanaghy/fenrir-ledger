@@ -100,6 +100,7 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
         <button
           type="button"
           onClick={onToggle}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
             "flex items-center gap-3 w-full rounded-sm px-2.5 py-2 text-sm",
