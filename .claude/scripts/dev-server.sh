@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
-# dev-server.sh — start, stop, or restart the Fenrir Ledger dev server (port 9653)
+# dev-server.sh — start, stop, or restart the Fenrir Ledger dev server
+#
+# Environment overrides (for worktrees):
+#   FENRIR_PORT    — port to listen on    (default: 9653)
+#   FENRIR_DEV_DIR — path to development/src  (default: auto-detected relative to this script)
 
 set -euo pipefail
 
-PORT=9653
-DEV_DIR="$(cd "$(dirname "$0")/../../development/src" && pwd)"
-LOG_FILE="/tmp/fenrir-dev-server.log"
+PORT="${FENRIR_PORT:-9653}"
+DEV_DIR="${FENRIR_DEV_DIR:-$(cd "$(dirname "$0")/../../development/src" && pwd)}"
+LOG_DIR="${DEV_DIR}/logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="${LOG_DIR}/dev-server.log"
 
 pid() { lsof -ti TCP:$PORT -sTCP:LISTEN 2>/dev/null | head -1; }
 
@@ -15,9 +21,9 @@ case "${1:-}" in
       echo "Already running (pid $p)"
       exit 0
     fi
-    echo "Starting dev server on port $PORT..."
+    echo "Starting dev server on port $PORT (dir: $DEV_DIR)..."
     cd "$DEV_DIR"
-    nohup npm run dev > "$LOG_FILE" 2>&1 &
+    nohup npx next dev -p "$PORT" > "$LOG_FILE" 2>&1 &
     echo "Started (pid $!). Logs: $LOG_FILE"
     ;;
 
@@ -36,9 +42,9 @@ case "${1:-}" in
       echo "Stopped (pid $p)"
       sleep 1
     fi
-    echo "Starting dev server on port $PORT..."
+    echo "Starting dev server on port $PORT (dir: $DEV_DIR)..."
     cd "$DEV_DIR"
-    nohup npm run dev > "$LOG_FILE" 2>&1 &
+    nohup npx next dev -p "$PORT" > "$LOG_FILE" 2>&1 &
     echo "Started (pid $!). Logs: $LOG_FILE"
     ;;
 

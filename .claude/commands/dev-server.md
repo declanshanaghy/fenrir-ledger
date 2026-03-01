@@ -17,10 +17,10 @@ Run the script with the Bash tool:
 | Action | Effect |
 |--------|--------|
 | `start` | Start the server if not already running |
-| `stop` | Kill the listening process on port 9653 |
+| `stop` | Kill the listening process on the configured port |
 | `restart` | Stop then start (use after code changes that confuse HMR) |
 | `status` | Print whether the server is running and its PID |
-| `logs` | `tail -f` the log file at `/tmp/fenrir-dev-server.log` |
+| `logs` | `tail -f` the log file |
 
 ## When to use this
 
@@ -29,12 +29,31 @@ Run the script with the Bash tool:
 - **Before running Playwright tests** — confirm `status` is running first.
 - **After `npm install` / `npm uninstall`** — restart so the new module graph is picked up.
 
+## Environment overrides (for worktrees)
+
+The script supports two env vars for running in git worktrees:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `FENRIR_PORT` | `9653` | Port the Next.js dev server listens on |
+| `FENRIR_DEV_DIR` | Auto-detected `development/src/` | Path to the Next.js project root |
+
+**Main repo (default):**
+```
+.claude/scripts/dev-server.sh start
+```
+
+**Worktree example (port 9654, worktree directory):**
+```
+FENRIR_PORT=9654 FENRIR_DEV_DIR=trees/my-branch/development/src .claude/scripts/dev-server.sh start
+```
+
 ## Log file
 
-All server output is written to `/tmp/fenrir-dev-server.log`. Use `logs` to stream it, or read it directly with the Read tool when diagnosing build/runtime errors.
+Log output is written to `<DEV_DIR>/logs/dev-server.log` (e.g. `development/src/logs/dev-server.log` for main, `trees/<branch>/development/src/logs/dev-server.log` for a worktree). Use `logs` to stream it, or read it directly with the Read tool when diagnosing build/runtime errors.
 
 ## Notes
 
 - The script uses `lsof -sTCP:LISTEN` to find only the listening server process, not browser connections to the same port.
 - `nohup` is used so the server survives the shell session that spawned it.
-- The server runs from `development/src/` regardless of the working directory when the command is called.
+- The server runs from `development/src/` (or `FENRIR_DEV_DIR`) regardless of the working directory when the command is called.

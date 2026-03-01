@@ -39,5 +39,8 @@ playwright-report/
 # Temp files
 tmp/
 
+# Git worktrees for parallel agent development
+trees/
+
 # doc-sync run artifacts (ephemeral, coordinator reads then discards)
 .sync-report.md

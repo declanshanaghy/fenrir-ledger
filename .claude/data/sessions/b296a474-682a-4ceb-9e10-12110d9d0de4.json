@@ -1,0 +1,13 @@
+{
+  "session_id": "b296a474-682a-4ceb-9e10-12110d9d0de4",
+  "prompts": [
+    "keep hooks and just clean the __pycache__ dirs",
+    "keep only generic ones, delete the observable ones",
+    "keep",
+    "delete",
+    "remove the script. I removed it from settings cos i want my own",
+    "For all kept files add an attribution to https://github.com/disler/claude-code-hooks-multi-agent-observability/",
+    "For all kept files add an attribution to https://github.com/disler/claude-code-hooks-multi-agent-observability/\n\nin README.md",
+    "not yet. we need to test the worktree skills. create a plan then compact"
+  ]
+}
