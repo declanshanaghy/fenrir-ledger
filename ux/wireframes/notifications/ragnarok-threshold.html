@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Ragnarök Threshold Mode — Story 4.1</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 4px; }
+    .label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; }
+    .badge { border: 1px solid; padding: 2px 6px; font-size: 10px; display: inline-block; }
+
+    /* Page shell */
+    .page-shell { display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { border-bottom: 1px solid; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    .topbar-brand { font-weight: bold; font-size: 13px; }
+    .topbar-avatar { width: 32px; height: 32px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+    .body-row { display: flex; flex: 1; }
+    .sidebar { width: 272px; border-right: 1px solid; padding: 16px 0; flex-shrink: 0; }
+    .sidebar-item { padding: 8px 20px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+    .sidebar-item.active { font-weight: bold; }
+    .sidebar-item .rune { font-size: 16px; }
+    .main { flex: 1; padding: 24px; }
+    .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-title { font-size: 20px; font-weight: bold; }
+    .btn { border: 1px solid; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+    .btn-primary { border-width: 2px; font-weight: bold; }
+    .footer { border-top: 1px solid; padding: 8px 24px; font-size: 11px; display: flex; justify-content: space-between; }
+
+    /* Summary bar */
+    .summary-bar { border: 1px solid; padding: 12px 16px; margin-bottom: 20px; display: flex; gap: 24px; align-items: center; }
+    .summary-stat { font-size: 13px; }
+    .summary-stat .count { font-weight: bold; font-size: 16px; font-family: monospace; }
+
+    /* Card grid */
+    .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card-tile { border: 1px solid; padding: 16px; }
+    .card-tile-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+    .status-ring { width: 48px; height: 48px; border: 3px solid; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+    .status-ring.urgent { border-style: dashed; }
+    .card-meta { flex: 1; }
+    .card-issuer { font-size: 13px; font-weight: bold; }
+    .card-name { font-size: 12px; }
+    .card-divider { border-top: 1px solid; margin: 8px 0; }
+    .card-deadline { font-size: 12px; font-family: monospace; }
+    .card-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; font-size: 11px; }
+    .card-stat-label { }
+    .card-stat-value { font-family: monospace; font-weight: bold; }
+
+    /* Howl panel */
+    .howl-panel { width: 288px; border: 1px solid; flex-shrink: 0; margin-left: 16px; display: flex; flex-direction: column; }
+    .howl-header { border-bottom: 1px solid; padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
+    .howl-header .rune { font-size: 18px; }
+    .howl-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.12em; flex: 1; }
+    .howl-count { border: 1px solid; padding: 2px 6px; font-size: 11px; font-family: monospace; }
+    .howl-row { border-bottom: 1px solid; padding: 12px 16px; }
+    .howl-row:last-child { border-bottom: none; }
+    .howl-row-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .urgency-dot { width: 8px; height: 8px; border: 1px solid; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .urgency-type { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; flex: 1; }
+    .days-remaining { font-family: monospace; font-size: 11px; font-weight: bold; }
+
+    /* Scenario containers */
+    .scenario { margin-bottom: 48px; }
+    .scenario-title { font-size: 16px; font-weight: bold; border-bottom: 2px solid; padding-bottom: 8px; margin-bottom: 16px; }
+    .scenario-subtitle { font-size: 12px; margin-bottom: 12px; }
+
+    /* Overlay annotations */
+    .overlay-spec { border: 1px dashed; padding: 12px; margin-bottom: 16px; }
+    .overlay-spec .overlay-title { font-weight: bold; margin-bottom: 6px; }
+
+    /* Ragnarok state annotations */
+    .ragnarok-indicator { border: 2px solid; padding: 6px 12px; font-weight: bold; font-size: 12px; display: inline-block; margin-bottom: 8px; }
+
+    /* State diagram section */
+    .diagram-section { border: 1px solid; padding: 16px; margin-bottom: 24px; }
+    .diagram-title { font-weight: bold; margin-bottom: 12px; }
+    .diagram-flow { font-family: monospace; font-size: 12px; line-height: 2; }
+    .arrow { display: inline; }
+
+    /* Spec table */
+    table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
+    th, td { border: 1px solid; padding: 6px 10px; font-size: 12px; text-align: left; }
+    th { font-weight: bold; }
+
+    /* Transition spec box */
+    .transition-spec { border: 1px solid; padding: 12px; font-size: 12px; margin-bottom: 16px; }
+    .transition-spec h4 { font-weight: bold; margin-bottom: 6px; }
+
+    /* Title bar variant */
+    .title-bar-variant { border: 1px dashed; padding: 6px 12px; margin-bottom: 8px; font-size: 12px; font-family: monospace; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       STORY 4.1 — RAGNARÖK THRESHOLD MODE
+       Three dashboard states: Normal (0-2 urgent), Warning (1-2 urgent
+       illustrated), and Ragnarök (≥3 urgent).
+
+       KEY UX REQUIREMENTS:
+       - Threshold: ≥ 3 cards with fee_approaching OR promo_expiring
+       - Red radial overlay: position:fixed, pointer-events:none, z:1
+       - Gold→blood-orange accent shift on howl header only (subtle)
+       - Browser <title> changes to "Ragnarök — Fenrir Ledger"
+       - HowlPanel header copy overrides to the Ragnarök line
+       - Transitions: 1.2s ease-in on activate, 0.8s ease-out on deactivate
+       - Valhalla page is EXCLUDED from Ragnarök overlay
+       - Konami code volume: 0.25 normal → 1.0 during Ragnarök
+  ═══════════════════════════════════════════════════════════════════ -->
+
+  <div style="padding: 24px;">
+
+    <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">
+      Story 4.1 — Ragnarök Threshold Mode
+    </h1>
+    <p class="note" style="margin-bottom: 24px;">
+      Wireframe shows 3 dashboard states. No theme colors applied — structural layout only.
+      Implementation colors are defined in ux/theme-system.md.
+    </p>
+
+    <!-- ── SPEC TABLE ────────────────────────────────────────── -->
+    <div class="diagram-section" style="margin-bottom: 32px;">
+      <div class="diagram-title">Ragnarök Activation Rules</div>
+      <table>
+        <tr>
+          <th>Urgent Card Count</th>
+          <th>Mode</th>
+          <th>UI Changes</th>
+          <th>Browser Title</th>
+          <th>Howl Header</th>
+          <th>Konami Volume</th>
+        </tr>
+        <tr>
+          <td>0</td>
+          <td>Normal</td>
+          <td>No change</td>
+          <td>Fenrir Ledger</td>
+          <td>The wolf is not howling. All chains are silent.</td>
+          <td>0.25</td>
+        </tr>
+        <tr>
+          <td>1–2</td>
+          <td>Warning (normal UI)</td>
+          <td>HowlPanel appears; cards show urgent status rings</td>
+          <td>Fenrir Ledger</td>
+          <td>THE HOWL [N]</td>
+          <td>0.25</td>
+        </tr>
+        <tr>
+          <td>≥ 3</td>
+          <td>Ragnarök ACTIVE</td>
+          <td>Red radial overlay + HowlPanel header override + title override</td>
+          <td>Ragnarök — Fenrir Ledger</td>
+          <td>Ragnarök approaches. Multiple chains tighten.</td>
+          <td>1.0</td>
+        </tr>
+      </table>
+      <p class="note">
+        Statuses that count: fee_approaching, promo_expiring. Statuses that do NOT count: active, closed.
+        Threshold is hard-coded in Sprint 4 — not configurable.
+      </p>
+    </div>
+
+    <!-- ── STATE FLOW DIAGRAM (Mermaid) ──────────────────────── -->
+    <div class="diagram-section" style="margin-bottom: 32px;">
+      <div class="diagram-title">State Flow — Ragnarök Threshold</div>
+      <p class="note" style="margin-bottom: 8px;">
+        Mermaid stateDiagram-v2 — follows ux/ux-assets/mermaid-style-guide.md conventions.
+        Render this in any standard Mermaid renderer.
+      </p>
+      <pre style="border: 1px solid; padding: 12px; font-size: 12px; line-height: 1.6; overflow-x: auto;">
+```mermaid
+stateDiagram-v2
+    classDef normal fill:#03A9F4,stroke:#0288D1,color:#FFF
+    classDef warning fill:#FF9800,stroke:#F57C00,color:#FFF
+    classDef ragnarok fill:#F44336,stroke:#D32F2F,color:#FFF
+
+    [*] --> Normal : App loads
+
+    Normal --> Warning : 1-2 cards become urgent
+    Warning --> Normal : urgent count drops to 0
+    Warning --> Ragnarok : 3rd card becomes urgent
+    Ragnarok --> Warning : urgent count drops to 2\n(1.2s ease-in overlay → 0.8s ease-out fade)
+    Ragnarok --> Normal : urgent count drops to 0
+    Normal --> Ragnarok : 3+ cards urgent simultaneously
+
+    Normal : Normal\n(0 urgent cards)
+    Warning : Warning\n(1-2 urgent cards)
+    Ragnarok : Ragnarök ACTIVE\n(≥3 urgent cards)
+```
+      </pre>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SCENARIO 1: NORMAL STATE (0 urgent cards)
+    ═══════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Scenario 1: Normal State — 0 Urgent Cards</div>
+      <p class="scenario-subtitle">
+        HowlPanel shows empty state. No overlay. No title override.
+      </p>
+
+      <div class="title-bar-variant">Browser &lt;title&gt;: "Fenrir Ledger"</div>
+
+      <div class="page-shell" style="height: auto; border: 1px solid;">
+        <header class="topbar">
+          <span class="topbar-brand">ᛟ FENRIR LEDGER</span>
+          <span class="topbar-avatar">ᛟ</span>
+        </header>
+
+        <div class="body-row">
+          <nav class="sidebar">
+            <div class="sidebar-item active"><span class="rune">ᛟ</span> Cards</div>
+            <div class="sidebar-item"><span class="rune">ᛏ</span> Valhalla</div>
+            <div class="sidebar-item" style="margin-top: auto;"><span class="rune">ᛉ</span> Settings</div>
+          </nav>
+
+          <main class="main">
+            <div class="content-header">
+              <h2 class="page-title">The Ledger of Fates</h2>
+              <button class="btn btn-primary">Add Card ▶</button>
+            </div>
+
+            <div class="summary-bar">
+              <div class="summary-stat"><span class="count">4</span> cards</div>
+              <div class="summary-stat"><span class="count">0</span> need attention</div>
+              <p class="note">No Ragnarök. Summary bar shows 0 urgent.</p>
+            </div>
+
+            <div style="display: flex; gap: 16px;">
+              <div style="flex: 1;">
+                <div class="card-grid">
+                  <!-- 4 active cards, all normal status -->
+                  <div class="card-tile">
+                    <div class="card-tile-header">
+                      <div class="status-ring"><span>ᛊ</span></div>
+                      <div class="card-meta">
+                        <div class="card-issuer">Chase</div>
+                        <div class="card-name">Sapphire Preferred</div>
+                        <span class="badge">Active / Asgard</span>
+                      </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <div class="card-deadline">ᛊ Annual fee: Mar 15, 2026 (280 days)</div>
+                  </div>
+                  <div class="card-tile">
+                    <div class="card-tile-header">
+                      <div class="status-ring"><span>ᛊ</span></div>
+                      <div class="card-meta">
+                        <div class="card-issuer">Amex</div>
+                        <div class="card-name">Gold Card</div>
+                        <span class="badge">Active / Asgard</span>
+                      </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <div class="card-deadline">ᛊ Annual fee: Jun 08, 2026 (365 days)</div>
+                  </div>
+                  <div class="card-tile">
+                    <div class="card-tile-header">
+                      <div class="status-ring"><span>ᛊ</span></div>
+                      <div class="card-meta">
+                        <div class="card-issuer">Citi</div>
+                        <div class="card-name">Premier</div>
+                        <span class="badge">Active / Asgard</span>
+                      </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <div class="card-deadline">ᛊ Annual fee: Sep 01, 2026 (185 days)</div>
+                  </div>
+                  <div class="card-tile">
+                    <div class="card-tile-header">
+                      <div class="status-ring"><span>ᛊ</span></div>
+                      <div class="card-meta">
+                        <div class="card-issuer">Capital One</div>
+                        <div class="card-name">Venture X</div>
+                        <span class="badge">Active / Asgard</span>
+                      </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <div class="card-deadline">ᛊ Promo expires: Dec 20, 2026</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- HowlPanel — empty state (no urgent cards) -->
+              <aside class="howl-panel" style="height: fit-content;">
+                <div class="howl-header">
+                  <span class="rune">ᚱ</span>
+                  <span class="howl-title">The Howl</span>
+                  <p class="note">Count badge absent</p>
+                </div>
+                <div style="padding: 24px 16px; text-align: center;">
+                  <span style="font-size: 28px;">ᚱ</span>
+                  <p style="font-size: 12px; margin-top: 8px; font-style: italic;">
+                    The wolf is not howling.<br>All chains are silent.
+                  </p>
+                </div>
+              </aside>
+            </div>
+          </main>
+        </div>
+
+        <footer class="footer">
+          <span>ᛟ FENRIR LEDGER · Break free. Harvest every reward.</span>
+          <span>Forged by FiremanDecko · Guarded by Freya · Tested by Loki — © 2026 Fenrir Ledger</span>
+        </footer>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SCENARIO 2: WARNING STATE (1–2 urgent cards)
+    ═══════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Scenario 2: Warning State — 2 Urgent Cards (Below Threshold)</div>
+      <p class="scenario-subtitle">
+        HowlPanel is active with 2 entries. No Ragnarök overlay. Normal UI atmosphere.
+        This is the pre-threshold "approaching" state — the storm is gathering.
+      </p>
+
+      <div class="title-bar-variant">Browser &lt;title&gt;: "Fenrir Ledger" (unchanged — threshold NOT reached)</div>
+
+      <div class="page-shell" style="height: auto; border: 1px solid;">
+        <header class="topbar">
+          <span class="topbar-brand">ᛟ FENRIR LEDGER</span>
+          <span class="topbar-avatar">ᛟ</span>
+        </header>
+
+        <div class="body-row">
+          <nav class="sidebar">
+            <div class="sidebar-item active"><span class="rune">ᛟ</span> Cards</div>
+            <div class="sidebar-item"><span class="rune">ᛏ</span> Valhalla</div>
+          </nav>
+
+          <main class="main">
+            <div class="content-header">
+              <h2 class="page-title">The Ledger of Fates</h2>
+              <button class="btn btn-primary">Add Card ▶</button>
+            </div>
+
+            <div class="summary-bar">
+              <div class="summary-stat"><span class="count">4</span> cards</div>
+              <div class="summary-stat"><span class="count">2</span> need attention</div>
+            </div>
+
+            <div style="display: flex; gap: 16px;">
+              <div style="flex: 1;">
+                <div class="card-grid">
+                  <!-- 2 urgent, 2 normal -->
+                  <div class="card-tile">
+                    <div class="card-tile-header">
+                      <div class="status-ring urgent"><span>ᚺ</span></div>
+                      <div class="card-meta">
+                        <div class="card-issuer">Chase</div>
+                        <div class="card-name">Sapphire Preferred</div>
+                        <span class="badge">Fee Approaching / Muspelheim</span>
+                      </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <div class="card-deadline">ᚺ Annual fee due: Mar 15, 2026 (22 days)</div>
+                    <p class="note">Status ring pulses. Dashed border indicates urgency.</p>
+                  </div>
+                  <div class="card-tile">
+                    <div class="card-tile-header">
+                      <div class="status-ring urgent"><span>ᚺ</span></div>
+                      <div class="card-meta">
+                        <div class="card-issuer">Amex</div>
+                        <div class="card-name">Gold Card</div>
+                        <span class="badge">Promo Expiring / Hati</span>
+                      </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <div class="card-deadline">ᚺ Promo deadline: Mar 18, 2026 (25 days)</div>
+                  </div>
+                  <div class="card-tile">
+                    <div class="card-tile-header">
+                      <div class="status-ring"><span>ᛊ</span></div>
+                      <div class="card-meta">
+                        <div class="card-issuer">Citi</div>
+                        <div class="card-name">Premier</div>
+                        <span class="badge">Active / Asgard</span>
+                      </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <div class="card-deadline">ᛊ Annual fee: Sep 01, 2026</div>
+                  </div>
+                  <div class="card-tile">
+                    <div class="card-tile-header">
+                      <div class="status-ring"><span>ᛊ</span></div>
+                      <div class="card-meta">
+                        <div class="card-issuer">Capital One</div>
+                        <div class="card-name">Venture X</div>
+                        <span class="badge">Active / Asgard</span>
+                      </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <div class="card-deadline">ᛊ Promo expires: Dec 20, 2026</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- HowlPanel — 2 urgent cards, normal header -->
+              <aside class="howl-panel" style="height: fit-content;">
+                <div class="howl-header">
+                  <span class="rune">ᚲ</span>
+                  <span class="howl-title">The Howl</span>
+                  <span class="howl-count">2</span>
+                </div>
+                <div class="howl-row">
+                  <div class="howl-row-top">
+                    <span class="urgency-dot"></span>
+                    <span class="urgency-type">Annual Fee</span>
+                    <span class="days-remaining">22 days</span>
+                  </div>
+                  <div style="font-size: 12px; font-weight: bold;">Sapphire Preferred</div>
+                  <div style="font-size: 11px; margin-bottom: 4px;">Chase · Due Mar 15, 2026 · $95</div>
+                  <a href="#" style="font-size: 11px; text-decoration: underline;">View</a>
+                </div>
+                <div class="howl-row">
+                  <div class="howl-row-top">
+                    <span class="urgency-dot"></span>
+                    <span class="urgency-type">Promo Deadline</span>
+                    <span class="days-remaining">25 days</span>
+                  </div>
+                  <div style="font-size: 12px; font-weight: bold;">Gold Card</div>
+                  <div style="font-size: 11px; margin-bottom: 4px;">Amex · Due Mar 18, 2026</div>
+                  <a href="#" style="font-size: 11px; text-decoration: underline;">View</a>
+                </div>
+                <p class="note" style="padding: 8px 16px;">Normal header. No Ragnarök override yet.</p>
+              </aside>
+            </div>
+          </main>
+        </div>
+        <footer class="footer">
+          <span>ᛟ FENRIR LEDGER · Break free. Harvest every reward.</span>
+          <span>© 2026 Fenrir Ledger</span>
+        </footer>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SCENARIO 3: RAGNARÖK ACTIVE (≥3 urgent cards)
+    ═══════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Scenario 3: Ragnarök Mode — ≥ 3 Urgent Cards ACTIVE</div>
+      <p class="scenario-subtitle">
+        Red radial overlay fires. HowlPanel header overrides. Title changes. Accent shifts on header.
+        The overlay is position:fixed, inset:0, pointer-events:none, z-index:1.
+        It does NOT block any clicks, inputs, or keyboard navigation.
+      </p>
+
+      <div class="title-bar-variant">Browser &lt;title&gt;: "Ragnarök — Fenrir Ledger" [OVERRIDDEN]</div>
+
+      <!-- Overlay specification -->
+      <div class="overlay-spec" style="margin-bottom: 16px;">
+        <div class="overlay-title">Ragnarök Overlay Specification</div>
+        <p style="font-size: 12px; margin-bottom: 6px;">
+          <strong>Element:</strong> &lt;div aria-hidden="true" /&gt; in AppShell, above background (z:1), below all content
+        </p>
+        <p style="font-size: 12px; margin-bottom: 6px;">
+          <strong>Background:</strong> radial-gradient(ellipse at 50% 0%, rgba(150,30,10,0.18) 0%, transparent 65%)
+        </p>
+        <p style="font-size: 12px; margin-bottom: 6px;">
+          <strong>Activate transition:</strong> opacity 0→1 over 1200ms ease-in
+        </p>
+        <p style="font-size: 12px; margin-bottom: 6px;">
+          <strong>Deactivate transition:</strong> opacity 1→0 over 800ms ease-out
+        </p>
+        <p style="font-size: 12px; margin-bottom: 6px;">
+          <strong>MUST NOT use:</strong> CSS filter on root — breaks portal stacking contexts (Dialog, Sheet)
+        </p>
+        <p style="font-size: 12px;">
+          <strong>Valhalla exclusion:</strong> Overlay renders null when pathname === '/valhalla'
+        </p>
+      </div>
+
+      <!-- Ragnarök active: visual representation of overlay concept -->
+      <div style="position: relative; border: 2px solid; margin-bottom: 16px;">
+        <!-- Simulated overlay (structure only — in production this is the actual CSS gradient) -->
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 80px; border-bottom: 2px dashed; pointer-events: none; display: flex; align-items: center; justify-content: center; font-size: 11px; font-style: italic;">
+          [RED RADIAL OVERLAY: position:fixed, inset:0, pointer-events:none, z:1, opacity transitions 1.2s in / 0.8s out]
+        </div>
+
+        <div class="page-shell" style="height: auto; opacity: 1;">
+          <header class="topbar">
+            <span class="topbar-brand">ᛟ FENRIR LEDGER</span>
+            <span style="font-size: 11px; border: 1px solid; padding: 2px 8px;">
+              ⚠ Ragnarök — title shown in browser tab
+            </span>
+            <span class="topbar-avatar">ᛟ</span>
+          </header>
+
+          <div class="body-row">
+            <nav class="sidebar">
+              <div class="sidebar-item active"><span class="rune">ᛟ</span> Cards</div>
+              <div class="sidebar-item"><span class="rune">ᛏ</span> Valhalla</div>
+            </nav>
+
+            <main class="main">
+              <div class="content-header">
+                <h2 class="page-title">The Ledger of Fates</h2>
+                <button class="btn btn-primary">Add Card ▶</button>
+              </div>
+
+              <div class="summary-bar">
+                <div class="summary-stat"><span class="count">5</span> cards</div>
+                <div class="summary-stat"><span class="count">4</span> need attention</div>
+                <p class="note">4 urgent cards = Ragnarök threshold exceeded (≥3)</p>
+              </div>
+
+              <div style="display: flex; gap: 16px;">
+                <div style="flex: 1;">
+                  <div class="card-grid">
+                    <!-- 4 urgent cards shown -->
+                    <div class="card-tile" style="border-width: 2px;">
+                      <div class="card-tile-header">
+                        <div class="status-ring urgent"><span>ᚺ</span></div>
+                        <div class="card-meta">
+                          <div class="card-issuer">Chase</div>
+                          <div class="card-name">Sapphire Preferred</div>
+                          <span class="badge">Fee Approaching / Muspelheim</span>
+                        </div>
+                      </div>
+                      <div class="card-divider"></div>
+                      <div class="card-deadline">Annual fee: Mar 15 (22 days)</div>
+                    </div>
+                    <div class="card-tile" style="border-width: 2px;">
+                      <div class="card-tile-header">
+                        <div class="status-ring urgent"><span>ᚺ</span></div>
+                        <div class="card-meta">
+                          <div class="card-issuer">Amex</div>
+                          <div class="card-name">Gold Card</div>
+                          <span class="badge">Promo Expiring / Hati</span>
+                        </div>
+                      </div>
+                      <div class="card-divider"></div>
+                      <div class="card-deadline">Promo deadline: Mar 18 (25 days)</div>
+                    </div>
+                    <div class="card-tile" style="border-width: 2px;">
+                      <div class="card-tile-header">
+                        <div class="status-ring urgent"><span>ᚺ</span></div>
+                        <div class="card-meta">
+                          <div class="card-issuer">Citi</div>
+                          <div class="card-name">Premier</div>
+                          <span class="badge">Fee Approaching / Muspelheim</span>
+                        </div>
+                      </div>
+                      <div class="card-divider"></div>
+                      <div class="card-deadline">Annual fee: Mar 01 (8 days)</div>
+                    </div>
+                    <div class="card-tile" style="border-width: 2px;">
+                      <div class="card-tile-header">
+                        <div class="status-ring urgent"><span>ᚺ</span></div>
+                        <div class="card-meta">
+                          <div class="card-issuer">Capital One</div>
+                          <div class="card-name">Venture X</div>
+                          <span class="badge">Promo Expiring / Hati</span>
+                        </div>
+                      </div>
+                      <div class="card-divider"></div>
+                      <div class="card-deadline">Promo deadline: Mar 22 (29 days)</div>
+                    </div>
+                    <div class="card-tile">
+                      <div class="card-tile-header">
+                        <div class="status-ring"><span>ᛊ</span></div>
+                        <div class="card-meta">
+                          <div class="card-issuer">Wells Fargo</div>
+                          <div class="card-name">Active Rewards</div>
+                          <span class="badge">Active / Asgard</span>
+                        </div>
+                      </div>
+                      <div class="card-divider"></div>
+                      <div class="card-deadline">Annual fee: Nov 10, 2026</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- HowlPanel — RAGNARÖK header override -->
+                <aside class="howl-panel" style="height: fit-content;">
+                  <div class="howl-header" style="border-bottom-width: 2px;">
+                    <span class="rune">ᚲ</span>
+                    <div style="flex: 1;">
+                      <div class="howl-title">The Howl</div>
+                      <!-- RAGNARÖK OVERRIDE COPY -->
+                      <div style="font-size: 11px; font-style: italic; margin-top: 2px;">
+                        Ragnarök approaches. Multiple chains tighten.
+                      </div>
+                      <p class="note">[Ragnarök header override — accent color shifts gold → blood orange]</p>
+                    </div>
+                    <span class="howl-count">4</span>
+                  </div>
+                  <div class="howl-row">
+                    <div class="howl-row-top">
+                      <span class="urgency-dot"></span>
+                      <span class="urgency-type">Annual Fee</span>
+                      <span class="days-remaining">8 days</span>
+                    </div>
+                    <div style="font-size: 12px; font-weight: bold;">Premier</div>
+                    <div style="font-size: 11px; margin-bottom: 4px;">Citi · Mar 01 · $95</div>
+                    <a href="#" style="font-size: 11px; text-decoration: underline;">View</a>
+                  </div>
+                  <div class="howl-row">
+                    <div class="howl-row-top">
+                      <span class="urgency-dot"></span>
+                      <span class="urgency-type">Annual Fee</span>
+                      <span class="days-remaining">22 days</span>
+                    </div>
+                    <div style="font-size: 12px; font-weight: bold;">Sapphire Preferred</div>
+                    <div style="font-size: 11px; margin-bottom: 4px;">Chase · Mar 15 · $95</div>
+                    <a href="#" style="font-size: 11px; text-decoration: underline;">View</a>
+                  </div>
+                  <div class="howl-row">
+                    <div class="howl-row-top">
+                      <span class="urgency-dot"></span>
+                      <span class="urgency-type">Promo Deadline</span>
+                      <span class="days-remaining">25 days</span>
+                    </div>
+                    <div style="font-size: 12px; font-weight: bold;">Gold Card</div>
+                    <div style="font-size: 11px; margin-bottom: 4px;">Amex · Mar 18</div>
+                    <a href="#" style="font-size: 11px; text-decoration: underline;">View</a>
+                  </div>
+                  <div class="howl-row">
+                    <div class="howl-row-top">
+                      <span class="urgency-dot"></span>
+                      <span class="urgency-type">Promo Deadline</span>
+                      <span class="days-remaining">29 days</span>
+                    </div>
+                    <div style="font-size: 12px; font-weight: bold;">Venture X</div>
+                    <div style="font-size: 11px; margin-bottom: 4px;">Capital One · Mar 22</div>
+                    <a href="#" style="font-size: 11px; text-decoration: underline;">View</a>
+                  </div>
+                </aside>
+              </div>
+            </main>
+          </div>
+
+          <footer class="footer">
+            <span>ᛟ FENRIR LEDGER · Break free. Harvest every reward.</span>
+            <span>© 2026 Fenrir Ledger</span>
+          </footer>
+        </div>
+      </div>
+
+      <!-- Implementation notes -->
+      <div class="transition-spec">
+        <h4>Konami Code Volume Escalation</h4>
+        <p>During Ragnarök: Konami triggers howl at volume 1.0 (max intensity).</p>
+        <p>Outside Ragnarök: Konami triggers howl at volume 0.25.</p>
+        <p class="note">KonamiHowl.tsx consumes RagnarokContext to read the flag and adjust audio gain node.</p>
+      </div>
+
+      <div class="transition-spec">
+        <h4>Accessibility Requirements (Non-Negotiable)</h4>
+        <ul style="font-size: 12px; padding-left: 16px; line-height: 2;">
+          <li>Overlay div carries aria-hidden="true" — invisible to screen readers</li>
+          <li>No WCAG AA contrast violations: red overlay at rgba(150,30,10,0.18) is below contrast threshold impact</li>
+          <li>All modals, dialogs, toasts remain fully interactable (pointer-events:none on overlay)</li>
+          <li>RagnarokContext change fires within one render cycle — no user action needed</li>
+          <li>Valhalla route excluded from overlay — closed cards are beyond the storm</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         RAGNARÖK CONTEXT ARCHITECTURE NOTE
+    ═══════════════════════════════════════════════════ -->
+    <div class="diagram-section">
+      <div class="diagram-title">RagnarokContext Data Flow</div>
+      <p class="note" style="margin-bottom: 8px;">
+        Mermaid flowchart — shows context provider and consumers.
+        Follows ux/ux-assets/mermaid-style-guide.md conventions.
+      </p>
+      <pre style="border: 1px solid; padding: 12px; font-size: 12px; line-height: 1.6; overflow-x: auto;">
+```mermaid
+graph TD
+    classDef primary fill:#03A9F4,stroke:#0288D1,color:#FFF
+    classDef critical fill:#F44336,stroke:#D32F2F,color:#FFF
+    classDef warning fill:#FF9800,stroke:#F57C00,color:#FFF
+
+    cards[(Card Data\nlocalStorage)] -->|getCards()| compute[computeCardStatus()\ncard-utils.ts]
+    compute -->|urgentCards.length >= 3| provider[RagnarokProvider\nAppShell]
+    provider -->|ragnarok: boolean| overlay[RedOverlayDiv\nposition:fixed, z:1]
+    provider -->|ragnarok: boolean| howlpanel[HowlPanel\nheader copy override]
+    provider -->|ragnarok: boolean| konamihowl[KonamiHowl\nvolume: 0.25 → 1.0]
+    provider -->|ragnarok: boolean| title[document.title\nuseEffect on dashboard page]
+
+    class provider primary
+    class overlay critical
+    class howlpanel warning
+    class konamihowl warning
+```
+      </pre>
+    </div>
+
+  </div>
+</body>
+</html>

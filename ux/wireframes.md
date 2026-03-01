@@ -3,40 +3,65 @@
 Wireframes are standalone HTML5 documents. They use only structural layout — no colors, no custom fonts, no shadows, no decorative borders. Theme styling is defined in `theme-system.md` and applied separately by the engineer. If the theme changes, the wireframes remain valid.
 
 **Convention:**
-- All wireframe files live in `ux/wireframes/`
-- Link to them from any `.md` file that references a layout (`[Wireframe](wireframes/foo.html)`)
+- All wireframe files live in `ux/wireframes/{category}/` — see category table in `.claude/agents/luna.md`
+- Link to them from any `.md` file that references a layout (`[Wireframe](wireframes/category/foo.html)`)
 - The HTML files use semantic elements (`<nav>`, `<main>`, `<aside>`, `<section>`, `<form>`, `<fieldset>`) to convey structure
 - Permitted CSS: `display: flex/grid`, `border: 1px solid`, `width/height`, `padding/margin`, `font-size`, `font-weight`
 - Prohibited CSS: `color`, `background-color`, `font-family` beyond `sans-serif`, `border-radius`, `box-shadow`, `opacity` (except for placeholder items)
 
 ---
 
-## Wireframe Index
+## Sprint 4 Wireframes
+
+| Story | File | Description |
+|-------|------|-------------|
+| 4.1 — Ragnarök Threshold Mode | [wireframes/notifications/ragnarok-threshold.html](wireframes/notifications/ragnarok-threshold.html) | 3 dashboard states, red radial overlay spec, RagnarokContext data flow, HowlPanel header override |
+| 4.2 — Card Count Milestone Toasts | [wireframes/notifications/card-count-milestones.html](wireframes/notifications/card-count-milestones.html) | All 5 milestone toast designs, desktop + mobile positioning, stacked behavior, localStorage gate flow |
+| 4.3 — Full Gleipnir Hunt | [wireframes/easter-eggs/gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) | Fragment 4 (7th card save) + Fragment 6 (15s Valhalla idle) triggers, Gleipnir reward entry, DEF-001 fix |
+| 4.4 — Accessibility + UX Polish | [wireframes/accessibility/accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) | Focus ring spec, skip-nav, ARIA landmarks, heading hierarchy, touch target audit, mobile layouts, reduced-motion |
+| 4.5 — Wolf's Hunger Meter + About Modal | [wireframes/cards/wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) | Hunger meter in About modal + ForgeMasterEgg, 4 display variants, shared WolfHungerMeter component spec |
+
+---
+
+## Wireframe Index by Category
 
 | View | File | Description |
 |------|------|-------------|
-| TopBar — Anonymous + Signed-In States | [wireframes/topbar.html](wireframes/topbar.html) | Global sticky header: 7 scenarios covering anonymous ᛟ rune avatar + upsell prompt, signed-in Google avatar + dropdown, and the avatar transition animation (anonymous-first model, Sprint 3.2) |
-| Cloud Sync Upsell Banner | [wireframes/upsell-banner.html](wireframes/upsell-banner.html) | Dismissible banner below TopBar on the dashboard: visible/dismissed/signed-in variants, desktop + mobile; dismiss lifecycle and localStorage flag spec |
-| Sign In — Optional Cloud Sync | [wireframes/sign-in.html](wireframes/sign-in.html) | Dedicated /sign-in page (not gated — optional upgrade); no-data and has-data variants; desktop + mobile; "Continue without signing in" is a first-class prominent CTA |
-| Migration Prompt — Anonymous to Signed-In | [wireframes/migration-prompt.html](wireframes/migration-prompt.html) | Post-OAuth modal dialog: Import N cards vs. Start fresh; reassurance copy; desktop + mobile stacked choices; state flow diagram |
-| Dashboard — The Ledger of Fates | [wireframes/dashboard.html](wireframes/dashboard.html) | TopBar (row 1) + sidebar shell + card grid + summary bar + footer |
-| Add / Edit Card — Forge a Chain | [wireframes/add-card.html](wireframes/add-card.html) | Multi-section form: identity, fee, welcome bonus, notes |
-| Valhalla — Hall of the Honored Dead | [wireframes/valhalla.html](wireframes/valhalla.html) | Tombstone cards, filter bar, empty state |
-| The Howl Panel | [wireframes/howl-panel.html](wireframes/howl-panel.html) | Alert sidebar: active and empty variants |
-| Marketing Site | [wireframes/marketing-site.html](wireframes/marketing-site.html) | 5-section static page: nav, hero, problems, features, steps, footer |
-| Easter Egg Modal | [wireframes/easter-egg-modal.html](wireframes/easter-egg-modal.html) | Reusable discovery dialog triggered by any easter egg — see [easter-egg-modal.md](easter-egg-modal.md) |
-| About Modal | [wireframes/about-modal.html](wireframes/about-modal.html) | Two-column dialog: wolf logo left, team pack + seven impossible ingredients right |
-| Loki Mode (Easter Egg #3) | [wireframes/loki-mode.html](wireframes/loki-mode.html) | Side-by-side normal vs active states, scrambled card grid, random realm badges, toast, timer, footer trigger |
-| LCARS Mode (Easter Egg #6) | [wireframes/lcars-mode.html](wireframes/lcars-mode.html) | LCARS overlay on dashboard header: elbow blocks + 4 data lines, z:9653, 5s auto-dismiss |
-| Konami Code — The Howl (Easter Egg #2) | [wireframes/konami-howl.html](wireframes/konami-howl.html) | Easter Egg #2: wolf silhouette overlay, FENRIR AWAKENS band, Ragnarok pulse variant, z-index layer map |
-| Ragnarok Threshold (Easter Egg #8) | [wireframes/ragnarok-threshold.html](wireframes/ragnarok-threshold.html) | Full dashboard in Ragnarok state: red radial overlay, altered page title, altered Howl header, 4 warning cards; threshold logic diagram |
-| App Footer | [wireframes/footer.html](wireframes/footer.html) | Three-column footer: brand wordmark + tagline, nav links (About), team credits + © copyright; Easter Egg #5 (© hover → "Breath of a Fish") and Easter Egg #3 (Loki 7-click) both anchored here |
+| **app** | | |
+| Dashboard — The Ledger of Fates | [wireframes/app/dashboard.html](wireframes/app/dashboard.html) | TopBar (row 1) + sidebar shell + card grid + summary bar + footer |
+| Valhalla — Hall of the Honored Dead | [wireframes/app/valhalla.html](wireframes/app/valhalla.html) | Tombstone cards, filter bar, empty state |
+| **chrome** | | |
+| TopBar — Anonymous + Signed-In States | [wireframes/chrome/topbar.html](wireframes/chrome/topbar.html) | Global sticky header: 7 scenarios covering anonymous ᛟ rune avatar + upsell prompt, signed-in Google avatar + dropdown, and the avatar transition animation (anonymous-first model, Sprint 3.2) |
+| The Howl Panel | [wireframes/chrome/howl-panel.html](wireframes/chrome/howl-panel.html) | Alert sidebar: active and empty variants |
+| App Footer | [wireframes/chrome/footer.html](wireframes/chrome/footer.html) | Three-column footer: brand wordmark + tagline, nav links (About), team credits + © copyright; Easter Egg #5 (© hover → "Breath of a Fish") and Easter Egg #3 (Loki 7-click) both anchored here |
+| **cards** | | |
+| Add / Edit Card — Forge a Chain | [wireframes/cards/add-card.html](wireframes/cards/add-card.html) | Multi-section form: identity, fee, welcome bonus, notes |
+| Wolf's Hunger Meter + About Modal | [wireframes/cards/wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) | Hunger meter in About modal + ForgeMasterEgg, 4 display variants, shared WolfHungerMeter component spec |
+| **auth** | | |
+| Sign In — Optional Cloud Sync | [wireframes/auth/sign-in.html](wireframes/auth/sign-in.html) | Dedicated /sign-in page (not gated — optional upgrade); no-data and has-data variants; desktop + mobile; "Continue without signing in" is a first-class prominent CTA |
+| Migration Prompt — Anonymous to Signed-In | [wireframes/auth/migration-prompt.html](wireframes/auth/migration-prompt.html) | Post-OAuth modal dialog: Import N cards vs. Start fresh; reassurance copy; desktop + mobile stacked choices; state flow diagram |
+| Cloud Sync Upsell Banner | [wireframes/auth/upsell-banner.html](wireframes/auth/upsell-banner.html) | Dismissible banner below TopBar on the dashboard: visible/dismissed/signed-in variants, desktop + mobile; dismiss lifecycle and localStorage flag spec |
+| **notifications** | | |
+| Ragnarök Threshold Mode | [wireframes/notifications/ragnarok-threshold.html](wireframes/notifications/ragnarok-threshold.html) | 3 dashboard states, red radial overlay spec, RagnarokContext data flow, HowlPanel header override |
+| Card Count Milestone Toasts | [wireframes/notifications/card-count-milestones.html](wireframes/notifications/card-count-milestones.html) | All 5 milestone toast designs, desktop + mobile positioning, stacked behavior, localStorage gate flow |
+| **modals** | | |
+| About Modal | [wireframes/modals/about-modal.html](wireframes/modals/about-modal.html) | Two-column dialog: wolf logo left, team pack + seven impossible ingredients right |
+| **easter-eggs** | | |
+| Easter Egg Modal | [wireframes/easter-eggs/easter-egg-modal.html](wireframes/easter-eggs/easter-egg-modal.html) | Reusable discovery dialog triggered by any easter egg — see [easter-egg-modal.md](easter-egg-modal.md) |
+| Konami Code — The Howl (Easter Egg #2) | [wireframes/easter-eggs/konami-howl.html](wireframes/easter-eggs/konami-howl.html) | Easter Egg #2: wolf silhouette overlay, FENRIR AWAKENS band, Ragnarok pulse variant, z-index layer map |
+| Loki Mode (Easter Egg #3) | [wireframes/easter-eggs/loki-mode.html](wireframes/easter-eggs/loki-mode.html) | Side-by-side normal vs active states, scrambled card grid, random realm badges, toast, timer, footer trigger |
+| LCARS Mode (Easter Egg #6) | [wireframes/easter-eggs/lcars-mode.html](wireframes/easter-eggs/lcars-mode.html) | LCARS overlay on dashboard header: elbow blocks + 4 data lines, z:9653, 5s auto-dismiss |
+| Gleipnir Hunt Complete | [wireframes/easter-eggs/gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) | Fragment 4 (7th card save) + Fragment 6 (15s Valhalla idle) triggers, Gleipnir reward entry, DEF-001 fix |
+| **accessibility** | | |
+| Accessibility + UX Polish | [wireframes/accessibility/accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) | Focus ring spec, skip-nav, ARIA landmarks, heading hierarchy, touch target audit, mobile layouts, reduced-motion |
+| **marketing** | | |
+| Marketing Site | [wireframes/marketing/marketing-site.html](wireframes/marketing/marketing-site.html) | 5-section static page: nav, hero, problems, features, steps, footer |
 
 ---
 
 ## TopBar — Anonymous + Signed-In States
 
-[→ topbar.html](wireframes/topbar.html)
+[→ topbar.html](wireframes/chrome/topbar.html)
 
 Updated Sprint 3.2 (anonymous-first auth model). Full-width sticky header spanning both columns.
 
@@ -66,7 +91,7 @@ Key layout decisions:
 
 ## Cloud Sync Upsell Banner
 
-[→ upsell-banner.html](wireframes/upsell-banner.html)
+[→ upsell-banner.html](wireframes/auth/upsell-banner.html)
 
 Added Sprint 3.2. Dismissible banner on the dashboard (route `/`) only. Shown to anonymous users who have not dismissed it.
 
@@ -83,7 +108,7 @@ Key layout decisions:
 
 ## Sign In — Optional Cloud Sync
 
-[→ sign-in.html](wireframes/sign-in.html)
+[→ sign-in.html](wireframes/auth/sign-in.html)
 
 Added Sprint 3.2. Dedicated `/sign-in` page — not a gate, an optional upgrade destination.
 
@@ -99,7 +124,7 @@ Key layout decisions:
 
 ## Migration Prompt — Anonymous to Signed-In
 
-[→ migration-prompt.html](wireframes/migration-prompt.html)
+[→ migration-prompt.html](wireframes/auth/migration-prompt.html)
 
 Added Sprint 3.2. Post-OAuth modal dialog. Fires only when: OAuth completes AND `localStorage` contains anonymous card data (count > 0).
 
@@ -117,7 +142,7 @@ Key layout decisions:
 
 ## Dashboard — The Ledger of Fates
 
-[→ dashboard.html](wireframes/dashboard.html)
+[→ dashboard.html](wireframes/app/dashboard.html)
 
 Key layout decisions:
 - **TopBar row added (Sprint 3.1):** App shell now has 3 rows — `auto` (TopBar) · `1fr` (sidebar + content) · `auto` (footer). TopBar spans both columns.
@@ -135,7 +160,7 @@ Key layout decisions:
 
 ## Card Panel Component
 
-[→ dashboard.html](wireframes/dashboard.html) (cards rendered in the grid)
+[→ dashboard.html](wireframes/app/dashboard.html) (cards rendered in the grid)
 
 Each card is a `CardChain` component. Structure:
 - Top: Status ring (SVG circle, `strokeDashoffset`-driven progress) + realm badge
@@ -157,7 +182,7 @@ Each card is a `CardChain` component. Structure:
 
 ## Add / Edit Card — Forge a Chain
 
-[→ add-card.html](wireframes/add-card.html)
+[→ add-card.html](wireframes/cards/add-card.html)
 
 Two-column form layout. Four fieldset panels:
 
@@ -178,7 +203,7 @@ Edit mode: title reads "REFORGE THIS CHAIN". Pre-populates all fields.
 
 ## Valhalla — Hall of the Honored Dead
 
-[→ valhalla.html](wireframes/valhalla.html)
+[→ valhalla.html](wireframes/app/valhalla.html)
 
 Narrower layout, sepia-tinted background variant (relative to main dashboard). Filter bar: issuer + sort. Tombstone cards:
 - Thicker left border accent (stone-hel color)
@@ -194,7 +219,7 @@ Gleipnir special entry (easter egg): appears at top of list when all 6 fragments
 
 ## The Howl Panel
 
-[→ howl-panel.html](wireframes/howl-panel.html)
+[→ howl-panel.html](wireframes/chrome/howl-panel.html)
 
 Two variants — active and empty:
 
@@ -211,7 +236,7 @@ Z-index: 50 (see z-index table below). Mobile: bottom drawer toggle.
 
 ## Marketing Site — `/static/index.html`
 
-[→ marketing-site.html](wireframes/marketing-site.html)
+[→ marketing-site.html](wireframes/marketing/marketing-site.html)
 
 Single-page, no framework, inline CSS/JS. Five sections:
 
@@ -301,9 +326,9 @@ Stack vertically. Primary action on top, Cancel below it, destructive action at 
 
 | Wireframe | Mode | Left | Right |
 |---|---|---|---|
-| `add-card.html` | Add | — | `[Cancel]` · `[Add Card]` |
-| `add-card.html` | Edit | `[Delete card]` | `[Cancel]` · `[Save changes]` |
-| `about-modal.html` | — | — | `[Close]` |
+| `cards/add-card.html` | Add | — | `[Cancel]` · `[Add Card]` |
+| `cards/add-card.html` | Edit | `[Delete card]` | `[Cancel]` · `[Save changes]` |
+| `modals/about-modal.html` | — | — | `[Close]` |
 | Dialog footers | — | — | `[Cancel]` · `[Confirm]` |
 
 ---
@@ -325,7 +350,7 @@ Stack vertically. Primary action on top, Cancel below it, destructive action at 
 
 ## Easter Egg Modal
 
-[→ wireframes/easter-egg-modal.html](wireframes/easter-egg-modal.html) · [Full design doc → easter-egg-modal.md](easter-egg-modal.md)
+[→ wireframes/easter-eggs/easter-egg-modal.html](wireframes/easter-eggs/easter-egg-modal.html) · [Full design doc → easter-egg-modal.md](easter-egg-modal.md)
 
 Reusable modal dialog shown whenever the user discovers a hidden easter egg. The wireframe establishes the two-column layout and content contract; all visual styling (gold glow, Cinzel Decorative headline, animated entry) is defined in `easter-egg-modal.md` and `theme-system.md`.
 
@@ -376,7 +401,7 @@ For the React component, `useEasterEgg` hook, and full token reference see [east
 
 ## About Modal
 
-[→ wireframes/about-modal.html](wireframes/about-modal.html)
+[→ wireframes/modals/about-modal.html](wireframes/modals/about-modal.html)
 
 Triggered from a persistent "About" link in the sidebar footer or app header. Provides app identity, team credits, and mythological provenance — all delivered in the wolf's voice.
 

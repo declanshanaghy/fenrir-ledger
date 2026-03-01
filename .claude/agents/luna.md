@@ -38,7 +38,7 @@ ux/ux-assets/
 
 ## Where to Write Output
 
-- **Wireframes**: `ux/wireframes/{view-name}.html` — HTML5, no theme styling
+- **Wireframes**: `ux/wireframes/{category}/{view-name}.html` — HTML5, no theme styling
 - **Wireframe Index**: `ux/wireframes.md`
 - **Interactions**: `ux/interactions.md`
 - **Theme System**: `ux/theme-system.md`
@@ -46,7 +46,21 @@ ux/ux-assets/
 - **UX Assets**: `ux/ux-assets/`
 - **Design Manifesto / Index**: `ux/README.md`
 
-Git tracks history — overwrite files each sprint. No sprint subdirectories.
+Git tracks history — overwrite files when a design changes. Organise by **feature category, not sprint**. Categories:
+
+| Category | What goes here |
+|----------|----------------|
+| `app` | Core page views — dashboard, valhalla |
+| `chrome` | Persistent layout frame — topbar, footer, howl-panel |
+| `cards` | Card entry and detail views — add-card, card-edit, wolves-hunger-meter |
+| `auth` | Sign-in, migration prompt, upsell banner |
+| `notifications` | Toasts, threshold overlays — ragnarök, milestones |
+| `modals` | Standalone modal dialogs — about-modal |
+| `easter-eggs` | All egg interactions — easter-egg-modal, konami-howl, lcars-mode, loki-mode, gleipnir |
+| `accessibility` | Cross-cutting a11y specs and audits |
+| `marketing` | Static marketing site views |
+
+Never create sprint subdirectories (e.g. `sprint-4/`). If you need to update a wireframe, overwrite the file in its category folder.
 
 ## Your Position in the Team
 

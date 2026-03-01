@@ -35,6 +35,12 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [handoff-to-fireman-anon-auth.md](handoff-to-fireman-anon-auth.md) — FiremanDecko handoff: what changed, householdId model, what to remove/change, new UI states, open technical questions.
 - [easter-egg-modal.md](easter-egg-modal.md) — Shared modal template for all easter egg discovery moments.
 - [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) — Mermaid diagram conventions for all pack members.
+- [wireframes/sprint-4/README.md](wireframes/sprint-4/README.md) — Sprint 4 wireframe index: 5 stories, key UX decisions, accessibility non-negotiables, FiremanDecko flexibility notes.
+- [wireframes/sprint-4/ragnarok-threshold.html](wireframes/sprint-4/ragnarok-threshold.html) — Ragnarök Threshold Mode: 3 dashboard states, overlay spec, RagnarokContext flow diagram (Story 4.1).
+- [wireframes/sprint-4/card-count-milestones.html](wireframes/sprint-4/card-count-milestones.html) — Card Count Milestone Toasts: all 5 milestones, desktop + mobile positioning, gate flow (Story 4.2).
+- [wireframes/sprint-4/gleipnir-hunt-complete.html](wireframes/sprint-4/gleipnir-hunt-complete.html) — Full Gleipnir Hunt: Fragment 4 + 6 triggers, reward Valhalla entry, DEF-001 fix (Story 4.3).
+- [wireframes/sprint-4/accessibility-polish.html](wireframes/sprint-4/accessibility-polish.html) — Accessibility polish: focus rings, skip-nav, ARIA landmarks, touch targets, reduced motion (Story 4.4).
+- [wireframes/sprint-4/wolves-hunger-about-modal.html](wireframes/sprint-4/wolves-hunger-about-modal.html) — Wolf's Hunger Meter + About Modal: hunger section, display variants, shared component spec (Story 4.5).
 - [.sync-report.md](.sync-report.md) — Latest doc-sync run report: files changed, verified, and root README hints.
 - [../architecture/README.md](../architecture/README.md) — FiremanDecko's domain: implementation brief, pipeline, system design, sprint plan, and ADRs.
 - [../architecture/implementation-brief.md](../architecture/implementation-brief.md) — FiremanDecko integration plan: wave strategy, sprint stories, open questions.

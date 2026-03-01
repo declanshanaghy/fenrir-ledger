@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Card Count Milestone Toasts — Story 4.2</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 4px; }
+    .label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .scenario { margin-bottom: 40px; }
+    .scenario-title { font-size: 16px; font-weight: bold; border-bottom: 2px solid; padding-bottom: 8px; margin-bottom: 16px; }
+
+    /* Dashboard shell (simplified) */
+    .dashboard-shell { border: 1px solid; position: relative; overflow: hidden; }
+    .topbar { height: 56px; border-bottom: 1px solid; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+    .topbar-brand { font-weight: bold; font-size: 13px; }
+    .main-content { padding: 24px; min-height: 200px; }
+
+    /* Toast base */
+    .toast {
+      border: 1px solid;
+      padding: 12px 16px;
+      font-size: 13px;
+      min-width: 280px;
+      max-width: 380px;
+    }
+    .toast-rune {
+      font-size: 18px;
+      margin-right: 8px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .toast-body { display: inline; }
+    .toast-progress {
+      height: 2px;
+      border: 1px solid;
+      margin-top: 8px;
+      position: relative;
+    }
+    .toast-progress-fill {
+      height: 100%;
+      border-right: 1px solid;
+    }
+
+    /* Toast positioning variants */
+    .toast-container-desktop {
+      position: absolute;
+      top: 72px;
+      right: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 300;
+    }
+    .toast-container-mobile {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 300;
+    }
+
+    /* Milestone table */
+    table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
+    th, td { border: 1px solid; padding: 6px 10px; font-size: 12px; text-align: left; }
+    th { font-weight: bold; }
+
+    /* Spec diagram section */
+    .spec-box { border: 1px solid; padding: 16px; margin-bottom: 24px; }
+    .spec-title { font-weight: bold; margin-bottom: 12px; }
+
+    /* Layout viewport labels */
+    .viewport-label { font-size: 11px; font-weight: bold; border: 1px solid; padding: 2px 8px; display: inline-block; margin-bottom: 8px; }
+
+    /* Stacked toasts */
+    .stacked-label { font-size: 11px; margin-bottom: 4px; font-style: italic; }
+
+    /* Lifecycle steps */
+    .lifecycle { display: flex; gap: 0; margin-bottom: 16px; }
+    .lifecycle-step { border: 1px solid; padding: 8px 12px; font-size: 11px; flex: 1; text-align: center; position: relative; }
+    .lifecycle-step + .lifecycle-step::before { content: "→"; position: absolute; left: -12px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+
+    /* Mobile viewport simulation */
+    .mobile-viewport { width: 375px; border: 2px solid; position: relative; overflow: hidden; }
+    .mobile-viewport .topbar { height: 48px; }
+    .mobile-toast-note { font-size: 11px; border: 1px dashed; padding: 8px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div style="padding: 24px;">
+
+    <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">
+      Story 4.2 — Card Count Milestone Toasts
+    </h1>
+    <p class="note" style="margin-bottom: 24px;">
+      Wireframe shows all 5 milestone toast designs, stacked-toast behavior, desktop and mobile positioning,
+      and the localStorage gate logic. No theme colors applied — structure only.
+    </p>
+
+    <!-- ── MILESTONE TABLE ──────────────────────────────────────── -->
+    <div class="spec-box">
+      <div class="spec-title">Milestone Definitions</div>
+      <table>
+        <tr>
+          <th>Active Card Count</th>
+          <th>localStorage Key</th>
+          <th>Rune Prefix</th>
+          <th>Toast Copy (exact — no paraphrasing)</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td><code>egg:milestone-1</code></td>
+          <td>ᚠ (Fehu — wealth)</td>
+          <td><em>The first chain is forged. Fenrir stirs.</em></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><code>egg:milestone-5</code></td>
+          <td>ᚠ (Fehu — wealth)</td>
+          <td><em>Five chains. The Pack grows.</em></td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><code>egg:milestone-9</code></td>
+          <td>ᛊ (Sowilo — sun/glory)</td>
+          <td><em>Nine chains — one for each realm. Odin watches.</em></td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td><code>egg:milestone-13</code></td>
+          <td>ᛊ (Sowilo — sun/glory)</td>
+          <td><em>Thirteen chains. Even Loki is impressed.</em></td>
+        </tr>
+        <tr>
+          <td>20</td>
+          <td><code>egg:milestone-20</code></td>
+          <td>ᛊ (Sowilo — sun/glory)</td>
+          <td><em>Twenty chains. The great wolf is bound no longer — it is the gods who should fear you.</em></td>
+        </tr>
+      </table>
+      <p class="note">
+        Count is active cards only (status !== 'closed'). Milestone fires ONCE per user lifetime.
+        Gate check: if localStorage.getItem(key) exists, skip. Set key on fire.
+        No toast fires during page load/hydration — only on card add/edit user action.
+      </p>
+    </div>
+
+    <!-- ── LIFECYCLE FLOW ─────────────────────────────────────── -->
+    <div class="spec-box" style="margin-bottom: 24px;">
+      <div class="spec-title">Toast Lifecycle</div>
+      <div class="lifecycle">
+        <div class="lifecycle-step">Card saved<br><span class="note">onSubmit success</span></div>
+        <div class="lifecycle-step">Count active cards<br><span class="note">status !== 'closed'</span></div>
+        <div class="lifecycle-step">Check thresholds<br><span class="note">iterate all milestones</span></div>
+        <div class="lifecycle-step">Check localStorage gate<br><span class="note">!getItem(key)?</span></div>
+        <div class="lifecycle-step">Set key + fire toast<br><span class="note">one per threshold crossed</span></div>
+        <div class="lifecycle-step">Auto-dismiss<br><span class="note">5 seconds + fade</span></div>
+      </div>
+      <p class="note">
+        Multiple thresholds in one action: iterate all, queue toasts with 200ms stagger.
+        Stagger prevents visual collision when user jumps from 4 to 10 cards (bulk import future scenario).
+      </p>
+    </div>
+
+    <!-- ── TOAST ANATOMY ─────────────────────────────────────── -->
+    <div class="scenario">
+      <div class="scenario-title">Toast Anatomy</div>
+
+      <!-- Toast variant 1: Fehu rune (milestones 1, 5) -->
+      <div style="margin-bottom: 16px;">
+        <span class="viewport-label">Milestone 1 Toast — First card</span>
+        <div class="toast">
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span class="toast-rune">ᚠ</span>
+            <div>
+              <div class="toast-body" style="font-style: italic;">
+                The first chain is forged. Fenrir stirs.
+              </div>
+              <p class="note">Voice 2 (atmospheric). No emoji. No action buttons. No close button.</p>
+            </div>
+          </div>
+          <!-- 5-second auto-dismiss progress bar -->
+          <div class="toast-progress" title="Progress bar drains over 5 seconds">
+            <div class="toast-progress-fill" style="width: 75%;"></div>
+          </div>
+          <p class="note">2px progress bar drains from 100% to 0% over 5s. Visual affordance for auto-dismiss timing.</p>
+        </div>
+      </div>
+
+      <!-- Toast variant 2: Fehu rune (milestone 5) -->
+      <div style="margin-bottom: 16px;">
+        <span class="viewport-label">Milestone 5 Toast</span>
+        <div class="toast">
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span class="toast-rune">ᚠ</span>
+            <div class="toast-body" style="font-style: italic;">
+              Five chains. The Pack grows.
+            </div>
+          </div>
+          <div class="toast-progress"><div class="toast-progress-fill" style="width: 50%;"></div></div>
+        </div>
+      </div>
+
+      <!-- Toast variant 3: Sowilo rune (milestones 9+) -->
+      <div style="margin-bottom: 16px;">
+        <span class="viewport-label">Milestone 9 Toast — Sowilo rune switches at 9+</span>
+        <div class="toast">
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span class="toast-rune">ᛊ</span>
+            <div class="toast-body" style="font-style: italic;">
+              Nine chains — one for each realm. Odin watches.
+            </div>
+          </div>
+          <div class="toast-progress"><div class="toast-progress-fill" style="width: 30%;"></div></div>
+        </div>
+      </div>
+
+      <!-- Toast variant 4: milestone 13 -->
+      <div style="margin-bottom: 16px;">
+        <span class="viewport-label">Milestone 13 Toast</span>
+        <div class="toast">
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span class="toast-rune">ᛊ</span>
+            <div class="toast-body" style="font-style: italic;">
+              Thirteen chains. Even Loki is impressed.
+            </div>
+          </div>
+          <div class="toast-progress"><div class="toast-progress-fill" style="width: 10%;"></div></div>
+        </div>
+      </div>
+
+      <!-- Toast variant 5: milestone 20 — long copy -->
+      <div style="margin-bottom: 24px;">
+        <span class="viewport-label">Milestone 20 Toast — Long copy, wider container required</span>
+        <div class="toast" style="max-width: 420px;">
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span class="toast-rune" style="flex-shrink: 0;">ᛊ</span>
+            <div class="toast-body" style="font-style: italic;">
+              Twenty chains. The great wolf is bound no longer — it is the gods who should fear you.
+            </div>
+          </div>
+          <div class="toast-progress"><div class="toast-progress-fill" style="width: 5%;"></div></div>
+          <p class="note">Container must be max-w-sm or wider. Do not clip this copy.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DESKTOP POSITIONING ─────────────────────────────── -->
+    <div class="scenario">
+      <div class="scenario-title">Desktop Toast Positioning</div>
+      <span class="viewport-label">Desktop (>640px) — Top-right quadrant, below TopBar</span>
+      <p class="note" style="margin-bottom: 12px;">
+        Toasts anchor to top-right of viewport. z-index: 300 (above all content including HowlPanel z:50 and header z:100).
+        Toasts must NOT overlap the sticky TopBar. Top offset = TopBar height (56px) + 16px gap.
+      </p>
+
+      <div class="dashboard-shell" style="min-height: 360px;">
+        <div class="topbar">
+          <span class="topbar-brand">ᛟ FENRIR LEDGER</span>
+          <span class="topbar-avatar" style="width: 32px; height: 32px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 11px;">ᛟ</span>
+        </div>
+        <div class="main-content">
+          <p style="font-size: 13px;">Dashboard content (card grid, etc.)</p>
+          <p class="note">Toast renders above all content, does not displace layout.</p>
+        </div>
+
+        <!-- Toast container — desktop position -->
+        <div class="toast-container-desktop">
+          <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">[Toast — top:72px, right:16px, z:300]</div>
+          <div class="toast">
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <span class="toast-rune">ᛊ</span>
+              <span style="font-style: italic;">Nine chains — one for each realm. Odin watches.</span>
+            </div>
+            <div class="toast-progress"><div class="toast-progress-fill" style="width: 60%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MOBILE POSITIONING ──────────────────────────────── -->
+    <div class="scenario">
+      <div class="scenario-title">Mobile Toast Positioning (375px)</div>
+      <p class="note" style="margin-bottom: 12px;">
+        On mobile, toasts must not overlap the sticky TopBar. Two viable positions:
+        (1) below the TopBar top-anchored, or (2) bottom of viewport above footer.
+        Bottom positioning is preferred on mobile to keep the primary content area clear.
+      </p>
+
+      <div style="display: flex; gap: 32px; flex-wrap: wrap;">
+
+        <!-- Mobile: bottom position (preferred) -->
+        <div>
+          <span class="viewport-label">Mobile — bottom positioning (preferred)</span>
+          <div class="mobile-viewport" style="min-height: 480px; position: relative;">
+            <div class="topbar">
+              <span class="topbar-brand">ᛟ FENRIR LEDGER</span>
+            </div>
+            <div style="padding: 16px; font-size: 12px;">
+              <p>Card grid</p>
+              <p class="note">Full-width 1-col on mobile</p>
+            </div>
+            <!-- Mobile toast: bottom, full width minus margins -->
+            <div style="position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 300;">
+              <p class="note" style="margin-bottom: 4px;">[Toast: bottom:16px, left:16px, right:16px, z:300]</p>
+              <div class="toast" style="max-width: 100%; width: 100%;">
+                <div style="display: flex; gap: 8px; align-items: flex-start;">
+                  <span class="toast-rune" style="font-size: 16px;">ᚠ</span>
+                  <span style="font-style: italic; font-size: 12px;">The first chain is forged. Fenrir stirs.</span>
+                </div>
+                <div class="toast-progress"><div class="toast-progress-fill" style="width: 80%;"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="mobile-toast-note">
+            Toast is full-width minus 16px margins. Progress bar visible.
+            Does not overlap TopBar (56px height). Touch target: entire toast is non-interactive — no dismiss button.
+          </div>
+        </div>
+
+        <!-- Stacked toasts on mobile -->
+        <div>
+          <span class="viewport-label">Mobile — stacked toasts (bulk-add scenario, 200ms stagger)</span>
+          <div class="mobile-viewport" style="min-height: 480px; position: relative;">
+            <div class="topbar">
+              <span class="topbar-brand">ᛟ FENRIR LEDGER</span>
+            </div>
+            <div style="padding: 16px; font-size: 12px;"><p>Card grid</p></div>
+
+            <!-- Stacked toasts -->
+            <div style="position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 300; display: flex; flex-direction: column; gap: 6px;">
+              <p class="note" style="margin-bottom: 2px;">[Stacked: 200ms stagger between each]</p>
+              <div class="toast" style="max-width: 100%; width: 100%;">
+                <div style="display: flex; gap: 8px; align-items: flex-start;">
+                  <span class="toast-rune" style="font-size: 14px;">ᚠ</span>
+                  <span style="font-style: italic; font-size: 11px;">Five chains. The Pack grows.</span>
+                </div>
+              </div>
+              <div class="toast" style="max-width: 100%; width: 100%;">
+                <div style="display: flex; gap: 8px; align-items: flex-start;">
+                  <span class="toast-rune" style="font-size: 14px;">ᛊ</span>
+                  <span style="font-style: italic; font-size: 11px;">Nine chains — one for each realm. Odin watches.</span>
+                </div>
+              </div>
+              <p class="note">Both toasts fire when active count jumps from 4 → 9 in one action.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LOCALSTORAGE GATE FLOW ────────────────────────── -->
+    <div class="spec-box">
+      <div class="spec-title">localStorage Gate — State Flow Diagram</div>
+      <p class="note" style="margin-bottom: 8px;">
+        Mermaid stateDiagram-v2 — follows ux/ux-assets/mermaid-style-guide.md conventions.
+      </p>
+      <pre style="border: 1px solid; padding: 12px; font-size: 12px; line-height: 1.6; overflow-x: auto;">
+```mermaid
+stateDiagram-v2
+    classDef primary fill:#03A9F4,stroke:#0288D1,color:#FFF
+    classDef healthy fill:#4CAF50,stroke:#388E3C,color:#FFF
+    classDef neutral fill:#9E9E9E,stroke:#757575,color:#FFF
+
+    [*] --> CardSaved : User saves card
+
+    CardSaved --> CountActive : Count active cards\n(status !== 'closed')
+    CountActive --> CheckThresholds : Active count = N
+
+    CheckThresholds --> GateCheck1 : N matches milestone?
+    GateCheck1 --> AlreadySeen : localStorage key exists
+    GateCheck1 --> FireToast : key absent
+    AlreadySeen --> Done : suppress — no toast
+    FireToast --> SetKey : Set egg:milestone-N
+    SetKey --> ShowToast : Render toast (shadcn Toaster)
+    ShowToast --> AutoDismiss : 5 seconds pass
+    AutoDismiss --> FadeOut : opacity 1→0
+    FadeOut --> Done : Remove from DOM
+
+    Done : [*]
+```
+      </pre>
+      <p class="note" style="margin-top: 8px;">
+        Re-fire prevention: once egg:milestone-N is set, the milestone NEVER fires again.
+        Closing cards that drop count below threshold does NOT reset the gate.
+        Milestones celebrate the add action, not the current portfolio size.
+      </p>
+    </div>
+
+    <!-- ── VISUAL DESIGN DIRECTION ───────────────────────── -->
+    <div class="spec-box">
+      <div class="spec-title">Visual Design Direction (for FiremanDecko — implement per theme-system.md)</div>
+      <table>
+        <tr><th>Property</th><th>Value</th><th>Token</th></tr>
+        <tr><td>Toast background</td><td>#0f1018</td><td>forge surface</td></tr>
+        <tr><td>Toast border</td><td>1px solid #2a2d45</td><td>iron-border</td></tr>
+        <tr><td>Toast text</td><td>#e8e4d4</td><td>text-saga</td></tr>
+        <tr><td>Rune prefix color</td><td>#c9920a</td><td>gold accent</td></tr>
+        <tr><td>Progress bar fill</td><td>#c9920a</td><td>gold accent</td></tr>
+        <tr><td>Progress bar track</td><td>#1e2235</td><td>rune-border</td></tr>
+        <tr><td>Auto-dismiss</td><td>5 seconds then fade-out</td><td>—</td></tr>
+        <tr><td>No close button</td><td>Celebratory — not actionable</td><td>—</td></tr>
+        <tr><td>z-index</td><td>300</td><td>Toast layer (see wireframes.md z-index table)</td></tr>
+      </table>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Full Gleipnir Hunt — Story 4.3</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 4px; }
+    .label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .scenario { margin-bottom: 48px; }
+    .scenario-title { font-size: 16px; font-weight: bold; border-bottom: 2px solid; padding-bottom: 8px; margin-bottom: 16px; }
+    .scenario-subtitle { font-size: 12px; margin-bottom: 12px; }
+
+    /* Spec box */
+    .spec-box { border: 1px solid; padding: 16px; margin-bottom: 24px; }
+    .spec-title { font-weight: bold; margin-bottom: 12px; }
+
+    /* Tables */
+    table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
+    th, td { border: 1px solid; padding: 6px 10px; font-size: 12px; text-align: left; }
+    th { font-weight: bold; }
+
+    /* Card form shell */
+    .form-shell { border: 1px solid; padding: 20px; margin-bottom: 16px; }
+    .form-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; }
+    .fieldset { border: 1px solid; padding: 12px; margin-bottom: 12px; }
+    .fieldset-legend { font-size: 12px; font-weight: bold; padding: 0 6px; }
+    .field-row { display: flex; gap: 12px; margin-bottom: 10px; }
+    .field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .field-label { font-size: 12px; font-weight: bold; }
+    .field-input { border: 1px solid; padding: 6px 8px; font-size: 13px; }
+
+    /* Save count indicator */
+    .save-count-badge { border: 1px solid; padding: 2px 8px; font-size: 11px; font-family: monospace; display: inline-block; }
+
+    /* Valhalla shell */
+    .valhalla-shell { border: 1px solid; min-height: 300px; }
+    .valhalla-header { border-bottom: 1px solid; padding: 20px 24px; }
+    .valhalla-title { font-size: 20px; font-weight: bold; }
+    .valhalla-content { padding: 24px; }
+
+    /* Gleipnir reward card */
+    .gleipnir-card { border: 2px solid; padding: 20px; margin-bottom: 16px; }
+    .gleipnir-card-header { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
+    .gleipnir-card-sub { font-style: italic; font-size: 13px; margin-bottom: 12px; }
+    .gleipnir-meta { display: flex; gap: 24px; font-size: 12px; font-family: monospace; border-top: 1px solid; padding-top: 10px; margin-top: 10px; }
+    .gleipnir-rewards { font-style: italic; font-size: 13px; margin-top: 8px; }
+
+    /* Tombstone card (normal Valhalla card) */
+    .tombstone { border: 1px solid; border-left-width: 4px; padding: 16px; margin-bottom: 12px; }
+    .tombstone-title { font-size: 14px; font-weight: bold; }
+    .tombstone-meta { font-size: 11px; font-family: monospace; margin-top: 4px; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 64px 32px; }
+    .empty-rune { font-size: 48px; margin-bottom: 16px; }
+    .empty-heading { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+    .empty-body { font-size: 14px; font-style: italic; }
+    .idle-timer { border: 1px dashed; padding: 8px 16px; margin-top: 16px; font-size: 11px; display: inline-block; }
+
+    /* Shimmer overlay spec */
+    .shimmer-overlay { border: 2px dashed; padding: 12px; text-align: center; font-size: 12px; margin-bottom: 16px; }
+
+    /* Fragment progress indicator */
+    .fragment-tracker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .fragment-item { border: 1px solid; padding: 4px 10px; font-size: 11px; }
+    .fragment-item.found { border-width: 2px; font-weight: bold; }
+
+    /* Trigger location annotations */
+    .trigger-annotation { border: 1px dashed; padding: 8px 12px; font-size: 11px; margin-top: 8px; }
+
+    /* CardForm save counter annotation */
+    .save-tracker { border: 1px solid; padding: 10px; margin-bottom: 12px; font-size: 12px; }
+    .save-tracker-title { font-weight: bold; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <div style="padding: 24px;">
+
+    <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">
+      Story 4.3 — Full Gleipnir Hunt: Wiring Fragments 4 and 6
+    </h1>
+    <p class="note" style="margin-bottom: 24px;">
+      Wireframe covers: Fragment 4 trigger location (card edit form, 7th save),
+      Fragment 6 trigger location (Valhalla empty state, 15s idle), the Gleipnir Complete
+      reward screen in Valhalla, and the aria-description bug fix (DEF-001).
+    </p>
+
+    <!-- ── GLEIPNIR STATUS TABLE ────────────────────────── -->
+    <div class="spec-box">
+      <div class="spec-title">Gleipnir Hunt — Fragment Status After Sprint 3</div>
+      <table>
+        <tr>
+          <th>#</th>
+          <th>Ingredient</th>
+          <th>Trigger</th>
+          <th>localStorage Key</th>
+          <th>Status</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>The sound of a cat's footfall</td>
+          <td>Click/hover SyncIndicator dot (bottom-right)</td>
+          <td>egg:gleipnir-1</td>
+          <td>Wired and shipped</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>The beard of a woman</td>
+          <td>Click ingredient text in About modal</td>
+          <td>egg:gleipnir-2</td>
+          <td>Wired and shipped</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>The roots of a mountain</td>
+          <td>First sidebar collapse</td>
+          <td>egg:gleipnir-3</td>
+          <td>Wired and shipped</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>The sinews of a bear</td>
+          <td>7th save of any card in CardForm</td>
+          <td>egg:gleipnir-4</td>
+          <td>NEEDS TRIGGER (this story)</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>The breath of a fish</td>
+          <td>Hover © in Footer</td>
+          <td>egg:gleipnir-5</td>
+          <td>Wired and shipped</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>The spittle of a bird</td>
+          <td>15s idle on Valhalla empty state</td>
+          <td>egg:gleipnir-6</td>
+          <td>NEEDS TRIGGER (this story)</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         FRAGMENT 4: THE SINEWS OF A BEAR
+         Trigger: 7th save of any card in CardForm
+    ═══════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Fragment 4: The Sinews of a Bear — Card Edit Form, 7th Save</div>
+      <p class="scenario-subtitle">
+        The GleipnirBearSinews modal fires when the user saves any card for the 7th time.
+        Save count is tracked per-card in localStorage: fenrir:card-saves:{cardId}.
+        The trigger is invisible to the user — no visual affordance. Bears are strong, persistent.
+        Rewarding the dedicated optimizer who keeps their ledger updated.
+      </p>
+
+      <!-- Save count tracking spec -->
+      <div class="save-tracker">
+        <div class="save-tracker-title">localStorage Save Counter Pattern</div>
+        <p style="font-size: 12px;">Key: <code>fenrir:card-saves:{cardId}</code> (string integer)</p>
+        <p style="font-size: 12px;">Incremented: in CardForm.tsx onSubmit success path</p>
+        <p style="font-size: 12px;">Gate check: <code>!localStorage.getItem('egg:gleipnir-4')</code> before trigger</p>
+        <p style="font-size: 12px;">Count resets: never — persists per card across sessions</p>
+        <p class="note">7 is a magic number in Fenrir Ledger (Loki's 7 children). Consistent with Loki Mode trigger.</p>
+      </div>
+
+      <!-- Card edit form showing the trigger point -->
+      <span class="label" style="display: block; margin-bottom: 8px;">Card Edit Form — structure showing where trigger fires</span>
+      <div class="form-shell">
+        <div class="form-title">REFORGE THIS CHAIN</div>
+
+        <!-- Save count indicator (internal, not visible in UI) -->
+        <div style="border: 1px dashed; padding: 8px; margin-bottom: 12px; font-size: 11px;">
+          <strong>[Internal state, NOT visible to user]</strong><br>
+          Save count for this card: <span class="save-count-badge">7</span>
+          &nbsp;← On 7th save, GleipnirBearSinews modal fires after form closes
+        </div>
+
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Chain Identity</legend>
+          <div class="field-row">
+            <div class="field"><div class="field-label">Issuer</div><select class="field-input" style="padding: 6px 8px;"><option>Chase</option></select></div>
+            <div class="field"><div class="field-label">Card name</div><input class="field-input" type="text" value="Sapphire Preferred" /></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><div class="field-label">Open date</div><input class="field-input" type="date" /></div>
+            <div class="field"><div class="field-label">Credit limit</div><input class="field-input" type="text" value="$10,000" /></div>
+          </div>
+        </fieldset>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Fee-Serpent</legend>
+            <div class="field"><div class="field-label">Annual fee</div><input class="field-input" type="text" value="$95" /></div>
+            <div class="field" style="margin-top: 8px;"><div class="field-label">Fee date</div><input class="field-input" type="date" /></div>
+          </fieldset>
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Welcome Mead</legend>
+            <div class="field"><div class="field-label">Bonus type</div><select class="field-input" style="padding: 6px 8px;"><option>Points</option></select></div>
+            <div class="field" style="margin-top: 8px;"><div class="field-label">Bonus amount</div><input class="field-input" type="text" value="60,000" /></div>
+          </fieldset>
+        </div>
+
+        <fieldset class="fieldset" style="margin-bottom: 16px;">
+          <legend class="fieldset-legend">Skald's Notes</legend>
+          <textarea class="field-input" style="width: 100%; height: 60px;"></textarea>
+        </fieldset>
+
+        <!-- Form actions — edit mode layout per wireframes.md convention -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <button style="border: 1px solid; padding: 8px 16px; font-size: 13px;">Delete card</button>
+          <div style="display: flex; gap: 12px;">
+            <button style="border: 1px solid; padding: 8px 16px; font-size: 13px;">Cancel</button>
+            <button style="border: 2px solid; padding: 8px 16px; font-size: 13px; font-weight: bold;">Save changes ▶</button>
+          </div>
+        </div>
+
+        <div class="trigger-annotation">
+          TRIGGER POINT: "Save changes" click → onSubmit success handler →
+          increment fenrir:card-saves:{cardId} → if count === 7 AND !egg:gleipnir-4 →
+          set egg:gleipnir-4 → open GleipnirBearSinews modal (already implemented)
+        </div>
+      </div>
+
+      <!-- GleipnirBearSinews modal spec -->
+      <div class="spec-box" style="max-width: 500px;">
+        <div class="spec-title">GleipnirBearSinews Modal (already built — wire trigger only)</div>
+        <!-- Using the established easter-egg-modal layout -->
+        <div style="border: 1px solid; padding: 0;">
+          <div style="border-bottom: 1px solid; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;">Easter Egg Discovered</div>
+              <div style="font-weight: bold; font-size: 16px;">The Sinews of a Bear</div>
+            </div>
+            <button style="border: none; cursor: pointer;">×</button>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 2fr; border-bottom: 1px solid;">
+            <div style="border-right: 1px solid; padding: 16px; display: flex; align-items: center; justify-content: center;">
+              <div style="border: 1px solid; width: 100px; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 24px;">ᚺ</div>
+            </div>
+            <div style="padding: 16px;">
+              <p style="font-size: 13px; font-style: italic; margin-bottom: 8px;">
+                You have maintained this chain with persistence. The sinews of a bear.
+              </p>
+              <p style="font-size: 12px;">Fragment 4 of 6 found</p>
+              <div style="display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap;">
+                <span class="save-count-badge" style="border-width: 2px;">1</span>
+                <span class="save-count-badge" style="border-width: 2px;">2</span>
+                <span class="save-count-badge" style="border-width: 2px;">3</span>
+                <span class="save-count-badge" style="border-width: 2px;">4</span>
+                <span class="save-count-badge">5</span>
+                <span class="save-count-badge">6</span>
+              </div>
+              <p class="note">Filled dots = found fragments. 4 of 6 shown as example.</p>
+            </div>
+          </div>
+          <div style="padding: 12px; text-align: center;">
+            <button style="border: 1px solid; padding: 8px 24px;">OK</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="trigger-annotation">
+        FALLBACK (if 7-save tracking adds complexity): Long-press (600ms) on the "Delete card" button
+        in the confirmation dialog. FiremanDecko chooses the implementation path.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         FRAGMENT 6: THE SPITTLE OF A BIRD
+         Trigger: 15s idle on Valhalla empty state
+    ═══════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Fragment 6: The Spittle of a Bird — Valhalla Empty State, 15s Idle</div>
+      <p class="scenario-subtitle">
+        When the user visits the Valhalla page with zero closed cards and waits 15 seconds
+        without any interaction, the GleipnirBirdSpittle modal fires. Birds carry messages —
+        waiting in an empty hall, listening. The trigger rewards patience.
+      </p>
+
+      <p class="note" style="margin-bottom: 12px;">
+        Note: The Valhalla empty state had aria-description="the beard of a woman" (DEF-001 from Loki Sprint 3 QA verdict).
+        This must be REMOVED in this story. The beard is fragment 2 (About modal). The bird spittle is this fragment (6).
+        No aria-description annotation is needed on the empty state — the idle timer is the trigger.
+      </p>
+
+      <!-- Valhalla empty state with idle timer annotation -->
+      <div class="valhalla-shell">
+        <div class="valhalla-header">
+          <div class="valhalla-title">Valhalla — Hall of the Honored Dead</div>
+          <p style="font-size: 12px; margin-top: 4px;">No closed cards in the hall.</p>
+        </div>
+        <div class="valhalla-content">
+          <div class="empty-state">
+            <div class="empty-rune">ᛏ</div>
+            <div class="empty-heading">The hall is empty.</div>
+            <div class="empty-body">
+              No cards have been honored in Valhalla yet.<br>
+              Close a card to send it to eternal rest.
+            </div>
+            <!-- Idle timer annotation -->
+            <div class="idle-timer">
+              [useEffect idle timer: 15 seconds after component mounts]<br>
+              If !egg:gleipnir-6 → triggerBirdSpittle()<br>
+              cleanup: clearTimeout on unmount (navigation cancels timer)<br>
+              Fires once only — gated by localStorage key
+            </div>
+            <div class="trigger-annotation" style="margin-top: 8px;">
+              TRIGGER: ValhallaEmptyState mounts → setTimeout 15s → if no gleipnir-6 key → open modal<br>
+              CANCEL: useEffect cleanup on unmount cancels the timer<br>
+              CONDITION: only fires if ValhallaEmptyState is visible (zero closed cards)<br>
+              DEF-001 FIX: Remove aria-description="the beard of a woman" from this element
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GleipnirBirdSpittle modal spec -->
+      <div class="spec-box" style="max-width: 500px; margin-top: 16px;">
+        <div class="spec-title">GleipnirBirdSpittle Modal (already built — wire trigger only)</div>
+        <div style="border: 1px solid; padding: 0;">
+          <div style="border-bottom: 1px solid; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;">Easter Egg Discovered</div>
+              <div style="font-weight: bold; font-size: 16px;">The Spittle of a Bird</div>
+            </div>
+            <button style="border: none; cursor: pointer;">×</button>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 2fr; border-bottom: 1px solid;">
+            <div style="border-right: 1px solid; padding: 16px; display: flex; align-items: center; justify-content: center;">
+              <div style="border: 1px solid; width: 100px; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 24px;">ᛊ</div>
+            </div>
+            <div style="padding: 16px;">
+              <p style="font-size: 13px; font-style: italic; margin-bottom: 8px;">
+                You waited in the empty hall. Listened. The bird has spoken.
+              </p>
+              <p style="font-size: 12px;">Fragment 6 of 6 found</p>
+              <p class="note">If this is the completing fragment → shimmer fires → Gleipnir unlocks</p>
+            </div>
+          </div>
+          <div style="padding: 12px; text-align: center;">
+            <button style="border: 1px solid; padding: 8px 24px;">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         GLEIPNIR COMPLETE UNLOCK
+    ═══════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Gleipnir Complete Unlock — All 6 Fragments Found</div>
+      <p class="scenario-subtitle">
+        When all 6 egg:gleipnir-N keys are set, the gleipnir-shimmer CSS animation fires on &lt;html&gt;
+        for 2 seconds. The Valhalla page gains the Gleipnir special entry at the top.
+        The entry persists across page refreshes (read from egg:gleipnir-complete key).
+      </p>
+
+      <!-- Shimmer overlay spec -->
+      <div class="shimmer-overlay">
+        [GLEIPNIR SHIMMER: html.gleipnir-complete — @keyframes gleipnir-shimmer — 2s ease-in-out — defined in interactions.md]<br>
+        Apply class via: document.documentElement.classList.add('gleipnir-complete')<br>
+        Remove after 2s: document.documentElement.classList.remove('gleipnir-complete')
+      </div>
+
+      <!-- Valhalla with Gleipnir special entry -->
+      <div class="valhalla-shell">
+        <div class="valhalla-header">
+          <div class="valhalla-title">Valhalla — Hall of the Honored Dead</div>
+        </div>
+        <div class="valhalla-content">
+
+          <!-- GLEIPNIR SPECIAL ENTRY — top of list, visually distinct -->
+          <div class="gleipnir-card">
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px;">
+              The Chain That Bound the Great Wolf
+            </div>
+            <div class="gleipnir-card-header">Gleipnir</div>
+            <div class="gleipnir-card-sub">
+              The chain that bound the great wolf. Made of impossible things. No chain is stronger.
+            </div>
+            <div class="gleipnir-meta">
+              <span>Opened: [first card open date across all cards]</span>
+              <span>Closed: [today's date]</span>
+            </div>
+            <div class="gleipnir-rewards">Rewards extracted: <em>Freedom itself</em></div>
+            <div class="trigger-annotation" style="margin-top: 8px;">
+              VISUAL DISTINCTION (non-negotiable):
+              Gold border (2px) · No issuer badge · Italicized rewards field · Special header eyebrow
+              First card open date: Math.min of all openDate values (active + closed cards)
+              Fallback if no cards: "Before memory"
+              ForgeMasterEgg shows: "6 of 6 Gleipnir fragments found"
+            </div>
+          </div>
+
+          <!-- Normal tombstone cards below -->
+          <div class="tombstone">
+            <div style="display: flex; gap: 8px; align-items: baseline;">
+              <span style="font-size: 16px;">ᛏ</span>
+              <div>
+                <div class="tombstone-title">Chase Sapphire Preferred</div>
+                <div class="tombstone-meta">Chase · Opened: Mar 2023 · Closed: Jan 2025 · Held: 22 months</div>
+              </div>
+            </div>
+          </div>
+          <div class="tombstone">
+            <div style="display: flex; gap: 8px; align-items: baseline;">
+              <span style="font-size: 16px;">ᛏ</span>
+              <div>
+                <div class="tombstone-title">Amex Gold Card</div>
+                <div class="tombstone-meta">Amex · Opened: Jan 2024 · Closed: Feb 2026 · Held: 13 months</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="note" style="margin-top: 8px;">
+        Gleipnir entry renders at the TOP of the card list, before all tombstones.
+        Conditional: isGleipnirComplete() returns true (all 6 keys set).
+        It is NOT a real Card object — rendered as separate JSX in ValhallaPage.
+      </p>
+    </div>
+
+    <!-- ── COMPLETE UNLOCK STATE FLOW ─────────────────── -->
+    <div class="spec-box">
+      <div class="spec-title">Gleipnir Complete — Unlock Flow</div>
+      <pre style="border: 1px solid; padding: 12px; font-size: 12px; line-height: 1.6; overflow-x: auto;">
+```mermaid
+graph TD
+    classDef primary fill:#03A9F4,stroke:#0288D1,color:#FFF
+    classDef healthy fill:#4CAF50,stroke:#388E3C,color:#FFF
+    classDef warning fill:#FF9800,stroke:#F57C00,color:#FFF
+
+    frag6([Fragment 6 found]) --> check{getGleipnirFoundCount()\n=== 6?}
+    check -->|No| partialDone[Fragment modal shows\nN of 6 found]
+    check -->|Yes| setComplete[Set egg:gleipnir-complete]
+    setComplete --> shimmer[Add html.gleipnir-complete\n@keyframes gleipnir-shimmer 2s]
+    shimmer --> removeClass[Remove class after 2s]
+    setComplete --> valhallaEntry[ValhallaPage renders\nGleipnir special entry at top]
+    setComplete --> forgeMaster[ForgeMasterEgg shows\n6 of 6 Gleipnir fragments found]
+
+    class setComplete primary
+    class shimmer healthy
+    class valhallaEntry warning
+```
+      </pre>
+    </div>
+
+    <!-- ── BUG FIX SPEC (DEF-001) ─────────────────────── -->
+    <div class="spec-box">
+      <div class="spec-title">Bug Fix — DEF-001: aria-description on Valhalla Empty State</div>
+      <table>
+        <tr>
+          <th>Issue</th>
+          <th>Location</th>
+          <th>Current State (Bug)</th>
+          <th>Fix Required</th>
+        </tr>
+        <tr>
+          <td>DEF-001</td>
+          <td>ValhallaEmptyState in valhalla/page.tsx</td>
+          <td>aria-description="the beard of a woman" (wrong fragment — beard = fragment 2)</td>
+          <td>Remove aria-description entirely. Fragment 6 trigger is the 15s idle timer — no DOM annotation needed.</td>
+        </tr>
+      </table>
+      <p class="note">
+        The aria-description was a Sprint 3 placeholder that assigned the wrong Gleipnir ingredient.
+        Fragment 2 (beard) is already wired in AboutModal.tsx. The Valhalla empty state's correct
+        fragment is #6 (bird spittle), triggered by the 15s idle timer — invisible to DOM inspection.
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>
