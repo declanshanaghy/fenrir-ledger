@@ -39,8 +39,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { toast } from "sonner";
+
 import type { Card, CardStatus } from "@/lib/types";
-import { saveCard, deleteCard, closeCard } from "@/lib/storage";
+import { saveCard, deleteCard, closeCard, getCards } from "@/lib/storage";
+import { checkMilestone } from "@/lib/milestone-utils";
 import {
   computeCardStatus,
   dollarsToCents,
@@ -50,6 +53,7 @@ import {
   localDateStringToIso,
 } from "@/lib/card-utils";
 import { KNOWN_ISSUERS } from "@/lib/constants";
+import { GleipnirBearSinews, useGleipnirFragment4 } from "@/components/cards/GleipnirBearSinews";
 
 // ─── Zod validation schema ────────────────────────────────────────────────────
 
@@ -105,6 +109,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { open: bearOpen, trigger: triggerBear, dismiss: dismissBear } = useGleipnirFragment4();
 
   // Precompute today + derived defaults (used for new cards)
   const todayStr = new Date().toISOString().split("T")[0] ?? "";
@@ -231,6 +236,28 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
       card.status = computeCardStatus(card);
 
       saveCard(card);
+
+      // Gleipnir Fragment 4 — Bear Sinews: triggers on the 7th card save
+      const SAVE_COUNT_KEY = "fenrir:card-save-count";
+      const prevCount = parseInt(localStorage.getItem(SAVE_COUNT_KEY) || "0", 10);
+      const newCount = prevCount + 1;
+      localStorage.setItem(SAVE_COUNT_KEY, String(newCount));
+      if (newCount === 7) {
+        triggerBear();
+      }
+
+      // Milestone toast — only on new card creation (not edit)
+      if (!isEditMode) {
+        const activeCards = getCards(card.householdId);
+        const milestone = checkMilestone(activeCards.length);
+        if (milestone) {
+          toast(milestone.message, {
+            duration: 5000,
+            className: "milestone-toast",
+          });
+        }
+      }
+
       router.push("/");
     } catch (err) {
       console.error("Failed to save card:", err);
@@ -273,6 +300,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit(onSubmit, scrollToFirstError)} className="space-y-4">
       {/* ── Card Details (full width) ───────────────────────────── */}
       <fieldset className="border border-border rounded-md p-4 space-y-4">
@@ -642,5 +670,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         </div>
       </div>
     </form>
+    <GleipnirBearSinews open={bearOpen} onClose={dismissBear} />
+    </>
   );
 }
