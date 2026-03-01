@@ -157,7 +157,9 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001 through ADR-006)
 - [architecture/adrs/ADR-005-auth-pkce-public-client.md](architecture/adrs/ADR-005-auth-pkce-public-client.md) — ADR-005: PKCE public client auth, localStorage session
 - [architecture/adrs/ADR-006-anonymous-first-auth.md](architecture/adrs/ADR-006-anonymous-first-auth.md) — ADR-006: Anonymous-first auth pivot, householdId from localStorage, cloud sync upsell
-- [development/spec-auth-oidc-google.md](development/spec-auth-oidc-google.md) — Technical spec: Google OIDC login (Iteration 1)
+- [designs/architecture/adr-clerk-auth.md](designs/architecture/adr-clerk-auth.md) — ADR-007: Clerk as auth platform with GitHub as initial provider (GA prerequisite)
+- [designs/architecture/clerk-implementation-plan.md](designs/architecture/clerk-implementation-plan.md) — Clerk integration plan: 5 phases, file-by-file changes, Playwright testing strategy
+- [development/spec-auth-oidc-google.md](development/spec-auth-oidc-google.md) — Technical spec: Google OIDC login (Iteration 1, superseded by ADR-007)
 - `architecture/api-contracts.md` — API surface, data shapes, endpoint specs *(future sprint)*
 - [development/src/](development/src/) — The forge itself. Next.js source code lives here.
 - [development/implementation-plan.md](development/implementation-plan.md) — Ordered task breakdown, what was built
