@@ -57,7 +57,7 @@ The route must:
 
 The API route calls the Anthropic API (server-side only — API key never exposed to client) with:
 
-- **Model**: `claude-haiku-3-5` (fast and cost-effective for structured extraction)
+- **Model**: `claude-haiku-4-5-20251001` (fast and cost-effective for structured extraction)
 - **Prompt strategy**: A system prompt that explains the `Card` schema in detail and instructs the model to extract all credit card records from the provided CSV, returning a JSON array.
 
 ### System Prompt (product-specified):
@@ -99,7 +99,7 @@ Rules:
 
 ```json
 {
-  "model": "claude-haiku-3-5",
+  "model": "claude-haiku-4-5-20251001",
   "max_tokens": 4096,
   "messages": [
     {
@@ -218,13 +218,13 @@ GID (tab ID) is optional in the URL hash: `#gid=0`. Default to GID `0` if absent
 
 ## Open Questions for FiremanDecko
 
-1. **Anthropic model selection**: `claude-haiku-3-5` is the product preference for cost/speed. If the model has been superseded or has a different model ID in the current SDK version, use the equivalent fast/cheap model and document the choice in the route file.
+1. ~~**Anthropic model selection**~~ — **Resolved**: Use `claude-haiku-4-5-20251001`. This is the confirmed model ID for Sprint 5.
 
 2. **CSV encoding**: Google Sheets CSV exports may use UTF-8 with BOM. Confirm whether the fetch response needs BOM stripping before passing to Anthropic.
 
 3. **Rate limiting**: Anthropic has per-minute token limits. If a user submits a very large sheet, the request may be rate-limited. Should the route return a retryable `429` response, or silently truncate the input first? Product preference: truncate first (at 100k characters), then surface a warning.
 
-4. **Vercel timeout**: Default Vercel serverless function timeout is 10 seconds. A large sheet fetch + Anthropic call may exceed this. Does the Vercel project have an extended timeout configured, or does this route need to be declared as an edge function or streaming response?
+4. ~~**Vercel timeout**~~ — **Resolved**: Extend the function timeout using `export const maxDuration = 60` at the top of the route file (Vercel Pro, serverless runtime). Do not use streaming or edge runtime for this route.
 
 ---
 

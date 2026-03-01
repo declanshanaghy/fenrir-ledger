@@ -23,7 +23,7 @@ This is a pure delight feature. It adds no functional value. It is the product's
 
 After this ships:
 
-1. Pressing `Cmd+Shift+W` (Mac) / `Ctrl+Shift+W` (Windows/Linux) on any page triggers LCARS mode.
+1. Pressing `Cmd+Shift+L` (Mac) / `Ctrl+Shift+L` (Windows/Linux) on any page triggers LCARS mode.
 2. A full-viewport amber overlay fades in over the current page, styled in the LCARS aesthetic (Star Trek: TNG computer panels).
 3. The overlay displays:
    - A "STARDATE" reading (derived from today's date in stardate format)
@@ -97,10 +97,10 @@ RAGNAROK THREAT LEVEL: {NONE / ELEVATED / CRITICAL}
 
 ## Trigger
 
-- **Key combo**: `Cmd+Shift+W` (Mac) / `Ctrl+Shift+W` (Windows/Linux)
+- **Key combo**: `Cmd+Shift+L` (Mac) / `Ctrl+Shift+L` (Windows/Linux)
 - **Scope**: global keyboard listener, active on all pages
 - **Guard**: if LCARS mode is already visible, the key combo is a no-op
-- **Conflict check**: `Ctrl+W` is the browser's "close tab" shortcut; `Ctrl+Shift+W` closes all tabs in some browsers. FiremanDecko must verify `e.preventDefault()` is called on the keydown event to suppress the browser's default behavior. If suppression is not possible across all target browsers, propose an alternative key combo at implementation time.
+- **Conflict check**: `Ctrl+Shift+L` has no known browser default action across Chrome, Firefox, or Safari. FiremanDecko must still call `e.preventDefault()` on the keydown event as a precaution and verify no conflict exists before shipping.
 
 ---
 
@@ -114,7 +114,7 @@ RAGNAROK THREAT LEVEL: {NONE / ELEVATED / CRITICAL}
 
 ## Acceptance Criteria
 
-- [ ] Pressing `Cmd+Shift+W` (Mac) or `Ctrl+Shift+W` (Windows/Linux) on any page triggers the LCARS overlay
+- [ ] Pressing `Cmd+Shift+L` (Mac) or `Ctrl+Shift+L` (Windows/Linux) on any page triggers the LCARS overlay
 - [ ] The overlay covers the full viewport with a fixed-position panel in LCARS amber/black aesthetic
 - [ ] The overlay displays the stardate (derived from today's date using the simplified formula)
 - [ ] The overlay displays card counts by status (active, fee_approaching, promo_expiring, closed) read live from the current household
@@ -136,7 +136,7 @@ RAGNAROK THREAT LEVEL: {NONE / ELEVATED / CRITICAL}
 
 **Component**: `LcarsOverlay.tsx` — a new client component rendered in `AppShell` alongside `KonamiHowl` and the Ragnarök overlay. It holds its own `visible` state.
 
-**Keyboard listener**: `useEffect` on mount, `window.addEventListener("keydown", handler)`. Check `e.metaKey` (Mac Cmd) or `e.ctrlKey` plus `e.shiftKey` and `e.key === "W"`. Call `e.preventDefault()` to suppress browser defaults.
+**Keyboard listener**: `useEffect` on mount, `window.addEventListener("keydown", handler)`. Check `e.metaKey` (Mac Cmd) or `e.ctrlKey` plus `e.shiftKey` and `e.key === "L"`. Call `e.preventDefault()` to suppress any browser defaults.
 
 **Card data**: Read from the current household using `getAllCardsGlobal(householdId)`. Count by status. The `householdId` is available from whatever auth context the app uses. Use `getClosedCards(householdId)` for the "Honored Dead" count.
 
@@ -156,7 +156,7 @@ RAGNAROK THREAT LEVEL: {NONE / ELEVATED / CRITICAL}
 
 ## Open Questions for FiremanDecko
 
-1. **`Ctrl+Shift+W` browser conflict**: In Chrome and Firefox on Windows/Linux, `Ctrl+Shift+W` closes all windows in the browser. `e.preventDefault()` may or may not prevent this depending on the browser. If it cannot be prevented reliably, the fallback key combo is `Ctrl+Shift+L` (L for "LCARS"). Product preference: try `Ctrl+Shift+W` first; if it cannot be safely suppressed, use `Ctrl+Shift+L`. Document the actual key combo used in a comment in the component.
+1. ~~**Key combo browser conflict**~~ — **Resolved**: The trigger is `Cmd+Shift+L` (Mac) / `Ctrl+Shift+L` (Windows/Linux). `Ctrl+Shift+L` has no known browser default action. FiremanDecko must verify this holds across Chrome, Firefox, and Safari before shipping and document the confirmation in a code comment in `LcarsOverlay.tsx`.
 
 2. **Mobile trigger**: There is no physical keyboard on most mobile devices. The LCARS easter egg is effectively desktop-only. Confirm this is acceptable — product preference is yes, desktop-only is fine for this easter egg.
 
