@@ -35,6 +35,7 @@ test-results/
 playwright-report/
 .playwright-mcp/
 .vercel
+logs/
 
 # Temp files
 tmp/
