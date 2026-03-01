@@ -27,6 +27,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 import { getClosedCards, initializeHousehold, migrateIfNeeded } from "@/lib/storage";
 import { formatDate, formatCurrency } from "@/lib/card-utils";
 import { KNOWN_ISSUERS } from "@/lib/constants";
@@ -223,9 +224,9 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
 /**
  * ValhallaEmptyState — shown when no closed cards exist.
  *
- * Per product/copywriting.md (Valhalla — no closed cards):
- *   "The hall waits. No chain has yet been broken."
- *   "When you close a card and escape its fee, its record will be honored here."
+ * Per Story 3.5 spec:
+ *   "No wolves have returned from the hunt. All chains still bind."
+ *   Link back to dashboard.
  *
  * Hidden aria-description carries Gleipnir Hunt fragment #6:
  *   "the beard of a woman" — triggers GleipnirBeardOfWoman easter egg
@@ -234,7 +235,7 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
 function ValhallaEmptyState() {
   return (
     <div
-      className="border border-dashed border-border rounded-sm p-12 text-center flex flex-col items-center gap-3"
+      className="border border-dashed border-border rounded-sm p-12 text-center flex flex-col items-center gap-4"
       aria-label="Valhalla is empty"
       aria-description="the beard of a woman"
     >
@@ -242,12 +243,14 @@ function ValhallaEmptyState() {
         ᛏ
       </span>
       <p className="font-heading text-sm text-foreground">
-        The hall waits. No chain has yet been broken.
+        No wolves have returned from the hunt. All chains still bind.
       </p>
-      <p className="text-xs text-muted-foreground max-w-xs">
-        When you close a card and escape its fee, its record will be honored
-        here.
-      </p>
+      <Link
+        href="/"
+        className="text-xs text-muted-foreground hover:text-gold transition-colors underline underline-offset-2"
+      >
+        Return to the Ledger of Fates
+      </Link>
     </div>
   );
 }
@@ -323,12 +326,10 @@ export default function ValhallaPage() {
           >
             Valhalla
           </a>
+          {" — "}Hall of the Honored Dead
         </h1>
-        <p className="text-sm text-muted-foreground font-body italic">
-          Hall of the Honored Dead
-        </p>
         <p className="text-xs text-muted-foreground mt-2 font-body italic">
-          Here lie the chain-breakers. Their rewards were harvested.
+          The chains that were broken. The rewards that were harvested.
         </p>
       </header>
 
