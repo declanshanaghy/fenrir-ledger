@@ -20,6 +20,7 @@ import {
   GleipnirWomansBeard,
   useGleipnirFragment2,
 } from "@/components/cards/GleipnirWomansBeard";
+import { WolfHungerMeter } from "@/components/shared/WolfHungerMeter";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI"] as const;
 
@@ -178,6 +179,12 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
                 </li>
               ))}
             </ol>
+
+            {/* Separator */}
+            <div className="border-t border-border mt-5 mb-5" aria-hidden="true" />
+
+            {/* Wolf's Hunger — aggregate bonus summary */}
+            <WolfHungerMeter />
 
           </div>
         </div>
