@@ -80,7 +80,6 @@ jobs:
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.preview_url }}
           BRANCH_NAME: ${{ github.ref_name }}
-          BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           PLAYWRIGHT_OUTCOME: ${{ steps.playwright.outcome }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
@@ -100,12 +99,9 @@ jobs:
 
             const prNumber = pulls[0].number;
 
-            // Build preview URL with bypass secret
+            // Use the plain preview URL — never append secrets to public PR comments.
+            // This is a public repo; PR comments are world-readable.
             const previewUrl = process.env.PREVIEW_URL || '';
-            const bypass = process.env.BYPASS_SECRET || '';
-            const accessUrl = previewUrl && bypass
-              ? `${previewUrl}?x-vercel-protection-bypass=${bypass}`
-              : previewUrl;
 
             // Build test result line
             const outcome = process.env.PLAYWRIGHT_OUTCOME;
@@ -119,7 +115,7 @@ jobs:
                   : '⚠️ Playwright tests did not run';
 
             const deployLine = previewUrl
-              ? `🔍 **Preview URL:** ${accessUrl}`
+              ? `🔍 **Preview URL:** ${previewUrl}`
               : '❌ **Deployment failed** — no preview URL';
 
             const body = [
