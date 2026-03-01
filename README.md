@@ -162,6 +162,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 *The trickster tests. His verdicts are final.*
 
 - [quality/README.md](quality/README.md) — Index of all QA artifacts and test execution guide
+- [quality/story-3.4-howl-panel-verdict.md](quality/story-3.4-howl-panel-verdict.md) — QA verdict: PR #7 (feat/howl-panel) — READY TO SHIP ✓ (0 defects)
 - [quality/story-3.2-anon-auth-verdict.md](quality/story-3.2-anon-auth-verdict.md) — QA verdict: Story 3.2 (Anonymous-First Auth + Cloud Sync Upsell) — READY TO SHIP ✓ (0 defects, 24/24 tests pass)
 - [quality/story-3.1-verdict.md](quality/story-3.1-verdict.md) — QA verdict: Story 3.1 (Google OIDC Auth + per-household localStorage) — READY TO SHIP ✓ (0 defects)
 - [quality/story-3.1-realm-utils-verdict.md](quality/story-3.1-realm-utils-verdict.md) — QA verdict: PR #3 (feat/realm-utils) — SHIP ✓ (0 defects)
