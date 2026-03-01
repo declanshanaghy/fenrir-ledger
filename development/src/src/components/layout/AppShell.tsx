@@ -31,6 +31,7 @@ import {
   GleipnirMountainRoots,
   useGleipnirFragment3,
 } from "@/components/cards/GleipnirMountainRoots";
+import { useRagnarok } from "@/contexts/RagnarokContext";
 
 const STORAGE_KEY = "fenrir:sidenav-collapsed";
 
@@ -43,6 +44,7 @@ export function AppShell({ children }: AppShellProps) {
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { open: rootsOpen, trigger: triggerRoots, dismiss: dismissRoots } = useGleipnirFragment3();
+  const { ragnarokActive } = useRagnarok();
 
   // Read persisted state after mount to avoid SSR mismatch
   useEffect(() => {
@@ -50,6 +52,20 @@ export function AppShell({ children }: AppShellProps) {
     if (stored === "true") setCollapsed(true);
     setMounted(true);
   }, []);
+
+  // Update document title when Ragnarök Threshold Mode activates/deactivates.
+  useEffect(() => {
+    if (ragnarokActive) {
+      document.title = "⚠ RAGNARÖK APPROACHES — Fenrir Ledger";
+    } else {
+      // Reset to empty so Next.js metadata can re-assert the correct title.
+      document.title = "";
+    }
+    return () => {
+      // Cleanup: don't leave the Ragnarök title lingering on unmount.
+      document.title = "";
+    };
+  }, [ragnarokActive]);
 
   function handleToggle() {
     const next = !collapsed;
@@ -102,6 +118,13 @@ export function AppShell({ children }: AppShellProps) {
       <LcarsOverlay />
       {/* Easter egg #3 — The Roots of a Mountain (first sidebar collapse, one-time) */}
       <GleipnirMountainRoots open={rootsOpen} onClose={dismissRoots} />
+      {/* Easter egg #11 — Ragnarök Threshold Mode (≥5 urgent cards) */}
+      {ragnarokActive && (
+        <div
+          aria-hidden="true"
+          className="ragnarok-overlay"
+        />
+      )}
       <Toaster
         position="bottom-right"
         toastOptions={{

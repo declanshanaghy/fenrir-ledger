@@ -375,3 +375,25 @@ body.konami-shake-mobile {
   100% { top: 100%; }
 }
 
+/* ── Ragnarök Threshold Mode ──────────────────────────────── */
+.ragnarok-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(61, 0, 0, 0.15) 70%,
+    rgba(61, 0, 0, 0.35) 100%
+  );
+  transition: opacity 1.2s ease-in;
+}
+
+/* Reduced motion: disable the overlay animation */
+@media (prefers-reduced-motion: reduce) {
+  .ragnarok-overlay {
+    transition: none;
+  }
+}
+

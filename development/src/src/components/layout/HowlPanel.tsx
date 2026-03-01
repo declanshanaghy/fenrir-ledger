@@ -28,6 +28,7 @@ import type { Card } from "@/lib/types";
 import { daysUntil, formatDate, formatCurrency } from "@/lib/card-utils";
 import { KNOWN_ISSUERS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { useRagnarok } from "@/contexts/RagnarokContext";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -181,35 +182,56 @@ interface PanelHeaderProps {
   shake: boolean;
   /** Callback to clear the shake state after animation ends. */
   onShakeEnd: () => void;
+  /** When true, Ragnarök Threshold Mode is active — intensified styling. */
+  ragnarokActive: boolean;
 }
 
 /**
  * HowlPanel header: ᚲ Kenaz rune (pulses when urgent cards present),
  * "THE HOWL" label, urgent count badge.
+ *
+ * When ragnarokActive: header text changes to "RAGNARÖK APPROACHES",
+ * rune changes to ᚠ (Fehu — wealth/fire), border pulses red.
  */
-function PanelHeader({ count, shake, onShakeEnd }: PanelHeaderProps) {
+function PanelHeader({ count, shake, onShakeEnd, ragnarokActive }: PanelHeaderProps) {
   return (
-    <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-      {/* ᚲ Kenaz rune — the torch; represents urgency.
+    <div
+      className={cn(
+        "flex items-center gap-2 px-4 py-3 border-b",
+        ragnarokActive
+          ? "border-[#c94020] animate-muspel-pulse"
+          : "border-border"
+      )}
+    >
+      {/* Rune — ᚠ Fehu (wealth/fire) in Ragnarök mode, ᚲ Kenaz (torch) normally.
           Pulses when there are urgent cards (animate-muspel-pulse in globals.css). */}
       <span
         aria-hidden="true"
         className={cn(
           "text-lg leading-none shrink-0 select-none",
-          count > 0 ? "text-[#c94a0a] animate-muspel-pulse" : "text-muted-foreground",
+          ragnarokActive
+            ? "text-[#c94020] animate-muspel-pulse"
+            : count > 0
+            ? "text-[#c94a0a] animate-muspel-pulse"
+            : "text-muted-foreground",
           shake ? "raven-icon--warning" : ""
         )}
         onAnimationEnd={onShakeEnd}
         style={{ fontFamily: "serif" }}
       >
-        ᚲ
+        {ragnarokActive ? "ᚠ" : "ᚲ"}
       </span>
       <h2 className="font-heading text-xs uppercase tracking-widest text-foreground flex-1">
-        The Howl
+        {ragnarokActive ? "Ragnarök Approaches" : "The Howl"}
       </h2>
       {count > 0 && (
         <span
-          className="text-xs font-mono font-semibold text-[#c94a0a] bg-[#c94a0a]/10 px-1.5 py-0.5 rounded-sm"
+          className={cn(
+            "text-xs font-mono font-semibold px-1.5 py-0.5 rounded-sm",
+            ragnarokActive
+              ? "text-[#c94020] bg-[#c94020]/10"
+              : "text-[#c94a0a] bg-[#c94a0a]/10"
+          )}
           data-slot="count"
           aria-label={`${count} urgent card${count === 1 ? "" : "s"}`}
         >
@@ -271,6 +293,7 @@ interface HowlPanelProps {
  * body, not a hidden panel. This matches the wireframe spec.
  */
 export function HowlPanel({ cards, className }: HowlPanelProps) {
+  const { ragnarokActive } = useRagnarok();
   const urgentRows = toUrgentRows(
     cards.filter(
       (c) => c.status === "fee_approaching" || c.status === "promo_expiring"
@@ -298,7 +321,8 @@ export function HowlPanel({ cards, className }: HowlPanelProps) {
     <aside
       className={cn(
         "flex flex-col",
-        "bg-background border border-border rounded-sm",
+        "bg-background border rounded-sm",
+        ragnarokActive ? "border-[#c94020]" : "border-border",
         "w-full",
         className
       )}
@@ -308,6 +332,7 @@ export function HowlPanel({ cards, className }: HowlPanelProps) {
         count={urgentRows.length}
         shake={shake}
         onShakeEnd={handleShakeEnd}
+        ragnarokActive={ragnarokActive}
       />
 
       <div className="flex-1 overflow-y-auto px-4">

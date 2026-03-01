@@ -35,6 +35,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { getAllCardsGlobal } from "@/lib/storage";
+import { useRagnarok } from "@/contexts/RagnarokContext";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -99,6 +100,7 @@ type HowlPhase = "idle" | "pulse" | "rising" | "holding" | "fading";
 
 export function KonamiHowl() {
   const { data: session } = useAuth();
+  const { ragnarokActive } = useRagnarok();
   const sequenceRef = useRef<string[]>([]);
   const [phase, setPhase] = useState<HowlPhase>("idle");
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -139,6 +141,9 @@ export function KonamiHowl() {
       (c) => c.status === "fee_approaching" || c.status === "promo_expiring"
     );
 
+    // Ragnarök Threshold Mode intensifies the hold: 5 s instead of 3 s.
+    const holdMs = ragnarokActive ? 5000 : 3000;
+
     if (overdue && !reducedMotion.current) {
       // Phase 1: Ragnarök pulse (800 ms)
       setPhase("pulse");
@@ -148,21 +153,21 @@ export function KonamiHowl() {
         // After rise animation completes, enter hold
         schedule(() => setPhase("holding"), 600);
         // After hold, begin fade
-        schedule(() => setPhase("fading"), 600 + 3000);
+        schedule(() => setPhase("fading"), 600 + holdMs);
         // After fade completes, return to idle
-        schedule(() => setPhase("idle"), 600 + 3000 + 400);
+        schedule(() => setPhase("idle"), 600 + holdMs + 400);
       }, RAGNAROK_PULSE_MS);
     } else {
       // No overdue cards (or reduced motion): go straight to rising
       setPhase("rising");
       if (!reducedMotion.current) {
         schedule(() => setPhase("holding"), 600);
-        schedule(() => setPhase("fading"), 600 + 3000);
-        schedule(() => setPhase("idle"), 600 + 3000 + 400);
+        schedule(() => setPhase("fading"), 600 + holdMs);
+        schedule(() => setPhase("idle"), 600 + holdMs + 400);
       } else {
         // Reduced motion: skip animations, just hold the band then dismiss.
-        schedule(() => setPhase("fading"), 3000);
-        schedule(() => setPhase("idle"), 3000 + 400);
+        schedule(() => setPhase("fading"), holdMs);
+        schedule(() => setPhase("idle"), holdMs + 400);
       }
     }
 
@@ -176,7 +181,7 @@ export function KonamiHowl() {
         document.body.classList.remove("konami-shake", "konami-shake-mobile");
       }, 400);
     }
-  }, [clearTimeouts, schedule, session]);
+  }, [clearTimeouts, ragnarokActive, schedule, session]);
 
   // Keydown listener — tracks the sequence and fires on completion.
   useEffect(() => {
