@@ -52,6 +52,16 @@ export function EmptyState() {
       >
         Add Card
       </Link>
+
+      <button
+        type="button"
+        onClick={() => {
+          window.dispatchEvent(new CustomEvent("fenrir:open-import-wizard"));
+        }}
+        className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-10 px-6 mt-3"
+      >
+        Import from Google Sheets
+      </button>
     </div>
   );
 }

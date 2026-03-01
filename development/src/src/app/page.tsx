@@ -20,11 +20,13 @@
  */
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { CardSkeletonGrid } from "@/components/dashboard/CardSkeletonGrid";
 import { AnimatedHowlPanel } from "@/components/layout/HowlPanel";
+import { ImportWizard } from "@/components/sheets/ImportWizard";
 import { initializeHousehold, getCards, migrateIfNeeded } from "@/lib/storage";
 import type { Card } from "@/lib/types";
 
@@ -34,6 +36,8 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   // Mobile HowlPanel bottom-sheet visibility
   const [mobileHowlOpen, setMobileHowlOpen] = useState(false);
+  // Import wizard visibility
+  const [importWizardOpen, setImportWizardOpen] = useState(false);
 
   useEffect(() => {
     // Wait for auth state to resolve before reading localStorage
@@ -46,13 +50,40 @@ export default function DashboardPage() {
     const loaded = getCards(householdId);
     setCards(loaded);
     setIsLoading(false);
+
+    // Pick up merge result from auth callback redirect
+    const mergeResult = sessionStorage.getItem("fenrir:merge-result");
+    if (mergeResult) {
+      sessionStorage.removeItem("fenrir:merge-result");
+      try {
+        const { merged } = JSON.parse(mergeResult) as { merged: number };
+        toast.success(`${merged} card${merged !== 1 ? "s" : ""} carried into your ledger.`);
+      } catch {
+        // Corrupt data — ignore silently
+      }
+    }
   }, [householdId, status]);
+
+  // Listen for custom event from EmptyState's "Import from Google Sheets" button
+  useEffect(() => {
+    function handleOpenWizard() {
+      setImportWizardOpen(true);
+    }
+    window.addEventListener("fenrir:open-import-wizard", handleOpenWizard);
+    return () => window.removeEventListener("fenrir:open-import-wizard", handleOpenWizard);
+  }, []);
 
   const urgentCount = cards.filter(
     (c) => c.status === "fee_approaching" || c.status === "promo_expiring"
   ).length;
 
   const loaded = !isLoading && status !== "loading";
+
+  // Placeholder — Story 5.4 implements real persistence + dedup
+  function handleConfirmImport(importedCards: Omit<Card, "householdId">[]) {
+    toast.success(`${importedCards.length} card${importedCards.length !== 1 ? "s" : ""} ready to import.`);
+    setImportWizardOpen(false);
+  }
 
   return (
     <div className="px-6 py-6">
@@ -88,6 +119,17 @@ export default function DashboardPage() {
               >
                 {urgentCount}
               </span>
+            </button>
+          )}
+
+          {/* Import button — shown in toolbar only when cards exist */}
+          {loaded && cards.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setImportWizardOpen(true)}
+              className="inline-flex items-center justify-center rounded-sm text-sm font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-9 px-4 py-2"
+            >
+              Import
             </button>
           )}
 
@@ -131,6 +173,13 @@ export default function DashboardPage() {
           />
         )}
       </div>
+
+      {/* Import Wizard modal */}
+      <ImportWizard
+        open={importWizardOpen}
+        onClose={() => setImportWizardOpen(false)}
+        onConfirmImport={handleConfirmImport}
+      />
     </div>
   );
 }
