@@ -50,11 +50,20 @@ We need an IDP that is both **easy for developers to test against** and **approp
 | **Firebase Auth** | Easy test accounts, Google-native | Google-centric, vendor lock-in, less Next.js-native | Worse DX than Clerk for this stack |
 | **Magic.link** | Great passwordless UX | Limited social login support, smaller ecosystem | Too narrow |
 
+## IDP Provider Rollout
+
+**Phase 1 (now):** GitHub only — the whole team has accounts, fastest path to testable auth.
+
+**Phase 2 (later):** Add Google, Apple, email magic link via Clerk dashboard toggles — no code changes required.
+
+Clerk decouples the auth platform from provider selection. Adding providers later is a config change, not a code change.
+
 ## Acceptance Criteria
 
 - [ ] Spike: Stand up Clerk dev instance, integrate with Next.js App Router
 - [ ] Verify test-mode flow works for local dev and CI (Playwright)
-- [ ] Enable Google + Apple + email magic link providers
+- [ ] Enable GitHub as the initial identity provider
+- [ ] Confirm adding providers later is dashboard-only (no code changes)
 - [ ] Document migration path from anonymous localStorage to Clerk-authenticated flow
 - [ ] Update product brief auth section to reflect chosen IDP
 
