@@ -167,7 +167,7 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
       await clearEggStorage(page, [EGG_STORAGE_KEYS.gleipnir_3]);
 
       // Find and click the sidebar collapse button (usually in the TopBar or SideNav)
-      const collapseButton = page.locator('button[aria-label*="collapse"], button[aria-label*="toggle"]')
+      const collapseButton = page.locator('[aria-label="Collapse sidebar"], [aria-label="Expand sidebar"]')
         .first();
 
       if (await collapseButton.isVisible()) {
@@ -212,7 +212,7 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
     }) => {
       // Trigger and dismiss the modal on first collapse
       const collapseButton = page
-        .locator('button[aria-label*="collapse"], button[aria-label*="toggle"]')
+        .locator('[aria-label="Collapse sidebar"], [aria-label="Expand sidebar"]')
         .first();
 
       if (await collapseButton.isVisible()) {
@@ -543,7 +543,7 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
 
       // Trigger egg #3 (Roots of a Mountain)
       const collapseButton = page
-        .locator('button[aria-label*="collapse"], button[aria-label*="toggle"]')
+        .locator('[aria-label="Collapse sidebar"], [aria-label="Expand sidebar"]')
         .first();
       if (await collapseButton.isVisible()) {
         await collapseButton.click();
