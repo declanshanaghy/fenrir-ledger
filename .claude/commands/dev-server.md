@@ -31,26 +31,40 @@ Run the script with the Bash tool:
 
 ## Environment overrides (for worktrees)
 
-The script supports two env vars for running in git worktrees:
+### Frontend (dev-server.sh)
 
 | Variable | Default | Purpose |
 |---|---|---|
 | `FENRIR_PORT` | `9653` | Port the Next.js dev server listens on |
 | `FENRIR_DEV_DIR` | Auto-detected `development/src/` | Path to the Next.js project root |
 
-**Main repo (default):**
 ```
-.claude/scripts/dev-server.sh start
-```
-
-**Worktree example (port 9654, worktree directory):**
-```
-FENRIR_PORT=9654 FENRIR_DEV_DIR=trees/my-branch/development/src .claude/scripts/dev-server.sh start
+.claude/scripts/dev-server.sh start                          # Main repo
+FENRIR_PORT=9654 FENRIR_DEV_DIR=trees/my-branch/development/src .claude/scripts/dev-server.sh start  # Worktree
 ```
 
-## Log file
+### Backend (backend-server.sh)
 
-Log output is written to `<DEV_DIR>/logs/dev-server.log` (e.g. `development/src/logs/dev-server.log` for main, `trees/<branch>/development/src/logs/dev-server.log` for a worktree). Use `logs` to stream it, or read it directly with the Read tool when diagnosing build/runtime errors.
+A separate script at `.claude/scripts/backend-server.sh` manages the Node/TS backend server.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `FENRIR_BACKEND_PORT` | `9753` | Port the backend server listens on |
+| `FENRIR_BACKEND_DIR` | Auto-detected `development/backend/` | Path to the backend project root |
+
+```
+.claude/scripts/backend-server.sh start                                  # Main repo
+FENRIR_BACKEND_PORT=9754 FENRIR_BACKEND_DIR=trees/my-branch/development/backend .claude/scripts/backend-server.sh start  # Worktree
+```
+
+Backend port = frontend port + 100 (e.g., frontend 9654 → backend 9754).
+
+## Log files
+
+- Frontend: `<DEV_DIR>/logs/dev-server.log`
+- Backend: `<BACKEND_DIR>/logs/backend-server.log`
+
+Use `logs` action to stream, or read directly with the Read tool when diagnosing errors.
 
 ## Notes
 

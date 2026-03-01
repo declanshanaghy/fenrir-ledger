@@ -44,19 +44,20 @@ Technical details, command syntax, and configuration reference.
 
 ### Port Calculation Formula
 ```
-PORT = 9653 + offset
+FRONTEND_PORT = 9653 + offset
+BACKEND_PORT  = 9753 + offset   (frontend + 100)
 ```
 
 ### Port Map
 
-| Environment | Offset | Port |
-|-------------|--------|------|
-| Main Repo   | 0      | 9653 |
-| Worktree 1  | 1      | 9654 |
-| Worktree 2  | 2      | 9655 |
-| Worktree 3  | 3      | 9656 |
-| Worktree 4  | 4      | 9657 |
-| Worktree 5  | 5      | 9658 |
+| Environment | Offset | Frontend Port | Backend Port |
+|-------------|--------|---------------|--------------|
+| Main Repo   | 0      | 9653          | 9753         |
+| Worktree 1  | 1      | 9654          | 9754         |
+| Worktree 2  | 2      | 9655          | 9755         |
+| Worktree 3  | 3      | 9656          | 9756         |
+| Worktree 4  | 4      | 9657          | 9757         |
+| Worktree 5  | 5      | 9658          | 9758         |
 
 ### Auto-calculated Offsets
 When no port offset is specified, the system:
@@ -101,29 +102,39 @@ trees/
 
 ---
 
-## Dev Server Management
+## Server Management
 
-All dev server management uses `.claude/scripts/dev-server.sh` with environment overrides.
+Two scripts manage frontend and backend servers independently.
 
-### Main repo (default port 9653):
+### Frontend (Next.js) — `.claude/scripts/dev-server.sh`
+
+Main repo (default port 9653):
 ```bash
-.claude/scripts/dev-server.sh start
-.claude/scripts/dev-server.sh stop
-.claude/scripts/dev-server.sh status
-.claude/scripts/dev-server.sh restart
-.claude/scripts/dev-server.sh logs
+.claude/scripts/dev-server.sh start|stop|restart|status|logs
 ```
 
-### Worktree (custom port):
+Worktree:
 ```bash
-FENRIR_PORT=<PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/src .claude/scripts/dev-server.sh start
-FENRIR_PORT=<PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/src .claude/scripts/dev-server.sh stop
-FENRIR_PORT=<PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/src .claude/scripts/dev-server.sh status
+FENRIR_PORT=<FE_PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/src .claude/scripts/dev-server.sh start|stop|status
+```
+
+### Backend (Node/TS) — `.claude/scripts/backend-server.sh`
+
+Main repo (default port 9753):
+```bash
+.claude/scripts/backend-server.sh start|stop|restart|status|logs
+```
+
+Worktree:
+```bash
+FENRIR_BACKEND_PORT=<BE_PORT> FENRIR_BACKEND_DIR=<abs-path>/trees/<branch>/development/backend .claude/scripts/backend-server.sh start|stop|status
 ```
 
 ### Log Files
-- Main: `development/src/logs/dev-server.log`
-- Worktree: `trees/<branch>/development/src/logs/dev-server.log`
+- Frontend main: `development/src/logs/dev-server.log`
+- Frontend worktree: `trees/<branch>/development/src/logs/dev-server.log`
+- Backend main: `development/backend/logs/backend-server.log`
+- Backend worktree: `trees/<branch>/development/backend/logs/backend-server.log`
 
 ---
 
@@ -134,7 +145,8 @@ Each worktree has:
 | Feature | Isolation Level | Notes |
 |---------|----------------|-------|
 | **File System** | Complete | Separate working directory |
-| **Port** | Complete | Unique port per worktree |
+| **Frontend Port** | Complete | Unique frontend port per worktree (9653+offset) |
+| **Backend Port** | Complete | Unique backend port per worktree (9753+offset) |
 | **Environment** | Complete | Own `.env.local` |
 | **Dependencies** | Complete | Own `node_modules/` |
 | **Git History** | Shared | Same repository |

@@ -43,26 +43,34 @@ DEV_SERVER_SCRIPT: .claude/scripts/dev-server.sh
   - Check if directory exists anyway (orphaned directory)
   - If neither exists, error with message that worktree not found
 
-### 3. Identify Port
+### 3. Identify Ports
 
-- Find which port the worktree's dev server is using:
+- Find which ports the worktree's servers are using:
   - Check running processes in the worktree dir: `ps aux | grep "trees/<BRANCH_NAME>"`
-  - Or scan ports 9654-9663 for a process whose working dir matches the worktree
-- Note the port for stopping the server
+  - Scan frontend ports 9654-9663 for a process whose working dir matches the worktree
+  - Scan backend ports 9754-9763 for a process whose working dir matches the worktree
+- Note both ports for stopping servers
 
-### 4. Stop Dev Server
+### 4. Stop Servers
 
-- If port was identified, stop the dev server using the dev-server script:
+**Stop Frontend Dev Server:**
+- If frontend port was identified:
   ```
-  FENRIR_PORT=<PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src .claude/scripts/dev-server.sh stop
+  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src .claude/scripts/dev-server.sh stop
   ```
-- If port couldn't be identified, try to find and kill any process in the worktree directory:
+- Verify stopped: `FENRIR_PORT=<FRONTEND_PORT> .claude/scripts/dev-server.sh status`
+
+**Stop Backend Server:**
+- If backend port was identified:
+  ```
+  FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/backend .claude/scripts/backend-server.sh stop
+  ```
+- Verify stopped: `FENRIR_BACKEND_PORT=<BACKEND_PORT> .claude/scripts/backend-server.sh status`
+
+- If ports couldn't be identified, try to find and kill any process in the worktree directory:
   - `lsof -t +D <WORKTREE_DIR>/development/src | xargs kill 2>/dev/null`
-- Verify dev server stopped:
-  ```
-  FENRIR_PORT=<PORT> .claude/scripts/dev-server.sh status
-  ```
-- Wait 2 seconds for process to fully terminate
+  - `lsof -t +D <WORKTREE_DIR>/development/backend | xargs kill 2>/dev/null`
+- Wait 2 seconds for processes to fully terminate
 
 ### 5. Remove Git Worktree
 
@@ -97,7 +105,8 @@ Branch:   <BRANCH_NAME>
 Status:   REMOVED
 
 Cleanup:
-  Dev server stopped (port <PORT>)
+  Frontend server stopped (port <FRONTEND_PORT>)
+  Backend server stopped (port <BACKEND_PORT>) [or: was not running]
   Git worktree removed
   Git branch deleted
   Directory removed from trees/
