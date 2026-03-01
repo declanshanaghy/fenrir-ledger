@@ -46,7 +46,7 @@
 
 Track every fee-wyrm in your portfolio. Every chain forged, every promo deadline, every fee-serpent's strike date — Fenrir watches and howls before the trap snaps shut. Add your cards, name your thresholds, and the wolf does the rest: reminding you to spend, transfer, downgrade, or close before you lose a single dollar to a fee you didn't choose to pay.
 
-*Sprint 3 in progress — Stories 3.2 (Norse copy pass), 3.3 (Framer Motion card animations), and 3.5 (Valhalla archive + Close Card action) shipped. StatusRing and HowlPanel next.*
+*Sprint 3 in progress — Stories 3.2 (Norse copy pass), 3.3 (Framer Motion card animations), 3.4 (HowlPanel urgent sidebar), and 3.5 (Valhalla archive + Close Card action) shipped. StatusRing next.*
 
 ---
 
@@ -238,6 +238,12 @@ cd development/src && npm run dev
 - [SideNav.tsx](development/src/src/components/layout/SideNav.tsx) — Valhalla nav link with ᛏ RuneIcon added
 - [implementation-plan.md](development/implementation-plan.md) — Story 3.5 tasks documented
 - [qa-handoff.md](development/qa-handoff.md) — Story 3.5 QA handoff with full test matrix
+
+### Sprint 3 — Story 3.4 — HowlPanel — Urgent Deadlines Sidebar
+
+- [HowlPanel.tsx](development/src/src/components/layout/HowlPanel.tsx) — Urgent sidebar: filters fee_approaching/promo_expiring, sorts by days remaining, Framer Motion slide-in from right, mobile bottom sheet
+- [page.tsx](development/src/src/app/page.tsx) — Dashboard layout updated: flex row with HowlPanel as lg+ right sidebar; mobile ᚲ bell button opens bottom sheet
+- [globals.css](development/src/src/app/globals.css) — `raven-warn` keyframe added for raven icon shake on new urgent card
 
 ### Sprint 3 — Story 3.3 — Framer Motion + Card Animations
 
