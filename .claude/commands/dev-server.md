@@ -1,26 +1,46 @@
 ---
-description: Start, stop, restart, check status of, or tail logs for the Fenrir Ledger dev server (port 9653).
+description: Start, stop, restart, check status of, or tail logs for the Fenrir Ledger services (frontend port 9653, backend port 9753).
 ---
 
-Manage the Fenrir Ledger development server using the script at `.claude/scripts/dev-server.sh`.
+Manage Fenrir Ledger services using three scripts in `.claude/scripts/`:
 
-The argument passed to this command is the action: `start`, `stop`, `restart`, `status`, or `logs`.
+| Script | Purpose |
+|--------|---------|
+| `services.sh` | Unified — manages both frontend and backend together |
+| `frontend-server.sh` | Frontend (Next.js) dev server only |
+| `backend-server.sh` | Backend (Node/TS) server only |
 
-Run the script with the Bash tool:
+## Unified Script (recommended)
 
 ```
-.claude/scripts/dev-server.sh <action>
+.claude/scripts/services.sh <action>
 ```
-
-## Actions
 
 | Action | Effect |
 |--------|--------|
-| `start` | Start the server if not already running |
-| `stop` | Kill the listening process on the configured port |
-| `restart` | Stop then start (use after code changes that confuse HMR) |
-| `status` | Print whether the server is running and its PID |
-| `logs` | `tail -f` the log file |
+| `start` | Start backend first, then frontend |
+| `stop` | Stop both services |
+| `restart` | Restart both services |
+| `status` | Show status of both services |
+| `logs` | Tail both log files interleaved |
+| `logs frontend` | Tail frontend logs only |
+| `logs backend` | Tail backend logs only |
+
+## Individual Scripts
+
+### Frontend — `frontend-server.sh`
+
+```
+.claude/scripts/frontend-server.sh <action>
+```
+
+### Backend — `backend-server.sh`
+
+```
+.claude/scripts/backend-server.sh <action>
+```
+
+Both accept: `start`, `stop`, `restart`, `status`, `logs`.
 
 ## When to use this
 
@@ -31,21 +51,21 @@ Run the script with the Bash tool:
 
 ## Environment overrides (for worktrees)
 
-### Frontend (dev-server.sh)
+### Frontend (frontend-server.sh)
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `FENRIR_PORT` | `9653` | Port the Next.js dev server listens on |
-| `FENRIR_DEV_DIR` | Auto-detected `development/frontend/` | Path to the Next.js project root |
+| `FENRIR_FRONTEND_PORT` | `9653` | Port the Next.js dev server listens on |
+| `FENRIR_FRONTEND_DIR` | Auto-detected `development/frontend/` | Path to the Next.js project root |
+
+Backward-compatible aliases (deprecated): `FENRIR_PORT`, `FENRIR_DEV_DIR`.
 
 ```
-.claude/scripts/dev-server.sh start                          # Main repo
-FENRIR_PORT=9654 FENRIR_DEV_DIR=trees/my-branch/development/frontend .claude/scripts/dev-server.sh start  # Worktree
+.claude/scripts/frontend-server.sh start                          # Main repo
+FENRIR_FRONTEND_PORT=9654 FENRIR_FRONTEND_DIR=trees/my-branch/development/frontend .claude/scripts/frontend-server.sh start  # Worktree
 ```
 
 ### Backend (backend-server.sh)
-
-A separate script at `.claude/scripts/backend-server.sh` manages the Node/TS backend server.
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -57,17 +77,27 @@ A separate script at `.claude/scripts/backend-server.sh` manages the Node/TS bac
 FENRIR_BACKEND_PORT=9754 FENRIR_BACKEND_DIR=trees/my-branch/development/backend .claude/scripts/backend-server.sh start  # Worktree
 ```
 
-Backend port = frontend port + 100 (e.g., frontend 9654 → backend 9754).
+### Unified (services.sh)
+
+`services.sh` reads the same environment variables and delegates to the individual scripts.
+
+```
+.claude/scripts/services.sh start                          # Main repo — starts both
+FENRIR_FRONTEND_PORT=9654 FENRIR_BACKEND_PORT=9754 .claude/scripts/services.sh status  # Worktree
+```
+
+Backend port = frontend port + 100 (e.g., frontend 9654 -> backend 9754).
 
 ## Log files
 
-- Frontend: `<DEV_DIR>/logs/dev-server.log`
+- Frontend: `<FRONTEND_DIR>/logs/frontend-server.log`
 - Backend: `<BACKEND_DIR>/logs/backend-server.log`
 
 Use `logs` action to stream, or read directly with the Read tool when diagnosing errors.
 
 ## Notes
 
-- The script uses `lsof -sTCP:LISTEN` to find only the listening server process, not browser connections to the same port.
+- The scripts use `lsof -sTCP:LISTEN` to find only the listening server process, not browser connections to the same port.
 - `nohup` is used so the server survives the shell session that spawned it.
-- The server runs from `development/frontend/` (or `FENRIR_DEV_DIR`) regardless of the working directory when the command is called.
+- The server runs from the configured directory regardless of the working directory when the command is called.
+- **Migration note**: `dev-server.sh` was renamed to `frontend-server.sh`. The old `FENRIR_PORT` and `FENRIR_DEV_DIR` env vars still work as fallbacks.

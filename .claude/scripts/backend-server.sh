@@ -18,41 +18,41 @@ pid() { lsof -ti TCP:$PORT -sTCP:LISTEN 2>/dev/null | head -1; }
 case "${1:-}" in
   start)
     if p=$(pid); then
-      echo "Already running (pid $p)"
+      echo "Backend: already running (pid $p)"
       exit 0
     fi
-    echo "Starting backend server on port $PORT (dir: $BACKEND_DIR)..."
+    echo "Backend: starting on port $PORT (dir: $BACKEND_DIR)..."
     cd "$BACKEND_DIR"
     nohup npx tsx watch src/index.ts > "$LOG_FILE" 2>&1 &
-    echo "Started (pid $!). Logs: $LOG_FILE"
+    echo "Backend: started (pid $!). Logs: $LOG_FILE"
     ;;
 
   stop)
     if p=$(pid); then
       kill "$p"
-      echo "Stopped (pid $p)"
+      echo "Backend: stopped (pid $p)"
     else
-      echo "Not running"
+      echo "Backend: not running"
     fi
     ;;
 
   restart)
     if p=$(pid); then
       kill "$p"
-      echo "Stopped (pid $p)"
+      echo "Backend: stopped (pid $p)"
       sleep 1
     fi
-    echo "Starting backend server on port $PORT (dir: $BACKEND_DIR)..."
+    echo "Backend: starting on port $PORT (dir: $BACKEND_DIR)..."
     cd "$BACKEND_DIR"
     nohup npx tsx watch src/index.ts > "$LOG_FILE" 2>&1 &
-    echo "Started (pid $!). Logs: $LOG_FILE"
+    echo "Backend: started (pid $!). Logs: $LOG_FILE"
     ;;
 
   status)
     if p=$(pid); then
-      echo "Running (pid $p)"
+      echo "Backend: running (pid $p) on port $PORT"
     else
-      echo "Not running"
+      echo "Backend: not running"
     fi
     ;;
 

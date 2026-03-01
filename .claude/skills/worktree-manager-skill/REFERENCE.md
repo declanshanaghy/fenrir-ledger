@@ -73,16 +73,23 @@ When no port offset is specified, the system:
 ```
 fenrir-ledger/
 ├── .claude/
-│   ├── scripts/dev-server.sh
+│   ├── scripts/
+│   │   ├── services.sh          # Unified: manages both servers
+│   │   ├── frontend-server.sh   # Frontend (Next.js) only
+│   │   └── backend-server.sh    # Backend (Node/TS) only
 │   ├── commands/
 │   └── skills/
 ├── development/
-│   └── src/           # Next.js app root
-│       ├── .env.local
+│   ├── frontend/        # Next.js app root
+│   │   ├── .env.local
+│   │   ├── package.json
+│   │   ├── node_modules/
+│   │   └── src/
+│   └── backend/         # Node/TS backend root
 │       ├── package.json
 │       ├── node_modules/
 │       └── src/
-├── trees/             # Worktrees live here (gitignored)
+├── trees/               # Worktrees live here (gitignored)
 └── .gitignore
 ```
 
@@ -92,10 +99,14 @@ trees/
 └── <branch-name>/
     ├── .claude/           # Inherited from main
     ├── development/
-    │   └── src/           # Isolated Next.js app
-    │       ├── .env.local # Copied from main
+    │   ├── frontend/      # Isolated Next.js app
+    │   │   ├── .env.local # Copied from main
+    │   │   ├── package.json
+    │   │   ├── node_modules/ # Independently installed
+    │   │   └── src/
+    │   └── backend/       # Isolated backend
     │       ├── package.json
-    │       ├── node_modules/ # Independently installed
+    │       ├── node_modules/
     │       └── src/
     └── ...
 ```
@@ -104,18 +115,34 @@ trees/
 
 ## Server Management
 
-Two scripts manage frontend and backend servers independently.
+Three scripts manage frontend and backend servers.
 
-### Frontend (Next.js) — `.claude/scripts/dev-server.sh`
+### Unified — `.claude/scripts/services.sh`
 
-Main repo (default port 9653):
+Manages both frontend and backend together. Recommended for most operations.
+
+Main repo:
 ```bash
-.claude/scripts/dev-server.sh start|stop|restart|status|logs
+.claude/scripts/services.sh start|stop|restart|status|logs [frontend|backend]
 ```
 
 Worktree:
 ```bash
-FENRIR_PORT=<FE_PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/frontend .claude/scripts/dev-server.sh start|stop|status
+FENRIR_FRONTEND_PORT=<FE_PORT> FENRIR_FRONTEND_DIR=<abs-path>/trees/<branch>/development/frontend \
+FENRIR_BACKEND_PORT=<BE_PORT> FENRIR_BACKEND_DIR=<abs-path>/trees/<branch>/development/backend \
+.claude/scripts/services.sh start|stop|status
+```
+
+### Frontend (Next.js) — `.claude/scripts/frontend-server.sh`
+
+Main repo (default port 9653):
+```bash
+.claude/scripts/frontend-server.sh start|stop|restart|status|logs
+```
+
+Worktree:
+```bash
+FENRIR_FRONTEND_PORT=<FE_PORT> FENRIR_FRONTEND_DIR=<abs-path>/trees/<branch>/development/frontend .claude/scripts/frontend-server.sh start|stop|status
 ```
 
 ### Backend (Node/TS) — `.claude/scripts/backend-server.sh`
@@ -130,9 +157,22 @@ Worktree:
 FENRIR_BACKEND_PORT=<BE_PORT> FENRIR_BACKEND_DIR=<abs-path>/trees/<branch>/development/backend .claude/scripts/backend-server.sh start|stop|status
 ```
 
+### Environment Variables
+
+| Variable | Default | Script | Purpose |
+|---|---|---|---|
+| `FENRIR_FRONTEND_PORT` | `9653` | frontend-server.sh, services.sh | Frontend port |
+| `FENRIR_FRONTEND_DIR` | Auto-detected | frontend-server.sh, services.sh | Frontend project root |
+| `FENRIR_BACKEND_PORT` | `9753` | backend-server.sh, services.sh | Backend port |
+| `FENRIR_BACKEND_DIR` | Auto-detected | backend-server.sh, services.sh | Backend project root |
+
+Deprecated aliases (still work as fallbacks in frontend-server.sh):
+- `FENRIR_PORT` -> `FENRIR_FRONTEND_PORT`
+- `FENRIR_DEV_DIR` -> `FENRIR_FRONTEND_DIR`
+
 ### Log Files
-- Frontend main: `development/frontend/logs/dev-server.log`
-- Frontend worktree: `trees/<branch>/development/frontend/logs/dev-server.log`
+- Frontend main: `development/frontend/logs/frontend-server.log`
+- Frontend worktree: `trees/<branch>/development/frontend/logs/frontend-server.log`
 - Backend main: `development/backend/logs/backend-server.log`
 - Backend worktree: `trees/<branch>/development/backend/logs/backend-server.log`
 

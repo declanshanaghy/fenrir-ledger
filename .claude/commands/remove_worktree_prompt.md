@@ -15,13 +15,15 @@ Remove an existing git worktree from the `trees/` directory AND delete the assoc
 PROJECT_CWD: . (current working directory - the main project root)
 BRANCH_NAME: $1 (required)
 WORKTREE_DIR: trees/<BRANCH_NAME>
-DEV_SERVER_SCRIPT: .claude/scripts/dev-server.sh
+FRONTEND_SERVER_SCRIPT: .claude/scripts/frontend-server.sh
+BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
 ```
 
 ## Instructions
 
 - This command safely removes a worktree and all associated resources
-- Stops the dev server using the dev-server script
+- Stops the frontend server using the frontend-server script
+- Stops the backend server using the backend-server script
 - Removes the git worktree using git's built-in removal command
 - Deletes the git branch associated with the worktree (PERMANENT)
 - Validates that the worktree and branch were completely removed
@@ -56,9 +58,9 @@ DEV_SERVER_SCRIPT: .claude/scripts/dev-server.sh
 **Stop Frontend Dev Server:**
 - If frontend port was identified:
   ```
-  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/frontend .claude/scripts/dev-server.sh stop
+  FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/frontend .claude/scripts/frontend-server.sh stop
   ```
-- Verify stopped: `FENRIR_PORT=<FRONTEND_PORT> .claude/scripts/dev-server.sh status`
+- Verify stopped: `FENRIR_FRONTEND_PORT=<FRONTEND_PORT> .claude/scripts/frontend-server.sh status`
 
 **Stop Backend Server:**
 - If backend port was identified:

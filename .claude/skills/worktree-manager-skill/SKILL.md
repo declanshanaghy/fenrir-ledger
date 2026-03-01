@@ -57,11 +57,11 @@ For technical details and quick reference, see [REFERENCE.md](REFERENCE.md).
 - Create worktrees manually with git commands
 - Manually configure ports or environment files
 - Use bash to remove directories directly
-- Manage dev server processes manually (use the dev-server script)
+- Manage dev server processes manually (use frontend-server.sh, backend-server.sh, or services.sh)
 
 ### Always use the slash commands because they:
 - Handle all configuration automatically
 - Ensure port uniqueness
 - Validate operations
-- Use the dev-server skill for server management
+- Use the service scripts for server management (services.sh, frontend-server.sh, backend-server.sh)
 - Clean up properly on removal
