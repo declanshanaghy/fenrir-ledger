@@ -83,14 +83,33 @@ function formatHeldDuration(startIso: string, endIso: string): string {
 
 // ─── Sort options ─────────────────────────────────────────────────────────────
 
-type SortKey = "closed_date_desc" | "closed_date_asc" | "alpha_asc" | "alpha_desc";
+type SortKey =
+  | "closed_date_desc"
+  | "closed_date_asc"
+  | "alpha_asc"
+  | "alpha_desc"
+  | "rewards_desc"
+  | "fee_avoided_desc";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: "closed_date_desc", label: "Sort: Closed date (newest)" },
   { value: "closed_date_asc", label: "Sort: Closed date (oldest)" },
   { value: "alpha_asc", label: "Sort: A → Z" },
   { value: "alpha_desc", label: "Sort: Z → A" },
+  { value: "rewards_desc", label: "Sort: Rewards earned (highest)" },
+  { value: "fee_avoided_desc", label: "Sort: Fee avoided (highest)" },
 ];
+
+/**
+ * Returns the cashback reward amount in cents for a card, or 0 if the bonus
+ * was not earned or is not a cashback type. Points/miles have no comparable
+ * monetary value in the data model and are treated as 0 for sort purposes.
+ */
+function getRewardsCents(card: Card): number {
+  if (!card.signUpBonus || !card.signUpBonus.met) return 0;
+  if (card.signUpBonus.type !== "cashback") return 0;
+  return card.signUpBonus.amount;
+}
 
 function sortCards(cards: Card[], sort: SortKey): Card[] {
   const copy = [...cards];
@@ -111,6 +130,10 @@ function sortCards(cards: Card[], sort: SortKey): Card[] {
       return copy.sort((a, b) => a.cardName.localeCompare(b.cardName));
     case "alpha_desc":
       return copy.sort((a, b) => b.cardName.localeCompare(a.cardName));
+    case "rewards_desc":
+      return copy.sort((a, b) => getRewardsCents(b) - getRewardsCents(a));
+    case "fee_avoided_desc":
+      return copy.sort((a, b) => b.annualFee - a.annualFee);
   }
 }
 
@@ -152,6 +175,15 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
     const unit = type === "miles" ? "mi" : "pts";
     return `${label}: ${amount.toLocaleString()} ${unit}`;
   })();
+
+  // Net gain: cashback rewards earned + annual fee avoided.
+  // Points/miles have no comparable monetary value in the data model;
+  // net gain is only augmented by cashback bonuses that were earned.
+  const cashbackEarned =
+    card.signUpBonus?.type === "cashback" && card.signUpBonus.met
+      ? card.signUpBonus.amount
+      : 0;
+  const netGainCents = cashbackEarned + feeAvoided;
 
   return (
     <motion.article
@@ -207,6 +239,10 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
         <span className="font-mono text-foreground">
           {feeAvoided > 0 ? formatCurrency(feeAvoided) : "$0 (no-fee card)"}
         </span>
+        <span className="text-[#8a8578] font-semibold">Net gain:</span>
+        <span className="font-mono font-semibold text-foreground">
+          {formatCurrency(netGainCents)}
+        </span>
       </div>
 
       {/* Epitaph — atmospheric voice, Norse-flavoured */}
@@ -215,6 +251,21 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
           ? `The chain is broken. ${formatCurrency(feeAvoided)} returned to the wolf.`
           : "The chain held no toll. Its rewards stand alone."}
       </p>
+
+      {/* View full record */}
+      <div className="pt-1">
+        <Link
+          href={`/cards/${card.id}/edit`}
+          className={[
+            "inline-block text-xs px-3 py-1.5 rounded-sm",
+            "border border-[#8a8578]/40 text-[#8a8578]",
+            "hover:border-[#8a8578] hover:text-foreground",
+            "transition-colors font-mono",
+          ].join(" ")}
+        >
+          View full record
+        </Link>
+      </div>
     </motion.article>
   );
 }
