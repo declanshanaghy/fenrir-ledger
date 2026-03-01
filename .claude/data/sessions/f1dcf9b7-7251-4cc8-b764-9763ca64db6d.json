@@ -3,6 +3,9 @@
   "prompts": [
     "continue",
     "keep going ya knob",
-    "commit and push"
+    "commit and push",
+    "clean up the old prunable worktrees",
+    "delete them",
+    "also delete feat/worktree-support"
   ]
 }
