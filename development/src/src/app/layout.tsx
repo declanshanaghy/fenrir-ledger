@@ -62,7 +62,10 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Fenrir Ledger",
+    // Dashboard (/) inherits this default: "Ledger of Fates — Fenrir Ledger"
+    // Sub-pages set their own title via route segment layouts and use the template.
+    // Per product/copywriting.md page title table.
+    default: "Ledger of Fates — Fenrir Ledger",
     template: "%s — Fenrir Ledger",
   },
   description:

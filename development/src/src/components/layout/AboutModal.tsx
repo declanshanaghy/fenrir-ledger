@@ -110,7 +110,7 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
                 Fenrir Ledger
               </p>
               <p className="font-body text-muted-foreground text-xs italic mt-1">
-                Credit Card Tracker
+                Break free. Harvest every reward.
               </p>
             </div>
             <p className="font-body text-muted-foreground text-[11px] italic leading-relaxed max-w-[160px]">

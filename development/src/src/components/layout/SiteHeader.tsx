@@ -43,7 +43,7 @@ export function SiteHeader({
               Fenrir Ledger
             </span>
             <span className="font-body text-muted-foreground text-xs italic">
-              Credit Card Tracker
+              Break free. Harvest every reward.
             </span>
           </Link>
         </div>
