@@ -4,13 +4,9 @@ Stories explicitly parked by Freya as post-Sprint 4 work. These are not forgotte
 
 ---
 
-## LCARS Mode (Star Trek Easter Egg #6) — Deferred to Sprint 5+
+## LCARS Mode (Star Trek Easter Egg #6) — Pulled into Sprint 5
 
-**Why deferred**: The Gleipnir Hunt completion, Ragnarök mode, milestone toasts, and the accessibility pass are all higher-value and more tightly integrated with existing features. LCARS mode is a standalone easter egg that requires building a temporary UI overlay with no dependencies on other Sprint 4 work. It has no user-value justification beyond delight. Sprint 4 has 5 stories already (at the team's sprint cap).
-
-**When to revisit**: Sprint 5, as the opening story if the team has capacity for pure delight work after core functionality gaps are addressed.
-
-**Spec**: See `ux/easter-eggs.md` #6. `Cmd+Shift+W` trigger, 5-second LCARS amber overlay with stardate, card counts, and a scan-line wipe exit. The full spec is written and ready — this is purely an implementation deferral.
+**Status**: Scheduled as Story 5.5. No longer deferred.
 
 ---
 
