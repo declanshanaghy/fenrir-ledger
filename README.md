@@ -1,6 +1,7 @@
 # ᛟ Fenrir Ledger
 
-[![Deploy to Vercel](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel.yml/badge.svg)](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel.yml)
+[![Deploy to Vercel — Production](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-production.yml/badge.svg)](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-production.yml)
+[![Deploy to Vercel — Preview](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-preview.yml/badge.svg)](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-preview.yml)
 [![Last Commit](https://img.shields.io/github/last-commit/declanshanaghy/fenrir-ledger?color=c9920a&logo=git&logoColor=white)](https://github.com/declanshanaghy/fenrir-ledger/commits/main)
 [![License: ELv2](https://img.shields.io/badge/license-ELv2-brightgreen)](LICENSE.md)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org)
