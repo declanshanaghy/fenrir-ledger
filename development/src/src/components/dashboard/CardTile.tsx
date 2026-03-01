@@ -143,6 +143,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
                   daysRemaining={ringDaysRemaining}
                   totalDays={ringTotalDays}
                   initials={ringInitials}
+                  cardName={card.cardName}
                 />
                 <div className="min-w-0">
                   <CardDescription className="text-xs uppercase tracking-wide mb-1">

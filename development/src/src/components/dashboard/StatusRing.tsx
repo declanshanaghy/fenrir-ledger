@@ -18,6 +18,7 @@
  */
 
 import type { CardStatus } from "@/lib/types";
+import { STATUS_LABELS } from "@/lib/constants";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -96,6 +97,12 @@ interface StatusRingProps {
   totalDays: number;
   /** 1–2 character issuer initial displayed inside the ring. */
   initials: string;
+  /**
+   * Card name for the accessible aria-label.
+   * When provided the SVG gets role="img" with a descriptive label;
+   * when omitted the SVG stays aria-hidden (decorative fallback).
+   */
+  cardName?: string;
 }
 
 /**
@@ -114,17 +121,27 @@ export function StatusRing({
   daysRemaining,
   totalDays,
   initials,
+  cardName,
 }: StatusRingProps) {
   const strokeColor = getRingColor(status, daysRemaining);
   const offset = computeOffset(daysRemaining, totalDays);
   const isUrgent = status !== "closed" && daysRemaining <= 30;
+
+  // Build a descriptive label for screen readers when cardName is available.
+  const ariaLabel = cardName
+    ? status === "closed"
+      ? `${cardName}: closed`
+      : `${cardName}: ${STATUS_LABELS[status] ?? status}, ${daysRemaining} days remaining`
+    : undefined;
 
   return (
     <svg
       width={SIZE}
       height={SIZE}
       viewBox={`0 0 ${SIZE} ${SIZE}`}
-      aria-hidden="true"
+      role={cardName ? "img" : undefined}
+      aria-label={ariaLabel}
+      aria-hidden={cardName ? undefined : true}
       className="shrink-0"
     >
       {/* Background track — stone ring at low opacity */}
