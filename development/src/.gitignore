@@ -34,3 +34,6 @@ Thumbs.db
 # Testing
 /coverage
 .vercel
+
+# Dev server logs
+logs/

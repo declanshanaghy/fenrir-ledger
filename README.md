@@ -315,6 +315,20 @@ cd development/src && npm run dev
 
 Fenrir Ledger was forged from [ZeroForge](https://github.com/declanshanaghy/zeroforge) — a reusable AI agent team starter kit — with structural improvements carried forward from [Vulcan Brownout](https://github.com/declanshanaghy/vulcan-brownout): explicit input/output file mappings per agent, a flat output directory structure, and the `patient-zero.md` quick-reference pattern.
 
+The Claude Code hooks, agents, and skills infrastructure under `.claude/` is adapted from [claude-code-hooks-multi-agent-observability](https://github.com/disler/claude-code-hooks-multi-agent-observability) by [@disler](https://github.com/disler). The following files originate from that project (modified for Fenrir Ledger):
+
+- `.claude/hooks/` — Hook scripts (PreToolUse, PostToolUse, Notification, Stop, etc.)
+- `.claude/agents/docs-scraper.md` — Documentation scraping agent
+- `.claude/agents/meta-agent.md` — Agent definition generator
+- `.claude/agents/scout-report-suggest.md` / `scout-report-suggest-fast.md` — Codebase scout agents
+- `.claude/agents/team/builder.md` / `validator.md` — Builder and validator team agents
+- `.claude/commands/build.md` — Plan executor command
+- `.claude/commands/plan_w_team.md` — Team planning command
+- `.claude/commands/t_metaprompt_workflow.md` — Slash command generator
+- `.claude/skills/meta-skill/` — Skill creation skill
+- `.claude/skills/create-worktree-skill/` / `worktree-manager-skill/` — Git worktree management
+- `.claude/output-styles/` — Response formatting presets
+
 *"Though it looks like silk ribbon, no chain is stronger."*
 — Prose Edda, Gylfaginning
 
