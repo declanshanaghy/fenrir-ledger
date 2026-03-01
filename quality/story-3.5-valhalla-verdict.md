@@ -147,7 +147,7 @@ No automated tests are failing (copy changes are tested manually). However, if a
    git checkout feat/valhalla-route
    git rebase main
    # Conflict will occur at line 175, auto-resolve to .sublabel
-   git add development/src/src/app/valhalla/page.tsx
+   git add development/frontend/src/app/valhalla/page.tsx
    git rebase --continue
    git push --force-with-lease
    ```

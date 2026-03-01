@@ -4,7 +4,7 @@ on:
   push:
     branches-ignore: [main]
     paths:
-      - 'development/src/**'
+      - 'development/frontend/**'
       - 'static/**'
       - 'sessions/**'
       - '.github/workflows/**'
@@ -40,10 +40,10 @@ jobs:
 
       - name: Copy static site into Next.js public/
         run: |
-          rm -rf development/src/public/static development/src/public/sessions
-          mkdir -p development/src/public/static development/src/public/sessions
-          cp -r static/. development/src/public/static/
-          cp -r sessions/. development/src/public/sessions/
+          rm -rf development/frontend/public/static development/frontend/public/sessions
+          mkdir -p development/frontend/public/static development/frontend/public/sessions
+          cp -r static/. development/frontend/public/static/
+          cp -r sessions/. development/frontend/public/sessions/
 
       - name: Build
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
@@ -55,12 +55,12 @@ jobs:
           echo "preview_url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
 
       - name: Install Playwright browsers
-        working-directory: development/src
+        working-directory: development/frontend
         run: npm ci && npx playwright install --with-deps chromium
 
       - name: Run Playwright tests against preview
         id: playwright
-        working-directory: development/src
+        working-directory: development/frontend
         env:
           SERVER_URL: ${{ steps.deploy.outputs.preview_url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
@@ -73,7 +73,7 @@ jobs:
         if: always()
         with:
           name: playwright-report-${{ github.run_id }}
-          path: development/src/playwright-report/
+          path: development/frontend/playwright-report/
           retention-days: 14
 
       - name: Post or update PR comment

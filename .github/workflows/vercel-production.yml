@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'development/src/**'
+      - 'development/frontend/**'
       - 'static/**'
       - 'sessions/**'
       - '.github/workflows/**'
@@ -35,10 +35,10 @@ jobs:
 
       - name: Copy static site into Next.js public/
         run: |
-          rm -rf development/src/public/static development/src/public/sessions
-          mkdir -p development/src/public/static development/src/public/sessions
-          cp -r static/. development/src/public/static/
-          cp -r sessions/. development/src/public/sessions/
+          rm -rf development/frontend/public/static development/frontend/public/sessions
+          mkdir -p development/frontend/public/static development/frontend/public/sessions
+          cp -r static/. development/frontend/public/static/
+          cp -r sessions/. development/frontend/public/sessions/
 
       - name: Build
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}

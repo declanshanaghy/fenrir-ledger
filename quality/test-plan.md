@@ -272,7 +272,7 @@ localStorage.setItem('egg:forgemaster', '1')
 ### Sample Card State (Trigger Ragnarök Pulse)
 ```javascript
 // Create 3+ cards with fee_approaching status
-// See development/src/src/lib/storage.ts for storage.addCard()
+// See development/frontend/src/lib/storage.ts for storage.addCard()
 ```
 
 ### Environment Variables

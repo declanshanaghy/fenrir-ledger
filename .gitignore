@@ -39,7 +39,7 @@ logs/
 
 # Temp & worktree files (for parallel agent development)
 tmp/
-development/src/.claude/
+development/frontend/.claude/
 trees/
 
 # doc-sync run artifacts (ephemeral, coordinator reads then discards)

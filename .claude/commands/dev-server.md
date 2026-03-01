@@ -36,11 +36,11 @@ Run the script with the Bash tool:
 | Variable | Default | Purpose |
 |---|---|---|
 | `FENRIR_PORT` | `9653` | Port the Next.js dev server listens on |
-| `FENRIR_DEV_DIR` | Auto-detected `development/src/` | Path to the Next.js project root |
+| `FENRIR_DEV_DIR` | Auto-detected `development/frontend/` | Path to the Next.js project root |
 
 ```
 .claude/scripts/dev-server.sh start                          # Main repo
-FENRIR_PORT=9654 FENRIR_DEV_DIR=trees/my-branch/development/src .claude/scripts/dev-server.sh start  # Worktree
+FENRIR_PORT=9654 FENRIR_DEV_DIR=trees/my-branch/development/frontend .claude/scripts/dev-server.sh start  # Worktree
 ```
 
 ### Backend (backend-server.sh)
@@ -70,4 +70,4 @@ Use `logs` action to stream, or read directly with the Read tool when diagnosing
 
 - The script uses `lsof -sTCP:LISTEN` to find only the listening server process, not browser connections to the same port.
 - `nohup` is used so the server survives the shell session that spawned it.
-- The server runs from `development/src/` (or `FENRIR_DEV_DIR`) regardless of the working directory when the command is called.
+- The server runs from `development/frontend/` (or `FENRIR_DEV_DIR`) regardless of the working directory when the command is called.

@@ -115,7 +115,7 @@ Main repo (default port 9653):
 
 Worktree:
 ```bash
-FENRIR_PORT=<FE_PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/src .claude/scripts/dev-server.sh start|stop|status
+FENRIR_PORT=<FE_PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/frontend .claude/scripts/dev-server.sh start|stop|status
 ```
 
 ### Backend (Node/TS) — `.claude/scripts/backend-server.sh`
@@ -131,8 +131,8 @@ FENRIR_BACKEND_PORT=<BE_PORT> FENRIR_BACKEND_DIR=<abs-path>/trees/<branch>/devel
 ```
 
 ### Log Files
-- Frontend main: `development/src/logs/dev-server.log`
-- Frontend worktree: `trees/<branch>/development/src/logs/dev-server.log`
+- Frontend main: `development/frontend/logs/dev-server.log`
+- Frontend worktree: `trees/<branch>/development/frontend/logs/dev-server.log`
 - Backend main: `development/backend/logs/backend-server.log`
 - Backend worktree: `trees/<branch>/development/backend/logs/backend-server.log`
 

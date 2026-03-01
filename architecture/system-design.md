@@ -198,7 +198,7 @@ stateDiagram-v2
 ## File Structure
 
 ```
-development/src/
+development/frontend/
 ├── .env.example                     # Committed placeholder env template
 ├── .env.local                       # Local secrets (gitignored)
 ├── next.config.ts                   # Next.js configuration
@@ -378,7 +378,7 @@ Components installed via `npx shadcn@latest add`: `button`, `card`, `input`, `la
 | All dates | Stored as ISO 8601 strings (YYYY-MM-DD for dates, full ISO for timestamps) |
 | Card IDs | Generated with `crypto.randomUUID()` |
 | Household ID | Hardcoded `"default-household"` in Sprint 2; replaced by real UUID in Sprint 3 (ADR-004) |
-| Vercel Root Directory | Set to `development/src/` |
+| Vercel Root Directory | Set to `development/frontend/` |
 | Font loading | `next/font/google` with `display: 'swap'` on all four Norse typefaces |
 
 ---

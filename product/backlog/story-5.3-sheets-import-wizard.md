@@ -167,7 +167,7 @@ Then: modal closes, dashboard refreshes with new cards visible, toast from Story
 
 **Preview list performance**: If the API returns 20+ cards, the preview list should use a fixed-height scrollable container (`max-height: 320px; overflow-y: auto`) to avoid a modal that extends beyond the viewport.
 
-**Issuer display name**: The API returns `issuerId` in snake_case. Map to human-readable names using the existing `Issuer` list from `development/src/src/lib/` (or a simple lookup map). For any unknown `issuerId`, display it as-is with title case applied.
+**Issuer display name**: The API returns `issuerId` in snake_case. Map to human-readable names using the existing `Issuer` list from `development/frontend/src/lib/` (or a simple lookup map). For any unknown `issuerId`, display it as-is with title case applied.
 
 **Annual fee formatting**: Divide cents by 100. Show `$X` format. Use `$0` vs "No annual fee" based on `annualFee === 0`.
 

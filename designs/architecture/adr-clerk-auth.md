@@ -61,7 +61,7 @@ This ADR documents the integration design, not the implementation schedule. Impl
 `clerkMiddleware()` replaces the current no-op middleware. All routes remain public by default — there are no protected routes. The middleware exists only so Clerk can attach session information to the request context for server components.
 
 ```typescript
-// development/src/src/middleware.ts (after Clerk integration)
+// development/frontend/src/middleware.ts (after Clerk integration)
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
 export default clerkMiddleware();

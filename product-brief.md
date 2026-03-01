@@ -82,7 +82,7 @@ Rationale:
 - **Framework**: Next.js (App Router) + TypeScript
 - **Frontend**: React (latest)
 - **Styling**: Tailwind CSS + shadcn/ui
-- **Hosting**: Vercel; Root Directory configured to `development/src/`
+- **Hosting**: Vercel; Root Directory configured to `development/frontend/`
 - **Data model**: Household-scoped from day one (single-user UI initially; multi-user sharing is future)
 - **Auth**: Optional — OIDC via Google surfaced as cloud-sync upsell at GA; not a gate in MVP
 

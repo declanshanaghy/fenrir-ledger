@@ -13,7 +13,7 @@ This directory contains implementation artifacts for the Fenrir Ledger project: 
 
 ## Source Code
 
-- [src/](src/) — Next.js project root. All `package.json`, `next.config.ts`, `app/`, and `components/` files live here. Vercel is configured with Root Directory set to `development/src/`.
+- [src/](src/) — Next.js project root. All `package.json`, `next.config.ts`, `app/`, and `components/` files live here. Vercel is configured with Root Directory set to `development/frontend/`.
 
 ## Scripts
 

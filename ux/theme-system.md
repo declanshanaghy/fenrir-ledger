@@ -60,7 +60,7 @@ The visual language of the Saga Ledger. All tokens should be implemented as CSS 
 ### Loading via next/font (Google Fonts)
 
 ```typescript
-// development/src/src/app/layout.tsx
+// development/frontend/src/app/layout.tsx
 import { Cinzel, Cinzel_Decorative, Source_Serif_4, JetBrains_Mono } from 'next/font/google'
 
 const cinzel = Cinzel({ subsets: ['latin'], variable: '--font-cinzel', weight: ['400','600','700','900'] })

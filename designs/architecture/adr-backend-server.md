@@ -85,7 +85,7 @@ None of these can be delivered via stateless serverless functions.
 
 ### Option C: Dedicated Node/TS Backend Server (WebSocket-capable)
 
-**Description:** Introduce a standalone `development/backend/` Node.js + TypeScript server alongside the existing Next.js frontend (`development/src/`). The backend:
+**Description:** Introduce a standalone `development/backend/` Node.js + TypeScript server alongside the existing Next.js frontend (`development/frontend/`). The backend:
 - Uses Fastify or Hono as the HTTP framework (lightweight, TypeScript-native)
 - Adds `ws` or `Socket.io` for WebSocket support
 - Runs on port 9753 (frontend stays on 9653, per existing port scheme)
@@ -197,7 +197,7 @@ graph TD
     browser([User Browser])
 
     %% Frontend tier
-    browser -->|HTTP GET /| nextjs[Next.js App\nport 9653\ndevelopment/src/]
+    browser -->|HTTP GET /| nextjs[Next.js App\nport 9653\ndevelopment/frontend/]
     browser -->|WebSocket ws://localhost:9753| backend[Node/TS Backend\nport 9753\ndevelopment/backend/]
 
     %% Next.js routes

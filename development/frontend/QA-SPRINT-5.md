@@ -104,7 +104,7 @@ ESC dismiss: `LcarsOverlay.tsx:63-65` — handled in same keydown listener. Clic
 
 | # | Check | Result | Evidence |
 |---|-------|--------|---------|
-| 15 | No API keys or secrets in committed files | **PASS** | grep for `sk-ant-`, `ANTHROPIC_API_KEY=`, `AIza` in `src/` returned zero matches. `ANTHROPIC_API_KEY` accessed only via `process.env` at `route.ts:111`. `.env` and `*.env.*` are in both root and `development/src/.gitignore`. |
+| 15 | No API keys or secrets in committed files | **PASS** | grep for `sk-ant-`, `ANTHROPIC_API_KEY=`, `AIza` in `src/` returned zero matches. `ANTHROPIC_API_KEY` accessed only via `process.env` at `route.ts:111`. `.env` and `*.env.*` are in both root and `development/frontend/.gitignore`. |
 
 ---
 

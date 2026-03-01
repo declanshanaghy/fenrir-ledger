@@ -73,7 +73,7 @@ The development team (currently one person, designed to scale to collaborators).
 ### Triggers a deploy (app + assets changed)
 
 ```
-development/src/**
+development/frontend/**
 static/**
 sessions/**
 .github/workflows/**
@@ -118,7 +118,7 @@ on:
   push:
     branches-ignore: [main]
     paths:
-      - 'development/src/**'
+      - 'development/frontend/**'
       - 'static/**'
       - 'sessions/**'
       - '.github/workflows/**'
@@ -134,7 +134,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'development/src/**'
+      - 'development/frontend/**'
       - 'static/**'
       - 'sessions/**'
       - '.github/workflows/**'

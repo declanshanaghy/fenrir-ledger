@@ -40,7 +40,7 @@ PR #3 successfully refactors `getRealmLabel()` from returning a simple string to
   - **PASS**: Line 174 calls `getRealmLabel("closed").sublabel` — correctly accesses the new sublabel field for the rune's title attribute.
 
 - [x] No other call sites broken
-  - **PASS**: Grep of `/development/src/src/` found only 3 references:
+  - **PASS**: Grep of `/development/frontend/src/` found only 3 references:
     1. `realm-utils.ts` (definition)
     2. `valhalla/page.tsx` (updated call site)
     3. `constants.ts` (calls `getRealmDescription()` — not affected)

@@ -39,7 +39,7 @@
 
 ```bash
 # From repo root
-cd /path/to/fenrir-ledger/development/src
+cd /path/to/fenrir-ledger/development/frontend
 npm run build      # Verify clean compile — 0 errors required
 npm run dev        # Run dev server on port 9653
 ```
