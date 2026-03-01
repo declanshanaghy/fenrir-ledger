@@ -23,6 +23,7 @@
 
 import { useEffect, useState } from "react";
 import { EasterEggModal } from "@/components/easter-eggs/EasterEggModal";
+import { WolfHungerMeter } from "@/components/shared/WolfHungerMeter";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -132,6 +133,11 @@ export function ForgeMasterEgg() {
             Six impossible things wait to be found.
           </p>
         )}
+      </div>
+
+      {/* Wolf's Hunger — aggregate bonus summary */}
+      <div className="border-t border-[#1e2235] pt-3 mt-1">
+        <WolfHungerMeter />
       </div>
     </EasterEggModal>
   );
