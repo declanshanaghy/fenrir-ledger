@@ -46,7 +46,7 @@
 
 Track every fee-wyrm in your portfolio. Every chain forged, every promo deadline, every fee-serpent's strike date — Fenrir watches and howls before the trap snaps shut. Add your cards, name your thresholds, and the wolf does the rest: reminding you to spend, transfer, downgrade, or close before you lose a single dollar to a fee you didn't choose to pay.
 
-*Sprint 3 in progress — Stories 3.2 (Norse copy pass), 3.3 (Framer Motion card animations), 3.4 (HowlPanel urgent sidebar), and 3.5 (Valhalla archive + Close Card action) shipped. StatusRing next.*
+*Sprint 3 complete. Sprint 4 groomed and Ready: Ragnarök threshold mode, card count milestones, Gleipnir Hunt completion (resolves DEF-001), accessibility polish, and the Wolf's Hunger meter. All 5 stories carry code-audit notes from Freya's 2026-02-28 groom.*
 
 ---
 
@@ -116,7 +116,13 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 - [product/README.md](product/README.md) — Product domain index: mythology map, copywriting guide, backlog
 - [product/product-design-brief.md](product/product-design-brief.md) — Design philosophy, anonymous-first identity model, header states
-- [product/backlog/README.md](product/backlog/README.md) — Groomed backlog index
+- [product/backlog/README.md](product/backlog/README.md) — Groomed backlog index (Sprint 4 stories: 4.1–4.5)
+- [product/backlog/story-4.1-ragnarok-threshold.md](product/backlog/story-4.1-ragnarok-threshold.md) — P1: Ragnarök Threshold Mode (visual alarm ≥3 urgent cards)
+- [product/backlog/story-4.2-card-count-milestones.md](product/backlog/story-4.2-card-count-milestones.md) — P2: Card Count Milestone Toasts (5 thresholds, one-time)
+- [product/backlog/story-4.3-gleipnir-hunt-complete.md](product/backlog/story-4.3-gleipnir-hunt-complete.md) — P2: Gleipnir Hunt — wire fragments 4 and 6, complete the unlock
+- [product/backlog/story-4.4-accessibility-and-ux-polish.md](product/backlog/story-4.4-accessibility-and-ux-polish.md) — P2: Accessibility and UX polish pass (keyboard, mobile, reduced motion)
+- [product/backlog/story-4.5-wolves-hunger-and-about-modal.md](product/backlog/story-4.5-wolves-hunger-and-about-modal.md) — P3: Wolf's Hunger Meter in About modal
+- [product/backlog/future-deferred.md](product/backlog/future-deferred.md) — Deferred items with rationale (LCARS, migration wizard, reminders)
 - [product/backlog/story-auth-oidc-google.md](product/backlog/story-auth-oidc-google.md) — P3 (GA-deferred): Optional Login — Google OIDC + Cloud Sync Upsell
 - [product/handoff-to-luna-anon-auth.md](product/handoff-to-luna-anon-auth.md) — Handoff to Luna: anonymous-first auth + cloud sync upsell UX brief
 
