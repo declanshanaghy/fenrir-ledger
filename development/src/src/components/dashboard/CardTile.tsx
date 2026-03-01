@@ -24,6 +24,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { StatusBadge } from "./StatusBadge";
+import { StatusRing } from "./StatusRing";
 import type { Card as CreditCard } from "@/lib/types";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/card-utils";
 import { KNOWN_ISSUERS } from "@/lib/constants";
@@ -46,6 +47,38 @@ function getIssuerName(issuerId: string): string {
   return issuer?.name ?? issuerId;
 }
 
+/**
+ * Derives 1–2 character initials from the issuer name.
+ *
+ * Multi-word names (e.g. "Capital One") → "CO" (first letter of each word).
+ * Single-word names (e.g. "Chase") → "C" (first letter only).
+ * Falls back to the first character of issuerId if name lookup fails.
+ */
+function getIssuerInitials(issuerId: string): string {
+  const issuer = KNOWN_ISSUERS.find((i) => i.id === issuerId);
+  const name = issuer?.name ?? issuerId;
+  const words = name.trim().split(/\s+/);
+  if (words.length >= 2) {
+    return (words[0]![0]! + words[1]![0]!).toUpperCase();
+  }
+  return name[0]!.toUpperCase();
+}
+
+/**
+ * Returns the number of days from openDate to a deadline ISO string.
+ * Used as the totalDays denominator for the StatusRing progress calculation.
+ * Returns 365 as a safe fallback if dates are missing or invalid.
+ */
+function getTotalDays(openDate: string, deadlineIso: string): number {
+  if (!openDate || !deadlineIso) return 365;
+  const open = new Date(openDate);
+  const deadline = new Date(deadlineIso);
+  if (isNaN(open.getTime()) || isNaN(deadline.getTime())) return 365;
+  const diffMs = deadline.getTime() - open.getTime();
+  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  return days > 0 ? days : 365;
+}
+
 export function CardTile({ card, lokiLabel }: CardTileProps) {
   const reducedMotion = useReducedMotion() ?? false;
 
@@ -56,6 +89,32 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
     hasBonus && card.signUpBonus?.deadline
       ? daysUntil(card.signUpBonus.deadline)
       : null;
+
+  // ── StatusRing data ────────────────────────────────────────────────────────
+  // Pick the most urgent deadline for the ring.
+  // Priority: fee_approaching > promo_expiring > active > closed.
+  const ringDaysRemaining: number = (() => {
+    if (card.status === "closed") return 0;
+    if (card.status === "fee_approaching" && feeDays !== null) return feeDays;
+    if (card.status === "promo_expiring" && bonusDays !== null) return bonusDays;
+    // Active: show whichever deadline is nearest, or a generous default.
+    if (feeDays !== null) return feeDays;
+    if (bonusDays !== null) return bonusDays;
+    return 365;
+  })();
+
+  const ringDeadlineIso: string = (() => {
+    if (card.status === "fee_approaching" && card.annualFeeDate)
+      return card.annualFeeDate;
+    if (card.status === "promo_expiring" && card.signUpBonus?.deadline)
+      return card.signUpBonus.deadline;
+    if (card.annualFeeDate) return card.annualFeeDate;
+    if (card.signUpBonus?.deadline) return card.signUpBonus.deadline;
+    return "";
+  })();
+
+  const ringTotalDays = getTotalDays(card.openDate, ringDeadlineIso);
+  const ringInitials = getIssuerInitials(card.issuerId);
 
   return (
     /*
@@ -77,13 +136,22 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
         <Card className="h-full border border-secondary cursor-pointer">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <CardDescription className="text-xs uppercase tracking-wide mb-1">
-                  {getIssuerName(card.issuerId)}
-                </CardDescription>
-                <CardTitle className="text-base font-semibold leading-tight truncate">
-                  {card.cardName}
-                </CardTitle>
+              <div className="flex items-center gap-2 min-w-0">
+                {/* StatusRing: SVG countdown ring around issuer initials */}
+                <StatusRing
+                  status={card.status}
+                  daysRemaining={ringDaysRemaining}
+                  totalDays={ringTotalDays}
+                  initials={ringInitials}
+                />
+                <div className="min-w-0">
+                  <CardDescription className="text-xs uppercase tracking-wide mb-1">
+                    {getIssuerName(card.issuerId)}
+                  </CardDescription>
+                  <CardTitle className="text-base font-semibold leading-tight truncate">
+                    {card.cardName}
+                  </CardTitle>
+                </div>
               </div>
               <StatusBadge
                 status={card.status}

@@ -191,12 +191,32 @@
   animation: saga-shimmer 1.4s ease-in-out infinite;
 }
 
-/* ── Gold Pulse (urgent status) ─────────────────────────────────────────── */
+/* ── Muspel Pulse (urgent status) ───────────────────────────────────────── */
+/*
+ * G4.2: drop-shadow modulation added alongside opacity.
+ * Uses currentColor so the shadow matches whatever stroke color the ring
+ * or element currently has — works for both SVG ring--urgent and generic
+ * .animate-muspel-pulse consumers.
+ *
+ * Spec from ux/interactions.md — Status Ring section:
+ *   0%, 100%: opacity 1, drop-shadow 4px
+ *   50%:      opacity 0.7, drop-shadow 10px
+ */
 @keyframes muspel-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.6; }
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+  50% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 10px currentColor);
+  }
 }
 .animate-muspel-pulse {
+  animation: muspel-pulse 1.8s ease-in-out infinite;
+}
+/* SVG ring urgent class — same animation, applied to the ring circle element */
+.ring--urgent {
   animation: muspel-pulse 1.8s ease-in-out infinite;
 }
 
