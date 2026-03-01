@@ -11,7 +11,21 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
-## Wireframe Index
+## Sprint 4 Wireframes
+
+See [wireframes/sprint-4/README.md](wireframes/sprint-4/README.md) for the full Sprint 4 wireframe index and key UX decisions.
+
+| Story | File | Description |
+|-------|------|-------------|
+| 4.1 — Ragnarök Threshold Mode | [wireframes/sprint-4/ragnarok-threshold.html](wireframes/sprint-4/ragnarok-threshold.html) | 3 dashboard states, red radial overlay spec, RagnarokContext data flow, HowlPanel header override |
+| 4.2 — Card Count Milestone Toasts | [wireframes/sprint-4/card-count-milestones.html](wireframes/sprint-4/card-count-milestones.html) | All 5 milestone toast designs, desktop + mobile positioning, stacked behavior, localStorage gate flow |
+| 4.3 — Full Gleipnir Hunt | [wireframes/sprint-4/gleipnir-hunt-complete.html](wireframes/sprint-4/gleipnir-hunt-complete.html) | Fragment 4 (7th card save) + Fragment 6 (15s Valhalla idle) triggers, Gleipnir reward entry, DEF-001 fix |
+| 4.4 — Accessibility + UX Polish | [wireframes/sprint-4/accessibility-polish.html](wireframes/sprint-4/accessibility-polish.html) | Focus ring spec, skip-nav, ARIA landmarks, heading hierarchy, touch target audit, mobile layouts, reduced-motion |
+| 4.5 — Wolf's Hunger Meter + About Modal | [wireframes/sprint-4/wolves-hunger-about-modal.html](wireframes/sprint-4/wolves-hunger-about-modal.html) | Hunger meter in About modal + ForgeMasterEgg, 4 display variants, shared WolfHungerMeter component spec |
+
+---
+
+## Prior Sprint Wireframe Index
 
 | View | File | Description |
 |------|------|-------------|
