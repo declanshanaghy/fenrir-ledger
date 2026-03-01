@@ -158,6 +158,19 @@ function AuthCallbackContent() {
         };
 
         setSession(session);
+
+        // Silent merge: carry anonymous cards into the Google household
+        const { getAnonHouseholdId } = await import("@/lib/auth/household");
+        const { mergeAnonymousCards, isMergeComplete } = await import("@/lib/merge-anonymous");
+
+        const anonId = getAnonHouseholdId();
+        if (anonId && !isMergeComplete(anonId)) {
+          const result = mergeAnonymousCards(session.user.sub, anonId);
+          if (result.merged > 0) {
+            sessionStorage.setItem("fenrir:merge-result", JSON.stringify(result));
+          }
+        }
+
         setCallbackStatus("success");
 
         // Redirect to the original destination.

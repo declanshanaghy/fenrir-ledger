@@ -23,6 +23,7 @@ import { SideNav } from "./SideNav";
 import { SyncIndicator } from "./SyncIndicator";
 import { KonamiHowl } from "./KonamiHowl";
 import { ForgeMasterEgg } from "./ForgeMasterEgg";
+import { LcarsOverlay } from "@/components/easter-eggs/LcarsOverlay";
 import { Toaster } from "sonner";
 import { Footer } from "./Footer";
 import { UpsellBanner } from "./UpsellBanner";
@@ -97,6 +98,8 @@ export function AppShell({ children }: AppShellProps) {
       <KonamiHowl />
       {/* Easter egg #9 — The Forgemaster's Signature (`?` key, one-time) */}
       <ForgeMasterEgg />
+      {/* Easter egg #10 — LCARS Mode (Cmd+Shift+L / Ctrl+Shift+L) */}
+      <LcarsOverlay />
       {/* Easter egg #3 — The Roots of a Mountain (first sidebar collapse, one-time) */}
       <GleipnirMountainRoots open={rootsOpen} onClose={dismissRoots} />
       <Toaster

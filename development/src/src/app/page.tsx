@@ -20,6 +20,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { Dashboard } from "@/components/dashboard/Dashboard";
@@ -46,6 +47,18 @@ export default function DashboardPage() {
     const loaded = getCards(householdId);
     setCards(loaded);
     setIsLoading(false);
+
+    // Pick up merge result from auth callback redirect
+    const mergeResult = sessionStorage.getItem("fenrir:merge-result");
+    if (mergeResult) {
+      sessionStorage.removeItem("fenrir:merge-result");
+      try {
+        const { merged } = JSON.parse(mergeResult) as { merged: number };
+        toast.success(`${merged} card${merged !== 1 ? "s" : ""} carried into your ledger.`);
+      } catch {
+        // Corrupt data — ignore silently
+      }
+    }
   }, [householdId, status]);
 
   const urgentCount = cards.filter(
