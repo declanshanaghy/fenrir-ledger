@@ -18,10 +18,10 @@ Every agent must read this guide before creating diagrams in any deliverable.
 
 | Agent | Name | Model | Rationale |
 |-------|------|-------|-----------|
-| Product Owner | **Freya** | **Sonnet** | Strategic thinking, product vision, priority calls |
-| UX Designer | **Luna** | **Sonnet** | Rapid wireframing, interaction design |
-| Principal Engineer | **FiremanDecko** | **Sonnet** | Complex technical decisions, system design, and implementation |
-| QA Tester | **Loki** | **Haiku** | Efficient test script generation, validation |
+| Product Owner | **Freya** | **Opus** | Product vision requires strong reasoning |
+| UX Designer | **Luna** | **Opus** | Wireframing and interaction design quality |
+| Principal Engineer | **FiremanDecko** | **Opus** | Architecture + implementation is heaviest work |
+| QA Tester | **Loki** | **Sonnet** | Extra firepower for devil's advocate testing |
 
 When spawning agents, use the model specified above for each role.
 
@@ -179,3 +179,24 @@ quality/
 3. **Blocker Escalation**: If any stage is blocked, escalate to the previous stage (FiremanDecko asks Luna or Freya, Loki asks FiremanDecko).
 4. **Max 5 Stories per Sprint**: From the product brief. The PO enforces this constraint.
 5. **Definition of Done**: A story is DONE when QA signs off with a Ship recommendation and all idempotent test scripts pass.
+
+## Automated Orchestration
+
+The `/orchestrate` command automates this pipeline using worktree isolation.
+
+### Entry Point
+Run `/orchestrate <requirements>` to trigger the full pipeline.
+
+### Worktree Strategy
+| Phase | Branch Pattern | Worktree Path | Agents | Dev Server |
+|-------|---------------|---------------|--------|------------|
+| Product + UX | `design/<slug>` | `trees/design/<slug>/` | Freya → Luna (shared) | No |
+| Build + Validate | `feat/<slug>` | `trees/feat/<slug>/` | FiremanDecko ↔ Loki | Yes |
+
+### Retry Policy
+- Max 3 build-validate attempts per story
+- On failure: escalate to user with Loki's report
+- On success: commit, push, create PR, cleanup worktree
+
+### Story Sequencing
+Stories execute one at a time (WIP limit 1). Each story's worktree branches from updated main after the previous story's PR merges.

@@ -34,8 +34,11 @@ Create a detailed implementation plan based on the user's requirements provided 
 USER_PROMPT: $1
 ORCHESTRATION_PROMPT: $2 - (Optional) Guidance for team assembly, task structure, and execution strategy
 PLAN_OUTPUT_DIRECTORY: `specs/`
-TEAM_MEMBERS: `.claude/agents/team/*.md`
-GENERAL_PURPOSE_AGENT: `general-purpose`
+TEAM_MEMBERS:
+  - Builder: `.claude/agents/fireman-decko.md` (subagent_type: fireman-decko-principal-engineer)
+  - Validator: `.claude/agents/loki.md` (subagent_type: loki-qa-tester)
+  - Product Owner: `.claude/agents/freya.md` (subagent_type: freya-product-owner)
+  - UX Designer: `.claude/agents/luna.md` (subagent_type: luna-ux-designer)
 
 ## Instructions
 
@@ -140,7 +143,7 @@ TaskList({})  // Filter by owner to find assigned work
 Task({
   description: "Implement auth endpoints",
   prompt: "Implement the authentication endpoints as specified in Task 1...",
-  subagent_type: "general-purpose",
+  subagent_type: "fireman-decko-principal-engineer",
   model: "opus",  // or "opus" for complex work, "haiku" for VERY simple
   run_in_background: false  // true for parallel execution
 })
@@ -156,7 +159,7 @@ Store the agentId to continue an agent's work with preserved context:
 Task({
   description: "Build user service",
   prompt: "Create the user service with CRUD operations...",
-  subagent_type: "general-purpose"
+  subagent_type: "fireman-decko-principal-engineer"
 })
 // Returns: agentId: "abc123"
 
@@ -164,7 +167,7 @@ Task({
 Task({
   description: "Continue user service",
   prompt: "Now add input validation to the endpoints you created...",
-  subagent_type: "general-purpose",
+  subagent_type: "fireman-decko-principal-engineer",
   resume: "abc123"  // Continues with previous context
 })
 ```
@@ -182,7 +185,7 @@ Run multiple agents simultaneously with `run_in_background: true`:
 Task({
   description: "Build API endpoints",
   prompt: "...",
-  subagent_type: "general-purpose",
+  subagent_type: "fireman-decko-principal-engineer",
   run_in_background: true
 })
 // Returns immediately with agentId and output_file path
@@ -190,7 +193,7 @@ Task({
 Task({
   description: "Build frontend components",
   prompt: "...",
-  subagent_type: "general-purpose",
+  subagent_type: "fireman-decko-principal-engineer",
   run_in_background: true
 })
 // Both agents now working simultaneously
@@ -227,7 +230,7 @@ IMPORTANT: **PLANNING ONLY** - Do not execute, build, or deploy. Output is a pla
 1. Analyze Requirements - Parse the USER_PROMPT to understand the core problem and desired outcome
 2. Understand Codebase - Without subagents, directly understand existing patterns, architecture, and relevant files
 3. Design Solution - Develop technical approach including architecture decisions and implementation strategy
-4. Define Team Members - Use `ORCHESTRATION_PROMPT` (if provided) to guide team composition. Identify from `.claude/agents/team/*.md` or use `general-purpose`. Document in plan.
+4. Define Team Members - Use `ORCHESTRATION_PROMPT` (if provided) to guide team composition. Identify from TEAM_MEMBERS (see Variables). Document in plan.
 5. Define Step by Step Tasks - Use `ORCHESTRATION_PROMPT` (if provided) to guide task granularity and parallel/sequential structure. Write out tasks with IDs, dependencies, assignments. Document in plan.
 6. Generate Filename - Create a descriptive kebab-case filename based on the plan's main topic
 7. Save Plan - Write the plan to `PLAN_OUTPUT_DIRECTORY/<filename>.md`
@@ -287,12 +290,27 @@ Use these files to complete the task:
 ### Team Members
 <list the team members you'll use to execute the plan>
 
+- Product Owner
+  - Name: freya
+  - Role: Product definition, backlog, acceptance criteria
+  - Agent Type: freya-product-owner
+  - Resume: true
+- UX Designer
+  - Name: luna
+  - Role: Wireframes, interaction specs, accessibility
+  - Agent Type: luna-ux-designer
+  - Resume: true
 - Builder
-  - Name: <unique name for this builder - this allows you and other team members to reference THIS builder by name. Take note there may be multiple builders, the name make them unique.>
-  - Role: <the single role and focus of this builder will play>
-  - Agent Type: <the subagent type of this builder, you'll specify based on the name in TEAM_MEMBERS file or GENERAL_PURPOSE_AGENT if you want to use a general-purpose agent>
-  - Resume: <default true. This lets the agent continue working with the same context. Pass false if you want to start fresh with a new context.>
-- <continue with additional team members as needed in the same format as above>
+  - Name: fireman-decko
+  - Role: Architecture, system design, implementation
+  - Agent Type: fireman-decko-principal-engineer
+  - Resume: true
+- Validator
+  - Name: loki
+  - Role: QA testing, validation, ship/no-ship decision
+  - Agent Type: loki-qa-tester
+  - Resume: true
+- <adjust team composition as needed — not all members are required for every plan>
 
 ## Step by Step Tasks
 
@@ -330,7 +348,7 @@ Use these files to complete the task:
 - Run all validation commands
 - Verify acceptance criteria met
 
-<continue with additional tasks as needed. Agent types must exist in .claude/agents/team/*.md>
+<continue with additional tasks as needed. Agent types must exist in .claude/agents/*.md>
 
 ## Acceptance Criteria
 <list specific, measurable criteria that must be met for the task to be considered complete>
