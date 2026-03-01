@@ -153,8 +153,8 @@ test.describe("Session Archive — /sessions/", () => {
     // Navigate back
     await page.goBack({ waitUntil: "domcontentloaded" });
 
-    // We're back at the archive
-    expect(page.url()).toContain("/sessions/");
+    // We're back at the archive (Vercel may drop trailing slash, so check without it)
+    expect(page.url()).toContain("/sessions");
     await expect(page.locator(".session-card")).toHaveCount(
       await page.locator(".session-card").count()
     );

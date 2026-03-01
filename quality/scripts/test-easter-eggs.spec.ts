@@ -98,8 +98,9 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
       });
       await expect(statusBand).toContainText("FENRIR AWAKENS");
 
-      // Assert: Status band has correct styling (blood orange text)
-      await expect(statusBand).toHaveCSS(
+      // Assert: Status band span has correct styling (blood orange text)
+      const statusSpan = statusBand.locator("span").first();
+      await expect(statusSpan).toHaveCSS(
         "color",
         /rgb\(201,\s*64,\s*32\)|#c94020/i
       );
@@ -233,9 +234,7 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
 
         // Assert: Modal does NOT open again (localStorage gate prevents it)
         const dialogAgain = page.locator('[role="dialog"]').first();
-        await expect(dialogAgain).not.toContainText(
-          "The Roots of a Mountain"
-        );
+        await expect(dialogAgain).not.toBeVisible({ timeout: 2000 });
       }
     });
   });
@@ -317,7 +316,7 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
         await page.waitForTimeout(500); // Wait for any potential modal
 
         const dialogAgain = page.locator('[role="dialog"]').first();
-        await expect(dialogAgain).not.toContainText("The Breath of a Fish");
+        await expect(dialogAgain).not.toBeVisible({ timeout: 2000 });
       }
     });
   });
@@ -396,9 +395,7 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
       await page.waitForTimeout(500); // Wait for any potential modal
 
       const dialogAgain = page.locator('[role="dialog"]').first();
-      await expect(dialogAgain).not.toContainText(
-        "The Forgemaster's Signature"
-      );
+      await expect(dialogAgain).not.toBeVisible({ timeout: 2000 });
     });
 
     test("should not trigger when input field has focus", async ({ page }) => {
@@ -438,8 +435,9 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
           "Loki was here. Your data is fine. Probably."
         );
 
-        // Assert: Toast has gold color
-        await expect(toast).toHaveCSS("color", /f0c040|rgb\(240,\s*192,\s*64\)/i);
+        // Assert: Toast span has gold color
+        const toastSpan = toast.locator("span").first();
+        await expect(toastSpan).toHaveCSS("color", /f0c040|rgb\(240,\s*192,\s*64\)/i);
 
         // Wait for the toast to fade after 5 seconds
         await page.waitForTimeout(5500);
@@ -509,7 +507,7 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
       );
 
       // Assert: Title is gold colored
-      const title = dialog.locator('[role="dialog"] h2').first();
+      const title = dialog.locator('h2').first();
       await expect(title).toHaveCSS("color", /f0b429|rgb\(240,\s*180,\s*41\)/i);
     });
 
@@ -538,6 +536,8 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
       // Clear all storage
       await clearAllEggStorage(page);
 
+      let dialog: any;
+
       // Trigger egg #3 (Roots of a Mountain)
       const collapseButton = page
         .locator('button[aria-label*="collapse"], button[aria-label*="toggle"]')
@@ -545,7 +545,7 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
       if (await collapseButton.isVisible()) {
         await collapseButton.click();
 
-        let dialog = page.locator('[role="dialog"]').first();
+        dialog = page.locator('[role="dialog"]').first();
         await expect(dialog).toContainText("The Roots of a Mountain");
         // Fragment count should be "1 of 6"
         await expect(dialog).toContainText(/1 of 6/);
