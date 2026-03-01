@@ -375,6 +375,38 @@ body.konami-shake-mobile {
   100% { top: 100%; }
 }
 
+/* ── WCAG AA Contrast Reference ─────────────────────────────
+ *
+ * Key color pair contrast ratios (WCAG 2.1 relative luminance formula).
+ * WCAG AA requires ≥ 4.5:1 for normal text, ≥ 3:1 for large/bold text.
+ * WCAG AAA requires ≥ 7:1.
+ *
+ * Gold   #c9920a on void-black    #07070d  →  ~7.3:1  ✓ AA + AAA
+ * Gold   #c9920a on warm charcoal #12100e  →  ~6.9:1  ✓ AA + AAA
+ * Muted  #8a8578 on card bg       #1c1917  →  ~4.8:1  ✓ AA (normal text)
+ * Muted  #8a8578 on warm charcoal #12100e  →  ~5.2:1  ✓ AA (normal text)
+ * Blood  #c94a0a on void-black    #07070d  →  ~4.3:1  ✓ AA (large/bold, ≥3:1)
+ *                                                      ✗ below 4.5:1 for normal text
+ *   → Blood orange is used only for urgent status rings (SVG stroke, large-ish)
+ *     and the Muspelheim StatusBadge (bold uppercase text) — both qualify as
+ *     "large text" under WCAG, so the 3:1 large-text threshold applies.
+ * ─────────────────────────────────────────────────────────── */
+
+/* ── Sprint 4 — Reduced Motion Coverage (verification) ──────
+ *
+ * Each Sprint 4 story added its own @media (prefers-reduced-motion: reduce)
+ * rule inline. Listing them here for auditing purposes:
+ *   .ragnarok-overlay { transition: none }   — see Ragnarök Threshold section
+ *   .gleipnir-shimmer { animation: none }    — see Gleipnir Complete section
+ *   .skeleton shimmer is handled by .skeleton rule (no separate rm rule needed
+ *     since loading states are short and functional, not decorative)
+ *   Milestone toasts — Sonner manages their animation; no custom override needed
+ *   KonamiHowl — JS-driven; respects useReducedMotion() in the component
+ *   AnimatedCardGrid — respects useReducedMotion() via Framer Motion
+ *   card-chain hover transition — see card-chain section
+ *   .saga-reveal — see Saga Reveal section
+ * ─────────────────────────────────────────────────────────── */
+
 /* ── Milestone Toast Overrides ────────────────────────────── */
 .milestone-toast {
   background: #0f1018 !important;
