@@ -533,6 +533,9 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
     test("should track multiple fragments found across eggs", async ({
       page,
     }) => {
+      // Reset viewport to desktop — previous test may have set it to mobile
+      await page.setViewportSize({ width: 1280, height: 720 });
+
       // Clear all storage
       await clearAllEggStorage(page);
 
