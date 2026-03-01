@@ -18,14 +18,14 @@ Hidden references for the wolves who look closely. None of these should obstruct
 
 **Placement**:
 
-| Ingredient | Location |
-|-----------|----------|
-| *Sound of a cat's footfall* | Tooltip on the silent background sync indicator (bottom-right corner) |
-| *Beard of a woman* | About modal — listed under "Built from..." in fine print |
-| *Roots of a mountain* | First time collapse of the Sidebar Menu |
-| *Sinews of a bear* | TBD — more UI elements need to be finished |
-| *Breath of a fish* | Footer — mouse-hover on the copyright `©` symbol reveals it via CSS `::after` |
-| *Spittle of a bird* | TBD — more UI elements need to be finished |
+| # | Ingredient | Location | Storage Key |
+|---|-----------|----------|-------------|
+| 1 | *Sound of a cat's footfall* | Click SyncIndicator dot (bottom-right corner) | `egg:gleipnir-1` |
+| 2 | *Beard of a woman* | Click ingredient II in AboutModal | `egg:gleipnir-2` |
+| 3 | *Roots of a mountain* | First sidebar collapse | `egg:gleipnir-3` |
+| 4 | *Sinews of a bear* | 7th card save (`fenrir:card-save-count`) | `egg:gleipnir-4` |
+| 5 | *Breath of a fish* | Footer — hover on the copyright `©` symbol | `egg:gleipnir-5` |
+| 6 | *Spittle of a bird* | 15 seconds idle on empty Valhalla page | `egg:gleipnir-6` |
 
 **Unlock mechanic**: A `localStorage` key `gleipnir-found` stores a Set of found ingredients. When all six are found, the page briefly shimmers (CSS `@keyframes gleipnir-shimmer`) and the Valhalla page gains a new special entry:
 
@@ -241,9 +241,9 @@ When the user's active card count hits certain numbers, a one-time toast appears
 | 2 | Konami code howl | Medium | Sprint 2 | Done — `KonamiHowl.tsx` |
 | 3 | Loki mode | Medium | Sprint 2 | Done — Footer "Loki" 7-click shuffle |
 | 1 (frag 5) | Gleipnir — Breath of a Fish | Low | Sprint 2 | Done — Footer © hover → `GleipnirFishBreath` modal |
-| 9 | About modal (`?` key) | Medium | Sprint 3 | Backlog |
-| 10 | Wolf's Hunger meter | Medium | Sprint 3 | Backlog |
-| 11 | Card count milestones | Low | Sprint 3 | Backlog |
-| 8 | Ragnarök threshold | Medium | Sprint 3 | Backlog |
-| 1 | Gleipnir Hunt (full, remaining 5 fragments) | High | Sprint 4 | Backlog |
-| 6 | Star Trek LCARS mode | High | Sprint 4 | Backlog |
+| 8 | Ragnarök threshold | Medium | Sprint 4 | Done — `RagnarokContext.tsx`, overlay + title change (Story 4.1) |
+| 11 | Card count milestones | Low | Sprint 4 | Done — `milestone-utils.ts`, Norse toasts at 1/5/9/13/20 (Story 4.2) |
+| 1 | Gleipnir Hunt (fragments 4 + 6) | High | Sprint 4 | Done — Fragment 4 (7th save), Fragment 6 (15s Valhalla idle), reward card (Story 4.3) |
+| 10 | Wolf's Hunger meter | Medium | Sprint 4 | Done — `WolfHungerMeter.tsx` in AboutModal + ForgeMasterEgg (Story 4.5) |
+| 9 | About modal (`?` key) | Medium | Sprint 4 | Done — AboutModal with team pack + Gleipnir ingredients (Story 4.5) |
+| 6 | Star Trek LCARS mode | High | Sprint 5 | Done — `LcarsMode.tsx`, 5s auto-dismiss (Story 5.5) |

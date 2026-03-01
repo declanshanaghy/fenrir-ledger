@@ -47,7 +47,7 @@
 
 Track every fee-wyrm in your portfolio. Every chain forged, every promo deadline, every fee-serpent's strike date — Fenrir watches and howls before the trap snaps shut. Add your cards, name your thresholds, and the wolf does the rest: reminding you to spend, transfer, downgrade, or close before you lose a single dollar to a fee you didn't choose to pay.
 
-*Sprint 3 complete. Sprint 4 groomed and Ready: Ragnarök threshold mode, card count milestones, Gleipnir Hunt completion (resolves DEF-001), accessibility polish, and the Wolf's Hunger meter. All 5 stories carry code-audit notes from Freya's 2026-02-28 groom.*
+*Sprints 1–5 shipped. The forge has been restructured: `development/frontend/` (Next.js) and `development/backend/` (Hono + WebSocket), managed by unified `services.sh`. Sprint 4 delivered Ragnarök threshold, milestones, Gleipnir completion, accessibility, and Wolf Hunger. Sprint 5 delivered the backend server with Google Sheets import via WebSocket streaming.*
 
 ---
 
@@ -117,7 +117,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 - [product/README.md](product/README.md) — Product domain index: mythology map, copywriting guide, backlog
 - [product/product-design-brief.md](product/product-design-brief.md) — Design philosophy, anonymous-first identity model, header states
-- [product/backlog/README.md](product/backlog/README.md) — Groomed backlog index (Sprint 4 stories: 4.1–4.5)
+- [product/backlog/README.md](product/backlog/README.md) — Groomed backlog index (Sprints 4–5 shipped)
 - [product/backlog/story-4.1-ragnarok-threshold.md](product/backlog/story-4.1-ragnarok-threshold.md) — P1: Ragnarök Threshold Mode (visual alarm ≥3 urgent cards)
 - [product/backlog/story-4.2-card-count-milestones.md](product/backlog/story-4.2-card-count-milestones.md) — P2: Card Count Milestone Toasts (5 thresholds, one-time)
 - [product/backlog/story-4.3-gleipnir-hunt-complete.md](product/backlog/story-4.3-gleipnir-hunt-complete.md) — P2: Gleipnir Hunt — wire fragments 4 and 6, complete the unlock
@@ -208,10 +208,14 @@ cd fenrir-ledger
 # Prepare the forge (idempotent)
 ./development/scripts/setup-local.sh
 
-# Stoke the fire
-cd development/frontend && npm run dev
+# Stoke the fire — start both frontend and backend
+.claude/scripts/services.sh start
 
-# Open http://localhost:9999
+# Or start individually:
+#   .claude/scripts/frontend-server.sh start   # port 9653
+#   .claude/scripts/backend-server.sh start    # port 9753
+
+# Open http://localhost:9653
 ```
 
 ### Sprint 3 — Anonymous-First Auth + Cloud Sync Upsell

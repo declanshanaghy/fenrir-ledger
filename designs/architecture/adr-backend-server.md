@@ -1,6 +1,6 @@
 # ADR: Introduce a Dedicated Node/TS Backend Server
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-03-01
 **Author:** FiremanDecko (Principal Engineer)
 **Related:** ADR-005 (auth/PKCE), ADR-006 (anonymous-first)
@@ -171,7 +171,7 @@ The frontend remains functional without the backend for anonymous users (localSt
 - Clear separation of concerns: Next.js = UI + stateless API, backend = stateful + real-time
 
 ### Negative / Trade-offs
-- **Two processes in local dev.** Developers must run both `npm run dev` (frontend) and `backend-server.sh start` (backend). The existing `backend-server.sh` script mitigates this.
+- **Two processes in local dev.** Developers must run both the frontend and backend servers. The `services.sh` script (`.claude/scripts/services.sh`) orchestrates both processes together; individual control is available via `backend-server.sh` and `frontend-server.sh`.
 - **Additional hosting.** The backend needs a persistent process. Vercel Serverless is not appropriate. Options: Fly.io, Railway, or a VPS. (See Implementation Plan for hosting recommendation.)
 - **Secrets management spans two runtimes.** `ANTHROPIC_API_KEY` moves from Vercel env vars to the backend's `.env`. The PKCE token proxy keeps `GOOGLE_CLIENT_SECRET` in Next.js/Vercel. This split is intentional and matches where each secret is consumed.
 - **Deployment pipeline complexity increases.** Sprint stories must include deployment scripts for both services.

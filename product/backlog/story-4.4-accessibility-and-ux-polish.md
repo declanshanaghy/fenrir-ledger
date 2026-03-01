@@ -5,7 +5,7 @@
 - **So that**: I can use Fenrir Ledger efficiently on any device, in any context, without fighting the UI
 - **Priority**: P2-High
 - **Sprint Target**: 4
-- **Status**: Ready
+- **Status**: Done
 
 ---
 

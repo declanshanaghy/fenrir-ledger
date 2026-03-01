@@ -2,8 +2,10 @@
 
 **Priority**: Medium
 **Category**: Infrastructure / Architecture
-**Sprint**: Unscheduled
-**Status**: Proposed
+**Sprint**: Resolved in Sprint 5
+**Status**: Done
+
+> **Resolution (2026-03-01):** The backend investigation concluded with ADR acceptance of Option C (Dedicated Node/TS Backend Server). A Hono v4 + ws v8 backend was implemented at `development/backend/`, with WebSocket streaming for Google Sheets import progress. See `designs/architecture/adr-backend-server.md` for the decision record and `designs/architecture/backend-implementation-plan.md` for the implementation plan. PRs #41 (backend pipeline), #42 (route ownership), #43 (frontend WS integration) shipped the full solution.
 
 ## Problem
 

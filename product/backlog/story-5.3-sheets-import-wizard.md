@@ -5,7 +5,7 @@
 - **So that**: I can validate the AI-converted data looks correct before it lands in my ledger, without committing to anything blindly
 - **Priority**: P1-Critical
 - **Sprint Target**: 5
-- **Status**: Ready
+- **Status**: Done
 
 ---
 

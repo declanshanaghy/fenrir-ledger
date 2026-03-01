@@ -5,7 +5,7 @@
 - **So that**: I feel the cumulative weight of what I've built — the wolf has been feeding, and the ledger remembers every meal
 - **Priority**: P3-Medium
 - **Sprint Target**: 4
-- **Status**: Ready
+- **Status**: Done
 
 ---
 

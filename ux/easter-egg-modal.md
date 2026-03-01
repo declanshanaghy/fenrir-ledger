@@ -2,13 +2,13 @@
 
 Fenrir-themed modal dialog shown when the user discovers a hidden easter egg. Applies full Saga Ledger design tokens: void background, gold accent border glow, Cinzel Decorative headline, animated entry.
 
-**Template file**: [`wireframes/easter-egg-modal.html`](./wireframes/easter-egg-modal.html)
+**Template file**: [`wireframes/easter-eggs/easter-egg-modal.html`](./wireframes/easter-eggs/easter-egg-modal.html)
 
 ---
 
 ## Structure
 
-See [wireframes/easter-egg-modal.html](./wireframes/easter-egg-modal.html).
+See [wireframes/easter-eggs/easter-egg-modal.html](./wireframes/easter-eggs/easter-egg-modal.html).
 
 ---
 

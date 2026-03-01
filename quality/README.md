@@ -8,6 +8,16 @@ This directory contains all QA artifacts: test plans, test cases, test scripts, 
 
 ---
 
+## Infrastructure Sync Notes
+
+As of 2026-03-01, the project has completed two infrastructure renames:
+- `development/src` → `development/frontend` (PR #44)
+- `dev-server.sh` → `frontend-server.sh`, new `services.sh` created (PR #45)
+
+All QA documents in this directory use `development/frontend` throughout.
+
+---
+
 ## Backend PR #41 — Backend WebSocket Import Pipeline (Stories 1-3)
 
 **Status:** PASS — READY TO SHIP | 0 Blocking Defects | 3 Low-Severity Observations
@@ -16,28 +26,12 @@ This directory contains all QA artifacts: test plans, test cases, test scripts, 
 
 ---
 
-## Current Sprint Deliverables (Sprint 3)
-
-### Story 3.2 — Anonymous-First Auth + Cloud Sync Upsell
-
-**Status:** READY TO SHIP ✓ | 0 Defects Found
-
-#### Quality Report
-- **[story-3.2-anon-auth-verdict.md](story-3.2-anon-auth-verdict.md)** — 400-line comprehensive QA verdict
-  - 24 test cases across 7 suites (Anonymous First Load, Household ID, Upsell Banner, Sign-In Page, Mobile)
-  - 100% pass rate: all anonymous state, banner behavior, navigation, mobile responsiveness working
-  - Code review: AppShell, UpsellBanner, AuthContext, TopBar, Sign-In page all verified ✓
-  - Build clean: 0 TypeScript errors, 0 console errors, stable dev server
-  - Edge cases: browser state, navigation flows, viewport responsiveness all tested
-  - Final verdict: READY TO SHIP with 0 defects
-
----
+## Sprint 3 Deliverables
 
 ### Story 3.1 — Google OIDC Auth (Auth.js v5 + per-household localStorage)
 
-**Status:** READY TO SHIP ✓ | 0 Defects Found
+**Status:** READY TO SHIP | 0 Defects Found
 
-#### Quality Report
 - **[story-3.1-verdict.md](story-3.1-verdict.md)** — 436-line comprehensive code review
   - Auth.js v5 configuration, JWT strategy, `householdId` derivation from Google `sub` claim
   - Per-household localStorage key namespacing (e.g., `fenrir_ledger:{householdId}:cards`)
@@ -47,19 +41,99 @@ This directory contains all QA artifacts: test plans, test cases, test scripts, 
   - 18 review sections covering every critical component
   - Final verdict: READY TO SHIP with 0 defects
 
+- **[story-3.1-realm-utils-verdict.md](story-3.1-realm-utils-verdict.md)** — QA verdict for feat/realm-utils (PR #3)
+  - `RealmLabel` interface refactor: `getRealmLabel()` returns object with `label`, `sublabel`, `rune`, `colorClass`
+  - All 4 `CardStatus` return values verified correct
+  - Single call site in `valhalla/page.tsx` correctly updated
+  - Final verdict: SHIP with 0 defects
+
 ---
 
-## Previous Sprint Deliverables (Sprint 2)
+### Story 3.2 — Norse Copy Pass + Anonymous-First Auth
+
+**Status:** READY TO SHIP | 0 Defects Found (after fixes)
+
+- **[story-3.2-anon-auth-verdict.md](story-3.2-anon-auth-verdict.md)** — 400-line comprehensive QA verdict
+  - 24 test cases across 7 suites (Anonymous First Load, Household ID, Upsell Banner, Sign-In Page, Mobile)
+  - 100% pass rate: all anonymous state, banner behavior, navigation, mobile responsiveness working
+  - Code review: AppShell, UpsellBanner, AuthContext, TopBar, Sign-In page all verified
+  - Build clean: 0 TypeScript errors, 0 console errors, stable dev server
+  - Final verdict: READY TO SHIP with 0 defects
+
+- **[story-3.2-verdict.md](story-3.2-verdict.md)** — Re-validation after defect fixes
+  - Three tooltip copy divergences corrected in `realm-utils.ts`
+  - All strings verified against `product/copywriting.md`
+  - Final verdict: SHIP (all defects resolved)
+
+- **[story-3.2-norse-copy-verdict.md](story-3.2-norse-copy-verdict.md)** — QA verdict for feat/norse-copy-pass (PR #6)
+  - Tagline replacement verified across SiteHeader, TopBar, AboutModal
+  - Page title metadata verified for 5 routes
+  - Two-Voice Rule compliance: functional copy plain English, atmospheric copy Norse
+  - Final verdict: SHIP with 0 defects
+
+---
+
+### Story 3.3 — Framer Motion Card Animations
+
+**Status:** READY TO SHIP | 0 Defects Found
+
+- **[story-3.3-verdict.md](story-3.3-verdict.md)** — Static code review and build verification
+  - `AnimatedCardGrid.tsx`: stagger spec verified (opacity, y-offset, easing, delay formula)
+  - `CardSkeletonGrid.tsx`: layout mirror and saga-shimmer keyframe verified
+  - `globals.css`: `@keyframes saga-shimmer` confirmed against ux/interactions.md spec
+  - Loki Mode regression check: Fisher-Yates shuffle, random realm labels, event listener all intact
+  - Build: PASS (framer-motion bundle impact acceptable)
+  - Final verdict: SHIP with 0 defects
+
+---
+
+### Story 3.4 — HowlPanel (Urgent Deadlines Sidebar)
+
+**Status:** READY TO SHIP | 0 Defects Found
+
+- **[story-3.4-howl-panel-verdict.md](story-3.4-howl-panel-verdict.md)** — QA verdict for feat/howl-panel (PR #7)
+  - All 13 acceptance criteria validated
+  - Filtering, sorting, animations (desktop slide-in, mobile bottom-sheet) verified
+  - `raven-warn` CSS keyframe correct; conditional shake on count increase only
+  - Strong TypeScript, defensive null-handling, accessibility attributes verified
+  - Final verdict: READY TO SHIP with 0 defects
+
+---
+
+### Story 3.5 — Valhalla Archive + Close Card Action
+
+**Status:** READY TO SHIP | 0 Defects (after DEF-001 fix)
+
+- **[story-3.5-verdict.md](story-3.5-verdict.md)** — Comprehensive code review and test execution
+  - Data integrity: `closeCard()`, `getCards()`, `getClosedCards()` all verified
+  - Tombstone card rendering, filter/sort controls, Framer Motion stagger verified
+  - DEF-001 (wrong Gleipnir fragment in Valhalla empty state) fixed and re-verified
+  - Final verdict: READY TO SHIP after fix
+
+- **[story-3.5-valhalla-verdict.md](story-3.5-valhalla-verdict.md)** — QA verdict for feat/valhalla-route (PR #4)
+  - All UI acceptance criteria verified in isolation
+  - HOLD issued: merge conflict with feat/realm-utils (getRealmLabel return type)
+  - DEF-001: Missing `.sublabel` accessor — documented with resolution strategy
+  - Final verdict: SHIP after realm-utils merges and branch is rebased
+
+---
+
+## Sprint 2 Deliverables
 
 ### Easter Eggs Test Suite
 
-**Status:** READY TO SHIP ✓ | 0 Defects Found
+**Status:** READY TO SHIP | 0 Defects Found
 
 #### Test Automation
-- **[test-easter-eggs.spec.ts](scripts/test-easter-eggs.spec.ts)** — 596-line Playwright test suite
+- **[scripts/test-easter-eggs.spec.ts](scripts/test-easter-eggs.spec.ts)** — 596-line Playwright test suite
   - 22 test cases across 8 test suites
   - Tests: trigger mechanics, modal content, one-time gates, edge cases, UI/UX, accessibility, fragment tracking
   - Eggs covered: Konami Howl (#2), Mountain Roots (#3), Fish Breath (#5), Forgemaster (#9), Loki Mode (variant)
+
+- **[scripts/test-navigation.spec.ts](scripts/test-navigation.spec.ts)** — Navigation and link integrity test suite
+  - Marketing site browsability: `/static/` loads, "Open the Ledger" CTA resolves to app root
+  - Session archive navigation: `/sessions/` → chronicle entries → back navigation flow
+  - Tests derived from design spec link requirements, not implemented behaviour
 
 #### Test Documentation
 - **[test-plan.md](test-plan.md)** — 283-line test strategy
@@ -96,6 +170,11 @@ npm install -D @playwright/test
 ### All Easter Egg Tests
 ```bash
 npx playwright test quality/scripts/test-easter-eggs.spec.ts
+```
+
+### Navigation & Link Integrity Tests
+```bash
+npx playwright test quality/scripts/test-navigation.spec.ts
 ```
 
 ### Specific Test Suite
@@ -219,33 +298,33 @@ test("should [expected behavior]", async ({ page }) => {
 ### Egg #2: Konami Howl
 Listening for the classic Konami Code sequence (↑ ↑ ↓ ↓ ← → ← → B A). When triggered, displays a wolf silhouette rising from the bottom of the viewport with "FENRIR AWAKENS" status band at the top.
 
-**Test Status:** PASS ✓
+**Test Status:** PASS
 
 ### Egg #3: The Roots of a Mountain
 Opening a modal when the user collapses the sidebar for the first time. Shows the first Gleipnir fragment ("The Roots of a Mountain").
 
-**Test Status:** PASS ✓
+**Test Status:** PASS
 
 ### Egg #5: The Breath of a Fish
 Opening a modal when the user hovers (or touches on mobile) the © symbol in the footer. Shows the fifth Gleipnir fragment ("The Breath of a Fish").
 
-**Test Status:** PASS ✓
+**Test Status:** PASS
 
 ### Egg #9: The Forgemaster's Signature
 Opening a modal when the user presses the ? key. Shows all team members (Freya, Luna, FiremanDecko, Loki) and the current Gleipnir fragment collection progress.
 
-**Test Status:** PASS ✓
+**Test Status:** PASS
 
 ### Egg #3 Variant: Loki Mode
 After clicking "Loki" in the footer 7 times, a gold toast appears: "Loki was here. Your data is fine. Probably." The 7-click threshold references Loki's 7 known children in Norse mythology.
 
-**Test Status:** PASS ✓
+**Test Status:** PASS
 
 ---
 
 ## Future QA Deliverables
 
-Out of scope for Sprint 2, planned for future sprints:
+Out of scope for current sprints, planned for future:
 
 - [ ] **quality/test-results.json** — Machine-readable test results
 - [ ] **quality/quality-report.md** — Ship/No-Ship verdict report
@@ -309,7 +388,7 @@ Out of scope for Sprint 2, planned for future sprints:
 
 ## Related Documentation
 
-- **Design Brief:** [design/easter-eggs.md](../design/easter-eggs.md) — The source of truth for all eggs
+- **Design Brief:** [ux/easter-eggs.md](../ux/easter-eggs.md) — The source of truth for all eggs
 - **Implementation:** [development/frontend/src/components/](../development/frontend/src/components/) — Source code for each egg
 - **Git Convention:** [.claude/skills/git-commit/SKILL.md](../.claude/skills/git-commit/SKILL.md) — Commit format
 - **Mermaid Guide:** [ux/ux-assets/mermaid-style-guide.md](../ux/ux-assets/mermaid-style-guide.md) — Diagram conventions
@@ -321,4 +400,3 @@ Out of scope for Sprint 2, planned for future sprints:
 **QA Tester:** Loki (@.claude/agents/loki.md)
 
 Questions? Check [test-plan.md](test-plan.md) first — it covers most edge cases and FAQs.
-
