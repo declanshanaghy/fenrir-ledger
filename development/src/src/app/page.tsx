@@ -27,7 +27,7 @@ import { Dashboard } from "@/components/dashboard/Dashboard";
 import { CardSkeletonGrid } from "@/components/dashboard/CardSkeletonGrid";
 import { AnimatedHowlPanel } from "@/components/layout/HowlPanel";
 import { ImportWizard } from "@/components/sheets/ImportWizard";
-import { initializeHousehold, getCards, migrateIfNeeded } from "@/lib/storage";
+import { initializeHousehold, getCards, saveCard, migrateIfNeeded } from "@/lib/storage";
 import type { Card } from "@/lib/types";
 
 export default function DashboardPage() {
@@ -79,10 +79,24 @@ export default function DashboardPage() {
 
   const loaded = !isLoading && status !== "loading";
 
-  // Placeholder — Story 5.4 implements real persistence + dedup
   function handleConfirmImport(importedCards: Omit<Card, "householdId">[]) {
-    toast.success(`${importedCards.length} card${importedCards.length !== 1 ? "s" : ""} ready to import.`);
+    if (!householdId) return;
+
+    for (const c of importedCards) {
+      const card: Card = {
+        ...c,
+        householdId,
+        status: "active",
+      };
+      saveCard(card);
+    }
+
+    const refreshed = getCards(householdId);
+    setCards(refreshed);
     setImportWizardOpen(false);
+
+    const count = importedCards.length;
+    toast.success(`${count} card${count !== 1 ? "s" : ""} added to your ledger.`);
   }
 
   return (
@@ -179,6 +193,7 @@ export default function DashboardPage() {
         open={importWizardOpen}
         onClose={() => setImportWizardOpen(false)}
         onConfirmImport={handleConfirmImport}
+        existingCards={cards}
       />
     </div>
   );

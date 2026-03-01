@@ -12,7 +12,7 @@
  * container, 44px minimum touch targets on all interactive elements.
  */
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,9 @@ import {
 } from "@/components/ui/dialog";
 import { KNOWN_ISSUERS } from "@/lib/constants";
 import { useSheetImport } from "@/hooks/useSheetImport";
+import { findDuplicates } from "@/lib/sheets/dedup";
+import type { DedupResult } from "@/lib/sheets/dedup";
+import { ImportDedupStep } from "@/components/sheets/ImportDedupStep";
 import type { Card } from "@/lib/types";
 import type { SheetImportErrorCode } from "@/lib/sheets/types";
 
@@ -28,6 +31,7 @@ interface ImportWizardProps {
   open: boolean;
   onClose: () => void;
   onConfirmImport: (cards: Omit<Card, "householdId">[]) => void;
+  existingCards: Card[];
 }
 
 /** Human-readable error messages keyed by error code */
@@ -59,9 +63,10 @@ function formatDate(iso: string): string {
   }
 }
 
-export function ImportWizard({ open, onClose, onConfirmImport }: ImportWizardProps) {
+export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: ImportWizardProps) {
   const {
     step,
+    setStep,
     url,
     setUrl,
     cards,
@@ -72,6 +77,8 @@ export function ImportWizard({ open, onClose, onConfirmImport }: ImportWizardPro
     cancel,
     reset,
   } = useSheetImport();
+
+  const [dedupResult, setDedupResult] = useState<DedupResult | null>(null);
 
   // URL validation: must contain Google Sheets domain
   const isValidUrl = url.includes("docs.google.com/spreadsheets");
@@ -87,6 +94,21 @@ export function ImportWizard({ open, onClose, onConfirmImport }: ImportWizardPro
   }, [step, onClose]);
 
   function handleConfirm() {
+    const result = findDuplicates(cards, existingCards);
+    if (result.duplicates.length > 0) {
+      setDedupResult(result);
+      setStep("dedup");
+    } else {
+      onConfirmImport(cards);
+    }
+  }
+
+  function handleSkipDuplicates() {
+    if (!dedupResult) return;
+    onConfirmImport(dedupResult.unique);
+  }
+
+  function handleImportAll() {
     onConfirmImport(cards);
   }
 
@@ -101,6 +123,7 @@ export function ImportWizard({ open, onClose, onConfirmImport }: ImportWizardPro
           {step === "entry" && "Step 1: Enter Google Sheets URL"}
           {step === "loading" && "Loading: fetching cards from spreadsheet"}
           {step === "preview" && `Preview: ${cards.length} cards ready to import`}
+          {step === "dedup" && `Duplicates found: ${dedupResult?.duplicates.length ?? 0} duplicate cards detected`}
           {step === "error" && "Error: import failed"}
           {step === "success" && "Success: cards imported"}
         </div>
@@ -257,6 +280,17 @@ export function ImportWizard({ open, onClose, onConfirmImport }: ImportWizardPro
               </div>
             </div>
           </>
+        )}
+
+        {/* ── Dedup step ─────────────────────────────────────────────── */}
+        {step === "dedup" && dedupResult && (
+          <ImportDedupStep
+            duplicates={dedupResult.duplicates}
+            uniqueCount={dedupResult.unique.length}
+            onSkipDuplicates={handleSkipDuplicates}
+            onImportAll={handleImportAll}
+            onCancel={onClose}
+          />
         )}
 
         {/* ── Error step ─────────────────────────────────────────────── */}

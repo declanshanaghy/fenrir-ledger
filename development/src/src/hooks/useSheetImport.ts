@@ -4,10 +4,11 @@ import { useState, useCallback, useRef } from "react";
 import type { Card } from "@/lib/types";
 import type { SheetImportErrorCode } from "@/lib/sheets/types";
 
-export type ImportStep = "entry" | "loading" | "preview" | "error" | "success";
+export type ImportStep = "entry" | "loading" | "preview" | "dedup" | "error" | "success";
 
 export interface UseSheetImportReturn {
   step: ImportStep;
+  setStep: (step: ImportStep) => void;
   url: string;
   setUrl: (url: string) => void;
   cards: Omit<Card, "householdId">[];
@@ -101,6 +102,7 @@ export function useSheetImport(): UseSheetImportReturn {
 
   return {
     step,
+    setStep,
     url,
     setUrl,
     cards,
