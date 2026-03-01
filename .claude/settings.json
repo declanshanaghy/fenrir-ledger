@@ -14,11 +14,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/pre_tool_use.py"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/pre_tool_use.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type PreToolUse --summarize"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type PreToolUse --summarize"
           }
         ]
       }
@@ -29,11 +29,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/post_tool_use.py"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/post_tool_use.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type PostToolUse --summarize"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type PostToolUse --summarize"
           }
         ]
       }
@@ -43,11 +43,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/notification.py"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/notification.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type Notification --summarize"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type Notification --summarize"
           }
         ]
       }
@@ -57,11 +57,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/stop.py --chat"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/stop.py --chat"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type Stop --add-chat"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type Stop --add-chat"
           }
         ]
       }
@@ -71,11 +71,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/subagent_stop.py"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/subagent_stop.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type SubagentStop"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type SubagentStop"
           }
         ]
       }
@@ -85,11 +85,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/pre_compact.py"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/pre_compact.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type PreCompact"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type PreCompact"
           }
         ]
       }
@@ -99,11 +99,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/user_prompt_submit.py --log-only --store-last-prompt --name-agent"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/user_prompt_submit.py --log-only --store-last-prompt --name-agent"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type UserPromptSubmit --summarize"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type UserPromptSubmit --summarize"
           }
         ]
       }
@@ -113,11 +113,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/session_start.py"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/session_start.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type SessionStart"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type SessionStart"
           }
         ]
       }
@@ -127,11 +127,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/session_end.py"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/session_end.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type SessionEnd"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type SessionEnd"
           }
         ]
       }
@@ -142,11 +142,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/permission_request.py"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/permission_request.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type PermissionRequest --summarize"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type PermissionRequest --summarize"
           }
         ]
       }
@@ -157,11 +157,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/post_tool_use_failure.py"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/post_tool_use_failure.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type PostToolUseFailure --summarize"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type PostToolUseFailure --summarize"
           }
         ]
       }
@@ -172,11 +172,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/subagent_start.py"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/subagent_start.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type SubagentStart"
+            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/send_event.py --source-app fenrir-ledger --event-type SubagentStart"
           }
         ]
       }
