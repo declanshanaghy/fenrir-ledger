@@ -375,6 +375,17 @@ body.konami-shake-mobile {
   100% { top: 100%; }
 }
 
+/* ── Milestone Toast Overrides ────────────────────────────── */
+.milestone-toast {
+  background: #0f1018 !important;
+  border: 1px solid #c9920a !important;
+  color: #e8e4d4 !important;
+}
+
+.milestone-toast [data-content] {
+  font-family: var(--font-source-serif), serif;
+}
+
 /* ── Ragnarök Threshold Mode ──────────────────────────────── */
 .ragnarok-overlay {
   position: fixed;
@@ -397,3 +408,19 @@ body.konami-shake-mobile {
   }
 }
 
+/* ── Gleipnir Complete Shimmer ────────────────────────────── */
+@keyframes gleipnir-shimmer {
+  0% { box-shadow: 0 0 0 0 rgba(201, 146, 10, 0); }
+  50% { box-shadow: 0 0 20px 4px rgba(201, 146, 10, 0.3); }
+  100% { box-shadow: 0 0 0 0 rgba(201, 146, 10, 0); }
+}
+
+.gleipnir-shimmer {
+  animation: gleipnir-shimmer 2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gleipnir-shimmer {
+    animation: none;
+  }
+}
