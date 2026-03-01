@@ -37,10 +37,9 @@ playwright-report/
 .vercel
 logs/
 
-# Temp files
+# Temp & worktree files (for parallel agent development)
 tmp/
-
-# Git worktrees for parallel agent development
+development/src/.claude/
 trees/
 
 # doc-sync run artifacts (ephemeral, coordinator reads then discards)
