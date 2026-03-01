@@ -64,6 +64,7 @@ jobs:
           SERVER_URL: ${{ steps.deploy.outputs.preview_url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           CI: "true"
+          NODE_PATH: ./node_modules
         run: npx playwright test --config playwright.config.ts
 
       - name: Upload Playwright report
