@@ -23,6 +23,7 @@ import { SideNav } from "./SideNav";
 import { SyncIndicator } from "./SyncIndicator";
 import { KonamiHowl } from "./KonamiHowl";
 import { ForgeMasterEgg } from "./ForgeMasterEgg";
+import { Toaster } from "sonner";
 import { Footer } from "./Footer";
 import { UpsellBanner } from "./UpsellBanner";
 import {
@@ -98,6 +99,17 @@ export function AppShell({ children }: AppShellProps) {
       <ForgeMasterEgg />
       {/* Easter egg #3 — The Roots of a Mountain (first sidebar collapse, one-time) */}
       <GleipnirMountainRoots open={rootsOpen} onClose={dismissRoots} />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          className: "font-body",
+          style: {
+            background: "hsl(var(--card))",
+            border: "1px solid hsl(var(--border))",
+            color: "hsl(var(--foreground))",
+          },
+        }}
+      />
     </div>
   );
 }
