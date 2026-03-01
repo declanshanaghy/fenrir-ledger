@@ -1,86 +1,113 @@
-# QA Handoff — Story 5: Route Ownership + Env Config
+# QA Handoff -- Frontend WebSocket Import (Story 4)
 
-**Date:** 2026-03-01
-**Engineer:** FiremanDecko
-**Branch:** `feat/route-ownership-config`
+**From**: FiremanDecko (Principal Engineer)
+**To**: Loki (QA Tester)
+**Branch**: `feat/frontend-ws-import`
+**Date**: 2026-03-01
 
 ---
 
-## What Was Built
+## What Was Implemented
 
-This story converts the Next.js `/api/sheets/import` route from a full Anthropic import implementation into a thin HTTP proxy that delegates to the backend server. It also documents the route ownership split and adds the `BACKEND_URL` environment variable.
+### Frontend WebSocket Import Progress
 
-### Files Created
+The Google Sheets import wizard now supports real-time phase progress via WebSocket when the backend import service (port 9753) is available. If the backend is unavailable, it silently falls back to the existing HTTP `/api/sheets/import` endpoint.
 
-| File | Description |
-|------|-------------|
-| `designs/architecture/route-ownership.md` | Documents which routes live in Next.js vs. backend, env var mapping, and design principles |
+**Key behaviors:**
 
-### Files Modified
+1. On submit, the hook probes `GET /health` on the backend (2s timeout).
+2. If healthy: opens a WebSocket connection, sends `import_start`, and listens for phase/complete/error messages.
+3. If unhealthy or WS fails to open: falls back to existing HTTP POST logic.
+4. Cancel button sends `import_cancel` over WebSocket before closing the connection.
+5. Loading step shows dynamic Norse-flavored phase labels based on backend progress.
+
+---
+
+## Files Created / Modified
 
 | File | Change |
 |------|--------|
-| `development/src/src/app/api/sheets/import/route.ts` | Replaced full Anthropic/Zod import implementation with thin HTTP proxy to backend `/import` endpoint |
-| `development/src/.env.example` | Added `BACKEND_URL=http://localhost:9753` with documentation comments |
-| `development/qa-handoff.md` | This file (overwritten per sprint convention) |
+| `development/src/src/hooks/useSheetImport.ts` | Added WebSocket import path with health-check fallback, `importPhase` state, `ImportPhase` type export, `ServerMessage` interface, `checkBackendHealth()`, `submitViaWebSocket()`, `submitViaHttp()` (extracted from old `submit`), cancel sends `import_cancel` over WS |
+| `development/src/src/components/sheets/ImportWizard.tsx` | Added `ImportPhase` type import, `PHASE_LABELS` map, destructured `importPhase` from hook, dynamic loading text based on phase |
+| `development/src/.env.example` | Added `NEXT_PUBLIC_BACKEND_WS_URL=ws://localhost:9753` |
+| `development/qa-handoff.md` | This file |
 
 ---
 
-## How to Deploy
+## How to Test
 
-1. Pull the `feat/route-ownership-config` branch
-2. `cd development/src && npm install`
-3. Ensure `.env.local` has `BACKEND_URL=http://localhost:9753` (or the deployed backend URL)
-4. `npm run build` -- verify successful build
-5. `npm run dev` -- start the Next.js dev server
+### Prerequisites
 
----
+- `npm install` in `development/src/`
+- Copy `.env.example` to `.env.local` and fill in required values
 
-## Testing Instructions
+### Test 1: HTTP Fallback (No Backend Running)
 
-### Acceptance Criteria Checklist
+1. Make sure no process is listening on port 9753.
+2. Start the Next.js dev server: `npm run dev` in `development/src/`.
+3. Open the import wizard (Google Sheets import).
+4. Paste a valid Google Sheets URL and click Import.
+5. **Expected**: The loading step shows "Reading the runes from your spreadsheet..." (the default/fallback text). After a brief health check delay (~2s), the import proceeds via the HTTP API route as before.
+6. The import should complete (preview step) or error (error step) normally.
 
-- [ ] **No Anthropic SDK in route**: Open `development/src/src/app/api/sheets/import/route.ts` and verify there are no imports of `@anthropic-ai/sdk`, `zod`, `extractSheetId`, `buildCsvExportUrl`, `buildExtractionPrompt`, or `CSV_TRUNCATION_LIMIT`
-- [ ] **Thin proxy only**: The route should be under 45 lines. It accepts a URL in the body, forwards it to `BACKEND_URL/import`, and returns the response
-- [ ] **503 on backend unreachable**: With no backend running, POST to `/api/sheets/import` with `{"url": "https://docs.google.com/spreadsheets/d/test"}` and verify it returns HTTP 503 with `{"error": {"code": "FETCH_ERROR", "message": "The import service is currently unavailable. Please try again later."}}`
-- [ ] **504 on timeout**: If the backend takes over 55 seconds, the route returns 504 (hard to test manually; verify the `AbortSignal.timeout(55_000)` code is present)
-- [ ] **BACKEND_URL in .env.example**: Verify `development/src/.env.example` contains `BACKEND_URL=http://localhost:9753` with documentation
-- [ ] **Route ownership doc**: Verify `designs/architecture/route-ownership.md` contains the route table, env var table, and 4 design principles
-- [ ] **TypeScript compiles**: `cd development/src && npx tsc --noEmit` exits 0
-- [ ] **Build succeeds**: `cd development/src && npm run build` exits 0
+### Test 2: Cancel During HTTP Fallback
 
-### Test Commands
+1. Same setup as Test 1 (no backend on 9753).
+2. Start an import and immediately click Cancel.
+3. **Expected**: Import is aborted, wizard returns to entry step. No errors.
+
+### Test 3: WebSocket Happy Path (Backend Running)
+
+1. Start the backend WebSocket service on port 9753 (from PR #41).
+2. Start the Next.js dev server.
+3. Open the import wizard and submit a valid Google Sheets URL.
+4. **Expected**:
+   - Loading text changes through phases:
+     - "Connecting to the forge..."
+     - "Fetching the sacred scrolls..."
+     - "The runes are being deciphered..."
+     - "Validating the inscriptions..."
+   - On completion, the preview step shows extracted cards.
+
+### Test 4: WebSocket Cancel
+
+1. Backend running on 9753.
+2. Start an import, then click Cancel while loading.
+3. **Expected**: `import_cancel` message sent over WS (visible in backend logs), connection closed, wizard returns to entry step.
+
+### Test 5: WebSocket Error from Backend
+
+1. Backend running, but configure it to return an `import_error` message (e.g., invalid sheet URL).
+2. **Expected**: Error step shown with appropriate error code and message.
+
+### Test 6: Backend Goes Down Mid-Import
+
+1. Start the backend, begin an import.
+2. Kill the backend process while the import is in progress.
+3. **Expected**: After the 20s timeout, the wizard shows an error or returns to entry. No crash.
+
+### Test 7: TypeScript and Build
 
 ```bash
-# TypeScript check
-cd development/src && npx tsc --noEmit
-
-# Production build
-cd development/src && npm run build
-
-# Test 503 error (no backend running)
-cd development/src && npm run dev &
-curl -X POST http://localhost:9653/api/sheets/import \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://docs.google.com/spreadsheets/d/test"}'
-# Expected: 503 with FETCH_ERROR
-
-# Test invalid body
-curl -X POST http://localhost:9653/api/sheets/import \
-  -H "Content-Type: application/json" \
-  -d '{}'
-# Expected: 400 with INVALID_URL
-
-# Test invalid JSON
-curl -X POST http://localhost:9653/api/sheets/import \
-  -H "Content-Type: text/plain" \
-  -d 'not json'
-# Expected: 400 with INVALID_URL
+cd development/src
+npx -p typescript tsc --noEmit   # Should pass
+npm run build                     # Should pass
 ```
+
+---
+
+## Env Var Reference
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `NEXT_PUBLIC_BACKEND_WS_URL` | WebSocket URL for backend import service | `ws://localhost:9753` |
+
+The HTTP health-check URL is derived automatically by replacing the `ws://` protocol with `http://`.
 
 ---
 
 ## Known Limitations
 
-- The `NEXT_PUBLIC_BACKEND_WS_URL` env var is documented in `route-ownership.md` but not yet added to `.env.example` -- it will be added when the WebSocket client code is implemented.
-- The `@anthropic-ai/sdk` and `zod` packages remain in `package.json` as they may be used by other parts of the application or the future backend. They are no longer imported by the import route.
+- `import_progress` messages (rowsExtracted/totalRows) are received but not displayed in the UI. A progress bar could be added in a future sprint.
+- The `warning` field from the HTTP response is supported, but the WebSocket `import_complete` message does not carry a `warning` field per the current backend spec.
+- WebSocket reconnection is not implemented -- if the connection drops, the user must retry manually.

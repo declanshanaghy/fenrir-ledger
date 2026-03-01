@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { KNOWN_ISSUERS } from "@/lib/constants";
 import { useSheetImport } from "@/hooks/useSheetImport";
+import type { ImportPhase } from "@/hooks/useSheetImport";
 import { findDuplicates } from "@/lib/sheets/dedup";
 import type { DedupResult } from "@/lib/sheets/dedup";
 import { ImportDedupStep } from "@/components/sheets/ImportDedupStep";
@@ -43,6 +44,14 @@ const ERROR_MESSAGES: Record<SheetImportErrorCode, string> = {
   PARSE_ERROR: "The card data couldn't be parsed correctly.",
   ANTHROPIC_ERROR: "Our card extraction service is temporarily unavailable.",
   FETCH_ERROR: "Couldn't reach the spreadsheet. Check the URL and try again.",
+};
+
+/** Norse-flavored phase labels shown during WebSocket import. */
+const PHASE_LABELS: Record<NonNullable<ImportPhase>, string> = {
+  connecting: "Connecting to the forge...",
+  fetching_sheet: "Fetching the sacred scrolls...",
+  extracting: "The runes are being deciphered...",
+  validating: "Validating the inscriptions...",
 };
 
 /** Format cents as a dollar amount string */
@@ -73,6 +82,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
     warning,
     errorCode,
     errorMessage,
+    importPhase,
     submit,
     cancel,
     reset,
@@ -195,7 +205,9 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               />
 
               <p className="font-body text-muted-foreground text-sm italic text-center">
-                Reading the runes from your spreadsheet...
+                {importPhase
+                  ? PHASE_LABELS[importPhase]
+                  : "Reading the runes from your spreadsheet..."}
               </p>
 
               <button
