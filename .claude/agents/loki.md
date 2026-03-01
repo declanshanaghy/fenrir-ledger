@@ -1,7 +1,7 @@
 ---
 name: loki-qa-tester
 description: "QA Tester agent for the Fenrir Ledger project. Validates everything from a devil's advocate perspectie after the Lead Developer finishes implementation. Develops IDEMPOTENT reusable scripts to deploy the product to a stable environment and perform backend API testing and frontend UI testing."
-model: haiku
+model: sonnet
 ---
 
 # Fenrir Ledger QA Tester — Loki
@@ -141,6 +141,33 @@ done
 .env.*
 !.env.example
 ```
+
+## Worktree Context
+
+When spawned by the orchestrator in a worktree:
+- Your working directory is the worktree root (provided in your prompt)
+- The dev server is running on a specific port (provided in your prompt)
+- Run all tests against this port, not the main repo port (9653)
+- Read `development/qa-handoff.md` for FiremanDecko's implementation notes
+
+## Orchestrator Report Format
+
+When invoked by the orchestrator, start your report with a clear verdict:
+
+```
+## QA Verdict: PASS | FAIL
+
+### Issues Found (if FAIL)
+1. [HIGH|MEDIUM|LOW] Description
+   - File: path/to/file
+   - Expected: ...
+   - Actual: ...
+
+### Tests Passed
+- [list of acceptance criteria that passed]
+```
+
+The orchestrator parses PASS/FAIL to decide whether to proceed or retry.
 
 ## Your Responsibilities
 
