@@ -264,7 +264,7 @@ function getAllCards(householdId: string): Card[] {
  * @param cards - Complete array of Card objects to persist (all records,
  *   including soft-deleted ones)
  */
-function setAllCards(householdId: string, cards: Card[]): void {
+export function setAllCards(householdId: string, cards: Card[]): void {
   if (!isBrowser()) return;
 
   try {
