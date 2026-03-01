@@ -80,19 +80,20 @@ test.describe("Marketing Site — /static/", () => {
     await expect(sessionLink).toHaveAttribute("href", "/sessions/");
   });
 
-  test("footer link from app reaches /static/", async ({ page }) => {
-    // Start at the app root (may redirect to sign-in — we check the footer
-    // link href regardless of auth state by inspecting the DOM directly).
+  test("topbar logo link from app reaches /static/", async ({ page }) => {
+    // Start at the app root (may redirect to sign-in — we check the topbar
+    // logo link href by inspecting the DOM directly).
     await goto(page, "/");
 
-    // The footer wordmark link must exist with href="/static"
-    const footerLink = page
-      .locator('footer a[href="/static"]')
+    // The topbar logo link must exist with href="/static"
+    // (Per commit beae3ff: footer now has About button, topbar has /static link)
+    const topbarLink = page
+      .locator('header a[href="/static"]')
       .first();
-    await expect(footerLink).toBeAttached();
+    await expect(topbarLink).toBeAttached();
 
     // Confirm it opens in a new tab (target="_blank")
-    await expect(footerLink).toHaveAttribute("target", "_blank");
+    await expect(topbarLink).toHaveAttribute("target", "_blank");
 
     // Navigate directly to /static/ and confirm it serves real content
     await goto(page, "/static/");

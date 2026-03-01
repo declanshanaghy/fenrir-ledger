@@ -92,7 +92,10 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
       ]);
 
       // Assert: FENRIR AWAKENS status band appears at the top
-      const statusBand = page.locator('[role="status"]');
+      // Filter by text content to disambiguate from Loki toast (also role="status")
+      const statusBand = page.locator('[role="status"]').filter({
+        hasText: "FENRIR AWAKENS",
+      });
       await expect(statusBand).toContainText("FENRIR AWAKENS");
 
       // Assert: Status band has correct styling (blood orange text)
@@ -123,8 +126,11 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
       await typeKeySequence(page, ["ArrowUp", "ArrowUp"]);
 
       // The status band should NOT appear because the sequence was reset
-      const statusBand = page.locator('[role="status"]');
-      await expect(statusBand).not.toContainText("FENRIR AWAKENS");
+      // Filter by "FENRIR AWAKENS" text to disambiguate from Loki toast
+      const statusBand = page.locator('[role="status"]').filter({
+        hasText: "FENRIR AWAKENS",
+      });
+      await expect(statusBand).not.toBeVisible();
     });
 
     test("should not trigger when input field has focus", async ({ page }) => {
