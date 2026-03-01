@@ -21,14 +21,15 @@ The command handles:
 - Configures a unique port (9653 + offset)
 - Copies `.env.local` from main project
 - Installs npm dependencies
-- Starts the dev server using `.claude/scripts/dev-server.sh`
+- Starts the dev server using `.claude/scripts/frontend-server.sh`
+- Starts the backend server using `.claude/scripts/backend-server.sh` (if backend exists)
 - Provides access URL
 
 ### Step 4: Share results with user
 Include:
 - App URL (e.g., http://localhost:9654)
 - Configured port
-- How to manage the dev server
+- How to manage the services (use `services.sh` for both, or individual scripts)
 - Location of worktree directory
 
 ---
@@ -70,7 +71,8 @@ Highlight:
 ```
 
 ### Step 3: What happens automatically
-- Stops the dev server using `.claude/scripts/dev-server.sh`
+- Stops the frontend server using `.claude/scripts/frontend-server.sh`
+- Stops the backend server using `.claude/scripts/backend-server.sh`
 - Removes the git worktree
 - Deletes the git branch
 - Validates complete removal
@@ -78,5 +80,5 @@ Highlight:
 ### Step 4: Confirm removal with user
 Share:
 - Confirmation that worktree was removed
-- Dev server that was stopped
+- Servers that were stopped
 - Any cleanup actions performed

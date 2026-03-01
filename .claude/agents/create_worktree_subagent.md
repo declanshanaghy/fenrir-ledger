@@ -19,7 +19,9 @@ You are a git worktree creation specialist. Your sole responsibility is to creat
 - If the user provides a port offset, pass it to the command
 - If no port offset provided, the command auto-calculates it
 - Each worktree gets a unique port: 9653 + offset (9654, 9655, 9656...)
-- Dev server is managed via the dev-server script at `.claude/scripts/dev-server.sh`
+- Frontend server is managed via `.claude/scripts/frontend-server.sh`
+- Backend server is managed via `.claude/scripts/backend-server.sh`
+- Both servers can be managed together via `.claude/scripts/services.sh`
 
 ## Workflow
 

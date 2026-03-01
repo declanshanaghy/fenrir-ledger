@@ -10,9 +10,9 @@ Common issues and their solutions when managing worktrees.
 3. Check port configuration
 
 ### Solutions
-- If dev server is stopped, restart it using the dev-server script
+- If dev server is stopped, restart it using the frontend-server script
 - If port conflicts, use a different port offset
-- Check logs: `FENRIR_PORT=<port> FENRIR_DEV_DIR=<dev-dir> .claude/scripts/dev-server.sh logs`
+- Check logs: `FENRIR_FRONTEND_PORT=<port> FENRIR_FRONTEND_DIR=<dev-dir> .claude/scripts/frontend-server.sh logs`
 
 ---
 
@@ -44,8 +44,9 @@ Common issues and their solutions when managing worktrees.
 
 ### Solutions
 1. Use `/remove_worktree_prompt` which stops the server first
-2. Manually stop: `FENRIR_PORT=<port> .claude/scripts/dev-server.sh stop`
-3. Force kill if stuck: `lsof -ti TCP:<port> -sTCP:LISTEN | xargs kill -9`
+2. Manually stop: `FENRIR_FRONTEND_PORT=<port> .claude/scripts/frontend-server.sh stop`
+3. Stop both at once: `FENRIR_FRONTEND_PORT=<port> FENRIR_BACKEND_PORT=<port+100> .claude/scripts/services.sh stop`
+4. Force kill if stuck: `lsof -ti TCP:<port> -sTCP:LISTEN | xargs kill -9`
 
 ---
 
@@ -57,11 +58,11 @@ Common issues and their solutions when managing worktrees.
 3. Remove unused worktrees to free up ports
 
 ### Port Allocation Reference
-- Main: 9653
-- Offset 1: 9654
-- Offset 2: 9655
-- Offset 3: 9656
-- Pattern: 9653 + offset
+- Main: 9653 (frontend), 9753 (backend)
+- Offset 1: 9654 / 9754
+- Offset 2: 9655 / 9755
+- Offset 3: 9656 / 9756
+- Pattern: 9653 + offset (frontend), 9753 + offset (backend)
 
 ---
 
@@ -88,17 +89,17 @@ Incomplete removal or manual deletion
 
 ## General Debugging
 
-1. **Gather info** — Run `/list_worktrees_prompt` first
-2. **Check logs** — `FENRIR_PORT=<port> FENRIR_DEV_DIR=<dev-dir> .claude/scripts/dev-server.sh logs`
-3. **Check dev server** — `FENRIR_PORT=<port> .claude/scripts/dev-server.sh status`
-4. **Resolve** — Use appropriate command
-5. **Verify** — Re-run status/list to confirm fix
+1. **Gather info** -- Run `/list_worktrees_prompt` first
+2. **Check logs** -- `FENRIR_FRONTEND_PORT=<port> FENRIR_FRONTEND_DIR=<dev-dir> .claude/scripts/frontend-server.sh logs`
+3. **Check status** -- `.claude/scripts/services.sh status` (main repo) or with env overrides (worktree)
+4. **Resolve** -- Use appropriate command
+5. **Verify** -- Re-run status/list to confirm fix
 
 ## Quick Diagnostic Checklist
 
 - Does worktree directory exist? (`ls trees/`)
 - Is git aware of it? (`git worktree list`)
-- Is the dev server running? (check status via dev-server script)
+- Is the dev server running? (check status via frontend-server script or services.sh)
 - Is the port available? (`lsof -i TCP:<port>`)
 - Is `.env.local` present? (`ls trees/<branch>/development/frontend/.env.local`)
 - Did dependencies install? (`ls trees/<branch>/development/frontend/node_modules`)

@@ -1,147 +1,118 @@
-# QA Handoff -- Rename development/src to development/frontend
+# QA Handoff: Service Script Consolidation
 
-**From**: FiremanDecko (Principal Engineer)
-**To**: Loki (QA Tester)
-**Branch**: `chore/rename-frontend`
-**Date**: 2026-03-01
+**Story:** Story 2 -- Service Script Consolidation
+**Branch:** `chore/service-scripts`
+**Engineer:** FiremanDecko
+**Date:** 2026-03-01
 
 ---
 
 ## What Was Implemented
 
-Renamed the frontend project directory from `development/src` to `development/frontend` for clarity and consistency with the existing `development/backend` directory. Updated all path references across the entire codebase (55 files, approximately 150+ occurrences).
+1. **Renamed `dev-server.sh` to `frontend-server.sh`** for naming consistency with `backend-server.sh`.
+2. **Standardized env var names** -- `FENRIR_FRONTEND_PORT` and `FENRIR_FRONTEND_DIR` are now the primary names. Old names (`FENRIR_PORT`, `FENRIR_DEV_DIR`) still work as fallbacks.
+3. **Created `services.sh`** -- unified script that manages both frontend and backend servers together.
+4. **Updated all documentation** -- commands, worktree prompts, worktree skill files, and subagent definition all reference `frontend-server.sh` and `services.sh`.
+5. **Standardized output prefixes** -- both scripts now prefix output with their service name (e.g., `Frontend: running (pid 12345) on port 9653`).
+6. **Cleaned up stale worktrees** -- removed `agent-aed8f05d` and its nested worktrees.
+
+## Files Created / Modified
+
+| File | Change |
+|------|--------|
+| `.claude/scripts/frontend-server.sh` | RENAMED from `dev-server.sh`. Updated env vars, header, output prefixes, log filename. |
+| `.claude/scripts/backend-server.sh` | Updated output prefixes to include `Backend:` prefix for consistency. |
+| `.claude/scripts/services.sh` | NEW -- unified script delegating to frontend-server.sh and backend-server.sh. |
+| `.claude/commands/dev-server.md` | Rewritten to cover all three scripts with migration note. |
+| `.claude/commands/create_worktree_prompt.md` | Updated all script refs and env var names. |
+| `.claude/commands/remove_worktree_prompt.md` | Updated all script refs and env var names. |
+| `.claude/commands/list_worktrees_prompt.md` | Updated all script refs and env var names. |
+| `.claude/skills/worktree-manager-skill/REFERENCE.md` | Updated directory tree, script names, env var table. |
+| `.claude/skills/worktree-manager-skill/TROUBLESHOOTING.md` | Updated all script refs. |
+| `.claude/skills/worktree-manager-skill/OPERATIONS.md` | Updated all script refs. |
+| `.claude/skills/worktree-manager-skill/SKILL.md` | Updated script reference in notes section. |
+| `.claude/agents/create_worktree_subagent.md` | Updated script references. |
+| `development/frontend/LOKI-TEST-PLAN-anon-auth.md` | Updated stale `dev-server.sh` reference. |
+| `development/qa-handoff.md` | This file (replaces previous handoff). |
+
+## How to Verify
+
+### 1. Script Execution
+
+All three scripts should work from the repo root:
+
+```bash
+.claude/scripts/frontend-server.sh status
+.claude/scripts/backend-server.sh status
+.claude/scripts/services.sh status
+```
+
+### 2. Unified Script Actions
+
+```bash
+# Start both services (backend first, then frontend)
+.claude/scripts/services.sh start
+
+# Check status of both
+.claude/scripts/services.sh status
+
+# Stop both
+.claude/scripts/services.sh stop
+
+# Restart both
+.claude/scripts/services.sh restart
+
+# Tail logs
+.claude/scripts/services.sh logs frontend
+.claude/scripts/services.sh logs backend
+.claude/scripts/services.sh logs          # both interleaved
+```
+
+### 3. Backward Compatibility
+
+Old env var names should still work:
+
+```bash
+FENRIR_PORT=9654 .claude/scripts/frontend-server.sh status
+FENRIR_DEV_DIR=/some/path .claude/scripts/frontend-server.sh status
+```
+
+New env var names take precedence:
+
+```bash
+FENRIR_FRONTEND_PORT=9654 FENRIR_PORT=9999 .claude/scripts/frontend-server.sh status
+# Should use 9654, not 9999
+```
+
+### 4. No Stale References
+
+```bash
+grep -r "dev-server\.sh" .claude/ --include="*.md" --include="*.sh"
+```
+
+Should return ONLY the migration note in `dev-server.md` (intentional documentation).
+
+### 5. Stale Worktree Cleanup
+
+```bash
+git worktree list
+```
+
+Should NOT contain `agent-aed8f05d` or its nested worktrees.
+
+## Known Limitations
+
+- `sessions/super-wolf.html` still references `dev-server.sh` in historical session text. This is an archived session log and should not be modified.
+- The `dev-server.md` command file retains its filename for backward compatibility with existing slash command muscle memory. Its content has been updated to document all three scripts.
+
+## Suggested Test Focus
+
+1. **services.sh start/stop/restart** -- verify backend starts before frontend on `start`, both stop on `stop`.
+2. **Backward compat** -- old `FENRIR_PORT` / `FENRIR_DEV_DIR` env vars still work.
+3. **Precedence** -- new `FENRIR_FRONTEND_PORT` overrides old `FENRIR_PORT`.
+4. **Output format** -- verify service name prefixes in output (e.g., `Frontend: running`, `Backend: not running`).
+5. **Log file paths** -- frontend logs now go to `frontend-server.log` (not `dev-server.log`).
 
 ---
 
-## Files Modified
-
-### Directory Rename
-- `development/src/` -> `development/frontend/` (via `git mv`)
-
-### Scripts (2 files)
-- `.claude/scripts/dev-server.sh` -- updated `FENRIR_DEV_DIR` default path
-- `development/scripts/setup-local.sh` -- updated `REPO_ROOT/development/src` references
-
-### Agent Prompts (2 files)
-- `.claude/agents/fireman-decko.md` -- updated Source Code path and Vercel Root Directory
-- `.claude/agents/loki.md` -- updated Source Code path
-
-### Commands (5 files)
-- `.claude/commands/create_worktree_prompt.md` -- updated all worktree path references
-- `.claude/commands/dev-server.md` -- updated dev server path references
-- `.claude/commands/list_worktrees_prompt.md` -- updated worktree listing paths
-- `.claude/commands/plan_w_team.md` -- updated build/lint/typecheck commands
-- `.claude/commands/remove_worktree_prompt.md` -- updated worktree removal paths
-
-### Skills (3 files)
-- `.claude/skills/easter-egg-modal/SKILL.md` -- updated public asset and component paths
-- `.claude/skills/worktree-manager-skill/REFERENCE.md` -- updated worktree reference paths
-- `.claude/skills/worktree-manager-skill/TROUBLESHOOTING.md` -- updated troubleshooting paths
-
-### CI/CD Workflows (2 files)
-- `.github/workflows/vercel-preview.yml` -- updated path triggers and working directories
-- `.github/workflows/vercel-production.yml` -- updated path triggers and working directories
-
-### Configuration (2 files)
-- `.claude/settings.local.json` -- updated build/typecheck command paths
-- `.gitignore` -- updated ignore path
-
-### Architecture and Design Docs (9 files)
-- `architecture/adrs/ADR-001-tech-stack.md`
-- `architecture/adrs/ADR-003-local-storage.md`
-- `architecture/implementation-brief.md`
-- `architecture/system-design.md`
-- `designs/architecture/adr-backend-server.md`
-- `designs/architecture/adr-clerk-auth.md`
-- `designs/architecture/backend-implementation-plan.md`
-- `designs/architecture/backend-ws-qa-report.md`
-- `designs/architecture/clerk-implementation-plan.md`
-
-### Backend References (3 files)
-- `development/backend/src/lib/sheets/parse-url.ts` -- comment path references
-- `development/backend/src/lib/sheets/prompt.ts` -- comment path references
-- `development/backend/src/ws/handlers/import.ts` -- comment path references
-
-### Frontend Docs (2 files)
-- `development/frontend/LOKI-TEST-PLAN-anon-auth.md`
-- `development/frontend/QA-SPRINT-5.md`
-
-### Development Docs (3 files)
-- `development/implementation-plan.md`
-- `development/qa-handoff.md` -- this file
-- `development/README.md`
-
-### Product and Backlog Docs (6 files)
-- `product-brief.md`
-- `product/backlog/story-5.1-silent-auto-merge.md`
-- `product/backlog/story-5.2-sheets-import-api-route.md`
-- `product/backlog/story-5.3-sheets-import-wizard.md`
-- `product/backlog/story-5.5-lcars-mode.md`
-- `product/backlog/story-branch-based-ci-cd.md`
-
-### Quality Docs (7 files)
-- `quality/README.md`
-- `quality/story-3.1-realm-utils-verdict.md`
-- `quality/story-3.1-verdict.md`
-- `quality/story-3.2-norse-copy-verdict.md`
-- `quality/story-3.3-verdict.md`
-- `quality/story-3.5-valhalla-verdict.md`
-- `quality/story-3.5-verdict.md`
-- `quality/test-plan.md`
-
-### README and Other Docs (2 files)
-- `README.md`
-- `ux/handoff-to-fireman-anon-auth.md`
-- `ux/theme-system.md`
-
-### HTML Session Logs (5 files)
-- `sessions/breaking-the-gleipnir.html`
-- `sessions/the-wolf-signs-in-valhalla-opens.html`
-- `sessions/vercel-wrangling.html`
-- `sessions/wireframes-modals.html`
-- `ux/wireframes/app/dashboard.html`
-
----
-
-## How to Validate
-
-### Test 1: No Remaining References
-```bash
-grep -r "development/src" . --include='*.md' --include='*.sh' --include='*.json' --include='*.ts' --include='*.yml' --include='*.html' | grep -v node_modules | grep -v '.git/' | grep -v '.next/'
-```
-**Expected**: Zero matches.
-
-### Test 2: Build Succeeds
-```bash
-cd development/frontend && npm install && npm run build
-```
-**Expected**: Build completes with no errors.
-
-### Test 3: TypeScript Check
-```bash
-cd development/frontend && npx tsc --noEmit
-```
-**Expected**: No type errors.
-
-### Test 4: Dev Server Starts
-```bash
-.claude/scripts/dev-server.sh start
-```
-**Expected**: Dev server starts using `development/frontend/` as its root.
-
-### Test 5: CI Workflow Paths
-Verify that `.github/workflows/vercel-preview.yml` and `.github/workflows/vercel-production.yml` reference `development/frontend/**` in their path triggers and working-directory fields.
-
-### Test 6: Git Status
-```bash
-git status
-```
-**Expected**: Shows rename from `development/src/` to `development/frontend/` plus modifications to all the files listed above. No untracked files that should have been updated.
-
----
-
-## Known Considerations
-
-- **Vercel Root Directory**: Must be updated in the Vercel dashboard from `development/src` to `development/frontend`. This is a manual step outside of code.
-- **MEMORY.md**: Not updated in this PR -- the orchestrator handles memory file updates separately.
-- **node_modules, .next, dist**: These directories are not tracked by git and were not modified.
+*FiremanDecko -- Principal Engineer*

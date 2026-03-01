@@ -15,15 +15,16 @@ PROJECT_CWD: . (current working directory - the main project root)
 WORKTREE_BASE_DIR: trees/
 BASE_FRONTEND_PORT: 9653
 BASE_BACKEND_PORT: 9753
-DEV_SERVER_SCRIPT: .claude/scripts/dev-server.sh
+FRONTEND_SERVER_SCRIPT: .claude/scripts/frontend-server.sh
 BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
+SERVICES_SCRIPT: .claude/scripts/services.sh
 ```
 
 ## Instructions
 
 - List all worktrees managed by git
 - For each worktree in trees/, gather configuration details
-- Check dev server status using the dev-server script
+- Check dev server status using the frontend-server script
 - Display comprehensive information in a clear, organized format
 - Show which worktrees have running dev servers vs stopped
 - Provide quick action commands for each worktree
@@ -62,7 +63,7 @@ For each worktree found in trees/:
 
 For each worktree:
 
-- Check frontend ports 9654 through 9663 using: `FENRIR_PORT=<port> .claude/scripts/dev-server.sh status`
+- Check frontend ports 9654 through 9663 using: `FENRIR_FRONTEND_PORT=<port> .claude/scripts/frontend-server.sh status`
 - Check backend ports 9754 through 9763 using: `FENRIR_BACKEND_PORT=<port> .claude/scripts/backend-server.sh status`
 - Or check directly: `lsof -ti TCP:<port> -sTCP:LISTEN`
 - Determine if process is running and extract PID for each server type
@@ -103,7 +104,8 @@ Main Repository (Default)
   Backend Status:  <RUNNING|STOPPED|NOT CONFIGURED>
   Frontend URL:    http://localhost:9653
   Backend URL:     http://localhost:9753
-  Manage FE:       .claude/scripts/dev-server.sh <start|stop|status>
+  Manage all:      .claude/scripts/services.sh <start|stop|status>
+  Manage FE:       .claude/scripts/frontend-server.sh <start|stop|status>
   Manage BE:       .claude/scripts/backend-server.sh <start|stop|status>
 
 ---
@@ -120,9 +122,10 @@ Worktree: <branch-name>
   Backend URL:     http://localhost:<BACKEND_PORT>
   Dependencies:    FE: <Installed|Missing> | BE: <Installed|Missing|N/A>
   Environment:     <.env.local present|Missing>
-  FE Logs:         trees/<branch-name>/development/frontend/logs/dev-server.log
+  FE Logs:         trees/<branch-name>/development/frontend/logs/frontend-server.log
   BE Logs:         trees/<branch-name>/development/backend/logs/backend-server.log
-  Manage FE:       FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/frontend .claude/scripts/dev-server.sh <start|stop|status>
+  Manage all:      FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_BACKEND_PORT=<BACKEND_PORT> ... .claude/scripts/services.sh <start|stop|status>
+  Manage FE:       FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=<abs-path>/trees/<branch>/development/frontend .claude/scripts/frontend-server.sh <start|stop|status>
   Manage BE:       FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<abs-path>/trees/<branch>/development/backend .claude/scripts/backend-server.sh <start|stop|status>
 
 ---

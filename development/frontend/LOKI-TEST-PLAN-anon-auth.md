@@ -47,7 +47,7 @@ npm run dev        # Run dev server on port 9653
 Or use the dev server script:
 
 ```bash
-.claude/scripts/dev-server.sh restart
+.claude/scripts/frontend-server.sh restart
 ```
 
 Then open: http://localhost:9653

@@ -23,8 +23,9 @@ BASE_FRONTEND_PORT: 9653
 BASE_BACKEND_PORT: 9753
 FRONTEND_PORT: 9653 + PORT_OFFSET  # First worktree: 9654, Second: 9655, etc.
 BACKEND_PORT: 9753 + PORT_OFFSET   # First worktree: 9754, Second: 9755, etc.
-DEV_SERVER_SCRIPT: .claude/scripts/dev-server.sh
+FRONTEND_SERVER_SCRIPT: .claude/scripts/frontend-server.sh
 BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
+SERVICES_SCRIPT: .claude/scripts/services.sh
 
 NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
       Worktrees start at offset 1 to avoid conflicts with main repo
@@ -39,7 +40,7 @@ NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
 - Port offsets start at 1 and increment (1 -> 9654, 2 -> 9655, 3 -> 9656...)
 - Main repo preserves default port 9653 for primary development work
 - Dependencies are installed automatically via npm
-- After setup, the dev server is started using the dev-server skill/script
+- After setup, the dev server is started using the frontend-server script
 - If branch doesn't exist locally, create it from current HEAD
 - If branch exists but isn't checked out, create worktree from it
 - Provide clear access URL so user can immediately use the running instance
@@ -100,13 +101,13 @@ NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
 ### 6. Start Dev Servers
 
 **Frontend (Next.js):**
-- Use the dev-server script with environment overrides:
+- Use the frontend-server script with environment overrides:
   ```
-  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/frontend <PROJECT_CWD>/.claude/scripts/dev-server.sh start
+  FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/frontend <PROJECT_CWD>/.claude/scripts/frontend-server.sh start
   ```
 - Wait 5 seconds for the server to start: `sleep 5`
 - Verify server is running:
-  - Check status: `FENRIR_PORT=<FRONTEND_PORT> <PROJECT_CWD>/.claude/scripts/dev-server.sh status`
+  - Check status: `FENRIR_FRONTEND_PORT=<FRONTEND_PORT> <PROJECT_CWD>/.claude/scripts/frontend-server.sh status`
   - Health check: `curl -s -o /dev/null -w "%{http_code}" http://localhost:<FRONTEND_PORT>`
 
 **Backend (Node/TS):**
@@ -160,15 +161,18 @@ Environment:
   .env.local copied from main project (or: WARNING - needs manual setup)
 
 Frontend Dev Server:
-  Started via dev-server.sh on port <FRONTEND_PORT>
-  Logs: <WORKTREE_DIR>/development/frontend/logs/dev-server.log
+  Started via frontend-server.sh on port <FRONTEND_PORT>
+  Logs: <WORKTREE_DIR>/development/frontend/logs/frontend-server.log
 
 Backend Server:
   Started via backend-server.sh on port <BACKEND_PORT> [or: not configured — no development/backend found]
   Logs: <WORKTREE_DIR>/development/backend/logs/backend-server.log
 
+To manage this worktree's services (both):
+  FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/frontend FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/backend .claude/scripts/services.sh status|restart|stop
+
 To manage this worktree's frontend:
-  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/frontend .claude/scripts/dev-server.sh status|restart|stop|logs
+  FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/frontend .claude/scripts/frontend-server.sh status|restart|stop|logs
 
 To manage this worktree's backend:
   FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/backend .claude/scripts/backend-server.sh status|restart|stop|logs
