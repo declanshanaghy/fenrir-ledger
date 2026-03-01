@@ -203,12 +203,19 @@ export function useSheetImport(): UseSheetImportReturn {
         };
 
         ws.onclose = () => {
-          // If WS closed unexpectedly after opening but before import_complete/error,
-          // and the step is still "loading", treat as an error
           wsRef.current = null;
+          const hadActiveTimeout = wsTimeoutRef.current !== null;
           if (wsTimeoutRef.current !== null) {
             clearTimeout(wsTimeoutRef.current);
             wsTimeoutRef.current = null;
+          }
+          // If the timeout was still running, this was an unexpected close mid-import.
+          // Surface an error rather than leaving the user on the loading spinner.
+          if (hadActiveTimeout) {
+            setImportPhase(null);
+            setErrorCode("FETCH_ERROR");
+            setErrorMessage("Connection to the forge was lost. Please try again.");
+            setStep("error");
           }
         };
       });
