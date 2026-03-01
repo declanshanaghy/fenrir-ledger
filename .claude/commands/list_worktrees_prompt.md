@@ -13,8 +13,10 @@ List all git worktrees in the `trees/` directory with comprehensive information 
 ```
 PROJECT_CWD: . (current working directory - the main project root)
 WORKTREE_BASE_DIR: trees/
-BASE_PORT: 9653
+BASE_FRONTEND_PORT: 9653
+BASE_BACKEND_PORT: 9753
 DEV_SERVER_SCRIPT: .claude/scripts/dev-server.sh
+BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
 ```
 
 ## Instructions
@@ -47,9 +49,10 @@ For each worktree found in trees/:
 - Branch name from git worktree list
 - App directory: `trees/<branch-name>/development/src`
 
-**Determine Port:**
+**Determine Ports:**
 - Infer from worktree order or check running processes
-- Check `lsof -i TCP:965x -sTCP:LISTEN` for ports 9654-9663 to find which port each worktree uses
+- Check frontend ports: `lsof -i TCP:965x -sTCP:LISTEN` for ports 9654-9663
+- Check backend ports: `lsof -i TCP:975x -sTCP:LISTEN` for ports 9754-9763
 
 **Check Environment:**
 - Check if `<worktree>/development/src/.env.local` exists
@@ -59,9 +62,10 @@ For each worktree found in trees/:
 
 For each worktree:
 
-- Check ports 9654 through 9663 using: `FENRIR_PORT=<port> .claude/scripts/dev-server.sh status`
+- Check frontend ports 9654 through 9663 using: `FENRIR_PORT=<port> .claude/scripts/dev-server.sh status`
+- Check backend ports 9754 through 9763 using: `FENRIR_BACKEND_PORT=<port> .claude/scripts/backend-server.sh status`
 - Or check directly: `lsof -ti TCP:<port> -sTCP:LISTEN`
-- Determine if process is running and extract PID
+- Determine if process is running and extract PID for each server type
 
 ### 4. Check Dependencies
 
@@ -91,26 +95,35 @@ Summary:
 ---
 
 Main Repository (Default)
-  Location: <project-root>
-  Branch:   <current-branch>
-  Port:     9653
-  Status:   <RUNNING|STOPPED>
-  URL:      http://localhost:9653
-  Manage:   .claude/scripts/dev-server.sh <start|stop|status>
+  Location:        <project-root>
+  Branch:          <current-branch>
+  Frontend Port:   9653
+  Backend Port:    9753
+  Frontend Status: <RUNNING|STOPPED>
+  Backend Status:  <RUNNING|STOPPED|NOT CONFIGURED>
+  Frontend URL:    http://localhost:9653
+  Backend URL:     http://localhost:9753
+  Manage FE:       .claude/scripts/dev-server.sh <start|stop|status>
+  Manage BE:       .claude/scripts/backend-server.sh <start|stop|status>
 
 ---
 
 Worktree: <branch-name>
-  Location:     trees/<branch-name>
-  Branch:       <branch-name>
-  Commit:       <commit-hash-short>
-  Port:         <PORT>
-  Status:       <RUNNING (PID: xxxx)|STOPPED>
-  URL:          http://localhost:<PORT>
-  Dependencies: <Installed|Missing>
-  Environment:  <.env.local present|Missing>
-  Logs:         trees/<branch-name>/development/src/logs/dev-server.log
-  Manage:       FENRIR_PORT=<PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/src .claude/scripts/dev-server.sh <start|stop|status>
+  Location:        trees/<branch-name>
+  Branch:          <branch-name>
+  Commit:          <commit-hash-short>
+  Frontend Port:   <FRONTEND_PORT>
+  Backend Port:    <BACKEND_PORT>
+  Frontend Status: <RUNNING (PID: xxxx)|STOPPED>
+  Backend Status:  <RUNNING (PID: xxxx)|STOPPED|NOT CONFIGURED>
+  Frontend URL:    http://localhost:<FRONTEND_PORT>
+  Backend URL:     http://localhost:<BACKEND_PORT>
+  Dependencies:    FE: <Installed|Missing> | BE: <Installed|Missing|N/A>
+  Environment:     <.env.local present|Missing>
+  FE Logs:         trees/<branch-name>/development/src/logs/dev-server.log
+  BE Logs:         trees/<branch-name>/development/backend/logs/backend-server.log
+  Manage FE:       FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<abs-path>/trees/<branch>/development/src .claude/scripts/dev-server.sh <start|stop|status>
+  Manage BE:       FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<abs-path>/trees/<branch>/development/backend .claude/scripts/backend-server.sh <start|stop|status>
 
 ---
 

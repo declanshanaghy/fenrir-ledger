@@ -18,12 +18,17 @@ PORT_OFFSET: $2 (optional, defaults to auto-calculated based on existing worktre
 WORKTREE_BASE_DIR: trees/
 WORKTREE_DIR: trees/<BRANCH_NAME>
 APP_DIR: <WORKTREE_DIR>/development/src
-BASE_PORT: 9653
-PORT: 9653 + PORT_OFFSET  # First worktree: 9654, Second: 9655, etc.
+BACKEND_DIR: <WORKTREE_DIR>/development/backend
+BASE_FRONTEND_PORT: 9653
+BASE_BACKEND_PORT: 9753
+FRONTEND_PORT: 9653 + PORT_OFFSET  # First worktree: 9654, Second: 9655, etc.
+BACKEND_PORT: 9753 + PORT_OFFSET   # First worktree: 9754, Second: 9755, etc.
 DEV_SERVER_SCRIPT: .claude/scripts/dev-server.sh
+BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
 
-NOTE: Main repo uses port 9653 (no offset)
+NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
       Worktrees start at offset 1 to avoid conflicts with main repo
+      Backend port = frontend port + 100
 ```
 
 ## Instructions
@@ -52,7 +57,8 @@ NOTE: Main repo uses port 9653 (no offset)
   - IMPORTANT: Offset starts at 1 to preserve main repo port (9653)
   - First worktree gets offset 1 -> port 9654
   - Second worktree gets offset 2 -> port 9655
-- Calculate PORT = 9653 + PORT_OFFSET
+- Calculate FRONTEND_PORT = 9653 + PORT_OFFSET
+- Calculate BACKEND_PORT = 9753 + PORT_OFFSET
 - Validate branch name format (no spaces, valid git branch name)
 
 ### 2. Pre-Creation Validation
@@ -63,9 +69,10 @@ NOTE: Main repo uses port 9653 (no offset)
 - Check if branch exists: `git branch --list <BRANCH_NAME>`
   - If branch doesn't exist, will create it in next step
   - If branch exists, will checkout to create worktree
-- Check if calculated port is available:
-  - Check PORT: `lsof -i :<PORT>` (should return nothing)
-  - If port is in use, error with message to try different offset
+- Check if calculated ports are available:
+  - Check FRONTEND_PORT: `lsof -i :<FRONTEND_PORT>` (should return nothing)
+  - Check BACKEND_PORT: `lsof -i :<BACKEND_PORT>` (should return nothing)
+  - If either port is in use, error with message to try different offset
 
 ### 3. Create Git Worktree
 
@@ -90,16 +97,28 @@ NOTE: Main repo uses port 9653 (no offset)
   - `cd <WORKTREE_DIR>/development/src && npm install`
   - Verify `<WORKTREE_DIR>/development/src/node_modules` directory was created
 
-### 6. Start Dev Server
+### 6. Start Dev Servers
 
+**Frontend (Next.js):**
 - Use the dev-server script with environment overrides:
   ```
-  FENRIR_PORT=<PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src <PROJECT_CWD>/.claude/scripts/dev-server.sh start
+  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src <PROJECT_CWD>/.claude/scripts/dev-server.sh start
   ```
 - Wait 5 seconds for the server to start: `sleep 5`
 - Verify server is running:
-  - Check status: `FENRIR_PORT=<PORT> <PROJECT_CWD>/.claude/scripts/dev-server.sh status`
-  - Health check: `curl -s -o /dev/null -w "%{http_code}" http://localhost:<PORT>`
+  - Check status: `FENRIR_PORT=<FRONTEND_PORT> <PROJECT_CWD>/.claude/scripts/dev-server.sh status`
+  - Health check: `curl -s -o /dev/null -w "%{http_code}" http://localhost:<FRONTEND_PORT>`
+
+**Backend (Node/TS):**
+- If `<WORKTREE_DIR>/development/backend` exists and has a `package.json`:
+  - Install dependencies: `cd <WORKTREE_DIR>/development/backend && npm install`
+  - Start the backend server:
+    ```
+    FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/backend <PROJECT_CWD>/.claude/scripts/backend-server.sh start
+    ```
+  - Wait 3 seconds, then verify:
+    - Check status: `FENRIR_BACKEND_PORT=<BACKEND_PORT> <PROJECT_CWD>/.claude/scripts/backend-server.sh status`
+- If backend directory does not exist, skip and note "Backend: not configured" in report
 
 ### 7. Validation
 
@@ -107,8 +126,10 @@ NOTE: Main repo uses port 9653 (no offset)
   - Confirm WORKTREE_DIR exists
   - Confirm `<WORKTREE_DIR>/development/src/.env.local` exists (or warn)
   - Confirm `<WORKTREE_DIR>/development/src/node_modules` exists
+  - If backend exists: confirm `<WORKTREE_DIR>/development/backend/node_modules` exists
 - List worktrees to confirm: `git worktree list`
-- Confirm dev server is responding on PORT
+- Confirm frontend dev server is responding on FRONTEND_PORT
+- If backend exists: confirm backend server is responding on BACKEND_PORT
 
 ### 8. Report
 
@@ -123,27 +144,34 @@ Worktree Created and Running
 
 Location:   trees/<BRANCH_NAME>
 Branch:     <BRANCH_NAME>
-Port:       <PORT> (offset <PORT_OFFSET>)
+Frontend:   port <FRONTEND_PORT> (offset <PORT_OFFSET>)
+Backend:    port <BACKEND_PORT> (offset <PORT_OFFSET>) [or: not configured]
 Status:     RUNNING
 
-Access URL:
-  http://localhost:<PORT>
+Access URLs:
+  Frontend: http://localhost:<FRONTEND_PORT>
+  Backend:  http://localhost:<BACKEND_PORT>  [or: not configured]
 
 Dependencies:
-  npm packages installed at <WORKTREE_DIR>/development/src/node_modules
+  Frontend: npm packages installed at <WORKTREE_DIR>/development/src/node_modules
+  Backend:  npm packages installed at <WORKTREE_DIR>/development/backend/node_modules [or: not configured]
 
 Environment:
   .env.local copied from main project (or: WARNING - needs manual setup)
 
-Dev Server:
-  Started via dev-server.sh on port <PORT>
+Frontend Dev Server:
+  Started via dev-server.sh on port <FRONTEND_PORT>
   Logs: <WORKTREE_DIR>/development/src/logs/dev-server.log
 
-To manage this worktree's dev server:
-  FENRIR_PORT=<PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src .claude/scripts/dev-server.sh status
-  FENRIR_PORT=<PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src .claude/scripts/dev-server.sh restart
-  FENRIR_PORT=<PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src .claude/scripts/dev-server.sh stop
-  FENRIR_PORT=<PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src .claude/scripts/dev-server.sh logs
+Backend Server:
+  Started via backend-server.sh on port <BACKEND_PORT> [or: not configured — no development/backend found]
+  Logs: <WORKTREE_DIR>/development/backend/logs/backend-server.log
+
+To manage this worktree's frontend:
+  FENRIR_PORT=<FRONTEND_PORT> FENRIR_DEV_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/src .claude/scripts/dev-server.sh status|restart|stop|logs
+
+To manage this worktree's backend:
+  FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/backend .claude/scripts/backend-server.sh status|restart|stop|logs
 
 To remove this worktree:
   /remove_worktree <BRANCH_NAME>
