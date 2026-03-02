@@ -31,7 +31,7 @@ from typing import Optional
 
 GEMINI_ENDPOINT = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-2.5-flash-preview-05-20:generateContent"
+    "gemini-3.1-flash-image-preview:generateContent"
 )
 
 REQUEST_TIMEOUT_SECONDS = 60
@@ -155,8 +155,12 @@ def generate_image(api_key: str, prompt: str, aspect_ratio: str) -> list[bytes]:
     for candidate in candidates:
         parts = candidate.get("content", {}).get("parts", [])
         for part in parts:
-            inline_data = part.get("inline_data")
-            if inline_data and inline_data.get("mime_type", "").startswith("image/"):
+            # API returns camelCase keys (inlineData, mimeType)
+            inline_data = part.get("inlineData") or part.get("inline_data")
+            if inline_data and (
+                inline_data.get("mimeType", "").startswith("image/")
+                or inline_data.get("mime_type", "").startswith("image/")
+            ):
                 raw_b64 = inline_data.get("data", "")
                 if raw_b64:
                     images.append(base64.b64decode(raw_b64))

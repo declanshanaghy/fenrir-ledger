@@ -34,6 +34,7 @@ coverage/
 test-results/
 playwright-report/
 .playwright-mcp/
+.playwright-cli/
 .vercel
 logs/
 
@@ -47,3 +48,6 @@ trees/
 
 # doc-sync run artifacts (ephemeral, coordinator reads then discards)
 .sync-report.md
+
+# Auto-generated session artifacts
+TOOLS.md
