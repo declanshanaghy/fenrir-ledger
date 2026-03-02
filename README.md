@@ -1,12 +1,26 @@
 # ᛟ Fenrir Ledger
 
-[![Deploy to Vercel — Production](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-production.yml/badge.svg)](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-production.yml)
-[![Deploy to Vercel — Preview](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-preview.yml/badge.svg)](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-preview.yml)
-[![Last Commit](https://img.shields.io/github/last-commit/declanshanaghy/fenrir-ledger?color=c9920a&logo=git&logoColor=white)](https://github.com/declanshanaghy/fenrir-ledger/commits/main)
-[![License: ELv2](https://img.shields.io/badge/license-ELv2-brightgreen)](LICENSE.md)
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+<table>
+  <tr>
+    <td colspan="4">
+      <a href="LICENSE.md"><img src="https://img.shields.io/badge/LICENSE-ELv2-c9920a?style=for-the-badge&labelColor=07070d" alt="License: ELv2"></a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <a href="https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-production.yml"><img src="https://img.shields.io/github/actions/workflow/status/declanshanaghy/fenrir-ledger/vercel-production.yml?branch=main&style=for-the-badge&label=Production&logo=vercel&logoColor=white&labelColor=07070d" alt="Production Deploy"></a>
+    </td>
+    <td colspan="2">
+      <a href="https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-preview.yml"><img src="https://img.shields.io/github/actions/workflow/status/declanshanaghy/fenrir-ledger/vercel-preview.yml?branch=main&style=for-the-badge&label=Preview&logo=vercel&logoColor=white&labelColor=07070d" alt="Preview Deploy"></a>
+    </td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/declanshanaghy/fenrir-ledger/commits/main"><img src="https://img.shields.io/github/last-commit/declanshanaghy/fenrir-ledger?style=for-the-badge&color=c9920a&logo=git&logoColor=white&labelColor=07070d" alt="Last Commit"></a></td>
+    <td><a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=next.js&logoColor=white&labelColor=07070d" alt="Next.js 15"></a></td>
+    <td><a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=for-the-badge&logo=typescript&logoColor=white&labelColor=07070d" alt="TypeScript strict"></a></td>
+    <td><a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/Tailwind-CSS-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white&labelColor=07070d" alt="Tailwind CSS"></a></td>
+  </tr>
+</table>
 
 **Break free from fee traps. Harvest every reward. Let no chain hold.**
 
