@@ -87,14 +87,14 @@ export function getLlmProvider(): LlmProvider {
 
   switch (provider) {
     case "anthropic": {
-      const key = process.env.ANTHROPIC_API_KEY;
-      if (!key) throw new Error("ANTHROPIC_API_KEY is required when LLM_PROVIDER=anthropic.");
+      const key = process.env.FENRIR_ANTHROPIC_API_KEY;
+      if (!key) throw new Error("FENRIR_ANTHROPIC_API_KEY is required when LLM_PROVIDER=anthropic.");
       _instance = new AnthropicProvider(key);
       break;
     }
     case "openai": {
-      const key = process.env.OPENAI_API_KEY;
-      if (!key) throw new Error("OPENAI_API_KEY is required when LLM_PROVIDER=openai.");
+      const key = process.env.FENRIR_OPENAI_API_KEY;
+      if (!key) throw new Error("FENRIR_OPENAI_API_KEY is required when LLM_PROVIDER=openai.");
       _instance = new OpenAIProvider(key);
       break;
     }
