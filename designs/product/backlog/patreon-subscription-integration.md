@@ -43,3 +43,11 @@ Freya to conduct a product discovery interview with Odin (the human operator) to
 ## Next Step
 
 Freya to schedule and conduct the discovery interview with Odin, then produce a full Product Design Brief at `designs/product/backlog/patreon-subscription-brief.md`.
+
+## Acceptance Criteria
+
+- [ ] Product discovery interview with Odin completed
+- [ ] Full product brief produced at `designs/product/backlog/patreon-subscription-brief.md`
+- [ ] All 6 open questions answered in the brief
+- [ ] Patreon tier structure defined with Norse-themed naming
+- [ ] Integration approach selected and documented

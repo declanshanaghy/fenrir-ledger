@@ -9,6 +9,12 @@
 
 ---
 
+## Test Execution
+
+- Total: 39 | Passed: 35 | Failed: 4 | Blocked: 0
+
+---
+
 ## Summary
 
 The implementation of Path B ("Browse the Archives") is **architecturally sound** and
