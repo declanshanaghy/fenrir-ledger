@@ -27,6 +27,7 @@ import { Dashboard } from "@/components/dashboard/Dashboard";
 import { CardSkeletonGrid } from "@/components/dashboard/CardSkeletonGrid";
 import { AnimatedHowlPanel } from "@/components/layout/HowlPanel";
 import { ImportWizard } from "@/components/sheets/ImportWizard";
+import { AuthGate } from "@/components/shared/AuthGate";
 import { initializeHousehold, getCards, saveCard, migrateIfNeeded } from "@/lib/storage";
 import type { Card } from "@/lib/types";
 
@@ -136,15 +137,17 @@ export default function DashboardPage() {
             </button>
           )}
 
-          {/* Import button — shown in toolbar only when cards exist */}
+          {/* Import button — shown in toolbar only when cards exist and user is signed in */}
           {loaded && cards.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setImportWizardOpen(true)}
-              className="inline-flex items-center justify-center rounded-sm text-sm font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-9 px-4 py-2"
-            >
-              Import
-            </button>
+            <AuthGate>
+              <button
+                type="button"
+                onClick={() => setImportWizardOpen(true)}
+                className="inline-flex items-center justify-center rounded-sm text-sm font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-9 px-4 py-2"
+              >
+                Import
+              </button>
+            </AuthGate>
           )}
 
           <Link
