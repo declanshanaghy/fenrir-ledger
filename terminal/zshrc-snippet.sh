@@ -1,12 +1,14 @@
 # Fenrir Ledger — Claude Code splash wrapper
 # Source this in your .zshrc or let terminal/install.sh do it automatically.
 #
-# This wraps the `claude` command to display the Fenrir Elder Futhark
+# Defines the `fenrir-claude` command which displays the Fenrir Elder Futhark
 # splash screen before launching Claude Code. All arguments are forwarded
 # to the real `claude` binary unchanged.
 #
 # Usage:
 #   source /path/to/fenrir-ledger/terminal/zshrc-snippet.sh
+#   fenrir-claude          # launch with splash screen
+#   claude                 # launch normally (unmodified)
 
 # Guard: only define once
 if ! type fenrir-claude > /dev/null 2>&1; then
@@ -18,5 +20,4 @@ if ! type fenrir-claude > /dev/null 2>&1; then
     fi
     command claude "$@"
   }
-  alias claude="fenrir-claude"
 fi

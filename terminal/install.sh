@@ -55,10 +55,18 @@ info() {
 }
 
 # ---------------------------------------------------------------------------
-# Resolve repo root (directory containing this script's parent)
+# Resolve repo root — ALWAYS the main worktree, never a sub-worktree.
+# If run from inside a git worktree, resolve back to the primary checkout
+# so that paths written to ~/.zshrc remain stable after worktrees are removed.
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="$(git -C "$SCRIPT_DIR" worktree list --porcelain 2>/dev/null \
+             | head -1 | sed 's/^worktree //')" \
+  || REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Fallback if git is unavailable or repo is not a worktree
+if [ -z "$REPO_ROOT" ]; then
+    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
 
 # ---------------------------------------------------------------------------
 # Prerequisite check: jq
@@ -178,9 +186,10 @@ else
     cat >> "$ZSHRC" << ZSHEOF
 
 ${GUARD_COMMENT}
-# Wraps the claude command with the Fenrir Elder Futhark splash screen.
+# Defines fenrir-claude command with the Fenrir Elder Futhark splash screen.
 # To remove: delete everything between the >>> and <<< markers.
-source "${SNIPPET_SRC}"
+[[ -f "${SNIPPET_SRC}" ]] \\
+  && source "${SNIPPET_SRC}"
 ${END_COMMENT}
 ZSHEOF
 
