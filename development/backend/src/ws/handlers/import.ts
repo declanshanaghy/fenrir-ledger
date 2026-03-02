@@ -20,34 +20,9 @@ import { buildExtractionPrompt } from "../../lib/sheets/prompt.js";
 import { fetchCsv, FetchCsvError } from "../../lib/sheets/fetch-csv.js";
 import { extractCardsFromCsv } from "../../lib/anthropic/extract.js";
 import { config, assertConfig } from "../../config.js";
+import { CardSchema, CardsArraySchema } from "../../schemas/index.js";
 
-/**
- * Zod schema for a single extracted card.
- * Ported from the frontend route: development/frontend/src/app/api/sheets/import/route.ts
- */
-const CardSchema = z.object({
-  issuerId: z.string(),
-  cardName: z.string(),
-  openDate: z.string(),
-  creditLimit: z.number().int().min(0),
-  annualFee: z.number().int().min(0),
-  annualFeeDate: z.string(),
-  promoPeriodMonths: z.number().int().min(0),
-  signUpBonus: z
-    .object({
-      type: z.enum(["points", "miles", "cashback"]),
-      amount: z.number(),
-      spendRequirement: z.number().int().min(0),
-      deadline: z.string(),
-      met: z.boolean(),
-    })
-    .nullable(),
-  notes: z.string(),
-});
-
-const CardsArraySchema = z.array(CardSchema);
-
-/** Export for reuse in the HTTP import route. */
+/** Re-export for backward compatibility with existing consumers. */
 export { CardSchema, CardsArraySchema };
 
 /**
