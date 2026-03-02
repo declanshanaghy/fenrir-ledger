@@ -6,5 +6,9 @@
   "enabledPlugins": {
     "playwright@claude-plugins-official": true,
     "vercel@claude-plugins-official": true
+  },
+  "statusLine": {
+    "type": "command",
+    "command": ".claude/statusline-command.sh"
   }
-}  
+}
