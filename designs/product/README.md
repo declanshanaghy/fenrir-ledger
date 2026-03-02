@@ -11,3 +11,5 @@ For the primary product backlog and design briefs, see [`product/`](../../produc
 - [backlog/backend-websocket-investigation.md](backlog/backend-websocket-investigation.md) — Done: Investigation into backend architecture and WebSocket server (resolved in Sprint 5; see ADR)
 - [backlog/idp-testing-alternative.md](backlog/idp-testing-alternative.md) — Proposed: Evaluate Clerk as alternative IDP for testing and production
 - [backlog/import-workflow-v2.md](backlog/import-workflow-v2.md) — Sprint 6: Three-path import workflow (Share URL, Google Picker, CSV Upload) with safety guardrails and LLM prompt hardening
+
+- [backlog/claude-terminal-skin.md](backlog/claude-terminal-skin.md) — P3: Claude Code terminal skin with Norse statusline, splash screen, and color palette
