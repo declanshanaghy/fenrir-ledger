@@ -5,6 +5,8 @@
 **Date**: 2026-02-27
 **Priority**: P2-High — touches every page, auth middleware, TopBar, and localStorage model
 
+> **Implementation status (2026-03-01):** The anonymous-first model described here has been implemented. The UX decisions (anonymous TopBar, upsell prompt, migration prompt, avatar transition) are all in production. Technical note: references to "Auth.js" below were superseded during implementation — the project uses a custom Google PKCE flow (ADR-005) with per-route `requireAuth()` guards (ADR-008) instead of Auth.js / NextAuth. The UX behavior remains exactly as specified.
+
 ---
 
 ## What Changed in the UX
