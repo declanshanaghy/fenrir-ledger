@@ -1,7 +1,7 @@
-# QA Handoff: Service Script Consolidation
+# QA Handoff: AuthGate UI Abstraction
 
-**Story:** Story 2 -- Service Script Consolidation
-**Branch:** `chore/service-scripts`
+**Feature:** AuthGate component for auth-conditional rendering
+**Branch:** `feat/auth-gate-ui`
 **Engineer:** FiremanDecko
 **Date:** 2026-03-01
 
@@ -9,109 +9,55 @@
 
 ## What Was Implemented
 
-1. **Renamed `dev-server.sh` to `frontend-server.sh`** for naming consistency with `backend-server.sh`.
-2. **Standardized env var names** -- `FENRIR_FRONTEND_PORT` and `FENRIR_FRONTEND_DIR` are now the primary names. Old names (`FENRIR_PORT`, `FENRIR_DEV_DIR`) still work as fallbacks.
-3. **Created `services.sh`** -- unified script that manages both frontend and backend servers together.
-4. **Updated all documentation** -- commands, worktree prompts, worktree skill files, and subagent definition all reference `frontend-server.sh` and `services.sh`.
-5. **Standardized output prefixes** -- both scripts now prefix output with their service name (e.g., `Frontend: running (pid 12345) on port 9653`).
-6. **Cleaned up stale worktrees** -- removed `agent-aed8f05d` and its nested worktrees.
+A reusable `AuthGate` component that conditionally renders children based on authentication status. The "Import from Google Sheets" buttons (empty state and toolbar) are now hidden for anonymous users and only visible when signed in with Google.
 
 ## Files Created / Modified
 
 | File | Change |
 |------|--------|
-| `.claude/scripts/frontend-server.sh` | RENAMED from `dev-server.sh`. Updated env vars, header, output prefixes, log filename. |
-| `.claude/scripts/backend-server.sh` | Updated output prefixes to include `Backend:` prefix for consistency. |
-| `.claude/scripts/services.sh` | NEW -- unified script delegating to frontend-server.sh and backend-server.sh. |
-| `.claude/commands/dev-server.md` | Rewritten to cover all three scripts with migration note. |
-| `.claude/commands/create_worktree_prompt.md` | Updated all script refs and env var names. |
-| `.claude/commands/remove_worktree_prompt.md` | Updated all script refs and env var names. |
-| `.claude/commands/list_worktrees_prompt.md` | Updated all script refs and env var names. |
-| `.claude/skills/worktree-manager-skill/REFERENCE.md` | Updated directory tree, script names, env var table. |
-| `.claude/skills/worktree-manager-skill/TROUBLESHOOTING.md` | Updated all script refs. |
-| `.claude/skills/worktree-manager-skill/OPERATIONS.md` | Updated all script refs. |
-| `.claude/skills/worktree-manager-skill/SKILL.md` | Updated script reference in notes section. |
-| `.claude/agents/create_worktree_subagent.md` | Updated script references. |
-| `development/frontend/LOKI-TEST-PLAN-anon-auth.md` | Updated stale `dev-server.sh` reference. |
+| `development/frontend/src/components/shared/AuthGate.tsx` | **New file.** Reusable component that reads `useAuth().status` and renders children only when the required auth condition is met. Defaults to requiring `"authenticated"`. Supports `require="anonymous"` and an optional `fallback` prop. Returns `null` while auth is loading. |
+| `development/frontend/src/components/dashboard/EmptyState.tsx` | Wrapped the "Import from Google Sheets" button with `<AuthGate>`. Added import for `AuthGate`. |
+| `development/frontend/src/app/page.tsx` | Wrapped the toolbar "Import" button with `<AuthGate>`. Added import for `AuthGate`. |
 | `development/qa-handoff.md` | This file (replaces previous handoff). |
 
-## How to Verify
+## How to Test
 
-### 1. Script Execution
+### 1. Anonymous User (not signed in)
 
-All three scripts should work from the repo root:
+1. Open the app in a fresh browser or incognito window (no Google sign-in).
+2. **Empty state**: Navigate to `/` with no cards. Verify the "Add Card" button is visible but the "Import from Google Sheets" button is **not visible**.
+3. **Toolbar**: Add at least one card, return to `/`. Verify the "Add Card" button is in the toolbar but the "Import" button is **not visible**.
 
-```bash
-.claude/scripts/frontend-server.sh status
-.claude/scripts/backend-server.sh status
-.claude/scripts/services.sh status
-```
+### 2. Authenticated User (signed in with Google)
 
-### 2. Unified Script Actions
+1. Sign in with Google.
+2. **Empty state**: Clear all cards (or use a fresh household). Navigate to `/`. Verify both "Add Card" and "Import from Google Sheets" buttons are visible.
+3. **Toolbar**: With at least one card on the dashboard, verify both "Add Card" and "Import" buttons are visible in the toolbar.
 
-```bash
-# Start both services (backend first, then frontend)
-.claude/scripts/services.sh start
+### 3. Loading State
 
-# Check status of both
-.claude/scripts/services.sh status
+1. On slow connections or by throttling, verify no flash of the import button during auth resolution. The button should not appear until auth status resolves to `"authenticated"`.
 
-# Stop both
-.claude/scripts/services.sh stop
+## Acceptance Criteria Checklist
 
-# Restart both
-.claude/scripts/services.sh restart
-
-# Tail logs
-.claude/scripts/services.sh logs frontend
-.claude/scripts/services.sh logs backend
-.claude/scripts/services.sh logs          # both interleaved
-```
-
-### 3. Backward Compatibility
-
-Old env var names should still work:
-
-```bash
-FENRIR_PORT=9654 .claude/scripts/frontend-server.sh status
-FENRIR_DEV_DIR=/some/path .claude/scripts/frontend-server.sh status
-```
-
-New env var names take precedence:
-
-```bash
-FENRIR_FRONTEND_PORT=9654 FENRIR_PORT=9999 .claude/scripts/frontend-server.sh status
-# Should use 9654, not 9999
-```
-
-### 4. No Stale References
-
-```bash
-grep -r "dev-server\.sh" .claude/ --include="*.md" --include="*.sh"
-```
-
-Should return ONLY the migration note in `dev-server.md` (intentional documentation).
-
-### 5. Stale Worktree Cleanup
-
-```bash
-git worktree list
-```
-
-Should NOT contain `agent-aed8f05d` or its nested worktrees.
+- [ ] `AuthGate` component created at `components/shared/AuthGate.tsx`
+- [ ] Anonymous users do NOT see the "Import from Google Sheets" button on the empty state
+- [ ] Anonymous users do NOT see the "Import" button in the dashboard toolbar
+- [ ] Authenticated users see both import buttons as before
+- [ ] No flash of import button during auth loading state
+- [ ] TypeScript compiles with zero errors (`tsc --noEmit`)
+- [ ] Next.js production build succeeds (`npm run build`)
+- [ ] No other source files were modified
 
 ## Known Limitations
 
-- `sessions/super-wolf.html` still references `dev-server.sh` in historical session text. This is an archived session log and should not be modified.
-- The `dev-server.md` command file retains its filename for backward compatibility with existing slash command muscle memory. Its content has been updated to document all three scripts.
+- None. This is a minimal UI gate with no new business logic.
 
 ## Suggested Test Focus
 
-1. **services.sh start/stop/restart** -- verify backend starts before frontend on `start`, both stop on `stop`.
-2. **Backward compat** -- old `FENRIR_PORT` / `FENRIR_DEV_DIR` env vars still work.
-3. **Precedence** -- new `FENRIR_FRONTEND_PORT` overrides old `FENRIR_PORT`.
-4. **Output format** -- verify service name prefixes in output (e.g., `Frontend: running`, `Backend: not running`).
-5. **Log file paths** -- frontend logs now go to `frontend-server.log` (not `dev-server.log`).
+1. **Auth state transitions** -- sign in, sign out, verify button visibility toggles correctly.
+2. **Empty state vs toolbar** -- both import button locations are gated independently.
+3. **No layout shift** -- the `AuthGate` returns `null` during loading rather than a placeholder, so there should be no visible flash or layout jump.
 
 ---
 
