@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: CSV Upload (Path C)</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 16px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 4px; }
+
+    /* ── Modal shell (same constraints as method-selection) ── */
+    .modal-overlay {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .modal {
+      width: 92vw;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid;
+      padding: 24px;
+    }
+
+    /* ── Header ── */
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid;
+    }
+    .modal-header h2 { font-size: 20px; font-weight: 700; }
+    .close-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    /* ── Back navigation ── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 12px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      padding: 8px 0;
+      min-height: 44px;
+    }
+    .back-link:focus { outline: 2px solid; outline-offset: 2px; }
+
+    /* ── Step indicator ── */
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 12px;
+    }
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border: 1px solid;
+    }
+    .step-dot.active { border-width: 3px; }
+
+    /* ── Safety banner (compact) ── */
+    .safety-banner-compact {
+      border: 2px solid;
+      padding: 12px 16px;
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .safety-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    /* ── Section heading ── */
+    .section-heading {
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .section-subheading {
+      margin-top: 4px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    /* ═══════════════════════════════════════
+       DROP ZONE — 4 visual states
+       ═══════════════════════════════════════ */
+
+    /* State 1: Idle (default) */
+    .drop-zone {
+      margin-top: 20px;
+      border: 2px dashed;
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 180px;
+      cursor: pointer;
+    }
+    .drop-zone:focus { outline: 2px solid; outline-offset: 2px; }
+
+    .drop-zone-icon {
+      width: 48px;
+      height: 48px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    .drop-zone-text {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .drop-zone-subtext {
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .drop-zone-browse-btn {
+      margin-top: 12px;
+      padding: 10px 24px;
+      border: 1px solid;
+      font-size: 13px;
+      cursor: pointer;
+      min-height: 44px;
+      min-width: 44px;
+    }
+    .drop-zone-constraints {
+      font-size: 11px;
+      margin-top: 12px;
+      opacity: 0.6;
+    }
+
+    /* State 2: Drag-over (file hovering) */
+    .drop-zone.dragover {
+      border-width: 3px;
+      border-style: dashed;
+      /* Theme: gold glow border (#c9920a), subtle gold background at ~5% */
+    }
+
+    /* State 3: Processing (file accepted, reading) */
+    .drop-zone.processing {
+      border-style: solid;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* State 4: Error */
+    .drop-zone.error {
+      border-style: solid;
+    }
+
+    /* ── File accepted preview ── */
+    .file-accepted {
+      margin-top: 16px;
+      border: 1px solid;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .file-icon {
+      width: 32px;
+      height: 32px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .file-name { font-size: 13px; font-weight: 600; }
+    .file-size { font-size: 11px; opacity: 0.6; }
+    .file-remove {
+      width: 44px;
+      height: 44px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* ── Validation error message ── */
+    .validation-error {
+      margin-top: 12px;
+      border: 2px solid;
+      padding: 12px 16px;
+      font-size: 13px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .validation-error-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    /* ── Helper text: supported formats ── */
+    .format-help {
+      margin-top: 16px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .format-help strong { font-weight: 700; }
+
+    /* ── Footer ── */
+    .modal-footer {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: 1px solid;
+      font-size: 14px;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .btn-primary { font-weight: 700; border-width: 2px; }
+    .btn-primary[disabled] { opacity: 0.4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="modal-overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+      <!-- ── Header ── -->
+      <header class="modal-header">
+        <h2 id="modal-title">Import Cards</h2>
+        <button class="close-btn" aria-label="Close import wizard">&times;</button>
+      </header>
+
+      <!-- ── Back link ── -->
+      <button class="back-link" aria-label="Go back to method selection">
+        &larr; Choose a different path
+      </button>
+
+      <!-- ── Step indicator ── -->
+      <nav class="step-indicator" aria-label="Import wizard progress">
+        <span class="step-dot"></span>
+        <span>Method</span>
+        <span class="step-dot active" aria-current="step"></span>
+        <span>Import</span>
+        <span class="step-dot"></span>
+        <span>Preview</span>
+        <span class="step-dot"></span>
+        <span>Confirm</span>
+      </nav>
+
+      <!-- ── Safety banner (compact version for inner steps) ── -->
+      <section class="safety-banner-compact" role="note" aria-label="Data safety reminder">
+        <span class="safety-icon" aria-hidden="true">!</span>
+        <span>Never include card numbers, CVVs, PINs, or passwords in your file.</span>
+      </section>
+
+      <!-- ── Section heading ── -->
+      <h3 class="section-heading">Deliver a Rune-Stone</h3>
+      <p class="section-subheading">
+        Drop your CSV file here, or summon it from the realm of files.
+      </p>
+
+      <!-- ══════════════════════════════════════
+           STATE 1: Drop zone — idle (default)
+           ══════════════════════════════════════ -->
+      <div class="drop-zone"
+           id="drop-zone-idle"
+           role="button"
+           tabindex="0"
+           aria-label="Drop a CSV file here or click to browse">
+        <div class="drop-zone-icon" aria-hidden="true">&#x2B07;</div>
+        <div class="drop-zone-text">Drop your CSV here</div>
+        <div class="drop-zone-subtext">or</div>
+        <button class="drop-zone-browse-btn" aria-label="Browse for a CSV file">
+          Choose file
+        </button>
+        <div class="drop-zone-constraints">.csv files only, up to 1 MB</div>
+      </div>
+      <p class="note">
+        STATE: Idle. Dashed border. Click or Enter opens native file picker filtered to .csv.
+        Drag a file over to transition to dragover state.
+      </p>
+
+      <!-- ══════════════════════════════════════
+           STATE 2: Drop zone — drag-over
+           ══════════════════════════════════════ -->
+      <div class="drop-zone dragover"
+           id="drop-zone-dragover"
+           role="button"
+           tabindex="-1"
+           aria-label="Release to upload file"
+           style="margin-top: 32px;">
+        <div class="drop-zone-icon" aria-hidden="true">&#x2B07;</div>
+        <div class="drop-zone-text">Release to deliver the rune-stone</div>
+      </div>
+      <p class="note">
+        STATE: Drag-over. Border becomes thicker/glowing (gold in theme). Background subtly highlights.
+        Text changes to "Release to deliver the rune-stone."
+      </p>
+
+      <!-- ══════════════════════════════════════
+           STATE 3: Drop zone — processing
+           ══════════════════════════════════════ -->
+      <div class="drop-zone processing"
+           id="drop-zone-processing"
+           role="status"
+           aria-label="Reading file"
+           aria-live="polite"
+           style="margin-top: 32px;">
+        <div class="drop-zone-icon" aria-hidden="true">&#x23F3;</div>
+        <div class="drop-zone-text">Reading the runes...</div>
+        <div class="drop-zone-subtext">Validating your file</div>
+      </div>
+      <p class="note">
+        STATE: Processing. Solid border, reduced opacity. Spinner icon (hourglass placeholder).
+        aria-live="polite" announces state to screen readers.
+        Transitions to file-accepted or error within ~1 second for typical files.
+      </p>
+
+      <!-- ══════════════════════════════════════
+           STATE 4: File accepted
+           ══════════════════════════════════════ -->
+      <div class="file-accepted" id="file-accepted" style="margin-top: 32px;">
+        <div class="file-info">
+          <div class="file-icon" aria-hidden="true">&#x1F4C4;</div>
+          <div>
+            <div class="file-name">my-cards.csv</div>
+            <div class="file-size">42 KB</div>
+          </div>
+        </div>
+        <button class="file-remove" aria-label="Remove selected file">&times;</button>
+      </div>
+      <p class="note">
+        STATE: File accepted. Drop zone is replaced by a file summary row.
+        Remove button lets the user clear and re-select. Focus moves to the "Begin import" button.
+      </p>
+
+      <!-- ══════════════════════════════════════
+           STATE 5: Validation error
+           ══════════════════════════════════════ -->
+      <div class="drop-zone error" id="drop-zone-error" style="margin-top: 32px;">
+        <div class="drop-zone-icon" aria-hidden="true">&#x26A0;</div>
+        <div class="drop-zone-text">Unable to read this file</div>
+      </div>
+      <div class="validation-error" role="alert" style="margin-top: 8px;">
+        <span class="validation-error-icon" aria-hidden="true">&#x26A0;</span>
+        <div>
+          <strong>Wrong file type.</strong>
+          Please upload a .csv file. For Excel files, export as CSV first.
+        </div>
+      </div>
+      <p class="note">
+        STATE: Error. Border becomes solid (red in theme). Error message appears below with role="alert".
+        Possible errors: wrong file type, file too large (&gt;1 MB), unreadable encoding.
+        Drop zone remains interactive so user can try again.
+      </p>
+
+      <!-- ── Format help ── -->
+      <div class="format-help" style="margin-top: 32px;">
+        <strong>How to export CSV:</strong>
+        <ul style="padding-left: 20px; margin-top: 4px;">
+          <li>Google Sheets: File &gt; Download &gt; Comma-separated values (.csv)</li>
+          <li>Excel: File &gt; Save As &gt; CSV UTF-8</li>
+          <li>Numbers: File &gt; Export To &gt; CSV</li>
+        </ul>
+      </div>
+      <p class="note">
+        Helper text for users who need guidance on CSV export. Displayed below the drop zone at all times.
+      </p>
+
+      <!-- ── Footer ── -->
+      <footer class="modal-footer">
+        <button class="btn" aria-label="Cancel import">Cancel</button>
+        <button class="btn btn-primary" disabled aria-label="Begin import (select a file first)">
+          Begin Import
+        </button>
+      </footer>
+      <p class="note">
+        "Begin Import" is disabled until a valid file is accepted.
+        Once enabled, clicking it sends CSV text to the LLM extraction pipeline
+        and transitions to the shared Loading step.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       WIREFRAME ANNOTATIONS
+       ════════════════════════════════════════ -->
+  <!--
+    LAYOUT DECISIONS:
+    - Modal: 92vw / max-680px / max-90vh per team norm.
+    - Drop zone is full-width within the modal content area.
+    - All five visual states (idle, dragover, processing, accepted, error) are shown
+      inline in this wireframe for reference. In the live UI, only one state is visible at a time.
+
+    RESPONSIVE BEHAVIOR:
+    - Drop zone stretches full width at all breakpoints.
+    - "Choose file" button remains centered within the drop zone.
+    - Format help list wraps naturally on narrow screens.
+    - Minimum viewport: 375px.
+
+    INTERACTION FLOW:
+    1. User arrives at this step after selecting "Deliver a Rune-Stone" on the method selection screen.
+    2. Drop zone shows idle state.
+    3. User drags a file: transitions to dragover state.
+    4. User drops the file: transitions to processing state.
+    5a. Validation passes: transitions to file-accepted state. "Begin Import" button enables.
+    5b. Validation fails: transitions to error state with specific error message.
+    6. User clicks "Begin Import": CSV text is sent to the pipeline. View transitions to shared Loading step.
+
+    FILE VALIDATION (client-side):
+    - File extension must be .csv (reject .xlsx, .xls, .numbers, .tsv with helpful messages).
+    - File size must be <= 1 MB.
+    - File must be readable as UTF-8 text.
+    - The hidden <input type="file" accept=".csv"> restricts the native picker.
+
+    ACCESSIBILITY:
+    - Drop zone: role="button", tabindex="0", keyboard activatable via Enter/Space.
+    - Hidden file input triggered by the visible "Choose file" button for a11y.
+    - Processing state: role="status" + aria-live="polite".
+    - Error state: role="alert" for immediate screen reader announcement.
+    - File accepted: Remove button has aria-label. Focus moves to "Begin Import".
+    - All interactive elements exceed 44x44px touch target.
+
+    THEME NOTES (for FiremanDecko):
+    - Idle: dashed border using muted color.
+    - Dragover: dashed border in gold (#c9920a), subtle gold background ~5% opacity.
+    - Processing: solid border, spinner animation.
+    - Error: solid red/danger border, error text in danger color.
+    - Accepted: solid border, file row in muted background.
+    - "Begin Import" button: gold fill when enabled.
+  -->
+</body>
+</html>
