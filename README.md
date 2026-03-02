@@ -197,7 +197,10 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [quality/test-cases.md](quality/test-cases.md) — 22 test cases for all implemented eggs (Konami #2, Mountain #3, Fish #5, Forgemaster #9, Loki Mode) (480 lines)
 - [quality/EASTER-EGGS-AUDIT.md](quality/EASTER-EGGS-AUDIT.md) — Final verdict report: READY TO SHIP, 0 defects (369 lines)
 - [quality/easter-eggs-transparency-report.md](quality/easter-eggs-transparency-report.md) — SVG artifact validation and background transparency audit (236 lines)
-- [quality/scripts/test-easter-eggs.spec.ts](quality/scripts/test-easter-eggs.spec.ts) — Playwright automation suite, 22 tests across 8 test suites (596 lines)
+- [quality/test-suites/easter-eggs/easter-eggs.spec.ts](quality/test-suites/easter-eggs/easter-eggs.spec.ts) — Playwright automation: 22 tests across 8 suites (migrated from quality/scripts/)
+- [quality/test-suites/navigation/navigation.spec.ts](quality/test-suites/navigation/navigation.spec.ts) — Playwright automation: 6 navigation + link integrity tests
+- [quality/test-suites/helpers/test-fixtures.ts](quality/test-suites/helpers/test-fixtures.ts) — Card factories (makeCard, makeUrgentCard, makePromoCard, makeClosedCard) + localStorage seeders
+- [quality/test-suites/helpers/seed-data.ts](quality/test-suites/helpers/seed-data.ts) — Predefined card sets: EMPTY, FEW, MANY, URGENT, MIXED
 - [designs/architecture/backend-ws-qa-report.md](designs/architecture/backend-ws-qa-report.md) — QA validation: Backend/WebSocket architecture investigation — APPROVED (0 blocking issues)
 - [quality/llm-provider-factory-verdict.md](quality/llm-provider-factory-verdict.md) — QA verdict: feat/llm-provider-factory (LLM abstraction layer) — SHIP WITH KNOWN ISSUES (1 medium defect, 1 low defect, 44 assertions run)
 - [quality/import-workflow-v2-verdict.md](quality/import-workflow-v2-verdict.md) — QA verdict: PR #61 Import Workflow v2 (Three Paths to the Forge) — HOLD FOR FIXES (3 defects: DEF-001 success step unreachable, DEF-002 missing option aria-labels, DEF-003 generic CSV rejection messages)
