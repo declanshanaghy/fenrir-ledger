@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { Card } from "@/lib/types";
 import type { SheetImportErrorCode } from "@/lib/sheets/types";
+import { getSession } from "@/lib/auth/session";
 
 export type ImportStep = "entry" | "loading" | "preview" | "dedup" | "error" | "success";
 
@@ -233,10 +234,19 @@ export function useSheetImport(): UseSheetImportReturn {
         controller.abort();
       }, IMPORT_TIMEOUT_MS);
 
+      // Build headers with auth token if signed in (ADR-008)
+      const session = getSession();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (session?.id_token) {
+        headers["Authorization"] = `Bearer ${session.id_token}`;
+      }
+
       try {
         const response = await fetch("/api/sheets/import", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ url: sheetUrl }),
           signal: controller.signal,
         });

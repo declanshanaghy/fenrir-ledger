@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { SheetImportError } from "@/lib/sheets/types";
 import { importFromSheet } from "@/lib/sheets/import-pipeline";
+import { requireAuth } from "@/lib/auth/require-auth";
 
 export const maxDuration = 60;
 
@@ -12,6 +13,10 @@ function errorResponse(code: SheetImportError["code"], message: string, status: 
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Verify caller is authenticated (ADR-008)
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+
   let url: string;
   try {
     const body = await request.json();
