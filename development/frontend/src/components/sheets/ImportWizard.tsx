@@ -184,6 +184,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
       <DialogContent
         className="w-[92vw] max-w-[680px] max-h-[90vh] overflow-hidden flex flex-col border-border bg-background"
         aria-label="Import Wizard"
+        onInteractOutside={(e) => e.preventDefault()}
       >
         {/* Step indicator */}
         <StepIndicator activeStep={getStepIndex(step)} />
