@@ -20,25 +20,17 @@
  *      clicks the second chronicle entry, navigates back. Verifies correct
  *      page titles and working return path throughout.
  *
+ * NOTE: baseURL is provided by Playwright config (playwright.config.ts).
+ * Tests use page.goto(path) with path strings — no hardcoded BASE_URL constant.
+ * Playwright prepends baseURL automatically so tests run against the correct server.
+ *
  * Assumptions:
- *   - BASE_URL points to a running server (local or production)
- *   - /sessions/ is served at BASE_URL/sessions/
- *   - /static/ is served at BASE_URL/static/
- *   - The app dashboard is served at BASE_URL/
+ *   - /sessions/ is served at baseURL/sessions/
+ *   - /static/ is served at baseURL/static/
+ *   - The app dashboard is served at baseURL/
  */
 
-import { test, expect, Page } from "@playwright/test";
-
-// ── Configuration ────────────────────────────────────────────────────────────
-
-const BASE_URL = process.env.SERVER_URL || "http://localhost:3000";
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Navigate to a URL and wait for the page to be fully loaded. */
-async function goto(page: Page, path: string) {
-  await page.goto(`${BASE_URL}${path}`, { waitUntil: "domcontentloaded" });
-}
+import { test, expect } from "@playwright/test";
 
 // ════════════════════════════════════════════════════════════════════════════
 // Suite 1 — Marketing Site Browsability
@@ -48,7 +40,7 @@ test.describe("Marketing Site — /static/", () => {
   test("loads with expected content and the Ledger CTA is wired to the app", async ({
     page,
   }) => {
-    await goto(page, "/static/");
+    await page.goto("/static/", { waitUntil: "domcontentloaded" });
 
     // Page has a <title>
     const title = await page.title();
@@ -83,7 +75,7 @@ test.describe("Marketing Site — /static/", () => {
   test("topbar logo link from app reaches /static/", async ({ page }) => {
     // Start at the app root (may redirect to sign-in — we check the topbar
     // logo link href by inspecting the DOM directly).
-    await goto(page, "/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // The topbar logo link must exist with href="/static"
     // (Per commit beae3ff: footer now has About button, topbar has /static link)
@@ -96,7 +88,7 @@ test.describe("Marketing Site — /static/", () => {
     await expect(topbarLink).toHaveAttribute("target", "_blank");
 
     // Navigate directly to /static/ and confirm it serves real content
-    await goto(page, "/static/");
+    await page.goto("/static/", { waitUntil: "domcontentloaded" });
     await expect(page.locator("body")).toContainText("FENRIR");
   });
 });
@@ -109,7 +101,7 @@ test.describe("Session Archive — /sessions/", () => {
   test("archive loads with Open-the-Ledger link and at least 2 chronicle cards", async ({
     page,
   }) => {
-    await goto(page, "/sessions/");
+    await page.goto("/sessions/", { waitUntil: "domcontentloaded" });
 
     // Page title
     const title = await page.title();
@@ -129,7 +121,7 @@ test.describe("Session Archive — /sessions/", () => {
   test("click first chronicle, navigate back, click second chronicle, navigate back", async ({
     page,
   }) => {
-    await goto(page, "/sessions/");
+    await page.goto("/sessions/", { waitUntil: "domcontentloaded" });
 
     const cards = page.locator(".session-card");
 
@@ -183,7 +175,7 @@ test.describe("Session Archive — /sessions/", () => {
   test("all session card hrefs are relative (no fenrir-ledger.vercel.app absolute URLs)", async ({
     page,
   }) => {
-    await goto(page, "/sessions/");
+    await page.goto("/sessions/", { waitUntil: "domcontentloaded" });
 
     const cards = page.locator(".session-card");
     const count = await cards.count();
@@ -203,7 +195,7 @@ test.describe("Session Archive — /sessions/", () => {
   test("marketing site link in archive is relative and reachable", async ({
     page,
   }) => {
-    await goto(page, "/sessions/");
+    await page.goto("/sessions/", { waitUntil: "domcontentloaded" });
 
     const marketingLink = page.locator(".marketing-banner");
     await expect(marketingLink).toBeVisible();
@@ -214,7 +206,7 @@ test.describe("Session Archive — /sessions/", () => {
     expect(href).not.toBeNull();
 
     // Navigate to the marketing site and verify it loads
-    await goto(page, "/static/");
+    await page.goto("/static/", { waitUntil: "domcontentloaded" });
     await expect(page.locator("body")).toContainText("FENRIR");
   });
 });

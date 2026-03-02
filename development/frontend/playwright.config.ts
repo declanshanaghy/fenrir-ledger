@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 import path from "path";
 
 export default defineConfig({
-  testDir: path.resolve(__dirname, "../../quality/scripts"),
+  testDir: path.resolve(__dirname, "../../quality/test-suites"),
   testMatch: "**/*.spec.ts",
   fullyParallel: false,
   forbidOnly: false,
