@@ -1,6 +1,21 @@
 # ADR: Introduce a Dedicated Node/TS Backend Server
 
-**Status:** Accepted
+## Addendum (2026-03-01): Backend Removed -- Serverless-Only
+
+The dedicated backend server has been removed. The import pipeline now runs
+exclusively as a Vercel serverless function via the Next.js API route
+`/api/sheets/import`. The WebSocket streaming feature has been removed in
+favor of the simpler HTTP request/response pattern.
+
+**Reason:** Simplify operations. The serverless pipeline handles all import
+functionality without requiring a separate server. This eliminates Fly.io
+hosting costs and operational overhead.
+
+**Status:** Superseded (backend removed)
+
+---
+
+**Original Status:** Accepted
 **Date:** 2026-03-01
 **Author:** FiremanDecko (Principal Engineer)
 **Related:** ADR-005 (auth/PKCE), ADR-006 (anonymous-first)

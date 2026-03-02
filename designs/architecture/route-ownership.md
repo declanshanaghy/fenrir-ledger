@@ -1,8 +1,8 @@
 # Route Ownership — Fenrir Ledger
 
-**Date:** 2026-03-01
+**Date:** 2026-03-01 (updated: backend removed)
 **Author:** FiremanDecko (Principal Engineer)
-**Related:** ADR: `adr-backend-server.md`
+**Related:** ADR: `adr-backend-server.md` (superseded — serverless-only)
 
 ## Route Placement
 
@@ -10,23 +10,19 @@
 |-------|------|--------|---------|-----------|
 | `/` (app routes) | Next.js (Vercel) | GET | All UI pages (dashboard, cards, valhalla, auth) | App Router serves the React SPA |
 | `POST /api/auth/token` | Next.js (Vercel) | POST | Google OAuth2 PKCE token exchange proxy | Fast (~200ms), stateless, keeps GOOGLE_CLIENT_SECRET server-side |
-| `POST /api/sheets/import` | Next.js → Backend proxy | POST | Thin HTTP proxy to backend /import | Fallback for non-WebSocket clients; delegates long-running work to backend |
-| `GET /health` | Backend (Fly.io) | GET | Liveness probe | Backend health check for monitoring and frontend availability detection |
-| `POST /import` | Backend (Fly.io) | POST | Full import pipeline (CSV fetch + Anthropic + Zod) | Long-running operation (~5-30s); freed from Vercel timeout limits |
-| `ws://` (WebSocket) | Backend (Fly.io) | WS | Real-time import progress streaming | Duplex: server streams phase events, client can cancel mid-import |
+| `POST /api/sheets/import` | Next.js (Vercel) | POST | Import pipeline: fetch CSV + Anthropic call + Zod validation | Runs as a Vercel serverless function (`maxDuration = 60`) |
 
 ## Environment Variables
 
 | Variable | Runtime | Scope | Description |
 |----------|---------|-------|-------------|
-| `BACKEND_URL` | Next.js (server) | Server-side only | HTTP URL of backend for proxy use (e.g., `http://localhost:9753`) |
-| `NEXT_PUBLIC_BACKEND_WS_URL` | Next.js (client) | Browser-exposed | WebSocket URL for client-side connection (e.g., `ws://localhost:9753`) |
-| `GOOGLE_CLIENT_SECRET` | Next.js (server) | Server-side only | Stays in Next.js — used by auth token proxy |
-| `ANTHROPIC_API_KEY` | Backend | Server-side only | Moved to backend — used by import pipeline |
+| `GOOGLE_CLIENT_SECRET` | Next.js (server) | Server-side only | Used by auth token proxy |
+| `ANTHROPIC_API_KEY` | Next.js (server) | Server-side only | Used by import pipeline |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Next.js (client) | Browser-exposed | Used for the auth redirect |
 
 ## Design Principles
 
-1. **Fast + stateless -> Next.js**: Routes that complete in <1s with no persistent state belong in Next.js/Vercel.
-2. **Long-running + stateful -> Backend**: Operations exceeding Vercel's timeout ceiling or requiring WebSocket belong on the backend.
-3. **Graceful degradation**: The frontend works without the backend for anonymous users (localStorage-only mode). The backend is an optional enhancement.
-4. **Single secret per runtime**: Each secret lives in exactly one runtime. No secret is shared across both.
+1. **All routes live in Next.js**: With the backend removed, all API routes are Vercel serverless functions.
+2. **Server-side secrets stay server-side**: No `NEXT_PUBLIC_` prefix on secret values.
+3. **Graceful degradation**: The app works without auth for anonymous users (localStorage-only mode).
+4. **Single secret per route**: Each secret is consumed by exactly one route handler.

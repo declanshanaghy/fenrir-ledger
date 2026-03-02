@@ -47,7 +47,7 @@
 
 Track every fee-wyrm in your portfolio. Every chain forged, every promo deadline, every fee-serpent's strike date — Fenrir watches and howls before the trap snaps shut. Add your cards, name your thresholds, and the wolf does the rest: reminding you to spend, transfer, downgrade, or close before you lose a single dollar to a fee you didn't choose to pay.
 
-*Sprints 1–5 shipped. The forge has been restructured: `development/frontend/` (Next.js) and `development/backend/` (Hono + WebSocket), managed by unified `services.sh`. Sprint 4 delivered Ragnarök threshold, milestones, Gleipnir completion, accessibility, and Wolf Hunger. Sprint 5 delivered the backend server with Google Sheets import via WebSocket streaming.*
+*Sprints 1–5 shipped. The app lives at `development/frontend/` (Next.js on Vercel). Sprint 4 delivered Ragnarok threshold, milestones, Gleipnir completion, accessibility, and Wolf Hunger. Sprint 5 delivered Google Sheets import. The dedicated backend server has been removed in favor of serverless-only.*
 
 ---
 
@@ -209,12 +209,11 @@ cd fenrir-ledger
 # Prepare the forge (idempotent)
 ./development/scripts/setup-local.sh
 
-# Stoke the fire — start both frontend and backend
+# Stoke the fire — start the frontend
 .claude/scripts/services.sh start
 
 # Or start individually:
 #   .claude/scripts/frontend-server.sh start   # port 9653
-#   .claude/scripts/backend-server.sh start    # port 9753
 
 # Open http://localhost:9653
 ```

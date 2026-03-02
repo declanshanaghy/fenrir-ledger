@@ -1,9 +1,15 @@
 # Backend Implementation Plan: Node/TS Backend Server
 
+> **ARCHIVED (2026-03-01):** This plan is superseded. The dedicated backend
+> server has been removed. All import functionality now runs as a Vercel
+> serverless function via the Next.js API route `/api/sheets/import`.
+> See the addendum in `adr-backend-server.md`. This file is kept for
+> historical reference only.
+
 **Date:** 2026-03-01
 **Author:** FiremanDecko (Principal Engineer)
 **ADR:** `designs/architecture/adr-backend-server.md`
-**Status:** Accepted (Phase 1 + Phase 2 implemented)
+**Status:** Archived (backend removed)
 
 ---
 

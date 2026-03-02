@@ -2,7 +2,7 @@
  * Serverless import pipeline.
  *
  * Orchestrates: parse URL -> fetch CSV -> prompt -> LLM -> validate -> assign IDs -> return.
- * Used when IMPORT_MODE=serverless (default).
+ * Called by the /api/sheets/import route handler.
  */
 
 import { extractSheetId, buildCsvExportUrl } from "./parse-url";

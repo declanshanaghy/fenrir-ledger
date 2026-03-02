@@ -1,118 +1,96 @@
-# QA Handoff: Service Script Consolidation
+# QA Handoff: Remove Fly.io Backend -- Serverless-Only
 
-**Story:** Story 2 -- Service Script Consolidation
-**Branch:** `chore/service-scripts`
-**Engineer:** FiremanDecko
+**Branch:** `chore/remove-fly-io`
 **Date:** 2026-03-01
+**Author:** FiremanDecko (Principal Engineer)
 
 ---
 
-## What Was Implemented
+## What Was Done
 
-1. **Renamed `dev-server.sh` to `frontend-server.sh`** for naming consistency with `backend-server.sh`.
-2. **Standardized env var names** -- `FENRIR_FRONTEND_PORT` and `FENRIR_FRONTEND_DIR` are now the primary names. Old names (`FENRIR_PORT`, `FENRIR_DEV_DIR`) still work as fallbacks.
-3. **Created `services.sh`** -- unified script that manages both frontend and backend servers together.
-4. **Updated all documentation** -- commands, worktree prompts, worktree skill files, and subagent definition all reference `frontend-server.sh` and `services.sh`.
-5. **Standardized output prefixes** -- both scripts now prefix output with their service name (e.g., `Frontend: running (pid 12345) on port 9653`).
-6. **Cleaned up stale worktrees** -- removed `agent-aed8f05d` and its nested worktrees.
+Removed the dedicated Node/TS backend server (`development/backend/`) and all
+WebSocket import infrastructure. The Google Sheets import pipeline now runs
+exclusively as a Vercel serverless function via the Next.js API route
+`/api/sheets/import`.
 
-## Files Created / Modified
+---
 
-| File | Change |
+## Files Deleted
+
+| Path | Description |
+|------|-------------|
+| `development/backend/` (entire directory) | Hono v4 backend server, Dockerfile, fly.toml, WebSocket handlers, import routes, LLM providers, schemas, config |
+| `.claude/scripts/backend-server.sh` | Backend server lifecycle management script |
+
+## Files Modified
+
+| Path | Change |
 |------|--------|
-| `.claude/scripts/frontend-server.sh` | RENAMED from `dev-server.sh`. Updated env vars, header, output prefixes, log filename. |
-| `.claude/scripts/backend-server.sh` | Updated output prefixes to include `Backend:` prefix for consistency. |
-| `.claude/scripts/services.sh` | NEW -- unified script delegating to frontend-server.sh and backend-server.sh. |
-| `.claude/commands/dev-server.md` | Rewritten to cover all three scripts with migration note. |
-| `.claude/commands/create_worktree_prompt.md` | Updated all script refs and env var names. |
-| `.claude/commands/remove_worktree_prompt.md` | Updated all script refs and env var names. |
-| `.claude/commands/list_worktrees_prompt.md` | Updated all script refs and env var names. |
-| `.claude/skills/worktree-manager-skill/REFERENCE.md` | Updated directory tree, script names, env var table. |
-| `.claude/skills/worktree-manager-skill/TROUBLESHOOTING.md` | Updated all script refs. |
-| `.claude/skills/worktree-manager-skill/OPERATIONS.md` | Updated all script refs. |
-| `.claude/skills/worktree-manager-skill/SKILL.md` | Updated script reference in notes section. |
-| `.claude/agents/create_worktree_subagent.md` | Updated script references. |
-| `development/frontend/LOKI-TEST-PLAN-anon-auth.md` | Updated stale `dev-server.sh` reference. |
-| `development/qa-handoff.md` | This file (replaces previous handoff). |
+| `development/frontend/src/hooks/useSheetImport.ts` | Removed all WebSocket logic (submitViaWebSocket, checkBackendHealth, closeWebSocket, ServerMessage, ImportPhase type, WS refs/constants). Now a simple HTTP-only hook. |
+| `development/frontend/src/components/sheets/ImportWizard.tsx` | Removed ImportPhase import, PHASE_LABELS map, importPhase destructuring. Loading step now shows static "Reading the runes..." text. |
+| `development/frontend/src/app/api/sheets/import/route.ts` | Removed IMPORT_MODE/BACKEND_URL env vars and backend proxy branch. Route now only calls importFromSheet() directly. |
+| `development/frontend/.env.example` | Removed BACKEND_URL, NEXT_PUBLIC_BACKEND_WS_URL, and IMPORT_MODE variables. |
+| `development/frontend/src/lib/sheets/import-pipeline.ts` | Updated comment (removed IMPORT_MODE reference). |
+| `.claude/scripts/services.sh` | Removed all backend start/stop/restart logic. Now frontend-only wrapper. |
+| `.claude/commands/dev-server.md` | Removed backend references, updated to frontend-only documentation. |
+| `designs/architecture/adr-backend-server.md` | Added "Superseded" addendum at top explaining the backend removal. |
+| `designs/architecture/route-ownership.md` | Rewritten: all routes now under "Next.js (Vercel)". Removed Backend (Fly.io) routes and env vars. |
+| `designs/architecture/README.md` | Updated index: backend ADR marked "Superseded", implementation plan and QA report marked "Archived". Removed backend from project structure and dev scripts tables. |
+| `designs/architecture/backend-implementation-plan.md` | Added archived notice at top. |
+| `designs/architecture/backend-ws-qa-report.md` | Added archived notice at top. |
+| `README.md` | Updated project description and quick-start to remove backend references. |
+
+---
 
 ## How to Verify
 
-### 1. Script Execution
-
-All three scripts should work from the repo root:
+### 1. Build and Type Check
 
 ```bash
-.claude/scripts/frontend-server.sh status
-.claude/scripts/backend-server.sh status
-.claude/scripts/services.sh status
+cd development/frontend
+npm run build          # Must pass (verified: all 11 routes compiled)
+./node_modules/.bin/tsc --noEmit   # Must pass (verified: zero errors)
 ```
 
-### 2. Unified Script Actions
+### 2. Import Still Works via HTTP
 
-```bash
-# Start both services (backend first, then frontend)
-.claude/scripts/services.sh start
+1. Start the frontend dev server: `.claude/scripts/frontend-server.sh start`
+2. Sign in with Google OAuth
+3. Open the Import Wizard (Import from Google Sheets button)
+4. Paste a valid public Google Sheets URL
+5. Confirm the import completes via HTTP (no WebSocket connection attempted)
+6. Verify imported cards appear in the dashboard
 
-# Check status of both
-.claude/scripts/services.sh status
+### 3. No Backend Required
 
-# Stop both
-.claude/scripts/services.sh stop
+1. Confirm no process is listening on port 9753
+2. Confirm `development/backend/` directory does not exist
+3. Confirm `.claude/scripts/backend-server.sh` does not exist
+4. Run `.claude/scripts/services.sh status` -- should only show frontend status
 
-# Restart both
-.claude/scripts/services.sh restart
+### 4. Environment Variables
 
-# Tail logs
-.claude/scripts/services.sh logs frontend
-.claude/scripts/services.sh logs backend
-.claude/scripts/services.sh logs          # both interleaved
-```
-
-### 3. Backward Compatibility
-
-Old env var names should still work:
-
-```bash
-FENRIR_PORT=9654 .claude/scripts/frontend-server.sh status
-FENRIR_DEV_DIR=/some/path .claude/scripts/frontend-server.sh status
-```
-
-New env var names take precedence:
-
-```bash
-FENRIR_FRONTEND_PORT=9654 FENRIR_PORT=9999 .claude/scripts/frontend-server.sh status
-# Should use 9654, not 9999
-```
-
-### 4. No Stale References
-
-```bash
-grep -r "dev-server\.sh" .claude/ --include="*.md" --include="*.sh"
-```
-
-Should return ONLY the migration note in `dev-server.md` (intentional documentation).
-
-### 5. Stale Worktree Cleanup
-
-```bash
-git worktree list
-```
-
-Should NOT contain `agent-aed8f05d` or its nested worktrees.
-
-## Known Limitations
-
-- `sessions/super-wolf.html` still references `dev-server.sh` in historical session text. This is an archived session log and should not be modified.
-- The `dev-server.md` command file retains its filename for backward compatibility with existing slash command muscle memory. Its content has been updated to document all three scripts.
-
-## Suggested Test Focus
-
-1. **services.sh start/stop/restart** -- verify backend starts before frontend on `start`, both stop on `stop`.
-2. **Backward compat** -- old `FENRIR_PORT` / `FENRIR_DEV_DIR` env vars still work.
-3. **Precedence** -- new `FENRIR_FRONTEND_PORT` overrides old `FENRIR_PORT`.
-4. **Output format** -- verify service name prefixes in output (e.g., `Frontend: running`, `Backend: not running`).
-5. **Log file paths** -- frontend logs now go to `frontend-server.log` (not `dev-server.log`).
+1. Confirm `.env.example` has no `BACKEND_URL`, `NEXT_PUBLIC_BACKEND_WS_URL`, or `IMPORT_MODE`
+2. If `.env.local` exists, the removed vars are harmless (unused) but can be cleaned up
 
 ---
 
-*FiremanDecko -- Principal Engineer*
+## Breaking Changes
+
+| Change | Impact |
+|--------|--------|
+| WebSocket import removed | Import no longer streams phase-by-phase progress. Loading state shows a single "Reading the runes..." message instead. |
+| `IMPORT_MODE=backend` no longer supported | The API route always runs the pipeline inline. Setting this env var has no effect. |
+| `backend-server.sh` deleted | Any scripts or automation referencing this file will break. Use `frontend-server.sh` or `services.sh` instead. |
+| `ImportPhase` type removed from `useSheetImport` | Any code importing `ImportPhase` from `@/hooks/useSheetImport` will fail to compile. |
+| `importPhase` removed from `UseSheetImportReturn` | Any component reading `importPhase` from the hook will fail to compile. |
+
+---
+
+## What Was NOT Changed
+
+- Import pipeline (`import-pipeline.ts`) -- untouched
+- Auth system (OAuth, requireAuth, session) -- untouched
+- Card types, storage, card-utils -- untouched
+- All other components -- untouched
+- Frontend-server.sh -- untouched (works standalone)
