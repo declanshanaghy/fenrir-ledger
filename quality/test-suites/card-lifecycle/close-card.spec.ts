@@ -119,8 +119,11 @@ test.describe("Close Card — Confirmation Dialog", () => {
 
     await page.locator('button:has-text("Close Card")').first().click();
 
-    // The card name must appear in the dialog description
-    await expect(page.locator("text=Named Dialog Card")).toBeVisible();
+    // The card name must appear in the dialog description (scoped to dialog
+    // to avoid strict-mode clash with the edit page h1 which also shows the name)
+    await expect(
+      page.locator('[role="dialog"]').getByText("Named Dialog Card")
+    ).toBeVisible();
   });
 
   test("close dialog has a Cancel button that dismisses without action", async ({

@@ -127,11 +127,11 @@ test.describe("Dashboard — Card Grid", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, MANY_CARDS);
     await page.reload({ waitUntil: "networkidle" });
 
-    // The empty state heading must NOT be visible when cards exist
-    const emptyHeading = page.locator("h2");
-    // Verify it doesn't contain the empty state text
-    const h2Text = await emptyHeading.textContent().catch(() => "");
-    expect(h2Text).not.toContain("Gleipnir was forged");
+    // When cards exist, EmptyState is not rendered — no h2 with "Gleipnir"
+    // should be present. Use count check (instant) rather than textContent()
+    // which would wait up to 30s for an h2 that may not exist.
+    const emptyHeading = page.locator('h2:has-text("Gleipnir")');
+    await expect(emptyHeading).toHaveCount(0);
 
     const editLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
     await expect(editLinks).toHaveCount(10);

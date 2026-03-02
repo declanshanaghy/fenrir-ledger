@@ -120,7 +120,10 @@ test.describe("Delete Card — Confirmation Dialog", () => {
 
     await page.locator('button:has-text("Delete card")').first().click();
 
-    await expect(page.locator("text=Named Delete Card")).toBeVisible();
+    // Scope to dialog to avoid strict-mode clash with the edit page h1
+    await expect(
+      page.locator('[role="dialog"]').getByText("Named Delete Card")
+    ).toBeVisible();
   });
 
   test("delete dialog mentions 'cannot be undone'", async ({ page }) => {
@@ -213,10 +216,12 @@ test.describe("Delete Card — Confirm Action", () => {
     expect(body).not.toContain("Permanently Gone Card");
   });
 
-  test("deleted card is removed from localStorage entirely", async ({
+  test("deleted card is soft-deleted in localStorage (deletedAt set)", async ({
     page,
   }) => {
-    // Spec: deleteCard() removes the card entry from the stored array
+    // Spec: storage.ts deleteCard() is a SOFT delete — it sets deletedAt on
+    // the card record rather than removing it from the array. The dashboard
+    // filters out cards with deletedAt so they no longer appear in the UI.
     const card = makeCard({ cardName: "Storage Delete Verify" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
@@ -234,21 +239,24 @@ test.describe("Delete Card — Confirm Action", () => {
 
     await page.waitForURL("**/", { timeout: 5000 });
 
-    // Verify directly in localStorage — card must not exist
-    const found = await page.evaluate(
-      ({ key, cardId }: { key: string; cardId: string }) => {
-        const raw = localStorage.getItem(key);
-        if (!raw) return false;
-        const cards = JSON.parse(raw) as Array<{ id: string }>;
-        return cards.some((c) => c.id === cardId);
-      },
-      {
-        key: `fenrir_ledger:${ANONYMOUS_HOUSEHOLD_ID}:cards`,
-        cardId: card.id,
-      }
-    );
-
-    expect(found).toBe(false);
+    // Poll localStorage until deletedAt is set — React's state update
+    // may write to localStorage slightly after the URL change completes.
+    await expect(async () => {
+      const deletedAt = await page.evaluate(
+        ({ key, cardId }: { key: string; cardId: string }) => {
+          const raw = localStorage.getItem(key);
+          if (!raw) return null;
+          const cards = JSON.parse(raw) as Array<{ id: string; deletedAt?: string }>;
+          const found = cards.find((c) => c.id === cardId);
+          return found?.deletedAt ?? null;
+        },
+        {
+          key: `fenrir_ledger:${ANONYMOUS_HOUSEHOLD_ID}:cards`,
+          cardId: card.id,
+        }
+      );
+      expect(deletedAt).toBeTruthy();
+    }).toPass({ timeout: 5000 });
   });
 
   test("deleting one card does not remove other cards", async ({ page }) => {

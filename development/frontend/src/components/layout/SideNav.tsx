@@ -103,7 +103,7 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "flex items-center gap-3 w-full rounded-sm px-2.5 py-2 text-sm",
+            "flex items-center gap-3 w-full rounded-sm px-2.5 py-2 text-sm min-h-[44px]",
             "text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
           )}
         >

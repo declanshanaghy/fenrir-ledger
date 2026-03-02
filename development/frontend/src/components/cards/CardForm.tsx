@@ -314,7 +314,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             {...(defaultValues.issuerId !== undefined && { defaultValue: defaultValues.issuerId })}
             onValueChange={(v) => setValue("issuerId", v)}
           >
-            <SelectTrigger id="issuerId">
+            <SelectTrigger id="issuerId" aria-required="true">
               <SelectValue placeholder="Select issuer" />
             </SelectTrigger>
             <SelectContent>
@@ -336,6 +336,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           <Input
             id="cardName"
             placeholder="e.g. Sapphire Preferred"
+            aria-required="true"
             {...register("cardName")}
           />
           {errors.cardName && (
@@ -346,7 +347,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         {/* Open date */}
         <div className="space-y-1.5">
           <Label htmlFor="openDate">Date opened *</Label>
-          <Input id="openDate" type="date" {...register("openDate")} />
+          <Input id="openDate" type="date" aria-required="true" {...register("openDate")} />
           {errors.openDate && (
             <p className="text-sm text-destructive">{errors.openDate.message}</p>
           )}

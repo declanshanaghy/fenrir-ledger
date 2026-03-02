@@ -74,14 +74,18 @@ def _get_git_branch() -> str:
 
 
 def _resolve_source_app(input_data: dict, default: str) -> str:
-    """Build a dynamic source_app for subagents: {agent}-{branch}.
+    """Build a dynamic source_app for subagents: {agent}-{branch}-{sid_short}.
 
     Resolution order for agent name:
       1. CLAUDE_AGENT_NAME env var
       2. input_data["agent_type"]
 
-    If an agent identity is detected, returns "{agent}-{branch}" (or just
-    "{agent}" if the branch can't be determined).  Otherwise returns *default*.
+    The first 8 chars of the session_id are appended to disambiguate
+    multiple agents of the same type running on the same branch.
+
+    If an agent identity is detected, returns "{agent}-{branch}-{sid}" (or
+    just "{agent}" if the branch can't be determined).  Otherwise returns
+    *default*.
     """
     agent = (
         os.environ.get("CLAUDE_AGENT_NAME", "")
@@ -91,9 +95,11 @@ def _resolve_source_app(input_data: dict, default: str) -> str:
         return default
 
     branch = _get_git_branch()
-    if branch:
-        return f"{agent}-{branch}"
-    return f"{agent}"
+    session_id = input_data.get("session_id", "")
+    sid_short = session_id[:8] if session_id else ""
+
+    base = f"{agent}-{branch}" if branch else agent
+    return f"{base}-{sid_short}" if sid_short else base
 
 
 def fire_and_forget_send_event(

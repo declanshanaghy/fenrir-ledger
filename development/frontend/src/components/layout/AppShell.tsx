@@ -46,10 +46,16 @@ export function AppShell({ children }: AppShellProps) {
   const { open: rootsOpen, trigger: triggerRoots, dismiss: dismissRoots } = useGleipnirFragment3();
   const { ragnarokActive } = useRagnarok();
 
-  // Read persisted state after mount to avoid SSR mismatch
+  // Read persisted state after mount to avoid SSR mismatch.
+  // On narrow viewports (< 768px) default to collapsed so the main content
+  // area gets usable width — the user can still expand manually.
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "true") setCollapsed(true);
+    if (stored === "true") {
+      setCollapsed(true);
+    } else if (stored === null && window.innerWidth < 768) {
+      setCollapsed(true);
+    }
     setMounted(true);
   }, []);
 
