@@ -10,6 +10,7 @@ Constants and shared utilities for Claude Code Hooks.
 import json
 import os
 import subprocess
+import threading
 from pathlib import Path
 
 # Base directory for all logs
@@ -47,6 +48,19 @@ def ensure_session_log_dir(session_id: str) -> Path:
 _SEND_EVENT_SCRIPT = str(Path(__file__).resolve().parent.parent / "send_event.py")
 
 
+def _write_and_close(proc: subprocess.Popen, payload_bytes: bytes) -> None:
+    """Write payload to subprocess stdin in a background thread.
+
+    Runs as a daemon thread so the parent hook returns immediately even when
+    the payload exceeds the OS pipe buffer (~64 KB on macOS).
+    """
+    try:
+        proc.stdin.write(payload_bytes)
+        proc.stdin.close()
+    except Exception:
+        pass
+
+
 def fire_and_forget_send_event(
     input_data: dict,
     event_type: str,
@@ -59,6 +73,9 @@ def fire_and_forget_send_event(
     The child process inherits the current environment but its stdin is fed
     the JSON-serialised *input_data*.  The parent does **not** wait for the
     child to finish — this keeps the hook fast.
+
+    The pipe write is performed on a daemon thread to avoid blocking the
+    parent when the payload exceeds the OS pipe buffer size.
 
     Args:
         input_data:  The original stdin dict received by the hook.
@@ -84,10 +101,16 @@ def fire_and_forget_send_event(
             # Detach from the parent so we don't block on it.
             start_new_session=True,
         )
-        # Write the JSON payload and close stdin so the child can proceed.
-        proc.stdin.write(json.dumps(input_data).encode("utf-8"))
-        proc.stdin.close()
-        # Do NOT call proc.wait() — fire and forget.
+        # Write the JSON payload on a daemon thread so the parent returns
+        # immediately even for payloads larger than the OS pipe buffer.
+        payload_bytes = json.dumps(input_data).encode("utf-8")
+        writer = threading.Thread(
+            target=_write_and_close,
+            args=(proc, payload_bytes),
+            daemon=True,
+        )
+        writer.start()
+        # Don't join — daemon thread dies when parent exits.
     except Exception:
         # Never block Claude Code even if spawning fails.
         pass

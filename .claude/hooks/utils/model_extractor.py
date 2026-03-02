@@ -6,6 +6,7 @@ Extracts model name from Claude Code transcript with caching.
 import json
 import os
 import time
+from collections import deque
 from pathlib import Path
 
 # Set to False to disable caching and always read from transcript
@@ -88,7 +89,6 @@ def extract_model_from_transcript(transcript_path: str) -> str:
         # Read only the last TAIL_LINES lines of the transcript to cap I/O.
         # The model name appears in recent assistant messages, so reading the
         # tail is sufficient and avoids loading multi-MB transcripts entirely.
-        from collections import deque
         with open(transcript_path, 'r') as f:
             lines = deque(f, maxlen=TAIL_LINES)
 
