@@ -1,0 +1,319 @@
+/**
+ * Dashboard Test Suite — Fenrir Ledger
+ * Authored by Loki, QA Tester of the Pack
+ *
+ * Tests the main dashboard view (/) against the design spec, not against
+ * whatever the code currently happens to produce. Every assertion traces back
+ * to a specific requirement in the product-design-brief, EmptyState.tsx,
+ * Dashboard.tsx, CardTile.tsx, or StatusBadge.tsx.
+ *
+ * Spec references:
+ *   - EmptyState.tsx: heading "Before Gleipnir was forged" + "Add Card" link
+ *   - Dashboard.tsx:  summary header "{N} cards" / "{N} need attention"
+ *   - CardTile.tsx:   Link href="/cards/{id}/edit", cardName, issuerName
+ *   - StatusBadge.tsx: STATUS_LABELS = { active: "Active", fee_approaching: "Fee Due Soon", … }
+ *   - constants.ts:   STATUS_LABELS record (authoritative badge text source)
+ *
+ * Data isolation: each test clears localStorage and seeds its own state before
+ * navigating. Tests never depend on data left by a previous test.
+ */
+
+import { test, expect } from "@playwright/test";
+import {
+  seedCards,
+  seedHousehold,
+  clearAllStorage,
+  ANONYMOUS_HOUSEHOLD_ID,
+} from "../helpers/test-fixtures";
+import {
+  EMPTY_CARDS,
+  FEW_CARDS,
+  MANY_CARDS,
+  URGENT_CARDS,
+  MIXED_CARDS,
+} from "../helpers/seed-data";
+
+// ─── Shared beforeEach ────────────────────────────────────────────────────────
+// Each test overrides this with its own card set via beforeEach at the
+// describe level where needed. The top-level beforeEach just navigates and
+// clears storage so the base state is deterministic.
+
+test.beforeEach(async ({ page }) => {
+  await page.goto("/");
+  await clearAllStorage(page);
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite 1 — Empty State
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("Dashboard — Empty State", () => {
+  // No cards seeded — EmptyState component must render.
+
+  test("shows the Gleipnir heading when no cards exist", async ({ page }) => {
+    // Seed household only — no cards
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, EMPTY_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: EmptyState.tsx h2 begins "Before" and contains "Gleipnir was forged"
+    // The heading includes two myth-link anchors (Gleipnir, Fenrir) so we
+    // match the surrounding text nodes, not the whole string.
+    const heading = page.locator("h2");
+    await expect(heading).toContainText("Before");
+    await expect(heading).toContainText("Gleipnir");
+    await expect(heading).toContainText("was forged");
+  });
+
+  test("Add Card link is present and points to /cards/new on empty state", async ({
+    page,
+  }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, EMPTY_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: EmptyState.tsx renders <Link href="/cards/new">Add Card</Link>
+    const addCardLink = page.locator('a[href="/cards/new"]').first();
+    await expect(addCardLink).toBeVisible();
+    await expect(addCardLink).toContainText("Add Card");
+  });
+
+  test("no card tiles are rendered when zero cards are seeded", async ({
+    page,
+  }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, EMPTY_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Dashboard renders EmptyState when cards.length === 0 — no card links
+    // to /cards/{id}/edit should exist
+    const editLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
+    await expect(editLinks).toHaveCount(0);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite 2 — Card Grid Renders
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("Dashboard — Card Grid", () => {
+  test("renders FEW_CARDS (3 cards) with correct card names", async ({
+    page,
+  }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: CardTile.tsx renders <CardTitle>{card.cardName}</CardTitle>
+    // FEW_CARDS = [Sapphire Preferred, Platinum, Venture Rewards]
+    await expect(page.getByText("Sapphire Preferred")).toBeVisible();
+    await expect(page.getByText("Platinum")).toBeVisible();
+    await expect(page.getByText("Venture Rewards")).toBeVisible();
+  });
+
+  test("renders exactly 3 card tiles for FEW_CARDS", async ({ page }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Each CardTile is wrapped in a Link to /cards/{id}/edit
+    // There are 3 FEW_CARDS, each with a unique ID, so 3 edit links
+    const editLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
+    await expect(editLinks).toHaveCount(3);
+  });
+
+  test("renders MANY_CARDS (10 cards) — no empty state", async ({ page }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, MANY_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // The empty state heading must NOT be visible when cards exist
+    const emptyHeading = page.locator("h2");
+    // Verify it doesn't contain the empty state text
+    const h2Text = await emptyHeading.textContent().catch(() => "");
+    expect(h2Text).not.toContain("Gleipnir was forged");
+
+    const editLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
+    await expect(editLinks).toHaveCount(10);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite 3 — Summary Stats
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("Dashboard — Summary Stats", () => {
+  test("summary shows correct card count for MANY_CARDS (10)", async ({
+    page,
+  }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, MANY_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: Dashboard.tsx renders "{cards.length} cards" in the summary header
+    // MANY_CARDS has 10 entries
+    const summary = page.locator("text=10").first();
+    await expect(summary).toBeVisible();
+
+    // The text node with "cards" (plural form) must also be present
+    await expect(page.locator("body")).toContainText("10");
+    await expect(page.locator("body")).toContainText("cards");
+  });
+
+  test("summary shows '1 card' (singular) when exactly one card is seeded", async ({
+    page,
+  }) => {
+    const oneCard = [FEW_CARDS[0]!];
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, oneCard);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: Dashboard.tsx uses ternary → cards.length === 1 ? "card" : "cards"
+    // Must be "1 card" not "1 cards"
+    await expect(page.locator("body")).toContainText("1");
+    // Verify the singular "card" label without the "s"
+    // The summary span text is "{N} cards" or "{N} card"
+    const body = await page.locator("body").innerText();
+    // Should contain "1" followed by "card" but NOT "1 cards"
+    expect(body).not.toMatch(/\b1\s+cards\b/);
+  });
+
+  test("shows 'needs attention' count for URGENT_CARDS", async ({ page }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, URGENT_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: Dashboard.tsx renders "{needsAttention.length} need{plural} attention"
+    // URGENT_CARDS has 5 cards: 3 fee_approaching + 2 promo_expiring = 5 urgent
+    await expect(page.locator("body")).toContainText("5");
+    await expect(page.locator("body")).toContainText("need");
+    await expect(page.locator("body")).toContainText("attention");
+  });
+
+  test("no 'needs attention' shown when all cards are active", async ({
+    page,
+  }) => {
+    // FEW_CARDS are all status: "active" — no urgent entries
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: needsAttention.length > 0 guard before rendering the attention span
+    const body = await page.locator("body").innerText();
+    expect(body).not.toContain("need");
+    expect(body).not.toContain("attention");
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite 4 — Status Badges
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("Dashboard — Status Badges", () => {
+  test("active cards show 'Active' badge", async ({ page }) => {
+    // FEW_CARDS are all status: "active"
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: STATUS_LABELS.active = "Active" (constants.ts, authoritative)
+    // StatusBadge renders <Badge>{label}</Badge> where label = STATUS_LABELS[status]
+    const activeBadges = page.locator('[aria-label="Card status: Active"]');
+    const count = await activeBadges.count();
+    // All 3 FEW_CARDS are active
+    expect(count).toBe(3);
+  });
+
+  test("fee_approaching cards show 'Fee Due Soon' badge", async ({ page }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, URGENT_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: STATUS_LABELS.fee_approaching = "Fee Due Soon" (constants.ts)
+    const feeBadges = page.locator('[aria-label="Card status: Fee Due Soon"]');
+    const count = await feeBadges.count();
+    // URGENT_CARDS has 3 fee_approaching cards
+    expect(count).toBe(3);
+  });
+
+  test("promo_expiring cards show 'Promo Expiring' badge", async ({ page }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, URGENT_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: STATUS_LABELS.promo_expiring = "Promo Expiring" (constants.ts)
+    const promoBadges = page.locator('[aria-label="Card status: Promo Expiring"]');
+    const count = await promoBadges.count();
+    // URGENT_CARDS has 2 promo_expiring cards
+    expect(count).toBe(2);
+  });
+
+  test("mixed set shows correct badge mix (Active + Fee Due Soon + Promo Expiring)", async ({
+    page,
+  }) => {
+    // MIXED_CARDS: 2 active + 1 fee_approaching + 1 promo_expiring + 2 closed
+    // Dashboard only shows non-closed cards, so 4 tiles expected
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, MIXED_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    await expect(
+      page.locator('[aria-label="Card status: Active"]').first()
+    ).toBeVisible();
+    await expect(
+      page.locator('[aria-label="Card status: Fee Due Soon"]').first()
+    ).toBeVisible();
+    await expect(
+      page.locator('[aria-label="Card status: Promo Expiring"]').first()
+    ).toBeVisible();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite 5 — Card Tile Navigation Links
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("Dashboard — Card Tile Links", () => {
+  test("each card tile links to /cards/{id}/edit", async ({ page }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: CardTile.tsx wraps content in <Link href={`/cards/${card.id}/edit`}>
+    // Each FEW_CARDS entry has a unique ID — verify the link pattern exists
+    for (const card of FEW_CARDS) {
+      const tileLink = page.locator(`a[href="/cards/${card.id}/edit"]`);
+      await expect(tileLink).toBeVisible();
+    }
+  });
+
+  test("clicking a card tile navigates to the correct edit URL", async ({
+    page,
+  }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    const firstCard = FEW_CARDS[0]!;
+    const tileLink = page.locator(`a[href="/cards/${firstCard.id}/edit"]`);
+    await tileLink.click();
+
+    // After click, URL must be the edit page for that specific card
+    await page.waitForURL(`**/cards/${firstCard.id}/edit`);
+    expect(page.url()).toContain(`/cards/${firstCard.id}/edit`);
+  });
+
+  test("Add Card button in header navigates to /cards/new", async ({ page }) => {
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
+
+    // Spec: page.tsx renders <Link href="/cards/new">Add Card</Link> in the header
+    const addCardBtn = page.locator('a[href="/cards/new"]').first();
+    await expect(addCardBtn).toBeVisible();
+    await addCardBtn.click();
+
+    await page.waitForURL("**/cards/new");
+    expect(page.url()).toContain("/cards/new");
+  });
+});
