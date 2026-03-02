@@ -201,6 +201,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [designs/architecture/backend-ws-qa-report.md](designs/architecture/backend-ws-qa-report.md) — QA validation: Backend/WebSocket architecture investigation — APPROVED (0 blocking issues)
 - [quality/llm-provider-factory-verdict.md](quality/llm-provider-factory-verdict.md) — QA verdict: feat/llm-provider-factory (LLM abstraction layer) — SHIP WITH KNOWN ISSUES (1 medium defect, 1 low defect, 44 assertions run)
 - [quality/import-workflow-v2-verdict.md](quality/import-workflow-v2-verdict.md) — QA verdict: PR #61 Import Workflow v2 (Three Paths to the Forge) — HOLD FOR FIXES (3 defects: DEF-001 success step unreachable, DEF-002 missing option aria-labels, DEF-003 generic CSV rejection messages)
+- PR #72 Norse Statusline Script — PASS, merged: `.claude/statusline-command.sh` (7 sections, 4-tier color thresholds, 4 width breakpoints, Ragnarok mode, rune prefixes)
 
 ### ᚠ Pack Operations
 
