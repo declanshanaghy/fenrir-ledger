@@ -61,6 +61,41 @@ def _write_and_close(proc: subprocess.Popen, payload_bytes: bytes) -> None:
         pass
 
 
+def _get_git_branch() -> str:
+    """Get current git branch name, or empty string on failure."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True, text=True, timeout=3,
+        )
+        return result.stdout.strip() if result.returncode == 0 else ""
+    except Exception:
+        return ""
+
+
+def _resolve_source_app(input_data: dict, default: str) -> str:
+    """Build a dynamic source_app for subagents: {agent}-{branch}.
+
+    Resolution order for agent name:
+      1. CLAUDE_AGENT_NAME env var
+      2. input_data["agent_type"]
+
+    If an agent identity is detected, returns "{agent}-{branch}" (or just
+    "{agent}" if the branch can't be determined).  Otherwise returns *default*.
+    """
+    agent = (
+        os.environ.get("CLAUDE_AGENT_NAME", "")
+        or input_data.get("agent_type", "")
+    )
+    if not agent:
+        return default
+
+    branch = _get_git_branch()
+    if branch:
+        return f"{agent}-{branch}"
+    return f"{agent}"
+
+
 def fire_and_forget_send_event(
     input_data: dict,
     event_type: str,
@@ -77,6 +112,10 @@ def fire_and_forget_send_event(
     The pipe write is performed on a daemon thread to avoid blocking the
     parent when the payload exceeds the OS pipe buffer size.
 
+    When running as a subagent (detected via CLAUDE_AGENT_NAME env var or
+    input_data["agent_type"]), source_app is automatically overridden to
+    "{agent}-{branch}" for observability identification.
+
     Args:
         input_data:  The original stdin dict received by the hook.
         event_type:  Hook event name (e.g. "PreToolUse").
@@ -85,9 +124,10 @@ def fire_and_forget_send_event(
                      (e.g. ["--summarize", "--add-chat"]).
     """
     try:
+        resolved_app = _resolve_source_app(input_data, source_app)
         cmd = [
             "uv", "run", _SEND_EVENT_SCRIPT,
-            "--source-app", source_app,
+            "--source-app", resolved_app,
             "--event-type", event_type,
         ]
         if extra_args:

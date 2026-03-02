@@ -89,9 +89,23 @@ def main():
         or 'orchestrator'
     )
 
+    # Override source_app for subagents: {agent}-{branch}
+    source_app = args.source_app
+    if agent_name != 'orchestrator':
+        try:
+            import subprocess as _sp
+            _branch = _sp.run(
+                ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                capture_output=True, text=True, timeout=3,
+            )
+            branch = _branch.stdout.strip() if _branch.returncode == 0 else ''
+            source_app = f"{agent_name}-{branch}" if branch else agent_name
+        except Exception:
+            source_app = agent_name
+
     # Prepare event data for server
     event_data = {
-        'source_app': args.source_app,
+        'source_app': source_app,
         'session_id': session_id,
         'hook_event_type': args.event_type,
         'agent_name': agent_name,
