@@ -75,7 +75,7 @@ These observations were made during the Sprint 4 groom. They refine the stories 
 
 **5.1 Auto-Merge**: The existing migration prompt dialog (`ux/wireframes/auth/migration-prompt.html`) is now superseded. Luna must produce an updated wireframe for the auto-merge toast surface. The "Start fresh" path is eliminated by product decision — if any code implements this path, it must be removed. Key risk: the tombstone strategy for `fenrir:household` must be carefully implemented to prevent re-merge on subsequent sign-ins. FiremanDecko to confirm the OAuth callback hook location before starting.
 
-**5.2 Sheets Import API Route**: `ANTHROPIC_API_KEY` is a new server-side dependency. It must be provisioned in Vercel before the route can be tested in preview deployments. The model ID `claude-haiku-3-5` should be confirmed against the current Anthropic SDK — if it has been updated, use the equivalent. CSV truncation at 100k characters is a product-specified limit; do not change without Freya's approval.
+**5.2 Sheets Import API Route**: `ANTHROPIC_API_KEY` is a new server-side dependency. It must be provisioned in Vercel before the route can be tested in preview deployments. The model ID is `claude-haiku-4-5-20251001` (confirmed in the story spec). CSV truncation at 100k characters is a product-specified limit; do not change without Freya's approval.
 
 **5.3 Sheets Import Wizard**: Story 5.3 and 5.4 are split at the "Import N cards" confirm button. Story 5.3 owns the wizard UI up to and including that button. Story 5.4 owns the callback that fires when the button is pressed. The interface between them is `onConfirmImport(cards: Card[])` — a callback prop. This boundary must be respected to keep both stories independently reviewable by Loki.
 

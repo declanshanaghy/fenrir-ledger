@@ -161,7 +161,8 @@ architecture/
 development/
 ├── implementation-plan.md         # What was built and how
 ├── qa-handoff.md                  # Handoff notes for Loki
-└── src/                           # Next.js source code
+└── frontend/                      # Next.js project root (Vercel Root Directory)
+    └── src/                       # Next.js source code
 
 quality/
 ├── test-plan.md                   # Test plan

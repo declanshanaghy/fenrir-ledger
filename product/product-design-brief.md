@@ -19,7 +19,7 @@ Every element — color, label, animation, empty state — is grounded in the No
 The target user is a numbers-obsessed optimizer managing 5–20+ credit cards. Data must be scannable, dense-but-organized, and tactically clear. The mythology provides atmosphere; the function provides a war room. These must coexist without friction.
 
 **3. Hidden Depth**
-The app rewards exploration. Easter eggs reference the Gleipnir myth, the Norns, Hati and Sköll. The console logs a wolf. A hidden keycode triggers a howl. Nerd culture references are woven in for FiremanDecko and other builders who look close. See [`easter-eggs.md`](easter-eggs.md).
+The app rewards exploration. Easter eggs reference the Gleipnir myth, the Norns, Hati and Sköll. The console logs a wolf. A hidden keycode triggers a howl. Nerd culture references are woven in for FiremanDecko and other builders who look close. See [`easter-eggs.md`](../ux/easter-eggs.md).
 
 ---
 

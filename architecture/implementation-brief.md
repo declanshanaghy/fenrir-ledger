@@ -262,15 +262,37 @@ Implementation notes:
 
 | File | Sprint | Purpose |
 |------|--------|---------|
-| `src/components/dashboard/HowlPanel.tsx` | S3 | Urgent sidebar |
+| `src/components/layout/HowlPanel.tsx` | S3 | Urgent cards sidebar |
 | `src/components/dashboard/StatusRing.tsx` | S3 | SVG deadline ring |
-| `src/components/dashboard/StatusBadge.tsx` | S2 | Realm status badge (shipped as `StatusBadge.tsx`, not `CardStatusBadge.tsx`) |
+| `src/components/dashboard/StatusBadge.tsx` | S2 | Realm status badge |
+| `src/components/dashboard/AnimatedCardGrid.tsx` | S3 | Framer Motion card grid |
+| `src/components/dashboard/CardSkeletonGrid.tsx` | S3 | Gold shimmer loading |
 | `src/components/layout/Footer.tsx` | S2 | Footer with Loki easter egg trigger |
+| `src/components/layout/UpsellBanner.tsx` | S3 | Cloud sync upsell for anonymous users |
+| `src/components/layout/SyncIndicator.tsx` | S4 | Sync status dot (Gleipnir fragment 1) |
+| `src/components/shared/WolfHungerMeter.tsx` | S4 | Aggregate bonus summary |
+| `src/components/shared/AuthGate.tsx` | S5 | Hides children for anonymous users |
+| `src/components/easter-eggs/EasterEggModal.tsx` | S4 | Shared Gleipnir modal shell |
+| `src/components/easter-eggs/LcarsOverlay.tsx` | S4 | LCARS overlay easter egg |
 | `src/app/valhalla/page.tsx` | S3 | Closed cards archive |
-| `src/components/layout/ConsoleSignature.tsx` | S2 | Console ASCII (client-only) — shipped as component, not lib utility |
-| `src/lib/easter-eggs.ts` | S3 | Konami code, Loki mode, event listeners |
-| `src/lib/realm-utils.ts` | S3 | `getRealmLabel()` and Norse display helpers — not yet implemented (Norse copy pass deferred) |
-| `public/cursors/wolf-paw.svg` | S4 | Custom cursor asset |
+| `src/app/sign-in/page.tsx` | S3 | Opt-in sign-in page |
+| `src/app/auth/callback/page.tsx` | S3 | OAuth callback |
+| `src/app/api/auth/token/route.ts` | S3 | Server token proxy |
+| `src/app/api/sheets/import/route.ts` | S5 | Google Sheets import API |
+| `src/components/layout/ConsoleSignature.tsx` | S2 | Console ASCII (client-only) |
+| `src/lib/realm-utils.ts` | S3 | `getRealmLabel()` Norse display helpers |
+| `src/lib/milestone-utils.ts` | S4 | Card count milestone toast thresholds |
+| `src/lib/gleipnir-utils.ts` | S4 | Gleipnir fragment tracking |
+| `src/lib/merge-anonymous.ts` | S5 | Anonymous → authenticated data merge |
+| `src/lib/auth/pkce.ts` | S3 | PKCE utilities |
+| `src/lib/auth/session.ts` | S3 | localStorage session management |
+| `src/lib/auth/household.ts` | S3 | Anonymous householdId generation |
+| `src/lib/auth/require-auth.ts` | S5 | API route auth guard |
+| `src/contexts/AuthContext.tsx` | S3 | Auth state context |
+| `src/contexts/RagnarokContext.tsx` | S4 | Ragnarok threshold context |
+| `src/hooks/useAuth.ts` | S3 | Auth hook |
+| `src/hooks/useSheetImport.ts` | S5 | Sheet import state management |
+| `src/components/sheets/ImportWizard.tsx` | S5 | Three-path import wizard |
 
 ---
 
@@ -310,14 +332,14 @@ For each sprint, Loki should specifically test:
 
 ---
 
-## Open Questions for FiremanDecko
+## Resolved Questions (Historical)
 
-1. **Framer Motion SSR**: Next.js App Router — ensure `framer-motion` components are wrapped in `"use client"` directives. Plan for this in the animation stories.
+1. **Framer Motion SSR**: Resolved — all Framer Motion components use `"use client"` directive. `AnimatedCardGrid.tsx` and `CardSkeletonGrid.tsx` are client components.
 
-2. **Font loading strategy**: Use `display: 'swap'` on all `next/font` declarations to prevent FOUT on slow connections.
+2. **Font loading strategy**: Resolved — `display: 'swap'` applied to all `next/font/google` declarations in `layout.tsx`.
 
-3. **The `status` field enrichment**: `getRealmLabel()` needs `daysRemaining` which requires computing from `annualFeeDate` and `signUpBonus.deadline`. Confirm `card-utils.ts` already provides this or whether a new `getDaysRemaining(card: Card): number` is needed.
+3. **The `status` field enrichment**: Resolved — `getRealmLabel()` implemented in `realm-utils.ts`, wired into `StatusBadge.tsx`. `daysRemaining` computed from card dates.
 
-4. **Valhalla vs delete**: Currently cards can be deleted. Propose: soft-delete moves card to `status: "closed"` with `closedAt` date. Hard-delete removed from UI entirely (requires confirmation with the "Cast into the Void" dialog). Discuss with Freya whether this needs a schema migration (ADR-004).
+4. **Valhalla vs delete**: Resolved — Valhalla route built at `/valhalla` for closed cards. Cards with `status: "closed"` appear in Valhalla.
 
-5. **The Howl threshold**: What counts as "urgent enough" for The Howl? Propose: `fee_approaching` (≤ 30 days) OR `promo_expiring` (≤ 45 days). Configurable in settings (Sprint 4).
+5. **The Howl threshold**: Resolved — HowlPanel shows cards with `fee_approaching` or `promo_expiring` status. Ragnarok mode (>= 5 urgent) triggers dramatic overlay via `RagnarokContext`.

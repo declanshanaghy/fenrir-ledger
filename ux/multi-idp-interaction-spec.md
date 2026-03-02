@@ -2,9 +2,11 @@
 
 **Author**: Luna (UX Designer)
 **Date**: 2026-03-01
-**Status**: Ready for handoff
+**Status**: Planned — not yet implemented
 **Wireframe**: [ux/wireframes/auth/multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html)
 **Supersedes**: `wireframes/auth/sign-in.html` (dedicated page spec — Google PKCE only)
+
+> **Implementation note (2026-03-01):** This spec describes a *planned* Clerk integration for multi-provider auth. The current production implementation uses Google PKCE directly (see ADR-005, ADR-008) — not Clerk. The interaction patterns and UX decisions here remain the target design for when Clerk is adopted. Until then, the single-provider Google flow in `wireframes/auth/sign-in.html` is what is implemented.
 
 ---
 

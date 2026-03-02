@@ -10,11 +10,20 @@ This directory contains all QA artifacts: test plans, test cases, test scripts, 
 
 ## Infrastructure Sync Notes
 
-As of 2026-03-01, the project has completed two infrastructure renames:
+As of 2026-03-01, the project has completed the following infrastructure changes:
 - `development/src` → `development/frontend` (PR #44)
 - `dev-server.sh` → `frontend-server.sh`, new `services.sh` created (PR #45)
+- Dedicated Hono/Node.js backend removed, import pipeline moved fully serverless to Vercel (PR #60)
 
-All QA documents in this directory use `development/frontend` throughout.
+All QA documents in this directory use `development/frontend` throughout. Documents referencing the backend server or `fly.toml` are historical records — the standalone backend no longer exists.
+
+---
+
+## Import Workflow v2 — Three-Path Import (PR #61)
+
+**Status:** FAIL → HOLD FOR FIXES (3 defects) | PR subsequently merged to main with fixes applied
+
+- **[import-workflow-v2-verdict.md](import-workflow-v2-verdict.md)** — QA verdict: method selection, CSV upload, URL entry, pipeline/API; DEF-001 (dead success step), DEF-002 (missing aria-label), DEF-003 (generic CSV rejection message)
 
 ---
 
@@ -26,9 +35,18 @@ All QA documents in this directory use `development/frontend` throughout.
 
 ---
 
+## Sprint 3 Gap Audit
+
+**Status:** Pre-fix gap analysis identifying unimplemented acceptance criteria across Stories 3.2, 3.4, 3.5
+
+- **[sprint-3-gap-audit.md](sprint-3-gap-audit.md)** — Gap audit: Story 3.1 PASS, Story 3.2 PARTIAL (missing badge labels, settings route), Story 3.4 PARTIAL (StatusRing missing), Story 3.5 PARTIAL (missing net gain, sort options); proposed fix batches
+
+---
+
 ## Backend PR #41 — Backend WebSocket Import Pipeline (Stories 1-3)
 
 **Status:** PASS — READY TO SHIP | 0 Blocking Defects | 3 Low-Severity Observations
+**Note:** Backend later removed in PR #60 (go fully serverless on Vercel). Historical record only.
 
 - **[backend-pr41-verdict.md](backend-pr41-verdict.md)** — Full QA verdict: code review, build validation, health endpoint, HTTP error-path tests, security review
 

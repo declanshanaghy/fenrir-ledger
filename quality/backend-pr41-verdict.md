@@ -5,6 +5,8 @@
 **Reviewer:** Loki (QA Tester)
 **PR:** #41 feat: backend server with WebSocket import pipeline
 
+> **⚠️ Deployment status update (2026-03-01):** The dedicated Node/Hono backend validated in this report was subsequently removed in PR #60 ("remove Fly.io backend, go fully serverless on Vercel"). The WebSocket import pipeline and `fly.toml` described below no longer exist in the codebase. This document is retained as a historical record of the Sprint 5 backend scaffold QA.
+
 ---
 
 ## QA Verdict: PASS
