@@ -1,9 +1,13 @@
 "use client";
 
 /**
- * ImportWizard — multi-step Google Sheets import modal.
+ * ImportWizard -- multi-step import modal with three import paths.
  *
- * Steps: entry → loading → preview → error → success
+ * Steps: method -> url-entry|csv-upload -> loading -> preview -> dedup -> error -> success
+ *
+ * Path A: Google Sheets URL ("Share a Scroll")
+ * Path B: Google Drive Picker ("Browse the Archives") — disabled, coming soon
+ * Path C: CSV file upload ("Deliver a Rune-Stone")
  *
  * Uses shadcn Dialog with the project's standard modal sizing:
  * w-[92vw] max-w-[680px] max-h-[90vh] (team norm for mobile-friendly modals).
@@ -24,6 +28,12 @@ import { useSheetImport } from "@/hooks/useSheetImport";
 import { findDuplicates } from "@/lib/sheets/dedup";
 import type { DedupResult } from "@/lib/sheets/dedup";
 import { ImportDedupStep } from "@/components/sheets/ImportDedupStep";
+import { StepIndicator } from "@/components/sheets/StepIndicator";
+import { MethodSelection } from "@/components/sheets/MethodSelection";
+import { ShareUrlEntry } from "@/components/sheets/ShareUrlEntry";
+import { CsvUpload } from "@/components/sheets/CsvUpload";
+import { SafetyBanner } from "@/components/sheets/SafetyBanner";
+import type { ImportMethod } from "@/components/sheets/MethodSelection";
 import type { Card } from "@/lib/types";
 import type { SheetImportErrorCode } from "@/lib/sheets/types";
 
@@ -37,12 +47,13 @@ interface ImportWizardProps {
 /** Human-readable error messages keyed by error code */
 const ERROR_MESSAGES: Record<SheetImportErrorCode, string> = {
   INVALID_URL: "The URL doesn't look like a Google Sheets link.",
+  INVALID_CSV: "The uploaded CSV file could not be processed.",
   SHEET_NOT_PUBLIC:
     "This spreadsheet isn't publicly accessible. Share it with 'Anyone with the link can view'.",
-  NO_CARDS_FOUND: "No credit card data was found in the spreadsheet.",
+  NO_CARDS_FOUND: "No credit card data was found in the source.",
   PARSE_ERROR: "The card data couldn't be parsed correctly.",
   ANTHROPIC_ERROR: "Our card extraction service is temporarily unavailable.",
-  FETCH_ERROR: "Couldn't reach the spreadsheet. Check the URL and try again.",
+  FETCH_ERROR: "Couldn't reach the import service. Check your connection and try again.",
 };
 
 /** Format cents as a dollar amount string */
@@ -63,6 +74,28 @@ function formatDate(iso: string): string {
   }
 }
 
+/** Map ImportStep to StepIndicator's 0-3 index. */
+function getStepIndex(step: string): number {
+  switch (step) {
+    case "method":
+      return 0;
+    case "url-entry":
+    case "csv-upload":
+      return 1;
+    case "loading":
+      return 1;
+    case "preview":
+    case "dedup":
+      return 2;
+    case "error":
+      return 2;
+    case "success":
+      return 3;
+    default:
+      return 0;
+  }
+}
+
 export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: ImportWizardProps) {
   const {
     step,
@@ -71,27 +104,47 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
     setUrl,
     cards,
     warning,
+    sensitiveDataWarning,
     errorCode,
     errorMessage,
     submit,
+    submitCsv,
     cancel,
     reset,
   } = useSheetImport();
 
   const [dedupResult, setDedupResult] = useState<DedupResult | null>(null);
+  const [importMethod, setImportMethod] = useState<ImportMethod | null>(null);
+  /** Cards to import, stored when transitioning to success step. */
+  const [pendingImport, setPendingImport] = useState<Omit<Card, "householdId">[] | null>(null);
 
   // URL validation: must contain Google Sheets domain
   const isValidUrl = url.includes("docs.google.com/spreadsheets");
   const showUrlError = url.length > 0 && !isValidUrl;
 
-  // Auto-close after 1.5s on success
+  // On success step: invoke onConfirmImport with pending cards, then auto-close after 1.5s
   useEffect(() => {
-    if (step !== "success") return;
+    if (step !== "success" || !pendingImport) return;
+
+    // Commit the import to the parent
+    onConfirmImport(pendingImport);
+    setPendingImport(null);
+
     const timer = setTimeout(() => {
       onClose();
     }, 1500);
     return () => clearTimeout(timer);
-  }, [step, onClose]);
+  }, [step, pendingImport, onConfirmImport, onClose]);
+
+  function handleSelectMethod(method: ImportMethod) {
+    setImportMethod(method);
+    if (method === "url") {
+      setStep("url-entry");
+    } else if (method === "csv") {
+      setStep("csv-upload");
+    }
+    // "picker" is disabled, no action
+  }
 
   function handleConfirm() {
     const result = findDuplicates(cards, existingCards);
@@ -99,90 +152,100 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
       setDedupResult(result);
       setStep("dedup");
     } else {
-      onConfirmImport(cards);
+      setPendingImport(cards);
+      setStep("success");
     }
   }
 
   function handleSkipDuplicates() {
     if (!dedupResult) return;
-    onConfirmImport(dedupResult.unique);
+    setPendingImport(dedupResult.unique);
+    setStep("success");
   }
 
   function handleImportAll() {
-    onConfirmImport(cards);
+    setPendingImport(cards);
+    setStep("success");
+  }
+
+  function handleBackToMethod() {
+    setStep("method");
+    setImportMethod(null);
   }
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent
         className="w-[92vw] max-w-[680px] max-h-[90vh] overflow-hidden flex flex-col border-border bg-background"
-        aria-label="Google Sheets Import Wizard"
+        aria-label="Import Wizard"
       >
+        {/* Step indicator */}
+        <StepIndicator activeStep={getStepIndex(step)} />
+
         {/* aria-live region announces step changes to screen readers */}
         <div aria-live="polite" className="sr-only">
-          {step === "entry" && "Step 1: Enter Google Sheets URL"}
-          {step === "loading" && "Loading: fetching cards from spreadsheet"}
+          {step === "method" && "Step 1: Choose import method"}
+          {step === "url-entry" && "Step 2: Enter Google Sheets URL"}
+          {step === "csv-upload" && "Step 2: Upload CSV file"}
+          {step === "loading" && "Loading: extracting cards from your data"}
           {step === "preview" && `Preview: ${cards.length} cards ready to import`}
           {step === "dedup" && `Duplicates found: ${dedupResult?.duplicates.length ?? 0} duplicate cards detected`}
           {step === "error" && "Error: import failed"}
           {step === "success" && "Success: cards imported"}
         </div>
 
-        {/* ── Entry step ─────────────────────────────────────────────── */}
-        {step === "entry" && (
+        {/* ── Method selection step ──────────────────────────────── */}
+        {step === "method" && (
           <>
             <DialogHeader>
               <DialogTitle className="font-display text-gold tracking-wide text-lg">
-                Import from Google Sheets
+                Import Cards
               </DialogTitle>
             </DialogHeader>
-
-            <div className="flex flex-col gap-4 py-2">
-              <p className="font-body text-muted-foreground text-sm">
-                Paste the URL of a publicly shared Google Sheets document containing
-                your credit cards.
-              </p>
-
-              <div className="flex flex-col gap-1">
-                <input
-                  id="sheets-url"
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="Paste your Google Sheets URL..."
-                  className="h-11 w-full rounded-sm border border-border bg-background px-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && isValidUrl) submit();
-                  }}
-                  autoFocus
-                />
-                {showUrlError && (
-                  <p className="text-xs text-red-400 font-body">
-                    Enter a valid Google Sheets URL
-                  </p>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={submit}
-                  disabled={!isValidUrl}
-                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors bg-primary text-primary-foreground hover:bg-gold-bright disabled:opacity-40 disabled:cursor-not-allowed h-11 px-6 min-w-[44px]"
-                >
-                  Import
-                </button>
-              </div>
-            </div>
+            <MethodSelection onSelectMethod={handleSelectMethod} />
           </>
         )}
 
-        {/* ── Loading step ───────────────────────────────────────────── */}
+        {/* ── URL entry step ────────────────────────────────────── */}
+        {step === "url-entry" && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="font-display text-gold tracking-wide text-lg">
+                Share a Scroll
+              </DialogTitle>
+            </DialogHeader>
+            <ShareUrlEntry
+              url={url}
+              setUrl={setUrl}
+              onSubmit={submit}
+              onBack={handleBackToMethod}
+              isValid={isValidUrl}
+              showError={showUrlError}
+            />
+          </>
+        )}
+
+        {/* ── CSV upload step ───────────────────────────────────── */}
+        {step === "csv-upload" && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="font-display text-gold tracking-wide text-lg">
+                Deliver a Rune-Stone
+              </DialogTitle>
+            </DialogHeader>
+            <CsvUpload
+              onSubmit={submitCsv}
+              onBack={handleBackToMethod}
+            />
+          </>
+        )}
+
+        {/* ── Loading step ──────────────────────────────────────── */}
         {step === "loading" && (
           <>
             <DialogHeader>
               <DialogTitle className="font-display text-gold tracking-wide text-lg">
-                Fetching cards...
+                Deciphering the runes...
               </DialogTitle>
             </DialogHeader>
 
@@ -195,7 +258,9 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               />
 
               <p className="font-body text-muted-foreground text-sm italic text-center">
-                Reading the runes from your spreadsheet...
+                {importMethod === "csv"
+                  ? "Reading the inscriptions from your rune-stone..."
+                  : "Reading the runes from your spreadsheet..."}
               </p>
 
               <button
@@ -209,7 +274,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
           </>
         )}
 
-        {/* ── Preview step ───────────────────────────────────────────── */}
+        {/* ── Preview step ──────────────────────────────────────── */}
         {step === "preview" && (
           <>
             <DialogHeader>
@@ -224,7 +289,12 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
             </DialogHeader>
 
             <div className="flex flex-col gap-3 overflow-hidden flex-1">
-              {/* Warning banner */}
+              {/* Sensitive data warning */}
+              {sensitiveDataWarning && (
+                <SafetyBanner variant="sensitive-data" />
+              )}
+
+              {/* CSV/fetch warning banner */}
               {warning && (
                 <div className="rounded-sm border border-amber-500/40 bg-amber-500/10 px-3 py-2">
                   <p className="text-xs font-body text-amber-400">{warning}</p>
@@ -282,7 +352,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
           </>
         )}
 
-        {/* ── Dedup step ─────────────────────────────────────────────── */}
+        {/* ── Dedup step ────────────────────────────────────────── */}
         {step === "dedup" && dedupResult && (
           <ImportDedupStep
             duplicates={dedupResult.duplicates}
@@ -293,7 +363,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
           />
         )}
 
-        {/* ── Error step ─────────────────────────────────────────────── */}
+        {/* ── Error step ────────────────────────────────────────── */}
         {step === "error" && (
           <>
             <DialogHeader>
@@ -327,7 +397,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
           </>
         )}
 
-        {/* ── Success step ───────────────────────────────────────────── */}
+        {/* ── Success step ──────────────────────────────────────── */}
         {step === "success" && (
           <>
             <DialogHeader>
@@ -344,6 +414,13 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
                 The runes have been inscribed in the ledger. Your cards have been
                 added to the household.
               </p>
+
+              {/* Post-share reminder for URL imports */}
+              {importMethod === "url" && (
+                <div className="w-full">
+                  <SafetyBanner variant="post-share" />
+                </div>
+              )}
             </div>
           </>
         )}
