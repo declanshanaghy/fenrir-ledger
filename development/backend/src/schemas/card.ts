@@ -13,29 +13,33 @@ import { z } from "zod";
 /**
  * Zod schema for sign-up bonus details attached to a card.
  */
-export const SignUpBonusSchema = z.object({
-  type: z.enum(["points", "miles", "cashback"]),
-  amount: z.number(),
-  spendRequirement: z.number().int().min(0),
-  deadline: z.string(),
-  met: z.boolean(),
-});
+export const SignUpBonusSchema = z
+  .object({
+    type: z.enum(["points", "miles", "cashback"]),
+    amount: z.number(),
+    spendRequirement: z.number().int().min(0),
+    deadline: z.string(),
+    met: z.boolean(),
+  })
+  .openapi("SignUpBonus");
 
 /**
  * Zod schema for a single extracted card.
  * Ported from the frontend route: development/frontend/src/app/api/sheets/import/route.ts
  */
-export const CardSchema = z.object({
-  issuerId: z.string(),
-  cardName: z.string(),
-  openDate: z.string(),
-  creditLimit: z.number().int().min(0),
-  annualFee: z.number().int().min(0),
-  annualFeeDate: z.string(),
-  promoPeriodMonths: z.number().int().min(0),
-  signUpBonus: SignUpBonusSchema.nullable(),
-  notes: z.string(),
-});
+export const CardSchema = z
+  .object({
+    issuerId: z.string(),
+    cardName: z.string(),
+    openDate: z.string(),
+    creditLimit: z.number().int().min(0),
+    annualFee: z.number().int().min(0),
+    annualFeeDate: z.string(),
+    promoPeriodMonths: z.number().int().min(0),
+    signUpBonus: SignUpBonusSchema.nullable(),
+    notes: z.string(),
+  })
+  .openapi("Card");
 
 /**
  * Zod schema for an array of extracted cards.
@@ -50,4 +54,4 @@ export const ImportedCardSchema = CardSchema.extend({
   status: z.literal("active"),
   createdAt: z.string(),
   updatedAt: z.string(),
-});
+}).openapi("ImportedCard");

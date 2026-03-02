@@ -34,6 +34,27 @@ const importApp = new OpenAPIHono({
 });
 
 /**
+ * Global error handler for the import sub-app.
+ *
+ * Catches errors thrown before the route handler runs (e.g. Hono's built-in
+ * JSON body parser rejecting malformed payloads). Without this, those errors
+ * surface as `text/plain` 400 responses, violating the API contract that all
+ * errors return `{ error: { code, message } }`.
+ */
+importApp.onError((err, c) => {
+  if (err instanceof Error && err.message.includes("Malformed JSON")) {
+    return c.json(
+      { error: { code: "INVALID_URL" as const, message: "Request body must be valid JSON." } },
+      400,
+    );
+  }
+  return c.json(
+    { error: { code: "ANTHROPIC_ERROR" as const, message: "Internal server error." } },
+    500,
+  );
+});
+
+/**
  * Request body schema for the import endpoint.
  */
 const ImportRequestSchema = z.object({

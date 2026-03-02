@@ -42,6 +42,41 @@ app.route("/", health);
 app.route("/", importRoute);
 
 // OpenAPI 3.1.0 specification endpoint
+//
+// The info object includes a custom `x-websocket-messages` extension for
+// machine-readable WebSocket message documentation, alongside the human-readable
+// prose in the description field.  Because @hono/zod-openapi types do not include
+// arbitrary `x-` extensions, we spread the extension in via a type assertion.
+const websocketExtension = {
+  "x-websocket-messages": {
+    endpoint: "ws://localhost:9753/",
+    client_messages: {
+      import_start: { type: "import_start", payload: { url: "string" } },
+      import_cancel: { type: "import_cancel" },
+    },
+    server_messages: {
+      import_phase: {
+        type: "import_phase",
+        phase: "fetching_sheet | extracting | validating | done",
+      },
+      import_progress: {
+        type: "import_progress",
+        rowsExtracted: "number",
+        totalRows: "number",
+      },
+      import_complete: {
+        type: "import_complete",
+        cards: "ImportedCard[]",
+      },
+      import_error: {
+        type: "import_error",
+        code: "ImportErrorCode",
+        message: "string",
+      },
+    },
+  },
+};
+
 app.doc31("/openapi.json", {
   openapi: "3.1.0",
   info: {
@@ -68,7 +103,8 @@ app.doc31("/openapi.json", {
       "Import finished successfully with extracted card data.\n" +
       "- **`import_error`** `{ type: \"import_error\", code: ImportErrorCode, message: string }` -- " +
       "Import failed. Error codes: INVALID_URL, SHEET_NOT_PUBLIC, FETCH_ERROR, ANTHROPIC_ERROR, PARSE_ERROR, NO_CARDS_FOUND.",
-  },
+    ...websocketExtension,
+  } as typeof websocketExtension & { title: string; version: string; description: string },
   servers: [
     {
       url: "http://localhost:9753",
