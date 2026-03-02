@@ -14,59 +14,40 @@ ALLOWED_RM_DIRECTORIES = [
     'trees/',
 ]
 
-def is_path_in_allowed_directory(command, allowed_dirs):
+def _split_compound_command(command):
     """
-    Check if the rm command targets paths exclusively within allowed directories.
-    Returns True if all paths in the command are within allowed directories.
+    Split a compound shell command into individual sub-commands.
+    Handles &&, ||, ; separators and pipes (only last pipe segment matters for rm).
     """
-    # Extract the path portion after rm and its flags
-    # Pattern: rm [flags] path1 path2 ...
-    path_pattern = r'rm\s+(?:-[\w]+\s+|--[\w-]+\s+)*(.+)$'
-    match = re.search(path_pattern, command, re.IGNORECASE)
+    # Split on &&, ||, ;
+    parts = re.split(r'\s*(?:&&|\|\||;)\s*', command)
+    result = []
+    for part in parts:
+        # For piped commands, only the last segment can run rm
+        pipe_parts = part.split('|')
+        result.append(pipe_parts[-1].strip())
+    return result
 
-    if not match:
-        return False
-
-    path_str = match.group(1).strip()
-
-    # Split by spaces to get individual paths (simple approach)
-    # This might not handle all edge cases but works for common usage
-    paths = path_str.split()
-
-    if not paths:
-        return False
-
-    # Check if all paths are within allowed directories
-    for path in paths:
-        # Remove quotes
-        path = path.strip('\'"')
-
-        # Skip if empty
-        if not path:
-            continue
-
-        # Check if this path is within any allowed directory
-        is_allowed = False
-        for allowed_dir in allowed_dirs:
-            # Check various formats:
-            # - trees/something
-            # - ./trees/something
-            if path.startswith(allowed_dir) or path.startswith('./' + allowed_dir):
-                is_allowed = True
-                break
-
-        # If any path is not in allowed directories, return False
-        if not is_allowed:
-            return False
-
-    # All paths are within allowed directories
-    return True
 
 def is_dangerous_rm_command(command, allowed_dirs=None):
     """
-    Comprehensive detection of dangerous rm commands.
-    Matches various forms of rm -rf and similar destructive patterns.
-    Returns False if the command targets only allowed directories.
+    Detect dangerous rm commands that could cause mass data loss.
+
+    Safe (returns False):
+    - git rm / git clean (version-controlled operations)
+    - rm file.txt (single file delete, no recursive flag)
+    - rm -rf trees/... (allowed directory)
+
+    Dangerous (returns True):
+    - rm -rf / (catastrophic)
+    - rm -rf ~ (home directory)
+    - rm -rf . (current directory)
+    - rm -rf development/ (bulk directory delete outside allowed dirs)
+
+    The old implementation used regex patterns like r'rm\\s+.*-[a-z]*r' which
+    falsely matched flag-like sequences inside filenames (e.g. the '-restructure'
+    in 'dev-setup-restructure-orchestration.md' looked like a '-r' flag).
+    This rewrite properly parses flags by splitting tokens.
 
     Args:
         command: The bash command to check
@@ -78,57 +59,56 @@ def is_dangerous_rm_command(command, allowed_dirs=None):
     if allowed_dirs is None:
         allowed_dirs = []
 
-    # Normalize command by removing extra spaces and converting to lowercase
-    normalized = ' '.join(command.lower().split())
+    sub_commands = _split_compound_command(command)
 
-    # Pattern 1: Standard rm -rf variations
-    patterns = [
-        r'\brm\s+.*-[a-z]*r[a-z]*f',  # rm -rf, rm -fr, rm -Rf, etc.
-        r'\brm\s+.*-[a-z]*f[a-z]*r',  # rm -fr variations
-        r'\brm\s+--recursive\s+--force',  # rm --recursive --force
-        r'\brm\s+--force\s+--recursive',  # rm --force --recursive
-        r'\brm\s+-r\s+.*-f',  # rm -r ... -f
-        r'\brm\s+-f\s+.*-r',  # rm -f ... -r
-    ]
+    for subcmd in sub_commands:
+        normalized = ' '.join(subcmd.lower().split())
 
-    # Check for dangerous patterns
-    is_potentially_dangerous = False
-    for pattern in patterns:
-        if re.search(pattern, normalized):
-            is_potentially_dangerous = True
-            break
+        # Git commands are always safe — they're version-controlled operations
+        # (git rm, git clean, etc.)
+        if normalized.startswith('git '):
+            continue
 
-    # If not found in Pattern 1, check Pattern 2
-    if not is_potentially_dangerous:
-        # Pattern 2: Check for rm with recursive flag targeting dangerous paths
-        dangerous_paths = [
-            r'/',           # Root directory
-            r'/\*',         # Root with wildcard
-            r'~',           # Home directory
-            r'~/',          # Home directory path
-            r'\$HOME',      # Home environment variable
-            r'\.\.',        # Parent directory references
-            r'\*',          # Wildcards in general rm -rf context
-            r'\.',          # Current directory
-            r'\.\s*$',      # Current directory at end of command
-        ]
+        # Find rm invocations: as the main command or after sudo/xargs/etc.
+        rm_match = re.search(r'\brm\s+(.+)', normalized)
+        if not rm_match:
+            continue
 
-        if re.search(r'\brm\s+.*-[a-z]*r', normalized):  # If rm has recursive flag
-            for path in dangerous_paths:
-                if re.search(path, normalized):
-                    is_potentially_dangerous = True
-                    break
+        # Parse tokens into flags and paths
+        args_str = rm_match.group(1).strip()
+        tokens = args_str.split()
 
-    # If not potentially dangerous at all, it's safe
-    if not is_potentially_dangerous:
-        return False
+        short_flags = ''
+        long_flags = []
+        paths = []
 
-    # It's potentially dangerous - check if targeting only allowed directories
-    if allowed_dirs and is_path_in_allowed_directory(command, allowed_dirs):
-        return False  # Allowed directory, so not dangerous
+        for token in tokens:
+            if token.startswith('--'):
+                long_flags.append(token)
+            elif token.startswith('-'):
+                short_flags += token[1:]  # accumulate flag chars
+            else:
+                paths.append(token.strip('\'"'))
 
-    # Dangerous and not in allowed directories
-    return True
+        has_recursive = 'r' in short_flags or '--recursive' in long_flags
+
+        # No recursive flag → can only delete individual files → safe
+        if not has_recursive:
+            continue
+
+        # Has recursive flag — check if ALL paths are in allowed directories
+        if paths and allowed_dirs:
+            all_allowed = all(
+                any(p.startswith(d) or p.startswith('./' + d) for d in allowed_dirs)
+                for p in paths
+            )
+            if all_allowed:
+                continue
+
+        # Recursive delete outside allowed directories → dangerous
+        return True
+
+    return False
 
 def is_env_file_access(tool_name, tool_input):
     """
