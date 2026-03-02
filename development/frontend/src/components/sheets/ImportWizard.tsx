@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { KNOWN_ISSUERS } from "@/lib/constants";
 import { useSheetImport } from "@/hooks/useSheetImport";
+import { usePickerConfig } from "@/hooks/usePickerConfig";
 import { findDuplicates } from "@/lib/sheets/dedup";
 import type { DedupResult } from "@/lib/sheets/dedup";
 import { ImportDedupStep } from "@/components/sheets/ImportDedupStep";
@@ -114,6 +115,8 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
     cancel,
     reset,
   } = useSheetImport();
+
+  const { pickerApiKey } = usePickerConfig();
 
   const [dedupResult, setDedupResult] = useState<DedupResult | null>(null);
   const [importMethod, setImportMethod] = useState<ImportMethod | null>(null);
@@ -206,7 +209,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
                 Import Cards
               </DialogTitle>
             </DialogHeader>
-            <MethodSelection onSelectMethod={handleSelectMethod} />
+            <MethodSelection onSelectMethod={handleSelectMethod} pickerApiKey={pickerApiKey} />
           </>
         )}
 
@@ -255,6 +258,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
             <PickerStep
               onSubmitCsv={submitCsv}
               onBack={handleBackToMethod}
+              pickerApiKey={pickerApiKey}
             />
           </>
         )}

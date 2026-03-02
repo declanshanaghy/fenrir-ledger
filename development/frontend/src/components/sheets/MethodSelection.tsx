@@ -21,6 +21,8 @@ export type ImportMethod = "url" | "picker" | "csv";
 interface MethodSelectionProps {
   /** Callback when the user selects an import method. */
   onSelectMethod: (method: ImportMethod) => void;
+  /** Google Picker API key, fetched server-side by the parent */
+  pickerApiKey?: string | null;
 }
 
 interface MethodCardDef {
@@ -93,10 +95,8 @@ function UploadIcon() {
   );
 }
 
-const PICKER_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PICKER_API_KEY;
-
-function buildMethods(isAuthenticated: boolean): MethodCardDef[] {
-  const pickerDisabled = !isAuthenticated || !PICKER_API_KEY;
+function buildMethods(isAuthenticated: boolean, pickerApiKey: string | null): MethodCardDef[] {
+  const pickerDisabled = !isAuthenticated || !pickerApiKey;
 
   const pickerCard: MethodCardDef = {
     id: "picker",
@@ -107,7 +107,7 @@ function buildMethods(isAuthenticated: boolean): MethodCardDef[] {
     disabled: pickerDisabled,
   };
 
-  if (!PICKER_API_KEY) {
+  if (!pickerApiKey) {
     pickerCard.disabledLabel = "Configuration required";
   } else if (!isAuthenticated) {
     pickerCard.disabledLabel = "Sign in to browse your Google Drive";
@@ -134,10 +134,10 @@ function buildMethods(isAuthenticated: boolean): MethodCardDef[] {
   ];
 }
 
-export function MethodSelection({ onSelectMethod }: MethodSelectionProps) {
+export function MethodSelection({ onSelectMethod, pickerApiKey = null }: MethodSelectionProps) {
   const { status } = useAuthContext();
   const isAuthenticated = status === "authenticated";
-  const METHODS = useMemo(() => buildMethods(isAuthenticated), [isAuthenticated]);
+  const METHODS = useMemo(() => buildMethods(isAuthenticated, pickerApiKey), [isAuthenticated, pickerApiKey]);
   const listboxRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
