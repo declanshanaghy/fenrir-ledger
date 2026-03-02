@@ -3,12 +3,13 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { Card } from "@/lib/types";
 import type { SheetImportErrorCode } from "@/lib/sheets/types";
-import { getSession } from "@/lib/auth/session";
+import { ensureFreshToken } from "@/lib/auth/refresh-session";
 
 export type ImportStep =
   | "method"
   | "url-entry"
   | "csv-upload"
+  | "picker"
   | "loading"
   | "preview"
   | "dedup"
@@ -55,35 +56,95 @@ export function useSheetImport(): UseSheetImportReturn {
     };
   }, []);
 
-  /** Build auth headers for the import API call. */
-  function buildHeaders(): Record<string, string> {
-    const session = getSession();
+  /**
+   * Build auth headers with a fresh token (DEF-003).
+   * Silently refreshes the id_token if it's expired or close to expiry.
+   */
+  async function buildHeaders(): Promise<Record<string, string>> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    if (session?.id_token) {
-      headers["Authorization"] = `Bearer ${session.id_token}`;
+    const token = await ensureFreshToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
     return headers;
   }
 
-  /** Shared response handler for both URL and CSV import paths. */
+  /**
+   * Shared response handler for both URL and CSV import paths (DEF-002 fix).
+   *
+   * Handles two error response shapes:
+   *   - requireAuth: { error: "missing_token", error_description: "..." }
+   *   - import pipeline: { error: { code: "...", message: "..." } }
+   */
   const handleResponse = useCallback(
     async (response: Response) => {
-      const data = (await response.json()) as
-        | { cards: Omit<Card, "householdId">[]; warning?: string; sensitiveDataWarning?: boolean }
-        | { error: { code: SheetImportErrorCode; message: string } };
-
-      if ("error" in data) {
-        setErrorCode(data.error.code);
-        setErrorMessage(data.error.message);
+      // DEF-002: Handle HTTP-level auth errors before parsing body
+      if (response.status === 401) {
+        setErrorCode("FETCH_ERROR");
+        setErrorMessage(
+          "Your session has expired. Please sign in again to import."
+        );
         setStep("error");
-      } else {
-        setCards(data.cards);
-        setWarning(data.warning);
-        setSensitiveDataWarning(data.sensitiveDataWarning ?? false);
-        setStep("preview");
+        return;
       }
+
+      if (response.status === 403 && !response.headers.get("content-type")?.includes("application/json")) {
+        setErrorCode("FETCH_ERROR");
+        setErrorMessage("Access denied. Please sign in again.");
+        setStep("error");
+        return;
+      }
+
+      let data: unknown;
+      try {
+        data = await response.json();
+      } catch {
+        setErrorCode("FETCH_ERROR");
+        setErrorMessage("Received an invalid response from the server.");
+        setStep("error");
+        return;
+      }
+
+      // Check for the import pipeline error shape: { error: { code, message } }
+      if (
+        data &&
+        typeof data === "object" &&
+        "error" in data
+      ) {
+        const err = (data as Record<string, unknown>).error;
+
+        if (err && typeof err === "object" && "code" in err && "message" in err) {
+          // Standard SheetImportError shape
+          const importErr = err as { code: SheetImportErrorCode; message: string };
+          setErrorCode(importErr.code);
+          setErrorMessage(importErr.message);
+        } else {
+          // Auth error shape: { error: "string", error_description: "string" }
+          const desc = (data as Record<string, unknown>).error_description;
+          setErrorCode("FETCH_ERROR");
+          setErrorMessage(
+            typeof desc === "string"
+              ? desc
+              : "An authentication error occurred. Please sign in again."
+          );
+        }
+
+        setStep("error");
+        return;
+      }
+
+      // Success path
+      const success = data as {
+        cards: Omit<Card, "householdId">[];
+        warning?: string;
+        sensitiveDataWarning?: boolean;
+      };
+      setCards(success.cards);
+      setWarning(success.warning);
+      setSensitiveDataWarning(success.sensitiveDataWarning ?? false);
+      setStep("preview");
     },
     []
   );
@@ -118,9 +179,10 @@ export function useSheetImport(): UseSheetImportReturn {
     }, IMPORT_TIMEOUT_MS);
 
     try {
+      const headers = await buildHeaders();
       const response = await fetch("/api/sheets/import", {
         method: "POST",
-        headers: buildHeaders(),
+        headers,
         body: JSON.stringify({ url }),
         signal: controller.signal,
       });
@@ -148,9 +210,10 @@ export function useSheetImport(): UseSheetImportReturn {
       }, IMPORT_TIMEOUT_MS);
 
       try {
+        const headers = await buildHeaders();
         const response = await fetch("/api/sheets/import", {
           method: "POST",
-          headers: buildHeaders(),
+          headers,
           body: JSON.stringify({ csv }),
           signal: controller.signal,
         });

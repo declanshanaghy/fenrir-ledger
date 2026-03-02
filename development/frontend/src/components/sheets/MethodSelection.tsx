@@ -12,7 +12,8 @@
  * role="listbox" with role="option" on each card.
  */
 
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useMemo } from "react";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { SafetyBanner } from "./SafetyBanner";
 
 export type ImportMethod = "url" | "picker" | "csv";
@@ -92,35 +93,51 @@ function UploadIcon() {
   );
 }
 
-const METHODS: MethodCardDef[] = [
-  {
-    id: "url",
-    title: "Share a Scroll",
-    subtitle: "Google Sheets URL",
-    description: "Paste a link to a publicly shared spreadsheet.",
-    icon: <LinkIcon />,
-    disabled: false,
-  },
-  {
+const PICKER_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PICKER_API_KEY;
+
+function buildMethods(isAuthenticated: boolean): MethodCardDef[] {
+  const pickerDisabled = !isAuthenticated || !PICKER_API_KEY;
+
+  const pickerCard: MethodCardDef = {
     id: "picker",
     title: "Browse the Archives",
     subtitle: "Google Drive Picker",
     description: "Select a spreadsheet from your Drive.",
     icon: <FolderIcon />,
-    disabled: true,
-    disabledLabel: "Coming soon",
-  },
-  {
-    id: "csv",
-    title: "Deliver a Rune-Stone",
-    subtitle: "CSV File Upload",
-    description: "Upload a CSV file exported from any spreadsheet.",
-    icon: <UploadIcon />,
-    disabled: false,
-  },
-];
+    disabled: pickerDisabled,
+  };
+
+  if (!PICKER_API_KEY) {
+    pickerCard.disabledLabel = "Configuration required";
+  } else if (!isAuthenticated) {
+    pickerCard.disabledLabel = "Sign in to browse your Google Drive";
+  }
+
+  return [
+    {
+      id: "url",
+      title: "Share a Scroll",
+      subtitle: "Google Sheets URL",
+      description: "Paste a link to a publicly shared spreadsheet.",
+      icon: <LinkIcon />,
+      disabled: false,
+    },
+    pickerCard,
+    {
+      id: "csv",
+      title: "Deliver a Rune-Stone",
+      subtitle: "CSV File Upload",
+      description: "Upload a CSV file exported from any spreadsheet.",
+      icon: <UploadIcon />,
+      disabled: false,
+    },
+  ];
+}
 
 export function MethodSelection({ onSelectMethod }: MethodSelectionProps) {
+  const { status } = useAuthContext();
+  const isAuthenticated = status === "authenticated";
+  const METHODS = useMemo(() => buildMethods(isAuthenticated), [isAuthenticated]);
   const listboxRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -130,7 +147,7 @@ export function MethodSelection({ onSelectMethod }: MethodSelectionProps) {
     if (firstEnabled >= 0) {
       itemRefs.current[firstEnabled]?.focus();
     }
-  }, []);
+  }, [METHODS]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -173,7 +190,7 @@ export function MethodSelection({ onSelectMethod }: MethodSelectionProps) {
         itemRefs.current[nextIndex]?.focus();
       }
     },
-    [onSelectMethod]
+    [onSelectMethod, METHODS]
   );
 
   return (
@@ -194,7 +211,7 @@ export function MethodSelection({ onSelectMethod }: MethodSelectionProps) {
               itemRefs.current[index] = el;
             }}
             role="option"
-            aria-label={`${method.title}: ${method.description}${method.disabled ? " (Coming soon)" : ""}`}
+            aria-label={`${method.title}: ${method.description}${method.disabledLabel ? ` (${method.disabledLabel})` : ""}`}
             aria-selected={false}
             aria-disabled={method.disabled}
             tabIndex={method.disabled ? -1 : 0}
