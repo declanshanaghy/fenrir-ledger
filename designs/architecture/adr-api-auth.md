@@ -224,6 +224,6 @@ sequenceDiagram
 
 - [jose library](https://github.com/panva/jose) -- JOSE/JWT implementation for Node.js, browsers, Edge Runtime
 - [Google OIDC discovery](https://accounts.google.com/.well-known/openid-configuration) -- JWKS URI and issuer
-- [ADR-005](../../architecture/adrs/ADR-005-auth-architecture.md) -- PKCE auth implementation
+- [ADR-005](../../architecture/adrs/ADR-005-auth-pkce-public-client.md) -- PKCE auth implementation
 - [ADR-006](../../architecture/adrs/ADR-006-anonymous-first-auth.md) -- Anonymous-first auth model
 - [ADR-007](adr-clerk-auth.md) -- Clerk integration (deferred to GA)
