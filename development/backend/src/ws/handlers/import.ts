@@ -18,7 +18,7 @@ import type { ClientMessage, ServerMessage, ImportErrorCode } from "../../types/
 import { extractSheetId, buildCsvExportUrl } from "../../lib/sheets/parse-url.js";
 import { buildExtractionPrompt } from "../../lib/sheets/prompt.js";
 import { fetchCsv, FetchCsvError } from "../../lib/sheets/fetch-csv.js";
-import { extractCardsFromCsv } from "../../lib/anthropic/extract.js";
+import { getLlmProvider } from "../../lib/llm/index.js";
 import { config, assertConfig } from "../../config.js";
 import { CardSchema, CardsArraySchema } from "../../schemas/index.js";
 
@@ -54,19 +54,22 @@ function send(ws: WebSocket, msg: ServerMessage): void {
  * @param msg - The parsed client message
  */
 export function handleImportMessage(ws: WebSocket, msg: ClientMessage): void {
+  console.info(`[fenrir-backend] WS message received: type=${msg.type}`);
   switch (msg.type) {
     case "import_start":
+      console.info(`[fenrir-backend] Import pipeline starting for URL: ${msg.payload.url.substring(0, 60)}...`);
       void runImportPipeline(ws, msg.payload.url);
       break;
     case "import_cancel": {
       const flag = cancellationFlags.get(ws);
       if (flag) {
         flag.cancelled = true;
-        console.log("[ws:import] Import cancelled by client");
+        console.info("[fenrir-backend] Import cancelled by client");
       }
       break;
     }
     default:
+      console.error(`[fenrir-backend] Unknown WS message type:`, { type: (msg as { type: string }).type });
       send(ws, {
         type: "import_error",
         code: "INVALID_URL",
@@ -90,10 +93,13 @@ async function runImportPipeline(ws: WebSocket, url: string): Promise<void> {
   cancellationFlags.set(ws, cancelFlag);
 
   try {
+    const pipelineStart = Date.now();
     // Step 0: Validate config (ANTHROPIC_API_KEY required)
     try {
       assertConfig();
+      console.info("[fenrir-backend] Config validated: API key present");
     } catch {
+      console.error(`[fenrir-backend] Config validation failed: API key missing for provider=${config.llmProvider}`);
       send(ws, {
         type: "import_error",
         code: "ANTHROPIC_ERROR",
@@ -142,13 +148,13 @@ async function runImportPipeline(ws: WebSocket, url: string): Promise<void> {
 
     if (cancelFlag.cancelled) return;
 
-    // Step 3: Call Anthropic for extraction
+    // Step 3: Call LLM for extraction
     send(ws, { type: "import_phase", phase: "extracting" });
 
     let responseText: string;
     try {
       const prompt = buildExtractionPrompt(csv);
-      responseText = await extractCardsFromCsv(config.anthropicApiKey, prompt);
+      responseText = await getLlmProvider().extractText(prompt);
     } catch (err) {
       send(ws, {
         type: "import_error",
@@ -194,6 +200,8 @@ async function runImportPipeline(ws: WebSocket, url: string): Promise<void> {
         updatedAt: now,
       }));
 
+      const totalElapsed = Date.now() - pipelineStart;
+      console.info(`[fenrir-backend] Import pipeline complete: ${cards.length} cards extracted in ${totalElapsed}ms`);
       send(ws, { type: "import_phase", phase: "done" });
       send(ws, { type: "import_complete", cards });
     } catch (err) {

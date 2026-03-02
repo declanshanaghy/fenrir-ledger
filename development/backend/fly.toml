@@ -2,8 +2,7 @@ app = "fenrir-ledger-backend"
 primary_region = "iad"
 
 [build]
-  # Build with Node.js builder; Fly auto-detects package.json
-  builder = "heroku/buildpacks:22"
+  dockerfile = "Dockerfile"
 
 [env]
   NODE_ENV = "production"

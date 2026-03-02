@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { Card } from "@/lib/types";
 import type { SheetImportErrorCode } from "@/lib/sheets/types";
+import { getSession } from "@/lib/auth/session";
 
 export type ImportStep = "entry" | "loading" | "preview" | "dedup" | "error" | "success";
 
@@ -41,7 +42,7 @@ const WS_BACKEND_WS_URL =
 const HEALTH_CHECK_TIMEOUT_MS = 2_000;
 
 /** Overall import timeout in milliseconds. */
-const IMPORT_TIMEOUT_MS = 20_000;
+const IMPORT_TIMEOUT_MS = 90_000;
 
 export interface UseSheetImportReturn {
   step: ImportStep;
@@ -144,7 +145,7 @@ export function useSheetImport(): UseSheetImportReturn {
           } else {
             // WS was already open and messaging — this is a timeout during import
             setErrorCode("FETCH_ERROR");
-            setErrorMessage("Import timed out. Please try again.");
+            setErrorMessage("Import timed out — the extraction service didn't respond within 90 seconds. Please try again.");
             setStep("error");
           }
         }, IMPORT_TIMEOUT_MS);
@@ -233,10 +234,19 @@ export function useSheetImport(): UseSheetImportReturn {
         controller.abort();
       }, IMPORT_TIMEOUT_MS);
 
+      // Build headers with auth token if signed in (ADR-008)
+      const session = getSession();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (session?.id_token) {
+        headers["Authorization"] = `Bearer ${session.id_token}`;
+      }
+
       try {
         const response = await fetch("/api/sheets/import", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ url: sheetUrl }),
           signal: controller.signal,
         });

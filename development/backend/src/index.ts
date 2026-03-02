@@ -122,6 +122,7 @@ app.get("/docs", swaggerUI({ url: "/openapi.json" }));
 const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`[fenrir-backend] Listening on http://localhost:${info.port}`);
   console.log(`[fenrir-backend] Environment: ${config.nodeEnv}`);
+  console.log(`[fenrir-backend] LLM provider: ${config.llmProvider}`);
   console.log(`[fenrir-backend] OpenAPI spec: http://localhost:${info.port}/openapi.json`);
   console.log(`[fenrir-backend] Swagger UI:   http://localhost:${info.port}/docs`);
 }) as unknown as Server;

@@ -67,3 +67,26 @@ This repo is public. Every PR comment is world-readable.
 **If you need to give a human access to a protected preview deployment**, link to the
 plain URL only. Do not append the bypass secret. The human can obtain access through
 Vercel's dashboard or by rotating their own credentials.
+
+### API Route Auth (UNBREAKABLE RULE)
+
+**Every API route handler under `development/frontend/src/app/api/` MUST call
+`requireAuth(request)` at the top of the handler and return early if `!auth.ok`.**
+
+The only exception is `/api/auth/token` -- the OAuth token exchange proxy
+cannot require a Bearer token because the client is obtaining its token there.
+
+Pattern:
+```typescript
+import { requireAuth } from "@/lib/auth/require-auth";
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+  // auth.user is the verified Google user
+  // ... handler logic
+}
+```
+
+See ADR-008 for the rationale and `src/lib/auth/require-auth.ts` for the
+implementation.

@@ -5,11 +5,6 @@ on:
     branches-ignore: [main]
     paths:
       - 'development/frontend/**'
-      - 'static/**'
-      - 'sessions/**'
-      - '.github/workflows/**'
-      - 'vercel.json'
-      - 'quality/**'
   workflow_dispatch:
 
 permissions:
@@ -86,7 +81,6 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
           script: |
-            // Find the open PR for this branch, if any
             const { data: pulls } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -102,7 +96,6 @@ jobs:
             const prNumber = pulls[0].number;
 
             // Use the plain preview URL — never append secrets to public PR comments.
-            // This is a public repo; PR comments are world-readable.
             const previewUrl = process.env.PREVIEW_URL || '';
 
             // Build test result line

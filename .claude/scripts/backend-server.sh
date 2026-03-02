@@ -7,8 +7,17 @@
 
 set -euo pipefail
 
-PORT="${FENRIR_BACKEND_PORT:-9753}"
 BACKEND_DIR="${FENRIR_BACKEND_DIR:-$(cd "$(dirname "$0")/../../development/backend" && pwd)}"
+
+# Load .env if present (export all vars so child processes inherit them)
+if [[ -f "$BACKEND_DIR/.env" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "$BACKEND_DIR/.env"
+  set +a
+fi
+
+PORT="${FENRIR_BACKEND_PORT:-9753}"
 LOG_DIR="${BACKEND_DIR}/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="${LOG_DIR}/backend-server.log"
