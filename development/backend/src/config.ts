@@ -9,13 +9,13 @@
  */
 export const config = {
   /** Port the backend listens on. Default: 9753. Override via FENRIR_BACKEND_PORT. */
-  port: parseInt(process.env.FENRIR_BACKEND_PORT ?? "9753", 10),
+  port: parseInt(process.env.FENRIR_BACKEND_PORT || "9753", 10),
 
   /** Anthropic API key for Claude Haiku calls during sheet import. */
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
 
   /** Node environment. "development" | "production" | "test". */
-  nodeEnv: process.env.NODE_ENV ?? "development",
+  nodeEnv: process.env.NODE_ENV || "development",
 } as const;
 
 /**
