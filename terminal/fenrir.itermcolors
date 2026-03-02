@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Fenrir Ledger — Norse Terminal Palette for iTerm2
+  ==================================================
+  Import instructions:
+    1. Open iTerm2 > Settings > Profiles > Colors
+    2. Click "Color Presets..." dropdown (bottom right)
+    3. Select "Import..." and choose this file
+    4. Select "Fenrir" from the Color Presets dropdown
+
+  Palette: Saga Ledger dark Norse theme
+  Background: Void Black #07070d
+  Foreground: Parchment #f0ede4
+  Cursor: Forge Gold #c9920a
+-->
+<plist version="1.0">
+<dict>
+	<!-- ANSI 0: Void Black #07070d -->
+	<key>Ansi 0 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.02745098039215686</real>
+		<key>Green Component</key>
+		<real>0.02745098039215686</real>
+		<key>Blue Component</key>
+		<real>0.05098039215686274</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 1: Ragnarok Red #ef4444 -->
+	<key>Ansi 1 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.93725490196078431</real>
+		<key>Green Component</key>
+		<real>0.26666666666666666</real>
+		<key>Blue Component</key>
+		<real>0.26666666666666666</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 2: Asgard Teal #0a8c6e -->
+	<key>Ansi 2 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.03921568627450980</real>
+		<key>Green Component</key>
+		<real>0.54901960784313725</real>
+		<key>Blue Component</key>
+		<real>0.43137254901960786</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 3: Hati Amber #f59e0b -->
+	<key>Ansi 3 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.96078431372549020</real>
+		<key>Green Component</key>
+		<real>0.61960784313725492</real>
+		<key>Blue Component</key>
+		<real>0.04313725490196078</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 4: Deep Fjord #2563eb -->
+	<key>Ansi 4 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.14509803921568629</real>
+		<key>Green Component</key>
+		<real>0.38823529411764707</real>
+		<key>Blue Component</key>
+		<real>0.92156862745098034</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 5: Muspel Orange #c94a0a -->
+	<key>Ansi 5 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.78823529411764703</real>
+		<key>Green Component</key>
+		<real>0.29019607843137257</real>
+		<key>Blue Component</key>
+		<real>0.03921568627450980</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 6: Forge Gold #c9920a -->
+	<key>Ansi 6 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.78823529411764703</real>
+		<key>Green Component</key>
+		<real>0.57254901960784310</real>
+		<key>Blue Component</key>
+		<real>0.03921568627450980</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 7: Parchment #f0ede4 -->
+	<key>Ansi 7 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.94117647058823528</real>
+		<key>Green Component</key>
+		<real>0.92941176470588238</real>
+		<key>Blue Component</key>
+		<real>0.89411764705882357</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 8: Stone #8a8578 (Bright Black) -->
+	<key>Ansi 8 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.54117647058823526</real>
+		<key>Green Component</key>
+		<real>0.52156862745098043</real>
+		<key>Blue Component</key>
+		<real>0.47058823529411764</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 9: Light Ragnarok #f87171 (Bright Red) -->
+	<key>Ansi 9 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.97254901960784312</real>
+		<key>Green Component</key>
+		<real>0.44313725490196076</real>
+		<key>Blue Component</key>
+		<real>0.44313725490196076</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 10: Light Asgard #34d399 (Bright Green) -->
+	<key>Ansi 10 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.20392156862745098</real>
+		<key>Green Component</key>
+		<real>0.82745098039215681</real>
+		<key>Blue Component</key>
+		<real>0.60000000000000000</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 11: Light Hati #fbbf24 (Bright Yellow) -->
+	<key>Ansi 11 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.98431372549019602</real>
+		<key>Green Component</key>
+		<real>0.74901960784313726</real>
+		<key>Blue Component</key>
+		<real>0.14117647058823529</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 12: Light Fjord #60a5fa (Bright Blue) -->
+	<key>Ansi 12 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.37647058823529413</real>
+		<key>Green Component</key>
+		<real>0.64705882352941180</real>
+		<key>Blue Component</key>
+		<real>0.98039215686274506</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 13: Light Muspel #fb923c (Bright Magenta) -->
+	<key>Ansi 13 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.98431372549019602</real>
+		<key>Green Component</key>
+		<real>0.57254901960784310</real>
+		<key>Blue Component</key>
+		<real>0.23529411764705882</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 14: Light Gold #eab308 (Bright Cyan) -->
+	<key>Ansi 14 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.91764705882352937</real>
+		<key>Green Component</key>
+		<real>0.70196078431372544</real>
+		<key>Blue Component</key>
+		<real>0.03137254901960784</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- ANSI 15: Pure Parchment #faf9f6 (Bright White) -->
+	<key>Ansi 15 Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.98039215686274506</real>
+		<key>Green Component</key>
+		<real>0.97647058823529409</real>
+		<key>Blue Component</key>
+		<real>0.96470588235294119</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- Background: Void Black #07070d -->
+	<key>Background Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.02745098039215686</real>
+		<key>Green Component</key>
+		<real>0.02745098039215686</real>
+		<key>Blue Component</key>
+		<real>0.05098039215686274</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- Foreground: Parchment #f0ede4 -->
+	<key>Foreground Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.94117647058823528</real>
+		<key>Green Component</key>
+		<real>0.92941176470588238</real>
+		<key>Blue Component</key>
+		<real>0.89411764705882357</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- Cursor: Forge Gold #c9920a -->
+	<key>Cursor Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.78823529411764703</real>
+		<key>Green Component</key>
+		<real>0.57254901960784310</real>
+		<key>Blue Component</key>
+		<real>0.03921568627450980</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- Cursor Text: Void Black #07070d -->
+	<key>Cursor Text Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.02745098039215686</real>
+		<key>Green Component</key>
+		<real>0.02745098039215686</real>
+		<key>Blue Component</key>
+		<real>0.05098039215686274</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- Selection: Warm Charcoal bg #1c1917, Pure Parchment fg #faf9f6 -->
+	<key>Selected Text Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.98039215686274506</real>
+		<key>Green Component</key>
+		<real>0.97647058823529409</real>
+		<key>Blue Component</key>
+		<real>0.96470588235294119</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<key>Selection Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.10980392156862745</real>
+		<key>Green Component</key>
+		<real>0.09803921568627451</real>
+		<key>Blue Component</key>
+		<real>0.09019607843137255</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- Bold: Parchment #f0ede4 -->
+	<key>Bold Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.94117647058823528</real>
+		<key>Green Component</key>
+		<real>0.92941176470588238</real>
+		<key>Blue Component</key>
+		<real>0.89411764705882357</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+
+	<!-- Link: Deep Fjord #2563eb -->
+	<key>Link Color</key>
+	<dict>
+		<key>Red Component</key>
+		<real>0.14509803921568629</real>
+		<key>Green Component</key>
+		<real>0.38823529411764707</real>
+		<key>Blue Component</key>
+		<real>0.92156862745098034</real>
+		<key>Color Space</key>
+		<string>sRGB</string>
+	</dict>
+</dict>
+</plist>
