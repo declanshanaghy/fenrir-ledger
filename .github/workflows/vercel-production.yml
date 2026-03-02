@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'development/frontend/**'
+      - 'development/backend/**'
       - 'static/**'
       - 'sessions/**'
       - '.github/workflows/**'
