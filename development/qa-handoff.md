@@ -1,62 +1,106 @@
-# QA Handoff: Remove Fly.io Backend -- Serverless-Only
+# QA Handoff -- Terminal Skin Story 4: Install Script + Setup Guide
 
-**Branch:** `chore/remove-fly-io`
-**Date:** 2026-03-01
+**Branch:** `feat/terminal-skin-install`
+**Date:** 2026-03-02
 **Author:** FiremanDecko (Principal Engineer)
 
 ---
 
-## What Was Done
+## What Was Implemented
 
-Removed the dedicated Node/TS backend server (`development/backend/`) and all
-WebSocket import infrastructure. The Google Sheets import pipeline now runs
-exclusively as a Vercel serverless function via the Next.js API route
-`/api/sheets/import`.
+Story 4 of the Norse terminal skin: an idempotent install script and a comprehensive setup guide README.
 
----
+## Files Created
 
-## Files Deleted
-
-| Path | Description |
+| File | Description |
 |------|-------------|
-| `development/backend/` (entire directory) | Hono v4 backend server, Dockerfile, fly.toml, WebSocket handlers, import routes, LLM providers, schemas, config |
-| `.claude/scripts/backend-server.sh` | Backend server lifecycle management script |
+| `terminal/install.sh` | Idempotent bash installer -- symlinks, settings merge, shell wrapper, color instructions |
+| `terminal/README.md` | Setup guide covering all 4 skin components, rune semantics, color palette, troubleshooting |
 
-## Files Modified
+## Files Already on Main (Unchanged)
 
-| Path | Change |
-|------|--------|
-| `development/frontend/src/hooks/useSheetImport.ts` | Removed all WebSocket logic. Now a simple HTTP-only hook. |
-| `development/frontend/src/components/sheets/ImportWizard.tsx` | Removed ImportPhase import, PHASE_LABELS map. Loading step now shows static text. |
-| `development/frontend/src/app/api/sheets/import/route.ts` | Removed IMPORT_MODE/BACKEND_URL. Route now only calls importFromSheet() directly. |
-| `development/frontend/.env.example` | Removed BACKEND_URL, NEXT_PUBLIC_BACKEND_WS_URL, and IMPORT_MODE variables. |
-| `development/frontend/src/lib/sheets/import-pipeline.ts` | Updated comment. |
-| `.claude/scripts/services.sh` | Removed all backend logic. Now frontend-only wrapper. |
-| `.claude/commands/dev-server.md` | Removed backend references. |
-| `designs/architecture/adr-backend-server.md` | Added "Superseded" addendum. |
-| `designs/architecture/route-ownership.md` | Rewritten: all routes now under "Next.js (Vercel)". |
-| `designs/architecture/README.md` | Updated index. |
-| `designs/architecture/backend-implementation-plan.md` | Added archived notice. |
-| `designs/architecture/backend-ws-qa-report.md` | Added archived notice. |
-| `README.md` | Updated project description and quick-start. |
+| File | Description |
+|------|-------------|
+| `.claude/statusline-command.sh` | Norse statusline script (Story 1, PR #72) |
+| `.claude/splash.sh` | Elder Futhark splash screen (Story 2, PR #71) |
+| `terminal/fenrir.itermcolors` | iTerm2 color preset (Story 3, PR #70) |
+| `terminal/ghostty.conf` | Ghostty color config (Story 3, PR #70) |
+| `terminal/wezterm-colors.lua` | WezTerm color scheme (Story 3, PR #70) |
+| `terminal/kitty.conf` | Kitty theme file (Story 3, PR #70) |
+| `terminal/zshrc-snippet.sh` | Zsh wrapper snippet (Story 3, PR #70) |
 
 ---
 
-## Breaking Changes
+## How to Test
 
-| Change | Impact |
-|--------|--------|
-| WebSocket import removed | Import no longer streams phase-by-phase progress. |
-| `IMPORT_MODE=backend` no longer supported | The API route always runs the pipeline inline. |
-| `backend-server.sh` deleted | Use `frontend-server.sh` or `services.sh` instead. |
-| `ImportPhase` type removed | Any code importing it will fail to compile. |
-| `importPhase` removed from hook return | Any component reading it will fail to compile. |
+### Test 1: First Run (Clean State)
+
+```bash
+# Remove any existing artifacts from previous testing
+rm -f ~/.claude/statusline-command.sh ~/.claude/splash.sh
+# Remove wrapper from .zshrc if present
+sed -i '' '/# >>> fenrir-ledger claude wrapper >>>/,/# <<< fenrir-ledger claude wrapper <<</d' ~/.zshrc
+
+# Run the installer
+bash terminal/install.sh
+
+# Expected: all steps show green "+" checkmarks
+# Verify:
+ls -la ~/.claude/statusline-command.sh  # Should be symlink to repo's .claude/statusline-command.sh
+ls -la ~/.claude/splash.sh              # Should be symlink to repo's .claude/splash.sh
+jq '.statusLine' ~/.claude/settings.json  # Should show command config
+grep "fenrir-ledger claude wrapper" ~/.zshrc  # Should find guard markers
+```
+
+### Test 2: Idempotency (Second Run)
+
+```bash
+bash terminal/install.sh
+
+# Expected: steps 1-4 show grey "-" skip markers
+# No new symlinks created, no duplicate .zshrc entries
+```
+
+### Test 3: plutil Lint
+
+```bash
+plutil -lint terminal/fenrir.itermcolors
+# Expected: OK
+```
+
+### Test 4: Shell Wrapper Function
+
+```bash
+source ~/.zshrc
+type fenrir-claude  # Should show function definition
+type claude         # Should show alias to fenrir-claude
+```
+
+### Test 5: README Completeness
+
+Verify `terminal/README.md` covers:
+- [ ] Overview of all components
+- [ ] Prerequisites (jq, Unicode terminal)
+- [ ] Quick install instructions
+- [ ] Manual setup for statusline, splash, color palette (all 4 emulators)
+- [ ] Rune semantics reference table (8 runes)
+- [ ] Norse color palette table (special + 16 ANSI colors)
+- [ ] Cost and context tier color tables
+- [ ] Troubleshooting section (rune rendering, narrow terminal, no color, etc.)
+- [ ] Uninstall instructions
 
 ---
 
-## What Was NOT Changed
+## Known Limitations
 
-- Import pipeline (`import-pipeline.ts`) -- untouched
-- Auth system -- untouched
-- Card types, storage, card-utils -- untouched
-- Frontend-server.sh -- untouched
+- The install script targets zsh only. Bash users need to manually source the snippet in `.bashrc`.
+- The symlinks point to the absolute path of the repo clone. If the repo moves, symlinks break (re-run the installer from the new location).
+- Color palette import for iTerm2 is manual (cannot be automated without AppleScript).
+- The settings merge preserves existing `statusLine` config -- if someone already has a different statusline command, the script will skip (not overwrite). This is intentional for safety.
+
+## Test Focus Areas
+
+- Idempotency: run the script 3+ times, verify no duplicates or errors
+- Backup behavior: place a different file at `~/.claude/statusline-command.sh`, verify it gets backed up with timestamp
+- Settings merge: verify `jq` correctly merges into existing settings without losing other keys
+- Guard markers in `.zshrc`: verify the markers prevent duplicate appends
