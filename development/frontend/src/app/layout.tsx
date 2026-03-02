@@ -23,6 +23,7 @@ import {
   Source_Serif_4,
   JetBrains_Mono,
 } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -105,6 +106,7 @@ export default function RootLayout({
             <AppShell>{children}</AppShell>
           </RagnarokProvider>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
