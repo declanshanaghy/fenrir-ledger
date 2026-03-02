@@ -15,8 +15,8 @@ import { z } from "zod";
 import { extractSheetId, buildCsvExportUrl } from "../lib/sheets/parse-url.js";
 import { buildExtractionPrompt } from "../lib/sheets/prompt.js";
 import { fetchCsv, FetchCsvError } from "../lib/sheets/fetch-csv.js";
-import { extractCardsFromCsv } from "../lib/anthropic/extract.js";
-import { config, assertConfig } from "../config.js";
+import { getLlmProvider } from "../lib/llm/index.js";
+import { assertConfig } from "../config.js";
 import { CardsArraySchema, ImportedCardSchema } from "../schemas/index.js";
 import { ErrorResponseSchema } from "../schemas/error.js";
 import type { ImportErrorCode } from "../types/messages.js";
@@ -192,11 +192,11 @@ importApp.openapi(importRoute, async (c) => {
     ) as never;
   }
 
-  // 5. Call Anthropic
+  // 5. Call LLM for extraction
   let responseText: string;
   try {
     const prompt = buildExtractionPrompt(csv);
-    responseText = await extractCardsFromCsv(config.anthropicApiKey, prompt);
+    responseText = await getLlmProvider().extractText(prompt);
   } catch (err) {
     return errorJson(
       c,

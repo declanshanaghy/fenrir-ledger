@@ -39,9 +39,15 @@ export class FetchCsvError extends Error {
  * @throws {FetchCsvError} With structured code on failure
  */
 export async function fetchCsv(csvUrl: string): Promise<FetchCsvResult> {
+  console.info(`[fenrir-backend] Fetching CSV from Google Sheets...`);
+  const start = Date.now();
   const response = await fetch(csvUrl, { redirect: "follow" });
+  const elapsed = Date.now() - start;
+
+  console.info(`[fenrir-backend] Google Sheets responded: status=${response.status}, elapsed=${elapsed}ms`);
 
   if (response.status === 403 || response.status === 404) {
+    console.error(`[fenrir-backend] Sheet not public:`, { status: response.status });
     throw new FetchCsvError(
       "SHEET_NOT_PUBLIC",
       "The spreadsheet is not publicly accessible. Make sure it's shared as 'Anyone with the link can view'.",
@@ -49,6 +55,7 @@ export async function fetchCsv(csvUrl: string): Promise<FetchCsvResult> {
   }
 
   if (!response.ok) {
+    console.error(`[fenrir-backend] Sheet fetch failed:`, { status: response.status });
     throw new FetchCsvError(
       "FETCH_ERROR",
       `Failed to fetch spreadsheet (HTTP ${response.status}).`,
@@ -56,8 +63,10 @@ export async function fetchCsv(csvUrl: string): Promise<FetchCsvResult> {
   }
 
   let csv = await response.text();
+  console.info(`[fenrir-backend] CSV fetched: ${csv.length} chars, ${csv.split("\n").length} lines`);
 
   if (!csv.trim()) {
+    console.error(`[fenrir-backend] Sheet is empty`);
     throw new FetchCsvError(
       "NO_CARDS_FOUND",
       "The spreadsheet appears to be empty.",
@@ -68,6 +77,7 @@ export async function fetchCsv(csvUrl: string): Promise<FetchCsvResult> {
   if (csv.length > CSV_TRUNCATION_LIMIT) {
     csv = csv.slice(0, CSV_TRUNCATION_LIMIT);
     warning = `CSV was truncated at ${CSV_TRUNCATION_LIMIT.toLocaleString()} characters. Some rows may be missing.`;
+    console.info(`[fenrir-backend] CSV truncated at ${CSV_TRUNCATION_LIMIT} chars`);
   }
 
   return { csv, warning };
