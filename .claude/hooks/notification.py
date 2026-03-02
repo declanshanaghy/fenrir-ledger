@@ -13,7 +13,7 @@ import sys
 import subprocess
 import random
 from pathlib import Path
-from utils.constants import ensure_session_log_dir
+from utils.constants import ensure_session_log_dir, fire_and_forget_send_event
 
 try:
     from dotenv import load_dotenv
@@ -126,6 +126,9 @@ def main():
         # Write back to file with formatting
         with open(log_file, 'w') as f:
             json.dump(log_data, f, indent=2)
+
+        # Fire-and-forget: send event to observability server (no --summarize on hot path)
+        fire_and_forget_send_event(input_data, "Notification")
 
         # Announce notification via TTS only if --notify flag is set
         # Use notification_type for conditional TTS behavior:

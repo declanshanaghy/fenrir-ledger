@@ -12,6 +12,7 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
+from utils.constants import fire_and_forget_send_event
 
 try:
     from dotenv import load_dotenv
@@ -184,6 +185,9 @@ def main():
                 }
                 print(json.dumps(output))
                 sys.exit(0)
+
+        # Fire-and-forget: send event to observability server (low-frequency, keep --summarize)
+        fire_and_forget_send_event(input_data, "UserPromptSubmit", extra_args=["--summarize"])
 
         # Success - prompt will be processed
         sys.exit(0)

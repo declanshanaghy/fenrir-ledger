@@ -12,12 +12,13 @@ import sys
 from dotenv import load_dotenv
 
 
-def prompt_llm(prompt_text):
+def prompt_llm(prompt_text, timeout=10):
     """
     Base Anthropic LLM prompting method using fastest model.
 
     Args:
         prompt_text (str): The prompt to send to the model
+        timeout (int): Request timeout in seconds (default: 10)
 
     Returns:
         str: The model's response text, or None if error
@@ -31,7 +32,7 @@ def prompt_llm(prompt_text):
     try:
         import anthropic
 
-        client = anthropic.Anthropic(api_key=api_key)
+        client = anthropic.Anthropic(api_key=api_key, timeout=timeout)
 
         message = client.messages.create(
             model="claude-haiku-4-5-20251001",  # Haiku 4.5 - Fastest, most efficient model (TOP PRIORITY)

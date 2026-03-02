@@ -4,10 +4,13 @@
 # ///
 
 """
-Constants for Claude Code Hooks.
+Constants and shared utilities for Claude Code Hooks.
 """
 
+import json
 import os
+import subprocess
+import threading
 from pathlib import Path
 
 # Base directory for all logs
@@ -29,13 +32,85 @@ def get_session_log_dir(session_id: str) -> Path:
 def ensure_session_log_dir(session_id: str) -> Path:
     """
     Ensure the log directory for a session exists.
-    
+
     Args:
         session_id: The Claude session ID
-        
+
     Returns:
         Path object for the session's log directory
     """
     log_dir = get_session_log_dir(session_id)
     log_dir.mkdir(parents=True, exist_ok=True)
     return log_dir
+
+
+# Absolute path to send_event.py, resolved once at import time.
+_SEND_EVENT_SCRIPT = str(Path(__file__).resolve().parent.parent / "send_event.py")
+
+
+def _write_and_close(proc: subprocess.Popen, payload_bytes: bytes) -> None:
+    """Write payload to subprocess stdin in a background thread.
+
+    Runs as a daemon thread so the parent hook returns immediately even when
+    the payload exceeds the OS pipe buffer (~64 KB on macOS).
+    """
+    try:
+        proc.stdin.write(payload_bytes)
+        proc.stdin.close()
+    except Exception:
+        pass
+
+
+def fire_and_forget_send_event(
+    input_data: dict,
+    event_type: str,
+    source_app: str = "fenrir-ledger",
+    extra_args: list = None,
+) -> None:
+    """
+    Spawn send_event.py as a fire-and-forget subprocess.
+
+    The child process inherits the current environment but its stdin is fed
+    the JSON-serialised *input_data*.  The parent does **not** wait for the
+    child to finish — this keeps the hook fast.
+
+    The pipe write is performed on a daemon thread to avoid blocking the
+    parent when the payload exceeds the OS pipe buffer size.
+
+    Args:
+        input_data:  The original stdin dict received by the hook.
+        event_type:  Hook event name (e.g. "PreToolUse").
+        source_app:  Value for --source-app (default "fenrir-ledger").
+        extra_args:  Optional list of additional CLI flags
+                     (e.g. ["--summarize", "--add-chat"]).
+    """
+    try:
+        cmd = [
+            "uv", "run", _SEND_EVENT_SCRIPT,
+            "--source-app", source_app,
+            "--event-type", event_type,
+        ]
+        if extra_args:
+            cmd.extend(extra_args)
+
+        proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            # Detach from the parent so we don't block on it.
+            start_new_session=True,
+        )
+        # Write the JSON payload on a daemon thread so the parent returns
+        # immediately even for payloads larger than the OS pipe buffer.
+        payload_bytes = json.dumps(input_data).encode("utf-8")
+        writer = threading.Thread(
+            target=_write_and_close,
+            args=(proc, payload_bytes),
+            daemon=True,
+        )
+        writer.start()
+        # Don't join — daemon thread dies when parent exits.
+    except Exception:
+        # Never block Claude Code even if spawning fails.
+        pass

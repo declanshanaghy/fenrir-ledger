@@ -14,7 +14,7 @@ import random
 import subprocess
 from pathlib import Path
 from datetime import datetime
-from utils.constants import ensure_session_log_dir
+from utils.constants import ensure_session_log_dir, fire_and_forget_send_event
 
 try:
     from dotenv import load_dotenv
@@ -210,6 +210,9 @@ def main():
                         json.dump(chat_data, f, indent=2)
                 except Exception:
                     pass  # Fail silently
+
+        # Fire-and-forget: send event to observability server (low-frequency, keep --summarize + --add-chat)
+        fire_and_forget_send_event(input_data, "Stop", extra_args=["--add-chat", "--summarize"])
 
         if args.notify:
             # Announce completion via TTS

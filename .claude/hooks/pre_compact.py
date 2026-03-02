@@ -12,6 +12,7 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
+from utils.constants import fire_and_forget_send_event
 
 try:
     from dotenv import load_dotenv
@@ -125,6 +126,9 @@ def main():
             
             print(message)
         
+        # Fire-and-forget: send event to observability server
+        fire_and_forget_send_event(input_data, "PreCompact")
+
         # Success - compaction will proceed
         sys.exit(0)
         

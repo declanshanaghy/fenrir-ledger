@@ -7,7 +7,7 @@ import json
 import sys
 import re
 from pathlib import Path
-from utils.constants import ensure_session_log_dir
+from utils.constants import ensure_session_log_dir, fire_and_forget_send_event
 
 # Allowed directories where rm -rf is permitted
 ALLOWED_RM_DIRECTORIES = [
@@ -369,6 +369,9 @@ def main():
         # Write back to file with formatting
         with open(log_path, 'w') as f:
             json.dump(log_data, f, indent=2)
+
+        # Fire-and-forget: send event to observability server (no --summarize on hot path)
+        fire_and_forget_send_event(input_data, "PreToolUse")
 
         sys.exit(0)
 
