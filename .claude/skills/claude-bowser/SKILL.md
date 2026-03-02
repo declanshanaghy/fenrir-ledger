@@ -1,6 +1,7 @@
 ---
 name: claude-bowser
 description: Observable browser automation using Chrome MCP tools. Use when you need to browse websites, take screenshots, interact with web pages, or perform browser tasks in your current Chrome. Keywords - browse, screenshot, browser, chrome, bowser, ui testing, observable.
+attribution: Imported from https://github.com/disler/bowser — credit to @disler
 ---
 
 # Claude Bowser

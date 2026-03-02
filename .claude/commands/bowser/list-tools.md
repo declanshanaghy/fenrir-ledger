@@ -1,6 +1,7 @@
 ---
 model: opus
 description: List all available tools as TypeScript function prototypes with parameter and purpose comments
+attribution: Imported from https://github.com/disler/bowser — credit to @disler
 ---
 
 # Purpose

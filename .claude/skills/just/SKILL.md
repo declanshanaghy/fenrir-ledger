@@ -1,6 +1,7 @@
 ---
 name: just
 description: Use `just` to save and run project-specific commands. Use when the user mentions `justfile`, `recipe`, or needs a simple alternative to `make` for task automation.
+attribution: Imported from https://github.com/disler/bowser — credit to @disler
 ---
 
 # Just Command Runner

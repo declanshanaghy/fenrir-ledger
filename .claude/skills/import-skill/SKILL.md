@@ -4,11 +4,14 @@ Import skills, agents, and commands from an external repo's `.claude/` directory
 
 ## Trigger
 
-Use when the user says "import skill", "import from repo", "import .claude artifacts", or provides a repo path to import from.
+Use when the user says "import skill", "import from repo", "import .claude artifacts", or provides a repo path or GitHub URL to import from.
 
 ## Arguments
 
-- `$ARGUMENTS` — the source repo path (absolute or `~/`-relative). Optional flags:
+- `$ARGUMENTS` — the source. Accepts any of:
+  - **GitHub URL** — `git@github.com:user/repo.git`, `https://github.com/user/repo`, or `github.com/user/repo`
+  - **Local path** — absolute path or `~/`-relative to an already-cloned repo
+- Optional flags:
   - `--skills-only` — import only skills
   - `--agents-only` — import only agents
   - `--commands-only` — import only commands
@@ -18,13 +21,42 @@ Use when the user says "import skill", "import from repo", "import .claude artif
 
 ## Workflow
 
-### 1. Validate Source
+### 1. Resolve Source
+
+Determine whether `$ARGUMENTS` is a GitHub URL or a local path.
+
+**GitHub URL detection** — matches any of:
+- `git@github.com:<owner>/<repo>.git`
+- `https://github.com/<owner>/<repo>` (with or without `.git` suffix)
+- `github.com/<owner>/<repo>`
+
+If a GitHub URL is detected:
+
+```
+OWNER = extract owner from URL
+REPO  = extract repo name from URL (strip .git suffix)
+CLONE_DIR = ~/src/github.com/$OWNER/$REPO
+
+If $CLONE_DIR already exists and is a git repo:
+  cd $CLONE_DIR && git pull origin HEAD
+  Print "Using existing clone at $CLONE_DIR (updated)"
+Else:
+  mkdir -p ~/src/github.com/$OWNER
+  git clone <url> $CLONE_DIR
+  Print "Cloned to $CLONE_DIR"
+
+SOURCE_DIR = $CLONE_DIR
+```
+
+If a local path:
 
 ```
 SOURCE_DIR = resolve $ARGUMENTS to absolute path
-Verify $SOURCE_DIR/.claude/ exists
-If not: error "No .claude/ directory found at $SOURCE_DIR"
 ```
+
+**Validate**: verify `$SOURCE_DIR/.claude/` exists. If not: error "No .claude/ directory found at $SOURCE_DIR".
+
+**Derive attribution URL**: for GitHub URLs, use `https://github.com/$OWNER/$REPO`. For local paths, check `git -C $SOURCE_DIR remote get-url origin` to extract the GitHub URL. If neither works, use the raw path.
 
 ### 2. Discover Artifacts
 
@@ -83,18 +115,52 @@ Copy the single .md file for agents and commands
 
 Use `cp -r` for skill directories (they may contain subdirectories like `docs/`, `examples/`).
 
-### 6. Report
+### 6. Add Attribution
+
+After copying each artifact, inject an `attribution` line into the YAML frontmatter of every imported `.md` file.
+
+**Format:**
+```yaml
+attribution: Imported from <ATTRIBUTION_URL> — credit to @<OWNER>
+```
+
+**Injection rules:**
+- If the file has YAML frontmatter (starts with `---`), add the `attribution` line before the closing `---`.
+- If the file has no frontmatter, skip attribution for that file (don't create frontmatter that might break the artifact).
+- If an `attribution` line already exists, replace it with the new one.
+
+**Example** — before:
+```yaml
+---
+name: playwright-bowser
+description: Headless browser automation
+allowed-tools: Bash
+---
+```
+
+After:
+```yaml
+---
+name: playwright-bowser
+description: Headless browser automation
+allowed-tools: Bash
+attribution: Imported from https://github.com/disler/bowser — credit to @disler
+---
+```
+
+### 7. Report
 
 Print summary:
 
 ```
 ## Import Complete
 
-Imported N artifacts from <source-repo>:
+Imported N artifacts from <source-repo> (<ATTRIBUTION_URL>):
 - Skills: <list>
 - Agents: <list>
 - Commands: <list>
 
+Attribution: all imported files tagged with source URL and author.
 Skipped (conflicts): <list or "none">
 
 ### Next Steps
@@ -117,3 +183,4 @@ Skipped (conflicts): <list or "none">
 - Preserve the full directory structure of skills (they often have `docs/`, `examples/` subdirs)
 - Commands with subdirectories (e.g., `commands/bowser/`) are preserved as-is, then optionally wrapped in the namespace directory
 - After import, suggest reviewing any imported `prime.md` or context-priming commands for project-specific file references
+- Attribution is mandatory — every imported artifact gets tagged with its source repo and author

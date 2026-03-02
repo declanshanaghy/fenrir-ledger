@@ -2,6 +2,7 @@
 model: opus
 description: Run a saved browser automation workflow with configurable skill, mode, and vision settings
 argument-hint: <workflow-name> [prompt] [playwright|claude] [headed|headless] [vision]
+attribution: Imported from https://github.com/disler/bowser — credit to @disler
 ---
 
 # Hop Automate

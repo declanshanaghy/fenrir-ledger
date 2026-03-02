@@ -1,6 +1,7 @@
 ---
 description: Build the codebase based on the plan
 argument-hint: [path-to-plan]
+attribution: Imported from https://github.com/disler/bowser — credit to @disler
 ---
 
 # Build

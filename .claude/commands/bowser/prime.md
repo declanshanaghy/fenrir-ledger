@@ -1,5 +1,6 @@
 ---
 description: Prime context by exploring the codebase structure and key documentation
+attribution: Imported from https://github.com/disler/bowser — credit to @disler (adapted for fenrir-ledger)
 ---
 
 # Purpose

@@ -2,6 +2,7 @@
 name: playwright-bowser
 description: Headless browser automation using Playwright CLI. Use when you need headless browsing, parallel browser sessions, UI testing, screenshots, web scraping, or browser automation that can run in the background. Keywords - playwright, headless, browser, test, screenshot, scrape, parallel.
 allowed-tools: Bash
+attribution: Imported from https://github.com/disler/bowser — credit to @disler
 ---
 
 # Playwright Bowser

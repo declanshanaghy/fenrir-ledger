@@ -3,6 +3,7 @@ name: playwright-bowser-agent
 description: Headless browser automation agent using Playwright CLI. Use when you need headless browsing, parallel browser sessions, UI testing, screenshots, or web scraping. Supports parallel instances. Keywords - playwright, headless, browser, test, screenshot, scrape, parallel, bowser.
 model: opus
 color: orange
+attribution: Imported from https://github.com/disler/bowser — credit to @disler
 skills:
   - playwright-bowser
 ---
