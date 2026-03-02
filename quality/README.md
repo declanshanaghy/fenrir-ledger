@@ -18,6 +18,14 @@ All QA documents in this directory use `development/frontend` throughout.
 
 ---
 
+## feat/llm-provider-factory — LLM Provider Abstraction Layer
+
+**Status:** SHIP WITH KNOWN ISSUES | 1 Medium Defect, 1 Low Defect, 2 Observations
+
+- **[llm-provider-factory-verdict.md](llm-provider-factory-verdict.md)** — Full QA verdict: 44 assertions across config, URL parsing, factory singleton, Anthropic extraction, Zod validation, WS pipeline, HTTP error paths
+
+---
+
 ## Backend PR #41 — Backend WebSocket Import Pipeline (Stories 1-3)
 
 **Status:** PASS — READY TO SHIP | 0 Blocking Defects | 3 Low-Severity Observations
