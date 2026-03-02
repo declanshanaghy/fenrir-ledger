@@ -32,6 +32,7 @@ import { StepIndicator } from "@/components/sheets/StepIndicator";
 import { MethodSelection } from "@/components/sheets/MethodSelection";
 import { ShareUrlEntry } from "@/components/sheets/ShareUrlEntry";
 import { CsvUpload } from "@/components/sheets/CsvUpload";
+import { PickerStep } from "@/components/sheets/PickerStep";
 import { SafetyBanner } from "@/components/sheets/SafetyBanner";
 import type { ImportMethod } from "@/components/sheets/MethodSelection";
 import type { Card } from "@/lib/types";
@@ -81,6 +82,7 @@ function getStepIndex(step: string): number {
       return 0;
     case "url-entry":
     case "csv-upload":
+    case "picker":
       return 1;
     case "loading":
       return 1;
@@ -140,10 +142,11 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
     setImportMethod(method);
     if (method === "url") {
       setStep("url-entry");
+    } else if (method === "picker") {
+      setStep("picker");
     } else if (method === "csv") {
       setStep("csv-upload");
     }
-    // "picker" is disabled, no action
   }
 
   function handleConfirm() {
@@ -187,6 +190,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
           {step === "method" && "Step 1: Choose import method"}
           {step === "url-entry" && "Step 2: Enter Google Sheets URL"}
           {step === "csv-upload" && "Step 2: Upload CSV file"}
+          {step === "picker" && "Step 2: Browsing Google Drive"}
           {step === "loading" && "Loading: extracting cards from your data"}
           {step === "preview" && `Preview: ${cards.length} cards ready to import`}
           {step === "dedup" && `Duplicates found: ${dedupResult?.duplicates.length ?? 0} duplicate cards detected`}
@@ -240,6 +244,21 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
           </>
         )}
 
+        {/* ── Picker step (Path B) ────────────────────────────── */}
+        {step === "picker" && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="font-display text-gold tracking-wide text-lg">
+                Browse the Archives
+              </DialogTitle>
+            </DialogHeader>
+            <PickerStep
+              onSubmitCsv={submitCsv}
+              onBack={handleBackToMethod}
+            />
+          </>
+        )}
+
         {/* ── Loading step ──────────────────────────────────────── */}
         {step === "loading" && (
           <>
@@ -258,9 +277,11 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               />
 
               <p className="font-body text-muted-foreground text-sm italic text-center">
-                {importMethod === "csv"
-                  ? "Reading the inscriptions from your rune-stone..."
-                  : "Reading the runes from your spreadsheet..."}
+                {importMethod === "picker"
+                  ? "Deciphering the sacred scrolls from your archives..."
+                  : importMethod === "csv"
+                    ? "Reading the inscriptions from your rune-stone..."
+                    : "Reading the runes from your spreadsheet..."}
               </p>
 
               <button
