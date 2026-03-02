@@ -189,8 +189,9 @@ const healthRoute = createRoute({
 **3. Serve spec and docs**
 
 ```typescript
-// OpenAPI JSON spec
-app.doc("/openapi.json", {
+// OpenAPI 3.1.0 JSON spec — doc31() is required for 3.1.0 output;
+// doc() produces 3.0.x regardless of the openapi field value.
+app.doc31("/openapi.json", {
   openapi: "3.1.0",
   info: {
     title: "Fenrir Ledger Backend API",
@@ -233,7 +234,7 @@ This is a pragmatic approach: it keeps WebSocket documentation co-located with t
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `@hono/zod-openapi` | `^0.18` | Route-level OpenAPI definitions from Zod schemas |
+| `@hono/zod-openapi` | `^1.2` | Route-level OpenAPI definitions from Zod schemas |
 | `@hono/swagger-ui` | `^0.5` | Interactive API documentation UI |
 
 Both are official `@hono/*` packages maintained by the Hono team.
