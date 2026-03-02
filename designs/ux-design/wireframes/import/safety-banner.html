@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Safety Banner</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 16px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 4px; }
+
+    .page-container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 18px; font-weight: 700; margin-bottom: 24px; }
+    h2 { font-size: 15px; font-weight: 700; margin-top: 32px; margin-bottom: 8px; }
+
+    /* ═══════════════════════════════════════════
+       VARIANT 1: Full safety banner
+       Used on the method selection step (Step 1).
+       ═══════════════════════════════════════════ */
+    .safety-banner-full {
+      border: 2px solid;
+      padding: 16px;
+    }
+    .safety-banner-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .safety-banner-icon {
+      width: 24px;
+      height: 24px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .safety-banner-full p {
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .safety-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 480px) {
+      .safety-columns { grid-template-columns: 1fr; }
+    }
+    .safety-column h4 {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .safety-column ul {
+      font-size: 12px;
+      line-height: 1.6;
+      padding-left: 20px;
+    }
+    .safety-column.exclude ul {
+      /* Theme: items in the "Never include" list use a danger/warning text color */
+    }
+
+    /* ═══════════════════════════════════════════
+       VARIANT 2: Compact safety banner
+       Used on inner steps (Step 2A, 2B, 2C).
+       ═══════════════════════════════════════════ */
+    .safety-banner-compact {
+      border: 2px solid;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .safety-compact-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .safety-compact-link {
+      font-size: 11px;
+      text-decoration: underline;
+      cursor: pointer;
+      white-space: nowrap;
+      margin-left: auto;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+    }
+
+    /* ═══════════════════════════════════════════
+       VARIANT 3: Post-import sensitive data warning
+       Shown in the Preview step if LLM flags
+       potential card numbers or CVVs.
+       ═══════════════════════════════════════════ */
+    .safety-warning-post {
+      border: 2px solid;
+      padding: 16px;
+    }
+    .safety-warning-post-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .safety-warning-post p {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .safety-warning-post ul {
+      font-size: 12px;
+      line-height: 1.6;
+      padding-left: 20px;
+      margin-top: 8px;
+    }
+
+    /* ═══════════════════════════════════════════
+       VARIANT 4: Post-import share reminder
+       Shown after successful import via Path A (Share URL).
+       ═══════════════════════════════════════════ */
+    .safety-reminder-post-share {
+      border: 1px solid;
+      padding: 12px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .reminder-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    /* ── Divider ── */
+    hr {
+      border: none;
+      border-top: 1px dashed;
+      margin: 32px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+
+    <h1>Safety Banner Variants</h1>
+    <p class="note">
+      This wireframe documents all safety-related banner variants used across the Import Wizard.
+      Each variant is shown with placement context and accessibility annotations.
+    </p>
+
+    <!-- ═══════════════════════════════════════
+         VARIANT 1: Full banner — Method selection step
+         ═══════════════════════════════════════ -->
+    <h2>Variant 1: Full Safety Banner</h2>
+    <p class="note">Placement: Method Selection step (Step 1), above the method cards. Always visible. Not dismissible.</p>
+
+    <section class="safety-banner-full" role="alert" aria-label="Data safety warning">
+      <div class="safety-banner-header">
+        <span class="safety-banner-icon" aria-hidden="true">&#x26A0;</span>
+        <span>Protect Your Secrets</span>
+      </div>
+      <p>
+        Your spreadsheet should contain card names, issuers, fees, and dates &mdash;
+        never full card numbers, CVVs, PINs, or passwords.
+        Fenrir Ledger does not need or store sensitive payment credentials.
+      </p>
+      <div class="safety-columns">
+        <div class="safety-column include">
+          <h4>What to include</h4>
+          <ul>
+            <li>Card name / product (e.g., "Sapphire Preferred")</li>
+            <li>Issuer (e.g., "Chase", "Amex")</li>
+            <li>Annual fee amount</li>
+            <li>Open date</li>
+            <li>Bonus details (spend, deadline, status)</li>
+            <li>Notes</li>
+          </ul>
+        </div>
+        <div class="safety-column exclude">
+          <h4>Never include</h4>
+          <ul>
+            <li>Full credit card numbers (16 digits)</li>
+            <li>CVV / security codes</li>
+            <li>PINs</li>
+            <li>Account passwords</li>
+            <li>Social Security numbers</li>
+            <li>Bank account numbers</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    <p class="note">
+      ACCESSIBILITY: role="alert" for immediate screen reader announcement.
+      Heading "Protect Your Secrets" is Norse-voiced but clear in meaning.
+      Two-column layout collapses to single column below 480px.
+      THEME: amber/gold border (#c9920a), subtle amber background ~8% opacity.
+      "Never include" list items styled in a subdued warning tone (not red).
+    </p>
+
+    <hr />
+
+    <!-- ═══════════════════════════════════════
+         VARIANT 2: Compact banner — Inner steps
+         ═══════════════════════════════════════ -->
+    <h2>Variant 2: Compact Safety Reminder</h2>
+    <p class="note">Placement: Steps 2A, 2B, 2C (URL entry, Picker, CSV upload). Below the back link, above the main content. Not dismissible.</p>
+
+    <section class="safety-banner-compact" role="note" aria-label="Data safety reminder">
+      <span class="safety-compact-icon" aria-hidden="true">&#x26A0;</span>
+      <span>Never include card numbers, CVVs, PINs, or passwords in your file.</span>
+      <a class="safety-compact-link" href="#" role="button" aria-label="View full safety details">Details</a>
+    </section>
+    <p class="note">
+      Single-line reminder with a "Details" link that expands to Variant 1 content or scrolls to it.
+      ACCESSIBILITY: role="note" (less urgent than role="alert" since user already saw the full banner).
+      "Details" link is a button that toggles an inline expansion of the full include/exclude lists.
+      Touch target for "Details" meets 44px min-height.
+    </p>
+
+    <hr />
+
+    <!-- ═══════════════════════════════════════
+         VARIANT 3: Post-import sensitive data warning
+         ═══════════════════════════════════════ -->
+    <h2>Variant 3: Sensitive Data Warning (Preview Step)</h2>
+    <p class="note">Placement: Preview step (Step 4), at the top of the card list, only if the LLM sets sensitiveDataWarning: true.</p>
+
+    <section class="safety-warning-post" role="alert" aria-label="Sensitive data detected warning">
+      <div class="safety-warning-post-header">
+        <span class="safety-banner-icon" aria-hidden="true">&#x26A0;</span>
+        <span>Potential Sensitive Data Detected</span>
+      </div>
+      <p>
+        Our extraction process detected data that may include credit card numbers or
+        security codes. This data has been excluded from the import, but we recommend
+        you review and remove it from your source spreadsheet.
+      </p>
+      <ul>
+        <li>No card numbers, CVVs, or PINs have been imported</li>
+        <li>The extracted cards below contain only safe fields</li>
+        <li>Review your spreadsheet and remove any sensitive columns</li>
+      </ul>
+    </section>
+    <p class="note">
+      CONDITIONAL: Only rendered when the LLM response includes sensitiveDataWarning.
+      ACCESSIBILITY: role="alert" since this is critical safety information the user must see.
+      THEME: amber/gold border and background, matching Variant 1.
+      This banner is NOT dismissible -- it stays visible throughout the preview step.
+    </p>
+
+    <hr />
+
+    <!-- ═══════════════════════════════════════
+         VARIANT 4: Post-share reminder
+         ═══════════════════════════════════════ -->
+    <h2>Variant 4: Post-Share Reminder (Success Step, Path A only)</h2>
+    <p class="note">Placement: Success step (Step 6), below the success message, only for Path A (Share URL) imports.</p>
+
+    <section class="safety-reminder-post-share" role="note" aria-label="Reminder to remove public share">
+      <span class="reminder-icon" aria-hidden="true">&#x1F512;</span>
+      <div>
+        <strong>You can now remove the public share from your spreadsheet.</strong>
+        Fenrir has inscribed the data in the ledger. Your spreadsheet no longer needs to be publicly accessible.
+      </div>
+    </section>
+    <p class="note">
+      CONDITIONAL: Only shown after a successful Path A import.
+      ACCESSIBILITY: role="note" -- informational, not urgent.
+      THEME: neutral border, subtle background. Lock icon suggests security.
+      This is dismissible (user can close it or it disappears when the modal closes).
+    </p>
+
+  </div>
+
+  <!-- ════════════════════════════════════════
+       WIREFRAME ANNOTATIONS
+       ════════════════════════════════════════ -->
+  <!--
+    DESIGN RATIONALE:
+    - Four variants serve different points in the import flow with appropriate urgency.
+    - Variant 1 (full) is the primary safety gate. Always shown first. Not dismissible.
+    - Variant 2 (compact) maintains safety awareness without repeating full content.
+    - Variant 3 (post-import warning) is a reactive safety net triggered by LLM detection.
+    - Variant 4 (post-share reminder) is a hygiene reminder specific to the public URL path.
+
+    NON-NEGOTIABLE REQUIREMENTS:
+    - Variant 1 MUST be visible before any import method is selected.
+    - Variant 3 MUST appear if sensitiveDataWarning is true -- no opt-out.
+    - None of the safety banners may be permanently dismissed via localStorage or settings.
+
+    RESPONSIVE BEHAVIOR:
+    - Variant 1: Two-column include/exclude collapses to single column below 480px.
+    - Variants 2-4: Single-line layouts, no column changes needed.
+    - All variants stretch to the modal's content width.
+
+    ACCESSIBILITY:
+    - Variant 1 & 3: role="alert" for screen reader announcement on render.
+    - Variant 2 & 4: role="note" for less urgent information.
+    - Warning icons use aria-hidden="true" (the text conveys the meaning).
+    - All text meets WCAG AA contrast requirements against the themed background.
+    - "Details" link in Variant 2 is keyboard-accessible (Enter/Space to toggle).
+
+    THEME NOTES (for FiremanDecko):
+    - Amber/gold tone for all warning variants (consistent with Saga Ledger voice).
+    - Variant 1 & 3: 2px solid gold border, gold background at ~8% opacity.
+    - Variant 2: 2px solid gold border, no background fill.
+    - Variant 4: 1px solid neutral border, subtle neutral background.
+    - "Never include" list items in Variant 1: use a muted warning text color
+      (not bright red -- amber/gold family to stay on-brand).
+  -->
+</body>
+</html>

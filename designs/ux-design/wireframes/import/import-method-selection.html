@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Import Method Selection</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 16px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 4px; }
+
+    /* ── Modal shell ── */
+    .modal-overlay {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .modal {
+      width: 92vw;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid;
+      padding: 24px;
+    }
+
+    /* ── Header ── */
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid;
+    }
+    .modal-header h2 { font-size: 20px; font-weight: 700; }
+    .close-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .close-btn:focus { outline: 2px solid; outline-offset: 2px; }
+    <!-- NOTE: Close button is 44x44px minimum touch target per team norm. -->
+
+    /* ── Safety banner ── */
+    .safety-banner {
+      border: 2px solid;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .safety-banner-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .safety-banner-icon {
+      width: 20px;
+      height: 20px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .safety-banner p { font-size: 13px; line-height: 1.5; }
+    .safety-banner ul {
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 8px;
+      padding-left: 20px;
+    }
+    .safety-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    @media (max-width: 480px) {
+      .safety-columns { grid-template-columns: 1fr; }
+    }
+    .safety-columns h4 {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    /* ── Step indicator ── */
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      font-size: 12px;
+    }
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border: 1px solid;
+    }
+    .step-dot.active { border-width: 3px; }
+
+    /* ── Prompt heading ── */
+    .prompt-heading {
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .prompt-subheading {
+      margin-top: 4px;
+      font-size: 13px;
+    }
+
+    /* ── Method cards grid ── */
+    .method-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    @media (max-width: 768px) {
+      .method-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Individual method card ── */
+    .method-card {
+      border: 2px solid;
+      padding: 20px 16px;
+      cursor: pointer;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .method-card:hover { border-width: 3px; }
+    .method-card:focus { outline: 2px solid; outline-offset: 2px; }
+    .method-card[aria-selected="true"] { border-width: 3px; }
+    <!-- NOTE: Each card is a focusable, selectable element.
+         role="option" inside role="listbox" for the card group.
+         Keyboard: Tab to group, Arrow keys between cards, Enter to select. -->
+
+    .method-icon {
+      width: 48px;
+      height: 48px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    .method-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .method-subtitle {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+    .method-description {
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    /* ── Disabled state for Path B (anonymous) ── */
+    .method-card[aria-disabled="true"] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .disabled-reason {
+      font-size: 11px;
+      font-style: italic;
+      margin-top: 8px;
+    }
+
+    /* ── Footer ── */
+    .modal-footer {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .btn-cancel {
+      padding: 10px 20px;
+      border: 1px solid;
+      font-size: 14px;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 44px;
+    }
+  </style>
+</head>
+<body>
+  <div class="modal-overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+      <!-- ── Modal header ── -->
+      <header class="modal-header">
+        <h2 id="modal-title">Import Cards</h2>
+        <button class="close-btn" aria-label="Close import wizard">&times;</button>
+      </header>
+
+      <!-- ── Step indicator ── -->
+      <nav class="step-indicator" aria-label="Import wizard progress">
+        <span class="step-dot active" aria-current="step"></span>
+        <span>Method</span>
+        <span class="step-dot"></span>
+        <span>Import</span>
+        <span class="step-dot"></span>
+        <span>Preview</span>
+        <span class="step-dot"></span>
+        <span>Confirm</span>
+      </nav>
+      <p class="note">Step indicator shows wizard progress. Active dot is visually emphasized via theme, not wireframe styling.</p>
+
+      <!-- ── Safety banner ── -->
+      <section class="safety-banner" role="alert" aria-label="Data safety warning">
+        <div class="safety-banner-header">
+          <span class="safety-banner-icon" aria-hidden="true">!</span>
+          <span>Protect Your Secrets</span>
+        </div>
+        <p>
+          Your spreadsheet should contain card names, issuers, fees, and dates &mdash;
+          never full card numbers, CVVs, PINs, or passwords.
+          Fenrir Ledger does not need or store sensitive payment credentials.
+        </p>
+        <div class="safety-columns">
+          <div>
+            <h4>Include</h4>
+            <ul>
+              <li>Card name / product</li>
+              <li>Issuer (Chase, Amex...)</li>
+              <li>Annual fee amount</li>
+              <li>Open date</li>
+              <li>Bonus details</li>
+              <li>Notes</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Never include</h4>
+            <ul>
+              <li>Full card numbers (16 digits)</li>
+              <li>CVV / security codes</li>
+              <li>PINs</li>
+              <li>Account passwords</li>
+              <li>Social Security numbers</li>
+              <li>Bank account numbers</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+      <p class="note">Safety banner: amber/gold border + background in theme. role="alert" ensures screen readers announce it. Always visible before method selection.</p>
+
+      <!-- ── Prompt ── -->
+      <h3 class="prompt-heading">Choose Your Path to the Forge</h3>
+      <p class="prompt-subheading">Select how you would like to bring your cards into the ledger.</p>
+
+      <!-- ── Method cards ── -->
+      <div class="method-cards" role="listbox" aria-label="Import method" aria-orientation="horizontal">
+        <p class="note" style="grid-column: 1 / -1;">
+          role="listbox" with role="option" children.
+          Arrow keys navigate between cards; Enter selects.
+          On mobile (&lt;768px) cards stack vertically, each full-width.
+        </p>
+
+        <!-- Path A: Share URL -->
+        <div class="method-card"
+             role="option"
+             tabindex="0"
+             aria-selected="false"
+             aria-label="Share a Scroll: paste a Google Sheets share URL">
+          <div class="method-icon" aria-hidden="true">&#x1F517;</div>
+          <div class="method-title">Share a Scroll</div>
+          <div class="method-subtitle">Paste a Google Sheets URL</div>
+          <div class="method-description">
+            Share your spreadsheet link and we will fetch the data.
+            Requires the sheet to be publicly viewable.
+          </div>
+        </div>
+
+        <!-- Path B: Google Picker -->
+        <div class="method-card"
+             role="option"
+             tabindex="0"
+             aria-selected="false"
+             aria-label="Browse the Archives: select a spreadsheet from Google Drive">
+          <div class="method-icon" aria-hidden="true">&#x1F4C2;</div>
+          <div class="method-title">Browse the Archives</div>
+          <div class="method-subtitle">Pick from Google Drive</div>
+          <div class="method-description">
+            Select a spreadsheet from your Drive.
+            No public sharing needed.
+          </div>
+          <!-- When user is anonymous, this card renders disabled: -->
+          <!-- <div class="disabled-reason">Sign in to browse your Google Drive</div> -->
+        </div>
+
+        <!-- Path C: CSV Upload -->
+        <div class="method-card"
+             role="option"
+             tabindex="0"
+             aria-selected="false"
+             aria-label="Deliver a Rune-Stone: upload a CSV file">
+          <div class="method-icon" aria-hidden="true">&#x1F4E4;</div>
+          <div class="method-title">Deliver a Rune-Stone</div>
+          <div class="method-subtitle">Upload a CSV file</div>
+          <div class="method-description">
+            Drag and drop or choose a CSV export from any spreadsheet tool.
+            No Google account needed.
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Footer ── -->
+      <footer class="modal-footer">
+        <button class="btn-cancel">Cancel</button>
+      </footer>
+      <p class="note">No "Next" button at this step -- selecting a method card immediately advances to the corresponding Step 2.</p>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       WIREFRAME ANNOTATIONS
+       ════════════════════════════════════════ -->
+  <!--
+    LAYOUT DECISIONS:
+    - Modal: 92vw / max-680px / max-90vh per team norm.
+    - 3-column grid at >= 768px collapses to single column below.
+    - Safety banner is always above method cards (never collapsible).
+    - Step indicator is linear dots + labels; active step is dot with thicker border.
+
+    RESPONSIVE BEHAVIOR:
+    - >= 768px: 3 cards side by side.
+    - < 768px: Cards stack vertically, full width. Safety columns also stack.
+    - Minimum viewport: 375px. Cards have 16px side padding inside the modal.
+
+    INTERACTION:
+    - Card click/Enter immediately navigates to the selected method's Step 2.
+    - No intermediate "Next" button -- direct selection reduces friction.
+    - Path B card is aria-disabled="true" + visually dimmed for anonymous users.
+    - Focus order: Close btn -> Safety banner -> Card A -> Card B -> Card C -> Cancel.
+
+    ACCESSIBILITY:
+    - Modal: role="dialog", aria-modal="true", aria-labelledby.
+    - Safety banner: role="alert" for screen reader announcement.
+    - Method cards: role="listbox" + role="option" pattern.
+    - All interactive elements have focus outlines (2px solid + 2px offset).
+    - Keyboard: Tab into listbox, Arrow keys between options, Enter to select.
+    - Close button: aria-label="Close import wizard".
+    - Touch targets: all buttons and cards exceed 44x44px.
+
+    THEME NOTES (for FiremanDecko):
+    - Safety banner: amber/gold border (#c9920a), subtle fill at 10% opacity.
+    - Method card borders: thin default, gold on hover/focus/selected.
+    - Icons: placeholder Unicode glyphs -- replace with project icon set.
+    - Card title: Cinzel font. Description: Source Serif 4.
+    - Step indicator active dot: gold fill.
+  -->
+</body>
+</html>
