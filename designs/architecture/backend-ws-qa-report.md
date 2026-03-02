@@ -1,5 +1,10 @@
 # QA Validation Report: Backend/WebSocket Investigation
 
+> **ARCHIVED (2026-03-01):** This report covers the now-removed backend
+> server. The dedicated backend has been deleted and all import functionality
+> runs as a Vercel serverless function. See the addendum in
+> `adr-backend-server.md`. This file is kept for historical reference only.
+
 **Validator:** Loki (QA Tester)
 **Date:** 2026-03-01
 **Branch:** worktree-agent-a3717f89

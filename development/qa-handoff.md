@@ -1,64 +1,62 @@
-# QA Handoff: AuthGate UI Abstraction
+# QA Handoff: Remove Fly.io Backend -- Serverless-Only
 
-**Feature:** AuthGate component for auth-conditional rendering
-**Branch:** `feat/auth-gate-ui`
-**Engineer:** FiremanDecko
+**Branch:** `chore/remove-fly-io`
 **Date:** 2026-03-01
+**Author:** FiremanDecko (Principal Engineer)
 
 ---
 
-## What Was Implemented
+## What Was Done
 
-A reusable `AuthGate` component that conditionally renders children based on authentication status. The "Import from Google Sheets" buttons (empty state and toolbar) are now hidden for anonymous users and only visible when signed in with Google.
+Removed the dedicated Node/TS backend server (`development/backend/`) and all
+WebSocket import infrastructure. The Google Sheets import pipeline now runs
+exclusively as a Vercel serverless function via the Next.js API route
+`/api/sheets/import`.
 
-## Files Created / Modified
+---
 
-| File | Change |
+## Files Deleted
+
+| Path | Description |
+|------|-------------|
+| `development/backend/` (entire directory) | Hono v4 backend server, Dockerfile, fly.toml, WebSocket handlers, import routes, LLM providers, schemas, config |
+| `.claude/scripts/backend-server.sh` | Backend server lifecycle management script |
+
+## Files Modified
+
+| Path | Change |
 |------|--------|
-| `development/frontend/src/components/shared/AuthGate.tsx` | **New file.** Reusable component that reads `useAuth().status` and renders children only when the required auth condition is met. Defaults to requiring `"authenticated"`. Supports `require="anonymous"` and an optional `fallback` prop. Returns `null` while auth is loading. |
-| `development/frontend/src/components/dashboard/EmptyState.tsx` | Wrapped the "Import from Google Sheets" button with `<AuthGate>`. Added import for `AuthGate`. |
-| `development/frontend/src/app/page.tsx` | Wrapped the toolbar "Import" button with `<AuthGate>`. Added import for `AuthGate`. |
-| `development/qa-handoff.md` | This file (replaces previous handoff). |
-
-## How to Test
-
-### 1. Anonymous User (not signed in)
-
-1. Open the app in a fresh browser or incognito window (no Google sign-in).
-2. **Empty state**: Navigate to `/` with no cards. Verify the "Add Card" button is visible but the "Import from Google Sheets" button is **not visible**.
-3. **Toolbar**: Add at least one card, return to `/`. Verify the "Add Card" button is in the toolbar but the "Import" button is **not visible**.
-
-### 2. Authenticated User (signed in with Google)
-
-1. Sign in with Google.
-2. **Empty state**: Clear all cards (or use a fresh household). Navigate to `/`. Verify both "Add Card" and "Import from Google Sheets" buttons are visible.
-3. **Toolbar**: With at least one card on the dashboard, verify both "Add Card" and "Import" buttons are visible in the toolbar.
-
-### 3. Loading State
-
-1. On slow connections or by throttling, verify no flash of the import button during auth resolution. The button should not appear until auth status resolves to `"authenticated"`.
-
-## Acceptance Criteria Checklist
-
-- [ ] `AuthGate` component created at `components/shared/AuthGate.tsx`
-- [ ] Anonymous users do NOT see the "Import from Google Sheets" button on the empty state
-- [ ] Anonymous users do NOT see the "Import" button in the dashboard toolbar
-- [ ] Authenticated users see both import buttons as before
-- [ ] No flash of import button during auth loading state
-- [ ] TypeScript compiles with zero errors (`tsc --noEmit`)
-- [ ] Next.js production build succeeds (`npm run build`)
-- [ ] No other source files were modified
-
-## Known Limitations
-
-- None. This is a minimal UI gate with no new business logic.
-
-## Suggested Test Focus
-
-1. **Auth state transitions** -- sign in, sign out, verify button visibility toggles correctly.
-2. **Empty state vs toolbar** -- both import button locations are gated independently.
-3. **No layout shift** -- the `AuthGate` returns `null` during loading rather than a placeholder, so there should be no visible flash or layout jump.
+| `development/frontend/src/hooks/useSheetImport.ts` | Removed all WebSocket logic. Now a simple HTTP-only hook. |
+| `development/frontend/src/components/sheets/ImportWizard.tsx` | Removed ImportPhase import, PHASE_LABELS map. Loading step now shows static text. |
+| `development/frontend/src/app/api/sheets/import/route.ts` | Removed IMPORT_MODE/BACKEND_URL. Route now only calls importFromSheet() directly. |
+| `development/frontend/.env.example` | Removed BACKEND_URL, NEXT_PUBLIC_BACKEND_WS_URL, and IMPORT_MODE variables. |
+| `development/frontend/src/lib/sheets/import-pipeline.ts` | Updated comment. |
+| `.claude/scripts/services.sh` | Removed all backend logic. Now frontend-only wrapper. |
+| `.claude/commands/dev-server.md` | Removed backend references. |
+| `designs/architecture/adr-backend-server.md` | Added "Superseded" addendum. |
+| `designs/architecture/route-ownership.md` | Rewritten: all routes now under "Next.js (Vercel)". |
+| `designs/architecture/README.md` | Updated index. |
+| `designs/architecture/backend-implementation-plan.md` | Added archived notice. |
+| `designs/architecture/backend-ws-qa-report.md` | Added archived notice. |
+| `README.md` | Updated project description and quick-start. |
 
 ---
 
-*FiremanDecko -- Principal Engineer*
+## Breaking Changes
+
+| Change | Impact |
+|--------|--------|
+| WebSocket import removed | Import no longer streams phase-by-phase progress. |
+| `IMPORT_MODE=backend` no longer supported | The API route always runs the pipeline inline. |
+| `backend-server.sh` deleted | Use `frontend-server.sh` or `services.sh` instead. |
+| `ImportPhase` type removed | Any code importing it will fail to compile. |
+| `importPhase` removed from hook return | Any component reading it will fail to compile. |
+
+---
+
+## What Was NOT Changed
+
+- Import pipeline (`import-pipeline.ts`) -- untouched
+- Auth system -- untouched
+- Card types, storage, card-utils -- untouched
+- Frontend-server.sh -- untouched
