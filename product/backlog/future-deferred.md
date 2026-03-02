@@ -20,7 +20,7 @@ Stories explicitly parked by Freya. These are not forgotten — they are in the 
 
 ## Smart Reminders / Notification Engine — Deferred to Sprint 6+
 
-**Why deferred**: The product brief lists this as a "Future" item. It requires either push notifications (requires a backend service) or in-browser notifications (requires the Notifications API + user permission). The backend now exists (Sprint 5), but the notification engine is still out of scope for the current phase. The Howl panel is the current reminder surface and is sufficient for MVP validation.
+**Why deferred**: The product brief lists this as a "Future" item. It requires either push notifications (requires a backend service) or in-browser notifications (requires the Notifications API + user permission). The dedicated backend server was removed in PR #60 (replaced with Vercel serverless API routes), so push notifications would need a new delivery mechanism. The Howl panel is the current reminder surface and is sufficient for MVP validation.
 
 ---
 

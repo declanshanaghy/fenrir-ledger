@@ -4,10 +4,10 @@
 - **I want**: every feature branch to get an isolated Vercel preview deployment, and only main to go to production
 - **So that**: I can review and QA changes in a real deployed environment before they reach users
 - **Priority**: P2-High
-- **Status**: Backlog
+- **Status**: Done (PR #9)
 - **Created**: 2026-02-28
-- **Last revised**: 2026-02-28
-- **Sprint target**: Next infra sprint
+- **Last revised**: 2026-03-01 — marked shipped per PR #9
+- **Sprint target**: Shipped
 
 ---
 
