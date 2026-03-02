@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { SheetImportError } from "@/lib/sheets/types";
 import { importFromSheet } from "@/lib/sheets/import-pipeline";
+import { importFromCsv } from "@/lib/sheets/csv-import-pipeline";
 import { requireAuth } from "@/lib/auth/require-auth";
 
 export const maxDuration = 60;
@@ -14,23 +15,38 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const auth = await requireAuth(request);
   if (!auth.ok) return auth.response;
 
-  let url: string;
+  let url: string | undefined;
+  let csv: string | undefined;
+
   try {
     const body = await request.json();
     url = body?.url;
-    if (!url || typeof url !== "string") {
-      return errorResponse("INVALID_URL", "Request body must include a 'url' string.");
-    }
+    csv = body?.csv;
   } catch {
     return errorResponse("INVALID_URL", "Invalid JSON body.");
   }
 
-  // Run the import pipeline inline (serverless)
+  // Exactly one of url or csv must be provided
+  const hasUrl = url && typeof url === "string";
+  const hasCsv = csv && typeof csv === "string";
+
+  if (hasUrl && hasCsv) {
+    return errorResponse("INVALID_URL", "Provide either 'url' or 'csv', not both.");
+  }
+
+  if (!hasUrl && !hasCsv) {
+    return errorResponse("INVALID_URL", "Request body must include a 'url' or 'csv' string.");
+  }
+
+  // Run the appropriate import pipeline
   try {
-    const result = await importFromSheet(url);
+    const result = hasUrl
+      ? await importFromSheet(url!)
+      : await importFromCsv(csv!);
 
     if ("error" in result) {
       const status = result.error.code === "INVALID_URL" ? 400
+        : result.error.code === "INVALID_CSV" ? 400
         : result.error.code === "SHEET_NOT_PUBLIC" ? 403
         : result.error.code === "NO_CARDS_FOUND" ? 404
         : 500;

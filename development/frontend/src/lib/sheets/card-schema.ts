@@ -3,6 +3,9 @@
  *
  * Ported from development/backend/src/schemas/card.ts
  * without the .openapi() extensions.
+ *
+ * ImportResponseSchema validates the new wrapped format:
+ * { cards: [...], sensitiveDataWarning: boolean }
  */
 
 import { z } from "zod";
@@ -28,3 +31,9 @@ export const CardSchema = z.object({
 });
 
 export const CardsArraySchema = z.array(CardSchema);
+
+/** Wrapped response format: { cards: [...], sensitiveDataWarning: boolean } */
+export const ImportResponseSchema = z.object({
+  cards: CardsArraySchema,
+  sensitiveDataWarning: z.boolean(),
+});
