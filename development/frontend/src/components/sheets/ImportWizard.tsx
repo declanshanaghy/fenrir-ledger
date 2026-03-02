@@ -115,19 +115,26 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
 
   const [dedupResult, setDedupResult] = useState<DedupResult | null>(null);
   const [importMethod, setImportMethod] = useState<ImportMethod | null>(null);
+  /** Cards to import, stored when transitioning to success step. */
+  const [pendingImport, setPendingImport] = useState<Omit<Card, "householdId">[] | null>(null);
 
   // URL validation: must contain Google Sheets domain
   const isValidUrl = url.includes("docs.google.com/spreadsheets");
   const showUrlError = url.length > 0 && !isValidUrl;
 
-  // Auto-close after 1.5s on success
+  // On success step: invoke onConfirmImport with pending cards, then auto-close after 1.5s
   useEffect(() => {
-    if (step !== "success") return;
+    if (step !== "success" || !pendingImport) return;
+
+    // Commit the import to the parent
+    onConfirmImport(pendingImport);
+    setPendingImport(null);
+
     const timer = setTimeout(() => {
       onClose();
     }, 1500);
     return () => clearTimeout(timer);
-  }, [step, onClose]);
+  }, [step, pendingImport, onConfirmImport, onClose]);
 
   function handleSelectMethod(method: ImportMethod) {
     setImportMethod(method);
@@ -145,17 +152,20 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
       setDedupResult(result);
       setStep("dedup");
     } else {
-      onConfirmImport(cards);
+      setPendingImport(cards);
+      setStep("success");
     }
   }
 
   function handleSkipDuplicates() {
     if (!dedupResult) return;
-    onConfirmImport(dedupResult.unique);
+    setPendingImport(dedupResult.unique);
+    setStep("success");
   }
 
   function handleImportAll() {
-    onConfirmImport(cards);
+    setPendingImport(cards);
+    setStep("success");
   }
 
   function handleBackToMethod() {

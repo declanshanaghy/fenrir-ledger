@@ -51,10 +51,21 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
   }, []);
 
   const processFile = useCallback((file: File) => {
-    // Validate extension
+    // Validate extension with format-specific guidance
     if (!file.name.toLowerCase().endsWith(".csv")) {
       setDropState("error");
-      setErrorMsg("Only .csv files are accepted.");
+      const lower = file.name.toLowerCase();
+      if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
+        setErrorMsg(
+          "Excel files are not supported directly. Please export as CSV from Excel first (File > Save As > CSV UTF-8)."
+        );
+      } else if (lower.endsWith(".numbers")) {
+        setErrorMsg(
+          "Numbers files are not supported directly. Please export as CSV from Numbers first (File > Export To > CSV)."
+        );
+      } else {
+        setErrorMsg("Only .csv files are accepted.");
+      }
       return;
     }
 

@@ -194,6 +194,7 @@ export function MethodSelection({ onSelectMethod }: MethodSelectionProps) {
               itemRefs.current[index] = el;
             }}
             role="option"
+            aria-label={`${method.title}: ${method.description}${method.disabled ? " (Coming soon)" : ""}`}
             aria-selected={false}
             aria-disabled={method.disabled}
             tabIndex={method.disabled ? -1 : 0}

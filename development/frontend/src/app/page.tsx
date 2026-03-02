@@ -94,7 +94,8 @@ export default function DashboardPage() {
 
     const refreshed = getCards(householdId);
     setCards(refreshed);
-    setImportWizardOpen(false);
+    // Do NOT close the wizard here -- ImportWizard shows the success step
+    // and auto-closes itself after 1.5s via its own useEffect.
 
     const count = importedCards.length;
     toast.success(`${count} card${count !== 1 ? "s" : ""} added to your ledger.`);
