@@ -7,7 +7,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from utils.constants import ensure_session_log_dir
+from utils.constants import ensure_session_log_dir, fire_and_forget_send_event
 
 def main():
     try:
@@ -59,6 +59,9 @@ def main():
         # Write back to file with formatting
         with open(log_path, 'w') as f:
             json.dump(log_data, f, indent=2)
+
+        # Fire-and-forget: send event to observability server (no --summarize on hot path)
+        fire_and_forget_send_event(input_data, "PostToolUse")
 
         sys.exit(0)
 

@@ -6,7 +6,7 @@
 import json
 import sys
 from pathlib import Path
-from utils.constants import ensure_session_log_dir
+from utils.constants import ensure_session_log_dir, fire_and_forget_send_event
 
 
 def main():
@@ -37,6 +37,9 @@ def main():
         # Write back to file with formatting
         with open(log_path, 'w') as f:
             json.dump(log_data, f, indent=2)
+
+        # Fire-and-forget: send event to observability server
+        fire_and_forget_send_event(input_data, "SubagentStart")
 
         sys.exit(0)
 

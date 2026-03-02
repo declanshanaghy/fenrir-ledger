@@ -13,6 +13,7 @@ import sys
 import subprocess
 from pathlib import Path
 from datetime import datetime
+from utils.constants import fire_and_forget_send_event
 
 try:
     from dotenv import load_dotenv
@@ -171,6 +172,9 @@ def main():
 
         # Log the session start event
         log_session_start(input_data)
+
+        # Fire-and-forget: send event to observability server
+        fire_and_forget_send_event(input_data, "SessionStart")
 
         # Load development context if requested
         if args.load_context:

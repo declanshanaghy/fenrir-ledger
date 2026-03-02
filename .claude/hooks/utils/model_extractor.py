@@ -9,7 +9,11 @@ import time
 from pathlib import Path
 
 # Set to False to disable caching and always read from transcript
-ENABLE_CACHING = False
+ENABLE_CACHING = True
+
+# Maximum number of lines to read from the end of a transcript file.
+# Caps I/O for large transcripts — the model name is in recent entries.
+TAIL_LINES = 200
 
 
 def get_model_from_transcript(session_id: str, transcript_path: str, ttl: int = 60) -> str:
@@ -81,10 +85,12 @@ def extract_model_from_transcript(transcript_path: str) -> str:
     model_name = ''
 
     try:
-        # Read transcript file in reverse to find most recent assistant message
-        # We'll read the whole file since we need to find the LAST occurrence
+        # Read only the last TAIL_LINES lines of the transcript to cap I/O.
+        # The model name appears in recent assistant messages, so reading the
+        # tail is sufficient and avoids loading multi-MB transcripts entirely.
+        from collections import deque
         with open(transcript_path, 'r') as f:
-            lines = f.readlines()
+            lines = deque(f, maxlen=TAIL_LINES)
 
         # Iterate in reverse to find most recent assistant message with model
         for line in reversed(lines):

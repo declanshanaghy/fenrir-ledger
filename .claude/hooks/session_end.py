@@ -13,6 +13,7 @@ import sys
 import subprocess
 from pathlib import Path
 from datetime import datetime
+from utils.constants import fire_and_forget_send_event
 
 try:
     from dotenv import load_dotenv
@@ -116,6 +117,9 @@ def main():
 
         # Log the session end event (ensuring reason is always logged)
         log_session_end(input_data, reason)
+
+        # Fire-and-forget: send event to observability server
+        fire_and_forget_send_event(input_data, "SessionEnd")
 
         # Save session statistics if requested
         if args.save_stats:
