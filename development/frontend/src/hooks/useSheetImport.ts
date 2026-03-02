@@ -41,7 +41,7 @@ const WS_BACKEND_WS_URL =
 const HEALTH_CHECK_TIMEOUT_MS = 2_000;
 
 /** Overall import timeout in milliseconds. */
-const IMPORT_TIMEOUT_MS = 20_000;
+const IMPORT_TIMEOUT_MS = 90_000;
 
 export interface UseSheetImportReturn {
   step: ImportStep;
@@ -144,7 +144,7 @@ export function useSheetImport(): UseSheetImportReturn {
           } else {
             // WS was already open and messaging — this is a timeout during import
             setErrorCode("FETCH_ERROR");
-            setErrorMessage("Import timed out. Please try again.");
+            setErrorMessage("Import timed out — the extraction service didn't respond within 90 seconds. Please try again.");
             setStep("error");
           }
         }, IMPORT_TIMEOUT_MS);
