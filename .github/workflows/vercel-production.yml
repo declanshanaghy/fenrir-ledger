@@ -5,10 +5,6 @@ on:
     branches: [main]
     paths:
       - 'development/frontend/**'
-      - 'static/**'
-      - 'sessions/**'
-      - '.github/workflows/**'
-      - 'vercel.json'
   workflow_dispatch:
 
 env:

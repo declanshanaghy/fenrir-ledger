@@ -5,11 +5,6 @@ on:
     branches-ignore: [main]
     paths:
       - 'development/frontend/**'
-      - 'static/**'
-      - 'sessions/**'
-      - '.github/workflows/**'
-      - 'vercel.json'
-      - 'quality/**'
   workflow_dispatch:
 
 permissions:
@@ -37,6 +32,60 @@ jobs:
 
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Detect ephemeral backend
+        id: backend
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find PR number for this branch
+          PR_NUMBER=$(gh pr list --repo "${{ github.repository }}" --head "${{ github.ref_name }}" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open PR found — skipping ephemeral backend detection"
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          APP_NAME="fenrir-backend-pr-${PR_NUMBER}"
+          echo "Looking for ephemeral app: $APP_NAME"
+
+          # Retry loop — the fly-preview workflow may still be deploying
+          for attempt in $(seq 1 5); do
+            if flyctl apps list --json | jq -e ".[] | select(.Name == \"$APP_NAME\")" > /dev/null 2>&1; then
+              BACKEND_URL="https://${APP_NAME}.fly.dev"
+              if curl -sf "${BACKEND_URL}/health" > /dev/null 2>&1; then
+                echo "Ephemeral backend found and healthy: $BACKEND_URL"
+                echo "found=true" >> "$GITHUB_OUTPUT"
+                echo "url=$BACKEND_URL" >> "$GITHUB_OUTPUT"
+                echo "ws_url=wss://${APP_NAME}.fly.dev" >> "$GITHUB_OUTPUT"
+                echo "app_name=$APP_NAME" >> "$GITHUB_OUTPUT"
+                exit 0
+              else
+                echo "App exists but health check failed (attempt $attempt/5)"
+              fi
+            else
+              echo "App $APP_NAME not found (attempt $attempt/5)"
+            fi
+            if [ "$attempt" -lt 5 ]; then
+              echo "Retrying in 30s..."
+              sleep 30
+            fi
+          done
+
+          echo "No healthy ephemeral backend found after 5 attempts"
+          echo "found=false" >> "$GITHUB_OUTPUT"
+
+      - name: Override backend env for ephemeral preview
+        if: steps.backend.outputs.found == 'true'
+        run: |
+          echo "" >> .vercel/.env.preview.local
+          echo "NEXT_PUBLIC_BACKEND_WS_URL=${{ steps.backend.outputs.ws_url }}" >> .vercel/.env.preview.local
+          echo "BACKEND_URL=${{ steps.backend.outputs.url }}" >> .vercel/.env.preview.local
+          echo "Wired preview to ephemeral backend: ${{ steps.backend.outputs.url }}"
 
       - name: Copy static site into Next.js public/
         run: |
@@ -84,9 +133,11 @@ jobs:
           BRANCH_NAME: ${{ github.ref_name }}
           PLAYWRIGHT_OUTCOME: ${{ steps.playwright.outcome }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BACKEND_FOUND: ${{ steps.backend.outputs.found }}
+          BACKEND_URL: ${{ steps.backend.outputs.url }}
+          BACKEND_APP_NAME: ${{ steps.backend.outputs.app_name }}
         with:
           script: |
-            // Find the open PR for this branch, if any
             const { data: pulls } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -102,7 +153,6 @@ jobs:
             const prNumber = pulls[0].number;
 
             // Use the plain preview URL — never append secrets to public PR comments.
-            // This is a public repo; PR comments are world-readable.
             const previewUrl = process.env.PREVIEW_URL || '';
 
             // Build test result line
@@ -120,10 +170,19 @@ jobs:
               ? `🔍 **Preview URL:** ${previewUrl}`
               : '❌ **Deployment failed** — no preview URL';
 
+            // Backend info
+            const backendFound = process.env.BACKEND_FOUND === 'true';
+            const backendUrl = process.env.BACKEND_URL;
+            const backendAppName = process.env.BACKEND_APP_NAME;
+            const backendLine = backendFound
+              ? `🔗 **Backend:** [${backendAppName}](${backendUrl}/health) (ephemeral)`
+              : '🔗 **Backend:** production';
+
             const body = [
               '## Vercel Preview',
               '',
               deployLine,
+              backendLine,
               '',
               '### Playwright Tests',
               testLine,
