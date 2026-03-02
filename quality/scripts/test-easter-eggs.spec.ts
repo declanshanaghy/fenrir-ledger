@@ -229,8 +229,12 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
         await dismissButton.click();
         await expect(dialog).not.toBeVisible();
 
-        // Second collapse: re-expand the sidebar
-        await collapseButton.click();
+        // Second collapse: re-expand the sidebar.
+        // Use { force: true } to bypass the Next.js dev-mode <nextjs-portal>
+        // overlay (the "Static route" indicator) that intercepts pointer events
+        // after the modal dismisses. Force-clicking reaches the underlying button
+        // directly — we are testing the localStorage gate, not pointer reachability.
+        await collapseButton.click({ force: true });
 
         // Assert: Modal does NOT open again (localStorage gate prevents it)
         const dialogAgain = page.locator('[role="dialog"]').first();
