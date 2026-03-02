@@ -150,7 +150,7 @@ export interface PickerResult {
  * Opens the Google Picker filtered to spreadsheets.
  *
  * @param accessToken - OAuth2 access token with drive.file scope
- * @param apiKey - Google API browser key (NEXT_PUBLIC_GOOGLE_PICKER_API_KEY)
+ * @param apiKey - Google API key (GOOGLE_PICKER_API_KEY, served via /api/config/picker)
  * @returns The selected spreadsheet info, or null if cancelled
  */
 export async function openPicker(

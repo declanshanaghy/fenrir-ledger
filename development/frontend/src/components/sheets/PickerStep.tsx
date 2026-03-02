@@ -24,11 +24,11 @@ interface PickerStepProps {
   onSubmitCsv: (csv: string) => void;
   /** Called when user wants to go back to method selection */
   onBack: () => void;
+  /** Google Picker API key, fetched server-side by the parent */
+  pickerApiKey: string | null;
 }
 
-const PICKER_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PICKER_API_KEY;
-
-export function PickerStep({ onSubmitCsv, onBack }: PickerStepProps) {
+export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }: PickerStepProps) {
   const {
     hasDriveAccess,
     driveToken,
