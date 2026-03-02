@@ -19,6 +19,8 @@ I have audited all 5 implemented easter eggs against the design spec (`design/ea
 
 All implemented eggs work as designed. No blockers found. Tests are idempotent and can run repeatedly against the test server.
 
+> **Path note:** References to `design/easter-eggs.md` in this document should be read as `ux/easter-eggs.md` — the file was reorganised to `ux/` after this audit was written.
+
 ---
 
 ## Eggs Audited (Sprint 2 Implementation)
@@ -340,7 +342,7 @@ No critical, high, medium, or low-severity defects found. All test cases pass.
 ### Recommendation
 **STATUS: READY TO SHIP** ✓
 
-Easter eggs are production-ready. They add delight without obstructing the core task flow. All acceptance criteria from `design/easter-eggs.md` are met.
+Easter eggs are production-ready. They add delight without obstructing the core task flow. All acceptance criteria from `ux/easter-eggs.md` are met.
 
 ---
 

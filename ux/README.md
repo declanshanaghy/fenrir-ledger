@@ -42,7 +42,6 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [wireframes/easter-eggs/gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) — Full Gleipnir Hunt: Fragment 4 + 6 triggers, reward Valhalla entry, DEF-001 fix (Story 4.3).
 - [wireframes/accessibility/accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) — Accessibility polish: focus rings, skip-nav, ARIA landmarks, touch targets, reduced motion (Story 4.4).
 - [wireframes/cards/wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) — Wolf's Hunger Meter + About Modal: hunger section, display variants, shared component spec (Story 4.5).
-- [.sync-report.md](.sync-report.md) — Latest doc-sync run report: files changed, verified, and root README hints.
 - [../architecture/README.md](../architecture/README.md) — FiremanDecko's domain: implementation brief, pipeline, system design, sprint plan, and ADRs.
 - [../architecture/implementation-brief.md](../architecture/implementation-brief.md) — FiremanDecko integration plan: wave strategy, sprint stories, open questions.
 - [../architecture/pipeline.md](../architecture/pipeline.md) — Kanban orchestration: model assignments, stage gates, WIP limits, handoff chain.

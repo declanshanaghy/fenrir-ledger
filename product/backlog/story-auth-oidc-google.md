@@ -4,10 +4,10 @@
 - **I want**: to optionally sign in with my Google account to unlock cloud sync
 - **So that**: I can access my card portfolio across multiple devices without losing my locally-tracked data
 - **Priority**: P3-Medium
-- **Status**: Backlog
+- **Status**: Done (Iteration 1 shipped; Iteration 2 deferred to GA)
 - **Created**: 2026-02-27
-- **Last revised**: 2026-02-27 — demoted from P1 gate to P3 optional upsell per anonymous-first product direction
-- **Sprint target**: GA sprint (deferred; not in MVP or Early Access)
+- **Last revised**: 2026-03-01 — Iteration 1 shipped (commit 60d8f64, QA 24/24); Iteration 2 deferred to GA
+- **Sprint target**: Iteration 1 shipped Sprint 5; Iteration 2 deferred to GA
 
 ---
 

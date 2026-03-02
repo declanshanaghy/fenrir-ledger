@@ -1,6 +1,17 @@
 # ADR: OpenAPI Specification for Backend API
 
-**Status:** Accepted
+## Addendum (2026-03-01): Backend Removed — ADR Superseded
+
+The dedicated backend server has been removed. All import functionality now
+runs as a Vercel serverless function via the Next.js API route
+`/api/sheets/import`. Since this ADR specified an OpenAPI spec for the
+backend's HTTP and WebSocket endpoints, it is no longer applicable.
+
+**Status:** Superseded (backend removed — see `adr-backend-server.md` addendum)
+
+---
+
+**Original Status:** Accepted
 **Date:** 2026-03-01
 **Author:** FiremanDecko (Principal Engineer)
 **Related:** ADR: Backend Server (adr-backend-server.md), Route Ownership (route-ownership.md)
