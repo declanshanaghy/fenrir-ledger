@@ -195,8 +195,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       body: params.toString(),
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    log.error("POST /api/auth/token: fetch to Google failed", { error: message });
+    log.error("POST /api/auth/token: fetch to Google failed", err);
     log.debug("POST /api/auth/token returning", { status: 502, error: "server_error" });
     return NextResponse.json(
       { error: "server_error", error_description: "Failed to reach Google token endpoint." },

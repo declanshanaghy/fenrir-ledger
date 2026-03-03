@@ -44,10 +44,10 @@ export async function importFromSheet(url: string): Promise<SheetImportResponse>
     csvWarning = result.warning;
   } catch (err) {
     if (err instanceof FetchCsvError) {
-      log.debug("importFromSheet returning", { errorCode: err.code });
+      log.error("importFromSheet: FetchCsvError", err);
       return { error: { code: err.code, message: err.message } };
     }
-    log.debug("importFromSheet returning", { errorCode: "FETCH_ERROR" });
+    log.error("importFromSheet: unexpected fetch error", err);
     return {
       error: {
         code: "FETCH_ERROR",

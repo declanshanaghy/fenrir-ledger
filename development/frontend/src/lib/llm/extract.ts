@@ -53,7 +53,7 @@ class AnthropicProvider implements LlmProvider {
         log.debug("AnthropicProvider.extractText returning", { attempt, resultLength: result.length });
         return result;
       } catch (err) {
-        log.error("AnthropicProvider.extractText attempt failed", { attempt, error: err instanceof Error ? err.message : String(err) });
+        log.error("AnthropicProvider.extractText attempt failed", { attempt }, err);
         if (attempt === 1) throw err;
       }
     }
@@ -90,7 +90,7 @@ class OpenAIProvider implements LlmProvider {
         log.debug("OpenAIProvider.extractText returning", { attempt, resultLength: result.length });
         return result;
       } catch (err) {
-        log.error("OpenAIProvider.extractText attempt failed", { attempt, error: err instanceof Error ? err.message : String(err) });
+        log.error("OpenAIProvider.extractText attempt failed", { attempt }, err);
         if (attempt === 1) throw err;
       }
     }
