@@ -34,6 +34,7 @@ import {
 } from "react";
 import { getSession, clearSession, isSessionValid } from "@/lib/auth/session";
 import { getOrCreateAnonHouseholdId } from "@/lib/auth/household";
+import { clearEntitlementCache } from "@/lib/entitlement/cache";
 import type { FenrirSession } from "@/lib/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -98,6 +99,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = useCallback(() => {
     clearSession();
+    // Clear entitlement cache on sign-out — the user's subscription link
+    // is associated with their Google identity, not the anonymous identity.
+    clearEntitlementCache();
     // Restore anonymous state — the anonymous householdId in localStorage
     // is preserved (never overwritten by sign-in). Data is never lost.
     const anonId = getOrCreateAnonHouseholdId();

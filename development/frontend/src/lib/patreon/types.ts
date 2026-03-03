@@ -158,4 +158,8 @@ export interface MembershipResponse {
   platform: "patreon";
   checkedAt: string;
   stale?: boolean;
+  /** Patreon user ID — included when the user has a linked entitlement */
+  userId?: string;
+  /** ISO 8601 timestamp when Patreon was linked — included when linked */
+  linkedAt?: string;
 }

@@ -104,6 +104,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       active: cached.active,
       platform: "patreon",
       checkedAt: cached.checkedAt,
+      userId: cached.patreonUserId,
+      linkedAt: cached.linkedAt,
     };
     log.debug("GET /api/patreon/membership returning", {
       status: 200,
@@ -153,6 +155,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       active: membership.active,
       platform: "patreon",
       checkedAt: now,
+      userId: cached.patreonUserId,
+      linkedAt: cached.linkedAt,
     };
     log.debug("GET /api/patreon/membership returning", {
       status: 200,
@@ -177,6 +181,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       platform: "patreon",
       checkedAt: cached.checkedAt,
       stale: true,
+      userId: cached.patreonUserId,
+      linkedAt: cached.linkedAt,
     };
     log.debug("GET /api/patreon/membership returning", {
       status: 200,
