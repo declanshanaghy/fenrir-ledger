@@ -65,13 +65,14 @@ export function SealedRuneModal({
   open,
   onDismiss,
 }: SealedRuneModalProps) {
-  const { isLinked, isActive, linkPatreon } = useEntitlement();
+  const { isLinked, isActive, tier, linkPatreon } = useEntitlement();
 
   const featureDef = PREMIUM_FEATURES[feature];
   const featureDesc = FEATURE_DESCRIPTIONS[feature];
 
-  // Determine if this is an expired user (linked but not active)
-  const isExpired = isLinked && !isActive;
+  // Determine if this is an expired Karl user (linked but not active, was karl)
+  // A linked thrall (never pledged) should see "Pledge" copy, not "Renew"
+  const isExpired = isLinked && !isActive && tier === "karl";
 
   const ctaLabel = isExpired ? "Renew on Patreon" : "Pledge on Patreon";
   const ctaAriaLabel = isExpired
