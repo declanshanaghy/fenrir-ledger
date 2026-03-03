@@ -180,7 +180,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
   }
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()} modal={step !== "picker"}>
       <DialogContent
         className="w-[92vw] max-w-[680px] max-h-[90vh] overflow-hidden flex flex-col border-border bg-background"
         aria-label="Import Wizard"
