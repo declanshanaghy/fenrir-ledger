@@ -49,6 +49,12 @@ trees/
 # doc-sync run artifacts (ephemeral, coordinator reads then discards)
 .sync-report.md
 
+# Stray agent artifacts (safety net — agents should write to tmp/)
+development/*.log
+development/security-audit-*.png
+development/console-*.log
+development/network-requests-*.log
+
 # Auto-generated session artifacts
 TOOLS.md
 .condense-report.md

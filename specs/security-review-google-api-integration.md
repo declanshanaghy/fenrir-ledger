@@ -169,8 +169,8 @@ Use these files to complete the task:
 - Attempt to call `POST /api/sheets/import` without auth — verify 401 response
 - Attempt to call `POST /api/auth/token` with invalid body — verify error response doesn't leak secrets
 - Check the JS bundle for string patterns: grep the fetched JS for API key patterns, secret patterns
-- Capture screenshots of error states for the report
-- Save findings to `development/browser-traffic-report.md`
+- Capture screenshots of error states to `tmp/playwright-bowser/`
+- Save findings to `tmp/playwright-bowser/browser-traffic-report.md`
 
 ### 4. Consolidate Security Report
 - **Task ID**: consolidate-report
@@ -178,7 +178,7 @@ Use these files to complete the task:
 - **Assigned To**: orchestrator (self)
 - **Agent Type**: N/A (orchestrator merges reports)
 - **Parallel**: false
-- Read `development/heimdall-static-review.md` and `development/browser-traffic-report.md`
+- Read `development/heimdall-static-review.md` and `tmp/playwright-bowser/browser-traffic-report.md`
 - Merge findings into a single consolidated report at `development/security-review-report.md`
 - Deduplicate findings found by both static and runtime analysis
 - Assign final severity ratings
