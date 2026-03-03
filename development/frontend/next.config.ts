@@ -14,9 +14,9 @@ const cspDirectives = [
   // Default: only same-origin
   "default-src 'self'",
 
-  // Scripts: self + Google APIs + Vercel analytics + unsafe-inline (Next.js requirement)
+  // Scripts: self + Google APIs + Vercel analytics/live + unsafe-inline (Next.js requirement)
   // In development, Next.js HMR / React Fast Refresh requires 'unsafe-eval'.
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""} https://accounts.google.com https://apis.google.com https://va.vercel-scripts.com`,
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""} https://accounts.google.com https://apis.google.com https://va.vercel-scripts.com https://vercel.live`,
 
   // Styles: self + unsafe-inline (Tailwind inline styles) + Google Fonts
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
@@ -27,7 +27,7 @@ const cspDirectives = [
   // Fonts: self + Google Fonts CDN + data: URIs
   "font-src 'self' https://fonts.gstatic.com data:",
 
-  // Connections: self + Google APIs + Anthropic + OpenAI + Vercel analytics
+  // Connections: self + Google APIs + Anthropic + OpenAI + Vercel analytics/live
   [
     "connect-src 'self'",
     "https://accounts.google.com",
@@ -39,10 +39,11 @@ const cspDirectives = [
     "https://api.anthropic.com",
     "https://api.openai.com",
     "https://va.vercel-scripts.com",
+    "https://vercel.live",
   ].join(" "),
 
-  // Frames: Google Picker and OAuth consent
-  "frame-src https://accounts.google.com https://docs.google.com https://drive.google.com",
+  // Frames: Google Picker, OAuth consent, and Vercel toolbar
+  "frame-src https://accounts.google.com https://docs.google.com https://drive.google.com https://vercel.live",
 
   // Form actions: self only
   "form-action 'self'",
