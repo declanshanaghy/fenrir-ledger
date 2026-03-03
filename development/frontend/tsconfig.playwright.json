@@ -5,5 +5,5 @@
     "moduleResolution": "node",
     "strict": false
   },
-  "include": ["../../quality/scripts/**/*.spec.ts"]
+  "include": ["../../quality/test-suites/**/*.ts"]
 }
