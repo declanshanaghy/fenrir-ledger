@@ -229,6 +229,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - PR #72 Norse Statusline Script — PASS, merged: `.claude/statusline-command.sh` (7 sections, 4-tier color thresholds, 4 width breakpoints, Ragnarok mode, rune prefixes)
 - [development/qa-handoff.md](development/qa-handoff.md) — Import workflow investigation: 4 issues found (2 HIGH: orphaned backend processes + stale .env.local; 1 MEDIUM: CSS broken by build-over-dev; 1 LOW: stale MEMORY.md)
 - [quality/quality-report.md](quality/quality-report.md) — QA verdict: feat/patreon-api (Task #4: Server-Side Patreon Integration) — FAIL (DEF-001 HIGH: uncaught exception in webhook signature validation; DEF-002 MEDIUM: getMembership does not filter by campaign_id)
+- [quality/test-suites/patreon/gate-components.spec.ts](quality/test-suites/patreon/gate-components.spec.ts) — PR #96 component smoke tests: 18 tests covering CSS animation contract, FEATURE_DESCRIPTIONS registry, regression, console errors, UpsellBanner auth guard, UnlinkConfirmDialog alertdialog role, SealedRuneModal copy (18 passed)
 
 ### ᚠ Pack Operations
 
