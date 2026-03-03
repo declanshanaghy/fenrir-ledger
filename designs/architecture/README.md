@@ -15,6 +15,7 @@ Technical architecture documents owned by FiremanDecko (Principal Engineer).
 | [clerk-implementation-plan.md](clerk-implementation-plan.md) | Implementation Plan | Proposed (deferred) | 5-phase Clerk auth integration plan. Deferred until GA planning is triggered. |
 | [route-ownership.md](route-ownership.md) | Reference | Current | Route placement table: all routes now live in Next.js (Vercel). |
 | [backend-ws-qa-report.md](backend-ws-qa-report.md) | QA Report | Archived | Loki's QA validation of the (now-removed) backend ADR and implementation plan. Kept for historical reference. |
+| [adr-patreon-integration.md](adr-patreon-integration.md) | ADR | Proposed | ADR-009: Patreon as entitlement layer (not identity provider). Two-token architecture: Google for identity, Patreon for entitlements. |
 | [clerk-auth-qa-report.md](clerk-auth-qa-report.md) | QA Report | Complete | Loki's QA validation of the Clerk ADR and implementation plan. Verdict: Approved with notes. |
 
 ## Directory Layout
@@ -26,6 +27,7 @@ designs/architecture/
 ├── adr-backend-server.md            # ADR: backend server decision (superseded)
 ├── adr-clerk-auth.md                # ADR-007: Clerk auth decision (proposed, deferred)
 ├── adr-openapi-spec.md              # ADR: OpenAPI spec for backend (superseded)
+├── adr-patreon-integration.md       # ADR-009: Patreon as entitlement layer (proposed)
 ├── backend-implementation-plan.md   # Backend server implementation plan (archived)
 ├── backend-ws-qa-report.md          # QA report: backend/WS investigation (archived)
 ├── clerk-auth-qa-report.md          # QA report: Clerk auth architecture
@@ -38,6 +40,7 @@ designs/architecture/
 - The backend ADR (`adr-backend-server.md`) and its OpenAPI ADR (`adr-openapi-spec.md`) are both superseded; the backend was removed in favor of serverless-only.
 - `adr-api-auth.md` (ADR-008) defines the current API route auth pattern — Google id_token verification via `jose` JWKS. This is the active auth mechanism.
 - The Clerk ADR (`adr-clerk-auth.md`) is the decision; `clerk-implementation-plan.md` is the execution plan. Both are deferred until GA planning.
+- `adr-patreon-integration.md` (ADR-009) defines Patreon as an entitlement layer on top of Google OIDC identity. Depends on ADR-005, ADR-006, and ADR-008.
 - `route-ownership.md` documents all routes, now exclusively in Next.js (Vercel).
 - QA reports validate each ADR + plan pair before implementation begins.
 
