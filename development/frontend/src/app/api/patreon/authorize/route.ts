@@ -3,20 +3,21 @@
  *
  * Initiates the Patreon OAuth linking flow.
  *
- * This route is behind requireAuth (ADR-008) because the user must be
- * signed in with Google before linking Patreon. The Google user sub is
- * embedded in the encrypted state parameter for the callback to use.
+ * Authentication is required (ADR-008). Since this route is accessed via
+ * full-page redirect (not a fetch), the Google id_token is passed as a
+ * query parameter (?id_token=...) rather than an Authorization header.
+ * The route validates the token server-side before proceeding.
  *
  * Flow:
  *   1. User clicks "Link Patreon" in the frontend
- *   2. Frontend redirects to this route
- *   3. This route generates an encrypted state token containing the Google sub
+ *   2. Frontend redirects to this route with ?id_token=...
+ *   3. This route validates the token, generates an encrypted state token
  *   4. Redirects to Patreon's OAuth authorize URL
  *   5. After user grants consent, Patreon redirects to /api/patreon/callback
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { verifyIdToken } from "@/lib/auth/verify-id-token";
 import { generateState } from "@/lib/patreon/state";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
@@ -61,15 +62,44 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Require Google authentication (ADR-008)
-  const auth = await requireAuth(request);
-  if (!auth.ok) {
+  // Authenticate the user via Google id_token.
+  // This route is accessed via full-page redirect, so the token comes as a
+  // query parameter rather than an Authorization header (requireAuth pattern).
+  // The token is still validated server-side before proceeding.
+  const idToken =
+    request.nextUrl.searchParams.get("id_token") ??
+    request.headers.get("authorization")?.slice(7);
+  if (!idToken) {
     log.debug("GET /api/patreon/authorize returning", {
       status: 401,
-      reason: "auth failed",
+      reason: "no id_token provided",
     });
-    return auth.response;
+    return NextResponse.json(
+      {
+        error: "missing_token",
+        error_description:
+          "Google id_token is required (query param or Authorization header).",
+      },
+      { status: 401 },
+    );
   }
+
+  const authResult = await verifyIdToken(idToken);
+  if (!authResult.ok) {
+    log.debug("GET /api/patreon/authorize returning", {
+      status: authResult.status,
+      reason: "invalid id_token",
+    });
+    return NextResponse.json(
+      {
+        error: "invalid_token",
+        error_description: authResult.error,
+      },
+      { status: authResult.status },
+    );
+  }
+
+  const auth = { user: authResult.user };
 
   // Validate Patreon configuration
   const clientId = process.env.PATREON_CLIENT_ID;

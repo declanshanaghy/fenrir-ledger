@@ -27,6 +27,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { EntitlementProvider } from "@/contexts/EntitlementContext";
 import { RagnarokProvider } from "@/contexts/RagnarokContext";
 import "./globals.css";
 
@@ -99,12 +100,15 @@ export default function RootLayout({
       <body className="bg-background text-foreground antialiased">
         {/* AuthProvider — anonymous-first. No redirects. Resolves householdId for all users. */}
         <AuthProvider>
-          {/* RagnarokProvider — activates threshold mode when ≥5 cards are urgent. */}
-          <RagnarokProvider>
-            {/* Easter egg #4 — console ASCII art (client-only, once per session) */}
-            <ConsoleSignature />
-            <AppShell>{children}</AppShell>
-          </RagnarokProvider>
+          {/* EntitlementProvider — platform-agnostic subscription tier. Nested inside AuthProvider. */}
+          <EntitlementProvider>
+            {/* RagnarokProvider — activates threshold mode when ≥5 cards are urgent. */}
+            <RagnarokProvider>
+              {/* Easter egg #4 — console ASCII art (client-only, once per session) */}
+              <ConsoleSignature />
+              <AppShell>{children}</AppShell>
+            </RagnarokProvider>
+          </EntitlementProvider>
         </AuthProvider>
         <Analytics />
       </body>
