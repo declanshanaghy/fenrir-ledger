@@ -15,7 +15,8 @@ const cspDirectives = [
   "default-src 'self'",
 
   // Scripts: self + Google APIs + Vercel analytics + unsafe-inline (Next.js requirement)
-  `script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://va.vercel-scripts.com`,
+  // In development, Next.js HMR / React Fast Refresh requires 'unsafe-eval'.
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""} https://accounts.google.com https://apis.google.com https://va.vercel-scripts.com`,
 
   // Styles: self + unsafe-inline (Tailwind inline styles) + Google Fonts
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
