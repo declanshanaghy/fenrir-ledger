@@ -8,6 +8,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
+import { log } from "@/lib/logger";
 
 /** Structured prompt with system/user separation to prevent prompt injection. */
 export interface StructuredPrompt {
@@ -36,6 +37,8 @@ class AnthropicProvider implements LlmProvider {
 
   async extractText(prompt: string | StructuredPrompt): Promise<string> {
     const isStructured = typeof prompt !== "string";
+    log.debug("AnthropicProvider.extractText called", { model: this.model, isStructured, promptLength: isStructured ? prompt.user.length : prompt.length });
+
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const message = await this.client.messages.create({
@@ -46,8 +49,11 @@ class AnthropicProvider implements LlmProvider {
             : { messages: [{ role: "user" as const, content: prompt }] }),
         });
         const textBlock = message.content.find((b) => b.type === "text");
-        return textBlock?.text ?? "";
+        const result = textBlock?.text ?? "";
+        log.debug("AnthropicProvider.extractText returning", { attempt, resultLength: result.length });
+        return result;
       } catch (err) {
+        log.error("AnthropicProvider.extractText attempt failed", { attempt, error: err instanceof Error ? err.message : String(err) });
         if (attempt === 1) throw err;
       }
     }
@@ -66,6 +72,8 @@ class OpenAIProvider implements LlmProvider {
 
   async extractText(prompt: string | StructuredPrompt): Promise<string> {
     const isStructured = typeof prompt !== "string";
+    log.debug("OpenAIProvider.extractText called", { model: this.model, isStructured, promptLength: isStructured ? prompt.user.length : prompt.length });
+
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const completion = await this.client.chat.completions.create({
@@ -78,8 +86,11 @@ class OpenAIProvider implements LlmProvider {
               ]
             : [{ role: "user" as const, content: prompt }],
         });
-        return completion.choices[0]?.message?.content ?? "";
+        const result = completion.choices[0]?.message?.content ?? "";
+        log.debug("OpenAIProvider.extractText returning", { attempt, resultLength: result.length });
+        return result;
       } catch (err) {
+        log.error("OpenAIProvider.extractText attempt failed", { attempt, error: err instanceof Error ? err.message : String(err) });
         if (attempt === 1) throw err;
       }
     }
@@ -96,7 +107,12 @@ let _instance: LlmProvider | null = null;
  * Requires the corresponding API key env var to be set.
  */
 export function getLlmProvider(): LlmProvider {
-  if (_instance) return _instance;
+  log.debug("getLlmProvider called", { cached: !!_instance });
+
+  if (_instance) {
+    log.debug("getLlmProvider returning", { provider: _instance.name, model: _instance.model, cached: true });
+    return _instance;
+  }
 
   const provider = process.env.LLM_PROVIDER || "anthropic";
 
@@ -117,5 +133,6 @@ export function getLlmProvider(): LlmProvider {
       throw new Error(`Unknown LLM provider: "${provider}". Expected "anthropic" or "openai".`);
   }
 
+  log.debug("getLlmProvider returning", { provider: _instance.name, model: _instance.model, cached: false });
   return _instance;
 }

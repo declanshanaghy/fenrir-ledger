@@ -27,6 +27,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
+import { log } from "@/lib/logger";
 
 /**
  * Whitelisted origins that may call this endpoint.
@@ -65,20 +66,27 @@ function isRefreshRequest(body: TokenRequestBody): body is RefreshRequestBody {
  * can trigger a token exchange through this proxy.
  */
 function isAllowedRedirectUri(redirectUri: string): boolean {
+  log.debug("isAllowedRedirectUri called", { redirectUri });
   try {
     const { origin } = new URL(redirectUri);
-    return ALLOWED_ORIGINS.has(origin);
+    const allowed = ALLOWED_ORIGINS.has(origin);
+    log.debug("isAllowedRedirectUri returning", { origin, allowed });
+    return allowed;
   } catch {
+    log.debug("isAllowedRedirectUri returning", { allowed: false, reason: "invalid URL" });
     return false;
   }
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  // Rate limit by IP — 10 requests per minute per IP address.
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  log.debug("POST /api/auth/token called", { ip });
+
+  // Rate limit by IP — 10 requests per minute per IP address.
   const { success } = rateLimit(`token:${ip}`, { limit: 10, windowMs: 60_000 });
   if (!success) {
+    log.debug("POST /api/auth/token returning", { status: 429, error: "rate_limited" });
     return NextResponse.json(
       {
         error: "rate_limited",
@@ -93,18 +101,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     body = (await request.json()) as TokenRequestBody;
   } catch {
+    log.debug("POST /api/auth/token returning", { status: 400, error: "invalid_request", reason: "invalid JSON" });
     return NextResponse.json(
       { error: "invalid_request", error_description: "Request body must be valid JSON." },
       { status: 400 }
     );
   }
 
+  const grantType = isRefreshRequest(body) ? "refresh_token" : "authorization_code";
+  log.debug("POST /api/auth/token parsed body", {
+    grantType,
+    hasCode: "code" in body,
+    hasCodeVerifier: "code_verifier" in body,
+    hasRedirectUri: "redirect_uri" in body,
+    hasRefreshToken: "refresh_token" in body,
+  });
+
   // Load OAuth credentials (needed for both flows).
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    console.error("[Fenrir] Token proxy: missing NEXT_PUBLIC_GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET");
+    log.error("POST /api/auth/token: missing env vars", { hasClientId: !!clientId, hasClientSecret: !!clientSecret });
+    log.debug("POST /api/auth/token returning", { status: 500, error: "server_error" });
     return NextResponse.json(
       { error: "server_error", error_description: "Auth configuration error." },
       { status: 500 }
@@ -117,6 +136,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (isRefreshRequest(body)) {
     // --- Refresh token flow (DEF-001) ---
     if (!body.refresh_token) {
+      log.debug("POST /api/auth/token returning", { status: 400, error: "invalid_request", reason: "missing refresh_token" });
       return NextResponse.json(
         { error: "invalid_request", error_description: "Missing required field: refresh_token." },
         { status: 400 }
@@ -134,6 +154,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const { code, code_verifier, redirect_uri } = body;
 
     if (!code || !code_verifier || !redirect_uri) {
+      log.debug("POST /api/auth/token returning", { status: 400, error: "invalid_request", reason: "missing fields" });
       return NextResponse.json(
         {
           error: "invalid_request",
@@ -144,6 +165,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     if (!isAllowedRedirectUri(redirect_uri)) {
+      log.debug("POST /api/auth/token returning", { status: 400, error: "invalid_request", reason: "redirect_uri not whitelisted" });
       return NextResponse.json(
         {
           error: "invalid_request",
@@ -164,6 +186,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // Proxy to Google's token endpoint.
+  log.debug("POST /api/auth/token proxying to Google", { grantType, clientIdLength: clientId.length, clientSecretLength: clientSecret.length });
   let googleResponse: Response;
   try {
     googleResponse = await fetch(GOOGLE_TOKEN_URL, {
@@ -173,7 +196,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[Fenrir] Token proxy: fetch to Google failed:", message);
+    log.error("POST /api/auth/token: fetch to Google failed", { error: message });
+    log.debug("POST /api/auth/token returning", { status: 502, error: "server_error" });
     return NextResponse.json(
       { error: "server_error", error_description: "Failed to reach Google token endpoint." },
       { status: 502 }
@@ -183,8 +207,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // Forward Google's response (status + body) unchanged.
   const responseBody = await googleResponse.text();
   if (!googleResponse.ok) {
-    console.error(`[Fenrir] Token proxy: Google returned ${googleResponse.status}:`, responseBody);
+    log.error("POST /api/auth/token: Google error", { status: googleResponse.status, grantType, body: responseBody });
   }
+  log.debug("POST /api/auth/token returning", { status: googleResponse.status, grantType });
   return new NextResponse(responseBody, {
     status: googleResponse.status,
     headers: { "Content-Type": "application/json" },

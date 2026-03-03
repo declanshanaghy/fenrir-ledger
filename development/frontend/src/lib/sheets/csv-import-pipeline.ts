@@ -8,6 +8,7 @@
 import { extractCardsFromCsv } from "./extract-cards";
 import { CSV_TRUNCATION_LIMIT } from "./prompt";
 import type { SheetImportResponse } from "./types";
+import { log } from "@/lib/logger";
 
 /** Minimum CSV length to be considered valid (header + at least one row). */
 const MIN_CSV_LENGTH = 10;
@@ -19,8 +20,11 @@ const MIN_CSV_LENGTH = 10;
  * @returns SheetImportResponse with cards array or error
  */
 export async function importFromCsv(csv: string): Promise<SheetImportResponse> {
+  log.debug("importFromCsv called", { csvLength: csv.length });
+
   // 1. Validate CSV content
   if (!csv || typeof csv !== "string" || csv.trim().length < MIN_CSV_LENGTH) {
+    log.debug("importFromCsv returning", { errorCode: "INVALID_CSV", reason: "empty or too short" });
     return {
       error: {
         code: "INVALID_CSV",
@@ -38,22 +42,30 @@ export async function importFromCsv(csv: string): Promise<SheetImportResponse> {
     ? `CSV was truncated from ${csv.length.toLocaleString()} to ${CSV_TRUNCATION_LIMIT.toLocaleString()} characters. Some rows may have been dropped.`
     : undefined;
 
+  if (truncationWarning) {
+    log.info("importFromCsv: CSV truncated", { originalLength: csv.length, truncatedLength: CSV_TRUNCATION_LIMIT });
+  }
+
   // 3. Extract cards using shared LLM pipeline
   const result = await extractCardsFromCsv(truncated);
 
   // Merge truncation warning if present
   if ("error" in result) {
+    log.debug("importFromCsv returning", { errorCode: result.error.code });
     return result;
   }
 
   if (truncationWarning) {
-    return {
+    const merged = {
       ...result,
       warning: result.warning
         ? `${result.warning} ${truncationWarning}`
         : truncationWarning,
     };
+    log.debug("importFromCsv returning", { cardCount: merged.cards.length, hasWarning: true });
+    return merged;
   }
 
+  log.debug("importFromCsv returning", { cardCount: result.cards.length, hasWarning: !!result.warning });
   return result;
 }

@@ -9,6 +9,7 @@ import { extractSheetId, buildCsvExportUrl } from "./parse-url";
 import { fetchCsv, FetchCsvError } from "./fetch-csv";
 import { extractCardsFromCsv } from "./extract-cards";
 import type { SheetImportResponse } from "./types";
+import { log } from "@/lib/logger";
 
 /**
  * Run the full import pipeline: URL -> CSV -> LLM -> validated cards.
@@ -17,15 +18,19 @@ import type { SheetImportResponse } from "./types";
  * @returns SheetImportResponse with cards array or error
  */
 export async function importFromSheet(url: string): Promise<SheetImportResponse> {
+  log.debug("importFromSheet called", { url });
+
   // 1. Parse the sheet URL
   const sheetId = extractSheetId(url);
   if (!sheetId) {
-    return {
+    const result: SheetImportResponse = {
       error: {
         code: "INVALID_URL",
         message: "Could not extract a Google Sheets ID from the provided URL.",
       },
     };
+    log.debug("importFromSheet returning", { errorCode: "INVALID_URL" });
+    return result;
   }
 
   const csvUrl = buildCsvExportUrl(sheetId);
@@ -39,8 +44,10 @@ export async function importFromSheet(url: string): Promise<SheetImportResponse>
     csvWarning = result.warning;
   } catch (err) {
     if (err instanceof FetchCsvError) {
+      log.debug("importFromSheet returning", { errorCode: err.code });
       return { error: { code: err.code, message: err.message } };
     }
+    log.debug("importFromSheet returning", { errorCode: "FETCH_ERROR" });
     return {
       error: {
         code: "FETCH_ERROR",
@@ -54,17 +61,21 @@ export async function importFromSheet(url: string): Promise<SheetImportResponse>
 
   // Merge CSV fetch warning if present
   if ("error" in result) {
+    log.debug("importFromSheet returning", { errorCode: result.error.code });
     return result;
   }
 
   if (csvWarning) {
-    return {
+    const merged = {
       ...result,
       warning: result.warning
         ? `${result.warning} ${csvWarning}`
         : csvWarning,
     };
+    log.debug("importFromSheet returning", { cardCount: merged.cards.length, hasWarning: true });
+    return merged;
   }
 
+  log.debug("importFromSheet returning", { cardCount: result.cards.length, hasWarning: !!result.warning });
   return result;
 }
