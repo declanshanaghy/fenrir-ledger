@@ -31,11 +31,11 @@ import { test, expect } from "@playwright/test";
 import { clearAllStorage } from "../helpers/test-fixtures";
 
 // ── Test target override ──────────────────────────────────────────────────────
-// These tests target the feat/patreon-wire-gates server on port 9657.
-// The playwright.config.ts default baseURL is port 9653 (main branch).
-// We explicitly navigate using full URLs to ensure we hit the correct server.
+// Uses SERVER_URL env var (set by orchestrator or run script).
+// Falls back to the playwright.config.ts default (port 9653).
+// Explicit full URLs ensure we always hit the configured test server.
 
-const BASE_URL = "http://localhost:9657";
+const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9653";
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
