@@ -170,7 +170,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Step 4: Add fenrir-claude wrapper to ~/.zshrc
+# Step 4: Add claude-fenrir wrapper to ~/.zshrc
 # ---------------------------------------------------------------------------
 header "Step 4: Shell Wrapper"
 
@@ -186,14 +186,14 @@ else
     cat >> "$ZSHRC" << ZSHEOF
 
 ${GUARD_COMMENT}
-# Defines fenrir-claude command with the Fenrir Elder Futhark splash screen.
+# Defines claude-fenrir command with the Fenrir Elder Futhark splash screen.
 # To remove: delete everything between the >>> and <<< markers.
 [[ -f "${SNIPPET_SRC}" ]] \\
   && source "${SNIPPET_SRC}"
 ${END_COMMENT}
 ZSHEOF
 
-    ok "Appended fenrir-claude wrapper to ${ZSHRC}"
+    ok "Appended claude-fenrir wrapper to ${ZSHRC}"
     info "The wrapper sources: ${SNIPPET_SRC}"
 fi
 
