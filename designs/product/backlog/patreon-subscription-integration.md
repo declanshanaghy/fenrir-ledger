@@ -1,9 +1,9 @@
 # Backlog Item: Patreon Integration for Paid Subscription Features
 
-**Status:** Discovery
-**Priority:** TBD (pending Freya/Odin interview)
+**Status:** Ready
+**Priority:** P1-Critical
 **Owner:** Freya (Product Owner)
-**Sprint:** Unscheduled
+**Sprint:** Next (post-Sprint 5)
 
 ---
 
@@ -40,14 +40,31 @@ Freya to conduct a product discovery interview with Odin (the human operator) to
 - Patreon webhooks: `members:pledge:create`, `members:pledge:update`, `members:pledge:delete`
 - Potential new env vars: `PATREON_CLIENT_ID`, `PATREON_CLIENT_SECRET`, `PATREON_CAMPAIGN_ID`
 
+## Discovery Results
+
+Product discovery interview with Odin completed on 2026-03-02. Full Product Design Brief produced at:
+[`designs/product/backlog/patreon-subscription-brief.md`](patreon-subscription-brief.md)
+
+### Decisions Made
+
+| Question | Decision |
+|----------|----------|
+| Tiers | 2: Thrall (Free), Karl (Supporter, $3-5/mo) |
+| Premium features | 8 categories: cloud sync, multi-household, analytics, priority import, export, extended history, custom notifications, cosmetics |
+| Gating style | Hard gate -- all premium features locked with Norse-themed modal |
+| Cancellation | Trust Patreon billing cycle (active_patron = access) |
+| Migration | None needed -- not GA yet, all premium features are net-new |
+| API depth | Minimal -- check on login, localStorage cache with TTL, no webhooks |
+| Anonymous-first | Fully preserved -- Patreon is entitlement only, Google OIDC stays for identity |
+
 ## Next Step
 
-Freya to schedule and conduct the discovery interview with Odin, then produce a full Product Design Brief at `designs/product/backlog/patreon-subscription-brief.md`.
+Hand off Product Design Brief to Luna (UX Designer) for subscription interaction wireframes and gate modal design. Then to FiremanDecko for architecture (ADR) and implementation.
 
 ## Acceptance Criteria
 
-- [ ] Product discovery interview with Odin completed
-- [ ] Full product brief produced at `designs/product/backlog/patreon-subscription-brief.md`
-- [ ] All 6 open questions answered in the brief
-- [ ] Patreon tier structure defined with Norse-themed naming
-- [ ] Integration approach selected and documented
+- [x] Product discovery interview with Odin completed
+- [x] Full product brief produced at `designs/product/backlog/patreon-subscription-brief.md`
+- [x] All 6 open questions answered in the brief
+- [x] Patreon tier structure defined with Norse-themed naming (Thrall / Karl)
+- [x] Integration approach selected and documented (minimal: OAuth + API check + localStorage cache)

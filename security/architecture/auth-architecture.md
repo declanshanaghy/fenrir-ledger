@@ -1,8 +1,8 @@
 # Auth Architecture — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-02
-**References**: ADR-005, ADR-006, ADR-008
+**Last reviewed**: 2026-03-02 (updated for Patreon integration — feat/patreon-api)
+**References**: ADR-005, ADR-006, ADR-008, ADR-009
 
 ---
 
@@ -302,3 +302,177 @@ This is intentional (ADR-006).
 | Token storage | localStorage (XSS-accessible) | RESIDUAL RISK |
 | Drive token persistence | localStorage | RESIDUAL RISK (see SEV-006) |
 | Automatic token refresh | Not implemented | KNOWN GAP |
+
+---
+
+## 8. Patreon OAuth Linking Flow (ADR-009)
+
+### 8.1 Overview
+
+The Patreon integration adds a second OAuth flow, layered on top of the existing
+Google authentication. Users must be signed in with Google before linking Patreon.
+The Patreon tokens are stored server-side (Vercel KV, encrypted) rather than in
+the browser, because Patreon requires a `client_secret` for token exchange and
+the tokens must persist across browser sessions for webhook-driven entitlement updates.
+
+This creates a **two-token model**:
+
+| Token | Storage | Expiry | Purpose |
+|---|---|---|---|
+| Google `id_token` | localStorage | ~1 hour | Identity verification on every API request |
+| Patreon `access_token` | Vercel KV (AES-256-GCM encrypted) | ~31 days | Patreon membership verification |
+| Patreon `refresh_token` | Vercel KV (AES-256-GCM encrypted) | Long-lived | Refreshing expired access tokens |
+
+### 8.2 Patreon Linking Flow
+
+```
+Browser (authenticated with Google)    Server Routes                    External
+                                                                          Services
+   |                                       |                               |
+   |-- GET /api/patreon/authorize          |                               |
+   |   Authorization: Bearer id_token      |                               |
+   |                                       |                               |
+   |   requireAuth() -> verifyIdToken()    |                               |
+   |   generateState(googleSub)            |                               |
+   |   AES-256-GCM encrypt(stateJson)      |                               |
+   |   Random 12-byte IV per encryption    |                               |
+   |                                       |                               |
+   |<-- 302 to patreon.com/oauth2/authorize|                               |
+   |   ?state=<encrypted>&client_id=...    |                               |
+   |                                       |                               |
+   |---------------- user grants consent ->|                         Patreon|
+   |                                       |                               |
+   |<-- 302 /api/patreon/callback          |                               |
+   |   ?code=<auth_code>&state=<enc>       |                               |
+   |                                       |                               |
+   |-- GET /api/patreon/callback           |                               |
+   |   (no requireAuth — exempt)           |                               |
+   |                                       |                               |
+   |   validateState(state)                |                               |
+   |   decrypt -> check expiry -> googleSub|                               |
+   |                                       |                               |
+   |   exchangeCode(code, redirectUri)     |-- POST /oauth2/token -------> |
+   |                                       |<-- {access_token, refresh} -- |
+   |                                       |                               |
+   |   getMembership(access_token)         |-- GET /v2/identity ---------->|
+   |                                       |<-- {patron_status, amount} -- |
+   |                                       |                               |
+   |   encrypt(access_token) -> AES-GCM    |                               |
+   |   encrypt(refresh_token) -> AES-GCM   |                               |
+   |                                       |                               |
+   |   setEntitlement(googleSub, record)   |-- KV.set entitlement:sub ---> |
+   |                                       |-- KV.set patreon-user:pid --> |
+   |                                       |                               |
+   |<-- 302 /settings?patreon=linked&tier= |                               |
+```
+
+### 8.3 Entitlement Storage
+
+Entitlements are stored in Vercel KV (Redis) with a 30-day TTL. Two keys are maintained:
+
+| Key Pattern | Value | TTL | Purpose |
+|---|---|---|---|
+| `entitlement:{googleSub}` | `StoredEntitlement` JSON | 30 days | Primary lookup by Google user |
+| `patreon-user:{patreonUserId}` | `{googleSub}` string | 30 days | Reverse index for webhook routing |
+
+All `patreonAccessToken` and `patreonRefreshToken` values stored in KV are encrypted with
+AES-256-GCM using a 32-byte key (`ENTITLEMENT_ENCRYPTION_KEY`). Each encryption uses a
+fresh 12-byte random IV. The encrypted format is `base64(iv[12] + ciphertext + authTag[16])`.
+
+### 8.4 Membership Check Flow (Stale Cache)
+
+The `/api/patreon/membership` route caches membership status for 1 hour. When the
+cache is stale, it automatically refreshes Patreon tokens and re-checks membership.
+On Patreon API failure, it returns the last-known state with `{ stale: true }`.
+
+### 8.5 Webhook Flow
+
+Patreon sends webhook events for pledge changes. The webhook route:
+
+1. Reads the raw request body (before JSON parsing) for HMAC validation
+2. Validates `X-Patreon-Signature` using HMAC-MD5 (Patreon's mandated algorithm — platform constraint, see SEV-001 in 2026-03-02-patreon-integration.md)
+3. Uses `crypto.timingSafeEqual()` to prevent timing attacks during signature comparison
+4. Looks up the affected Google user via the `patreon-user:{patreonUserId}` KV index
+5. Updates the stored entitlement based on the event type
+
+### 8.6 CSRF Protection for Patreon OAuth State
+
+Unlike the Google PKCE flow where state is a random hex string in `sessionStorage`,
+the Patreon state token is AES-256-GCM encrypted on the server:
+
+| Property | Google PKCE | Patreon OAuth |
+|---|---|---|
+| State storage | Browser sessionStorage | Encrypted in URL parameter |
+| CSRF protection | State comparison | Encryption integrity (AES-GCM) + expiry |
+| State expiry | Browser tab close | 10 minutes (hard-coded) |
+| Server-side storage | None | None (stateless; see SEV-006) |
+
+The state token embeds `{ googleSub, nonce, createdAt }` encrypted with the same key
+used for token encryption (`ENTITLEMENT_ENCRYPTION_KEY`). Decryption failure causes
+an immediate redirect to `/settings?patreon=error&reason=state_mismatch`.
+
+### 8.7 Trust Boundary Update for Patreon
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  BROWSER (untrusted)                                                 │
+│                                                                      │
+│  localStorage["fenrir:auth"]  ← Google tokens, user profile         │
+│  localStorage["fenrir:drive-token"]  ← Drive access token           │
+│  localStorage["fenrir_ledger:{sub}:cards"]  ← card data             │
+│  sessionStorage["fenrir:pkce"]  ← transient PKCE state              │
+│                                                                      │
+│  NO Patreon tokens in browser — stored server-side only              │
+└─────────────────────────────────┬───────────────────────────────────┘
+                                   │ HTTPS
+                    ───────────────┼───────────────  ← TRUST BOUNDARY
+                                   │
+┌─────────────────────────────────▼───────────────────────────────────┐
+│  NEXT.JS SERVER (trusted — Vercel serverless)                        │
+│                                                                      │
+│  /api/auth/token       — Google token exchange proxy (unprotected)  │
+│  /api/sheets/import    — requireAuth() → LLM extraction              │
+│  /api/config/picker    — requireAuth() → Picker API key              │
+│  /api/patreon/authorize — requireAuth() → Patreon OAuth redirect     │
+│  /api/patreon/callback — unprotected, encrypted-state CSRF protected │
+│  /api/patreon/membership — requireAuth() → KV lookup + refresh       │
+│  /api/patreon/webhook  — unprotected, HMAC-MD5 authenticated         │
+│                                                                      │
+│  Server secrets (never sent to browser):                             │
+│    GOOGLE_CLIENT_SECRET                                              │
+│    FENRIR_ANTHROPIC_API_KEY                                          │
+│    GOOGLE_PICKER_API_KEY  (served auth-gated)                        │
+│    PATREON_CLIENT_SECRET                                             │
+│    PATREON_WEBHOOK_SECRET                                            │
+│    ENTITLEMENT_ENCRYPTION_KEY                                        │
+│    KV_REST_API_URL                                                   │
+│    KV_REST_API_TOKEN                                                 │
+└─────────────────────────────────┬───────────────────────────────────┘
+                                   │
+┌─────────────────────────────────▼───────────────────────────────────┐
+│  VERCEL KV (Upstash Redis — trusted persistent store)               │
+│                                                                      │
+│  entitlement:{googleSub}   → StoredEntitlement (tokens encrypted)   │
+│  patreon-user:{patreonId}  → googleSub (reverse index)              │
+│                                                                      │
+│  All Patreon tokens encrypted with AES-256-GCM before storage        │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### 8.8 Security Properties — Patreon Integration
+
+| Property | Implementation | Status |
+|---|---|---|
+| Patreon CSRF prevention | AES-256-GCM encrypted state token | PASS |
+| State token expiry | 10-minute window | PASS |
+| State token single-use | Not implemented — stateless | PARTIAL (see SEV-006) |
+| Patreon client_secret isolation | Server-side only | PASS |
+| Token encryption at rest | AES-256-GCM, random IV | PASS |
+| GCM authentication tag | 128-bit | PASS |
+| Webhook signature | HMAC-MD5 (Patreon mandated) | ACCEPTED RISK (see SEV-001) |
+| Timing-safe comparison | crypto.timingSafeEqual() | PASS |
+| Webhook replay protection | Not implemented | GAP (see SEV-004) |
+| Redirect URI validation | Host header (not allowlisted) | FAIL — fix required (see SEV-002) |
+| KV TTL enforcement | 30 days | PASS |
+| Rate limiting (Patreon routes) | In-memory only | PARTIAL (see SEV-003) |
+| Audit logging for entitlement changes | Debug level only (suppressed in prod) | GAP (see SEV-008) |

@@ -140,11 +140,19 @@ For each completed story — launch ALL in a single message:
       3. TypeScript validation: npx tsc --noEmit
       4. GitHub Actions status: gh pr checks <N>
       5. If GH Actions still running, watch with timeout
+      6. Write Playwright tests for new/changed functionality:
+         - Tests in quality/test-suites/<feature-slug>/
+         - Assertions derived from acceptance criteria, NOT from current code behavior
+         - Run new tests: npx playwright test quality/test-suites/<feature-slug>/
+         - All new tests must pass
+         - Commit tests to the same branch
+         - If untestable via Playwright (real OAuth, etc.), document manual steps
       Report format:
         ## QA Verdict: PASS or FAIL
         ### Code Review: items
         ### Build: PASS/FAIL
         ### GH Actions: PASS/FAIL/PENDING
+        ### Playwright Tests: N new tests written, all passing
         ### Issues for FiremanDecko (if any): specific fixes"
   })
 ```
@@ -182,7 +190,7 @@ BUILD-VALIDATE LOOP:
      subagent_type: "loki-qa-tester",
      run_in_background: true,
      prompt: "Validate PR #<N> on branch <branch> in worktree at <path>.
-       <same validation steps as parallel mode>"
+       <same validation steps as parallel mode, including step 6: write Playwright tests>"
    })
 
 4. Parse Loki's verdict:
@@ -236,6 +244,9 @@ For each worktree with an open PR — launch ALL in parallel background:
       2. Verify build passes in worktree
       3. Check for merge conflicts with main
       4. Final code review pass
+      5. Verify Playwright tests exist for this PR's functionality
+         - If missing, write them now to quality/test-suites/<feature-slug>/
+         - Run and verify all pass, commit to branch
       Report: SHIP / FIX REQUIRED with specific issues"
   })
 ```
