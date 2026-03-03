@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Unlink Patreon Confirmation Dialog</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 4px; }
+
+    /* ── Page layout ─────────────────────────────────────────────── */
+    .page { display: flex; flex-direction: column; gap: 48px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* ── Confirmation dialog ─────────────────────────────────────── */
+    /*
+     * This is a standard confirmation dialog for unlinking Patreon.
+     * It uses role="alertdialog" because it is a potentially destructive action
+     * requiring user acknowledgment.
+     *
+     * Key decisions:
+     *   - Plain English (Voice 1) throughout -- this is a functional dialog
+     *   - No Norse copy -- destructive action confirmations need maximum clarity
+     *   - Two consequences explained clearly:
+     *     1. Premium features are locked
+     *     2. Patreon membership continues on Patreon (we don't cancel it)
+     *   - Button layout follows the standard convention:
+     *     [Cancel] [Unlink Patreon] -- right-aligned
+     *   - Escape dismisses (same as Cancel)
+     *   - Focus trap cycles through Cancel and Unlink buttons
+     *
+     * States shown:
+     *   1. Desktop — Standard unlink confirmation
+     *   2. Mobile 375px — Stacked buttons
+     */
+
+    /* Backdrop */
+    .modal-backdrop {
+      position: relative;
+      border: 1px solid;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .backdrop-label {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 10px;
+      opacity: 0.4;
+    }
+
+    /* Dialog shell */
+    .dialog {
+      width: 100%;
+      max-width: 440px;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Dialog header */
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid;
+    }
+    .dialog-heading {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .btn-close {
+      width: 32px;
+      height: 32px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    /* Dialog body */
+    .dialog-body {
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .dialog-text {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .dialog-text--emphasis {
+      font-weight: bold;
+    }
+
+    /* Dialog footer */
+    .dialog-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 12px 20px 16px;
+      border-top: 1px solid;
+    }
+    .btn-cancel {
+      padding: 10px 20px;
+      border: 1px solid;
+      font-size: 14px;
+      cursor: pointer;
+      min-height: 44px;
+      min-width: 44px;
+    }
+    .btn-unlink {
+      padding: 10px 20px;
+      border: 2px solid;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* ── Mobile variant ──────────────────────────────────────────── */
+    .modal-backdrop--mobile {
+      max-width: 375px;
+    }
+    .dialog--mobile {
+      max-width: 345px;
+    }
+    .dialog--mobile .dialog-footer {
+      flex-direction: column-reverse;
+      gap: 8px;
+    }
+    .dialog--mobile .btn-cancel,
+    .dialog--mobile .btn-unlink {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+      display: flex;
+      min-height: 48px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCENARIO 1: Desktop — Unlink Confirmation
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Scenario 1: Desktop — Unlink Patreon Confirmation</div>
+      <p class="note">
+        Triggered when user clicks "Unlink Patreon" on the Settings page.
+        All copy is Voice 1 (functional). No Norse language -- this is a
+        consequential action confirmation that must be unambiguous.
+        The dialog explains exactly what happens and what does not happen.
+      </p>
+
+      <div class="modal-backdrop" role="presentation">
+        <span class="backdrop-label">Backdrop (semi-transparent overlay, z-index: 200)</span>
+
+        <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="unlink-heading" aria-describedby="unlink-body">
+
+          <div class="dialog-header">
+            <h2 class="dialog-heading" id="unlink-heading">Unlink Patreon?</h2>
+            <button class="btn-close" aria-label="Dismiss">x</button>
+          </div>
+
+          <div class="dialog-body" id="unlink-body">
+            <p class="dialog-text">
+              Your Patreon account will be disconnected from Fenrir Ledger.
+              You will lose access to premium features, but your card data
+              will not be affected.
+            </p>
+            <!--
+              Clear consequence statement:
+              1. Premium features are locked (clear loss)
+              2. Card data is safe (reassurance)
+            -->
+            <p class="dialog-text">
+              If you have an active Patreon membership, it will continue on
+              Patreon until you cancel it there.
+            </p>
+            <!--
+              Important: we do NOT cancel the user's Patreon membership.
+              We only disconnect the link. The user must manage their
+              subscription on Patreon directly. This avoids confusion.
+            -->
+          </div>
+
+          <div class="dialog-footer">
+            <!--
+              Button layout follows the standard form action convention:
+              Cancel + destructive action, right-aligned.
+              Cancel is left of Unlink Patreon.
+              No isolated destructive button on the far left (only 2 actions).
+            -->
+            <button class="btn-cancel">Cancel</button>
+            <button class="btn-unlink">Unlink Patreon</button>
+            <!--
+              "Unlink Patreon" is styled as destructive in implementation:
+              border-color: fire-muspel (#c94a0a), text remains saga.
+              It is NOT bright red -- it is the same muted danger styling
+              used for "Delete" in the card form.
+            -->
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCENARIO 2: Mobile 375px — Unlink Confirmation
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Scenario 2: Mobile 375px — Unlink Confirmation</div>
+      <p class="note">
+        Mobile layout. Buttons stack vertically per mobile form convention:
+        "Unlink Patreon" on top (primary/destructive), "Cancel" below.
+        Both buttons are full-width with min-height 48px for touch targets.
+        Dialog is nearly full-width (92vw = ~345px on 375px viewport).
+      </p>
+
+      <div class="modal-backdrop modal-backdrop--mobile" role="presentation">
+        <span class="backdrop-label">Backdrop (375px viewport)</span>
+
+        <div class="dialog dialog--mobile" role="alertdialog" aria-modal="true" aria-labelledby="unlink-heading-2" aria-describedby="unlink-body-2">
+
+          <div class="dialog-header">
+            <h2 class="dialog-heading" id="unlink-heading-2">Unlink Patreon?</h2>
+            <button class="btn-close" aria-label="Dismiss">x</button>
+          </div>
+
+          <div class="dialog-body" id="unlink-body-2">
+            <p class="dialog-text">
+              Your Patreon account will be disconnected from Fenrir Ledger.
+              You will lose access to premium features, but your card data
+              will not be affected.
+            </p>
+            <p class="dialog-text">
+              If you have an active Patreon membership, it will continue on
+              Patreon until you cancel it there.
+            </p>
+          </div>
+
+          <div class="dialog-footer">
+            <!--
+              Mobile stacking: Unlink on top, Cancel below.
+              column-reverse in CSS puts the destructive action on top.
+            -->
+            <button class="btn-cancel">Cancel</button>
+            <button class="btn-unlink">Unlink Patreon</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         POST-UNLINK BEHAVIOR
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Post-Unlink Behavior Notes</div>
+      <p class="note">
+        After confirming unlink:
+        1. Patreon link is removed from user profile (localStorage + server cache).
+        2. Tier badge disappears from TopBar immediately.
+        3. Premium features become locked (hard gate modal on next attempt).
+        4. Toast appears: "Patreon unlinked." (Voice 1, polite aria-live).
+        5. Settings Patreon section returns to "Link Patreon" button state
+           (see settings-patreon-unlinked.html).
+        6. No page navigation -- user stays on Settings page.
+        7. Focus moves to the Patreon section heading after the dialog closes.
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -167,6 +167,8 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [ux/handoff-to-fireman-anon-auth.md](ux/handoff-to-fireman-anon-auth.md) — FiremanDecko handoff: anonymous-first model, householdId, what to build
 - [architecture/implementation-brief.md](architecture/implementation-brief.md) — FiremanDecko integration plan, wave strategy, open questions
 - [ux/easter-egg-modal.md](ux/easter-egg-modal.md) — Shared modal template for all easter egg discovery moments
+- [designs/ux-design/interactions/patreon-subscription.md](designs/ux-design/interactions/patreon-subscription.md) — Patreon subscription interaction spec: state machine, OAuth flow, hard gate modal, upsell banners, tier badge
+- [designs/ux-design/wireframes/patreon-subscription/](designs/ux-design/wireframes/patreon-subscription/) — 6 wireframes: settings (unlinked/linked/expired), hard gate modal, upsell banners, unlink confirmation
 
 ### ᚲ [The Forge — Architecture + Development](development/README.md)
 

@@ -11,6 +11,21 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Patreon Subscription Wireframes
+
+| View | File | Description |
+|------|------|-------------|
+| Settings — Patreon Unlinked | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/settings-patreon-unlinked.html) | Settings page with "Link Patreon" button: 4 scenarios (default, loading, error, mobile 375px) |
+| Hard Gate Modal | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/hard-gate-modal.html) | "This Rune Is Sealed" modal: 4 scenarios (Cloud Sync, Data Export, mobile 375px, expired variant) |
+| Settings — Patreon Linked + Badge | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/settings-patreon-linked.html) | Linked Karl state: 5 scenarios (TopBar badge, dropdown, Thrall-no-pledge, mobile, expired) |
+| Upsell Banners | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/upsell-banner-premium.html) | Contextual premium feature upsells: 5 scenarios (Settings, Valhalla, Import, mobile, Dashboard) + component spec |
+| Unlink Confirmation | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/unlink-confirmation.html) | Unlink Patreon dialog: desktop + mobile 375px + post-unlink behavior notes |
+| Settings — Expired Membership | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/settings-patreon-expired.html) | Expired Karl state: desktop + mobile + info toast + expiration detection flow |
+
+**Interaction spec:** [designs/ux-design/interactions/patreon-subscription.md](../designs/ux-design/interactions/patreon-subscription.md)
+
+---
+
 ## Sprint 4 Wireframes
 
 | Story | File | Description |
@@ -42,6 +57,12 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Multi-IDP Sign-In Dialog (Clerk) | [wireframes/auth/multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html) | Modal dialog supporting 1–4+ providers; Phase 1 (GitHub) + Phase 2 (Google, Apple, Magic Link); desktop centered + mobile bottom-anchored; "Continue without signing in" is the sole, prominent dismiss |
 | Migration Prompt — Anonymous to Signed-In | [wireframes/auth/migration-prompt.html](wireframes/auth/migration-prompt.html) | Post-OAuth modal dialog: Import N cards vs. Start fresh; reassurance copy; desktop + mobile stacked choices; state flow diagram |
 | Cloud Sync Upsell Banner | [wireframes/auth/upsell-banner.html](wireframes/auth/upsell-banner.html) | Dismissible banner below TopBar on the dashboard: visible/dismissed/signed-in variants, desktop + mobile; dismiss lifecycle and localStorage flag spec |
+| Settings — Patreon Unlinked | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/settings-patreon-unlinked.html) | Settings page with "Link Patreon" button: default, loading, error, and mobile 375px states |
+| Hard Gate Modal — "This Rune Is Sealed" | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/hard-gate-modal.html) | Premium feature hard gate: Algiz rune, feature description, Karl tier badge, "Pledge on Patreon" CTA, expired variant |
+| Settings — Patreon Linked + Tier Badge | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/settings-patreon-linked.html) | Linked Karl state with TopBar badge, profile dropdown tier label, Thrall-no-pledge, mobile, expired states |
+| Premium Feature Upsell Banners | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/upsell-banner-premium.html) | Contextual inline upsells for 8 premium features: Settings, Valhalla, Import, Dashboard placements + component spec |
+| Unlink Patreon Confirmation | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/unlink-confirmation.html) | Unlink dialog: desktop + mobile, post-unlink behavior |
+| Settings — Expired Membership | [wireframes (designs)](../designs/ux-design/wireframes/patreon-subscription/settings-patreon-expired.html) | Expired Karl: warning, renewal CTA, info toast, expiration detection flow |
 | **notifications** | | |
 | Ragnarök Threshold Mode | [wireframes/notifications/ragnarok-threshold.html](wireframes/notifications/ragnarok-threshold.html) | 3 dashboard states, red radial overlay spec, RagnarokContext data flow, HowlPanel header override |
 | Card Count Milestone Toasts | [wireframes/notifications/card-count-milestones.html](wireframes/notifications/card-count-milestones.html) | All 5 milestone toast designs, desktop + mobile positioning, stacked behavior, localStorage gate flow |

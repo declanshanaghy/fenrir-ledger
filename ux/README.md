@@ -193,6 +193,20 @@ The canonical reference for Mermaid syntax conventions across all four agents: c
 
 ---
 
+### ᛊ Patreon Subscription UX
+
+*The two tiers. The sealed rune. The pledge that opens Karl's Hall.*
+
+- [Interaction Spec](../designs/ux-design/interactions/patreon-subscription.md) -- Full interaction specification: state machine, OAuth flow, hard gate modal, upsell banners, tier badge, unlink flow, accessibility, responsive behavior.
+- [Settings -- Unlinked](../designs/ux-design/wireframes/patreon-subscription/settings-patreon-unlinked.html) -- Settings page with "Link Patreon" button (4 scenarios).
+- [Hard Gate Modal](../designs/ux-design/wireframes/patreon-subscription/hard-gate-modal.html) -- "This Rune Is Sealed" modal for premium features (4 scenarios).
+- [Settings -- Linked + Badge](../designs/ux-design/wireframes/patreon-subscription/settings-patreon-linked.html) -- Karl linked state with TopBar tier badge (5 scenarios).
+- [Upsell Banners](../designs/ux-design/wireframes/patreon-subscription/upsell-banner-premium.html) -- Contextual premium feature upsells (5 scenarios + component spec).
+- [Unlink Confirmation](../designs/ux-design/wireframes/patreon-subscription/unlink-confirmation.html) -- Unlink Patreon dialog (desktop + mobile).
+- [Settings -- Expired](../designs/ux-design/wireframes/patreon-subscription/settings-patreon-expired.html) -- Expired membership state + info toast (3 scenarios).
+
+---
+
 ### ᚢ [Freya's Backlog](../product/backlog/README.md)
 
 *The wolf's queue. Groomed, prioritized, ready to hunt.*

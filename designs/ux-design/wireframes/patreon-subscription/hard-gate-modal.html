@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Hard Gate Modal — This Rune Is Sealed</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 4px; }
+
+    /* ── Page layout ─────────────────────────────────────────────── */
+    .page { display: flex; flex-direction: column; gap: 48px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* ── Modal structure ─────────────────────────────────────────── */
+    /*
+     * The Hard Gate Modal ("This Rune Is Sealed") appears when a signed-in
+     * Thrall user (or unlinked/expired user) attempts to access any of the
+     * 8 premium features.
+     *
+     * It is NOT a soft gate. There is no "try once" or "limited preview".
+     * The feature is fully locked. The modal explains what the feature does,
+     * why it is locked, and how to unlock it (pledge on Patreon).
+     *
+     * Key decisions:
+     *   - Rune glyph (Algiz -- protection) is the visual centerpiece
+     *   - "THIS RUNE IS SEALED" heading (Cinzel Decorative in implementation)
+     *   - Feature name + description (Voice 1 -- functional)
+     *   - Atmospheric encouragement (Voice 2 -- Norse, italic)
+     *   - Karl tier badge + price indicator
+     *   - "Pledge on Patreon" CTA opens Patreon campaign in new tab
+     *   - "Not now" secondary dismiss (text link, not hidden)
+     *   - z-index: 200 (overlay) / 210 (modal)
+     *   - Focus trap: close -> Pledge CTA -> Not now -> close (cycle)
+     *   - Escape key dismisses
+     *
+     * States shown:
+     *   1. Desktop — Cloud Sync feature gate
+     *   2. Desktop — Data Export feature gate (alternate content)
+     *   3. Mobile 375px — Cloud Sync feature gate
+     *   4. Desktop — Expired membership variant
+     */
+
+    /* Backdrop */
+    .modal-backdrop {
+      position: relative;
+      border: 1px solid;
+      min-height: 500px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .backdrop-label {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 10px;
+      opacity: 0.4;
+    }
+
+    /* Modal shell */
+    .modal {
+      width: 100%;
+      max-width: 480px;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Close button row */
+    .modal-close-row {
+      display: flex;
+      justify-content: flex-end;
+      padding: 8px 12px;
+    }
+    .btn-close {
+      width: 32px;
+      height: 32px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    /* Rune centerpiece */
+    .modal-rune {
+      text-align: center;
+      padding: 8px 0;
+    }
+    .rune-glyph {
+      font-size: 48px;
+      line-height: 1;
+    }
+
+    /* Modal heading */
+    .modal-heading {
+      text-align: center;
+      padding: 8px 24px 16px;
+    }
+    .modal-heading h2 {
+      font-size: 22px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    /* Feature content */
+    .modal-content {
+      padding: 0 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .feature-box {
+      border: 1px solid;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .feature-name {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .feature-description {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .feature-separator {
+      border-top: 1px solid;
+      margin: 4px 0;
+    }
+    .feature-atmospheric {
+      font-size: 14px;
+      font-style: italic;
+      line-height: 1.5;
+      opacity: 0.8;
+    }
+
+    /* Tier info row */
+    .tier-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 8px 24px;
+    }
+    .tier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .tier-badge-icon {
+      width: 16px;
+      height: 16px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+    }
+    .tier-price {
+      font-size: 13px;
+    }
+
+    /* CTA */
+    .modal-cta {
+      padding: 8px 24px;
+    }
+    .btn-pledge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px 24px;
+      border: 2px solid;
+      font-size: 15px;
+      font-weight: bold;
+      min-height: 48px;
+      cursor: pointer;
+    }
+
+    /* Secondary dismiss */
+    .modal-dismiss {
+      text-align: center;
+      padding: 12px 24px 20px;
+    }
+    .dismiss-link {
+      font-size: 13px;
+      border: none;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 8px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    /* ── Mobile variant ──────────────────────────────────────────── */
+    .modal-backdrop--mobile {
+      max-width: 375px;
+    }
+    .modal--mobile {
+      max-width: 345px;
+    }
+    .modal--mobile .rune-glyph {
+      font-size: 40px;
+    }
+    .modal--mobile .modal-heading h2 {
+      font-size: 18px;
+    }
+    .modal--mobile .feature-name {
+      font-size: 15px;
+    }
+    .modal--mobile .modal-content {
+      padding: 0 16px 12px;
+    }
+    .modal--mobile .tier-row {
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 16px;
+    }
+    .modal--mobile .modal-cta {
+      padding: 8px 16px;
+    }
+    .modal--mobile .modal-dismiss {
+      padding: 8px 16px 16px;
+    }
+
+    /* Expired variant badge */
+    .tier-badge--expired {
+      border-style: dashed;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCENARIO 1: Desktop — Cloud Sync Feature Gate
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Scenario 1: Desktop — Cloud Sync Feature Gate</div>
+      <p class="note">
+        A signed-in Thrall user clicked "Cloud Sync" or attempted a sync action.
+        The hard gate modal appears instead of the feature.
+        The rune Algiz (protection) is the visual anchor.
+        "Pledge on Patreon" opens the Patreon campaign page in a new tab.
+        "Not now" dismisses the modal and returns focus to the trigger element.
+      </p>
+
+      <div class="modal-backdrop" role="presentation">
+        <span class="backdrop-label">Backdrop (semi-transparent overlay, z-index: 200)</span>
+
+        <!-- Modal dialog -->
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="gate-heading-1" aria-describedby="gate-desc-1">
+
+          <!-- Close button -->
+          <div class="modal-close-row">
+            <button class="btn-close" aria-label="Dismiss">x</button>
+            <!-- Note: min-width/min-height 44px for touch target -->
+          </div>
+
+          <!-- Rune glyph -->
+          <div class="modal-rune">
+            <div class="rune-glyph">&#5765;</div>
+            <!--
+              Rune: Algiz (protection, shielding).
+              In implementation: rendered in Noto Sans Runic or as SVG.
+              Pulse animation on entry (600ms, once).
+              prefers-reduced-motion: no animation.
+            -->
+          </div>
+
+          <!-- Heading -->
+          <div class="modal-heading">
+            <h2 id="gate-heading-1">THIS RUNE IS SEALED</h2>
+            <!--
+              Implementation: Cinzel Decorative 700, uppercase, letter-spacing 0.12em.
+              This is the brand moment. Non-negotiable.
+            -->
+          </div>
+
+          <!-- Feature content -->
+          <div class="modal-content">
+            <div class="feature-box">
+              <div class="feature-name">Cloud Sync</div>
+              <p class="feature-description" id="gate-desc-1">
+                Sync your card data across all your devices. Never lose your ledger.
+              </p>
+              <!-- Voice 1 -- functional. Clear what the feature does. -->
+              <div class="feature-separator"></div>
+              <p class="feature-atmospheric">
+                "The wolf who roams far keeps his saga close."
+              </p>
+              <!-- Voice 2 -- atmospheric. Norse encouragement. Italic. -->
+            </div>
+          </div>
+
+          <!-- Tier info -->
+          <div class="tier-row">
+            <div class="tier-badge">
+              <span class="tier-badge-icon">K</span>
+              Karl Supporter
+            </div>
+            <span class="tier-price">$3-5/mo via Patreon</span>
+          </div>
+
+          <!-- Primary CTA -->
+          <div class="modal-cta">
+            <button class="btn-pledge" aria-label="Open Patreon campaign page in new tab">
+              Pledge on Patreon
+            </button>
+            <!--
+              Opens: https://www.patreon.com/fenrir_ledger (or campaign URL)
+              target="_blank" rel="noopener noreferrer"
+              Modal stays open so user can return after pledging.
+            -->
+          </div>
+
+          <!-- Secondary dismiss -->
+          <div class="modal-dismiss">
+            <button class="dismiss-link" aria-label="Dismiss and continue as free user">
+              Not now -- I will continue as Thrall
+            </button>
+            <!--
+              Dismisses modal. Focus returns to trigger element.
+              This is a first-class dismiss path, not a hidden link.
+            -->
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCENARIO 2: Desktop — Data Export Feature Gate
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Scenario 2: Desktop — Data Export Feature Gate</div>
+      <p class="note">
+        Same modal structure, different feature content. Shows how the modal
+        adapts to each of the 8 premium features while maintaining identical
+        structure and interaction patterns.
+      </p>
+
+      <div class="modal-backdrop" role="presentation">
+        <span class="backdrop-label">Backdrop</span>
+
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="gate-heading-2" aria-describedby="gate-desc-2">
+          <div class="modal-close-row">
+            <button class="btn-close" aria-label="Dismiss">x</button>
+          </div>
+          <div class="modal-rune">
+            <div class="rune-glyph">&#5765;</div>
+          </div>
+          <div class="modal-heading">
+            <h2 id="gate-heading-2">THIS RUNE IS SEALED</h2>
+          </div>
+          <div class="modal-content">
+            <div class="feature-box">
+              <div class="feature-name">Data Export</div>
+              <p class="feature-description" id="gate-desc-2">
+                Export your card data as CSV or JSON for use anywhere.
+              </p>
+              <div class="feature-separator"></div>
+              <p class="feature-atmospheric">
+                "Carry the runes beyond these walls."
+              </p>
+            </div>
+          </div>
+          <div class="tier-row">
+            <div class="tier-badge">
+              <span class="tier-badge-icon">K</span>
+              Karl Supporter
+            </div>
+            <span class="tier-price">$3-5/mo via Patreon</span>
+          </div>
+          <div class="modal-cta">
+            <button class="btn-pledge" aria-label="Open Patreon campaign page in new tab">
+              Pledge on Patreon
+            </button>
+          </div>
+          <div class="modal-dismiss">
+            <button class="dismiss-link" aria-label="Dismiss and continue as free user">
+              Not now -- I will continue as Thrall
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCENARIO 3: Mobile 375px — Cloud Sync Feature Gate
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Scenario 3: Mobile 375px — Cloud Sync Feature Gate</div>
+      <p class="note">
+        Mobile variant. Modal is nearly full-width (w-[92vw] = ~345px on 375px viewport).
+        Rune glyph is smaller (40px). Heading is smaller (18px). Tier row stacks vertically.
+        "Pledge on Patreon" is full-width, min-height 48px for comfortable mobile touch.
+        "Not now" dismiss has min-height 44px touch target.
+        Content scrolls if it exceeds max-h-[90vh].
+      </p>
+
+      <div class="modal-backdrop modal-backdrop--mobile" role="presentation">
+        <span class="backdrop-label">Backdrop (375px viewport)</span>
+
+        <div class="modal modal--mobile" role="dialog" aria-modal="true" aria-labelledby="gate-heading-3" aria-describedby="gate-desc-3">
+          <div class="modal-close-row">
+            <button class="btn-close" aria-label="Dismiss">x</button>
+          </div>
+          <div class="modal-rune">
+            <div class="rune-glyph">&#5765;</div>
+          </div>
+          <div class="modal-heading">
+            <h2 id="gate-heading-3">THIS RUNE IS SEALED</h2>
+          </div>
+          <div class="modal-content">
+            <div class="feature-box">
+              <div class="feature-name">Cloud Sync</div>
+              <p class="feature-description" id="gate-desc-3">
+                Sync your card data across all your devices. Never lose your ledger.
+              </p>
+              <div class="feature-separator"></div>
+              <p class="feature-atmospheric">
+                "The wolf who roams far keeps his saga close."
+              </p>
+            </div>
+          </div>
+          <div class="tier-row">
+            <div class="tier-badge">
+              <span class="tier-badge-icon">K</span>
+              Karl Supporter
+            </div>
+            <span class="tier-price">$3-5/mo via Patreon</span>
+          </div>
+          <div class="modal-cta">
+            <button class="btn-pledge" aria-label="Open Patreon campaign page in new tab">
+              Pledge on Patreon
+            </button>
+          </div>
+          <div class="modal-dismiss">
+            <button class="dismiss-link" aria-label="Dismiss and continue as free user">
+              Not now -- I will continue as Thrall
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCENARIO 4: Desktop — Expired Membership Variant
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Scenario 4: Desktop — Expired Membership Variant</div>
+      <p class="note">
+        User was previously Karl but their Patreon membership has lapsed.
+        The modal is similar but the CTA changes from "Pledge on Patreon"
+        to "Renew on Patreon" and the tier badge shows "EXPIRED".
+        The atmospheric copy adjusts to acknowledge the user was once a Karl.
+      </p>
+
+      <div class="modal-backdrop" role="presentation">
+        <span class="backdrop-label">Backdrop</span>
+
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="gate-heading-4" aria-describedby="gate-desc-4">
+          <div class="modal-close-row">
+            <button class="btn-close" aria-label="Dismiss">x</button>
+          </div>
+          <div class="modal-rune">
+            <div class="rune-glyph">&#5765;</div>
+          </div>
+          <div class="modal-heading">
+            <h2 id="gate-heading-4">THIS RUNE IS SEALED</h2>
+          </div>
+          <div class="modal-content">
+            <div class="feature-box">
+              <div class="feature-name">Cloud Sync</div>
+              <p class="feature-description" id="gate-desc-4">
+                Sync your card data across all your devices. Never lose your ledger.
+              </p>
+              <div class="feature-separator"></div>
+              <p class="feature-atmospheric">
+                "The hall remembers your name, Karl. Return and reclaim your seat."
+              </p>
+              <!--
+                Expired users get different atmospheric copy that acknowledges
+                they were once a supporter. This feels welcoming, not punitive.
+              -->
+            </div>
+          </div>
+          <div class="tier-row">
+            <div class="tier-badge tier-badge--expired">
+              <span class="tier-badge-icon">!</span>
+              Expired
+            </div>
+            <span class="tier-price">Renew at $3-5/mo</span>
+          </div>
+          <div class="modal-cta">
+            <!--
+              CTA changes to "Renew on Patreon" for expired users.
+              Same behavior: opens Patreon campaign in new tab.
+            -->
+            <button class="btn-pledge" aria-label="Open Patreon campaign page to renew membership">
+              Renew on Patreon
+            </button>
+          </div>
+          <div class="modal-dismiss">
+            <button class="dismiss-link" aria-label="Dismiss and continue without premium features">
+              Not now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

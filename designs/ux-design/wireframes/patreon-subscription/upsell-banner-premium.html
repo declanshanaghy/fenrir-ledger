@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Premium Feature Upsell Banners</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 4px; }
+
+    /* ── Page layout ─────────────────────────────────────────────── */
+    .page { display: flex; flex-direction: column; gap: 48px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* ── Upsell banner component ─────────────────────────────────── */
+    /*
+     * Premium feature upsell banners appear contextually near the features
+     * they promote. They are inline with page content -- NOT popups, NOT
+     * blocking overlays, NOT floating notifications.
+     *
+     * Design principles:
+     *   - Non-aggressive: informational only, no countdown timers, no pulsing
+     *   - Contextual: each banner appears near its relevant feature
+     *   - Not individually dismissible: they disappear when user becomes Karl
+     *   - Maximum 1 upsell per page view
+     *   - Not shown to anonymous users (sign in first)
+     *   - "Learn more" opens the hard gate modal for that feature
+     *
+     * Banner anatomy:
+     *   [Rune icon]  [Headline -- Voice 1]
+     *                [1-line description -- Voice 1]
+     *                [Atmospheric teaser -- Voice 2, italic, muted]
+     *                                           [Learn more ->]
+     *
+     * States shown:
+     *   1. Settings page — Cloud Sync upsell (in Data section)
+     *   2. Valhalla page — Extended History upsell
+     *   3. Import Wizard — Priority Import upsell
+     *   4. Mobile 375px — Cloud Sync upsell
+     *   5. Dashboard — Advanced Analytics upsell (future panel)
+     */
+
+    /* Banner structure */
+    .upsell-banner {
+      border: 1px solid;
+      padding: 16px 20px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .upsell-rune {
+      font-size: 24px;
+      line-height: 1;
+      flex-shrink: 0;
+      width: 32px;
+      text-align: center;
+      padding-top: 2px;
+    }
+    .upsell-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .upsell-headline {
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .upsell-description {
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .upsell-atmospheric {
+      font-size: 13px;
+      font-style: italic;
+      opacity: 0.6;
+      line-height: 1.4;
+    }
+    .upsell-link {
+      font-size: 13px;
+      font-weight: bold;
+      text-decoration: underline;
+      cursor: pointer;
+      align-self: flex-end;
+      margin-top: 4px;
+      padding: 4px 0;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* ── Page context containers ─────────────────────────────────── */
+
+    /* Settings page mock */
+    .settings-context {
+      border: 1px solid;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .context-title {
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding-bottom: 8px;
+      border-bottom: 1px solid;
+    }
+    .context-content {
+      font-size: 14px;
+      opacity: 0.5;
+    }
+
+    /* Valhalla page mock */
+    .valhalla-context {
+      border: 1px solid;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .valhalla-heading {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .valhalla-subheading {
+      font-size: 14px;
+      font-style: italic;
+      opacity: 0.7;
+    }
+    .tombstone-card {
+      border: 1px solid;
+      border-left: 4px solid;
+      padding: 12px 16px;
+      font-size: 13px;
+    }
+
+    /* Import wizard mock */
+    .wizard-context {
+      border: 1px solid;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 480px;
+    }
+    .wizard-heading {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .wizard-option {
+      border: 1px solid;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+    .wizard-option-icon {
+      width: 32px;
+      height: 32px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .wizard-option-label {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    /* Dashboard mock */
+    .dashboard-context {
+      border: 1px solid;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Mobile */
+    .upsell-banner--mobile {
+      flex-direction: column;
+      gap: 8px;
+      max-width: 375px;
+    }
+    .upsell-banner--mobile .upsell-rune {
+      font-size: 20px;
+    }
+    .upsell-banner--mobile .upsell-link {
+      align-self: flex-start;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCENARIO 1: Settings Page — Cloud Sync Upsell
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Scenario 1: Settings Page — Cloud Sync Upsell</div>
+      <p class="note">
+        The upsell banner appears within the Settings page "Data" section,
+        below existing data management options. It is inline -- not a popup.
+        "Learn more" opens the hard gate modal for Cloud Sync (see hard-gate-modal.html).
+        Visible only to signed-in Thrall users. Anonymous users see nothing.
+      </p>
+
+      <div class="settings-context">
+        <h2 class="context-title">Data</h2>
+        <div class="context-content">[Existing data management: clear data, etc.]</div>
+
+        <!-- UPSELL BANNER: Cloud Sync -->
+        <div class="upsell-banner" role="complementary" aria-label="Premium feature: Cloud Sync">
+          <div class="upsell-rune">&#5765;</div>
+          <!-- Rune: Algiz (protection). In implementation: SVG or Noto Sans Runic. -->
+          <div class="upsell-content">
+            <div class="upsell-headline">Cloud Sync</div>
+            <div class="upsell-description">
+              Sync your card data across all your devices. Never lose your ledger.
+            </div>
+            <div class="upsell-atmospheric">
+              "The wolf who roams far keeps his saga close."
+            </div>
+            <a class="upsell-link" aria-label="Learn more about Cloud Sync">Learn more &#8594;</a>
+            <!--
+              "Learn more" opens the hard gate modal (Interaction 3 in the spec).
+              It does NOT navigate to a new page.
+            -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCENARIO 2: Valhalla Page — Extended History Upsell
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Scenario 2: Valhalla Page — Extended History Upsell</div>
+      <p class="note">
+        The upsell banner appears at the top of the Valhalla card list,
+        above the tombstone cards. It promotes Extended History (5 years
+        vs. 1 year of closed card records). Contextually relevant because
+        the user is already looking at their closed card archive.
+      </p>
+
+      <div class="valhalla-context">
+        <div>
+          <h1 class="valhalla-heading">Valhalla</h1>
+          <p class="valhalla-subheading">Hall of the Honored Dead</p>
+        </div>
+
+        <!-- UPSELL BANNER: Extended History -->
+        <div class="upsell-banner" role="complementary" aria-label="Premium feature: Extended History">
+          <div class="upsell-rune">&#5765;</div>
+          <div class="upsell-content">
+            <div class="upsell-headline">Extended History</div>
+            <div class="upsell-description">
+              Keep closed card records for 5 years instead of 1.
+            </div>
+            <div class="upsell-atmospheric">
+              "In Karl's Hall, the honored dead remember longer."
+            </div>
+            <a class="upsell-link" aria-label="Learn more about Extended History">Learn more &#8594;</a>
+          </div>
+        </div>
+
+        <!-- Tombstone cards below -->
+        <div class="tombstone-card">
+          [Tombstone: Chase Sapphire Preferred -- closed Jan 2026]
+        </div>
+        <div class="tombstone-card">
+          [Tombstone: Amex Gold -- closed Nov 2025]
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCENARIO 3: Import Wizard — Priority Import Upsell
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Scenario 3: Import Wizard — Priority Import Upsell</div>
+      <p class="note">
+        The upsell banner appears within the Import Wizard's method selection
+        step, below the import method options. It promotes Priority Import
+        (faster processing). The banner is inside the wizard dialog, not
+        outside it. Maximum 1 upsell per page -- this would be the only one
+        visible in the wizard context.
+      </p>
+
+      <div class="wizard-context">
+        <h2 class="wizard-heading">Import Cards</h2>
+        <p class="note" style="margin-bottom: 8px; opacity: 1;">Choose an import method:</p>
+
+        <div class="wizard-option">
+          <div class="wizard-option-icon">A</div>
+          <div class="wizard-option-label">Import from URL</div>
+        </div>
+        <div class="wizard-option">
+          <div class="wizard-option-icon">B</div>
+          <div class="wizard-option-label">Google Drive Picker</div>
+        </div>
+        <div class="wizard-option">
+          <div class="wizard-option-icon">C</div>
+          <div class="wizard-option-label">Upload CSV</div>
+        </div>
+
+        <!-- UPSELL BANNER: Priority Import -->
+        <div class="upsell-banner" role="complementary" aria-label="Premium feature: Priority Import">
+          <div class="upsell-rune">&#5765;</div>
+          <div class="upsell-content">
+            <div class="upsell-headline">Priority Import</div>
+            <div class="upsell-description">
+              Import cards faster with priority processing.
+            </div>
+            <div class="upsell-atmospheric">
+              "The ravens fly swifter for Karl's hall."
+            </div>
+            <a class="upsell-link" aria-label="Learn more about Priority Import">Learn more &#8594;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCENARIO 4: Mobile 375px — Cloud Sync Upsell
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Scenario 4: Mobile 375px — Cloud Sync Upsell</div>
+      <p class="note">
+        Mobile layout. Banner is single-column: rune icon above content.
+        "Learn more" link has min-height 44px for touch target.
+        The banner is full-width within the page content area.
+      </p>
+
+      <div class="settings-context" style="max-width: 375px;">
+        <h2 class="context-title">Data</h2>
+        <div class="context-content">[Existing data management]</div>
+
+        <!-- UPSELL BANNER: Mobile variant -->
+        <div class="upsell-banner upsell-banner--mobile" role="complementary" aria-label="Premium feature: Cloud Sync">
+          <div class="upsell-rune">&#5765;</div>
+          <div class="upsell-content">
+            <div class="upsell-headline">Cloud Sync</div>
+            <div class="upsell-description">
+              Sync your card data across all your devices. Never lose your ledger.
+            </div>
+            <div class="upsell-atmospheric">
+              "The wolf who roams far keeps his saga close."
+            </div>
+            <a class="upsell-link" aria-label="Learn more about Cloud Sync">Learn more &#8594;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCENARIO 5: Dashboard — Advanced Analytics Upsell
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Scenario 5: Dashboard — Advanced Analytics Upsell</div>
+      <p class="note">
+        When an analytics panel is added to the dashboard in a future sprint,
+        the upsell banner appears below the card grid where the analytics
+        panel would normally render. This shows the banner in a non-settings
+        context -- it works anywhere in the page flow.
+      </p>
+
+      <div class="dashboard-context">
+        <div>
+          <h1 style="font-size: 24px; font-weight: bold;">The Ledger of Fates</h1>
+          <p style="font-size: 14px; font-style: italic; opacity: 0.7; margin-top: 4px;">Every chain, every deadline, every reward</p>
+        </div>
+
+        <div style="border: 1px solid; padding: 16px; opacity: 0.4;">
+          [Card grid: 3 columns of card tiles]
+        </div>
+
+        <!-- UPSELL BANNER: Advanced Analytics -->
+        <div class="upsell-banner" role="complementary" aria-label="Premium feature: Advanced Analytics">
+          <div class="upsell-rune">&#5765;</div>
+          <div class="upsell-content">
+            <div class="upsell-headline">Advanced Analytics</div>
+            <div class="upsell-description">
+              See spending trends, reward optimization, and portfolio insights.
+            </div>
+            <div class="upsell-atmospheric">
+              "The Norns see deeper for those who pledge."
+            </div>
+            <a class="upsell-link" aria-label="Learn more about Advanced Analytics">Learn more &#8594;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         COMPONENT SPEC: UpsellBanner
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-label">Component Spec: UpsellBanner</div>
+      <p class="note">
+        Reusable component for all 8 premium feature upsells.
+        Rendered by a PremiumFeatureGate wrapper that checks auth + tier status.
+      </p>
+
+      <pre style="font-size: 12px; border: 1px solid; padding: 16px; line-height: 1.6; white-space: pre-wrap;">
+Component: UpsellBanner
+
+Props:
+  feature: "cloud-sync" | "multi-household" | "advanced-analytics"
+           | "priority-import" | "data-export" | "extended-history"
+           | "custom-notifications" | "cosmetic-perks"
+
+Render condition:
+  - User is signed in (not anonymous)
+  - User is NOT Karl tier (tier !== "karl")
+  - Maximum 1 UpsellBanner per page (PremiumFeatureGate manages this)
+
+Behavior:
+  - "Learn more" click: opens HardGateModal for the given feature
+  - Not individually dismissible
+  - Disappears when user upgrades to Karl
+
+Accessibility:
+  - role="complementary"
+  - aria-label="Premium feature: {Feature Name}"
+  - "Learn more" link: keyboard focusable, aria-label="Learn more about {Feature Name}"
+  - min-height 44px on "Learn more" link for touch target
+
+Responsive:
+  - Desktop: horizontal layout (rune left, content right)
+  - Mobile (&lt;640px): vertical stack (rune above content)
+      </pre>
+    </div>
+
+  </div>
+</body>
+</html>
