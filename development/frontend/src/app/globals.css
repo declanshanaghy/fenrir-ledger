@@ -457,3 +457,26 @@ body.konami-shake-mobile {
   }
 }
 
+/* ── Sealed Rune Pulse — Premium Gate Modal ────────────────────── */
+/*
+ * One-shot gold pulse on the Algiz rune glyph when the hard gate
+ * modal opens. 600ms, ease-out, no repeat. Purely decorative.
+ *
+ * Spec from wireframe: designs/ux-design/wireframes/patreon-subscription/hard-gate-modal.html
+ */
+@keyframes sealed-rune-pulse {
+  0%   { opacity: 0.4; filter: drop-shadow(0 0 0 rgba(212, 165, 32, 0)); }
+  50%  { opacity: 1;   filter: drop-shadow(0 0 16px rgba(212, 165, 32, 0.5)); }
+  100% { opacity: 1;   filter: drop-shadow(0 0 4px rgba(212, 165, 32, 0.15)); }
+}
+
+.sealed-rune-pulse {
+  animation: sealed-rune-pulse 600ms ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sealed-rune-pulse {
+    animation: none;
+  }
+}
+
