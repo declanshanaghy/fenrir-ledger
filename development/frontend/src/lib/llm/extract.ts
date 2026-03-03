@@ -9,11 +9,17 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 
+/** Structured prompt with system/user separation to prevent prompt injection. */
+export interface StructuredPrompt {
+  system: string;
+  user: string;
+}
+
 /** Provider-agnostic interface for text extraction. */
 export interface LlmProvider {
   readonly name: string;
   readonly model: string;
-  extractText(prompt: string): Promise<string>;
+  extractText(prompt: string | StructuredPrompt): Promise<string>;
 }
 
 const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
@@ -28,13 +34,16 @@ class AnthropicProvider implements LlmProvider {
     this.client = new Anthropic({ apiKey });
   }
 
-  async extractText(prompt: string): Promise<string> {
+  async extractText(prompt: string | StructuredPrompt): Promise<string> {
+    const isStructured = typeof prompt !== "string";
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const message = await this.client.messages.create({
           model: this.model,
           max_tokens: 4096,
-          messages: [{ role: "user", content: prompt }],
+          ...(isStructured
+            ? { system: prompt.system, messages: [{ role: "user" as const, content: prompt.user }] }
+            : { messages: [{ role: "user" as const, content: prompt }] }),
         });
         const textBlock = message.content.find((b) => b.type === "text");
         return textBlock?.text ?? "";
@@ -55,13 +64,19 @@ class OpenAIProvider implements LlmProvider {
     this.client = new OpenAI({ apiKey });
   }
 
-  async extractText(prompt: string): Promise<string> {
+  async extractText(prompt: string | StructuredPrompt): Promise<string> {
+    const isStructured = typeof prompt !== "string";
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const completion = await this.client.chat.completions.create({
           model: this.model,
           max_tokens: 4096,
-          messages: [{ role: "user", content: prompt }],
+          messages: isStructured
+            ? [
+                { role: "system" as const, content: prompt.system },
+                { role: "user" as const, content: prompt.user },
+              ]
+            : [{ role: "user" as const, content: prompt }],
         });
         return completion.choices[0]?.message?.content ?? "";
       } catch (err) {

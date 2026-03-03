@@ -1,10 +1,6 @@
 # Designs / Product
 
-Product-level design artifacts that live alongside the architecture specs in `designs/`. These are investigation and evaluation stories that inform architectural decisions.
-
-For the primary product backlog and design briefs, see [`product/`](../../product/) at the repo root.
-
----
+Product-level design artifacts. For the primary product backlog and design briefs, see [`product/`](../../product/) at the repo root.
 
 ## Index
 

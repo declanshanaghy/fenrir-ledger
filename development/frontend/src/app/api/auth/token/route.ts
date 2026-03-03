@@ -14,14 +14,19 @@
  *
  * See ADR-005 for the full auth architecture decision.
  *
- * Request body (JSON):
- *   { code: string; code_verifier: string; redirect_uri: string }
+ * Supports two flows:
  *
- * Response:
- *   Google's token response forwarded as-is (status + body).
+ * 1. Authorization code exchange (initial login):
+ *    Request:  { code: string; code_verifier: string; redirect_uri: string }
+ *    Response: Google's token response (access_token, id_token, refresh_token, expires_in)
+ *
+ * 2. Refresh token (silent session renewal — DEF-001 fix):
+ *    Request:  { refresh_token: string }
+ *    Response: Google's token response (access_token, id_token, expires_in)
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 /**
  * Whitelisted origins that may call this endpoint.
@@ -38,10 +43,20 @@ const ALLOWED_ORIGINS = new Set([
 /** Google token endpoint. */
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 
-interface TokenRequestBody {
+interface AuthCodeRequestBody {
   code: string;
   code_verifier: string;
   redirect_uri: string;
+}
+
+interface RefreshRequestBody {
+  refresh_token: string;
+}
+
+type TokenRequestBody = AuthCodeRequestBody | RefreshRequestBody;
+
+function isRefreshRequest(body: TokenRequestBody): body is RefreshRequestBody {
+  return "refresh_token" in body;
 }
 
 /**
@@ -59,6 +74,20 @@ function isAllowedRedirectUri(redirectUri: string): boolean {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Rate limit by IP — 10 requests per minute per IP address.
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const { success } = rateLimit(`token:${ip}`, { limit: 10, windowMs: 60_000 });
+  if (!success) {
+    return NextResponse.json(
+      {
+        error: "rate_limited",
+        error_description: "Too many requests. Try again later.",
+      },
+      { status: 429 }
+    );
+  }
+
   // Parse and validate request body.
   let body: TokenRequestBody;
   try {
@@ -70,29 +99,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { code, code_verifier, redirect_uri } = body;
-
-  if (!code || !code_verifier || !redirect_uri) {
-    return NextResponse.json(
-      {
-        error: "invalid_request",
-        error_description: "Missing required fields: code, code_verifier, redirect_uri.",
-      },
-      { status: 400 }
-    );
-  }
-
-  // Validate redirect_uri origin against the allow-list.
-  if (!isAllowedRedirectUri(redirect_uri)) {
-    return NextResponse.json(
-      {
-        error: "invalid_request",
-        error_description: "redirect_uri origin is not whitelisted.",
-      },
-      { status: 400 }
-    );
-  }
-
+  // Load OAuth credentials (needed for both flows).
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
@@ -104,16 +111,59 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Proxy the token exchange to Google.
-  const params = new URLSearchParams({
-    code,
-    code_verifier,
-    redirect_uri,
-    client_id: clientId,
-    client_secret: clientSecret,
-    grant_type: "authorization_code",
-  });
+  // Build the params for the appropriate grant type.
+  let params: URLSearchParams;
 
+  if (isRefreshRequest(body)) {
+    // --- Refresh token flow (DEF-001) ---
+    if (!body.refresh_token) {
+      return NextResponse.json(
+        { error: "invalid_request", error_description: "Missing required field: refresh_token." },
+        { status: 400 }
+      );
+    }
+
+    params = new URLSearchParams({
+      refresh_token: body.refresh_token,
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "refresh_token",
+    });
+  } else {
+    // --- Authorization code exchange flow (original) ---
+    const { code, code_verifier, redirect_uri } = body;
+
+    if (!code || !code_verifier || !redirect_uri) {
+      return NextResponse.json(
+        {
+          error: "invalid_request",
+          error_description: "Missing required fields: code, code_verifier, redirect_uri.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!isAllowedRedirectUri(redirect_uri)) {
+      return NextResponse.json(
+        {
+          error: "invalid_request",
+          error_description: "redirect_uri origin is not whitelisted.",
+        },
+        { status: 400 }
+      );
+    }
+
+    params = new URLSearchParams({
+      code,
+      code_verifier,
+      redirect_uri,
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "authorization_code",
+    });
+  }
+
+  // Proxy to Google's token endpoint.
   let googleResponse: Response;
   try {
     googleResponse = await fetch(GOOGLE_TOKEN_URL, {

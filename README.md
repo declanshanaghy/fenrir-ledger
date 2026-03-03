@@ -72,6 +72,7 @@ Track every fee-wyrm in your portfolio. Every chain forged, every promo deadline
 | Product Owner | Freya | Sonnet | [AGENT](.claude/agents/freya.md) |
 | UX Designer | Luna | Sonnet | [AGENT](.claude/agents/luna.md) |
 | Principal Engineer | FiremanDecko | Sonnet | [AGENT](.claude/agents/fireman-decko.md) |
+| Security Specialist | Heimdall | Sonnet | [AGENT](.claude/agents/heimdall.md) |
 | QA Tester | Loki | Haiku | [AGENT](.claude/agents/loki.md) |
 
 ## The Pipeline
@@ -87,12 +88,14 @@ graph LR
     po(Freya<br/>Product Owner)
     ux(Luna<br/>UX Designer)
     eng(FiremanDecko<br/>Principal Engineer)
+    sec(Heimdall<br/>Security Specialist)
     qa(Loki<br/>QA Tester)
 
     %% Artifacts
     brief[Design Brief]
     sysdesign[System Design<br/>+ API Contracts]
     impl[Implementation]
+    review[Security Review]
     ship([Accepted ✓])
 
     %% Pipeline
@@ -101,16 +104,20 @@ graph LR
     brief -->|handed off| eng
     eng -->|produces| sysdesign
     sysdesign -->|guides| impl
-    impl -->|tested by| qa
+    impl -->|audited by| sec
+    sec -->|produces| review
+    review -->|tested by| qa
     qa -->|ship / no-ship| ship
 
     class po primary
     class ux primary
     class eng primary
+    class sec warning
     class qa warning
     class brief neutral
     class sysdesign neutral
     class impl neutral
+    class review neutral
     class ship healthy
 ```
 
@@ -179,6 +186,13 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [development/implementation-plan.md](development/implementation-plan.md) — Ordered task breakdown, what was built
 - [development/qa-handoff.md](development/qa-handoff.md) — Handoff to Loki: deploy steps, test focus, known limits
 - [development/scripts/](development/scripts/) — Idempotent build and deploy scripts
+
+### ᛉ [Bifrost Watch — Security](security/README.md)
+
+*Heimdall's domain. The all-seeing eye that guards the bridge between trusted code and hostile input.*
+
+- [security/README.md](security/README.md) — Index of all security documentation: reports, architecture, checklists, advisories
+- [security/reports/2026-03-02-google-api-integration.md](security/reports/2026-03-02-google-api-integration.md) — Heimdall review: Google API integration (0C / 3H / 4M / 3L / 3I)
 
 ### ᛏ [Loki's Domain — Quality](quality/README.md)
 
@@ -384,4 +398,4 @@ Copyright (C) 2026 Declan Shanaghy. Licensed under the [Elastic License 2.0 (ELv
 - **Commits**: Strict format per [git-commit/SKILL.md](.claude/skills/git-commit/SKILL.md)
 - **Secrets**: `.env` file, never committed, `.env.example` as the template
 - **Sprints**: Max 5 stories. The forge-script runs every sprint. No exceptions.
-- **Output**: Each wolf writes to its top-level folder (`product/`, `ux/`, `architecture/`, `development/`, `quality/`). Git tracks the history — files are overwritten each sprint, no subdirectories.
+- **Output**: Each wolf writes to its top-level folder (`product/`, `ux/`, `architecture/`, `development/`, `security/`, `quality/`). Git tracks the history — files are overwritten each sprint, no subdirectories.

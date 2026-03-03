@@ -58,6 +58,23 @@ function decodeIdToken(idToken: string): IdTokenClaims {
   return JSON.parse(decoded) as IdTokenClaims;
 }
 
+// ── Callback URL validation ──────────────────────────────────────────────────
+
+/**
+ * Validates that a callback URL is safe to redirect to.
+ * Prevents open-redirect attacks by ensuring the URL's origin matches the
+ * current page's origin. Relative paths (e.g. "/dashboard") are always safe.
+ */
+function isSafeCallbackUrl(url: string): boolean {
+  if (!url || url === "/") return true;
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.origin === window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 type CallbackStatus = "exchanging" | "success" | "error";
@@ -173,8 +190,10 @@ function AuthCallbackContent() {
 
         setCallbackStatus("success");
 
-        // Redirect to the original destination.
-        const destination = pkceData.callbackUrl || "/";
+        // Redirect to the original destination (with origin validation).
+        const destination = isSafeCallbackUrl(pkceData.callbackUrl)
+          ? pkceData.callbackUrl
+          : "/";
         window.location.href = destination;
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

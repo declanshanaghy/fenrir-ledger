@@ -18,14 +18,12 @@ import type { SheetImportResponse } from "./types";
  * @returns SheetImportResponse with cards array or error
  */
 export async function extractCardsFromCsv(csv: string): Promise<SheetImportResponse> {
-  // 1. Build prompt and call LLM
+  // 1. Build structured prompt (system/user separated) and call LLM
   const prompt = buildExtractionPrompt(csv);
   let rawText: string;
   try {
     const provider = getLlmProvider();
-    rawText = provider.extractText
-      ? await provider.extractText(prompt)
-      : "";
+    rawText = await provider.extractText(prompt);
   } catch {
     return {
       error: {
