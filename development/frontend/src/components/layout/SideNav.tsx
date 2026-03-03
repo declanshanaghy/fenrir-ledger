@@ -53,7 +53,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Valhalla",
     href: "/valhalla",
     icon: CreditCard, // Fallback (unused when iconNode is set)
-    iconNode: <RuneIcon rune="\u16C9" />,
+    iconNode: <RuneIcon rune="ᛏ" />,
   },
   {
     label: "Settings",
