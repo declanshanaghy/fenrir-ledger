@@ -12,7 +12,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CreditCard, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { CreditCard, PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SideNavProps {
@@ -54,6 +54,11 @@ const NAV_ITEMS: NavItem[] = [
     href: "/valhalla",
     icon: CreditCard, // Fallback (unused when iconNode is set)
     iconNode: <RuneIcon rune="ᛏ" />,
+  },
+  {
+    label: "Settings",
+    href: "/settings",
+    icon: Settings,
   },
 ];
 
