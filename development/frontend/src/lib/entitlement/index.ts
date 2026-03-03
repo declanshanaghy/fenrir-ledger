@@ -25,3 +25,8 @@ export {
   clearEntitlementCache,
   isEntitlementStale,
 } from "./cache";
+
+export {
+  type FeatureDescription,
+  FEATURE_DESCRIPTIONS,
+} from "./feature-descriptions";
