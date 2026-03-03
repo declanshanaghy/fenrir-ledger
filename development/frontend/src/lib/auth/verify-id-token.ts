@@ -82,6 +82,7 @@ export async function verifyIdToken(token: string): Promise<VerifyResult> {
     log.debug("verifyIdToken returning", { ok: true, sub: user.sub, email: user.email });
     return { ok: true, user };
   } catch (err) {
+    log.error("verifyIdToken failed", err);
     const message = err instanceof Error ? err.message : "Token verification failed";
 
     if (message.includes("expired") || message.includes('"exp"')) {

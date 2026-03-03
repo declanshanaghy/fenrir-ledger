@@ -69,8 +69,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     log.debug("POST /api/sheets/import returning", { status: 200, cardCount: result.cards.length, hasWarning: !!("warning" in result) });
     return NextResponse.json(result);
-  } catch {
-    log.debug("POST /api/sheets/import returning", { status: 500, error: "FETCH_ERROR", reason: "unexpected error" });
+  } catch (err) {
+    log.error("POST /api/sheets/import: pipeline failed", err);
     return errorResponse(
       "FETCH_ERROR",
       "The import service encountered an unexpected error. Please try again.",

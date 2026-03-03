@@ -1,25 +1,26 @@
-# QA Handoff: Task #5 — Client-Side useEntitlement Hook (Platform-Agnostic)
+# QA Handoff: Patreon OAuth + API Routes + Webhooks + Vercel KV
 
-**Task**: #5 -- Client-side entitlement hook
-**Branch**: `feat/patreon-client`
+**Task**: #4 -- Patreon server-side integration
+**Branch**: `feat/patreon-api`
 **Author**: FiremanDecko (Principal Engineer)
 **Date**: 2026-03-02
-**Depends on**: Task #4 (PR #93, branch `feat/patreon-api`)
 
 ---
 
 ## What Was Implemented
 
-Platform-agnostic client-side entitlement system for Patreon subscription integration. This is the React data layer that connects to the server-side Patreon API routes from Task #4.
+Complete server-side Patreon integration including:
 
-### Components
-
-1. **Entitlement types** -- Platform-agnostic type definitions: `EntitlementTier`, `EntitlementPlatform`, `PremiumFeature`, `PREMIUM_FEATURES` registry, `tierMeetsRequirement()`
-2. **localStorage cache** -- Client-side cache (`fenrir:entitlement`) with staleness detection, corruption-safe parsing, and graceful degradation
-3. **EntitlementProvider context** -- React context managing tier state, OAuth callback query param handling, server API refresh, and linking/unlinking
-4. **useEntitlement hook** -- Thin wrapper hook for consuming entitlement state
-5. **Unlink API route** -- `POST /api/patreon/unlink` to delete server-side KV entitlement
-6. **Auth integration** -- Sign-out clears entitlement cache; authorize route accepts id_token via query param for redirect-based flow
+1. **Vercel KV entitlement store** -- persistent storage for Patreon entitlements keyed by Google user sub, with a secondary index for webhook reverse lookups
+2. **Patreon types** -- full TypeScript type definitions for Patreon API v2 responses, webhook payloads, and stored entitlements
+3. **Patreon API client** -- server-side functions for OAuth token exchange, membership checking, and token refresh
+4. **AES-256-GCM encryption** -- encrypt/decrypt utilities for Patreon tokens stored in KV
+5. **OAuth state management** -- encrypted state parameter generation and validation for CSRF protection
+6. **4 API routes**:
+   - `GET /api/patreon/authorize` -- initiates OAuth (behind requireAuth)
+   - `GET /api/patreon/callback` -- OAuth callback (NOT behind requireAuth, same pattern as /api/auth/token)
+   - `GET /api/patreon/membership` -- checks current membership status (behind requireAuth)
+   - `POST /api/patreon/webhook` -- receives Patreon webhook events (validated by HMAC-MD5 signature)
 
 ---
 
@@ -27,131 +28,119 @@ Platform-agnostic client-side entitlement system for Patreon subscription integr
 
 | File | Description |
 |------|-------------|
-| `development/frontend/src/lib/entitlement/types.ts` | `EntitlementTier`, `EntitlementPlatform`, `Entitlement`, `PremiumFeature`, `PREMIUM_FEATURES` registry (6 features), `tierMeetsRequirement()` |
-| `development/frontend/src/lib/entitlement/cache.ts` | localStorage cache: `getEntitlementCache()`, `setEntitlementCache()`, `clearEntitlementCache()`, `isEntitlementStale()` |
-| `development/frontend/src/lib/entitlement/index.ts` | Barrel re-export for clean imports |
-| `development/frontend/src/contexts/EntitlementContext.tsx` | `EntitlementProvider` + `useEntitlementContext()`: manages tier state, OAuth callback params, API refresh, link/unlink |
-| `development/frontend/src/hooks/useEntitlement.ts` | `useEntitlement()` thin wrapper hook |
-| `development/frontend/src/app/api/patreon/unlink/route.ts` | `POST /api/patreon/unlink`: deletes KV entitlement record (behind `requireAuth`) |
+| `development/frontend/src/lib/patreon/types.ts` | PatreonTier, PatreonTokenResponse, PatreonIdentityResponse, PatreonMember, PatreonWebhookPayload, StoredEntitlement, PatreonOAuthState, MembershipResponse |
+| `development/frontend/src/lib/patreon/api.ts` | Server-side Patreon API client: exchangeCode(), getMembership(), refreshToken() |
+| `development/frontend/src/lib/patreon/state.ts` | OAuth state parameter: generateState(), validateState() |
+| `development/frontend/src/lib/crypto/encrypt.ts` | AES-256-GCM: encrypt(), decrypt() using ENTITLEMENT_ENCRYPTION_KEY |
+| `development/frontend/src/lib/kv/entitlement-store.ts` | Vercel KV operations: getEntitlement(), setEntitlement(), deleteEntitlement(), getGoogleSubByPatreonUserId() |
+| `development/frontend/src/app/api/patreon/authorize/route.ts` | GET -- OAuth initiation (requireAuth) |
+| `development/frontend/src/app/api/patreon/callback/route.ts` | GET -- OAuth callback (no auth, CSRF via state) |
+| `development/frontend/src/app/api/patreon/membership/route.ts` | GET -- Membership check with KV cache + refresh (requireAuth) |
+| `development/frontend/src/app/api/patreon/webhook/route.ts` | POST -- Webhook handler with HMAC-MD5 validation |
 
 ## Files Modified
 
-| File | Change |
-|------|--------|
-| `development/frontend/src/contexts/AuthContext.tsx` | Added `clearEntitlementCache()` call in `signOut()` |
-| `development/frontend/src/app/layout.tsx` | Added `EntitlementProvider` in provider hierarchy (inside `AuthProvider`, outside `RagnarokProvider`) |
-| `development/frontend/src/app/api/patreon/authorize/route.ts` | Changed auth from `requireAuth` (header-only) to `verifyIdToken` with query param support for redirect-based flows |
-| `development/frontend/src/app/api/patreon/membership/route.ts` | Added `userId` and `linkedAt` fields to all response paths |
-| `development/frontend/src/lib/patreon/types.ts` | Added `userId?` and `linkedAt?` fields to `MembershipResponse` |
-
----
-
-## Hook Interface
-
-```typescript
-const {
-  tier,               // "thrall" | "karl"
-  isActive,           // boolean — is subscription active
-  isLinked,           // boolean — is any platform linked
-  isLoading,          // boolean — checking entitlement status
-  platform,           // "patreon" | null
-  linkPatreon,        // () => void — redirects to Patreon OAuth
-  unlinkPatreon,      // () => Promise<void> — clears cache + KV
-  refreshEntitlement, // () => Promise<void> — re-checks server
-  hasFeature,         // (feature: PremiumFeature) => boolean
-} = useEntitlement();
-```
-
----
-
-## Premium Features (6 total)
-
-All require Karl tier:
-
-| Slug | Display Name |
+| File | Description |
 |------|-------------|
-| `cloud-sync` | Cloud Sync |
-| `multi-household` | Multi-Household |
-| `advanced-analytics` | Advanced Analytics |
-| `data-export` | Data Export |
-| `extended-history` | Extended History |
-| `cosmetic-perks` | Cosmetic Perks |
-
-Removed from earlier specs: Priority Import, Custom Notifications.
+| `development/frontend/.env.example` | Added PATREON_CLIENT_ID, PATREON_CLIENT_SECRET, PATREON_CAMPAIGN_ID, PATREON_WEBHOOK_SECRET, ENTITLEMENT_ENCRYPTION_KEY, KV_REST_API_URL, KV_REST_API_TOKEN |
+| `development/frontend/package.json` | Added @vercel/kv dependency |
+| `development/frontend/package-lock.json` | Updated lockfile for @vercel/kv |
 
 ---
 
-## API Endpoints
+## Environment Variables Required
 
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/api/patreon/authorize?id_token=...` | GET | id_token via query param | Initiates Patreon OAuth |
-| `/api/patreon/membership` | GET | Bearer id_token | Checks entitlement status, now includes userId and linkedAt |
-| `/api/patreon/unlink` | POST | Bearer id_token | Deletes entitlement from KV |
+All server-side only (no NEXT_PUBLIC_ prefix):
+
+| Variable | Purpose | How to obtain |
+|----------|---------|---------------|
+| `PATREON_CLIENT_ID` | OAuth client identifier | Patreon developer portal |
+| `PATREON_CLIENT_SECRET` | OAuth client secret for token exchange | Patreon developer portal |
+| `PATREON_CAMPAIGN_ID` | Campaign ID for membership verification | Patreon campaign URL |
+| `PATREON_WEBHOOK_SECRET` | HMAC-MD5 key for webhook signature validation | Patreon webhook config |
+| `ENTITLEMENT_ENCRYPTION_KEY` | 64-char hex (32 bytes) for AES-256-GCM | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `KV_REST_API_URL` | Vercel KV REST API URL | Auto-populated by Vercel when KV store is linked |
+| `KV_REST_API_TOKEN` | Vercel KV REST API token | Auto-populated by Vercel when KV store is linked |
 
 ---
 
-## Suggested Test Focus Areas
+## API Endpoints for Testing
 
-### 1. Entitlement Cache (localStorage)
-- Verify `fenrir:entitlement` is written to localStorage after successful linking
-- Verify cache is cleared on sign-out (`signOut()` in AuthContext)
-- Verify cache is cleared on unlink (`unlinkPatreon()`)
-- Corrupted cache: manually set invalid JSON in `fenrir:entitlement`, reload -- should not crash, treats as no cache
-- Missing fields: set a partial object in the cache, reload -- should treat as no cache
-- Staleness: set `checkedAt` to >1 hour ago, verify membership API is called
+### GET /api/patreon/authorize
+- **Auth**: Requires Google id_token (Bearer token in Authorization header)
+- **Response**: 302 redirect to Patreon OAuth authorize URL
+- **Rate limit**: 5/min per IP
+- **Test scenarios**:
+  - Without auth header -> 401
+  - With valid auth -> 302 to patreon.com
+  - Without PATREON_CLIENT_ID env -> 500
 
-### 2. OAuth Callback Query Params
-- `?patreon=linked&tier=karl` -- triggers refresh, updates cache
-- `?patreon=linked&tier=thrall` -- triggers refresh
-- `?patreon=error&reason=oauth_failed` -- logs error, no state change
-- `?patreon=denied` -- logs cancellation, no state change
-- All query params are cleaned from URL after processing (check address bar)
-- Params are only processed once per mount (no duplicate API calls)
+### GET /api/patreon/callback
+- **Auth**: None (exempt from requireAuth, CSRF via state param)
+- **Query params**: `code`, `state` (from Patreon redirect)
+- **Response**: 302 redirect to /settings with query params
+- **Rate limit**: 10/min per IP
+- **Test scenarios**:
+  - Missing code/state -> redirect to /settings?patreon=error&reason=invalid_request
+  - Invalid state -> redirect to /settings?patreon=error&reason=state_mismatch
+  - Expired state (>10min) -> redirect to /settings?patreon=error&reason=state_mismatch
+  - Patreon user denied -> redirect to /settings?patreon=denied
+  - Success + Karl tier -> redirect to /settings?patreon=linked&tier=karl
+  - Success + no pledge -> redirect to /settings?patreon=linked&tier=thrall
+  - Patreon API failure -> redirect to /settings?patreon=error&reason=oauth_failed
 
-### 3. Feature Gating
-- `hasFeature("cloud-sync")` returns `false` for Thrall tier
-- `hasFeature("cloud-sync")` returns `true` for active Karl tier
-- `hasFeature("cloud-sync")` returns `false` for Karl tier with `active: false` (expired)
-- All 6 premium features require Karl tier
+### GET /api/patreon/membership
+- **Auth**: Requires Google id_token (Bearer token)
+- **Response**: JSON `{ tier, active, platform: "patreon", checkedAt, stale? }`
+- **Rate limit**: 20/min per IP
+- **Test scenarios**:
+  - No auth -> 401
+  - User not linked (no KV entry) -> { tier: "thrall", active: false }
+  - Fresh KV entry (<1hr) -> returns cached data
+  - Stale KV entry (>1hr) -> refreshes from Patreon API
+  - Stale + Patreon API failure -> returns cached data with { stale: true }
 
-### 4. Auth Integration
-- Anonymous users: `tier` is "thrall", `isLinked` is false, no API calls made
-- Signed-in users with no Patreon link: `tier` is "thrall" after API check
-- Signed-in users with active Karl pledge: `tier` is "karl", `isActive` is true
-- Sign-out clears entitlement cache (check localStorage)
-- Entitlement state resets to null when user signs out
+### POST /api/patreon/webhook
+- **Auth**: None (validated by HMAC-MD5 signature)
+- **Headers**: `X-Patreon-Signature`, `X-Patreon-Event`
+- **Response**: JSON with processing status
+- **Test scenarios**:
+  - Missing signature -> 400
+  - Invalid signature -> 400
+  - members:pledge:create with active pledge -> updates KV to karl
+  - members:pledge:update downgrade -> updates KV to thrall
+  - members:pledge:delete -> sets KV to thrall, active=false
+  - Unknown Patreon user (no reverse index) -> 200 with status: "ignored"
+  - Unknown event type -> 200 with status: "ignored"
 
-### 5. Graceful Degradation
-- API failure with existing cache: use stale cache data (no error thrown)
-- API failure with no cache: default to Thrall
-- Network offline: default to Thrall (or stale cache if available)
-- Never block UI on API failure
+---
 
-### 6. Unlink Flow
-- `unlinkPatreon()` clears localStorage immediately (responsive UI)
-- `unlinkPatreon()` calls `POST /api/patreon/unlink` to clear KV
-- If server call fails, local cache is still cleared (graceful degradation)
-- After unlink: `isLinked` is false, `tier` is "thrall", `isActive` is false
+## Vercel KV Key Schema
 
-### 7. Provider Hierarchy
-- `EntitlementProvider` is inside `AuthProvider` (needs auth context)
-- `EntitlementProvider` is outside `RagnarokProvider` (independent)
-- Verify the app renders without errors at all provider nesting levels
+| Key Pattern | Value | TTL |
+|-------------|-------|-----|
+| `entitlement:{googleSub}` | StoredEntitlement JSON | 30 days |
+| `patreon-user:{patreonUserId}` | Google sub string | 30 days |
 
-### 8. Authorize Route Change
-- `GET /api/patreon/authorize?id_token=<valid>` returns 302 redirect to Patreon
-- `GET /api/patreon/authorize` (no token) returns 401
-- `GET /api/patreon/authorize?id_token=<invalid>` returns 401
+---
+
+## Security Notes
+
+1. **Patreon tokens are encrypted at rest** in KV using AES-256-GCM
+2. **PATREON_CLIENT_SECRET** is server-side only, never in client bundle
+3. **OAuth state** is encrypted + time-limited (10min) for CSRF protection
+4. **Webhook signatures** are validated using constant-time comparison
+5. **All routes** have IP-based rate limiting
+6. **Fenrir logger** masks all sensitive values automatically
 
 ---
 
 ## Known Limitations
 
-1. **No UI components in this task** -- This implements the data layer only. Settings section, TierBadge, Hard Gate Modal, and Upsell Banners are in subsequent tasks.
-2. **linkPatreon passes id_token in URL** -- The authorize route receives the token as a query parameter since it is a full-page redirect. The token is validated server-side and not stored.
-3. **No toast notifications** -- OAuth callback param handling logs to `console.debug` but does not show toasts (toast UI is in a subsequent task).
-4. **Single concurrent API call** -- `fetchInProgressRef` prevents duplicate membership API calls but does not queue pending requests.
+1. **@vercel/kv is deprecated** -- Vercel recommends migrating to Upstash Redis. The package works but may not receive updates. Consider migrating when Upstash Redis is officially the replacement.
+2. **No frontend UI** -- This is the server-side only. Task #5 (useEntitlement hook) and later tasks will build the frontend.
+3. **Rate limiter is per-instance** -- In-memory rate limiting does not span across serverless instances. For production, consider Upstash Redis rate limiting.
+4. **State token nonce is not stored server-side** -- The CSRF nonce is embedded in the encrypted state and validated by decryption integrity, not by server-side lookup. This is acceptable because the encryption key provides authentication.
 
 ---
 
@@ -159,4 +148,25 @@ Removed from earlier specs: Priority Import, Custom Notifications.
 
 - `npx tsc --noEmit`: PASS
 - `npm run build`: PASS
-- All routes visible in build output including new `/api/patreon/unlink`
+- All 4 new routes visible in build output
+
+---
+
+## Deployment Instructions
+
+1. Create a Vercel KV store and link it to the project (auto-populates KV_REST_API_URL and KV_REST_API_TOKEN)
+2. Set all PATREON_* and ENTITLEMENT_ENCRYPTION_KEY env vars in Vercel project settings
+3. Register the Patreon OAuth client with redirect URIs for both localhost and production
+4. Configure Patreon webhooks pointing to `https://fenrir-ledger.vercel.app/api/patreon/webhook`
+5. Deploy via Vercel (standard git push workflow)
+
+---
+
+## Suggested Test Focus Areas
+
+1. **OAuth state round-trip**: Generate state -> validate state with correct key -> validate state with wrong key
+2. **Encryption round-trip**: encrypt(value) -> decrypt(result) == value
+3. **Webhook signature validation**: Compute expected HMAC-MD5 and verify the route accepts/rejects correctly
+4. **KV secondary index**: After setEntitlement, verify getGoogleSubByPatreonUserId returns the correct mapping
+5. **Staleness logic**: Verify membership route re-checks Patreon API when entitlement is older than 1 hour
+6. **Graceful degradation**: When Patreon API is down, membership route returns stale cache instead of error
