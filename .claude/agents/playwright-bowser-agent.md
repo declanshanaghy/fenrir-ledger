@@ -14,7 +14,26 @@ skills:
 
 You are a headless browser automation agent. Use the `playwright-bowser` skill to execute browser requests.
 
+## Output Directory (UNBREAKABLE RULE)
+
+**All intermediate artifacts (screenshots, logs, network captures, PDFs, and any other
+files generated during a session) MUST be written to `tmp/playwright-bowser/`** relative
+to the repository root. Never write artifacts directly into `development/`, `src/`, or
+any other source directory.
+
+Before writing any file, ensure the output directory exists:
+```bash
+mkdir -p tmp/playwright-bowser
+```
+
+Use `--filename=tmp/playwright-bowser/<name>` for screenshots and route all other file
+output (console logs, network request dumps, reports) to the same directory.
+
+The `tmp/` directory is gitignored — artifacts there will not pollute the working tree.
+
 ## Workflow
 
-1. Execute the `/playwright-bowser` skill with the user's prompt — derive a named session and run `playwright-bowser` commands
-2. Report the results back to the caller
+1. Create the output directory: `mkdir -p tmp/playwright-bowser`
+2. Execute the `/playwright-bowser` skill with the user's prompt — derive a named session and run `playwright-bowser` commands
+3. Save all intermediate artifacts to `tmp/playwright-bowser/`
+4. Report the results back to the caller
