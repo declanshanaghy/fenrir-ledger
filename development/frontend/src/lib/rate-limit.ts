@@ -9,6 +9,8 @@
  * @module rate-limit
  */
 
+import { log } from "@/lib/logger";
+
 interface RateLimitEntry {
   count: number;
   resetAt: number;
@@ -28,18 +30,26 @@ export function rateLimit(
   key: string,
   { limit = 10, windowMs = 60_000 }: { limit?: number; windowMs?: number } = {}
 ): { success: boolean; remaining: number } {
+  log.debug("rateLimit called", { key, limit, windowMs });
+
   const now = Date.now();
   const entry = store.get(key);
 
   if (!entry || now >= entry.resetAt) {
     store.set(key, { count: 1, resetAt: now + windowMs });
-    return { success: true, remaining: limit - 1 };
+    const result = { success: true, remaining: limit - 1 };
+    log.debug("rateLimit returning", { key, ...result, reason: "new window" });
+    return result;
   }
 
   entry.count++;
   if (entry.count > limit) {
-    return { success: false, remaining: 0 };
+    const result = { success: false, remaining: 0 };
+    log.debug("rateLimit returning", { key, ...result, reason: "exceeded" });
+    return result;
   }
 
-  return { success: true, remaining: limit - entry.count };
+  const result = { success: true, remaining: limit - entry.count };
+  log.debug("rateLimit returning", { key, ...result });
+  return result;
 }

@@ -10,6 +10,7 @@ import { buildExtractionPrompt } from "./prompt";
 import { CardsArraySchema, ImportResponseSchema } from "./card-schema";
 import { getLlmProvider } from "@/lib/llm/extract";
 import type { SheetImportResponse } from "./types";
+import { log } from "@/lib/logger";
 
 /**
  * Extract card data from raw CSV text via LLM.
@@ -18,13 +19,18 @@ import type { SheetImportResponse } from "./types";
  * @returns SheetImportResponse with cards array or error
  */
 export async function extractCardsFromCsv(csv: string): Promise<SheetImportResponse> {
+  log.debug("extractCardsFromCsv called", { csvLength: csv.length });
+
   // 1. Build structured prompt (system/user separated) and call LLM
   const prompt = buildExtractionPrompt(csv);
   let rawText: string;
   try {
     const provider = getLlmProvider();
+    log.debug("extractCardsFromCsv calling LLM", { provider: provider.name, model: provider.model });
     rawText = await provider.extractText(prompt);
+    log.debug("extractCardsFromCsv LLM response received", { rawTextLength: rawText.length });
   } catch {
+    log.debug("extractCardsFromCsv returning", { errorCode: "ANTHROPIC_ERROR" });
     return {
       error: {
         code: "ANTHROPIC_ERROR",
@@ -40,6 +46,7 @@ export async function extractCardsFromCsv(csv: string): Promise<SheetImportRespo
     const cleaned = rawText.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
     parsed = JSON.parse(cleaned);
   } catch {
+    log.debug("extractCardsFromCsv returning", { errorCode: "PARSE_ERROR", reason: "invalid JSON" });
     return {
       error: {
         code: "PARSE_ERROR",
@@ -56,10 +63,12 @@ export async function extractCardsFromCsv(csv: string): Promise<SheetImportRespo
   if (wrappedValidation.success) {
     extractedCards = wrappedValidation.data.cards;
     sensitiveDataWarning = wrappedValidation.data.sensitiveDataWarning;
+    log.debug("extractCardsFromCsv parsed wrapped format", { cardCount: extractedCards.length, sensitiveDataWarning });
   } else {
     // Fall back to plain array format (backwards compatibility)
     const arrayValidation = CardsArraySchema.safeParse(parsed);
     if (!arrayValidation.success) {
+      log.debug("extractCardsFromCsv returning", { errorCode: "PARSE_ERROR", reason: "schema mismatch" });
       return {
         error: {
           code: "PARSE_ERROR",
@@ -68,9 +77,11 @@ export async function extractCardsFromCsv(csv: string): Promise<SheetImportRespo
       };
     }
     extractedCards = arrayValidation.data;
+    log.debug("extractCardsFromCsv parsed array format", { cardCount: extractedCards.length });
   }
 
   if (extractedCards.length === 0) {
+    log.debug("extractCardsFromCsv returning", { errorCode: "NO_CARDS_FOUND" });
     return {
       error: {
         code: "NO_CARDS_FOUND",
@@ -94,5 +105,6 @@ export async function extractCardsFromCsv(csv: string): Promise<SheetImportRespo
     (result as { cards: typeof cards; sensitiveDataWarning?: boolean }).sensitiveDataWarning = true;
   }
 
+  log.debug("extractCardsFromCsv returning", { cardCount: cards.length, sensitiveDataWarning });
   return result;
 }

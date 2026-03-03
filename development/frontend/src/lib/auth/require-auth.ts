@@ -21,6 +21,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyIdToken, type VerifiedUser } from "./verify-id-token";
+import { log } from "@/lib/logger";
 
 /** Auth check succeeded — verified user is available. */
 export type AuthSuccess = { ok: true; user: VerifiedUser };
@@ -41,8 +42,10 @@ export type AuthResult = AuthSuccess | AuthFailure;
  */
 export async function requireAuth(request: NextRequest): Promise<AuthResult> {
   const authHeader = request.headers.get("authorization");
+  log.debug("requireAuth called", { hasAuthHeader: !!authHeader, hasBearerPrefix: authHeader?.startsWith("Bearer ") ?? false });
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    log.debug("requireAuth returning", { ok: false, error: "missing_token", status: 401 });
     return {
       ok: false,
       response: NextResponse.json(
@@ -61,6 +64,7 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult> {
   const result = await verifyIdToken(token);
 
   if (!result.ok) {
+    log.debug("requireAuth returning", { ok: false, error: "invalid_token", status: result.status });
     return {
       ok: false,
       response: NextResponse.json(
@@ -73,5 +77,6 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult> {
     };
   }
 
+  log.debug("requireAuth returning", { ok: true, userSub: result.user.sub, email: result.user.email });
   return { ok: true, user: result.user };
 }
