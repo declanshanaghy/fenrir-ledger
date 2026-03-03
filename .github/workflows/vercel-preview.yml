@@ -5,6 +5,7 @@ on:
     branches-ignore: [main]
     paths:
       - 'development/frontend/**'
+      - 'quality/**'
   workflow_dispatch:
 
 permissions:
