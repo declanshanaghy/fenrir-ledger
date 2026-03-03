@@ -144,6 +144,8 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [product/backlog/story-4.3-gleipnir-hunt-complete.md](product/backlog/story-4.3-gleipnir-hunt-complete.md) — P2: Gleipnir Hunt — wire fragments 4 and 6, complete the unlock
 - [product/backlog/story-4.4-accessibility-and-ux-polish.md](product/backlog/story-4.4-accessibility-and-ux-polish.md) — P2: Accessibility and UX polish pass (keyboard, mobile, reduced motion)
 - [product/backlog/story-4.5-wolves-hunger-and-about-modal.md](product/backlog/story-4.5-wolves-hunger-and-about-modal.md) — P3: Wolf's Hunger Meter in About modal
+- [product/backlog/patreon-subscription-brief.md](designs/product/backlog/patreon-subscription-brief.md) — Patreon subscription Product Design Brief (Thrall/Karl tiers, 8 premium features, hard gate)
+- [product/backlog/patreon-subscription-integration.md](designs/product/backlog/patreon-subscription-integration.md) — Patreon integration backlog item (Status: Ready)
 - [product/backlog/future-deferred.md](product/backlog/future-deferred.md) — Deferred items with rationale (LCARS, migration wizard, reminders)
 - [product/backlog/story-auth-oidc-google.md](product/backlog/story-auth-oidc-google.md) — P3 (GA-deferred): Optional Login — Google OIDC + Cloud Sync Upsell
 - [product/handoff-to-luna-anon-auth.md](product/handoff-to-luna-anon-auth.md) — Handoff to Luna: anonymous-first auth + cloud sync upsell UX brief
@@ -198,37 +200,10 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 *The trickster tests. His verdicts are final.*
 
-- [quality/README.md](quality/README.md) — Index of all QA artifacts and test execution guide
-- [designs/architecture/clerk-auth-qa-report.md](designs/architecture/clerk-auth-qa-report.md) — QA validation: ADR-007 (Clerk Auth + GitHub Provider) + implementation plan — APPROVED WITH NOTES
-- [quality/story-3.4-howl-panel-verdict.md](quality/story-3.4-howl-panel-verdict.md) — QA verdict: PR #7 (feat/howl-panel) — READY TO SHIP ✓ (0 defects)
-- [quality/story-3.2-anon-auth-verdict.md](quality/story-3.2-anon-auth-verdict.md) — QA verdict: Story 3.2 (Anonymous-First Auth + Cloud Sync Upsell) — READY TO SHIP ✓ (0 defects, 24/24 tests pass)
-- [quality/story-3.1-verdict.md](quality/story-3.1-verdict.md) — QA verdict: Story 3.1 (Google OIDC Auth + per-household localStorage) — READY TO SHIP ✓ (0 defects)
-- [quality/story-3.1-realm-utils-verdict.md](quality/story-3.1-realm-utils-verdict.md) — QA verdict: PR #3 (feat/realm-utils) — SHIP ✓ (0 defects)
-- [quality/story-3.5-verdict.md](quality/story-3.5-verdict.md) — QA verdict: Story 3.5 (Valhalla Archive + Close Card) — HOLD (DEF-001: wrong gleipnir fragment)
-- [quality/story-3.3-verdict.md](quality/story-3.3-verdict.md) — QA verdict: Story 3.3 (Framer Motion + Card Animations) — SHIP ✓ (0 defects)
-- [quality/story-3.2-norse-copy-verdict.md](quality/story-3.2-norse-copy-verdict.md) — QA verdict: PR #6 (feat/norse-copy-pass) — SHIP ✓ (0 defects)
-- [quality/test-plan.md](quality/test-plan.md) — Easter eggs test strategy and coverage plan (283 lines)
-- [quality/test-cases.md](quality/test-cases.md) — 22 test cases for all implemented eggs (Konami #2, Mountain #3, Fish #5, Forgemaster #9, Loki Mode) (480 lines)
-- [quality/EASTER-EGGS-AUDIT.md](quality/EASTER-EGGS-AUDIT.md) — Final verdict report: READY TO SHIP, 0 defects (369 lines)
-- [quality/easter-eggs-transparency-report.md](quality/easter-eggs-transparency-report.md) — SVG artifact validation and background transparency audit (236 lines)
-- [quality/test-suites/easter-eggs/easter-eggs.spec.ts](quality/test-suites/easter-eggs/easter-eggs.spec.ts) — Playwright automation: 22 tests across 8 suites (migrated from quality/scripts/)
-- [quality/test-suites/navigation/navigation.spec.ts](quality/test-suites/navigation/navigation.spec.ts) — Playwright automation: 6 navigation + link integrity tests
-- [quality/test-suites/helpers/test-fixtures.ts](quality/test-suites/helpers/test-fixtures.ts) — Card factories (makeCard, makeUrgentCard, makePromoCard, makeClosedCard) + localStorage seeders
-- [quality/test-suites/helpers/seed-data.ts](quality/test-suites/helpers/seed-data.ts) — Predefined card sets: EMPTY, FEW, MANY, URGENT, MIXED
-- [quality/test-suites/accessibility/a11y.spec.ts](quality/test-suites/accessibility/a11y.spec.ts) — 15 tests: landmarks, heading hierarchy, form labels, keyboard nav, screen reader support; documents DEF-A01 (RHF/Zod missing required attribute, WCAG 1.3.5 AA)
-- [quality/test-suites/responsive/mobile.spec.ts](quality/test-suites/responsive/mobile.spec.ts) — 12 tests at 375px: layout, touch targets, Import Wizard sizing, HowlPanel mobile behaviour; documents DEF-M01 (SideNav not auto-collapsing at mobile widths)
-- [quality/test-suites/import/import-wizard.spec.ts](quality/test-suites/import/import-wizard.spec.ts) — 22 tests: method selection, URL/CSV paths, step indicator, dialog close/ESC/outside-click guard, AuthGate visibility, empty-state vs toolbar import buttons
-- [quality/test-suites/valhalla/valhalla.spec.ts](quality/test-suites/valhalla/valhalla.spec.ts) — 14 tests: empty state, tombstone entries, ᛏ rune, closed date, filter bar, active/deleted card exclusion, MIXED_CARDS integration
-- [quality/test-suites/layout/topbar.spec.ts](quality/test-suites/layout/topbar.spec.ts) — 12 tests: brand identity, /static logo link, rel/aria attrs, anonymous ᛟ avatar, upsell panel open/dismiss/Escape
-- [quality/test-suites/layout/sidebar.spec.ts](quality/test-suites/layout/sidebar.spec.ts) — 11 tests: Cards/Valhalla nav links, ᛏ rune, collapse/expand toggle, active gold border per route
-- [quality/test-suites/layout/footer.spec.ts](quality/test-suites/layout/footer.spec.ts) — 13 tests: brand button, full tagline, copyright 2026, data-gleipnir attribute, team colophon, About modal open/close/team/ingredients
-- [quality/test-suites/layout/howl-panel.spec.ts](quality/test-suites/layout/howl-panel.spec.ts) — 17 tests: hidden/visible states (desktop+mobile), Ragnarök mode (≥5 cards), ᚲ/ᚠ rune, days remaining, sort order, mobile bell button and bottom sheet
-- [designs/architecture/backend-ws-qa-report.md](designs/architecture/backend-ws-qa-report.md) — QA validation: Backend/WebSocket architecture investigation — APPROVED (0 blocking issues)
-- [quality/llm-provider-factory-verdict.md](quality/llm-provider-factory-verdict.md) — QA verdict: feat/llm-provider-factory (LLM abstraction layer) — SHIP WITH KNOWN ISSUES (1 medium defect, 1 low defect, 44 assertions run)
-- [quality/import-workflow-v2-verdict.md](quality/import-workflow-v2-verdict.md) — QA verdict: PR #61 Import Workflow v2 (Three Paths to the Forge) — HOLD FOR FIXES (3 defects: DEF-001 success step unreachable, DEF-002 missing option aria-labels, DEF-003 generic CSV rejection messages)
-- PR #72 Norse Statusline Script — PASS, merged: `.claude/statusline-command.sh` (7 sections, 4-tier color thresholds, 4 width breakpoints, Ragnarok mode, rune prefixes)
-- [development/qa-handoff.md](development/qa-handoff.md) — Import workflow investigation: 4 issues found (2 HIGH: orphaned backend processes + stale .env.local; 1 MEDIUM: CSS broken by build-over-dev; 1 LOW: stale MEMORY.md)
-- [quality/quality-report.md](quality/quality-report.md) — QA verdict: feat/server-side-picker-api-key (Move Picker API key server-side) — PASS WITH ADVISORY (0 blocking defects, 2 low-severity advisories)
+- [quality/README.md](quality/README.md) — Index of all QA artifacts, verdicts, and test execution guide
+- [quality/test-suites/](quality/test-suites/) — Playwright test suites: easter eggs, navigation, accessibility, responsive, import, valhalla, layout (130+ tests)
+- [quality/test-plan.md](quality/test-plan.md) — Test strategy and coverage plan
+- [quality/quality-report.md](quality/quality-report.md) — Latest QA verdict
 
 ### ᚠ Pack Operations
 
