@@ -89,7 +89,9 @@ def main():
         or 'orchestrator'
     )
 
-    # Override source_app for subagents: {agent}-{branch}
+    # Override source_app for subagents: {agent}-{branch}-{sid_short}
+    # The short session_id suffix disambiguates multiple agents of the same
+    # type running on the same branch (e.g. 5 loki-qa-tester agents).
     source_app = args.source_app
     if agent_name != 'orchestrator':
         try:
@@ -99,7 +101,9 @@ def main():
                 capture_output=True, text=True, timeout=3,
             )
             branch = _branch.stdout.strip() if _branch.returncode == 0 else ''
-            source_app = f"{agent_name}-{branch}" if branch else agent_name
+            sid_short = session_id[:8] if session_id and session_id != 'unknown' else ''
+            base = f"{agent_name}-{branch}" if branch else agent_name
+            source_app = f"{base}-{sid_short}" if sid_short else base
         except Exception:
             source_app = agent_name
 

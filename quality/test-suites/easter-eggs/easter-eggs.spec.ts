@@ -18,15 +18,15 @@
  *
  * Test isolation: localStorage is reset before each egg test to ensure
  * no cross-test contamination from fragment count state.
+ *
+ * NOTE: baseURL is provided by Playwright config (playwright.config.ts).
+ * Tests use page.goto(path) — no hardcoded port or BASE_URL constant.
  */
 
 import { test, expect } from "@playwright/test";
 
-// ── Test Configuration ──────────────────────────────────────────────────────
+// ── Easter egg localStorage keys ─────────────────────────────────────────────
 
-const BASE_URL = process.env.SERVER_URL || "http://localhost:3000";
-
-// Easter egg localStorage keys
 const EGG_STORAGE_KEYS = {
   gleipnir_3: "egg:gleipnir-3",
   gleipnir_5: "egg:gleipnir-5",
@@ -64,8 +64,8 @@ async function typeKeySequence(page: any, keys: string[]) {
 // ── Test Suite ──────────────────────────────────────────────────────────
 
 test.beforeEach(async ({ page }) => {
-  // Navigate to the app
-  await page.goto(BASE_URL);
+  // Navigate to the app root — baseURL is set in playwright.config.ts
+  await page.goto("/");
   // Clear all egg storage before each test
   await clearAllEggStorage(page);
   // Wait for app to hydrate
@@ -229,8 +229,12 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
         await dismissButton.click();
         await expect(dialog).not.toBeVisible();
 
-        // Second collapse: re-expand the sidebar
-        await collapseButton.click();
+        // Second collapse: re-expand the sidebar.
+        // Use { force: true } to bypass the Next.js dev-mode <nextjs-portal>
+        // overlay (the "Static route" indicator) that intercepts pointer events
+        // after the modal dismisses. Force-clicking reaches the underlying button
+        // directly — we are testing the localStorage gate, not pointer reachability.
+        await collapseButton.click({ force: true });
 
         // Assert: Modal does NOT open again (localStorage gate prevents it)
         const dialogAgain = page.locator('[role="dialog"]').first();
@@ -628,9 +632,11 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
     for (const artifact of svgArtifacts) {
       test(`egg #${artifact.egg} (${artifact.name}) SVG has no full-canvas background rect`, async ({
         request,
+        baseURL,
       }) => {
-        // Fetch the SVG file content directly from the test server
-        const response = await request.get(`${BASE_URL}${artifact.path}`);
+        // Fetch the SVG file content directly from the test server.
+        // baseURL is injected by Playwright from playwright.config.ts — no hardcoded port.
+        const response = await request.get(`${baseURL}${artifact.path}`);
         expect(response.status()).toBe(200);
 
         const svgText = await response.text();
