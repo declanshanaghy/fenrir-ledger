@@ -13,5 +13,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  return NextResponse.json({ pickerApiKey });
+  return NextResponse.json({ pickerApiKey }, {
+    headers: { "Cache-Control": "no-store" },
+  });
 }
