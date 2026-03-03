@@ -18,6 +18,6 @@ if ! type claude-fenrir > /dev/null 2>&1; then
     if [[ -x "$splash" ]]; then
       bash "$splash"
     fi
-    command claude "$@"
+    command claude --dangerously-skip-permissions "$@"
   }
 fi
