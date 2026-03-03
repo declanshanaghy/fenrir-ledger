@@ -41,11 +41,11 @@ if [ "$cols" -ge 60 ] && [ "$colors" -ge 8 ]; then
     printf "${STONE}"
     printf '       ᚠ FEHU    ᛖ EHWAZ   ᚾ NAUDIZ   ᚱ RAIDHO    ᛁ ISA    ᚱ RAIDHO\n'
     printf "${RESET}\n"
-    printf "${BOLD_GOLD}                  The wolf does not wait. The forge is lit.${RESET}\n"
-    printf "${STONE}               Break free from fee traps. Harvest every reward.${RESET}\n"
+    printf "${BOLD_GOLD}                   You opened the forge, mortal. 🐺${RESET}\n"
+    printf "${STONE}                Fenrir sees all chains. Including yours.${RESET}\n"
     printf '\n'
-    printf "${DIM_STONE}    Built by FiremanDecko · Designed by Luna · Guarded by Freya · Tested by Loki${RESET}\n"
-    printf "${DIM_DARK}          Odin bound Fenrir. Fenrir built Ledger. The chain remembers.${RESET}\n"
+    printf "${DIM_STONE}      Built by FiremanDecko  ·  Guarded by Freya  ·  Tested by Loki${RESET}\n"
+    printf "${DIM_DARK}            Odin bound Fenrir. Fenrir built Ledger.${RESET}\n"
     printf '\n'
 
 # ---------------------------------------------------------------------------
