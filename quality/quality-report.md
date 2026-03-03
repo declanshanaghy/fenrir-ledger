@@ -1,367 +1,248 @@
-# Quality Report: feat/server-side-picker-api-key — Move Google Picker Key to Server-Side
+# Quality Report: feat/patreon-api — Server-Side Patreon Integration (Task #4)
 
-## QA Verdict: PASS WITH ADVISORY
+## QA Verdict: FAIL
 
 **Validated by**: Loki (QA Tester)
 **Date**: 2026-03-02
-**Branch**: `feat/server-side-picker-api-key`
-**Scope**: Server-side migration of `GOOGLE_PICKER_API_KEY`, new `/api/config/picker` route,
-`usePickerConfig` hook, prop-threading through ImportWizard, MethodSelection, and PickerStep.
+**Branch**: `feat/patreon-api`
+**PR**: #93
+**Scope**: 9 new files (Patreon types, API client, OAuth state, AES-256-GCM encryption,
+Vercel KV entitlement store, 4 API routes). 3 modified files (.env.example, package.json,
+qa-handoff.md).
 
 ---
 
 ## Test Execution
 
-- Total: 23 | Passed: 22 | Failed: 0 | Blocked: 0 | Advisory: 1
+- Total: 18 | Passed: 15 | Failed: 2 | Advisory: 1
 
 ---
 
 ## Summary
 
-The implementation correctly moves the Google Picker API key from a `NEXT_PUBLIC_` env var
-baked into the client bundle to a server-side env var delivered only to authenticated users
-via a new auth-gated API route. All security requirements are met. The build is clean.
-The client bundle contains zero references to the key name or its value.
+The implementation is well-structured and follows team patterns in the majority of its
+surface area. The fenrir logger is used throughout. Auth guards are correctly placed.
+No Patreon secrets are exposed to the client bundle. The TypeScript compiler and
+Next.js build both pass clean with zero errors.
 
-One advisory issue is raised: a one-render flash where an authenticated user sees the
-Picker option as "Configuration required" before the async key fetch completes. This is
-not a functional defect — the fetch resolves quickly and the label corrects itself — but
-it is a perceivable UI flicker. No fix is required to ship; a follow-up card is recommended.
+Two blocking defects were found during security review:
+
+1. **DEF-001 [HIGH]** — `validateSignature` in the webhook route will throw an uncaught
+   exception and return HTTP 500 instead of 400 when an attacker sends a correctly-length
+   but non-hexadecimal `X-Patreon-Signature` header. This is an unhandled crash path on
+   a public, unauthenticated endpoint.
+
+2. **DEF-002 [MEDIUM]** — `getMembership()` accepts a `campaignId` parameter and the
+   JSDoc promises it filters to that campaign, but the filtering loop does not check
+   `resource.relationships?.campaign?.data?.id`. A user who is an active patron of ANY
+   Patreon campaign (not just Fenrir Ledger's) would be granted `karl` tier. This is an
+   entitlement privilege-escalation bug.
+
+Both defects must be fixed before this PR ships.
 
 ---
 
-## Check 1: requireAuth Guard (UNBREAKABLE RULE)
+## Issues for FiremanDecko
 
-**Result: PASS**
+### DEF-001 [HIGH] — `validateSignature` throws uncaught exception on non-hex signature input
 
-`development/frontend/src/app/api/config/picker/route.ts` — lines 1-6:
+**File**: `development/frontend/src/app/api/patreon/webhook/route.ts`
+**Lines**: 65-79 (`validateSignature`), 149 (call site)
 
-```typescript
-import { requireAuth } from "@/lib/auth/require-auth";
+**Root Cause**: The length guard at line 72 compares the raw hex-string lengths
+(`signature.length === expectedSignature.length`). A valid MD5 hex string is always
+32 characters. An attacker can send any 32-character string containing non-hex characters
+(e.g. `ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ`). This passes the length check. Then
+`Buffer.from(signature, "hex")` decodes to 0 bytes (Node.js silently drops invalid hex
+pairs), while `Buffer.from(expectedSignature, "hex")` decodes to 16 bytes. Node's
+`crypto.timingSafeEqual` throws `Error: Input buffers must have the same byte length`
+when given buffers of unequal length. The call site at line 149 is outside any try/catch,
+so this exception propagates as an unhandled rejection, resulting in a 500 response.
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
-  const auth = await requireAuth(request);
-  if (!auth.ok) return auth.response;
+**Impact**: A malicious actor can reliably trigger 500 errors on the public webhook
+endpoint by sending garbage signatures. While this does not bypass signature validation
+(the attacker still cannot forge a valid signature), it:
+- Causes unhandled exceptions logged as server errors (noise in production logs)
+- Returns HTTP 500 instead of 400, which may cause Patreon to retry the webhook
+- Is a denial-of-service vector if Patreon retries on 500s
+
+**Confirmed by**:
+```
+node -e "
+  const crypto = require('crypto');
+  const sig = 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ'; // 32-char non-hex
+  const exp = 'a1bf10825f943bd9b16ee890d3241b3c'; // 32-char valid hex
+  const sBuf = Buffer.from(sig, 'hex'); // => 0 bytes
+  const eBuf = Buffer.from(exp, 'hex'); // => 16 bytes
+  crypto.timingSafeEqual(sBuf, eBuf); // THROWS: Input buffers must have the same byte length
+"
 ```
 
-- `requireAuth()` is called at the top of the handler. Check passes.
-- Early return `if (!auth.ok)` is present. Check passes.
-- Pattern exactly matches the mandated CLAUDE.md pattern. Check passes.
-- The route does NOT appear in any exception list. Auth is required and present.
-
----
-
-## Check 2: No `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` in Source Files
-
-**Result: PASS**
-
-Grep over `development/frontend/src/` returned zero matches.
-
-Files containing the old variable name in the repo are exclusively docs/specs:
-
-| File | Type | Acceptable? |
-|------|------|-------------|
-| `specs/browse-archives-google-picker.md` | Original spec | Yes — historical spec |
-| `designs/product/backlog/import-workflow-v2.md` | Backlog doc | Yes — historical design |
-| `development/qa-handoff.md` | QA investigation notes | Yes — historical investigation |
-| `quality/quality-report.md` (previous) | Historical QA report | Yes — previous sprint report |
-
-Zero source files (`.ts`, `.tsx`) reference `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY`.
-
-The new variable `GOOGLE_PICKER_API_KEY` (no `NEXT_PUBLIC_` prefix) appears only in:
-- `src/app/api/config/picker/route.ts` line 8 — via `process.env.GOOGLE_PICKER_API_KEY` (server-side, correct)
-- `src/lib/google/picker.ts` line 153 — in a JSDoc comment only (not code, acceptable)
-
----
-
-## Check 3: Hook Auth State Handling
-
-**Result: PASS with Advisory**
-
-`usePickerConfig.ts` auth state handling:
-
-| Auth Status | pickerApiKey | isLoading | Correct? |
-|-------------|-------------|-----------|----------|
-| `"loading"` | `null` | `false` | Yes — no fetch initiated, returns null |
-| `"anonymous"` | `null` | `false` | Yes — no fetch initiated, key not served |
-| `"authenticated"` (initial render) | `null` | `false` → `true` | Advisory (see below) |
-| `"authenticated"` (after fetch resolves) | `string` | `false` | Yes |
-| `"authenticated"` (fetch error) | `null` | `false` | Yes — silently fails, picker unavailable |
-| `"authenticated" → "anonymous"` (sign out) | `null` | `false` | Yes — `setPickerApiKey(null)` on status change |
-
-The `cancelled` flag correctly prevents state updates after component unmount or re-render.
-`ensureFreshToken()` is called before the fetch — consistent with auth token refresh
-patterns used elsewhere in the codebase.
-
-**Advisory (non-blocking)**: On the first render after authentication, `pickerApiKey` is
-`null` and `isLoading` is `false` (it is only set to `true` after the `useEffect` fires,
-which is one render cycle after mount). `ImportWizard` discards the `isLoading` return
-value entirely. `MethodSelection` therefore receives `pickerApiKey: null` on the first
-render and shows the Picker card as disabled with "Configuration required". This corrects
-itself once the fetch resolves (typically sub-100ms). The flash is perceivable but
-transient and not a security or functional regression.
-
-**Recommended follow-up** (not blocking this PR): `ImportWizard` should destructure
-`isLoading` from `usePickerConfig()` and pass it to `MethodSelection`, which can show a
-neutral loading state on the Picker card instead of "Configuration required".
-
----
-
-## Check 4: Prop Threading — ImportWizard → MethodSelection and PickerStep
-
-**Result: PASS**
-
-`ImportWizard.tsx`:
-- Line 119: `const { pickerApiKey } = usePickerConfig();`
-- Line 212: `<MethodSelection onSelectMethod={handleSelectMethod} pickerApiKey={pickerApiKey} />`
-- Line 260: `<PickerStep onSubmitCsv={submitCsv} onBack={handleBackToMethod} pickerApiKey={pickerApiKey} />`
-
-Both downstream components receive the prop. Prop type in both components is
-`string | null`, matching what `usePickerConfig` returns.
-
----
-
-## Check 5: MethodSelection Disabled Logic
-
-**Result: PASS**
-
-`MethodSelection.tsx` `buildMethods()` function, line 98-114:
+**Required Fix**: Validate that `signature` is a valid lowercase hex string before
+decoding, OR wrap the `timingSafeEqual` call in a try/catch and return `false`:
 
 ```typescript
-function buildMethods(isAuthenticated: boolean, pickerApiKey: string | null): MethodCardDef[] {
-  const pickerDisabled = !isAuthenticated || !pickerApiKey;
+// Option A: hex validation guard
+const HEX_RE = /^[0-9a-f]+$/i;
+const valid =
+  signature.length === expectedSignature.length &&
+  HEX_RE.test(signature) &&
+  crypto.timingSafeEqual(
+    Buffer.from(signature, "hex"),
+    Buffer.from(expectedSignature, "hex"),
+  );
 
-  const pickerCard: MethodCardDef = {
-    ...
-    disabled: pickerDisabled,
-  };
+// Option B: try/catch (simpler, equally correct)
+try {
+  const valid =
+    signature.length === expectedSignature.length &&
+    crypto.timingSafeEqual(
+      Buffer.from(signature, "hex"),
+      Buffer.from(expectedSignature, "hex"),
+    );
+  log.debug("validateSignature returning", { valid });
+  return valid;
+} catch {
+  log.debug("validateSignature returning", { valid: false, reason: "buffer decode error" });
+  return false;
+}
+```
 
-  if (!pickerApiKey) {
-    pickerCard.disabledLabel = "Configuration required";
-  } else if (!isAuthenticated) {
-    pickerCard.disabledLabel = "Sign in to browse your Google Drive";
+---
+
+### DEF-002 [MEDIUM] — `getMembership` does not filter by `campaignId`; any active Patreon patron receives `karl` tier
+
+**File**: `development/frontend/src/lib/patreon/api.ts`
+**Lines**: 112-188
+
+**Root Cause**: The `getMembership()` function signature accepts `campaignId: string`,
+and the JSDoc states _"Calls the Patreon identity endpoint with membership includes, then
+matches the membership to the specified campaign ID to determine the user's tier."_
+However, the filtering loop at lines 154-179 iterates over all `member` resources in the
+response's `included` array and checks only `patron_status === "active_patron"`. There is
+no check of `resource.relationships?.campaign?.data?.id === campaignId`.
+
+The Patreon `/identity?include=memberships` endpoint returns **all** memberships for the
+authenticated user across **all campaigns**. A user who pledges to an unrelated creator's
+campaign would have `patron_status: "active_patron"` in the response, and the current
+code would grant them `karl` tier in Fenrir Ledger.
+
+The `campaignId` parameter is correctly passed to `log.debug` and stored in the
+entitlement record, but is never used for membership matching.
+
+**Impact**: Entitlement privilege escalation. Any Patreon user who is an active patron
+of any campaign (not just Fenrir Ledger) can link their Patreon account and receive
+`karl` tier without paying for Fenrir Ledger support.
+
+**Required Fix**: Filter the member resources by matching the campaign relationship:
+
+```typescript
+// In getMembership(), replace the filtering loop with campaign-aware matching:
+if (identity.included) {
+  for (const resource of identity.included) {
+    if (resource.type === "member") {
+      // Check this membership belongs to our campaign
+      const memberCampaignId = (
+        resource.relationships as Record<string, { data?: { id?: string } }> | undefined
+      )?.campaign?.data?.id;
+
+      if (memberCampaignId && memberCampaignId !== campaignId) {
+        log.debug("getMembership: skipping membership for different campaign", {
+          memberCampaignId,
+          expectedCampaignId: campaignId,
+        });
+        continue;
+      }
+
+      const patronStatus = resource.attributes.patron_status as string | null;
+      const amountCents =
+        resource.attributes.currently_entitled_amount_cents as number | undefined;
+
+      if (patronStatus === "active_patron") {
+        active = true;
+        if (amountCents && amountCents > 0) {
+          tier = "karl";
+        }
+      }
+    }
   }
+}
 ```
 
-The disabled logic is correct:
-- `null` key (not configured): disabled + "Configuration required"
-- Authenticated but no key (server returned 500 or fetch failed): disabled + "Configuration required"
-- Key present but not authenticated: disabled + "Sign in to browse your Google Drive"
-- Key present and authenticated: enabled
-
-The label priority is correct: `!pickerApiKey` is checked first. If the key is absent,
-the user sees "Configuration required" regardless of auth state — they should not see
-"Sign in" when the feature is genuinely unconfigured.
-
-The component signature `{ onSelectMethod, pickerApiKey = null }` provides a safe default.
-`useMemo` dependency on `[isAuthenticated, pickerApiKey]` correctly recomputes when either changes.
-
----
-
-## Check 6: PickerStep PICKER_API_KEY Alias
-
-**Result: PASS**
-
-`PickerStep.tsx` line 31:
+Note: The Patreon identity endpoint's `included` member resources expose the campaign
+relationship only when `&include=memberships.campaign` is added to the query. The current
+`PATREON_IDENTITY_URL` includes `memberships` but not `memberships.campaign`. The URL
+must also be updated to include the campaign relationship data:
 
 ```typescript
-export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }: PickerStepProps) {
+const PATREON_IDENTITY_URL =
+  "https://www.patreon.com/api/oauth2/v2/identity" +
+  "?include=memberships.campaign" +  // <-- was "memberships"
+  "&fields%5Buser%5D=email,full_name" +
+  "&fields%5Bmember%5D=patron_status,currently_entitled_amount_cents,campaign_lifetime_support_cents";
 ```
-
-The prop is aliased to `PICKER_API_KEY` at the destructuring site. Internal usages at
-lines 57, 68, and 76 all reference `PICKER_API_KEY`, which resolves to the prop value.
-
-The guard on line 57 (`!PICKER_API_KEY`) correctly prevents the auto-open effect from
-firing when the key is null.
-
-**ESLint Warning (non-blocking)**: The build emits one warning:
-```
-./src/components/sheets/PickerStep.tsx
-135:5  Warning: React Hook useCallback has a missing dependency: 'PICKER_API_KEY'.
-       Either include it or remove the dependency array.  react-hooks/exhaustive-deps
-```
-
-`PICKER_API_KEY` is a destructured prop alias. Its value can change if the parent
-re-renders with a new `pickerApiKey` prop after the fetch resolves. The stale closure in
-`handleOpenPicker` would use the old (null) value rather than the fetched key, but in
-practice this only matters during the brief window between the null render and the fetch
-resolution. The `useEffect` at line 56 re-checks `PICKER_API_KEY` before calling
-`handleOpenPicker`, so the auto-open effect itself is safe. The risk is only if a user
-manually calls `handleRetry` during that window, which is extremely unlikely. This warning
-is pre-existing behavior not introduced by this PR and is classified low severity.
-
----
-
-## Check 7: Build Verification
-
-**Result: PASS**
-
-```
-npm run build
-✓ Compiled successfully
-✓ Generating static pages (12/12)
-```
-
-One ESLint warning (documented above in Check 6). Zero TypeScript errors. Zero build errors.
-
-New route appears in build manifest:
-```
-ƒ /api/config/picker    152 B    106 kB
-```
-
-Route is server-rendered on demand (dynamic), as expected for an auth-gated endpoint.
-
----
-
-## Check 8: Backend API Tests
-
-**Result: PASS**
-
-Tested against running dev server at `http://localhost:9653`.
-
-| Test | Expected | Actual | Result |
-|------|----------|--------|--------|
-| `GET /api/config/picker` — no Authorization header | 401 | 401 `{"error":"missing_token","error_description":"Authorization: Bearer <id_token> header is required."}` | PASS |
-| `GET /api/config/picker` — invalid Bearer token | 401 | 401 `{"error":"invalid_token","error_description":"Invalid token."}` | PASS |
-| `GET /api/config/picker` — authenticated (key not set) | 500 `not_configured` | Not directly testable without valid Google OIDC token, but code path verified by review | PASS (by inspection) |
-
-Error responses are distinct and informative. The 401 for missing token correctly
-differentiates from the 401 for an invalid token — useful for debugging.
-
----
-
-## Check 9: Client Bundle Audit
-
-**Result: PASS**
-
-The `.next/static/chunks/` directory (the actual shipped client JavaScript) contains
-zero occurrences of `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` or `GOOGLE_PICKER_API_KEY`.
-
-The string `GOOGLE_PICKER_API_KEY` appears in:
-- `.next/cache/webpack/client-production/8.pack` — binary webpack compiler cache
-- `.next/cache/webpack/server-production/` pack files
-
-These are pre-link intermediate compiler caches equivalent to `.cache` directories. They
-are not served to clients. The actual served client chunk files under `.next/static/` are
-clean.
-
-The route handler bundle at `.next/server/app/api/config/picker/route.js` correctly
-contains `process.env.GOOGLE_PICKER_API_KEY` (server-side env read, never sent to browser).
-
----
-
-## Check 10: Grep Audit — Repo-Wide
-
-**Result: PASS**
-
-`NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` found in 4 files, all documentation/specs:
-
-| File | Category |
-|------|----------|
-| `specs/browse-archives-google-picker.md` | Original feature spec (historical) |
-| `designs/product/backlog/import-workflow-v2.md` | Backlog design doc (historical) |
-| `development/qa-handoff.md` | Previous QA investigation notes (historical) |
-| `quality/quality-report.md` | Previous sprint QA report (this file, previous section) |
-
-Zero hits in any `.ts` or `.tsx` source file.
-
----
-
-## Check 11: .env.example Correctness
-
-**Result: PASS**
-
-`development/frontend/.env.example` contains:
-
-```bash
-# No NEXT_PUBLIC_ prefix — server-side only, never included in client bundle.
-GOOGLE_PICKER_API_KEY=
-```
-
-The comment explicitly states server-side only. The old `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY`
-entry is absent. The template is accurate and will not mislead developers setting up locally.
-
----
-
-## Defects Found
-
-None. Zero blocking or high-severity defects.
 
 ---
 
 ## Advisory Items (Non-Blocking)
 
-### ADV-001 [LOW] — Picker card flashes "Configuration required" for authenticated users on first render
+### ADV-001 [LOW] — `@vercel/kv` is deprecated; plan for Upstash Redis migration
 
-**File**: `development/frontend/src/components/sheets/ImportWizard.tsx` line 119;
-`development/frontend/src/hooks/usePickerConfig.ts` lines 21-22
+**File**: `development/frontend/package.json` line 20
 
-**Description**: `usePickerConfig` initialises `isLoading` to `false`. On the first render
-after authentication, `pickerApiKey` is `null` and `isLoading` is `false` for one tick
-before the `useEffect` fires. `ImportWizard` discards the `isLoading` value entirely.
-`MethodSelection` receives `pickerApiKey: null` and renders the Picker card as
-disabled with "Configuration required" until the fetch resolves.
+**Description**: FiremanDecko acknowledged this in `development/qa-handoff.md`
+(Known Limitation #1). The package is functional but deprecated. Vercel recommends
+migrating to Upstash Redis. This is not a blocker for this PR — the package works —
+but a follow-up card should be created to track the migration before `@vercel/kv`
+becomes unsupported.
 
-**Impact**: Visual flicker only. The correct state renders once the fetch completes
-(typically under 100ms on localhost, under 300ms in production). No security or functional
-impact.
-
-**Recommended fix** (follow-up card, not blocking):
-```typescript
-// ImportWizard.tsx
-const { pickerApiKey, isLoading: isPickerConfigLoading } = usePickerConfig();
-
-// MethodSelection.tsx — add prop
-interface MethodSelectionProps {
-  pickerApiKey?: string | null;
-  isPickerConfigLoading?: boolean;
-}
-
-// buildMethods — treat loading same as "not yet determined"
-const pickerDisabled = !isAuthenticated || (!pickerApiKey && !isPickerConfigLoading);
-// Show spinner or neutral state while loading
-```
-
-### ADV-002 [LOW] — ESLint warning: missing `PICKER_API_KEY` in useCallback deps
-
-**File**: `development/frontend/src/components/sheets/PickerStep.tsx` line 135
-
-**Description**: The build emits a `react-hooks/exhaustive-deps` warning for the
-`handleOpenPicker` `useCallback`. `PICKER_API_KEY` (a destructured prop alias) is
-used inside the callback but omitted from the dependency array. The risk is a stale
-closure during the brief null-to-value transition, which is already guarded by the
-`useEffect` at line 56. Low severity but the linter warning is visible in CI logs.
-
-**Recommended fix** (follow-up card):
-Add `PICKER_API_KEY` to the `useCallback` dependency array and remove the
-`// eslint-disable-next-line` comment.
+**Action required**: Create a follow-up backlog item for Upstash Redis migration.
+Not blocking this PR.
 
 ---
 
-## Security Assessment
+## Checks Passed
 
 | Check | Result |
 |-------|--------|
-| `requireAuth()` guard present in new route | PASS |
-| Key never returned to unauthenticated callers | PASS |
-| Key not baked into client bundle | PASS |
-| Key not logged to console | PASS |
-| Key not in `.env.example` as plaintext | PASS (placeholder empty string only) |
-| `.env.local` gitignored | PASS (confirmed gitignored) |
-| Old `NEXT_PUBLIC_` variable absent from source | PASS |
+| `/api/patreon/authorize` requires `requireAuth` (ADR-008) | PASS |
+| `/api/patreon/membership` requires `requireAuth` (ADR-008) | PASS |
+| `/api/patreon/callback` correctly exempt from `requireAuth` (CSRF via state) | PASS |
+| `/api/patreon/webhook` correctly exempt from `requireAuth` (HMAC-MD5 validation) | PASS |
+| `PATREON_CLIENT_SECRET` accessed only via `process.env` in server-side modules | PASS |
+| No `NEXT_PUBLIC_` prefix on any Patreon/KV/encryption secret variable | PASS |
+| Fenrir logger (`log.*`) used throughout — no raw `console.*` in backend code | PASS |
+| Method entry/exit `log.debug` on all functions | PASS |
+| AES-256-GCM: 12-byte IV, 16-byte auth tag, correct buffer concatenation | PASS |
+| AES-256-GCM: `decipher.setAuthTag()` called before `decipher.final()` | PASS |
+| Tokens encrypted before KV storage (callback and membership refresh) | PASS |
+| OAuth state: 16-byte nonce generated via `crypto.randomBytes(16)` | PASS |
+| OAuth state: 10-minute expiry enforced in `validateState()` | PASS |
+| Webhook: `timingSafeEqual` used (constant-time comparison) | PASS (with DEF-001 caveat) |
+| KV secondary index (`patreon-user:{id}` -> `googleSub`) maintained in `setEntitlement` | PASS |
+| KV TTL (30 days) set on both primary and secondary index entries | PASS |
+| Graceful degradation: stale cache returned with `{ stale: true }` on Patreon API failure | PASS |
+| TypeScript: `npx tsc --noEmit` — zero errors | PASS |
+| Build: `npm run build` — zero errors, all 4 routes in build manifest | PASS |
+| `.env.example` updated with all required variables, no secrets as plaintext | PASS |
+| `.gitignore` covers `.env`, `*.env`, `.env.*` (excludes `.env.example`) | PASS |
+| GH Actions: `deploy-preview` | PENDING (still running at time of report) |
 
 ---
 
-## Non-Regression Confirmation
+## Defects Found
 
-| Area | Result |
-|------|--------|
-| Path A (Share a Scroll / URL) — unaffected | PASS |
-| Path C (Deliver a Rune-Stone / CSV) — unaffected | PASS |
-| Auth flow (PKCE, token exchange) — not modified | PASS |
-| `/api/sheets/import` `requireAuth()` guard — still present | PASS |
-| MethodSelection keyboard navigation — unchanged | PASS |
-| MethodSelection disabled logic for anonymous users — unchanged | PASS |
+### DEF-001 [HIGH] — Uncaught exception in `validateSignature` on non-hex input
+- Severity: HIGH — public unauthenticated endpoint, 500 error from garbage input
+- File: `development/frontend/src/app/api/patreon/webhook/route.ts` lines 65-79
+- Root cause: `timingSafeEqual` throws when decoded buffers have unequal byte lengths
+- Fix: wrap `timingSafeEqual` in try/catch or add hex format guard before decode
+
+### DEF-002 [MEDIUM] — `getMembership` grants `karl` tier for any active Patreon membership
+- Severity: MEDIUM — entitlement privilege escalation
+- File: `development/frontend/src/lib/patreon/api.ts` lines 154-179
+- Root cause: filtering loop checks `patron_status` but not `campaign.id`
+- Fix: add campaign relationship check; update `PATREON_IDENTITY_URL` to include `memberships.campaign`
 
 ---
 
@@ -369,17 +250,14 @@ Add `PICKER_API_KEY` to the `useCallback` dependency array and remove the
 
 | Risk | Severity | Likelihood | Notes |
 |------|----------|------------|-------|
-| ADV-001 picker card flash | Low | Certain | Cosmetic only, transient |
-| ADV-002 stale useCallback | Low | Very low | Guarded by useEffect |
-| Pre-existing ESLint warning in LcarsOverlay | Low | Pre-existing | Not this PR |
+| DEF-001: 500 crash on malformed webhook signature | HIGH | Certain if targeted | Any 32-char non-hex sig triggers it |
+| DEF-002: Karl tier granted to unrelated Patreon patrons | MEDIUM | Plausible | Any Patreon user can exploit |
+| ADV-001: @vercel/kv deprecation | LOW | Long-term | Functional now, needs migration tracking |
+| Rate limiter is per-instance (KL-003) | LOW | Known | Acknowledged in handoff, acceptable now |
 
 ---
 
-## Recommendation: SHIP
+## Recommendation: HOLD FOR FIXES
 
-The primary security objective is achieved: the Google Picker API key no longer lives in
-the client JS bundle. The `requireAuth()` guard is correctly placed. All three auth
-states are handled. Prop threading is correct. The build is clean. Client bundle is clean.
-
-The two advisory items are cosmetic/low-severity and do not block shipping. They should
-be tracked as follow-up cards.
+Fix DEF-001 and DEF-002, then re-submit for QA. Both fixes are small and targeted.
+No architectural changes are required — the overall implementation structure is sound.

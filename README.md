@@ -170,7 +170,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 *The trickster tests. His verdicts are final.*
 
 - [quality/README.md](quality/README.md) — Index of all QA artifacts, verdicts, and test execution guide
-- [quality/test-suites/](quality/test-suites/) — Playwright test suites: easter eggs, navigation, accessibility, responsive, import, valhalla, layout (130+ tests)
+- [quality/test-suites/](quality/test-suites/) — Playwright test suites: easter eggs, navigation, accessibility, responsive, import, valhalla, layout, patreon (150+ tests)
 - [quality/test-plan.md](quality/test-plan.md) — Test strategy and coverage plan
 - [quality/quality-report.md](quality/quality-report.md) — Latest QA verdict
 
