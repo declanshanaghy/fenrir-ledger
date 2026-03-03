@@ -36,6 +36,7 @@ interface PickerBuilderApi {
   setOAuthToken(token: string): PickerBuilderApi;
   setDeveloperKey(key: string): PickerBuilderApi;
   setCallback(callback: (data: PickerResponseObject) => void): PickerBuilderApi;
+  setOrigin(origin: string): PickerBuilderApi;
   setSize(width: number, height: number): PickerBuilderApi;
   build(): PickerInstance;
 }
@@ -173,6 +174,7 @@ export async function openPicker(
         .enableFeature(pickerApi.Feature.NAV_HIDDEN)
         .setOAuthToken(accessToken)
         .setDeveloperKey(apiKey)
+        .setOrigin(window.location.protocol + "//" + window.location.host)
         .setCallback((data: PickerResponseObject) => {
           if (data.action === pickerApi.Action.PICKED && data.docs?.[0]) {
             resolve({
