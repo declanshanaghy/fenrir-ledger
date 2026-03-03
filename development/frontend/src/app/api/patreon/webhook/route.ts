@@ -62,21 +62,40 @@ function validateSignature(body: string, signature: string): boolean {
     return false;
   }
 
+  // Guard: reject non-hex signature strings before attempting Buffer decode
+  if (!/^[0-9a-f]+$/i.test(signature)) {
+    log.debug("validateSignature returning", { valid: false, reason: "non-hex signature" });
+    return false;
+  }
+
   const expectedSignature = crypto
     .createHmac("md5", secret)
     .update(body)
     .digest("hex");
 
-  // Constant-time comparison to prevent timing attacks
-  const valid =
-    signature.length === expectedSignature.length &&
-    crypto.timingSafeEqual(
-      Buffer.from(signature, "hex"),
-      Buffer.from(expectedSignature, "hex"),
-    );
+  // Compare Buffer lengths (not string lengths) before timingSafeEqual
+  // to avoid the throw when hex-decoded buffers differ in byte length.
+  try {
+    const sigBuf = Buffer.from(signature, "hex");
+    const expectedBuf = Buffer.from(expectedSignature, "hex");
 
-  log.debug("validateSignature returning", { valid });
-  return valid;
+    if (sigBuf.length !== expectedBuf.length) {
+      log.debug("validateSignature returning", {
+        valid: false,
+        reason: "buffer length mismatch",
+      });
+      return false;
+    }
+
+    const valid = crypto.timingSafeEqual(sigBuf, expectedBuf);
+    log.debug("validateSignature returning", { valid });
+    return valid;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error("validateSignature: timingSafeEqual threw", { error: message });
+    log.debug("validateSignature returning", { valid: false, reason: "exception" });
+    return false;
+  }
 }
 
 /**

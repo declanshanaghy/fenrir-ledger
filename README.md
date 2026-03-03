@@ -228,7 +228,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 - [quality/import-workflow-v2-verdict.md](quality/import-workflow-v2-verdict.md) — QA verdict: PR #61 Import Workflow v2 (Three Paths to the Forge) — HOLD FOR FIXES (3 defects: DEF-001 success step unreachable, DEF-002 missing option aria-labels, DEF-003 generic CSV rejection messages)
 - PR #72 Norse Statusline Script — PASS, merged: `.claude/statusline-command.sh` (7 sections, 4-tier color thresholds, 4 width breakpoints, Ragnarok mode, rune prefixes)
 - [development/qa-handoff.md](development/qa-handoff.md) — Import workflow investigation: 4 issues found (2 HIGH: orphaned backend processes + stale .env.local; 1 MEDIUM: CSS broken by build-over-dev; 1 LOW: stale MEMORY.md)
-- [quality/quality-report.md](quality/quality-report.md) — QA verdict: feat/server-side-picker-api-key (Move Picker API key server-side) — PASS WITH ADVISORY (0 blocking defects, 2 low-severity advisories)
+- [quality/quality-report.md](quality/quality-report.md) — QA verdict: feat/patreon-api (Task #4: Server-Side Patreon Integration) — FAIL (DEF-001 HIGH: uncaught exception in webhook signature validation; DEF-002 MEDIUM: getMembership does not filter by campaign_id)
 
 ### ᚠ Pack Operations
 

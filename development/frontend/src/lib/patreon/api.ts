@@ -23,12 +23,13 @@ import type {
 /** Patreon OAuth token endpoint. */
 const PATREON_TOKEN_URL = "https://www.patreon.com/api/oauth2/token";
 
-/** Patreon API v2 identity endpoint with membership includes. */
+/** Patreon API v2 identity endpoint with membership + campaign includes. */
 const PATREON_IDENTITY_URL =
   "https://www.patreon.com/api/oauth2/v2/identity" +
-  "?include=memberships" +
+  "?include=memberships.campaign" +
   "&fields%5Buser%5D=email,full_name" +
-  "&fields%5Bmember%5D=patron_status,currently_entitled_amount_cents,campaign_lifetime_support_cents";
+  "&fields%5Bmember%5D=patron_status,currently_entitled_amount_cents,campaign_lifetime_support_cents" +
+  "&fields%5Bcampaign%5D=";
 
 /**
  * Exchanges an OAuth authorization code for Patreon access and refresh tokens.
@@ -147,13 +148,21 @@ export async function getMembership(
     includedCount: identity.included?.length ?? 0,
   });
 
-  // Look through included resources for a membership matching our campaign
+  // Look through included resources for a membership matching our campaign.
+  // We filter by campaignId to ensure only pledges to the Fenrir Ledger campaign
+  // grant Karl tier — not pledges to unrelated creators.
   let tier: PatreonTier = "thrall";
   let active = false;
 
   if (identity.included) {
     for (const resource of identity.included) {
       if (resource.type === "member") {
+        // Verify this membership belongs to the Fenrir Ledger campaign
+        const memberCampaign = resource.relationships as
+          | { campaign?: { data?: { id?: string } } }
+          | undefined;
+        const memberCampaignId = memberCampaign?.campaign?.data?.id;
+
         const patronStatus = resource.attributes.patron_status as
           | string
           | null;
@@ -166,7 +175,19 @@ export async function getMembership(
           resourceId: resource.id,
           patronStatus,
           amountCents,
+          memberCampaignId,
+          expectedCampaignId: campaignId,
         });
+
+        // Skip memberships that do not belong to the target campaign
+        if (memberCampaignId !== campaignId) {
+          log.debug("getMembership: skipping member — campaign mismatch", {
+            resourceId: resource.id,
+            memberCampaignId,
+            expectedCampaignId: campaignId,
+          });
+          continue;
+        }
 
         if (patronStatus === "active_patron") {
           active = true;
