@@ -1,73 +1,34 @@
 # Backlog: Evaluate Alternative IDP for Testing & Production
 
-**Priority**: Medium
-**Category**: Infrastructure / Auth
-**Sprint**: Unscheduled (GA prerequisite)
-**Status**: Proposed
+**Priority**: Medium | **Status**: Proposed | **Sprint**: Unscheduled (GA prerequisite)
 
 ## Problem
 
-The current product brief specifies OIDC via Google for authentication at GA.
-Google OAuth is difficult to test:
-
-- Requires real Google accounts or complex test-user setup
-- OAuth consent screen is cumbersome in development
-- Cannot easily create/destroy disposable test accounts
-- Rate limits and verification requirements slow down CI/E2E testing
-
-We need an IDP that is both **easy for developers to test against** and **appropriate for the target audience** (credit card churners and rewards optimizers — mainstream consumers, mobile-first, privacy-conscious about financial data).
+Google OAuth is hard to test: no easy disposable test accounts, consent screen friction, rate limits in CI.
 
 ## Recommendation: Clerk
 
-**Clerk** is the strongest fit for both testing ease and target audience alignment.
+Best fit for both testing ease and target audience (mainstream consumers, mobile-first).
 
-### Why Clerk
+- First-class Next.js App Router integration (`@clerk/nextjs`)
+- Built-in dev/test mode — no real OAuth needed locally or in CI
+- Social providers (Google, Apple, GitHub) toggle-on from dashboard — no code changes
+- Testing tokens API for Playwright — no login flow in CI
+- 10K MAU free tier — sufficient through Early Access
+- SOC 2 compliant
 
-| Criterion | Clerk |
-|---|---|
-| **Next.js integration** | First-class — `@clerk/nextjs` with App Router support, middleware, server components |
-| **Test mode** | Built-in development instance with test accounts; no real OAuth needed locally |
-| **Social providers** | Google, Apple, Facebook, GitHub — all toggle-on, no per-provider OAuth app setup |
-| **Passwordless** | Email magic link + passkeys out of the box |
-| **Mobile UX** | Drop-in `<SignIn />` component, responsive, customizable |
-| **Privacy** | SOC 2 compliant, user data stays with Clerk (not a third-party aggregator) |
-| **Free tier** | 10,000 MAU free — more than enough through Early Access |
-| **E2E testing** | Testing tokens API for Playwright/Cypress — no real login flow needed in CI |
-
-### Why it beats Google-only
-
-- **Testing**: Clerk's dev mode gives instant test users. No Google OAuth dance in local/CI.
-- **Audience fit**: Credit card churners are mainstream consumers who expect Apple/Google sign-in options. Clerk aggregates both plus email magic link — one integration, all providers.
-- **Speed to ship**: Drop-in components mean auth UI ships in hours, not days.
-
-### Alternatives Considered
-
-| IDP | Pros | Cons | Verdict |
-|---|---|---|---|
-| **Auth.js (NextAuth)** | Open source, no vendor lock-in, lightweight | DIY test user management, no built-in test mode, each provider needs separate OAuth app | Good fallback if Clerk pricing becomes a concern at scale |
-| **Auth0** | Excellent test user management, database connections | More enterprise-focused, heavier SDK, overkill for consumer app | Over-engineered for this audience |
-| **Supabase Auth** | Bundled with Supabase DB | Product brief explicitly defers Supabase until GA; coupling auth to DB prematurely | Violates current constraints |
-| **Firebase Auth** | Easy test accounts, Google-native | Google-centric, vendor lock-in, less Next.js-native | Worse DX than Clerk for this stack |
-| **Magic.link** | Great passwordless UX | Limited social login support, smaller ecosystem | Too narrow |
-
-## IDP Provider Rollout
-
-**Phase 1 (now):** GitHub only — the whole team has accounts, fastest path to testable auth.
-
-**Phase 2 (later):** Add Google, Apple, email magic link via Clerk dashboard toggles — no code changes required.
-
-Clerk decouples the auth platform from provider selection. Adding providers later is a config change, not a code change.
+**Rollout**: Phase 1 = GitHub only (team accounts). Phase 2 = Add Google, Apple, email magic link via dashboard toggles.
 
 ## Acceptance Criteria
 
-- [ ] Spike: Stand up Clerk dev instance, integrate with Next.js App Router
-- [ ] Verify test-mode flow works for local dev and CI (Playwright)
-- [ ] Enable GitHub as the initial identity provider
-- [ ] Confirm adding providers later is dashboard-only (no code changes)
-- [ ] Document migration path from anonymous localStorage to Clerk-authenticated flow
-- [ ] Update product brief auth section to reflect chosen IDP
+- [ ] Spike: Clerk dev instance + Next.js App Router integration
+- [ ] Verify test-mode works for local dev and CI (Playwright)
+- [ ] Enable GitHub as initial IDP
+- [ ] Confirm adding providers later is dashboard-only
+- [ ] Document migration from anonymous localStorage to Clerk-authenticated flow
+- [ ] Update product brief auth section
 
 ## Dependencies
 
-- This is a **GA prerequisite** — no auth work ships before GA planning is triggered (per product brief constraints)
-- Must preserve anonymous-first design: auth is an upsell, never a gate
+- GA prerequisite — no auth work ships before GA planning
+- Must preserve anonymous-first design: auth is upsell, never a gate

@@ -1,4 +1,4 @@
-# Luna -- UX Designer
+# Luna — UX Designer
 
 UX design artifacts for Fenrir Ledger.
 

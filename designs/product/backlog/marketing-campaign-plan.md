@@ -1,139 +1,37 @@
-# Backlog Item: Marketing Campaign — Credit Card Churner Acquisition
+# Backlog: Marketing Campaign — Credit Card Churner Acquisition
 
-**Status:** Backlog
-**Priority:** P2-High
-**Owner:** Freya (Product Owner)
-**Sprint:** Unscheduled
-
----
+**Status**: Backlog | **Priority**: P2-High | **Owner**: Freya | **Sprint**: Unscheduled
 
 ## Summary
 
-Develop a comprehensive marketing campaign for Fenrir Ledger targeting the credit card churning community. Maximize ROI with minimal spend by leveraging Claude skills for content generation, SEO optimization, and social media automation. The wolf hunts where the prey gathers.
-
-## Creative Direction
-
-**Voice of the Wolf:** Fenrir doesn't advertise — he howls, and the pack comes running. Every churner who's ever missed an annual fee, forgotten a signup bonus deadline, or lost track of a promo rate expiry is prey to the chains. Fenrir breaks those chains. The message is simple: *stop losing money to the banks.*
+Marketing campaign targeting credit card churning community. Minimize spend, maximize ROI via Claude-generated content and organic channels.
 
 ## Strategy Pillars
 
-### 1. SEO — Excruciating Search Optimization
+1. **SEO**: Target "credit card churn tracker", "annual fee reminder app", "signup bonus tracker", "best churning tools 2026". Long-form blog content, landing pages per use case, schema markup.
 
-**Goal:** Dominate search results for credit card churning tool queries.
+2. **Social (ranked by churner density)**: Reddit (r/churning, r/creditcards), Twitter/X (FinTwit), YouTube (churning tutorials), Doctor of Credit, Flyertalk. Value-first engagement, no spam.
 
-**Target keywords:**
-- "credit card churn tracker"
-- "annual fee reminder app"
-- "signup bonus tracker"
-- "credit card rewards optimizer"
-- "when to cancel credit card"
-- "credit card promo rate expiry tracker"
-- "best churning tools 2026"
+3. **Content**: Claude-generated blog posts, social copy, email sequences, landing pages, comparison content. Near-zero marginal cost.
 
-**Tactics:**
-- Long-form blog content on churning strategies (generated via Claude skills)
-- Landing pages per use case (fee avoidance, bonus tracking, promo monitoring)
-- Schema markup for tool/software rich results
-- Backlink outreach to churning blogs and forums
+4. **Community**: Referral "Pack" program, Discord community, monthly "Hunt Report" newsletter, churner testimonials.
 
-### 2. Social Media — Hunt Where the Prey Gathers
+5. **Partnerships**: Credit card YouTubers, churning bloggers (Doctor of Credit, Frequent Miler), personal finance podcasts.
 
-**Primary channels (ranked by churner density):**
+## Phases
 
-| Platform | Community | Approach |
-|----------|-----------|----------|
-| Reddit | r/churning, r/creditcards, r/CreditCardsIndia, r/awardtravel | Value-first posts, AMAs, tool mentions in relevant threads |
-| Twitter/X | FinTwit, churning influencers, points/miles community | Thread hooks, memes, engagement with churning discourse |
-| YouTube | Churning tutorials, credit card review channels | Sponsor or create "how I track my cards" content |
-| Facebook | Churning groups, points/miles groups | Community engagement, not hard selling |
-| TikTok | Personal finance creators, "money hack" content | Short-form demos, fee-saved celebrations |
-| Doctor of Credit | The churning bible | Sponsored post or tool listing |
-| Flyertalk | Veteran churners | Forum presence, tool recommendation threads |
-
-### 3. Content Marketing — Claude-Powered, Cost-Minimized
-
-**Use Claude skills to generate:**
-- Blog posts on churning strategies and fee avoidance
-- Social media copy (threads, posts, captions)
-- Email sequences for onboarding and retention
-- Landing page copy with Norse-themed branding
-- Comparison content (Fenrir vs spreadsheets vs other trackers)
-- Infographics content (fee savings calculator, churning timeline visualizer)
-
-**Claude skills to investigate:**
-- Content generation and copywriting
-- SEO keyword research and optimization
-- Social media scheduling and copy
-- Email marketing automation copy
-- A/B test copy variants
-
-### 4. Community Building
-
-- **"Pack" program** — referral system where users invite fellow churners
-- **Discord/Slack community** — churners helping churners, with Fenrir as the hub
-- **Monthly "Hunt Report"** — newsletter showing aggregate savings stats (anonymized)
-- **Churner testimonials** — "Fenrir saved me $X in annual fees"
-
-### 5. Partnerships & Influencers
-
-- Credit card review YouTubers (AskSebby, Ben Hedges, Credit Shifu)
-- Churning bloggers (Doctor of Credit, Frequent Miler, The Points Guy)
-- Personal finance podcasts
-- Points/miles community leaders on Twitter
-
-## Campaign Phases
-
-### Phase 1: Foundation (Week 1-2)
-- Landing page with clear value prop and signup
-- SEO-optimized blog (3-5 cornerstone articles)
-- Social media accounts created with Norse branding
-- Reddit presence established (value-first, no spam)
-
-### Phase 2: Launch (Week 3-4)
-- Product Hunt launch
-- Reddit AMAs in r/churning and r/creditcards
-- Twitter thread campaign ("I built a tool because I lost $495 to an annual fee")
-- YouTube demo video
-
-### Phase 3: Growth (Week 5-8)
-- Influencer outreach and sponsored content
-- Email drip campaigns for signups who haven't activated
-- Community Discord launch
-- Retargeting ads (minimal budget, high-intent audiences only)
-
-### Phase 4: Sustain (Ongoing)
-- Weekly social content (Claude-generated, human-reviewed)
-- Monthly "Hunt Report" newsletter
-- SEO content cadence (2 posts/month)
-- Community management and engagement
-
-## Budget Philosophy
-
-**Minimize cost, maximize ROI:**
-- Claude skills for all content generation (near-zero marginal cost)
-- Organic social first, paid only for retargeting high-intent visitors
-- No broad paid ads — churners are a niche, reachable organically
-- Influencer partnerships on performance basis where possible
-- Product Hunt and Reddit launches are free
-
-## Metrics
-
-| Metric | Target |
-|--------|--------|
-| Monthly signups | 500+ by month 3 |
-| Cost per acquisition | < $2 |
-| Reddit/social referral traffic | 40% of total |
-| SEO organic traffic | 30% of total by month 6 |
-| User retention (30-day) | > 60% |
-| NPS from churning community | > 50 |
+| Phase | Timing | Key actions |
+|-------|--------|-------------|
+| Foundation | Week 1-2 | Landing page, 3-5 blog posts, social accounts, Reddit presence |
+| Launch | Week 3-4 | Product Hunt, Reddit AMAs, Twitter threads, YouTube demo |
+| Growth | Week 5-8 | Influencer outreach, email drips, Discord launch |
+| Sustain | Ongoing | Weekly social, monthly newsletter, 2 posts/month |
 
 ## Acceptance Criteria
 
-- [ ] Marketing plan reviewed and approved by Freya
 - [ ] Landing page live with SEO fundamentals
-- [ ] Social media accounts created on top 3 platforms
+- [ ] Social accounts on top 3 platforms
 - [ ] First 5 blog posts published
-- [ ] Reddit presence established (not banned)
+- [ ] Reddit presence established
 - [ ] Product Hunt launch scheduled
-- [ ] Claude skills identified and tested for content pipeline
 - [ ] Email capture and drip sequence operational
