@@ -86,6 +86,27 @@ Don't test to confirm it works. Test to prove it doesn't. Assume:
 
 Tests that validate what the code currently does are worthless — they will pass even when the code is wrong. Every test assertion must be derived from the design spec, wireframes, or product requirements. If the spec says a link must resolve to `/sessions/`, assert `/sessions/` — not whatever the code currently outputs.
 
+## Playwright Test Requirement (MANDATORY)
+
+Every QA validation MUST include writing Playwright tests for the new functionality in the PR being validated. Code review and build checks alone are NOT sufficient for a PASS verdict.
+
+For each PR you validate:
+
+1. **Create test file(s)** in `quality/test-suites/<feature>/<feature>.spec.ts`
+2. **Derive every assertion from the acceptance criteria** — never from what the code currently does
+3. **Test what CAN be automated**: routing, rendering, UI element presence, text content, localStorage interactions, modals (open/close/dismiss), navigation, responsive layout, form behavior
+4. **Run all new tests**: `npx playwright test quality/test-suites/<feature>/`
+5. **All new tests must pass** before you can declare a PASS verdict
+6. **Commit test files to the same branch** as the PR you are validating
+7. **Report test count in your verdict**: `### Playwright Tests: N new tests written, all passing`
+
+If a feature path cannot be tested via Playwright (e.g., real OAuth flow, external API callback):
+- Document what WAS tested automatically
+- Document what CANNOT be tested and why
+- Provide manual test steps for the untestable paths
+
+A PASS verdict requires: code review passes, build passes, tsc passes, GH Actions pass, AND new Playwright tests written and passing.
+
 ## Test Environment
 
 ### Predefined Test Server

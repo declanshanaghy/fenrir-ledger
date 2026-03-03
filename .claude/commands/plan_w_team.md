@@ -339,14 +339,26 @@ Use these files to complete the task:
 
 ### 3. <Continue Pattern>
 
+### N-1. Write Playwright Tests
+- **Task ID**: write-playwright-tests
+- **Depends On**: <all implementation task IDs>
+- **Assigned To**: loki
+- **Agent Type**: loki-qa-tester
+- **Parallel**: false
+- Write Playwright tests covering acceptance criteria for each PR
+- Tests in `quality/test-suites/<feature-slug>/`
+- Assertions derived from acceptance criteria, not current code behavior
+- Run tests, verify all pass, commit to each PR's branch
+
 ### N. <Final Validation Task>
 - **Task ID**: validate-all
-- **Depends On**: <all previous Task IDs>
+- **Depends On**: write-playwright-tests
 - **Assigned To**: <validator team member>
 - **Agent Type**: <validator agent>
 - **Parallel**: false
 - Run all validation commands
 - Verify acceptance criteria met
+- Verify Playwright test coverage exists for all new functionality
 
 <continue with additional tasks as needed. Agent types must exist in .claude/agents/*.md>
 
