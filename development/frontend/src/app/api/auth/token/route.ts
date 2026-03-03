@@ -22,6 +22,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 /**
  * Whitelisted origins that may call this endpoint.
@@ -59,6 +60,20 @@ function isAllowedRedirectUri(redirectUri: string): boolean {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Rate limit by IP — 10 requests per minute per IP address.
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const { success } = rateLimit(`token:${ip}`, { limit: 10, windowMs: 60_000 });
+  if (!success) {
+    return NextResponse.json(
+      {
+        error: "rate_limited",
+        error_description: "Too many requests. Try again later.",
+      },
+      { status: 429 }
+    );
+  }
+
   // Parse and validate request body.
   let body: TokenRequestBody;
   try {
