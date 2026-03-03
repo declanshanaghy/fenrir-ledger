@@ -10,7 +10,7 @@
  * Usage:
  *   import { log } from "@/lib/logger";
  *   log.debug("myFunction called", { url, csvLength: csv.length });
- *   log.error("myFunction failed", { error: err.message });
+ *   log.error("myFunction failed", err);  // log full error — masking handles secrets
  *
  * Masking is applied automatically — you can safely pass objects containing
  * secret keys and they will be replaced with the mask placeholder before
@@ -47,6 +47,21 @@ const MASKED_KEYS = [
   "codeVerifier",
   "code",
   "pickerApiKey",
+  "bearer",
+  "nonce",
+  "state",
+  "signature",
+  "webhook_secret",
+  "webhookSecret",
+  "encryption_key",
+  "encryptionKey",
+  "session_token",
+  "sessionToken",
+  "csrf",
+  "csrfToken",
+  "csrf_token",
+  "patreon_token",
+  "patreonToken",
 ];
 
 /**
@@ -60,6 +75,8 @@ const MASKED_PATTERNS = [
   /AIzaSy[a-zA-Z0-9_-]{30,}/gi,                             // Google API keys
   /ya29\.[a-zA-Z0-9_-]+/gi,                                 // Google access tokens
   /eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/gi, // JWTs
+  /[0-9a-f]{32,}/gi,                                        // Hex-encoded secrets (HMAC, encryption keys)
+  /patreon_[a-zA-Z0-9_-]{20,}/gi,                           // Patreon tokens
 ];
 
 const isProd = process.env.NODE_ENV === "production";
