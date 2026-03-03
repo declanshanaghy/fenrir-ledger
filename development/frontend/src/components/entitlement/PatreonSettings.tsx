@@ -135,10 +135,12 @@ export function PatreonSettings() {
     return <PatreonSettingsSkeleton />;
   }
 
-  // Determine state
-  const isExpired = isLinked && !isActive;
+  // Determine state — order matters: isLinkedThrall is checked before isExpired
+  // in the render so that linked thrall users (never pledged) see "Pledge" copy,
+  // while isExpired only matches formerly-active Karl users whose membership lapsed.
   const isKarlActive = isLinked && isActive && tier === "karl";
-  const isLinkedThrall = isLinked && !isActive && tier === "thrall" && !isExpired;
+  const isLinkedThrall = isLinked && !isActive && tier === "thrall";
+  const isExpired = isLinked && !isActive && tier === "karl";
 
   // Format linked date from cache (if available)
   const linkedDate = (() => {
