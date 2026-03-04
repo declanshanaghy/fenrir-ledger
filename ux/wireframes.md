@@ -56,7 +56,8 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | **accessibility** | | |
 | Accessibility + UX Polish | [wireframes/accessibility/accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) | Focus ring spec, skip-nav, ARIA landmarks, heading hierarchy, touch target audit, mobile layouts, reduced-motion |
 | **marketing** | | |
-| Marketing Site | [wireframes/marketing/marketing-site.html](wireframes/marketing/marketing-site.html) | 5-section static page: nav, hero, problems, features, steps, footer |
+| Marketing Site | [wireframes/marketing/marketing-site.html](wireframes/marketing/marketing-site.html) | 5-section static page: nav, hero, problems, features, steps, footer (updated: legal links in footer) |
+| Static Site Footer | [wireframes/marketing/static-site-footer.html](wireframes/marketing/static-site-footer.html) | Dedicated footer spec: brand, quote, runes, CTA, session link, legal row (Privacy Policy + Terms of Service), team credits; easter egg triggers preserved |
 
 ---
 
@@ -237,7 +238,7 @@ Z-index: 50 (see z-index table below). Mobile: bottom drawer toggle.
 
 ## Marketing Site — `/static/index.html`
 
-[→ marketing-site.html](wireframes/marketing/marketing-site.html)
+[→ marketing-site.html](wireframes/marketing/marketing-site.html) | [→ static-site-footer.html](wireframes/marketing/static-site-footer.html) (dedicated footer spec)
 
 Single-page, no framework, inline CSS/JS. Five sections:
 
@@ -248,7 +249,9 @@ Single-page, no framework, inline CSS/JS. Five sections:
 | CHAINS | 3-col problems | Fee-Serpent · Promo Tide · Unclaimed Plunder |
 | FEATURES | 3×2 grid | Six product pillars (Sköll & Hati, Norns, Ledger, Valhalla, Howl, Nine Realms) |
 | STEPS | 3-step flow | Forge → Watch → Break Free |
-| FOOTER | | Logo · quote · runic cipher · CTA · credits |
+| FOOTER | | Logo · quote · runic cipher · CTA · legal links · credits |
+
+**Footer legal links (new):** The footer now includes a legal links row between the Session Chronicles link and the team credits. Structure: `(c) 2026 Fenrir Ledger · Privacy Policy · Terms of Service`. Links navigate same-tab to `/static/privacy.html` and `/static/terms.html`. Required for Patreon OAuth compliance. See [static-site-footer.html](wireframes/marketing/static-site-footer.html) for the dedicated footer wireframe with full annotations.
 
 Easter egg placements visible in wireframe annotations (Gleipnir Hunt #5 on ©, Loki Mode on "Loki").
 
