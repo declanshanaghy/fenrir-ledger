@@ -26,15 +26,23 @@ import { log } from "@/lib/logger";
 const PATREON_AUTHORIZE_URL = "https://www.patreon.com/oauth2/authorize";
 
 /**
- * Builds the full redirect URI for the Patreon callback based on the incoming request.
- * Auto-detects the host to work in both development and production.
+ * Builds the full redirect URI for the Patreon callback.
+ * Prefers APP_BASE_URL env var for deterministic redirect URIs in production
+ * (SEV-002 fix). Falls back to header-based detection for preview deployments
+ * and local development where the URL varies.
  */
 function buildRedirectUri(request: NextRequest): string {
   log.debug("buildRedirectUri called");
+  const appBaseUrl = process.env.APP_BASE_URL;
+  if (appBaseUrl) {
+    const uri = `${appBaseUrl}/api/patreon/callback`;
+    log.debug("buildRedirectUri returning (APP_BASE_URL)", { uri });
+    return uri;
+  }
   const proto = request.headers.get("x-forwarded-proto") ?? "https";
   const host = request.headers.get("host") ?? "localhost:9653";
   const uri = `${proto}://${host}/api/patreon/callback`;
-  log.debug("buildRedirectUri returning", { uri });
+  log.debug("buildRedirectUri returning (header fallback)", { uri });
   return uri;
 }
 

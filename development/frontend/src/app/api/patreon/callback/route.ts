@@ -27,14 +27,21 @@ import { log } from "@/lib/logger";
 import type { StoredEntitlement } from "@/lib/patreon/types";
 
 /**
- * Builds the application base URL from the request headers.
+ * Builds the application base URL.
+ * Prefers APP_BASE_URL env var for deterministic URLs in production (SEV-002 fix).
+ * Falls back to header-based detection for preview deployments and local development.
  */
 function getBaseUrl(request: NextRequest): string {
   log.debug("getBaseUrl called");
+  const appBaseUrl = process.env.APP_BASE_URL;
+  if (appBaseUrl) {
+    log.debug("getBaseUrl returning (APP_BASE_URL)", { url: appBaseUrl });
+    return appBaseUrl;
+  }
   const proto = request.headers.get("x-forwarded-proto") ?? "https";
   const host = request.headers.get("host") ?? "localhost:9653";
   const url = `${proto}://${host}`;
-  log.debug("getBaseUrl returning", { url });
+  log.debug("getBaseUrl returning (header fallback)", { url });
   return url;
 }
 
