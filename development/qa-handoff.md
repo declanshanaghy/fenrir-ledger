@@ -1,86 +1,128 @@
-# QA Handoff: Story 1 — Server-Side Anonymous Patreon Flow
+# QA Handoff -- Story 2: Client-side Anonymous Patreon Support
 
-**Branch:** `feat/anon-patreon-server`
+**Branch:** `feat/anon-patreon-client`
+**Base:** `feat/anon-patreon-server` (PR #109)
 **Date:** 2026-03-04
 **Engineer:** FiremanDecko
 
 ## What Was Implemented
 
-All server-side changes to support anonymous (not signed in with Google) users subscribing via Patreon.
+Story 2 of the anonymous Patreon linking feature. This builds on Story 1 (server-side,
+branch `feat/anon-patreon-server`, PR #109) which added the server-side anonymous
+OAuth flow, KV storage for anonymous entitlements, and the migration endpoint.
 
-### Story References
-- Story 1 from `specs/anonymous-patreon-subscription.md`
-- Tasks: extend-state-token, extend-kv-store, update-authorize-route, update-callback-route, create-migrate-route, update-webhook-handler, update-cache-helpers, update-adr
+Story 2 adds the **client-side** logic so anonymous users (not signed in with Google)
+can subscribe via Patreon and see their tier status in the UI.
+
+### Key behaviors added:
+
+1. Anonymous users can click "Subscribe via Patreon" on the settings page (no Google sign-in needed)
+2. After Patreon OAuth, the callback stores the Patreon user ID in localStorage
+3. The EntitlementContext fetches anonymous membership status from a new endpoint
+4. After anonymous linking, the UI shows a "Sign in with Google" nudge
+5. On sign-in, auto-migration fires: moves the anonymous entitlement to Google-keyed storage
+6. All existing authenticated behavior is preserved (no regressions)
 
 ## Files Created/Modified
-
-### Modified Files
-
-| File | Description |
-|------|-------------|
-| `development/frontend/src/lib/patreon/types.ts` | Added `mode: "authenticated" \| "anonymous"` to `PatreonOAuthState`; updated JSDoc on `StoredEntitlement` |
-| `development/frontend/src/lib/patreon/state.ts` | Updated `generateState()` to accept optional `googleSub` (defaults to anonymous mode); updated `validateState()` to handle both modes with backwards compatibility |
-| `development/frontend/src/lib/kv/entitlement-store.ts` | Added `setAnonymousEntitlement()`, `getAnonymousEntitlement()`, `migrateEntitlement()`, `isAnonymousReverseIndex()`, `extractPatreonUserIdFromReverseIndex()` |
-| `development/frontend/src/app/api/patreon/authorize/route.ts` | Made Google auth optional; anonymous requests generate state with `mode: "anonymous"`; authenticated requests work as before |
-| `development/frontend/src/app/api/patreon/callback/route.ts` | Handles both modes from state: authenticated stores under `entitlement:{googleSub}`, anonymous stores under `entitlement:patreon:{pid}`; anonymous redirect includes `pid` param |
-| `development/frontend/src/app/api/patreon/webhook/route.ts` | Updated to check reverse index value format for dual-key lookup; handles both anonymous and authenticated entitlement keys |
-| `development/frontend/src/lib/entitlement/cache.ts` | Added `getPatreonUserId()`, `setPatreonUserId()`, `clearPatreonUserId()` for `fenrir:patreon-user-id` localStorage key |
-| `designs/architecture/adr-009-patreon-entitlement.md` | Added Amendment section documenting anonymous flow, dual KV keys, migration, and accepted risks (SEV-003, SEV-004) |
 
 ### New Files
 
 | File | Description |
 |------|-------------|
-| `development/frontend/src/app/api/patreon/migrate/route.ts` | `POST /api/patreon/migrate` — migrates anonymous entitlement to Google-keyed on sign-in; behind `requireAuth`; rate limited 5/min/IP; idempotent |
+| `development/frontend/src/app/api/patreon/membership-anon/route.ts` | New API endpoint for anonymous membership lookup. Accepts `?pid=` query param, returns tier/active status from KV. Rate-limited (10/min/IP), no auth required. |
+
+### Modified Files
+
+| File | Description |
+|------|-------------|
+| `development/frontend/src/contexts/EntitlementContext.tsx` | Dual-path `linkPatreon` (auth vs anon), anonymous membership fetching via `/api/patreon/membership-anon`, `?pid=` query param handling on callback, auto-migration on sign-in, new context fields (`isAnonymouslyLinked`, `isMigrating`, `migrateAnonymousEntitlement`). |
+| `development/frontend/src/components/entitlement/PatreonSettings.tsx` | 7-state UI: anonymous+unlinked (CTA), anonymous+linked (tier display + sign-in nudge), migration in-progress, authenticated+unlinked, authenticated+Karl, authenticated+Thrall, authenticated+expired. No longer depends on external AuthGate. |
+| `development/frontend/src/app/settings/page.tsx` | Removed AuthGate wrapper around PatreonSettings. Removed unused AuthGate import. PatreonSettings now handles auth-awareness internally. |
 
 ## How to Deploy
 
-This is a Next.js application deployed on Vercel. The changes are server-side API routes and utility modules. No new environment variables are required.
+Standard Vercel deployment -- no new env vars required beyond what Story 1 already needs.
+The new API route `/api/patreon/membership-anon` is serverless and auto-deploys.
 
-1. Merge the PR to main
-2. Vercel automatically deploys from main
+## Test Flows
 
-## API Endpoints Available for Testing
+### Flow 1: Anonymous Subscribe via Patreon
 
-### Modified Endpoints
+1. Open the app in a fresh browser (no Google sign-in, clear localStorage).
+2. Navigate to `/settings`.
+3. Verify: PatreonSettings section is visible (not hidden behind AuthGate).
+4. Verify: "Subscribe via Patreon" button is shown with feature preview list (all locked).
+5. Click "Subscribe via Patreon".
+6. Verify: Redirected to `/api/patreon/authorize` WITHOUT `?id_token=` param.
+7. Verify: Patreon OAuth consent screen appears.
+8. Grant consent on Patreon.
+9. Verify: Redirected back to `/settings?patreon=linked&tier=karl&pid=<id>` (or tier=thrall if no active pledge).
+10. Verify: URL is cleaned (query params removed).
+11. Verify: `fenrir:patreon-user-id` is set in localStorage.
+12. Verify: Tier badge and feature list are shown.
+13. Verify: "Sign in with Google to unlock Cloud Sync" nudge is displayed below the tier info.
 
-- **`GET /api/patreon/authorize`** — Now accepts requests without `id_token` (anonymous mode)
-  - With `?id_token=...`: authenticated flow (unchanged)
-  - Without `id_token`: anonymous flow (new)
-  - Both paths redirect to Patreon OAuth
+### Flow 2: Sign-in After Anonymous Link (Migration)
 
-- **`GET /api/patreon/callback`** — Handles both modes from state token
-  - Authenticated mode: stores at `entitlement:{googleSub}`, redirects to `/settings?patreon=linked&tier={tier}`
-  - Anonymous mode: stores at `entitlement:patreon:{pid}`, redirects to `/settings?patreon=linked&tier={tier}&pid={pid}`
+1. Complete Flow 1 first (anonymous Patreon link).
+2. Sign in with Google (click "Sign in with Google" in the nudge or via nav).
+3. Verify: Auto-migration fires -- "Linking your Patreon..." transitional state appears briefly.
+4. Verify: After migration succeeds:
+   - `fenrir:patreon-user-id` is cleared from localStorage.
+   - Entitlement is now keyed by Google sub in KV (check via server logs).
+   - Full authenticated PatreonSettings UI is shown (Karl badge, features unlocked, Unlink button).
+5. Verify: If migration fails (e.g., anonymous KV entry expired), the error does not block sign-in. The user sees the normal authenticated UI.
 
-- **`POST /api/patreon/webhook`** — Now handles both key types
-  - Reverse index value starting with `patreon:` -> updates anonymous entitlement
-  - Otherwise -> updates authenticated entitlement (unchanged)
+### Flow 3: Authenticated Link (Existing Behavior, No Regression)
 
-### New Endpoint
+1. Sign in with Google first.
+2. Navigate to `/settings`.
+3. Verify: "Link Patreon" button is shown (authenticated copy).
+4. Click "Link Patreon".
+5. Verify: Redirected to `/api/patreon/authorize?id_token=<token>`.
+6. Complete Patreon OAuth.
+7. Verify: Redirected back, standard Karl/Thrall UI appears.
+8. Verify: Unlink button works.
 
-- **`POST /api/patreon/migrate`**
-  - Requires: `Authorization: Bearer <google_id_token>`
-  - Body: `{ "patreonUserId": "<pid>" }`
-  - Returns: `{ "migrated": true, "tier": "karl", "active": true }` or `{ "migrated": false, "reason": "not_found" }`
-  - Rate limit: 5/min/IP
-  - Idempotent
+### Flow 4: Page Refresh After Anonymous Link
+
+1. Complete Flow 1 (anonymous Patreon link).
+2. Refresh the page.
+3. Verify: Entitlement cache loads instantly (no loading flash).
+4. Verify: If cache is stale, background refresh calls `/api/patreon/membership-anon?pid=<id>`.
+5. Verify: Tier and features display correctly.
+
+## API Endpoints for Testing
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/patreon/membership-anon?pid=<id>` | GET | None | Returns anonymous entitlement status. Rate: 10/min/IP. |
+| `/api/patreon/authorize` | GET | Optional | Starts OAuth. With `?id_token=`: authenticated. Without: anonymous. |
+| `/api/patreon/callback` | GET | None | OAuth callback. Anonymous includes `&pid=` in redirect. |
+| `/api/patreon/migrate` | POST | Required | Migrates anonymous entitlement to Google-keyed. Body: `{ patreonUserId }`. |
 
 ## Known Limitations
 
-- Client-side changes (EntitlementContext, PatreonSettings, PatreonGate, SignInNudgeBanner) are NOT included in this story. They will be in Story 2 (`feat/anon-patreon-client`).
-- The anonymous flow is complete server-side but cannot be triggered from the UI yet (the "Link Patreon" button still requires auth in the client).
-- Migration can be tested via direct API calls but the automatic trigger on sign-in is in Story 2.
+1. **Anonymous entitlement refresh**: The anonymous membership endpoint reads from KV only --
+   it does not re-check the Patreon API with a fresh token (that requires the stored tokens,
+   which are encrypted in KV). Staleness is handled by the 30-day TTL on KV entries and the
+   webhook handler (Story 1) which updates entries when Patreon sends events.
+
+2. **Anonymous unlink**: Anonymous users cannot server-side unlink (no auth for the unlink endpoint).
+   They can clear localStorage, which effectively resets their local state. The KV entry expires
+   after 30 days.
+
+3. **Multiple devices**: Anonymous Patreon linking is per-device (pid stored in localStorage).
+   If a user links on device A, device B will not know. The sign-in nudge encourages migration
+   to Google-keyed storage for cross-device access.
 
 ## Suggested Test Focus Areas
 
-1. **Type safety**: `npx tsc --noEmit` passes (verified)
-2. **Build**: `npx next build` succeeds (verified)
-3. **Backwards compatibility**: Existing authenticated flow must still work. The `generateState(googleSub)` call with a string argument still produces `mode: "authenticated"`. Old state tokens without `mode` field are treated as `"authenticated"`.
-4. **Authorize route**: Verify that requests without `id_token` are not rejected (they should proceed in anonymous mode).
-5. **Callback route**: Verify the anonymous redirect includes `pid` param.
-6. **Migration endpoint**: Verify auth is required, rate limiting works, and idempotent behavior on repeated calls.
-7. **Webhook handler**: Verify dual-key lookup works for both `patreon:*` and plain Google sub reverse index values.
+- **State transitions**: The PatreonSettings component now has 7 states. Verify each renders correctly.
+- **Migration edge cases**: What happens if the user signs in, migration starts, but the anonymous KV entry is gone? (Should gracefully fall through to normal authenticated flow.)
+- **Rate limiting on membership-anon**: Hit the endpoint > 10 times per minute from the same IP to confirm 429 response.
+- **URL cleanup**: Ensure `?patreon=linked&tier=karl&pid=12345` params are fully cleaned from the URL after processing.
+- **localStorage persistence**: Verify `fenrir:patreon-user-id` survives page refresh and is correctly read on mount.
 
 ## Validation Commands
 
@@ -88,3 +130,5 @@ This is a Next.js application deployed on Vercel. The changes are server-side AP
 cd development/frontend && npx tsc --noEmit
 cd development/frontend && npx next build
 ```
+
+Both pass as of 2026-03-04.

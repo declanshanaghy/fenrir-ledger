@@ -1,16 +1,21 @@
 "use client";
 
 /**
- * PatreonSettings — Fenrir Ledger
+ * PatreonSettings -- Fenrir Ledger
  *
  * Settings section for managing the Patreon subscription link.
- * Renders one of three states:
- *   1. Unlinked — "Link Patreon" button with feature preview
- *   2. Linked (Karl active) — membership info, feature status, unlink button
- *   3. Expired — warning, renew CTA, unlink button
+ * Renders different states depending on auth and entitlement:
  *
- * This component is meant to be placed inside a settings page.
- * It is wrapped in AuthGate externally — only rendered for authenticated users.
+ *   1. Anonymous + unlinked: "Subscribe via Patreon" CTA (anonymous path)
+ *   2. Anonymous + linked: tier display + "Sign in with Google to unlock Cloud Sync" nudge
+ *   3. Signed in + migrating: "Linking your Patreon..." transitional state
+ *   4. Signed in + linked (Karl active): membership info, feature status, unlink button
+ *   5. Signed in + linked (Thrall): no active pledge, pledge CTA, unlink button
+ *   6. Signed in + expired: warning, renew CTA, unlink button
+ *   7. Signed in + unlinked: "Link Patreon" button with feature preview
+ *
+ * This component is NO LONGER wrapped in AuthGate -- anonymous users need
+ * access to the Patreon CTA. Auth-awareness is handled internally.
  *
  * Wireframe references:
  *   - designs/ux-design/wireframes/patreon-subscription/settings-patreon-unlinked.html
@@ -24,6 +29,7 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { PREMIUM_FEATURES } from "@/lib/entitlement/types";
 import type { PremiumFeature } from "@/lib/entitlement/types";
@@ -92,6 +98,55 @@ function PatreonSettingsSkeleton() {
   );
 }
 
+/**
+ * Migration progress state shown while migrating anonymous entitlement.
+ */
+function MigrationState() {
+  return (
+    <section
+      className="border border-border p-5 flex flex-col gap-3"
+      aria-busy="true"
+      aria-label="Linking your Patreon..."
+    >
+      <h2 className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-saga">
+        Patreon
+      </h2>
+      <div className="flex items-center gap-3">
+        <div className="w-4 h-4 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-saga/90 font-body">
+          Linking your Patreon to your Google account...
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Sign-in nudge shown to anonymous users who have linked Patreon.
+ */
+function SignInNudge() {
+  return (
+    <div
+      className="border border-dashed border-gold/30 p-3 mt-2 flex flex-col gap-1.5"
+      role="status"
+    >
+      <p className="text-sm font-heading font-bold text-gold">
+        Unlock Cloud Sync
+      </p>
+      <p className="text-[13px] text-saga/80 font-body leading-relaxed">
+        Sign in with Google to sync your card data across devices and secure your
+        Patreon link to your account.
+      </p>
+      <a
+        href="/sign-in"
+        className="inline-flex items-center gap-2 mt-1 text-sm font-heading text-gold underline hover:text-gold-bright transition-colors min-h-[44px]"
+      >
+        Sign in with Google
+      </a>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -99,20 +154,25 @@ function PatreonSettingsSkeleton() {
 /**
  * Patreon subscription settings section.
  *
- * Renders the appropriate state (unlinked, linked, expired) based on
- * the current entitlement status from useEntitlement.
+ * Renders the appropriate state (unlinked, linked, expired, anonymous)
+ * based on the current auth and entitlement status.
  */
 export function PatreonSettings() {
+  const { status: authStatus } = useAuth();
   const {
     tier,
     isActive,
     isLinked,
     isLoading,
     platform,
+    isAnonymouslyLinked,
+    isMigrating,
     linkPatreon,
     unlinkPatreon,
     hasFeature,
   } = useEntitlement();
+
+  const isAuthenticated = authStatus === "authenticated";
 
   const [unlinkDialogOpen, setUnlinkDialogOpen] = useState(false);
   const [isUnlinking, setIsUnlinking] = useState(false);
@@ -131,16 +191,19 @@ export function PatreonSettings() {
   }, [unlinkPatreon]);
 
   // Loading state
-  if (isLoading) {
+  if (isLoading && !isLinked && !isAnonymouslyLinked) {
     return <PatreonSettingsSkeleton />;
   }
 
-  // Determine state — order matters: isLinkedThrall is checked before isExpired
-  // in the render so that linked thrall users (never pledged) see "Pledge" copy,
-  // while isExpired only matches formerly-active Karl users whose membership lapsed.
-  const isKarlActive = isLinked && isActive && tier === "karl";
-  const isLinkedThrall = isLinked && !isActive && tier === "thrall";
-  const isExpired = isLinked && !isActive && tier === "karl";
+  // Migration state: signed in and has anonymous Patreon user ID
+  if (isMigrating) {
+    return <MigrationState />;
+  }
+
+  // Determine authenticated linked states
+  const isKarlActive = isAuthenticated && isLinked && isActive && tier === "karl";
+  const isLinkedThrall = isAuthenticated && isLinked && !isActive && tier === "thrall";
+  const isExpired = isAuthenticated && isLinked && !isActive && tier === "karl";
 
   // Format linked date from cache (if available)
   const linkedDate = (() => {
@@ -188,10 +251,94 @@ export function PatreonSettings() {
               EXPIRED
             </span>
           )}
+          {/* Anonymous linked badge */}
+          {!isAuthenticated && isAnonymouslyLinked && isLinked && isActive && tier === "karl" && (
+            <span
+              className="inline-flex items-center px-2 py-0.5 border border-gold/30 text-[10px] font-mono font-bold uppercase tracking-wide text-gold h-5"
+              aria-label="Karl Supporter tier (anonymous)"
+            >
+              KARL
+            </span>
+          )}
         </div>
 
-        {/* ── State: Unlinked ──────────────────────────────────────── */}
-        {!isLinked && (
+        {/* -- State: Anonymous + Unlinked --------------------------------- */}
+        {!isAuthenticated && !isAnonymouslyLinked && !isLinked && (
+          <>
+            <p className="text-sm text-saga/90 leading-relaxed font-body">
+              Subscribe via Patreon to unlock premium features. No sign-in required.
+            </p>
+
+            {/* Feature preview list */}
+            <div className="flex flex-col gap-1.5">
+              {FEATURE_LIST.map((f) => (
+                <FeatureItem key={f} feature={f} unlocked={false} />
+              ))}
+            </div>
+
+            <div>
+              <Button
+                onClick={linkPatreon}
+                className="inline-flex items-center gap-2.5 min-h-[44px] md:min-h-[40px] w-full md:w-auto font-heading font-bold bg-gold text-[#07070d] hover:bg-gold-bright border-2 border-gold"
+                aria-label="Subscribe via Patreon"
+              >
+                <span className="w-5 h-5 flex items-center justify-center border border-[#07070d]/30 text-xs font-bold rounded-sm">
+                  P
+                </span>
+                Subscribe via Patreon
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* -- State: Anonymous + Linked ----------------------------------- */}
+        {!isAuthenticated && (isAnonymouslyLinked || isLinked) && (
+          <>
+            <div className="flex flex-col gap-1 text-sm">
+              <span className="text-saga font-body">
+                Linked to Patreon
+              </span>
+              {linkedDate && (
+                <span className="text-[13px] text-rune/70 font-body">
+                  Member since {linkedDate}
+                </span>
+              )}
+            </div>
+
+            {isActive && tier === "karl" ? (
+              <>
+                <div className="text-sm font-heading font-bold text-saga">
+                  Premium features: All unlocked
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {FEATURE_LIST.map((f) => (
+                    <FeatureItem key={f} feature={f} unlocked={true} />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="text-sm font-bold text-rune font-body">
+                  No active pledge found.
+                </span>
+                <p className="text-sm text-saga/90 font-body">
+                  Pledge to unlock premium features:
+                </p>
+                <div className="flex flex-col gap-1.5">
+                  {FEATURE_LIST.map((f) => (
+                    <FeatureItem key={f} feature={f} unlocked={false} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Sign-in nudge */}
+            <SignInNudge />
+          </>
+        )}
+
+        {/* -- State: Authenticated + Unlinked ----------------------------- */}
+        {isAuthenticated && !isLinked && !isAnonymouslyLinked && (
           <>
             <p className="text-sm text-saga/90 leading-relaxed font-body">
               Link your Patreon account to unlock premium features.
@@ -219,8 +366,8 @@ export function PatreonSettings() {
           </>
         )}
 
-        {/* ── State: Linked Karl (active) ──────────────────────────── */}
-        {isKarlActive && (
+        {/* -- State: Authenticated + Linked Karl (active) ----------------- */}
+        {isAuthenticated && isKarlActive && (
           <>
             <div className="flex flex-col gap-1 text-sm">
               <span className="text-saga font-body">
@@ -257,8 +404,8 @@ export function PatreonSettings() {
           </>
         )}
 
-        {/* ── State: Linked Thrall (no active pledge) ──────────────── */}
-        {isLinkedThrall && (
+        {/* -- State: Authenticated + Linked Thrall (no active pledge) ----- */}
+        {isAuthenticated && isLinkedThrall && (
           <>
             <div className="flex flex-col gap-1 text-sm">
               <span className="text-saga font-body">
@@ -299,8 +446,8 @@ export function PatreonSettings() {
           </>
         )}
 
-        {/* ── State: Expired ───────────────────────────────────────── */}
-        {isExpired && (
+        {/* -- State: Authenticated + Expired ------------------------------ */}
+        {isAuthenticated && isExpired && (
           <>
             <div className="text-sm text-saga font-body">
               Linked to {platform === "patreon" ? "Patreon" : platform}
@@ -343,13 +490,15 @@ export function PatreonSettings() {
         )}
       </section>
 
-      {/* Unlink confirmation dialog */}
-      <UnlinkConfirmDialog
-        open={unlinkDialogOpen}
-        onCancel={() => setUnlinkDialogOpen(false)}
-        onConfirm={handleUnlinkConfirm}
-        isUnlinking={isUnlinking}
-      />
+      {/* Unlink confirmation dialog (only shown for authenticated users) */}
+      {isAuthenticated && (
+        <UnlinkConfirmDialog
+          open={unlinkDialogOpen}
+          onCancel={() => setUnlinkDialogOpen(false)}
+          onConfirm={handleUnlinkConfirm}
+          isUnlinking={isUnlinking}
+        />
+      )}
     </>
   );
 }
