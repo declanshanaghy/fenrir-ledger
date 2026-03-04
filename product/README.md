@@ -25,3 +25,5 @@ Freya shapes the vision before the forge ever heats. Nothing moves downstream un
 - [backlog/future-deferred.md](backlog/future-deferred.md) — Items explicitly deferred with rationale (last reviewed 2026-03-01)
 - [backlog/story-auth-oidc-google.md](backlog/story-auth-oidc-google.md) — Shipped (GA-deferred for Iteration 2): Optional Login — Google OIDC + Cloud Sync Upsell
 - [handoff-to-luna-anon-auth.md](handoff-to-luna-anon-auth.md) — Handoff to Luna: anonymous-first auth + cloud sync upsell wireframe requirements.
+- [platform-comparison.md](platform-comparison.md) — Subscription platform research: 8 platforms compared (Patreon selected).
+- [platform-recommendation.md](platform-recommendation.md) — Platform decision rationale: why Patreon, integration status, Substack strategy, future migration path.
