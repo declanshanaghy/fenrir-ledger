@@ -141,7 +141,28 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const membership = await getMembership(tokens.access_token, campaignId);
+    // Fetch membership — if this fails (e.g. creator account, API error),
+    // still link the account as thrall rather than failing the entire flow.
+    let membership: { tier: "thrall" | "karl"; active: boolean; patreonUserId: string };
+    try {
+      membership = await getMembership(tokens.access_token, campaignId);
+    } catch (membershipErr) {
+      log.error("GET /api/patreon/callback: getMembership failed, linking as thrall", {
+        error: membershipErr instanceof Error ? membershipErr.message : String(membershipErr),
+      });
+      // Extract patreonUserId from a simpler identity call as fallback
+      let patreonUserId = "unknown";
+      try {
+        const idResp = await fetch("https://www.patreon.com/api/oauth2/v2/identity", {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+        });
+        if (idResp.ok) {
+          const idData = await idResp.json() as { data: { id: string } };
+          patreonUserId = idData.data.id;
+        }
+      } catch { /* best-effort */ }
+      membership = { tier: "thrall", active: false, patreonUserId };
+    }
 
     // --- Encrypt tokens for KV storage ---
     const encryptedAccessToken = encrypt(tokens.access_token);
