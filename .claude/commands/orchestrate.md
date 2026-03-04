@@ -33,7 +33,17 @@ Read `architecture/pipeline.md` for the full Kanban workflow and rules.
 
 ### Phase 1: Requirements Collection
 
-Parse USER_PROMPT to determine work type:
+**First, check if USER_PROMPT is a path to an existing plan file** (e.g., `specs/my-plan.md`):
+
+1. If the file exists AND contains `## Stories` and `## Step by Step Tasks` — this is a **pre-made plan** from `/plan_w_team`.
+   - Read the plan file completely
+   - Extract: Stories, Tasks, Team Members, Acceptance Criteria, Validation Commands
+   - **Skip Phase 2** (Product + UX) — the plan already defines the work
+   - **Skip Phase 3 story breakdown** — the `## Stories` section already defines stories
+   - Jump directly to **Phase 3 step 3** (create TaskCreate entries from the plan's Stories)
+   - Then proceed to Phase 4 (Build/Validate)
+
+2. If USER_PROMPT is NOT a plan file, parse it as raw requirements to determine work type:
 
 | Work Type | Description | Pipeline Path |
 |-----------|-------------|---------------|
@@ -46,10 +56,10 @@ If the USER_PROMPT is ambiguous, ask the user to clarify before proceeding.
 
 ### Phase 2: Product + UX Definition
 
-**Skip this phase** for bug-fix and chore work types.
+**Skip this phase** for bug-fix, chore work types, and when a pre-made plan file is provided.
 
 1. **Create shared worktree** for design:
-   - Invoke `/create_worktree_prompt design/<feature-slug>`
+   - Invoke `/create-worktree design/<feature-slug>`
    - This creates `trees/design/<feature-slug>/` with its own branch
 
 2. **Spawn Freya** to define the product:
@@ -83,6 +93,18 @@ If the USER_PROMPT is ambiguous, ask the user to clarify before proceeding.
 6. On rejection: relay feedback to Freya/Luna and repeat
 
 ### Phase 3: Implementation Planning
+
+**If a pre-made plan file was provided (from `/plan_w_team`):**
+
+1. Read the plan file's `## Stories` section — these are your stories (already broken down)
+2. Read `## Step by Step Tasks` — these are the detailed tasks within each story
+3. **Create tasks** using TaskCreate for each story (not each task — stories are the unit of work)
+4. **Set dependencies** using TaskUpdate with addBlockedBy (from each story's `Depends On`)
+5. Read `## Team Members` for agent type assignments
+6. Read `## Acceptance Criteria` and `## Validation Commands` for Loki's validation steps
+7. **Present plan summary** to user for confirmation before executing
+
+**If starting from raw requirements (no plan file):**
 
 1. **Read design artifacts** from Phase 2 (or existing docs for bug-fix/chore)
 2. **Break work into stories** (max 5 per Kanban rules):

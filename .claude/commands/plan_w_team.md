@@ -23,6 +23,7 @@ hooks:
             --contains '## Acceptance Criteria'
             --contains '## Team Orchestration'
             --contains '### Team Members'
+            --contains '## Stories'
 ---
 
 # Plan With Team
@@ -362,8 +363,36 @@ Use these files to complete the task:
 
 <continue with additional tasks as needed. Agent types must exist in .claude/agents/*.md>
 
+## Stories
+
+Group the tasks above into max 5 PR-sized stories. Each story becomes one branch + one PR.
+The orchestrator (`/orchestrate`) reads this section to know how to execute.
+
+<list stories as h3 headers. Each story groups related tasks into a single PR.>
+
+### Story 1: <Story Name>
+- **Slug**: <kebab-case-slug>
+- **Branch**: feat/<slug>
+- **Depends On**: none | Story N
+- **Assigned To**: <builder agent name>
+- **Tasks**: <comma-separated task IDs from Step by Step Tasks that belong to this story>
+- **Acceptance Criteria**:
+  - <testable criterion for this story's PR>
+  - <testable criterion for this story's PR>
+
+### Story 2: <Story Name>
+- **Slug**: <kebab-case-slug>
+- **Branch**: feat/<slug>
+- **Depends On**: Story 1
+- **Assigned To**: <builder agent name>
+- **Tasks**: <task IDs>
+- **Acceptance Criteria**:
+  - <testable criterion>
+
+<continue for each story, max 5>
+
 ## Acceptance Criteria
-<list specific, measurable criteria that must be met for the task to be considered complete>
+<list specific, measurable criteria that must be met for the task to be considered complete — these are the OVERALL acceptance criteria across all stories>
 
 ## Validation Commands
 Execute these commands to validate the task is complete:
@@ -397,6 +426,6 @@ Team Task List:
 Team members:
 - <list of team members and their roles (concise)>
 
-When you're ready, you can execute the plan in a new agent by running:
-/build <replace with path to plan>
+When you're ready, execute the plan by running:
+/orchestrate <replace with path to plan>
 ```
