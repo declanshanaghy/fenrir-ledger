@@ -3,15 +3,20 @@
  *
  * Initiates the Patreon OAuth linking flow.
  *
- * Authentication is required (ADR-008). Since this route is accessed via
- * full-page redirect (not a fetch), the Google id_token is passed as a
- * query parameter (?id_token=...) rather than an Authorization header.
- * The route validates the token server-side before proceeding.
+ * Supports two modes:
+ *   - **Authenticated**: Google id_token is present (query param or Authorization header).
+ *     Verifies the token and embeds the Google sub in the state.
+ *   - **Anonymous**: No id_token. Generates state with `googleSub: "anonymous"`.
+ *
+ * This route is exempt from requireAuth because:
+ *   1. It is accessed via full-page redirect (not a fetch call)
+ *   2. Anonymous users must be able to start the Patreon OAuth flow
+ *   3. CSRF protection is provided by the encrypted state parameter
  *
  * Flow:
  *   1. User clicks "Link Patreon" in the frontend
- *   2. Frontend redirects to this route with ?id_token=...
- *   3. This route validates the token, generates an encrypted state token
+ *   2. Frontend redirects to this route (with or without ?id_token=...)
+ *   3. This route generates an encrypted state token
  *   4. Redirects to Patreon's OAuth authorize URL
  *   5. After user grants consent, Patreon redirects to /api/patreon/callback
  */
@@ -70,44 +75,35 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Authenticate the user via Google id_token.
-  // This route is accessed via full-page redirect, so the token comes as a
-  // query parameter rather than an Authorization header (requireAuth pattern).
-  // The token is still validated server-side before proceeding.
+  // Attempt to authenticate the user via Google id_token.
+  // If present: authenticated flow (embed Google sub in state).
+  // If absent: anonymous flow (embed "anonymous" in state).
   const idToken =
     request.nextUrl.searchParams.get("id_token") ??
     request.headers.get("authorization")?.slice(7);
-  if (!idToken) {
-    log.debug("GET /api/patreon/authorize returning", {
-      status: 401,
-      reason: "no id_token provided",
-    });
-    return NextResponse.json(
-      {
-        error: "missing_token",
-        error_description:
-          "Google id_token is required (query param or Authorization header).",
-      },
-      { status: 401 },
-    );
-  }
 
-  const authResult = await verifyIdToken(idToken);
-  if (!authResult.ok) {
-    log.debug("GET /api/patreon/authorize returning", {
-      status: authResult.status,
-      reason: "invalid id_token",
-    });
-    return NextResponse.json(
-      {
-        error: "invalid_token",
-        error_description: authResult.error,
-      },
-      { status: authResult.status },
-    );
-  }
+  let googleSub: string | undefined;
 
-  const auth = { user: authResult.user };
+  if (idToken) {
+    const authResult = await verifyIdToken(idToken);
+    if (!authResult.ok) {
+      log.debug("GET /api/patreon/authorize returning", {
+        status: authResult.status,
+        reason: "invalid id_token",
+      });
+      return NextResponse.json(
+        {
+          error: "invalid_token",
+          error_description: authResult.error,
+        },
+        { status: authResult.status },
+      );
+    }
+    googleSub = authResult.user.sub;
+    log.debug("GET /api/patreon/authorize: authenticated mode", { googleSub });
+  } else {
+    log.debug("GET /api/patreon/authorize: anonymous mode (no id_token)");
+  }
 
   // Validate Patreon configuration
   const clientId = process.env.PATREON_CLIENT_ID;
@@ -126,10 +122,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Generate encrypted state token containing the Google user sub
+  // Generate encrypted state token containing the Google user sub (or anonymous)
   let state: string;
   try {
-    state = generateState(auth.user.sub);
+    state = generateState(googleSub);
   } catch (err) {
     log.error("GET /api/patreon/authorize: generateState failed", {
       error: err instanceof Error ? err.message : String(err),
@@ -157,10 +153,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   );
   authorizeUrl.searchParams.set("state", state);
 
+  const mode = googleSub ? "authenticated" : "anonymous";
   log.debug("GET /api/patreon/authorize returning", {
     status: 302,
     redirectTo: "patreon.com/oauth2/authorize",
-    googleSub: auth.user.sub,
+    mode,
+    googleSub: googleSub ?? "anonymous",
   });
 
   return NextResponse.redirect(authorizeUrl.toString());

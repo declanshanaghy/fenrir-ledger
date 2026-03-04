@@ -108,6 +108,60 @@ export function isEntitlementStale(entitlement: Entitlement): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Patreon user ID cache (for anonymous -> authenticated migration)
+// ---------------------------------------------------------------------------
+
+/** localStorage key for the anonymous Patreon user ID. */
+const PATREON_USER_ID_KEY = "fenrir:patreon-user-id";
+
+/**
+ * Reads the cached Patreon user ID from localStorage.
+ *
+ * This value is set when an anonymous user completes the Patreon OAuth flow.
+ * It is used to trigger migration when the user later signs in with Google.
+ *
+ * @returns The Patreon user ID or null if not set
+ */
+export function getPatreonUserId(): string | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    return localStorage.getItem(PATREON_USER_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Writes a Patreon user ID to the localStorage cache.
+ *
+ * @param pid - The Patreon user ID to cache
+ */
+export function setPatreonUserId(pid: string): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem(PATREON_USER_ID_KEY, pid);
+  } catch {
+    // localStorage may be full or blocked — fail silently
+  }
+}
+
+/**
+ * Removes the Patreon user ID from localStorage.
+ * Called after successful migration to a Google-keyed entitlement.
+ */
+export function clearPatreonUserId(): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.removeItem(PATREON_USER_ID_KEY);
+  } catch {
+    // Fail silently
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------------------
 

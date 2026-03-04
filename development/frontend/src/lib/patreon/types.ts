@@ -113,7 +113,12 @@ export interface PatreonWebhookPayload {
 // Stored entitlement (Vercel KV)
 // ---------------------------------------------------------------------------
 
-/** Entitlement record stored in Vercel KV, keyed by Google user sub. */
+/**
+ * Entitlement record stored in Vercel KV.
+ *
+ * Keyed by Google user sub for authenticated users (`entitlement:{googleSub}`)
+ * or by Patreon user ID for anonymous users (`entitlement:patreon:{patreonUserId}`).
+ */
 export interface StoredEntitlement {
   /** Current subscription tier */
   tier: PatreonTier;
@@ -137,14 +142,21 @@ export interface StoredEntitlement {
 // OAuth state token
 // ---------------------------------------------------------------------------
 
-/** Decoded contents of the OAuth state parameter. */
+/**
+ * Decoded contents of the OAuth state parameter.
+ *
+ * For authenticated users, `googleSub` is the Google user sub and `mode` is `"authenticated"`.
+ * For anonymous users (no Google sign-in), `googleSub` is `"anonymous"` and `mode` is `"anonymous"`.
+ */
 export interface PatreonOAuthState {
-  /** Google user sub (identity) */
+  /** Google user sub (identity), or `"anonymous"` for unauthenticated users */
   googleSub: string;
   /** CSRF nonce */
   nonce: string;
   /** Timestamp when state was created (for expiry) */
   createdAt: number;
+  /** Whether the user was authenticated or anonymous when starting the flow */
+  mode: "authenticated" | "anonymous";
 }
 
 // ---------------------------------------------------------------------------

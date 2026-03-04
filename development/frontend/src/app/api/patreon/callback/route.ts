@@ -7,13 +7,19 @@
  * Patreon. This follows the same exemption pattern as /api/auth/token.
  * CSRF protection is provided by the encrypted state parameter.
  *
+ * Supports two modes based on the state token:
+ *   - **Authenticated** (mode: "authenticated"): stores entitlement under
+ *     `entitlement:{googleSub}` in KV (existing behavior).
+ *   - **Anonymous** (mode: "anonymous"): stores entitlement under
+ *     `entitlement:patreon:{patreonUserId}` in KV and includes `pid` in redirect.
+ *
  * Flow:
  *   1. Patreon redirects here with ?code=...&state=...
- *   2. Validate state parameter (decrypt, check expiry, extract Google sub)
+ *   2. Validate state parameter (decrypt, check expiry, extract mode + identity)
  *   3. Exchange authorization code for Patreon tokens
  *   4. Fetch membership status from Patreon API
- *   5. Encrypt tokens, store entitlement + tokens in Vercel KV
- *   6. Redirect to /settings?patreon=linked&tier={tier} on success
+ *   5. Encrypt tokens, store entitlement in Vercel KV (key depends on mode)
+ *   6. Redirect to /settings?patreon=linked&tier={tier}[&pid={pid}] on success
  *   7. Redirect to /settings?patreon=error&reason={code} on failure
  */
 
@@ -21,7 +27,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateState } from "@/lib/patreon/state";
 import { exchangeCode, getMembership } from "@/lib/patreon/api";
 import { encrypt } from "@/lib/crypto/encrypt";
-import { setEntitlement } from "@/lib/kv/entitlement-store";
+import { setEntitlement, setAnonymousEntitlement } from "@/lib/kv/entitlement-store";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import type { StoredEntitlement } from "@/lib/patreon/types";
@@ -108,7 +114,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // --- Validate state (CSRF protection + Google sub extraction) ---
+  // --- Validate state (CSRF protection + identity extraction) ---
   const state = validateState(stateParam);
   if (!state) {
     log.debug("GET /api/patreon/callback returning", {
@@ -120,8 +126,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { googleSub } = state;
-  log.debug("GET /api/patreon/callback: state validated", { googleSub });
+  const { googleSub, mode } = state;
+  log.debug("GET /api/patreon/callback: state validated", { googleSub, mode });
 
   try {
     // --- Exchange authorization code for tokens ---
@@ -181,11 +187,31 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       campaignId,
     };
 
+    if (mode === "anonymous") {
+      // Anonymous flow: store under patreon-keyed entry
+      await setAnonymousEntitlement(membership.patreonUserId, entitlement);
+
+      log.debug("GET /api/patreon/callback returning", {
+        status: 302,
+        redirect: `settings?patreon=linked&tier=${membership.tier}&pid=${membership.patreonUserId}`,
+        mode: "anonymous",
+        tier: membership.tier,
+        active: membership.active,
+        patreonUserId: membership.patreonUserId,
+      });
+
+      return NextResponse.redirect(
+        `${baseUrl}/settings?patreon=linked&tier=${membership.tier}&pid=${membership.patreonUserId}`,
+      );
+    }
+
+    // Authenticated flow: store under Google-keyed entry (existing behavior)
     await setEntitlement(googleSub, entitlement);
 
     log.debug("GET /api/patreon/callback returning", {
       status: 302,
       redirect: `settings?patreon=linked&tier=${membership.tier}`,
+      mode: "authenticated",
       googleSub,
       tier: membership.tier,
       active: membership.active,
@@ -199,6 +225,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const stack = err instanceof Error ? err.stack : undefined;
     log.error("GET /api/patreon/callback: flow failed", {
       googleSub,
+      mode,
       error: message,
       stack,
     });
