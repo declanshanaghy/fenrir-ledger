@@ -127,7 +127,23 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   // Generate encrypted state token containing the Google user sub
-  const state = generateState(auth.user.sub);
+  let state: string;
+  try {
+    state = generateState(auth.user.sub);
+  } catch (err) {
+    log.error("GET /api/patreon/authorize: generateState failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return NextResponse.json(
+      {
+        error: "state_generation_failed",
+        error_description:
+          "Failed to generate OAuth state. Check ENTITLEMENT_ENCRYPTION_KEY.",
+      },
+      { status: 500 },
+    );
+  }
+
   const redirectUri = buildRedirectUri(request);
 
   // Build the Patreon authorize URL
