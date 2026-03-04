@@ -33,6 +33,7 @@ import {
   isAnonymousReverseIndex,
   extractPatreonUserIdFromReverseIndex,
 } from "@/lib/kv/entitlement-store";
+import { isPatreon } from "@/lib/feature-flags";
 import { log } from "@/lib/logger";
 import type {
   PatreonWebhookPayload,
@@ -192,6 +193,13 @@ async function storeUpdatedEntitlement(
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/patreon/webhook called");
+
+  if (!isPatreon()) {
+    return NextResponse.json(
+      { error: "Patreon integration is disabled" },
+      { status: 404 },
+    );
+  }
 
   // --- Read raw body for signature validation ---
   let rawBody: string;

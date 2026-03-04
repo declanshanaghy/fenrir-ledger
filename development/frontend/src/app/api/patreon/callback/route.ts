@@ -28,6 +28,7 @@ import { validateState } from "@/lib/patreon/state";
 import { exchangeCode, getMembership } from "@/lib/patreon/api";
 import { encrypt } from "@/lib/crypto/encrypt";
 import { setEntitlement, setAnonymousEntitlement } from "@/lib/kv/entitlement-store";
+import { isPatreon } from "@/lib/feature-flags";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import type { StoredEntitlement } from "@/lib/patreon/types";
@@ -64,6 +65,13 @@ function buildRedirectUri(request: NextRequest): string {
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   log.debug("GET /api/patreon/callback called");
+
+  if (!isPatreon()) {
+    return NextResponse.json(
+      { error: "Patreon integration is disabled" },
+      { status: 404 },
+    );
+  }
 
   // Rate limit by IP
   const ip =

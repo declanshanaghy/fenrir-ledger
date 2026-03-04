@@ -24,6 +24,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyIdToken } from "@/lib/auth/verify-id-token";
 import { generateState } from "@/lib/patreon/state";
+import { isPatreon } from "@/lib/feature-flags";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 
@@ -53,6 +54,13 @@ function buildRedirectUri(request: NextRequest): string {
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   log.debug("GET /api/patreon/authorize called");
+
+  if (!isPatreon()) {
+    return NextResponse.json(
+      { error: "Patreon integration is disabled" },
+      { status: 404 },
+    );
+  }
 
   // Rate limit
   const ip =
