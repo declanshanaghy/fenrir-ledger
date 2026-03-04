@@ -154,3 +154,110 @@ Originally, OAuth redirect URIs were built from `x-forwarded-proto` and `host` h
 - HMAC-MD5 webhook signatures (accepted risk, cannot change)
 - Key rotation requires all users to re-link
 - Two OAuth clients to manage (dev + prod)
+
+---
+
+## Amendment: Anonymous Patreon Flow (2026-03-04)
+
+**Author:** FiremanDecko (Principal Engineer)
+
+### Context
+
+The original design required Google sign-in before starting the Patreon OAuth flow. This created unnecessary friction for the monetization pathway: users had to authenticate with two separate providers (Google for identity, then Patreon for subscription) just to become a paying subscriber.
+
+### Changes
+
+#### Dual-Path Entitlement
+
+The entitlement system now supports two identity anchors:
+
+| User State | KV Primary Key | KV Reverse Index Value |
+|---|---|---|
+| Authenticated | `entitlement:{googleSub}` | `{googleSub}` |
+| Anonymous | `entitlement:patreon:{patreonUserId}` | `patreon:{patreonUserId}` |
+
+The reverse index key (`patreon-user:{patreonUserId}`) is unchanged. Its **value** format now distinguishes between the two states: if it starts with `patreon:`, the user is anonymous; otherwise, it is a Google sub.
+
+#### State Token Extension
+
+`PatreonOAuthState` gains a `mode` field:
+```typescript
+interface PatreonOAuthState {
+  googleSub: string;     // Google sub OR "anonymous"
+  nonce: string;
+  createdAt: number;
+  mode: "authenticated" | "anonymous";
+}
+```
+
+Backwards compatible: tokens without `mode` are treated as `"authenticated"`.
+
+#### Anonymous OAuth Flow
+
+```mermaid
+sequenceDiagram
+    participant U as Anonymous User
+    participant F as Frontend
+    participant A as API Routes
+    participant P as Patreon API
+    participant KV as Vercel KV
+
+    U->>F: Click "Link Patreon" (not signed in)
+    F->>A: GET /api/patreon/authorize (no id_token)
+    A->>A: Generate state (mode: "anonymous", googleSub: "anonymous")
+    A->>P: Redirect to Patreon OAuth
+    P->>U: User grants consent
+    P->>A: GET /api/patreon/callback?code=...&state=...
+    A->>A: Validate state, detect anonymous mode
+    A->>P: Exchange code for tokens
+    A->>P: GET /api/v2/identity (membership)
+    A->>A: Encrypt tokens (AES-256-GCM)
+    A->>KV: Store at entitlement:patreon:{pid}
+    A->>F: Redirect to /settings?patreon=linked&tier=karl&pid={pid}
+    F->>F: Store entitlement in localStorage
+```
+
+#### Migration on Google Sign-In
+
+When an anonymous Karl user later signs in with Google:
+
+1. Client detects `fenrir:patreon-user-id` in localStorage
+2. Client calls `POST /api/patreon/migrate` with `{ patreonUserId }` (behind requireAuth)
+3. Server copies entitlement from `entitlement:patreon:{pid}` to `entitlement:{googleSub}`
+4. Server updates reverse index to point to `{googleSub}` instead of `patreon:{pid}`
+5. Server deletes the anonymous KV entry
+6. Client clears `fenrir:patreon-user-id` and refreshes entitlement from server
+
+Migration is idempotent: if the Google-keyed entry already exists, it succeeds without modification.
+
+#### Route Auth Exceptions
+
+`/api/patreon/authorize` is now exempt from `requireAuth` for anonymous users:
+- Authenticated requests (with `id_token`) still verify the token
+- Anonymous requests (without `id_token`) proceed with `mode: "anonymous"`
+- CSRF protection is provided by the encrypted state parameter
+- Rate limiting (5/min/IP) applies to both paths
+
+This follows the same exemption pattern as `/api/auth/token` and `/api/patreon/callback`.
+
+#### Webhook Dual-Key Handling
+
+Webhook handler now checks the reverse index value format to determine the correct entitlement key:
+- Value starts with `patreon:` -> anonymous user -> update `entitlement:patreon:{pid}`
+- Otherwise -> authenticated user -> update `entitlement:{googleSub}` (existing behavior)
+
+### Accepted Risks
+
+#### SEV-003: localStorage-Only Entitlement for Anonymous Users
+Anonymous users' entitlement is device-bound via localStorage. They cannot verify their tier from another device without signing in with Google. This is an acceptable trade-off:
+- Reduces friction for the primary monetization pathway
+- Server-side entitlement still exists in KV (webhooks update it)
+- Signing in with Google at any point migrates the entitlement
+- A persistent nudge banner encourages migration
+
+#### SEV-004: Authorize Route Without Auth (Anonymous Mode)
+`/api/patreon/authorize` no longer requires Google auth for anonymous users. Mitigated by:
+- Encrypted state parameter provides CSRF protection
+- Rate limiting (5/min/IP) prevents abuse
+- The route only redirects to Patreon — no data is exposed
+- Patreon itself handles user authentication during the OAuth flow

@@ -1,12 +1,14 @@
 /**
  * Vercel KV entitlement store — server-side persistence for Patreon entitlements.
  *
- * Stores and retrieves entitlement records keyed by Google user sub.
- * Maintains a secondary index from Patreon user ID to Google sub for webhook lookups.
+ * Stores and retrieves entitlement records keyed by Google user sub (authenticated)
+ * or Patreon user ID (anonymous).
  *
  * Key format:
- *   - `entitlement:{googleSub}` -> StoredEntitlement
- *   - `patreon-user:{patreonUserId}` -> `{googleSub}`
+ *   - `entitlement:{googleSub}` -> StoredEntitlement (authenticated users)
+ *   - `entitlement:patreon:{patreonUserId}` -> StoredEntitlement (anonymous users)
+ *   - `patreon-user:{patreonUserId}` -> `{googleSub}` (authenticated reverse index)
+ *   - `patreon-user:{patreonUserId}` -> `patreon:{patreonUserId}` (anonymous reverse index)
  *
  * TTL: Entitlements expire after 30 days if not refreshed.
  *
@@ -21,7 +23,7 @@ import { log } from "@/lib/logger";
 const ENTITLEMENT_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 /**
- * Builds the primary KV key for a user's entitlement.
+ * Builds the primary KV key for an authenticated user's entitlement.
  *
  * @param googleSub - Google account immutable ID
  * @returns KV key string
@@ -31,7 +33,17 @@ function entitlementKey(googleSub: string): string {
 }
 
 /**
- * Builds the secondary index key for Patreon user ID -> Google sub mapping.
+ * Builds the primary KV key for an anonymous user's entitlement.
+ *
+ * @param patreonUserId - Patreon user ID
+ * @returns KV key string
+ */
+function anonymousEntitlementKey(patreonUserId: string): string {
+  return `entitlement:patreon:${patreonUserId}`;
+}
+
+/**
+ * Builds the secondary index key for Patreon user ID -> identity mapping.
  *
  * @param patreonUserId - Patreon user ID
  * @returns KV key string
@@ -39,6 +51,33 @@ function entitlementKey(googleSub: string): string {
 function patreonUserKey(patreonUserId: string): string {
   return `patreon-user:${patreonUserId}`;
 }
+
+/**
+ * Checks whether a reverse index value points to an anonymous user.
+ * Anonymous entries are stored as `patreon:{patreonUserId}`, while
+ * authenticated entries store the raw `googleSub`.
+ *
+ * @param reverseIndexValue - The value from the `patreon-user:{id}` key
+ * @returns true if the value indicates an anonymous user
+ */
+export function isAnonymousReverseIndex(reverseIndexValue: string): boolean {
+  return reverseIndexValue.startsWith("patreon:");
+}
+
+/**
+ * Extracts the Patreon user ID from an anonymous reverse index value.
+ * The value format is `patreon:{patreonUserId}`.
+ *
+ * @param reverseIndexValue - The anonymous reverse index value
+ * @returns The Patreon user ID
+ */
+export function extractPatreonUserIdFromReverseIndex(reverseIndexValue: string): string {
+  return reverseIndexValue.slice("patreon:".length);
+}
+
+// ---------------------------------------------------------------------------
+// Authenticated user operations (existing)
+// ---------------------------------------------------------------------------
 
 /**
  * Retrieves a stored entitlement for a Google user.
@@ -134,11 +173,15 @@ export async function deleteEntitlement(googleSub: string): Promise<void> {
 }
 
 /**
- * Looks up a Google sub from a Patreon user ID using the secondary index.
+ * Looks up a Google sub (or anonymous indicator) from a Patreon user ID
+ * using the secondary index.
+ *
+ * For authenticated users, returns the Google sub string.
+ * For anonymous users, returns `patreon:{patreonUserId}`.
  * Used by webhook handlers to map incoming Patreon events to our users.
  *
  * @param patreonUserId - Patreon user ID from webhook payload
- * @returns Google sub or null if no mapping exists
+ * @returns Google sub, anonymous indicator, or null if no mapping exists
  */
 export async function getGoogleSubByPatreonUserId(
   patreonUserId: string,
@@ -156,5 +199,160 @@ export async function getGoogleSubByPatreonUserId(
     log.error("getGoogleSubByPatreonUserId failed", { patreonUserId, error: message });
     log.debug("getGoogleSubByPatreonUserId returning", { patreonUserId, found: false, reason: "error" });
     return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Anonymous user operations (new)
+// ---------------------------------------------------------------------------
+
+/**
+ * Retrieves a stored entitlement for an anonymous user (keyed by Patreon user ID).
+ *
+ * @param patreonUserId - Patreon user ID
+ * @returns The stored entitlement or null if not found / expired
+ */
+export async function getAnonymousEntitlement(
+  patreonUserId: string,
+): Promise<StoredEntitlement | null> {
+  log.debug("getAnonymousEntitlement called", { patreonUserId });
+  try {
+    const result = await kv.get<StoredEntitlement>(anonymousEntitlementKey(patreonUserId));
+    log.debug("getAnonymousEntitlement returning", {
+      patreonUserId,
+      found: result !== null,
+      tier: result?.tier,
+      active: result?.active,
+    });
+    return result;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error("getAnonymousEntitlement failed", { patreonUserId, error: message });
+    log.debug("getAnonymousEntitlement returning", { patreonUserId, found: false, reason: "error" });
+    return null;
+  }
+}
+
+/**
+ * Stores an entitlement record for an anonymous user (keyed by Patreon user ID).
+ * Also maintains the reverse index with the `patreon:` prefix to indicate anonymous.
+ *
+ * @param patreonUserId - Patreon user ID
+ * @param entitlement - The entitlement record to store
+ */
+export async function setAnonymousEntitlement(
+  patreonUserId: string,
+  entitlement: StoredEntitlement,
+): Promise<void> {
+  log.debug("setAnonymousEntitlement called", {
+    patreonUserId,
+    tier: entitlement.tier,
+    active: entitlement.active,
+  });
+  try {
+    // Store the entitlement with TTL under the anonymous key
+    await kv.set(anonymousEntitlementKey(patreonUserId), entitlement, {
+      ex: ENTITLEMENT_TTL_SECONDS,
+    });
+
+    // Maintain the reverse index: Patreon user ID -> patreon:{patreonUserId}
+    // The `patreon:` prefix indicates this is an anonymous user
+    await kv.set(patreonUserKey(patreonUserId), `patreon:${patreonUserId}`, {
+      ex: ENTITLEMENT_TTL_SECONDS,
+    });
+
+    log.debug("setAnonymousEntitlement returning", { patreonUserId, success: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error("setAnonymousEntitlement failed", { patreonUserId, error: message });
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Migration (anonymous -> authenticated)
+// ---------------------------------------------------------------------------
+
+/**
+ * Migrates an anonymous entitlement to an authenticated (Google-keyed) entitlement.
+ *
+ * Steps:
+ *   1. Read from `entitlement:patreon:{patreonUserId}`
+ *   2. Copy to `entitlement:{googleSub}`
+ *   3. Update reverse index from `patreon:{pid}` to `{googleSub}`
+ *   4. Delete the anonymous key
+ *
+ * Idempotent: if the Google-keyed entry already exists, returns success.
+ *
+ * @param patreonUserId - Patreon user ID from the anonymous flow
+ * @param googleSub - Google account immutable ID to migrate to
+ * @returns Object indicating whether migration occurred and the entitlement details
+ */
+export async function migrateEntitlement(
+  patreonUserId: string,
+  googleSub: string,
+): Promise<{ migrated: boolean; tier?: string; active?: boolean; reason?: string }> {
+  log.debug("migrateEntitlement called", { patreonUserId, googleSub });
+
+  try {
+    // Check if Google-keyed entry already exists (idempotent)
+    const existingGoogle = await kv.get<StoredEntitlement>(entitlementKey(googleSub));
+    if (existingGoogle) {
+      log.debug("migrateEntitlement returning", {
+        migrated: true,
+        reason: "already_migrated",
+        tier: existingGoogle.tier,
+        active: existingGoogle.active,
+      });
+      return {
+        migrated: true,
+        tier: existingGoogle.tier,
+        active: existingGoogle.active,
+      };
+    }
+
+    // Read the anonymous entitlement
+    const anonymousEntitlement = await kv.get<StoredEntitlement>(
+      anonymousEntitlementKey(patreonUserId),
+    );
+
+    if (!anonymousEntitlement) {
+      log.debug("migrateEntitlement returning", {
+        migrated: false,
+        reason: "not_found",
+      });
+      return { migrated: false, reason: "not_found" };
+    }
+
+    // Copy to Google-keyed entry
+    await kv.set(entitlementKey(googleSub), anonymousEntitlement, {
+      ex: ENTITLEMENT_TTL_SECONDS,
+    });
+
+    // Update reverse index to point to Google sub instead of anonymous
+    await kv.set(patreonUserKey(patreonUserId), googleSub, {
+      ex: ENTITLEMENT_TTL_SECONDS,
+    });
+
+    // Delete the anonymous key
+    await kv.del(anonymousEntitlementKey(patreonUserId));
+
+    log.debug("migrateEntitlement returning", {
+      migrated: true,
+      patreonUserId,
+      googleSub,
+      tier: anonymousEntitlement.tier,
+      active: anonymousEntitlement.active,
+    });
+
+    return {
+      migrated: true,
+      tier: anonymousEntitlement.tier,
+      active: anonymousEntitlement.active,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error("migrateEntitlement failed", { patreonUserId, googleSub, error: message });
+    throw err;
   }
 }

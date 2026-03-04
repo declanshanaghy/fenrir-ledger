@@ -2,7 +2,9 @@
  * OAuth state parameter management for Patreon linking flow.
  *
  * The state parameter carries:
- *   - Google user sub (so the callback knows who initiated the flow)
+ *   - Google user sub (so the callback knows who initiated the flow),
+ *     or "anonymous" for users who have not signed in with Google
+ *   - Mode flag ("authenticated" or "anonymous")
  *   - CSRF nonce (prevents cross-site request forgery)
  *   - Creation timestamp (for expiry validation)
  *
@@ -23,22 +25,31 @@ const STATE_MAX_AGE_MS = 10 * 60 * 1000;
 /**
  * Generates an encrypted OAuth state token.
  *
- * @param googleSub - The Google user sub to embed in the state
+ * When `googleSub` is provided, the state is created in "authenticated" mode.
+ * When `googleSub` is omitted or undefined, the state is created in "anonymous" mode
+ * with `googleSub` set to `"anonymous"`.
+ *
+ * @param googleSub - The Google user sub to embed, or undefined for anonymous flow
  * @returns Base64-encoded encrypted state string
  */
-export function generateState(googleSub: string): string {
-  log.debug("generateState called", { googleSub });
+export function generateState(googleSub?: string): string {
+  const isAnonymous = !googleSub;
+  const effectiveSub = googleSub ?? "anonymous";
+  const mode = isAnonymous ? "anonymous" : "authenticated";
+
+  log.debug("generateState called", { googleSub: effectiveSub, mode });
 
   const state: PatreonOAuthState = {
-    googleSub,
+    googleSub: effectiveSub,
     nonce: crypto.randomBytes(16).toString("hex"),
     createdAt: Date.now(),
+    mode,
   };
 
   const stateJson = JSON.stringify(state);
   const encrypted = encrypt(stateJson);
 
-  log.debug("generateState returning", { stateLength: encrypted.length });
+  log.debug("generateState returning", { stateLength: encrypted.length, mode });
   return encrypted;
 }
 
@@ -50,6 +61,7 @@ export function generateState(googleSub: string): string {
  *   2. JSON structure is valid
  *   3. Token has not expired (10-minute window)
  *   4. Required fields are present
+ *   5. Mode field is valid (defaults to "authenticated" for backwards compatibility)
  *
  * @param stateToken - The encrypted state string from the callback URL
  * @returns The decoded state or null if validation fails
@@ -59,13 +71,24 @@ export function validateState(stateToken: string): PatreonOAuthState | null {
 
   try {
     const decrypted = decrypt(stateToken);
-    const state = JSON.parse(decrypted) as PatreonOAuthState;
+    const parsed = JSON.parse(decrypted) as Record<string, unknown>;
 
     // Validate required fields
-    if (!state.googleSub || !state.nonce || !state.createdAt) {
+    if (!parsed.googleSub || !parsed.nonce || !parsed.createdAt) {
       log.debug("validateState returning", { valid: false, reason: "missing fields" });
       return null;
     }
+
+    // Backwards compatibility: state tokens created before the mode field
+    // was added are treated as "authenticated" (the only mode that existed).
+    const mode = parsed.mode === "anonymous" ? "anonymous" : "authenticated";
+
+    const state: PatreonOAuthState = {
+      googleSub: parsed.googleSub as string,
+      nonce: parsed.nonce as string,
+      createdAt: parsed.createdAt as number,
+      mode,
+    };
 
     // Check expiry
     const age = Date.now() - state.createdAt;
@@ -82,6 +105,7 @@ export function validateState(stateToken: string): PatreonOAuthState | null {
     log.debug("validateState returning", {
       valid: true,
       googleSub: state.googleSub,
+      mode: state.mode,
       ageMs: age,
     });
     return state;

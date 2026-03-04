@@ -16,16 +16,22 @@
  *   - Algorithm: HMAC-MD5 of the raw request body
  *   - Key: PATREON_WEBHOOK_SECRET
  *
- * Patreon user -> Google sub mapping:
- *   Uses the secondary KV index `patreon-user:{patreonUserId}` -> googleSub
- *   established during the OAuth linking flow.
+ * Dual-key lookup:
+ *   Uses the secondary KV index `patreon-user:{patreonUserId}` to find the user.
+ *   The index value determines whether the user is authenticated or anonymous:
+ *     - Starts with `patreon:` -> anonymous user, look up `entitlement:patreon:{pid}`
+ *     - Otherwise -> authenticated user, look up `entitlement:{googleSub}`
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import {
   getEntitlement,
   setEntitlement,
+  getAnonymousEntitlement,
+  setAnonymousEntitlement,
   getGoogleSubByPatreonUserId,
+  isAnonymousReverseIndex,
+  extractPatreonUserIdFromReverseIndex,
 } from "@/lib/kv/entitlement-store";
 import { log } from "@/lib/logger";
 import type {
@@ -134,6 +140,56 @@ function determineTierFromPayload(
   return { tier: "thrall", active: false };
 }
 
+/**
+ * Retrieves the existing entitlement based on whether the user is anonymous or authenticated.
+ * Returns the entitlement and a key identifier for updating.
+ */
+async function getExistingEntitlement(
+  reverseIndexValue: string,
+  patreonUserId: string,
+): Promise<{ entitlement: StoredEntitlement | null; isAnonymous: boolean }> {
+  log.debug("getExistingEntitlement called", { reverseIndexValue, patreonUserId });
+
+  if (isAnonymousReverseIndex(reverseIndexValue)) {
+    const pid = extractPatreonUserIdFromReverseIndex(reverseIndexValue);
+    const entitlement = await getAnonymousEntitlement(pid);
+    log.debug("getExistingEntitlement returning", {
+      isAnonymous: true,
+      found: entitlement !== null,
+    });
+    return { entitlement, isAnonymous: true };
+  }
+
+  // Authenticated user — reverseIndexValue is the Google sub
+  const entitlement = await getEntitlement(reverseIndexValue);
+  log.debug("getExistingEntitlement returning", {
+    isAnonymous: false,
+    found: entitlement !== null,
+  });
+  return { entitlement, isAnonymous: false };
+}
+
+/**
+ * Stores an updated entitlement based on whether the user is anonymous or authenticated.
+ */
+async function storeUpdatedEntitlement(
+  reverseIndexValue: string,
+  patreonUserId: string,
+  entitlement: StoredEntitlement,
+): Promise<void> {
+  log.debug("storeUpdatedEntitlement called", { reverseIndexValue, patreonUserId });
+
+  if (isAnonymousReverseIndex(reverseIndexValue)) {
+    const pid = extractPatreonUserIdFromReverseIndex(reverseIndexValue);
+    await setAnonymousEntitlement(pid, entitlement);
+  } else {
+    // Authenticated user — reverseIndexValue is the Google sub
+    await setEntitlement(reverseIndexValue, entitlement);
+  }
+
+  log.debug("storeUpdatedEntitlement returning", { success: true });
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/patreon/webhook called");
 
@@ -222,9 +278,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ status: "ignored", reason: "no_user_id" });
   }
 
-  // --- Look up Google sub from Patreon user ID ---
-  const googleSub = await getGoogleSubByPatreonUserId(patreonUserId);
-  if (!googleSub) {
+  // --- Look up identity from Patreon user ID (may be Google sub or anonymous indicator) ---
+  const reverseIndexValue = await getGoogleSubByPatreonUserId(patreonUserId);
+  if (!reverseIndexValue) {
     log.debug("POST /api/patreon/webhook returning", {
       status: 200,
       reason: "patreon user not linked to any Fenrir account",
@@ -237,9 +293,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   }
 
-  log.debug("POST /api/patreon/webhook: found Google sub for Patreon user", {
+  const isAnonymous = isAnonymousReverseIndex(reverseIndexValue);
+  log.debug("POST /api/patreon/webhook: found user for Patreon ID", {
     patreonUserId,
-    googleSub,
+    isAnonymous,
+    reverseIndexValue: isAnonymous ? "(anonymous)" : reverseIndexValue,
   });
 
   try {
@@ -251,10 +309,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const { tier, active } = determineTierFromPayload(payload);
 
       // Get existing entitlement to preserve encrypted tokens
-      const existing = await getEntitlement(googleSub);
+      const { entitlement: existing } = await getExistingEntitlement(
+        reverseIndexValue,
+        patreonUserId,
+      );
       if (!existing) {
         log.debug("POST /api/patreon/webhook: no existing entitlement to update", {
-          googleSub,
+          patreonUserId,
+          isAnonymous,
           eventType,
         });
         // We have no stored tokens for this user — the webhook arrived before
@@ -276,14 +338,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         checkedAt: new Date().toISOString(),
       };
 
-      await setEntitlement(googleSub, updatedEntitlement);
+      await storeUpdatedEntitlement(reverseIndexValue, patreonUserId, updatedEntitlement);
 
       log.debug("POST /api/patreon/webhook returning", {
         status: 200,
         eventType,
         tier,
         active,
-        googleSub,
+        isAnonymous,
       });
       return NextResponse.json({
         status: "processed",
@@ -295,7 +357,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (eventType === "members:pledge:delete") {
       // Downgrade to thrall, keep the link active (user can re-pledge)
-      const existing = await getEntitlement(googleSub);
+      const { entitlement: existing } = await getExistingEntitlement(
+        reverseIndexValue,
+        patreonUserId,
+      );
       if (!existing) {
         log.debug("POST /api/patreon/webhook returning", {
           status: 200,
@@ -314,14 +379,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         checkedAt: new Date().toISOString(),
       };
 
-      await setEntitlement(googleSub, updatedEntitlement);
+      await storeUpdatedEntitlement(reverseIndexValue, patreonUserId, updatedEntitlement);
 
       log.debug("POST /api/patreon/webhook returning", {
         status: 200,
         eventType,
         tier: "thrall",
         active: false,
-        googleSub,
+        isAnonymous,
       });
       return NextResponse.json({
         status: "processed",
@@ -341,7 +406,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const message = err instanceof Error ? err.message : String(err);
     log.error("POST /api/patreon/webhook: processing failed", {
       eventType,
-      googleSub,
+      patreonUserId,
+      isAnonymous,
       error: message,
     });
     log.debug("POST /api/patreon/webhook returning", {
