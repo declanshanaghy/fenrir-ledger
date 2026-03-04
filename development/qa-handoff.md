@@ -1,134 +1,78 @@
-# QA Handoff -- Story 2: Client-side Anonymous Patreon Support
+# QA Handoff -- Story 2: Client-Side Feature Flag Guards
 
-**Branch:** `feat/anon-patreon-client`
-**Base:** `feat/anon-patreon-server` (PR #109)
+**Branch:** `feat/feature-flags-client`
+**Base:** `feat/feature-flags` (PR #113)
 **Date:** 2026-03-04
 **Engineer:** FiremanDecko
 
 ## What Was Implemented
 
-Story 2 of the anonymous Patreon linking feature. This builds on Story 1 (server-side,
-branch `feat/anon-patreon-server`, PR #109) which added the server-side anonymous
-OAuth flow, KV storage for anonymous entitlements, and the migration endpoint.
+Story 2 of the Stripe platform pivot feature flags. This builds on Story 1 (PR #113)
+which added `src/lib/feature-flags.ts` with `isPatreon()`, `isStripe()` helpers and
+guarded all 7 Patreon API routes with server-side checks.
 
-Story 2 adds the **client-side** logic so anonymous users (not signed in with Google)
-can subscribe via Patreon and see their tier status in the UI.
+Story 2 adds **client-side feature flag guards** so that when
+`NEXT_PUBLIC_SUBSCRIPTION_PLATFORM=stripe`, all Patreon-specific UI and API calls
+are suppressed. When the flag is unset or set to `patreon`, all existing behavior
+is preserved with zero changes.
 
 ### Key behaviors added:
 
-1. Anonymous users can click "Subscribe via Patreon" on the settings page (no Google sign-in needed)
-2. After Patreon OAuth, the callback stores the Patreon user ID in localStorage
-3. The EntitlementContext fetches anonymous membership status from a new endpoint
-4. After anonymous linking, the UI shows a "Sign in with Google" nudge
-5. On sign-in, auto-migration fires: moves the anonymous entitlement to Google-keyed storage
-6. All existing authenticated behavior is preserved (no regressions)
+1. `PatreonSettings` does not render when stripe mode -- replaced with a "Subscription management coming soon" placeholder
+2. `SealedRuneModal` hides Patreon campaign URL, tier row, and "Pledge on Patreon" CTA when stripe mode -- shows generic "Premium feature -- subscription coming soon" instead
+3. `UpsellBanner` returns null (hidden entirely) when stripe mode
+4. `EntitlementContext` skips all Patreon API calls (`linkPatreon`, `unlinkPatreon`, `refreshEntitlement`, `migrateAnonymousEntitlement`, OAuth callback processing) when stripe mode
+5. `PatreonGate` renders children unconditionally when stripe mode (no lockout)
 
-## Files Created/Modified
-
-### New Files
+## Files Modified
 
 | File | Description |
 |------|-------------|
-| `development/frontend/src/app/api/patreon/membership-anon/route.ts` | New API endpoint for anonymous membership lookup. Accepts `?pid=` query param, returns tier/active status from KV. Rate-limited (10/min/IP), no auth required. |
+| `development/frontend/src/app/settings/page.tsx` | Import `isPatreon`, conditionally render `<PatreonSettings />` vs placeholder section |
+| `development/frontend/src/components/entitlement/SealedRuneModal.tsx` | Import `isPatreon`, wrap Patreon tier row + CTA in conditional, show generic message in stripe mode |
+| `development/frontend/src/components/entitlement/UpsellBanner.tsx` | Import `isPatreon`, early return null when `!isPatreon()` |
+| `development/frontend/src/contexts/EntitlementContext.tsx` | Import `isPatreon`, guard `refreshEntitlement`, `linkPatreon`, `unlinkPatreon`, `migrateAnonymousEntitlement`, and OAuth callback useEffect |
+| `development/frontend/src/components/entitlement/PatreonGate.tsx` | Import `isPatreon`, render children unconditionally when `!isPatreon()` |
 
-### Modified Files
+## How to Test
 
-| File | Description |
-|------|-------------|
-| `development/frontend/src/contexts/EntitlementContext.tsx` | Dual-path `linkPatreon` (auth vs anon), anonymous membership fetching via `/api/patreon/membership-anon`, `?pid=` query param handling on callback, auto-migration on sign-in, new context fields (`isAnonymouslyLinked`, `isMigrating`, `migrateAnonymousEntitlement`). |
-| `development/frontend/src/components/entitlement/PatreonSettings.tsx` | 7-state UI: anonymous+unlinked (CTA), anonymous+linked (tier display + sign-in nudge), migration in-progress, authenticated+unlinked, authenticated+Karl, authenticated+Thrall, authenticated+expired. No longer depends on external AuthGate. |
-| `development/frontend/src/app/settings/page.tsx` | Removed AuthGate wrapper around PatreonSettings. Removed unused AuthGate import. PatreonSettings now handles auth-awareness internally. |
+### Test 1: Default behavior (Patreon mode -- no regression)
 
-## How to Deploy
+1. Ensure `NEXT_PUBLIC_SUBSCRIPTION_PLATFORM` is **unset** (or set to `patreon`).
+2. Run the app: `cd development/frontend && npm run dev`
+3. Navigate to `/settings`.
+4. Verify: `PatreonSettings` component renders normally.
+5. Verify: `PatreonGate` sections show locked/unlocked state normally.
+6. Verify: `UpsellBanner` appears for Thrall users.
+7. Verify: `SealedRuneModal` shows Patreon CTA when opened.
 
-Standard Vercel deployment -- no new env vars required beyond what Story 1 already needs.
-The new API route `/api/patreon/membership-anon` is serverless and auto-deploys.
+### Test 2: Stripe mode
 
-## Test Flows
+1. Set `NEXT_PUBLIC_SUBSCRIPTION_PLATFORM=stripe` in `.env.local`.
+2. Restart the dev server.
+3. Navigate to `/settings`.
+4. Verify: "Subscription Management" placeholder with "coming soon" text appears instead of PatreonSettings.
+5. Verify: PatreonGate sections render their children directly (Cloud Sync, Multi-Household, Data Export placeholders all visible).
+6. Verify: No Patreon API calls in the network tab.
+7. Navigate to dashboard -- verify UpsellBanner does not appear.
+8. If SealedRuneModal is triggered, verify it shows "Premium feature -- subscription coming soon" instead of Patreon CTA.
 
-### Flow 1: Anonymous Subscribe via Patreon
+### Test 3: Build validation
 
-1. Open the app in a fresh browser (no Google sign-in, clear localStorage).
-2. Navigate to `/settings`.
-3. Verify: PatreonSettings section is visible (not hidden behind AuthGate).
-4. Verify: "Subscribe via Patreon" button is shown with feature preview list (all locked).
-5. Click "Subscribe via Patreon".
-6. Verify: Redirected to `/api/patreon/authorize` WITHOUT `?id_token=` param.
-7. Verify: Patreon OAuth consent screen appears.
-8. Grant consent on Patreon.
-9. Verify: Redirected back to `/settings?patreon=linked&tier=karl&pid=<id>` (or tier=thrall if no active pledge).
-10. Verify: URL is cleaned (query params removed).
-11. Verify: `fenrir:patreon-user-id` is set in localStorage.
-12. Verify: Tier badge and feature list are shown.
-13. Verify: "Sign in with Google to unlock Cloud Sync" nudge is displayed below the tier info.
-
-### Flow 2: Sign-in After Anonymous Link (Migration)
-
-1. Complete Flow 1 first (anonymous Patreon link).
-2. Sign in with Google (click "Sign in with Google" in the nudge or via nav).
-3. Verify: Auto-migration fires -- "Linking your Patreon..." transitional state appears briefly.
-4. Verify: After migration succeeds:
-   - `fenrir:patreon-user-id` is cleared from localStorage.
-   - Entitlement is now keyed by Google sub in KV (check via server logs).
-   - Full authenticated PatreonSettings UI is shown (Karl badge, features unlocked, Unlink button).
-5. Verify: If migration fails (e.g., anonymous KV entry expired), the error does not block sign-in. The user sees the normal authenticated UI.
-
-### Flow 3: Authenticated Link (Existing Behavior, No Regression)
-
-1. Sign in with Google first.
-2. Navigate to `/settings`.
-3. Verify: "Link Patreon" button is shown (authenticated copy).
-4. Click "Link Patreon".
-5. Verify: Redirected to `/api/patreon/authorize?id_token=<token>`.
-6. Complete Patreon OAuth.
-7. Verify: Redirected back, standard Karl/Thrall UI appears.
-8. Verify: Unlink button works.
-
-### Flow 4: Page Refresh After Anonymous Link
-
-1. Complete Flow 1 (anonymous Patreon link).
-2. Refresh the page.
-3. Verify: Entitlement cache loads instantly (no loading flash).
-4. Verify: If cache is stale, background refresh calls `/api/patreon/membership-anon?pid=<id>`.
-5. Verify: Tier and features display correctly.
-
-## API Endpoints for Testing
-
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/api/patreon/membership-anon?pid=<id>` | GET | None | Returns anonymous entitlement status. Rate: 10/min/IP. |
-| `/api/patreon/authorize` | GET | Optional | Starts OAuth. With `?id_token=`: authenticated. Without: anonymous. |
-| `/api/patreon/callback` | GET | None | OAuth callback. Anonymous includes `&pid=` in redirect. |
-| `/api/patreon/migrate` | POST | Required | Migrates anonymous entitlement to Google-keyed. Body: `{ patreonUserId }`. |
+```bash
+cd development/frontend && npx tsc --noEmit   # Should pass
+cd development/frontend && npx next build      # Should succeed
+```
 
 ## Known Limitations
 
-1. **Anonymous entitlement refresh**: The anonymous membership endpoint reads from KV only --
-   it does not re-check the Patreon API with a fresh token (that requires the stored tokens,
-   which are encrypted in KV). Staleness is handled by the 30-day TTL on KV entries and the
-   webhook handler (Story 1) which updates entries when Patreon sends events.
+1. **Stripe gating not built yet**: When stripe mode is active, PatreonGate renders children unconditionally. This is intentional -- disabling Patreon should not lock users out of features before Stripe gating exists.
 
-2. **Anonymous unlink**: Anonymous users cannot server-side unlink (no auth for the unlink endpoint).
-   They can clear localStorage, which effectively resets their local state. The KV entry expires
-   after 30 days.
-
-3. **Multiple devices**: Anonymous Patreon linking is per-device (pid stored in localStorage).
-   If a user links on device A, device B will not know. The sign-in nudge encourages migration
-   to Google-keyed storage for cross-device access.
+2. **EntitlementContext still mounts**: The provider still renders and creates context, but all Patreon-specific API calls and OAuth processing are skipped. The context returns Thrall defaults.
 
 ## Suggested Test Focus Areas
 
-- **State transitions**: The PatreonSettings component now has 7 states. Verify each renders correctly.
-- **Migration edge cases**: What happens if the user signs in, migration starts, but the anonymous KV entry is gone? (Should gracefully fall through to normal authenticated flow.)
-- **Rate limiting on membership-anon**: Hit the endpoint > 10 times per minute from the same IP to confirm 429 response.
-- **URL cleanup**: Ensure `?patreon=linked&tier=karl&pid=12345` params are fully cleaned from the URL after processing.
-- **localStorage persistence**: Verify `fenrir:patreon-user-id` survives page refresh and is correctly read on mount.
-
-## Validation Commands
-
-```bash
-cd development/frontend && npx tsc --noEmit
-cd development/frontend && npx next build
-```
-
-Both pass as of 2026-03-04.
+- **No regressions in patreon mode**: All existing Patreon flows must work identically when the flag is unset.
+- **No network calls in stripe mode**: Confirm zero `/api/patreon/*` requests are made.
+- **PatreonGate passthrough**: Verify premium feature sections are accessible (not locked) in stripe mode.
+- **SealedRuneModal dismiss**: Verify the "Not now" dismiss button works in stripe mode.

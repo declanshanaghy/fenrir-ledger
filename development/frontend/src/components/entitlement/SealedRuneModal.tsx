@@ -34,6 +34,7 @@ import { useEntitlement } from "@/hooks/useEntitlement";
 import { PREMIUM_FEATURES } from "@/lib/entitlement/types";
 import { FEATURE_DESCRIPTIONS } from "@/lib/entitlement/feature-descriptions";
 import type { PremiumFeature } from "@/lib/entitlement/types";
+import { isPatreon } from "@/lib/feature-flags";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -127,56 +128,83 @@ export function SealedRuneModal({
           </div>
         </div>
 
-        {/* Tier info row */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 px-6 py-2">
-          {isExpired ? (
-            <span
-              className="inline-flex items-center gap-1.5 border border-dashed border-rune/40 px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wide text-rune/70"
-              aria-label="Membership expired"
-            >
-              <span className="w-4 h-4 flex items-center justify-center border border-rune/40 text-[9px]">
-                !
+        {/* Tier info + CTA — Patreon-specific when platform is active,
+            generic "coming soon" when Patreon is disabled (stripe mode). */}
+        {isPatreon() ? (
+          <>
+            {/* Tier info row */}
+            <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 px-6 py-2">
+              {isExpired ? (
+                <span
+                  className="inline-flex items-center gap-1.5 border border-dashed border-rune/40 px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wide text-rune/70"
+                  aria-label="Membership expired"
+                >
+                  <span className="w-4 h-4 flex items-center justify-center border border-rune/40 text-[9px]">
+                    !
+                  </span>
+                  Expired
+                </span>
+              ) : (
+                <span
+                  className="inline-flex items-center gap-1.5 border border-gold/30 px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wide text-gold"
+                  aria-label="Karl Supporter tier"
+                >
+                  <span className="w-4 h-4 flex items-center justify-center border border-gold/30 text-[9px] text-gold">
+                    K
+                  </span>
+                  Karl Supporter
+                </span>
+              )}
+              <span className="text-[13px] text-rune font-body">
+                {isExpired ? "Renew at $3\u20135/mo" : "$3\u20135/mo via Patreon"}
               </span>
-              Expired
-            </span>
-          ) : (
-            <span
-              className="inline-flex items-center gap-1.5 border border-gold/30 px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wide text-gold"
-              aria-label="Karl Supporter tier"
-            >
-              <span className="w-4 h-4 flex items-center justify-center border border-gold/30 text-[9px] text-gold">
-                K
-              </span>
-              Karl Supporter
-            </span>
-          )}
-          <span className="text-[13px] text-rune font-body">
-            {isExpired ? "Renew at $3\u20135/mo" : "$3\u20135/mo via Patreon"}
-          </span>
-        </div>
+            </div>
 
-        {/* Primary CTA */}
-        <div className="px-6 md:px-8 py-2">
-          <Button
-            onClick={linkPatreon}
-            className="w-full min-h-[48px] text-[15px] font-heading font-bold tracking-wide bg-gold text-[#07070d] hover:bg-gold-bright border-2 border-gold"
-            aria-label={ctaAriaLabel}
-          >
-            {ctaLabel}
-          </Button>
-        </div>
+            {/* Primary CTA */}
+            <div className="px-6 md:px-8 py-2">
+              <Button
+                onClick={linkPatreon}
+                className="w-full min-h-[48px] text-[15px] font-heading font-bold tracking-wide bg-gold text-[#07070d] hover:bg-gold-bright border-2 border-gold"
+                aria-label={ctaAriaLabel}
+              >
+                {ctaLabel}
+              </Button>
+            </div>
 
-        {/* Secondary dismiss */}
-        <div className="text-center px-6 pt-2 pb-5">
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="text-[13px] text-rune underline cursor-pointer min-h-[44px] inline-flex items-center px-2 font-body hover:text-saga transition-colors"
-            aria-label="Dismiss and continue without premium features"
-          >
-            {dismissLabel}
-          </button>
-        </div>
+            {/* Secondary dismiss */}
+            <div className="text-center px-6 pt-2 pb-5">
+              <button
+                type="button"
+                onClick={onDismiss}
+                className="text-[13px] text-rune underline cursor-pointer min-h-[44px] inline-flex items-center px-2 font-body hover:text-saga transition-colors"
+                aria-label="Dismiss and continue without premium features"
+              >
+                {dismissLabel}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Stripe mode — generic premium message */}
+            <div className="px-6 md:px-8 py-4 text-center">
+              <p className="text-sm text-rune/80 font-body">
+                Premium feature — subscription coming soon.
+              </p>
+            </div>
+
+            {/* Dismiss */}
+            <div className="text-center px-6 pt-2 pb-5">
+              <button
+                type="button"
+                onClick={onDismiss}
+                className="text-[13px] text-rune underline cursor-pointer min-h-[44px] inline-flex items-center px-2 font-body hover:text-saga transition-colors"
+                aria-label="Dismiss"
+              >
+                Not now
+              </button>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

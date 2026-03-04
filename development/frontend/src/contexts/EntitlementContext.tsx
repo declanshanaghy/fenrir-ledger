@@ -67,6 +67,7 @@ import type {
   Entitlement,
   PremiumFeature,
 } from "@/lib/entitlement/types";
+import { isPatreon } from "@/lib/feature-flags";
 
 // -- Types -------------------------------------------------------------------
 
@@ -271,6 +272,9 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
   // -- Refresh entitlement ---------------------------------------------------
 
   const refreshEntitlement = useCallback(async () => {
+    // Skip all Patreon API calls when the platform is not patreon
+    if (!isPatreon()) return;
+
     if (fetchInProgressRef.current) return;
 
     fetchInProgressRef.current = true;
@@ -312,6 +316,12 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
   // -- Link Patreon ----------------------------------------------------------
 
   const linkPatreon = useCallback(() => {
+    // No-op when Patreon is not the active subscription platform
+    if (!isPatreon()) {
+      console.debug("[Fenrir] linkPatreon skipped: platform is not patreon");
+      return;
+    }
+
     if (isAuthenticated && session) {
       // Authenticated flow: pass id_token to authorize endpoint
       void (async () => {
@@ -335,6 +345,9 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
   // -- Unlink Patreon --------------------------------------------------------
 
   const unlinkPatreon = useCallback(async () => {
+    // No-op when Patreon is not the active subscription platform
+    if (!isPatreon()) return;
+
     // Clear client-side state immediately for responsive UI
     clearEntitlementCache();
     clearPatreonUserId();
@@ -373,6 +386,9 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
    * @returns true if migration succeeded, false otherwise.
    */
   const migrateAnonymousEntitlement = useCallback(async (): Promise<boolean> => {
+    // Skip migration when Patreon is not the active platform
+    if (!isPatreon()) return false;
+
     const pid = getPatreonUserId();
     if (!pid) {
       console.debug("[Fenrir] No anonymous Patreon user ID to migrate");
@@ -456,6 +472,8 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Skip Patreon OAuth callback processing when platform is not patreon
+    if (!isPatreon()) return;
     if (queryParamsProcessedRef.current) return;
     if (status === "loading") return;
 

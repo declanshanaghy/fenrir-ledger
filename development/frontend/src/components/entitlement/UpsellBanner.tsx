@@ -31,6 +31,7 @@ import { useEntitlement } from "@/hooks/useEntitlement";
 import { useAuth } from "@/hooks/useAuth";
 import { SealedRuneModal } from "./SealedRuneModal";
 import type { PremiumFeature } from "@/lib/entitlement/types";
+import { isPatreon } from "@/lib/feature-flags";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -128,10 +129,12 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
   }, []);
 
   // Do not render for:
+  //   - Stripe mode (Patreon disabled — no Patreon CTA to show)
   //   - Anonymous users
   //   - Users who already have the feature (Karl tier)
   //   - Loading state
   //   - Dismissed banner
+  if (!isPatreon()) return null;
   if (status !== "authenticated") return null;
   if (isLoading) return null;
   if (hasFeature(feature)) return null;

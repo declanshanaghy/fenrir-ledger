@@ -16,6 +16,7 @@
 
 import { PatreonGate } from "@/components/entitlement/PatreonGate";
 import { PatreonSettings } from "@/components/entitlement/PatreonSettings";
+import { isPatreon } from "@/lib/feature-flags";
 
 // ---------------------------------------------------------------------------
 // Gated feature placeholders
@@ -129,10 +130,24 @@ export default function SettingsPage() {
 
       {/* Settings sections */}
       <div className="flex flex-col gap-6">
-        {/* Patreon subscription management — accessible to all users.
-            Anonymous users see a "Subscribe via Patreon" CTA.
-            Auth-awareness is handled internally by PatreonSettings. */}
-        <PatreonSettings />
+        {/* Subscription management — only rendered when the active platform
+            matches. When Patreon is disabled (stripe mode), the section is
+            hidden entirely; Stripe subscription UI will replace it later. */}
+        {isPatreon() ? (
+          <PatreonSettings />
+        ) : (
+          <section
+            className="border border-border p-5 flex flex-col gap-3"
+            aria-label="Subscription Management"
+          >
+            <h2 className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-saga">
+              Subscription Management
+            </h2>
+            <p className="text-sm text-saga/90 leading-relaxed font-body">
+              Subscription management coming soon.
+            </p>
+          </section>
+        )}
 
         {/* Premium feature placeholders — each wrapped in PatreonGate */}
         <PatreonGate feature="cloud-sync">
