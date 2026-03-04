@@ -16,7 +16,6 @@
 
 import { PatreonGate } from "@/components/entitlement/PatreonGate";
 import { PatreonSettings } from "@/components/entitlement/PatreonSettings";
-import { AuthGate } from "@/components/shared/AuthGate";
 
 // ---------------------------------------------------------------------------
 // Gated feature placeholders
@@ -130,10 +129,10 @@ export default function SettingsPage() {
 
       {/* Settings sections */}
       <div className="flex flex-col gap-6">
-        {/* Patreon subscription management — requires auth */}
-        <AuthGate>
-          <PatreonSettings />
-        </AuthGate>
+        {/* Patreon subscription management — accessible to all users.
+            Anonymous users see a "Subscribe via Patreon" CTA.
+            Auth-awareness is handled internally by PatreonSettings. */}
+        <PatreonSettings />
 
         {/* Premium feature placeholders — each wrapped in PatreonGate */}
         <PatreonGate feature="cloud-sync">
