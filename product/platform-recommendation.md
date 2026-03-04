@@ -1,100 +1,130 @@
 # Platform Recommendation for Fenrir Ledger
 
-## Current Decision: Patreon (Implemented)
+## Current Decision: Stripe Direct (Pivot from Patreon)
 
-**Status:** Patreon is the active subscription platform. Integration shipped and operational.
+**Status:** Strategic pivot in progress. Patreon integration is being feature-flagged off. Stripe Direct is the new subscription platform.
 
-The initial research recommended **Stripe Direct** for payment processing and **Substack** for content marketing. After further evaluation during implementation, **Patreon** was chosen as the subscription platform. This document preserves the original research tiers for context, then explains the decision evolution.
+**Decision date:** 2026-03-04
 
----
-
-## Why Patreon Won Over Stripe Direct
-
-The original recommendation favored Stripe Direct for its low fees and full control. In practice, Patreon proved to be the better fit for Fenrir Ledger's current stage and identity. The key factors that tipped the decision:
-
-### 1. Indie Creator Identity Alignment
-
-Fenrir Ledger is a solo indie project, not a SaaS product. Patreon's creator-subscriber model signals "support an indie tool you love" rather than "pay for software." This framing matches the Norse forge aesthetic and the community-first ethos of the credit card churning world. Stripe Direct would have positioned the product as a transactional SaaS, which is not what it is yet.
-
-### 2. Zero Billing Infrastructure
-
-Stripe Direct requires building: subscription management UI, billing portal, payment failure handling, invoice generation, refund workflows, webhook processing for payment events, and customer support tooling. Patreon provides all of this out of the box. For a solo developer, this saved weeks of engineering effort that went instead into premium features.
-
-### 3. Built-In Campaign Management
-
-Patreon provides a campaign page, patron communication tools, subscriber analytics, and tier management without any code. The Fenrir Ledger Patreon campaign page serves as both a marketing surface and a subscription management portal that the team did not have to build.
-
-### 4. Separation of Concerns: Identity vs. Entitlement
-
-The architectural insight that made Patreon work cleanly was treating it as an **entitlement layer only**, not an identity provider. Google OIDC remains the sole identity system (ADR-005). Patreon OAuth provides one piece of data: "Is this person an active patron of the Fenrir Ledger campaign?" This clean separation (documented in ADR-009) meant the integration was minimal: four API routes, one KV store, and one React context.
-
-### 5. Fee Trade-Off Was Acceptable
-
-Patreon takes 10% vs. Stripe's ~3.6%. At the current scale ($5/month subscribers), this means Patreon takes $0.50 more per subscriber per month. That premium buys: no billing UI to build, no payment failure handling, no invoice system, no refund workflow, built-in campaign page, and patron communication tools. The break-even point where Stripe Direct becomes cheaper on total cost of ownership is well beyond the current subscriber count.
-
-### 6. Anonymous-First Compatibility
-
-A critical requirement was preserving the anonymous-first model (ADR-006). Patreon as an entitlement-only layer achieved this cleanly: anonymous users never see Patreon UI, and the free tier (Thrall) is the full current product with zero friction. The anonymous Patreon flow (shipped in PR #109) even allows users to subscribe without Google sign-in first, further reducing friction.
+**Rationale:** Stripe Direct provides significantly better revenue retention ($9.34 vs $8.41 per $10 subscription), full control over the billing experience, and eliminates platform dependency. The Patreon integration was well-architected for provider portability (documented in ADR-009), making this pivot feasible with moderate engineering effort.
 
 ---
 
-## What Patreon Does Not Solve
+## Why Stripe Direct Wins Over Patreon
 
-Patreon is not a permanent solution for all monetization needs. Known limitations:
+### 1. Fee Advantage Is Significant
 
-| Limitation | Impact | Mitigation |
-|---|---|---|
-| 10% platform fee | Higher per-subscriber cost than Stripe | Acceptable at current scale; revisit at 500+ subscribers |
-| 30% Apple tax on iOS | Brutal for mobile subscribers | No native iOS app planned; web-only avoids this |
-| No in-app payment UI | Users must visit Patreon to subscribe | The hard gate modal links directly to the Patreon campaign page |
-| Platform dependency | Patreon outage = entitlement check failure | Graceful degradation: stale localStorage cache used as fallback |
-| HMAC-MD5 webhooks | Weaker cryptographic signature than SHA-256 | Accepted risk (SEV-001); Patreon platform constraint |
+At $10/month per subscriber:
+
+| Platform | Platform Fee | Processing Fee | You Keep |
+|----------|-------------|----------------|----------|
+| Stripe Direct | $0.07 (0.7% Billing) | $0.59 (2.9% + $0.30) | **$9.34** |
+| Patreon | $1.00 (10%) | $0.59 (2.9% + $0.30) | **$8.41** |
+
+That is $0.93 more per subscriber per month with Stripe. At 100 subscribers, that is $93/month. At 500 subscribers, $465/month. The fee delta grows linearly and never stops compounding.
+
+### 2. Full Control Over Billing Experience
+
+Stripe provides:
+- **Stripe Checkout** -- hosted, PCI-compliant payment pages, customizable to match the Norse theme
+- **Stripe Billing** -- subscription lifecycle management (trials, upgrades, downgrades, proration)
+- **Customer Portal** -- subscriber self-service (update payment method, cancel, view invoices)
+- **Stripe Webhooks** -- SHA-256 signed events (vs Patreon's HMAC-MD5, SEV-001)
+- **All payment methods** -- credit cards, Apple Pay, Google Pay, ACH, SEPA, and more
+
+### 3. Churner-Friendly Payment Methods
+
+Credit card churners want to pay with credit cards to maximize their own rewards. Stripe supports all major cards plus Apple Pay and Google Pay. Patreon's payment method support is more limited (cards + PayPal only).
+
+### 4. No Platform Dependency Risk
+
+Patreon is a third party that can change pricing (they already raised to 10% in Aug 2025), change APIs, or experience outages. Stripe is pure payment infrastructure -- the relationship is direct between Fenrir Ledger and the subscriber.
+
+### 5. iOS Apple Tax Elimination
+
+Patreon charges an additional 30% on iOS subscriptions (Apple tax). With Stripe Direct via web-only, this tax does not apply. If a native app is ever built, the web-based Stripe checkout can still be used to avoid in-app purchase requirements.
+
+### 6. Architecture Was Designed for This
+
+The existing entitlement layer was explicitly designed for provider portability (see ADR-009):
+- `useEntitlement` hook is platform-agnostic -- the frontend checks `tier` and `hasFeature()`, not `platform`
+- `PatreonGate` checks tier, not platform
+- `EntitlementPlatform` type already has a comment: `// Future: | "buymeacoffee" | "stripe" | ...`
+- Vercel KV entitlement store can be re-keyed from Patreon records to Stripe subscription records
+- The only Patreon-specific UI is in `PatreonSettings.tsx` and the campaign URL in `SealedRuneModal.tsx`
 
 ---
 
-## Current Integration Status
+## Patreon Integration: Feature-Flagged, Not Deleted
 
-### Shipped (as of March 2026)
+The existing Patreon integration will be preserved behind a feature flag, not deleted. This ensures:
 
-The Patreon integration is fully operational with the following components:
+1. **Rollback safety** -- If the Stripe migration hits blockers, Patreon can be re-enabled immediately
+2. **Existing subscribers** -- Any active Patreon subscribers can be migrated gracefully
+3. **Code reference** -- The Patreon implementation serves as a working reference for the Stripe integration's structure
+4. **Test coverage preservation** -- Existing test suites remain valid for regression testing
 
-**API Routes** (5 routes):
-- `/api/patreon/authorize` -- Initiates Patreon OAuth flow (supports both authenticated and anonymous users)
-- `/api/patreon/callback` -- Handles OAuth callback, exchanges code for tokens, stores entitlement in Vercel KV
-- `/api/patreon/membership` -- Returns current entitlement status (auth-gated)
-- `/api/patreon/webhook` -- Processes real-time membership change events from Patreon
-- `/api/patreon/unlink` -- Removes Patreon linkage from user account
-- `/api/patreon/migrate` -- Migrates anonymous Patreon entitlement to Google-keyed on sign-in
+### Feature Flag Plan
 
-**Client-Side Components**:
-- `EntitlementContext` -- React context managing subscription state, OAuth flow, and feature gating
-- `useEntitlement` hook -- Platform-agnostic interface for checking tier and feature access
-- `PatreonGate` -- Conditional renderer that gates premium features by tier
-- `SealedRuneModal` -- Norse-themed modal shown when Thrall users attempt to access Karl features
-- `UpsellBanner` -- Non-aggressive banner promoting Karl tier benefits
-- `PatreonSettings` -- Settings page component for linking/unlinking Patreon
-- `UnlinkConfirmDialog` -- Confirmation dialog for Patreon unlinking
+See `specs/feature-flagging-system.md` for the full feature flagging spec.
 
-**Infrastructure**:
-- Vercel KV for server-side entitlement storage (encrypted tokens, AES-256-GCM)
-- Dual-environment OAuth clients (dev + production)
-- `APP_BASE_URL` env var for deterministic redirect URIs (SEV-002 fix)
-- Anonymous Patreon flow with migration on Google sign-in
+A single environment variable controls the active subscription platform:
 
-**Security** (reviewed by Heimdall, 2026-03-02):
-- 0 critical, 2 high (both mitigated), 3 medium, 3 low, 3 informational findings
-- Full report: `security/reports/2026-03-02-patreon-integration.md`
+```
+SUBSCRIPTION_PLATFORM=stripe   # or "patreon" to revert
+```
 
-**QA** (validated by Loki):
-- 6 test suites in `quality/test-suites/patreon/`
-- 20 additional tests for anonymous flow in `quality/test-suites/anon-patreon/`
+The `EntitlementContext` reads this flag and routes to the appropriate provider (Stripe routes or Patreon routes). The feature gating layer (`PatreonGate`, `useEntitlement`, `hasFeature()`) does not change.
 
-### Tier Structure
+### What Gets Flagged Off
 
-| Tier | Norse Name | Price | Access |
-|------|-----------|-------|--------|
-| Free | Thrall | $0 | All current features (Sprint 1-5). Full card management, import, Valhalla, Easter eggs. |
-| Paid | Karl | $5/month | 8 premium feature categories: cloud sync, multi-household, analytics, priority import, export, extended history, custom notifications, cosmetics |
+**API Routes** (6 routes behind flag):
+- `/api/patreon/authorize`
+- `/api/patreon/callback`
+- `/api/patreon/membership`
+- `/api/patreon/webhook`
+- `/api/patreon/unlink`
+- `/api/patreon/migrate`
+
+**Client Components** (behind flag):
+- `PatreonSettings.tsx` -- replaced by `StripeSettings.tsx`
+- `SealedRuneModal.tsx` -- campaign URL updated to Stripe checkout link
+- `UpsellBanner.tsx` -- CTA updated to Stripe checkout
+- `UnlinkConfirmDialog.tsx` -- adapted for Stripe subscription cancellation
+
+**Server Libraries** (behind flag):
+- `lib/patreon/api.ts`
+- `lib/patreon/types.ts`
+- `lib/patreon/state.ts`
+
+**Environment Variables** (Patreon vars become optional):
+- `PATREON_CLIENT_ID`
+- `PATREON_CLIENT_SECRET`
+- `PATREON_CAMPAIGN_ID`
+- `PATREON_WEBHOOK_SECRET`
+
+---
+
+## Stripe Direct Implementation Strategy
+
+### Phase 1: Feature Flag + Stripe Checkout (MVP)
+
+Build the minimum Stripe integration to replace Patreon's subscription capability:
+
+1. **Stripe Product + Price** -- Create a "Karl" product in Stripe Dashboard with $5/month price
+2. **Stripe Checkout Session** -- API route creates a Checkout Session, redirects user to Stripe-hosted payment page
+3. **Stripe Webhooks** -- Handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+4. **Entitlement Store Update** -- Store Stripe `customer_id` and `subscription_id` in Vercel KV (same pattern as Patreon)
+5. **Customer Portal** -- Link to Stripe Customer Portal for subscription management (cancel, update payment)
+6. **Feature Flag** -- `SUBSCRIPTION_PLATFORM=stripe` activates Stripe routes, deactivates Patreon routes
+
+### Phase 2: Enhanced Billing (Post-MVP)
+
+- Annual billing option (discounted)
+- Trial periods
+- Promotional pricing / coupon codes
+- Usage-based pricing for future features
+- Invoice history in-app
 
 ### Architecture
 
@@ -104,32 +134,78 @@ graph TD
     classDef healthy fill:#4CAF50,stroke:#388E3C,color:#FFF
     classDef warning fill:#FF9800,stroke:#F57C00,color:#FFF
     classDef neutral fill:#F5F5F5,stroke:#E0E0E0,color:#212121
+    classDef unavailable fill:#9E9E9E,stroke:#757575,color:#FFF
 
     %% Identity layer
     google([Google OIDC<br/>Identity Provider])
     %% Entitlement layer
-    patreon([Patreon OAuth<br/>Entitlement Provider])
+    stripe([Stripe Billing<br/>Entitlement Provider])
+    patreon([Patreon OAuth<br/>Feature-Flagged Off])
     %% Storage
-    kv[(Vercel KV<br/>Encrypted Tokens)]
+    kv[(Vercel KV<br/>Entitlement Store)]
     cache[(localStorage<br/>Entitlement Cache)]
 
     %% App layer
     app[Fenrir Ledger<br/>Next.js App]
-    gate[PatreonGate<br/>Feature Gating]
+    gate[SubscriptionGate<br/>Feature Gating]
+    portal([Stripe Customer Portal<br/>Self-Service])
 
     google -->|"who you are (sub)"| app
-    patreon -->|"what you can access (tier)"| app
+    stripe -->|"what you can access (subscription)"| app
     app -->|"stores entitlement"| kv
     app -->|"caches entitlement"| cache
     app -->|"checks tier"| gate
+    app -.->|"manage subscription"| portal
+    patreon -.->|"disabled via flag"| app
 
     class google primary
-    class patreon warning
+    class stripe healthy
+    class patreon unavailable
     class kv neutral
     class cache neutral
     class app primary
     class gate healthy
+    class portal warning
 ```
+
+### New API Routes (Stripe)
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/api/stripe/checkout` | POST | Creates Stripe Checkout Session, returns URL |
+| `/api/stripe/webhook` | POST | Handles Stripe webhook events (SHA-256 verified) |
+| `/api/stripe/membership` | GET | Returns current subscription status from KV |
+| `/api/stripe/portal` | POST | Creates Stripe Customer Portal session |
+| `/api/stripe/unlink` | POST | Cancels subscription and clears entitlement |
+
+### New Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `STRIPE_SECRET_KEY` | Stripe API secret key |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (client-side, `NEXT_PUBLIC_`) |
+| `STRIPE_WEBHOOK_SECRET` | Webhook endpoint signing secret |
+| `STRIPE_PRICE_ID` | Price ID for the Karl tier |
+| `SUBSCRIPTION_PLATFORM` | Feature flag: `stripe` or `patreon` |
+
+---
+
+## What "Done" Looks Like
+
+The Stripe Direct migration is complete when:
+
+- [ ] Feature flag `SUBSCRIPTION_PLATFORM` controls which provider is active
+- [ ] Patreon routes return 404 or redirect when flag is set to `stripe`
+- [ ] Stripe Checkout flow works end-to-end: click subscribe -> pay -> entitlement granted
+- [ ] Stripe webhooks update entitlement in real-time on subscription changes
+- [ ] Customer Portal link works for self-service subscription management
+- [ ] `useEntitlement` hook works identically regardless of provider
+- [ ] `PatreonGate` (renamed to `SubscriptionGate`) works with both providers
+- [ ] Settings page shows Stripe subscription status (replaces PatreonSettings)
+- [ ] SealedRuneModal links to Stripe Checkout (not Patreon campaign page)
+- [ ] Existing Patreon tests still pass when flag is set to `patreon`
+- [ ] New Stripe test suites pass
+- [ ] Security review by Heimdall (Stripe webhook signature verification, key management)
 
 ---
 
@@ -137,7 +213,7 @@ graph TD
 
 **Status: Still recommended, not yet executed.**
 
-The original recommendation to use Substack for audience building and content marketing remains valid and complementary to Patreon. Patreon handles subscription/entitlement. Substack would handle discovery and content.
+The original recommendation to use Substack for audience building and content marketing remains valid and complementary to Stripe Direct. Stripe handles subscription/entitlement. Substack would handle discovery and content.
 
 ### Why Substack Still Makes Sense
 
@@ -153,11 +229,46 @@ When the team is ready to invest in content marketing:
 
 1. Launch a free Substack newsletter: "Fenrir Ledger -- The Churner's Forge"
 2. Content: weekly deal alerts, card strategy breakdowns, points optimization, tool tips
-3. Include CTAs linking to the Fenrir Ledger app and Patreon campaign
+3. Include CTAs linking to the Fenrir Ledger app and Stripe checkout
 4. Consider a paid Substack tier only if the newsletter itself generates enough unique content to justify it
-5. Cross-promote: Patreon patrons get early access to newsletter content; Substack readers discover the app
+5. Cross-promote: Stripe subscribers get early access to newsletter content; Substack readers discover the app
 
-This is a P3 initiative. The current focus is shipping premium features for Karl-tier patrons.
+This is a P3 initiative. The current focus is shipping the Stripe Direct integration and premium features for Karl-tier subscribers.
+
+---
+
+## Prior Art: Patreon Integration (Preserved for Reference)
+
+The Patreon integration shipped in March 2026 and is fully operational. It is preserved behind a feature flag as a reference implementation and fallback option.
+
+### Patreon Integration Components
+
+**API Routes** (6 routes):
+- `/api/patreon/authorize` -- Initiates Patreon OAuth flow
+- `/api/patreon/callback` -- Handles OAuth callback, stores entitlement in Vercel KV
+- `/api/patreon/membership` -- Returns current entitlement status
+- `/api/patreon/webhook` -- Processes membership change events
+- `/api/patreon/unlink` -- Removes Patreon linkage
+- `/api/patreon/migrate` -- Migrates anonymous entitlement to Google-keyed on sign-in
+
+**Client Components**:
+- `EntitlementContext` -- React context (platform-agnostic, reusable)
+- `useEntitlement` hook -- Platform-agnostic interface (reusable)
+- `PatreonGate` -- Feature gating component (reusable with rename)
+- `SealedRuneModal` -- Norse-themed upsell modal (reusable with URL swap)
+- `UpsellBanner` -- Upsell banner (reusable with CTA swap)
+- `PatreonSettings` -- Settings page component (replaced by StripeSettings)
+- `UnlinkConfirmDialog` -- Confirmation dialog (reusable)
+
+**Infrastructure**:
+- Vercel KV for server-side entitlement storage (AES-256-GCM encrypted tokens)
+- Dual-environment OAuth clients (dev + production)
+- Anonymous Patreon flow with migration on Google sign-in
+
+**Architecture References**:
+- ADR-009: `designs/architecture/adr-009-patreon-entitlement.md`
+- Product Design Brief: `designs/product/backlog/patreon-subscription-brief.md`
+- Security Review: `security/reports/2026-03-02-patreon-integration.md`
 
 ---
 
@@ -184,30 +295,6 @@ This is a P3 initiative. The current focus is shipping premium features for Karl
 | **Gumroad** | Highest effective fees; weak community; better for one-off digital products |
 | **Ko-fi** | Art/creative brand mismatch; no churning audience |
 | **Memberful** | $49/mo base cost is prohibitive for a solo project starting out |
-
----
-
-## Future Platform Strategy Decisions
-
-### When to Revisit Patreon vs. Stripe Direct
-
-The team should revisit the Stripe Direct option if any of the following triggers occur:
-
-- **Scale threshold**: 500+ active Karl subscribers (the 10% fee delta becomes meaningful)
-- **Mobile app**: If a native iOS/Android app is planned, Apple/Google require in-app purchases, making Patreon's additional 30% iOS tax untenable
-- **Enterprise tier**: If a higher-priced tier ($20+/month) is introduced, the absolute fee difference makes Stripe more attractive
-- **Custom billing**: If the product needs annual plans, family plans, or usage-based pricing that Patreon does not support
-
-### Migration Path to Stripe (If Needed)
-
-The architecture was designed for provider portability:
-
-1. The `useEntitlement` hook is platform-agnostic -- the frontend does not know it is backed by Patreon
-2. The `PatreonGate` component checks `tier`, not `platform`
-3. The Vercel KV store can be re-keyed from Patreon entitlements to Stripe subscription statuses
-4. The only Patreon-specific UI is the "Link Patreon" button in settings and the Patreon campaign URL in the sealed rune modal
-
-A Stripe migration would require: new API routes for Stripe webhooks and checkout, a new entitlement provider in `EntitlementContext`, and updated settings UI. The feature gating layer (`PatreonGate`, `useEntitlement`) would not change.
 
 ---
 
