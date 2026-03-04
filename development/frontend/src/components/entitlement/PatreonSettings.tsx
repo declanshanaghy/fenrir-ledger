@@ -201,9 +201,9 @@ export function PatreonSettings() {
   }
 
   // Determine authenticated linked states
-  const isKarlActive = isLinked && isActive && tier === "karl";
-  const isLinkedThrall = isLinked && !isActive && tier === "thrall";
-  const isExpired = isLinked && !isActive && tier === "karl";
+  const isKarlActive = isAuthenticated && isLinked && isActive && tier === "karl";
+  const isLinkedThrall = isAuthenticated && isLinked && !isActive && tier === "thrall";
+  const isExpired = isAuthenticated && isLinked && !isActive && tier === "karl";
 
   // Format linked date from cache (if available)
   const linkedDate = (() => {
