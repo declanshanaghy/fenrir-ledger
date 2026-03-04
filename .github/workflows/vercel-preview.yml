@@ -34,11 +34,10 @@ jobs:
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Copy static site into Next.js public/
+      - name: Copy sessions into Next.js public/
         run: |
-          rm -rf development/frontend/public/static development/frontend/public/sessions
-          mkdir -p development/frontend/public/static development/frontend/public/sessions
-          cp -r static/. development/frontend/public/static/
+          rm -rf development/frontend/public/sessions
+          mkdir -p development/frontend/public/sessions
           cp -r sessions/. development/frontend/public/sessions/
 
       - name: Build

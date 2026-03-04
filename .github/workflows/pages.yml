@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'static/**'
+      - 'development/frontend/public/static/**'
       - 'sessions/**'
   workflow_dispatch:
 
@@ -34,7 +34,7 @@ jobs:
         run: |
           mkdir -p _site
           # Marketing site at root
-          cp -r static/. _site/
+          cp -r development/frontend/public/static/. _site/
           # Session archive at /sessions/
           mkdir -p _site/sessions
           cp -r sessions/. _site/sessions/
