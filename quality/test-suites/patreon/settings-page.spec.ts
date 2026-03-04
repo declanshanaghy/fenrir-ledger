@@ -222,18 +222,21 @@ test.describe("Settings Page — AC-4: Navigation to /settings", () => {
 // ════════════════════════════════════════════════════════════════════════════
 
 test.describe("Settings Page — AC-6: PatreonSettings section", () => {
-  test("TC-SP-12: Patreon section heading is NOT visible for anonymous users (AuthGate)", async ({
+  test("TC-SP-12: Patreon section IS visible for anonymous users (no AuthGate — PR #110)", async ({
     page,
   }) => {
-    // Spec: settings/page.tsx wraps PatreonSettings in <AuthGate>.
-    // For unauthenticated users, AuthGate renders null — Patreon section is hidden.
-    // This is the correct anonymous-first behavior: no auth prompt in settings header.
+    // UPDATED: settings/page.tsx previously wrapped PatreonSettings in <AuthGate>,
+    // but PR #110 (feat/anon-patreon-client) removed AuthGate to support anonymous
+    // Patreon subscriptions. Anonymous users now see the "Subscribe via Patreon" CTA.
+    //
+    // Spec (post-PR #110): PatreonSettings handles auth-awareness internally.
+    // Anonymous users must see the Patreon section with the subscribe CTA.
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
 
     // PatreonSettings section has aria-label="Patreon subscription"
     const patreonSection = page.locator('[aria-label="Patreon subscription"]');
-    // Must not be attached — AuthGate hides it entirely for anonymous users
-    await expect(patreonSection).not.toBeAttached();
+    // Must be visible — AuthGate removed, anonymous users can access the Patreon CTA
+    await expect(patreonSection).toBeVisible();
   });
 
   test("TC-SP-13: 'Link your Patreon' button text visible in unlinked state when authenticated", async ({
