@@ -225,11 +225,11 @@ The Claude Code hooks, agents, and skills infrastructure under `.claude/` is ada
 - `.claude/agents/meta-agent.md` — Agent definition generator
 - `.claude/agents/scout-report-suggest.md` / `scout-report-suggest-fast.md` — Codebase scout agents
 - `.claude/agents/team/builder.md` / `validator.md` — Builder and validator team agents
-- `.claude/commands/build.md` — Plan executor command
 - `.claude/commands/plan_w_team.md` — Team planning command
+- `.claude/commands/orchestrate.md` — Full pipeline orchestration
+- `.claude/commands/create-worktree.md` / `remove-worktree.md` / `list-worktrees.md` — Git worktree management
 - `.claude/commands/t_metaprompt_workflow.md` — Slash command generator
 - `.claude/skills/meta-skill/` — Skill creation skill
-- `.claude/skills/create-worktree-skill/` / `worktree-manager-skill/` — Git worktree management
 - `.claude/output-styles/` — Response formatting presets
 
 *"Though it looks like silk ribbon, no chain is stronger."*
