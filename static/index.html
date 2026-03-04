@@ -687,6 +687,28 @@
       cursor: help;
       border-bottom: 1px dotted var(--text-void);
     }
+    .footer-legal {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 16px;
+    }
+    .footer-legal a {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-rune);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: color 150ms ease-out;
+    }
+    .footer-legal a:hover {
+      color: var(--gold);
+    }
+    .footer-legal-sep {
+      color: var(--text-void);
+      font-size: 13px;
+      user-select: none;
+    }
 
     /* ── Mythology Links ─────────────────────────────────── */
     /* Subtly visible enrichment links to Wikipedia for Norse
@@ -993,6 +1015,12 @@
       <hr class="footer-rule" />
 
       <a href="/sessions/" class="step-log-link" style="display:block;margin-bottom:24px;">ᛏ Session Chronicles →</a>
+
+      <div class="footer-legal">
+        <a href="/static/privacy.html">Privacy Policy</a>
+        <span class="footer-legal-sep" aria-hidden="true">&middot;</span>
+        <a href="/static/terms.html">Terms of Service</a>
+      </div>
 
       <p class="footer-credit">
         <span data-gleipnir="breath-of-a-fish" class="copyright-c">©</span> 2026 Fenrir Ledger ·
