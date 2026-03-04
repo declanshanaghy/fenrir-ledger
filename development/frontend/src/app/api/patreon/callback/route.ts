@@ -175,16 +175,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
     log.error("GET /api/patreon/callback: flow failed", {
       googleSub,
       error: message,
+      stack,
     });
+    // Encode a sanitized reason into the redirect for debugging.
+    // Strip secrets/tokens but keep the error category.
+    const reason = message.includes("token exchange")
+      ? "token_exchange_failed"
+      : message.includes("identity API")
+        ? "membership_check_failed"
+        : message.includes("ENTITLEMENT_ENCRYPTION_KEY")
+          ? "encryption_key_error"
+          : "oauth_failed";
     log.debug("GET /api/patreon/callback returning", {
       status: 302,
-      redirect: "settings?patreon=error&reason=oauth_failed",
+      redirect: `settings?patreon=error&reason=${reason}`,
     });
     return NextResponse.redirect(
-      `${baseUrl}/settings?patreon=error&reason=oauth_failed`,
+      `${baseUrl}/settings?patreon=error&reason=${reason}`,
     );
   }
 }
