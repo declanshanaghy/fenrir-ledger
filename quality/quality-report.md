@@ -1,248 +1,199 @@
-# Quality Report: feat/patreon-api — Server-Side Patreon Integration (Task #4)
+# Quality Report: PR #110 — feat/anon-patreon-client
 
-## QA Verdict: FAIL
-
-**Validated by**: Loki (QA Tester)
-**Date**: 2026-03-02
-**Branch**: `feat/patreon-api`
-**PR**: #93
-**Scope**: 9 new files (Patreon types, API client, OAuth state, AES-256-GCM encryption,
-Vercel KV entitlement store, 4 API routes). 3 modified files (.env.example, package.json,
-qa-handoff.md).
-
----
-
-## Test Execution
-
-- Total: 18 | Passed: 15 | Failed: 2 | Advisory: 1
+**Date:** 2026-03-04
+**Branch:** `feat/anon-patreon-client` (based on `feat/anon-patreon-server`)
+**Engineer:** FiremanDecko
+**QA Tester:** Loki
 
 ---
 
 ## Summary
 
-The implementation is well-structured and follows team patterns in the majority of its
-surface area. The fenrir logger is used throughout. Auth guards are correctly placed.
-No Patreon secrets are exposed to the client bundle. The TypeScript compiler and
-Next.js build both pass clean with zero errors.
+PR #110 adds the client-side anonymous Patreon subscription flow (Story 2 of 2). It builds on
+PR #109's server-side foundation and allows users who have not signed in with Google to subscribe
+via Patreon and see their tier status on the settings page.
 
-Two blocking defects were found during security review:
-
-1. **DEF-001 [HIGH]** — `validateSignature` in the webhook route will throw an uncaught
-   exception and return HTTP 500 instead of 400 when an attacker sends a correctly-length
-   but non-hexadecimal `X-Patreon-Signature` header. This is an unhandled crash path on
-   a public, unauthenticated endpoint.
-
-2. **DEF-002 [MEDIUM]** — `getMembership()` accepts a `campaignId` parameter and the
-   JSDoc promises it filters to that campaign, but the filtering loop does not check
-   `resource.relationships?.campaign?.data?.id`. A user who is an active patron of ANY
-   Patreon campaign (not just Fenrir Ledger's) would be granted `karl` tier. This is an
-   entitlement privilege-escalation bug.
-
-Both defects must be fixed before this PR ships.
+**Recommendation: HOLD FOR FIX — 1 medium defect (DEF-APC-001) must be resolved before ship.**
 
 ---
 
-## Issues for FiremanDecko
+## Test Execution
 
-### DEF-001 [HIGH] — `validateSignature` throws uncaught exception on non-hex signature input
+| Category | Total | Passed | Failed | Blocked |
+|----------|-------|--------|--------|---------|
+| New Playwright tests (anon-patreon-client suite) | 34 | 33 | 1 | 0 |
+| Updated existing tests (settings-page.spec.ts TC-SP-12) | 1 | 1 | 0 | 0 |
+| TypeScript validation (`npx tsc --noEmit`) | — | PASS | — | — |
+| Next.js build (`npx next build`) | — | PASS | — | — |
+| GH Actions (deploy-preview) | — | PENDING | — | — |
 
-**File**: `development/frontend/src/app/api/patreon/webhook/route.ts`
-**Lines**: 65-79 (`validateSignature`), 149 (call site)
-
-**Root Cause**: The length guard at line 72 compares the raw hex-string lengths
-(`signature.length === expectedSignature.length`). A valid MD5 hex string is always
-32 characters. An attacker can send any 32-character string containing non-hex characters
-(e.g. `ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ`). This passes the length check. Then
-`Buffer.from(signature, "hex")` decodes to 0 bytes (Node.js silently drops invalid hex
-pairs), while `Buffer.from(expectedSignature, "hex")` decodes to 16 bytes. Node's
-`crypto.timingSafeEqual` throws `Error: Input buffers must have the same byte length`
-when given buffers of unequal length. The call site at line 149 is outside any try/catch,
-so this exception propagates as an unhandled rejection, resulting in a 500 response.
-
-**Impact**: A malicious actor can reliably trigger 500 errors on the public webhook
-endpoint by sending garbage signatures. While this does not bypass signature validation
-(the attacker still cannot forge a valid signature), it:
-- Causes unhandled exceptions logged as server errors (noise in production logs)
-- Returns HTTP 500 instead of 400, which may cause Patreon to retry the webhook
-- Is a denial-of-service vector if Patreon retries on 500s
-
-**Confirmed by**:
-```
-node -e "
-  const crypto = require('crypto');
-  const sig = 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ'; // 32-char non-hex
-  const exp = 'a1bf10825f943bd9b16ee890d3241b3c'; // 32-char valid hex
-  const sBuf = Buffer.from(sig, 'hex'); // => 0 bytes
-  const eBuf = Buffer.from(exp, 'hex'); // => 16 bytes
-  crypto.timingSafeEqual(sBuf, eBuf); // THROWS: Input buffers must have the same byte length
-"
-```
-
-**Required Fix**: Validate that `signature` is a valid lowercase hex string before
-decoding, OR wrap the `timingSafeEqual` call in a try/catch and return `false`:
-
-```typescript
-// Option A: hex validation guard
-const HEX_RE = /^[0-9a-f]+$/i;
-const valid =
-  signature.length === expectedSignature.length &&
-  HEX_RE.test(signature) &&
-  crypto.timingSafeEqual(
-    Buffer.from(signature, "hex"),
-    Buffer.from(expectedSignature, "hex"),
-  );
-
-// Option B: try/catch (simpler, equally correct)
-try {
-  const valid =
-    signature.length === expectedSignature.length &&
-    crypto.timingSafeEqual(
-      Buffer.from(signature, "hex"),
-      Buffer.from(expectedSignature, "hex"),
-    );
-  log.debug("validateSignature returning", { valid });
-  return valid;
-} catch {
-  log.debug("validateSignature returning", { valid: false, reason: "buffer decode error" });
-  return false;
-}
-```
-
----
-
-### DEF-002 [MEDIUM] — `getMembership` does not filter by `campaignId`; any active Patreon patron receives `karl` tier
-
-**File**: `development/frontend/src/lib/patreon/api.ts`
-**Lines**: 112-188
-
-**Root Cause**: The `getMembership()` function signature accepts `campaignId: string`,
-and the JSDoc states _"Calls the Patreon identity endpoint with membership includes, then
-matches the membership to the specified campaign ID to determine the user's tier."_
-However, the filtering loop at lines 154-179 iterates over all `member` resources in the
-response's `included` array and checks only `patron_status === "active_patron"`. There is
-no check of `resource.relationships?.campaign?.data?.id === campaignId`.
-
-The Patreon `/identity?include=memberships` endpoint returns **all** memberships for the
-authenticated user across **all campaigns**. A user who pledges to an unrelated creator's
-campaign would have `patron_status: "active_patron"` in the response, and the current
-code would grant them `karl` tier in Fenrir Ledger.
-
-The `campaignId` parameter is correctly passed to `log.debug` and stored in the
-entitlement record, but is never used for membership matching.
-
-**Impact**: Entitlement privilege escalation. Any Patreon user who is an active patron
-of any campaign (not just Fenrir Ledger) can link their Patreon account and receive
-`karl` tier without paying for Fenrir Ledger support.
-
-**Required Fix**: Filter the member resources by matching the campaign relationship:
-
-```typescript
-// In getMembership(), replace the filtering loop with campaign-aware matching:
-if (identity.included) {
-  for (const resource of identity.included) {
-    if (resource.type === "member") {
-      // Check this membership belongs to our campaign
-      const memberCampaignId = (
-        resource.relationships as Record<string, { data?: { id?: string } }> | undefined
-      )?.campaign?.data?.id;
-
-      if (memberCampaignId && memberCampaignId !== campaignId) {
-        log.debug("getMembership: skipping membership for different campaign", {
-          memberCampaignId,
-          expectedCampaignId: campaignId,
-        });
-        continue;
-      }
-
-      const patronStatus = resource.attributes.patron_status as string | null;
-      const amountCents =
-        resource.attributes.currently_entitled_amount_cents as number | undefined;
-
-      if (patronStatus === "active_patron") {
-        active = true;
-        if (amountCents && amountCents > 0) {
-          tier = "karl";
-        }
-      }
-    }
-  }
-}
-```
-
-Note: The Patreon identity endpoint's `included` member resources expose the campaign
-relationship only when `&include=memberships.campaign` is added to the query. The current
-`PATREON_IDENTITY_URL` includes `memberships` but not `memberships.campaign`. The URL
-must also be updated to include the campaign relationship data:
-
-```typescript
-const PATREON_IDENTITY_URL =
-  "https://www.patreon.com/api/oauth2/v2/identity" +
-  "?include=memberships.campaign" +  // <-- was "memberships"
-  "&fields%5Buser%5D=email,full_name" +
-  "&fields%5Bmember%5D=patron_status,currently_entitled_amount_cents,campaign_lifetime_support_cents";
-```
-
----
-
-## Advisory Items (Non-Blocking)
-
-### ADV-001 [LOW] — `@vercel/kv` is deprecated; plan for Upstash Redis migration
-
-**File**: `development/frontend/package.json` line 20
-
-**Description**: FiremanDecko acknowledged this in `development/qa-handoff.md`
-(Known Limitation #1). The package is functional but deprecated. Vercel recommends
-migrating to Upstash Redis. This is not a blocker for this PR — the package works —
-but a follow-up card should be created to track the migration before `@vercel/kv`
-becomes unsupported.
-
-**Action required**: Create a follow-up backlog item for Upstash Redis migration.
-Not blocking this PR.
-
----
-
-## Checks Passed
-
-| Check | Result |
-|-------|--------|
-| `/api/patreon/authorize` requires `requireAuth` (ADR-008) | PASS |
-| `/api/patreon/membership` requires `requireAuth` (ADR-008) | PASS |
-| `/api/patreon/callback` correctly exempt from `requireAuth` (CSRF via state) | PASS |
-| `/api/patreon/webhook` correctly exempt from `requireAuth` (HMAC-MD5 validation) | PASS |
-| `PATREON_CLIENT_SECRET` accessed only via `process.env` in server-side modules | PASS |
-| No `NEXT_PUBLIC_` prefix on any Patreon/KV/encryption secret variable | PASS |
-| Fenrir logger (`log.*`) used throughout — no raw `console.*` in backend code | PASS |
-| Method entry/exit `log.debug` on all functions | PASS |
-| AES-256-GCM: 12-byte IV, 16-byte auth tag, correct buffer concatenation | PASS |
-| AES-256-GCM: `decipher.setAuthTag()` called before `decipher.final()` | PASS |
-| Tokens encrypted before KV storage (callback and membership refresh) | PASS |
-| OAuth state: 16-byte nonce generated via `crypto.randomBytes(16)` | PASS |
-| OAuth state: 10-minute expiry enforced in `validateState()` | PASS |
-| Webhook: `timingSafeEqual` used (constant-time comparison) | PASS (with DEF-001 caveat) |
-| KV secondary index (`patreon-user:{id}` -> `googleSub`) maintained in `setEntitlement` | PASS |
-| KV TTL (30 days) set on both primary and secondary index entries | PASS |
-| Graceful degradation: stale cache returned with `{ stale: true }` on Patreon API failure | PASS |
-| TypeScript: `npx tsc --noEmit` — zero errors | PASS |
-| Build: `npm run build` — zero errors, all 4 routes in build manifest | PASS |
-| `.env.example` updated with all required variables, no secrets as plaintext | PASS |
-| `.gitignore` covers `.env`, `*.env`, `.env.*` (excludes `.env.example`) | PASS |
-| GH Actions: `deploy-preview` | PENDING (still running at time of report) |
+**Total: 35 tests, 34 passed, 1 failed.**
 
 ---
 
 ## Defects Found
 
-### DEF-001 [HIGH] — Uncaught exception in `validateSignature` on non-hex input
-- Severity: HIGH — public unauthenticated endpoint, 500 error from garbage input
-- File: `development/frontend/src/app/api/patreon/webhook/route.ts` lines 65-79
-- Root cause: `timingSafeEqual` throws when decoded buffers have unequal byte lengths
-- Fix: wrap `timingSafeEqual` in try/catch or add hex format guard before decode
+### DEF-APC-001: Duplicate KARL Badge in Header for Anonymous Linked Karl User
 
-### DEF-002 [MEDIUM] — `getMembership` grants `karl` tier for any active Patreon membership
-- Severity: MEDIUM — entitlement privilege escalation
-- File: `development/frontend/src/lib/patreon/api.ts` lines 154-179
-- Root cause: filtering loop checks `patron_status` but not `campaign.id`
-- Fix: add campaign relationship check; update `PATREON_IDENTITY_URL` to include `memberships.campaign`
+- **Severity:** MEDIUM
+- **File:** `development/frontend/src/components/entitlement/PatreonSettings.tsx`
+- **Lines:** 238–262
+
+**Reproduction steps:**
+1. Seed `fenrir:patreon-user-id` and `fenrir:entitlement` (tier=karl, active=true) in localStorage.
+2. Navigate to `/settings` as an anonymous (non-authenticated) user.
+3. Observe the Patreon section header.
+
+**Expected:** One KARL badge (the anonymous badge, `aria-label="Karl Supporter tier (anonymous)"`).
+
+**Actual:** Two KARL badges render simultaneously — `aria-label="Karl Supporter tier"` (line 241)
+AND `aria-label="Karl Supporter tier (anonymous)"` (line 257).
+
+**Root cause:** `isKarlActive` is computed as `isLinked && isActive && tier === "karl"` with no
+`isAuthenticated` guard. When an anonymous user has a seeded Karl entitlement, `isKarlActive = true`
+and renders the first badge (line 238). The anonymous badge condition (line 255) also evaluates to
+true, rendering a second badge.
+
+**Fix:** Add `isAuthenticated &&` to the derived state computations at lines 204–206:
+
+```typescript
+// Before:
+const isKarlActive = isLinked && isActive && tier === "karl";
+const isLinkedThrall = isLinked && !isActive && tier === "thrall";
+const isExpired = isLinked && !isActive && tier === "karl";
+
+// After:
+const isKarlActive = isAuthenticated && isLinked && isActive && tier === "karl";
+const isLinkedThrall = isAuthenticated && isLinked && !isActive && tier === "thrall";
+const isExpired = isAuthenticated && isLinked && !isActive && tier === "karl";
+```
+
+---
+
+## Code Review: Findings
+
+### Verified Correct
+
+- **`/api/patreon/membership-anon/route.ts`** — Rate limiting (10/min/IP), pid validation
+  (400 on missing/empty/whitespace), Cache-Control: no-store, no auth required (intentional),
+  correct 200 response shape (`tier`, `active`, `platform`, `checkedAt`), no token/secret
+  leakage in responses, method gating (GET only, POST returns 405).
+
+- **`EntitlementContext.tsx` dual-path `linkPatreon()`** — Anonymous path redirects to
+  `/api/patreon/authorize` without `id_token`. Authenticated path appends `id_token`. Correct.
+
+- **OAuth callback `?pid=` handling** — `pidParam` read before URL cleaning. `setPatreonUserId(pid)`
+  called only on `patreon=linked`. `patreon=denied` and `patreon=error` do NOT save pid. URL
+  cleaned via `window.history.replaceState()`. All correct.
+
+- **`refreshEntitlement()` anonymous path** — Reads pid from localStorage, calls
+  `/api/patreon/membership-anon`, updates cache and state. Graceful degradation when API
+  fails (keeps stale cache). Correct.
+
+- **`migrateAnonymousEntitlement()`** — Guards on `isAuthenticated` and valid token. POSTs
+  to `/api/patreon/migrate` with `{ patreonUserId: pid }`. Clears localStorage pid on
+  success. Handles `not_found` reason gracefully. Correct.
+
+- **Post-sign-in migration hook** — `useEffect` fires when `isAuthenticated` becomes true
+  and stored pid exists. `migrationAttemptedRef` prevents re-triggering. Correct.
+
+- **`settings/page.tsx` AuthGate removal** — `PatreonSettings` rendered directly, no
+  `<AuthGate>` wrapper. `PatreonGate` feature gates below it are unaffected. Correct.
+
+### Observations (Non-Blocking)
+
+1. **Rate limiter is in-memory** — Applies per-serverless-instance on Vercel. Documented
+   in route file and QA handoff. Not a defect.
+
+2. **Anonymous `unlinkPatreon()` only clears localStorage** — No server-side KV cleanup
+   for anonymous users (no auth token available). KV entry expires after 30-day TTL.
+   Documented in handoff. Not a defect.
+
+---
+
+## Security Review
+
+| Check | Result |
+|-------|--------|
+| `/api/patreon/membership-anon` does not leak tokens (access_token, refresh_token) | PASS |
+| `/api/patreon/membership-anon` does not leak Google sub | PASS |
+| 400 error responses contain only `error`/`error_description` fields | PASS |
+| Rate limiting on membership-anon: 10/min/IP | PASS |
+| `/api/patreon/authorize` intentionally exempt from requireAuth (anonymous OAuth flow) | PASS — documented exemption |
+| Anonymous pid stored in localStorage only (not in cookies or URL) | PASS |
+| URL parameters cleaned from browser URL after OAuth callback | PASS |
+| No pid saved on `patreon=denied` or `patreon=error` callbacks | PASS |
+| CLAUDE.md API Route Auth rule: all other routes unaffected | PASS |
+
+---
+
+## Acceptance Criteria Coverage
+
+| AC | Description | Status |
+|----|-------------|--------|
+| AC-1 | Anonymous users can see "Subscribe via Patreon" on /settings without signing in | PASS (TC-APC-01–06) |
+| AC-2 | `linkPatreon()` works without Google auth — redirects without id_token | PASS (TC-APC-07, 08) |
+| AC-3 | After anonymous linking, callback saves pid to localStorage and shows tier + nudge | PASS (TC-APC-09–15) |
+| AC-4 | `/api/patreon/membership-anon?pid=X` returns tier for anonymous users | PASS (TC-APC-16–23) |
+| AC-5 | Post-sign-in auto-migration: localStorage patreonUserId triggers POST /api/patreon/migrate | CANNOT AUTOMATE — verified by code review |
+| AC-6 | Existing authenticated flow unchanged | PASS (TC-APC-24, 25) |
+| AC-7 | PatreonSettings renders all 7 states correctly | PARTIAL — State 2 (anon+karl) renders duplicate badge (DEF-APC-001) |
+
+---
+
+## Playwright Tests: 34 new tests written, 33 passing (1 failing — DEF-APC-001)
+
+**Test file:** `quality/test-suites/anon-patreon-client/anon-patreon-client.spec.ts`
+
+| Test ID | Description | Result |
+|---------|-------------|--------|
+| TC-APC-01 | /settings loads without auth (HTTP 200) | PASS |
+| TC-APC-02 | Patreon section visible to anonymous users (no AuthGate) | PASS |
+| TC-APC-03 | "Subscribe via Patreon" button visible for anonymous unlinked user | PASS |
+| TC-APC-04 | Anonymous unlinked state shows "No sign-in required" description | PASS |
+| TC-APC-05 | Authenticated unlinked state shows Patreon section | PASS |
+| TC-APC-06 | /settings renders on mobile viewport (375px) with Patreon section | PASS |
+| TC-APC-07 | Subscribe button initiates navigation to /api/patreon/authorize | PASS |
+| TC-APC-08 | /api/patreon/authorize GET without id_token responds (not 404, not 401) | PASS |
+| TC-APC-09 | Patreon section visible with pid in localStorage (anon+linked state) | PASS |
+| TC-APC-10 | Anonymous linked state shows "Sign in with Google" nudge link | PASS |
+| TC-APC-11 | Anonymous linked state shows "Unlock Cloud Sync" nudge heading | PASS |
+| TC-APC-12 | URL query params cleaned after OAuth callback processing | PASS |
+| TC-APC-13 | pid saved in localStorage after linked callback with pid param | PASS |
+| TC-APC-14 | denied callback does NOT save pid | PASS |
+| TC-APC-15 | error callback does NOT save pid | PASS |
+| TC-APC-16 | GET without pid returns 400 error: missing_pid | PASS |
+| TC-APC-17 | GET with empty pid returns 400 error: missing_pid | PASS |
+| TC-APC-18 | GET with whitespace-only pid returns 400 error: missing_pid | PASS |
+| TC-APC-19 | GET with valid pid returns 200 with correct shape | PASS |
+| TC-APC-20 | GET response has Cache-Control: no-store header | PASS |
+| TC-APC-21 | GET response has Content-Type: application/json | PASS |
+| TC-APC-22 | POST method returns 405 | PASS |
+| TC-APC-23 | Rate limiting returns 429 after 10 requests (best-effort in distributed env) | PASS |
+| TC-APC-24 | /api/patreon/membership still requires auth (401 on missing token) | PASS |
+| TC-APC-25 | Authenticated unlinked state renders Patreon section | PASS |
+| TC-APC-26 | Karl badge appears only once (no duplicate badges) | FAIL — DEF-APC-001 |
+| TC-APC-27 | State 1 (anon+unlinked) renders "Subscribe via Patreon" button with aria-label | PASS |
+| TC-APC-28 | State 1 (anon+unlinked) description mentions "No sign-in required" | PASS |
+| TC-APC-29 | Migration state NOT visible in default state | PASS |
+| TC-APC-30 | Sign-in link points to /sign-in (relative, not external) | PASS |
+| TC-APC-31 | Sign-in nudge link has min-h-[44px] touch target | PASS |
+| TC-APC-32 | 200 response does not include tokens, secrets, or Google sub | PASS |
+| TC-APC-33 | 400 response contains only error/error_description fields | PASS |
+| TC-APC-34 | /api/patreon/authorize accepts anonymous requests (not 401) | PASS |
+
+**Also updated:** TC-SP-12 in `quality/test-suites/patreon/settings-page.spec.ts` — reversed
+assertion from "Patreon section NOT visible" (previous AuthGate behavior) to "Patreon section
+IS visible" (post-PR #110 behavior). TC-SP-12 now passes.
+
+---
+
+## Cannot-Automate Paths
+
+| Path | Reason | Manual Test Steps |
+|------|--------|-------------------|
+| AC-5: Post-sign-in auto-migration | Requires real Google OIDC auth and live Vercel KV | 1. Link Patreon anonymously. 2. Verify pid in localStorage. 3. Sign in with Google. 4. Verify migration spinner appears briefly. 5. Verify pid cleared from localStorage. 6. Verify Karl badge in authenticated state. |
+| Anonymous Patreon OAuth end-to-end | Requires real Patreon OAuth consent screen | See QA handoff Flow 1 |
 
 ---
 
@@ -250,14 +201,14 @@ Not blocking this PR.
 
 | Risk | Severity | Likelihood | Notes |
 |------|----------|------------|-------|
-| DEF-001: 500 crash on malformed webhook signature | HIGH | Certain if targeted | Any 32-char non-hex sig triggers it |
-| DEF-002: Karl tier granted to unrelated Patreon patrons | MEDIUM | Plausible | Any Patreon user can exploit |
-| ADV-001: @vercel/kv deprecation | LOW | Long-term | Functional now, needs migration tracking |
-| Rate limiter is per-instance (KL-003) | LOW | Known | Acknowledged in handoff, acceptable now |
+| DEF-APC-001: Duplicate KARL badge for anon Karl user | MEDIUM | Certain when anon Karl user visits /settings | One-line fix |
+| Rate limiter is per-instance | LOW | Known | Documented in handoff, acceptable |
+| Anonymous unlink is client-side only | LOW | By design | KV expires in 30 days |
 
 ---
 
-## Recommendation: HOLD FOR FIXES
+## Recommendation: HOLD FOR FIX
 
-Fix DEF-001 and DEF-002, then re-submit for QA. Both fixes are small and targeted.
-No architectural changes are required — the overall implementation structure is sound.
+Fix DEF-APC-001 (`isKarlActive` missing `isAuthenticated &&` guard), re-run TC-APC-26, then ship.
+The fix is a one-line change. All other acceptance criteria pass. The overall implementation
+is well-structured with correct security posture and graceful degradation.
