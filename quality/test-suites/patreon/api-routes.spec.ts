@@ -5,23 +5,31 @@
  * Tests for PR #93: Patreon OAuth API routes, webhook handler, and supporting
  * infrastructure (crypto utilities, Vercel KV entitlement store).
  *
+ * UPDATED for PR #109 (anonymous Patreon flow):
+ *   AC-1 was updated by Loki during PR #109 validation.
+ *   PR #109 removed requireAuth from /api/patreon/authorize to allow anonymous users
+ *   to start the Patreon OAuth flow without signing in with Google first.
+ *   The old AC-1 test (expects 401 on no auth) was a now-broken spec — it asserted
+ *   the old behavior, not the new design. Updated to assert the new contract.
+ *
  * Every assertion is derived from the design spec (route file docstrings and
  * CLAUDE.md API Route Auth rule) — not from what the implementation currently
  * outputs. These tests prove correctness, not behaviour.
  *
- * Acceptance criteria (from PR #93):
- *   AC-1: /api/patreon/authorize returns 401 without auth token
+ * Acceptance criteria (original from PR #93, AC-1 updated for PR #109):
+ *   AC-1: /api/patreon/authorize allows anonymous access (no requireAuth, no 401)
  *   AC-2: /api/patreon/callback returns 302 (redirect) with missing/invalid state param
  *   AC-3: /api/patreon/membership returns 401 without auth token
  *   AC-4: /api/patreon/webhook returns 400 with missing/invalid signature header
  *   AC-5: All 4 routes exist and respond (not 404)
  *
  * Spec references:
- *   - authorize/route.ts: auth-first, 401 on missing token
+ *   - authorize/route.ts (PR #109): exempt from requireAuth, anonymous mode allowed
  *   - callback/route.ts: no auth gate, missing code/state -> 302 to /settings?patreon=error
  *   - membership/route.ts: requireAuth first, 401 on missing token
  *   - webhook/route.ts: no auth gate, missing X-Patreon-Signature -> 400
  *   - CLAUDE.md API Route Auth: "must call requireAuth at the top ... return early if !auth.ok"
+ *     (Exception: /api/patreon/authorize is explicitly exempt per PR #109 ADR-009 amendment)
  *   - require-auth.ts: returns 401 JSON { error: "missing_token" } on no Bearer token
  *   - webhook/route.ts: returns 400 JSON { error: "missing_signature" } on no sig header
  *   - webhook/route.ts: returns 400 JSON { error: "invalid_signature" } on bad sig
@@ -105,41 +113,61 @@ test.describe("AC-5: All 4 routes exist (not 404)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// AC-1: /api/patreon/authorize — Auth enforcement
-// Spec: "behind requireAuth (ADR-008) because the user must be signed in with
-//        Google before linking Patreon"
-// Spec: missing Bearer token -> 401 JSON { error: "missing_token" }
+// AC-1: /api/patreon/authorize — Anonymous access allowed (PR #109 behavioral change)
+//
+// UPDATED by Loki (PR #109 validation): This route was behind requireAuth before PR #109.
+// PR #109 removed requireAuth from this route to allow anonymous Patreon linking.
+//
+// New spec (authorize/route.ts, PR #109):
+//   "This route is exempt from requireAuth because:
+//     1. It is accessed via full-page redirect (not a fetch call)
+//     2. Anonymous users must be able to start the Patreon OAuth flow
+//     3. CSRF protection is provided by the encrypted state parameter"
+//
+// Expected behavior without id_token:
+//   - 302 redirect to Patreon (when PATREON_CLIENT_ID is configured)
+//   - 500 { error: "not_configured" } (when PATREON_CLIENT_ID is absent, e.g. dev env)
+//   - 429 { error: "rate_limited" } (when rate limit of 5/min/IP is exceeded)
+//   NEVER: 401 (auth gate was deliberately removed)
 //
 // Rate limit budget for this route: 5 req/min.
 // AC-5 consumed 1. We have 4 remaining for these tests. Keep at most 3 here.
 // ---------------------------------------------------------------------------
 
-test.describe("AC-1: /api/patreon/authorize — auth enforcement", () => {
-  test("returns 401 with no Authorization header", async ({ request }) => {
-    // Spec: auth gate rejects requests with no token -> 401 { error: "missing_token" }
+test.describe("AC-1: /api/patreon/authorize — anonymous access permitted (no requireAuth)", () => {
+  test("does NOT return 401 with no Authorization header (anonymous access allowed)", async ({ request }) => {
+    // Spec (PR #109): requireAuth was removed — anonymous users may initiate the Patreon flow.
+    // Without id_token: route proceeds to anonymous mode.
+    //   - Configured env: 302 to Patreon
+    //   - Dev env (no PATREON_CLIENT_ID): 500 not_configured
+    // MUST NOT return 401 (that would indicate requireAuth was left in place — a regression).
     const response = await request.get(ROUTES.authorize, {
       headers: { Accept: "application/json" },
+      maxRedirects: 0,
     });
 
-    // Spec: missing token returns 401
-    expect(response.status()).toBe(401);
-
-    const body = await response.json();
-    // Spec: error key is "missing_token"
-    expect(body).toHaveProperty("error", "missing_token");
-    expect(body).toHaveProperty("error_description");
-    expect(typeof body.error_description).toBe("string");
+    // The critical assertion for PR #109: not 401 (auth gate removed)
+    expect(response.status()).not.toBe(401);
+    // Must also not be 404 (route must exist)
+    expect(response.status()).not.toBe(404);
   });
 
-  test("response Content-Type is application/json for 401", async ({ request }) => {
-    // Spec: NextResponse.json() always returns application/json
-    // This is request #3 to authorize (AC-5 + test above = 2)
+  test("response is JSON or redirect — not raw HTML — for all non-redirect responses", async ({ request }) => {
+    // Spec: all non-redirect error responses from this route are { error, error_description } JSON.
+    // Rate limit, not_configured, and invalid_token all return NextResponse.json().
     const response = await request.get(ROUTES.authorize, {
       headers: { Accept: "application/json" },
+      maxRedirects: 0,
     });
 
-    // Any auth-rejection response must be JSON, not HTML
-    // Spec: all error responses are { error, error_description } JSON objects
+    const status = response.status();
+
+    // If it is a redirect, no body to check — that is the happy path (configured env)
+    if ([302, 303, 307, 308].includes(status)) {
+      return; // Redirect is the correct outcome in a configured environment
+    }
+
+    // For non-redirect responses (500, 429) the body must be application/json
     const contentType = response.headers()["content-type"] ?? "";
     expect(contentType).toContain("application/json");
 
