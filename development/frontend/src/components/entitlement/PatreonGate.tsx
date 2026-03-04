@@ -21,6 +21,7 @@
  */
 
 import { useState, type ReactNode } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { SealedRuneModal } from "./SealedRuneModal";
 import type { PremiumFeature } from "@/lib/entitlement/types";
@@ -70,8 +71,17 @@ function GateSkeleton() {
  * @param props - Feature slug and children
  */
 export function PatreonGate({ feature, children }: PatreonGateProps) {
+  const { status } = useAuth();
   const { hasFeature, isLoading } = useEntitlement();
-  const [modalDismissed, setModalDismissed] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Anonymous users: render children directly — no Patreon-related UI.
+  // Per spec: "Anonymous users see no Patreon-related UI."
+  // The placeholder sections (e.g. "Coming soon to Karl supporters") are
+  // informational and safe to show; the Sealed Rune Modal is Patreon-specific.
+  if (status !== "authenticated") {
+    return <>{children}</>;
+  }
 
   // Loading state: show skeleton shimmer
   if (isLoading) {
@@ -83,33 +93,31 @@ export function PatreonGate({ feature, children }: PatreonGateProps) {
     return <>{children}</>;
   }
 
-  // Feature is locked: show the Sealed Rune Modal
-  // When dismissed, we show nothing (the gate remains locked)
+  // Feature is locked: show the locked placeholder with an option to open the modal.
+  // The modal is NOT auto-opened — this prevents multiple modals stacking when
+  // several PatreonGate components render on the same page.
   return (
     <>
       <SealedRuneModal
         feature={feature}
-        open={!modalDismissed}
-        onDismiss={() => setModalDismissed(true)}
+        open={modalOpen}
+        onDismiss={() => setModalOpen(false)}
       />
-      {/* When the modal is dismissed, show a locked placeholder */}
-      {modalDismissed && (
-        <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-          <span className="text-3xl text-gold/40 mb-3" aria-hidden="true">
-            &#5765;
-          </span>
-          <p className="text-sm text-rune font-body">
-            This feature requires a Karl subscription.
-          </p>
-          <button
-            type="button"
-            onClick={() => setModalDismissed(false)}
-            className="mt-3 text-sm text-gold underline hover:text-gold-bright transition-colors font-heading min-h-[44px] inline-flex items-center"
-          >
-            Learn more
-          </button>
-        </div>
-      )}
+      <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+        <span className="text-3xl text-gold/40 mb-3" aria-hidden="true">
+          &#5765;
+        </span>
+        <p className="text-sm text-rune font-body">
+          This feature requires a Karl subscription.
+        </p>
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className="mt-3 text-sm text-gold underline hover:text-gold-bright transition-colors font-heading min-h-[44px] inline-flex items-center"
+        >
+          Learn more
+        </button>
+      </div>
     </>
   );
 }

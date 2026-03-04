@@ -90,8 +90,8 @@ export function SealedRuneModal({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onDismiss()}>
       <DialogContent
         className="w-[92vw] max-w-[480px] max-h-[90vh] overflow-y-auto border-2 border-gold/40 bg-[#07070d] p-0 gap-0"
-        aria-labelledby="sealed-rune-heading"
-        aria-describedby="sealed-rune-desc"
+        aria-labelledby={`sealed-rune-heading-${feature}`}
+        aria-describedby={`sealed-rune-desc-${feature}`}
       >
         {/* Rune glyph — Algiz (protection) */}
         <div className="text-center pt-6 pb-2" aria-hidden="true">
@@ -102,7 +102,7 @@ export function SealedRuneModal({
 
         {/* Heading */}
         <DialogTitle
-          id="sealed-rune-heading"
+          id={`sealed-rune-heading-${feature}`}
           className="text-center font-display text-lg md:text-[22px] font-bold uppercase tracking-[0.12em] text-saga px-6 pb-4"
         >
           THIS RUNE IS SEALED
@@ -115,7 +115,7 @@ export function SealedRuneModal({
               {featureDef.name}
             </span>
             <DialogDescription
-              id="sealed-rune-desc"
+              id={`sealed-rune-desc-${feature}`}
               className="text-sm text-saga/90 leading-relaxed font-body"
             >
               {featureDesc.description}
