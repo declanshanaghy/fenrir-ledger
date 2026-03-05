@@ -234,7 +234,7 @@ Use these files to complete the task:
 
 ### 8. Deployment Cleanup — Remove Patreon Env Vars
 - **Task ID**: deploy-cleanup
-- **Depends On**: validate-all
+- **Depends On**: update-test-suites
 - **Assigned To**: fireman-decko
 - **Agent Type**: fireman-decko-principal-engineer
 - **Parallel**: false
@@ -289,7 +289,7 @@ The orchestrator (`/orchestrate`) reads this section to know how to execute.
 ### Story 3: Deployment Cleanup — Remove Patreon Env Vars
 - **Slug**: patreon-env-cleanup
 - **Branch**: chore/patreon-env-cleanup
-- **Depends On**: Story 2
+- **Depends On**: Story 1
 - **Assigned To**: fireman-decko
 - **Tasks**: deploy-cleanup
 - **Acceptance Criteria**:
