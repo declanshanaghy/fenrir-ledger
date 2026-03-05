@@ -27,6 +27,10 @@ import {
   getStripeEntitlement,
   setStripeEntitlement,
   getGoogleSubByStripeCustomerId,
+  setAnonymousStripeEntitlement,
+  getAnonymousStripeEntitlement,
+  isAnonymousStripeReverseIndex,
+  extractStripeCustomerIdFromReverseIndex,
 } from "@/lib/kv/entitlement-store";
 import { isStripe } from "@/lib/feature-flags";
 import { log } from "@/lib/logger";
@@ -40,7 +44,13 @@ const HANDLED_EVENTS = new Set<string>([
 
 /**
  * Handles checkout.session.completed — links the new Stripe customer to the
- * authenticated Google user via metadata.googleSub.
+ * authenticated Google user (via metadata.googleSub) or stores as anonymous.
+ *
+ * Dual path:
+ *   - metadata.googleSub present -> authenticated: store as entitlement:{googleSub},
+ *     reverse index stripe-customer:{customerId} -> {googleSub}
+ *   - metadata.googleSub absent -> anonymous: store as entitlement:stripe:{customerId},
+ *     reverse index stripe-customer:{customerId} -> stripe:{customerId}
  */
 async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
@@ -48,16 +58,8 @@ async function handleCheckoutCompleted(
   log.debug("handleCheckoutCompleted called", {
     sessionId: session.id,
     customerId: session.customer,
+    hasGoogleSub: !!session.metadata?.googleSub,
   });
-
-  const googleSub = session.metadata?.googleSub;
-  if (!googleSub) {
-    log.error("handleCheckoutCompleted: no googleSub in session metadata", {
-      sessionId: session.id,
-    });
-    log.debug("handleCheckoutCompleted returning", { status: 200, reason: "no googleSub" });
-    return NextResponse.json({ status: "ignored", reason: "no_google_sub" });
-  }
 
   const subscriptionId = typeof session.subscription === "string"
     ? session.subscription
@@ -87,25 +89,40 @@ async function handleCheckoutCompleted(
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
   const entitlement = buildEntitlementFromSubscription(subscription, customerId);
 
-  await setStripeEntitlement(googleSub, entitlement);
+  const googleSub = session.metadata?.googleSub;
 
-  log.debug("handleCheckoutCompleted returning", {
-    status: 200,
-    googleSub,
-    tier: entitlement.tier,
-    active: entitlement.active,
-  });
+  if (googleSub) {
+    // Authenticated path: store under Google sub with reverse index
+    await setStripeEntitlement(googleSub, entitlement);
+    log.debug("handleCheckoutCompleted returning (authenticated)", {
+      status: 200,
+      googleSub,
+      tier: entitlement.tier,
+      active: entitlement.active,
+    });
+  } else {
+    // Anonymous path: store under Stripe customer ID with anonymous reverse index
+    await setAnonymousStripeEntitlement(customerId, entitlement);
+    log.debug("handleCheckoutCompleted returning (anonymous)", {
+      status: 200,
+      stripeCustomerId: customerId,
+      tier: entitlement.tier,
+      active: entitlement.active,
+    });
+  }
 
   return NextResponse.json({
     status: "processed",
     eventType: "checkout.session.completed",
     tier: entitlement.tier,
     active: entitlement.active,
+    anonymous: !googleSub,
   });
 }
 
 /**
  * Handles customer.subscription.updated — updates the entitlement tier/status.
+ * Supports both authenticated and anonymous users via the reverse index.
  */
 async function handleSubscriptionUpdated(
   subscription: Stripe.Subscription,
@@ -119,14 +136,14 @@ async function handleSubscriptionUpdated(
     ? subscription.customer
     : subscription.customer.id;
 
-  const googleSub = await getGoogleSubByStripeCustomerId(customerId);
-  if (!googleSub) {
-    log.debug("handleSubscriptionUpdated: no Google sub for customer", { customerId });
+  const identity = await getGoogleSubByStripeCustomerId(customerId);
+  if (!identity) {
+    log.debug("handleSubscriptionUpdated: no identity for customer", { customerId });
     log.debug("handleSubscriptionUpdated returning", { status: 200, reason: "unknown customer" });
     return NextResponse.json({ status: "ignored", reason: "unknown_customer" });
   }
 
-  const existing = await getStripeEntitlement(googleSub);
+  const isAnonymous = isAnonymousStripeReverseIndex(identity);
   const { tier, active } = mapStripeStatusToTier(subscription.status);
 
   const entitlement = {
@@ -135,18 +152,34 @@ async function handleSubscriptionUpdated(
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscription.id,
     stripeStatus: subscription.status,
-    linkedAt: existing?.linkedAt ?? new Date().toISOString(),
+    linkedAt: new Date().toISOString(),
     checkedAt: new Date().toISOString(),
   };
 
-  await setStripeEntitlement(googleSub, entitlement);
-
-  log.debug("handleSubscriptionUpdated returning", {
-    status: 200,
-    tier,
-    active,
-    googleSub,
-  });
+  if (isAnonymous) {
+    // Anonymous path: look up existing to preserve linkedAt, then store under Stripe customer ID
+    const stripeId = extractStripeCustomerIdFromReverseIndex(identity);
+    const existing = await getAnonymousStripeEntitlement(stripeId);
+    entitlement.linkedAt = existing?.linkedAt ?? entitlement.linkedAt;
+    await setAnonymousStripeEntitlement(stripeId, entitlement);
+    log.debug("handleSubscriptionUpdated returning (anonymous)", {
+      status: 200,
+      tier,
+      active,
+      stripeCustomerId: stripeId,
+    });
+  } else {
+    // Authenticated path: store under Google sub
+    const existing = await getStripeEntitlement(identity);
+    entitlement.linkedAt = existing?.linkedAt ?? entitlement.linkedAt;
+    await setStripeEntitlement(identity, entitlement);
+    log.debug("handleSubscriptionUpdated returning (authenticated)", {
+      status: 200,
+      tier,
+      active,
+      googleSub: identity,
+    });
+  }
 
   return NextResponse.json({
     status: "processed",
@@ -158,6 +191,7 @@ async function handleSubscriptionUpdated(
 
 /**
  * Handles customer.subscription.deleted — downgrades to thrall.
+ * Supports both authenticated and anonymous users via the reverse index.
  */
 async function handleSubscriptionDeleted(
   subscription: Stripe.Subscription,
@@ -170,14 +204,14 @@ async function handleSubscriptionDeleted(
     ? subscription.customer
     : subscription.customer.id;
 
-  const googleSub = await getGoogleSubByStripeCustomerId(customerId);
-  if (!googleSub) {
-    log.debug("handleSubscriptionDeleted: no Google sub for customer", { customerId });
+  const identity = await getGoogleSubByStripeCustomerId(customerId);
+  if (!identity) {
+    log.debug("handleSubscriptionDeleted: no identity for customer", { customerId });
     log.debug("handleSubscriptionDeleted returning", { status: 200, reason: "unknown customer" });
     return NextResponse.json({ status: "ignored", reason: "unknown_customer" });
   }
 
-  const existing = await getStripeEntitlement(googleSub);
+  const isAnonymous = isAnonymousStripeReverseIndex(identity);
 
   const entitlement = {
     tier: "thrall" as const,
@@ -185,18 +219,32 @@ async function handleSubscriptionDeleted(
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscription.id,
     stripeStatus: "canceled",
-    linkedAt: existing?.linkedAt ?? new Date().toISOString(),
+    linkedAt: new Date().toISOString(),
     checkedAt: new Date().toISOString(),
   };
 
-  await setStripeEntitlement(googleSub, entitlement);
-
-  log.debug("handleSubscriptionDeleted returning", {
-    status: 200,
-    tier: "thrall",
-    active: false,
-    googleSub,
-  });
+  if (isAnonymous) {
+    const stripeId = extractStripeCustomerIdFromReverseIndex(identity);
+    const existing = await getAnonymousStripeEntitlement(stripeId);
+    entitlement.linkedAt = existing?.linkedAt ?? entitlement.linkedAt;
+    await setAnonymousStripeEntitlement(stripeId, entitlement);
+    log.debug("handleSubscriptionDeleted returning (anonymous)", {
+      status: 200,
+      tier: "thrall",
+      active: false,
+      stripeCustomerId: stripeId,
+    });
+  } else {
+    const existing = await getStripeEntitlement(identity);
+    entitlement.linkedAt = existing?.linkedAt ?? entitlement.linkedAt;
+    await setStripeEntitlement(identity, entitlement);
+    log.debug("handleSubscriptionDeleted returning (authenticated)", {
+      status: 200,
+      tier: "thrall",
+      active: false,
+      googleSub: identity,
+    });
+  }
 
   return NextResponse.json({
     status: "processed",

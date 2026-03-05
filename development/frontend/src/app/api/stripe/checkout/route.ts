@@ -1,19 +1,23 @@
 /**
  * POST /api/stripe/checkout
  *
- * Creates a Stripe Checkout Session for the authenticated user and returns
- * the session URL for client-side redirect.
+ * Creates a Stripe Checkout Session and returns the session URL for
+ * client-side redirect. Supports both authenticated and anonymous users.
  *
- * Behind requireAuth (ADR-008) + isStripe() feature flag guard.
+ * Behind isStripe() feature flag guard.
  *
- * Flow:
- *   1. Authenticate user via Google id_token
- *   2. Create Stripe Checkout Session with metadata linking to Google sub
+ * Flow (authenticated — Google id_token present):
+ *   1. Verify Google id_token from Authorization header
+ *   2. Create Stripe Checkout Session with metadata.googleSub
  *   3. Return the session URL for redirect
  *
- * The checkout session metadata includes `googleSub` so that the webhook
- * handler (checkout.session.completed) can map the Stripe customer to the
- * authenticated user.
+ * Flow (anonymous — no Authorization header):
+ *   1. Read `email` from the JSON request body
+ *   2. Create Stripe Checkout Session with customer_email (no googleSub metadata)
+ *   3. Return the session URL for redirect
+ *
+ * The checkout session metadata includes `googleSub` only for authenticated
+ * users, so the webhook handler can map authenticated vs anonymous.
  *
  * @see ADR-010 for the Stripe Direct integration decision
  */
@@ -55,14 +59,43 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Require Google authentication (ADR-008)
+  // --- Dual auth path: authenticated (Google id_token) or anonymous (email in body) ---
   const auth = await requireAuth(request);
-  if (!auth.ok) {
-    log.debug("POST /api/stripe/checkout returning", { status: 401, reason: "auth failed" });
-    return auth.response;
+  const isAuthenticated = auth.ok;
+
+  let customerEmail: string;
+  let googleSub: string | undefined;
+
+  if (isAuthenticated) {
+    customerEmail = auth.user.email;
+    googleSub = auth.user.sub;
+    log.debug("POST /api/stripe/checkout: authenticated user", { googleSub, customerEmail });
+  } else {
+    // Anonymous path — read email from request body
+    let body: { email?: string };
+    try {
+      body = await request.json() as { email?: string };
+    } catch {
+      log.debug("POST /api/stripe/checkout returning", { status: 400, error: "invalid_body" });
+      return NextResponse.json(
+        { error: "invalid_body", error_description: "Could not parse request body as JSON." },
+        { status: 400 },
+      );
+    }
+
+    if (!body.email || typeof body.email !== "string" || !body.email.includes("@")) {
+      log.debug("POST /api/stripe/checkout returning", { status: 400, error: "email_required" });
+      return NextResponse.json(
+        { error: "email_required", error_description: "A valid email address is required." },
+        { status: 400 },
+      );
+    }
+
+    customerEmail = body.email;
+    googleSub = undefined;
+    log.debug("POST /api/stripe/checkout: anonymous user", { customerEmail });
   }
 
-  const googleSub = auth.user.sub;
   const priceId = process.env.STRIPE_PRICE_ID;
 
   if (!priceId) {
@@ -87,11 +120,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           quantity: 1,
         },
       ],
+      customer_email: customerEmail,
       success_url: `${origin}/settings?stripe=success`,
       cancel_url: `${origin}/settings?stripe=cancel`,
-      metadata: {
-        googleSub,
-      },
+      metadata: googleSub ? { googleSub } : {},
       // Allow promotion codes
       allow_promotion_codes: true,
     });
@@ -111,13 +143,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     log.debug("POST /api/stripe/checkout returning", {
       status: 200,
       sessionId: session.id,
-      googleSub,
+      isAuthenticated,
+      googleSub: googleSub ?? "anonymous",
     });
     return NextResponse.json(response);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error("POST /api/stripe/checkout: session creation failed", {
-      googleSub,
+      isAuthenticated,
+      googleSub: googleSub ?? "anonymous",
       error: message,
     });
     log.debug("POST /api/stripe/checkout returning", { status: 500, error: "stripe_error" });
