@@ -55,6 +55,11 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Gleipnir Hunt Complete | [wireframes/easter-eggs/gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) | Fragment 4 (7th card save) + Fragment 6 (15s Valhalla idle) triggers, Gleipnir reward entry, DEF-001 fix |
 | **accessibility** | | |
 | Accessibility + UX Polish | [wireframes/accessibility/accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) | Focus ring spec, skip-nav, ARIA landmarks, heading hierarchy, touch target audit, mobile layouts, reduced-motion |
+| **stripe-direct** | | |
+| Stripe Settings — Subscription Status | [wireframes/stripe-direct/stripe-settings.html](wireframes/stripe-direct/stripe-settings.html) | StripeSettings component: 3 states (Thrall/Karl/Canceled), desktop + mobile, state machine, API flow |
+| SealedRuneModal — Stripe CTA | [wireframes/stripe-direct/sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html) | Premium feature paywall modal with Stripe Checkout redirect, anonymous + authenticated flows |
+| Upsell Banner — Stripe Variant | [wireframes/stripe-direct/upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html) | Dashboard upgrade banner for Thrall users, Stripe Checkout CTA, dismiss lifecycle |
+| Anonymous Checkout Email Form | [wireframes/stripe-direct/anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html) | Email collection modal for anonymous Stripe subscribers, validation states, loading, mobile |
 | **marketing** | | |
 | Marketing Site | [wireframes/marketing/marketing-site.html](wireframes/marketing/marketing-site.html) | 5-section static page: nav, hero, problems, features, steps, footer (updated: legal links in footer) |
 | Static Site Footer | [wireframes/marketing/static-site-footer.html](wireframes/marketing/static-site-footer.html) | Dedicated footer spec: brand, quote, runes, CTA, session link, legal row (Privacy Policy + Terms of Service), team credits; easter egg triggers preserved |
@@ -254,6 +259,72 @@ Single-page, no framework, inline CSS/JS. Five sections:
 **Footer legal links (new):** The footer now includes a legal links row between the Session Chronicles link and the team credits. Structure: `(c) 2026 Fenrir Ledger · Privacy Policy · Terms of Service`. Links navigate same-tab to `/static/privacy.html` and `/static/terms.html`. Required for Patreon OAuth compliance. See [static-site-footer.html](wireframes/marketing/static-site-footer.html) for the dedicated footer wireframe with full annotations.
 
 Easter egg placements visible in wireframe annotations (Gleipnir Hunt #5 on ©, Loki Mode on "Loki").
+
+---
+
+## Stripe Direct Integration
+
+### StripeSettings Component
+
+[-> stripe-settings.html](wireframes/stripe-direct/stripe-settings.html)
+
+Settings page component replacing PatreonSettings. Three subscription states:
+
+| State | Badge | Actions | Notes |
+|-------|-------|---------|-------|
+| Thrall (unsubscribed) | `THRALL` / Free tier | `[Subscribe for $3.99/month]` | Feature list shown. Anonymous users get email modal first. |
+| Karl (active) | `KARL` / Active | `[Manage Subscription]` `[Cancel]` | Next billing date shown. Both buttons route to Stripe Portal. |
+| Canceled | `KARL` / Canceled | `[Resubscribe]` `[Manage Subscription]` | Access-until date shown. Resubscribe creates new checkout session. |
+
+Key layout decisions:
+- Same card pattern as PatreonSettings (section heading + status + actions).
+- Works for both anonymous and authenticated users -- the only difference is the email collection step.
+- Billing history lives in Stripe Customer Portal (not in our UI).
+- Mobile: buttons stack vertically, full width.
+
+### SealedRuneModal -- Stripe CTA
+
+[-> sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html)
+
+Premium feature paywall modal. Appears when a Thrall user accesses a Karl-gated feature.
+
+Key layout decisions:
+- Rune icon (sealed glyph) + atmospheric heading (Voice 2) + locked feature name (dynamic, prop-driven).
+- CTA: "Subscribe for $3.99/month" -- price explicit, Voice 1.
+- "Not now" dismiss -- no permanent flag, modal reappears on next locked feature access.
+- Anonymous users: email modal opens first, then Stripe Checkout.
+- Authenticated users: direct redirect to Stripe Checkout.
+- Z-index: 210 (standard modal layer).
+
+### Upsell Banner -- Stripe Variant
+
+[-> upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html)
+
+Dashboard upgrade banner for Thrall users. Same placement as cloud-sync upsell banner (`grid-row: 2; grid-column: 1/3`).
+
+Key layout decisions:
+- Atmospheric line (Voice 2) + functional description (Voice 1) + "Upgrade to Karl" CTA + dismiss.
+- Shown to ALL Thrall users (both anonymous and authenticated).
+- CTA triggers Stripe Checkout (anonymous users get email modal first).
+- Dismiss flag: `fenrir:stripe_upsell_dismissed` (separate from cloud-sync dismiss flag).
+- This banner and the cloud-sync banner are mutually exclusive -- feature-flagged.
+- Re-entry points: /settings (StripeSettings) and SealedRuneModal.
+
+### Anonymous Checkout Email Form
+
+[-> anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html)
+
+Modal dialog for email collection before Stripe Checkout redirect. Only shown to anonymous (not-signed-in) users.
+
+Key layout decisions:
+- Single-field form: email address. Modal (not inline) -- shared component used by all subscribe surfaces.
+- Autocomplete="email" + type="email" for mobile keyboard optimization.
+- Input font-size: 16px on mobile (prevents iOS zoom on focus -- NON-NEGOTIABLE).
+- Three states: default (empty), validation error, loading/submitting.
+- "Sign in instead" secondary link for users who prefer account association.
+- Privacy note: "Your email is shared with Stripe for billing only."
+- After submit: redirect to Stripe Checkout with email as `customer_email`.
+- Z-index: 210 (standard modal layer).
 
 ---
 
