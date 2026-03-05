@@ -13,7 +13,7 @@
 ### Changes summary
 1. **PatreonGate renamed to SubscriptionGate** across entire codebase
 2. **StripeSettings component** built with 3 states (Thrall/Karl/Canceled)
-3. **AnonymousCheckoutModal** for anonymous user email collection before Stripe Checkout
+3. **AnonymousCheckoutModal removed** -- Stripe's hosted checkout page collects email natively
 4. **EntitlementContext updated** with `subscribeStripe()`, `openPortal()`, `unlinkStripe()` actions
 5. **SealedRuneModal updated** with Stripe CTA (subscribe button replaces Patreon link when isStripe())
 6. **UpsellBanner updated** to work in Stripe mode (Upgrade to Karl CTA)
@@ -29,7 +29,7 @@
 |------|-------------|
 | `src/components/entitlement/SubscriptionGate.tsx` | Renamed from PatreonGate, works for both platforms |
 | `src/components/entitlement/StripeSettings.tsx` | Stripe subscription settings (3 states) |
-| `src/components/entitlement/AnonymousCheckoutModal.tsx` | Email collection modal for anonymous Stripe checkout |
+| ~~`src/components/entitlement/AnonymousCheckoutModal.tsx`~~ | Removed -- Stripe handles email collection |
 | `src/lib/stripe/types.ts` | Stripe type definitions (from Story 1) |
 | `src/lib/stripe/api.ts` | Stripe SDK client (from Story 1) |
 | `src/lib/stripe/webhook.ts` | Webhook handler (from Story 1) |
@@ -42,7 +42,7 @@
 ### Modified files
 | File | Description |
 |------|-------------|
-| `src/components/entitlement/index.ts` | Barrel exports updated (SubscriptionGate, StripeSettings, AnonymousCheckoutModal) |
+| `src/components/entitlement/index.ts` | Barrel exports updated (SubscriptionGate, StripeSettings) |
 | `src/components/entitlement/SealedRuneModal.tsx` | Stripe CTA added alongside Patreon CTA |
 | `src/components/entitlement/UpsellBanner.tsx` | Stripe mode support (Upgrade to Karl CTA) |
 | `src/app/settings/page.tsx` | SubscriptionGate + conditional StripeSettings/PatreonSettings |
@@ -79,36 +79,26 @@
    - Anonymous user: clicking subscribe opens AnonymousCheckoutModal
    - Authenticated user: clicking subscribe calls POST /api/stripe/checkout
 
-2. **AnonymousCheckoutModal**
-   - As anonymous user, click any subscribe CTA
-   - Verify: email input with validation, "Continue to checkout" button
-   - Submit empty: "Please enter your email address."
-   - Submit "not-an-email": "Please enter a valid email address."
-   - Submit valid email: button changes to "Redirecting to Stripe..."
-   - "Sign in instead" link navigates to /sign-in
-   - Cancel/X/Escape dismisses
-
-3. **SealedRuneModal (Stripe CTA)**
+2. **SealedRuneModal (Stripe CTA)**
    - Navigate to `/settings` as Thrall user
    - Click "Learn more" on a locked feature
    - Verify: "Subscribe for $3.99/month" button, "Not now" dismiss, locked feature name shown
-   - Anonymous: subscribe CTA opens email modal
-   - Authenticated: subscribe CTA redirects to checkout
+   - Both anonymous and authenticated: subscribe CTA redirects to Stripe Checkout
 
-4. **UpsellBanner (Stripe mode)**
+3. **UpsellBanner (Stripe mode)**
    - Navigate to dashboard as Thrall user
    - Verify: "Upgrade to Karl" button, atmospheric text, dismiss X button
-   - Anonymous: clicking CTA opens email modal
+   - Both anonymous and authenticated: clicking CTA redirects to Stripe Checkout
    - Dismiss: sets `fenrir:stripe_upsell_dismissed` in localStorage, banner hidden permanently
 
-5. **SubscriptionGate (renamed from PatreonGate)**
+4. **SubscriptionGate (renamed from PatreonGate)**
    - Verify premium features are gated in Stripe mode
    - Both anonymous and authenticated Thrall users see the gate
    - Karl users see the feature content
 
 ### Test with SUBSCRIPTION_PLATFORM=patreon
 
-6. **Existing Patreon flow still works**
+5. **Existing Patreon flow still works**
    - PatreonSettings renders on /settings
    - SealedRuneModal shows Patreon CTA
    - UpsellBanner shows "Learn more" (Patreon flow)
@@ -116,30 +106,30 @@
 
 ### Security verification
 
-7. **SEV-002: No Origin header usage**
+6. **SEV-002: No Origin header usage**
    - `grep -rn "origin" src/app/api/stripe/` should NOT show `request.headers.get("origin")`
    - Checkout and portal routes use `process.env.APP_BASE_URL`
 
-8. **SEV-003: Stripe domains in CSP**
+7. **SEV-003: Stripe domains in CSP**
    - `next.config.ts` includes js.stripe.com, api.stripe.com, hooks.stripe.com
    - Browser console should not show CSP violations when Stripe.js loads
 
 ### Build verification
 
-9. `cd development/frontend && npx tsc --noEmit` -- passes
-10. `cd development/frontend && npx next build` -- succeeds
-11. `grep -rn 'PatreonGate' development/frontend/src/ --include='*.tsx' --include='*.ts'` -- returns only the rename comment
+8. `cd development/frontend && npx tsc --noEmit` -- passes
+9. `cd development/frontend && npx next build` -- succeeds
+10. `grep -rn 'PatreonGate' development/frontend/src/ --include='*.tsx' --include='*.ts'` -- returns only the rename comment
 
 ## Known limitations
 
 - Stripe subscription states (canceled with access until period end) require actual Stripe webhook events to populate `stripeStatus` and `currentPeriodEnd` in the context. These fields are wired but not yet populated from the membership API response (Story 1 membership endpoint returns `tier` and `active` but not status/period details). The UI gracefully handles null values.
-- Anonymous Stripe flow is client-side only (no server-side session). The email modal collects email for Stripe Checkout pre-fill.
+- Anonymous Stripe flow is client-side only (no server-side session). Stripe's hosted checkout page collects email.
 - The `unlinkStripe` action is wired in the context but not exposed in the StripeSettings UI (per wireframe: cancel routes to Stripe Portal).
 
 ## Suggested test focus areas
 
 1. Platform switching: toggling `SUBSCRIPTION_PLATFORM` between `patreon` and `stripe` should cleanly switch all UI
-2. Anonymous checkout flow: email validation, loading state, error handling
+2. Anonymous checkout flow: Stripe Checkout redirect, loading state, error handling
 3. Mobile responsiveness: all new components at 375px width
 4. Accessibility: modal focus trapping, aria labels, screen reader flow
 5. CSP: load the app with Stripe mode and verify no CSP errors in console
