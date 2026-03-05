@@ -46,33 +46,22 @@ BACKEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/backend-server.sh
   - Check if directory exists anyway (orphaned directory)
   - If neither exists, error with message that worktree not found
 
-### 3. Identify Ports
+### 3. Identify Port
 
-- Find which ports the worktree's servers are using:
-  - Check running processes in the worktree dir: `ps aux | grep "${REPO_ROOT}-trees/<BRANCH_NAME>"`
-  - Scan frontend ports 9654-9663 for a process whose working dir matches the worktree
-  - Scan backend ports 9754-9763 for a process whose working dir matches the worktree
-- Note both ports for stopping servers
+- Read the port from the `.port` file: `cat ${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend/.port 2>/dev/null`
+- If `.port` file doesn't exist, try to find processes in the worktree directory
 
 ### 4. Stop Servers
 
 **Stop Frontend Dev Server:**
-- If frontend port was identified:
+- If port was identified from `.port` file:
   ```
-  FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend .claude/scripts/frontend-server.sh stop
+  FENRIR_FRONTEND_DIR=${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend .claude/scripts/frontend-server.sh stop
   ```
-- Verify stopped: `FENRIR_FRONTEND_PORT=<FRONTEND_PORT> .claude/scripts/frontend-server.sh status`
+- Verify stopped: `FENRIR_FRONTEND_DIR=${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend .claude/scripts/frontend-server.sh status`
 
-**Stop Backend Server:**
-- If backend port was identified:
-  ```
-  FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=${REPO_ROOT}-trees/<BRANCH_NAME>/development/backend .claude/scripts/backend-server.sh stop
-  ```
-- Verify stopped: `FENRIR_BACKEND_PORT=<BACKEND_PORT> .claude/scripts/backend-server.sh status`
-
-- If ports couldn't be identified, try to find and kill any process in the worktree directory:
+- If `.port` file didn't exist, try to find and kill any process in the worktree directory:
   - `lsof -t +D <WORKTREE_DIR>/development/frontend | xargs kill 2>/dev/null`
-  - `lsof -t +D <WORKTREE_DIR>/development/backend | xargs kill 2>/dev/null`
 - Wait 2 seconds for processes to fully terminate
 
 ### 5. Remove Git Worktree

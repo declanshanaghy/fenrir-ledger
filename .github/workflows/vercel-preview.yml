@@ -4,8 +4,15 @@ on:
   push:
     branches-ignore: [main]
     paths:
-      - 'development/frontend/**'
-      - 'quality/**'
+      - 'development/frontend/src/**'
+      - 'development/frontend/public/**'
+      - 'development/frontend/package.json'
+      - 'development/frontend/package-lock.json'
+      - 'development/frontend/next.config.ts'
+      - 'development/frontend/tailwind.config.ts'
+      - 'development/frontend/tsconfig.json'
+      - 'development/frontend/playwright.config.ts'
+      - 'quality/test-suites/**'
   workflow_dispatch:
 
 permissions:

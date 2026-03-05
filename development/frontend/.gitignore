@@ -35,5 +35,6 @@ Thumbs.db
 /coverage
 .vercel
 
-# Dev server logs
+# Dev server logs + port file
 logs/
+.port
