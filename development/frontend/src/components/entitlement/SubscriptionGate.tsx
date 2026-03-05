@@ -94,7 +94,6 @@ interface SoftGateBannerProps {
 function SoftGateBanner({
   onSubscribe,
   isSubscribing,
-  onLearnMore,
 }: SoftGateBannerProps) {
   return (
     <div
@@ -126,7 +125,7 @@ function SoftGateBanner({
         onClick={onSubscribe}
         disabled={isSubscribing}
         className={[
-          "self-start sm:self-center px-4 py-2 text-xs font-heading font-bold tracking-wide",
+          "self-start sm:self-center inline-flex items-center px-4 py-2 text-xs font-heading font-bold tracking-wide",
           "border border-gold/50 text-gold",
           "hover:bg-gold/10 transition-colors",
           "rounded-sm whitespace-nowrap min-h-[44px]",
@@ -178,9 +177,10 @@ export function SubscriptionGate({
 
   // -- Soft mode ---------------------------------------------------------------
   if (mode === "soft") {
-    // While loading, show skeleton above children placeholder
+    // While loading in soft mode, render children directly (not a skeleton).
+    // The banner will appear once loading resolves if the user lacks entitlement.
     if (isLoading) {
-      return <GateSkeleton />;
+      return <>{children}</>;
     }
 
     // Feature is unlocked: render children without banner
