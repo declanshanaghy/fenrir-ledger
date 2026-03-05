@@ -234,14 +234,20 @@ IMPORTANT: **PLANNING ONLY** - Do not execute, build, or deploy. Output is a pla
    - In Freya's prompt, include this context: **"The user's name is Odin. He is the project owner and ultimate decision-maker for Fenrir Ledger. Address him as Odin. Interview Odin to clarify requirements for: <USER_PROMPT>. Ask about priorities, edge cases, UX preferences, and acceptance criteria. Use AskUserQuestion to conduct the interview. Summarize findings when done."**
    - Wait for Freya's summary before proceeding to step 3
    - Incorporate Freya's findings into the plan's acceptance criteria and solution approach
-3. Understand Codebase - Without subagents, directly understand existing patterns, architecture, and relevant files
-4. Design Solution - Develop technical approach including architecture decisions and implementation strategy
-5. Define Team Members - Use `ORCHESTRATION_PROMPT` (if provided) to guide team composition. Identify from TEAM_MEMBERS (see Variables). Document in plan.
-6. Define Step by Step Tasks - Use `ORCHESTRATION_PROMPT` (if provided) to guide task granularity and parallel/sequential structure. Write out tasks with IDs, dependencies, assignments. Document in plan.
-7. Generate Filename - Create a descriptive kebab-case filename based on the plan's main topic
-8. Save Plan - Write the plan to `PLAN_OUTPUT_DIRECTORY/<filename>.md`
-9. Commit Spec - Stage and commit the new spec file to the current branch: `git add PLAN_OUTPUT_DIRECTORY/<filename>.md && git commit -m "docs: add spec <filename>"`. Include `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>` in the commit message.
-10. Save & Report - Follow the `Report` section to write the plan to `PLAN_OUTPUT_DIRECTORY/<filename>.md` and provide a summary of key components
+3. **Luna Creates Wireframes** - If the plan involves UI changes (new components, modified screens, user-facing flows), spawn Luna to produce wireframes. Luna should also interview Odin about UX questions.
+   - Spawn Luna via: `Agent({ subagent_type: "luna-ux-designer", prompt: "..." })`
+   - In Luna's prompt, include: **"The user's name is Odin. Interview Odin about UX preferences using AskUserQuestion before producing wireframes. Create HTML5 wireframes (no theme styling) for: <UI components from the plan>. Write wireframes to ux/wireframes/<feature-slug>/. Questions to ask: layout preferences, interaction patterns, mobile behavior, copy/language preferences."**
+   - Wait for Luna's wireframes before proceeding to step 5
+   - Reference Luna's wireframes in the plan's Relevant Files section
+   - If the plan has NO UI changes (pure backend, infra, docs), skip this step
+4. Understand Codebase - Without subagents, directly understand existing patterns, architecture, and relevant files
+5. Design Solution - Develop technical approach including architecture decisions and implementation strategy
+6. Define Team Members - Use `ORCHESTRATION_PROMPT` (if provided) to guide team composition. Identify from TEAM_MEMBERS (see Variables). Document in plan.
+7. Define Step by Step Tasks - Use `ORCHESTRATION_PROMPT` (if provided) to guide task granularity and parallel/sequential structure. Write out tasks with IDs, dependencies, assignments. Document in plan.
+8. Generate Filename - Create a descriptive kebab-case filename based on the plan's main topic
+9. Save Plan - Write the plan to `PLAN_OUTPUT_DIRECTORY/<filename>.md`
+10. Commit Spec - Stage and commit the new spec file to the current branch: `git add PLAN_OUTPUT_DIRECTORY/<filename>.md && git commit -m "docs: add spec <filename>"`. Include `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>` in the commit message.
+11. Save & Report - Follow the `Report` section to write the plan to `PLAN_OUTPUT_DIRECTORY/<filename>.md` and provide a summary of key components
 
 ## Plan Format
 

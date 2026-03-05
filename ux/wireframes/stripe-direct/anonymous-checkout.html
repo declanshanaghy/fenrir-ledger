@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Anonymous Checkout Email Form</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* -- Page layout -------------------------------------------------------- */
+    .page { display: flex; flex-direction: column; gap: 48px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* -- Modal backdrop + shell --------------------------------------------- */
+    /*
+     * The Anonymous Checkout Email Form is a MODAL DIALOG.
+     *
+     * Rationale for modal (not inline):
+     *   - The email prompt is a brief, focused step in a redirect flow.
+     *     It appears between the user clicking "Subscribe" and being
+     *     redirected to Stripe Checkout. Inline would disrupt the
+     *     settings card layout and confuse the user about where they are.
+     *   - A modal keeps the user in the subscribe flow -- it is a
+     *     single-field checkpoint, not a new page or new context.
+     *   - The modal is only shown to anonymous users. Authenticated users
+     *     bypass this entirely (their Google email is used automatically).
+     *
+     * Trigger: anonymous user clicks any Stripe subscribe CTA
+     *   (StripeSettings, SealedRuneModal, UpsellBanner).
+     * Dismiss: X close or backdrop click -- returns to the previous state
+     *   without starting checkout.
+     *
+     * Z-index: 210 (standard modal layer).
+     *
+     * After submit: POST /api/stripe/checkout-session with the entered email.
+     * Stripe Checkout will use this email as customer_email (pre-filled).
+     */
+    .modal-backdrop {
+      border: 1px solid;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 360px;
+    }
+    .modal-shell {
+      border: 1px solid;
+      max-width: 400px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* -- Modal header ------------------------------------------------------- */
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid;
+    }
+    .modal-title {
+      font-size: 15px;
+      font-weight: bold;
+    }
+    .btn-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    /* -- Modal body --------------------------------------------------------- */
+    .modal-body {
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .modal-desc {
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .modal-atmos {
+      font-size: 11px;
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    /* -- Email form --------------------------------------------------------- */
+    .email-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-label {
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .form-input {
+      padding: 10px 12px;
+      border: 1px solid;
+      font-size: 14px;
+      font-family: inherit;
+      min-height: 44px;
+      width: 100%;
+    }
+    .form-hint {
+      font-size: 11px;
+      opacity: 0.6;
+    }
+    .form-error {
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    /* -- Submit button ------------------------------------------------------ */
+    .btn-submit {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      font-family: inherit;
+      background: none;
+      min-height: 44px;
+    }
+    .btn-submit[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* -- Loading state ------------------------------------------------------ */
+    .loading-indicator {
+      font-size: 12px;
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    /* -- Privacy note ------------------------------------------------------- */
+    .privacy-note {
+      font-size: 10px;
+      text-align: center;
+      line-height: 1.5;
+      opacity: 0.6;
+    }
+
+    /* -- Modal footer ------------------------------------------------------- */
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid;
+      display: flex;
+      justify-content: center;
+    }
+    .btn-cancel {
+      padding: 8px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+      background: none;
+      min-height: 44px;
+    }
+
+    /* -- Mobile frame ------------------------------------------------------- */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+    }
+    .mobile-modal-backdrop {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 340px;
+    }
+    .mobile-modal-shell {
+      border: 1px solid;
+      width: 92%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* -- Utilities ---------------------------------------------------------- */
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note-block {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.6;
+      border: 1px dashed;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+    .scenario-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .scenario-col { display: flex; flex-direction: column; gap: 8px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+
+  <!-- =====================================================================
+       DESIGN DECISION -- Email collection: Modal vs. Inline
+       Luna's recommendation: MODAL DIALOG.
+
+       Rationale:
+         - The email prompt is a brief step in a redirect flow. The user
+           is about to leave the app for Stripe Checkout. A modal signals
+           "one quick thing before we send you there."
+         - Inline would mean embedding an email field inside every surface
+           that has a subscribe CTA (StripeSettings, SealedRuneModal,
+           UpsellBanner). That is 3+ integrations vs. 1 shared modal.
+         - The modal is a single shared component: <AnonymousCheckoutModal>.
+           Any subscribe CTA for anonymous users opens this modal.
+         - After submitting the email, the user is immediately redirected
+           to Stripe Checkout. No intermediate state.
+
+       The modal is ONLY shown to anonymous (not-signed-in) users.
+       Authenticated users bypass this entirely.
+
+       OPEN QUESTION FOR ODIN:
+         Should we offer a "Sign in instead" option in this modal?
+         Current best guess: yes, as a secondary link -- not a button.
+         Users who have a Google account might prefer to sign in first,
+         which associates their subscription with their account.
+  ===================================================================== -->
+
+
+  <!-- =====================================================================
+       SCENARIO 1 -- Desktop: Email Form (default state)
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 -- Desktop -- Email Form (empty, ready for input)</div>
+
+    <div class="modal-backdrop">
+
+      <div class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="email-heading-1">
+
+        <div class="modal-header">
+          <h1 class="modal-title" id="email-heading-1">Enter your email</h1>
+          <button class="btn-close" type="button" aria-label="Cancel">x</button>
+        </div>
+
+        <div class="modal-body">
+
+          <!-- Atmospheric context (Voice 2) -->
+          <p class="modal-atmos" aria-hidden="true">
+            Name yourself, and the bond is forged.
+          </p>
+
+          <!-- Functional description (Voice 1) -->
+          <p class="modal-desc">
+            We need your email to create your subscription. You will be
+            redirected to Stripe to complete payment.
+          </p>
+
+          <!-- Email form -->
+          <form class="email-form" novalidate>
+            <div class="form-field">
+              <label class="form-label" for="checkout-email">Email address</label>
+              <input
+                class="form-input"
+                type="email"
+                id="checkout-email"
+                name="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+                aria-describedby="email-hint"
+              />
+              <p class="form-hint" id="email-hint">
+                This email will be used for your Stripe account and receipts.
+              </p>
+            </div>
+
+            <!--
+              Submit button:
+              - Validates email format (HTML5 type="email" + JS validation).
+              - On valid: POST /api/stripe/checkout-session with { email, priceId }.
+              - On success: redirect to Stripe Checkout URL.
+              - On error: show inline error message below the input.
+              - Button disabled while submitting (loading state).
+            -->
+            <button class="btn-submit" type="submit">
+              Continue to checkout
+            </button>
+          </form>
+
+          <!-- Privacy assurance -->
+          <p class="privacy-note">
+            Your email is shared with Stripe for billing only.
+            We do not send marketing emails.
+          </p>
+
+          <!-- Optional: Sign in instead -->
+          <!--
+            For users who have a Google account and want to associate
+            their subscription with it. This is a secondary path.
+            Implementation: navigates to /sign-in, then after auth
+            the subscribe flow continues with the Google email.
+          -->
+          <p style="font-size: 11px; text-align: center;">
+            Have a Google account? <a href="#" style="text-decoration: underline;">Sign in instead</a>
+          </p>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-cancel" type="button">Cancel</button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      Modal appears when an anonymous user clicks any Stripe subscribe CTA.<br/>
+      Single field: email address. Autocomplete="email" for mobile keyboard optimization.<br/>
+      "Continue to checkout" submits the email and redirects to Stripe Checkout.<br/>
+      "Sign in instead" is a secondary path for users who want account association.<br/>
+      Privacy note: brief, honest -- no marketing emails, billing only.<br/>
+      The modal is a shared component -- all subscribe surfaces use it for anonymous users.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 2 -- Desktop: Validation Error State
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 -- Desktop -- Validation Error</div>
+
+    <div class="modal-backdrop">
+
+      <div class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="email-heading-2">
+
+        <div class="modal-header">
+          <h1 class="modal-title" id="email-heading-2">Enter your email</h1>
+          <button class="btn-close" type="button" aria-label="Cancel">x</button>
+        </div>
+
+        <div class="modal-body">
+
+          <p class="modal-desc">
+            We need your email to create your subscription.
+          </p>
+
+          <form class="email-form" novalidate>
+            <div class="form-field">
+              <label class="form-label" for="checkout-email-err">Email address</label>
+              <input
+                class="form-input"
+                type="email"
+                id="checkout-email-err"
+                name="email"
+                value="not-an-email"
+                autocomplete="email"
+                required
+                aria-invalid="true"
+                aria-describedby="email-error"
+                style="border-width: 2px;"
+              />
+              <!--
+                Error styling note:
+                The thick border above (2px) represents the error state visually.
+                In the theme, this would be border-destructive or border-red.
+                The wireframe uses only border-width to indicate emphasis.
+              -->
+              <p class="form-error" id="email-error" role="alert">
+                Please enter a valid email address.
+              </p>
+            </div>
+
+            <button class="btn-submit" type="submit">
+              Continue to checkout
+            </button>
+          </form>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-cancel" type="button">Cancel</button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      Validation error state: shown after submit with invalid email.<br/>
+      Error message: <code>role="alert"</code> for screen reader announcement.<br/>
+      Input: <code>aria-invalid="true"</code> + <code>aria-describedby</code> pointing to error message.<br/>
+      Border emphasis (2px) indicates error visually -- theme adds color.<br/>
+      Button remains enabled -- user can retry immediately after fixing input.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 3 -- Desktop: Loading / Submitting State
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 -- Desktop -- Submitting (Loading State)</div>
+
+    <div class="modal-backdrop">
+
+      <div class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="email-heading-3">
+
+        <div class="modal-header">
+          <h1 class="modal-title" id="email-heading-3">Enter your email</h1>
+          <!-- X close disabled during submission -->
+        </div>
+
+        <div class="modal-body">
+
+          <p class="modal-desc">
+            Creating your checkout session...
+          </p>
+
+          <form class="email-form" novalidate>
+            <div class="form-field">
+              <label class="form-label" for="checkout-email-load">Email address</label>
+              <input
+                class="form-input"
+                type="email"
+                id="checkout-email-load"
+                name="email"
+                value="user@example.com"
+                disabled
+                style="opacity: 0.6;"
+              />
+            </div>
+
+            <button class="btn-submit" type="submit" disabled>
+              Redirecting to Stripe...
+            </button>
+            <!--
+              Loading state:
+              - Input disabled (user cannot change email during submission)
+              - Button disabled + text changes to "Redirecting to Stripe..."
+              - X close button disabled (prevent abandoning mid-request)
+              - On success: window.location.href = checkoutUrl (redirect)
+              - On error: re-enable form, show error message below input
+            -->
+
+            <p class="loading-indicator" aria-live="polite">
+              Creating checkout session...
+            </p>
+          </form>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      Loading state: input + buttons disabled, copy changes to "Redirecting to Stripe..."<br/>
+      <code>aria-live="polite"</code> on loading indicator for screen reader announcement.<br/>
+      X close disabled during submission to prevent race conditions.<br/>
+      On API error: re-enable form, show error: "Something went wrong. Please try again."<br/>
+      On success: immediate redirect -- user should see Stripe Checkout within 1-2 seconds.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 4 -- Mobile (375px): Email Form
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 4 -- Mobile 375px -- Email Form</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">375px frame</div>
+        <div class="mobile-frame">
+          <div class="mobile-modal-backdrop">
+
+            <div class="mobile-modal-shell" role="dialog" aria-modal="true" aria-labelledby="email-heading-m">
+
+              <div class="modal-header" style="padding: 12px 14px;">
+                <h1 class="modal-title" id="email-heading-m" style="font-size: 14px;">Enter your email</h1>
+                <button class="btn-close" type="button" aria-label="Cancel" style="font-size: 14px;">x</button>
+              </div>
+
+              <div class="modal-body" style="padding: 18px 14px; gap: 14px;">
+
+                <p class="modal-desc" style="font-size: 12px;">
+                  We need your email to create your subscription.
+                </p>
+
+                <form class="email-form" novalidate style="gap: 10px;">
+                  <div class="form-field">
+                    <label class="form-label" for="checkout-email-m" style="font-size: 11px;">Email address</label>
+                    <input
+                      class="form-input"
+                      type="email"
+                      id="checkout-email-m"
+                      name="email"
+                      placeholder="you@example.com"
+                      autocomplete="email"
+                      required
+                      style="font-size: 16px;"
+                    />
+                    <!--
+                      Font-size: 16px on mobile input prevents iOS zoom on focus.
+                      This is a non-negotiable accessibility requirement.
+                    -->
+                    <p class="form-hint" style="font-size: 10px;">
+                      Used for Stripe billing and receipts.
+                    </p>
+                  </div>
+
+                  <button class="btn-submit" type="submit" style="font-size: 13px;">
+                    Continue to checkout
+                  </button>
+                </form>
+
+                <p style="font-size: 10px; text-align: center;">
+                  Have a Google account? <a href="#" style="text-decoration: underline;">Sign in instead</a>
+                </p>
+
+              </div>
+
+              <div class="modal-footer" style="padding: 10px 14px;">
+                <button class="btn-cancel" type="button" style="font-size: 11px;">Cancel</button>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="scenario-col" style="max-width: 380px;">
+        <div class="col-label">Mobile rules</div>
+        <p class="note">
+          Modal: <code>w-[92vw] max-w-[340px]</code> -- same mobile modal convention.<br/>
+          Email input: <code>font-size: 16px</code> to prevent iOS zoom on focus. NON-NEGOTIABLE.<br/>
+          <code>autocomplete="email"</code> + <code>type="email"</code> triggers email keyboard on mobile.<br/>
+          Atmospheric line hidden on mobile to save space.<br/>
+          All touch targets: min 44px height.<br/>
+          "Sign in instead" link maintained -- important alternative path on mobile.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       ACCESSIBILITY SUMMARY
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Accessibility Requirements</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size: 12px;">
+      <table style="border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr style="border-bottom: 1px solid;">
+            <th style="text-align: left; padding: 6px 8px;">Element</th>
+            <th style="text-align: left; padding: 6px 8px;">Requirement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Modal dialog</td>
+            <td style="padding: 6px 8px;"><code>role="dialog"</code> + <code>aria-modal="true"</code> + <code>aria-labelledby</code> bound to heading. Focus trapped inside modal.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Email input</td>
+            <td style="padding: 6px 8px;"><code>type="email"</code>, <code>autocomplete="email"</code>, associated <code>&lt;label&gt;</code>, <code>aria-describedby</code> for hint/error text. Receives focus on modal open.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Error message</td>
+            <td style="padding: 6px 8px;"><code>role="alert"</code> for live announcement. Input gets <code>aria-invalid="true"</code> when in error state.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Submit button</td>
+            <td style="padding: 6px 8px;">Full text label. Disabled state communicated via <code>aria-disabled="true"</code> (not just visual opacity).</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Loading indicator</td>
+            <td style="padding: 6px 8px;"><code>aria-live="polite"</code> -- screen readers announce the loading text without interrupting.</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 8px;">Escape key</td>
+            <td style="padding: 6px 8px;">Closes modal (same as Cancel). Disabled during loading state.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       INTERACTION SPECIFICATION -- Anonymous Checkout Flow
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Interaction Specification -- Anonymous Checkout Flow</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size: 12px;">
+
+      <p style="font-weight: bold; margin-bottom: 8px;">Flow Diagram (Mermaid -- render in wireframes.md)</p>
+      <pre style="font-size: 11px; padding: 8px; border: 1px solid; white-space: pre-wrap;">
+stateDiagram-v2
+    [*] --> Closed: Modal not shown
+    Closed --> Open: Anonymous user clicks subscribe CTA
+    Open --> Validating: User submits email
+    Validating --> Error: Invalid email format
+    Error --> Validating: User fixes email + resubmits
+    Validating --> Submitting: Email valid
+    Submitting --> Redirecting: API returns checkout URL
+    Submitting --> APIError: API request fails
+    APIError --> Open: User retries
+    Redirecting --> [*]: window.location.href = checkoutUrl
+    Open --> Closed: Cancel / X / Escape / Backdrop click
+      </pre>
+
+      <p style="font-weight: bold; margin-bottom: 8px; margin-top: 12px;">Email validation rules</p>
+      <ul style="padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
+        <li>Required field -- cannot be empty.</li>
+        <li>Must match email format (HTML5 <code>type="email"</code> + JS regex for edge cases).</li>
+        <li>No maximum length enforced on the client (Stripe handles server-side validation).</li>
+        <li>Validation runs on blur and on submit.</li>
+        <li>Error clears when user starts typing (onChange).</li>
+      </ul>
+
+      <p style="font-weight: bold; margin-bottom: 8px; margin-top: 12px;">Error states</p>
+      <ul style="padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
+        <li><strong>Empty:</strong> "Please enter your email address."</li>
+        <li><strong>Invalid format:</strong> "Please enter a valid email address."</li>
+        <li><strong>API error:</strong> "Something went wrong. Please try again." (generic -- do not expose Stripe errors).</li>
+      </ul>
+
+    </div>
+  </section>
+
+  <p class="note" style="text-align: center; padding-bottom: 24px;">
+    Wireframe -- anonymous-checkout.html -- Fenrir Ledger -- Anonymous email collection modal -- No theme styling applied
+  </p>
+
+</div>
+
+</body>
+</html>
