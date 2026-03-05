@@ -171,11 +171,12 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 - [quality/README.md](quality/README.md) — Index of all QA artifacts, verdicts, and test execution guide
 - [quality/test-suites/](quality/test-suites/) — Playwright test suites: easter eggs, navigation, accessibility, responsive, import, valhalla, layout, patreon, anon-patreon-client, feature-flags, theme-toggle (216+ tests)
-- [quality/test-suites/theme-toggle/theme-foundation.spec.ts](quality/test-suites/theme-toggle/theme-foundation.spec.ts) — 20-test suite: PR #116 Story 1 theme foundation (17 pass, 3 fail — DEF-TF-001)
+- [quality/test-suites/theme-toggle/theme-toggle-ui.spec.ts](quality/test-suites/theme-toggle/theme-toggle-ui.spec.ts) — 13-test suite: PR #117 Story 2 theme toggle UI, color audit, design docs (13 pass — PASS)
+- [quality/test-suites/theme-toggle/theme-foundation.spec.ts](quality/test-suites/theme-toggle/theme-foundation.spec.ts) — 20-test suite: PR #116 Story 1 theme foundation (19 pass, 1 pre-existing fail — TC-TF-019)
 - [quality/test-suites/feature-flags/feature-flags.spec.ts](quality/test-suites/feature-flags/feature-flags.spec.ts) — 12-test suite: PR #113 feature flag registry + Patreon route guards (all 7 routes verified in default mode)
 - [quality/test-suites/anon-patreon-client/anon-patreon-client.spec.ts](quality/test-suites/anon-patreon-client/anon-patreon-client.spec.ts) — 34-test suite: PR #110 anonymous Patreon client AC-1 through AC-7
 - [quality/test-plan.md](quality/test-plan.md) — Test strategy and coverage plan
-- [quality/quality-report.md](quality/quality-report.md) — Latest QA verdict: PR #116 FAIL — DEF-TF-001 critical (.dark CSS variable block absent from compiled CSS)
+- [quality/quality-report.md](quality/quality-report.md) — Latest QA verdict: PR #117 PASS — Story 2 theme toggle UI, color audit, and design docs all passing
 
 ### ᚠ Pack Operations
 
