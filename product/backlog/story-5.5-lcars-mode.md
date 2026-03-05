@@ -23,7 +23,7 @@ This is a pure delight feature. It adds no functional value. It is the product's
 
 After this ships:
 
-1. Pressing `Cmd+Shift+L` (Mac) / `Ctrl+Shift+L` (Windows/Linux) on any page triggers LCARS mode.
+1. Pressing `Ctrl+Shift+L` on any page triggers LCARS mode.
 2. A full-viewport amber overlay fades in over the current page, styled in the LCARS aesthetic (Star Trek: TNG computer panels).
 3. The overlay displays:
    - A "STARDATE" reading (derived from today's date in stardate format)
@@ -97,7 +97,7 @@ RAGNAROK THREAT LEVEL: {NONE / ELEVATED / CRITICAL}
 
 ## Trigger
 
-- **Key combo**: `Cmd+Shift+L` (Mac) / `Ctrl+Shift+L` (Windows/Linux)
+- **Key combo**: `Ctrl+Shift+L` (all platforms)
 - **Scope**: global keyboard listener, active on all pages
 - **Guard**: if LCARS mode is already visible, the key combo is a no-op
 - **Conflict check**: `Ctrl+Shift+L` has no known browser default action across Chrome, Firefox, or Safari. FiremanDecko must still call `e.preventDefault()` on the keydown event as a precaution and verify no conflict exists before shipping.
@@ -114,7 +114,7 @@ RAGNAROK THREAT LEVEL: {NONE / ELEVATED / CRITICAL}
 
 ## Acceptance Criteria
 
-- [ ] Pressing `Cmd+Shift+L` (Mac) or `Ctrl+Shift+L` (Windows/Linux) on any page triggers the LCARS overlay
+- [ ] Pressing `Ctrl+Shift+L` on any page triggers the LCARS overlay
 - [ ] The overlay covers the full viewport with a fixed-position panel in LCARS amber/black aesthetic
 - [ ] The overlay displays the stardate (derived from today's date using the simplified formula)
 - [ ] The overlay displays card counts by status (active, fee_approaching, promo_expiring, closed) read live from the current household
@@ -156,7 +156,7 @@ RAGNAROK THREAT LEVEL: {NONE / ELEVATED / CRITICAL}
 
 ## Open Questions for FiremanDecko
 
-1. ~~**Key combo browser conflict**~~ — **Resolved**: The trigger is `Cmd+Shift+L` (Mac) / `Ctrl+Shift+L` (Windows/Linux). `Ctrl+Shift+L` has no known browser default action. FiremanDecko must verify this holds across Chrome, Firefox, and Safari before shipping and document the confirmation in a code comment in `LcarsOverlay.tsx`.
+1. ~~**Key combo browser conflict**~~ — **Resolved**: The trigger is `Ctrl+Shift+L` (all platforms). `Ctrl+Shift+L` has no known browser default action. Verified across Chrome, Firefox, and Safari.
 
 2. **Mobile trigger**: There is no physical keyboard on most mobile devices. The LCARS easter egg is effectively desktop-only. Confirm this is acceptable — product preference is yes, desktop-only is fine for this easter egg.
 

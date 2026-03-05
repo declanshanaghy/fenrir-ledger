@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { SealedRuneModal } from "./SealedRuneModal";
 import type { PremiumFeature } from "@/lib/entitlement/types";
+import { isPatreon } from "@/lib/feature-flags";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -74,6 +75,12 @@ export function PatreonGate({ feature, children }: PatreonGateProps) {
   const { status } = useAuth();
   const { hasFeature, isLoading } = useEntitlement();
   const [modalOpen, setModalOpen] = useState(false);
+
+  // When Patreon is not the active platform, render children unconditionally.
+  // Premium features should remain accessible — Stripe gating is not built yet.
+  if (!isPatreon()) {
+    return <>{children}</>;
+  }
 
   // Anonymous users: render children directly — no Patreon-related UI.
   // Per spec: "Anonymous users see no Patreon-related UI."
