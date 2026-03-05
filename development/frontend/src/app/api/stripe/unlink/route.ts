@@ -4,7 +4,7 @@
  * Cancels the Stripe subscription and removes the entitlement for the
  * authenticated user.
  *
- * Behind requireAuth (ADR-008) + isStripe() feature flag guard.
+ * Behind requireAuth (ADR-008).
  *
  * Logic:
  *   1. Authenticate the user via Google id_token (requireAuth)
@@ -23,20 +23,11 @@ import {
   getStripeEntitlement,
   deleteStripeEntitlement,
 } from "@/lib/kv/entitlement-store";
-import { isStripe } from "@/lib/feature-flags";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/stripe/unlink called");
-
-  if (!isStripe()) {
-    log.debug("POST /api/stripe/unlink returning", { status: 404, reason: "stripe disabled" });
-    return NextResponse.json(
-      { error: "Stripe integration is disabled" },
-      { status: 404 },
-    );
-  }
 
   // Rate limit by IP
   const ip =

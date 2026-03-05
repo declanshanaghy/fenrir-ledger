@@ -311,6 +311,18 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
         )}
       </div>
 
+      {/* Format help */}
+      <div className="text-xs font-body text-muted-foreground">
+        <p className="font-heading text-foreground text-xs mb-1.5 tracking-wide">
+          How to export CSV
+        </p>
+        <ul className="space-y-1 list-disc list-inside">
+          <li>Google Sheets: File &gt; Download &gt; Comma-separated values (.csv)</li>
+          <li>Excel: File &gt; Save As &gt; CSV UTF-8</li>
+          <li>Numbers: File &gt; Export To &gt; CSV</li>
+        </ul>
+      </div>
+
       {/* Actions */}
       <div className="flex justify-between gap-2">
         <button
@@ -326,7 +338,7 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
           disabled={dropState !== "accepted"}
           className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors bg-primary text-primary-foreground hover:bg-gold-bright disabled:opacity-40 disabled:cursor-not-allowed h-11 px-6 min-w-[44px]"
         >
-          Import CSV
+          Begin Import
         </button>
       </div>
     </div>

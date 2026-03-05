@@ -15,8 +15,6 @@ export type { SealedRuneModalProps } from "./SealedRuneModal";
 export { UpsellBanner } from "./UpsellBanner";
 export type { UpsellBannerProps } from "./UpsellBanner";
 
-export { PatreonSettings } from "./PatreonSettings";
-
 export { StripeSettings } from "./StripeSettings";
 
 export { UnlinkConfirmDialog } from "./UnlinkConfirmDialog";

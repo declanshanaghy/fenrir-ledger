@@ -4,7 +4,7 @@
  * Settings Page -- /settings route
  *
  * Central settings hub for the Fenrir Ledger. Contains:
- *   - Subscription management (PatreonSettings or StripeSettings based on platform)
+ *   - Subscription management (Stripe)
  *   - Gated premium feature placeholders (Cloud Sync, Multi-Household, Data Export)
  *
  * Anonymous-first: accessible without a signed-in session. The settings
@@ -15,9 +15,7 @@
  */
 
 import { SubscriptionGate } from "@/components/entitlement/SubscriptionGate";
-import { PatreonSettings } from "@/components/entitlement/PatreonSettings";
 import { StripeSettings } from "@/components/entitlement/StripeSettings";
-import { isPatreon, isStripe } from "@/lib/feature-flags";
 
 // ---------------------------------------------------------------------------
 // Gated feature placeholders
@@ -113,8 +111,8 @@ function DataExportSection() {
 /**
  * SettingsPage -- the /settings route.
  *
- * Renders the subscription settings (Patreon or Stripe based on platform)
- * and gated premium feature placeholders in a single-column layout.
+ * Renders the Stripe subscription settings and gated premium feature
+ * placeholders in a single-column layout.
  */
 export default function SettingsPage() {
   return (
@@ -131,12 +129,8 @@ export default function SettingsPage() {
 
       {/* Settings sections */}
       <div className="flex flex-col gap-6">
-        {/* Subscription management -- rendered based on active platform */}
-        {isStripe() ? (
-          <StripeSettings />
-        ) : isPatreon() ? (
-          <PatreonSettings />
-        ) : null}
+        {/* Subscription management */}
+        <StripeSettings />
 
         {/* Premium feature placeholders -- each wrapped in SubscriptionGate */}
         <SubscriptionGate feature="cloud-sync">

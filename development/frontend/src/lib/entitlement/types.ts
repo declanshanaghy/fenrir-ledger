@@ -1,9 +1,8 @@
 /**
  * Entitlement Types — Fenrir Ledger
  *
- * Platform-agnostic entitlement types. The entitlement layer answers
- * "what can you access?" independently of which subscription platform
- * (Patreon, Buy Me a Coffee, etc.) backs the subscription.
+ * Entitlement types. The entitlement layer answers "what can you access?"
+ * based on the user's Stripe subscription status.
  *
  * Tier naming uses Norse social hierarchy:
  *   - Thrall: Free tier (all current features, no subscription required)
@@ -23,10 +22,9 @@
 export type EntitlementTier = "thrall" | "karl";
 
 /**
- * Subscription platform identifier. Extensible for future platforms.
- * Currently only Patreon is supported.
+ * Subscription platform identifier.
  */
-export type EntitlementPlatform = "patreon" | "stripe";
+export type EntitlementPlatform = "stripe";
 
 // ---------------------------------------------------------------------------
 // Entitlement record (client-side cache)
@@ -44,7 +42,7 @@ export interface Entitlement {
   active: boolean;
   /** Which platform backs this subscription */
   platform: EntitlementPlatform;
-  /** Platform-specific user ID (e.g., Patreon user ID) */
+  /** Platform-specific user ID (e.g., Stripe customer ID) */
   userId: string;
   /** Unix timestamp (ms) when the platform account was linked */
   linkedAt: number;

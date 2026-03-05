@@ -1,135 +1,74 @@
-# QA Handoff -- Story 2: Stripe UI Components + PatreonGate Rename
+# QA Handoff -- Import Wizard Wireframe Fixes
 
-**Branch:** `feat/stripe-ui`
+**Branch:** `fix/import-wireframe-fixes`
 **Date:** 2026-03-04
 **Engineer:** FiremanDecko
+**PR:** https://github.com/declanshanaghy/fenrir-ledger/pull/136
 
 ## What was implemented
 
-### Story references
-- Story 2 of the Stripe Direct Integration sprint
-- Depends on Story 1 (feat/stripe-foundation branch -- API routes + KV store)
+Three wireframe alignment fixes for the import wizard.
 
-### Changes summary
-1. **PatreonGate renamed to SubscriptionGate** across entire codebase
-2. **StripeSettings component** built with 3 states (Thrall/Karl/Canceled)
-3. **AnonymousCheckoutModal removed** -- Stripe's hosted checkout page collects email natively
-4. **EntitlementContext updated** with `subscribeStripe()`, `openPortal()`, `unlinkStripe()` actions
-5. **SealedRuneModal updated** with Stripe CTA (subscribe button replaces Patreon link when isStripe())
-6. **UpsellBanner updated** to work in Stripe mode (Upgrade to Karl CTA)
-7. **Settings page updated** to conditionally render StripeSettings or PatreonSettings
-8. **SEV-002 fixed**: Removed `request.headers.get("origin")` from checkout and portal routes, replaced with `process.env.APP_BASE_URL`
-9. **SEV-003 fixed**: Added `js.stripe.com`, `api.stripe.com`, `hooks.stripe.com` to CSP in next.config.ts
-10. **EntitlementPlatform type** updated to include `"stripe"`
+### Fix 1: Compact SafetyBanner expandable Details link
+- Added a "Details" button to the compact safety banner variant
+- Clicking toggles inline expansion showing include/exclude column lists (same content as the full variant)
+- Uses local React state -- not persisted to localStorage
+- Button text toggles between "Details" and "Hide"
+- 44px minimum touch target on the button
+- `aria-label="View full safety details"` and `aria-expanded` attributes for accessibility
 
-## Files created/modified
+### Fix 2: CSV format help section
+- Added always-visible "How to export CSV" section below the drop zone in CsvUpload
+- Includes instructions for Google Sheets, Excel, and Numbers
+- Not collapsible -- always displayed
 
-### New files
+### Fix 3: Standardized button text
+- CsvUpload: "Import CSV" changed to "Begin Import"
+- ShareUrlEntry: "Import" changed to "Begin Import"
+
+## Files modified
+
 | File | Description |
 |------|-------------|
-| `src/components/entitlement/SubscriptionGate.tsx` | Renamed from PatreonGate, works for both platforms |
-| `src/components/entitlement/StripeSettings.tsx` | Stripe subscription settings (3 states) |
-| ~~`src/components/entitlement/AnonymousCheckoutModal.tsx`~~ | Removed -- Stripe handles email collection |
-| `src/lib/stripe/types.ts` | Stripe type definitions (from Story 1) |
-| `src/lib/stripe/api.ts` | Stripe SDK client (from Story 1) |
-| `src/lib/stripe/webhook.ts` | Webhook handler (from Story 1) |
-| `src/app/api/stripe/checkout/route.ts` | Checkout session API (from Story 1, SEV-002 fixed) |
-| `src/app/api/stripe/portal/route.ts` | Customer Portal API (from Story 1, SEV-002 fixed) |
-| `src/app/api/stripe/membership/route.ts` | Membership status API (from Story 1) |
-| `src/app/api/stripe/unlink/route.ts` | Unlink/cancel API (from Story 1) |
-| `src/app/api/stripe/webhook/route.ts` | Webhook endpoint (from Story 1) |
-
-### Modified files
-| File | Description |
-|------|-------------|
-| `src/components/entitlement/index.ts` | Barrel exports updated (SubscriptionGate, StripeSettings) |
-| `src/components/entitlement/SealedRuneModal.tsx` | Stripe CTA added alongside Patreon CTA |
-| `src/components/entitlement/UpsellBanner.tsx` | Stripe mode support (Upgrade to Karl CTA) |
-| `src/app/settings/page.tsx` | SubscriptionGate + conditional StripeSettings/PatreonSettings |
-| `src/contexts/EntitlementContext.tsx` | subscribeStripe, openPortal, unlinkStripe, Stripe membership fetch |
-| `src/lib/entitlement/types.ts` | EntitlementPlatform now includes "stripe" |
-| `src/lib/kv/entitlement-store.ts` | Stripe entitlement CRUD operations added |
-| `next.config.ts` | CSP updated with Stripe domains (SEV-003 fix) |
-| `.env.example` | Stripe env vars added |
-
-### Deleted files
-| File | Description |
-|------|-------------|
-| `src/components/entitlement/PatreonGate.tsx` | Renamed to SubscriptionGate.tsx |
+| `development/frontend/src/components/sheets/SafetyBanner.tsx` | Added `CompactBanner` component with expandable details; added `useState` import |
+| `development/frontend/src/components/sheets/CsvUpload.tsx` | Added format help section; changed button text to "Begin Import" |
+| `development/frontend/src/components/sheets/ShareUrlEntry.tsx` | Changed button text to "Begin Import" |
 
 ## How to deploy
 
-1. Ensure `SUBSCRIPTION_PLATFORM=stripe` is set in `.env.local`
-2. Ensure Stripe env vars are set: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
-3. Ensure `APP_BASE_URL` is set (SEV-002 fix)
-4. `cd development/frontend && npm install && npx next build`
-5. `npx next dev -p 9656`
+1. `cd development/frontend && npm install && npx next build`
+2. `npx next dev` or use worktree dev server
 
 ## How to test
 
 ### Port and URL
-- Dev server: `http://localhost:9656`
-- Worktree path: `/Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger-trees/feat/stripe-ui`
+- Dev server: http://localhost:49460
+- Worktree path: `/Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger-trees/fix/import-wireframe-fixes`
 
-### Test with SUBSCRIPTION_PLATFORM=stripe
+### Test steps
 
-1. **StripeSettings (Thrall state)**
-   - Navigate to `/settings`
-   - Verify: "Subscription" heading, "Thrall" badge, Karl benefits list, "Subscribe for $3.99/month" button
-   - Anonymous user: clicking subscribe opens AnonymousCheckoutModal
-   - Authenticated user: clicking subscribe calls POST /api/stripe/checkout
+1. Navigate to the import wizard (click import button on dashboard)
+2. Select URL import method -- verify compact banner shows "Details" link
+3. Click "Details" -- include/exclude lists expand inline with a border separator
+4. Click "Hide" -- lists collapse
+5. Verify the URL entry button reads "Begin Import"
+6. Go back, select CSV upload method
+7. Verify compact banner shows "Details" link (same behavior)
+8. Verify "How to export CSV" section is visible below the drop zone with three bullet items
+9. Verify the CSV upload button reads "Begin Import"
 
-2. **SealedRuneModal (Stripe CTA)**
-   - Navigate to `/settings` as Thrall user
-   - Click "Learn more" on a locked feature
-   - Verify: "Subscribe for $3.99/month" button, "Not now" dismiss, locked feature name shown
-   - Both anonymous and authenticated: subscribe CTA redirects to Stripe Checkout
+### Accessibility checks
+- Details button has `aria-label="View full safety details"`
+- `aria-expanded` toggles between `true` and `false`
+- Details button meets 44px min-height/min-width touch target (inspect element)
+- Test on mobile viewport (375px) -- layout should not break
 
-3. **UpsellBanner (Stripe mode)**
-   - Navigate to dashboard as Thrall user
-   - Verify: "Upgrade to Karl" button, atmospheric text, dismiss X button
-   - Both anonymous and authenticated: clicking CTA redirects to Stripe Checkout
-   - Dismiss: sets `fenrir:stripe_upsell_dismissed` in localStorage, banner hidden permanently
+## Build verification
 
-4. **SubscriptionGate (renamed from PatreonGate)**
-   - Verify premium features are gated in Stripe mode
-   - Both anonymous and authenticated Thrall users see the gate
-   - Karl users see the feature content
-
-### Test with SUBSCRIPTION_PLATFORM=patreon
-
-5. **Existing Patreon flow still works**
-   - PatreonSettings renders on /settings
-   - SealedRuneModal shows Patreon CTA
-   - UpsellBanner shows "Learn more" (Patreon flow)
-   - SubscriptionGate works for authenticated users
-
-### Security verification
-
-6. **SEV-002: No Origin header usage**
-   - `grep -rn "origin" src/app/api/stripe/` should NOT show `request.headers.get("origin")`
-   - Checkout and portal routes use `process.env.APP_BASE_URL`
-
-7. **SEV-003: Stripe domains in CSP**
-   - `next.config.ts` includes js.stripe.com, api.stripe.com, hooks.stripe.com
-   - Browser console should not show CSP violations when Stripe.js loads
-
-### Build verification
-
-8. `cd development/frontend && npx tsc --noEmit` -- passes
-9. `cd development/frontend && npx next build` -- succeeds
-10. `grep -rn 'PatreonGate' development/frontend/src/ --include='*.tsx' --include='*.ts'` -- returns only the rename comment
+- `npx tsc --noEmit` -- PASS
+- `npx next lint` -- PASS (no warnings or errors)
+- `npx next build` -- PASS
 
 ## Known limitations
 
-- Stripe subscription states (canceled with access until period end) require actual Stripe webhook events to populate `stripeStatus` and `currentPeriodEnd` in the context. These fields are wired but not yet populated from the membership API response (Story 1 membership endpoint returns `tier` and `active` but not status/period details). The UI gracefully handles null values.
-- Anonymous Stripe flow is client-side only (no server-side session). Stripe's hosted checkout page collects email.
-- The `unlinkStripe` action is wired in the context but not exposed in the StripeSettings UI (per wireframe: cancel routes to Stripe Portal).
-
-## Suggested test focus areas
-
-1. Platform switching: toggling `SUBSCRIPTION_PLATFORM` between `patreon` and `stripe` should cleanly switch all UI
-2. Anonymous checkout flow: Stripe Checkout redirect, loading state, error handling
-3. Mobile responsiveness: all new components at 375px width
-4. Accessibility: modal focus trapping, aria labels, screen reader flow
-5. CSP: load the app with Stripe mode and verify no CSP errors in console
+None. All three fixes are straightforward UI changes with no backend impact.

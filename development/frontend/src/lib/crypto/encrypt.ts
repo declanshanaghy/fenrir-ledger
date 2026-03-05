@@ -1,7 +1,7 @@
 /**
  * AES-256-GCM encryption utilities for sensitive data at rest.
  *
- * Used to encrypt Patreon tokens before storing them in Vercel KV.
+ * Used to encrypt sensitive data before storing in Vercel KV.
  * Requires ENTITLEMENT_ENCRYPTION_KEY env var (64-char hex = 32 bytes).
  *
  * Format: base64(iv:ciphertext:authTag)
