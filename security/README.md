@@ -10,6 +10,7 @@ This directory contains all security documentation for the Fenrir Ledger project
 |------|-------|----------|------|
 | 2026-03-02 | Google API Integration | 0C / 3H / 4M / 3L / 3I | [reports/2026-03-02-google-api-integration.md](reports/2026-03-02-google-api-integration.md) |
 | 2026-03-02 | Patreon Integration | 0C / 2H / 3M / 3L / 3I | [reports/2026-03-02-patreon-integration.md](reports/2026-03-02-patreon-integration.md) |
+| 2026-03-04 | Stripe Direct Integration | 1C / 0H / 2M / 3L / 3I | [reports/2026-03-04-stripe-direct-integration.md](reports/2026-03-04-stripe-direct-integration.md) |
 
 ## Architecture
 
