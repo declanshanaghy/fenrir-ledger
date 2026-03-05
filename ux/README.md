@@ -43,6 +43,10 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [wireframes/accessibility/accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) — Accessibility polish: focus rings, skip-nav, ARIA landmarks, touch targets, reduced motion (Story 4.4).
 - [wireframes/cards/wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) — Wolf's Hunger Meter + About Modal: hunger section, display variants, shared component spec (Story 4.5).
 - [wireframes/marketing/static-site-footer.html](wireframes/marketing/static-site-footer.html) — Static site footer: legal links row (Privacy Policy + Terms of Service), easter egg preservation, responsive spec.
+- [wireframes/stripe-direct/stripe-settings.html](wireframes/stripe-direct/stripe-settings.html) — StripeSettings component: Thrall/Karl/Canceled states, desktop + mobile, state machine spec.
+- [wireframes/stripe-direct/sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html) — SealedRuneModal Stripe CTA: premium feature paywall with Stripe Checkout redirect.
+- [wireframes/stripe-direct/upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html) — Upsell Banner Stripe variant: dashboard upgrade banner for Thrall users.
+- [wireframes/stripe-direct/anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html) — Anonymous Checkout Email Form: email collection modal before Stripe Checkout redirect.
 - [../architecture/README.md](../architecture/README.md) — FiremanDecko's domain: implementation brief, pipeline, system design, sprint plan, and ADRs.
 - [../architecture/implementation-brief.md](../architecture/implementation-brief.md) — FiremanDecko integration plan: wave strategy, sprint stories, open questions.
 - [../architecture/pipeline.md](../architecture/pipeline.md) — Kanban orchestration: model assignments, stage gates, WIP limits, handoff chain.
