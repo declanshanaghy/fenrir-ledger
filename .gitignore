@@ -42,8 +42,6 @@ logs/
 tmp/
 development/frontend/.claude/
 
-# Machine-specific Claude settings (contains absolute paths)
-.claude/settings-observability.json
 
 # doc-sync run artifacts (ephemeral, coordinator reads then discards)
 .sync-report.md
