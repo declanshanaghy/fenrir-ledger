@@ -4,10 +4,10 @@ import path from "path";
 export default defineConfig({
   testDir: path.resolve(__dirname, "../../quality/test-suites"),
   testMatch: "**/*.spec.ts",
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: false,
   retries: 0,
-  workers: 1,
+  workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI
     ? [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]]
     : "list",

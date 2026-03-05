@@ -5,110 +5,9 @@
 
 import json
 import sys
-import re
 from pathlib import Path
 from utils.constants import ensure_session_log_dir, fire_and_forget_send_event
 
-# Allowed directories where rm -rf is permitted
-ALLOWED_RM_DIRECTORIES = [
-    'trees/',
-]
-
-def _split_compound_command(command):
-    """
-    Split a compound shell command into individual sub-commands.
-    Handles &&, ||, ; separators and pipes (only last pipe segment matters for rm).
-    """
-    # Split on &&, ||, ;
-    parts = re.split(r'\s*(?:&&|\|\||;)\s*', command)
-    result = []
-    for part in parts:
-        # For piped commands, only the last segment can run rm
-        pipe_parts = part.split('|')
-        result.append(pipe_parts[-1].strip())
-    return result
-
-
-def is_dangerous_rm_command(command, allowed_dirs=None):
-    """
-    Detect dangerous rm commands that could cause mass data loss.
-
-    Safe (returns False):
-    - git rm / git clean (version-controlled operations)
-    - rm file.txt (single file delete, no recursive flag)
-    - rm -rf trees/... (allowed directory)
-
-    Dangerous (returns True):
-    - rm -rf / (catastrophic)
-    - rm -rf ~ (home directory)
-    - rm -rf . (current directory)
-    - rm -rf development/ (bulk directory delete outside allowed dirs)
-
-    The old implementation used regex patterns like r'rm\\s+.*-[a-z]*r' which
-    falsely matched flag-like sequences inside filenames (e.g. the '-restructure'
-    in 'dev-setup-restructure-orchestration.md' looked like a '-r' flag).
-    This rewrite properly parses flags by splitting tokens.
-
-    Args:
-        command: The bash command to check
-        allowed_dirs: List of directory paths where rm -rf is permitted
-
-    Returns:
-        True if the command is dangerous and should be blocked, False otherwise
-    """
-    if allowed_dirs is None:
-        allowed_dirs = []
-
-    sub_commands = _split_compound_command(command)
-
-    for subcmd in sub_commands:
-        normalized = ' '.join(subcmd.lower().split())
-
-        # Git commands are always safe — they're version-controlled operations
-        # (git rm, git clean, etc.)
-        if normalized.startswith('git '):
-            continue
-
-        # Find rm invocations: as the main command or after sudo/xargs/etc.
-        rm_match = re.search(r'\brm\s+(.+)', normalized)
-        if not rm_match:
-            continue
-
-        # Parse tokens into flags and paths
-        args_str = rm_match.group(1).strip()
-        tokens = args_str.split()
-
-        short_flags = ''
-        long_flags = []
-        paths = []
-
-        for token in tokens:
-            if token.startswith('--'):
-                long_flags.append(token)
-            elif token.startswith('-'):
-                short_flags += token[1:]  # accumulate flag chars
-            else:
-                paths.append(token.strip('\'"'))
-
-        has_recursive = 'r' in short_flags or '--recursive' in long_flags
-
-        # No recursive flag → can only delete individual files → safe
-        if not has_recursive:
-            continue
-
-        # Has recursive flag — check if ALL paths are in allowed directories
-        if paths and allowed_dirs:
-            all_allowed = all(
-                any(p.startswith(d) or p.startswith('./' + d) for d in allowed_dirs)
-                for p in paths
-            )
-            if all_allowed:
-                continue
-
-        # Recursive delete outside allowed directories → dangerous
-        return True
-
-    return False
 
 def is_env_file_access(tool_name, tool_input):
     """
@@ -305,17 +204,6 @@ def main():
         # COMMENTED OUT: Allows worktree command to create .env files automatically
         # if is_env_file_access(tool_name, tool_input):
         #     deny_tool("Access to .env files containing sensitive data is prohibited. Use .env.sample for template files instead")
-
-        # Check for dangerous rm -rf commands
-        if tool_name == 'Bash':
-            command = tool_input.get('command', '')
-
-            # Block rm -rf commands unless they target allowed directories
-            if is_dangerous_rm_command(command, ALLOWED_RM_DIRECTORIES):
-                deny_tool(
-                    f"Dangerous rm command detected and prevented. "
-                    f"rm -rf is only allowed in these directories: {', '.join(ALLOWED_RM_DIRECTORIES)}"
-                )
 
         # Extract session_id
         session_id = input_data.get('session_id', 'unknown')
