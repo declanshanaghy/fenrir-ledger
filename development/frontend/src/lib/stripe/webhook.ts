@@ -6,8 +6,7 @@
  *
  * Security model:
  *   - Signature verification via `stripe.webhooks.constructEvent()` using
- *     the STRIPE_WEBHOOK_SECRET. This is SHA-256 HMAC, unlike Patreon's
- *     HMAC-MD5.
+ *     the STRIPE_WEBHOOK_SECRET (SHA-256 HMAC).
  *   - No Bearer auth — Stripe sends webhooks, not authenticated users.
  *
  * @module stripe/webhook

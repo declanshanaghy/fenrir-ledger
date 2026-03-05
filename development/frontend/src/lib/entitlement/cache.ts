@@ -1,5 +1,5 @@
 /**
- * Entitlement Cache — Fenrir Ledger
+ * Entitlement Cache -- Fenrir Ledger
  *
  * Client-side localStorage cache for entitlement data.
  *
@@ -47,18 +47,18 @@ export function getEntitlementCache(): Entitlement | null {
 
     // Validate the shape of the parsed data
     if (!isValidEntitlement(parsed)) {
-      // Corrupted or outdated cache format — clear it
+      // Corrupted or outdated cache format -- clear it
       localStorage.removeItem(CACHE_KEY);
       return null;
     }
 
     return parsed;
   } catch {
-    // JSON.parse failed — corrupted data
+    // JSON.parse failed -- corrupted data
     try {
       localStorage.removeItem(CACHE_KEY);
     } catch {
-      // localStorage may be full or blocked — ignore
+      // localStorage may be full or blocked -- ignore
     }
     return null;
   }
@@ -75,7 +75,7 @@ export function setEntitlementCache(entitlement: Entitlement): void {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(entitlement));
   } catch {
-    // localStorage may be full or blocked — fail silently
+    // localStorage may be full or blocked -- fail silently
     // The app continues to work; it just won't have a cache next mount.
   }
 }
@@ -105,60 +105,6 @@ export function clearEntitlementCache(): void {
 export function isEntitlementStale(entitlement: Entitlement): boolean {
   const age = Date.now() - entitlement.checkedAt;
   return age > STALENESS_THRESHOLD_MS;
-}
-
-// ---------------------------------------------------------------------------
-// Patreon user ID cache (for anonymous -> authenticated migration)
-// ---------------------------------------------------------------------------
-
-/** localStorage key for the anonymous Patreon user ID. */
-const PATREON_USER_ID_KEY = "fenrir:patreon-user-id";
-
-/**
- * Reads the cached Patreon user ID from localStorage.
- *
- * This value is set when an anonymous user completes the Patreon OAuth flow.
- * It is used to trigger migration when the user later signs in with Google.
- *
- * @returns The Patreon user ID or null if not set
- */
-export function getPatreonUserId(): string | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    return localStorage.getItem(PATREON_USER_ID_KEY);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Writes a Patreon user ID to the localStorage cache.
- *
- * @param pid - The Patreon user ID to cache
- */
-export function setPatreonUserId(pid: string): void {
-  if (typeof window === "undefined") return;
-
-  try {
-    localStorage.setItem(PATREON_USER_ID_KEY, pid);
-  } catch {
-    // localStorage may be full or blocked — fail silently
-  }
-}
-
-/**
- * Removes the Patreon user ID from localStorage.
- * Called after successful migration to a Google-keyed entitlement.
- */
-export function clearPatreonUserId(): void {
-  if (typeof window === "undefined") return;
-
-  try {
-    localStorage.removeItem(PATREON_USER_ID_KEY);
-  } catch {
-    // Fail silently
-  }
 }
 
 // ---------------------------------------------------------------------------

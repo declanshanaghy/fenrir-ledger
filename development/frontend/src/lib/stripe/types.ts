@@ -5,14 +5,13 @@
  * entitlements. Used exclusively by server-side code (API routes and the
  * Stripe client wrapper).
  *
- * Mirrors the Patreon types structure for consistency across subscription
- * platforms. See ADR-010 for the Stripe Direct integration decision.
+ * See ADR-010 for the Stripe Direct integration decision.
  *
  * @module stripe/types
  */
 
 // ---------------------------------------------------------------------------
-// Tier model (shared with Patreon)
+// Tier model
 // ---------------------------------------------------------------------------
 
 /**
@@ -45,8 +44,7 @@ export const ACTIVE_STRIPE_STATUSES = new Set([
  * Stripe-specific entitlement record stored in Vercel KV.
  *
  * Keyed by Google user sub: `entitlement:{googleSub}`
- * Same key namespace as Patreon entitlements — only one platform is active at
- * a time (controlled by SUBSCRIPTION_PLATFORM feature flag).
+ * Keyed by Google user sub: `entitlement:{googleSub}`.
  */
 export interface StoredStripeEntitlement {
   /** Current subscription tier */

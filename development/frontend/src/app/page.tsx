@@ -28,7 +28,7 @@ import { CardSkeletonGrid } from "@/components/dashboard/CardSkeletonGrid";
 import { AnimatedHowlPanel } from "@/components/layout/HowlPanel";
 import { ImportWizard } from "@/components/sheets/ImportWizard";
 import { AuthGate } from "@/components/shared/AuthGate";
-import { UpsellBanner as PatreonUpsellBanner } from "@/components/entitlement/UpsellBanner";
+import { UpsellBanner } from "@/components/entitlement/UpsellBanner";
 import { initializeHousehold, getCards, saveCard, migrateIfNeeded } from "@/lib/storage";
 import type { Card } from "@/lib/types";
 
@@ -161,10 +161,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Patreon upsell banner — shown to authenticated Thrall users above the card grid.
-          The entitlement UpsellBanner self-hides for anonymous/Karl/dismissed users. */}
+      {/* Upsell banner -- shown to Thrall users above the card grid.
+          The UpsellBanner self-hides for Karl/dismissed users. */}
       <div className="mb-4">
-        <PatreonUpsellBanner />
+        <UpsellBanner />
       </div>
 
       {/* Main content row: card grid + HowlPanel side-by-side on desktop */}

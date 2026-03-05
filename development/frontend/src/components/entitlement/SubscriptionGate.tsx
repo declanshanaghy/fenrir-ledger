@@ -7,8 +7,8 @@
  * Renders children for Karl users, the Sealed Rune Modal for Thrall/expired
  * users, and a Norse-themed skeleton shimmer while loading.
  *
- * Platform-agnostic: works with both Patreon and Stripe subscription flows.
- * Previously named PatreonGate -- renamed in Story 2 of the Stripe integration.
+ * Stripe-only: gates all users (anonymous and authenticated) through
+ * Stripe subscription checks.
  *
  * Usage:
  *   <SubscriptionGate feature="cloud-sync">
@@ -24,11 +24,9 @@
  */
 
 import { useState, type ReactNode } from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { SealedRuneModal } from "./SealedRuneModal";
 import type { PremiumFeature } from "@/lib/entitlement/types";
-import { isPatreon, isStripe } from "@/lib/feature-flags";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -72,25 +70,11 @@ function GateSkeleton() {
  * Gates a premium feature. Renders children for Karl users, the Sealed Rune
  * Modal for Thrall/expired users, and a loading skeleton while resolving.
  *
- * Works with both Patreon and Stripe subscription platforms.
- *
  * @param props - Feature slug and children
  */
 export function SubscriptionGate({ feature, children }: SubscriptionGateProps) {
-  const { status } = useAuth();
   const { hasFeature, isLoading } = useEntitlement();
   const [modalOpen, setModalOpen] = useState(false);
-
-  // When neither platform is active, render children unconditionally.
-  if (!isPatreon() && !isStripe()) {
-    return <>{children}</>;
-  }
-
-  // For Patreon mode: anonymous users see children directly (no Patreon UI).
-  // For Stripe mode: anonymous users ARE gated (they can subscribe without Google).
-  if (isPatreon() && status !== "authenticated") {
-    return <>{children}</>;
-  }
 
   // Loading state: show skeleton shimmer
   if (isLoading) {

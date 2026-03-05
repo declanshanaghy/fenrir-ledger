@@ -1,135 +1,82 @@
-# QA Handoff -- Story 2: Stripe UI Components + PatreonGate Rename
+# QA Handoff -- Remove Patreon (Story 1)
 
-**Branch:** `feat/stripe-ui`
+**Branch:** `refactor/remove-patreon`
 **Date:** 2026-03-04
 **Engineer:** FiremanDecko
 
 ## What was implemented
 
-### Story references
-- Story 2 of the Stripe Direct Integration sprint
-- Depends on Story 1 (feat/stripe-foundation branch -- API routes + KV store)
+Complete removal of all Patreon code paths, feature flag system, and Patreon-specific test suites. Stripe is now the sole subscription platform with no feature flag gating.
 
-### Changes summary
-1. **PatreonGate renamed to SubscriptionGate** across entire codebase
-2. **StripeSettings component** built with 3 states (Thrall/Karl/Canceled)
-3. **AnonymousCheckoutModal removed** -- Stripe's hosted checkout page collects email natively
-4. **EntitlementContext updated** with `subscribeStripe()`, `openPortal()`, `unlinkStripe()` actions
-5. **SealedRuneModal updated** with Stripe CTA (subscribe button replaces Patreon link when isStripe())
-6. **UpsellBanner updated** to work in Stripe mode (Upgrade to Karl CTA)
-7. **Settings page updated** to conditionally render StripeSettings or PatreonSettings
-8. **SEV-002 fixed**: Removed `request.headers.get("origin")` from checkout and portal routes, replaced with `process.env.APP_BASE_URL`
-9. **SEV-003 fixed**: Added `js.stripe.com`, `api.stripe.com`, `hooks.stripe.com` to CSP in next.config.ts
-10. **EntitlementPlatform type** updated to include `"stripe"`
+## Summary of changes by task
 
-## Files created/modified
+### Task 1: Delete Patreon Backend and Library
+- Deleted `src/app/api/patreon/` (7 route directories: authorize, callback, membership, membership-anon, migrate, unlink, webhook)
+- Deleted `src/lib/patreon/` (3 files: api.ts, state.ts, types.ts)
+- Deleted `src/components/entitlement/PatreonSettings.tsx`
+- Removed `PatreonSettings` export from `src/components/entitlement/index.ts`
+- Simplified `src/app/settings/page.tsx` to render `<StripeSettings />` directly
 
-### New files
-| File | Description |
-|------|-------------|
-| `src/components/entitlement/SubscriptionGate.tsx` | Renamed from PatreonGate, works for both platforms |
-| `src/components/entitlement/StripeSettings.tsx` | Stripe subscription settings (3 states) |
-| ~~`src/components/entitlement/AnonymousCheckoutModal.tsx`~~ | Removed -- Stripe handles email collection |
-| `src/lib/stripe/types.ts` | Stripe type definitions (from Story 1) |
-| `src/lib/stripe/api.ts` | Stripe SDK client (from Story 1) |
-| `src/lib/stripe/webhook.ts` | Webhook handler (from Story 1) |
-| `src/app/api/stripe/checkout/route.ts` | Checkout session API (from Story 1, SEV-002 fixed) |
-| `src/app/api/stripe/portal/route.ts` | Customer Portal API (from Story 1, SEV-002 fixed) |
-| `src/app/api/stripe/membership/route.ts` | Membership status API (from Story 1) |
-| `src/app/api/stripe/unlink/route.ts` | Unlink/cancel API (from Story 1) |
-| `src/app/api/stripe/webhook/route.ts` | Webhook endpoint (from Story 1) |
+### Task 2: Delete Patreon Test Suites and Design Docs
+- Deleted `quality/test-suites/patreon/` (6 spec files)
+- Deleted `quality/test-suites/anon-patreon/` (1 spec file)
+- Deleted `quality/test-suites/anon-patreon-client/` (1 spec file)
+- Deleted `designs/product/backlog/patreon-subscription-brief.md`
+- Deleted `designs/product/backlog/patreon-subscription-integration.md`
+- Deleted `designs/architecture/adr-009-patreon-entitlement.md`
+- Updated `designs/architecture/adr-feature-flags.md` with "Status: Superseded" header
 
-### Modified files
-| File | Description |
-|------|-------------|
-| `src/components/entitlement/index.ts` | Barrel exports updated (SubscriptionGate, StripeSettings) |
-| `src/components/entitlement/SealedRuneModal.tsx` | Stripe CTA added alongside Patreon CTA |
-| `src/components/entitlement/UpsellBanner.tsx` | Stripe mode support (Upgrade to Karl CTA) |
-| `src/app/settings/page.tsx` | SubscriptionGate + conditional StripeSettings/PatreonSettings |
-| `src/contexts/EntitlementContext.tsx` | subscribeStripe, openPortal, unlinkStripe, Stripe membership fetch |
-| `src/lib/entitlement/types.ts` | EntitlementPlatform now includes "stripe" |
-| `src/lib/kv/entitlement-store.ts` | Stripe entitlement CRUD operations added |
-| `next.config.ts` | CSP updated with Stripe domains (SEV-003 fix) |
-| `.env.example` | Stripe env vars added |
+### Task 3: Remove Feature Flag System
+- Deleted `src/lib/feature-flags.ts` entirely (no other flags remained)
+- Removed `isStripe()` guard blocks from all 5 Stripe API routes (checkout, webhook, membership, portal, unlink)
+- Stripe routes are now always active
 
-### Deleted files
-| File | Description |
-|------|-------------|
-| `src/components/entitlement/PatreonGate.tsx` | Renamed to SubscriptionGate.tsx |
+### Task 4: Simplify Entitlement System to Stripe-Only
+- `EntitlementContext.tsx`: Removed all Patreon code paths (anonymous Patreon linking, migration, Patreon membership fetching). Removed `isAnonymouslyLinked`, `isMigrating`, `linkPatreon`, `unlinkPatreon`, `migrateAnonymousEntitlement` from context value.
+- `cache.ts`: Removed `getPatreonUserId`, `setPatreonUserId`, `clearPatreonUserId` functions
+- `types.ts`: Changed `EntitlementPlatform` from `"patreon" | "stripe"` to just `"stripe"`
+- `entitlement-store.ts`: Removed all Patreon-specific KV operations. Kept only Stripe operations.
+- `SubscriptionGate.tsx`: Removed platform branching. Gates all users through Stripe checks.
+- `SealedRuneModal.tsx`: Removed Patreon CTA. Stripe CTA always renders.
+- `UpsellBanner.tsx`: Simplified to Stripe-only with permanent dismiss.
+- `UnlinkConfirmDialog.tsx`: Changed copy from "Patreon" to "Subscription"/"Stripe"
+- Various comment updates in: `page.tsx`, `globals.css`, `logger.ts`, `encrypt.ts`, `stripe/types.ts`, `stripe/webhook.ts`, `stripe/membership/route.ts`
+
+### Task 5: Update Test Suites
+- `feature-flags.spec.ts`: Rewrote entirely for Stripe-only world
+- `stripe-direct.spec.ts`: Removed platform isolation tests and Patreon-mode fallback logic
+
+## Validation results
+
+All three checks pass:
+- `npx tsc --noEmit` -- zero errors
+- `npx next lint` -- zero warnings or errors
+- `npx next build` -- builds successfully, `/api/patreon/*` routes absent from output
+
+Zero-match verification:
+- `grep -ri "patreon" src/ --include="*.ts" --include="*.tsx"` -- zero matches
+- `grep -ri "isPatreon\|isStripe" src/` -- zero matches
+- `ls src/app/api/patreon/` -- "No such file or directory"
 
 ## How to deploy
 
-1. Ensure `SUBSCRIPTION_PLATFORM=stripe` is set in `.env.local`
-2. Ensure Stripe env vars are set: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
-3. Ensure `APP_BASE_URL` is set (SEV-002 fix)
-4. `cd development/frontend && npm install && npx next build`
-5. `npx next dev -p 9656`
-
-## How to test
-
-### Port and URL
-- Dev server: `http://localhost:9656`
-- Worktree path: `/Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger-trees/feat/stripe-ui`
-
-### Test with SUBSCRIPTION_PLATFORM=stripe
-
-1. **StripeSettings (Thrall state)**
-   - Navigate to `/settings`
-   - Verify: "Subscription" heading, "Thrall" badge, Karl benefits list, "Subscribe for $3.99/month" button
-   - Anonymous user: clicking subscribe opens AnonymousCheckoutModal
-   - Authenticated user: clicking subscribe calls POST /api/stripe/checkout
-
-2. **SealedRuneModal (Stripe CTA)**
-   - Navigate to `/settings` as Thrall user
-   - Click "Learn more" on a locked feature
-   - Verify: "Subscribe for $3.99/month" button, "Not now" dismiss, locked feature name shown
-   - Both anonymous and authenticated: subscribe CTA redirects to Stripe Checkout
-
-3. **UpsellBanner (Stripe mode)**
-   - Navigate to dashboard as Thrall user
-   - Verify: "Upgrade to Karl" button, atmospheric text, dismiss X button
-   - Both anonymous and authenticated: clicking CTA redirects to Stripe Checkout
-   - Dismiss: sets `fenrir:stripe_upsell_dismissed` in localStorage, banner hidden permanently
-
-4. **SubscriptionGate (renamed from PatreonGate)**
-   - Verify premium features are gated in Stripe mode
-   - Both anonymous and authenticated Thrall users see the gate
-   - Karl users see the feature content
-
-### Test with SUBSCRIPTION_PLATFORM=patreon
-
-5. **Existing Patreon flow still works**
-   - PatreonSettings renders on /settings
-   - SealedRuneModal shows Patreon CTA
-   - UpsellBanner shows "Learn more" (Patreon flow)
-   - SubscriptionGate works for authenticated users
-
-### Security verification
-
-6. **SEV-002: No Origin header usage**
-   - `grep -rn "origin" src/app/api/stripe/` should NOT show `request.headers.get("origin")`
-   - Checkout and portal routes use `process.env.APP_BASE_URL`
-
-7. **SEV-003: Stripe domains in CSP**
-   - `next.config.ts` includes js.stripe.com, api.stripe.com, hooks.stripe.com
-   - Browser console should not show CSP violations when Stripe.js loads
-
-### Build verification
-
-8. `cd development/frontend && npx tsc --noEmit` -- passes
-9. `cd development/frontend && npx next build` -- succeeds
-10. `grep -rn 'PatreonGate' development/frontend/src/ --include='*.tsx' --include='*.ts'` -- returns only the rename comment
-
-## Known limitations
-
-- Stripe subscription states (canceled with access until period end) require actual Stripe webhook events to populate `stripeStatus` and `currentPeriodEnd` in the context. These fields are wired but not yet populated from the membership API response (Story 1 membership endpoint returns `tier` and `active` but not status/period details). The UI gracefully handles null values.
-- Anonymous Stripe flow is client-side only (no server-side session). Stripe's hosted checkout page collects email.
-- The `unlinkStripe` action is wired in the context but not exposed in the StripeSettings UI (per wireframe: cancel routes to Stripe Portal).
+Standard Vercel deployment. No new env vars needed. The following env vars can be removed from Vercel after deployment:
+- `SUBSCRIPTION_PLATFORM`
+- `NEXT_PUBLIC_SUBSCRIPTION_PLATFORM`
+- Any Patreon-specific env vars (PATREON_CLIENT_ID, PATREON_CLIENT_SECRET, PATREON_CAMPAIGN_ID, PATREON_WEBHOOK_SECRET)
 
 ## Suggested test focus areas
 
-1. Platform switching: toggling `SUBSCRIPTION_PLATFORM` between `patreon` and `stripe` should cleanly switch all UI
-2. Anonymous checkout flow: Stripe Checkout redirect, loading state, error handling
-3. Mobile responsiveness: all new components at 375px width
-4. Accessibility: modal focus trapping, aria labels, screen reader flow
-5. CSP: load the app with Stripe mode and verify no CSP errors in console
+1. Verify `/settings` page renders the Stripe subscription section correctly
+2. Verify premium feature gates show "Learn more" -> SealedRuneModal with Stripe CTA
+3. Verify UpsellBanner appears on dashboard for Thrall users and dismisses correctly
+4. Verify all 5 Stripe API routes respond (no 404s, auth routes return 401)
+5. Verify no console errors or hydration warnings on page load
+6. Verify mobile responsiveness at 375px
+7. Run `quality/test-suites/feature-flags/feature-flags.spec.ts`
+8. Run `quality/test-suites/stripe-direct/stripe-direct.spec.ts`
+
+## Known limitations
+
+- The `EntitlementPlatform` type is now just `"stripe"` -- any code checking for `"patreon"` will get a TypeScript error (desired behavior)
+- The `encrypt.ts` module remains but is no longer used for Patreon tokens -- it may still be used by other code paths

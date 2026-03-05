@@ -3,15 +3,15 @@
  *
  * Returns the current user's Stripe subscription/entitlement status.
  *
- * Behind requireAuth (ADR-008) + isStripe() feature flag guard.
+ * Behind requireAuth (ADR-008).
  *
  * Logic:
  *   1. Look up cached entitlement in Vercel KV (keyed by Google sub)
  *   2. Return cached data (Stripe webhooks keep it fresh)
  *   3. If no entitlement exists, return thrall tier (not subscribed)
  *
- * Unlike Patreon, we do not need to re-check via API here — Stripe webhooks
- * proactively update KV on subscription changes. The cached state is authoritative.
+ * Stripe webhooks proactively update KV on subscription changes.
+ * The cached state is authoritative -- no need for live re-checks.
  *
  * Response: { tier, active, platform: "stripe", checkedAt, customerId?, linkedAt? }
  *
@@ -21,21 +21,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
-import { isStripe } from "@/lib/feature-flags";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import type { StripeMembershipResponse } from "@/lib/stripe/types";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   log.debug("GET /api/stripe/membership called");
-
-  if (!isStripe()) {
-    log.debug("GET /api/stripe/membership returning", { status: 404, reason: "stripe disabled" });
-    return NextResponse.json(
-      { error: "Stripe integration is disabled" },
-      { status: 404 },
-    );
-  }
 
   // Rate limit by IP
   const ip =

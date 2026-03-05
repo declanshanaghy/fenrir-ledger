@@ -5,13 +5,10 @@
  *
  * Hard gate modal that appears when a Thrall (or expired) user attempts to
  * access a premium feature. Displays the Algiz rune, feature information,
- * and a CTA to link/renew Patreon or subscribe via Stripe.
+ * and a CTA to subscribe via Stripe.
  *
- * Platform-aware: renders Patreon CTA when isPatreon(), Stripe CTA when isStripe().
- *
- * Wireframe references:
- *   - Patreon: designs/ux-design/wireframes/patreon-subscription/hard-gate-modal.html
- *   - Stripe: ux/wireframes/stripe-direct/sealed-rune-stripe.html
+ * Wireframe reference:
+ *   - ux/wireframes/stripe-direct/sealed-rune-stripe.html
  *
  * @module entitlement/SealedRuneModal
  */
@@ -28,7 +25,6 @@ import { useEntitlement } from "@/hooks/useEntitlement";
 import { PREMIUM_FEATURES } from "@/lib/entitlement/types";
 import { FEATURE_DESCRIPTIONS } from "@/lib/entitlement/feature-descriptions";
 import type { PremiumFeature } from "@/lib/entitlement/types";
-import { isPatreon, isStripe } from "@/lib/feature-flags";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -51,7 +47,7 @@ export interface SealedRuneModalProps {
  * Hard gate modal for premium features.
  *
  * Renders a Norse-themed dialog explaining why the feature is locked and
- * providing a CTA to subscribe (Stripe) or link Patreon.
+ * providing a CTA to subscribe via Stripe.
  *
  * @param props - Feature, open state, and dismiss callback
  */
@@ -60,7 +56,7 @@ export function SealedRuneModal({
   open,
   onDismiss,
 }: SealedRuneModalProps) {
-  const { isLinked, isActive, tier, linkPatreon, subscribeStripe } = useEntitlement();
+  const { isLinked, isActive, tier, subscribeStripe } = useEntitlement();
 
   const [isSubscribing, setIsSubscribing] = useState(false);
 
@@ -84,16 +80,6 @@ export function SealedRuneModal({
       setIsSubscribing(false);
     }
   }, [subscribeStripe]);
-
-  // -- Patreon-specific labels ------------------------------------------------
-
-  const patreonCtaLabel = isExpired ? "Renew on Patreon" : "Pledge on Patreon";
-  const patreonCtaAriaLabel = isExpired
-    ? "Open Patreon campaign page to renew membership"
-    : "Open Patreon campaign page in new tab";
-  const patreonDismissLabel = isExpired
-    ? "Not now"
-    : "Not now \u2014 I will continue as Thrall";
 
   return (
     <>
@@ -145,122 +131,42 @@ export function SealedRuneModal({
           </div>
 
           {/* -- Stripe CTA --------------------------------------------------- */}
-          {isStripe() && (
-            <>
-              {/* Functional description */}
-              <div className="px-6 md:px-8 pb-2 text-center">
-                <p className="text-[13px] text-saga/80 font-body leading-relaxed">
-                  Unlock with a Karl subscription -- $3.99/month.
-                  Cancel anytime.
-                </p>
-              </div>
 
-              {/* Subscribe button */}
-              <div className="px-6 md:px-8 py-2">
-                <Button
-                  onClick={handleStripeSubscribe}
-                  disabled={isSubscribing}
-                  className="w-full min-h-[48px] text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold disabled:opacity-50"
-                >
-                  {isSubscribing ? "Starting checkout..." : "Subscribe for $3.99/month"}
-                </Button>
-              </div>
+          {/* Functional description */}
+          <div className="px-6 md:px-8 pb-2 text-center">
+            <p className="text-[13px] text-saga/80 font-body leading-relaxed">
+              Unlock with a Karl subscription -- $3.99/month.
+              Cancel anytime.
+            </p>
+          </div>
 
-              {/* Price note */}
-              <p className="text-[11px] text-center text-rune/60 font-body px-6">
-                Billed monthly. Cancel anytime from your account.
-              </p>
+          {/* Subscribe button */}
+          <div className="px-6 md:px-8 py-2">
+            <Button
+              onClick={handleStripeSubscribe}
+              disabled={isSubscribing}
+              className="w-full min-h-[48px] text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold disabled:opacity-50"
+            >
+              {isSubscribing ? "Starting checkout..." : "Subscribe for $3.99/month"}
+            </Button>
+          </div>
 
-              {/* Dismiss */}
-              <div className="text-center px-6 pt-2 pb-5">
-                <button
-                  type="button"
-                  onClick={onDismiss}
-                  className="text-[13px] text-rune underline cursor-pointer min-h-[44px] inline-flex items-center px-2 font-body hover:text-saga transition-colors"
-                  aria-label="Dismiss and continue without premium features"
-                >
-                  Not now
-                </button>
-              </div>
-            </>
-          )}
+          {/* Price note */}
+          <p className="text-[11px] text-center text-rune/60 font-body px-6">
+            Billed monthly. Cancel anytime from your account.
+          </p>
 
-          {/* -- Patreon CTA -------------------------------------------------- */}
-          {isPatreon() && (
-            <>
-              {/* Tier info row */}
-              <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 px-6 py-2">
-                {isExpired ? (
-                  <span
-                    className="inline-flex items-center gap-1.5 border border-dashed border-rune/40 px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wide text-rune/70"
-                    aria-label="Membership expired"
-                  >
-                    <span className="w-4 h-4 flex items-center justify-center border border-rune/40 text-[9px]">
-                      !
-                    </span>
-                    Expired
-                  </span>
-                ) : (
-                  <span
-                    className="inline-flex items-center gap-1.5 border border-gold/30 px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wide text-gold"
-                    aria-label="Karl Supporter tier"
-                  >
-                    <span className="w-4 h-4 flex items-center justify-center border border-gold/30 text-[9px] text-gold">
-                      K
-                    </span>
-                    Karl Supporter
-                  </span>
-                )}
-                <span className="text-[13px] text-rune font-body">
-                  {isExpired ? "Renew at $3\u20135/mo" : "$3\u20135/mo via Patreon"}
-                </span>
-              </div>
-
-              {/* Primary CTA */}
-              <div className="px-6 md:px-8 py-2">
-                <Button
-                  onClick={linkPatreon}
-                  className="w-full min-h-[48px] text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
-                  aria-label={patreonCtaAriaLabel}
-                >
-                  {patreonCtaLabel}
-                </Button>
-              </div>
-
-              {/* Secondary dismiss */}
-              <div className="text-center px-6 pt-2 pb-5">
-                <button
-                  type="button"
-                  onClick={onDismiss}
-                  className="text-[13px] text-rune underline cursor-pointer min-h-[44px] inline-flex items-center px-2 font-body hover:text-saga transition-colors"
-                  aria-label="Dismiss and continue without premium features"
-                >
-                  {patreonDismissLabel}
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* -- No platform active ------------------------------------------- */}
-          {!isStripe() && !isPatreon() && (
-            <>
-              <div className="px-6 md:px-8 py-4 text-center">
-                <p className="text-sm text-rune/80 font-body">
-                  Premium feature -- subscription coming soon.
-                </p>
-              </div>
-              <div className="text-center px-6 pt-2 pb-5">
-                <button
-                  type="button"
-                  onClick={onDismiss}
-                  className="text-[13px] text-rune underline cursor-pointer min-h-[44px] inline-flex items-center px-2 font-body hover:text-saga transition-colors"
-                  aria-label="Dismiss"
-                >
-                  Not now
-                </button>
-              </div>
-            </>
-          )}
+          {/* Dismiss */}
+          <div className="text-center px-6 pt-2 pb-5">
+            <button
+              type="button"
+              onClick={onDismiss}
+              className="text-[13px] text-rune underline cursor-pointer min-h-[44px] inline-flex items-center px-2 font-body hover:text-saga transition-colors"
+              aria-label="Dismiss and continue without premium features"
+            >
+              Not now
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
     </>

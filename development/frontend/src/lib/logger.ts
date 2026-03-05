@@ -60,8 +60,6 @@ const MASKED_KEYS = [
   "csrf",
   "csrfToken",
   "csrf_token",
-  "patreon_token",
-  "patreonToken",
 ];
 
 /**
@@ -76,7 +74,6 @@ const MASKED_PATTERNS = [
   /ya29\.[a-zA-Z0-9_-]+/gi,                                 // Google access tokens
   /eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/gi, // JWTs
   /[0-9a-f]{32,}/gi,                                        // Hex-encoded secrets (HMAC, encryption keys)
-  /patreon_[a-zA-Z0-9_-]{20,}/gi,                           // Patreon tokens
 ];
 
 const isProd = process.env.NODE_ENV === "production";
