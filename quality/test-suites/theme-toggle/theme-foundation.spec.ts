@@ -581,9 +581,13 @@ test("TC-TF-019: --primary CSS variable differs between light and dark themes", 
   const primaryLight = await getCSSVariable(page, "--primary");
   expect(primaryLight).toBeTruthy();
 
-  // Dark
-  await page.evaluate((key) => localStorage.setItem(key, "dark"), THEME_STORAGE_KEY);
-  await page.reload({ waitUntil: "networkidle" });
+  // Dark — use addInitScript so localStorage is set BEFORE next-themes'
+  // blocking script reads it during page load
+  await page.addInitScript((key) => {
+    localStorage.setItem(key, "dark");
+  }, THEME_STORAGE_KEY);
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
   const primaryDark = await getCSSVariable(page, "--primary");
   expect(primaryDark).toBeTruthy();
 
