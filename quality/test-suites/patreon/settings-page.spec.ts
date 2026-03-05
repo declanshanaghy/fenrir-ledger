@@ -738,14 +738,14 @@ test.describe("Settings Page — Edge Cases", () => {
   test("TC-SP-35: SealedRuneModal has correct aria-labelledby pointing to DialogTitle", async ({
     page,
   }) => {
-    // Spec: SealedRuneModal DialogContent has aria-labelledby="sealed-rune-heading"
-    // DialogTitle has id="sealed-rune-heading"
+    // SealedRuneModal uses dynamic IDs: aria-labelledby="sealed-rune-heading-{feature}"
+    // DialogTitle has id="sealed-rune-heading-{feature}"
     // Verifies accessibility: screen readers get correct dialog name.
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
 
-    // Find DialogContent with the aria-labelledby attribute
+    // Find DialogContent with the dynamic aria-labelledby attribute (prefix match)
     const dialogContent = page.locator(
-      '[aria-labelledby="sealed-rune-heading"]'
+      '[aria-labelledby^="sealed-rune-heading-"]'
     );
     // At least one gated modal must have this attribute
     await expect(dialogContent.first()).toBeAttached();
