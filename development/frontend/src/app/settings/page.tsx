@@ -5,7 +5,11 @@
  *
  * Central settings hub for the Fenrir Ledger. Contains:
  *   - Subscription management (Stripe)
- *   - Gated premium feature placeholders (Cloud Sync, Multi-Household, Data Export)
+ *   - Premium feature sections (Cloud Sync, Multi-Household, Data Export)
+ *
+ * Uses soft-gated SubscriptionGate so all feature sections are always visible.
+ * Non-subscribers see a subscribe banner above each section; subscribers see
+ * the sections without any banner.
  *
  * Anonymous-first: accessible without a signed-in session. The settings
  * and gated sections handle their own auth/entitlement checks internally.
@@ -23,8 +27,8 @@ import { StripeSettings } from "@/components/entitlement/StripeSettings";
 
 /**
  * Placeholder UI for the Cloud Sync premium feature.
- * Wrapped in SubscriptionGate -- Karl users see the placeholder content,
- * Thrall users see the Sealed Rune Modal.
+ * Wrapped in soft-gated SubscriptionGate -- always visible, with a
+ * subscribe banner for Thrall users.
  */
 function CloudSyncSection() {
   return (
@@ -47,8 +51,8 @@ function CloudSyncSection() {
 
 /**
  * Placeholder UI for the Multi-Household premium feature.
- * Wrapped in SubscriptionGate -- Karl users see the placeholder content,
- * Thrall users see the Sealed Rune Modal.
+ * Wrapped in soft-gated SubscriptionGate -- always visible, with a
+ * subscribe banner for Thrall users.
  */
 function MultiHouseholdSection() {
   return (
@@ -71,8 +75,8 @@ function MultiHouseholdSection() {
 
 /**
  * Placeholder UI for the Data Export premium feature.
- * Wrapped in SubscriptionGate -- Karl users see the placeholder content,
- * Thrall users see the Sealed Rune Modal.
+ * Wrapped in soft-gated SubscriptionGate -- always visible, with a
+ * subscribe banner for Thrall users.
  */
 function DataExportSection() {
   return (
@@ -111,7 +115,7 @@ function DataExportSection() {
 /**
  * SettingsPage -- the /settings route.
  *
- * Renders the Stripe subscription settings and gated premium feature
+ * Renders the Stripe subscription settings and soft-gated premium feature
  * placeholders in a single-column layout.
  */
 export default function SettingsPage() {
@@ -132,16 +136,16 @@ export default function SettingsPage() {
         {/* Subscription management */}
         <StripeSettings />
 
-        {/* Premium feature placeholders -- each wrapped in SubscriptionGate */}
-        <SubscriptionGate feature="cloud-sync">
+        {/* Premium feature sections -- soft-gated so content is always visible */}
+        <SubscriptionGate feature="cloud-sync" mode="soft">
           <CloudSyncSection />
         </SubscriptionGate>
 
-        <SubscriptionGate feature="multi-household">
+        <SubscriptionGate feature="multi-household" mode="soft">
           <MultiHouseholdSection />
         </SubscriptionGate>
 
-        <SubscriptionGate feature="data-export">
+        <SubscriptionGate feature="data-export" mode="soft">
           <DataExportSection />
         </SubscriptionGate>
       </div>
