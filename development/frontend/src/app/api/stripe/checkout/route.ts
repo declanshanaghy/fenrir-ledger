@@ -4,7 +4,6 @@
  * Creates a Stripe Checkout Session and returns the session URL for
  * client-side redirect. Supports both authenticated and anonymous users.
  *
- * Behind isStripe() feature flag guard.
  *
  * Flow (authenticated — Google id_token present):
  *   1. Verify Google id_token from Authorization header
@@ -25,21 +24,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { stripe } from "@/lib/stripe/api";
-import { isStripe } from "@/lib/feature-flags";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import type { StripeCheckoutResponse } from "@/lib/stripe/types";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/stripe/checkout called");
-
-  if (!isStripe()) {
-    log.debug("POST /api/stripe/checkout returning", { status: 404, reason: "stripe disabled" });
-    return NextResponse.json(
-      { error: "Stripe integration is disabled" },
-      { status: 404 },
-    );
-  }
 
   // Rate limit by IP
   const ip =

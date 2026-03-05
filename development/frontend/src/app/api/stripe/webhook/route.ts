@@ -32,7 +32,6 @@ import {
   isAnonymousStripeReverseIndex,
   extractStripeCustomerIdFromReverseIndex,
 } from "@/lib/kv/entitlement-store";
-import { isStripe } from "@/lib/feature-flags";
 import { log } from "@/lib/logger";
 
 /** Valid webhook event types we process. */
@@ -256,13 +255,6 @@ async function handleSubscriptionDeleted(
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/stripe/webhook called");
-
-  if (!isStripe()) {
-    return NextResponse.json(
-      { error: "Stripe integration is disabled" },
-      { status: 404 },
-    );
-  }
 
   // --- Read raw body for signature validation ---
   let rawBody: string;

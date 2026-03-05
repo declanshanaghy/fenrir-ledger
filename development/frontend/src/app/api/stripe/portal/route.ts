@@ -4,7 +4,7 @@
  * Creates a Stripe Customer Portal session for the authenticated user
  * and returns the session URL for client-side redirect.
  *
- * Behind requireAuth (ADR-008) + isStripe() feature flag guard.
+ * Behind requireAuth (ADR-008).
  *
  * The Customer Portal allows users to:
  *   - Update payment method
@@ -21,21 +21,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { stripe } from "@/lib/stripe/api";
 import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
-import { isStripe } from "@/lib/feature-flags";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import type { StripePortalResponse } from "@/lib/stripe/types";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/stripe/portal called");
-
-  if (!isStripe()) {
-    log.debug("POST /api/stripe/portal returning", { status: 404, reason: "stripe disabled" });
-    return NextResponse.json(
-      { error: "Stripe integration is disabled" },
-      { status: 404 },
-    );
-  }
 
   // Rate limit by IP
   const ip =

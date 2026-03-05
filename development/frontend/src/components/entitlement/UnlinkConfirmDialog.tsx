@@ -1,19 +1,17 @@
 "use client";
 
 /**
- * UnlinkConfirmDialog — Fenrir Ledger
+ * UnlinkConfirmDialog -- Fenrir Ledger
  *
- * Confirmation dialog for unlinking the Patreon account.
+ * Confirmation dialog for unlinking the subscription.
  * Uses role="alertdialog" because this is a consequential action.
  *
- * Wireframe reference: designs/ux-design/wireframes/patreon-subscription/unlink-confirmation.html
- *
- * Key design decisions (from wireframe):
- *   - All copy is Voice 1 (functional, plain English) — no Norse
+ * Key design decisions:
+ *   - All copy is Voice 1 (functional, plain English) -- no Norse
  *   - Two consequences stated clearly:
  *     1. Premium features are locked
- *     2. Patreon membership continues on Patreon
- *   - Button layout: [Cancel] [Unlink Patreon]
+ *     2. Subscription continues on Stripe until cancelled
+ *   - Button layout: [Cancel] [Unlink Subscription]
  *   - Mobile: buttons stack vertically, full-width
  *   - Escape dismisses (same as Cancel)
  *
@@ -48,7 +46,7 @@ export interface UnlinkConfirmDialogProps {
 // ---------------------------------------------------------------------------
 
 /**
- * Confirmation dialog for disconnecting Patreon from Fenrir Ledger.
+ * Confirmation dialog for disconnecting subscription from Fenrir Ledger.
  *
  * @param props - Open state, cancel/confirm callbacks, loading state
  */
@@ -72,7 +70,7 @@ export function UnlinkConfirmDialog({
             id="unlink-heading"
             className="text-lg font-heading font-bold text-saga"
           >
-            Unlink Patreon?
+            Unlink Subscription?
           </DialogTitle>
         </div>
 
@@ -80,13 +78,13 @@ export function UnlinkConfirmDialog({
         <DialogDescription asChild>
           <div id="unlink-body" className="px-5 py-4 flex flex-col gap-3">
             <p className="text-sm text-saga/90 leading-relaxed font-body">
-              Your Patreon account will be disconnected from Fenrir Ledger.
+              Your subscription will be disconnected from Fenrir Ledger.
               You will lose access to premium features, but your card data
               will not be affected.
             </p>
             <p className="text-sm text-saga/90 leading-relaxed font-body">
-              If you have an active Patreon membership, it will continue on
-              Patreon until you cancel it there.
+              If you have an active subscription, it will continue on
+              Stripe until you cancel it there.
             </p>
           </div>
         </DialogDescription>
@@ -107,7 +105,7 @@ export function UnlinkConfirmDialog({
             disabled={isUnlinking}
             className="min-h-[44px] sm:min-h-[40px] w-full sm:w-auto font-heading border-2 border-destructive"
           >
-            {isUnlinking ? "Unlinking..." : "Unlink Patreon"}
+            {isUnlinking ? "Unlinking..." : "Unlink Subscription"}
           </Button>
         </div>
       </DialogContent>

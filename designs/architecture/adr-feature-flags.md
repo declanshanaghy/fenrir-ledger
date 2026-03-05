@@ -1,6 +1,11 @@
 # ADR: Feature Flag System (Phase 1 -- Environment Variables)
 
-## Status: Accepted
+## Status: Superseded
+
+> **Superseded note:** Stripe is now the sole subscription platform. The
+> `SUBSCRIPTION_PLATFORM` feature flag, `isPatreon()`, and `isStripe()` helpers
+> have been removed. All Patreon code paths were deleted. The feature flag
+> registry file (`src/lib/feature-flags.ts`) has been removed entirely.
 
 ## Context
 
