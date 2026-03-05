@@ -19,11 +19,19 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAnonymousEntitlement } from "@/lib/kv/entitlement-store";
+import { isPatreon } from "@/lib/feature-flags";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   log.debug("GET /api/patreon/membership-anon called");
+
+  if (!isPatreon()) {
+    return NextResponse.json(
+      { error: "Patreon integration is disabled" },
+      { status: 404 },
+    );
+  }
 
   // Rate limit by IP
   const ip =

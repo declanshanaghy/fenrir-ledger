@@ -18,11 +18,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { deleteEntitlement } from "@/lib/kv/entitlement-store";
+import { isPatreon } from "@/lib/feature-flags";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/patreon/unlink called");
+
+  if (!isPatreon()) {
+    return NextResponse.json(
+      { error: "Patreon integration is disabled" },
+      { status: 404 },
+    );
+  }
 
   // Rate limit by IP
   const ip =

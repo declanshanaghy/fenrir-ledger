@@ -21,6 +21,7 @@ import { getEntitlement, setEntitlement } from "@/lib/kv/entitlement-store";
 import { decrypt } from "@/lib/crypto/encrypt";
 import { encrypt } from "@/lib/crypto/encrypt";
 import { getMembership, refreshToken } from "@/lib/patreon/api";
+import { isPatreon } from "@/lib/feature-flags";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import type { MembershipResponse, StoredEntitlement } from "@/lib/patreon/types";
@@ -42,6 +43,13 @@ function isStale(entitlement: StoredEntitlement): boolean {
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   log.debug("GET /api/patreon/membership called");
+
+  if (!isPatreon()) {
+    return NextResponse.json(
+      { error: "Patreon integration is disabled" },
+      { status: 404 },
+    );
+  }
 
   // Rate limit by IP
   const ip =
