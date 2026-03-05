@@ -19,7 +19,5 @@ export { PatreonSettings } from "./PatreonSettings";
 
 export { StripeSettings } from "./StripeSettings";
 
-export { AnonymousCheckoutModal } from "./AnonymousCheckoutModal";
-
 export { UnlinkConfirmDialog } from "./UnlinkConfirmDialog";
 export type { UnlinkConfirmDialogProps } from "./UnlinkConfirmDialog";

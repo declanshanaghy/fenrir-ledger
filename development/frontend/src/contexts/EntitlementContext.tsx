@@ -92,8 +92,8 @@ export interface EntitlementContextValue {
   /** Migrates anonymous entitlement to the authenticated Google-keyed entry. */
   migrateAnonymousEntitlement: () => Promise<boolean>;
 
-  /** Creates a Stripe Checkout session and redirects. For anonymous users, pass email. */
-  subscribeStripe: (email?: string) => Promise<void>;
+  /** Creates a Stripe Checkout session and redirects to Stripe's hosted checkout. */
+  subscribeStripe: () => Promise<void>;
   /** Opens the Stripe Customer Portal for subscription management. */
   openPortal: () => Promise<void>;
   /** Unlinks Stripe: cancels subscription and clears entitlement. */
@@ -405,11 +405,9 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
   /**
    * Creates a Stripe Checkout session and redirects the user.
    * For authenticated users, email comes from Google profile.
-   * For anonymous users, email must be passed as parameter.
-   *
-   * @param email - Required for anonymous users
+   * For anonymous users, Stripe's hosted checkout page collects email.
    */
-  const subscribeStripe = useCallback(async (email?: string) => {
+  const subscribeStripe = useCallback(async () => {
     if (!isStripe()) {
       console.debug("[Fenrir] subscribeStripe skipped: platform is not stripe");
       return;
@@ -426,16 +424,11 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
       }
     }
 
-    const body: Record<string, string> = {};
-    if (email) {
-      body.email = email;
-    }
-
     try {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers,
-        body: JSON.stringify(body),
+        body: JSON.stringify({}),
       });
 
       if (!response.ok) {

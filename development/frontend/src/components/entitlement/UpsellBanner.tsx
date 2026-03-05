@@ -27,7 +27,6 @@ import { useState, useCallback, useEffect } from "react";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { useAuth } from "@/hooks/useAuth";
 import { SealedRuneModal } from "./SealedRuneModal";
-import { AnonymousCheckoutModal } from "./AnonymousCheckoutModal";
 import type { PremiumFeature } from "@/lib/entitlement/types";
 import { isPatreon, isStripe } from "@/lib/feature-flags";
 
@@ -121,7 +120,6 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
   const { status } = useAuth();
   const [visible, setVisible] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
 
   const isAuthenticated = status === "authenticated";
@@ -151,18 +149,13 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
   }, []);
 
   const handleStripeUpgrade = useCallback(async () => {
-    if (isAuthenticated) {
-      setIsSubscribing(true);
-      try {
-        await subscribeStripe();
-      } catch {
-        setIsSubscribing(false);
-      }
-    } else {
-      // Anonymous: open email modal
-      setEmailModalOpen(true);
+    setIsSubscribing(true);
+    try {
+      await subscribeStripe();
+    } catch {
+      setIsSubscribing(false);
     }
-  }, [isAuthenticated, subscribeStripe]);
+  }, [subscribeStripe]);
 
   // Do not render for:
   //   - No active platform
@@ -224,12 +217,6 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
             {isSubscribing ? "Starting..." : "Upgrade to Karl"}
           </button>
         </div>
-
-        {/* Anonymous checkout email modal */}
-        <AnonymousCheckoutModal
-          open={emailModalOpen}
-          onDismiss={() => setEmailModalOpen(false)}
-        />
       </>
     );
   }

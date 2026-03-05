@@ -24,13 +24,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { PREMIUM_FEATURES } from "@/lib/entitlement/types";
 import { FEATURE_DESCRIPTIONS } from "@/lib/entitlement/feature-descriptions";
 import type { PremiumFeature } from "@/lib/entitlement/types";
 import { isPatreon, isStripe } from "@/lib/feature-flags";
-import { AnonymousCheckoutModal } from "./AnonymousCheckoutModal";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -62,11 +60,8 @@ export function SealedRuneModal({
   open,
   onDismiss,
 }: SealedRuneModalProps) {
-  const { status: authStatus } = useAuth();
   const { isLinked, isActive, tier, linkPatreon, subscribeStripe } = useEntitlement();
 
-  const isAuthenticated = authStatus === "authenticated";
-  const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
 
   const featureDef = PREMIUM_FEATURES[feature];
@@ -82,18 +77,13 @@ export function SealedRuneModal({
   // -- Stripe subscribe handler -----------------------------------------------
 
   const handleStripeSubscribe = useCallback(async () => {
-    if (isAuthenticated) {
-      setIsSubscribing(true);
-      try {
-        await subscribeStripe();
-      } catch {
-        setIsSubscribing(false);
-      }
-    } else {
-      // Anonymous: open email modal
-      setEmailModalOpen(true);
+    setIsSubscribing(true);
+    try {
+      await subscribeStripe();
+    } catch {
+      setIsSubscribing(false);
     }
-  }, [isAuthenticated, subscribeStripe]);
+  }, [subscribeStripe]);
 
   // -- Patreon-specific labels ------------------------------------------------
 
@@ -273,14 +263,6 @@ export function SealedRuneModal({
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Anonymous checkout email modal (Stripe only) */}
-      {isStripe() && (
-        <AnonymousCheckoutModal
-          open={emailModalOpen}
-          onDismiss={() => setEmailModalOpen(false)}
-        />
-      )}
     </>
   );
 }

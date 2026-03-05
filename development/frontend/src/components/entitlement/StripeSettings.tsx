@@ -23,9 +23,7 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 import { useEntitlement } from "@/hooks/useEntitlement";
-import { AnonymousCheckoutModal } from "./AnonymousCheckoutModal";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -71,7 +69,6 @@ function StripeSettingsSkeleton() {
  * based on the current entitlement status.
  */
 export function StripeSettings() {
-  const { status: authStatus } = useAuth();
   const {
     tier,
     isActive,
@@ -83,8 +80,6 @@ export function StripeSettings() {
     openPortal,
   } = useEntitlement();
 
-  const isAuthenticated = authStatus === "authenticated";
-  const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
 
   // Determine state
@@ -103,24 +98,19 @@ export function StripeSettings() {
 
   /**
    * Handle subscribe CTA click.
-   * Authenticated: redirect to Stripe Checkout directly.
-   * Anonymous: open email collection modal first.
+   * Redirects to Stripe Checkout for both authenticated and anonymous users.
+   * Stripe's hosted checkout page handles email collection for anonymous users.
    */
   const handleSubscribe = useCallback(async () => {
-    if (isAuthenticated) {
-      setIsSubscribing(true);
-      try {
-        await subscribeStripe();
-        // If successful, user is redirected
-      } catch {
-        toast.error("Could not start checkout. Please try again.");
-        setIsSubscribing(false);
-      }
-    } else {
-      // Anonymous: open email modal
-      setEmailModalOpen(true);
+    setIsSubscribing(true);
+    try {
+      await subscribeStripe();
+      // If successful, user is redirected
+    } catch {
+      toast.error("Could not start checkout. Please try again.");
+      setIsSubscribing(false);
     }
-  }, [isAuthenticated, subscribeStripe]);
+  }, [subscribeStripe]);
 
   /**
    * Handle manage subscription click -- opens Stripe Customer Portal.
@@ -326,11 +316,6 @@ export function StripeSettings() {
         )}
       </section>
 
-      {/* Anonymous checkout email modal */}
-      <AnonymousCheckoutModal
-        open={emailModalOpen}
-        onDismiss={() => setEmailModalOpen(false)}
-      />
     </>
   );
 }
