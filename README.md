@@ -170,7 +170,8 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 *The trickster tests. His verdicts are final.*
 
 - [quality/README.md](quality/README.md) — Index of all QA artifacts, verdicts, and test execution guide
-- [quality/test-suites/](quality/test-suites/) — Playwright test suites: easter eggs, navigation, accessibility, responsive, import, valhalla, layout, patreon, anon-patreon-client, feature-flags, theme-toggle, stripe-direct (253+ tests)
+- [quality/test-suites/](quality/test-suites/) — Playwright test suites: easter eggs, navigation, accessibility, responsive, import, valhalla, layout, feature-flags, theme-toggle, stripe-direct, patreon-removal (289+ tests)
+- [quality/test-suites/patreon-removal/patreon-removal.spec.ts](quality/test-suites/patreon-removal/patreon-removal.spec.ts) — 36-test suite: PR #128 Patreon removal validation (14 route 404s, 0 Patreon text, Stripe-only entitlement, all passing)
 - [quality/test-suites/stripe-direct/stripe-direct.spec.ts](quality/test-suites/stripe-direct/stripe-direct.spec.ts) — 37-test suite: PR #119+#120 Stripe Direct Integration AC-1 through AC-14 (all passing)
 - [quality/test-suites/theme-toggle/theme-foundation.spec.ts](quality/test-suites/theme-toggle/theme-foundation.spec.ts) — 20-test suite: PR #116 Story 1 theme foundation (17 pass, 3 fail — DEF-TF-001)
 - [quality/test-suites/feature-flags/feature-flags.spec.ts](quality/test-suites/feature-flags/feature-flags.spec.ts) — 12-test suite: PR #113 feature flag registry + Patreon route guards (all 7 routes verified in default mode)
