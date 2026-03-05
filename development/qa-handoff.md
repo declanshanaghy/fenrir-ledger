@@ -1,103 +1,99 @@
-# QA Handoff -- Story 2: Theme Toggle UI + Color Audit + Design Docs
+# QA Handoff: Stripe Foundation + API Routes (Story 1)
 
-**Branch:** `feat/theme-toggle-ui`
+**Branch:** `feat/stripe-foundation`
 **Date:** 2026-03-04
 **Engineer:** FiremanDecko
 
 ## What Was Implemented
 
-Three tasks for Story 2:
+Stripe Direct integration foundation -- SDK, library modules, KV store extensions, and all 5 API routes.
 
-### Task 1: ThemeToggle Component + TopBar Integration
-- Created `ThemeToggle.tsx` -- three-way segmented toggle (Light/Dark/System) using Sun, Moon, Monitor icons from lucide-react
-- SSR-safe: renders placeholder until mounted to avoid hydration mismatch
-- Integrated into TopBar in both states:
-  - **Anonymous**: Theme row in the upsell prompt panel (above "Sign in to Google")
-  - **Signed-in**: Theme row in the profile dropdown (above "Sign out")
-- Accessible: `role="radiogroup"`, `aria-label="Theme"`, `aria-checked` per option
-- Touch-friendly: min 44x36px tap targets
-
-### Task 2: Color Audit -- Hardcoded Hex Removal
-- Converted ALL inline `style={{ color: "#hex" }}` and Tailwind `[#hex]` patterns to CSS variables
-- Added new CSS variable groups in globals.css: `--egg-*`, `--lcars-*`, `--howl-*`, `--loki-toast-*`, `--realm-*`
-- 24 component files modified (see list below)
-
-### Task 3: Design System Documentation
-- Created `designs/ux-design/theme-system.md` with full palette specs, WCAG contrast ratios, and mandatory design rules
-
-## Files Created
+### Files Created
 
 | File | Description |
 |------|-------------|
-| `src/components/layout/ThemeToggle.tsx` | Three-way theme toggle (Sun/Moon/Monitor) |
-| `designs/ux-design/theme-system.md` | Dual-theme design system documentation |
+| `src/lib/stripe/api.ts` | Lazy singleton Stripe SDK client (deferred init for build safety) |
+| `src/lib/stripe/types.ts` | Stripe entitlement types, tier mapping, API response types |
+| `src/lib/stripe/webhook.ts` | Webhook signature verification + entitlement builders |
+| `src/app/api/stripe/checkout/route.ts` | POST: create Checkout Session, return URL |
+| `src/app/api/stripe/webhook/route.ts` | POST: verify signature, process 3 event types |
+| `src/app/api/stripe/membership/route.ts` | GET: return cached entitlement from KV |
+| `src/app/api/stripe/portal/route.ts` | POST: create Customer Portal session, return URL |
+| `src/app/api/stripe/unlink/route.ts` | POST: cancel subscription + delete KV record |
+| `designs/architecture/adr-010-stripe-direct.md` | Architecture decision record |
 
-## Files Modified
+### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/app/globals.css` | Added `--egg-*`, `--lcars-*`, `--howl-*`, `--loki-toast-*`, `--realm-*` vars in both `:root` and `.dark` |
-| `src/components/layout/TopBar.tsx` | Added ThemeToggle import and integration in both auth states |
-| `src/components/easter-eggs/EasterEggModal.tsx` | All hex to `--egg-*` CSS variables |
-| `src/components/easter-eggs/LcarsOverlay.tsx` | All hex to `--lcars-*` CSS variables |
-| `src/components/layout/KonamiHowl.tsx` | All hex to `--howl-*` CSS variables |
-| `src/components/layout/Footer.tsx` | Loki Toast hex to `--loki-toast-*` variables |
-| `src/components/layout/HowlPanel.tsx` | Realm status hex to `--realm-*` variables |
-| `src/components/layout/SyncIndicator.tsx` | Hex to CSS variables |
-| `src/components/layout/ForgeMasterEgg.tsx` | Hex to `--egg-*` variables |
-| `src/components/dashboard/StatusRing.tsx` | Realm color constants to CSS variables |
-| `src/components/cards/GleipnirCatFootfall.tsx` | All hex to CSS variables |
-| `src/components/cards/GleipnirWomansBeard.tsx` | All hex to CSS variables |
-| `src/components/cards/GleipnirMountainRoots.tsx` | All hex to CSS variables |
-| `src/components/cards/GleipnirBearSinews.tsx` | All hex to CSS variables |
-| `src/components/cards/GleipnirFishBreath.tsx` | All hex to CSS variables |
-| `src/components/cards/GleipnirBirdSpittle.tsx` | All hex to CSS variables |
-| `src/components/shared/WolfHungerMeter.tsx` | Hex to CSS variables |
-| `src/app/page.tsx` | Urgent badge color to CSS variable |
-| `src/app/valhalla/page.tsx` | All hex to CSS variables |
-| `src/components/entitlement/PatreonSettings.tsx` | `#07070d` to `text-primary-foreground` |
-| `src/components/entitlement/SealedRuneModal.tsx` | `#07070d` to semantic tokens |
-| `src/components/entitlement/UpsellBanner.tsx` | `#07070d` to `bg-background` |
-| `src/components/entitlement/UnlinkConfirmDialog.tsx` | `#07070d` to `bg-background` |
+| `package.json` | Added `stripe` dependency |
+| `src/lib/kv/entitlement-store.ts` | Added Stripe KV ops: getStripeEntitlement, setStripeEntitlement, deleteStripeEntitlement, getGoogleSubByStripeCustomerId |
+| `.env.example` | Added Stripe environment variable placeholders |
 
 ## How to Deploy / Test
 
+### Prerequisites
+1. Set `SUBSCRIPTION_PLATFORM=stripe` in `.env.local`
+2. Add real Stripe keys to `.env.local`:
+   - `STRIPE_SECRET_KEY=sk_test_...`
+   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...`
+   - `STRIPE_WEBHOOK_SECRET=whsec_...`
+   - `STRIPE_PRICE_ID=price_...`
+3. Ensure Vercel KV credentials are configured (`KV_REST_API_URL`, `KV_REST_API_TOKEN`)
+
+### Dev Server
 ```bash
-cd development/frontend
-npm install
-npm run dev
+cd development/frontend && npm run dev
+```
+Port: 9655 (worktree) or 9653 (main)
+
+### Testing Routes
+
+All routes except webhook require Bearer auth (Google id_token):
+```
+Authorization: Bearer <google_id_token>
 ```
 
-## Test Scenarios
+**Checkout:**
+```bash
+curl -X POST http://localhost:9655/api/stripe/checkout \
+  -H "Authorization: Bearer <token>"
+# Returns: { "url": "https://checkout.stripe.com/..." }
+```
 
-### ThemeToggle
+**Membership:**
+```bash
+curl http://localhost:9655/api/stripe/membership \
+  -H "Authorization: Bearer <token>"
+# Returns: { "tier": "thrall", "active": false, "platform": "stripe", ... }
+```
 
-| Test | Steps | Expected |
-|------|-------|----------|
-| TC-TH-001 | Sign in, click avatar, open dropdown | "Theme" row with toggle visible above "Sign out" |
-| TC-TH-002 | Anonymous state, click avatar | "Theme" row visible in upsell panel above CTAs |
-| TC-TH-003 | Click Moon (Dark) | `.dark` class added to `<html>`, dark background |
-| TC-TH-004 | Click Sun (Light) | `.dark` class removed, parchment background |
-| TC-TH-005 | Click Monitor (System), toggle OS dark/light | Theme follows OS |
-| TC-TH-006 | Clear localStorage `fenrir-theme`, reload | Default is System |
-| TC-TH-007 | Select Dark, reload page | Theme persists as Dark |
-| TC-TH-008 | Set to Light | Parchment background renders (not white) |
-| TC-TH-009 | Set to Dark | Void-black background renders |
-| TC-TH-011 | Hard reload | No flash of wrong theme |
+**Portal:**
+```bash
+curl -X POST http://localhost:9655/api/stripe/portal \
+  -H "Authorization: Bearer <token>"
+# Returns: { "url": "https://billing.stripe.com/..." }
+# Requires existing entitlement (returns 404 if no subscription)
+```
 
-### Color Audit
+**Unlink:**
+```bash
+curl -X POST http://localhost:9655/api/stripe/unlink \
+  -H "Authorization: Bearer <token>"
+# Returns: { "success": true }
+```
 
-| Test | Steps | Expected |
-|------|-------|----------|
-| Easter eggs | Trigger `?` key (ForgeMasterEgg) in both themes | Modal renders correctly |
-| LCARS | Ctrl+Shift+L in both themes | Overlay renders with correct colors |
-| Konami | Enter Konami code in both themes | Wolf and band render correctly |
-| HowlPanel | View with urgent cards in both themes | Colors render correctly |
-| StatusRing | View cards with various statuses | Ring colors visible and correct |
-| Valhalla | Visit /valhalla in both themes | Tombstone cards render correctly |
-| Loki Mode | Click "Loki" 7x in footer in both themes | Toast renders correctly |
+**Webhook (use Stripe CLI):**
+```bash
+stripe listen --forward-to http://localhost:9655/api/stripe/webhook
+stripe trigger checkout.session.completed
+```
 
-### Build Validation
+### Feature Flag Behavior
+- When `SUBSCRIPTION_PLATFORM=patreon`: all `/api/stripe/*` routes return 404
+- When `SUBSCRIPTION_PLATFORM=stripe`: all `/api/patreon/*` routes return 404
+
+## Build Validation
 
 ```bash
 cd development/frontend
@@ -106,16 +102,15 @@ npx next build     # PASS (verified)
 ```
 
 ## Known Limitations
-
-- Google brand colors on the sign-in page (#4285F4, etc.) are intentionally left as hardcoded hex per brand guidelines
-- Easter egg modals use their own dark overlay aesthetic in both themes (by design)
-- The `--realm-*` status colors are identical in both themes for consistency
-- Tailwind config still has hardcoded hex in direct color tokens (void, forge, chain, gold, realm) -- these are design-time constants used by Tailwind's color system, not runtime theme variables
+- Placeholder env vars -- Odin must provide real Stripe keys before testing
+- No frontend UI yet -- this is the backend foundation only
+- Webhook testing requires either Stripe CLI or a public URL (ngrok/Vercel preview)
+- No migration path from Patreon entitlements to Stripe (by design -- users re-subscribe)
 
 ## Suggested Test Focus Areas
-
-1. **Dark mode visual regression** -- everything should look identical to pre-change
-2. **Light mode readability** -- all text readable on parchment background
-3. **Easter egg modals in light mode** -- these have their own dark overlay
-4. **Status colors on light background** -- realm-* colors need adequate contrast
-5. **ThemeToggle active state** -- gold highlight on the selected option
+1. Feature flag guard: verify Stripe routes return 404 when `SUBSCRIPTION_PLATFORM=patreon`
+2. Auth guard: verify all routes except webhook return 401 without Bearer token
+3. Webhook signature: verify invalid signatures are rejected (400)
+4. Checkout flow: verify session URL is returned with correct metadata
+5. KV operations: verify entitlements are stored/retrieved/deleted correctly
+6. Rate limiting: verify excessive requests are throttled (429)
