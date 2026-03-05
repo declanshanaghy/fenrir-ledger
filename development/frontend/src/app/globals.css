@@ -59,48 +59,52 @@
     --chart-5:              0   79% 50%;    /* red */
   }
 
-  /* ── Dark Theme (Norse War-Room) ─────────────────────────── */
-  .dark {
-    /* ── Surfaces ───────────────────────────────────────────── */
-    --background:           28  15% 7%;     /* #12100e — warm charcoal */
-    --foreground:           40  27% 91%;    /* #f0ede4 — light parchment */
+}
 
-    --card:                 25  14% 10%;    /* #1c1917 — forge */
-    --card-foreground:      40  27% 91%;
+/* ── Dark Theme (Norse War-Room) ───────────────────────────────
+ * Outside @layer base so Tailwind compilation does not strip it.
+ * See DEF-TF-001.
+ * ───────────────────────────────────────────────────────────── */
+.dark {
+  /* ── Surfaces ───────────────────────────────────────────── */
+  --background:           28  15% 7%;     /* #12100e — warm charcoal */
+  --foreground:           40  27% 91%;    /* #f0ede4 — light parchment */
 
-    --popover:              20  9%  13%;    /* #242120 — chain */
-    --popover-foreground:   40  27% 91%;
+  --card:                 25  14% 10%;    /* #1c1917 — forge */
+  --card-foreground:      40  27% 91%;
 
-    /* ── Brand ──────────────────────────────────────────────── */
-    --primary:              42  75% 48%;    /* #d4a520 — brighter gold */
-    --primary-foreground:   28  15% 7%;
+  --popover:              20  9%  13%;    /* #242120 — chain */
+  --popover-foreground:   40  27% 91%;
 
-    /* ── Secondary / Muted ──────────────────────────────────── */
-    --secondary:            22  8%  20%;    /* #3a3530 — stone border */
-    --secondary-foreground: 40  27% 91%;
+  /* ── Brand ──────────────────────────────────────────────── */
+  --primary:              42  75% 48%;    /* #d4a520 — brighter gold */
+  --primary-foreground:   28  15% 7%;
 
-    --muted:                20  7%  27%;    /* #4a4540 — emphasized border */
-    --muted-foreground:     30  11% 58%;    /* #a09888 — lighter stone gray */
+  /* ── Secondary / Muted ──────────────────────────────────── */
+  --secondary:            22  8%  20%;    /* #3a3530 — stone border */
+  --secondary-foreground: 40  27% 91%;
 
-    --accent:               20  7%  27%;
-    --accent-foreground:    40  27% 91%;
+  --muted:                20  7%  27%;    /* #4a4540 — emphasized border */
+  --muted-foreground:     30  11% 58%;    /* #a09888 — lighter stone gray */
 
-    /* ── Status / Destructive ───────────────────────────────── */
-    --destructive:          22  88% 41%;    /* #c94a0a — Muspelheim fire */
-    --destructive-foreground: 40 27% 91%;
+  --accent:               20  7%  27%;
+  --accent-foreground:    40  27% 91%;
 
-    /* ── Structure ──────────────────────────────────────────── */
-    --border:               22  8%  20%;    /* #3a3530 — stone seam */
-    --input:                20  7%  27%;    /* #4a4540 */
-    --ring:                 42  75% 48%;    /* gold focus ring */
+  /* ── Status / Destructive ───────────────────────────────── */
+  --destructive:          22  88% 41%;    /* #c94a0a — Muspelheim fire */
+  --destructive-foreground: 40 27% 91%;
 
-    /* ── Charts (Norse palette) ─────────────────────────────── */
-    --chart-1:              42  75% 48%;    /* gold */
-    --chart-2:              163 83% 29%;    /* teal-asgard */
-    --chart-3:              22  88% 41%;    /* muspel */
-    --chart-4:              38  90% 51%;    /* amber-hati */
-    --chart-5:              0   79% 59%;    /* ragnarok red */
-  }
+  /* ── Structure ──────────────────────────────────────────── */
+  --border:               22  8%  20%;    /* #3a3530 — stone seam */
+  --input:                20  7%  27%;    /* #4a4540 */
+  --ring:                 42  75% 48%;    /* gold focus ring */
+
+  /* ── Charts (Norse palette) ─────────────────────────────── */
+  --chart-1:              42  75% 48%;    /* gold */
+  --chart-2:              163 83% 29%;    /* teal-asgard */
+  --chart-3:              22  88% 41%;    /* muspel */
+  --chart-4:              38  90% 51%;    /* amber-hati */
+  --chart-5:              0   79% 59%;    /* ragnarok red */
 }
 
 @layer base {
