@@ -13,13 +13,39 @@
  *   - Manual test steps are documented at the bottom of this file.
  */
 
-import { test, expect, type Page, type APIResponse } from "@playwright/test";
+import { test, expect, type Page, type APIResponse, type APIRequestContext } from "@playwright/test";
 
 // ---------------------------------------------------------------------------
 // Constants & Helpers
 // ---------------------------------------------------------------------------
 
 const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9653";
+
+// ---------------------------------------------------------------------------
+// Platform detection — module-level cached result.
+//
+// Detection method: GET /api/patreon/authorize
+//   - Patreon mode: non-404 response (302/429/500)
+//   - Stripe mode:  404 {"error":"Patreon integration is disabled"}
+//
+// The cache means only one HTTP request is issued regardless of how many
+// describe blocks call detectPlatform(). Subsequent calls return instantly.
+// ---------------------------------------------------------------------------
+
+let _platformDetected: boolean | undefined;
+
+async function detectStripeMode(request: APIRequestContext): Promise<boolean> {
+  if (_platformDetected !== undefined) return _platformDetected;
+  try {
+    const resp = await request.get(`${BASE_URL}/api/patreon/authorize`, {
+      maxRedirects: 0,
+    });
+    _platformDetected = resp.status() === 404;
+  } catch {
+    _platformDetected = false; // unknown — proceed and let tests surface real issues
+  }
+  return _platformDetected;
+}
 
 /**
  * Assert that a response is NOT a feature-flag 404.
@@ -58,6 +84,14 @@ async function clearPatreonState(page: Page): Promise<void> {
 // ===========================================================================
 
 test.describe("API Route Guards — default patreon mode", () => {
+  test.beforeAll(async ({ request }) => {
+    const isStripe = await detectStripeMode(request);
+    if (isStripe) {
+      // eslint-disable-next-line playwright/no-skipped-test
+      test.skip(true, "Deployment is in Stripe mode — Patreon API route tests skipped.");
+    }
+  });
+
   test(
     "TC-FF-001: GET /api/patreon/authorize responds in default Patreon mode",
     async ({ request }) => {
@@ -225,6 +259,14 @@ test.describe("API Route Guards — default patreon mode", () => {
 // ===========================================================================
 
 test.describe("Client-Side Guards — Settings page in patreon mode", () => {
+  test.beforeAll(async ({ request }) => {
+    const isStripe = await detectStripeMode(request);
+    if (isStripe) {
+      // eslint-disable-next-line playwright/no-skipped-test
+      test.skip(true, "Deployment is in Stripe mode — Patreon client-side settings tests skipped.");
+    }
+  });
+
   test("TC-FF-101: /settings page loads with HTTP 200", async ({ page }) => {
     await clearPatreonState(page);
     const response = await page.goto(`${BASE_URL}/settings`, {
@@ -260,6 +302,14 @@ test.describe("Client-Side Guards — Settings page in patreon mode", () => {
 });
 
 test.describe("Client-Side Guards — PatreonGate passes children in patreon mode", () => {
+  test.beforeAll(async ({ request }) => {
+    const isStripe = await detectStripeMode(request);
+    if (isStripe) {
+      // eslint-disable-next-line playwright/no-skipped-test
+      test.skip(true, "Deployment is in Stripe mode — PatreonGate patreon-mode tests skipped.");
+    }
+  });
+
   test("TC-FF-105: Cloud Sync section is visible to anonymous users", async ({
     page,
   }) => {
@@ -299,6 +349,14 @@ test.describe("Client-Side Guards — PatreonGate passes children in patreon mod
 });
 
 test.describe("Client-Side Guards — SealedRuneModal in patreon mode", () => {
+  test.beforeAll(async ({ request }) => {
+    const isStripe = await detectStripeMode(request);
+    if (isStripe) {
+      // eslint-disable-next-line playwright/no-skipped-test
+      test.skip(true, "Deployment is in Stripe mode — SealedRuneModal patreon-mode tests skipped.");
+    }
+  });
+
   test("TC-FF-109: SealedRuneModal is not visible before interaction", async ({
     page,
   }) => {
@@ -321,7 +379,11 @@ test.describe("Client-Side Guards — SealedRuneModal in patreon mode", () => {
 test.describe("Client-Side Guards — Page structure and regression", () => {
   test("TC-FF-111: Settings page contains all 4 expected sections", async ({
     page,
+    request,
   }) => {
+    const isStripe = await detectStripeMode(request);
+    // eslint-disable-next-line playwright/no-skipped-test
+    test.skip(isStripe, "Deployment is in Stripe mode — Patreon subscription section not rendered.");
     await clearPatreonState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
     await expect(page.locator('[aria-label="Patreon subscription"]')).toBeVisible();
@@ -339,7 +401,11 @@ test.describe("Client-Side Guards — Page structure and regression", () => {
 
   test("TC-FF-113: 'Coming soon to Karl supporters' text renders", async ({
     page,
+    request,
   }) => {
+    const isStripe = await detectStripeMode(request);
+    // eslint-disable-next-line playwright/no-skipped-test
+    test.skip(isStripe, "Deployment is in Stripe mode — Patreon Karl tier copy not rendered.");
     await clearPatreonState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
     const comingSoonText = page.getByText("Coming soon to Karl supporters.").first();
@@ -367,7 +433,11 @@ test.describe("Client-Side Guards — Page structure and regression", () => {
 
   test("TC-FF-116: Settings page is accessible at mobile viewport (375px)", async ({
     page,
+    request,
   }) => {
+    const isStripe = await detectStripeMode(request);
+    // eslint-disable-next-line playwright/no-skipped-test
+    test.skip(isStripe, "Deployment is in Stripe mode — Patreon subscription section not rendered at mobile viewport.");
     await page.setViewportSize({ width: 375, height: 812 });
     await clearPatreonState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });

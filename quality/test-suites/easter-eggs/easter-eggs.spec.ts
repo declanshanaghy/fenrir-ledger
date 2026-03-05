@@ -96,10 +96,14 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
       const statusBand = page.locator('[role="status"]').filter({
         hasText: "FENRIR AWAKENS",
       });
+      // Wait for the band to be visible before asserting text and CSS
+      await expect(statusBand).toBeVisible({ timeout: 5000 });
       await expect(statusBand).toContainText("FENRIR AWAKENS");
 
       // Assert: Status band span has correct styling (blood orange text)
+      // Wait for the span to be attached and styled before checking CSS
       const statusSpan = statusBand.locator("span").first();
+      await expect(statusSpan).toBeVisible({ timeout: 3000 });
       await expect(statusSpan).toHaveCSS(
         "color",
         /rgb\(201,\s*64,\s*32\)|#c94020/i
@@ -435,12 +439,16 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
         const toast = page.locator('[role="status"]').filter({
           hasText: /Loki was here/,
         });
+        // Wait for toast to be visible before asserting text and CSS
+        await expect(toast).toBeVisible({ timeout: 5000 });
         await expect(toast).toContainText(
           "Loki was here. Your data is fine. Probably."
         );
 
         // Assert: Toast span has gold color
+        // Wait for span to be visible and fully styled before checking CSS
         const toastSpan = toast.locator("span").first();
+        await expect(toastSpan).toBeVisible({ timeout: 3000 });
         await expect(toastSpan).toHaveCSS("color", /f0c040|rgb\(240,\s*192,\s*64\)/i);
 
         // Wait for the toast to fade after 5 seconds
@@ -502,17 +510,20 @@ test.describe("Easter Eggs — Fenrir Ledger", () => {
       await page.keyboard.press("Shift+Slash");
 
       const dialog = page.locator('[role="dialog"]').first();
-      await expect(dialog).toBeVisible();
+      await expect(dialog).toBeVisible({ timeout: 5000 });
 
       // Assert: Modal has dark background
+      // Allow extra time for CSS transitions to settle before checking computed styles
       await expect(dialog).toHaveCSS(
         "background-color",
-        /rgb\(15,\s*16,\s*24\)|#0f1018/i
+        /rgb\(15,\s*16,\s*24\)|#0f1018/i,
+        { timeout: 3000 },
       );
 
       // Assert: Title is gold colored
       const title = dialog.locator('h2').first();
-      await expect(title).toHaveCSS("color", /f0b429|rgb\(240,\s*180,\s*41\)/i);
+      await expect(title).toBeVisible({ timeout: 3000 });
+      await expect(title).toHaveCSS("color", /f0b429|rgb\(240,\s*180,\s*41\)/i, { timeout: 3000 });
     });
 
     test("should be responsive on mobile viewport", async ({ page }) => {
