@@ -95,16 +95,16 @@ export function ForgeMasterEgg() {
     >
       {/* The Pack */}
       <div>
-        <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#8a8578] mb-2.5">
+        <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--egg-text-muted))] mb-2.5">
           The Pack
         </p>
         <div className="flex flex-col gap-2">
           {TEAM.map((member) => (
             <div key={member.name} className="flex items-baseline gap-2">
-              <span className="font-heading text-xs font-bold uppercase tracking-wide text-[#f0b429]">
+              <span className="font-heading text-xs font-bold uppercase tracking-wide text-[hsl(var(--egg-title))]">
                 {member.name}
               </span>
-              <span className="font-mono text-[10px] text-[#8a8578]">
+              <span className="font-mono text-[10px] text-[hsl(var(--egg-text-muted))]">
                 {member.role}
               </span>
             </div>
@@ -113,30 +113,30 @@ export function ForgeMasterEgg() {
       </div>
 
       {/* Lore line */}
-      <p className="font-body text-xs italic text-[#8a8578] leading-relaxed">
+      <p className="font-body text-xs italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
         &ldquo;Forged in the fires of Muspelheim. No chain holds the wolf
         that built the chain.&rdquo;
       </p>
 
       {/* Gleipnir fragment count */}
-      <div className="border-t border-[#1e2235] pt-3">
-        <p className="font-mono text-[0.7rem] text-[#c9920a]">
+      <div className="border-t border-[hsl(var(--egg-border))] pt-3">
+        <p className="font-mono text-[0.7rem] text-[hsl(var(--egg-accent))]">
           {fragmentsFound} of {TOTAL_FRAGMENTS} Gleipnir fragments found
         </p>
         {fragmentsFound === TOTAL_FRAGMENTS && (
-          <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">
+          <p className="font-mono text-[0.65rem] text-[hsl(var(--egg-title))] mt-1 animate-pulse">
             ✦ Gleipnir is complete. The wolf stirs.
           </p>
         )}
         {fragmentsFound === 0 && (
-          <p className="font-mono text-[0.6rem] text-[#3d3d52] mt-1">
+          <p className="font-mono text-[0.6rem] text-muted-foreground/50 mt-1">
             Six impossible things wait to be found.
           </p>
         )}
       </div>
 
       {/* Wolf's Hunger — aggregate bonus summary */}
-      <div className="border-t border-[#1e2235] pt-3 mt-1">
+      <div className="border-t border-[hsl(var(--egg-border))] pt-3 mt-1">
         <WolfHungerMeter />
       </div>
     </EasterEggModal>

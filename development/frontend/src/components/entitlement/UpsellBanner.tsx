@@ -144,7 +144,7 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
   return (
     <>
       <div
-        className="relative border border-gold/20 bg-[#07070d]/60 p-4 md:px-5 flex flex-col md:flex-row gap-3 md:items-start rounded-sm"
+        className="relative border border-gold/20 bg-background/60 p-4 md:px-5 flex flex-col md:flex-row gap-3 md:items-start rounded-sm"
         role="complementary"
         aria-label="Premium feature promotion"
       >

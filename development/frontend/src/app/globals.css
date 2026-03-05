@@ -57,6 +57,53 @@
     --chart-3:              15  85% 42%;    /* blood orange */
     --chart-4:              38  90% 42%;    /* deeper amber */
     --chart-5:              0   79% 50%;    /* red */
+
+    /* ── Easter Egg Modal ──────────────────────────────────── */
+    --egg-bg:               230 20% 12%;   /* #1a1c25 — deep indigo */
+    --egg-bg-body:          230 18% 10%;   /* #13151f — slightly lighter */
+    --egg-border:           230 25% 20%;   /* #2a2d45 — muted indigo seam */
+    --egg-title:            42  90% 55%;   /* #f0b429 — bright gold */
+    --egg-text:             40  27% 91%;   /* #e8e4d4 — parchment text */
+    --egg-text-muted:       30  6%  50%;   /* #8a8578 — stone muted */
+    --egg-accent:           42  75% 40%;   /* #c9920a — gold accent */
+    --egg-btn-bg:           42  75% 40%;   /* #c9920a — gold button */
+    --egg-btn-text:         230 40% 5%;    /* #07070d — near-black */
+    --egg-btn-hover:        42  90% 55%;   /* #f0b429 — bright gold hover */
+
+    /* ── LCARS Overlay ─────────────────────────────────────── */
+    --lcars-orange:         30  100% 50%;  /* #ff9900 */
+    --lcars-lavender:       300 33% 72%;   /* #cc99cc */
+    --lcars-periwinkle:     240 100% 80%;  /* #9999ff */
+    --lcars-red:            0   100% 60%;  /* #ff3333 */
+    --lcars-green:          145 60% 50%;   /* #33cc66 */
+    --lcars-rose:           0   40% 60%;   /* #cc6666 */
+    --lcars-bg:             0   0%  0%;    /* #000000 — deep black */
+    --lcars-scanline:       30  100% 50%;  /* orange scanline */
+    --lcars-text-dark:      0   0%  0%;    /* #000 — text on bright bars */
+
+    /* ── Konami Howl ───────────────────────────────────────── */
+    --howl-wolf-fill:       42  75% 40%;   /* #c9920a — wolf gold */
+    --howl-eye-fill:        230 40% 5%;    /* #07070d — void cutouts */
+    --howl-pulse-bg:        0   100% 12%;  /* #3d0000 — deep red flash */
+    --howl-band-bg:         240 30% 4%;    /* rgba(7,7,13,0.96) */
+    --howl-band-border:     10  60% 48%;   /* #c94020 — blood red */
+    --howl-band-text:       10  60% 48%;   /* #c94020 */
+    --howl-wolf-bg:         240 30% 4%;    /* rgba(7,7,13,0.92) */
+    --howl-wolf-border:     42  75% 40%;   /* #c9920a — gold border */
+
+    /* ── Loki Toast ────────────────────────────────────────── */
+    --loki-toast-bg:        28  15% 7%;    /* #12100e */
+    --loki-toast-border:    42  75% 48%;   /* #d4a520 */
+    --loki-toast-text:      46  87% 60%;   /* #f0c040 */
+    --loki-toast-shadow:    42  75% 48%;   /* gold glow */
+
+    /* ── Realm Status (used in StatusRing / HowlPanel) ─────── */
+    --realm-ragnarok:       0   84% 60%;   /* #ef4444 */
+    --realm-muspel:         22  88% 41%;   /* #c94a0a */
+    --realm-hati:           38  92% 50%;   /* #f59e0b */
+    --realm-asgard:         163 83% 29%;   /* #0a8c6e */
+    --realm-stone:          37  6%  50%;   /* #8a8578 */
+    --realm-ragnarok-dark:  10  60% 48%;   /* #c94020 — ragnarok accent */
   }
 
 }
@@ -105,6 +152,53 @@
   --chart-3:              22  88% 41%;    /* muspel */
   --chart-4:              38  90% 51%;    /* amber-hati */
   --chart-5:              0   79% 59%;    /* ragnarok red */
+
+  /* ── Easter Egg Modal ──────────────────────────────────── */
+  --egg-bg:               230 20% 6%;    /* #0f1018 — deep indigo */
+  --egg-bg-body:          230 18% 9%;    /* #13151f — slightly lighter */
+  --egg-border:           230 25% 18%;   /* #2a2d45 — muted indigo seam */
+  --egg-title:            42  90% 55%;   /* #f0b429 — bright gold */
+  --egg-text:             40  27% 91%;   /* #e8e4d4 — parchment text */
+  --egg-text-muted:       37  6%  50%;   /* #8a8578 — stone muted */
+  --egg-accent:           42  75% 40%;   /* #c9920a — gold accent */
+  --egg-btn-bg:           42  75% 40%;   /* #c9920a — gold button */
+  --egg-btn-text:         230 40% 5%;    /* #07070d — near-black */
+  --egg-btn-hover:        42  90% 55%;   /* #f0b429 — bright gold hover */
+
+  /* ── LCARS Overlay ─────────────────────────────────────── */
+  --lcars-orange:         30  100% 50%;  /* #ff9900 */
+  --lcars-lavender:       300 33% 72%;   /* #cc99cc */
+  --lcars-periwinkle:     240 100% 80%;  /* #9999ff */
+  --lcars-red:            0   100% 60%;  /* #ff3333 */
+  --lcars-green:          145 60% 50%;   /* #33cc66 */
+  --lcars-rose:           0   40% 60%;   /* #cc6666 */
+  --lcars-bg:             0   0%  0%;    /* #000000 — deep black */
+  --lcars-scanline:       30  100% 50%;  /* orange scanline */
+  --lcars-text-dark:      0   0%  0%;    /* #000 — text on bright bars */
+
+  /* ── Konami Howl ───────────────────────────────────────── */
+  --howl-wolf-fill:       42  75% 40%;   /* #c9920a — wolf gold */
+  --howl-eye-fill:        230 40% 5%;    /* #07070d — void cutouts */
+  --howl-pulse-bg:        0   100% 12%;  /* #3d0000 — deep red flash */
+  --howl-band-bg:         240 30% 4%;    /* rgba(7,7,13,0.96) */
+  --howl-band-border:     10  60% 48%;   /* #c94020 — blood red */
+  --howl-band-text:       10  60% 48%;   /* #c94020 */
+  --howl-wolf-bg:         240 30% 4%;    /* rgba(7,7,13,0.92) */
+  --howl-wolf-border:     42  75% 40%;   /* #c9920a — gold border */
+
+  /* ── Loki Toast ────────────────────────────────────────── */
+  --loki-toast-bg:        28  15% 7%;    /* #12100e */
+  --loki-toast-border:    42  75% 48%;   /* #d4a520 */
+  --loki-toast-text:      46  87% 60%;   /* #f0c040 */
+  --loki-toast-shadow:    42  75% 48%;   /* gold glow */
+
+  /* ── Realm Status (used in StatusRing / HowlPanel) ─────── */
+  --realm-ragnarok:       0   84% 60%;   /* #ef4444 */
+  --realm-muspel:         22  88% 41%;   /* #c94a0a */
+  --realm-hati:           38  92% 50%;   /* #f59e0b */
+  --realm-asgard:         163 83% 29%;   /* #0a8c6e */
+  --realm-stone:          37  6%  50%;   /* #8a8578 */
+  --realm-ragnarok-dark:  10  60% 48%;   /* #c94020 — ragnarok accent */
 }
 
 @layer base {

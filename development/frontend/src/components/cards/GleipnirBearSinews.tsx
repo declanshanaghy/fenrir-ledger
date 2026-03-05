@@ -52,25 +52,25 @@ export function GleipnirBearSinews({ open, onClose }: GleipnirBearSinewsProps) {
       }
       audioSrc="/sounds/fenrir-growl.mp3"
     >
-      <p className="font-body text-sm text-[#e8e4d4] leading-relaxed">
+      <p className="font-body text-sm text-[hsl(var(--egg-text))] leading-relaxed">
         One of the six impossible things woven into{" "}
-        <span className="text-[#f0b429] italic">Gleipnir</span> — the only
+        <span className="text-[hsl(var(--egg-title))] italic">Gleipnir</span> — the only
         chain strong enough to bind the great wolf. Though it looks like silk
         ribbon, no chain is stronger.
       </p>
 
-      <p className="font-body text-xs italic text-[#8a8578] leading-relaxed">
+      <p className="font-body text-xs italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
         &ldquo;The dwarves of Svartálfaheimr gathered six things that do not
         exist. From these they wove Gleipnir. When Fenrir felt its touch, he
         knew at last what true binding was.&rdquo;
       </p>
 
-      <div className="border-t border-[#1e2235] pt-3 mt-1">
-        <p className="font-mono text-[0.7rem] text-[#c9920a]">
+      <div className="border-t border-[hsl(var(--egg-border))] pt-3 mt-1">
+        <p className="font-mono text-[0.7rem] text-[hsl(var(--egg-accent))]">
           Fragment {found} of {TOTAL_FRAGMENTS} found
         </p>
         {found === TOTAL_FRAGMENTS && (
-          <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">
+          <p className="font-mono text-[0.65rem] text-[hsl(var(--egg-title))] mt-1 animate-pulse">
             ✦ Gleipnir is complete. The wolf stirs.
           </p>
         )}

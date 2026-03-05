@@ -1,80 +1,121 @@
-# QA Handoff -- Story 1: Theme Foundation + CSS Variables
+# QA Handoff -- Story 2: Theme Toggle UI + Color Audit + Design Docs
 
-**Branch:** `feat/theme-foundation`
+**Branch:** `feat/theme-toggle-ui`
 **Date:** 2026-03-04
 **Engineer:** FiremanDecko
 
 ## What Was Implemented
 
-### Task: theme-foundation
-Installed `next-themes` and restructured the CSS variable system to support both dark and light themes. This is the foundation layer -- no toggle UI yet (that is Story 2).
+Three tasks for Story 2:
 
-### Changes summary:
-1. Installed `next-themes` package
-2. Restructured `globals.css`: `:root` now defines the light (Norse parchment) palette, `.dark` defines the dark (Norse war-room) palette
-3. Updated `layout.tsx`: removed hardcoded `"dark"` class, added `suppressHydrationWarning`, wrapped app in `<ThemeProvider>` from next-themes with `defaultTheme="system"` and `storageKey="fenrir-theme"`
-4. Converted all hardcoded hex values in CSS animations/shadows to CSS variables (skeleton shimmer, milestone toast, gleipnir shimmer, sealed rune pulse, card-chain hover, myth-link borders, gleipnir copyright tooltip)
-5. Removed stray `dark:text-amber-400` prefixed classes from CardTile.tsx (2 instances) and Dashboard.tsx (1 instance)
-6. Added theme-aware body background textures (light: lower opacity warm glow; dark: original gold glow + stone grain)
+### Task 1: ThemeToggle Component + TopBar Integration
+- Created `ThemeToggle.tsx` -- three-way segmented toggle (Light/Dark/System) using Sun, Moon, Monitor icons from lucide-react
+- SSR-safe: renders placeholder until mounted to avoid hydration mismatch
+- Integrated into TopBar in both states:
+  - **Anonymous**: Theme row in the upsell prompt panel (above "Sign in to Google")
+  - **Signed-in**: Theme row in the profile dropdown (above "Sign out")
+- Accessible: `role="radiogroup"`, `aria-label="Theme"`, `aria-checked` per option
+- Touch-friendly: min 44x36px tap targets
 
-## Files Modified
+### Task 2: Color Audit -- Hardcoded Hex Removal
+- Converted ALL inline `style={{ color: "#hex" }}` and Tailwind `[#hex]` patterns to CSS variables
+- Added new CSS variable groups in globals.css: `--egg-*`, `--lcars-*`, `--howl-*`, `--loki-toast-*`, `--realm-*`
+- 24 component files modified (see list below)
+
+### Task 3: Design System Documentation
+- Created `designs/ux-design/theme-system.md` with full palette specs, WCAG contrast ratios, and mandatory design rules
+
+## Files Created
 
 | File | Description |
 |------|-------------|
-| `development/frontend/package.json` | Added `next-themes` dependency |
-| `development/frontend/src/app/globals.css` | Restructured into `:root` (light) + `.dark` (dark) variable blocks; converted hardcoded hex to CSS vars |
-| `development/frontend/src/app/layout.tsx` | Removed hardcoded `"dark"` class; added `suppressHydrationWarning`; wrapped app in `<ThemeProvider>` |
-| `development/frontend/src/components/dashboard/CardTile.tsx` | Removed `dark:text-amber-400` (2 instances) |
-| `development/frontend/src/components/dashboard/Dashboard.tsx` | Removed `dark:text-amber-400` (1 instance) |
+| `src/components/layout/ThemeToggle.tsx` | Three-way theme toggle (Sun/Moon/Monitor) |
+| `designs/ux-design/theme-system.md` | Dual-theme design system documentation |
 
-## How to Test
+## Files Modified
 
-### Test 1: Dark mode visual regression (primary concern)
+| File | Change |
+|------|--------|
+| `src/app/globals.css` | Added `--egg-*`, `--lcars-*`, `--howl-*`, `--loki-toast-*`, `--realm-*` vars in both `:root` and `.dark` |
+| `src/components/layout/TopBar.tsx` | Added ThemeToggle import and integration in both auth states |
+| `src/components/easter-eggs/EasterEggModal.tsx` | All hex to `--egg-*` CSS variables |
+| `src/components/easter-eggs/LcarsOverlay.tsx` | All hex to `--lcars-*` CSS variables |
+| `src/components/layout/KonamiHowl.tsx` | All hex to `--howl-*` CSS variables |
+| `src/components/layout/Footer.tsx` | Loki Toast hex to `--loki-toast-*` variables |
+| `src/components/layout/HowlPanel.tsx` | Realm status hex to `--realm-*` variables |
+| `src/components/layout/SyncIndicator.tsx` | Hex to CSS variables |
+| `src/components/layout/ForgeMasterEgg.tsx` | Hex to `--egg-*` variables |
+| `src/components/dashboard/StatusRing.tsx` | Realm color constants to CSS variables |
+| `src/components/cards/GleipnirCatFootfall.tsx` | All hex to CSS variables |
+| `src/components/cards/GleipnirWomansBeard.tsx` | All hex to CSS variables |
+| `src/components/cards/GleipnirMountainRoots.tsx` | All hex to CSS variables |
+| `src/components/cards/GleipnirBearSinews.tsx` | All hex to CSS variables |
+| `src/components/cards/GleipnirFishBreath.tsx` | All hex to CSS variables |
+| `src/components/cards/GleipnirBirdSpittle.tsx` | All hex to CSS variables |
+| `src/components/shared/WolfHungerMeter.tsx` | Hex to CSS variables |
+| `src/app/page.tsx` | Urgent badge color to CSS variable |
+| `src/app/valhalla/page.tsx` | All hex to CSS variables |
+| `src/components/entitlement/PatreonSettings.tsx` | `#07070d` to `text-primary-foreground` |
+| `src/components/entitlement/SealedRuneModal.tsx` | `#07070d` to semantic tokens |
+| `src/components/entitlement/UpsellBanner.tsx` | `#07070d` to `bg-background` |
+| `src/components/entitlement/UnlinkConfirmDialog.tsx` | `#07070d` to `bg-background` |
 
-1. `cd development/frontend && npm install && npm run dev`
-2. Open browser, set OS to dark mode (or set `fenrir-theme` to `"dark"` in localStorage)
-3. Verify: App looks identical to before -- same Norse war-room aesthetic
-4. Check: Card hover glow, skeleton shimmer, milestone toast styling, gleipnir copyright tooltip, myth links
-
-### Test 2: Light mode renders parchment palette
-
-1. Set OS to light mode (or set `fenrir-theme` to `"light"` in localStorage)
-2. Verify: Warm parchment backgrounds, dark brown text, adapted gold accents
-3. Verify: Skeleton shimmer uses parchment tones, not dark hex values
-
-### Test 3: System theme follows OS
-
-1. Remove `fenrir-theme` from localStorage (or set to `"system"`)
-2. Toggle OS dark/light mode
-3. Verify: App follows OS preference
-
-### Test 4: Build validation
+## How to Deploy / Test
 
 ```bash
-cd development/frontend && npx tsc --noEmit   # Should pass
-cd development/frontend && npx next build      # Should succeed
+cd development/frontend
+npm install
+npm run dev
 ```
 
-### Test 5: No stray dark: prefixes
+## Test Scenarios
+
+### ThemeToggle
+
+| Test | Steps | Expected |
+|------|-------|----------|
+| TC-TH-001 | Sign in, click avatar, open dropdown | "Theme" row with toggle visible above "Sign out" |
+| TC-TH-002 | Anonymous state, click avatar | "Theme" row visible in upsell panel above CTAs |
+| TC-TH-003 | Click Moon (Dark) | `.dark` class added to `<html>`, dark background |
+| TC-TH-004 | Click Sun (Light) | `.dark` class removed, parchment background |
+| TC-TH-005 | Click Monitor (System), toggle OS dark/light | Theme follows OS |
+| TC-TH-006 | Clear localStorage `fenrir-theme`, reload | Default is System |
+| TC-TH-007 | Select Dark, reload page | Theme persists as Dark |
+| TC-TH-008 | Set to Light | Parchment background renders (not white) |
+| TC-TH-009 | Set to Dark | Void-black background renders |
+| TC-TH-011 | Hard reload | No flash of wrong theme |
+
+### Color Audit
+
+| Test | Steps | Expected |
+|------|-------|----------|
+| Easter eggs | Trigger `?` key (ForgeMasterEgg) in both themes | Modal renders correctly |
+| LCARS | Ctrl+Shift+L in both themes | Overlay renders with correct colors |
+| Konami | Enter Konami code in both themes | Wolf and band render correctly |
+| HowlPanel | View with urgent cards in both themes | Colors render correctly |
+| StatusRing | View cards with various statuses | Ring colors visible and correct |
+| Valhalla | Visit /valhalla in both themes | Tombstone cards render correctly |
+| Loki Mode | Click "Loki" 7x in footer in both themes | Toast renders correctly |
+
+### Build Validation
 
 ```bash
-grep -rn 'dark:' development/frontend/src/ --include='*.tsx' --include='*.ts'
-# Should return zero results
+cd development/frontend
+npx tsc --noEmit   # PASS (verified)
+npx next build     # PASS (verified)
 ```
 
 ## Known Limitations
 
-- No theme toggle UI yet -- that is Story 2 (feat/theme-toggle-ui)
-- To test light mode manually, change OS preference or set `fenrir-theme` to `"light"` in localStorage
-- Tailwind config still has hardcoded hex in direct color tokens (void, forge, chain, gold, realm) -- these are design tokens, not theme-variable candidates. Story 2 color audit will address components using them incorrectly.
-- Light theme contrast ratios for muted-foreground on card/background are around 3.3-3.6:1 -- acceptable for large/bold text but may need adjustment for small body text in Story 2
+- Google brand colors on the sign-in page (#4285F4, etc.) are intentionally left as hardcoded hex per brand guidelines
+- Easter egg modals use their own dark overlay aesthetic in both themes (by design)
+- The `--realm-*` status colors are identical in both themes for consistency
+- Tailwind config still has hardcoded hex in direct color tokens (void, forge, chain, gold, realm) -- these are design-time constants used by Tailwind's color system, not runtime theme variables
 
 ## Suggested Test Focus Areas
 
-- Visual regression in dark mode (nothing should look different from current production)
-- Body background texture rendering in both themes
-- Skeleton loading shimmer appearance in both themes
-- Gleipnir hunt easter egg CSS (copyright tooltip color)
-- Card hover glow effect
-- Milestone toast styling
-- Myth link underline color
+1. **Dark mode visual regression** -- everything should look identical to pre-change
+2. **Light mode readability** -- all text readable on parchment background
+3. **Easter egg modals in light mode** -- these have their own dark overlay
+4. **Status colors on light background** -- realm-* colors need adequate contrast
+5. **ThemeToggle active state** -- gold highlight on the selected option

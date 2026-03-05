@@ -279,10 +279,10 @@ export function PatreonSettings() {
             <div>
               <Button
                 onClick={linkPatreon}
-                className="inline-flex items-center gap-2.5 min-h-[44px] md:min-h-[40px] w-full md:w-auto font-heading font-bold bg-gold text-[#07070d] hover:bg-gold-bright border-2 border-gold"
+                className="inline-flex items-center gap-2.5 min-h-[44px] md:min-h-[40px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
                 aria-label="Subscribe via Patreon"
               >
-                <span className="w-5 h-5 flex items-center justify-center border border-[#07070d]/30 text-xs font-bold rounded-sm">
+                <span className="w-5 h-5 flex items-center justify-center border border-primary-foreground/30 text-xs font-bold rounded-sm">
                   P
                 </span>
                 Subscribe via Patreon
@@ -354,10 +354,10 @@ export function PatreonSettings() {
             <div>
               <Button
                 onClick={linkPatreon}
-                className="inline-flex items-center gap-2.5 min-h-[44px] md:min-h-[40px] w-full md:w-auto font-heading font-bold bg-gold text-[#07070d] hover:bg-gold-bright border-2 border-gold"
+                className="inline-flex items-center gap-2.5 min-h-[44px] md:min-h-[40px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
                 aria-label="Link your Patreon account"
               >
-                <span className="w-5 h-5 flex items-center justify-center border border-[#07070d]/30 text-xs font-bold rounded-sm">
+                <span className="w-5 h-5 flex items-center justify-center border border-primary-foreground/30 text-xs font-bold rounded-sm">
                   P
                 </span>
                 Link Patreon
@@ -429,7 +429,7 @@ export function PatreonSettings() {
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
               <Button
                 onClick={linkPatreon}
-                className="min-h-[44px] md:min-h-[40px] w-full md:w-auto font-heading font-bold bg-gold text-[#07070d] hover:bg-gold-bright border-2 border-gold"
+                className="min-h-[44px] md:min-h-[40px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
                 aria-label="Open Patreon campaign page in new tab"
               >
                 Pledge on Patreon
@@ -472,7 +472,7 @@ export function PatreonSettings() {
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
               <Button
                 onClick={linkPatreon}
-                className="min-h-[48px] md:min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-[#07070d] hover:bg-gold-bright border-2 border-gold"
+                className="min-h-[48px] md:min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
                 aria-label="Open Patreon campaign page to renew membership"
               >
                 Renew on Patreon

@@ -60,7 +60,7 @@ export function SyncIndicator() {
                      pointer-events-none whitespace-nowrap"
           aria-hidden="true"
         >
-          <span className="font-mono text-[10px] tracking-wide text-[#c9920a]">
+          <span className="font-mono text-[10px] tracking-wide text-[hsl(var(--egg-accent))]">
             The sound of a cat&apos;s footfall
           </span>
         </div>
@@ -76,14 +76,14 @@ export function SyncIndicator() {
           {syncing && (
             <span
               className="absolute inline-flex h-full w-full rounded-full
-                         bg-[#c9920a] opacity-40 animate-ping"
+                         bg-[hsl(var(--egg-accent))] opacity-40 animate-ping"
             />
           )}
 
           {/* Core dot — gold while syncing, dim iron at rest */}
           <span
             className={`relative inline-flex h-2 w-2 rounded-full transition-colors duration-700 ${
-              syncing ? "bg-[#c9920a]" : "bg-[#2a2d45]"
+              syncing ? "bg-[hsl(var(--egg-accent))]" : "bg-[hsl(var(--egg-border))]"
             }`}
           />
         </button>

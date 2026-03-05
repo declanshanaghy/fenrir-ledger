@@ -92,10 +92,10 @@ function UrgentRow({ row }: UrgentRowProps) {
   // Color the urgency dot by realm token matching interactions.md StatusRing spec
   const dotColor =
     daysRemaining <= 0
-      ? "bg-[#ef4444]"       // ragnarok — overdue
+      ? "bg-[hsl(var(--realm-ragnarok))]"       // ragnarok — overdue
       : daysRemaining <= 30
-        ? "bg-[#c94a0a]"     // muspelheim — critical
-        : "bg-[#f59e0b]";    // hati — approaching
+        ? "bg-[hsl(var(--realm-muspel))]"     // muspelheim — critical
+        : "bg-[hsl(var(--realm-hati))]";    // hati — approaching
 
   const typeLabel = isFee ? "Annual Fee" : "Promo Deadline";
 
@@ -123,7 +123,7 @@ function UrgentRow({ row }: UrgentRowProps) {
         <span
           className={cn(
             "ml-auto text-xs font-mono font-semibold",
-            daysRemaining <= 30 ? "text-[#c94a0a]" : "text-[#f59e0b]"
+            daysRemaining <= 30 ? "text-[hsl(var(--realm-muspel))]" : "text-[hsl(var(--realm-hati))]"
           )}
           data-slot="count"
         >
@@ -199,7 +199,7 @@ function PanelHeader({ count, shake, onShakeEnd, ragnarokActive }: PanelHeaderPr
       className={cn(
         "flex items-center gap-2 px-4 py-3 border-b",
         ragnarokActive
-          ? "border-[#c94020] animate-muspel-pulse"
+          ? "border-[hsl(var(--realm-ragnarok-dark))] animate-muspel-pulse"
           : "border-border"
       )}
     >
@@ -210,9 +210,9 @@ function PanelHeader({ count, shake, onShakeEnd, ragnarokActive }: PanelHeaderPr
         className={cn(
           "text-lg leading-none shrink-0 select-none",
           ragnarokActive
-            ? "text-[#c94020] animate-muspel-pulse"
+            ? "text-[hsl(var(--realm-ragnarok-dark))] animate-muspel-pulse"
             : count > 0
-            ? "text-[#c94a0a] animate-muspel-pulse"
+            ? "text-[hsl(var(--realm-muspel))] animate-muspel-pulse"
             : "text-muted-foreground",
           shake ? "raven-icon--warning" : ""
         )}
@@ -229,8 +229,8 @@ function PanelHeader({ count, shake, onShakeEnd, ragnarokActive }: PanelHeaderPr
           className={cn(
             "text-xs font-mono font-semibold px-1.5 py-0.5 rounded-sm",
             ragnarokActive
-              ? "text-[#c94020] bg-[#c94020]/10"
-              : "text-[#c94a0a] bg-[#c94a0a]/10"
+              ? "text-[hsl(var(--realm-ragnarok-dark))] bg-[hsl(var(--realm-ragnarok-dark))]/10"
+              : "text-[hsl(var(--realm-muspel))] bg-[hsl(var(--realm-muspel))]/10"
           )}
           data-slot="count"
           aria-label={`${count} urgent card${count === 1 ? "" : "s"}`}
@@ -322,7 +322,7 @@ export function HowlPanel({ cards, className }: HowlPanelProps) {
       className={cn(
         "flex flex-col",
         "bg-background border rounded-sm",
-        ragnarokActive ? "border-[#c94020]" : "border-border",
+        ragnarokActive ? "border-[hsl(var(--realm-ragnarok-dark))]" : "border-border",
         "w-full",
         className
       )}

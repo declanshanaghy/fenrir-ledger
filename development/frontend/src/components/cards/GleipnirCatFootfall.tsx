@@ -56,20 +56,20 @@ export function GleipnirCatFootfall({ open, onClose }: GleipnirCatFootfallProps)
        */}
       <DialogContent
         className="w-[92vw] max-w-[680px] p-0 gap-0 flex flex-col
-                   bg-[#0f1018] border border-[#2a2d45]
-                   [&>button]:text-[#8a8578] [&>button]:hover:text-[#e8e4d4]"
+                   bg-[hsl(var(--egg-bg))] border border-[hsl(var(--egg-border))]
+                   [&>button]:text-[hsl(var(--egg-text-muted))] [&>button]:hover:text-[hsl(var(--egg-text))]"
         style={{ zIndex: 9653 }}
       >
         {/* ── Header ──────────────────────────────────────────────────── */}
         {/* pr-10 clears the built-in X button */}
-        <div className="px-6 pt-5 pb-4 pr-10 text-center border-b border-[#1e2235]">
-          <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-[#c9920a] mb-2">
+        <div className="px-6 pt-5 pb-4 pr-10 text-center border-b border-[hsl(var(--egg-border))]">
+          <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--egg-accent))] mb-2">
             <span aria-hidden="true">ᚠ ᛖ ᚾ ᚱ</span>
             {" · "}Easter Egg Discovered{" · "}
             <span aria-hidden="true">ᛁ ᚱ ᛊ</span>
           </p>
 
-          <DialogTitle className="font-display text-[clamp(1.1rem,3.5vw,1.6rem)] font-bold text-[#f0b429] leading-tight">
+          <DialogTitle className="font-display text-[clamp(1.1rem,3.5vw,1.6rem)] font-bold text-[hsl(var(--egg-title))] leading-tight">
             The Sound of a Cat&apos;s Footfall
           </DialogTitle>
         </div>
@@ -85,7 +85,7 @@ export function GleipnirCatFootfall({ open, onClose }: GleipnirCatFootfallProps)
          * Desktop: image left | divider | text right
          * Mobile:  stacked (image top, text bottom)
          */}
-        <div className="flex flex-col md:grid md:grid-cols-[1fr_1px_1fr] bg-[#13151f]">
+        <div className="flex flex-col md:grid md:grid-cols-[1fr_1px_1fr] bg-[hsl(var(--egg-bg-body))]">
 
           {/* Left — artifact image (SVG served from /public/easter-eggs/) */}
           <div className="flex items-center justify-center p-6 md:p-8">
@@ -102,32 +102,32 @@ export function GleipnirCatFootfall({ open, onClose }: GleipnirCatFootfallProps)
             className="hidden md:block"
             style={{
               background:
-                "linear-gradient(to bottom, transparent, #2a2d45 20%, #2a2d45 80%, transparent)",
+                "linear-gradient(to bottom, transparent, hsl(var(--egg-border)) 20%, hsl(var(--egg-border)) 80%, transparent)",
             }}
             aria-hidden="true"
           />
 
           {/* Right — discovery text */}
           <div className="flex flex-col justify-center gap-3 px-6 py-6 md:px-8">
-            <p className="font-body text-sm text-[#e8e4d4] leading-relaxed">
+            <p className="font-body text-sm text-[hsl(var(--egg-text))] leading-relaxed">
               One of the six impossible things woven into{" "}
-              <span className="text-[#f0b429] italic">Gleipnir</span> — the only
+              <span className="text-[hsl(var(--egg-title))] italic">Gleipnir</span> — the only
               chain strong enough to bind the great wolf. Though it looks like silk
               ribbon, no chain is stronger.
             </p>
 
-            <p className="font-body text-xs italic text-[#8a8578] leading-relaxed">
+            <p className="font-body text-xs italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
               &ldquo;The dwarves of Svartálfaheimr gathered six things that do not
               exist. From these they wove Gleipnir. When Fenrir felt its touch, he
               knew at last what true binding was.&rdquo;
             </p>
 
-            <div className="border-t border-[#1e2235] pt-3 mt-1">
-              <p className="font-mono text-[0.7rem] text-[#c9920a]">
+            <div className="border-t border-[hsl(var(--egg-border))] pt-3 mt-1">
+              <p className="font-mono text-[0.7rem] text-[hsl(var(--egg-accent))]">
                 Fragment {found} of {TOTAL_FRAGMENTS} found
               </p>
               {found === TOTAL_FRAGMENTS && (
-                <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">
+                <p className="font-mono text-[0.65rem] text-[hsl(var(--egg-title))] mt-1 animate-pulse">
                   ✦ Gleipnir is complete. The wolf stirs.
                 </p>
               )}
@@ -137,11 +137,11 @@ export function GleipnirCatFootfall({ open, onClose }: GleipnirCatFootfallProps)
         </div>
 
         {/* ── Footer ──────────────────────────────────────────────────── */}
-        <div className="flex justify-center px-6 py-4 border-t border-[#1e2235]">
+        <div className="flex justify-center px-6 py-4 border-t border-[hsl(var(--egg-border))]">
           <DialogClose asChild>
             <Button
               className="px-10 font-heading text-sm font-semibold tracking-widest uppercase
-                         bg-[#c9920a] text-[#07070d] hover:bg-[#f0b429]
+                         bg-[hsl(var(--egg-btn-bg))] text-[hsl(var(--egg-btn-text))] hover:bg-[hsl(var(--egg-btn-hover))]
                          rounded-none min-h-[44px]"
             >
               OK

@@ -1,14 +1,16 @@
 "use client";
 
 /**
- * GleipnirFishBreath — Gleipnir Fragment 5 of 6
+ * GleipnirFishBreath -- Gleipnir Fragment 5 of 6
  *
  * Shown when the user discovers: "The Breath of a Fish"
- * One of the six impossible things woven into Gleipnir — the ribbon that bound Fenrir.
+ * One of the six impossible things woven into Gleipnir -- the ribbon that bound Fenrir.
  *
- * Trigger:  Footer — hover on the © symbol (see design/easter-eggs.md)
+ * Trigger:  Footer -- hover on the (c) symbol (see design/easter-eggs.md)
  * Storage:  localStorage key "egg:gleipnir-5"
  * Image:    /easter-eggs/gleipnir-5.svg
+ *
+ * All colors use CSS variables (--egg-*) for theme support.
  */
 
 import { useEffect, useState } from "react";
@@ -28,7 +30,6 @@ export function GleipnirFishBreath({ open, onClose }: GleipnirFishBreathProps) {
 
   useEffect(() => {
     if (open) {
-      // Count total found (this fragment was already written by the hook's trigger()).
       const count = Array.from({ length: TOTAL_FRAGMENTS }, (_, i) =>
         localStorage.getItem(`egg:gleipnir-${i + 1}`)
       ).filter(Boolean).length;
@@ -46,13 +47,13 @@ export function GleipnirFishBreath({ open, onClose }: GleipnirFishBreathProps) {
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src="/easter-eggs/gleipnir-5.svg"
-          alt="The Breath of a Fish — Gleipnir artifact"
+          alt="The Breath of a Fish -- Gleipnir artifact"
           className="w-full max-w-[200px] md:max-w-[240px] aspect-square object-contain"
         />
       }
       audioSrc="/sounds/fenrir-growl.mp3"
     >
-      <p className="font-body text-sm text-[#e8e4d4] leading-relaxed">
+      <p className="font-body text-sm text-[hsl(var(--egg-text))] leading-relaxed">
         One of the six impossible things woven into{" "}
         <a
           className="myth-link"
@@ -60,24 +61,24 @@ export function GleipnirFishBreath({ open, onClose }: GleipnirFishBreathProps) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Gleipnir on Wikipedia"
-          style={{ color: "#f0b429", fontStyle: "italic" }}
+          style={{ color: "hsl(var(--egg-title))", fontStyle: "italic" }}
         >
           Gleipnir
         </a>{" "}
-        — the only chain strong enough to bind the great wolf. Though it looks
+        -- the only chain strong enough to bind the great wolf. Though it looks
         like silk ribbon, no chain is stronger.
       </p>
 
-      <p className="font-body text-xs italic text-[#8a8578] leading-relaxed">
+      <p className="font-body text-xs italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
         &ldquo;The dwarves of{" "}
         <a
           className="myth-link"
           href="https://en.wikipedia.org/wiki/Svartal%C3%A1fheim"
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Svartálfaheimr on Wikipedia"
+          aria-label="Svartalfaheimr on Wikipedia"
         >
-          Svartálfaheimr
+          Svartalfaheimr
         </a>{" "}
         gathered six things that do not exist. From these they wove{" "}
         <a
@@ -102,13 +103,13 @@ export function GleipnirFishBreath({ open, onClose }: GleipnirFishBreathProps) {
         felt its touch, he knew at last what true binding was.&rdquo;
       </p>
 
-      <div className="border-t border-[#1e2235] pt-3 mt-1">
-        <p className="font-mono text-[0.7rem] text-[#c9920a]">
+      <div className="border-t border-[hsl(var(--egg-border))] pt-3 mt-1">
+        <p className="font-mono text-[0.7rem] text-[hsl(var(--egg-accent))]">
           Fragment {found} of {TOTAL_FRAGMENTS} found
         </p>
         {found === TOTAL_FRAGMENTS && (
-          <p className="font-mono text-[0.65rem] text-[#f0b429] mt-1 animate-pulse">
-            ✦ Gleipnir is complete. The wolf stirs.
+          <p className="font-mono text-[0.65rem] text-[hsl(var(--egg-title))] mt-1 animate-pulse">
+            &#10022; Gleipnir is complete. The wolf stirs.
           </p>
         )}
       </div>
@@ -117,19 +118,7 @@ export function GleipnirFishBreath({ open, onClose }: GleipnirFishBreathProps) {
 }
 
 /**
- * Hook — wire this at the trigger site.
- *
- * Usage:
- *   const { open, trigger, dismiss } = useGleipnirFragment5();
- *   // Call trigger() when the user hovers the © symbol in the footer.
- *   // Render: <GleipnirFishBreath open={open} onClose={dismiss} />
- *
- * Trigger location (design/easter-eggs.md):
- *   Footer — mouse-hover on the copyright © symbol.
- *   Wire onMouseEnter on the © element to call trigger().
- *
- * Audio and modal structure are handled by EasterEggModal — do not add them here.
- * The trigger() call is the user-gesture entry point; browsers allow audio from there.
+ * Hook -- wire this at the trigger site.
  */
 export function useGleipnirFragment5() {
   const [open, setOpen] = useState(false);

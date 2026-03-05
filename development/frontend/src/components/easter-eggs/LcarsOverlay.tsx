@@ -1,13 +1,16 @@
 "use client";
 
 /**
- * LcarsOverlay — Easter Egg #10: LCARS Mode.
+ * LcarsOverlay -- Easter Egg #10: LCARS Mode.
  *
  * Trigger: Ctrl+Shift+L (all platforms).
  * Displays a Star Trek LCARS-style diagnostic overlay for 5 seconds.
  * Shows stardate, card counts, and threat assessment.
  *
  * Can be triggered multiple times (no one-time gate like ForgeMasterEgg).
+ *
+ * All colors use CSS variables defined in globals.css (--lcars-*) so the
+ * overlay adapts to both light and dark themes.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -36,11 +39,21 @@ function getThreatLevel(urgentCount: number): ThreatLevel {
 
 function getThreatColor(level: ThreatLevel): string {
   switch (level) {
-    case "CRITICAL": return "#ff3333";
-    case "ELEVATED": return "#ff9900";
-    case "NONE": return "#33cc66";
+    case "CRITICAL": return "hsl(var(--lcars-red))";
+    case "ELEVATED": return "hsl(var(--lcars-orange))";
+    case "NONE": return "hsl(var(--lcars-green))";
   }
 }
+
+/** Sidebar color palette as CSS variable references. */
+const SIDEBAR_COLORS = [
+  "hsl(var(--lcars-orange))",
+  "hsl(var(--lcars-lavender))",
+  "hsl(var(--lcars-periwinkle))",
+  "hsl(var(--lcars-orange))",
+  "hsl(var(--lcars-rose))",
+  "hsl(var(--lcars-periwinkle))",
+];
 
 export function LcarsOverlay() {
   const [visible, setVisible] = useState(false);
@@ -105,7 +118,7 @@ export function LcarsOverlay() {
           aria-live="polite"
           aria-label="LCARS diagnostic overlay"
           style={{
-            background: "rgba(0, 0, 0, 0.92)",
+            background: "hsl(var(--lcars-bg) / 0.92)",
             fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
           }}
         >
@@ -115,18 +128,18 @@ export function LcarsOverlay() {
             animate={{ top: "100%" }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             className="absolute left-0 right-0 h-[2px] pointer-events-none"
-            style={{ background: "rgba(255, 153, 0, 0.3)" }}
+            style={{ background: "hsl(var(--lcars-scanline) / 0.3)" }}
           />
 
           {/* LCARS frame */}
           <div className="h-full flex flex-col p-6 md:p-10">
             {/* Top bar */}
             <div className="flex items-center gap-3 mb-8">
-              <div className="h-8 w-32 rounded-l-full" style={{ background: "#ff9900" }} />
-              <div className="h-8 w-20" style={{ background: "#cc99cc" }} />
-              <div className="h-8 w-16" style={{ background: "#9999ff" }} />
-              <div className="h-8 flex-1 rounded-r-sm" style={{ background: "#ff9900" }} />
-              <span className="text-xs tracking-[0.2em] uppercase" style={{ color: "#ff9900" }}>
+              <div className="h-8 w-32 rounded-l-full" style={{ background: "hsl(var(--lcars-orange))" }} />
+              <div className="h-8 w-20" style={{ background: "hsl(var(--lcars-lavender))" }} />
+              <div className="h-8 w-16" style={{ background: "hsl(var(--lcars-periwinkle))" }} />
+              <div className="h-8 flex-1 rounded-r-sm" style={{ background: "hsl(var(--lcars-orange))" }} />
+              <span className="text-xs tracking-[0.2em] uppercase" style={{ color: "hsl(var(--lcars-orange))" }}>
                 LCARS 47634
               </span>
             </div>
@@ -135,7 +148,7 @@ export function LcarsOverlay() {
             <div className="flex-1 flex gap-6">
               {/* Left sidebar blocks */}
               <div className="hidden md:flex flex-col gap-2 w-24">
-                {["#ff9900", "#cc99cc", "#9999ff", "#ff9900", "#cc6666", "#9999ff"].map((color, i) => (
+                {SIDEBAR_COLORS.map((color, i) => (
                   <div
                     key={i}
                     className="rounded-sm"
@@ -148,10 +161,10 @@ export function LcarsOverlay() {
               <div className="flex-1 flex flex-col gap-6">
                 {/* Stardate */}
                 <div>
-                  <div className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ color: "#cc99cc" }}>
+                  <div className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ color: "hsl(var(--lcars-lavender))" }}>
                     STARDATE
                   </div>
-                  <div className="text-3xl md:text-4xl font-bold tracking-wider" style={{ color: "#ff9900" }}>
+                  <div className="text-3xl md:text-4xl font-bold tracking-wider" style={{ color: "hsl(var(--lcars-orange))" }}>
                     {stardate}
                   </div>
                 </div>
@@ -159,23 +172,23 @@ export function LcarsOverlay() {
                 {/* Card diagnostics */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <div className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ color: "#9999ff" }}>
+                    <div className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ color: "hsl(var(--lcars-periwinkle))" }}>
                       ACTIVE CARDS
                     </div>
-                    <div className="text-2xl font-bold" style={{ color: "#ff9900" }}>
+                    <div className="text-2xl font-bold" style={{ color: "hsl(var(--lcars-orange))" }}>
                       {activeCards.length}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ color: "#9999ff" }}>
+                    <div className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ color: "hsl(var(--lcars-periwinkle))" }}>
                       VALHALLA
                     </div>
-                    <div className="text-2xl font-bold" style={{ color: "#ff9900" }}>
+                    <div className="text-2xl font-bold" style={{ color: "hsl(var(--lcars-orange))" }}>
                       {closedCards.length}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ color: "#9999ff" }}>
+                    <div className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ color: "hsl(var(--lcars-periwinkle))" }}>
                       URGENT
                     </div>
                     <div className="text-2xl font-bold" style={{ color: threatColor }}>
@@ -183,7 +196,7 @@ export function LcarsOverlay() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ color: "#9999ff" }}>
+                    <div className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ color: "hsl(var(--lcars-periwinkle))" }}>
                       THREAT LEVEL
                     </div>
                     <div className="text-2xl font-bold" style={{ color: threatColor }}>
@@ -193,15 +206,15 @@ export function LcarsOverlay() {
                 </div>
 
                 {/* System status */}
-                <div className="mt-4 border-t pt-4" style={{ borderColor: "rgba(255, 153, 0, 0.2)" }}>
-                  <div className="text-[10px] tracking-[0.3em] uppercase mb-2" style={{ color: "#cc99cc" }}>
+                <div className="mt-4 border-t pt-4" style={{ borderColor: "hsl(var(--lcars-orange) / 0.2)" }}>
+                  <div className="text-[10px] tracking-[0.3em] uppercase mb-2" style={{ color: "hsl(var(--lcars-lavender))" }}>
                     SYSTEM STATUS
                   </div>
-                  <div className="flex flex-col gap-1.5 text-xs" style={{ color: "#ff9900" }}>
-                    <div>▸ FENRIR CONTAINMENT: {threatLevel === "CRITICAL" ? "FAILING" : threatLevel === "ELEVATED" ? "STRESSED" : "NOMINAL"}</div>
-                    <div>▸ GLEIPNIR INTEGRITY: {activeCards.length > 0 ? "HOLDING" : "NO CHAINS FORGED"}</div>
-                    <div>▸ BIFRÖST LINK: {householdId ? "AUTHENTICATED" : "ANONYMOUS"}</div>
-                    <div>▸ RAGNARÖK INDEX: {urgentCards.length > 0 ? `${urgentCards.length} ANOMAL${urgentCards.length === 1 ? "Y" : "IES"} DETECTED` : "ALL CLEAR"}</div>
+                  <div className="flex flex-col gap-1.5 text-xs" style={{ color: "hsl(var(--lcars-orange))" }}>
+                    <div>&#9656; FENRIR CONTAINMENT: {threatLevel === "CRITICAL" ? "FAILING" : threatLevel === "ELEVATED" ? "STRESSED" : "NOMINAL"}</div>
+                    <div>&#9656; GLEIPNIR INTEGRITY: {activeCards.length > 0 ? "HOLDING" : "NO CHAINS FORGED"}</div>
+                    <div>&#9656; BIFROST LINK: {householdId ? "AUTHENTICATED" : "ANONYMOUS"}</div>
+                    <div>&#9656; RAGNAROK INDEX: {urgentCards.length > 0 ? `${urgentCards.length} ANOMAL${urgentCards.length === 1 ? "Y" : "IES"} DETECTED` : "ALL CLEAR"}</div>
                   </div>
                 </div>
               </div>
@@ -209,10 +222,10 @@ export function LcarsOverlay() {
 
             {/* Bottom bar */}
             <div className="flex items-center gap-3 mt-8">
-              <div className="h-6 w-24 rounded-l-full" style={{ background: "#9999ff" }} />
-              <div className="h-6 flex-1" style={{ background: "#cc99cc", opacity: 0.6 }} />
-              <div className="h-6 w-40 rounded-r-sm flex items-center justify-end px-3" style={{ background: "#ff9900" }}>
-                <span className="text-[9px] tracking-[0.15em]" style={{ color: "#000" }}>
+              <div className="h-6 w-24 rounded-l-full" style={{ background: "hsl(var(--lcars-periwinkle))" }} />
+              <div className="h-6 flex-1" style={{ background: "hsl(var(--lcars-lavender))", opacity: 0.6 }} />
+              <div className="h-6 w-40 rounded-r-sm flex items-center justify-end px-3" style={{ background: "hsl(var(--lcars-orange))" }}>
+                <span className="text-[9px] tracking-[0.15em]" style={{ color: "hsl(var(--lcars-text-dark))" }}>
                   USS FENRIR NCC-9653
                 </span>
               </div>
