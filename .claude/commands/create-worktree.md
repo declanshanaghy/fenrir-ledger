@@ -13,6 +13,21 @@ Create a new git worktree in the trees directory (sibling to repo root) with com
 
 **Ports are auto-assigned by the OS** (port 0). The frontend-server.sh script starts Next.js with `--port 0`, parses the assigned port from stdout, and writes it to `development/frontend/.port`. Agents read this file to discover their server URL.
 
+## Shell Command Rules (UNBREAKABLE)
+
+**Variable assignments chained with `&&` lose context in the Bash tool's eval execution.**
+Always use `;` (semicolons) to chain variable assignments, NOT `&&`.
+
+```bash
+# BROKEN — variables are empty after &&
+REPO_ROOT=$(git rev-parse --show-toplevel) && WORKTREE_DIR="${REPO_ROOT}-trees/mybranch" && cd "$WORKTREE_DIR"
+
+# CORRECT — semicolons preserve variable context
+REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/mybranch"; cd "$WORKTREE_DIR"
+```
+
+Use `&&` only for non-assignment commands (e.g., `cd /path && npm install`).
+
 ## Variables
 
 ```
@@ -30,6 +45,16 @@ NOTE: Main repo uses frontend port 9653 (fixed)
       Worktrees use port 0 (OS-assigned) — no collisions possible
       WORKTREE_BASE_DIR is a sibling to the repo, NOT inside it
 ```
+
+### Resolving Paths
+
+At the start of every Bash call, resolve all paths with semicolons:
+
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; APP_DIR="${WORKTREE_DIR}/development/frontend"
+```
+
+Then use the resolved variables in subsequent commands.
 
 ## Instructions
 
@@ -52,8 +77,12 @@ NOTE: Main repo uses frontend port 9653 (fixed)
 
 ### 2. Pre-Creation Validation
 
+- Resolve paths first:
+  ```bash
+  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"
+  ```
 - Check if WORKTREE_BASE_DIR exists, create if not: `mkdir -p "${REPO_ROOT}-trees"`
-- Check if worktree already exists at WORKTREE_DIR
+- Check if worktree already exists at WORKTREE_DIR — if it does, skip to step 5 (idempotent)
 - Check if branch exists: `git branch --list <BRANCH_NAME>`
   - If branch doesn't exist, will create it in next step
   - If branch exists, will checkout to create worktree
@@ -77,9 +106,12 @@ NOTE: Main repo uses frontend port 9653 (fixed)
 
 ### 5. Install Dependencies
 
-- Install dependencies:
-  - `cd <WORKTREE_DIR>/development/frontend && npm install`
-  - Verify `<WORKTREE_DIR>/development/frontend/node_modules` directory was created
+- Install dependencies (use resolved APP_DIR path, not variable expansion in `&&`):
+  ```bash
+  REPO_ROOT=$(git rev-parse --show-toplevel); APP_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend"; cd "$APP_DIR" && npm install
+  ```
+- If `node_modules` already exists (idempotent re-run), skip `npm install`
+- Verify `<WORKTREE_DIR>/development/frontend/node_modules` directory was created
 
 ### 6. Start Dev Servers
 
@@ -95,7 +127,10 @@ NOTE: Main repo uses frontend port 9653 (fixed)
 
 **Backend (Node/TS):**
 - If `<WORKTREE_DIR>/development/backend` exists and has a `package.json`:
-  - Install dependencies: `cd <WORKTREE_DIR>/development/backend && npm install`
+  - Install dependencies:
+    ```bash
+    REPO_ROOT=$(git rev-parse --show-toplevel); BACKEND_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>/development/backend"; cd "$BACKEND_DIR" && npm install
+    ```
   - Start the backend server (use similar PORT=0 approach if backend-server.sh supports it)
 - If backend directory does not exist, skip and note "Backend: not configured" in report
 

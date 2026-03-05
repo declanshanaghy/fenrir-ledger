@@ -9,6 +9,21 @@ allowed-tools: Bash, Read, Glob, Grep
 
 Remove an existing git worktree from the trees directory (sibling to repo root) AND delete the associated git branch. This includes stopping the dev server, cleaning up processes, removing the worktree directory, and permanently deleting the branch.
 
+## Shell Command Rules (UNBREAKABLE)
+
+**Variable assignments chained with `&&` lose context in the Bash tool's eval execution.**
+Always use `;` (semicolons) to chain variable assignments, NOT `&&`.
+
+```bash
+# BROKEN — variables are empty after &&
+REPO_ROOT=$(git rev-parse --show-toplevel) && WORKTREE_DIR="${REPO_ROOT}-trees/mybranch" && cd "$WORKTREE_DIR"
+
+# CORRECT — semicolons preserve variable context
+REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/mybranch"; cd "$WORKTREE_DIR"
+```
+
+Use `&&` only for non-assignment commands (e.g., `cd /path && npm install`).
+
 ## Variables
 
 ```
@@ -19,6 +34,16 @@ WORKTREE_DIR: ${REPO_ROOT}-trees/<BRANCH_NAME>
 FRONTEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/frontend-server.sh
 BACKEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/backend-server.sh
 ```
+
+### Resolving Paths
+
+At the start of every Bash call, resolve all paths with semicolons:
+
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"
+```
+
+Then use the resolved variables in subsequent commands.
 
 ## Instructions
 
@@ -48,29 +73,42 @@ BACKEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/backend-server.sh
 
 ### 3. Identify Port
 
-- Read the port from the `.port` file: `cat ${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend/.port 2>/dev/null`
+- Resolve paths first, then read the port:
+  ```bash
+  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; cat "${WORKTREE_DIR}/development/frontend/.port" 2>/dev/null
+  ```
 - If `.port` file doesn't exist, try to find processes in the worktree directory
 
 ### 4. Stop Servers
 
 **Stop Frontend Dev Server:**
 - If port was identified from `.port` file:
+  ```bash
+  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; FENRIR_FRONTEND_DIR="${WORKTREE_DIR}/development/frontend" "${REPO_ROOT}/.claude/scripts/frontend-server.sh" stop
   ```
-  FENRIR_FRONTEND_DIR=${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend .claude/scripts/frontend-server.sh stop
+- Verify stopped:
+  ```bash
+  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; FENRIR_FRONTEND_DIR="${WORKTREE_DIR}/development/frontend" "${REPO_ROOT}/.claude/scripts/frontend-server.sh" status
   ```
-- Verify stopped: `FENRIR_FRONTEND_DIR=${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend .claude/scripts/frontend-server.sh status`
 
 - If `.port` file didn't exist, try to find and kill any process in the worktree directory:
-  - `lsof -t +D <WORKTREE_DIR>/development/frontend | xargs kill 2>/dev/null`
+  ```bash
+  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; lsof -t +D "${WORKTREE_DIR}/development/frontend" | xargs kill 2>/dev/null
+  ```
 - Wait 2 seconds for processes to fully terminate
 
 ### 5. Remove Git Worktree
 
-- Remove worktree: `git worktree remove ${REPO_ROOT}-trees/<BRANCH_NAME>`
+- Remove worktree:
+  ```bash
+  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; git worktree remove "$WORKTREE_DIR"
+  ```
 - If removal fails (uncommitted changes):
-  - Try force removal: `git worktree remove ${REPO_ROOT}-trees/<BRANCH_NAME> --force`
+  ```bash
+  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; git worktree remove "$WORKTREE_DIR" --force
+  ```
   - Note the force removal in the report
-- Verify worktree was removed: `git worktree list | grep ${REPO_ROOT}-trees/<BRANCH_NAME>` (should return nothing)
+- Verify worktree was removed: `git worktree list` (should not contain the worktree path)
 
 ### 6. Delete Git Branch
 
