@@ -241,55 +241,23 @@ test.describe("Settings Page -- AC-6: PatreonSettings section", () => {
     await expect(patreonSection).toBeVisible();
   });
 
-  test("TC-SP-13: 'Link your Patreon' button text visible in unlinked state when authenticated", async ({
+  test.skip("TC-SP-13: 'Link your Patreon' button text visible in unlinked state when authenticated", async ({
     page,
   }) => {
-    // Spec: PatreonSettings unlinked state renders "Link Patreon" button.
-    // We simulate a logged-in Thrall user by seeding auth state in sessionStorage.
-    // PatreonSettings is inside AuthGate -- only renders for authenticated users.
+    // SKIPPED: This test injects a mock Google session via sessionStorage, but
+    // the auth verification happens server-side (requireAuth checks the token
+    // against Google's userinfo endpoint). A mock token cannot pass server
+    // verification on Vercel deployments. This test requires real OAuth
+    // credentials and is covered in manual integration testing.
     //
-    // Approach: inject a mock Google session so AuthGate passes.
-    await page.goto(`${BASE_URL}/settings`);
+    // Spec: PatreonSettings unlinked state renders "Link Patreon" button when
+    // the user is authenticated but has not linked their Patreon account.
+    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
 
-    // Inject a mock auth session that AuthContext reads from sessionStorage
-    await page.evaluate(() => {
-      sessionStorage.setItem(
-        "fenrir:session",
-        JSON.stringify({
-          user: {
-            sub: "mock-user-123",
-            email: "test@example.com",
-            name: "Test User",
-            picture: "",
-          },
-          accessToken: "mock-access-token",
-          expiresAt: Date.now() + 3600000,
-        })
-      );
-    });
-
-    await page.reload({ waitUntil: "networkidle" });
-
-    // PatreonSettings section should render with "Link Patreon" button
-    // (The actual auth check may fail gracefully -- we just verify the section renders)
-    // NOTE: If session verification fails, AuthGate still hides it.
-    // This test documents the expected behavior when authenticated.
-    // The important thing is the unlinked state renders "Link Patreon" text.
     const linkPatreonButton = page
       .locator("button")
       .filter({ hasText: "Link Patreon" });
-    // If section renders (auth succeeds), button must contain "Link Patreon"
-    // If AuthGate hides it (auth fails), that is also valid behavior.
-    // We document the presence -- not assert visibility -- since mock auth may not work.
-    const sectionAttached = await page
-      .locator('[aria-label="Patreon subscription"]')
-      .isVisible()
-      .catch(() => false);
-
-    if (sectionAttached) {
-      await expect(linkPatreonButton).toBeVisible();
-    }
-    // Test documents the expected state; real auth is covered in integration tests.
+    await expect(linkPatreonButton).toBeVisible();
   });
 });
 

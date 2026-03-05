@@ -176,6 +176,8 @@ export function SubscriptionGate({
   }, []);
 
   // -- Soft mode ---------------------------------------------------------------
+  // Soft mode always renders children. Banners render for ALL unauthenticated
+  // or Thrall users regardless of platform.
   if (mode === "soft") {
     // While loading in soft mode, render children directly (not a skeleton).
     // The banner will appear once loading resolves if the user lacks entitlement.
