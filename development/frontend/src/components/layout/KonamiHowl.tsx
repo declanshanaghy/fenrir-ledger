@@ -68,7 +68,7 @@ function WolfSilhouette() {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
       className="w-full max-w-[320px] sm:max-w-[440px]"
-      style={{ fill: "#c9920a", opacity: 0.92 }}
+      style={{ fill: "hsl(var(--howl-wolf-fill))", opacity: 0.92 }}
     >
       {/*
        * Wolf head silhouette — geometric stylised shape.
@@ -85,11 +85,11 @@ function WolfSilhouette() {
       {/* Snout extension */}
       <polygon points="70,130 130,130 125,165 100,175 75,165" />
       {/* Left eye cutout */}
-      <ellipse cx="75" cy="118" rx="12" ry="9" style={{ fill: "#07070d" }} />
+      <ellipse cx="75" cy="118" rx="12" ry="9" style={{ fill: "hsl(var(--howl-eye-fill))" }} />
       {/* Right eye cutout */}
-      <ellipse cx="125" cy="118" rx="12" ry="9" style={{ fill: "#07070d" }} />
+      <ellipse cx="125" cy="118" rx="12" ry="9" style={{ fill: "hsl(var(--howl-eye-fill))" }} />
       {/* Nose bridge mark */}
-      <rect x="94" y="140" width="12" height="6" rx="2" style={{ fill: "#07070d" }} />
+      <rect x="94" y="140" width="12" height="6" rx="2" style={{ fill: "hsl(var(--howl-eye-fill))" }} />
     </svg>
   );
 }
@@ -237,7 +237,7 @@ export function KonamiHowl() {
             position: "fixed",
             inset: 0,
             zIndex: 9652,
-            backgroundColor: "#3d0000",
+            backgroundColor: "hsl(var(--howl-pulse-bg))",
             animation: `ragnarok-pulse ${RAGNAROK_PULSE_MS}ms ease-out forwards`,
             pointerEvents: "none",
           }}
@@ -260,8 +260,8 @@ export function KonamiHowl() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: "rgba(7, 7, 13, 0.96)",
-              borderBottom: "2px solid #c94020",
+              backgroundColor: "hsl(var(--howl-band-bg) / 0.96)",
+              borderBottom: "2px solid hsl(var(--howl-band-border))",
               animation:
                 phase === "fading"
                   ? "howl-band-fade 400ms ease-out forwards"
@@ -275,7 +275,7 @@ export function KonamiHowl() {
                 fontWeight: 700,
                 fontSize: "clamp(14px, 4vw, 18px)",
                 letterSpacing: "0.25em",
-                color: "#c94020",
+                color: "hsl(var(--howl-band-text))",
                 textTransform: "uppercase",
               }}
             >
@@ -299,8 +299,8 @@ export function KonamiHowl() {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "flex-end",
-                backgroundColor: "rgba(7, 7, 13, 0.92)",
-                borderTop: "2px solid #c9920a",
+                backgroundColor: "hsl(var(--howl-wolf-bg) / 0.92)",
+                borderTop: "2px solid hsl(var(--howl-wolf-border))",
                 animation:
                   phase === "fading"
                     ? "howl-element-fade 400ms ease-out forwards"

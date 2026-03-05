@@ -35,19 +35,19 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 // Thresholds and colors from ux/interactions.md — Status Ring section.
 
 /** Ragnarok: overdue (daysRemaining <= 0) */
-const COLOR_RAGNAROK = "#ef4444";
+const COLOR_RAGNAROK = "hsl(var(--realm-ragnarok))";
 
-/** Muspelheim: urgent (daysRemaining <= 30) — blood orange */
-const COLOR_MUSPEL = "#c94a0a";
+/** Muspelheim: urgent (daysRemaining <= 30) -- blood orange */
+const COLOR_MUSPEL = "hsl(var(--realm-muspel))";
 
-/** Hati: approaching (daysRemaining <= 60) — amber */
-const COLOR_HATI = "#f59e0b";
+/** Hati: approaching (daysRemaining <= 60) -- amber */
+const COLOR_HATI = "hsl(var(--realm-hati))";
 
-/** Asgard: healthy — teal */
-const COLOR_ASGARD = "#0a8c6e";
+/** Asgard: healthy -- teal */
+const COLOR_ASGARD = "hsl(var(--realm-asgard))";
 
 /** Stone: closed / inactive */
-const COLOR_STONE = "#8a8578";
+const COLOR_STONE = "hsl(var(--realm-stone))";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -150,7 +150,7 @@ export function StatusRing({
         cy={SIZE / 2}
         r={RADIUS}
         fill="none"
-        stroke="#8a8578"
+        stroke="hsl(var(--realm-stone))"
         strokeWidth={3}
         opacity={0.2}
       />

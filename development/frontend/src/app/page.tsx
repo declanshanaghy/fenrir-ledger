@@ -131,7 +131,7 @@ export default function DashboardPage() {
               </span>
               {/* Urgent count badge */}
               <span
-                className="absolute -top-1.5 -right-1.5 h-4 w-4 flex items-center justify-center rounded-full bg-[#c94a0a] text-[10px] font-mono font-bold text-white"
+                className="absolute -top-1.5 -right-1.5 h-4 w-4 flex items-center justify-center rounded-full bg-[hsl(var(--realm-muspel))] text-[10px] font-mono font-bold text-white"
                 aria-hidden="true"
               >
                 {urgentCount}

@@ -61,7 +61,7 @@ export function UnlinkConfirmDialog({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
       <DialogContent
-        className="w-[92vw] max-w-[440px] border-2 border-border bg-[#07070d] p-0 gap-0"
+        className="w-[92vw] max-w-[440px] border-2 border-border bg-background p-0 gap-0"
         role="alertdialog"
         aria-labelledby="unlink-heading"
         aria-describedby="unlink-body"

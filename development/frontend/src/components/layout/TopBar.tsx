@@ -26,6 +26,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 // ── Avatar component ──────────────────────────────────────────────────────────
 
@@ -143,6 +144,12 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
         Sign in to back up your cards and access them from any device. Your data
         is already here — signing in just keeps it safe.
       </p>
+
+      {/* Theme toggle */}
+      <div className="flex items-center justify-between pt-1">
+        <span className="text-xs text-muted-foreground font-body">Theme</span>
+        <ThemeToggle />
+      </div>
 
       {/* CTAs */}
       <div className="flex flex-col gap-2 pt-1">
@@ -310,6 +317,12 @@ export function TopBar() {
                     The wolf is named.
                   </span>
                 </div>
+              </div>
+
+              {/* Theme section */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <span className="text-xs text-muted-foreground font-body">Theme</span>
+                <ThemeToggle />
               </div>
 
               {/* Sign Out — returns user to dashboard in anonymous state */}

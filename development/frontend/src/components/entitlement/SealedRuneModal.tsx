@@ -90,7 +90,7 @@ export function SealedRuneModal({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onDismiss()}>
       <DialogContent
-        className="w-[92vw] max-w-[480px] max-h-[90vh] overflow-y-auto border-2 border-gold/40 bg-[#07070d] p-0 gap-0"
+        className="w-[92vw] max-w-[480px] max-h-[90vh] overflow-y-auto border-2 border-gold/40 bg-background p-0 gap-0"
         aria-labelledby={`sealed-rune-heading-${feature}`}
         aria-describedby={`sealed-rune-desc-${feature}`}
       >
@@ -164,7 +164,7 @@ export function SealedRuneModal({
             <div className="px-6 md:px-8 py-2">
               <Button
                 onClick={linkPatreon}
-                className="w-full min-h-[48px] text-[15px] font-heading font-bold tracking-wide bg-gold text-[#07070d] hover:bg-gold-bright border-2 border-gold"
+                className="w-full min-h-[48px] text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
                 aria-label={ctaAriaLabel}
               >
                 {ctaLabel}

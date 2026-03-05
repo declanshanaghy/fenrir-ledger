@@ -76,12 +76,12 @@ function LokiToast({ visible }: LokiToastProps) {
         left: "50%",
         transform: "translateX(-50%)",
         zIndex: 9000,
-        backgroundColor: "rgba(18, 16, 14, 0.97)",
-        border: "1px solid #d4a520",
+        backgroundColor: "hsl(var(--loki-toast-bg) / 0.97)",
+        border: "1px solid hsl(var(--loki-toast-border))",
         borderRadius: 4,
         padding: "10px 20px",
         whiteSpace: "nowrap",
-        boxShadow: "0 0 20px rgba(212, 165, 32, 0.25)",
+        boxShadow: "0 0 20px hsl(var(--loki-toast-shadow) / 0.25)",
         pointerEvents: "none",
       }}
     >
@@ -89,7 +89,7 @@ function LokiToast({ visible }: LokiToastProps) {
         style={{
           fontFamily: "var(--font-mono), monospace",
           fontSize: 13,
-          color: "#f0c040",
+          color: "hsl(var(--loki-toast-text))",
           letterSpacing: "0.04em",
         }}
       >

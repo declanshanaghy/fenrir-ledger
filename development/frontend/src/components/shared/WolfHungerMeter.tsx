@@ -65,29 +65,29 @@ export function WolfHungerMeter() {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#8a8578]">
+      <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--egg-text-muted))]">
         Fenrir&apos;s Plunder
       </p>
       {hasAny ? (
         <div className="flex flex-col gap-1">
           {totals.points > 0 && (
-            <p className="font-mono text-xs text-[#c9920a]">
+            <p className="font-mono text-xs text-[hsl(var(--egg-accent))]">
               {formatBonusLine("points", totals.points)}
             </p>
           )}
           {totals.miles > 0 && (
-            <p className="font-mono text-xs text-[#c9920a]">
+            <p className="font-mono text-xs text-[hsl(var(--egg-accent))]">
               {formatBonusLine("miles", totals.miles)}
             </p>
           )}
           {totals.cashback > 0 && (
-            <p className="font-mono text-xs text-[#c9920a]">
+            <p className="font-mono text-xs text-[hsl(var(--egg-accent))]">
               {formatBonusLine("cashback", totals.cashback)}
             </p>
           )}
         </div>
       ) : (
-        <p className="font-body text-xs italic text-[#3d3d52]">
+        <p className="font-body text-xs italic text-muted-foreground/50">
           The wolf has not yet fed.
         </p>
       )}

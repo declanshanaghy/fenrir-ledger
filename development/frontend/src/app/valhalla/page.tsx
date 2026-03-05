@@ -193,7 +193,7 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: staggerDelay, ease: EXPO_OUT }}
       className={[
-        "border border-border border-l-4 border-l-[#8a8578]",
+        "border border-border border-l-4 border-l-[hsl(var(--realm-stone))]",
         "bg-background/60 backdrop-blur-sm",
         "p-4 flex flex-col gap-2.5",
         "rounded-sm",
@@ -204,7 +204,7 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
       <div className="flex items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2 min-w-0">
           <span
-            className="text-[#8a8578] text-lg shrink-0"
+            className="text-[hsl(var(--realm-stone))] text-lg shrink-0"
             aria-hidden="true"
             title={getRealmLabel("closed").sublabel}
           >
@@ -241,7 +241,7 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
         <span className="font-mono text-foreground">
           {feeAvoided > 0 ? formatCurrency(feeAvoided) : "$0 (no-fee card)"}
         </span>
-        <span className="text-[#8a8578] font-semibold">Net gain:</span>
+        <span className="text-[hsl(var(--realm-stone))] font-semibold">Net gain:</span>
         <span className="font-mono font-semibold text-foreground">
           {formatCurrency(netGainCents)}
         </span>
@@ -260,8 +260,8 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
           href={`/cards/${card.id}/edit`}
           className={[
             "inline-block text-xs px-3 py-1.5 rounded-sm",
-            "border border-[#8a8578]/40 text-[#8a8578]",
-            "hover:border-[#8a8578] hover:text-foreground",
+            "border border-[hsl(var(--realm-stone))]/40 text-[hsl(var(--realm-stone))]",
+            "hover:border-[hsl(var(--realm-stone))] hover:text-foreground",
             "transition-colors font-mono",
           ].join(" ")}
         >
@@ -300,7 +300,7 @@ function ValhallaEmptyState() {
         className="border border-dashed border-border rounded-sm p-12 text-center flex flex-col items-center gap-4"
         aria-label="Valhalla is empty"
       >
-        <span className="text-[#8a8578] text-3xl" aria-hidden="true">
+        <span className="text-[hsl(var(--realm-stone))] text-3xl" aria-hidden="true">
           ᛏ
         </span>
         <p className="font-heading text-sm text-foreground">
@@ -462,19 +462,19 @@ export default function ValhallaPage() {
         <div className="flex flex-col gap-4">
           {gleipnirComplete && (
             <article
-              className="border border-[#c9920a] border-l-4 border-l-[#f0b429] bg-background/60 backdrop-blur-sm p-4 flex flex-col gap-2.5 rounded-sm gleipnir-shimmer"
+              className="border border-[hsl(var(--egg-accent))] border-l-4 border-l-[hsl(var(--egg-title))] bg-background/60 backdrop-blur-sm p-4 flex flex-col gap-2.5 rounded-sm gleipnir-shimmer"
               aria-label="Gleipnir complete"
             >
               <div className="flex items-baseline gap-2">
-                <span className="text-[#f0b429] text-lg" aria-hidden="true">✦</span>
-                <h2 className="font-heading text-sm font-semibold tracking-wide uppercase text-[#f0b429]">
+                <span className="text-[hsl(var(--egg-title))] text-lg" aria-hidden="true">✦</span>
+                <h2 className="font-heading text-sm font-semibold tracking-wide uppercase text-[hsl(var(--egg-title))]">
                   Gleipnir
                 </h2>
               </div>
-              <p className="font-body text-xs italic text-[#e8e4d4] leading-relaxed">
+              <p className="font-body text-xs italic text-[hsl(var(--egg-text))] leading-relaxed">
                 The six impossible things are found. The ribbon is woven. The wolf is bound — and content.
               </p>
-              <p className="font-mono text-[0.65rem] text-[#c9920a]">
+              <p className="font-mono text-[0.65rem] text-[hsl(var(--egg-accent))]">
                 All 6 fragments discovered
               </p>
             </article>
