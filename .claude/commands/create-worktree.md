@@ -1,37 +1,33 @@
 ---
 model: claude-sonnet-4-5-20250929
 description: Create a git worktree with isolated configuration for parallel development
-argument-hint: [branch-name] [port-offset]
+argument-hint: [branch-name]
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 ---
 
 # Purpose
 
-Create a new git worktree in the trees directory (sibling to repo root) with completely isolated configuration for parallel execution. Each worktree gets its own branch, port, dependencies, and dev server instance so multiple agents can work independently and simultaneously.
+Create a new git worktree in the trees directory (sibling to repo root) with completely isolated configuration for parallel execution. Each worktree gets its own branch, OS-assigned port, dependencies, and dev server instance so multiple agents can work independently and simultaneously.
 
 **Worktrees are created OUTSIDE the repo** to prevent nesting and pollution. The trees directory is always `$(git rev-parse --show-toplevel)-trees` — a sibling directory to the repo root with `-trees` appended.
+
+**Ports are auto-assigned by the OS** (port 0). The frontend-server.sh script starts Next.js with `--port 0`, parses the assigned port from stdout, and writes it to `development/frontend/.port`. Agents read this file to discover their server URL.
 
 ## Variables
 
 ```
 REPO_ROOT: $(git rev-parse --show-toplevel)
 BRANCH_NAME: $1 (required)
-PORT_OFFSET: $2 (optional, defaults to auto-calculated based on existing worktrees, starts at 1)
 WORKTREE_BASE_DIR: ${REPO_ROOT}-trees
 WORKTREE_DIR: ${REPO_ROOT}-trees/<BRANCH_NAME>
 APP_DIR: <WORKTREE_DIR>/development/frontend
 BACKEND_DIR: <WORKTREE_DIR>/development/backend
-BASE_FRONTEND_PORT: 9653
-BASE_BACKEND_PORT: 9753
-FRONTEND_PORT: 9653 + PORT_OFFSET  # First worktree: 9654, Second: 9655, etc.
-BACKEND_PORT: 9753 + PORT_OFFSET   # First worktree: 9754, Second: 9755, etc.
+FRONTEND_PORT: 0 (OS-assigned, actual port written to .port file)
 FRONTEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/frontend-server.sh
 BACKEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/backend-server.sh
-SERVICES_SCRIPT: ${REPO_ROOT}/.claude/scripts/services.sh
 
-NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
-      Worktrees start at offset 1 to avoid conflicts with main repo
-      Backend port = frontend port + 100
+NOTE: Main repo uses frontend port 9653 (fixed)
+      Worktrees use port 0 (OS-assigned) — no collisions possible
       WORKTREE_BASE_DIR is a sibling to the repo, NOT inside it
 ```
 
@@ -39,9 +35,8 @@ NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
 
 - This is a ONE-SHOT command that creates AND starts a worktree automatically
 - Creates a fully functional, isolated clone of the codebase in a separate worktree
-- Each worktree runs on a unique port to prevent conflicts when running in parallel
-- Port offsets start at 1 and increment (1 -> 9654, 2 -> 9655, 3 -> 9656...)
-- Main repo preserves default port 9653 for primary development work
+- Each worktree gets an OS-assigned port (no manual port management needed)
+- The actual port is written to `development/frontend/.port` after startup
 - Dependencies are installed automatically via npm
 - After setup, the dev server is started using the frontend-server script
 - If branch doesn't exist locally, create it from current HEAD
@@ -53,16 +48,6 @@ NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
 ### 1. Parse and Validate Arguments
 
 - Read BRANCH_NAME from $1, error if missing
-- Read PORT_OFFSET from $2 if provided
-- If PORT_OFFSET not provided, calculate next available offset:
-  - List all existing worktrees: `git worktree list`
-  - Check WORKTREE_BASE_DIR directory for existing worktrees
-  - Count existing worktrees and use (count + 1) as offset (1, 2, 3, 4...)
-  - IMPORTANT: Offset starts at 1 to preserve main repo port (9653)
-  - First worktree gets offset 1 -> port 9654
-  - Second worktree gets offset 2 -> port 9655
-- Calculate FRONTEND_PORT = 9653 + PORT_OFFSET
-- Calculate BACKEND_PORT = 9753 + PORT_OFFSET
 - Validate branch name format (no spaces, valid git branch name)
 
 ### 2. Pre-Creation Validation
@@ -72,10 +57,6 @@ NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
 - Check if branch exists: `git branch --list <BRANCH_NAME>`
   - If branch doesn't exist, will create it in next step
   - If branch exists, will checkout to create worktree
-- Check if calculated ports are available:
-  - Check FRONTEND_PORT: `lsof -i :<FRONTEND_PORT>` (should return nothing)
-  - Check BACKEND_PORT: `lsof -i :<BACKEND_PORT>` (should return nothing)
-  - If either port is in use, error with message to try different offset
 
 ### 3. Create Git Worktree
 
@@ -103,24 +84,19 @@ NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
 ### 6. Start Dev Servers
 
 **Frontend (Next.js):**
-- Use the frontend-server script with environment overrides:
+- Use the frontend-server script with PORT=0 for OS-assigned port:
   ```
-  FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=<REPO_ROOT>/${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend <REPO_ROOT>/.claude/scripts/frontend-server.sh start
+  FENRIR_FRONTEND_PORT=0 FENRIR_FRONTEND_DIR=<WORKTREE_DIR>/development/frontend <REPO_ROOT>/.claude/scripts/frontend-server.sh start
   ```
-- Wait 5 seconds for the server to start: `sleep 5`
+- The script waits for Next.js to start, parses the assigned port, and writes it to `<WORKTREE_DIR>/development/frontend/.port`
+- Read the assigned port: `cat <WORKTREE_DIR>/development/frontend/.port`
 - Verify server is running:
-  - Check status: `FENRIR_FRONTEND_PORT=<FRONTEND_PORT> <REPO_ROOT>/.claude/scripts/frontend-server.sh status`
-  - Health check: `curl -s -o /dev/null -w "%{http_code}" http://localhost:<FRONTEND_PORT>`
+  - Health check: `curl -s -o /dev/null -w "%{http_code}" http://localhost:$(cat <WORKTREE_DIR>/development/frontend/.port)`
 
 **Backend (Node/TS):**
 - If `<WORKTREE_DIR>/development/backend` exists and has a `package.json`:
   - Install dependencies: `cd <WORKTREE_DIR>/development/backend && npm install`
-  - Start the backend server:
-    ```
-    FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<REPO_ROOT>/${REPO_ROOT}-trees/<BRANCH_NAME>/development/backend <REPO_ROOT>/.claude/scripts/backend-server.sh start
-    ```
-  - Wait 3 seconds, then verify:
-    - Check status: `FENRIR_BACKEND_PORT=<BACKEND_PORT> <REPO_ROOT>/.claude/scripts/backend-server.sh status`
+  - Start the backend server (use similar PORT=0 approach if backend-server.sh supports it)
 - If backend directory does not exist, skip and note "Backend: not configured" in report
 
 ### 7. Validation
@@ -129,10 +105,11 @@ NOTE: Main repo uses frontend port 9653 + backend port 9753 (no offset)
   - Confirm WORKTREE_DIR exists
   - Confirm `<WORKTREE_DIR>/development/frontend/.env.local` exists (or warn)
   - Confirm `<WORKTREE_DIR>/development/frontend/node_modules` exists
+  - Confirm `<WORKTREE_DIR>/development/frontend/.port` exists and contains a port number
   - If backend exists: confirm `<WORKTREE_DIR>/development/backend/node_modules` exists
 - List worktrees to confirm: `git worktree list`
-- Confirm frontend dev server is responding on FRONTEND_PORT
-- If backend exists: confirm backend server is responding on BACKEND_PORT
+- Read actual port: `cat <WORKTREE_DIR>/development/frontend/.port`
+- Confirm frontend dev server is responding on the assigned port
 
 ### 8. Report
 
@@ -147,37 +124,32 @@ Worktree Created and Running
 
 Location:   ${REPO_ROOT}-trees/<BRANCH_NAME>
 Branch:     <BRANCH_NAME>
-Frontend:   port <FRONTEND_PORT> (offset <PORT_OFFSET>)
-Backend:    port <BACKEND_PORT> (offset <PORT_OFFSET>) [or: not configured]
+Frontend:   port <ACTUAL_PORT> (OS-assigned)
+Backend:    not configured
 Status:     RUNNING
 
-Access URLs:
-  Frontend: http://localhost:<FRONTEND_PORT>
-  Backend:  http://localhost:<BACKEND_PORT>  [or: not configured]
+Access URL:
+  Frontend: http://localhost:<ACTUAL_PORT>
+
+Port file: <WORKTREE_DIR>/development/frontend/.port
 
 Dependencies:
   Frontend: npm packages installed at <WORKTREE_DIR>/development/frontend/node_modules
-  Backend:  npm packages installed at <WORKTREE_DIR>/development/backend/node_modules [or: not configured]
 
 Environment:
   .env.local copied from main project (or: WARNING - needs manual setup)
 
 Frontend Dev Server:
-  Started via frontend-server.sh on port <FRONTEND_PORT>
+  Started via frontend-server.sh (port auto-assigned by OS)
   Logs: <WORKTREE_DIR>/development/frontend/logs/frontend-server.log
 
-Backend Server:
-  Started via backend-server.sh on port <BACKEND_PORT> [or: not configured — no development/backend found]
-  Logs: <WORKTREE_DIR>/development/backend/logs/backend-server.log
-
-To manage this worktree's services (both):
-  FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=<REPO_ROOT>/${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<REPO_ROOT>/${REPO_ROOT}-trees/<BRANCH_NAME>/development/backend .claude/scripts/services.sh status|restart|stop
+To discover the port:
+  cat <WORKTREE_DIR>/development/frontend/.port
+  # or
+  FENRIR_FRONTEND_DIR=<WORKTREE_DIR>/development/frontend .claude/scripts/frontend-server.sh port
 
 To manage this worktree's frontend:
-  FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=<REPO_ROOT>/${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend .claude/scripts/frontend-server.sh status|restart|stop|logs
-
-To manage this worktree's backend:
-  FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<REPO_ROOT>/${REPO_ROOT}-trees/<BRANCH_NAME>/development/backend .claude/scripts/backend-server.sh status|restart|stop|logs
+  FENRIR_FRONTEND_DIR=<WORKTREE_DIR>/development/frontend .claude/scripts/frontend-server.sh status|restart|stop|logs
 
 To remove this worktree:
   /remove_worktree <BRANCH_NAME>
