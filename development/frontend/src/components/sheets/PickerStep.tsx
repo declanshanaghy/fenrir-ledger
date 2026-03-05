@@ -132,7 +132,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
         pickerOpenedRef.current = false;
       }
     },
-    [onBack, onSubmitCsv, requestDriveAccess]
+    [PICKER_API_KEY, onBack, onSubmitCsv, requestDriveAccess]
   );
 
   const handleAllowAccess = useCallback(async () => {

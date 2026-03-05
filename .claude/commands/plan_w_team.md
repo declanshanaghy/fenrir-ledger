@@ -406,6 +406,26 @@ The orchestrator (`/orchestrate`) reads this section to know how to execute.
 ## Acceptance Criteria
 <list specific, measurable criteria that must be met for the task to be considered complete — these are the OVERALL acceptance criteria across all stories>
 
+<if the plan requires deployment configuration changes (env vars, infrastructure, DNS, third-party service setup), include this section:>
+## Deployment Configuration
+
+Document all deployment-related changes required for this feature to work in production and preview environments.
+
+### Environment Variables
+<list each env var that must be set, with scope and target>
+
+| Variable | Value / Description | Scope | Environments |
+|----------|-------------------|-------|-------------|
+| `EXAMPLE_VAR` | <description, NOT the actual secret> | Server | production, preview |
+| `NEXT_PUBLIC_EXAMPLE` | <description> | Client | production, preview |
+
+### Infrastructure Changes
+<list any DNS, CDN, webhook, or third-party service configuration needed. Write "None" if no infra changes.>
+
+### Deployment Steps
+<ordered list of deployment actions — e.g., "Set env vars via `vercel env add`", "Trigger production redeploy", "Verify feature flag active">
+</if>
+
 ## Validation Commands
 Execute these commands to validate the task is complete:
 
