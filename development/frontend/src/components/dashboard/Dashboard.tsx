@@ -100,7 +100,7 @@ export function Dashboard({ cards }: DashboardProps) {
         </span>
         {needsAttention.length > 0 && (
           <span>
-            <span className="text-amber-600 dark:text-amber-400 font-semibold text-lg">
+            <span className="text-amber-600 font-semibold text-lg">
               {needsAttention.length}
             </span>{" "}
             need{needsAttention.length === 1 ? "s" : ""} attention
