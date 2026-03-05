@@ -170,7 +170,10 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 *The trickster tests. His verdicts are final.*
 
 - [quality/README.md](quality/README.md) — Index of all QA artifacts, verdicts, and test execution guide
-- [quality/test-suites/](quality/test-suites/) — Playwright test suites: easter eggs, navigation, accessibility, responsive, import, valhalla, layout, patreon, anon-patreon-client, feature-flags, theme-toggle, stripe-direct (253+ tests)
+- [quality/test-suites/](quality/test-suites/) — Playwright test suites: easter eggs, navigation, accessibility, responsive, import, valhalla, layout, patreon, anon-patreon-client, feature-flags, theme-toggle, stripe-direct, auth, card-crud (299+ tests)
+- [quality/test-suites/auth/sign-in.spec.ts](quality/test-suites/auth/sign-in.spec.ts) — 17-test suite: /sign-in page rendering, heading variants, Google button, responsive (PR #138)
+- [quality/test-suites/auth/auth-callback.spec.ts](quality/test-suites/auth/auth-callback.spec.ts) — 13-test suite: /auth/callback graceful degradation (missing params, PKCE errors, CSRF, loading state) (PR #138)
+- [quality/test-suites/card-crud/edit-card.spec.ts](quality/test-suites/card-crud/edit-card.spec.ts) — 16-test suite: card edit form pre-population, editable fields, save, cancel, edge cases (PR #138)
 - [quality/test-suites/stripe-direct/stripe-direct.spec.ts](quality/test-suites/stripe-direct/stripe-direct.spec.ts) — 37-test suite: PR #119+#120 Stripe Direct Integration AC-1 through AC-14 (all passing)
 - [quality/test-suites/theme-toggle/theme-foundation.spec.ts](quality/test-suites/theme-toggle/theme-foundation.spec.ts) — 20-test suite: PR #116 Story 1 theme foundation (17 pass, 3 fail — DEF-TF-001)
 - [quality/test-suites/feature-flags/feature-flags.spec.ts](quality/test-suites/feature-flags/feature-flags.spec.ts) — 12-test suite: PR #113 feature flag registry + Patreon route guards (all 7 routes verified in default mode)
