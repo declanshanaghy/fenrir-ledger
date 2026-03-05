@@ -366,9 +366,9 @@ test.describe("SealedRuneModal -- Stripe CTA", () => {
       const priceNote = modal.getByText(/billed monthly/i);
       await expect(priceNote).toBeVisible({ timeout: 3000 });
 
-      // "Not now" dismiss button per wireframe
-      const notNow = modal.getByRole("button", { name: /not now/i });
-      await expect(notNow).toBeVisible({ timeout: 3000 });
+      // "Not now" dismiss button per wireframe -- aria-label overrides visible text
+      const notNow = modal.getByRole("button", { name: /dismiss and continue/i });
+      await expect(notNow).toBeVisible({ timeout: 5000 });
 
       // "THIS RUNE IS SEALED" heading per wireframe
       const heading = modal.getByText(/this rune is sealed/i);

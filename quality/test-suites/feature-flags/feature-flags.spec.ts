@@ -57,41 +57,51 @@ test.describe("Settings page structure", () => {
     await expect(stripeSection).toBeVisible();
   });
 
-  test("TC-FF-104: Cloud Sync section is visible", async ({
+  test("TC-FF-104: Cloud Sync gate shows locked placeholder for Thrall users", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    const cloudSyncSection = page.locator('[aria-label="Cloud Sync"]');
-    await expect(cloudSyncSection).toBeVisible();
+    // SubscriptionGate renders a locked placeholder instead of children for Thrall users
+    const lockedPlaceholders = page.getByText("This feature requires a Karl subscription.");
+    await expect(lockedPlaceholders.first()).toBeVisible({ timeout: 5000 });
   });
 
-  test("TC-FF-105: Multi-Household section is visible", async ({
+  test("TC-FF-105: Multi-Household gate shows locked placeholder for Thrall users", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    const multiHouseholdSection = page.locator('[aria-label="Multi-Household"]');
-    await expect(multiHouseholdSection).toBeVisible();
+    // All three SubscriptionGate instances render locked placeholders
+    const lockedPlaceholders = page.getByText("This feature requires a Karl subscription.");
+    // There should be at least 3 (one per gated feature: Cloud Sync, Multi-Household, Data Export)
+    const count = await lockedPlaceholders.count();
+    expect(count).toBeGreaterThanOrEqual(3);
   });
 
-  test("TC-FF-106: Data Export section is visible", async ({
+  test("TC-FF-106: Each locked gate has a 'Learn more' button", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    const dataExportSection = page.locator('[aria-label="Data Export"]');
-    await expect(dataExportSection).toBeVisible();
+    const learnMoreButtons = page.getByRole("button", { name: /learn more/i });
+    const count = await learnMoreButtons.count();
+    expect(count).toBeGreaterThanOrEqual(3);
   });
 
-  test("TC-FF-107: Data Export button is present but disabled", async ({
+  test("TC-FF-107: Gated sections do NOT render children for Thrall users", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    const exportButton = page.locator('button[aria-label="Export data (coming soon)"]');
-    await expect(exportButton).toBeVisible();
-    await expect(exportButton).toBeDisabled();
+    // The actual feature sections (Cloud Sync, Multi-Household, Data Export)
+    // should NOT be visible -- SubscriptionGate replaces them with the locked placeholder
+    const cloudSync = page.locator('[aria-label="Cloud Sync"]');
+    const multiHousehold = page.locator('[aria-label="Multi-Household"]');
+    const dataExport = page.locator('[aria-label="Data Export"]');
+    expect(await cloudSync.count()).toBe(0);
+    expect(await multiHousehold.count()).toBe(0);
+    expect(await dataExport.count()).toBe(0);
   });
 
   test("TC-FF-108: Settings page header tagline is visible", async ({ page }) => {
@@ -101,13 +111,15 @@ test.describe("Settings page structure", () => {
     await expect(tagline).toBeVisible();
   });
 
-  test("TC-FF-109: 'Coming soon to Karl supporters' text renders", async ({
+  test("TC-FF-109: 'Coming soon to Karl supporters' text is NOT visible for Thrall users", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    const comingSoonText = page.getByText("Coming soon to Karl supporters.").first();
-    await expect(comingSoonText).toBeVisible();
+    // "Coming soon to Karl supporters" is inside gated children -- Thrall users
+    // see the locked placeholder instead, so this text should NOT be visible
+    const comingSoonText = page.getByText("Coming soon to Karl supporters.");
+    expect(await comingSoonText.count()).toBe(0);
   });
 
   test("TC-FF-110: Dashboard loads without errors", async ({
