@@ -189,11 +189,22 @@ The `/orchestrate` command automates this pipeline using worktree isolation.
 Run `/orchestrate <requirements>` to trigger the full pipeline.
 
 ### Worktree Strategy
-| Phase | Branch Pattern | Worktree Path | Agents | Isolation |
-|-------|---------------|---------------|--------|-----------|
-| Product + UX | `design/<slug>` | `trees/design/<slug>/` | Freya → Luna (shared) | Shared worktree |
-| Build | `feat/<slug>` | `.claude/worktrees/agent-<id>/` | FiremanDecko | `isolation: "worktree"` per agent |
-| Validate | (same branch) | (same worktree path) | Loki | `run_in_background: true` |
+
+**All worktree creation is handled by the orchestrator via `/create-worktree` and `/remove-worktree` skills.** Worktrees live at `$(git rev-parse --show-toplevel)-trees/` — a sibling directory to the repo root, OUTSIDE the repo. This prevents nesting and pollution.
+
+**NEVER use `isolation: "worktree"` on Agent calls.** Agents receive the worktree path in their prompt.
+
+| Phase | Branch Pattern | Agents | Worktree |
+|-------|---------------|--------|----------|
+| Product + UX | `design/<slug>` | Freya, Luna (shared worktree) | `/create-worktree design/<slug>` |
+| Build | `feat/<slug>` | FiremanDecko | `/create-worktree feat/<slug>` per story |
+| Validate | (same branch) | Loki | Runs from main, reads worktree path from prompt |
+
+**Critical rules:**
+- Orchestrator creates worktrees BEFORE spawning agents, passes the path in the prompt
+- Agents `cd` to the worktree path — they never create worktrees themselves
+- Loki validators run from main and read/review code at the worktree path
+- Orchestrator cleans up worktrees with `/remove-worktree` after PRs merge
 
 ### Parallelism Strategy
 

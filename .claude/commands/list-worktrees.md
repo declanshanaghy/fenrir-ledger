@@ -6,24 +6,24 @@ allowed-tools: Bash, Read, Glob, Grep
 
 # Purpose
 
-List all git worktrees in the `trees/` directory with comprehensive information including branch names, port configuration, dev server status, and access URLs.
+List all git worktrees in the trees directory (sibling to repo root) with comprehensive information including branch names, port configuration, dev server status, and access URLs.
 
 ## Variables
 
 ```
-PROJECT_CWD: . (current working directory - the main project root)
-WORKTREE_BASE_DIR: trees/
+REPO_ROOT: $(git rev-parse --show-toplevel)
+WORKTREE_BASE_DIR: ${REPO_ROOT}-trees
 BASE_FRONTEND_PORT: 9653
 BASE_BACKEND_PORT: 9753
-FRONTEND_SERVER_SCRIPT: .claude/scripts/frontend-server.sh
-BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
-SERVICES_SCRIPT: .claude/scripts/services.sh
+FRONTEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/frontend-server.sh
+BACKEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/backend-server.sh
+SERVICES_SCRIPT: ${REPO_ROOT}/.claude/scripts/services.sh
 ```
 
 ## Instructions
 
 - List all worktrees managed by git
-- For each worktree in trees/, gather configuration details
+- For each worktree in WORKTREE_BASE_DIR, gather configuration details
 - Check dev server status using the frontend-server script
 - Display comprehensive information in a clear, organized format
 - Show which worktrees have running dev servers vs stopped
@@ -35,7 +35,7 @@ SERVICES_SCRIPT: .claude/scripts/services.sh
 
 - Run: `git worktree list`
 - Parse output to identify all worktrees
-- Filter for worktrees in PROJECT_CWD/trees/ directory
+- Filter for worktrees in WORKTREE_BASE_DIR directory
 - Extract:
   - Worktree path
   - Branch name
@@ -43,12 +43,12 @@ SERVICES_SCRIPT: .claude/scripts/services.sh
 
 ### 2. Gather Configuration for Each Worktree
 
-For each worktree found in trees/:
+For each worktree found in WORKTREE_BASE_DIR:
 
 **Extract Branch/Directory Info:**
-- Worktree directory: `trees/<branch-name>`
+- Worktree directory: `${REPO_ROOT}-trees/<branch-name>`
 - Branch name from git worktree list
-- App directory: `trees/<branch-name>/development/frontend`
+- App directory: `${REPO_ROOT}-trees/<branch-name>/development/frontend`
 
 **Determine Ports:**
 - Infer from worktree order or check running processes
@@ -111,7 +111,7 @@ Main Repository (Default)
 ---
 
 Worktree: <branch-name>
-  Location:        trees/<branch-name>
+  Location:        ${REPO_ROOT}-trees/<branch-name>
   Branch:          <branch-name>
   Commit:          <commit-hash-short>
   Frontend Port:   <FRONTEND_PORT>
@@ -122,11 +122,11 @@ Worktree: <branch-name>
   Backend URL:     http://localhost:<BACKEND_PORT>
   Dependencies:    FE: <Installed|Missing> | BE: <Installed|Missing|N/A>
   Environment:     <.env.local present|Missing>
-  FE Logs:         trees/<branch-name>/development/frontend/logs/frontend-server.log
-  BE Logs:         trees/<branch-name>/development/backend/logs/backend-server.log
+  FE Logs:         ${REPO_ROOT}-trees/<branch-name>/development/frontend/logs/frontend-server.log
+  BE Logs:         ${REPO_ROOT}-trees/<branch-name>/development/backend/logs/backend-server.log
   Manage all:      FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_BACKEND_PORT=<BACKEND_PORT> ... .claude/scripts/services.sh <start|stop|status>
-  Manage FE:       FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=<abs-path>/trees/<branch>/development/frontend .claude/scripts/frontend-server.sh <start|stop|status>
-  Manage BE:       FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<abs-path>/trees/<branch>/development/backend .claude/scripts/backend-server.sh <start|stop|status>
+  Manage FE:       FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=${REPO_ROOT}-trees/<branch>/development/frontend .claude/scripts/frontend-server.sh <start|stop|status>
+  Manage BE:       FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=${REPO_ROOT}-trees/<branch>/development/backend .claude/scripts/backend-server.sh <start|stop|status>
 
 ---
 
@@ -139,7 +139,7 @@ Quick Commands:
   List worktrees:       /list_worktrees
 ```
 
-If no worktrees exist in trees/:
+If no worktrees exist in WORKTREE_BASE_DIR:
 
 ```
 Git Worktrees Overview
@@ -150,7 +150,7 @@ Main Repository (Default)
   Port:     9653
   Status:   <RUNNING|STOPPED>
 
-No worktrees found in trees/ directory.
+No worktrees found in ${REPO_ROOT}-trees/ directory.
 
 Create your first worktree:
   /create_worktree <branch-name>

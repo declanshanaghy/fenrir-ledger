@@ -7,16 +7,17 @@ allowed-tools: Bash, Read, Glob, Grep
 
 # Purpose
 
-Remove an existing git worktree from the `trees/` directory AND delete the associated git branch. This includes stopping the dev server, cleaning up processes, removing the worktree directory, and permanently deleting the branch.
+Remove an existing git worktree from the trees directory (sibling to repo root) AND delete the associated git branch. This includes stopping the dev server, cleaning up processes, removing the worktree directory, and permanently deleting the branch.
 
 ## Variables
 
 ```
-PROJECT_CWD: . (current working directory - the main project root)
+REPO_ROOT: $(git rev-parse --show-toplevel)
 BRANCH_NAME: $1 (required)
-WORKTREE_DIR: trees/<BRANCH_NAME>
-FRONTEND_SERVER_SCRIPT: .claude/scripts/frontend-server.sh
-BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
+WORKTREE_BASE_DIR: ${REPO_ROOT}-trees
+WORKTREE_DIR: ${REPO_ROOT}-trees/<BRANCH_NAME>
+FRONTEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/frontend-server.sh
+BACKEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/backend-server.sh
 ```
 
 ## Instructions
@@ -34,7 +35,7 @@ BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
 ### 1. Parse and Validate Arguments
 
 - Read BRANCH_NAME from $1, error if missing
-- Construct WORKTREE_DIR path: `PROJECT_CWD/trees/<BRANCH_NAME>`
+- Construct WORKTREE_DIR path: `${REPO_ROOT}-trees/<BRANCH_NAME>`
 - Validate branch name format
 
 ### 2. Check Worktree Existence
@@ -48,7 +49,7 @@ BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
 ### 3. Identify Ports
 
 - Find which ports the worktree's servers are using:
-  - Check running processes in the worktree dir: `ps aux | grep "trees/<BRANCH_NAME>"`
+  - Check running processes in the worktree dir: `ps aux | grep "${REPO_ROOT}-trees/<BRANCH_NAME>"`
   - Scan frontend ports 9654-9663 for a process whose working dir matches the worktree
   - Scan backend ports 9754-9763 for a process whose working dir matches the worktree
 - Note both ports for stopping servers
@@ -58,14 +59,14 @@ BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
 **Stop Frontend Dev Server:**
 - If frontend port was identified:
   ```
-  FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/frontend .claude/scripts/frontend-server.sh stop
+  FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend .claude/scripts/frontend-server.sh stop
   ```
 - Verify stopped: `FENRIR_FRONTEND_PORT=<FRONTEND_PORT> .claude/scripts/frontend-server.sh status`
 
 **Stop Backend Server:**
 - If backend port was identified:
   ```
-  FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=<PROJECT_CWD>/trees/<BRANCH_NAME>/development/backend .claude/scripts/backend-server.sh stop
+  FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=${REPO_ROOT}-trees/<BRANCH_NAME>/development/backend .claude/scripts/backend-server.sh stop
   ```
 - Verify stopped: `FENRIR_BACKEND_PORT=<BACKEND_PORT> .claude/scripts/backend-server.sh status`
 
@@ -76,11 +77,11 @@ BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
 
 ### 5. Remove Git Worktree
 
-- Remove worktree: `git worktree remove trees/<BRANCH_NAME>`
+- Remove worktree: `git worktree remove ${REPO_ROOT}-trees/<BRANCH_NAME>`
 - If removal fails (uncommitted changes):
-  - Try force removal: `git worktree remove trees/<BRANCH_NAME> --force`
+  - Try force removal: `git worktree remove ${REPO_ROOT}-trees/<BRANCH_NAME> --force`
   - Note the force removal in the report
-- Verify worktree was removed: `git worktree list | grep trees/<BRANCH_NAME>` (should return nothing)
+- Verify worktree was removed: `git worktree list | grep ${REPO_ROOT}-trees/<BRANCH_NAME>` (should return nothing)
 
 ### 6. Delete Git Branch
 
@@ -102,7 +103,7 @@ BACKEND_SERVER_SCRIPT: .claude/scripts/backend-server.sh
 ```
 Worktree and Branch Removed
 
-Location: trees/<BRANCH_NAME>
+Location: ${REPO_ROOT}-trees/<BRANCH_NAME>
 Branch:   <BRANCH_NAME>
 Status:   REMOVED
 
@@ -111,7 +112,7 @@ Cleanup:
   Backend server stopped (port <BACKEND_PORT>) [or: was not running]
   Git worktree removed
   Git branch deleted
-  Directory removed from trees/
+  Directory removed from ${REPO_ROOT}-trees/
 
 Note: Both the worktree AND branch '<BRANCH_NAME>' have been permanently deleted.
       To recreate: /create_worktree <BRANCH_NAME>
