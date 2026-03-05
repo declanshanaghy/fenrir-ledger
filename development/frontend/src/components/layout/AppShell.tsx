@@ -120,7 +120,7 @@ export function AppShell({ children }: AppShellProps) {
       <KonamiHowl />
       {/* Easter egg #9 — The Forgemaster's Signature (`?` key, one-time) */}
       <ForgeMasterEgg />
-      {/* Easter egg #10 — LCARS Mode (Cmd+Shift+L / Ctrl+Shift+L) */}
+      {/* Easter egg #10 — LCARS Mode (Ctrl+Shift+L) */}
       <LcarsOverlay />
       {/* Easter egg #3 — The Roots of a Mountain (first sidebar collapse, one-time) */}
       <GleipnirMountainRoots open={rootsOpen} onClose={dismissRoots} />

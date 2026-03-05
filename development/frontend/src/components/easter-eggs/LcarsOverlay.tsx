@@ -3,7 +3,7 @@
 /**
  * LcarsOverlay — Easter Egg #10: LCARS Mode.
  *
- * Trigger: Cmd+Shift+L (Mac) / Ctrl+Shift+L (Win/Linux).
+ * Trigger: Ctrl+Shift+L (all platforms).
  * Displays a Star Trek LCARS-style diagnostic overlay for 5 seconds.
  * Shows stardate, card counts, and threat assessment.
  *
@@ -50,7 +50,7 @@ export function LcarsOverlay() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Cmd+Shift+L (Mac) or Ctrl+Shift+L (Win/Linux)
+      // Ctrl+Shift+L (all platforms)
       if (e.key === "L" && e.shiftKey && (e.metaKey || e.ctrlKey)) {
         // Skip if a form field has focus
         const tag = (e.target as HTMLElement | null)?.tagName;
