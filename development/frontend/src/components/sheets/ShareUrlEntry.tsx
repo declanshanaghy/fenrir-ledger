@@ -74,7 +74,7 @@ export function ShareUrlEntry({
           disabled={!isValid}
           className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors bg-primary text-primary-foreground hover:bg-gold-bright disabled:opacity-40 disabled:cursor-not-allowed h-11 px-6 min-w-[44px]"
         >
-          Import
+          Begin Import
         </button>
       </div>
     </div>
