@@ -1,116 +1,135 @@
-# QA Handoff: Stripe Foundation + API Routes (Story 1)
+# QA Handoff -- Story 2: Stripe UI Components + PatreonGate Rename
 
-**Branch:** `feat/stripe-foundation`
+**Branch:** `feat/stripe-ui`
 **Date:** 2026-03-04
 **Engineer:** FiremanDecko
 
-## What Was Implemented
+## What was implemented
 
-Stripe Direct integration foundation -- SDK, library modules, KV store extensions, and all 5 API routes.
+### Story references
+- Story 2 of the Stripe Direct Integration sprint
+- Depends on Story 1 (feat/stripe-foundation branch -- API routes + KV store)
 
-### Files Created
+### Changes summary
+1. **PatreonGate renamed to SubscriptionGate** across entire codebase
+2. **StripeSettings component** built with 3 states (Thrall/Karl/Canceled)
+3. **AnonymousCheckoutModal removed** -- Stripe's hosted checkout page collects email natively
+4. **EntitlementContext updated** with `subscribeStripe()`, `openPortal()`, `unlinkStripe()` actions
+5. **SealedRuneModal updated** with Stripe CTA (subscribe button replaces Patreon link when isStripe())
+6. **UpsellBanner updated** to work in Stripe mode (Upgrade to Karl CTA)
+7. **Settings page updated** to conditionally render StripeSettings or PatreonSettings
+8. **SEV-002 fixed**: Removed `request.headers.get("origin")` from checkout and portal routes, replaced with `process.env.APP_BASE_URL`
+9. **SEV-003 fixed**: Added `js.stripe.com`, `api.stripe.com`, `hooks.stripe.com` to CSP in next.config.ts
+10. **EntitlementPlatform type** updated to include `"stripe"`
 
+## Files created/modified
+
+### New files
 | File | Description |
 |------|-------------|
-| `src/lib/stripe/api.ts` | Lazy singleton Stripe SDK client (deferred init for build safety) |
-| `src/lib/stripe/types.ts` | Stripe entitlement types, tier mapping, API response types |
-| `src/lib/stripe/webhook.ts` | Webhook signature verification + entitlement builders |
-| `src/app/api/stripe/checkout/route.ts` | POST: create Checkout Session, return URL |
-| `src/app/api/stripe/webhook/route.ts` | POST: verify signature, process 3 event types |
-| `src/app/api/stripe/membership/route.ts` | GET: return cached entitlement from KV |
-| `src/app/api/stripe/portal/route.ts` | POST: create Customer Portal session, return URL |
-| `src/app/api/stripe/unlink/route.ts` | POST: cancel subscription + delete KV record |
-| `designs/architecture/adr-010-stripe-direct.md` | Architecture decision record |
+| `src/components/entitlement/SubscriptionGate.tsx` | Renamed from PatreonGate, works for both platforms |
+| `src/components/entitlement/StripeSettings.tsx` | Stripe subscription settings (3 states) |
+| ~~`src/components/entitlement/AnonymousCheckoutModal.tsx`~~ | Removed -- Stripe handles email collection |
+| `src/lib/stripe/types.ts` | Stripe type definitions (from Story 1) |
+| `src/lib/stripe/api.ts` | Stripe SDK client (from Story 1) |
+| `src/lib/stripe/webhook.ts` | Webhook handler (from Story 1) |
+| `src/app/api/stripe/checkout/route.ts` | Checkout session API (from Story 1, SEV-002 fixed) |
+| `src/app/api/stripe/portal/route.ts` | Customer Portal API (from Story 1, SEV-002 fixed) |
+| `src/app/api/stripe/membership/route.ts` | Membership status API (from Story 1) |
+| `src/app/api/stripe/unlink/route.ts` | Unlink/cancel API (from Story 1) |
+| `src/app/api/stripe/webhook/route.ts` | Webhook endpoint (from Story 1) |
 
-### Files Modified
+### Modified files
+| File | Description |
+|------|-------------|
+| `src/components/entitlement/index.ts` | Barrel exports updated (SubscriptionGate, StripeSettings) |
+| `src/components/entitlement/SealedRuneModal.tsx` | Stripe CTA added alongside Patreon CTA |
+| `src/components/entitlement/UpsellBanner.tsx` | Stripe mode support (Upgrade to Karl CTA) |
+| `src/app/settings/page.tsx` | SubscriptionGate + conditional StripeSettings/PatreonSettings |
+| `src/contexts/EntitlementContext.tsx` | subscribeStripe, openPortal, unlinkStripe, Stripe membership fetch |
+| `src/lib/entitlement/types.ts` | EntitlementPlatform now includes "stripe" |
+| `src/lib/kv/entitlement-store.ts` | Stripe entitlement CRUD operations added |
+| `next.config.ts` | CSP updated with Stripe domains (SEV-003 fix) |
+| `.env.example` | Stripe env vars added |
 
-| File | Change |
-|------|--------|
-| `package.json` | Added `stripe` dependency |
-| `src/lib/kv/entitlement-store.ts` | Added Stripe KV ops: getStripeEntitlement, setStripeEntitlement, deleteStripeEntitlement, getGoogleSubByStripeCustomerId |
-| `.env.example` | Added Stripe environment variable placeholders |
+### Deleted files
+| File | Description |
+|------|-------------|
+| `src/components/entitlement/PatreonGate.tsx` | Renamed to SubscriptionGate.tsx |
 
-## How to Deploy / Test
+## How to deploy
 
-### Prerequisites
-1. Set `SUBSCRIPTION_PLATFORM=stripe` in `.env.local`
-2. Add real Stripe keys to `.env.local`:
-   - `STRIPE_SECRET_KEY=sk_test_...`
-   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...`
-   - `STRIPE_WEBHOOK_SECRET=whsec_...`
-   - `STRIPE_PRICE_ID=price_...`
-3. Ensure Vercel KV credentials are configured (`KV_REST_API_URL`, `KV_REST_API_TOKEN`)
+1. Ensure `SUBSCRIPTION_PLATFORM=stripe` is set in `.env.local`
+2. Ensure Stripe env vars are set: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
+3. Ensure `APP_BASE_URL` is set (SEV-002 fix)
+4. `cd development/frontend && npm install && npx next build`
+5. `npx next dev -p 9656`
 
-### Dev Server
-```bash
-cd development/frontend && npm run dev
-```
-Port: 9655 (worktree) or 9653 (main)
+## How to test
 
-### Testing Routes
+### Port and URL
+- Dev server: `http://localhost:9656`
+- Worktree path: `/Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger-trees/feat/stripe-ui`
 
-All routes except webhook require Bearer auth (Google id_token):
-```
-Authorization: Bearer <google_id_token>
-```
+### Test with SUBSCRIPTION_PLATFORM=stripe
 
-**Checkout:**
-```bash
-curl -X POST http://localhost:9655/api/stripe/checkout \
-  -H "Authorization: Bearer <token>"
-# Returns: { "url": "https://checkout.stripe.com/..." }
-```
+1. **StripeSettings (Thrall state)**
+   - Navigate to `/settings`
+   - Verify: "Subscription" heading, "Thrall" badge, Karl benefits list, "Subscribe for $3.99/month" button
+   - Anonymous user: clicking subscribe opens AnonymousCheckoutModal
+   - Authenticated user: clicking subscribe calls POST /api/stripe/checkout
 
-**Membership:**
-```bash
-curl http://localhost:9655/api/stripe/membership \
-  -H "Authorization: Bearer <token>"
-# Returns: { "tier": "thrall", "active": false, "platform": "stripe", ... }
-```
+2. **SealedRuneModal (Stripe CTA)**
+   - Navigate to `/settings` as Thrall user
+   - Click "Learn more" on a locked feature
+   - Verify: "Subscribe for $3.99/month" button, "Not now" dismiss, locked feature name shown
+   - Both anonymous and authenticated: subscribe CTA redirects to Stripe Checkout
 
-**Portal:**
-```bash
-curl -X POST http://localhost:9655/api/stripe/portal \
-  -H "Authorization: Bearer <token>"
-# Returns: { "url": "https://billing.stripe.com/..." }
-# Requires existing entitlement (returns 404 if no subscription)
-```
+3. **UpsellBanner (Stripe mode)**
+   - Navigate to dashboard as Thrall user
+   - Verify: "Upgrade to Karl" button, atmospheric text, dismiss X button
+   - Both anonymous and authenticated: clicking CTA redirects to Stripe Checkout
+   - Dismiss: sets `fenrir:stripe_upsell_dismissed` in localStorage, banner hidden permanently
 
-**Unlink:**
-```bash
-curl -X POST http://localhost:9655/api/stripe/unlink \
-  -H "Authorization: Bearer <token>"
-# Returns: { "success": true }
-```
+4. **SubscriptionGate (renamed from PatreonGate)**
+   - Verify premium features are gated in Stripe mode
+   - Both anonymous and authenticated Thrall users see the gate
+   - Karl users see the feature content
 
-**Webhook (use Stripe CLI):**
-```bash
-stripe listen --forward-to http://localhost:9655/api/stripe/webhook
-stripe trigger checkout.session.completed
-```
+### Test with SUBSCRIPTION_PLATFORM=patreon
 
-### Feature Flag Behavior
-- When `SUBSCRIPTION_PLATFORM=patreon`: all `/api/stripe/*` routes return 404
-- When `SUBSCRIPTION_PLATFORM=stripe`: all `/api/patreon/*` routes return 404
+5. **Existing Patreon flow still works**
+   - PatreonSettings renders on /settings
+   - SealedRuneModal shows Patreon CTA
+   - UpsellBanner shows "Learn more" (Patreon flow)
+   - SubscriptionGate works for authenticated users
 
-## Build Validation
+### Security verification
 
-```bash
-cd development/frontend
-npx tsc --noEmit   # PASS (verified)
-npx next build     # PASS (verified)
-```
+6. **SEV-002: No Origin header usage**
+   - `grep -rn "origin" src/app/api/stripe/` should NOT show `request.headers.get("origin")`
+   - Checkout and portal routes use `process.env.APP_BASE_URL`
 
-## Known Limitations
-- Placeholder env vars -- Odin must provide real Stripe keys before testing
-- No frontend UI yet -- this is the backend foundation only
-- Webhook testing requires either Stripe CLI or a public URL (ngrok/Vercel preview)
-- No migration path from Patreon entitlements to Stripe (by design -- users re-subscribe)
+7. **SEV-003: Stripe domains in CSP**
+   - `next.config.ts` includes js.stripe.com, api.stripe.com, hooks.stripe.com
+   - Browser console should not show CSP violations when Stripe.js loads
 
-## Suggested Test Focus Areas
-1. Feature flag guard: verify Stripe routes return 404 when `SUBSCRIPTION_PLATFORM=patreon`
-2. Auth guard: verify all routes except webhook return 401 without Bearer token
-3. Webhook signature: verify invalid signatures are rejected (400)
-4. Checkout flow: verify session URL is returned with correct metadata
-5. KV operations: verify entitlements are stored/retrieved/deleted correctly
-6. Rate limiting: verify excessive requests are throttled (429)
+### Build verification
+
+8. `cd development/frontend && npx tsc --noEmit` -- passes
+9. `cd development/frontend && npx next build` -- succeeds
+10. `grep -rn 'PatreonGate' development/frontend/src/ --include='*.tsx' --include='*.ts'` -- returns only the rename comment
+
+## Known limitations
+
+- Stripe subscription states (canceled with access until period end) require actual Stripe webhook events to populate `stripeStatus` and `currentPeriodEnd` in the context. These fields are wired but not yet populated from the membership API response (Story 1 membership endpoint returns `tier` and `active` but not status/period details). The UI gracefully handles null values.
+- Anonymous Stripe flow is client-side only (no server-side session). Stripe's hosted checkout page collects email.
+- The `unlinkStripe` action is wired in the context but not exposed in the StripeSettings UI (per wireframe: cancel routes to Stripe Portal).
+
+## Suggested test focus areas
+
+1. Platform switching: toggling `SUBSCRIPTION_PLATFORM` between `patreon` and `stripe` should cleanly switch all UI
+2. Anonymous checkout flow: Stripe Checkout redirect, loading state, error handling
+3. Mobile responsiveness: all new components at 375px width
+4. Accessibility: modal focus trapping, aria labels, screen reader flow
+5. CSP: load the app with Stripe mode and verify no CSP errors in console

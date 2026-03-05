@@ -1,23 +1,26 @@
 "use client";
 
 /**
- * PatreonGate — Fenrir Ledger
+ * SubscriptionGate -- Fenrir Ledger
  *
  * Wrapper component that gates premium features with a hard lock.
  * Renders children for Karl users, the Sealed Rune Modal for Thrall/expired
  * users, and a Norse-themed skeleton shimmer while loading.
  *
+ * Platform-agnostic: works with both Patreon and Stripe subscription flows.
+ * Previously named PatreonGate -- renamed in Story 2 of the Stripe integration.
+ *
  * Usage:
- *   <PatreonGate feature="cloud-sync">
+ *   <SubscriptionGate feature="cloud-sync">
  *     <CloudSyncPanel />
- *   </PatreonGate>
+ *   </SubscriptionGate>
  *
  * Behavior:
  *   - hasFeature(feature) === true: render children normally
  *   - hasFeature(feature) === false: render the Sealed Rune Modal
  *   - isLoading: render a skeleton/loading state (Norse-themed shimmer)
  *
- * @module entitlement/PatreonGate
+ * @module entitlement/SubscriptionGate
  */
 
 import { useState, type ReactNode } from "react";
@@ -25,13 +28,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { SealedRuneModal } from "./SealedRuneModal";
 import type { PremiumFeature } from "@/lib/entitlement/types";
-import { isPatreon } from "@/lib/feature-flags";
+import { isPatreon, isStripe } from "@/lib/feature-flags";
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
-export interface PatreonGateProps {
+export interface SubscriptionGateProps {
   /** Which premium feature to gate */
   feature: PremiumFeature;
   /** Content to render when the feature is unlocked */
@@ -69,24 +72,23 @@ function GateSkeleton() {
  * Gates a premium feature. Renders children for Karl users, the Sealed Rune
  * Modal for Thrall/expired users, and a loading skeleton while resolving.
  *
+ * Works with both Patreon and Stripe subscription platforms.
+ *
  * @param props - Feature slug and children
  */
-export function PatreonGate({ feature, children }: PatreonGateProps) {
+export function SubscriptionGate({ feature, children }: SubscriptionGateProps) {
   const { status } = useAuth();
   const { hasFeature, isLoading } = useEntitlement();
   const [modalOpen, setModalOpen] = useState(false);
 
-  // When Patreon is not the active platform, render children unconditionally.
-  // Premium features should remain accessible — Stripe gating is not built yet.
-  if (!isPatreon()) {
+  // When neither platform is active, render children unconditionally.
+  if (!isPatreon() && !isStripe()) {
     return <>{children}</>;
   }
 
-  // Anonymous users: render children directly — no Patreon-related UI.
-  // Per spec: "Anonymous users see no Patreon-related UI."
-  // The placeholder sections (e.g. "Coming soon to Karl supporters") are
-  // informational and safe to show; the Sealed Rune Modal is Patreon-specific.
-  if (status !== "authenticated") {
+  // For Patreon mode: anonymous users see children directly (no Patreon UI).
+  // For Stripe mode: anonymous users ARE gated (they can subscribe without Google).
+  if (isPatreon() && status !== "authenticated") {
     return <>{children}</>;
   }
 
@@ -101,8 +103,8 @@ export function PatreonGate({ feature, children }: PatreonGateProps) {
   }
 
   // Feature is locked: show the locked placeholder with an option to open the modal.
-  // The modal is NOT auto-opened — this prevents multiple modals stacking when
-  // several PatreonGate components render on the same page.
+  // The modal is NOT auto-opened -- this prevents multiple modals stacking when
+  // several SubscriptionGate components render on the same page.
   return (
     <>
       <SealedRuneModal

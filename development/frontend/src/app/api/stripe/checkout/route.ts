@@ -71,29 +71,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     googleSub = auth.user.sub;
     log.debug("POST /api/stripe/checkout: authenticated user", { googleSub, customerEmail });
   } else {
-    // Anonymous path — read email from request body
-    let body: { email?: string };
-    try {
-      body = await request.json() as { email?: string };
-    } catch {
-      log.debug("POST /api/stripe/checkout returning", { status: 400, error: "invalid_body" });
-      return NextResponse.json(
-        { error: "invalid_body", error_description: "Could not parse request body as JSON." },
-        { status: 400 },
-      );
-    }
-
-    if (!body.email || typeof body.email !== "string" || !body.email.includes("@")) {
-      log.debug("POST /api/stripe/checkout returning", { status: 400, error: "email_required" });
-      return NextResponse.json(
-        { error: "email_required", error_description: "A valid email address is required." },
-        { status: 400 },
-      );
-    }
-
-    customerEmail = body.email;
+    // Anonymous path — Stripe's hosted checkout page collects email
+    customerEmail = "";
     googleSub = undefined;
-    log.debug("POST /api/stripe/checkout: anonymous user", { customerEmail });
+    log.debug("POST /api/stripe/checkout: anonymous user (email collected by Stripe)");
   }
 
   const priceId = process.env.STRIPE_PRICE_ID;
@@ -108,8 +89,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    // Determine the base URL for success/cancel redirects
-    const origin = request.headers.get("origin") ?? process.env.APP_BASE_URL ?? "http://localhost:9653";
+    // Determine the base URL for success/cancel redirects (SEV-002 fix: never use Origin header)
+    const baseUrl = process.env.APP_BASE_URL ?? "http://localhost:9653";
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -120,9 +101,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           quantity: 1,
         },
       ],
-      customer_email: customerEmail,
-      success_url: `${origin}/settings?stripe=success`,
-      cancel_url: `${origin}/settings?stripe=cancel`,
+      // Only pre-fill email for authenticated users; anonymous users enter it on Stripe's page
+      ...(customerEmail ? { customer_email: customerEmail } : {}),
+      success_url: `${baseUrl}/settings?stripe=success`,
+      cancel_url: `${baseUrl}/settings?stripe=cancel`,
       metadata: googleSub ? { googleSub } : {},
       // Allow promotion codes
       allow_promotion_codes: true,

@@ -79,11 +79,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const origin = request.headers.get("origin") ?? process.env.APP_BASE_URL ?? "http://localhost:9653";
+    // SEV-002 fix: never use Origin header for redirect URLs
+    const baseUrl = process.env.APP_BASE_URL ?? "http://localhost:9653";
 
     const session = await stripe.billingPortal.sessions.create({
       customer: entitlement.stripeCustomerId,
-      return_url: `${origin}/settings`,
+      return_url: `${baseUrl}/settings`,
     });
 
     const response: StripePortalResponse = { url: session.url };
