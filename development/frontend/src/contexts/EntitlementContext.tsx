@@ -4,35 +4,27 @@
  * EntitlementContext -- Fenrir Ledger
  *
  * React context that owns the client-side entitlement state.
- * Platform-agnostic: supports Patreon today, extensible to other platforms.
+ * Platform-agnostic: supports Patreon and Stripe, switched by feature flag.
  *
- * Source of truth: Vercel KV (server-side), accessed via /api/patreon/membership
- * (authenticated) or /api/patreon/membership-anon (anonymous).
+ * Source of truth: Vercel KV (server-side), accessed via:
+ *   - Patreon: /api/patreon/membership (authenticated) or /api/patreon/membership-anon (anonymous)
+ *   - Stripe: /api/stripe/membership (authenticated)
  * Client-side cache: localStorage "fenrir:entitlement" for instant mount + fallback.
  *
  * Supports two user modes:
  *   - **Authenticated**: Google-signed-in user. Uses id_token for API calls.
- *     Entitlements keyed by Google sub in KV.
- *   - **Anonymous**: No Google sign-in. Uses Patreon user ID from localStorage
- *     (`fenrir:patreon-user-id`). Entitlements keyed by Patreon PID in KV.
+ *   - **Anonymous**: No Google sign-in. For Patreon: uses Patreon user ID from localStorage.
+ *     For Stripe: anonymous users can subscribe (email collected via modal).
  *
  * Post-sign-in migration:
  *   When a user signs in with Google after anonymous Patreon linking, the context
- *   auto-detects the stored patreonUserId and calls POST /api/patreon/migrate
- *   to move the entitlement from the anonymous KV key to the Google-keyed entry.
+ *   auto-detects the stored patreonUserId and calls POST /api/patreon/migrate.
  *
  * On mount:
  *   1. Read localStorage cache for instant UI state (no loading flash).
  *   2. If user is authenticated AND cache is stale (>1 hour), call the membership
  *      API to refresh.
- *   3. If user is anonymous AND has a patreonUserId, call the anonymous membership
- *      API to check status.
- *   4. If the membership API fails, use stale cache if available, else Thrall.
- *
- * OAuth callback handling:
- *   Checks for ?patreon=linked|error|denied query params (set by the OAuth
- *   callback redirect). Processes them, updates cache, cleans the URL.
- *   For anonymous callbacks, also reads ?pid= and saves to localStorage.
+ *   3. If the membership API fails, use stale cache if available, else Thrall.
  *
  * See ADR-009 for the architectural decision.
  */
@@ -67,7 +59,7 @@ import type {
   Entitlement,
   PremiumFeature,
 } from "@/lib/entitlement/types";
-import { isPatreon } from "@/lib/feature-flags";
+import { isPatreon, isStripe } from "@/lib/feature-flags";
 
 // -- Types -------------------------------------------------------------------
 
@@ -86,6 +78,10 @@ export interface EntitlementContextValue {
   isAnonymouslyLinked: boolean;
   /** Whether a migration from anonymous to authenticated is in progress. */
   isMigrating: boolean;
+  /** Stripe subscription status (e.g. "active", "canceled", "past_due") */
+  stripeStatus: string | null;
+  /** Stripe subscription current period end (ISO 8601 string) */
+  currentPeriodEnd: string | null;
 
   /** Initiates the Patreon OAuth linking flow (redirects to /api/patreon/authorize). */
   linkPatreon: () => void;
@@ -95,6 +91,13 @@ export interface EntitlementContextValue {
   refreshEntitlement: () => Promise<void>;
   /** Migrates anonymous entitlement to the authenticated Google-keyed entry. */
   migrateAnonymousEntitlement: () => Promise<boolean>;
+
+  /** Creates a Stripe Checkout session and redirects. For anonymous users, pass email. */
+  subscribeStripe: (email?: string) => Promise<void>;
+  /** Opens the Stripe Customer Portal for subscription management. */
+  openPortal: () => Promise<void>;
+  /** Unlinks Stripe: cancels subscription and clears entitlement. */
+  unlinkStripe: () => Promise<void>;
 
   /** Returns true if the user has access to the given premium feature. */
   hasFeature: (feature: PremiumFeature) => boolean;
@@ -110,10 +113,15 @@ const DEFAULT_VALUE: EntitlementContextValue = {
   platform: null,
   isAnonymouslyLinked: false,
   isMigrating: false,
+  stripeStatus: null,
+  currentPeriodEnd: null,
   linkPatreon: () => {},
   unlinkPatreon: async () => {},
   refreshEntitlement: async () => {},
   migrateAnonymousEntitlement: async () => false,
+  subscribeStripe: async () => {},
+  openPortal: async () => {},
+  unlinkStripe: async () => {},
   hasFeature: () => false,
 };
 
@@ -126,11 +134,12 @@ const EntitlementContext = createContext<EntitlementContextValue>(DEFAULT_VALUE)
 interface MembershipApiResponse {
   tier: EntitlementTier;
   active: boolean;
-  platform: "patreon";
+  platform: "patreon" | "stripe";
   checkedAt: string;
   stale?: boolean;
   userId?: string;
   linkedAt?: string;
+  customerId?: string;
 }
 
 // -- Migration API response shape --------------------------------------------
@@ -155,6 +164,8 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
   const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
+  const [stripeStatus, setStripeStatus] = useState<string | null>(null);
+  const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
 
   // Track whether the user has an anonymous Patreon link in localStorage
   const [anonymouslyLinked, setAnonymouslyLinked] = useState(false);
@@ -173,12 +184,8 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
   const isLinked = entitlement !== null;
   const platform: EntitlementPlatform | null = entitlement?.platform ?? null;
 
-  // -- Fetch membership from server (authenticated) --------------------------
+  // -- Fetch membership from server (authenticated, Patreon) -----------------
 
-  /**
-   * Calls /api/patreon/membership with the user's Google id_token.
-   * Returns the membership data or null on failure.
-   */
   const fetchMembership = useCallback(async (): Promise<MembershipApiResponse | null> => {
     const token = await ensureFreshToken();
     if (!token) return null;
@@ -208,12 +215,8 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     }
   }, []);
 
-  // -- Fetch membership from server (anonymous) ------------------------------
+  // -- Fetch membership from server (anonymous, Patreon) ---------------------
 
-  /**
-   * Calls /api/patreon/membership-anon with the Patreon user ID.
-   * Returns the membership data or null on failure.
-   */
   const fetchAnonymousMembership = useCallback(
     async (pid: string): Promise<MembershipApiResponse | null> => {
       try {
@@ -243,15 +246,43 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     [],
   );
 
+  // -- Fetch Stripe membership (authenticated) --------------------------------
+
+  const fetchStripeMembership = useCallback(async (): Promise<MembershipApiResponse | null> => {
+    const token = await ensureFreshToken();
+    if (!token) return null;
+
+    try {
+      const response = await fetch("/api/stripe/membership", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Cache-Control": "no-cache",
+        },
+      });
+
+      if (!response.ok) {
+        console.debug("[Fenrir] Stripe membership API returned", response.status);
+        return null;
+      }
+
+      const data = (await response.json()) as MembershipApiResponse;
+      return data;
+    } catch (err) {
+      console.debug(
+        "[Fenrir] Stripe membership API fetch failed:",
+        err instanceof Error ? err.message : err,
+      );
+      return null;
+    }
+  }, []);
+
   /**
    * Converts a MembershipApiResponse into a client-side Entitlement record.
-   * Fills in userId/linkedAt from existing cache if the API doesn't return them.
    */
   const toEntitlement = useCallback(
     (data: MembershipApiResponse, existing: Entitlement | null): Entitlement | null => {
-      // If the API says the user is not linked (thrall + not active + no userId),
-      // there is no entitlement to cache.
-      if (data.tier === "thrall" && !data.active && !data.userId && !existing) {
+      if (data.tier === "thrall" && !data.active && !data.userId && !data.customerId && !existing) {
         return null;
       }
 
@@ -259,7 +290,7 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
         tier: data.tier,
         active: data.active,
         platform: data.platform,
-        userId: data.userId ?? existing?.userId ?? "",
+        userId: data.userId ?? data.customerId ?? existing?.userId ?? "",
         linkedAt: data.linkedAt
           ? new Date(data.linkedAt).getTime()
           : existing?.linkedAt ?? Date.now(),
@@ -272,9 +303,6 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
   // -- Refresh entitlement ---------------------------------------------------
 
   const refreshEntitlement = useCallback(async () => {
-    // Skip all Patreon API calls when the platform is not patreon
-    if (!isPatreon()) return;
-
     if (fetchInProgressRef.current) return;
 
     fetchInProgressRef.current = true;
@@ -283,14 +311,19 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     try {
       let data: MembershipApiResponse | null = null;
 
-      if (isAuthenticated) {
-        // Authenticated path: use Google id_token
-        data = await fetchMembership();
-      } else {
-        // Anonymous path: use Patreon user ID from localStorage
-        const pid = getPatreonUserId();
-        if (pid) {
-          data = await fetchAnonymousMembership(pid);
+      if (isStripe()) {
+        // Stripe path: authenticated users only for now
+        if (isAuthenticated) {
+          data = await fetchStripeMembership();
+        }
+      } else if (isPatreon()) {
+        if (isAuthenticated) {
+          data = await fetchMembership();
+        } else {
+          const pid = getPatreonUserId();
+          if (pid) {
+            data = await fetchAnonymousMembership(pid);
+          }
         }
       }
 
@@ -301,29 +334,25 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
           setEntitlementCache(updated);
           setEntitlement(updated);
         } else {
-          // Not linked -- clear any stale cache
           clearEntitlementCache();
           setEntitlement(null);
         }
       }
-      // If data is null (API failed), keep whatever cache we have (graceful degradation)
     } finally {
       fetchInProgressRef.current = false;
       setIsLoading(false);
     }
-  }, [isAuthenticated, fetchMembership, fetchAnonymousMembership, toEntitlement]);
+  }, [isAuthenticated, fetchMembership, fetchAnonymousMembership, fetchStripeMembership, toEntitlement]);
 
   // -- Link Patreon ----------------------------------------------------------
 
   const linkPatreon = useCallback(() => {
-    // No-op when Patreon is not the active subscription platform
     if (!isPatreon()) {
       console.debug("[Fenrir] linkPatreon skipped: platform is not patreon");
       return;
     }
 
     if (isAuthenticated && session) {
-      // Authenticated flow: pass id_token to authorize endpoint
       void (async () => {
         const token = await ensureFreshToken();
         if (!token) {
@@ -336,7 +365,6 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
         window.location.href = url.toString();
       })();
     } else {
-      // Anonymous flow: redirect to authorize WITHOUT id_token
       const url = new URL("/api/patreon/authorize", window.location.origin);
       window.location.href = url.toString();
     }
@@ -345,16 +373,13 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
   // -- Unlink Patreon --------------------------------------------------------
 
   const unlinkPatreon = useCallback(async () => {
-    // No-op when Patreon is not the active subscription platform
     if (!isPatreon()) return;
 
-    // Clear client-side state immediately for responsive UI
     clearEntitlementCache();
     clearPatreonUserId();
     setEntitlement(null);
     setAnonymouslyLinked(false);
 
-    // Also clear the server-side KV entry
     if (isAuthenticated) {
       try {
         const token = await ensureFreshToken();
@@ -367,8 +392,6 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
           });
         }
       } catch (err) {
-        // Server-side cleanup failed. The local cache is already cleared.
-        // The KV entry will expire naturally (30-day TTL).
         console.debug(
           "[Fenrir] Server-side unlink failed:",
           err instanceof Error ? err.message : err,
@@ -377,16 +400,135 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     }
   }, [isAuthenticated]);
 
-  // -- Migrate anonymous entitlement -----------------------------------------
+  // -- Stripe: Subscribe (create checkout session) ----------------------------
 
   /**
-   * Migrates an anonymous Patreon entitlement to the authenticated Google-keyed entry.
-   * Called automatically on sign-in if a patreonUserId exists in localStorage.
+   * Creates a Stripe Checkout session and redirects the user.
+   * For authenticated users, email comes from Google profile.
+   * For anonymous users, email must be passed as parameter.
    *
-   * @returns true if migration succeeded, false otherwise.
+   * @param email - Required for anonymous users
    */
+  const subscribeStripe = useCallback(async (email?: string) => {
+    if (!isStripe()) {
+      console.debug("[Fenrir] subscribeStripe skipped: platform is not stripe");
+      return;
+    }
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (isAuthenticated) {
+      const token = await ensureFreshToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+
+    const body: Record<string, string> = {};
+    if (email) {
+      body.email = email;
+    }
+
+    try {
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error((err as { error_description?: string }).error_description ?? "Checkout failed");
+      }
+
+      const data = (await response.json()) as { url: string };
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.debug(
+        "[Fenrir] Stripe checkout failed:",
+        err instanceof Error ? err.message : err,
+      );
+      throw err;
+    }
+  }, [isAuthenticated]);
+
+  // -- Stripe: Open Customer Portal ------------------------------------------
+
+  const openPortal = useCallback(async () => {
+    if (!isStripe()) {
+      console.debug("[Fenrir] openPortal skipped: platform is not stripe");
+      return;
+    }
+
+    const token = await ensureFreshToken();
+    if (!token) {
+      console.debug("[Fenrir] Cannot open portal: no valid token");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        console.debug("[Fenrir] Portal API returned", response.status);
+        return;
+      }
+
+      const data = (await response.json()) as { url: string };
+      if (data.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (err) {
+      console.debug(
+        "[Fenrir] Stripe portal failed:",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }, []);
+
+  // -- Stripe: Unlink --------------------------------------------------------
+
+  const unlinkStripe = useCallback(async () => {
+    if (!isStripe()) return;
+
+    clearEntitlementCache();
+    setEntitlement(null);
+    setStripeStatus(null);
+    setCurrentPeriodEnd(null);
+
+    if (isAuthenticated) {
+      try {
+        const token = await ensureFreshToken();
+        if (token) {
+          await fetch("/api/stripe/unlink", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        }
+      } catch (err) {
+        console.debug(
+          "[Fenrir] Stripe unlink failed:",
+          err instanceof Error ? err.message : err,
+        );
+      }
+    }
+  }, [isAuthenticated]);
+
+  // -- Migrate anonymous entitlement -----------------------------------------
+
   const migrateAnonymousEntitlement = useCallback(async (): Promise<boolean> => {
-    // Skip migration when Patreon is not the active platform
     if (!isPatreon()) return false;
 
     const pid = getPatreonUserId();
@@ -427,16 +569,12 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
 
       if (data.migrated) {
         console.debug("[Fenrir] Migration successful", { tier: data.tier, active: data.active });
-        // Clear the anonymous Patreon user ID from localStorage
         clearPatreonUserId();
         setAnonymouslyLinked(false);
-        // Refresh entitlement to pick up the migrated data
         await refreshEntitlement();
         return true;
       } else {
         console.debug("[Fenrir] Migration returned not migrated", { reason: data.reason });
-        // If reason is "not_found", the anonymous entitlement expired or was already migrated.
-        // Clear the stale localStorage entry.
         if (data.reason === "not_found") {
           clearPatreonUserId();
           setAnonymouslyLinked(false);
@@ -472,21 +610,39 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    // Skip Patreon OAuth callback processing when platform is not patreon
-    if (!isPatreon()) return;
     if (queryParamsProcessedRef.current) return;
     if (status === "loading") return;
 
     const params = new URLSearchParams(window.location.search);
+
+    // Handle Stripe callback params
+    const stripeParam = params.get("stripe");
+    if (stripeParam && isStripe()) {
+      queryParamsProcessedRef.current = true;
+
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete("stripe");
+      cleanUrl.searchParams.delete("session_id");
+      window.history.replaceState({}, "", cleanUrl.toString());
+
+      if (stripeParam === "success") {
+        console.debug("[Fenrir] Stripe checkout success callback");
+        void refreshEntitlement();
+      } else if (stripeParam === "cancel") {
+        console.debug("[Fenrir] Stripe checkout cancelled by user");
+      }
+      return;
+    }
+
+    // Handle Patreon callback params
+    if (!isPatreon()) return;
     const patreonParam = params.get("patreon");
     if (!patreonParam) return;
 
     queryParamsProcessedRef.current = true;
 
-    // Read pid before cleaning (anonymous callbacks include it)
     const pidParam = params.get("pid");
 
-    // Clean the query params from the URL immediately
     const cleanUrl = new URL(window.location.href);
     cleanUrl.searchParams.delete("patreon");
     cleanUrl.searchParams.delete("tier");
@@ -496,7 +652,6 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
 
     switch (patreonParam) {
       case "linked": {
-        // If pid is present, this was an anonymous callback -- save the pid
         if (pidParam) {
           console.debug("[Fenrir] Anonymous Patreon callback: saving pid", { pid: pidParam });
           setPatreonUserId(pidParam);
@@ -510,7 +665,6 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
           console.debug("[Fenrir] Patreon linked (Thrall tier -- no active pledge)");
         }
 
-        // Refresh to get full entitlement data (works for both auth and anon)
         void refreshEntitlement();
         break;
       }
@@ -518,13 +672,11 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
       case "error": {
         const reason = params.get("reason") ?? "unknown";
         console.debug("[Fenrir] Patreon linking error:", reason);
-        // No state change -- keep whatever cache we had before the attempt.
         break;
       }
 
       case "denied": {
         console.debug("[Fenrir] Patreon linking cancelled by user");
-        // No state change.
         break;
       }
 
@@ -546,7 +698,6 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     }
 
     if (isAuthenticated) {
-      // Authenticated user: read local cache for instant state
       const cached = getEntitlementCache();
       if (cached) {
         setEntitlement(cached);
@@ -556,10 +707,9 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
       } else {
         void refreshEntitlement();
       }
-    } else {
-      // Anonymous user: if we have a Patreon user ID, check status
+    } else if (isPatreon()) {
+      // Anonymous Patreon path
       if (storedPid) {
-        // Read local cache first for instant UI
         const cached = getEntitlementCache();
         if (cached) {
           setEntitlement(cached);
@@ -570,9 +720,11 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
           void refreshEntitlement();
         }
       } else {
-        // No auth, no anonymous link -- Thrall
         setEntitlement(null);
       }
+    } else {
+      // Anonymous + Stripe mode: no entitlement by default
+      setEntitlement(null);
     }
   }, [isAuthenticated, refreshEntitlement]);
 
@@ -586,7 +738,6 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     const storedPid = getPatreonUserId();
     if (!storedPid) return;
 
-    // User just signed in and has an anonymous Patreon user ID -- auto-migrate
     migrationAttemptedRef.current = true;
     console.debug("[Fenrir] Post-sign-in: auto-migrating anonymous Patreon entitlement");
     void migrateAnonymousEntitlement();
@@ -602,10 +753,15 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     platform,
     isAnonymouslyLinked: anonymouslyLinked,
     isMigrating,
+    stripeStatus,
+    currentPeriodEnd,
     linkPatreon,
     unlinkPatreon,
     refreshEntitlement,
     migrateAnonymousEntitlement,
+    subscribeStripe,
+    openPortal,
+    unlinkStripe,
     hasFeature,
   };
 
@@ -624,7 +780,5 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
  */
 export function useEntitlementContext(): EntitlementContextValue {
   const ctx = useContext(EntitlementContext);
-  // The context has a default value so it will never be null, but the
-  // provider wrapping is still recommended for proper behavior.
   return ctx;
 }

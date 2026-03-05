@@ -26,8 +26,7 @@ export type EntitlementTier = "thrall" | "karl";
  * Subscription platform identifier. Extensible for future platforms.
  * Currently only Patreon is supported.
  */
-export type EntitlementPlatform = "patreon";
-// Future: | "buymeacoffee" | "stripe" | ...
+export type EntitlementPlatform = "patreon" | "stripe";
 
 // ---------------------------------------------------------------------------
 // Entitlement record (client-side cache)

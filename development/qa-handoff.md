@@ -1,121 +1,145 @@
-# QA Handoff -- Story 2: Theme Toggle UI + Color Audit + Design Docs
+# QA Handoff -- Story 2: Stripe UI Components + PatreonGate Rename
 
-**Branch:** `feat/theme-toggle-ui`
+**Branch:** `feat/stripe-ui`
 **Date:** 2026-03-04
 **Engineer:** FiremanDecko
 
-## What Was Implemented
+## What was implemented
 
-Three tasks for Story 2:
+### Story references
+- Story 2 of the Stripe Direct Integration sprint
+- Depends on Story 1 (feat/stripe-foundation branch -- API routes + KV store)
 
-### Task 1: ThemeToggle Component + TopBar Integration
-- Created `ThemeToggle.tsx` -- three-way segmented toggle (Light/Dark/System) using Sun, Moon, Monitor icons from lucide-react
-- SSR-safe: renders placeholder until mounted to avoid hydration mismatch
-- Integrated into TopBar in both states:
-  - **Anonymous**: Theme row in the upsell prompt panel (above "Sign in to Google")
-  - **Signed-in**: Theme row in the profile dropdown (above "Sign out")
-- Accessible: `role="radiogroup"`, `aria-label="Theme"`, `aria-checked` per option
-- Touch-friendly: min 44x36px tap targets
+### Changes summary
+1. **PatreonGate renamed to SubscriptionGate** across entire codebase
+2. **StripeSettings component** built with 3 states (Thrall/Karl/Canceled)
+3. **AnonymousCheckoutModal** for anonymous user email collection before Stripe Checkout
+4. **EntitlementContext updated** with `subscribeStripe()`, `openPortal()`, `unlinkStripe()` actions
+5. **SealedRuneModal updated** with Stripe CTA (subscribe button replaces Patreon link when isStripe())
+6. **UpsellBanner updated** to work in Stripe mode (Upgrade to Karl CTA)
+7. **Settings page updated** to conditionally render StripeSettings or PatreonSettings
+8. **SEV-002 fixed**: Removed `request.headers.get("origin")` from checkout and portal routes, replaced with `process.env.APP_BASE_URL`
+9. **SEV-003 fixed**: Added `js.stripe.com`, `api.stripe.com`, `hooks.stripe.com` to CSP in next.config.ts
+10. **EntitlementPlatform type** updated to include `"stripe"`
 
-### Task 2: Color Audit -- Hardcoded Hex Removal
-- Converted ALL inline `style={{ color: "#hex" }}` and Tailwind `[#hex]` patterns to CSS variables
-- Added new CSS variable groups in globals.css: `--egg-*`, `--lcars-*`, `--howl-*`, `--loki-toast-*`, `--realm-*`
-- 24 component files modified (see list below)
+## Files created/modified
 
-### Task 3: Design System Documentation
-- Created `designs/ux-design/theme-system.md` with full palette specs, WCAG contrast ratios, and mandatory design rules
-
-## Files Created
-
+### New files
 | File | Description |
 |------|-------------|
-| `src/components/layout/ThemeToggle.tsx` | Three-way theme toggle (Sun/Moon/Monitor) |
-| `designs/ux-design/theme-system.md` | Dual-theme design system documentation |
+| `src/components/entitlement/SubscriptionGate.tsx` | Renamed from PatreonGate, works for both platforms |
+| `src/components/entitlement/StripeSettings.tsx` | Stripe subscription settings (3 states) |
+| `src/components/entitlement/AnonymousCheckoutModal.tsx` | Email collection modal for anonymous Stripe checkout |
+| `src/lib/stripe/types.ts` | Stripe type definitions (from Story 1) |
+| `src/lib/stripe/api.ts` | Stripe SDK client (from Story 1) |
+| `src/lib/stripe/webhook.ts` | Webhook handler (from Story 1) |
+| `src/app/api/stripe/checkout/route.ts` | Checkout session API (from Story 1, SEV-002 fixed) |
+| `src/app/api/stripe/portal/route.ts` | Customer Portal API (from Story 1, SEV-002 fixed) |
+| `src/app/api/stripe/membership/route.ts` | Membership status API (from Story 1) |
+| `src/app/api/stripe/unlink/route.ts` | Unlink/cancel API (from Story 1) |
+| `src/app/api/stripe/webhook/route.ts` | Webhook endpoint (from Story 1) |
 
-## Files Modified
+### Modified files
+| File | Description |
+|------|-------------|
+| `src/components/entitlement/index.ts` | Barrel exports updated (SubscriptionGate, StripeSettings, AnonymousCheckoutModal) |
+| `src/components/entitlement/SealedRuneModal.tsx` | Stripe CTA added alongside Patreon CTA |
+| `src/components/entitlement/UpsellBanner.tsx` | Stripe mode support (Upgrade to Karl CTA) |
+| `src/app/settings/page.tsx` | SubscriptionGate + conditional StripeSettings/PatreonSettings |
+| `src/contexts/EntitlementContext.tsx` | subscribeStripe, openPortal, unlinkStripe, Stripe membership fetch |
+| `src/lib/entitlement/types.ts` | EntitlementPlatform now includes "stripe" |
+| `src/lib/kv/entitlement-store.ts` | Stripe entitlement CRUD operations added |
+| `next.config.ts` | CSP updated with Stripe domains (SEV-003 fix) |
+| `.env.example` | Stripe env vars added |
 
-| File | Change |
-|------|--------|
-| `src/app/globals.css` | Added `--egg-*`, `--lcars-*`, `--howl-*`, `--loki-toast-*`, `--realm-*` vars in both `:root` and `.dark` |
-| `src/components/layout/TopBar.tsx` | Added ThemeToggle import and integration in both auth states |
-| `src/components/easter-eggs/EasterEggModal.tsx` | All hex to `--egg-*` CSS variables |
-| `src/components/easter-eggs/LcarsOverlay.tsx` | All hex to `--lcars-*` CSS variables |
-| `src/components/layout/KonamiHowl.tsx` | All hex to `--howl-*` CSS variables |
-| `src/components/layout/Footer.tsx` | Loki Toast hex to `--loki-toast-*` variables |
-| `src/components/layout/HowlPanel.tsx` | Realm status hex to `--realm-*` variables |
-| `src/components/layout/SyncIndicator.tsx` | Hex to CSS variables |
-| `src/components/layout/ForgeMasterEgg.tsx` | Hex to `--egg-*` variables |
-| `src/components/dashboard/StatusRing.tsx` | Realm color constants to CSS variables |
-| `src/components/cards/GleipnirCatFootfall.tsx` | All hex to CSS variables |
-| `src/components/cards/GleipnirWomansBeard.tsx` | All hex to CSS variables |
-| `src/components/cards/GleipnirMountainRoots.tsx` | All hex to CSS variables |
-| `src/components/cards/GleipnirBearSinews.tsx` | All hex to CSS variables |
-| `src/components/cards/GleipnirFishBreath.tsx` | All hex to CSS variables |
-| `src/components/cards/GleipnirBirdSpittle.tsx` | All hex to CSS variables |
-| `src/components/shared/WolfHungerMeter.tsx` | Hex to CSS variables |
-| `src/app/page.tsx` | Urgent badge color to CSS variable |
-| `src/app/valhalla/page.tsx` | All hex to CSS variables |
-| `src/components/entitlement/PatreonSettings.tsx` | `#07070d` to `text-primary-foreground` |
-| `src/components/entitlement/SealedRuneModal.tsx` | `#07070d` to semantic tokens |
-| `src/components/entitlement/UpsellBanner.tsx` | `#07070d` to `bg-background` |
-| `src/components/entitlement/UnlinkConfirmDialog.tsx` | `#07070d` to `bg-background` |
+### Deleted files
+| File | Description |
+|------|-------------|
+| `src/components/entitlement/PatreonGate.tsx` | Renamed to SubscriptionGate.tsx |
 
-## How to Deploy / Test
+## How to deploy
 
-```bash
-cd development/frontend
-npm install
-npm run dev
-```
+1. Ensure `SUBSCRIPTION_PLATFORM=stripe` is set in `.env.local`
+2. Ensure Stripe env vars are set: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
+3. Ensure `APP_BASE_URL` is set (SEV-002 fix)
+4. `cd development/frontend && npm install && npx next build`
+5. `npx next dev -p 9656`
 
-## Test Scenarios
+## How to test
 
-### ThemeToggle
+### Port and URL
+- Dev server: `http://localhost:9656`
+- Worktree path: `/Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger-trees/feat/stripe-ui`
 
-| Test | Steps | Expected |
-|------|-------|----------|
-| TC-TH-001 | Sign in, click avatar, open dropdown | "Theme" row with toggle visible above "Sign out" |
-| TC-TH-002 | Anonymous state, click avatar | "Theme" row visible in upsell panel above CTAs |
-| TC-TH-003 | Click Moon (Dark) | `.dark` class added to `<html>`, dark background |
-| TC-TH-004 | Click Sun (Light) | `.dark` class removed, parchment background |
-| TC-TH-005 | Click Monitor (System), toggle OS dark/light | Theme follows OS |
-| TC-TH-006 | Clear localStorage `fenrir-theme`, reload | Default is System |
-| TC-TH-007 | Select Dark, reload page | Theme persists as Dark |
-| TC-TH-008 | Set to Light | Parchment background renders (not white) |
-| TC-TH-009 | Set to Dark | Void-black background renders |
-| TC-TH-011 | Hard reload | No flash of wrong theme |
+### Test with SUBSCRIPTION_PLATFORM=stripe
 
-### Color Audit
+1. **StripeSettings (Thrall state)**
+   - Navigate to `/settings`
+   - Verify: "Subscription" heading, "Thrall" badge, Karl benefits list, "Subscribe for $3.99/month" button
+   - Anonymous user: clicking subscribe opens AnonymousCheckoutModal
+   - Authenticated user: clicking subscribe calls POST /api/stripe/checkout
 
-| Test | Steps | Expected |
-|------|-------|----------|
-| Easter eggs | Trigger `?` key (ForgeMasterEgg) in both themes | Modal renders correctly |
-| LCARS | Ctrl+Shift+L in both themes | Overlay renders with correct colors |
-| Konami | Enter Konami code in both themes | Wolf and band render correctly |
-| HowlPanel | View with urgent cards in both themes | Colors render correctly |
-| StatusRing | View cards with various statuses | Ring colors visible and correct |
-| Valhalla | Visit /valhalla in both themes | Tombstone cards render correctly |
-| Loki Mode | Click "Loki" 7x in footer in both themes | Toast renders correctly |
+2. **AnonymousCheckoutModal**
+   - As anonymous user, click any subscribe CTA
+   - Verify: email input with validation, "Continue to checkout" button
+   - Submit empty: "Please enter your email address."
+   - Submit "not-an-email": "Please enter a valid email address."
+   - Submit valid email: button changes to "Redirecting to Stripe..."
+   - "Sign in instead" link navigates to /sign-in
+   - Cancel/X/Escape dismisses
 
-### Build Validation
+3. **SealedRuneModal (Stripe CTA)**
+   - Navigate to `/settings` as Thrall user
+   - Click "Learn more" on a locked feature
+   - Verify: "Subscribe for $3.99/month" button, "Not now" dismiss, locked feature name shown
+   - Anonymous: subscribe CTA opens email modal
+   - Authenticated: subscribe CTA redirects to checkout
 
-```bash
-cd development/frontend
-npx tsc --noEmit   # PASS (verified)
-npx next build     # PASS (verified)
-```
+4. **UpsellBanner (Stripe mode)**
+   - Navigate to dashboard as Thrall user
+   - Verify: "Upgrade to Karl" button, atmospheric text, dismiss X button
+   - Anonymous: clicking CTA opens email modal
+   - Dismiss: sets `fenrir:stripe_upsell_dismissed` in localStorage, banner hidden permanently
 
-## Known Limitations
+5. **SubscriptionGate (renamed from PatreonGate)**
+   - Verify premium features are gated in Stripe mode
+   - Both anonymous and authenticated Thrall users see the gate
+   - Karl users see the feature content
 
-- Google brand colors on the sign-in page (#4285F4, etc.) are intentionally left as hardcoded hex per brand guidelines
-- Easter egg modals use their own dark overlay aesthetic in both themes (by design)
-- The `--realm-*` status colors are identical in both themes for consistency
-- Tailwind config still has hardcoded hex in direct color tokens (void, forge, chain, gold, realm) -- these are design-time constants used by Tailwind's color system, not runtime theme variables
+### Test with SUBSCRIPTION_PLATFORM=patreon
 
-## Suggested Test Focus Areas
+6. **Existing Patreon flow still works**
+   - PatreonSettings renders on /settings
+   - SealedRuneModal shows Patreon CTA
+   - UpsellBanner shows "Learn more" (Patreon flow)
+   - SubscriptionGate works for authenticated users
 
-1. **Dark mode visual regression** -- everything should look identical to pre-change
-2. **Light mode readability** -- all text readable on parchment background
-3. **Easter egg modals in light mode** -- these have their own dark overlay
-4. **Status colors on light background** -- realm-* colors need adequate contrast
-5. **ThemeToggle active state** -- gold highlight on the selected option
+### Security verification
+
+7. **SEV-002: No Origin header usage**
+   - `grep -rn "origin" src/app/api/stripe/` should NOT show `request.headers.get("origin")`
+   - Checkout and portal routes use `process.env.APP_BASE_URL`
+
+8. **SEV-003: Stripe domains in CSP**
+   - `next.config.ts` includes js.stripe.com, api.stripe.com, hooks.stripe.com
+   - Browser console should not show CSP violations when Stripe.js loads
+
+### Build verification
+
+9. `cd development/frontend && npx tsc --noEmit` -- passes
+10. `cd development/frontend && npx next build` -- succeeds
+11. `grep -rn 'PatreonGate' development/frontend/src/ --include='*.tsx' --include='*.ts'` -- returns only the rename comment
+
+## Known limitations
+
+- Stripe subscription states (canceled with access until period end) require actual Stripe webhook events to populate `stripeStatus` and `currentPeriodEnd` in the context. These fields are wired but not yet populated from the membership API response (Story 1 membership endpoint returns `tier` and `active` but not status/period details). The UI gracefully handles null values.
+- Anonymous Stripe flow is client-side only (no server-side session). The email modal collects email for Stripe Checkout pre-fill.
+- The `unlinkStripe` action is wired in the context but not exposed in the StripeSettings UI (per wireframe: cancel routes to Stripe Portal).
+
+## Suggested test focus areas
+
+1. Platform switching: toggling `SUBSCRIPTION_PLATFORM` between `patreon` and `stripe` should cleanly switch all UI
+2. Anonymous checkout flow: email validation, loading state, error handling
+3. Mobile responsiveness: all new components at 375px width
+4. Accessibility: modal focus trapping, aria labels, screen reader flow
+5. CSP: load the app with Stripe mode and verify no CSP errors in console

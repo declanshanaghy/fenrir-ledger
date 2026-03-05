@@ -1,22 +1,23 @@
 "use client";
 
 /**
- * Settings Page — /settings route
+ * Settings Page -- /settings route
  *
  * Central settings hub for the Fenrir Ledger. Contains:
- *   - Patreon subscription management (PatreonSettings)
+ *   - Subscription management (PatreonSettings or StripeSettings based on platform)
  *   - Gated premium feature placeholders (Cloud Sync, Multi-Household, Data Export)
  *
- * Anonymous-first: accessible without a signed-in session. The PatreonSettings
+ * Anonymous-first: accessible without a signed-in session. The settings
  * and gated sections handle their own auth/entitlement checks internally.
  *
  * Layout: single-column, max-width constrained, consistent with Valhalla page.
  * Mobile-first: 375px minimum, stacked sections with consistent spacing.
  */
 
-import { PatreonGate } from "@/components/entitlement/PatreonGate";
+import { SubscriptionGate } from "@/components/entitlement/SubscriptionGate";
 import { PatreonSettings } from "@/components/entitlement/PatreonSettings";
-import { isPatreon } from "@/lib/feature-flags";
+import { StripeSettings } from "@/components/entitlement/StripeSettings";
+import { isPatreon, isStripe } from "@/lib/feature-flags";
 
 // ---------------------------------------------------------------------------
 // Gated feature placeholders
@@ -24,7 +25,7 @@ import { isPatreon } from "@/lib/feature-flags";
 
 /**
  * Placeholder UI for the Cloud Sync premium feature.
- * Wrapped in PatreonGate — Karl users see the placeholder content,
+ * Wrapped in SubscriptionGate -- Karl users see the placeholder content,
  * Thrall users see the Sealed Rune Modal.
  */
 function CloudSyncSection() {
@@ -48,7 +49,7 @@ function CloudSyncSection() {
 
 /**
  * Placeholder UI for the Multi-Household premium feature.
- * Wrapped in PatreonGate — Karl users see the placeholder content,
+ * Wrapped in SubscriptionGate -- Karl users see the placeholder content,
  * Thrall users see the Sealed Rune Modal.
  */
 function MultiHouseholdSection() {
@@ -72,7 +73,7 @@ function MultiHouseholdSection() {
 
 /**
  * Placeholder UI for the Data Export premium feature.
- * Wrapped in PatreonGate — Karl users see the placeholder content,
+ * Wrapped in SubscriptionGate -- Karl users see the placeholder content,
  * Thrall users see the Sealed Rune Modal.
  */
 function DataExportSection() {
@@ -110,10 +111,10 @@ function DataExportSection() {
 // ---------------------------------------------------------------------------
 
 /**
- * SettingsPage — the /settings route.
+ * SettingsPage -- the /settings route.
  *
- * Renders the Patreon subscription settings and gated premium feature
- * placeholders in a single-column layout.
+ * Renders the subscription settings (Patreon or Stripe based on platform)
+ * and gated premium feature placeholders in a single-column layout.
  */
 export default function SettingsPage() {
   return (
@@ -130,37 +131,25 @@ export default function SettingsPage() {
 
       {/* Settings sections */}
       <div className="flex flex-col gap-6">
-        {/* Subscription management — only rendered when the active platform
-            matches. When Patreon is disabled (stripe mode), the section is
-            hidden entirely; Stripe subscription UI will replace it later. */}
-        {isPatreon() ? (
+        {/* Subscription management -- rendered based on active platform */}
+        {isStripe() ? (
+          <StripeSettings />
+        ) : isPatreon() ? (
           <PatreonSettings />
-        ) : (
-          <section
-            className="border border-border p-5 flex flex-col gap-3"
-            aria-label="Subscription Management"
-          >
-            <h2 className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-saga">
-              Subscription Management
-            </h2>
-            <p className="text-sm text-saga/90 leading-relaxed font-body">
-              Subscription management coming soon.
-            </p>
-          </section>
-        )}
+        ) : null}
 
-        {/* Premium feature placeholders — each wrapped in PatreonGate */}
-        <PatreonGate feature="cloud-sync">
+        {/* Premium feature placeholders -- each wrapped in SubscriptionGate */}
+        <SubscriptionGate feature="cloud-sync">
           <CloudSyncSection />
-        </PatreonGate>
+        </SubscriptionGate>
 
-        <PatreonGate feature="multi-household">
+        <SubscriptionGate feature="multi-household">
           <MultiHouseholdSection />
-        </PatreonGate>
+        </SubscriptionGate>
 
-        <PatreonGate feature="data-export">
+        <SubscriptionGate feature="data-export">
           <DataExportSection />
-        </PatreonGate>
+        </SubscriptionGate>
       </div>
     </div>
   );
