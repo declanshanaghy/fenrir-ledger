@@ -197,9 +197,10 @@ retry_count = 0
 
 BUILD-VALIDATE LOOP:
 
-3. Spawn FiremanDecko:
+3. Spawn FiremanDecko (background):
    Agent({
      subagent_type: "fireman-decko-principal-engineer",
+     run_in_background: true,
      mode: "bypassPermissions",
      prompt: "Implement story: <story-details>
        Working directory: <worktree-path>
@@ -243,9 +244,10 @@ if retry_count >= MAX_RETRIES (3):
   → stop and wait for user guidance
 
 else:
-  Resume or spawn FiremanDecko in the SAME worktree:
+  Resume or spawn FiremanDecko in the SAME worktree (background):
     Agent({
       subagent_type: "fireman-decko-principal-engineer",
+      run_in_background: true,
       prompt: "Fix issues found by Loki in worktree at <path>.
         Branch: <branch>
         Loki's report: <failure-details>
