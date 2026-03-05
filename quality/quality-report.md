@@ -1,239 +1,211 @@
-# Quality Report: PR #110 — feat/anon-patreon-client
+# Quality Report: PR #116 — feat/theme-foundation
 
 **Date:** 2026-03-04
-**Branch:** `feat/anon-patreon-client` (based on `feat/anon-patreon-server`)
+**Branch:** `feat/theme-foundation`
 **Engineer:** FiremanDecko
 **QA Tester:** Loki
+**Re-validation round:** 2 (after commit 5c85e4b — DEF-TF-001 fix attempt)
 
 ---
 
-## QA Verdict: PASS
+## QA Verdict: FAIL
 
-**Recommendation: SHIP.** DEF-APC-001 resolved by commit 1a08745. TC-APC-26 now passes.
-All 34 new Playwright tests pass locally. GH Actions failures are pre-existing defects
-unrelated to this PR (see Pre-existing CI Failures section below).
+**Recommendation: HOLD FOR FIX.** DEF-TF-001 source fix is confirmed correct in
+`globals.css` — the `.dark {}` block is now outside `@layer base` as recommended.
+However, TC-TF-015 through TC-TF-019 still fail because the **worktree dev server
+(port 9654) is broken and cannot serve static assets** (CSS, JS chunks). This is a
+test infrastructure defect caused by the dev server being started with `-p 9653 -p 9654`
+(two `-p` flags), which is not a valid Next.js invocation. A correctly started dev server
+must be provided before re-validation can pass. See DEF-TF-002.
 
 ---
 
-## Re-Validation Summary (DEF-APC-001 Fix)
+## Summary
 
-**Fix commit:** `1a08745` — Added `isAuthenticated &&` prefix to `isKarlActive`,
-`isLinkedThrall`, and `isExpired` in `PatreonSettings.tsx` lines 204–206.
-
-### Re-validation Steps Completed
-
-| Step | Result |
-|------|--------|
-| `git pull feat/anon-patreon-client` | Verified fix at lines 204–206 |
+| Check | Result |
+|-------|--------|
+| Code review against acceptance criteria | PASS |
 | `npx tsc --noEmit` | PASS — 0 errors |
-| `npx next build` | PASS — 0 errors (1 non-blocking ESLint warning) |
-| Full `anon-patreon-client` suite (34 tests) | 34/34 PASS including TC-APC-26 |
-| TC-APC-26 specifically | PASS — single Karl badge rendered |
-| `gh pr checks 110` | deploy-preview FAILING (pre-existing — see below) |
+| `globals.css` fix: `.dark {}` outside `@layer base` | PASS — source confirmed correct |
+| No stray `dark:` Tailwind prefixes | PASS |
+| `next-themes` installed | PASS — v0.4.6 |
+| `ThemeProvider` wraps app in `layout.tsx` | PASS |
+| `suppressHydrationWarning` on `<html>` | PASS |
+| `defaultTheme="system"` | PASS |
+| `storageKey="fenrir-theme"` | PASS |
+| `attribute="class"` | PASS |
+| `.dark` class applied/removed by next-themes | PASS |
+| Playwright TC-TF-001 to TC-TF-014, TC-TF-020 | PASS — 15/20 |
+| Playwright TC-TF-015 to TC-TF-019 (CSS var values) | FAIL — DEF-TF-002 (infra) |
 
 ---
 
-## Pre-existing CI Failures (Not Caused by This PR)
+## Test Execution — Round 2
 
-CI run comparison confirms all failures pre-date commit `1a08745`:
+Run against port 9654 (worktree dev server):
+```bash
+SERVER_URL=http://localhost:9654 npx playwright test quality/test-suites/theme-toggle/ --reporter=list
+```
 
-| Suite | Failing Tests | Root Cause | First Introduced |
-|-------|--------------|------------|-----------------|
-| `patreon/settings-page.spec.ts` | TC-SP-13 through TC-SP-35 (20 tests) | PR #105 removed `SealedRuneModal` auto-open and skipped modal for anonymous users; tests written against previous behavior | PR #105 |
-| `patreon/api-routes.spec.ts` | TC-AR-1, TC-AR-2 (2 tests) | `/api/patreon/authorize` returns 403 not 401; tests expect 401. Authorize route made auth-exempt in PR #109 | PR #109 |
-| `patreon/app-base-url.spec.ts` | TC-ABU-11 (1 test) | Same authorize auth-exempt behavior — expects 401, gets 403 | PR #109 |
-| `patreon/entitlement-hook.spec.ts` | TC-ENT-003 "corrupted cache" (1 test) | `page.title()` returns empty string (Vercel preview SSR timeout on this specific test) | Pre-existing flake |
-| `patreon/gate-components.spec.ts` | TC-P01 (1 test), TC-P08b (1 test) | TC-P01: CSS URL detection failure; TC-P08b: page title empty string (same SSR flake pattern) | Pre-existing flake |
-| `anon-patreon-client/anon-patreon-client.spec.ts` | TC-APC-32, TC-APC-33 (2 tests) | Old test code — fixed in commit 09e0b0b (rate limit bleed from TC-APC-23) | Fixed in this re-validation |
+- **Total:** 20
+- **Passed:** 15
+- **Failed:** 5
 
-**Evidence:** CI run `22687290422` (pre-fix commit `79a66fe`) shows identical failures
-minus TC-APC-26. The DEF-APC-001 fix (`1a08745`) changed exactly one result: TC-APC-26
-flipped from FAIL to PASS. No new failures were introduced.
-
-**TC-APC-32/33 fix committed:** `09e0b0b` — Tests now accept 429 as valid outcome when
-rate limiter fires after TC-APC-23 exhausts the budget. This is correct behavior per spec:
-rate-limit responses contain no sensitive data.
+| ID | Name | Result |
+|----|------|--------|
+| TC-TF-001 | `layout.tsx` contains `suppressHydrationWarning` | PASS |
+| TC-TF-002 | `layout.tsx` does NOT have hardcoded `className="dark"` | PASS |
+| TC-TF-003 | `layout.tsx` imports `ThemeProvider` from `next-themes` | PASS |
+| TC-TF-004 | `ThemeProvider` has `defaultTheme="system"` | PASS |
+| TC-TF-005 | `ThemeProvider` has `storageKey="fenrir-theme"` | PASS |
+| TC-TF-006 | `ThemeProvider` has `attribute="class"` | PASS |
+| TC-TF-007 | `next-themes` in `package.json` dependencies | PASS |
+| TC-TF-008 | `globals.css` has both `:root` and `.dark` blocks | PASS |
+| TC-TF-009 | No stray `dark:` prefixed classes in `.tsx`/`.ts` files | PASS |
+| TC-TF-010 | `fenrir-theme=dark` → `.dark` class on `<html>` | PASS |
+| TC-TF-011 | `fenrir-theme=light` → no `.dark` class on `<html>` | PASS |
+| TC-TF-012 | System + OS dark → `.dark` class on `<html>` | PASS |
+| TC-TF-013 | System + OS light → no `.dark` class on `<html>` | PASS |
+| TC-TF-014 | Theme persists across page reloads | PASS |
+| TC-TF-015 | Dark mode `--background` is dark (low lightness) | **FAIL — DEF-TF-002** |
+| TC-TF-016 | Light mode `--background` is parchment (high lightness) | **FAIL — DEF-TF-002** |
+| TC-TF-017 | Dark mode `--foreground` is light text (high lightness) | **FAIL — DEF-TF-002** |
+| TC-TF-018 | Light mode `--foreground` is dark text (low lightness) | **FAIL — DEF-TF-002** |
+| TC-TF-019 | `--primary` differs between light and dark themes | **FAIL — DEF-TF-002** |
+| TC-TF-020 | No React hydration errors in dark mode | PASS |
 
 ---
 
-## Test Execution
+## Comparison: Round 1 vs Round 2
 
-| Category | Total | Passed | Failed | Blocked |
-|----------|-------|--------|--------|---------|
-| New Playwright tests (anon-patreon-client suite) | 34 | 34 | 0 | 0 |
-| Updated existing tests (settings-page.spec.ts TC-SP-12) | 1 | 1 | 0 | 0 |
-| TypeScript validation (`npx tsc --noEmit`) | — | PASS | — | — |
-| Next.js build (`npx next build`) | — | PASS | — | — |
-| GH Actions (deploy-preview) | — | FAILING (pre-existing) | — | — |
+| Test | Round 1 (9653 — wrong server) | Round 2 (9654 — correct server) | Delta |
+|------|-------------------------------|----------------------------------|-------|
+| TC-TF-011 (light → no .dark class) | FAIL | PASS | Fixed by 5c85e4b |
+| TC-TF-013 (system+light → no .dark) | FAIL | PASS | Fixed by 5c85e4b |
+| TC-TF-015 (dark --background) | FAIL | FAIL | Infra blocking |
+| TC-TF-016 (light --background) | FAIL | FAIL | Infra blocking |
+| TC-TF-017 (dark --foreground) | FAIL | FAIL | Infra blocking |
+| TC-TF-018 (light --foreground) | FAIL | FAIL | Infra blocking |
+| TC-TF-019 (--primary differs) | FAIL | FAIL | Infra blocking |
 
-**Total new tests: 34 passed, 0 failed.**
+Note: Round 1 was accidentally run against port 9653 (main repo server). Round 2 used
+the correct worktree server on 9654. TC-TF-011 and TC-TF-013 recover because the
+worktree server serves the correct (post-fix) layout.tsx. TC-TF-015–019 require live
+CSS variable computation from the compiled stylesheet, which is blocked by DEF-TF-002.
 
 ---
 
 ## Defects Found
 
-### DEF-APC-001: Duplicate KARL Badge — RESOLVED
+### DEF-TF-001: Dark CSS variable block absent from compiled CSS output — FIXED in 5c85e4b
 
-- **Severity:** MEDIUM — RESOLVED in commit `1a08745`
-- **File:** `development/frontend/src/components/entitlement/PatreonSettings.tsx`
-- **Lines:** 204–206
+- **Severity:** CRITICAL — now RESOLVED in source
+- **Fix verified:** `.dark {}` block confirmed at line 68 of `globals.css`, outside `@layer base`
+- **Status:** Source fix is correct. Cannot confirm runtime fix because DEF-TF-002
+  blocks the CSS variable tests.
 
-**Root cause:** `isKarlActive`, `isLinkedThrall`, and `isExpired` were computed without
-`isAuthenticated &&` guard. Anonymous users with a seeded Karl entitlement caused two
-badge conditions to evaluate to true simultaneously.
+### DEF-TF-002: Worktree dev server (port 9654) cannot serve static assets
 
-**Fix applied:**
-```typescript
-// After fix (commit 1a08745):
-const isKarlActive = isAuthenticated && isLinked && isActive && tier === "karl";
-const isLinkedThrall = isAuthenticated && isLinked && !isActive && tier === "thrall";
-const isExpired = isAuthenticated && isLinked && !isActive && tier === "karl";
+- **Severity:** HIGH (test infrastructure — blocks QA validation)
+- **File:** Dev server startup command
+- **Component:** Port 9654 Next.js dev server process (PID 66683)
+
+**Description:**
+
+The dev server on port 9654 returns HTTP 404 for all `/_next/static/` assets (CSS,
+JS chunks). Static asset requests in Playwright result in `net::ERR_ABORTED`. The
+Playwright browser receives zero loaded stylesheets. CSS custom properties therefore
+return empty strings from `getComputedStyle`.
+
+**Root Cause:**
+
+The dev server process was started with two `-p` flags:
+```
+node .../next dev -p 9653 -p 9654
+```
+Next.js does not accept multiple `-p` arguments. The server listens on port 9654
+(last `-p` wins) but the Turbopack dev compiler is initialised incorrectly. SSR
+HTML renders successfully (because React Server Components run on the Node process),
+but the static asset bundler does not correctly serve `/_next/static/` paths.
+
+**Evidence:**
+```bash
+$ curl -s -I "http://localhost:9654/_next/static/css/app/layout.css"
+HTTP/1.1 404 Not Found
+Content-Type: text/html; charset=utf-8
+# Returns full Next.js 404 HTML page, not CSS
 ```
 
-**Verification:** TC-APC-26 passes locally (34/34 suite), passes in CI run `22687369170`.
+Playwright network intercept shows:
+```
+CSS content length: 34826
+CSS has .dark: false       # 34KB of HTML, not CSS
+CSS has --background: false
+```
+
+**Fix Required:**
+
+Kill the broken dev server and restart it correctly with a single port:
+```bash
+kill 66683
+cd development/frontend && npx next dev -p 9654
+```
+
+Then re-run the full test suite:
+```bash
+SERVER_URL=http://localhost:9654 npx playwright test quality/test-suites/theme-toggle/ --reporter=list
+```
+
+All 20 tests are expected to pass once the dev server serves static assets correctly
+and TC-TF-015 through TC-TF-019 can read live CSS variable values.
+
+**Impact:** TC-TF-015, TC-TF-016, TC-TF-017, TC-TF-018, TC-TF-019 all fail with
+`--background: ""`, `--foreground: ""`, `--primary: ""` (empty computed style).
 
 ---
 
-## Code Review: Findings
+## Acceptance Criteria Status
 
-### Verified Correct
-
-- **`/api/patreon/membership-anon/route.ts`** — Rate limiting (10/min/IP), pid validation
-  (400 on missing/empty/whitespace), Cache-Control: no-store, no auth required (intentional),
-  correct 200 response shape (`tier`, `active`, `platform`, `checkedAt`), no token/secret
-  leakage in responses, method gating (GET only, POST returns 405).
-
-- **`EntitlementContext.tsx` dual-path `linkPatreon()`** — Anonymous path redirects to
-  `/api/patreon/authorize` without `id_token`. Authenticated path appends `id_token`. Correct.
-
-- **OAuth callback `?pid=` handling** — `pidParam` read before URL cleaning. `setPatreonUserId(pid)`
-  called only on `patreon=linked`. `patreon=denied` and `patreon=error` do NOT save pid. URL
-  cleaned via `window.history.replaceState()`. All correct.
-
-- **`refreshEntitlement()` anonymous path** — Reads pid from localStorage, calls
-  `/api/patreon/membership-anon`, updates cache and state. Graceful degradation when API
-  fails (keeps stale cache). Correct.
-
-- **`migrateAnonymousEntitlement()`** — Guards on `isAuthenticated` and valid token. POSTs
-  to `/api/patreon/migrate` with `{ patreonUserId: pid }`. Clears localStorage pid on
-  success. Handles `not_found` reason gracefully. Correct.
-
-- **Post-sign-in migration hook** — `useEffect` fires when `isAuthenticated` becomes true
-  and stored pid exists. `migrationAttemptedRef` prevents re-triggering. Correct.
-
-- **`settings/page.tsx` AuthGate removal** — `PatreonSettings` rendered directly, no
-  `<AuthGate>` wrapper. `PatreonGate` feature gates below it are unaffected. Correct.
-
-### Observations (Non-Blocking)
-
-1. **Rate limiter is in-memory** — Applies per-serverless-instance on Vercel. Documented
-   in route file and QA handoff. Not a defect.
-
-2. **Anonymous `unlinkPatreon()` only clears localStorage** — No server-side KV cleanup
-   for anonymous users (no auth token available). KV entry expires after 30-day TTL.
-   Documented in handoff. Not a defect.
-
----
-
-## Security Review
-
-| Check | Result |
-|-------|--------|
-| `/api/patreon/membership-anon` does not leak tokens (access_token, refresh_token) | PASS |
-| `/api/patreon/membership-anon` does not leak Google sub | PASS |
-| 400 error responses contain only `error`/`error_description` fields | PASS |
-| Rate limiting on membership-anon: 10/min/IP | PASS |
-| `/api/patreon/authorize` intentionally exempt from requireAuth (anonymous OAuth flow) | PASS — documented exemption |
-| Anonymous pid stored in localStorage only (not in cookies or URL) | PASS |
-| URL parameters cleaned from browser URL after OAuth callback | PASS |
-| No pid saved on `patreon=denied` or `patreon=error` callbacks | PASS |
-| CLAUDE.md API Route Auth rule: all other routes unaffected | PASS |
-
----
-
-## Acceptance Criteria Coverage
-
-| AC | Description | Status |
-|----|-------------|--------|
-| AC-1 | Anonymous users can see "Subscribe via Patreon" on /settings without signing in | PASS (TC-APC-01–06) |
-| AC-2 | `linkPatreon()` works without Google auth — redirects without id_token | PASS (TC-APC-07, 08) |
-| AC-3 | After anonymous linking, callback saves pid to localStorage and shows tier + nudge | PASS (TC-APC-09–15) |
-| AC-4 | `/api/patreon/membership-anon?pid=X` returns tier for anonymous users | PASS (TC-APC-16–23) |
-| AC-5 | Post-sign-in auto-migration: localStorage patreonUserId triggers POST /api/patreon/migrate | CANNOT AUTOMATE — verified by code review |
-| AC-6 | Existing authenticated flow unchanged | PASS (TC-APC-24, 25) |
-| AC-7 | PatreonSettings renders all 7 states correctly | PASS — DEF-APC-001 resolved (TC-APC-26) |
-
----
-
-## Playwright Tests: 34 new tests written, all passing
-
-**Test file:** `quality/test-suites/anon-patreon-client/anon-patreon-client.spec.ts`
-
-| Test ID | Description | Result |
-|---------|-------------|--------|
-| TC-APC-01 | /settings loads without auth (HTTP 200) | PASS |
-| TC-APC-02 | Patreon section visible to anonymous users (no AuthGate) | PASS |
-| TC-APC-03 | "Subscribe via Patreon" button visible for anonymous unlinked user | PASS |
-| TC-APC-04 | Anonymous unlinked state shows "No sign-in required" description | PASS |
-| TC-APC-05 | Authenticated unlinked state shows Patreon section | PASS |
-| TC-APC-06 | /settings renders on mobile viewport (375px) with Patreon section | PASS |
-| TC-APC-07 | Subscribe button initiates navigation to /api/patreon/authorize | PASS |
-| TC-APC-08 | /api/patreon/authorize GET without id_token responds (not 404, not 401) | PASS |
-| TC-APC-09 | Patreon section visible with pid in localStorage (anon+linked state) | PASS |
-| TC-APC-10 | Anonymous linked state shows "Sign in with Google" nudge link | PASS |
-| TC-APC-11 | Anonymous linked state shows "Unlock Cloud Sync" nudge heading | PASS |
-| TC-APC-12 | URL query params cleaned after OAuth callback processing | PASS |
-| TC-APC-13 | pid saved in localStorage after linked callback with pid param | PASS |
-| TC-APC-14 | denied callback does NOT save pid | PASS |
-| TC-APC-15 | error callback does NOT save pid | PASS |
-| TC-APC-16 | GET without pid returns 400 error: missing_pid | PASS |
-| TC-APC-17 | GET with empty pid returns 400 error: missing_pid | PASS |
-| TC-APC-18 | GET with whitespace-only pid returns 400 error: missing_pid | PASS |
-| TC-APC-19 | GET with valid pid returns 200 with correct shape | PASS |
-| TC-APC-20 | GET response has Cache-Control: no-store header | PASS |
-| TC-APC-21 | GET response has Content-Type: application/json | PASS |
-| TC-APC-22 | POST method returns 405 | PASS |
-| TC-APC-23 | Rate limiting returns 429 after 10 requests (best-effort in distributed env) | PASS |
-| TC-APC-24 | /api/patreon/membership still requires auth (401 on missing token) | PASS |
-| TC-APC-25 | Authenticated unlinked state renders Patreon section | PASS |
-| TC-APC-26 | Karl badge appears only once (no duplicate badges) | PASS — DEF-APC-001 fixed |
-| TC-APC-27 | State 1 (anon+unlinked) renders "Subscribe via Patreon" button with aria-label | PASS |
-| TC-APC-28 | State 1 (anon+unlinked) description mentions "No sign-in required" | PASS |
-| TC-APC-29 | Migration state NOT visible in default state | PASS |
-| TC-APC-30 | Sign-in link points to /sign-in (relative, not external) | PASS |
-| TC-APC-31 | Sign-in nudge link has min-h-[44px] touch target | PASS |
-| TC-APC-32 | 200 response does not include tokens, secrets, or Google sub | PASS |
-| TC-APC-33 | 400 response contains only error/error_description fields | PASS |
-| TC-APC-34 | /api/patreon/authorize accepts anonymous requests (not 401) | PASS |
-
-**Also updated:** TC-SP-12 in `quality/test-suites/patreon/settings-page.spec.ts` — reversed
-assertion from "Patreon section NOT visible" (previous AuthGate behavior) to "Patreon section
-IS visible" (post-PR #110 behavior). TC-SP-12 passes.
-
----
-
-## Cannot-Automate Paths
-
-| Path | Reason | Manual Test Steps |
-|------|--------|-------------------|
-| AC-5: Post-sign-in auto-migration | Requires real Google OIDC auth and live Vercel KV | 1. Link Patreon anonymously. 2. Verify pid in localStorage. 3. Sign in with Google. 4. Verify migration spinner appears briefly. 5. Verify pid cleared from localStorage. 6. Verify Karl badge in authenticated state. |
-| Anonymous Patreon OAuth end-to-end | Requires real Patreon OAuth consent screen | See QA handoff Flow 1 |
+| Criterion | Status |
+|-----------|--------|
+| `next-themes` installed; `ThemeProvider` wraps app in `layout.tsx` | PASS |
+| `globals.css` has `:root` (light) and `.dark` (dark) variable blocks | PASS — source confirmed |
+| `.dark {}` outside `@layer base` (DEF-TF-001 fix) | PASS — line 68, confirmed |
+| Hardcoded `"dark"` class removed; `suppressHydrationWarning` added | PASS |
+| Default theme is "system" with localStorage key `fenrir-theme` | PASS |
+| App renders correctly in dark mode | CANNOT VERIFY — DEF-TF-002 blocks |
+| `npx tsc --noEmit` passes | PASS — 0 errors |
 
 ---
 
 ## Risk Assessment
 
-| Risk | Severity | Likelihood | Notes |
-|------|----------|------------|-------|
-| Rate limiter is per-instance | LOW | Known | Documented in handoff, acceptable |
-| Anonymous unlink is client-side only | LOW | By design | KV expires in 30 days |
-| Pre-existing CI failures in settings-page/api-routes/gate-components suites | LOW | Certain | Not caused by this PR; need separate tracking |
+| Risk | Level | Notes |
+|------|-------|-------|
+| DEF-TF-001 source fix | LOW | Fix confirmed correct in globals.css |
+| DEF-TF-002 dev server broken | HIGH | Blocks CSS variable test verification |
+| ThemeProvider wiring | LOW | Verified correct |
+| suppressHydrationWarning | LOW | Present and working |
+| Pre-existing ESLint warning | LOW | `useCallback` dep in `PickerStep.tsx` — unrelated |
 
 ---
 
-## Recommendation: SHIP
+## Notes for FiremanDecko
 
-All acceptance criteria pass. DEF-APC-001 resolved. 34/34 new Playwright tests passing.
-No new failures introduced. GH Actions `deploy-preview` CI failures are pre-existing
-defects from PRs #105 and #109 that require separate remediation — they are NOT blockers
-for this PR.
+The source fix in commit 5c85e4b is structurally correct — `.dark {}` is now
+outside `@layer base` exactly as prescribed in DEF-TF-001. Two tests that were
+previously failing due to SSR/hydration behaviour (TC-TF-011, TC-TF-013) now pass,
+confirming the layout.tsx changes are working correctly.
+
+The remaining 5 failures are entirely due to the dev server infrastructure issue
+(DEF-TF-002) — the broken `-p 9653 -p 9654` dual-port startup. This is not a code
+defect in the PR itself.
+
+**To unblock final QA sign-off:**
+
+1. Kill process 66683 (the broken dual-port dev server)
+2. Start a fresh single-port dev server: `npx next dev -p 9654`
+3. Re-run: `SERVER_URL=http://localhost:9654 npx playwright test quality/test-suites/theme-toggle/`
+4. All 20 tests are expected to pass
+
+If all 20 pass after the infra fix, this PR is cleared for merge.

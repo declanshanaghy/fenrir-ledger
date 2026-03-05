@@ -24,6 +24,7 @@ import {
   JetBrains_Mono,
 } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { ThemeProvider } from "next-themes";
 import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -89,8 +90,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={[
-        "dark",
         cinzel.variable,
         cinzelDecorative.variable,
         sourceSerif.variable,
@@ -98,18 +99,25 @@ export default function RootLayout({
       ].join(" ")}
     >
       <body className="bg-background text-foreground antialiased">
-        {/* AuthProvider — anonymous-first. No redirects. Resolves householdId for all users. */}
-        <AuthProvider>
-          {/* EntitlementProvider — platform-agnostic subscription tier. Nested inside AuthProvider. */}
-          <EntitlementProvider>
-            {/* RagnarokProvider — activates threshold mode when ≥5 cards are urgent. */}
-            <RagnarokProvider>
-              {/* Easter egg #4 — console ASCII art (client-only, once per session) */}
-              <ConsoleSignature />
-              <AppShell>{children}</AppShell>
-            </RagnarokProvider>
-          </EntitlementProvider>
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          storageKey="fenrir-theme"
+        >
+          {/* AuthProvider — anonymous-first. No redirects. Resolves householdId for all users. */}
+          <AuthProvider>
+            {/* EntitlementProvider — platform-agnostic subscription tier. Nested inside AuthProvider. */}
+            <EntitlementProvider>
+              {/* RagnarokProvider — activates threshold mode when >=5 cards are urgent. */}
+              <RagnarokProvider>
+                {/* Easter egg #4 — console ASCII art (client-only, once per session) */}
+                <ConsoleSignature />
+                <AppShell>{children}</AppShell>
+              </RagnarokProvider>
+            </EntitlementProvider>
+          </AuthProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>
