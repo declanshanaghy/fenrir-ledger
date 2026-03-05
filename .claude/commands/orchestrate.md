@@ -303,6 +303,7 @@ After all stories complete (or are escalated):
    - Note any stories that need manual attention
 2. **Cleanup**: Verify all worktrees are removed for completed stories
 3. **Merge readiness**: Flag which PRs are ready to merge (all checks green)
+4. **Delete spec file**: If the pipeline was driven by a plan file from `specs/`, delete it and commit the deletion: `git rm <spec-file> && git commit -m "chore: remove completed spec <filename>"`. Specs are living documents consumed by the pipeline — once all stories are shipped or escalated, the spec is no longer needed.
 
 ## Rules
 
