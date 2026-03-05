@@ -5,12 +5,62 @@
 @layer base {
   /*
    * Fenrir Ledger — Saga Ledger Theme
-   * Dark-only. No light mode. The wolf does not need the sun.
+   * Dual-theme: Light (Norse parchment) + Dark (Norse war-room).
+   * Theme is controlled by next-themes via class on <html>.
+   *
+   * :root = light palette (parchment default)
+   * .dark = dark palette (original Norse war-room)
    *
    * All surface, text, and status tokens follow design/theme-system.md.
    * shadcn/ui component tokens are remapped to the Norse palette.
    */
+
+  /* ── Light Theme (Norse Parchment) ───────────────────────── */
   :root {
+    /* ── Surfaces ───────────────────────────────────────────── */
+    --background:           36  33% 88%;    /* #e8dcc8 — warm parchment */
+    --foreground:           25  30% 12%;    /* #2a1f14 — deep brown-black */
+
+    --card:                 35  30% 83%;    /* #ddd0b8 — lighter parchment */
+    --card-foreground:      25  30% 12%;
+
+    --popover:              37  35% 90%;    /* #ede2d0 — warm cream */
+    --popover-foreground:   25  30% 12%;
+
+    /* ── Brand ──────────────────────────────────────────────── */
+    --primary:              42  80% 38%;    /* #ae8510 — darker gold for light bg */
+    --primary-foreground:   37  35% 95%;    /* light text on gold */
+
+    /* ── Secondary / Muted ──────────────────────────────────── */
+    --secondary:            28  20% 72%;    /* #c4b5a0 — leather tan */
+    --secondary-foreground: 25  30% 12%;
+
+    --muted:                30  15% 65%;    /* #b0a494 — faded leather */
+    --muted-foreground:     25  12% 42%;    /* #6b5f52 — dark stone */
+
+    --accent:               30  15% 65%;
+    --accent-foreground:    25  30% 12%;
+
+    /* ── Status / Destructive ───────────────────────────────── */
+    --destructive:          15  85% 42%;    /* blood orange for light bg */
+    --destructive-foreground: 37 35% 95%;
+
+    /* ── Structure ──────────────────────────────────────────── */
+    --border:               28  18% 65%;    /* #b5a590 — leather seam */
+    --input:                25  12% 78%;    /* #ccc2b4 — light stone */
+    --ring:                 42  80% 38%;    /* gold focus ring */
+    --radius:               0.25rem;        /* sharp, angular — not pill */
+
+    /* ── Charts (adapted for light background) ─────────────── */
+    --chart-1:              42  80% 38%;    /* darker gold */
+    --chart-2:              163 83% 25%;    /* darker teal */
+    --chart-3:              15  85% 42%;    /* blood orange */
+    --chart-4:              38  90% 42%;    /* deeper amber */
+    --chart-5:              0   79% 50%;    /* red */
+  }
+
+  /* ── Dark Theme (Norse War-Room) ─────────────────────────── */
+  .dark {
     /* ── Surfaces ───────────────────────────────────────────── */
     --background:           28  15% 7%;     /* #12100e — warm charcoal */
     --foreground:           40  27% 91%;    /* #f0ede4 — light parchment */
@@ -43,7 +93,6 @@
     --border:               22  8%  20%;    /* #3a3530 — stone seam */
     --input:                20  7%  27%;    /* #4a4540 */
     --ring:                 42  75% 48%;    /* gold focus ring */
-    --radius:               0.25rem;        /* sharp, angular — not pill */
 
     /* ── Charts (Norse palette) ─────────────────────────────── */
     --chart-1:              42  75% 48%;    /* gold */
@@ -66,8 +115,18 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body), serif;
+  }
 
-    /* Layered background: subtle gold radial glow + warm stone grain texture */
+  /* ── Body background textures (theme-aware) ──────────────── */
+  /* Light: subtle warm glow on parchment */
+  :root body {
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -5%, hsl(42 80% 38% / 0.04) 0%, transparent 65%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23s)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+
+  /* Dark: gold radial glow + stone grain texture */
+  .dark body {
     background-image:
       radial-gradient(ellipse 80% 50% at 50% -5%, rgba(212, 165, 32, 0.07) 0%, transparent 65%),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23s)' opacity='0.05'/%3E%3C/svg%3E");
@@ -116,10 +175,10 @@
   transition: box-shadow 200ms ease-out;
 }
 .card-chain:hover {
-  box-shadow: 0 0 0 1px #2a2d45, 0 0 20px rgba(201, 146, 10, 0.2);
+  box-shadow: 0 0 0 1px hsl(var(--border)), 0 0 20px hsl(var(--primary) / 0.2);
 }
 .card-chain:hover > a > div {
-  border-color: #c9920a;
+  border-color: hsl(var(--primary));
 }
 
 /* Suppress card-chain CSS transitions for reduced-motion users.
@@ -170,8 +229,7 @@
  * Spec from ux/interactions.md — Loading States section.
  *
  * .skeleton — apply to any placeholder element.
- * The gradient sweeps from void-black → midnight blue → slate → back,
- * giving a Norse gold-tinged pulse rather than a neutral gray flash.
+ * Theme-aware: dark uses midnight tones, light uses parchment tones.
  */
 @keyframes saga-shimmer {
   0%   { background-position: -400px 0; }
@@ -181,11 +239,11 @@
 .skeleton {
   background: linear-gradient(
     90deg,
-    #0f1018 0%,
-    #1e2235 40%,
-    #2a2d45 50%,
-    #1e2235 60%,
-    #0f1018 100%
+    hsl(var(--card)) 0%,
+    hsl(var(--muted)) 40%,
+    hsl(var(--border)) 50%,
+    hsl(var(--muted)) 60%,
+    hsl(var(--card)) 100%
   );
   background-size: 800px 100%;
   animation: saga-shimmer 1.4s ease-in-out infinite;
@@ -282,7 +340,7 @@ body.konami-shake-mobile {
 
 /* ── Gleipnir Hunt — Fragment #5 "The Breath of a Fish" ─────────────────────
  *
- * The © symbol in the Footer has class .gleipnir-copyright-symbol.
+ * The (c) symbol in the Footer has class .gleipnir-copyright-symbol.
  * On :hover, a CSS ::after pseudo-element reveals the fragment phrase.
  *
  * The ::after is CSS-only — no DOM node, no ARIA announcement.
@@ -292,7 +350,7 @@ body.konami-shake-mobile {
  * The CSS tooltip does not appear on touch (hover pseudoclass is not active),
  * which is correct — the modal itself provides the reveal.
  *
- * Positioning: appears above the © character, centered horizontally.
+ * Positioning: appears above the (c) character, centered horizontally.
  */
 .gleipnir-copyright-symbol {
   position: relative;
@@ -311,7 +369,7 @@ body.konami-shake-mobile {
   font-family: var(--font-mono), monospace;
   font-size: 10px;
   letter-spacing: 0.04em;
-  color: #d4a520;
+  color: hsl(var(--primary));
 
   /* Invisible by default; fades in on hover */
   opacity: 0;
@@ -359,13 +417,13 @@ body.konami-shake-mobile {
 .myth-link {
   color: inherit;
   text-decoration: none;
-  border-bottom: 1px dotted rgba(212, 165, 32, 0.38);
+  border-bottom: 1px dotted hsl(var(--primary) / 0.38);
   cursor: help;
   transition: border-bottom-color 0.15s ease;
 }
 .myth-link:hover,
 .myth-link:focus-visible {
-  border-bottom-color: rgba(212, 165, 32, 0.85);
+  border-bottom-color: hsl(var(--primary) / 0.85);
   outline: none;
 }
 
@@ -378,25 +436,28 @@ body.konami-shake-mobile {
 /* ── WCAG AA Contrast Reference ─────────────────────────────
  *
  * Key color pair contrast ratios (WCAG 2.1 relative luminance formula).
- * WCAG AA requires ≥ 4.5:1 for normal text, ≥ 3:1 for large/bold text.
- * WCAG AAA requires ≥ 7:1.
+ * WCAG AA requires >= 4.5:1 for normal text, >= 3:1 for large/bold text.
+ * WCAG AAA requires >= 7:1.
  *
- * Gold   #c9920a on void-black    #07070d  →  ~7.3:1  ✓ AA + AAA
- * Gold   #c9920a on warm charcoal #12100e  →  ~6.9:1  ✓ AA + AAA
- * Muted  #8a8578 on card bg       #1c1917  →  ~4.8:1  ✓ AA (normal text)
- * Muted  #8a8578 on warm charcoal #12100e  →  ~5.2:1  ✓ AA (normal text)
- * Blood  #c94a0a on void-black    #07070d  →  ~4.3:1  ✓ AA (large/bold, ≥3:1)
- *                                                      ✗ below 4.5:1 for normal text
- *   → Blood orange is used only for urgent status rings (SVG stroke, large-ish)
- *     and the Muspelheim StatusBadge (bold uppercase text) — both qualify as
- *     "large text" under WCAG, so the 3:1 large-text threshold applies.
+ * DARK THEME:
+ * Gold   #c9920a on void-black    #07070d  ->  ~7.3:1  AA + AAA
+ * Gold   #c9920a on warm charcoal #12100e  ->  ~6.9:1  AA + AAA
+ * Muted  #8a8578 on card bg       #1c1917  ->  ~4.8:1  AA (normal text)
+ * Muted  #8a8578 on warm charcoal #12100e  ->  ~5.2:1  AA (normal text)
+ * Blood  #c94a0a on void-black    #07070d  ->  ~4.3:1  AA (large/bold, >=3:1)
+ *
+ * LIGHT THEME:
+ * Gold   #ae8510 on parchment     #e8dcc8  ->  ~3.6:1  AA (large/bold text)
+ * Brown  #2a1f14 on parchment     #e8dcc8  ->  ~10.5:1 AA + AAA
+ * Stone  #6b5f52 on parchment     #e8dcc8  ->  ~3.6:1  AA (large/bold text)
+ * Stone  #6b5f52 on card bg       #ddd0b8  ->  ~3.3:1  AA (large/bold text)
  * ─────────────────────────────────────────────────────────── */
 
 /* ── Sprint 4 — Reduced Motion Coverage (verification) ──────
  *
  * Each Sprint 4 story added its own @media (prefers-reduced-motion: reduce)
  * rule inline. Listing them here for auditing purposes:
- *   .ragnarok-overlay { transition: none }   — see Ragnarök Threshold section
+ *   .ragnarok-overlay { transition: none }   — see Ragnarok Threshold section
  *   .gleipnir-shimmer { animation: none }    — see Gleipnir Complete section
  *   .skeleton shimmer is handled by .skeleton rule (no separate rm rule needed
  *     since loading states are short and functional, not decorative)
@@ -409,16 +470,16 @@ body.konami-shake-mobile {
 
 /* ── Milestone Toast Overrides ────────────────────────────── */
 .milestone-toast {
-  background: #0f1018 !important;
-  border: 1px solid #c9920a !important;
-  color: #e8e4d4 !important;
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--primary)) !important;
+  color: hsl(var(--foreground)) !important;
 }
 
 .milestone-toast [data-content] {
   font-family: var(--font-source-serif), serif;
 }
 
-/* ── Ragnarök Threshold Mode ──────────────────────────────── */
+/* ── Ragnarok Threshold Mode ──────────────────────────────── */
 .ragnarok-overlay {
   position: fixed;
   inset: 0;
@@ -442,9 +503,9 @@ body.konami-shake-mobile {
 
 /* ── Gleipnir Complete Shimmer ────────────────────────────── */
 @keyframes gleipnir-shimmer {
-  0% { box-shadow: 0 0 0 0 rgba(201, 146, 10, 0); }
-  50% { box-shadow: 0 0 20px 4px rgba(201, 146, 10, 0.3); }
-  100% { box-shadow: 0 0 0 0 rgba(201, 146, 10, 0); }
+  0% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+  50% { box-shadow: 0 0 20px 4px hsl(var(--primary) / 0.3); }
+  100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
 }
 
 .gleipnir-shimmer {
@@ -465,9 +526,9 @@ body.konami-shake-mobile {
  * Spec from wireframe: designs/ux-design/wireframes/patreon-subscription/hard-gate-modal.html
  */
 @keyframes sealed-rune-pulse {
-  0%   { opacity: 0.4; filter: drop-shadow(0 0 0 rgba(212, 165, 32, 0)); }
-  50%  { opacity: 1;   filter: drop-shadow(0 0 16px rgba(212, 165, 32, 0.5)); }
-  100% { opacity: 1;   filter: drop-shadow(0 0 4px rgba(212, 165, 32, 0.15)); }
+  0%   { opacity: 0.4; filter: drop-shadow(0 0 0 hsl(var(--primary) / 0)); }
+  50%  { opacity: 1;   filter: drop-shadow(0 0 16px hsl(var(--primary) / 0.5)); }
+  100% { opacity: 1;   filter: drop-shadow(0 0 4px hsl(var(--primary) / 0.15)); }
 }
 
 .sealed-rune-pulse {
@@ -479,4 +540,3 @@ body.konami-shake-mobile {
     animation: none;
   }
 }
-

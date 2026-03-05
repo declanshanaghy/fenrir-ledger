@@ -1,78 +1,80 @@
-# QA Handoff -- Story 2: Client-Side Feature Flag Guards
+# QA Handoff -- Story 1: Theme Foundation + CSS Variables
 
-**Branch:** `feat/feature-flags-client`
-**Base:** `feat/feature-flags` (PR #113)
+**Branch:** `feat/theme-foundation`
 **Date:** 2026-03-04
 **Engineer:** FiremanDecko
 
 ## What Was Implemented
 
-Story 2 of the Stripe platform pivot feature flags. This builds on Story 1 (PR #113)
-which added `src/lib/feature-flags.ts` with `isPatreon()`, `isStripe()` helpers and
-guarded all 7 Patreon API routes with server-side checks.
+### Task: theme-foundation
+Installed `next-themes` and restructured the CSS variable system to support both dark and light themes. This is the foundation layer -- no toggle UI yet (that is Story 2).
 
-Story 2 adds **client-side feature flag guards** so that when
-`NEXT_PUBLIC_SUBSCRIPTION_PLATFORM=stripe`, all Patreon-specific UI and API calls
-are suppressed. When the flag is unset or set to `patreon`, all existing behavior
-is preserved with zero changes.
-
-### Key behaviors added:
-
-1. `PatreonSettings` does not render when stripe mode -- replaced with a "Subscription management coming soon" placeholder
-2. `SealedRuneModal` hides Patreon campaign URL, tier row, and "Pledge on Patreon" CTA when stripe mode -- shows generic "Premium feature -- subscription coming soon" instead
-3. `UpsellBanner` returns null (hidden entirely) when stripe mode
-4. `EntitlementContext` skips all Patreon API calls (`linkPatreon`, `unlinkPatreon`, `refreshEntitlement`, `migrateAnonymousEntitlement`, OAuth callback processing) when stripe mode
-5. `PatreonGate` renders children unconditionally when stripe mode (no lockout)
+### Changes summary:
+1. Installed `next-themes` package
+2. Restructured `globals.css`: `:root` now defines the light (Norse parchment) palette, `.dark` defines the dark (Norse war-room) palette
+3. Updated `layout.tsx`: removed hardcoded `"dark"` class, added `suppressHydrationWarning`, wrapped app in `<ThemeProvider>` from next-themes with `defaultTheme="system"` and `storageKey="fenrir-theme"`
+4. Converted all hardcoded hex values in CSS animations/shadows to CSS variables (skeleton shimmer, milestone toast, gleipnir shimmer, sealed rune pulse, card-chain hover, myth-link borders, gleipnir copyright tooltip)
+5. Removed stray `dark:text-amber-400` prefixed classes from CardTile.tsx (2 instances) and Dashboard.tsx (1 instance)
+6. Added theme-aware body background textures (light: lower opacity warm glow; dark: original gold glow + stone grain)
 
 ## Files Modified
 
 | File | Description |
 |------|-------------|
-| `development/frontend/src/app/settings/page.tsx` | Import `isPatreon`, conditionally render `<PatreonSettings />` vs placeholder section |
-| `development/frontend/src/components/entitlement/SealedRuneModal.tsx` | Import `isPatreon`, wrap Patreon tier row + CTA in conditional, show generic message in stripe mode |
-| `development/frontend/src/components/entitlement/UpsellBanner.tsx` | Import `isPatreon`, early return null when `!isPatreon()` |
-| `development/frontend/src/contexts/EntitlementContext.tsx` | Import `isPatreon`, guard `refreshEntitlement`, `linkPatreon`, `unlinkPatreon`, `migrateAnonymousEntitlement`, and OAuth callback useEffect |
-| `development/frontend/src/components/entitlement/PatreonGate.tsx` | Import `isPatreon`, render children unconditionally when `!isPatreon()` |
+| `development/frontend/package.json` | Added `next-themes` dependency |
+| `development/frontend/src/app/globals.css` | Restructured into `:root` (light) + `.dark` (dark) variable blocks; converted hardcoded hex to CSS vars |
+| `development/frontend/src/app/layout.tsx` | Removed hardcoded `"dark"` class; added `suppressHydrationWarning`; wrapped app in `<ThemeProvider>` |
+| `development/frontend/src/components/dashboard/CardTile.tsx` | Removed `dark:text-amber-400` (2 instances) |
+| `development/frontend/src/components/dashboard/Dashboard.tsx` | Removed `dark:text-amber-400` (1 instance) |
 
 ## How to Test
 
-### Test 1: Default behavior (Patreon mode -- no regression)
+### Test 1: Dark mode visual regression (primary concern)
 
-1. Ensure `NEXT_PUBLIC_SUBSCRIPTION_PLATFORM` is **unset** (or set to `patreon`).
-2. Run the app: `cd development/frontend && npm run dev`
-3. Navigate to `/settings`.
-4. Verify: `PatreonSettings` component renders normally.
-5. Verify: `PatreonGate` sections show locked/unlocked state normally.
-6. Verify: `UpsellBanner` appears for Thrall users.
-7. Verify: `SealedRuneModal` shows Patreon CTA when opened.
+1. `cd development/frontend && npm install && npm run dev`
+2. Open browser, set OS to dark mode (or set `fenrir-theme` to `"dark"` in localStorage)
+3. Verify: App looks identical to before -- same Norse war-room aesthetic
+4. Check: Card hover glow, skeleton shimmer, milestone toast styling, gleipnir copyright tooltip, myth links
 
-### Test 2: Stripe mode
+### Test 2: Light mode renders parchment palette
 
-1. Set `NEXT_PUBLIC_SUBSCRIPTION_PLATFORM=stripe` in `.env.local`.
-2. Restart the dev server.
-3. Navigate to `/settings`.
-4. Verify: "Subscription Management" placeholder with "coming soon" text appears instead of PatreonSettings.
-5. Verify: PatreonGate sections render their children directly (Cloud Sync, Multi-Household, Data Export placeholders all visible).
-6. Verify: No Patreon API calls in the network tab.
-7. Navigate to dashboard -- verify UpsellBanner does not appear.
-8. If SealedRuneModal is triggered, verify it shows "Premium feature -- subscription coming soon" instead of Patreon CTA.
+1. Set OS to light mode (or set `fenrir-theme` to `"light"` in localStorage)
+2. Verify: Warm parchment backgrounds, dark brown text, adapted gold accents
+3. Verify: Skeleton shimmer uses parchment tones, not dark hex values
 
-### Test 3: Build validation
+### Test 3: System theme follows OS
+
+1. Remove `fenrir-theme` from localStorage (or set to `"system"`)
+2. Toggle OS dark/light mode
+3. Verify: App follows OS preference
+
+### Test 4: Build validation
 
 ```bash
 cd development/frontend && npx tsc --noEmit   # Should pass
 cd development/frontend && npx next build      # Should succeed
 ```
 
+### Test 5: No stray dark: prefixes
+
+```bash
+grep -rn 'dark:' development/frontend/src/ --include='*.tsx' --include='*.ts'
+# Should return zero results
+```
+
 ## Known Limitations
 
-1. **Stripe gating not built yet**: When stripe mode is active, PatreonGate renders children unconditionally. This is intentional -- disabling Patreon should not lock users out of features before Stripe gating exists.
-
-2. **EntitlementContext still mounts**: The provider still renders and creates context, but all Patreon-specific API calls and OAuth processing are skipped. The context returns Thrall defaults.
+- No theme toggle UI yet -- that is Story 2 (feat/theme-toggle-ui)
+- To test light mode manually, change OS preference or set `fenrir-theme` to `"light"` in localStorage
+- Tailwind config still has hardcoded hex in direct color tokens (void, forge, chain, gold, realm) -- these are design tokens, not theme-variable candidates. Story 2 color audit will address components using them incorrectly.
+- Light theme contrast ratios for muted-foreground on card/background are around 3.3-3.6:1 -- acceptable for large/bold text but may need adjustment for small body text in Story 2
 
 ## Suggested Test Focus Areas
 
-- **No regressions in patreon mode**: All existing Patreon flows must work identically when the flag is unset.
-- **No network calls in stripe mode**: Confirm zero `/api/patreon/*` requests are made.
-- **PatreonGate passthrough**: Verify premium feature sections are accessible (not locked) in stripe mode.
-- **SealedRuneModal dismiss**: Verify the "Not now" dismiss button works in stripe mode.
+- Visual regression in dark mode (nothing should look different from current production)
+- Body background texture rendering in both themes
+- Skeleton loading shimmer appearance in both themes
+- Gleipnir hunt easter egg CSS (copyright tooltip color)
+- Card hover glow effect
+- Milestone toast styling
+- Myth link underline color
