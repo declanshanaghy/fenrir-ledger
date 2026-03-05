@@ -38,10 +38,9 @@ playwright-report/
 .vercel
 logs/
 
-# Temp & worktree files (for parallel agent development)
+# Temp files (for parallel agent development)
 tmp/
 development/frontend/.claude/
-trees/
 
 # Machine-specific Claude settings (contains absolute paths)
 .claude/settings-observability.json

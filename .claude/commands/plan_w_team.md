@@ -229,13 +229,19 @@ TaskOutput({
 IMPORTANT: **PLANNING ONLY** - Do not execute, build, or deploy. Output is a plan document.
 
 1. Analyze Requirements - Parse the USER_PROMPT to understand the core problem and desired outcome
-2. Understand Codebase - Without subagents, directly understand existing patterns, architecture, and relevant files
-3. Design Solution - Develop technical approach including architecture decisions and implementation strategy
-4. Define Team Members - Use `ORCHESTRATION_PROMPT` (if provided) to guide team composition. Identify from TEAM_MEMBERS (see Variables). Document in plan.
-5. Define Step by Step Tasks - Use `ORCHESTRATION_PROMPT` (if provided) to guide task granularity and parallel/sequential structure. Write out tasks with IDs, dependencies, assignments. Document in plan.
-6. Generate Filename - Create a descriptive kebab-case filename based on the plan's main topic
-7. Save Plan - Write the plan to `PLAN_OUTPUT_DIRECTORY/<filename>.md`
-8. Save & Report - Follow the `Report` section to write the plan to `PLAN_OUTPUT_DIRECTORY/<filename>.md` and provide a summary of key components
+2. **Freya Interviews Odin** - Before any technical planning, spawn Freya (the Product Owner) to interview the user. Freya must clarify requirements, priorities, edge cases, and acceptance criteria directly with the user.
+   - Spawn Freya via: `Agent({ subagent_type: "freya-product-owner", prompt: "..." })`
+   - In Freya's prompt, include this context: **"The user's name is Odin. He is the project owner and ultimate decision-maker for Fenrir Ledger. Address him as Odin. Interview Odin to clarify requirements for: <USER_PROMPT>. Ask about priorities, edge cases, UX preferences, and acceptance criteria. Use AskUserQuestion to conduct the interview. Summarize findings when done."**
+   - Wait for Freya's summary before proceeding to step 3
+   - Incorporate Freya's findings into the plan's acceptance criteria and solution approach
+3. Understand Codebase - Without subagents, directly understand existing patterns, architecture, and relevant files
+4. Design Solution - Develop technical approach including architecture decisions and implementation strategy
+5. Define Team Members - Use `ORCHESTRATION_PROMPT` (if provided) to guide team composition. Identify from TEAM_MEMBERS (see Variables). Document in plan.
+6. Define Step by Step Tasks - Use `ORCHESTRATION_PROMPT` (if provided) to guide task granularity and parallel/sequential structure. Write out tasks with IDs, dependencies, assignments. Document in plan.
+7. Generate Filename - Create a descriptive kebab-case filename based on the plan's main topic
+8. Save Plan - Write the plan to `PLAN_OUTPUT_DIRECTORY/<filename>.md`
+9. Commit Spec - Stage and commit the new spec file to the current branch: `git add PLAN_OUTPUT_DIRECTORY/<filename>.md && git commit -m "docs: add spec <filename>"`. Include `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>` in the commit message.
+10. Save & Report - Follow the `Report` section to write the plan to `PLAN_OUTPUT_DIRECTORY/<filename>.md` and provide a summary of key components
 
 ## Plan Format
 
