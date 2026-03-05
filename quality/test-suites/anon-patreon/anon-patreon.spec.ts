@@ -51,6 +51,35 @@ import { test, expect } from "@playwright/test";
 
 const API_BASE = process.env.SERVER_URL ?? "http://localhost:9653";
 
+// ---------------------------------------------------------------------------
+// Platform detection — skip the entire suite when running in Stripe mode.
+//
+// Detection method: GET /api/patreon/authorize
+//   - Patreon mode: returns non-404 (302/500/429 depending on config)
+//   - Stripe mode:  returns 404 {"error":"Patreon integration is disabled"}
+//
+// This lets the same CI run against both Stripe and Patreon deployments
+// without false failures — Patreon tests only run where Patreon is active.
+// ---------------------------------------------------------------------------
+
+test.beforeAll(async ({ request }) => {
+  let isStripeModeActive = false;
+  try {
+    const resp = await request.get(`${API_BASE}/api/patreon/authorize`, {
+      maxRedirects: 0,
+    });
+    if (resp.status() === 404) {
+      isStripeModeActive = true;
+    }
+  } catch {
+    // Network error — cannot determine platform; proceed with tests.
+  }
+  if (isStripeModeActive) {
+    // eslint-disable-next-line playwright/no-skipped-test
+    test.skip(true, "Deployment is in Stripe mode (SUBSCRIPTION_PLATFORM=stripe) — Patreon tests skipped.");
+  }
+});
+
 const ROUTES = {
   authorize: `${API_BASE}/api/patreon/authorize`,
   callback: `${API_BASE}/api/patreon/callback`,

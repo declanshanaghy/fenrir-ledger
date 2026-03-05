@@ -32,6 +32,36 @@ import { test, expect } from "@playwright/test";
 
 const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9653";
 
+// ── Platform detection ────────────────────────────────────────────────────────
+//
+// Skip the entire suite when the deployment is in Stripe mode.
+//
+// Detection method: GET /api/patreon/authorize
+//   - Patreon mode: non-404 response (302/500/429 depending on config)
+//   - Stripe mode:  404 {"error":"Patreon integration is disabled"}
+//
+// Patreon client tests require the Patreon UI to be rendered; in Stripe mode
+// PatreonSettings is not mounted and all these tests would fail.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test.beforeAll(async ({ request }) => {
+  let isStripeModeActive = false;
+  try {
+    const resp = await request.get(`${BASE_URL}/api/patreon/authorize`, {
+      maxRedirects: 0,
+    });
+    if (resp.status() === 404) {
+      isStripeModeActive = true;
+    }
+  } catch {
+    // Network error — cannot determine platform; proceed with tests.
+  }
+  if (isStripeModeActive) {
+    // eslint-disable-next-line playwright/no-skipped-test
+    test.skip(true, "Deployment is in Stripe mode (SUBSCRIPTION_PLATFORM=stripe) — Patreon client tests skipped.");
+  }
+});
+
 /** The anonymous Patreon membership endpoint path. */
 const MEMBERSHIP_ANON_URL = `${BASE_URL}/api/patreon/membership-anon`;
 
