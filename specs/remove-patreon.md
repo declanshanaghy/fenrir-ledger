@@ -232,6 +232,19 @@ Use these files to complete the task:
 - Verify Playwright test coverage exists for all new functionality
 - Grep entire codebase for "patreon" — only matches should be in ADR superseded notes, git history references, or test assertions proving routes are gone
 
+### 8. Deployment Cleanup — Remove Patreon Env Vars
+- **Task ID**: deploy-cleanup
+- **Depends On**: validate-all
+- **Assigned To**: fireman-decko
+- **Agent Type**: fireman-decko-principal-engineer
+- **Parallel**: false
+- Remove all `PATREON_*` env vars from Vercel (development, preview, production) — 12 deletions
+- Remove `SUBSCRIPTION_PLATFORM` and `NEXT_PUBLIC_SUBSCRIPTION_PLATFORM` from Vercel (preview, production) — 4 deletions
+- Use `printf '%s'` pattern (NEVER `echo`) if any vars need re-setting (see team norms)
+- Update `.env.example` to remove Patreon vars if the file exists
+- Trigger production redeploy: `gh workflow run vercel-production.yml --ref main`
+- Verify production deploy succeeds and Stripe checkout still works
+
 ## Stories
 
 Group the tasks above into max 5 PR-sized stories. Each story becomes one branch + one PR.
@@ -272,6 +285,19 @@ The orchestrator (`/orchestrate`) reads this section to know how to execute.
   - Playwright tests verify Stripe checkout and SealedRuneModal work
   - All existing tests pass (no regressions)
   - Full validation commands pass
+
+### Story 3: Deployment Cleanup — Remove Patreon Env Vars
+- **Slug**: patreon-env-cleanup
+- **Branch**: chore/patreon-env-cleanup
+- **Depends On**: Story 2
+- **Assigned To**: fireman-decko
+- **Tasks**: deploy-cleanup
+- **Acceptance Criteria**:
+  - All `PATREON_*` env vars removed from Vercel (development, preview, production)
+  - `SUBSCRIPTION_PLATFORM` and `NEXT_PUBLIC_SUBSCRIPTION_PLATFORM` removed from Vercel (preview, production)
+  - `.env.example` updated to remove Patreon vars (if it exists)
+  - Production redeploy succeeds with no Patreon env vars
+  - Stripe checkout still works on production after redeploy
 
 ## Deployment Configuration
 
