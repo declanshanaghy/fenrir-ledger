@@ -57,6 +57,7 @@ TEAM_MEMBERS:
 - Ensure the plan is detailed enough that another developer could follow it to implement the solution
 - Include code examples or pseudo-code where appropriate to clarify complex concepts
 - Consider edge cases, error handling, and scalability concerns
+- **Deployment detection**: If the plan adds, changes, or removes environment variables, API keys, infrastructure config, or third-party service settings, you MUST include the `## Deployment Configuration` section AND create a dedicated deployment story in `## Stories` for the env var / infra changes. Deployment stories depend on the implementation + QA stories and include the actual `vercel env add/rm` commands, redeploy triggers, and post-deploy verification.
 - Understand your role as the team lead. Refer to the `Team Orchestration` section for more details.
 
 ### Team Orchestration
@@ -402,6 +403,19 @@ The orchestrator (`/orchestrate`) reads this section to know how to execute.
   - <testable criterion>
 
 <continue for each story, max 5>
+
+<if the plan requires deployment configuration changes (env vars, infrastructure, DNS, etc.), include a deployment story:>
+### Story N: Deployment Configuration
+- **Slug**: <feature-slug>-deploy
+- **Branch**: chore/<feature-slug>-deploy
+- **Depends On**: <last QA/implementation story>
+- **Assigned To**: <builder agent name>
+- **Tasks**: deploy-cleanup
+- **Acceptance Criteria**:
+  - <env var additions/removals verified on Vercel>
+  - <production redeploy succeeds>
+  - <post-deploy verification — feature works on production>
+</if>
 
 ## Acceptance Criteria
 <list specific, measurable criteria that must be met for the task to be considered complete — these are the OVERALL acceptance criteria across all stories>
