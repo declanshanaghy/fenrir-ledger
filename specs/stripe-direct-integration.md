@@ -12,7 +12,7 @@ Fenrir Ledger has a fully operational Patreon integration that is feature-flagge
 ## Solution Approach
 Mirror the Patreon integration's architecture for Stripe:
 - **API Routes**: `/api/stripe/checkout`, `/api/stripe/webhook`, `/api/stripe/membership`, `/api/stripe/portal`, `/api/stripe/unlink`
-- **KV Store**: Extend `entitlement-store.ts` with Stripe-specific fields (`stripeCustomerId`, `stripeSubscriptionId`)
+- **KV Store**: Extend `entitlement-store.ts` with Stripe-specific fields (`stripeCustomerId`, `stripeSubscriptionId`). Dual-key pattern mirroring Patreon: `entitlement:{googleSub}` for authenticated users, `entitlement:stripe:{stripeCustomerId}` for anonymous users. Migration from anonymous → authenticated on Google sign-in.
 - **Webhooks**: SHA-256 HMAC signature verification (superior to Patreon's HMAC-MD5)
 - **UI**: Rename `PatreonGate` → `SubscriptionGate`, update `SealedRuneModal` and `UpsellBanner` CTAs, create `StripeSettings` component
 - **EntitlementContext**: Add Stripe provider path alongside existing Patreon path, switched by feature flag
@@ -24,6 +24,7 @@ Odin's requirements (from Freya interview):
 4. **Rename PatreonGate → SubscriptionGate** — included
 5. **Heimdall security review** — included
 6. **Clean start** — no existing Patreon subscribers to migrate
+7. **Anonymous users can subscribe** — Google sign-in is NOT required before subscribing (mirrors Patreon anonymous flow)
 
 ## Relevant Files
 Use these files to complete the task:
@@ -119,7 +120,13 @@ Rename PatreonGate → SubscriptionGate. Build StripeSettings component. Update 
   - `stripeCustomerId: string`
   - `stripeSubscriptionId: string`
   - `stripeStatus: string` (active, canceled, past_due, etc.)
-  - Keep same KV key pattern: `entitlement:{googleSub}`
+  - Dual KV key pattern (mirrors Patreon anonymous flow):
+    - Authenticated: `entitlement:{googleSub}` (same as Patreon)
+    - Anonymous: `entitlement:stripe:{stripeCustomerId}`
+    - Reverse index: `stripe-customer:{stripeCustomerId}` → `{googleSub}` or `stripe:{stripeCustomerId}`
+  - Add `getAnonymousStripeEntitlement(stripeCustomerId)`, `setAnonymousStripeEntitlement(stripeCustomerId, entitlement)`
+  - Add `getGoogleSubByStripeCustomerId(stripeCustomerId)` (reverse index lookup)
+  - Add `migrateStripeEntitlement(stripeCustomerId, googleSub)` (anonymous → authenticated migration)
 
 ### 2. Stripe API Routes — Checkout + Webhook
 - **Task ID**: stripe-routes
@@ -128,9 +135,11 @@ Rename PatreonGate → SubscriptionGate. Build StripeSettings component. Update 
 - **Agent Type**: fireman-decko-principal-engineer
 - **Parallel**: false
 - Create `POST /api/stripe/checkout`:
-  - `requireAuth(request)` — must be signed in
   - Guard with `if (!isStripe()) return 404`
-  - Create Stripe Checkout Session with: `mode: "subscription"`, `price: STRIPE_PRICE_ID`, `customer_email: auth.user.email`, `success_url`, `cancel_url`, `metadata: { googleSub: auth.user.sub }`
+  - **Dual auth path** (mirrors Patreon anonymous flow):
+    - **Authenticated**: call `requireAuth(request)` — use `auth.user.sub` + `auth.user.email`. Set metadata: `{ googleSub: auth.user.sub }`
+    - **Anonymous**: skip `requireAuth`. Accept `{ email }` in request body. No `googleSub` in metadata.
+  - Create Stripe Checkout Session with: `mode: "subscription"`, `price: STRIPE_PRICE_ID`, `customer_email`, `success_url`, `cancel_url`, metadata as above
   - Return `{ url: session.url }`
 - Create `POST /api/stripe/webhook`:
   - NO `requireAuth` — Stripe sends webhooks directly
@@ -138,9 +147,12 @@ Rename PatreonGate → SubscriptionGate. Build StripeSettings component. Update 
   - Verify signature: `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)` — SHA-256 HMAC
   - Handle events:
     - `checkout.session.completed` → create KV entitlement (tier: "karl", active: true)
-    - `customer.subscription.updated` → update tier/active status
-    - `customer.subscription.deleted` → set active: false
-  - Extract `googleSub` from session/subscription metadata
+      - If metadata has `googleSub`: store as `entitlement:{googleSub}` (authenticated)
+      - If no `googleSub`: store as `entitlement:stripe:{stripeCustomerId}` (anonymous)
+      - Maintain reverse index: `stripe-customer:{stripeCustomerId}` → `{googleSub}` or `stripe:{stripeCustomerId}`
+    - `customer.subscription.updated` → update tier/active status (lookup via reverse index)
+    - `customer.subscription.deleted` → set active: false (lookup via reverse index)
+  - Extract identity from metadata (`googleSub`) or fall back to `stripeCustomerId` for anonymous users
   - Return 200
 - Create `GET /api/stripe/membership`:
   - `requireAuth(request)`
@@ -302,6 +314,9 @@ The orchestrator (`/orchestrate`) reads this section to know how to execute.
 - Stripe webhook handler verifies SHA-256 HMAC signatures
 - Webhook processes `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
 - Customer Portal accessible for subscription management (cancel, update payment)
+- Anonymous users can subscribe via Stripe Checkout without Google sign-in
+- `stripeCustomerId` used as identity key for anonymous subscribers
+- `migrateStripeEntitlement()` migrates anonymous → authenticated on Google sign-in
 - `useEntitlement()` hook works identically with both Stripe and Patreon providers
 - `PatreonGate` renamed to `SubscriptionGate` — all imports updated, no breakage
 - `StripeSettings` component shows subscription status, portal link, cancel option
@@ -325,7 +340,7 @@ Execute these commands to validate the task is complete:
 ## Notes
 - **New dependency**: `stripe` — official Stripe Node.js library. Well-maintained, TypeScript-native.
 - **Stripe account prerequisite**: Odin must create a Stripe account and configure: a "Karl" product at $3.99/month, a webhook endpoint pointing to `/api/stripe/webhook`, and provide test keys in `.env.local`. This is a manual step that cannot be automated.
-- **No anonymous flow for Stripe MVP**: Unlike Patreon, the Stripe MVP requires Google sign-in before subscribing. The anonymous Patreon flow was complex (ADR-009 Amendment) and is not needed for Stripe Phase 1. Users sign in with Google, then subscribe via Stripe Checkout.
+- **Anonymous flow supported**: Anonymous users can subscribe without Google sign-in (mirrors Patreon anonymous flow). Identity is keyed by `stripeCustomerId` until the user signs in with Google, at which point `migrateStripeEntitlement()` moves the entitlement to `entitlement:{googleSub}`. The checkout route accepts either an authenticated request (with Bearer token) or an anonymous request (with just `{ email }` in the body).
 - **Webhook endpoint**: In development, use Stripe CLI (`stripe listen --forward-to localhost:9653/api/stripe/webhook`) to forward webhook events. In production, configure the webhook URL in Stripe Dashboard.
 - **Price ID**: The `STRIPE_PRICE_ID` env var references a recurring price object created in Stripe Dashboard. This is NOT a code-level configuration — it must be created manually in Stripe.
 - **Customer Portal**: Stripe's hosted Customer Portal handles subscription management (cancel, update payment method, view invoices). It must be configured in Stripe Dashboard with branding settings.

@@ -57,3 +57,22 @@ Stories explicitly parked by Freya. These are not forgotten — they are in the 
 ## Data Export (CSV/JSON) — Deferred
 
 **Why deferred**: Useful for power users who want a backup or want to switch tools. But this is pre-GA work only — during the validation cycle, localStorage data is visible via DevTools and the upsell banner will eventually prompt users toward cloud sync. No sprint target yet.
+
+---
+
+## Wireframe vs Implementation Audit — Backlog
+
+**Priority**: P3-Medium
+**Assigned To**: Loki (QA) + Luna (UX)
+
+**What**: Systematically compare every wireframe in `ux/wireframes/` against the live application to identify features that were implemented differently from their wireframe spec. Many wireframes exist that were never fully implemented or diverged during development.
+
+**Scope**:
+1. For each wireframe HTML file in `ux/wireframes/**/*.html`, open the corresponding app screen and compare layout, interactions, copy, and component structure.
+2. Flag: **Missing** (wireframed but never built), **Diverged** (built but differs from wireframe), **Matched** (implemented as designed).
+3. For diverged items, determine whether the implementation or the wireframe is correct — some divergences are intentional improvements.
+4. Update wireframes that are outdated, or file stories for implementations that need correction.
+
+**Output**: Audit report at `quality/wireframe-audit.md` with a table of all wireframes and their status.
+
+**Why backlog**: Not blocking any current work, but accumulating design debt. Should be scheduled after the Stripe Direct integration ships.
