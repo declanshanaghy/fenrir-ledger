@@ -1,72 +1,264 @@
 #!/usr/bin/env bash
-# services.sh — manage Fenrir Ledger frontend server
+# services.sh — manage the Fenrir Ledger local development environment
 #
-# Usage: services.sh {start|stop|restart|status|logs}
+# Starts vercel dev (with Vercel Development env vars) and Stripe CLI
+# webhook forwarding. The Stripe ephemeral webhook secret is automatically
+# captured and injected into .env.local before the server starts.
+#
+# Usage:
+#   services.sh start   — start stripe listen + vercel dev
+#   services.sh stop    — stop everything, restore original webhook secret
+#   services.sh restart — stop then start
+#   services.sh status  — show status of all services
+#   services.sh logs    — tail the frontend log
 #
 # Environment overrides (for worktrees):
-#   FENRIR_FRONTEND_PORT — frontend port (default: 9653)
-#   FENRIR_FRONTEND_DIR  — path to development/frontend
+#   FENRIR_FRONTEND_PORT — port to listen on (default: 9653)
+#   FENRIR_FRONTEND_DIR  — path to development/frontend (default: auto-detected)
 #
-# Backward-compatible aliases (deprecated):
-#   FENRIR_PORT    — fallback for FENRIR_FRONTEND_PORT
-#   FENRIR_DEV_DIR — fallback for FENRIR_FRONTEND_DIR
-#
-# Note: The dedicated backend server was removed in chore/remove-fly-io.
-# All import functionality runs as a Vercel serverless function via the
-# Next.js API route /api/sheets/import. See adr-backend-server.md addendum.
+# Prerequisites:
+#   - Stripe CLI: brew install stripe/stripe-cli/stripe
+#   - Vercel CLI: npm i -g vercel (or npx)
+#   - STRIPE_SECRET_KEY in .env.local (vercel env pull --environment=development)
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-FRONTEND_SCRIPT="${SCRIPT_DIR}/frontend-server.sh"
+PORT="${FENRIR_FRONTEND_PORT:-${FENRIR_PORT:-9653}}"
+FRONTEND_DIR="${FENRIR_FRONTEND_DIR:-${FENRIR_DEV_DIR:-$(cd "$(dirname "$0")/../../development/frontend" && pwd)}}"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+LOG_DIR="${FRONTEND_DIR}/logs"
+mkdir -p "$LOG_DIR"
 
-# Propagate env vars so the frontend script picks them up.
-[[ -n "${FENRIR_FRONTEND_PORT:-${FENRIR_PORT:-}}" ]] && export FENRIR_FRONTEND_PORT="${FENRIR_FRONTEND_PORT:-${FENRIR_PORT:-}}"
-[[ -n "${FENRIR_FRONTEND_DIR:-${FENRIR_DEV_DIR:-}}" ]] && export FENRIR_FRONTEND_DIR="${FENRIR_FRONTEND_DIR:-${FENRIR_DEV_DIR:-}}"
+FRONTEND_LOG="${LOG_DIR}/frontend-server.log"
+STRIPE_LOG="${LOG_DIR}/stripe-listen.log"
+PORT_FILE="${FRONTEND_DIR}/.port"
+STRIPE_PID_FILE="${FRONTEND_DIR}/.stripe-listen.pid"
+ENV_FILE="${FRONTEND_DIR}/.env.local"
+WEBHOOK_BACKUP="${FRONTEND_DIR}/.env.local.stripe-backup"
 
-action="${1:-}"
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-run_frontend() { "$FRONTEND_SCRIPT" "$1"; }
+actual_port() {
+  if [[ -f "$PORT_FILE" ]]; then
+    cat "$PORT_FILE"
+  else
+    echo "$PORT"
+  fi
+}
 
-case "$action" in
-  start)
-    echo "=== Starting Fenrir Ledger ==="
-    run_frontend start
-    echo "=== Service started ==="
-    ;;
+frontend_pid() {
+  local p
+  p=$(actual_port)
+  [[ "$p" == "0" ]] && return 1
+  lsof -ti "TCP:$p" -sTCP:LISTEN 2>/dev/null | head -1
+}
 
-  stop)
-    echo "=== Stopping Fenrir Ledger ==="
-    run_frontend stop
-    echo "=== Service stopped ==="
-    ;;
+stripe_pid() {
+  if [[ -f "$STRIPE_PID_FILE" ]]; then
+    local p
+    p=$(cat "$STRIPE_PID_FILE")
+    if kill -0 "$p" 2>/dev/null; then
+      echo "$p"
+      return 0
+    fi
+    rm -f "$STRIPE_PID_FILE"
+  fi
+  return 1
+}
 
-  restart)
-    echo "=== Restarting Fenrir Ledger ==="
-    run_frontend stop
+get_stripe_key() {
+  [[ -f "$ENV_FILE" ]] && grep "^STRIPE_SECRET_KEY=" "$ENV_FILE" | cut -d= -f2- | tr -d '"'
+}
+
+# Wait for vercel dev to print its port (same format as next dev)
+wait_for_port() {
+  local timeout=30 elapsed=0
+  while (( elapsed < timeout )); do
+    if [[ -f "$FRONTEND_LOG" ]]; then
+      local detected
+      detected=$(sed -n 's/.*Local:[[:space:]]*http:\/\/localhost:\([0-9]*\).*/\1/p' "$FRONTEND_LOG" 2>/dev/null | head -1)
+      if [[ -n "$detected" ]]; then
+        echo "$detected" > "$PORT_FILE"
+        echo "$detected"
+        return 0
+      fi
+    fi
     sleep 1
-    run_frontend start
-    echo "=== Service restarted ==="
-    ;;
+    (( elapsed++ ))
+  done
+  return 1
+}
 
+# ---------------------------------------------------------------------------
+# Start: stripe listen → inject secret → vercel dev
+# ---------------------------------------------------------------------------
+
+do_start() {
+  # -- Check if already running --
+  if p=$(frontend_pid); then
+    echo "Frontend: already running (pid $p) on port $(actual_port)"
+    stripe_pid >/dev/null 2>&1 && echo "Stripe listen: running (pid $(stripe_pid))"
+    return 0
+  fi
+
+  # -- Prerequisites --
+  if ! command -v stripe &>/dev/null; then
+    echo "ERROR: Stripe CLI not installed. Run: brew install stripe/stripe-cli/stripe"
+    exit 1
+  fi
+
+  STRIPE_KEY=$(get_stripe_key)
+  if [[ -z "$STRIPE_KEY" ]]; then
+    echo "ERROR: STRIPE_SECRET_KEY not found in $ENV_FILE"
+    echo "Run: cd $FRONTEND_DIR && npx vercel env pull .env.local --environment=development"
+    exit 1
+  fi
+
+  # -- 1. Start stripe listen --
+  echo "Starting Stripe webhook forwarding..."
+  > "$STRIPE_LOG"
+  stripe listen \
+    --api-key "$STRIPE_KEY" \
+    --forward-to "http://localhost:${PORT}/api/stripe/webhook" \
+    >> "$STRIPE_LOG" 2>&1 &
+  echo $! > "$STRIPE_PID_FILE"
+
+  # Wait for ephemeral webhook secret
+  local_secret=""
+  for _ in $(seq 1 15); do
+    local_secret=$(sed -n 's/.*Your webhook signing secret is \(whsec_[a-zA-Z0-9_]*\).*/\1/p' "$STRIPE_LOG" 2>/dev/null | head -1)
+    [[ -n "$local_secret" ]] && break
+    sleep 1
+  done
+
+  if [[ -z "$local_secret" ]]; then
+    echo "ERROR: Could not detect Stripe webhook secret after 15s. Check $STRIPE_LOG"
+    stripe_pid >/dev/null 2>&1 && kill "$(stripe_pid)"
+    rm -f "$STRIPE_PID_FILE"
+    exit 1
+  fi
+
+  # -- 2. Inject ephemeral secret into .env.local --
+  grep "^STRIPE_WEBHOOK_SECRET=" "$ENV_FILE" > "$WEBHOOK_BACKUP" 2>/dev/null || true
+  if grep -q "^STRIPE_WEBHOOK_SECRET=" "$ENV_FILE"; then
+    sed -i '' "s|^STRIPE_WEBHOOK_SECRET=.*|STRIPE_WEBHOOK_SECRET=\"${local_secret}\"|" "$ENV_FILE"
+  else
+    echo "STRIPE_WEBHOOK_SECRET=\"${local_secret}\"" >> "$ENV_FILE"
+  fi
+  echo "Stripe listen: running (webhook secret injected)"
+
+  # -- 3. Start vercel dev --
+  echo "Starting frontend (vercel dev) on port ${PORT}..."
+  > "$FRONTEND_LOG"
+  nohup bash -c "cd '$REPO_ROOT' && npx vercel dev --listen $PORT" >> "$FRONTEND_LOG" 2>&1 &
+
+  if [[ "$PORT" == "0" ]]; then
+    ACTUAL=$(wait_for_port)
+    if [[ -z "$ACTUAL" ]]; then
+      echo "ERROR: Could not detect port after 30s. Check $FRONTEND_LOG"
+      exit 1
+    fi
+    echo "Frontend: running on port $ACTUAL"
+  else
+    echo "$PORT" > "$PORT_FILE"
+    # Wait briefly for ready confirmation
+    for _ in $(seq 1 10); do
+      grep -q "Ready" "$FRONTEND_LOG" 2>/dev/null && break
+      sleep 1
+    done
+    echo "Frontend: running on port $PORT"
+  fi
+
+  echo ""
+  echo "Local dev environment ready:"
+  echo "  App:      http://localhost:${PORT}"
+  echo "  Webhooks: Stripe → localhost:${PORT}/api/stripe/webhook"
+}
+
+# ---------------------------------------------------------------------------
+# Stop: kill everything, restore webhook secret
+# ---------------------------------------------------------------------------
+
+do_stop() {
+  # Stop stripe listen
+  if p=$(stripe_pid); then
+    kill "$p" 2>/dev/null
+    rm -f "$STRIPE_PID_FILE"
+    echo "Stripe listen: stopped"
+  fi
+
+  # Restore original webhook secret
+  if [[ -f "$WEBHOOK_BACKUP" ]]; then
+    original=$(cat "$WEBHOOK_BACKUP")
+    if [[ -n "$original" ]] && [[ -f "$ENV_FILE" ]]; then
+      sed -i '' "s|^STRIPE_WEBHOOK_SECRET=.*|${original}|" "$ENV_FILE"
+      echo "Stripe listen: webhook secret restored"
+    fi
+    rm -f "$WEBHOOK_BACKUP"
+  fi
+
+  # Stop frontend
+  if p=$(frontend_pid); then
+    kill "$p" 2>/dev/null
+    echo "Frontend: stopped"
+  fi
+  rm -f "$PORT_FILE"
+}
+
+# ---------------------------------------------------------------------------
+# Status
+# ---------------------------------------------------------------------------
+
+do_status() {
+  if p=$(frontend_pid); then
+    echo "Frontend: running (pid $p) on port $(actual_port)"
+  else
+    echo "Frontend: not running"
+  fi
+
+  if p=$(stripe_pid); then
+    echo "Stripe listen: running (pid $p)"
+  else
+    echo "Stripe listen: not running"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+case "${1:-}" in
+  start)
+    do_start
+    ;;
+  stop)
+    do_stop
+    ;;
+  restart)
+    do_stop
+    sleep 1
+    do_start
+    ;;
   status)
-    echo "=== Fenrir Ledger service status ==="
-    run_frontend status
+    do_status
     ;;
-
   logs)
-    run_frontend logs
+    tail -f "$FRONTEND_LOG"
     ;;
-
+  stripe-logs)
+    tail -f "$STRIPE_LOG"
+    ;;
   *)
-    echo "Usage: $0 {start|stop|restart|status|logs}"
+    echo "Usage: $0 {start|stop|restart|status|logs|stripe-logs}"
     echo ""
-    echo "Actions:"
-    echo "  start    — start frontend server"
-    echo "  stop     — stop frontend server"
-    echo "  restart  — restart frontend server"
-    echo "  status   — show status of frontend server"
-    echo "  logs     — tail frontend log file"
+    echo "  start        Start Stripe webhook forwarding + frontend (vercel dev)"
+    echo "  stop         Stop everything, restore webhook secret"
+    echo "  restart      Stop then start"
+    echo "  status       Show status of all services"
+    echo "  logs         Tail frontend log"
+    echo "  stripe-logs  Tail Stripe webhook log"
     exit 1
     ;;
 esac
