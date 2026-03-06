@@ -57,56 +57,53 @@ test.describe("Settings page structure", () => {
     await expect(stripeSection).toBeVisible();
   });
 
-  test("TC-FF-104: Cloud Sync gate shows locked upsell card for Thrall users", async ({
+  test("TC-FF-104: Soft gate shows subscribe banner for Thrall users", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    // SubscriptionGate renders a locked upsell card (aria-label ends with "(locked)")
-    // instead of children for Thrall users
-    const cloudSyncLocked = page.locator('[aria-label="Cloud Sync (locked)"]');
-    await expect(cloudSyncLocked).toBeVisible({ timeout: 5000 });
+    // Soft-gated SubscriptionGate renders a subscribe banner (not the hard-gate
+    // locked placeholder) above children for Thrall users
+    const banners = page.locator('[aria-label="Unlock this feature"]');
+    await expect(banners.first()).toBeVisible({ timeout: 5000 });
   });
 
-  test("TC-FF-105: All three gates show locked upsell cards for Thrall users", async ({
+  test("TC-FF-105: All three soft gates show subscribe banners for Thrall users", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    // All three SubscriptionGate instances render locked upsell cards with
-    // aria-label="<Feature Name> (locked)" when the user is a Thrall
-    const cloudSyncLocked = page.locator('[aria-label="Cloud Sync (locked)"]');
-    const multiHouseholdLocked = page.locator('[aria-label="Multi-Household (locked)"]');
-    const dataExportLocked = page.locator('[aria-label="Data Export (locked)"]');
-    await expect(cloudSyncLocked).toBeVisible({ timeout: 5000 });
-    await expect(multiHouseholdLocked).toBeVisible({ timeout: 5000 });
-    await expect(dataExportLocked).toBeVisible({ timeout: 5000 });
-  });
-
-  test("TC-FF-106: Each locked gate has an 'Unlock with Karl' button", async ({
-    page,
-  }) => {
-    await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    // Locked upsell cards render an "Unlock with Karl" CTA button
-    const unlockButtons = page.getByRole("button", { name: /unlock with karl/i });
-    const count = await unlockButtons.count();
+    // All three soft-gated SubscriptionGate instances render subscribe banners
+    const banners = page.locator('[aria-label="Unlock this feature"]');
+    // There should be 3 (one per gated feature: Cloud Sync, Multi-Household, Data Export)
+    const count = await banners.count();
     expect(count).toBeGreaterThanOrEqual(3);
   });
 
-  test("TC-FF-107: Gated sections do NOT render children for Thrall users", async ({
+  test("TC-FF-106: Each soft gate banner has a 'Subscribe' button", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    // The actual feature sections (Cloud Sync, Multi-Household, Data Export)
-    // should NOT be visible -- SubscriptionGate replaces them with the locked placeholder
+    // Soft gate banners have a "Subscribe" CTA button instead of "Learn more"
+    const subscribeButtons = page.getByRole("button", { name: /subscribe/i });
+    const count = await subscribeButtons.count();
+    expect(count).toBeGreaterThanOrEqual(3);
+  });
+
+  test("TC-FF-107: Gated sections render children in soft mode for Thrall users", async ({
+    page,
+  }) => {
+    await clearEntitlementState(page);
+    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
+    // Soft-gated SubscriptionGate always renders children -- the feature sections
+    // are visible even for Thrall users (with a subscribe banner above them)
     const cloudSync = page.locator('[aria-label="Cloud Sync"]');
     const multiHousehold = page.locator('[aria-label="Multi-Household"]');
     const dataExport = page.locator('[aria-label="Data Export"]');
-    expect(await cloudSync.count()).toBe(0);
-    expect(await multiHousehold.count()).toBe(0);
-    expect(await dataExport.count()).toBe(0);
+    await expect(cloudSync).toBeVisible();
+    await expect(multiHousehold).toBeVisible();
+    await expect(dataExport).toBeVisible();
   });
 
   test("TC-FF-108: Settings page header tagline is visible", async ({ page }) => {
@@ -116,15 +113,16 @@ test.describe("Settings page structure", () => {
     await expect(tagline).toBeVisible();
   });
 
-  test("TC-FF-109: 'Coming soon to Karl supporters' text is NOT visible for Thrall users", async ({
+  test("TC-FF-109: 'Coming soon to Karl supporters' text IS visible in soft gate mode", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    // "Coming soon to Karl supporters" is inside gated children -- Thrall users
-    // see the locked placeholder instead, so this text should NOT be visible
+    // In soft gate mode children are always rendered, so "Coming soon to Karl
+    // supporters" text inside the feature sections IS visible for Thrall users
     const comingSoonText = page.getByText("Coming soon to Karl supporters.");
-    expect(await comingSoonText.count()).toBe(0);
+    const count = await comingSoonText.count();
+    expect(count).toBeGreaterThan(0);
   });
 
   test("TC-FF-110: Dashboard loads without errors", async ({

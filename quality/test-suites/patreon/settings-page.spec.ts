@@ -220,25 +220,21 @@ test.describe("Settings Page -- AC-4: Navigation to /settings", () => {
 });
 
 // ============================================================================
-// AC-6: Settings page shows PatreonSettings section (unlinked state)
+// AC-6: Settings page shows Subscription section (formerly PatreonSettings)
 // ============================================================================
 
-test.describe("Settings Page -- AC-6: PatreonSettings section", () => {
-  test("TC-SP-12: Patreon section IS visible for anonymous users (no AuthGate -- PR #110)", async ({
+test.describe("Settings Page -- AC-6: Subscription section", () => {
+  test("TC-SP-12: Subscription section IS visible for anonymous users", async ({
     page,
   }) => {
-    // UPDATED: settings/page.tsx previously wrapped PatreonSettings in <AuthGate>,
-    // but PR #110 (feat/anon-patreon-client) removed AuthGate to support anonymous
-    // Patreon subscriptions. Anonymous users now see the "Subscribe via Patreon" CTA.
-    //
-    // Spec (post-PR #110): PatreonSettings handles auth-awareness internally.
-    // Anonymous users must see the Patreon section with the subscribe CTA.
+    // UPDATED: PatreonSettings was replaced by StripeSettings which uses
+    // aria-label="Subscription". The section is visible for all users
+    // (anonymous and authenticated) -- no AuthGate wrapper.
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
 
-    // PatreonSettings section has aria-label="Patreon subscription"
-    const patreonSection = page.locator('[aria-label="Patreon subscription"]');
-    // Must be visible -- AuthGate removed, anonymous users can access the Patreon CTA
-    await expect(patreonSection).toBeVisible();
+    // StripeSettings section has aria-label="Subscription"
+    const subscriptionSection = page.locator('[aria-label="Subscription"]');
+    await expect(subscriptionSection).toBeVisible();
   });
 
   test.skip("TC-SP-13: 'Link your Patreon' button text visible in unlinked state when authenticated", async ({
