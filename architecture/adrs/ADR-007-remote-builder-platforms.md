@@ -1,9 +1,9 @@
 # ADR-007 — Remote Builder Platforms for Parallel Agent Orchestration
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-03-06
 **Authors:** FiremanDecko (Principal Engineer)
-**Ref:** GitHub Issue #175
+**Ref:** GitHub Issue #175, #192 (implementation)
 
 ---
 

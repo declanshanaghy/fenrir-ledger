@@ -1,11 +1,11 @@
 ---
 name: fire-next-up
-description: "Pull the next 'Up Next' item from the GitHub Project board and run the full agent chain (design → build → validate) in background worktrees. Use when the user says 'fire next up', 'pull next item', 'work on next issue', or wants to dispatch work from the project board. Supports --peek flag to show the queue without dispatching, and --resume #N to continue a chain that was interrupted."
+description: "Pull the next 'Up Next' item from the GitHub Project board and run the full agent chain (design → build → validate) via Depot remote sandboxes (default) or local worktrees (--local). Use when the user says 'fire next up', 'pull next item', 'work on next issue', or wants to dispatch work from the project board. Supports --peek flag to show the queue without dispatching, and --resume #N to continue a chain that was interrupted."
 ---
 
 # Fire Next Up — Pull, Dispatch, and Chain Agents
 
-Pulls the next "Up Next" item from the GitHub Project board and runs the full agent chain for that issue type. Each agent in the chain works on the same branch, commits, and hands off to the next agent automatically.
+Pulls the next "Up Next" item from the GitHub Project board and runs the full agent chain for that issue type. By default, agents run in **Depot remote sandboxes** (fire-and-forget). Use `--local` to fall back to local worktrees. Each agent in the chain works on the same branch, commits, and hands off to the next agent automatically.
 
 ---
 
@@ -37,14 +37,187 @@ Each issue type has a defined chain of agents. When one agent completes, the orc
 | `--peek` | Show the prioritized Up Next queue with agent chains — do NOT spawn anything. |
 | `--resume #N` | Resume an interrupted chain for issue #N. Detects where the chain left off and spawns the next agent. |
 | `--batch N` | Pull the top N **unblocked** items from "Up Next" and start chains for all of them in parallel. Max 5. |
+| `--local` | Force local worktree execution instead of Depot remote sandboxes. |
 | `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
-| *(no flag)* | Default behavior: pick the top item and start the agent chain. |
+| *(no flag)* | Default behavior: pick the top item and start the agent chain via **Depot remote sandbox**. |
 
 When `--peek` is passed, run **Step 1 only**, then display the full queue as a table with columns: `#`, `Title`, `Priority`, `Type`, `Chain`. Stop after the table — do not proceed further.
 
-When `--resume #N` is passed, skip Steps 1–4 and jump directly to the **Resume Flow** section below.
+When `--resume #N` is passed, skip Steps 1-4 and jump directly to the **Resume Flow** section below.
 
 When `--batch N` is passed, follow the **Batch Dispatch** section below.
+
+When `--local` is passed, use local worktrees instead of Depot for all agent spawning. All other behavior remains the same.
+
+---
+
+## Execution Modes: Remote (Default) vs Local
+
+### Remote Mode (Default) — Depot Sandboxes
+
+By default, all agent spawning uses **Depot remote sandboxes**. This offloads CPU/memory
+from the local machine and allows true parallel execution. The orchestrator stays local,
+holds all secrets, and manages the agent chain lifecycle.
+
+**Prerequisites (one-time setup):**
+
+1. Depot CLI installed: `curl -L https://depot.dev/install-cli.sh | sh`
+2. Depot org configured: `DEPOT_ORG_ID` in `.env` (value: `pqtm7s538l`)
+3. Depot token: `DEPOT_TOKEN` in `.env` (obtain from Depot dashboard or `depot login`)
+4. Claude OAuth token: run `claude setup-token` on a machine with a browser, then
+   add via `depot claude secrets add CLAUDE_CODE_OAUTH_TOKEN`
+5. Git credentials: `depot claude secrets add GIT_CREDENTIALS` for repo access
+
+See `.claude/scripts/depot-setup.sh` for the automated setup flow.
+
+**How Depot remote execution works:**
+
+```
+Orchestrator (local)                     Depot Cloud
+       │                                      │
+       │  depot claude \                      │
+       │    --org pqtm7s538l \                │
+       │    --session-id issue-42-step1 \     │
+       │    --repository <repo-url> \         │
+       │    --branch <branch> \               │
+       │    -p "<agent prompt>"               │
+       │ ─────────────────────────────────────>│
+       │                                      │ Sandbox provisioned
+       │  (returns immediately — fire-and-forget)
+       │                                      │ Claude Code runs task
+       │  depot claude list-sessions \        │
+       │    --org pqtm7s538l \                │
+       │    --output json                     │
+       │ ─────────────────────────────────────>│
+       │  <── JSON: [{id, status, ...}] ──────│
+       │                                      │ Worker pushes to git
+       │  (orchestrator detects completion)    │
+       │                                      │
+```
+
+### Depot Session Lifecycle
+
+Each agent step in a chain maps to **one Depot session**. The orchestrator manages the
+full lifecycle: spawn, poll, detect completion, spawn next step.
+
+#### 1. Spawn (Fire-and-Forget)
+
+Launch a Depot session without `--wait`. The command returns immediately with a session ID.
+
+```bash
+depot claude \
+  --org "$DEPOT_ORG_ID" \
+  --session-id "issue-<NUMBER>-step<N>-<agent>" \
+  --repository "https://github.com/declanshanaghy/fenrir-ledger" \
+  --branch "<BRANCH>" \
+  -p "<AGENT PROMPT>"
+```
+
+Session ID naming convention: `issue-<NUMBER>-step<N>-<agent-name>`
+Examples: `issue-42-step1-firemandecko`, `issue-42-step2-loki`
+
+**Do NOT pass `--wait`** — the orchestrator must stay responsive to manage multiple
+concurrent workers and chains.
+
+#### 2. Poll (list-sessions)
+
+Periodically check session status using `list-sessions`:
+
+```bash
+depot claude list-sessions --org "$DEPOT_ORG_ID" --output json
+```
+
+Expected JSON output structure:
+
+```json
+[
+  {
+    "id": "issue-42-step1-firemandecko",
+    "status": "running",
+    "created_at": "2026-03-06T10:00:00Z",
+    "updated_at": "2026-03-06T10:05:00Z",
+    "repository": "https://github.com/declanshanaghy/fenrir-ledger",
+    "branch": "fix/issue-42-description"
+  }
+]
+```
+
+Session states and their meaning:
+
+| Status | Meaning | Orchestrator Action |
+|--------|---------|---------------------|
+| `running` | Agent is actively working | Continue polling (30s interval) |
+| `completed` | Agent exited successfully | Check git for commits, spawn next chain step |
+| `failed` | Agent crashed or errored | Log error, report to user, stop chain |
+| `stopped` | Manually stopped or timed out | Treat as failure, report to user |
+
+**Polling cadence:**
+- First check: 60 seconds after spawn (give the sandbox time to provision)
+- Subsequent checks: every 30 seconds
+- Timeout: 30 minutes per session (configurable). If exceeded, kill and report.
+
+#### 3. Detect Completion
+
+When `list-sessions` reports `completed` for a session:
+
+1. **Verify git state** — confirm the worker pushed commits to the branch:
+   ```bash
+   git fetch origin "<BRANCH>"
+   git log origin/main..origin/<BRANCH> --oneline
+   ```
+2. **Check for handoff comment** on the issue (agents are instructed to comment):
+   ```bash
+   gh issue view <NUMBER> --comments
+   ```
+3. If commits exist on the branch, proceed to spawn the next chain step.
+4. If no commits found despite `completed` status, treat as a silent failure —
+   re-run the step or report to the user.
+
+#### 4. Kill Stuck Workers
+
+If a session exceeds the timeout or appears hung (no `updated_at` change in 10 minutes):
+
+```bash
+# Sessions can be resumed or left to expire.
+# For stuck sessions, note the ID and move on.
+# Depot sessions are ephemeral — the only durable state is git.
+```
+
+Report to the user:
+```
+Worker `issue-42-step1-firemandecko` timed out after 30 minutes.
+Branch state: <N> commits on origin/<BRANCH>.
+Action: Skipping to next chain step / Stopping chain.
+```
+
+### Local Mode (`--local`)
+
+When `--local` is passed, the orchestrator uses **local git worktrees** instead of Depot.
+This is the original behavior — agents run as background Claude Code sessions on the
+local machine using the Agent tool with `isolation: worktree`.
+
+Use `--local` when:
+- Depot is down or unreachable
+- Debugging an agent prompt locally
+- Working offline
+- Quick single-issue fixes where remote overhead is not worth it
+
+All chain logic, handoff detection, and PR creation remain identical. Only the spawning
+mechanism differs.
+
+### Mode Selection Logic
+
+```
+if --local flag is set:
+    use local worktree spawning (Agent tool, isolation: worktree)
+else:
+    check DEPOT_ORG_ID and DEPOT_TOKEN in environment
+    if both present:
+        use Depot remote spawning
+    else:
+        warn: "Depot credentials not configured. Falling back to --local mode."
+        use local worktree spawning
+```
 
 ---
 
@@ -163,7 +336,31 @@ Examples:
 
 ## Step 5 — Spawn Step 1 Agent
 
-Launch the first agent in the chain in a **background worktree** using the Agent tool:
+### Remote Mode (Default — Depot)
+
+Launch the first agent in the chain as a **Depot remote session** (fire-and-forget):
+
+```bash
+depot claude \
+  --org "$DEPOT_ORG_ID" \
+  --session-id "issue-<NUMBER>-step1-<agent-name>" \
+  --repository "https://github.com/declanshanaghy/fenrir-ledger" \
+  --branch "<BRANCH>" \
+  -p "<AGENT PROMPT FROM TEMPLATES BELOW>"
+```
+
+After launching, immediately start the **polling loop** described in the Depot Session
+Lifecycle section. Track the session:
+
+```
+Session: issue-<NUMBER>-step1-<agent-name>
+Status: spawned, polling every 30s
+Timeout: 30 minutes
+```
+
+### Local Mode (`--local`)
+
+Launch the first agent in a **local background worktree** using the Agent tool:
 
 - `subagent_type`: first agent in the chain
 - `isolation`: `worktree`
@@ -408,6 +605,28 @@ Start by reading the issue comments for handoff context, then the acceptance cri
 ---
 
 ## Step 6 — Chain Execution
+
+### Remote Mode (Default — Depot)
+
+The orchestrator **polls** `depot claude list-sessions --org "$DEPOT_ORG_ID" --output json`
+to detect when an agent completes. When a session transitions to `completed`:
+
+1. **Verify git state** — fetch the branch and check for new commits.
+2. **Check for handoff comment** on the issue.
+3. **If the agent failed** (status `failed` or `stopped`, or no commits despite `completed`),
+   stop the chain and tell the user.
+4. **If more steps remain in the chain**, spawn the next agent as a new Depot session:
+   ```bash
+   depot claude \
+     --org "$DEPOT_ORG_ID" \
+     --session-id "issue-<NUMBER>-step<N>-<agent-name>" \
+     --repository "https://github.com/declanshanaghy/fenrir-ledger" \
+     --branch "<BRANCH>" \
+     -p "<AGENT PROMPT>"
+   ```
+5. **If this was the final step** (Loki), report completion to the user with the PR URL.
+
+### Local Mode (`--local`)
 
 When a background agent completes (you receive a task notification):
 
