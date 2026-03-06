@@ -29,7 +29,7 @@ echo "[ok] git credentials configured"
 # 3. Branch setup — create or checkout
 BRANCH="${1:-}"
 if [ -n "$BRANCH" ]; then
-  git fetch origin
+  git fetch origin --prune
   if git branch -r | grep -q "origin/${BRANCH}$"; then
     git checkout "$BRANCH"
     git pull origin "$BRANCH"
