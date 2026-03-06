@@ -1,6 +1,6 @@
 ---
 name: fire-next-up
-description: "Pull the next 'Up Next' item from the GitHub Project board and run the full agent chain (design → build → validate) in background worktrees. Use when the user says 'fire next up', 'pull next item', 'work on next issue', or wants to dispatch work from the project board. Supports --peek flag to show the queue without dispatching."
+description: "Pull the next 'Up Next' item from the GitHub Project board and run the full agent chain (design → build → validate) in background worktrees. Use when the user says 'fire next up', 'pull next item', 'work on next issue', or wants to dispatch work from the project board. Supports --peek flag to show the queue without dispatching, and --resume #N to continue a chain that was interrupted."
 ---
 
 # Fire Next Up — Pull, Dispatch, and Chain Agents
@@ -35,9 +35,13 @@ Each issue type has a defined chain of agents. When one agent completes, the orc
 | Flag | Effect |
 |------|--------|
 | `--peek` | Show the prioritized Up Next queue with agent chains — do NOT spawn anything. |
+| `--resume #N` | Resume an interrupted chain for issue #N. Detects where the chain left off and spawns the next agent. |
+| `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
 | *(no flag)* | Default behavior: pick the top item and start the agent chain. |
 
-When `--peek` is passed, run **Step 1 only**, then display the full queue as a table with columns: `#`, `Title`, `Priority`, `Type`, `Chain`. Stop after the table — do not proceed to Steps 2–7.
+When `--peek` is passed, run **Step 1 only**, then display the full queue as a table with columns: `#`, `Title`, `Priority`, `Type`, `Chain`. Stop after the table — do not proceed further.
+
+When `--resume #N` is passed, skip Steps 1–4 and jump directly to the **Resume Flow** section below.
 
 ---
 
@@ -129,6 +133,26 @@ You are Luna, the UX Designer. Design wireframes for GitHub Issue #<NUMBER>: <TI
 - Use `Ref #<NUMBER>` (not Fixes) — you are not the final agent.
 - Push to the branch when done.
 
+**Handoff — REQUIRED before you finish:**
+After pushing, comment on the issue with handoff notes for FiremanDecko:
+```bash
+gh issue comment <NUMBER> --body "## Luna → FiremanDecko Handoff
+
+**Wireframes committed** on branch \`<BRANCH>\`.
+
+**Files created:**
+- \`ux/wireframes/<file1>.html\`
+- \`ux/wireframes/<file2>.html\` (if applicable)
+
+**Key design decisions:**
+- <Brief summary of layout choices, responsive behavior, interactions>
+
+**Implementation notes for FiremanDecko:**
+- <Any specific component suggestions, existing patterns to reuse, edge cases to handle>
+
+Ready for implementation. 🔨"
+```
+
 **Key reminders:**
 - Read the existing wireframes first to match conventions.
 - Mobile-first: 375px minimum viewport.
@@ -143,11 +167,18 @@ Start by reading the issue, then review existing wireframes in ux/wireframes/ fo
 You are FiremanDecko, the Principal Engineer. Fix GitHub Issue #<NUMBER>: <TITLE>
 
 **Branch name:** `<BRANCH>`
-<If UX Step 2: **Luna's wireframes are already committed on this branch. Read them first: `ux/wireframes/`**>
 
 **Issue details:**
 
 <FULL ISSUE BODY>
+
+**Before you start — read the handoff context:**
+1. Read all comments on the issue for handoff notes from previous agents:
+   `gh issue view <NUMBER> --comments`
+2. Read the commits already on this branch:
+   `git log origin/main..HEAD --oneline`
+3. <If UX chain: Luna's wireframes are on this branch. Read them: `ux/wireframes/`>
+4. Use the previous agent's handoff comment to understand design decisions and what they built.
 
 **Your deliverables:**
 - Implement the fix/feature described in the issue.
@@ -158,13 +189,35 @@ You are FiremanDecko, the Principal Engineer. Fix GitHub Issue #<NUMBER>: <TITLE
 - Use `Ref #<NUMBER>` (not Fixes) — Loki will close the issue after validation.
 - Push to the branch when done.
 
+**Handoff — REQUIRED before you finish:**
+After pushing, comment on the issue with handoff notes for Loki:
+```bash
+gh issue comment <NUMBER> --body "## FiremanDecko → Loki Handoff
+
+**Implementation committed** on branch \`<BRANCH>\`.
+
+**What changed:**
+- \`<file1>\` — <brief description of change>
+- \`<file2>\` — <brief description of change>
+
+**How to verify:**
+- <Step-by-step verification that maps to acceptance criteria>
+- <Key user flows to test>
+
+**Edge cases to cover in tests:**
+- <Any tricky scenarios Loki should write tests for>
+
+**Build status:** tsc clean, next build clean.
+Ready for QA. 🧪"
+```
+
 **Key reminders:**
 - Read the existing code first before making changes.
 - Follow the git-commit skill for branch workflow and commit format.
 - Mobile-friendly: min 375px, two-col collapse pattern.
 - Structured logging on backend code (fenrir logger, not raw console.*).
 
-Start by reading the affected files listed in the issue, then implement the fix.
+Start by reading the issue comments for handoff context, then the affected files, then implement.
 ```
 
 #### Heimdall (Security Specialist) — Step 1 for `type:security`
@@ -184,6 +237,26 @@ You are Heimdall, the Security Specialist. Fix GitHub Issue #<NUMBER>: <TITLE>
 - Commit with message: `security: <description> — Ref #<NUMBER>`
 - Use `Ref #<NUMBER>` (not Fixes) — Loki will close the issue after validation.
 - Push to the branch when done.
+
+**Handoff — REQUIRED before you finish:**
+After pushing, comment on the issue with handoff notes for Loki:
+```bash
+gh issue comment <NUMBER> --body "## Heimdall → Loki Handoff
+
+**Security fix committed** on branch \`<BRANCH>\`.
+
+**What changed:**
+- \`<file1>\` — <brief description of change>
+
+**Security context for tests:**
+- <What the vulnerability was and how it was fixed>
+- <What to test: input validation, auth checks, error handling>
+
+**Verification steps:**
+- <Specific requests or payloads Loki should test>
+
+Ready for QA. 🧪"
+```
 
 **Key reminders:**
 - Read the existing code first before making changes.
@@ -206,14 +279,44 @@ You are Loki, the QA Tester. Validate GitHub Issue #<NUMBER>: <TITLE>
 
 <FULL ISSUE BODY>
 
+**Before you start — read the handoff context:**
+1. Read all comments on the issue for handoff notes from previous agents:
+   `gh issue view <NUMBER> --comments`
+2. Read the commits already on this branch:
+   `git log origin/main..HEAD --oneline`
+3. Use the previous agent's handoff comment to understand what was built, how to verify, and edge cases to test.
+
 **Your deliverables:**
 - Write new Playwright tests in `quality/test-suites/<feature-slug>/` covering the acceptance criteria.
+- Use the previous agent's "How to verify" and "Edge cases" sections to guide your test design.
 - Run the new tests: `cd development/frontend && SERVER_URL=http://localhost:9653 npx playwright test ../../quality/test-suites/<feature-slug>/ --reporter=list`
 - Verify build passes: `cd development/frontend && npx tsc --noEmit && npx next build`
 - Commit tests with message: `test: validate #<NUMBER> — <short description>`
 - Create the PR: `gh pr create --title "<title>" --body "Fixes #<NUMBER>\n\n<summary>"`
 - The PR body MUST contain `Fixes #<NUMBER>` to auto-close the issue on merge.
 - Push to the branch when done.
+
+**Handoff — REQUIRED before you finish:**
+After creating the PR, comment on the issue with your QA verdict:
+```bash
+gh issue comment <NUMBER> --body "## Loki QA Verdict
+
+**PR created:** <PR_URL>
+**Branch:** \`<BRANCH>\`
+**Verdict:** PASS / FAIL
+
+**Tests written:** <N> tests in \`quality/test-suites/<slug>/\`
+**Tests passing:** <N>/<N>
+
+**What was validated:**
+- <AC-1 result>
+- <AC-2 result>
+
+**Build status:** tsc clean, next build clean.
+
+<If PASS: Ready for merge. ✅>
+<If FAIL: Blocked — see failures above. ❌>"
+```
 
 **Key reminders:**
 - Read the existing code AND the previous commits on this branch to understand what was built.
@@ -222,7 +325,7 @@ You are Loki, the QA Tester. Validate GitHub Issue #<NUMBER>: <TITLE>
 - Follow the git-commit skill for branch workflow and commit format.
 - Do NOT run the full regression suite — CI handles that. Only run your new tests.
 
-Start by reading the issue acceptance criteria, then review the commits on this branch, then write and run tests.
+Start by reading the issue comments for handoff context, then the acceptance criteria, then write and run tests.
 ```
 
 ---
@@ -281,6 +384,82 @@ After the final step:
 ```
 **#<NUMBER>**: Chain complete. PR created: <PR_URL>
 ```
+
+---
+
+## Resume Flow (`--resume #N`)
+
+When a chain is interrupted (session ended, agent failed, context lost), use `--resume #N` to pick up where it left off.
+
+### Detection Steps
+
+1. **Fetch issue details** to determine the chain type:
+   ```bash
+   gh issue view <N> --json number,title,body,labels
+   ```
+
+2. **Find the existing branch** by looking for the issue number:
+   ```bash
+   git branch -r | grep "issue-<N>"
+   ```
+   If no branch exists, the chain never started — run a fresh chain instead (same as `/fire-next-up #N`).
+
+3. **Read issue comments** to determine which agents have completed their handoffs:
+   ```bash
+   gh issue view <N> --comments
+   ```
+
+   Look for handoff comment headers to identify completed steps:
+
+   | Comment header | Agent completed | Next agent |
+   |----------------|-----------------|------------|
+   | `## Luna → FiremanDecko Handoff` | Luna | FiremanDecko |
+   | `## FiremanDecko → Loki Handoff` | FiremanDecko | Loki |
+   | `## Heimdall → Loki Handoff` | Heimdall | Loki |
+   | `## Loki QA Verdict` | Loki (chain complete) | — |
+
+   The **last handoff comment** tells you exactly where the chain stopped and who's next.
+
+4. **Check if a PR already exists** for the branch:
+   ```bash
+   gh pr list --head "<BRANCH>" --json number,state
+   ```
+   If a PR exists and Loki's verdict comment is present → chain is complete.
+
+5. **Determine the next step:**
+   - No handoff comments → Step 1 agent failed before completing. Re-run Step 1.
+   - `Luna → FiremanDecko Handoff` exists but no further → spawn FiremanDecko.
+   - `FiremanDecko → Loki Handoff` or `Heimdall → Loki Handoff` exists but no verdict → spawn Loki.
+   - `Loki QA Verdict` exists → chain is complete, tell the user.
+
+6. **Fallback — inspect commits** if no handoff comments exist (agent forgot to comment):
+   ```bash
+   git log origin/main..origin/<BRANCH> --oneline
+   ```
+   Use commit prefixes (`design:`, `fix:`, `security:`, `test:`) as a secondary signal.
+
+### Resume Execution
+
+Once the next agent is identified:
+
+1. Report to the user what was detected:
+   ```
+   **Resuming #<N>**: <title>
+   **Chain:** <full chain>
+   **Completed:** Step 1 (<AgentName>) — found `<commit prefix>` commits
+   **Resuming at:** Step <X>/<Total> — spawning <NextAgentName>
+   ```
+
+2. Spawn the next agent using the same prompt templates from Step 5, on the **existing branch**.
+
+3. Continue normal chain execution from Step 6 onward.
+
+### Edge Cases
+
+- **Branch exists but no commits beyond main** — the previous agent failed before committing. Re-run that step (same agent, same branch).
+- **Multiple agents' commits exist but chain isn't complete** — skip to the next incomplete step.
+- **PR exists but CI failed** — tell the user. They may want to fix CI issues manually or re-run the failing agent.
+- **Issue is closed** — tell the user the issue is already closed. Do not spawn agents.
 
 ---
 
