@@ -16,6 +16,18 @@ set -euo pipefail
 
 QUERY="${1:-}"
 MODE="${2:---default}"
+
+# Strip URL to session ID if a depot.dev URL was passed
+QUERY="${QUERY##*/}"
+
+# Extract a search term from the session ID for local file matching.
+# Depot session IDs (e.g. "issue-199-step1-firemandecko-v4") are NOT stored
+# in the JSONL files, but the branch name (e.g. "fix/issue-199-...") IS.
+# Extract the issue number to use as a content search key.
+SEARCH_KEY="$QUERY"
+if [[ "$QUERY" =~ issue-([0-9]+) ]]; then
+  SEARCH_KEY="issue-${BASH_REMATCH[1]}"
+fi
 ORG_ID="${DEPOT_ORG_ID:-pqtm7s538l}"
 PROJECT_DIR="$HOME/.claude/projects/-Users-declanshanaghy-src-github-com-declanshanaghy-fenrir-ledger"
 
@@ -51,7 +63,7 @@ if [ -d "$PROJECT_DIR" ]; then
     lines=$(wc -l < "$f" | tr -d ' ')
     # Depot sessions are 10-200 lines; skip tiny or large files
     if [ "$lines" -gt 5 ] && [ "$lines" -lt 200 ]; then
-      if grep -q "$QUERY" "$f" 2>/dev/null; then
+      if grep -q "$SEARCH_KEY" "$f" 2>/dev/null; then
         SESSION_FILE="$f"
         break
       fi
@@ -60,15 +72,9 @@ if [ -d "$PROJECT_DIR" ]; then
 fi
 
 if [ -z "$SESSION_FILE" ]; then
-  echo "ERROR: Could not find session matching: $QUERY" >&2
-  echo "" >&2
-  echo "Possible causes:" >&2
-  echo "  - Session ID doesn't match any local file content" >&2
-  echo "  - Session hasn't been downloaded (try --wait --resume manually)" >&2
-  echo "" >&2
-  echo "Hint: Depot session IDs are NOT stored in the JSONL files." >&2
-  echo "Search by content instead (branch name, issue number):" >&2
-  echo "  depot-session-log.sh fix/issue-199" >&2
+  echo "ERROR: Could not find session matching: $QUERY (search key: $SEARCH_KEY)" >&2
+  echo "The session may not have been downloaded yet." >&2
+  echo "Try: depot claude --wait --resume $QUERY --org $ORG_ID" >&2
   exit 1
 fi
 
