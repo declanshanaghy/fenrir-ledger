@@ -394,3 +394,89 @@ These components have the highest density of small text and will need careful re
 ### Wireframe
 
 See [Font Size Scale wireframe](wireframes/accessibility/font-size-scale.html) for a visual before/after comparison of the typography hierarchy and component samples (card tile, form, sidebar, Howl panel).
+
+---
+
+## Button Feedback States (Issue #150)
+
+All interactive buttons across the app must provide visual feedback on hover, click, and during async operations. See [wireframes/chrome/button-feedback-states.html](wireframes/chrome/button-feedback-states.html) for the full visual spec.
+
+### Trigger
+User hovers over, clicks, or triggers an async action via any button.
+
+### Behavior
+
+**Hover (CSS-only, :hover pseudo-class):**
+1. Primary (gold) buttons: `filter: brightness(1.15)` + border glow (gold tint box-shadow).
+2. Secondary/ghost buttons: subtle background fill (`rgba(255,255,255,0.05)`), border brightens.
+3. Destructive buttons: danger color intensifies, subtle red background tint.
+4. Transition: `150ms ease-out` on filter, border-color, background-color, box-shadow.
+
+**Active/Pressed (CSS-only, :active pseudo-class):**
+1. All variants: `transform: scale(0.97)` + `filter: brightness(0.9)`.
+2. Transition: `80ms ease-out` -- must feel instantaneous.
+3. Provides "click registered" feedback before any async work begins.
+
+**Loading (React state, for async buttons only):**
+1. On click, set `isLoading = true` in component state.
+2. Render: 14px circular spinner (CSS rotate animation, 0.8s linear infinite) + contextual text ("Redirecting...", "Saving...", "Canceling...").
+3. Button receives `disabled` + `aria-busy="true"` + `aria-disabled="true"`.
+4. Opacity drops to 0.7, cursor changes to `not-allowed`, `pointer-events: none`.
+5. Sibling action buttons in the same group also become disabled (opacity 0.4) to prevent conflicting actions.
+6. On success: loading state clears (redirect happens or operation completes).
+7. On error: revert to default state, show error toast via sonner (5s auto-dismiss).
+
+**Disabled (static, not loading):**
+1. Opacity 0.4, cursor `not-allowed`, no hover/active effects.
+2. `aria-disabled="true"`.
+
+### Flow Diagram
+
+```mermaid
+stateDiagram-v2
+    classDef primary fill:#03A9F4,stroke:#0288D1,color:#FFF
+
+    [*] --> Default: Button rendered
+
+    Default --> Hover: Mouse enters (CSS :hover)
+    Hover --> Default: Mouse leaves
+    Hover --> Active: Mouse down (CSS :active)
+    Active --> Hover: Mouse up (still hovering)
+    Active --> Loading: Mouse up triggers async action
+
+    Default --> Loading: Click triggers async action
+    Loading --> Default: Success (redirect or complete)
+    Loading --> Default: Failure (revert + error toast)
+
+    Default --> Disabled: External condition
+    Disabled --> Default: Condition clears
+
+    class Loading primary
+```
+
+### States
+- **Default**: Normal appearance, interactive, cursor: pointer.
+- **Hover**: Brightness shift + border glow (CSS-only, 150ms).
+- **Active**: Scale down + darken (CSS-only, 80ms).
+- **Loading**: Spinner + text + disabled + aria-busy (React state).
+- **Disabled**: Reduced opacity + not-allowed cursor (static).
+
+### Animations/Transitions
+
+| Property | Duration | Easing | Notes |
+|----------|----------|--------|-------|
+| filter (hover) | 150ms | ease-out | Brightness shift |
+| border-color (hover) | 150ms | ease-out | Glow effect |
+| background-color (hover) | 150ms | ease-out | Secondary/destructive fill |
+| box-shadow (hover) | 150ms | ease-out | Gold glow on primary |
+| transform (active) | 80ms | ease-out | scale(0.97) press effect |
+| opacity (loading/disabled) | 150ms | ease-out | Fade to loading/disabled |
+| spinner rotation | 800ms | linear | Infinite loop |
+
+### Edge Cases
+- **Double-click prevention**: Loading state disables the button immediately on first click. `pointer-events: none` prevents any queued events.
+- **Fast operations (localStorage)**: If the operation completes in under 300ms, show loading state for a minimum of 300ms to avoid jarring flicker.
+- **Redirect operations (Stripe)**: Loading state persists until the page navigates away. If the redirect takes over 10s, show an error toast and revert.
+- **Touch devices**: No hover state available. Active (scale 0.97) provides the primary tap feedback. Use `@media (hover: hover)` to scope hover styles to devices that support it.
+- **Reduced motion**: `@media (prefers-reduced-motion: reduce)` disables scale transforms and spinner rotation. Opacity changes are preserved (not motion).
+- **Keyboard navigation**: `:focus-visible` ring must remain visible and meet WCAG 2.1 AA 3:1 contrast. Loading state announced via `aria-busy`.

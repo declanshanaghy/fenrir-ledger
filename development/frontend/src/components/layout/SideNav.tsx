@@ -84,10 +84,12 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
               href={item.href}
               title={collapsed ? item.label : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-sm px-2.5 py-2 text-base transition-colors",
+                "flex items-center gap-3 rounded-sm px-2.5 py-2 text-base",
+                "transition-[transform,filter,background-color,color,border-color] duration-150 ease-out",
+                "active:scale-[0.98] active:brightness-90",
                 isActive
                   ? "bg-primary/10 text-gold border-l-2 border-gold"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground border-l-2 border-transparent"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground hover:brightness-110 border-l-2 border-transparent"
               )}
             >
               {/* Render custom iconNode (rune) or fallback to Lucide icon */}
@@ -109,7 +111,9 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
             "flex items-center gap-3 w-full rounded-sm px-2.5 py-2 text-base min-h-[44px]",
-            "text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            "text-muted-foreground hover:bg-secondary hover:text-foreground",
+            "transition-[transform,filter,background-color,color] duration-150 ease-out",
+            "active:scale-[0.98] active:brightness-90"
           )}
         >
           {collapsed ? (
