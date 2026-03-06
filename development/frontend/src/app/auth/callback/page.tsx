@@ -20,7 +20,7 @@
  * See ADR-005 for the auth architecture decision.
  */
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { setSession } from "@/lib/auth/session";
 import type { FenrirSession } from "@/lib/types";
@@ -83,8 +83,15 @@ function AuthCallbackContent() {
   const searchParams = useSearchParams();
   const [callbackStatus, setCallbackStatus] = useState<CallbackStatus>("exchanging");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  // Guard against React StrictMode double-mount: only one exchange should run.
+  const exchangeStartedRef = useRef(false);
 
   useEffect(() => {
+    // If an exchange is already in progress (StrictMode re-mount), skip silently
+    // instead of falling through to the "PKCE data missing" error state.
+    if (exchangeStartedRef.current) return;
+    exchangeStartedRef.current = true;
+
     const code = searchParams.get("code");
     const stateParam = searchParams.get("state");
     const errorParam = searchParams.get("error");
@@ -126,8 +133,10 @@ function AuthCallbackContent() {
       return;
     }
 
-    // Clean up PKCE transient data immediately after reading.
-    sessionStorage.removeItem(PKCE_SESSION_KEY);
+    // NOTE: PKCE data is NOT cleared here. It is cleared only after a successful
+    // token exchange (below). This prevents a race condition where React StrictMode
+    // double-mount or a re-render would find the data already cleared and flash
+    // an error before the first mount's async exchange completes.
 
     const redirectUri = `${window.location.origin}/auth/callback`;
 
@@ -175,6 +184,9 @@ function AuthCallbackContent() {
         };
 
         setSession(session);
+
+        // Clean up PKCE transient data only after successful exchange.
+        sessionStorage.removeItem(PKCE_SESSION_KEY);
 
         // Silent merge: carry anonymous cards into the Google household
         const { getAnonHouseholdId } = await import("@/lib/auth/household");
