@@ -221,6 +221,46 @@ else:
 
 ---
 
+## Pre-Flight — Worktree Health Check
+
+Before any dispatch, verify that no nested or stale worktrees exist. Nested worktrees
+are a bug — they occur when a subagent creates `.claude/worktrees/` relative to its
+CWD (which is itself a worktree) instead of the repo root.
+
+```bash
+REPO_ROOT=$(git worktree list --porcelain | head -1 | sed 's/^worktree //')
+
+# List all worktrees and check for nesting
+git worktree list --porcelain | grep '^worktree ' | sed 's/^worktree //' | while read -r wt; do
+  # Skip the main worktree
+  [ "$wt" = "$REPO_ROOT" ] && continue
+  # Count occurrences of .claude/worktrees/ in the path
+  COUNT=$(echo "$wt" | grep -o '\.claude/worktrees/' | wc -l)
+  if [ "$COUNT" -gt 1 ]; then
+    echo "WARNING: Nested worktree detected: $wt"
+    echo "Removing nested worktree..."
+    git worktree remove "$wt" --force 2>/dev/null || rm -rf "$wt"
+  fi
+done
+
+# Prune any worktrees whose directories no longer exist
+git worktree prune
+```
+
+If nested worktrees were found and cleaned, report before continuing:
+
+```
+**Worktree health check:** Cleaned up N nested worktree(s). All worktrees now flat under $REPO_ROOT/.claude/worktrees/.
+```
+
+If no issues found, proceed silently.
+
+**IMPORTANT:** When spawning agents in `--local` mode, always follow the
+`create-worktree` skill to resolve the repo root first. Never create worktrees
+relative to CWD.
+
+---
+
 ## Step 0 — Orphan PR Check
 
 Before dispatching new work, check for orphaned PRs that need attention.
@@ -680,6 +720,45 @@ After the final step:
 ```
 **#<NUMBER>**: Chain complete. PR created: <PR_URL>
 ```
+
+### Worktree Cleanup (Local Mode Only)
+
+After a chain completes (Loki merges or chain fails), clean up the worktrees used
+by that chain. This prevents stale worktrees from accumulating.
+
+```bash
+REPO_ROOT=$(git worktree list --porcelain | head -1 | sed 's/^worktree //')
+
+# Remove worktrees for this chain's agents
+# Pattern: issue-<NUMBER>-* matches all agent worktrees for this issue
+for wt in "$REPO_ROOT/.claude/worktrees/issue-<NUMBER>-"*; do
+  if [ -d "$wt" ]; then
+    echo "Cleaning up worktree: $wt"
+    git worktree remove "$wt" --force 2>/dev/null || rm -rf "$wt"
+  fi
+done
+
+# Prune git's worktree registry for any removed directories
+git worktree prune
+```
+
+For batch dispatch cleanup (after ALL chains complete):
+
+```bash
+REPO_ROOT=$(git worktree list --porcelain | head -1 | sed 's/^worktree //')
+
+# Remove all agent worktrees (keeps the directory structure)
+for wt in "$REPO_ROOT/.claude/worktrees/"*; do
+  if [ -d "$wt" ]; then
+    git worktree remove "$wt" --force 2>/dev/null || rm -rf "$wt"
+  fi
+done
+
+git worktree prune
+```
+
+**Note:** Remote mode (Depot) does not create local worktrees, so cleanup is not
+needed. Depot sandboxes are ephemeral and self-destruct after the session ends.
 
 ---
 
