@@ -183,69 +183,38 @@ quality/
 
 ## Automated Orchestration
 
-The `/orchestrate` command automates this pipeline using worktree isolation.
+Work flows through two skills:
 
-### Entry Point
-Run `/orchestrate <requirements>` to trigger the full pipeline.
+| Skill | Purpose |
+|-------|---------|
+| `/plan_w_team` | Break work into GitHub Issues with labels, dependencies, and acceptance criteria. Interviews Odin via Freya, wireframes via Luna (if UI). |
+| `/fire-next-up` | Pull the next issue from "Up Next" on the Project board and run the full agent chain (design -> build -> validate) in a background worktree. |
+
+### How it works
+
+1. **Plan**: `/plan_w_team "add CSV export"` — Freya interviews Odin, Luna wireframes (if UI), then files 1-5 GitHub Issues to Project #1.
+2. **Execute**: `/fire-next-up` — picks the top unblocked issue from "Up Next", determines the agent chain from the `type:` label, and runs each agent sequentially on the same branch.
+3. **Batch**: `/fire-next-up --batch 3` — picks top 3 unblocked issues and runs chains in parallel.
+4. **Resume**: `/fire-next-up --resume #N` — detects where an interrupted chain left off (via issue comments) and spawns the next agent.
+
+### Agent Chains
+
+Each issue type maps to a chain of agents. Earlier agents use `Ref #N`; only the final agent (Loki) uses `Fixes #N` in the PR to auto-close the issue.
+
+| Type label | Chain |
+|------------|-------|
+| `type:bug` | FiremanDecko -> Loki |
+| `type:feature` | FiremanDecko -> Loki |
+| `type:ux` | Luna -> FiremanDecko -> Loki |
+| `type:security` | Heimdall -> Loki |
+| `type:test` | Loki |
+
+### Dependencies
+
+Issues created by `/plan_w_team` may include `Blocked by #N` in their body. `/fire-next-up` checks blocking issues before dispatching — blocked items are skipped until their dependencies close.
 
 ### Worktree Strategy
 
-**All worktree creation is handled by the orchestrator via `/create-worktree` and `/remove-worktree` skills.** Worktrees live at `$(git rev-parse --show-toplevel)-trees/` — a sibling directory to the repo root, OUTSIDE the repo. This prevents nesting and pollution.
+Each agent chain runs in an isolated background worktree. The chain orchestrator creates the worktree, spawns agents sequentially on the same branch, and each agent commits and pushes before handing off.
 
-**NEVER use `isolation: "worktree"` on Agent calls.** Agents receive the worktree path in their prompt.
-
-| Phase | Branch Pattern | Agents | Worktree |
-|-------|---------------|--------|----------|
-| Product + UX | `design/<slug>` | Freya, Luna (shared worktree) | `/create-worktree design/<slug>` |
-| Build | `feat/<slug>` | FiremanDecko | `/create-worktree feat/<slug>` per story |
-| Validate | (same branch) | Loki | Runs from main, reads worktree path from prompt |
-
-**Critical rules:**
-- Orchestrator creates worktrees BEFORE spawning agents, passes the path in the prompt
-- Agents `cd` to the worktree path — they never create worktrees themselves
-- Loki validators run from main and read/review code at the worktree path
-- Orchestrator cleans up worktrees with `/remove-worktree` after PRs merge
-
-### Parallelism Strategy
-
-**Independent stories run in parallel.** The orchestrator analyzes the dependency graph:
-
-| Pattern | Execution |
-|---------|-----------|
-| No dependencies between stories | Launch all FiremanDecko agents simultaneously, each in its own worktree via `isolation: "worktree"` + `run_in_background: true` |
-| Linear dependencies (A → B → C) | Sequential — wait for A to pass QA before starting B |
-| Mixed | Parallel for independent, sequential for dependent |
-
-**Agent launch pattern for parallel builds:**
-```
-// Single message with multiple Agent calls — all launch simultaneously
-Agent({ subagent_type: "fireman-decko-principal-engineer", isolation: "worktree", run_in_background: true, ... })
-Agent({ subagent_type: "fireman-decko-principal-engineer", isolation: "worktree", run_in_background: true, ... })
-```
-
-**Agent launch pattern for parallel validation:**
-```
-// After all builds complete, launch all Loki validators simultaneously
-Agent({ subagent_type: "loki-qa-tester", run_in_background: true, ... })  // PR #1
-Agent({ subagent_type: "loki-qa-tester", run_in_background: true, ... })  // PR #2
-```
-
-### Post-PR Validation
-
-After PRs are pushed, Loki runs a **post-PR validation pass** that includes:
-1. GH Actions CI status (`gh pr checks <N> --watch`)
-2. Build verification in worktree
-3. Merge conflict detection
-4. Final code review
-
-If post-PR validation fails, FiremanDecko is resumed in the same worktree to fix.
-
-### Retry Policy
-- Max 3 build-validate attempts per story
-- On failure: escalate to user with Loki's report
-- On success: commit, push, create PR, cleanup worktree
-- FiremanDecko and Loki alternate in the same worktree during fix loops
-
-### Story Sequencing
-- **Independent stories**: execute in parallel across isolated worktrees
-- **Dependent stories**: execute sequentially, each branching from updated main after the previous story's PR merges
+Agents post structured handoff comments on the GitHub Issue (e.g. `## FiremanDecko -> Loki Handoff`) so the next agent in the chain can read context via `gh issue view <N> --comments`.

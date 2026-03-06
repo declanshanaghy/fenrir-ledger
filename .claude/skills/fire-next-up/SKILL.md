@@ -36,12 +36,15 @@ Each issue type has a defined chain of agents. When one agent completes, the orc
 |------|--------|
 | `--peek` | Show the prioritized Up Next queue with agent chains — do NOT spawn anything. |
 | `--resume #N` | Resume an interrupted chain for issue #N. Detects where the chain left off and spawns the next agent. |
+| `--batch N` | Pull the top N **unblocked** items from "Up Next" and start chains for all of them in parallel. Max 5. |
 | `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
 | *(no flag)* | Default behavior: pick the top item and start the agent chain. |
 
 When `--peek` is passed, run **Step 1 only**, then display the full queue as a table with columns: `#`, `Title`, `Priority`, `Type`, `Chain`. Stop after the table — do not proceed further.
 
 When `--resume #N` is passed, skip Steps 1–4 and jump directly to the **Resume Flow** section below.
+
+When `--batch N` is passed, follow the **Batch Dispatch** section below.
 
 ---
 
@@ -463,10 +466,68 @@ Once the next agent is identified:
 
 ---
 
+## Batch Dispatch (`--batch N`)
+
+Pull the top N unblocked items from "Up Next" and start chains for all in parallel. Max 5.
+
+### Steps
+
+1. **Query the board** — same as Step 1.
+2. **Prioritize and filter** — same as Step 2, but select the top N items instead of 1.
+3. **Check for blocked issues** — for each candidate, scan its body for `Blocked by #N`:
+
+   ```bash
+   gh issue view <NUMBER> --json body --jq '.body' | grep -oP 'Blocked by #\K\d+'
+   ```
+
+   For each blocking issue number, check if it's still open:
+
+   ```bash
+   gh issue view <BLOCKING_NUMBER> --json state --jq '.state'
+   ```
+
+   If ANY blocking issue is still `OPEN`, **skip this item** and move to the next in priority order. Report skipped items in the output.
+
+4. **Spawn chains** — for each unblocked item, run Steps 3–5 (determine chain, build branch, spawn Step 1 agent). All chains run in parallel background worktrees.
+
+5. **Report** — show all dispatched chains and any skipped (blocked) items:
+
+   ```
+   **Batch dispatched:** N chains
+
+   | # | Title | Chain | Status |
+   |---|-------|-------|--------|
+   | #A | ... | Decko -> Loki | Running |
+   | #B | ... | Luna -> Decko -> Loki | Running |
+   | #C | ... | Decko -> Loki | Blocked by #A — skipped |
+   ```
+
+6. **Chain execution** — each chain runs independently per Step 6. When a chain completes, report it. When all chains complete, report the batch summary.
+
+### Batch rules
+
+- Max 5 parallel chains — if N > 5, cap at 5 and tell the user.
+- Each chain is independent — a failure in one does not stop others.
+- Blocked items are skipped, not queued. Run `/fire-next-up` again after blockers resolve.
+- If fewer than N unblocked items exist, dispatch whatever is available and report the shortfall.
+
+---
+
+## Dependency Checking
+
+Before dispatching ANY issue (single or batch), check if it's blocked:
+
+1. Read the issue body for `Blocked by #N` references.
+2. For each referenced issue, check if it's still open.
+3. If blocked:
+   - **Single dispatch**: warn the user and ask if they want to proceed anyway or pick the next unblocked item.
+   - **Batch dispatch**: skip silently and pick the next unblocked item.
+
+---
+
 ## Notes
 
-- Only spawn **one chain per invocation** unless the user explicitly asks for parallel chains.
-- If the selected issue depends on an in-progress PR (check `gh pr list --state open`), warn the user about potential merge conflicts.
+- Only spawn **one chain per invocation** unless `--batch` is used.
 - Each agent in the chain handles its own commits and pushes. Do NOT duplicate their work in the main context.
 - The orchestrator's job is to **coordinate the chain**, not to build. Never do an agent's work yourself.
 - If an agent goes idle (no completion after a reasonable time), kill and respawn per team norms.
