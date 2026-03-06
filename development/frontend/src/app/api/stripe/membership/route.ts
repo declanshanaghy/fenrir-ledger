@@ -125,7 +125,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       });
       const sub = await stripe.subscriptions.retrieve(cached.stripeSubscriptionId);
       cancelAtPeriodEnd = sub.cancel_at_period_end;
-      currentPeriodEnd = new Date(sub.current_period_end * 1000).toISOString();
+      const item = sub.items.data[0];
+      currentPeriodEnd = item
+        ? new Date(item.current_period_end * 1000).toISOString()
+        : new Date().toISOString();
 
       // Update KV cache with the new fields
       await setStripeEntitlement(googleSub, {
@@ -150,8 +153,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     customerId: cached.stripeCustomerId,
     linkedAt: cached.linkedAt,
     stripeStatus: cached.stripeStatus,
-    cancelAtPeriodEnd,
-    currentPeriodEnd,
+    ...(cancelAtPeriodEnd !== undefined && { cancelAtPeriodEnd }),
+    ...(currentPeriodEnd !== undefined && { currentPeriodEnd }),
   };
   log.debug("GET /api/stripe/membership returning", {
     status: 200,
