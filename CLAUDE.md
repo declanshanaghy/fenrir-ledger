@@ -1,5 +1,20 @@
 # Fenrir Ledger — Claude Code Rules
 
+## Scripting & Data Processing
+
+**Always use simple, standard bash commands first.** When you need to parse JSON, filter
+output, or process data, reach for `jq`, `grep`, `awk`, `sed`, or `cut` — never Python,
+Ruby, or other interpreters for one-off data wrangling. These tools are universally
+available, fast, and don't depend on environment-specific setup (e.g. pyenv, nvm).
+
+- **JSON processing** → `jq`
+- **Text filtering** → `grep`, `awk`, `sed`, `cut`
+- **File searching** → dedicated Claude Code tools (Glob, Grep, Read) or `find`
+- **HTTP requests** → `curl`
+
+Only reach for a full programming language when the task genuinely requires it (e.g.
+complex logic, multi-step transformations, or actual application code).
+
 ## Branching (UNBREAKABLE RULE)
 
 **Never commit or push directly to `main`.** All work happens on a branch, regardless of how small the change.
