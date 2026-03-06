@@ -90,10 +90,13 @@ case "$MODE" in
 
   --errors)
     jq -r '
-      if .type == "tool_result" then
-        .content[] |
-        if .type == "text" and (.text | test("(?i)error|fatal|failed|denied|not found|no such")) then
-          "ERROR: " + (.text | .[0:500])
+      if .type == "user" then
+        .message.content[]? |
+        if .type == "tool_result" then
+          .content as $c |
+          if ($c | type) == "string" and ($c | test("(?i)error|fatal|failed|denied|not found|no such")) then
+            "ERROR: " + ($c | .[0:500])
+          else empty end
         else empty end
       else empty end
     ' "$SESSION_FILE"
@@ -106,33 +109,39 @@ case "$MODE" in
         if .type == "tool_use" then
           "TOOL: " + .name + "\n  INPUT: " + (.input | tostring | .[0:500])
         else empty end
-      elif .type == "tool_result" then
-        .content[] |
-        if .type == "text" then
-          "  OUTPUT: " + (.text | .[0:500])
+      elif .type == "user" then
+        .message.content[]? |
+        if .type == "tool_result" then
+          .content as $c |
+          if ($c | type) == "string" and ($c | length) > 0 then
+            "  OUTPUT: " + ($c | .[0:500])
+          else empty end
         else empty end
       else empty end
     ' "$SESSION_FILE"
     ;;
 
   *)
-    # Default: compact view with assistant messages and tool calls
+    # Default: show assistant messages, tool calls, and tool outputs
     jq -r '
       if .type == "assistant" then
         .message.content[] |
         if .type == "text" then
-          ">>> " + .text
+          "\n>>> " + .text
         elif .type == "tool_use" then
-          "TOOL: " + .name + " -- " + (.input | tostring | .[0:200])
+          "\nTOOL: " + .name + " -- " + (.input | tostring | .[0:200])
         else empty end
-      elif .type == "tool_result" then
-        .content[] |
-        if .type == "text" then
-          if (.text | test("(?i)error|fatal|failed|denied")) then
-            "!!! " + (.text | .[0:300])
-          else
-            "<<< " + (.text | .[0:200])
-          end
+      elif .type == "user" then
+        .message.content[]? |
+        if .type == "tool_result" then
+          .content as $c |
+          if ($c | type) == "string" and ($c | length) > 0 then
+            if ($c | test("(?i)error|fatal|failed|denied|warning")) then
+              "!!! " + ($c | .[0:500])
+            else
+              "    " + ($c | .[0:500])
+            end
+          else empty end
         else empty end
       else empty end
     ' "$SESSION_FILE"
