@@ -37,7 +37,6 @@ Each issue type has a defined chain of agents. When one agent completes, the orc
 | `--peek` | Show the prioritized Up Next queue with agent chains — do NOT spawn anything. |
 | `--resume #N` | Resume an interrupted chain for issue #N. Detects where the chain left off and spawns the next agent. |
 | `--batch N` | Pull the top N **unblocked** items from "Up Next" and start chains for all of them in parallel. Max 5. |
-| `--remote` | Dispatch the agent chain to GitHub Actions instead of local worktrees. Can combine with `#N` or `--batch N`. |
 | `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
 | *(no flag)* | Default behavior: pick the top item and start the agent chain. |
 
@@ -46,8 +45,6 @@ When `--peek` is passed, run **Step 1 only**, then display the full queue as a t
 When `--resume #N` is passed, skip Steps 1–4 and jump directly to the **Resume Flow** section below.
 
 When `--batch N` is passed, follow the **Batch Dispatch** section below.
-
-When `--remote` is passed, follow the **Remote Dispatch** section below.
 
 ---
 
@@ -599,67 +596,6 @@ Before dispatching ANY issue (single or batch), check if it's blocked:
 3. If blocked:
    - **Single dispatch**: warn the user and ask if they want to proceed anyway or pick the next unblocked item.
    - **Batch dispatch**: skip silently and pick the next unblocked item.
-
----
-
-## Remote Dispatch (`--remote`)
-
-Instead of spawning agents in local worktrees, dispatch the entire agent chain to a GitHub Actions workflow. The local orchestrator stays lightweight — it only selects the issue, determines the chain, and triggers the remote workflow.
-
-### Prerequisites
-
-- The `ANTHROPIC_API_KEY` secret must be configured in the repository's GitHub Actions secrets.
-- The workflow `.github/workflows/agent-chain.yml` must exist on the default branch (or the branch being dispatched).
-
-### How it works
-
-1. **Steps 1–4 run locally** — query the board, select the item, determine the chain, build the branch name. These are lightweight and instant.
-
-2. **Step 5 dispatches remotely** instead of spawning a local worktree agent:
-
-   ```bash
-   gh workflow run agent-chain.yml \
-     -f issue_number="<NUMBER>" \
-     -f branch_name="<BRANCH>" \
-     -f chain_type="<TYPE>"
-   ```
-
-   Where `<TYPE>` is one of: `bug`, `feature`, `ux`, `security`, `test`.
-
-3. **Report the dispatch** to the user with the run URL:
-
-   ```
-   **#<NUMBER>**: <title>
-   **Chain:** <Agent1> → <Agent2> → <Agent3>
-   **Dispatched to:** GitHub Actions (remote)
-   **Monitor:** https://github.com/<owner>/<repo>/actions/runs/<run_id>
-
-   The chain will execute remotely. Each agent posts handoff comments on the issue.
-   Use `--resume #N` if the remote chain fails and needs local intervention.
-   ```
-
-4. **No local waiting.** The orchestrator returns immediately after dispatch. The remote workflow handles chain execution, handoff comments, PR creation, and auto-merge.
-
-### Combining with other flags
-
-- `--remote #N` — dispatch a specific issue remotely.
-- `--remote --batch N` — dispatch N issues remotely. Each gets its own workflow run.
-- `--remote --resume #N` — not supported. Use `--resume #N` (local) to recover from remote failures.
-
-### Monitoring remote chains
-
-After dispatch, the user can monitor via:
-- GitHub Actions UI: workflow runs show each step as a separate job
-- Issue comments: each agent posts handoff comments as it completes
-- `gh run list --workflow=agent-chain.yml` to see active/recent runs
-
-### Cost awareness
-
-Remote dispatch uses GitHub Actions minutes and Anthropic API credits:
-- Each agent step runs for up to 30 minutes (configurable via `timeout_minutes` input)
-- Estimated cost: ~$5.25/issue (Opus build + Sonnet QA + runner time)
-- Monitor spending via GitHub Settings > Billing > Actions
-- Consider using `--remote` for heavy builds and local dispatch for quick fixes
 
 ---
 
