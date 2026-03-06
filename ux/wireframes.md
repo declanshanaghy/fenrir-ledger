@@ -256,7 +256,7 @@ Single-page, no framework, inline CSS/JS. Five sections:
 | STEPS | 3-step flow | Forge → Watch → Break Free |
 | FOOTER | | Logo · quote · runic cipher · CTA · legal links · credits |
 
-**Footer legal links (new):** The footer now includes a legal links row between the Session Chronicles link and the team credits. Structure: `(c) 2026 Fenrir Ledger · Privacy Policy · Terms of Service`. Links navigate same-tab to `/static/privacy.html` and `/static/terms.html`. Required for Patreon OAuth compliance. See [static-site-footer.html](wireframes/marketing/static-site-footer.html) for the dedicated footer wireframe with full annotations.
+**Footer legal links:** The footer includes a legal links row between the Session Chronicles link and the team credits. Structure: `(c) 2026 Fenrir Ledger · Privacy Policy · Terms of Service`. Links navigate same-tab to `/static/privacy.html` and `/static/terms.html`. See [static-site-footer.html](wireframes/marketing/static-site-footer.html) for the dedicated footer wireframe with full annotations.
 
 Easter egg placements visible in wireframe annotations (Gleipnir Hunt #5 on ©, Loki Mode on "Loki").
 
@@ -268,7 +268,7 @@ Easter egg placements visible in wireframe annotations (Gleipnir Hunt #5 on ©, 
 
 [-> stripe-settings.html](wireframes/stripe-direct/stripe-settings.html)
 
-Settings page component replacing PatreonSettings. Three subscription states:
+Settings page component for Stripe subscription management. Three subscription states:
 
 | State | Badge | Actions | Notes |
 |-------|-------|---------|-------|
@@ -277,7 +277,7 @@ Settings page component replacing PatreonSettings. Three subscription states:
 | Canceled | `KARL` / Canceled | `[Resubscribe]` `[Manage Subscription]` | Access-until date shown. Resubscribe creates new checkout session. |
 
 Key layout decisions:
-- Same card pattern as PatreonSettings (section heading + status + actions).
+- Card pattern: section heading + status badge + action buttons.
 - Works for both anonymous and authenticated users -- the only difference is the email collection step.
 - Billing history lives in Stripe Customer Portal (not in our UI).
 - Mobile: buttons stack vertically, full width.
