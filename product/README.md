@@ -14,6 +14,7 @@ Freya shapes the vision before the forge ever heats. Nothing moves downstream un
 - [platform-recommendation.md](platform-recommendation.md) — Platform decision rationale: why Stripe Direct, implementation strategy, Substack content marketing recommendation.
 - [handoff-to-luna-anon-auth.md](handoff-to-luna-anon-auth.md) — Handoff to Luna: anonymous-first auth + cloud sync upsell wireframe requirements.
 - [backlog/README.md](backlog/README.md) — Historical backlog index (Sprints 1-5 shipped). Active backlog now in GitHub Issues.
+- [backlog/card-wizard-multi-step-form.md](backlog/card-wizard-multi-step-form.md) — Multi-Step Card Wizard: 2-step form for `/cards/new` with quick-save from Step 1.
 - [backlog/future-deferred.md](backlog/future-deferred.md) — Items explicitly deferred with rationale.
 
 ### Shipped Stories (Historical)

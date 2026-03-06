@@ -42,6 +42,10 @@ logs/
 tmp/
 development/frontend/.claude/
 
+# Agent worktrees (ephemeral, cleaned up after chain completion)
+.claude/worktrees/
+.claire/
+
 
 # doc-sync run artifacts (ephemeral, coordinator reads then discards)
 .sync-report.md

@@ -73,9 +73,7 @@ and PRs.
 - Include `Fixes #<number>` in your commit message or PR body to auto-close on merge
 
 **Filing your own issues:**
-- Use the title format: `[Type] [Priority]: Short description`
-  - Type: `Bug`, `Feature`, `UX`, `Security`, `Test`
-  - Priority: `P1` (critical), `P2` (high), `P3` (medium), `P4` (low)
+- Title: short, descriptive. No `[Type]` or `[Priority]` prefixes — use labels instead.
 - Apply both a type label and a priority label:
   - Type: `type:bug`, `type:ux`, `type:feature`, `type:security`, `type:test`
   - Priority: `P1-critical`, `P2-high`, `P3-medium`, `P4-low`

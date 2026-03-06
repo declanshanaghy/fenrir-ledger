@@ -1,18 +1,22 @@
 ---
 name: Issue
 about: Bug, feature, UX, security, or test coverage issue
-title: "[TYPE] [PRIORITY]: "
+title: ""
 labels: ''
 assignees: ''
 ---
 
-<!-- TITLE FORMAT: [Type] [Priority]: Short description
+<!-- TITLE: Short, descriptive title. No type/priority prefixes — use labels instead.
      Examples:
-       [Bug] [P1]: Howl panel overlaps user menu
-       [Feature] [P3]: Add financial sort options to Valhalla
-       [UX] [P2]: Increase base font sizes for readability
-       [Security] [P2]: LLM prompt injection via CSV content
-       [Test] [P2]: Stripe cancellation state coverage gaps
+       Howl panel overlaps user menu
+       Add financial sort options to Valhalla
+       Increase base font sizes for readability
+       LLM prompt injection via CSV content
+       Stripe cancellation state coverage gaps
+
+     LABELS (set via sidebar, not title):
+       type:bug / type:feature / type:ux / type:security / type:test
+       P1-critical / P2-high / P3-medium / P4-low
 -->
 
 ## Problem
