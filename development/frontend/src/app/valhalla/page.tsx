@@ -32,7 +32,8 @@ import { getClosedCards, initializeHousehold, migrateIfNeeded } from "@/lib/stor
 import { isGleipnirComplete } from "@/lib/gleipnir-utils";
 import { GleipnirBirdSpittle, useGleipnirFragment6 } from "@/components/cards/GleipnirBirdSpittle";
 import { formatDate, formatCurrency } from "@/lib/card-utils";
-import { KNOWN_ISSUERS } from "@/lib/constants";
+import { getIssuerName, getIssuerRune } from "@/lib/issuer-utils";
+import { IssuerLogo } from "@/components/shared/IssuerLogo";
 import { getRealmLabel } from "@/lib/realm-utils";
 import type { Card } from "@/lib/types";
 
@@ -48,14 +49,6 @@ const MAX_STAGGER_DELAY_S = 0.56; // 8 cards × 0.07 s
 const EXPO_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Returns the human-readable issuer name from the issuer ID.
- */
-function getIssuerName(issuerId: string): string {
-  const issuer = KNOWN_ISSUERS.find((i) => i.id === issuerId);
-  return issuer?.name ?? issuerId;
-}
 
 /**
  * Computes the number of months between two ISO date strings.
@@ -155,7 +148,6 @@ interface TombstoneCardProps {
 function TombstoneCard({ card, index }: TombstoneCardProps) {
   const staggerDelay = Math.min(index * 0.07, MAX_STAGGER_DELAY_S);
 
-  const issuerName = getIssuerName(card.issuerId);
   const openedFormatted = formatDate(card.openDate);
   const closedFormatted = card.closedAt ? formatDate(card.closedAt) : "—";
   const heldDuration = card.closedAt
@@ -219,11 +211,16 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
         </span>
       </div>
 
-      {/* Meta: issuer · opened · held duration */}
-      <p className="text-xs text-muted-foreground">
-        {issuerName}
-        {openedFormatted ? ` · Opened ${openedFormatted}` : ""}
-        {heldDuration ? ` · Held ${heldDuration}` : ""}
+      {/* Meta: issuer (rune + logo) · opened · held duration */}
+      <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
+        {getIssuerRune(card.issuerId) && (
+          <span className="text-gold/60 text-[0.7rem]" aria-hidden="true">
+            {getIssuerRune(card.issuerId)}
+          </span>
+        )}
+        <IssuerLogo issuerId={card.issuerId} className="inline-block align-middle opacity-70" />
+        {openedFormatted ? <span>· Opened {openedFormatted}</span> : null}
+        {heldDuration ? <span>· Held {heldDuration}</span> : null}
       </p>
 
       {/* Hairline rule */}

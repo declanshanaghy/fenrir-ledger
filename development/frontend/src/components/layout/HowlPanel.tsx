@@ -26,7 +26,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import type { Card } from "@/lib/types";
 import { daysUntil, formatDate, formatCurrency } from "@/lib/card-utils";
-import { KNOWN_ISSUERS } from "@/lib/constants";
+import { getIssuerRune } from "@/lib/issuer-utils";
+import { IssuerLogo } from "@/components/shared/IssuerLogo";
 import { cn } from "@/lib/utils";
 import { useRagnarok } from "@/contexts/RagnarokContext";
 
@@ -44,15 +45,6 @@ interface UrgentCardRow {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Returns the human-readable issuer name from KNOWN_ISSUERS, or the raw
- * issuerId if not found.
- */
-function getIssuerName(issuerId: string): string {
-  const issuer = KNOWN_ISSUERS.find((i) => i.id === issuerId);
-  return issuer?.name ?? issuerId;
-}
 
 /**
  * Computes UrgentCardRow entries for a list of cards that have status
@@ -131,13 +123,18 @@ function UrgentRow({ row }: UrgentRowProps) {
         </span>
       </div>
 
-      {/* Row 2: card name + issuer */}
+      {/* Row 2: card name + issuer (rune badge + logo) */}
       <div className="mb-1">
         <p className="text-sm font-heading text-foreground leading-tight truncate">
           {card.cardName}
         </p>
-        <p className="text-xs text-muted-foreground truncate">
-          {getIssuerName(card.issuerId)}
+        <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+          {getIssuerRune(card.issuerId) && (
+            <span className="text-gold/70 text-[0.7rem]" aria-hidden="true">
+              {getIssuerRune(card.issuerId)}
+            </span>
+          )}
+          <IssuerLogo issuerId={card.issuerId} className="inline-block align-middle opacity-80" />
         </p>
       </div>
 
