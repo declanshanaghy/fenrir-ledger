@@ -79,7 +79,8 @@ Orchestrator (local)                     Depot Cloud
        │    --org pqtm7s538l \                │
        │    --session-id issue-42-step1 \     │
        │    --repository <repo-url> \         │
-       │    --branch <branch> \               │
+       │    --branch main \                   │
+       │    --dangerously-skip-permissions \   │
        │    -p "<agent prompt>"               │
        │ ─────────────────────────────────────>│
        │                                      │ Sandbox provisioned
@@ -110,6 +111,7 @@ depot claude \
   --session-id "issue-<NUMBER>-step<N>-<agent>" \
   --repository "https://github.com/declanshanaghy/fenrir-ledger" \
   --branch "main" \
+  --dangerously-skip-permissions \
   -p "<AGENT PROMPT>"
 ```
 
@@ -436,6 +438,7 @@ depot claude \
   --session-id "issue-<NUMBER>-step1-<agent-name>" \
   --repository "https://github.com/declanshanaghy/fenrir-ledger" \
   --branch "main" \
+  --dangerously-skip-permissions \
   -p "<AGENT PROMPT FROM TEMPLATES BELOW>"
 ```
 
@@ -726,6 +729,7 @@ to detect when an agent completes. When a session transitions to `completed`:
      --session-id "issue-<NUMBER>-step<N>-<agent-name>" \
      --repository "https://github.com/declanshanaghy/fenrir-ledger" \
      --branch "main" \
+     --dangerously-skip-permissions \
      -p "<AGENT PROMPT>"
    ```
    The agent's prompt includes instructions to checkout the existing branch.
