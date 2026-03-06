@@ -125,6 +125,7 @@ export function SubscriptionGate({ feature, children }: SubscriptionGateProps) {
           Unlock with Karl
         </button>
       </section>
+      {children}
     </>
   );
 }
