@@ -118,17 +118,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // If cached entitlement is missing period end info (pre-existing records),
   // do a live Stripe lookup to backfill it
   let { cancelAtPeriodEnd, currentPeriodEnd } = cached;
-  if (currentPeriodEnd === undefined && cached.stripeSubscriptionId) {
+  if (cached.stripeSubscriptionId) {
     try {
       log.debug("GET /api/stripe/membership: backfilling period end from Stripe", {
         subscriptionId: cached.stripeSubscriptionId,
       });
       const sub = await stripe.subscriptions.retrieve(cached.stripeSubscriptionId);
-      cancelAtPeriodEnd = sub.cancel_at_period_end;
-      const item = sub.items.data[0];
-      currentPeriodEnd = item
-        ? new Date(item.current_period_end * 1000).toISOString()
-        : new Date().toISOString();
+      cancelAtPeriodEnd = sub.cancel_at_period_end || sub.cancel_at !== null;
+      currentPeriodEnd = sub.cancel_at
+        ? new Date(sub.cancel_at * 1000).toISOString()
+        : sub.items.data[0]
+          ? new Date(sub.items.data[0].current_period_end * 1000).toISOString()
+          : new Date().toISOString();
 
       // Update KV cache with the new fields
       await setStripeEntitlement(googleSub, {

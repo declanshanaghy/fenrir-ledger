@@ -69,8 +69,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   try {
     // Determine the base URL for success/cancel redirects (SEV-002 fix: never use Origin header)
+    // vercel dev sets VERCEL_URL but runs plain HTTP — only use https for deployed environments
     const baseUrl = process.env.APP_BASE_URL
-      ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:9653");
+      ?? (process.env.VERCEL_URL
+        ? (process.env.VERCEL_ENV === "development"
+          ? `http://${process.env.VERCEL_URL}`
+          : `https://${process.env.VERCEL_URL}`)
+        : "http://localhost:9653");
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
