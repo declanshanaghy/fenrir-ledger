@@ -176,9 +176,9 @@ test.describe("Soft gate banners -- shown above feature sections for Thrall user
     // In hard-gate mode these are the FEATURE_DESCRIPTIONS strings rendered by the
     // locked upsell card (not the section-children text, which is hidden for Thrall users).
     // Assert partial text matches that are present regardless of gating mode.
-    await expect(page.getByText("Sync your card data across all your devices")).toBeVisible();
-    await expect(page.getByText("Track cards for multiple households")).toBeVisible();
-    await expect(page.getByText("Export your card data as CSV or JSON")).toBeVisible();
+    await expect(page.getByText("Sync your card data across all your devices").first()).toBeVisible();
+    await expect(page.getByText("Track cards for multiple households").first()).toBeVisible();
+    await expect(page.getByText("Export your card data as CSV or JSON").first()).toBeVisible();
   });
 });
 
@@ -262,7 +262,7 @@ test.describe("Settings page baseline rendering", () => {
     // button is only rendered for Karl subscribers). Assert the gate section itself is present.
     await expect(page.getByRole("region", { name: "Data Export", exact: true })).toBeVisible();
     // The feature description from the upsell card must be present
-    await expect(page.getByText("Export your card data as CSV or JSON")).toBeVisible();
+    await expect(page.getByText("Export your card data as CSV or JSON").first()).toBeVisible();
   });
 });
 
