@@ -19,10 +19,6 @@
           {
             "type": "command",
             "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/observability/pre_tool_use.py"
-          },
-          {
-            "type": "command",
-            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/observability/send_event.py --source-app fenrir-ledger --event-type PreToolUse --summarize"
           }
         ]
       }
@@ -34,10 +30,6 @@
           {
             "type": "command",
             "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/observability/post_tool_use.py"
-          },
-          {
-            "type": "command",
-            "command": "uv run /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-ledger/.claude/hooks/observability/send_event.py --source-app fenrir-ledger --event-type PostToolUse --summarize"
           }
         ]
       }

@@ -480,3 +480,108 @@ stateDiagram-v2
 - **Touch devices**: No hover state available. Active (scale 0.97) provides the primary tap feedback. Use `@media (hover: hover)` to scope hover styles to devices that support it.
 - **Reduced motion**: `@media (prefers-reduced-motion: reduce)` disables scale transforms and spinner rotation. Opacity changes are preserved (not motion).
 - **Keyboard navigation**: `:focus-visible` ring must remain visible and meet WCAG 2.1 AA 3:1 contrast. Loading state announced via `aria-busy`.
+
+---
+
+## Error Handling & Disabled Element Patterns (Project-Wide)
+
+These conventions apply to every form and interactive element in the app, not just specific features.
+
+### Disabled Buttons Must Explain Why
+
+A disabled button without explanation is a dead end. The user must always understand what action will unblock the button.
+
+**Pattern 1 -- Tooltip (preferred):**
+
+```tsx
+<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <span tabIndex={0}>
+        <Button disabled={!isValid}>Save Card</Button>
+      </span>
+    </TooltipTrigger>
+    <TooltipContent>
+      Fill in all required fields to save
+    </TooltipContent>
+  </Tooltip>
+</TooltipProvider>
+```
+
+The wrapping `<span tabIndex={0}>` ensures the tooltip is keyboard-accessible even when the button is disabled (disabled elements do not receive focus by default).
+
+**Pattern 2 -- Inline helper text (when space allows):**
+
+```tsx
+<Button disabled={!isValid}>Save Card</Button>
+{!isValid && (
+  <p className="text-sm text-muted-foreground mt-1">
+    Issuer, card name, and open date are required.
+  </p>
+)}
+```
+
+**Rules:**
+1. Tooltip text must be actionable: tell the user what to do, not just what is wrong. "Fill in required fields" is better than "Form is incomplete".
+2. Tooltip must be accessible via keyboard focus (`:focus-visible`), not hover-only.
+3. The tooltip or helper text must update dynamically as the form state changes.
+4. Loading-state buttons (spinner + `aria-busy`) are a separate pattern and do not need a tooltip -- the spinner communicates "working".
+
+### Required Field Error Highlighting
+
+When a form submit or step advance is attempted with invalid required fields:
+
+**Sequence:**
+1. Validate all fields via the form's Zod schema (react-hook-form `handleSubmit` handles this).
+2. Each invalid field receives:
+   - A red border: `border-destructive` (maps to `--destructive` CSS variable).
+   - An error message directly below the field: `<p className="text-sm text-destructive">{message}</p>`.
+3. The form scrolls to the first invalid field in DOM order (`scrollToFirstError` utility).
+4. The first invalid field receives focus.
+5. Error messages clear when the user corrects the field (react-hook-form clears on re-validation).
+
+**Implementation reference:**
+
+```tsx
+// Team norm: scrollToFirstError on validation failure
+const scrollToFirstError = (errs: Record<string, unknown>) => {
+  const elements = Object.keys(errs)
+    .map((key) => document.getElementById(key))
+    .filter((el): el is HTMLElement => el !== null)
+    .sort((a, b) =>
+      a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+    );
+  if (elements.length > 0) {
+    elements[0]!.scrollIntoView({ behavior: "smooth", block: "center" });
+    elements[0]!.focus();
+  }
+};
+
+// Usage with react-hook-form
+<form onSubmit={handleSubmit(onSubmit, scrollToFirstError)}>
+```
+
+**Rules:**
+1. Every form field's `id` attribute must match its react-hook-form field name. This is how `scrollToFirstError` finds the DOM element.
+2. `shouldFocusError: false` must be set on the `useForm` config so react-hook-form does not fight the custom scroll behavior.
+3. Error text uses `text-sm text-destructive` -- never `text-xs` or custom red hex values.
+4. Error borders use `border-destructive` -- never inline red styles.
+
+### Error Highlighting Visual Spec
+
+```css
+/* Error state — applied by react-hook-form when field is invalid */
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: hsl(var(--destructive));
+  box-shadow: 0 0 0 1px hsl(var(--destructive) / 0.3);
+}
+```
+
+### Accessibility Requirements
+
+- Error messages must be associated with their field via `aria-describedby`.
+- The error message element should have `role="alert"` or use `aria-live="polite"` so screen readers announce errors as they appear.
+- Disabled buttons must have `aria-disabled="true"` in addition to the HTML `disabled` attribute.
+- Tooltip content for disabled buttons must be reachable by keyboard (wrap in focusable span if the button itself cannot receive focus).

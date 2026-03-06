@@ -176,7 +176,7 @@ Blocked by #N
 ```bash
 # Create the issue
 gh issue create \
-  --title "[Type] [Priority]: Short description" \
+  --title "Short descriptive title" \
   --label "type:<type>,<Priority>-<level>" \
   --body "$(cat <<'EOF'
 <issue body from template above>

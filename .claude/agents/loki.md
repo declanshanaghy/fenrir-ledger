@@ -125,7 +125,7 @@ documentation, not the tracking system.
 **Example:**
 ```bash
 gh issue create \
-  --title "[Bug] [P1]: Howl panel overlaps top-right user menu" \
+  --title "Howl panel overlaps top-right user menu" \
   --body "## Problem
 The Howl panel overlaps the user menu dropdown...
 
