@@ -10,56 +10,97 @@ debugging agent failures, auditing what an agent did, and checking for errors.
 
 ## Usage
 
-```bash
-bash .claude/scripts/depot-session-log.sh <session-id> [--raw|--errors|--tools]
+```
+/depot-logs <session-id-or-url> [--errors|--tools|--raw|--critique]
 ```
 
 ## Modes
 
 | Flag | Output |
 |------|--------|
-| *(default)* | Compact view: assistant messages + tool calls, errors highlighted with `!!!` |
+| *(default)* | Full log: assistant messages + tool calls + tool outputs. Errors highlighted with `!!!`. |
 | `--errors` | Only lines containing error/fatal/failed/denied |
 | `--tools` | Tool calls with full input and output (verbose) |
 | `--raw` | Raw JSONL for piping to `jq` |
+| `--critique` | Full log + deviation analysis comparing agent actions against instructions |
 
-## Examples
+## How to execute this skill
 
-```bash
-# List available sessions
-bash .claude/scripts/depot-session-log.sh
+### Default mode (and --errors, --tools, --raw)
 
-# View compact log
-bash .claude/scripts/depot-session-log.sh issue-199-step1-firemandecko-v4
+1. **Run the script** to generate the log file:
+   ```bash
+   bash .claude/scripts/depot-session-log.sh <session-id> [--errors|--tools|--raw]
+   ```
+2. **Read the log file** with the Read tool:
+   ```
+   Read: tmp/depot-logs/<session>.log
+   ```
+3. **Output the full file contents** directly as text in your response. Do NOT
+   summarize, condense, or paraphrase. Show the complete log.
+4. **Show the file path** at the end:
+   ```
+   Log saved to: tmp/depot-logs/<session>.log
+   ```
 
-# Show only errors
-bash .claude/scripts/depot-session-log.sh issue-199-step1-firemandecko-v4 --errors
+**IMPORTANT:** The user cannot see Bash tool output. You MUST read the log file
+with the Read tool and output its FULL contents as text. No summaries.
 
-# Full tool input/output
-bash .claude/scripts/depot-session-log.sh issue-199-step1-firemandecko-v4 --tools
-```
+### --critique mode
 
-## How to use this skill
+When the user passes `--critique`, perform ALL of the default mode steps above,
+then perform a deviation analysis:
 
-1. Run the script via Bash tool
-2. Read the generated log file with the Read tool and display it to the user
-3. Tell the user where the log file is saved
+1. **Extract the system prompt** — the instructions the agent was given. Run:
+   ```bash
+   bash .claude/scripts/depot-session-log.sh <session-id> --raw 2>/dev/null \
+     | head -1 | jq -r '.message.content' > tmp/depot-logs/<session>.prompt.txt
+   ```
+2. **Read the prompt file** with the Read tool.
+3. **Read the agent prompt template** from `.claude/skills/fire-next-up/SKILL.md`
+   to understand the expected steps for this agent type.
+4. **Compare the agent's actual actions** (from the log) against the instructions
+   (from the prompt). Check for ANY deviation, no matter how small:
 
-```
-# Step 1: Run the script
-bash .claude/scripts/depot-session-log.sh <session-id> [--raw|--errors|--tools]
+   - Did the agent follow the numbered steps in order?
+   - Did the agent skip any step?
+   - Did the agent take actions NOT listed in its steps?
+   - Did the agent add unsolicited messages, summaries, or status declarations?
+   - Did the agent declare the issue "resolved", "fixed", or "done"?
+   - Did the agent use correct commit message format (`Ref #N` not `Fixes #N`)?
+   - Did the agent create the PR when instructed (or skip it)?
+   - Did the agent post the handoff comment in the exact format specified?
+   - Did the agent use absolute paths and `cd <REPO_ROOT>` prefix?
+   - Did the agent run verification steps (tsc, next build) as instructed?
+   - Did the agent read CLAUDE.md and its persona file as instructed?
+   - Any other divergence from the literal instructions?
 
-# Step 2: Read and display the log file
-# The script prints the log path on the last line: "Log saved: tmp/depot-logs/<session>.log"
-# Use the Read tool to read that file, then output the contents to the user.
+5. **Output a deviation report** as a table after the full log:
 
-# Step 3: Tell the user
-# "Log saved to: tmp/depot-logs/<session>.log"
-```
+   ```
+   ## Deviation Report — <session-id>
 
-**IMPORTANT:** Always use the Read tool to read the log file and output the contents
-directly as text in your response. Do NOT just run the script in a Bash tool — the
-user cannot see Bash tool output. They need the content in your response text.
+   | # | Severity | Step | Expected | Actual | Impact |
+   |---|----------|------|----------|--------|--------|
+   | 1 | HIGH | — | No resolution claims | Agent declared "Issue #N resolved" | Misleading status |
+   | 2 | LOW | 1 | Read CLAUDE.md | Skipped | May miss project rules |
+   | ... | ... | ... | ... | ... | ... |
+
+   **Verdict:** N deviation(s) found. [CLEAN / NEEDS REFINEMENT]
+
+   Suggested prompt changes:
+   - <specific wording change to prevent deviation #1>
+   - <specific wording change to prevent deviation #2>
+   ```
+
+   Severity levels:
+   - **HIGH** — Agent took an unauthorized action, skipped a critical step, or
+     produced incorrect output (wrong commit format, missing PR, resolution claim)
+   - **MEDIUM** — Agent deviated from prescribed order or format but the outcome
+     was still correct
+   - **LOW** — Minor style or ordering issue with no functional impact
+
+6. **Save the critique** to `tmp/depot-logs/<session>.critique.md`
 
 ## How It Works
 
