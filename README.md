@@ -82,7 +82,7 @@ cd fenrir-ledger
 | UX Designer | Luna | [Agent](.claude/agents/luna.md) | [ux/](ux/README.md) |
 | Principal Engineer | FiremanDecko | [Agent](.claude/agents/fireman-decko.md) | [development/](development/README.md) · [architecture/](architecture/) |
 | Security Specialist | Heimdall | [Agent](.claude/agents/heimdall.md) | [security/](security/README.md) |
-| QA Tester | Loki | [Agent](.claude/agents/loki.md) | [quality/](quality/README.md) — 575 tests across 26 suites |
+| QA Tester | Loki | [Agent](.claude/agents/loki.md) | [quality/](quality/README.md) — 577 tests across 26 suites |
 
 ## The Pipeline
 
