@@ -170,18 +170,15 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 *The trickster tests. His verdicts are final.*
 
 - [quality/README.md](quality/README.md) — Index of all QA artifacts, verdicts, and test execution guide
-- [quality/test-suites/](quality/test-suites/) — Playwright test suites: easter eggs, navigation, accessibility, responsive, import, valhalla, layout, feature-flags, theme-toggle, stripe-direct, patreon-removal, import-wireframe-fixes, auth, card-crud (350+ tests)
-- [quality/test-suites/auth/sign-in.spec.ts](quality/test-suites/auth/sign-in.spec.ts) — 17-test suite: /sign-in page rendering, heading variants, Google button, responsive (PR #138)
-- [quality/test-suites/auth/auth-callback.spec.ts](quality/test-suites/auth/auth-callback.spec.ts) — 13-test suite: /auth/callback graceful degradation (missing params, PKCE errors, CSRF, loading state) (PR #138)
-- [quality/test-suites/card-crud/edit-card.spec.ts](quality/test-suites/card-crud/edit-card.spec.ts) — 16-test suite: card edit form pre-population, editable fields, save, cancel, edge cases (PR #138)
-- [quality/test-suites/import-wireframe-fixes/import-wireframe-fixes.spec.ts](quality/test-suites/import-wireframe-fixes/import-wireframe-fixes.spec.ts) — 15-test suite: PR #136 import wireframe fixes — Details toggle, format help, Begin Import button text (all passing)
-- [quality/test-suites/patreon-removal/patreon-removal.spec.ts](quality/test-suites/patreon-removal/patreon-removal.spec.ts) — 36-test suite: PR #128 Patreon removal validation (14 route 404s, 0 Patreon text, Stripe-only entitlement, all passing)
-- [quality/test-suites/stripe-direct/stripe-direct.spec.ts](quality/test-suites/stripe-direct/stripe-direct.spec.ts) — 37-test suite: PR #119+#120 Stripe Direct Integration AC-1 through AC-14 (all passing)
-- [quality/test-suites/theme-toggle/theme-foundation.spec.ts](quality/test-suites/theme-toggle/theme-foundation.spec.ts) — 20-test suite: PR #116 Story 1 theme foundation (17 pass, 3 fail — DEF-TF-001)
-- [quality/test-suites/feature-flags/feature-flags.spec.ts](quality/test-suites/feature-flags/feature-flags.spec.ts) — 12-test suite: PR #113 feature flag registry + Patreon route guards (all 7 routes verified in default mode)
-- [quality/test-suites/anon-patreon-client/anon-patreon-client.spec.ts](quality/test-suites/anon-patreon-client/anon-patreon-client.spec.ts) — 34-test suite: PR #110 anonymous Patreon client AC-1 through AC-7
-- [quality/test-plan.md](quality/test-plan.md) — Test strategy and coverage plan
-- [quality/quality-report.md](quality/quality-report.md) — Latest QA verdict: PR #136 PASS — Import Wireframe Fixes (15/15 Playwright tests passing)
+- [quality/test-suites/](quality/test-suites/) — Playwright test suites: easter-eggs, navigation, accessibility, responsive, import, valhalla, layout, feature-flags, theme-toggle, stripe-direct, patreon-removal, import-wireframe-fixes, auth, card-crud, card-lifecycle, dashboard, settings-soft-gate (549 tests across 25 spec files)
+- [quality/test-suites/settings-soft-gate/settings-soft-gate.spec.ts](quality/test-suites/settings-soft-gate/settings-soft-gate.spec.ts) — 38-test suite: PR #137 SubscriptionGate soft mode, Settings page sections visible, subscribe banner, no regressions (all passing)
+- [quality/test-suites/auth/sign-in.spec.ts](quality/test-suites/auth/sign-in.spec.ts) — 25-test suite: /sign-in page rendering, heading variants, Google button, responsive (PR #138)
+- [quality/test-suites/auth/auth-callback.spec.ts](quality/test-suites/auth/auth-callback.spec.ts) — 21-test suite: /auth/callback graceful degradation (missing params, PKCE errors, CSRF, loading state) (PR #138)
+- [quality/test-suites/card-crud/edit-card.spec.ts](quality/test-suites/card-crud/edit-card.spec.ts) — 22-test suite: card edit form pre-population, editable fields, save, cancel, edge cases (PR #138)
+- [quality/test-suites/patreon-removal/patreon-removal.spec.ts](quality/test-suites/patreon-removal/patreon-removal.spec.ts) — 29-test suite: PR #128 Patreon removal — routes 404, zero Patreon text, Stripe-only entitlement (all passing)
+- [quality/test-suites/stripe-direct/stripe-direct.spec.ts](quality/test-suites/stripe-direct/stripe-direct.spec.ts) — 43-test suite: PR #119+#120 Stripe Direct Integration AC-1 through AC-14 (all passing)
+- [quality/test-suites/feature-flags/feature-flags.spec.ts](quality/test-suites/feature-flags/feature-flags.spec.ts) — 18-test suite: PR #113 feature flag registry (all passing)
+- [quality/quality-report.md](quality/quality-report.md) — Latest QA report: 549 tests all PASS, Stripe Direct live, Patreon removed. Recommendation: SHIP
 
 ### ᚠ Pack Operations
 
