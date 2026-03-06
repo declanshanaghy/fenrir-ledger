@@ -62,8 +62,8 @@ holds all secrets, and manages the agent chain lifecycle.
 **Prerequisites (one-time setup):**
 
 1. Depot CLI installed: `curl -L https://depot.dev/install-cli.sh | sh`
-2. Depot org configured: `DEPOT_ORG_ID` in `.env` (value: `pqtm7s538l`)
-3. Depot token: `DEPOT_TOKEN` in `.env` (obtain from Depot dashboard or `depot login`)
+2. Depot login: `depot login` (browser OAuth — no env var token needed)
+3. Depot org configured: `DEPOT_ORG_ID` in `.env` (value: `pqtm7s538l`)
 4. Claude OAuth token: run `claude setup-token` on a machine with a browser, then
    add via `depot claude secrets add CLAUDE_CODE_OAUTH_TOKEN`
 5. Git credentials: `depot claude secrets add GIT_CREDENTIALS` for repo access
@@ -72,27 +72,27 @@ See `.claude/scripts/depot-setup.sh` for the automated setup flow.
 
 **How Depot remote execution works:**
 
-```
-Orchestrator (local)                     Depot Cloud
-       │                                      │
-       │  depot claude \                      │
-       │    --org pqtm7s538l \                │
-       │    --session-id issue-42-step1 \     │
-       │    --repository <repo-url> \         │
-       │    --branch <branch> \               │
-       │    -p "<agent prompt>"               │
-       │ ─────────────────────────────────────>│
-       │                                      │ Sandbox provisioned
-       │  (returns immediately — fire-and-forget)
-       │                                      │ Claude Code runs task
-       │  depot claude list-sessions \        │
-       │    --org pqtm7s538l \                │
-       │    --output json                     │
-       │ ─────────────────────────────────────>│
-       │  <── JSON: [{id, status, ...}] ──────│
-       │                                      │ Worker pushes to git
-       │  (orchestrator detects completion)    │
-       │                                      │
+```mermaid
+sequenceDiagram
+    participant 🐺 as Orchestrator<br/>(local)
+    participant ☁️ as Depot Cloud
+    participant 🌿 as Git Remote
+
+    Note over 🐺,☁️: ᚠ DISPATCH — Fire & Forget
+
+    🐺->>+☁️: depot claude --org ... --branch main<br/>--dangerously-skip-permissions<br/>-p "agent prompt"
+    ☁️-->>🐺: (returns immediately)
+
+    Note over ☁️: ⚒️ Sandbox provisioned<br/>Claude Code runs task
+
+    loop ᛉ Poll every 30s
+        🐺->>☁️: depot claude list-sessions --output json
+        ☁️-->>🐺: [{session_id, created_at, updated_at}]
+    end
+
+    ☁️->>🌿: git push (commits on feature branch)
+
+    Note over 🐺,🌿: ᚱ COMPLETION — Orchestrator detects<br/>new commits, spawns next chain step
 ```
 
 ### Depot Session Lifecycle
@@ -109,7 +109,8 @@ depot claude \
   --org "$DEPOT_ORG_ID" \
   --session-id "issue-<NUMBER>-step<N>-<agent>" \
   --repository "https://github.com/declanshanaghy/fenrir-ledger" \
-  --branch "<BRANCH>" \
+  --branch "main" \
+  --dangerously-skip-permissions \
   -p "<AGENT PROMPT>"
 ```
 
@@ -207,16 +208,22 @@ mechanism differs.
 
 ### Mode Selection Logic
 
-```
-if --local flag is set:
-    use local worktree spawning (Agent tool, isolation: worktree)
-else:
-    check DEPOT_ORG_ID and DEPOT_TOKEN in environment
-    if both present:
-        use Depot remote spawning
-    else:
-        warn: "Depot credentials not configured. Falling back to --local mode."
-        use local worktree spawning
+```mermaid
+flowchart TD
+    A{"🐺 --local flag?"}
+    A -->|Yes| B["⚒️ Local worktree spawning<br/>(Agent tool, isolation: worktree)"]
+    A -->|No| C{"ᚠ DEPOT_ORG_ID<br/>set in .env?"}
+    C -->|No| E
+    C -->|Yes| D{"ᛉ depot claude<br/>list-sessions<br/>auth check"}
+    D -->|Pass| F["☁️ Depot remote spawning"]
+    D -->|Fail| E["🚫 ERROR — Do NOT fall back<br/>Run depot login + set DEPOT_ORG_ID<br/>or use --local explicitly"]
+
+    style A fill:#07070d,stroke:#c9920a,color:#c9920a
+    style B fill:#07070d,stroke:#4a9eff,color:#4a9eff
+    style C fill:#07070d,stroke:#c9920a,color:#c9920a
+    style D fill:#07070d,stroke:#c9920a,color:#c9920a
+    style E fill:#07070d,stroke:#ff4444,color:#ff4444
+    style F fill:#07070d,stroke:#44ff44,color:#44ff44
 ```
 
 ---
@@ -349,7 +356,48 @@ gh issue view <NUMBER> --json number,title,body,labels
 
 ---
 
-## Step 3 — Determine the Chain
+## Step 3 — Refine with Odin
+
+Before dispatching, present the selected issue to Odin for refinement. This ensures the
+approach is correct and avoids wasted agent cycles on misunderstood requirements.
+
+**Present to Odin:**
+
+```
+**Issue #<NUMBER>**: <TITLE>
+**Type:** <type label>
+**Priority:** <priority label>
+**Chain:** <Agent1> → <Agent2> [→ <Agent3>]
+
+**Summary:**
+<First 3-4 sentences of the issue body — the problem statement>
+
+**Proposed approach:**
+<1-2 sentence summary of what the first agent will do, derived from the issue body and acceptance criteria>
+
+**Acceptance criteria:**
+<Bullet list of ACs from the issue>
+
+Odin — does this look right? Any adjustments to the approach, scope, or ACs before I fire it off?
+```
+
+**Wait for Odin's response.** Odin may:
+
+| Response | Action |
+|----------|--------|
+| Approval (e.g. "go", "looks good", "fire it") | Proceed to Step 4. |
+| Scope adjustment (e.g. "also fix X", "skip the toggle removal") | Update the agent prompt to reflect Odin's direction. Note the adjustment. |
+| Rejection (e.g. "skip this one", "not now") | Skip this issue. Pick the next Up Next item and return to Step 2. |
+| Different issue (e.g. "do #154 instead") | Switch to the requested issue and restart from Step 2. |
+| Question back | Answer from the issue context, then re-ask for approval. |
+
+**Skip refinement when:**
+- `--batch` flag is used (too many items for interactive review)
+- Issue body contains `skip-refinement` tag
+
+---
+
+## Step 4 — Determine the Chain
 
 Map the issue type label to its agent chain using the table above. Record the full chain — you will execute it step by step.
 
@@ -357,7 +405,7 @@ If the issue has multiple type labels, use the first match in priority order: bu
 
 ---
 
-## Step 4 — Build the Branch Name
+## Step 5 — Build the Branch Name
 
 Construct the branch name from the issue:
 
@@ -372,9 +420,14 @@ Examples:
 - `fix/issue-157-llm-prompt-injection`
 - `fix/issue-154-howl-overlaps-menu`
 
+**IMPORTANT:** The orchestrator does NOT create or push this branch. The branch name is
+passed to the agent via the prompt. The agent creates the branch itself inside the sandbox
+(or worktree) from `main`. This avoids the problem where Depot fails to checkout a
+non-existent remote branch.
+
 ---
 
-## Step 5 — Spawn Step 1 Agent
+## Step 6 — Spawn Step 1 Agent
 
 ### Remote Mode (Default — Depot)
 
@@ -385,9 +438,13 @@ depot claude \
   --org "$DEPOT_ORG_ID" \
   --session-id "issue-<NUMBER>-step1-<agent-name>" \
   --repository "https://github.com/declanshanaghy/fenrir-ledger" \
-  --branch "<BRANCH>" \
+  --branch "main" \
+  --dangerously-skip-permissions \
   -p "<AGENT PROMPT FROM TEMPLATES BELOW>"
 ```
+
+**Always use `--branch main`** — the sandbox clones main and the agent creates its own
+feature branch. Passing a non-existent branch causes Depot to fail on checkout.
 
 After launching, immediately start the **polling loop** described in the Depot Session
 Lifecycle section. Track the session:
@@ -411,12 +468,27 @@ Launch the first agent in a **local background worktree** using the Agent tool:
 
 Use the appropriate template based on which agent is being spawned.
 
+**IMPORTANT — All agent prompts include a mandatory setup preamble** that runs
+before any task work. This preamble:
+1. Reads `CLAUDE.md` (project rules)
+2. Reads the agent's persona file (`.claude/agents/<name>.md`)
+3. Runs `.claude/scripts/sandbox-setup.sh` (git credentials, `npm ci`, version checks)
+
+The setup script handles `gh auth setup-git` which configures the git credential
+helper so `git push` can authenticate using the `GITHUB_TOKEN` env var.
+
 #### Luna (UX Designer) — Step 1 for `type:ux`
 
 ```
 You are Luna, the UX Designer. Design wireframes for GitHub Issue #<NUMBER>: <TITLE>
 
-**Branch name:** `<BRANCH>`
+**Before anything else — mandatory setup (do these in order):**
+1. Read the project rules and follow them: cat CLAUDE.md
+2. Read your persona file and embody it: cat .claude/agents/luna.md
+3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+
+**Then, create your branch:**
+git checkout -b <BRANCH> && git push -u origin <BRANCH>
 
 **Issue details:**
 
@@ -464,7 +536,17 @@ Start by reading the issue, then review existing wireframes in ux/wireframes/ fo
 ```
 You are FiremanDecko, the Principal Engineer. Fix GitHub Issue #<NUMBER>: <TITLE>
 
-**Branch name:** `<BRANCH>`
+**Before anything else — mandatory setup (do these in order):**
+1. Read the project rules and follow them: cat CLAUDE.md
+2. Read your persona file and embody it: cat .claude/agents/fireman-decko.md
+3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+
+**Then, get on your branch:**
+Check if the branch already exists (a previous agent may have created it):
+  git fetch origin
+  git branch -r | grep '<BRANCH>'
+If it exists: git checkout <BRANCH> && git pull origin <BRANCH>
+If it does NOT exist: git checkout -b <BRANCH> && git push -u origin <BRANCH>
 
 **Issue details:**
 
@@ -473,7 +555,7 @@ You are FiremanDecko, the Principal Engineer. Fix GitHub Issue #<NUMBER>: <TITLE
 **Before you start — read the handoff context:**
 1. Read all comments on the issue for handoff notes from previous agents:
    `gh issue view <NUMBER> --comments`
-2. Read the commits already on this branch:
+2. Read the commits already on this branch (if any):
    `git log origin/main..HEAD --oneline`
 3. <If UX chain: Luna's wireframes are on this branch. Read them: `ux/wireframes/`>
 4. Use the previous agent's handoff comment to understand design decisions and what they built.
@@ -523,7 +605,13 @@ Start by reading the issue comments for handoff context, then the affected files
 ```
 You are Heimdall, the Security Specialist. Fix GitHub Issue #<NUMBER>: <TITLE>
 
-**Branch name:** `<BRANCH>`
+**Before anything else — mandatory setup (do these in order):**
+1. Read the project rules and follow them: cat CLAUDE.md
+2. Read your persona file and embody it: cat .claude/agents/heimdall.md
+3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+
+**Then, create your branch:**
+git checkout -b <BRANCH> && git push -u origin <BRANCH>
 
 **Issue details:**
 
@@ -570,8 +658,17 @@ Start by reading the affected files listed in the issue, then implement the fix.
 ```
 You are Loki, the QA Tester. Validate GitHub Issue #<NUMBER>: <TITLE>
 
-**Branch name:** `<BRANCH>`
-**Previous agents have already committed their work on this branch.**
+**Before anything else — mandatory setup (do these in order):**
+1. Read the project rules and follow them: cat CLAUDE.md
+2. Read your persona file and embody it: cat .claude/agents/loki.md
+3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+
+**Then, get on the branch:**
+Check if the branch already exists (previous agents may have created it):
+  git fetch origin
+  git branch -r | grep '<BRANCH>'
+If it exists: git checkout <BRANCH> && git pull origin <BRANCH>
+If it does NOT exist (e.g. you are the sole agent for type:test): git checkout -b <BRANCH> && git push -u origin <BRANCH>
 
 **Issue details:**
 
@@ -644,7 +741,7 @@ Start by reading the issue comments for handoff context, then the acceptance cri
 
 ---
 
-## Step 6 — Chain Execution
+## Step 7 — Chain Execution
 
 ### Remote Mode (Default — Depot)
 
@@ -661,9 +758,11 @@ to detect when an agent completes. When a session transitions to `completed`:
      --org "$DEPOT_ORG_ID" \
      --session-id "issue-<NUMBER>-step<N>-<agent-name>" \
      --repository "https://github.com/declanshanaghy/fenrir-ledger" \
-     --branch "<BRANCH>" \
+     --branch "main" \
+     --dangerously-skip-permissions \
      -p "<AGENT PROMPT>"
    ```
+   The agent's prompt includes instructions to checkout the existing branch.
 5. **If this was the final step** (Loki), report completion to the user with the PR URL.
 
 ### Local Mode (`--local`)
@@ -675,7 +774,7 @@ When a background agent completes (you receive a task notification):
    - Same `isolation: worktree` — but resume on the **same branch** (the previous agent already pushed).
    - `run_in_background: true`
    - `description`: `[Step N/<Total>] #<NUMBER>: <short summary>`
-   - Use the appropriate prompt template from Step 5.
+   - Use the appropriate prompt template from Step 6.
 3. **If this was the final step** (Loki), report completion to the user with the PR URL.
 
 ### Chain state tracking
@@ -693,7 +792,7 @@ Update this after each agent completes.
 
 ---
 
-## Step 7 — Report
+## Step 8 — Report
 
 After spawning Step 1, report to the user:
 
@@ -825,9 +924,9 @@ Once the next agent is identified:
    **Resuming at:** Step <X>/<Total> — spawning <NextAgentName>
    ```
 
-2. Spawn the next agent using the same prompt templates from Step 5, on the **existing branch**.
+2. Spawn the next agent using the same prompt templates from Step 6, on the **existing branch**.
 
-3. Continue normal chain execution from Step 6 onward.
+3. Continue normal chain execution from Step 7 onward.
 
 ### Edge Cases
 
@@ -860,7 +959,7 @@ Pull the top N unblocked items from "Up Next" and start chains for all in parall
 
    If ANY blocking issue is still `OPEN`, **skip this item** and move to the next in priority order. Report skipped items in the output.
 
-4. **Spawn chains** — for each unblocked item, run Steps 3–5 (determine chain, build branch, spawn Step 1 agent). All chains run in parallel background worktrees.
+4. **Spawn chains** — for each unblocked item, run Steps 4–6 (determine chain, build branch, spawn Step 1 agent). All chains run in parallel background worktrees.
 
 5. **Report** — show all dispatched chains and any skipped (blocked) items:
 
@@ -874,7 +973,7 @@ Pull the top N unblocked items from "Up Next" and start chains for all in parall
    | #C | ... | Decko -> Loki | Blocked by #A — skipped |
    ```
 
-6. **Chain execution** — each chain runs independently per Step 6. When a chain completes, report it. When all chains complete, report the batch summary.
+6. **Chain execution** — each chain runs independently per Step 7. When a chain completes, report it. When all chains complete, report the batch summary.
 
 ### Batch rules
 
