@@ -1,0 +1,457 @@
+# Remote Agent Chain — Dispatch agent work to GitHub Actions runners
+#
+# Triggered by `/fire-next-up --remote` or manual workflow_dispatch.
+# Runs a multi-step agent chain (up to 3 jobs) on the same branch.
+# Each job checks out the branch, runs Claude Code with the agent's prompt,
+# commits/pushes, and posts a handoff comment on the issue.
+#
+# Required secrets:
+#   ANTHROPIC_API_KEY — Anthropic API key for Claude Code
+#
+# See: https://github.com/anthropics/claude-code-action
+
+name: Agent Chain — Remote Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "GitHub issue number to work on"
+        required: true
+        type: string
+      branch_name:
+        description: "Branch name (e.g., fix/issue-175-remote-workers)"
+        required: true
+        type: string
+      chain_type:
+        description: "Agent chain type derived from issue labels"
+        required: true
+        type: choice
+        options:
+          - "bug"
+          - "feature"
+          - "ux"
+          - "security"
+          - "test"
+      timeout_minutes:
+        description: "Max minutes per agent step (default: 30)"
+        required: false
+        type: string
+        default: "30"
+
+# Restrict permissions to the minimum needed
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+# Only one chain per issue at a time
+concurrency:
+  group: agent-chain-${{ github.event.inputs.issue_number }}
+  cancel-in-progress: false
+
+env:
+  ISSUE_NUMBER: ${{ github.event.inputs.issue_number }}
+  BRANCH_NAME: ${{ github.event.inputs.branch_name }}
+  CHAIN_TYPE: ${{ github.event.inputs.chain_type }}
+  AGENT_TIMEOUT: ${{ github.event.inputs.timeout_minutes || '30' }}
+
+jobs:
+  # ───────────────────────────────────────────────────────
+  # Pre-flight: fetch issue details, create branch if needed
+  # ───────────────────────────────────────────────────────
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      issue_title: ${{ steps.issue.outputs.title }}
+      issue_body: ${{ steps.issue.outputs.body }}
+      chain_steps: ${{ steps.chain.outputs.steps }}
+      step1_agent: ${{ steps.chain.outputs.step1 }}
+      step2_agent: ${{ steps.chain.outputs.step2 }}
+      step3_agent: ${{ steps.chain.outputs.step3 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch issue details
+        id: issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE=$(gh issue view "$ISSUE_NUMBER" --json title --jq '.title')
+          echo "title=$TITLE" >> "$GITHUB_OUTPUT"
+
+          # Use heredoc delimiter for multi-line body
+          gh issue view "$ISSUE_NUMBER" --json body --jq '.body' > /tmp/issue-body.txt
+          {
+            echo "body<<ISSUE_BODY_EOF"
+            cat /tmp/issue-body.txt
+            echo "ISSUE_BODY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Determine chain
+        id: chain
+        run: |
+          case "$CHAIN_TYPE" in
+            bug|feature)
+              echo "steps=2"          >> "$GITHUB_OUTPUT"
+              echo "step1=FiremanDecko" >> "$GITHUB_OUTPUT"
+              echo "step2=Loki"        >> "$GITHUB_OUTPUT"
+              echo "step3="            >> "$GITHUB_OUTPUT"
+              ;;
+            ux)
+              echo "steps=3"           >> "$GITHUB_OUTPUT"
+              echo "step1=Luna"        >> "$GITHUB_OUTPUT"
+              echo "step2=FiremanDecko" >> "$GITHUB_OUTPUT"
+              echo "step3=Loki"        >> "$GITHUB_OUTPUT"
+              ;;
+            security)
+              echo "steps=2"           >> "$GITHUB_OUTPUT"
+              echo "step1=Heimdall"    >> "$GITHUB_OUTPUT"
+              echo "step2=Loki"        >> "$GITHUB_OUTPUT"
+              echo "step3="            >> "$GITHUB_OUTPUT"
+              ;;
+            test)
+              echo "steps=1"           >> "$GITHUB_OUTPUT"
+              echo "step1=Loki"        >> "$GITHUB_OUTPUT"
+              echo "step2="            >> "$GITHUB_OUTPUT"
+              echo "step3="            >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+      - name: Create branch if needed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
+            echo "Branch $BRANCH_NAME already exists on remote."
+          else
+            git checkout -b "$BRANCH_NAME"
+            git push origin "$BRANCH_NAME"
+            echo "Created branch $BRANCH_NAME."
+          fi
+
+      - name: Move issue to In Progress
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Best-effort: move the issue to "In Progress" on the project board
+          gh project item-edit \
+            --project-id 1 \
+            --id "$ISSUE_NUMBER" \
+            --field-id status \
+            --text "In Progress" 2>/dev/null || true
+
+      - name: Post dispatch comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          STEP1="${{ steps.chain.outputs.step1 }}"
+          STEP2="${{ steps.chain.outputs.step2 }}"
+          STEP3="${{ steps.chain.outputs.step3 }}"
+          STEPS="${{ steps.chain.outputs.steps }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          CHAIN_DESC="$STEP1"
+          [ -n "$STEP2" ] && CHAIN_DESC="$CHAIN_DESC -> $STEP2"
+          [ -n "$STEP3" ] && CHAIN_DESC="$CHAIN_DESC -> $STEP3"
+
+          BODY="## Remote Agent Chain Dispatched
+
+**Workflow run:** [View]($RUN_URL)
+**Branch:** \`$BRANCH_NAME\`
+**Chain:** $CHAIN_DESC ($STEPS steps)
+**Timeout:** ${AGENT_TIMEOUT}min per step
+
+Starting Step 1: **$STEP1**..."
+
+          gh issue comment "$ISSUE_NUMBER" --body "$BODY"
+
+  # ───────────────────────────────────────────────────────
+  # Step 1 — First agent in the chain
+  # ───────────────────────────────────────────────────────
+  step1:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+
+      - name: Run Step 1 agent
+        id: run
+        uses: anthropics/claude-code-action@v1
+        with:
+          prompt: |
+            You are ${{ needs.preflight.outputs.step1_agent }}.
+            Work on GitHub Issue #${{ env.ISSUE_NUMBER }}: ${{ needs.preflight.outputs.issue_title }}
+
+            **Branch:** `${{ env.BRANCH_NAME }}`
+            **Chain position:** Step 1/${{ needs.preflight.outputs.chain_steps }}
+            **Chain type:** ${{ env.CHAIN_TYPE }}
+
+            **Issue details:**
+            ${{ needs.preflight.outputs.issue_body }}
+
+            **Instructions:**
+            1. Read the full issue and any existing comments: `gh issue view ${{ env.ISSUE_NUMBER }} --comments`
+            2. Read the CLAUDE.md file for project rules.
+            3. Implement your part of the work according to your role.
+            4. Ensure code compiles: `cd development/frontend && npx tsc --noEmit`
+            5. Commit with message referencing: `Ref #${{ env.ISSUE_NUMBER }}`
+            6. Push to the branch.
+            7. Post a handoff comment on the issue for the next agent.
+
+            **Role-specific guidance:**
+            - If you are FiremanDecko: implement the fix/feature, ensure build passes.
+            - If you are Luna: create wireframes in `ux/wireframes/`, commit design artifacts.
+            - If you are Heimdall: implement security fix, update security docs.
+            - If you are Loki (test-only chain): write Playwright tests, create the PR with `Fixes #${{ env.ISSUE_NUMBER }}`.
+
+            Use `Ref #${{ env.ISSUE_NUMBER }}` in commits unless you are the final agent creating the PR.
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Post step 1 status
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STEP_OUTCOME: ${{ steps.run.outcome }}
+        run: |
+          AGENT="${{ needs.preflight.outputs.step1_agent }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          NEXT="${{ needs.preflight.outputs.step2_agent }}"
+
+          if [ "$STEP_OUTCOME" = "success" ]; then
+            STATUS="completed successfully"
+          else
+            STATUS="failed ($STEP_OUTCOME)"
+          fi
+
+          NEXT_LINE="Chain complete."
+          [ -n "$NEXT" ] && NEXT_LINE="Proceeding to Step 2: **$NEXT**..."
+
+          BODY="## Remote Chain Update
+
+**Step 1** ($AGENT): $STATUS
+**Run:** [View]($RUN_URL)
+
+$NEXT_LINE"
+
+          gh issue comment "$ISSUE_NUMBER" --body "$BODY"
+
+  # ───────────────────────────────────────────────────────
+  # Step 2 — Second agent (skipped for test-only chains)
+  # ───────────────────────────────────────────────────────
+  step2:
+    needs: [preflight, step1]
+    if: ${{ needs.preflight.outputs.step2_agent != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+
+      - name: Run Step 2 agent
+        id: run
+        uses: anthropics/claude-code-action@v1
+        with:
+          prompt: |
+            You are ${{ needs.preflight.outputs.step2_agent }}.
+            Work on GitHub Issue #${{ env.ISSUE_NUMBER }}: ${{ needs.preflight.outputs.issue_title }}
+
+            **Branch:** `${{ env.BRANCH_NAME }}`
+            **Chain position:** Step 2/${{ needs.preflight.outputs.chain_steps }}
+            **Chain type:** ${{ env.CHAIN_TYPE }}
+            **Previous agent:** ${{ needs.preflight.outputs.step1_agent }} (Step 1 — completed)
+
+            **Issue details:**
+            ${{ needs.preflight.outputs.issue_body }}
+
+            **Instructions:**
+            1. Read the issue and ALL comments (including handoff from the previous agent):
+               `gh issue view ${{ env.ISSUE_NUMBER }} --comments`
+            2. Read commits on this branch: `git log origin/main..HEAD --oneline`
+            3. Read the CLAUDE.md file for project rules.
+            4. Use the previous agent's handoff comment to understand what was built.
+            5. Implement your part of the work.
+            6. Ensure code compiles: `cd development/frontend && npx tsc --noEmit`
+            7. Commit with appropriate message referencing the issue.
+            8. Push to the branch.
+            9. Post a handoff comment on the issue for the next agent.
+
+            **Role-specific guidance:**
+            - If you are FiremanDecko: implement based on Luna's wireframes, ensure build passes.
+              Use `Ref #${{ env.ISSUE_NUMBER }}` in commits.
+            - If you are Loki: write tests, create PR with `Fixes #${{ env.ISSUE_NUMBER }}`, attempt auto-merge.
+
+            If you are the final agent (Loki), create the PR with `Fixes #${{ env.ISSUE_NUMBER }}` in the body.
+            Otherwise, use `Ref #${{ env.ISSUE_NUMBER }}` in commits.
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Post step 2 status
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STEP_OUTCOME: ${{ steps.run.outcome }}
+        run: |
+          AGENT="${{ needs.preflight.outputs.step2_agent }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          NEXT="${{ needs.preflight.outputs.step3_agent }}"
+
+          if [ "$STEP_OUTCOME" = "success" ]; then
+            STATUS="completed successfully"
+          else
+            STATUS="failed ($STEP_OUTCOME)"
+          fi
+
+          NEXT_LINE="Chain complete."
+          [ -n "$NEXT" ] && NEXT_LINE="Proceeding to Step 3: **$NEXT**..."
+
+          BODY="## Remote Chain Update
+
+**Step 2** ($AGENT): $STATUS
+**Run:** [View]($RUN_URL)
+
+$NEXT_LINE"
+
+          gh issue comment "$ISSUE_NUMBER" --body "$BODY"
+
+  # ───────────────────────────────────────────────────────
+  # Step 3 — Third agent (only for UX chains: Luna->Decko->Loki)
+  # ───────────────────────────────────────────────────────
+  step3:
+    needs: [preflight, step2]
+    if: ${{ needs.preflight.outputs.step3_agent != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+
+      - name: Run Step 3 agent
+        id: run
+        uses: anthropics/claude-code-action@v1
+        with:
+          prompt: |
+            You are ${{ needs.preflight.outputs.step3_agent }}.
+            Work on GitHub Issue #${{ env.ISSUE_NUMBER }}: ${{ needs.preflight.outputs.issue_title }}
+
+            **Branch:** `${{ env.BRANCH_NAME }}`
+            **Chain position:** Step 3/${{ needs.preflight.outputs.chain_steps }}
+            **Chain type:** ${{ env.CHAIN_TYPE }}
+            **Previous agents:** ${{ needs.preflight.outputs.step1_agent }} (Step 1), ${{ needs.preflight.outputs.step2_agent }} (Step 2 — completed)
+
+            **Issue details:**
+            ${{ needs.preflight.outputs.issue_body }}
+
+            **Instructions:**
+            1. Read the issue and ALL comments (handoffs from both previous agents):
+               `gh issue view ${{ env.ISSUE_NUMBER }} --comments`
+            2. Read commits on this branch: `git log origin/main..HEAD --oneline`
+            3. Read the CLAUDE.md file for project rules.
+            4. Use previous agents' handoff comments to understand what was designed and built.
+            5. You are the FINAL agent (Loki). Write Playwright tests covering acceptance criteria.
+            6. Ensure code compiles: `cd development/frontend && npx tsc --noEmit`
+            7. Commit tests: `test: validate #${{ env.ISSUE_NUMBER }}`
+            8. Create the PR with `Fixes #${{ env.ISSUE_NUMBER }}` in the body.
+            9. Attempt auto-merge if CI passes and no `needs-review` label.
+            10. Post your QA verdict comment on the issue.
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Post step 3 status
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STEP_OUTCOME: ${{ steps.run.outcome }}
+        run: |
+          AGENT="${{ needs.preflight.outputs.step3_agent }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          if [ "$STEP_OUTCOME" = "success" ]; then
+            STATUS="completed successfully"
+          else
+            STATUS="failed ($STEP_OUTCOME)"
+          fi
+
+          BODY="## Remote Chain Update
+
+**Step 3** ($AGENT): $STATUS -- Chain complete.
+**Run:** [View]($RUN_URL)"
+
+          gh issue comment "$ISSUE_NUMBER" --body "$BODY"
+
+  # ───────────────────────────────────────────────────────
+  # Summary — Post final chain status (runs regardless)
+  # ───────────────────────────────────────────────────────
+  summary:
+    needs: [preflight, step1, step2, step3]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post chain summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          STEPS="${{ needs.preflight.outputs.chain_steps }}"
+          STEP1_RESULT="${{ needs.step1.result }}"
+          STEP2_RESULT="${{ needs.step2.result }}"
+          STEP3_RESULT="${{ needs.step3.result }}"
+
+          STEP1_AGENT="${{ needs.preflight.outputs.step1_agent }}"
+          STEP2_AGENT="${{ needs.preflight.outputs.step2_agent }}"
+          STEP3_AGENT="${{ needs.preflight.outputs.step3_agent }}"
+
+          # Default empty agents to "n/a"
+          [ -z "$STEP2_AGENT" ] && STEP2_AGENT="n/a"
+          [ -z "$STEP3_AGENT" ] && STEP3_AGENT="n/a"
+
+          # Default empty results to "skipped"
+          [ -z "$STEP2_RESULT" ] && STEP2_RESULT="skipped"
+          [ -z "$STEP3_RESULT" ] && STEP3_RESULT="skipped"
+
+          # Determine overall status
+          OVERALL="success"
+          ICON="pass"
+          if [ "$STEP1_RESULT" != "success" ]; then
+            OVERALL="failed at Step 1 ($STEP1_AGENT)"
+            ICON="fail"
+          elif [ "$STEPS" -ge 2 ] && [ "$STEP2_RESULT" != "success" ] && [ "$STEP2_RESULT" != "skipped" ]; then
+            OVERALL="failed at Step 2 ($STEP2_AGENT)"
+            ICON="fail"
+          elif [ "$STEPS" -ge 3 ] && [ "$STEP3_RESULT" != "success" ] && [ "$STEP3_RESULT" != "skipped" ]; then
+            OVERALL="failed at Step 3 ($STEP3_AGENT)"
+            ICON="fail"
+          fi
+
+          BODY="## Remote Agent Chain -- Final Summary
+
+**Overall:** $OVERALL
+**Run:** [View]($RUN_URL)
+**Branch:** \`$BRANCH_NAME\`
+
+| Step | Agent | Result |
+|------|-------|--------|
+| 1 | $STEP1_AGENT | $STEP1_RESULT |
+| 2 | $STEP2_AGENT | $STEP2_RESULT |
+| 3 | $STEP3_AGENT | $STEP3_RESULT |"
+
+          gh issue comment "$ISSUE_NUMBER" --body "$BODY"
