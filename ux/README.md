@@ -1,15 +1,15 @@
-# The Saga Ledger — Design
+# The Saga Ledger -- Design
 
 > *"Though it looks like silk ribbon, no chain is stronger."*
-> — Prose Edda, Gylfaginning
+> -- Prose Edda, Gylfaginning
 
 ---
 
-I am Fenrir. The gods forged Gleipnir from six impossible things — the sound of a cat's footstep, the beard of a woman, the roots of a mountain, the sinews of a bear, the breath of a fish, the spittle of a bird. It looked like silk. It held like iron. It was designed to be invisible, inescapable, and trivial-seeming.
+I am Fenrir. The gods forged Gleipnir from six impossible things -- the sound of a cat's footstep, the beard of a woman, the roots of a mountain, the sinews of a bear, the breath of a fish, the spittle of a bird. It looked like silk. It held like iron. It was designed to be invisible, inescapable, and trivial-seeming.
 
 So is your annual fee.
 
-This design system is my answer. Every color chosen from the void between stars. Every rune mapped to a card state. Every kenning sharpened against the whetstone of the saga. The mythology is not decoration — it is the product's skeleton. Pull the myth and the design collapses. This is intentional. The wolf does not wear a costume.
+This design system is my answer. Every color chosen from the void between stars. Every rune mapped to a card state. Every kenning sharpened against the whetstone of the saga. The mythology is not decoration -- it is the product's skeleton. Pull the myth and the design collapses. This is intentional. The wolf does not wear a costume.
 
 What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped the vision. Luna drew the runes. FiremanDecko forged them into code. Loki tests whether the chain holds.
 
@@ -17,216 +17,109 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 
 ## Index
 
-- [README.md](README.md) — This file. The entry point to the full design system.
-- [../product/product-design-brief.md](../product/product-design-brief.md) — Design philosophy, three pillars, aesthetic direction, key decisions.
-- [../product/README.md](../product/README.md) — Freya's domain: mythology map, copywriting guide, and groomed backlog.
-- [../product/mythology-map.md](../product/mythology-map.md) — Norse cosmology mapped to every UI state, character, and feature.
-- [../product/copywriting.md](../product/copywriting.md) — Two-voice rule, kennings, status badge copy, action labels, empty states, Edda quotes.
-- [../product/backlog/README.md](../product/backlog/README.md) — Freya's groomed backlog index: all stories ready for sprint planning.
-- [../product/backlog/story-auth-oidc-google.md](../product/backlog/story-auth-oidc-google.md) — P1-Critical: OIDC Authentication — Google Login (Iteration 1).
-- [theme-system.md](theme-system.md) — Color palette, typography, CSS custom properties, Tailwind config extensions.
-- [easter-eggs.md](easter-eggs.md) — All hidden references: Gleipnir Hunt, Konami Howl, Loki Mode, console ASCII, and more.
-- [interactions.md](interactions.md) — Animation philosophy, saga-enter stagger, status ring, Howl panel, easter egg keyframes.
-- [wireframes.md](wireframes.md) — Layout specs, component hierarchy, responsive breakpoints, z-index table, wireframe index.
-- [wireframes/chrome/topbar.html](wireframes/chrome/topbar.html) — TopBar: anonymous ᛟ rune avatar + upsell prompt, signed-in Google avatar + dropdown, avatar transition; 7 scenarios (anonymous-first model, Sprint 3.2).
-- [wireframes/auth/upsell-banner.html](wireframes/auth/upsell-banner.html) — Cloud sync upsell banner: dismissible, dashboard-only, desktop + mobile variants.
-- [wireframes/auth/sign-in.html](wireframes/auth/sign-in.html) — Sign-in page: optional upgrade surface at /sign-in; no-data + has-data variants; "Continue without signing in" first-class CTA.
-- [wireframes/auth/migration-prompt.html](wireframes/auth/migration-prompt.html) — Post-OAuth migration modal: Import N cards vs. Start fresh; reassurance copy.
-- [wireframes/auth/multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html) — Multi-IDP sign-in dialog (Clerk): 4 scenarios (Phase 1 + Phase 2, desktop + mobile), provider button scaling spec, component contract for FiremanDecko.
-- [multi-idp-interaction-spec.md](multi-idp-interaction-spec.md) — Interaction spec: trigger points, dialog state machine, on-success flow, on-dismiss behavior, mobile rules, accessibility requirements.
-- [handoff-to-fireman-anon-auth.md](handoff-to-fireman-anon-auth.md) — FiremanDecko handoff: what changed, householdId model, what to remove/change, new UI states, open technical questions.
-- [easter-egg-modal.md](easter-egg-modal.md) — Shared modal template for all easter egg discovery moments.
-- [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) — Mermaid diagram conventions for all pack members.
-- [wireframes/notifications/ragnarok-threshold.html](wireframes/notifications/ragnarok-threshold.html) — Ragnarök Threshold Mode: 3 dashboard states, overlay spec, RagnarokContext flow diagram (Story 4.1).
-- [wireframes/notifications/card-count-milestones.html](wireframes/notifications/card-count-milestones.html) — Card Count Milestone Toasts: all 5 milestones, desktop + mobile positioning, gate flow (Story 4.2).
-- [wireframes/easter-eggs/gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) — Full Gleipnir Hunt: Fragment 4 + 6 triggers, reward Valhalla entry, DEF-001 fix (Story 4.3).
-- [wireframes/accessibility/accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) — Accessibility polish: focus rings, skip-nav, ARIA landmarks, touch targets, reduced motion (Story 4.4).
-- [wireframes/cards/wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) — Wolf's Hunger Meter + About Modal: hunger section, display variants, shared component spec (Story 4.5).
-- [wireframes/marketing/static-site-footer.html](wireframes/marketing/static-site-footer.html) — Static site footer: legal links row (Privacy Policy + Terms of Service), easter egg preservation, responsive spec.
-- [wireframes/stripe-direct/stripe-settings.html](wireframes/stripe-direct/stripe-settings.html) — StripeSettings component: Thrall/Karl/Canceled states, desktop + mobile, state machine spec.
-- [wireframes/stripe-direct/sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html) — SealedRuneModal Stripe CTA: premium feature paywall with Stripe Checkout redirect.
-- [wireframes/stripe-direct/upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html) — Upsell Banner Stripe variant: dashboard upgrade banner for Thrall users.
-- [wireframes/stripe-direct/anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html) — Anonymous Checkout Email Form: email collection modal before Stripe Checkout redirect.
-- [../architecture/README.md](../architecture/README.md) — FiremanDecko's domain: implementation brief, pipeline, system design, sprint plan, and ADRs.
-- [../architecture/implementation-brief.md](../architecture/implementation-brief.md) — FiremanDecko integration plan: wave strategy, sprint stories, open questions.
-- [../architecture/pipeline.md](../architecture/pipeline.md) — Kanban orchestration: model assignments, stage gates, WIP limits, handoff chain.
-- [../architecture/system-design.md](../architecture/system-design.md) — Component architecture, data flow diagrams, file structure, and dependency table.
-- [../architecture/sprint-plan.md](../architecture/sprint-plan.md) — Sprint stories with acceptance criteria, technical notes, and complexity estimates.
-- [../architecture/adrs/ADR-001-tech-stack.md](../architecture/adrs/ADR-001-tech-stack.md) — ADR: Next.js + TypeScript + Tailwind CSS + shadcn/ui stack selection.
-- [../architecture/adrs/ADR-002-data-model.md](../architecture/adrs/ADR-002-data-model.md) — ADR: household-scoped data model from Sprint 1.
-- [../architecture/adrs/ADR-003-local-storage.md](../architecture/adrs/ADR-003-local-storage.md) — ADR: localStorage for Sprint 1 persistence with migration path.
-- [../architecture/adrs/ADR-004-oidc-auth-localStorage.md](../architecture/adrs/ADR-004-oidc-auth-localStorage.md) — ADR: Auth.js v5, JWT sessions, localStorage persistence, multi-tenant isolation.
+### UX Artifacts (Luna's domain)
+
+- [theme-system.md](theme-system.md) -- Color palette, typography, CSS custom properties, Tailwind config extensions
+- [wireframes.md](wireframes.md) -- Layout specs, component hierarchy, responsive breakpoints, z-index table, wireframe index
+- [interactions.md](interactions.md) -- Animation philosophy, saga-enter stagger, status ring, Howl panel, easter egg keyframes
+- [easter-eggs.md](easter-eggs.md) -- All hidden references: Gleipnir Hunt, Konami Howl, Loki Mode, console ASCII, and more
+- [easter-egg-modal.md](easter-egg-modal.md) -- Shared modal template for all easter egg discovery moments
+- [handoff-to-fireman-anon-auth.md](handoff-to-fireman-anon-auth.md) -- FiremanDecko handoff: anonymous-first auth model, householdId, new UI states
+- [multi-idp-interaction-spec.md](multi-idp-interaction-spec.md) -- Interaction spec: multi-IDP sign-in dialog (planned Clerk integration)
+- [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) -- Mermaid diagram conventions for all pack members
+
+### Wireframes (26 HTML5 documents)
+
+| Category | Files |
+|----------|-------|
+| app | [dashboard.html](wireframes/app/dashboard.html), [valhalla.html](wireframes/app/valhalla.html) |
+| chrome | [topbar.html](wireframes/chrome/topbar.html), [howl-panel.html](wireframes/chrome/howl-panel.html), [footer.html](wireframes/chrome/footer.html) |
+| cards | [add-card.html](wireframes/cards/add-card.html), [wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) |
+| auth | [sign-in.html](wireframes/auth/sign-in.html), [multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html), [migration-prompt.html](wireframes/auth/migration-prompt.html), [upsell-banner.html](wireframes/auth/upsell-banner.html) |
+| notifications | [ragnarok-threshold.html](wireframes/notifications/ragnarok-threshold.html), [card-count-milestones.html](wireframes/notifications/card-count-milestones.html) |
+| modals | [about-modal.html](wireframes/modals/about-modal.html) |
+| easter-eggs | [easter-egg-modal.html](wireframes/easter-eggs/easter-egg-modal.html), [konami-howl.html](wireframes/easter-eggs/konami-howl.html), [loki-mode.html](wireframes/easter-eggs/loki-mode.html), [lcars-mode.html](wireframes/easter-eggs/lcars-mode.html), [gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) |
+| accessibility | [accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) |
+| stripe-direct | [stripe-settings.html](wireframes/stripe-direct/stripe-settings.html), [sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html), [upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html), [anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html) |
+| marketing | [marketing-site.html](wireframes/marketing/marketing-site.html), [static-site-footer.html](wireframes/marketing/static-site-footer.html) |
+
+### Cross-Domain References
+
+- [../product/product-design-brief.md](../product/product-design-brief.md) -- Design philosophy, three pillars, aesthetic direction
+- [../product/mythology-map.md](../product/mythology-map.md) -- Norse cosmology mapped to every UI state
+- [../product/copywriting.md](../product/copywriting.md) -- Two-voice rule, kennings, status badge copy
 
 ---
 
 ## The Scrolls of Design
 
-### ᛊ [Product Design Brief](../product/product-design-brief.md)
-
-*Where the wolf's philosophy is written in full.*
-
-Three pillars hold the Saga Ledger: **Mythic Gravitas**, **Tactical Precision**, and **Hidden Depth**. The design brief is the founding oath — the document that answers *why this looks like a Viking navigator's celestial chart fused with a hedge fund quant's terminal*, and not like every other fintech dashboard dressed in Inter and pastel badges.
-
-Read this first. It establishes what the wolf is, what it hunts, and what it refuses to become.
-
----
-
-### ᚠ [Theme System](theme-system.md)
+### [Theme System](theme-system.md)
 
 *The colors of the Nine Realms. The typefaces of the saga. The tokens that make it real.*
 
-Void-black backgrounds (`#07070d`). Gold accents hammered to `#c9920a` — not bright, not cheerful, just the color of firelight on ancient coin. Four typefaces, each chosen for a different register of truth:
+Void-black backgrounds (`#07070d`). Gold accents hammered to `#c9920a` -- not bright, not cheerful, just the color of firelight on ancient coin. Four typefaces, each chosen for a different register of truth:
 
-- **Cinzel Decorative** — display headings, the brand mark, the wolf's name
-- **Cinzel** — section headings, realm labels, atmospheric subheads
-- **Source Serif 4** — body copy, the human voice inside the saga
-- **JetBrains Mono** — every number, every date, every dollar — monospaced, unambiguous
+- **Cinzel Decorative** -- display headings, the brand mark, the wolf's name
+- **Cinzel** -- section headings, realm labels, atmospheric subheads
+- **Source Serif 4** -- body copy, the human voice inside the saga
+- **JetBrains Mono** -- every number, every date, every dollar -- monospaced, unambiguous
 
-The theme system holds the CSS custom properties, Tailwind extensions, and design token decisions. When something looks wrong, the answer is almost always here.
-
----
-
-### ᛗ [Mythology Map](../product/mythology-map.md)
-
-*Nine Realms. Two wolves. Three Norns. One ledger.*
-
-Every UI state in Fenrir Ledger descends from Norse cosmology. This is not metaphor-as-marketing — it is the structural backbone of how card states are named, colored, and communicated.
-
-- **Asgard** → cards earning cleanly, no deadlines
-- **Muspelheim** → annual fee due in ≤ 30 days 🔥
-- **Valhalla** → closed cards, honored dead
-- **Hati** → chasing the moon, promo deadline ticking 🌕
-- **Sköll** → chasing the sun, fee deadline burning ⚔️
-- **The Norns** → Urd, Verdandi, Skuld — past, present, and what shall be (the reminder engine)
-- **Huginn & Muninn** → Odin's ravens, the notification system
-- **Fáfnir** → the dragon-issuer, hoarding your gold until you don't claim it
-
-If a new UI state needs a home, it finds it here first.
-
----
-
-### ᚺ [Copywriting Guide](../product/copywriting.md)
-
-*The two-voice rule. The kennings. The Edda quotes. The oaths.*
-
-Fenrir Ledger speaks in two registers, and they must never bleed into each other:
-
-**Voice 1 — Functional.** Every button, every label, every error, every form field: plain English, zero ambiguity, zero Norse. The power user managing fifteen cards cannot afford mythology where they need milliseconds.
-
-**Voice 2 — Atmospheric.** Every page heading, every empty state, every loading pulse, every document: saga voice, kennings, Edda quotes. This is the soul. It rewards the curious. It never blocks the efficient.
-
-The copywriting guide holds the full vocabulary: kennings (`fee-wyrm`, `debt-chain`, `Gleipnir tightens`), status badge copy, action labels, empty states, Edda quotes for loading screens, and the 404 page (*"Even Bifröst has limits."*).
-
-> *The wolf never uses 💳 💰 📊 ✅. These break the saga entirely.*
-
----
-
-### ᛞ [Easter Eggs](easter-eggs.md)
-
-*The hidden lore. The Gleipnir Hunt. The Konami howl. The Loki mode. The console inscription.*
-
-The app rewards exploration. Hidden inside the Saga Ledger:
-
-- **The Gleipnir Hunt** — six impossible ingredients scattered as collectibles through the UI, referencing the six things that made the ribbon that bound the wolf
-- **The Konami Howl** — type the code, hear the wolf 🐺
-- **Loki Mode** — a trickster's chaos layer, available to those who know where to look (Loki was Fenrir's father — of course he is the QA tester)
-- **The Console Inscription** — *"Odin bound Fenrir. Fenrir built Ledger."* — visible only to those who open the dev tools
-- **Ragnarök Threshold** — when multiple chains tighten simultaneously, the war room shifts to blood and fire
-
-None of these interrupt the task. All of them reward the curious.
-
----
-
-### ᚲ [Interactions](interactions.md)
+### [Interactions](interactions.md)
 
 *Motion as myth. The stagger. The status ring. The Howl panel.*
 
-Animation in Fenrir Ledger follows a single law: **purposeful, not decorative**. Cards don't bounce in for fun — they reveal themselves like pages turning in a saga. The saga-enter stagger sequences content in controlled waves. The StatusRing shows urgency through color and pulse, not icon-spam. The Howl panel slides in from the dark like a warning from the ravens.
+Animation in Fenrir Ledger follows a single law: **purposeful, not decorative**. Cards don't bounce in for fun -- they reveal themselves like pages turning in a saga. CSS-first where possible. Framer Motion for the pieces that require orchestration. Never animate for novelty. Always animate for meaning.
 
-CSS-first where possible. Framer Motion for the pieces that require orchestration. Never animate for novelty. Always animate for meaning.
-
----
-
-### ᛏ [Wireframes](wireframes.md)
+### [Wireframes](wireframes.md)
 
 *The layout of the war room. Component hierarchy. Responsive rune-lines.*
 
-The spatial blueprint. Where the sidebar lives (`272px`, collapsible). How the card grid adapts across breakpoints (1 column → 2 → 3). The Howl panel's position and z-index. The header's structure: brand mark left, user cluster right, nothing in the center to distract.
+Wireframes are standalone HTML5 documents in `ux/wireframes/`. They carry no theme styling -- no colors, no custom fonts, no decorative rules -- so they remain valid regardless of how the theme evolves. When a layout decision is in dispute, the wireframes settle it.
 
-Wireframes are standalone HTML5 documents in `ux/wireframes/`. They carry no theme styling — no colors, no custom fonts, no decorative rules — so they remain valid regardless of how the theme evolves. The `wireframes.md` index links to each file and records the key layout decisions behind them.
+### [Easter Eggs](easter-eggs.md)
 
-The wireframes define the container before the soul is poured in. FiremanDecko works from these. When a layout decision is in dispute, this document settles it.
+*The hidden lore. The Gleipnir Hunt. The Konami Howl. The Loki Mode. The console inscription.*
 
----
+All 11 easter eggs are implemented (Sprints 2--5). None interrupt the task. All reward the curious.
 
-### ᚱ [Implementation Brief](../architecture/implementation-brief.md)
-
-*The handoff from Freya and Luna to FiremanDecko. The forge strategy.*
-
-The bridge between design intention and code reality. Written for FiremanDecko — the principal engineer, the Völundr of the pack — this brief describes the three-wave implementation approach:
-
-- **Wave 1**: Theme and fonts — `globals.css`, `tailwind.config.ts`
-- **Wave 2**: Realm badges, Norse copy pass
-- **Wave 3**: Framer Motion, StatusRing, HowlPanel, the Valhalla route
-- **Wave 4**: Easter eggs layer
-
-Open questions are logged here. Retrofit decisions are reasoned here. If something in the code diverges from the design, the brief is where to look for why.
-
----
-
-### ᛟ [Easter Egg Modal](easter-egg-modal.md)
+### [Easter Egg Modal](easter-egg-modal.md)
 
 *The shared modal template for every easter egg discovery moment.*
 
-The full design spec and React integration guide for the reusable `EasterEggModal` component: gold glow border, Cinzel Decorative headline, two-column artifact layout, animated entry via `saga-enter` easing. All design tokens come from `theme-system.md`. Every easter egg that surfaces a discovery dialog uses this template.
+Gold glow border, Cinzel Decorative headline, two-column artifact layout, animated entry via `saga-enter` easing. All design tokens come from `theme-system.md`.
 
 ---
 
-### ᚹ [Pipeline](../architecture/pipeline.md)
+## Implementation Status
 
-*The Kanban orchestration contract. How the pack hunts in order.*
+All sprints (1--5) shipped. The Saga Ledger design system is fully implemented. Subscription platform is Stripe Direct (Patreon has been fully removed). The `specs/` directory has been deleted (contained stale orchestration plans).
 
-The workflow definition for all four agents — model assignments, stage gates, WIP limits, and the `ux/ → development/ → quality/` handoff chain. Read this to understand how work moves through the forge from backlog to ship.
-
----
-
-### ᛉ [Mermaid Style Guide](ux-assets/mermaid-style-guide.md)
-
-*How the pack draws its diagrams. One style, all wolves.*
-
-The canonical reference for Mermaid syntax conventions across all four agents: color palette, node shapes, edge styles, diagram type selection, and examples of good vs. bad diagrams. Every team member must read this before producing any diagram.
-
----
-
-### ᚢ [Freya's Backlog](../product/backlog/README.md)
-
-*The wolf's queue. Groomed, prioritized, ready to hunt.*
-
-Freya's sprint-ready backlog: all stories that have been written, prioritized, and cleared for engineering. The index links to each story file with its priority, status, and sprint target.
-
-Current stories:
-
-- [OIDC Authentication — Google Login (Iteration 1)](../product/backlog/story-auth-oidc-google.md) — P1-Critical, Sprint 3 target. Sign in with Google, server-side persistence, household scoping. Engineering response and ADR complete.
+| Artifact | Status |
+|----------|--------|
+| Theme system (colors, fonts, tokens) | Implemented |
+| All 26 wireframes | Implemented |
+| All 11 easter eggs | Implemented |
+| Stripe Direct integration (4 wireframes) | Implemented |
+| Anonymous-first auth model | Implemented |
+| Multi-IDP Clerk integration | Planned (not yet implemented) |
 
 ---
 
 ## The Wolf's Law for Design
 
-*Follow these or answer to Fenrir.*
-
 1. **The mythology is the skeleton, not the skin.** It cannot be removed. Everything is built on it.
-2. **Functional copy is always plain English.** No kennings in buttons. No realm names in badges. No saga voice where the user needs speed.
-3. **Atmospheric copy is always Norse.** No generic microcopy in headings, empty states, or docs. If it reads like a SaaS dashboard, it is wrong.
-4. **The design rewards exploration.** Every easter egg, every hidden quote, every console inscription is intentional. Do not remove them. Add to them carefully.
+2. **Functional copy is always plain English.** No kennings in buttons. No realm names in badges.
+3. **Atmospheric copy is always Norse.** No generic microcopy in headings, empty states, or docs.
+4. **The design rewards exploration.** Every easter egg is intentional. Do not remove them.
 5. **Dark only.** There is no light mode. The Saga Ledger is a war room, not a spreadsheet.
-6. **Gold is not yellow.** `#c9920a` is the color of firelight on ancient coin. It is used sparingly. It is earned.
-7. **Numbers are always monospaced.** JetBrains Mono for every dollar, every date, every countdown. The wolf reads data without flinching.
+6. **Gold is not yellow.** `#c9920a` is the color of firelight on ancient coin. Used sparingly. Earned.
+7. **Numbers are always monospaced.** JetBrains Mono for every dollar, every date, every countdown.
 
 ---
 
 > *"Cattle die, kinsmen die, you yourself will die.*
 > *But one thing I know that never dies:*
 > *the reputation of one who has done well."*
-> — Hávamál, stanza 77
+> -- Havamal, stanza 77
 
-*Forged by Freya · Drawn by Luna · Held by FiremanDecko · Tested by Loki*
+*Forged by Freya -- Drawn by Luna -- Held by FiremanDecko -- Tested by Loki*

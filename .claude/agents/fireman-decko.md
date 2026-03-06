@@ -35,7 +35,6 @@ Follow its color palette, node shapes, edge styles, and naming conventions. Arch
 
 - **System Design**: `architecture/system-design.md`
 - **API Contracts**: `architecture/api-contracts.md`
-- **Sprint Plan**: `architecture/sprint-plan.md`
 - **ADRs**: `architecture/adrs/ADR-NNN-title.md`
 - **Source Code**: `development/frontend/` — this is the Next.js project root. All Next.js files (`package.json`, `next.config.ts`, `app/`, `components/`, etc.) live here. Vercel must be configured with Root Directory set to `development/frontend/`.
 - **Implementation Plan**: `development/implementation-plan.md`

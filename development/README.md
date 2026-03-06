@@ -6,14 +6,23 @@ This directory contains implementation artifacts for the Fenrir Ledger project: 
 
 ## Implementation Docs
 
-- [README.md](README.md) — This file. Index of all development artifacts: source code, scripts, implementation plan, QA handoff, and technical specs.
+- [README.md](README.md) — This file. Index of all development artifacts.
 - [implementation-plan.md](implementation-plan.md) — Ordered task breakdown for Sprint 1 (scaffold through setup script) and Sprint 2 (Saga Ledger theme, app shell, Easter eggs layer).
-- [qa-handoff.md](qa-handoff.md) — Handoff to Loki for Sprint 1 and Sprint 2: files created, deploy steps, test focus areas, and known limitations per sprint.
-- [spec-auth-oidc-google.md](spec-auth-oidc-google.md) — Technical spec (draft) for Sprint 3: Google OIDC authentication via Auth.js v5, Supabase persistence, DB schema, API routes, and migration path from localStorage.
+- [qa-handoff.md](qa-handoff.md) — Latest QA handoff: Import Wizard wireframe fixes (PR #136).
 
 ## Source Code
 
-- [src/](src/) — Next.js project root. All `package.json`, `next.config.ts`, `app/`, and `components/` files live here. Vercel is configured with Root Directory set to `development/frontend/`.
+- [frontend/](frontend/) — Next.js project root. All `package.json`, `next.config.ts`, `app/`, and `components/` files live here. Vercel is configured with Root Directory set to `development/frontend/`.
+
+### Key Source Directories
+
+| Directory | Purpose |
+|-----------|---------|
+| `frontend/src/app/` | Next.js App Router pages and API routes |
+| `frontend/src/components/` | React components: layout, dashboard, cards, sheets, entitlement, easter-eggs, shared, ui |
+| `frontend/src/contexts/` | React contexts: AuthContext, EntitlementContext, RagnarokContext |
+| `frontend/src/hooks/` | Custom hooks: useAuth, useEntitlement, useSheetImport, usePickerConfig, useDriveToken |
+| `frontend/src/lib/` | Core libraries: types, storage, card-utils, auth, entitlement, stripe, google, sheets, llm, kv, crypto |
 
 ## Scripts
 

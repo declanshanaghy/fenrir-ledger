@@ -1,6 +1,6 @@
 # Freya's Backlog
 
-Groomed stories ready for sprint planning. All stories follow the format defined in the Product Owner SKILL.md.
+**Active backlog is now tracked in [GitHub Issues](https://github.com/declanshanaghy/fenrir-ledger/issues).** The markdown stories below are historical records of shipped work from Sprints 1-5. New stories are filed as GitHub Issues, not as markdown files.
 
 ## Stories
 

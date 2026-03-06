@@ -29,7 +29,7 @@
      * while on the Thrall (free) tier. It acts as a paywall gate.
      *
      * The modal locks the premium feature behind a Stripe subscription.
-     * It replaces the previous Patreon-linked CTA with a Stripe Checkout redirect.
+     * CTA redirects to Stripe Checkout.
      *
      * Z-index: 210 (standard modal layer).
      * Backdrop: semi-transparent overlay -- user can see content behind it.
@@ -217,14 +217,11 @@
 
   <!-- =====================================================================
        DESIGN DECISION -- SealedRuneModal Stripe integration
-       Luna's recommendation: replace the Patreon campaign link with a
-       Stripe Checkout redirect. The modal structure stays the same --
-       only the CTA copy and action change.
+       SealedRuneModal uses Stripe Checkout for premium feature gating.
 
        Key decisions:
          - The CTA is "Unlock with Karl -- $3.99/month" (Voice 1 + tier name).
-         - The button triggers Stripe Checkout redirect (not a link to an
-           external campaign page like Patreon was).
+         - The button triggers Stripe Checkout redirect.
          - Anonymous users: email modal appears first, then Stripe Checkout.
          - Authenticated users: redirect directly to Stripe Checkout.
          - The modal remains dismissible -- it is a gate with a clear exit.

@@ -16,6 +16,8 @@ Technical architecture documents owned by FiremanDecko (Principal Engineer).
 | [route-ownership.md](route-ownership.md) | Reference | Current | Route placement table: all routes now live in Next.js (Vercel). |
 | [backend-ws-qa-report.md](backend-ws-qa-report.md) | QA Report | Archived | Loki's QA validation of the (now-removed) backend ADR and implementation plan. Kept for historical reference. |
 | [clerk-auth-qa-report.md](clerk-auth-qa-report.md) | QA Report | Complete | Loki's QA validation of the Clerk ADR and implementation plan. Verdict: Approved with notes. |
+| [adr-feature-flags.md](adr-feature-flags.md) | ADR | Superseded | Feature flag system for subscription platform toggle. Superseded — Patreon removed, Stripe is sole platform. |
+| [adr-010-stripe-direct.md](adr-010-stripe-direct.md) | ADR | Accepted | ADR-010: Stripe Direct integration — Checkout, Customer Portal, webhook-driven entitlements, Vercel KV storage. |
 
 ## Directory Layout
 
@@ -30,7 +32,9 @@ designs/architecture/
 ├── backend-ws-qa-report.md          # QA report: backend/WS investigation (archived)
 ├── clerk-auth-qa-report.md          # QA report: Clerk auth architecture
 ├── clerk-implementation-plan.md     # Clerk auth implementation plan
-└── route-ownership.md               # Route placement reference
+├── route-ownership.md               # Route placement reference
+├── adr-feature-flags.md             # Feature flag system (superseded)
+└── adr-010-stripe-direct.md         # ADR-010: Stripe Direct integration (accepted)
 ```
 
 ## Key Relationships

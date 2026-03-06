@@ -1,18 +1,36 @@
-# Architecture — Designs Index
+# Architecture — FiremanDecko's Forge
 
-FiremanDecko's forge. These documents translate product vision into technical structure and implementation sequence. Read the pipeline first to understand how work flows through the team; read the brief to understand what has been built and what is planned.
+Technical architecture documents. These translate product vision into technical structure and implementation sequence. Read the pipeline first to understand how work flows through the team; read the system design to understand what has been built.
 
-- [README.md](README.md) — This index: all architecture documents and their purpose.
-- [pipeline.md](pipeline.md) — Kanban workflow and model assignments for the full four-agent team pipeline.
-- [implementation-brief.md](implementation-brief.md) — Integration plan for the Saga Ledger design system, covering the three-wave approach, sprint story breakdowns, and QA handoff notes.
-- [system-design.md](system-design.md) — Component architecture, data flow diagrams, file structure, and dependency table reflecting the current delivered state (through Sprint 4).
-- [sprint-plan.md](sprint-plan.md) — Rolling sprint plan: Sprints 1–4 completed, with Sprint 5 import workflow shipped.
+## Core Documents
 
-### ADRs
+- [README.md](README.md) — This index.
+- [pipeline.md](pipeline.md) — Kanban workflow and model assignments for the full team pipeline.
+- [system-design.md](system-design.md) — Component architecture, data flow diagrams, file structure, and dependency table reflecting the current delivered state (through Stripe Direct integration).
+- [implementation-brief.md](implementation-brief.md) — Integration plan for the Saga Ledger design system: three-wave approach, sprint story breakdowns, and QA handoff notes.
 
-- [adrs/ADR-001-tech-stack.md](adrs/ADR-001-tech-stack.md) — Decision record for the Next.js + TypeScript + Tailwind CSS + shadcn/ui stack choice.
-- [adrs/ADR-002-data-model.md](adrs/ADR-002-data-model.md) — Decision record establishing the household-scoped data model from Sprint 1 to avoid future breaking migrations.
-- [adrs/ADR-003-local-storage.md](adrs/ADR-003-local-storage.md) — Decision record for localStorage persistence in Sprint 1 and the documented migration path to a server-side backend.
-- [adrs/ADR-004-oidc-auth-localStorage.md](adrs/ADR-004-oidc-auth-localStorage.md) — Decision record for OIDC authentication with per-household localStorage namespacing (Accepted).
-- [adrs/ADR-005-auth-pkce-public-client.md](adrs/ADR-005-auth-pkce-public-client.md) — Decision record for Authorization Code + PKCE flow with server token proxy, superseding ADR-004's Auth.js approach (Accepted).
-- [adrs/ADR-006-anonymous-first-auth.md](adrs/ADR-006-anonymous-first-auth.md) — Decision record for anonymous-first auth model with optional Google sign-in upsell, superseding ADR-005's auth gate (Accepted).
+## ADRs (architecture/adrs/)
+
+These are the original Sprint 1–3 ADRs living in this directory:
+
+- [adrs/ADR-001-tech-stack.md](adrs/ADR-001-tech-stack.md) — Next.js + TypeScript + Tailwind CSS + shadcn/ui stack choice.
+- [adrs/ADR-002-data-model.md](adrs/ADR-002-data-model.md) — Household-scoped data model from Sprint 1.
+- [adrs/ADR-003-local-storage.md](adrs/ADR-003-local-storage.md) — localStorage persistence with documented migration path.
+- [adrs/ADR-004-oidc-auth-localStorage.md](adrs/ADR-004-oidc-auth-localStorage.md) — OIDC auth with per-household localStorage namespacing (Accepted, superseded by ADR-005).
+- [adrs/ADR-005-auth-pkce-public-client.md](adrs/ADR-005-auth-pkce-public-client.md) — Authorization Code + PKCE flow with server token proxy (Accepted).
+- [adrs/ADR-006-anonymous-first-auth.md](adrs/ADR-006-anonymous-first-auth.md) — Anonymous-first auth model with optional Google sign-in (Accepted, current).
+
+## ADRs (designs/architecture/)
+
+Post-Sprint 5 ADRs live in the shared designs directory:
+
+- [../designs/architecture/adr-feature-flags.md](../designs/architecture/adr-feature-flags.md) — Feature flag system for subscription platform toggle (Superseded — Patreon removed, Stripe is sole platform).
+- [../designs/architecture/adr-clerk-auth.md](../designs/architecture/adr-clerk-auth.md) — ADR-007: Clerk as auth platform (Proposed, deferred to GA).
+- [../designs/architecture/adr-api-auth.md](../designs/architecture/adr-api-auth.md) — ADR-008: Server-side API route auth via Google id_token JWKS verification (Accepted, current).
+- [../designs/architecture/adr-backend-server.md](../designs/architecture/adr-backend-server.md) — Backend server decision (Superseded — backend removed, fully serverless).
+- [../designs/architecture/adr-openapi-spec.md](../designs/architecture/adr-openapi-spec.md) — OpenAPI spec for backend API (Superseded — backend removed).
+- [../designs/architecture/adr-010-stripe-direct.md](../designs/architecture/adr-010-stripe-direct.md) — ADR-010: Stripe Direct integration (Accepted, current).
+
+## See Also
+
+- [../designs/architecture/README.md](../designs/architecture/README.md) — Full index of `designs/architecture/` including implementation plans and QA reports.

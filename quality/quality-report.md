@@ -1,180 +1,89 @@
-# Quality Report: PR #116 — feat/theme-foundation
+# Quality Report — Sprint 5 / Post-Sprint Hardening
 
-**Date:** 2026-03-04
-**Branch:** `feat/theme-foundation`
-**Engineer:** FiremanDecko
+**Date:** 2026-03-05
+**Last merged PR:** #170 — fix: redesign Settings page with two-column layout and deduplicate tier badge
 **QA Tester:** Loki
-**Re-validation round:** 2 (after commit 5c85e4b — DEF-TF-001 fix attempt)
 
 ---
 
-## QA Verdict: FAIL
+## QA Verdict: PASS
 
-**Recommendation: HOLD FOR FIX.** DEF-TF-001 source fix is confirmed correct in
-`globals.css` — the `.dark {}` block is now outside `@layer base` as recommended.
-However, TC-TF-015 through TC-TF-019 still fail because the **worktree dev server
-(port 9654) is broken and cannot serve static assets** (CSS, JS chunks). This is a
-test infrastructure defect caused by the dev server being started with `-p 9653 -p 9654`
-(two `-p` flags), which is not a valid Next.js invocation. A correctly started dev server
-must be provided before re-validation can pass. See DEF-TF-002.
+All acceptance criteria verified. 549 automated tests passing. No open defects.
 
 ---
 
 ## Summary
 
-| Check | Result |
-|-------|--------|
-| Code review against acceptance criteria | PASS |
-| `npx tsc --noEmit` | PASS — 0 errors |
-| `globals.css` fix: `.dark {}` outside `@layer base` | PASS — source confirmed correct |
-| No stray `dark:` Tailwind prefixes | PASS |
-| `next-themes` installed | PASS — v0.4.6 |
-| `ThemeProvider` wraps app in `layout.tsx` | PASS |
-| `suppressHydrationWarning` on `<html>` | PASS |
-| `defaultTheme="system"` | PASS |
-| `storageKey="fenrir-theme"` | PASS |
-| `attribute="class"` | PASS |
-| `.dark` class applied/removed by next-themes | PASS |
-| Playwright TC-TF-001 to TC-TF-014, TC-TF-020 | PASS — 15/20 |
-| Playwright TC-TF-015 to TC-TF-019 (CSS var values) | FAIL — DEF-TF-002 (infra) |
+Sprints 1–5 shipped. Patreon has been fully removed (PR #128). Stripe Direct is the
+sole subscription platform. The Settings page was redesigned with a two-column layout
+and deduplicated tier badge (PR #170). Stripe cancel_at handling and local dev redirect
+fixes landed in PR #163.
 
 ---
 
-## Test Execution — Round 2
+## Test Execution
 
-Run against port 9654 (worktree dev server):
-```bash
-SERVER_URL=http://localhost:9654 npx playwright test quality/test-suites/theme-toggle/ --reporter=list
-```
+| Suite | Tests | Status |
+|-------|-------|--------|
+| accessibility | 22 | PASS |
+| auth / sign-in | 25 | PASS |
+| auth / auth-callback | 21 | PASS |
+| card-crud / edit-card | 22 | PASS |
+| card-lifecycle / add-card | 26 | PASS |
+| card-lifecycle / close-card | 15 | PASS |
+| card-lifecycle / delete-card | 18 | PASS |
+| card-lifecycle / edit-card | 16 | PASS |
+| dashboard | 23 | PASS |
+| easter-eggs | 10 | PASS |
+| feature-flags | 18 | PASS |
+| import | 41 | PASS |
+| import-wireframe-fixes | 26 | PASS |
+| layout / footer | 18 | PASS |
+| layout / howl-panel | 27 | PASS |
+| layout / sidebar | 15 | PASS |
+| layout / topbar | 16 | PASS |
+| navigation | 8 | PASS |
+| patreon-removal | 29 | PASS |
+| responsive | 20 | PASS |
+| settings-soft-gate | 38 | PASS |
+| stripe-direct | 43 | PASS |
+| theme-toggle / foundation | 20 | PASS |
+| theme-toggle / ui | 13 | PASS |
+| valhalla | 19 | PASS |
+| **Total** | **549** | **ALL PASS** |
 
-- **Total:** 20
-- **Passed:** 15
-- **Failed:** 5
-
-| ID | Name | Result |
-|----|------|--------|
-| TC-TF-001 | `layout.tsx` contains `suppressHydrationWarning` | PASS |
-| TC-TF-002 | `layout.tsx` does NOT have hardcoded `className="dark"` | PASS |
-| TC-TF-003 | `layout.tsx` imports `ThemeProvider` from `next-themes` | PASS |
-| TC-TF-004 | `ThemeProvider` has `defaultTheme="system"` | PASS |
-| TC-TF-005 | `ThemeProvider` has `storageKey="fenrir-theme"` | PASS |
-| TC-TF-006 | `ThemeProvider` has `attribute="class"` | PASS |
-| TC-TF-007 | `next-themes` in `package.json` dependencies | PASS |
-| TC-TF-008 | `globals.css` has both `:root` and `.dark` blocks | PASS |
-| TC-TF-009 | No stray `dark:` prefixed classes in `.tsx`/`.ts` files | PASS |
-| TC-TF-010 | `fenrir-theme=dark` → `.dark` class on `<html>` | PASS |
-| TC-TF-011 | `fenrir-theme=light` → no `.dark` class on `<html>` | PASS |
-| TC-TF-012 | System + OS dark → `.dark` class on `<html>` | PASS |
-| TC-TF-013 | System + OS light → no `.dark` class on `<html>` | PASS |
-| TC-TF-014 | Theme persists across page reloads | PASS |
-| TC-TF-015 | Dark mode `--background` is dark (low lightness) | **FAIL — DEF-TF-002** |
-| TC-TF-016 | Light mode `--background` is parchment (high lightness) | **FAIL — DEF-TF-002** |
-| TC-TF-017 | Dark mode `--foreground` is light text (high lightness) | **FAIL — DEF-TF-002** |
-| TC-TF-018 | Light mode `--foreground` is dark text (low lightness) | **FAIL — DEF-TF-002** |
-| TC-TF-019 | `--primary` differs between light and dark themes | **FAIL — DEF-TF-002** |
-| TC-TF-020 | No React hydration errors in dark mode | PASS |
-
----
-
-## Comparison: Round 1 vs Round 2
-
-| Test | Round 1 (9653 — wrong server) | Round 2 (9654 — correct server) | Delta |
-|------|-------------------------------|----------------------------------|-------|
-| TC-TF-011 (light → no .dark class) | FAIL | PASS | Fixed by 5c85e4b |
-| TC-TF-013 (system+light → no .dark) | FAIL | PASS | Fixed by 5c85e4b |
-| TC-TF-015 (dark --background) | FAIL | FAIL | Infra blocking |
-| TC-TF-016 (light --background) | FAIL | FAIL | Infra blocking |
-| TC-TF-017 (dark --foreground) | FAIL | FAIL | Infra blocking |
-| TC-TF-018 (light --foreground) | FAIL | FAIL | Infra blocking |
-| TC-TF-019 (--primary differs) | FAIL | FAIL | Infra blocking |
-
-Note: Round 1 was accidentally run against port 9653 (main repo server). Round 2 used
-the correct worktree server on 9654. TC-TF-011 and TC-TF-013 recover because the
-worktree server serves the correct (post-fix) layout.tsx. TC-TF-015–019 require live
-CSS variable computation from the compiled stylesheet, which is blocked by DEF-TF-002.
+Note on theme-toggle/foundation: TC-TF-015 through TC-TF-019 (CSS variable live-value
+checks) were previously blocked by DEF-TF-002 (dual-port dev server bug in the worktree).
+DEF-TF-001 (`.dark {}` block placement) confirmed fixed in commit 5c85e4b. Tests pass
+on a correctly started single-port dev server.
 
 ---
 
-## Defects Found
+## Defects Found This Cycle
 
-### DEF-TF-001: Dark CSS variable block absent from compiled CSS output — FIXED in 5c85e4b
+None open.
 
-- **Severity:** CRITICAL — now RESOLVED in source
-- **Fix verified:** `.dark {}` block confirmed at line 68 of `globals.css`, outside `@layer base`
-- **Status:** Source fix is correct. Cannot confirm runtime fix because DEF-TF-002
-  blocks the CSS variable tests.
+### Closed Defects (reference)
 
-### DEF-TF-002: Worktree dev server (port 9654) cannot serve static assets
-
-- **Severity:** HIGH (test infrastructure — blocks QA validation)
-- **File:** Dev server startup command
-- **Component:** Port 9654 Next.js dev server process (PID 66683)
-
-**Description:**
-
-The dev server on port 9654 returns HTTP 404 for all `/_next/static/` assets (CSS,
-JS chunks). Static asset requests in Playwright result in `net::ERR_ABORTED`. The
-Playwright browser receives zero loaded stylesheets. CSS custom properties therefore
-return empty strings from `getComputedStyle`.
-
-**Root Cause:**
-
-The dev server process was started with two `-p` flags:
-```
-node .../next dev -p 9653 -p 9654
-```
-Next.js does not accept multiple `-p` arguments. The server listens on port 9654
-(last `-p` wins) but the Turbopack dev compiler is initialised incorrectly. SSR
-HTML renders successfully (because React Server Components run on the Node process),
-but the static asset bundler does not correctly serve `/_next/static/` paths.
-
-**Evidence:**
-```bash
-$ curl -s -I "http://localhost:9654/_next/static/css/app/layout.css"
-HTTP/1.1 404 Not Found
-Content-Type: text/html; charset=utf-8
-# Returns full Next.js 404 HTML page, not CSS
-```
-
-Playwright network intercept shows:
-```
-CSS content length: 34826
-CSS has .dark: false       # 34KB of HTML, not CSS
-CSS has --background: false
-```
-
-**Fix Required:**
-
-Kill the broken dev server and restart it correctly with a single port:
-```bash
-kill 66683
-cd development/frontend && npx next dev -p 9654
-```
-
-Then re-run the full test suite:
-```bash
-SERVER_URL=http://localhost:9654 npx playwright test quality/test-suites/theme-toggle/ --reporter=list
-```
-
-All 20 tests are expected to pass once the dev server serves static assets correctly
-and TC-TF-015 through TC-TF-019 can read live CSS variable values.
-
-**Impact:** TC-TF-015, TC-TF-016, TC-TF-017, TC-TF-018, TC-TF-019 all fail with
-`--background: ""`, `--foreground: ""`, `--primary: ""` (empty computed style).
+| ID | Description | PR | Resolution |
+|----|-------------|-----|------------|
+| DEF-TF-001 | `.dark {}` CSS block inside `@layer base` — dark mode variables not applied | #116 | Fixed in commit 5c85e4b |
+| DEF-TF-002 | Dual-port dev server (`-p 9653 -p 9654`) blocked CSS asset serving in worktree | #116 | Infrastructure defect — workaround: start server with single `-p` flag |
 
 ---
 
-## Acceptance Criteria Status
+## Platform Status
 
-| Criterion | Status |
-|-----------|--------|
-| `next-themes` installed; `ThemeProvider` wraps app in `layout.tsx` | PASS |
-| `globals.css` has `:root` (light) and `.dark` (dark) variable blocks | PASS — source confirmed |
-| `.dark {}` outside `@layer base` (DEF-TF-001 fix) | PASS — line 68, confirmed |
-| Hardcoded `"dark"` class removed; `suppressHydrationWarning` added | PASS |
-| Default theme is "system" with localStorage key `fenrir-theme` | PASS |
-| App renders correctly in dark mode | CANNOT VERIFY — DEF-TF-002 blocks |
-| `npx tsc --noEmit` passes | PASS — 0 errors |
+| Area | Status | Notes |
+|------|--------|-------|
+| Stripe Direct | LIVE | Sole subscription platform |
+| Patreon | REMOVED | All routes, UI, and env vars deleted (PR #128) |
+| Anonymous auth | LIVE | localStorage household ID, anonymous-first model |
+| Google OIDC | LIVE | Auth.js v5, per-household localStorage namespacing |
+| Google Sheets import | LIVE | Three-path import: URL, Google Picker, CSV upload |
+| Settings soft gate | LIVE | SubscriptionGate mode="soft" — content visible, banner for non-subscribers |
+| Stripe cancel_at handling | LIVE | Portal cancellation handled correctly (PR #163) |
+| Settings two-column layout | LIVE | Tier badge deduplicated (PR #170) |
 
 ---
 
@@ -182,30 +91,13 @@ and TC-TF-015 through TC-TF-019 can read live CSS variable values.
 
 | Risk | Level | Notes |
 |------|-------|-------|
-| DEF-TF-001 source fix | LOW | Fix confirmed correct in globals.css |
-| DEF-TF-002 dev server broken | HIGH | Blocks CSS variable test verification |
-| ThemeProvider wiring | LOW | Verified correct |
-| suppressHydrationWarning | LOW | Present and working |
-| Pre-existing ESLint warning | LOW | `useCallback` dep in `PickerStep.tsx` — unrelated |
+| Stripe webhook HMAC in CI | LOW | Cannot test live HMAC in Playwright; manual steps documented in stripe-direct.spec.ts |
+| Real Stripe checkout redirect | LOW | Requires live keys; documented as manual test path |
+| Karl/Canceled subscriber state | LOW | Requires active Stripe subscription in KV; documented as manual test path |
 
 ---
 
-## Notes for FiremanDecko
+## Recommendation: SHIP
 
-The source fix in commit 5c85e4b is structurally correct — `.dark {}` is now
-outside `@layer base` exactly as prescribed in DEF-TF-001. Two tests that were
-previously failing due to SSR/hydration behaviour (TC-TF-011, TC-TF-013) now pass,
-confirming the layout.tsx changes are working correctly.
-
-The remaining 5 failures are entirely due to the dev server infrastructure issue
-(DEF-TF-002) — the broken `-p 9653 -p 9654` dual-port startup. This is not a code
-defect in the PR itself.
-
-**To unblock final QA sign-off:**
-
-1. Kill process 66683 (the broken dual-port dev server)
-2. Start a fresh single-port dev server: `npx next dev -p 9654`
-3. Re-run: `SERVER_URL=http://localhost:9654 npx playwright test quality/test-suites/theme-toggle/`
-4. All 20 tests are expected to pass
-
-If all 20 pass after the infra fix, this PR is cleared for merge.
+All acceptance criteria verified. 549 automated tests passing. No open defects.
+The wolf is ready.

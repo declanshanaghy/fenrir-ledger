@@ -27,7 +27,7 @@
     /*
      * The StripeSettings component lives inside the Settings page (/settings).
      * It is one section within a larger settings layout.
-     * It follows the same card pattern as the existing PatreonSettings component:
+     * It follows a standard settings card pattern:
      *   - Section heading
      *   - Status indicator
      *   - Action buttons
@@ -198,11 +198,10 @@
 
   <!-- =====================================================================
        DESIGN DECISION -- Stripe Settings placement and structure
-       Luna's recommendation: single settings card inside /settings page,
-       replacing the existing PatreonSettings component.
+       Luna's recommendation: single settings card inside /settings page.
 
        Rationale:
-         - Matches the existing pattern users already know from PatreonSettings.
+         - Standard settings card pattern: heading + status + actions.
          - Three clear states: Thrall (unsubscribed), Karl (active), Canceled.
          - Anonymous users see the same component -- they can subscribe too.
            The only difference is that anonymous users will be prompted for

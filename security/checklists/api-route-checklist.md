@@ -1,7 +1,7 @@
 # API Route Security Checklist — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-02
+**Last reviewed**: 2026-03-05 (updated for Stripe Direct — added webhook exemption, updated logging)
 
 Use this checklist whenever adding, modifying, or reviewing an API route under
 `development/frontend/src/app/api/`.
@@ -47,7 +47,9 @@ Every route handler MUST pass all items in this section before merge.
   - No raw third-party error messages forwarded verbatim (see SEV-007)
 
 - [ ] **Internal errors are logged server-side with full context**
-  - Use `console.error("[Fenrir] routeName: description", err)` for unexpected errors
+  - Use `log.error("routeName: description", { context })` from `@/lib/logger` (fenrir structured logger)
+  - Use `log.debug` at entry and exit of every handler (with return value summary)
+  - Never use raw `console.*` in API routes — always use the fenrir logger
   - Include route context and relevant non-sensitive metadata
 
 - [ ] **HTTP status codes are semantically correct**
@@ -102,9 +104,10 @@ Every route handler MUST pass all items in this section before merge.
 
 ## Accepted Exceptions
 
-| Route | Exception | Rationale |
-|-------|-----------|-----------|
-| `/api/auth/token` | No `requireAuth()` call | Token exchange proxy: the client is obtaining its Bearer token here. Protected by redirect_uri allowlist and rate limiting instead. |
+| Route | Exception | Rationale | Compensating Control |
+|-------|-----------|-----------|----------------------|
+| `/api/auth/token` | No `requireAuth()` call | Token exchange proxy: the client is obtaining its Bearer token here. | redirect_uri allowlist, rate limiting |
+| `/api/stripe/webhook` | No `requireAuth()` call | Stripe delivers webhooks server-to-server; no Bearer token is available. | SHA-256 HMAC via `stripe.webhooks.constructEvent()` with `STRIPE_WEBHOOK_SECRET` |
 
 To add a new exception, it must be:
 1. Documented in this table with rationale
@@ -118,11 +121,17 @@ To add a new exception, it must be:
 ```typescript
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
+import { log } from "@/lib/logger";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  log.debug("POST /api/your-route called");
+
   // 1. Auth guard — MUST be first
   const auth = await requireAuth(request);
-  if (!auth.ok) return auth.response;
+  if (!auth.ok) {
+    log.debug("POST /api/your-route returning", { status: 401 });
+    return auth.response;
+  }
   // auth.user: { sub, email, name, picture }
 
   // 2. Parse and validate input
@@ -130,6 +139,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     body = (await request.json()) as typeof body;
   } catch {
+    log.debug("POST /api/your-route returning", { status: 400, error: "invalid_json" });
     return NextResponse.json(
       { error: "invalid_request", error_description: "Request body must be valid JSON." },
       { status: 400 }
@@ -138,6 +148,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const { field } = body;
   if (!field || typeof field !== "string") {
+    log.debug("POST /api/your-route returning", { status: 400, error: "missing_field" });
     return NextResponse.json(
       { error: "invalid_request", error_description: "Missing required field: field." },
       { status: 400 }
@@ -147,11 +158,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // 3. Handler logic
   try {
     // ... your logic here
+    log.debug("POST /api/your-route returning", { status: 200 });
     return NextResponse.json({ result: "ok" });
   } catch (err) {
     // 4. Generic error response + server-side logging
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[Fenrir] routeName: unexpected error:", message);
+    log.error("POST /api/your-route: unexpected error", { error: message });
+    log.debug("POST /api/your-route returning", { status: 500, error: "server_error" });
     return NextResponse.json(
       { error: "server_error", error_description: "An unexpected error occurred." },
       { status: 500 }
@@ -170,6 +183,6 @@ When reviewing a PR that adds or modifies an API route, verify:
 2. Confirm `if (!auth.ok) return auth.response` immediately follows
 3. Check all `request.json()` calls are wrapped in try/catch with 400 response
 4. Grep the file for `process.env.NEXT_PUBLIC_` — flag any server secret using this prefix
-5. Search for `console.log` — should be `console.error` or `console.info` with `[Fenrir]` prefix
+5. Search for `console.log` / `console.error` / `console.info` — should use `log.*` from `@/lib/logger` instead
 6. Check error responses for raw error messages forwarded from third parties
 7. Check for any `fetch()` calls — verify hostname validation exists

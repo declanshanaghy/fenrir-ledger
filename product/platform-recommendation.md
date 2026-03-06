@@ -1,12 +1,12 @@
 # Platform Recommendation for Fenrir Ledger
 
-## Current Decision: Stripe Direct (Pivot from Patreon)
+## Current Decision: Stripe Direct
 
-**Status:** Strategic pivot in progress. Patreon integration is being feature-flagged off. Stripe Direct is the new subscription platform.
+**Status:** Stripe Direct is the subscription platform. Patreon has been fully removed (not just feature-flagged).
 
 **Decision date:** 2026-03-04
 
-**Rationale:** Stripe Direct provides significantly better revenue retention ($9.34 vs $8.41 per $10 subscription), full control over the billing experience, and eliminates platform dependency. The Patreon integration was well-architected for provider portability (documented in ADR-009), making this pivot feasible with moderate engineering effort.
+**Rationale:** Stripe Direct provides significantly better revenue retention ($9.34 vs $8.41 per $10 subscription), full control over the billing experience, and eliminates platform dependency. Patreon was fully removed (all routes, components, and environment variables deleted) after Stripe Direct shipped.
 
 ---
 
@@ -55,53 +55,17 @@ The existing entitlement layer was explicitly designed for provider portability 
 
 ---
 
-## Patreon Integration: Feature-Flagged, Not Deleted
+## Patreon Integration: Fully Removed
 
-The existing Patreon integration will be preserved behind a feature flag, not deleted. This ensures:
+The Patreon integration was fully removed from the codebase. All Patreon API routes, client components, server libraries, and environment variables have been deleted. The `SUBSCRIPTION_PLATFORM` feature flag is no longer needed -- Stripe Direct is the only provider.
 
-1. **Rollback safety** -- If the Stripe migration hits blockers, Patreon can be re-enabled immediately
-2. **Existing subscribers** -- Any active Patreon subscribers can be migrated gracefully
-3. **Code reference** -- The Patreon implementation serves as a working reference for the Stripe integration's structure
-4. **Test coverage preservation** -- Existing test suites remain valid for regression testing
+**Removed (no longer in codebase):**
+- All `/api/patreon/*` routes (authorize, callback, membership, webhook, unlink, migrate)
+- `PatreonSettings.tsx`, `lib/patreon/api.ts`, `lib/patreon/types.ts`, `lib/patreon/state.ts`
+- `PATREON_CLIENT_ID`, `PATREON_CLIENT_SECRET`, `PATREON_CAMPAIGN_ID`, `PATREON_WEBHOOK_SECRET` environment variables
+- `SUBSCRIPTION_PLATFORM` feature flag
 
-### Feature Flag Plan
-
-See `specs/feature-flagging-system.md` for the full feature flagging spec.
-
-A single environment variable controls the active subscription platform:
-
-```
-SUBSCRIPTION_PLATFORM=stripe   # or "patreon" to revert
-```
-
-The `EntitlementContext` reads this flag and routes to the appropriate provider (Stripe routes or Patreon routes). The feature gating layer (`PatreonGate`, `useEntitlement`, `hasFeature()`) does not change.
-
-### What Gets Flagged Off
-
-**API Routes** (6 routes behind flag):
-- `/api/patreon/authorize`
-- `/api/patreon/callback`
-- `/api/patreon/membership`
-- `/api/patreon/webhook`
-- `/api/patreon/unlink`
-- `/api/patreon/migrate`
-
-**Client Components** (behind flag):
-- `PatreonSettings.tsx` -- replaced by `StripeSettings.tsx`
-- `SealedRuneModal.tsx` -- campaign URL updated to Stripe checkout link
-- `UpsellBanner.tsx` -- CTA updated to Stripe checkout
-- `UnlinkConfirmDialog.tsx` -- adapted for Stripe subscription cancellation
-
-**Server Libraries** (behind flag):
-- `lib/patreon/api.ts`
-- `lib/patreon/types.ts`
-- `lib/patreon/state.ts`
-
-**Environment Variables** (Patreon vars become optional):
-- `PATREON_CLIENT_ID`
-- `PATREON_CLIENT_SECRET`
-- `PATREON_CAMPAIGN_ID`
-- `PATREON_WEBHOOK_SECRET`
+Loki validated the removal with a 36-test Playwright suite (`patreon-removal.spec.ts`) confirming all 14 Patreon routes return 404, zero Patreon text remains in the UI, and Stripe-only entitlement works correctly.
 
 ---
 
@@ -140,7 +104,7 @@ graph TD
     google([Google OIDC<br/>Identity Provider])
     %% Entitlement layer
     stripe([Stripe Billing<br/>Entitlement Provider])
-    patreon([Patreon OAuth<br/>Feature-Flagged Off])
+    patreon([Patreon OAuth<br/>Fully Removed])
     %% Storage
     kv[(Vercel KV<br/>Entitlement Store)]
     cache[(localStorage<br/>Entitlement Cache)]
@@ -156,7 +120,7 @@ graph TD
     app -->|"caches entitlement"| cache
     app -->|"checks tier"| gate
     app -.->|"manage subscription"| portal
-    patreon -.->|"disabled via flag"| app
+    patreon -.->|"removed from codebase"| app
 
     class google primary
     class stripe healthy
@@ -186,7 +150,6 @@ graph TD
 | `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (client-side, `NEXT_PUBLIC_`) |
 | `STRIPE_WEBHOOK_SECRET` | Webhook endpoint signing secret |
 | `STRIPE_PRICE_ID` | Price ID for the Karl tier |
-| `SUBSCRIPTION_PLATFORM` | Feature flag: `stripe` or `patreon` |
 
 ---
 
@@ -203,7 +166,6 @@ The Stripe Direct migration is complete when:
 - [ ] `PatreonGate` (renamed to `SubscriptionGate`) works with both providers
 - [ ] Settings page shows Stripe subscription status (replaces PatreonSettings)
 - [ ] SealedRuneModal links to Stripe Checkout (not Patreon campaign page)
-- [ ] Existing Patreon tests still pass when flag is set to `patreon`
 - [ ] New Stripe test suites pass
 - [ ] Security review by Heimdall (Stripe webhook signature verification, key management)
 
@@ -237,38 +199,19 @@ This is a P3 initiative. The current focus is shipping the Stripe Direct integra
 
 ---
 
-## Prior Art: Patreon Integration (Preserved for Reference)
+## Prior Art: Patreon Integration (Removed)
 
-The Patreon integration shipped in March 2026 and is fully operational. It is preserved behind a feature flag as a reference implementation and fallback option.
+The Patreon integration shipped in March 2026 and was subsequently fully removed from the codebase in favor of Stripe Direct. The git history preserves the implementation for reference.
 
-### Patreon Integration Components
+**Reusable components that survived the Patreon removal:**
+- `EntitlementContext` -- React context (now Stripe-only)
+- `useEntitlement` hook -- Platform-agnostic interface
+- `SealedRuneModal` -- Norse-themed upsell modal (now links to Stripe Checkout)
+- `UpsellBanner` -- Upsell banner (now CTA links to Stripe Checkout)
 
-**API Routes** (6 routes):
-- `/api/patreon/authorize` -- Initiates Patreon OAuth flow
-- `/api/patreon/callback` -- Handles OAuth callback, stores entitlement in Vercel KV
-- `/api/patreon/membership` -- Returns current entitlement status
-- `/api/patreon/webhook` -- Processes membership change events
-- `/api/patreon/unlink` -- Removes Patreon linkage
-- `/api/patreon/migrate` -- Migrates anonymous entitlement to Google-keyed on sign-in
-
-**Client Components**:
-- `EntitlementContext` -- React context (platform-agnostic, reusable)
-- `useEntitlement` hook -- Platform-agnostic interface (reusable)
-- `PatreonGate` -- Feature gating component (reusable with rename)
-- `SealedRuneModal` -- Norse-themed upsell modal (reusable with URL swap)
-- `UpsellBanner` -- Upsell banner (reusable with CTA swap)
-- `PatreonSettings` -- Settings page component (replaced by StripeSettings)
-- `UnlinkConfirmDialog` -- Confirmation dialog (reusable)
-
-**Infrastructure**:
-- Vercel KV for server-side entitlement storage (AES-256-GCM encrypted tokens)
-- Dual-environment OAuth clients (dev + production)
-- Anonymous Patreon flow with migration on Google sign-in
-
-**Architecture References**:
-- ADR-009: `designs/architecture/adr-009-patreon-entitlement.md`
-- Product Design Brief: `designs/product/backlog/patreon-subscription-brief.md`
-- Security Review: `security/reports/2026-03-02-patreon-integration.md`
+**Infrastructure retained:**
+- Vercel KV for server-side entitlement storage
+- Entitlement migration on Google sign-in
 
 ---
 
