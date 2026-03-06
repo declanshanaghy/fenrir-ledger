@@ -112,7 +112,7 @@ graph LR
 | **Architecture** | [System Design](architecture/system-design.md) · [ADRs](architecture/adrs/) · [Pipeline](architecture/pipeline.md) |
 | **Security** | [Security Index](security/README.md) · [Google API Review](security/reports/2026-03-02-google-api-integration.md) |
 | **Quality** | [Test Suites](quality/test-suites/) · [Quality Report](quality/quality-report.md) · [Test Plan](quality/test-plan.md) |
-| **Operations** | [Git Convention](.claude/skills/git-commit/SKILL.md) · [Mermaid Guide](ux/ux-assets/mermaid-style-guide.md) |
+| **Operations** | [Git Convention](.claude/skills/git-commit/SKILL.md) · [Mermaid Guide](ux/ux-assets/mermaid-style-guide.md) · [Depot Setup](.claude/scripts/depot-setup.sh) · [Fire Next Up](.claude/skills/fire-next-up/SKILL.md) |
 
 ---
 
