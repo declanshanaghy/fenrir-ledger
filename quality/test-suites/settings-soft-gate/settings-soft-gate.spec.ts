@@ -90,30 +90,30 @@ test.describe("Settings page -- all sections visible for non-subscribers (AC-4)"
 
   test("TC-SSG-001: Cloud Sync section is visible without subscription", async ({ page }) => {
     await navigateToSettings(page);
-    const section = page.getByRole("region", { name: CLOUD_SYNC_LABEL });
+    const section = page.getByRole("region", { name: CLOUD_SYNC_LABEL, exact: true });
     await expect(section).toBeVisible();
     await expect(section.getByRole("heading", { name: "Cloud Sync" })).toBeVisible();
   });
 
   test("TC-SSG-002: Multi-Household section is visible without subscription", async ({ page }) => {
     await navigateToSettings(page);
-    const section = page.getByRole("region", { name: MULTI_HOUSEHOLD_LABEL });
+    const section = page.getByRole("region", { name: MULTI_HOUSEHOLD_LABEL, exact: true });
     await expect(section).toBeVisible();
     await expect(section.getByRole("heading", { name: "Multi-Household" })).toBeVisible();
   });
 
   test("TC-SSG-003: Data Export section is visible without subscription", async ({ page }) => {
     await navigateToSettings(page);
-    const section = page.getByRole("region", { name: DATA_EXPORT_LABEL });
+    const section = page.getByRole("region", { name: DATA_EXPORT_LABEL, exact: true });
     await expect(section).toBeVisible();
     await expect(section.getByRole("heading", { name: "Data Export" })).toBeVisible();
   });
 
   test("TC-SSG-004: All 3 feature sections are visible simultaneously (AC-2)", async ({ page }) => {
     await navigateToSettings(page);
-    await expect(page.getByRole("region", { name: CLOUD_SYNC_LABEL })).toBeVisible();
-    await expect(page.getByRole("region", { name: MULTI_HOUSEHOLD_LABEL })).toBeVisible();
-    await expect(page.getByRole("region", { name: DATA_EXPORT_LABEL })).toBeVisible();
+    await expect(page.getByRole("region", { name: CLOUD_SYNC_LABEL, exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: MULTI_HOUSEHOLD_LABEL, exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: DATA_EXPORT_LABEL, exact: true })).toBeVisible();
   });
 });
 
@@ -134,9 +134,9 @@ test.describe("Soft gate banners -- shown above feature sections for Thrall user
     // locked upsell card sections carry aria-label="<Feature> (locked)"; in soft mode
     // the children sections carry aria-label="<Feature>".  getByRole with a partial
     // name string matches both variants (Playwright name matching is a substring check).
-    await expect(page.getByRole("region", { name: "Cloud Sync" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Multi-Household" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Data Export" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Cloud Sync", exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Multi-Household", exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Data Export", exact: true })).toBeVisible();
   });
 
   test("TC-SSG-006: Banner heading 'Unlock this feature' appears for locked sections (Stripe mode)", async ({ page }) => {
@@ -165,7 +165,7 @@ test.describe("Soft gate banners -- shown above feature sections for Thrall user
     if (bannerCount > 0) {
       // The key invariant: each banner is immediately followed by the feature section content.
       // Verify Cloud Sync section is still visible when its banner is present.
-      await expect(page.getByRole("region", { name: CLOUD_SYNC_LABEL })).toBeVisible();
+      await expect(page.getByRole("region", { name: CLOUD_SYNC_LABEL, exact: true })).toBeVisible();
     }
   });
 
@@ -260,7 +260,7 @@ test.describe("Settings page baseline rendering", () => {
     // The Data Export SubscriptionGate renders for Thrall users. In hard-gate mode
     // the locked upsell card replaces the section children (the "Export Data" disabled
     // button is only rendered for Karl subscribers). Assert the gate section itself is present.
-    await expect(page.getByRole("region", { name: "Data Export" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Data Export", exact: true })).toBeVisible();
     // The feature description from the upsell card must be present
     await expect(page.getByText("Export your card data as CSV or JSON")).toBeVisible();
   });
@@ -282,15 +282,15 @@ test.describe("Mobile responsiveness -- 375px viewport", () => {
     // Confirm heading and feature gate sections are visible -- layout must not collapse to nothing
     await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
     // The Cloud Sync gate section (upsell card or feature section) must be visible at mobile width
-    await expect(page.getByRole("region", { name: "Cloud Sync" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Cloud Sync", exact: true })).toBeVisible();
   });
 
   test("TC-SSG-015: Feature sections remain readable at 375px", async ({ page }) => {
     await navigateToSettings(page);
     // All 3 section headings must be visible at mobile width
-    const cloudSync = page.getByRole("region", { name: CLOUD_SYNC_LABEL });
-    const multiHousehold = page.getByRole("region", { name: MULTI_HOUSEHOLD_LABEL });
-    const dataExport = page.getByRole("region", { name: DATA_EXPORT_LABEL });
+    const cloudSync = page.getByRole("region", { name: CLOUD_SYNC_LABEL, exact: true });
+    const multiHousehold = page.getByRole("region", { name: MULTI_HOUSEHOLD_LABEL, exact: true });
+    const dataExport = page.getByRole("region", { name: DATA_EXPORT_LABEL, exact: true });
 
     await expect(cloudSync).toBeVisible();
     await expect(multiHousehold).toBeVisible();
@@ -378,9 +378,9 @@ test.describe("Hard mode regression -- no existing pages broken (AC-7, AC-8)", (
     await expect(page.getByText("This feature requires a Karl subscription.")).not.toBeVisible();
 
     // All 3 feature sections must be accessible without a Karl subscription
-    await expect(page.getByRole("region", { name: CLOUD_SYNC_LABEL })).toBeVisible();
-    await expect(page.getByRole("region", { name: MULTI_HOUSEHOLD_LABEL })).toBeVisible();
-    await expect(page.getByRole("region", { name: DATA_EXPORT_LABEL })).toBeVisible();
+    await expect(page.getByRole("region", { name: CLOUD_SYNC_LABEL, exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: MULTI_HOUSEHOLD_LABEL, exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: DATA_EXPORT_LABEL, exact: true })).toBeVisible();
   });
 
   test("TC-SSG-021: Valhalla page loads without regression", async ({ page }) => {
@@ -405,9 +405,9 @@ test.describe("No-platform mode -- gate passes children directly (AC-3 edge case
     await clearSubscriptionState(page);
     await navigateToSettings(page);
 
-    await expect(page.getByRole("region", { name: CLOUD_SYNC_LABEL })).toBeVisible();
-    await expect(page.getByRole("region", { name: MULTI_HOUSEHOLD_LABEL })).toBeVisible();
-    await expect(page.getByRole("region", { name: DATA_EXPORT_LABEL })).toBeVisible();
+    await expect(page.getByRole("region", { name: CLOUD_SYNC_LABEL, exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: MULTI_HOUSEHOLD_LABEL, exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: DATA_EXPORT_LABEL, exact: true })).toBeVisible();
   });
 });
 
