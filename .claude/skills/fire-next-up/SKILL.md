@@ -72,28 +72,27 @@ See `.claude/scripts/depot-setup.sh` for the automated setup flow.
 
 **How Depot remote execution works:**
 
-```
-Orchestrator (local)                     Depot Cloud
-       │                                      │
-       │  depot claude \                      │
-       │    --org pqtm7s538l \                │
-       │    --session-id issue-42-step1 \     │
-       │    --repository <repo-url> \         │
-       │    --branch main \                   │
-       │    --dangerously-skip-permissions \   │
-       │    -p "<agent prompt>"               │
-       │ ─────────────────────────────────────>│
-       │                                      │ Sandbox provisioned
-       │  (returns immediately — fire-and-forget)
-       │                                      │ Claude Code runs task
-       │  depot claude list-sessions \        │
-       │    --org pqtm7s538l \                │
-       │    --output json                     │
-       │ ─────────────────────────────────────>│
-       │  <── JSON: [{id, status, ...}] ──────│
-       │                                      │ Worker pushes to git
-       │  (orchestrator detects completion)    │
-       │                                      │
+```mermaid
+sequenceDiagram
+    participant 🐺 as Orchestrator<br/>(local)
+    participant ☁️ as Depot Cloud
+    participant 🌿 as Git Remote
+
+    Note over 🐺,☁️: ᚠ DISPATCH — Fire & Forget
+
+    🐺->>+☁️: depot claude --org ... --branch main<br/>--dangerously-skip-permissions<br/>-p "agent prompt"
+    ☁️-->>🐺: (returns immediately)
+
+    Note over ☁️: ⚒️ Sandbox provisioned<br/>Claude Code runs task
+
+    loop ᛉ Poll every 30s
+        🐺->>☁️: depot claude list-sessions --output json
+        ☁️-->>🐺: [{session_id, created_at, updated_at}]
+    end
+
+    ☁️->>🌿: git push (commits on feature branch)
+
+    Note over 🐺,🌿: ᚱ COMPLETION — Orchestrator detects<br/>new commits, spawns next chain step
 ```
 
 ### Depot Session Lifecycle
@@ -209,20 +208,22 @@ mechanism differs.
 
 ### Mode Selection Logic
 
-```
-if --local flag is set:
-    use local worktree spawning (Agent tool, isolation: worktree)
-else:
-    1. check DEPOT_ORG_ID is set and non-empty in .env
-    2. verify Depot auth: `depot claude list-sessions --org "$DEPOT_ORG_ID" --output json`
-       (auth comes from `depot login` OAuth — no DEPOT_TOKEN env var needed)
-    if both pass:
-        use Depot remote spawning
-    else:
-        ERROR — do NOT fall back to local. Print:
-        "Depot not configured. Run `depot login` and set DEPOT_ORG_ID in .env.
-         Use --local to run locally, or configure Depot first."
-        STOP. Do not dispatch.
+```mermaid
+flowchart TD
+    A{"🐺 --local flag?"}
+    A -->|Yes| B["⚒️ Local worktree spawning<br/>(Agent tool, isolation: worktree)"]
+    A -->|No| C{"ᚠ DEPOT_ORG_ID<br/>set in .env?"}
+    C -->|No| E
+    C -->|Yes| D{"ᛉ depot claude<br/>list-sessions<br/>auth check"}
+    D -->|Pass| F["☁️ Depot remote spawning"]
+    D -->|Fail| E["🚫 ERROR — Do NOT fall back<br/>Run depot login + set DEPOT_ORG_ID<br/>or use --local explicitly"]
+
+    style A fill:#07070d,stroke:#c9920a,color:#c9920a
+    style B fill:#07070d,stroke:#4a9eff,color:#4a9eff
+    style C fill:#07070d,stroke:#c9920a,color:#c9920a
+    style D fill:#07070d,stroke:#c9920a,color:#c9920a
+    style E fill:#07070d,stroke:#ff4444,color:#ff4444
+    style F fill:#07070d,stroke:#44ff44,color:#44ff44
 ```
 
 ---
