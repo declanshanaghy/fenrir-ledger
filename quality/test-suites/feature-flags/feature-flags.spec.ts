@@ -94,19 +94,19 @@ test.describe("Settings page structure", () => {
     expect(count).toBeGreaterThanOrEqual(3);
   });
 
-  test("TC-FF-107: Gated sections do NOT render children for Thrall users", async ({
+  test("TC-FF-107: Gated sections render children for Thrall users (soft gate)", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
     // The actual feature sections (Cloud Sync, Multi-Household, Data Export)
-    // should NOT be visible -- SubscriptionGate replaces them with the locked placeholder
+    // Soft gate: children are always rendered alongside the upsell card
     const cloudSync = page.locator('[aria-label="Cloud Sync"]');
     const multiHousehold = page.locator('[aria-label="Multi-Household"]');
     const dataExport = page.locator('[aria-label="Data Export"]');
-    expect(await cloudSync.count()).toBe(0);
-    expect(await multiHousehold.count()).toBe(0);
-    expect(await dataExport.count()).toBe(0);
+    expect(await cloudSync.count()).toBeGreaterThan(0);
+    expect(await multiHousehold.count()).toBeGreaterThan(0);
+    expect(await dataExport.count()).toBeGreaterThan(0);
   });
 
   test("TC-FF-108: Settings page header tagline is visible", async ({ page }) => {
@@ -116,15 +116,15 @@ test.describe("Settings page structure", () => {
     await expect(tagline).toBeVisible();
   });
 
-  test("TC-FF-109: 'Coming soon to Karl supporters' text is NOT visible for Thrall users", async ({
+  test("TC-FF-109: 'Coming soon to Karl supporters' text IS visible for Thrall users (soft gate)", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
     // "Coming soon to Karl supporters" is inside gated children -- Thrall users
-    // see the locked placeholder instead, so this text should NOT be visible
+    // Soft gate: children always render, so "Coming soon" text is visible
     const comingSoonText = page.getByText("Coming soon to Karl supporters.");
-    expect(await comingSoonText.count()).toBe(0);
+    expect(await comingSoonText.count()).toBeGreaterThan(0);
   });
 
   test("TC-FF-110: Dashboard loads without errors", async ({
