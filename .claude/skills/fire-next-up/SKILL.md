@@ -468,12 +468,24 @@ Launch the first agent in a **local background worktree** using the Agent tool:
 
 Use the appropriate template based on which agent is being spawned.
 
+**IMPORTANT — All agent prompts must include this git credential setup before any
+push or `gh` write operation:**
+
+```
+gh auth setup-git
+```
+
+This configures `gh` as the git credential helper so `git push` can authenticate
+using the `GITHUB_TOKEN` env var. Without this, pushes fail with
+`could not read Username for 'https://github.com'`.
+
 #### Luna (UX Designer) — Step 1 for `type:ux`
 
 ```
 You are Luna, the UX Designer. Design wireframes for GitHub Issue #<NUMBER>: <TITLE>
 
-**First, create your branch:**
+**First, set up git credentials and create your branch:**
+gh auth setup-git
 git checkout -b <BRANCH> && git push -u origin <BRANCH>
 
 **Issue details:**
@@ -522,7 +534,8 @@ Start by reading the issue, then review existing wireframes in ux/wireframes/ fo
 ```
 You are FiremanDecko, the Principal Engineer. Fix GitHub Issue #<NUMBER>: <TITLE>
 
-**First, get on your branch:**
+**First, set up git credentials and get on your branch:**
+gh auth setup-git
 Check if the branch already exists (a previous agent may have created it):
   git fetch origin
   git branch -r | grep '<BRANCH>'
@@ -586,7 +599,8 @@ Start by reading the issue comments for handoff context, then the affected files
 ```
 You are Heimdall, the Security Specialist. Fix GitHub Issue #<NUMBER>: <TITLE>
 
-**First, create your branch:**
+**First, set up git credentials and create your branch:**
+gh auth setup-git
 git checkout -b <BRANCH> && git push -u origin <BRANCH>
 
 **Issue details:**
@@ -634,7 +648,8 @@ Start by reading the affected files listed in the issue, then implement the fix.
 ```
 You are Loki, the QA Tester. Validate GitHub Issue #<NUMBER>: <TITLE>
 
-**First, get on the branch:**
+**First, set up git credentials and get on the branch:**
+gh auth setup-git
 Check if the branch already exists (previous agents may have created it):
   git fetch origin
   git branch -r | grep '<BRANCH>'
