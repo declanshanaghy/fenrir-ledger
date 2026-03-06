@@ -61,7 +61,7 @@
 
 Track every fee-wyrm in your portfolio. Every chain forged, every promo deadline, every fee-serpent's strike date — Fenrir watches and howls before the trap snaps shut. Add your cards, name your thresholds, and the wolf does the rest: reminding you to spend, transfer, downgrade, or close before you lose a single dollar to a fee you didn't choose to pay.
 
-*Sprints 1–5 shipped. The app lives at `development/frontend/` (Next.js on Vercel). Sprint 4 delivered Ragnarok threshold, milestones, Gleipnir completion, accessibility, and Wolf Hunger. Sprint 5 delivered Google Sheets import. The dedicated backend server has been removed in favor of serverless-only.*
+*Sprints 1–5 shipped. The app lives at `development/frontend/` (Next.js on Vercel). Sprint 5 delivered Google Sheets import. Post-sprint: Stripe Direct replaced Patreon as the sole subscription platform (ADR-010); SubscriptionGate is soft-only. The dedicated backend server was removed in favor of fully serverless Vercel.*
 
 ---
 
@@ -138,7 +138,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 - [product/README.md](product/README.md) — Product domain index: mythology map, copywriting guide, backlog
 - [product/product-design-brief.md](product/product-design-brief.md) — Design philosophy, anonymous-first identity model
-- [product/backlog/README.md](product/backlog/README.md) — Groomed backlog index (all stories, Patreon brief, deferred items)
+- [product/backlog/README.md](product/backlog/README.md) — Historical backlog index (Sprints 1-5 shipped; active backlog in GitHub Issues)
 - [product/handoff-to-luna-anon-auth.md](product/handoff-to-luna-anon-auth.md) — Handoff to Luna: anonymous-first auth + cloud sync UX brief
 
 ### [ᚱ The Saga Ledger — Design](ux/README.md)
@@ -155,7 +155,7 @@ Kanban · Max 5 chains per sprint · The forge-script runs every sprint
 
 - [development/README.md](development/README.md) — Index of all development artifacts, scripts, and specs
 - [architecture/system-design.md](architecture/system-design.md) — Component architecture, data model, data flow diagrams
-- [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001 through ADR-009)
+- [architecture/adrs/](architecture/adrs/) — Architecture Decision Records (ADR-001 through ADR-006; ADR-007 through ADR-010 in [designs/architecture/](designs/architecture/))
 - [development/frontend/](development/frontend/) — The forge itself. Next.js source code lives here.
 
 ### ᛉ [Bifrost Watch — Security](security/README.md)
@@ -213,7 +213,7 @@ cd fenrir-ledger
 
 ### Release History
 
-*Sprints 1–5 shipped. Sprint 4 delivered Ragnarok threshold, milestones, Gleipnir completion, accessibility, and Wolf Hunger. Sprint 5 delivered Google Sheets import.*
+*Sprints 1–5 shipped. Post-sprint: Stripe Direct replaced Patreon as the sole subscription platform (ADR-010).*
 
 - [Sprint History](architecture/sprint-history.md) — Per-sprint artifact listings (Sprints 1–3)
 - [Sprint 4 details](product/backlog/README.md) — Stories 4.1–4.5 in the backlog index

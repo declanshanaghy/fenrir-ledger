@@ -132,15 +132,48 @@ gantt
 
 **Key deliverables**:
 - Import wizard (`ImportWizard.tsx`) with three entry methods
-- `ShareUrlEntry.tsx`, `CsvUpload.tsx`, `ImportDedupStep.tsx` components
-- `useSheetImport.ts` hook for import state management
-- `/api/sheets/import` API route for server-side sheet processing
+- `ShareUrlEntry.tsx`, `CsvUpload.tsx`, `PickerStep.tsx`, `ImportDedupStep.tsx` components
+- `useSheetImport.ts`, `usePickerConfig.ts`, `useDriveToken.ts` hooks
+- `/api/sheets/import` and `/api/config/picker` API routes
 - `AuthGate` component to hide import buttons for anonymous users
-- Fly.io backend removed — fully serverless on Vercel (#60)
+- Google Picker integration (Path B) for direct spreadsheet selection
+- Backend server removed — fully serverless on Vercel (#60)
 
 ---
 
-## Post-Sprint 5 — Shipped
+## Post-Sprint 5 — Stripe Direct Pivot (Shipped)
 
+**Goal**: Replace Patreon with Stripe Direct as the sole subscription platform.
+
+**Key deliverables**:
+
+### Feature Flags Phase
+- Feature flag system (`adr-feature-flags.md`) for toggling between Patreon and Stripe
+- `isPatreon()` / `isStripe()` route guards on all Patreon API routes
+
+### Stripe Direct Integration (ADR-010)
+- Stripe Checkout for subscription creation (`/api/stripe/checkout`)
+- Stripe Customer Portal for billing management (`/api/stripe/portal`)
+- Stripe webhook handler for entitlement updates (`/api/stripe/webhook`)
+- Stripe membership lookup (`/api/stripe/membership`)
+- Stripe unlink (`/api/stripe/unlink`)
+- `EntitlementContext.tsx` and `useEntitlement.ts` hook
+- `SubscriptionGate.tsx` — soft-only mode (always renders children, prepends upsell)
+- `SealedRuneModal.tsx` — Norse-themed upgrade prompt
+- `StripeSettings.tsx` — subscription management panel
+- Settings page at `/settings`
+- Entitlement library (`lib/entitlement/`, `lib/stripe/`)
+- Vercel KV for entitlement state (`lib/kv/`)
+
+### Patreon Removal
+- All Patreon API routes deleted (7 routes)
+- All Patreon components and library code removed
+- Feature flag system superseded (Stripe is sole platform)
+- `SUBSCRIPTION_PLATFORM` env var and `feature-flags.ts` removed
+
+### Other Post-Sprint 5 Work
 - Clean up unstaged changes and obsolete spec files (#63)
 - Move sprint-3 audit report from specs/ to quality/ (#62)
+- Import wireframe fixes: SafetyBanner details toggle, CSV format help, standardized button text (#136)
+- Auth test suites: sign-in page, auth callback, card edit form (#138)
+- Stripe subscription state handling for portal cancellations (#fix branch)
