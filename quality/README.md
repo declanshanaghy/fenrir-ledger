@@ -84,7 +84,7 @@ SERVER_URL=http://localhost:9653 npx playwright test ../../quality/test-suites/s
 - [test-cases.md](test-cases.md) — TC-format specifications for Easter Eggs (22 cases; historical reference)
 - [EASTER-EGGS-AUDIT.md](EASTER-EGGS-AUDIT.md) — Sprint 2 Easter Eggs comprehensive audit; final verdict PASS
 - [easter-eggs-transparency-report.md](easter-eggs-transparency-report.md) — SVG transparency validation report
-- [sprint-3-gap-audit.md](sprint-3-gap-audit.md) — Pre-fix gap analysis for Stories 3.2, 3.4, 3.5 (all gaps resolved; historical)
+
 
 ---
 

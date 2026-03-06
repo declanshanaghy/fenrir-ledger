@@ -6,12 +6,12 @@ Fenrir Ledger is a freemium credit card churning tool built on Next.js/Vercel. F
 
 ## Decision Outcome
 
-**Patreon was selected and implemented** as the subscription platform (March 2026). See [platform-recommendation.md](platform-recommendation.md) for the full rationale, integration status, and future strategy.
+**Stripe Direct is the subscription platform** (March 2026). Patreon was initially selected and integrated, then fully removed in favor of Stripe Direct for better revenue retention, full billing control, and churner-friendly payment methods. See [platform-recommendation.md](platform-recommendation.md) for the full rationale and implementation strategy.
 
-Key architectural references:
-- ADR-009: `designs/architecture/adr-009-patreon-entitlement.md`
-- Product Design Brief: `designs/product/backlog/patreon-subscription-brief.md`
-- Security Review: `security/reports/2026-03-02-patreon-integration.md`
+
+
+
+
 
 ---
 
@@ -39,7 +39,7 @@ Key architectural references:
 - **Pros**: Low fees; simple setup; all features free; broad payment methods
 - **Cons**: Brand perception is casual/tip-based; limited community features; no built-in audience discovery
 
-### 3. Patreon — Best Tier Management **[SELECTED -- IMPLEMENTED]**
+### 3. Patreon — Best Tier Management [REMOVED -- replaced by Stripe Direct]
 
 - **Fees**: 10% for new creators (as of August 2025) + payment processing (2.9% + $0.30) + 30% Apple tax on iOS
 - **Payment methods**: Credit cards, PayPal
@@ -94,7 +94,7 @@ Key architectural references:
 - **Pros**: Deep integrations; Apple/Google Pay; group subscriptions; you own the relationship
 - **Cons**: Expensive ($49/month + 4.9%); requires your own website/platform; no content hosting or discovery
 
-### 8. Stripe Direct — Best for SaaS/Tool Delivery
+### 8. Stripe Direct — Best for SaaS/Tool Delivery **[SELECTED -- IMPLEMENTED]**
 
 - **Fees**: 2.9% + $0.30 per card transaction + 0.7% for Stripe Billing
 - **Payment methods**: All major credit cards, Apple Pay, Google Pay, ACH, and many more
@@ -121,4 +121,4 @@ Key architectural references:
 | Gumroad | $1.50 (10%+$0.50) | ~$0.59 | $0 | ~$7.91 |
 | Memberful | $0.49 (4.9%) | ~$0.59 | $49/mo | ~$8.92 (minus $49 amortized) |
 
-**Note:** Patreon was selected despite not having the lowest fees. The fee premium (~$0.93/subscriber/month vs. Stripe Direct) is offset by zero billing infrastructure development, built-in campaign management, and alignment with Fenrir Ledger's indie creator identity. See [platform-recommendation.md](platform-recommendation.md) for the full cost-benefit analysis.
+**Note:** Stripe Direct was selected for its lowest effective fees (~$9.34 kept per $10 subscription), full control over the billing experience, and churner-friendly payment methods. Patreon was initially implemented but fully removed in favor of Stripe Direct. See [platform-recommendation.md](platform-recommendation.md) for the full cost-benefit analysis.

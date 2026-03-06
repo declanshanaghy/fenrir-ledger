@@ -7,8 +7,6 @@ Technical architecture documents. These translate product vision into technical 
 - [README.md](README.md) — This index.
 - [pipeline.md](pipeline.md) — Kanban workflow and model assignments for the full team pipeline.
 - [system-design.md](system-design.md) — Component architecture, data flow diagrams, file structure, and dependency table reflecting the current delivered state (through Stripe Direct integration).
-- [sprint-plan.md](sprint-plan.md) — Rolling sprint plan: Sprints 1–5 completed, plus post-sprint Stripe Direct pivot and Patreon removal.
-- [sprint-history.md](sprint-history.md) — Per-sprint artifact listings (Sprints 1–3).
 - [implementation-brief.md](implementation-brief.md) — Integration plan for the Saga Ledger design system: three-wave approach, sprint story breakdowns, and QA handoff notes.
 
 ## ADRs (architecture/adrs/)

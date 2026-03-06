@@ -1,7 +1,7 @@
 # Security Data Flow Diagrams — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-02
+**Last reviewed**: 2026-03-05 (updated for Stripe Direct — Patreon removed; prompt injection fix noted)
 
 Trust boundary notation:
 - `[TB]` — Trust boundary crossing (browser ↔ server)
@@ -46,7 +46,7 @@ sequenceDiagram
 
     CB->>CB: decodeIdToken(id_token) [client-side, no sig verify]
     CB->>LS: setSession() → fenrir:auth [XSS]
-    CB->>CB: mergeAnonymousCards() [no schema validation — SEV-013]
+    CB->>CB: mergeAnonymousCards() [no schema validation]
     CB->>U: Redirect to callbackUrl (isSafeCallbackUrl validated)
 ```
 
@@ -120,8 +120,10 @@ Server (/api/sheets/import/route.ts)
   │
   ├─ extractCardsFromCsv(csv)  [extract-cards.ts]
   │    buildExtractionPrompt(csv)  [prompt.ts]
-  │    ← [INJ: csv is user-controlled and interpolated into LLM prompt]
-  │    LLM call (Anthropic/OpenAI)
+  │    ← Returns { system, user } structure — system instructions separated from CSV
+  │    ← [INJ: csv is in user message role only; system prompt ends with RAW DATA instruction]
+  │    ← Prompt injection mitigated by system/user role separation (PR #171)
+  │    LLM call (Anthropic/OpenAI) with system param + user message
   │    JSON.parse(response)
   │    Zod schema validation (CardsArraySchema / ImportResponseSchema)
   │    assign crypto.randomUUID() to each card
@@ -131,7 +133,7 @@ Server (/api/sheets/import/route.ts)
 
 **Trust boundary crossings**: 1 (browser → API route)
 **SSRF surface**: `fetchCsv()` with `redirect:"follow"` — mitigated by domain lock
-**Injection point**: CSV content interpolated into LLM prompt — prompt injection risk
+**Injection point**: CSV content in user message role only; system instructions protected
 
 ---
 
@@ -156,14 +158,15 @@ Server (/api/sheets/import/route.ts)
   │
   ├─ extractCardsFromCsv(csv)  ← same LLM pipeline as Path A
   │    buildExtractionPrompt(csv)
-  │    ← [INJ: same prompt injection risk as Path A]
+  │    ← [INJ: same structural separation as Path A — user message role only]
   │    LLM call → Zod validation → UUID assignment
   │
   └─ return { cards } → browser
 ```
 
 **Note**: Path C has no SSRF surface (no external fetch). The injection surface is
-identical to Path A — user-controlled CSV text is sent to the LLM.
+mitigated by system/user role separation — user-controlled CSV is placed in the user
+message role only with explicit RAW DATA instruction.
 
 ---
 
@@ -212,12 +215,56 @@ Browser
 
 ---
 
-## 5. Summary of Attack Surfaces per Flow
+## 5. Stripe Checkout Flow
+
+```
+Browser (authenticated)
+  │
+  ├─ User clicks "Subscribe"
+  │    Frontend redirects to /sign-in if not authenticated
+  │
+  ├─ POST /api/stripe/checkout  [TB]
+  │    Authorization: Bearer <id_token>
+  │    requireAuth() → verified Google user { sub, email }
+  │    IP rate limit (10/min — in-memory only)
+  │
+  │    stripe.checkout.sessions.create({
+  │      customer_email: auth.user.email,  ← from verified id_token
+  │      metadata: { googleSub: auth.user.sub },
+  │      success_url: APP_BASE_URL + "/settings?stripe=success",
+  │      cancel_url:  APP_BASE_URL + "/settings?stripe=cancel",
+  │    })
+  │    returns { url: "https://checkout.stripe.com/..." }
+  │
+  ├─ Browser redirects to Stripe-hosted checkout
+  │    User completes payment
+  │
+  ├─ Stripe delivers webhook: POST /api/stripe/webhook  [TB]
+  │    No requireAuth — authenticated by SHA-256 HMAC
+  │    request.text() — raw body preserved BEFORE JSON parse
+  │    stripe.webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET)
+  │    ← SHA-256 HMAC verification
+  │    handle checkout.session.completed:
+  │      session.metadata.googleSub → setStripeEntitlement(googleSub, entitlement) → KV
+  │
+  └─ Browser redirects to success_url: /settings?stripe=success
+```
+
+**Trust boundary crossings**: 2 (checkout + webhook)
+**SSRF surface**: None — all Stripe API calls use the official Stripe SDK
+**Redirect safety**: `APP_BASE_URL`/`VERCEL_URL` only — no user-controlled headers
+
+---
+
+## 6. Summary of Attack Surfaces per Flow
 
 | Flow | SSRF | Prompt Injection | XSS-accessible Storage | Auth Check |
 |------|------|-----------------|------------------------|------------|
-| Path A (URL) | Low (domain-locked + redirect:follow) | Yes (CSV→prompt) | fenrir:auth | requireAuth |
-| Path B (Picker) | None | Yes (CSV→prompt) | fenrir:auth + fenrir:drive-token | requireAuth |
-| Path C (CSV upload) | None | Yes (CSV→prompt) | fenrir:auth | requireAuth |
+| Path A (URL) | Low (domain-locked + redirect:follow) | Low (system/user separation + RAW DATA) | fenrir:auth | requireAuth |
+| Path B (Picker) | None | Low (system/user separation + RAW DATA) | fenrir:auth + fenrir:drive-token | requireAuth |
+| Path C (CSV upload) | None | Low (system/user separation + RAW DATA) | fenrir:auth | requireAuth |
 | OAuth callback | None | None | fenrir:auth | N/A (public) |
 | Token proxy | None (fixed URL) | None | None | N/A (public, rate-limited) |
+| Stripe checkout | None (Stripe SDK) | None | None | requireAuth |
+| Stripe webhook | None | None | None | N/A (SHA-256 HMAC) |
+| Stripe membership | None | None | None (KV only) | requireAuth |

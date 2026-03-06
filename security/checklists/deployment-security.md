@@ -1,7 +1,7 @@
 # Deployment Security Checklist — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-02
+**Last reviewed**: 2026-03-05 (updated for Stripe Direct — Patreon removed; Stripe env vars added)
 
 Run this checklist before every production deployment. Items marked [AUTOMATED] are
 covered by the Playwright test suite or CI. Items marked [MANUAL] require human review.
@@ -31,16 +31,23 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
   ```
   vercel env ls
   ```
-  Required vars: `GOOGLE_CLIENT_SECRET`, `FENRIR_ANTHROPIC_API_KEY`,
-  `GOOGLE_PICKER_API_KEY`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
+  Required vars:
+  - `GOOGLE_CLIENT_SECRET`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_PICKER_API_KEY`
+  - `FENRIR_ANTHROPIC_API_KEY`
+  - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`
+  - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+  - `KV_REST_API_URL`, `KV_REST_API_TOKEN`
+  - `APP_BASE_URL` (production URL for Stripe redirects)
 
 - [ ] [MANUAL] **No server secrets use `NEXT_PUBLIC_` prefix**
   ```
   grep -r "NEXT_PUBLIC_GOOGLE_CLIENT_SECRET" development/frontend/
   grep -r "NEXT_PUBLIC_FENRIR" development/frontend/
   grep -r "NEXT_PUBLIC_GOOGLE_PICKER" development/frontend/
+  grep -r "NEXT_PUBLIC_STRIPE_SECRET" development/frontend/
+  grep -r "NEXT_PUBLIC_STRIPE_WEBHOOK" development/frontend/
   ```
-  All should return no results.
+  All should return no results. (`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is intentionally public.)
 
 ---
 
@@ -48,10 +55,14 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 - [ ] [MANUAL] **Every API route calls `requireAuth()` as first operation**
   ```
-  grep -rn "export async function" development/frontend/src/app/api/ | grep -v "token/route"
+  grep -rn "export async function" development/frontend/src/app/api/ | grep -v "token/route" | grep -v "webhook/route"
   ```
-  For each route found (except `/api/auth/token`), open the file and confirm
-  `requireAuth(request)` is the first call.
+  For each route found (except `/api/auth/token` and `/api/stripe/webhook`), open the file
+  and confirm `requireAuth(request)` is the first call.
+
+- [ ] [MANUAL] **`/api/stripe/webhook` uses SHA-256 HMAC verification**
+  - Confirm `stripe.webhooks.constructEvent()` is called with `request.text()` (raw body)
+  - Confirm `STRIPE_WEBHOOK_SECRET` is read from process.env and never logged
 
 - [ ] [MANUAL] **`/api/auth/token` has rate limiting and origin validation**
   - Confirm `rateLimit()` is called before any processing
@@ -125,7 +136,7 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
   ```
   cd development/frontend && npx playwright test
   ```
-  Expected: 216 tests, 0 failures (as of 2026-03-02 baseline)
+  Expected: 0 failures (baseline count grows with each sprint)
 
 - [ ] [MANUAL] **Verify Next.js build output does not include server secrets**
   - Check `.next/static/` for any files containing `GOOGLE_CLIENT_SECRET` or `FENRIR_ANTHROPIC_API_KEY`
@@ -133,7 +144,25 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 ---
 
-## 7. Vercel Deployment Configuration
+## 7. Stripe Configuration
+
+- [ ] [MANUAL] **Stripe webhook endpoint is registered in Stripe Dashboard**
+  - Endpoint URL: `https://fenrir-ledger.vercel.app/api/stripe/webhook`
+  - Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+  - `STRIPE_WEBHOOK_SECRET` in Vercel matches the signing secret from Stripe Dashboard
+
+- [ ] [MANUAL] **Stripe Dashboard redirect URL allowlist is configured**
+  - Add `https://fenrir-ledger.vercel.app/settings` to allowed redirect URLs
+  - This is a defence-in-depth control (primary control is `APP_BASE_URL` in code)
+
+- [ ] [MANUAL] **`APP_BASE_URL` is set in Vercel production environment**
+  - Value: `https://fenrir-ledger.vercel.app`
+  - Used by checkout and portal routes for success/cancel redirect URLs
+  - If unset, `VERCEL_URL` is used as fallback (automatically set by Vercel)
+
+---
+
+## 9. Vercel Deployment Configuration
 
 - [ ] [MANUAL] **Vercel Protection Bypass secret is not exposed in PR comments or logs**
   - The bypass secret must only travel via `extraHTTPHeaders` in the Playwright runner
@@ -145,7 +174,7 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 ---
 
-## 8. Post-Deployment Verification
+## 10. Post-Deployment Verification
 
 - [ ] [MANUAL] **Sign-in flow works end-to-end on the production URL**
   - Navigate to production URL
