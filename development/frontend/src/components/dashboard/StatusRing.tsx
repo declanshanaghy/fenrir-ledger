@@ -95,7 +95,11 @@ interface StatusRingProps {
   daysRemaining: number;
   /** Total day span: from card open date to the deadline. */
   totalDays: number;
-  /** 1–2 character issuer initial displayed inside the ring. */
+  /**
+   * Character(s) displayed inside the ring.
+   * For known issuers this is an Elder Futhark rune; for unknown issuers
+   * it is 1-2 character initials (fallback).
+   */
   initials: string;
   /**
    * Card name for the accessible aria-label.

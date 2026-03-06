@@ -27,7 +27,8 @@ import { StatusBadge } from "./StatusBadge";
 import { StatusRing } from "./StatusRing";
 import type { Card as CreditCard } from "@/lib/types";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/card-utils";
-import { KNOWN_ISSUERS } from "@/lib/constants";
+import { getIssuerBadgeChar, getIssuerMeta } from "@/lib/issuer-utils";
+import { IssuerLogo } from "@/components/shared/IssuerLogo";
 
 interface CardTileProps {
   card: CreditCard;
@@ -37,31 +38,6 @@ interface CardTileProps {
    * Set to `undefined` in normal operation.
    */
   lokiLabel?: string | undefined;
-}
-
-/**
- * Returns the human-readable issuer name from the issuer ID.
- */
-function getIssuerName(issuerId: string): string {
-  const issuer = KNOWN_ISSUERS.find((i) => i.id === issuerId);
-  return issuer?.name ?? issuerId;
-}
-
-/**
- * Derives 1–2 character initials from the issuer name.
- *
- * Multi-word names (e.g. "Capital One") → "CO" (first letter of each word).
- * Single-word names (e.g. "Chase") → "C" (first letter only).
- * Falls back to the first character of issuerId if name lookup fails.
- */
-function getIssuerInitials(issuerId: string): string {
-  const issuer = KNOWN_ISSUERS.find((i) => i.id === issuerId);
-  const name = issuer?.name ?? issuerId;
-  const words = name.trim().split(/\s+/);
-  if (words.length >= 2) {
-    return (words[0]![0]! + words[1]![0]!).toUpperCase();
-  }
-  return name[0]!.toUpperCase();
 }
 
 /**
@@ -114,7 +90,8 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
   })();
 
   const ringTotalDays = getTotalDays(card.openDate, ringDeadlineIso);
-  const ringInitials = getIssuerInitials(card.issuerId);
+  const ringBadgeChar = getIssuerBadgeChar(card.issuerId);
+  const issuerMeta = getIssuerMeta(card.issuerId);
 
   return (
     /*
@@ -137,17 +114,20 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
-                {/* StatusRing: SVG countdown ring around issuer initials */}
+                {/* StatusRing: SVG countdown ring with rune (known) or initials (unknown) */}
                 <StatusRing
                   status={card.status}
                   daysRemaining={ringDaysRemaining}
                   totalDays={ringTotalDays}
-                  initials={ringInitials}
+                  initials={ringBadgeChar}
                   cardName={card.cardName}
                 />
                 <div className="min-w-0">
-                  <CardDescription className="text-xs uppercase tracking-wide mb-1">
-                    {getIssuerName(card.issuerId)}
+                  <CardDescription
+                    className="text-xs uppercase tracking-wide mb-1"
+                    title={issuerMeta ? `${issuerMeta.rune} ${issuerMeta.runeName} — ${issuerMeta.runeConnection}` : undefined}
+                  >
+                    <IssuerLogo issuerId={card.issuerId} className="inline-block align-middle opacity-90" />
                   </CardDescription>
                   <CardTitle className="text-base font-semibold leading-tight truncate">
                     {card.cardName}

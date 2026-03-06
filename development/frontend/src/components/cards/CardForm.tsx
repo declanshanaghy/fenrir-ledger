@@ -53,6 +53,7 @@ import {
   localDateStringToIso,
 } from "@/lib/card-utils";
 import { KNOWN_ISSUERS } from "@/lib/constants";
+import { getIssuerRune } from "@/lib/issuer-utils";
 import { GleipnirBearSinews, useGleipnirFragment4 } from "@/components/cards/GleipnirBearSinews";
 
 // ─── Zod validation schema ────────────────────────────────────────────────────
@@ -318,11 +319,14 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
               <SelectValue placeholder="Select issuer" />
             </SelectTrigger>
             <SelectContent>
-              {KNOWN_ISSUERS.map((issuer) => (
-                <SelectItem key={issuer.id} value={issuer.id}>
-                  {issuer.name}
-                </SelectItem>
-              ))}
+              {KNOWN_ISSUERS.map((issuer) => {
+                const rune = getIssuerRune(issuer.id);
+                return (
+                  <SelectItem key={issuer.id} value={issuer.id}>
+                    {rune ? `${rune} ` : ""}{issuer.name}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
           {errors.issuerId && (
