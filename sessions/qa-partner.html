@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ᚠ Session Chronicle: The Quality Hunt &mdash; Tracking the Prey · Fenrir Ledger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void:        #07070d;
+      --forge:       #0f1018;
+      --chain:       #13151f;
+      --rune-border: #1e2235;
+      --iron-border: #2a2d45;
+      --gold-dim:    #8a6a00;
+      --gold:        #c9920a;
+      --gold-bright: #f0b429;
+      --teal:        #0a8c6e;
+      --amber:       #f59e0b;
+      --fire:        #c94a0a;
+      --violet:      #a78bfa;
+      --text:        #e8e4d4;
+      --muted:       #8a8578;
+      --subtle:      #3d3d52;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Source Serif 4', serif;
+      font-size: 16px;
+      color: var(--text);
+      background-color: var(--void);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -5%, rgba(201,146,10,0.09) 0%, transparent 65%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      background-attachment: fixed;
+      min-height: 100vh;
+      line-height: 1.7;
+    }
+
+    /* ── Page ── */
+    .page { max-width: 880px; margin: 0 auto; padding: 0 28px 100px; }
+
+    /* ── Header ── */
+    .session-header {
+      text-align: center;
+      padding: 72px 0 52px;
+      border-bottom: 1px solid var(--rune-border);
+    }
+    .header-runes {
+      display: block;
+      font-size: 22px;
+      letter-spacing: 0.5em;
+      color: var(--gold);
+      opacity: 0.55;
+      margin-bottom: 20px;
+    }
+    .session-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.6rem, 5vw, 2.6rem);
+      font-weight: 700;
+      color: var(--gold-bright);
+      text-shadow: 0 0 48px rgba(201,146,10,0.35);
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+    .session-subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .session-meta {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px 28px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--subtle);
+    }
+    .session-meta .val { color: var(--gold); }
+
+    /* ── TOC ── */
+    .toc {
+      margin: 40px 0 0;
+      padding: 20px 24px;
+      background: var(--forge);
+      border: 1px solid var(--rune-border);
+      border-left: 3px solid var(--gold-dim);
+    }
+    .toc-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .toc-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 6px 24px;
+    }
+    .toc-list li a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toc-list li a:hover { color: var(--gold-bright); }
+    .toc-rune { color: var(--gold); opacity: 0.6; font-size: 0.9rem; }
+    .toc-num { color: var(--subtle); font-size: 0.65rem; }
+
+    /* ── Timeline ── */
+    .timeline {
+      position: relative;
+      padding-top: 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 23px;
+      top: 56px;
+      bottom: 60px;
+      width: 1px;
+      background: linear-gradient(to bottom,
+        var(--gold) 0%,
+        var(--iron-border) 60%,
+        transparent 100%);
+    }
+
+    /* ── Entry ── */
+    .entry { display: flex; gap: 24px; }
+
+    .entry-rune {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      background: var(--forge);
+      border: 1px solid var(--iron-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      position: relative;
+      z-index: 1;
+      cursor: default;
+    }
+    .entry-rune:hover { border-color: var(--gold); }
+
+    .entry-body { flex: 1; min-width: 0; }
+
+    .act-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--subtle);
+      margin-bottom: 4px;
+    }
+    .entry-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--gold-bright);
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
+
+    /* ── User message ── */
+    .user-msg {
+      background: var(--chain);
+      border: 1px solid var(--iron-border);
+      border-left: 3px solid var(--gold);
+      padding: 14px 18px;
+      margin-bottom: 14px;
+    }
+    .msg-role {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .role-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 9px;
+      border: 1px solid;
+    }
+    .badge-fireman { color: var(--amber);  border-color: #f59e0b55; background: rgba(245,158,11,0.07); }
+    .badge-luna    { color: var(--violet); border-color: #a78bfa55; background: rgba(167,139,250,0.07); }
+    .badge-system  { color: var(--fire);   border-color: #c94a0a55; background: rgba(201,74,10,0.07); }
+    .badge-odin    { color: var(--gold-bright); border-color: #f0b42955; background: rgba(240,180,41,0.07); }
+
+    .msg-text {
+      font-size: 0.9rem;
+      color: var(--text);
+      white-space: pre-wrap;
+      line-height: 1.65;
+    }
+
+    /* ── Work card ── */
+    .work-card {
+      background: var(--forge);
+      border: 1px solid var(--rune-border);
+      padding: 18px 20px;
+    }
+    .work-body {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+    .work-body p { margin-bottom: 8px; }
+    .work-body p:last-child { margin-bottom: 0; }
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; color: var(--muted); }
+    .hl   { color: var(--gold-bright); font-weight: 600; }
+
+    /* ── Change list ── */
+    .changes {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin: 12px 0;
+    }
+    .changes li {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+    }
+    .changes li::before { content: '\2192'; color: var(--gold); flex-shrink: 0; }
+    .old { text-decoration: line-through; color: var(--subtle); }
+    .new { color: var(--gold-bright); }
+
+    /* ── Code block ── */
+    .code-block {
+      background: #050508;
+      border: 1px solid var(--rune-border);
+      border-left: 2px solid var(--gold-dim);
+      padding: 14px 16px;
+      margin: 14px 0;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.77rem;
+      line-height: 1.65;
+      color: var(--text);
+    }
+    .ca { color: #6ee7b7; }
+    .cr { color: #fca5a5; opacity: 0.5; }
+    .cc { color: var(--subtle); }
+
+    /* ── File chips ── */
+    .file-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding-top: 14px;
+      border-top: 1px solid var(--rune-border);
+      margin-top: 16px;
+    }
+    .chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      padding: 3px 10px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .chip-mod  { color: var(--gold);   border-color: var(--gold-dim);    background: rgba(201,146,10,0.06); }
+    .chip-new  { color: var(--teal);   border-color: rgba(10,140,110,.4); background: rgba(10,140,110,0.06); }
+    .chip-mem  { color: var(--violet); border-color: rgba(167,139,250,.4);background: rgba(167,139,250,0.06); }
+
+    /* ── Bug callout ── */
+    .bug-box {
+      background: rgba(201,74,10,0.07);
+      border: 1px solid rgba(201,74,10,0.35);
+      border-left: 3px solid var(--fire);
+      padding: 13px 16px;
+      margin-bottom: 16px;
+    }
+    .bug-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--fire);
+      margin-bottom: 7px;
+    }
+    .bug-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.77rem;
+      color: #fca5a5;
+      line-height: 1.55;
+    }
+
+    /* ── Norm callout ── */
+    .norm-box {
+      background: rgba(10,140,110,0.06);
+      border: 1px solid rgba(10,140,110,0.3);
+      border-left: 3px solid var(--teal);
+      padding: 14px 18px;
+      margin: 14px 0;
+    }
+    .norm-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--teal);
+      margin-bottom: 10px;
+    }
+    .norm-body {
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── Issue table ── */
+    .issue-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+    }
+    .issue-table th {
+      text-align: left;
+      padding: 8px 12px;
+      background: var(--chain);
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.62rem;
+      border-bottom: 1px solid var(--iron-border);
+    }
+    .issue-table td {
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--rune-border);
+      color: var(--text);
+      vertical-align: top;
+    }
+    .issue-table tr:last-child td { border-bottom: none; }
+    .issue-num { color: var(--gold); }
+    .issue-type { color: var(--muted); font-size: 0.62rem; }
+    .triage-skip { color: var(--subtle); }
+    .triage-fixed { color: var(--teal); }
+    .triage-filed { color: var(--gold-bright); }
+
+    /* ── Section divider ── */
+    .rune-hr {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0;
+    }
+    .rune-hr::before, .rune-hr::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--rune-border);
+    }
+    .rune-hr span {
+      font-size: 16px;
+      color: var(--gold);
+      opacity: 0.3;
+      letter-spacing: 0.4em;
+    }
+
+    /* ── Footer ── */
+    .session-footer {
+      margin-top: 72px;
+      padding-top: 40px;
+      border-top: 1px solid var(--rune-border);
+      text-align: center;
+    }
+    .footer-cipher {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      letter-spacing: 0.5em;
+      color: var(--gold);
+      opacity: 0.35;
+      margin-bottom: 14px;
+    }
+    .footer-text {
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      color: var(--subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      line-height: 2;
+    }
+    .footer-text .hl { color: var(--gold-dim); }
+    .footer-sub {
+      font-family: 'Source Serif 4', serif;
+      font-size: 0.82rem;
+      font-style: italic;
+      color: var(--subtle);
+      margin-top: 8px;
+    }
+
+    /* ── Back nav ── */
+    .back-nav { padding: 24px 0 0; }
+    .back-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--gold-bright); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="back-nav" aria-label="Return to archive">
+    <a href="/sessions/" class="back-link">&larr; ᛏ Session Archive</a>
+  </nav>
+
+  <!-- ── Header ─────────────────────────────────────────────────── -->
+  <header class="session-header">
+    <span class="header-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ ᛊ</span>
+    <h1 class="session-title">The Quality Hunt</h1>
+    <p class="session-subtitle">Session Chronicle &middot; Fenrir Ledger</p>
+    <div class="session-meta">
+      <span>DATE <span class="val">2026-03-06</span></span>
+      <span>ACTS <span class="val">VIII</span></span>
+      <span>FILES CHANGED <span class="val">14</span></span>
+    </div>
+  </header>
+
+  <!-- ── Table of Contents ─────────────────────────────────────── -->
+  <nav class="toc" aria-label="Session acts">
+    <p class="toc-title">Chronicle of Acts</p>
+    <ol class="toc-list">
+      <li><a href="#act-1"><span class="toc-rune">ᚦ</span> <span class="toc-num">I</span> The Cancel-at Mending</a></li>
+      <li><a href="#act-2"><span class="toc-rune">ᚦ</span> <span class="toc-num">II</span> The Protocol Correction</a></li>
+      <li><a href="#act-3"><span class="toc-rune">ᛏ</span> <span class="toc-num">III</span> The Issue Harvest</a></li>
+      <li><a href="#act-4"><span class="toc-rune">ᛃ</span> <span class="toc-num">IV</span> The Triage Walk</a></li>
+      <li><a href="#act-5"><span class="toc-rune">ᛉ</span> <span class="toc-num">V</span> The Template Pact</a></li>
+      <li><a href="#act-6"><span class="toc-rune">ᛏ</span> <span class="toc-num">VI</span> The Label Forge</a></li>
+      <li><a href="#act-7"><span class="toc-rune">ᛜ</span> <span class="toc-num">VII</span> The Agent Binding</a></li>
+      <li><a href="#act-8"><span class="toc-rune">ᛞ</span> <span class="toc-num">VIII</span> The Push &amp; the Hunt</a></li>
+    </ol>
+  </nav>
+
+  <!-- ── Timeline ──────────────────────────────────────────────── -->
+  <div class="timeline">
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- ACT I: Stripe cancel_at fix                                -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="entry" id="act-1">
+      <div class="entry-rune" title="Thurisaz &mdash; problem-solving, fixing bugs">ᚦ</div>
+      <div class="entry-body">
+        <p class="act-label">Act I &middot; Bug Fix</p>
+        <h2 class="entry-title">The Cancel-at Mending</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-odin">Odin</span>
+          </div>
+          <p class="msg-text">Whats the url on vercel for that db can i view the data there?</p>
+        </div>
+
+        <div class="bug-box">
+          <p class="bug-label">Bug Fixed</p>
+          <p class="bug-text">Stripe portal cancellations set cancel_at (a timestamp) instead of cancel_at_period_end (a boolean). The membership route backfill only checked the boolean, so cancellation state never appeared on the frontend Settings page.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Aligned all three Stripe subscription handlers to check both <span class="mono">cancel_at_period_end</span> and <span class="mono">cancel_at !== null</span>. When <span class="mono">cancel_at</span> is present, it takes priority as the <span class="hl">currentPeriodEnd</span> date &mdash; this is the actual cancellation timestamp the portal writes.</p>
+            <p>Three locations made consistent: <span class="mono">webhook.ts</span> buildEntitlementFromSubscription, <span class="mono">webhook/route.ts</span> handleSubscriptionUpdated, and <span class="mono">membership/route.ts</span> backfill path.</p>
+          </div>
+
+          <div class="code-block">
+            <pre><span class="cc">// Before: only checked the boolean</span>
+<span class="cr">cancelAtPeriodEnd = sub.cancel_at_period_end;</span>
+
+<span class="cc">// After: portal uses cancel_at timestamp</span>
+<span class="ca">cancelAtPeriodEnd = sub.cancel_at_period_end || sub.cancel_at !== null;</span>
+<span class="ca">currentPeriodEnd = sub.cancel_at</span>
+<span class="ca">  ? new Date(sub.cancel_at * 1000).toISOString()</span>
+<span class="ca">  : sub.items.data[0]</span>
+<span class="ca">    ? new Date(sub.items.data[0].current_period_end * 1000).toISOString()</span>
+<span class="ca">    : new Date().toISOString();</span></pre>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-mod">&#9998; src/app/api/stripe/membership/route.ts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- ACT II: HTTPS localhost fix                                -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="entry" id="act-2">
+      <div class="entry-rune" title="Thurisaz &mdash; problem-solving, fixing bugs">ᚦ</div>
+      <div class="entry-body">
+        <p class="act-label">Act II &middot; Bug Fix</p>
+        <h2 class="entry-title">The Protocol Correction</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-odin">Odin</span>
+          </div>
+          <p class="msg-text">hmmm stripe redirect on checkout choked now. why did it try to go to https://localhost:9653 TLS isn't up locally</p>
+        </div>
+
+        <div class="bug-box">
+          <p class="bug-label">Bug Fixed</p>
+          <p class="bug-text">vercel dev sets VERCEL_URL but runs plain HTTP. The checkout and portal routes blindly prefixed https://, breaking Stripe redirects when developing locally.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Added a <span class="mono">VERCEL_ENV</span> check to both checkout and portal routes. When <span class="mono">VERCEL_ENV === "development"</span> (local <span class="mono">vercel dev</span>), the base URL uses <span class="hl">http://</span>. Preview and Production deployments continue using <span class="hl">https://</span>.</p>
+          </div>
+
+          <div class="code-block">
+            <pre><span class="ca">const baseUrl = process.env.APP_BASE_URL</span>
+<span class="ca">  ?? (process.env.VERCEL_URL</span>
+<span class="ca">    ? (process.env.VERCEL_ENV === "development"</span>
+<span class="ca">      ? `http://${process.env.VERCEL_URL}`</span>
+<span class="ca">      : `https://${process.env.VERCEL_URL}`)</span>
+<span class="ca">    : "http://localhost:9653");</span></pre>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-mod">&#9998; src/app/api/stripe/checkout/route.ts</span>
+            <span class="chip chip-mod">&#9998; src/app/api/stripe/portal/route.ts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- ACT III: Filing UX issues                                  -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="entry" id="act-3">
+      <div class="entry-rune" title="Tiwaz &mdash; tooling, meta-work">ᛏ</div>
+      <div class="entry-body">
+        <p class="act-label">Act III &middot; Issue Filing</p>
+        <h2 class="entry-title">The Issue Harvest</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-odin">Odin</span>
+          </div>
+          <p class="msg-text">We need bigger fonts. file a bug to do a UX update. Stripe platform is so much easier to read. We need to keep our style but bigger size by default.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Odin walked through the live app, identifying UX issues and feature requests as they appeared. Each observation was immediately filed as a GitHub Issue with screenshots, reproduction steps, and acceptance criteria. Eight issues filed in rapid succession, covering readability, button feedback, layout, and visual design.</p>
+          </div>
+
+          <table class="issue-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="issue-num">#149</td><td>Increase base font sizes for readability</td><td class="issue-type">UX</td></tr>
+              <tr><td class="issue-num">#150</td><td>Add hover/click feedback to buttons</td><td class="issue-type">UX</td></tr>
+              <tr><td class="issue-num">#151</td><td>Redesign Settings page layout</td><td class="issue-type">UX</td></tr>
+              <tr><td class="issue-num">#152</td><td>Howl panel vertical alignment with card grid</td><td class="issue-type">UX</td></tr>
+              <tr><td class="issue-num">#153</td><td>Assign runes to issuers + bank logos</td><td class="issue-type">UX</td></tr>
+              <tr><td class="issue-num">#154</td><td>Howl panel overlaps user menu</td><td class="issue-type">Bug</td></tr>
+              <tr><td class="issue-num">#155</td><td>Stripe test coverage gaps</td><td class="issue-type">Test</td></tr>
+              <tr><td class="issue-num">#156</td><td>Logged-out empty state overbusy</td><td class="issue-type">UX</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- ACT IV: Bug triage                                         -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="entry" id="act-4">
+      <div class="entry-rune" title="Jera &mdash; journeys, multi-step processes">ᛃ</div>
+      <div class="entry-body">
+        <p class="act-label">Act IV &middot; Triage</p>
+        <h2 class="entry-title">The Triage Walk</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-odin">Odin</span>
+          </div>
+          <p class="msg-text">Lets walk through them 1 by 1 and determine which are still applicable</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Walked through every on-disk bug: 6 Stripe security findings, 9 Google API security findings, 3 import QA defects, and 7 Sprint 3 gap items. Each was checked against current code to determine if still applicable.</p>
+            <p>Of ~25 items examined: <span class="hl">10 already fixed</span>, <span class="hl">3 not applicable</span>, <span class="hl">7 won't-do</span> (accepted design decisions), and <span class="hl">5 filed as new issues</span>.</p>
+          </div>
+
+          <table class="issue-table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Items</th>
+                <th>Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Stripe SEV-001</td><td>Secrets in worktree .env.local</td><td class="triage-skip">Stale &mdash; worktree deleted, never in git</td></tr>
+              <tr><td>Stripe SEV-002</td><td>Origin header in redirects</td><td class="triage-fixed">Fixed this session</td></tr>
+              <tr><td>Stripe SEV-003</td><td>CSP missing Stripe domains</td><td class="triage-fixed">Already fixed</td></tr>
+              <tr><td>Stripe SEV-004&ndash;006</td><td>Rate limiter, dedup, anon checkout</td><td class="triage-skip">Won't do / not applicable</td></tr>
+              <tr><td>Google SEV-001&ndash;003</td><td>Open redirect, headers, rate limiting</td><td class="triage-fixed">All fixed</td></tr>
+              <tr><td>Google SEV-005</td><td>LLM prompt injection via CSV</td><td class="triage-filed">Filed as #157</td></tr>
+              <tr><td>Google SEV-004,006&ndash;009</td><td>Picker key, Drive token, error fwd, etc.</td><td class="triage-skip">Design decisions / fixed / skip</td></tr>
+              <tr><td>Import DEF-001&ndash;003</td><td>Success step, aria-labels, CSV msg</td><td class="triage-fixed">All fixed</td></tr>
+              <tr><td>Sprint 3 gaps</td><td>4 remaining gaps</td><td class="triage-filed">Filed as #158&ndash;#161</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- ACT V: Issue template                                      -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="entry" id="act-5">
+      <div class="entry-rune" title="Algiz &mdash; protection, validation">ᛉ</div>
+      <div class="entry-body">
+        <p class="act-label">Act V &middot; Process</p>
+        <h2 class="entry-title">The Template Pact</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-odin">Odin</span>
+          </div>
+          <p class="msg-text">ok now lets develop a template for issues being filed in GH and update everyone's instructions to use it when needed.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Analyzed existing issues to extract common patterns, then created a unified GitHub Issue template. Title format: <span class="hl">[Type] [Priority]: Short description</span>. Types: Bug, Feature, UX, Security, Test. Priorities: P1-Critical through P4-Low.</p>
+            <p>Template includes structured sections: Problem, Screenshots, Expected Behavior, Affected Code, Reproduction Steps, Acceptance Criteria, and Notes.</p>
+          </div>
+
+          <div class="code-block">
+            <pre><span class="cc"># Title format</span>
+<span class="ca">[Bug] [P1]: Howl panel overlaps top-right user menu</span>
+<span class="ca">[Feature] [P3]: Add financial sort options to Valhalla</span>
+<span class="ca">[UX] [P2]: Increase base font sizes for readability</span>
+<span class="ca">[Security] [P2]: LLM prompt injection via CSV content</span>
+<span class="ca">[Test] [P2]: Stripe cancellation state coverage gaps</span></pre>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-new">&#10022; .github/ISSUE_TEMPLATE/issue.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- ACT VI: Labels & project board                             -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="entry" id="act-6">
+      <div class="entry-rune" title="Tiwaz &mdash; tooling, meta-work">ᛏ</div>
+      <div class="entry-body">
+        <p class="act-label">Act VI &middot; Tooling</p>
+        <h2 class="entry-title">The Label Forge</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-odin">Odin</span>
+          </div>
+          <p class="msg-text">How can we change how things are filed so that i can use severity and type filters?</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Created the <span class="hl">Fenrir Ledger Triage</span> GitHub Projects board. Added all 22 open issues. Created structured labels for filtering: <span class="mono">type:bug</span>, <span class="mono">type:ux</span>, <span class="mono">type:feature</span>, <span class="mono">type:security</span>, <span class="mono">type:test</span> for types, and <span class="mono">P1-critical</span> through <span class="mono">P4-low</span> for priorities.</p>
+            <p>Spawned 4 subagents in parallel to reformat all 21 existing issue titles to the <span class="mono">[Type] [Priority]:</span> convention and apply correct labels. All 22 issues updated.</p>
+          </div>
+
+          <table class="issue-table">
+            <thead>
+              <tr>
+                <th>Priority</th>
+                <th>Count</th>
+                <th>Issues</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>P2-high</td><td>6</td><td class="issue-num">#146, #147, #148, #154, #155, #157</td></tr>
+              <tr><td>P3-medium</td><td>10</td><td class="issue-num">#126, #131, #145, #149, #150, #151, #153, #156, #158, #160, #161</td></tr>
+              <tr><td>P4-low</td><td>6</td><td class="issue-num">#132, #133, #152, #159, #162</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- ACT VII: Agent prompt updates                              -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="entry" id="act-7">
+      <div class="entry-rune" title="Ingwaz &mdash; hooks, connections, bindings">ᛜ</div>
+      <div class="entry-body">
+        <p class="act-label">Act VII &middot; Agent Binding</p>
+        <h2 class="entry-title">The Agent Binding</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-odin">Odin</span>
+          </div>
+          <p class="msg-text">File them as feature requests in GH. Update the team norms to file all issues in GH from now on. Ensure Loki and FiremanDecko have this in their prompts.</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Updated three agent/config files with the new issue tracking workflow. <span class="hl">Loki</span> now files GitHub Issues for every defect found during QA, includes the full template, and hands off to FiremanDecko with the issue URL. <span class="hl">FiremanDecko</span> references issue numbers in branches and PRs, uses <span class="mono">Fixes #N</span> for auto-close on merge.</p>
+            <p>Both agents instructed to add every new issue to the project board: <span class="mono">gh project item-add 1 --owner declanshanaghy --url &lt;issue-url&gt;</span>.</p>
+          </div>
+
+          <div class="norm-box">
+            <p class="norm-label">Team Norm &mdash; GitHub-First Issue Tracking</p>
+            <p class="norm-body">All defects, bugs, features, and security issues MUST be tracked as GitHub Issues. On-disk QA verdicts and security reports are supplementary documentation, not the source of truth. A defect without a GitHub Issue is an untracked defect. Untracked defects get lost.</p>
+          </div>
+
+          <div class="file-chips">
+            <span class="chip chip-mod">&#9998; .claude/agents/loki.md</span>
+            <span class="chip chip-mod">&#9998; .claude/agents/fireman-decko.md</span>
+            <span class="chip chip-mem">&#9826; memory/team-norms.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- ACT VIII: Push & PR                                        -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="entry" id="act-8">
+      <div class="entry-rune" title="Dagaz &mdash; delivery, deployment">ᛞ</div>
+      <div class="entry-body">
+        <p class="act-label">Act VIII &middot; Delivery</p>
+        <h2 class="entry-title">The Push &amp; the Hunt</h2>
+
+        <div class="user-msg">
+          <div class="msg-role">
+            <span class="role-badge badge-odin">Odin</span>
+          </div>
+          <p class="msg-text">ok lets commit everything</p>
+        </div>
+
+        <div class="work-card">
+          <div class="work-body">
+            <p>Two clean commits on <span class="mono">fix/stripe-subscription-state</span>: the first for Stripe bug fixes (cancel_at handling + protocol fix), the second for process improvements (consolidated dev scripts, issue template, agent prompt updates). Pushed and created <span class="hl">PR #163</span>.</p>
+            <p>Playwright tests failing on CI &mdash; Loki spawned in the background to investigate and fix.</p>
+          </div>
+
+          <ul class="changes">
+            <li><span class="new">d5700b1 &mdash; fix: handle Stripe cancel_at for portal cancellations and fix local dev redirect</span></li>
+            <li><span class="new">b7a84af &mdash; chore: consolidate dev scripts, add issue template, update agent prompts</span></li>
+          </ul>
+
+          <div class="file-chips">
+            <span class="chip chip-mod">&#9998; 6 files (Stripe fixes)</span>
+            <span class="chip chip-mod">&#9998; 7 files (process/tooling)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /.timeline -->
+
+  <!-- ── Session Summary ───────────────────────────────────────── -->
+  <div style="margin-top:64px; padding:24px; background:var(--forge); border:1px solid var(--rune-border);">
+    <div style="font-family:'Cinzel',serif; font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.18em; color:var(--muted); margin-bottom:16px;">Session Ledger</div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px;">
+      <div style="background:var(--chain); border:1px solid var(--iron-border); padding:12px 14px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Bugs fixed</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:1.2rem; color:var(--fire);">2</div>
+      </div>
+      <div style="background:var(--chain); border:1px solid var(--iron-border); padding:12px 14px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Issues filed</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:1.2rem; color:var(--gold-bright);">14</div>
+      </div>
+      <div style="background:var(--chain); border:1px solid var(--iron-border); padding:12px 14px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Items triaged</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:1.2rem; color:var(--teal);">25</div>
+      </div>
+      <div style="background:var(--chain); border:1px solid var(--iron-border); padding:12px 14px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Team norms added</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:1.2rem; color:var(--violet);">1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Footer ────────────────────────────────────────────────── -->
+  <footer class="session-footer">
+    <p class="footer-cipher">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ ᛊ</p>
+    <p class="footer-text">The Quality Hunt &middot; Fenrir Ledger Session Chronicle</p>
+    <p class="footer-sub">The wolf learns to track its prey properly.</p>
+  </footer>
+
+</div>
+</body>
+</html>
