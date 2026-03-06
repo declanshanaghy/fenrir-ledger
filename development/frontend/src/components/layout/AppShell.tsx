@@ -27,6 +27,7 @@ import { LcarsOverlay } from "@/components/easter-eggs/LcarsOverlay";
 import { Toaster } from "sonner";
 import { Footer } from "./Footer";
 import { UpsellBanner } from "./UpsellBanner";
+import { StaleAuthNudge } from "./StaleAuthNudge";
 import {
   GleipnirMountainRoots,
   useGleipnirFragment3,
@@ -100,6 +101,10 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="flex flex-col h-screen bg-background">
       <TopBar />
+
+      {/* Stale auth nudge — all pages, returning users with expired session.
+          Shown when entitlement cache exists but auth is anonymous. */}
+      <StaleAuthNudge />
 
       {/* Upsell banner — dashboard only, anonymous users only.
           Sits between TopBar and the sidebar/content split.
