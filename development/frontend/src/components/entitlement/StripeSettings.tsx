@@ -140,7 +140,7 @@ export function StripeSettings() {
   return (
     <>
       <section
-        className="border border-border p-5 flex flex-col gap-4 max-w-[520px]"
+        className="border border-border p-5 flex flex-col gap-4"
         role="region"
         aria-label="Subscription"
       >
@@ -238,14 +238,6 @@ export function StripeSettings() {
               The wolf is bound. The chains hold true.
             </p>
 
-            {/* Status row */}
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center px-2.5 py-0.5 border border-gold/30 text-[11px] font-mono font-bold uppercase tracking-wide text-gold">
-                KARL
-              </span>
-              <span className="text-[13px] text-realm-asgard font-body">Active</span>
-            </div>
-
             {/* Subscription details */}
             <div className="text-xs text-saga/80 font-body leading-relaxed">
               <p>$3.99/month</p>
@@ -332,14 +324,6 @@ export function StripeSettings() {
             >
               The chain weakens -- but it holds until the moon turns.
             </p>
-
-            {/* Status row */}
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center px-2.5 py-0.5 border border-gold/30 text-[11px] font-mono font-bold uppercase tracking-wide text-gold">
-                KARL
-              </span>
-              <span className="text-[13px] text-rune font-body">Canceled</span>
-            </div>
 
             {/* Cancellation details */}
             <div className="text-xs text-saga/80 font-body leading-relaxed">

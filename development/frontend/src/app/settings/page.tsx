@@ -4,13 +4,13 @@
  * Settings Page -- /settings route
  *
  * Central settings hub for the Fenrir Ledger. Contains:
- *   - Subscription management (Stripe)
- *   - Gated premium feature placeholders (Cloud Sync, Multi-Household, Data Export)
+ *   - Subscription management (Stripe) -- left column on desktop
+ *   - Gated premium feature placeholders (Cloud Sync, Multi-Household, Data Export) -- right column
  *
  * Anonymous-first: accessible without a signed-in session. The settings
  * and gated sections handle their own auth/entitlement checks internally.
  *
- * Layout: single-column, max-width constrained, consistent with Valhalla page.
+ * Layout: two-column on desktop (md+), single-column stacked on mobile.
  * Mobile-first: 375px minimum, stacked sections with consistent spacing.
  */
 
@@ -111,12 +111,13 @@ function DataExportSection() {
 /**
  * SettingsPage -- the /settings route.
  *
- * Renders the Stripe subscription settings and gated premium feature
- * placeholders in a single-column layout.
+ * Two-column layout on desktop: subscription card on the left, tier benefit
+ * cards on the right. Collapses to single-column on mobile (benefits stack
+ * below the subscription card).
  */
 export default function SettingsPage() {
   return (
-    <div className="px-6 py-6 max-w-2xl">
+    <div className="px-6 py-6 max-w-5xl">
       {/* Page heading */}
       <header className="mb-6 border-b border-border pb-4">
         <h1 className="font-display text-xl text-gold tracking-wide mb-1">
@@ -127,23 +128,27 @@ export default function SettingsPage() {
         </p>
       </header>
 
-      {/* Settings sections */}
-      <div className="flex flex-col gap-6">
-        {/* Subscription management */}
-        <StripeSettings />
+      {/* Two-column layout: subscription left, tier benefits right */}
+      <div className="flex flex-col md:grid md:grid-cols-2 gap-6">
+        {/* Left column: Subscription management */}
+        <div className="flex flex-col gap-6">
+          <StripeSettings />
+        </div>
 
-        {/* Premium feature placeholders -- each wrapped in SubscriptionGate */}
-        <SubscriptionGate feature="cloud-sync">
-          <CloudSyncSection />
-        </SubscriptionGate>
+        {/* Right column: Tier benefit cards */}
+        <div className="flex flex-col gap-6">
+          <SubscriptionGate feature="cloud-sync">
+            <CloudSyncSection />
+          </SubscriptionGate>
 
-        <SubscriptionGate feature="multi-household">
-          <MultiHouseholdSection />
-        </SubscriptionGate>
+          <SubscriptionGate feature="multi-household">
+            <MultiHouseholdSection />
+          </SubscriptionGate>
 
-        <SubscriptionGate feature="data-export">
-          <DataExportSection />
-        </SubscriptionGate>
+          <SubscriptionGate feature="data-export">
+            <DataExportSection />
+          </SubscriptionGate>
+        </div>
       </div>
     </div>
   );
