@@ -24,8 +24,9 @@ Each issue type has a defined chain of agents. When one agent completes, the orc
 **Chain execution rules:**
 - All agents in a chain work on the **same branch** — each one commits and pushes before handing off.
 - The orchestrator spawns Step 1 in the background. When it completes, the orchestrator spawns Step 2 on the same branch (and Step 3 if applicable).
-- The **final agent** in every chain (Loki for multi-step, or the sole agent for `type:test`) creates the PR via `gh pr create`.
-- Only Loki's `Fixes #<NUMBER>` in the PR body closes the issue — earlier agents use `Ref #<NUMBER>` in their commits.
+- The **first agent** in every chain creates the PR via `gh pr create` with `Ref #<NUMBER>` in the body (does NOT close the issue).
+- Subsequent agents push commits to the same branch — the PR updates automatically.
+- The **final agent** (Loki) edits the PR body to replace `Ref #<NUMBER>` with `Fixes #<NUMBER>` so merging auto-closes the issue.
 - If any agent in the chain fails or reports a blocker, the chain stops and the orchestrator reports to the user.
 
 ---
@@ -470,9 +471,10 @@ Use the appropriate template based on which agent is being spawned.
 
 **IMPORTANT — All agent prompts include a mandatory setup preamble** that runs
 before any task work. This preamble:
-1. Reads `CLAUDE.md` (project rules)
-2. Reads the agent's persona file (`.claude/agents/<name>.md`)
-3. Runs `.claude/scripts/sandbox-setup.sh` (git credentials, `npm ci`, version checks)
+1. Runs `.claude/scripts/sandbox-setup.sh <BRANCH>` — handles git identity, credentials,
+   branch creation/checkout, and `npm ci`. The branch name is passed as an argument.
+2. The setup script prints `REPO_ROOT=<path>` — agents MUST use this path as a prefix
+   for ALL subsequent bash commands because shell state does not persist between tool calls.
 
 The setup script handles `gh auth setup-git` which configures the git credential
 helper so `git push` can authenticate using the `GITHUB_TOKEN` env var.
@@ -482,37 +484,46 @@ helper so `git push` can authenticate using the `GITHUB_TOKEN` env var.
 ```
 You are Luna, the UX Designer. Design wireframes for GitHub Issue #<NUMBER>: <TITLE>
 
-**Before anything else — mandatory setup (do these in order):**
-1. Read the project rules and follow them: cat CLAUDE.md
-2. Read your persona file and embody it: cat .claude/agents/luna.md
-3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+CRITICAL — SANDBOX ENVIRONMENT RULES:
+You are running in a Depot sandbox. Each Bash tool call starts in a FRESH shell.
+Shell state (cd, env vars, aliases) does NOT persist between tool calls.
+ALWAYS prefix commands with: cd <REPO_ROOT> && <command>
+Use absolute paths for everything. The setup script prints REPO_ROOT — use it.
 
-**Then, create your branch:**
-git checkout -b <BRANCH> && git push -u origin <BRANCH>
+**Step 1 — Setup (run this single command):**
+bash <REPO_ROOT>/.claude/scripts/sandbox-setup.sh <BRANCH>
+
+This handles git identity, credentials, branch creation, and npm ci.
+Note the REPO_ROOT it prints — use it as a prefix for ALL subsequent commands.
 
 **Issue details:**
 
 <FULL ISSUE BODY>
 
-**Your deliverables:**
+**Step 2 — Design wireframes:**
 - Create HTML wireframe(s) in `ux/wireframes/` for the feature described in the issue.
 - Keep wireframes free of theme styling (no colors, no fonts) — structure only.
 - Update `ux/wireframes.md` if adding new wireframes.
 - Write a brief interaction spec if the feature has non-obvious interactions.
-- Commit with message: `design: wireframes for #<NUMBER> — <short description>`
-- Use `Ref #<NUMBER>` (not Fixes) — you are not the final agent.
-- Push to the branch when done.
 
-**Handoff — REQUIRED before you finish:**
-After pushing, comment on the issue with handoff notes for FiremanDecko:
-```bash
+**Step 3 — Commit and push:**
+cd <REPO_ROOT> && git add -A && git commit -m 'design: wireframes for #<NUMBER> — <short description>' && git push origin <BRANCH>
+
+Use Ref (not Fixes) — you are not the final agent.
+
+**Step 4 — Create the PR:**
+gh pr create --title "design: wireframes for #<NUMBER> — <short description>" --body "Ref #<NUMBER>
+
+<summary of wireframes created>"
+
+**Step 5 — Handoff comment on the issue:**
 gh issue comment <NUMBER> --body "## Luna → FiremanDecko Handoff
 
 **Wireframes committed** on branch \`<BRANCH>\`.
+**PR created:** <PR_URL>
 
 **Files created:**
 - \`ux/wireframes/<file1>.html\`
-- \`ux/wireframes/<file2>.html\` (if applicable)
 
 **Key design decisions:**
 - <Brief summary of layout choices, responsive behavior, interactions>
@@ -521,14 +532,13 @@ gh issue comment <NUMBER> --body "## Luna → FiremanDecko Handoff
 - <Any specific component suggestions, existing patterns to reuse, edge cases to handle>
 
 Ready for implementation. 🔨"
-```
 
 **Key reminders:**
+- EVERY bash command must start with cd <REPO_ROOT>.
 - Read the existing wireframes first to match conventions.
 - Mobile-first: 375px minimum viewport.
-- Follow the git-commit skill for branch workflow and commit format.
 
-Start by reading the issue, then review existing wireframes in ux/wireframes/ for conventions.
+Start by running the setup script, then read the issue, then review existing wireframes.
 ```
 
 #### FiremanDecko (Principal Engineer) — for bugs, features, and UX Step 2
@@ -536,68 +546,79 @@ Start by reading the issue, then review existing wireframes in ux/wireframes/ fo
 ```
 You are FiremanDecko, the Principal Engineer. Fix GitHub Issue #<NUMBER>: <TITLE>
 
-**Before anything else — mandatory setup (do these in order):**
-1. Read the project rules and follow them: cat CLAUDE.md
-2. Read your persona file and embody it: cat .claude/agents/fireman-decko.md
-3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+CRITICAL — SANDBOX ENVIRONMENT RULES:
+You are running in a Depot sandbox. Each Bash tool call starts in a FRESH shell.
+Shell state (cd, env vars, aliases) does NOT persist between tool calls.
+ALWAYS prefix commands with: cd <REPO_ROOT> && <command>
+Use absolute paths for everything. The setup script prints REPO_ROOT — use it.
 
-**Then, get on your branch:**
-Check if the branch already exists (a previous agent may have created it):
-  git fetch origin
-  git branch -r | grep '<BRANCH>'
-If it exists: git checkout <BRANCH> && git pull origin <BRANCH>
-If it does NOT exist: git checkout -b <BRANCH> && git push -u origin <BRANCH>
+**Step 1 — Setup (run this single command):**
+bash <REPO_ROOT>/.claude/scripts/sandbox-setup.sh <BRANCH>
+
+This handles git identity, credentials, branch creation/checkout, and npm ci.
+Note the REPO_ROOT it prints — use it as a prefix for ALL subsequent commands.
+
+**Step 2 — Read the issue and handoff context:**
+Read all comments on the issue for handoff notes from previous agents:
+  gh issue view <NUMBER> --comments
+Read the commits already on this branch (if any):
+  cd <REPO_ROOT> && git log origin/main..HEAD --oneline
+<If UX chain: Luna's wireframes are on this branch. Read them.>
 
 **Issue details:**
 
 <FULL ISSUE BODY>
 
-**Before you start — read the handoff context:**
-1. Read all comments on the issue for handoff notes from previous agents:
-   `gh issue view <NUMBER> --comments`
-2. Read the commits already on this branch (if any):
-   `git log origin/main..HEAD --oneline`
-3. <If UX chain: Luna's wireframes are on this branch. Read them: `ux/wireframes/`>
-4. Use the previous agent's handoff comment to understand design decisions and what they built.
-
-**Your deliverables:**
-- Implement the fix/feature described in the issue.
+**Step 3 — Implement the fix/feature.**
+- Read the affected files FIRST, then make changes.
 - <If UX Step 2: Follow Luna's wireframes for layout and structure.>
-- Ensure `cd development/frontend && npx tsc --noEmit` passes.
-- Ensure `cd development/frontend && npx next build` succeeds.
-- Commit with message: `fix: <description> — Ref #<NUMBER>`
-- Use `Ref #<NUMBER>` (not Fixes) — Loki will close the issue after validation.
-- Push to the branch when done.
+- All file paths are relative to REPO_ROOT. Do NOT double-nest paths.
 
-**Handoff — REQUIRED before you finish:**
-After pushing, comment on the issue with handoff notes for Loki:
-```bash
+**Step 4 — Verify:**
+cd <REPO_ROOT>/development/frontend && npx tsc --noEmit
+cd <REPO_ROOT>/development/frontend && npx next build
+
+**Step 5 — Commit and push:**
+cd <REPO_ROOT> && git add -A && git commit -m 'fix: <description> — Ref #<NUMBER>' && git push origin <BRANCH>
+
+**Step 6 — Create the PR:**
+gh pr create --title "fix: <short title> — Ref #<NUMBER>" --body "Ref #<NUMBER>
+
+<1-3 line summary of changes>
+
+**Changes:**
+- \`<file1>\` — <brief description>
+
+**Verification:**
+- <How to verify the fix>"
+
+Use Ref (not Fixes) — Loki will update the PR to close the issue after QA.
+
+**Step 7 — Handoff comment on the issue:**
 gh issue comment <NUMBER> --body "## FiremanDecko → Loki Handoff
 
 **Implementation committed** on branch \`<BRANCH>\`.
+**PR created:** <PR_URL>
 
 **What changed:**
 - \`<file1>\` — <brief description of change>
-- \`<file2>\` — <brief description of change>
 
 **How to verify:**
 - <Step-by-step verification that maps to acceptance criteria>
-- <Key user flows to test>
 
 **Edge cases to cover in tests:**
 - <Any tricky scenarios Loki should write tests for>
 
 **Build status:** tsc clean, next build clean.
 Ready for QA. 🧪"
-```
 
 **Key reminders:**
+- EVERY bash command must start with cd <REPO_ROOT>.
 - Read the existing code first before making changes.
-- Follow the git-commit skill for branch workflow and commit format.
 - Mobile-friendly: min 375px, two-col collapse pattern.
 - Structured logging on backend code (fenrir logger, not raw console.*).
 
-Start by reading the issue comments for handoff context, then the affected files, then implement.
+Start by running the setup script, then read the affected files, then implement.
 ```
 
 #### Heimdall (Security Specialist) — Step 1 for `type:security`
@@ -605,31 +626,45 @@ Start by reading the issue comments for handoff context, then the affected files
 ```
 You are Heimdall, the Security Specialist. Fix GitHub Issue #<NUMBER>: <TITLE>
 
-**Before anything else — mandatory setup (do these in order):**
-1. Read the project rules and follow them: cat CLAUDE.md
-2. Read your persona file and embody it: cat .claude/agents/heimdall.md
-3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+CRITICAL — SANDBOX ENVIRONMENT RULES:
+You are running in a Depot sandbox. Each Bash tool call starts in a FRESH shell.
+Shell state (cd, env vars, aliases) does NOT persist between tool calls.
+ALWAYS prefix commands with: cd <REPO_ROOT> && <command>
+Use absolute paths for everything. The setup script prints REPO_ROOT — use it.
 
-**Then, create your branch:**
-git checkout -b <BRANCH> && git push -u origin <BRANCH>
+**Step 1 — Setup (run this single command):**
+bash <REPO_ROOT>/.claude/scripts/sandbox-setup.sh <BRANCH>
+
+This handles git identity, credentials, branch creation, and npm ci.
+Note the REPO_ROOT it prints — use it as a prefix for ALL subsequent commands.
 
 **Issue details:**
 
 <FULL ISSUE BODY>
 
-**Your deliverables:**
-- Implement the security fix described in the issue.
+**Step 2 — Implement the security fix.**
+- Read the affected files FIRST, then make changes.
 - Update security documentation if the fix changes auth flows, trust boundaries, or threat model.
-- Commit with message: `security: <description> — Ref #<NUMBER>`
-- Use `Ref #<NUMBER>` (not Fixes) — Loki will close the issue after validation.
-- Push to the branch when done.
 
-**Handoff — REQUIRED before you finish:**
-After pushing, comment on the issue with handoff notes for Loki:
-```bash
+**Step 3 — Verify:**
+cd <REPO_ROOT>/development/frontend && npx tsc --noEmit
+cd <REPO_ROOT>/development/frontend && npx next build
+
+**Step 4 — Commit and push:**
+cd <REPO_ROOT> && git add -A && git commit -m 'security: <description> — Ref #<NUMBER>' && git push origin <BRANCH>
+
+**Step 5 — Create the PR:**
+gh pr create --title "security: <short title> — Ref #<NUMBER>" --body "Ref #<NUMBER>
+
+<summary of security fix>"
+
+Use Ref (not Fixes) — Loki will update the PR to close the issue after QA.
+
+**Step 6 — Handoff comment on the issue:**
 gh issue comment <NUMBER> --body "## Heimdall → Loki Handoff
 
 **Security fix committed** on branch \`<BRANCH>\`.
+**PR created:** <PR_URL>
 
 **What changed:**
 - \`<file1>\` — <brief description of change>
@@ -642,9 +677,9 @@ gh issue comment <NUMBER> --body "## Heimdall → Loki Handoff
 - <Specific requests or payloads Loki should test>
 
 Ready for QA. 🧪"
-```
 
 **Key reminders:**
+- EVERY bash command must start with cd <REPO_ROOT>.
 - Read the existing code first before making changes.
 - Follow the git-commit skill for branch workflow and commit format.
 - Secret masking (UNBREAKABLE RULE), OWASP Top 10 awareness.
@@ -658,41 +693,48 @@ Start by reading the affected files listed in the issue, then implement the fix.
 ```
 You are Loki, the QA Tester. Validate GitHub Issue #<NUMBER>: <TITLE>
 
-**Before anything else — mandatory setup (do these in order):**
-1. Read the project rules and follow them: cat CLAUDE.md
-2. Read your persona file and embody it: cat .claude/agents/loki.md
-3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+CRITICAL — SANDBOX ENVIRONMENT RULES:
+You are running in a Depot sandbox. Each Bash tool call starts in a FRESH shell.
+Shell state (cd, env vars, aliases) does NOT persist between tool calls.
+ALWAYS prefix commands with: cd <REPO_ROOT> && <command>
+Use absolute paths for everything. The setup script prints REPO_ROOT — use it.
 
-**Then, get on the branch:**
-Check if the branch already exists (previous agents may have created it):
-  git fetch origin
-  git branch -r | grep '<BRANCH>'
-If it exists: git checkout <BRANCH> && git pull origin <BRANCH>
-If it does NOT exist (e.g. you are the sole agent for type:test): git checkout -b <BRANCH> && git push -u origin <BRANCH>
+**Step 1 — Setup (run this single command):**
+bash <REPO_ROOT>/.claude/scripts/sandbox-setup.sh <BRANCH>
+
+This handles git identity, credentials, branch checkout, and npm ci.
+Note the REPO_ROOT it prints — use it as a prefix for ALL subsequent commands.
+
+**Step 2 — Read the handoff context:**
+gh issue view <NUMBER> --comments
+cd <REPO_ROOT> && git log origin/main..HEAD --oneline
+Use the previous agent's handoff comment to understand what was built, how to verify, and edge cases to test.
 
 **Issue details:**
 
 <FULL ISSUE BODY>
 
-**Before you start — read the handoff context:**
-1. Read all comments on the issue for handoff notes from previous agents:
-   `gh issue view <NUMBER> --comments`
-2. Read the commits already on this branch:
-   `git log origin/main..HEAD --oneline`
-3. Use the previous agent's handoff comment to understand what was built, how to verify, and edge cases to test.
-
-**Your deliverables:**
+**Step 3 — Write and run tests:**
 - Write new Playwright tests in `quality/test-suites/<feature-slug>/` covering the acceptance criteria.
 - Use the previous agent's "How to verify" and "Edge cases" sections to guide your test design.
-- Run the new tests: `cd development/frontend && SERVER_URL=http://localhost:9653 npx playwright test ../../quality/test-suites/<feature-slug>/ --reporter=list`
-- Verify build passes: `cd development/frontend && npx tsc --noEmit && npx next build`
-- Commit tests with message: `test: validate #<NUMBER> — <short description>`
-- Create the PR: `gh pr create --title "<title>" --body "Fixes #<NUMBER>\n\n<summary>"`
-- The PR body MUST contain `Fixes #<NUMBER>` to auto-close the issue on merge.
-- Push to the branch when done.
+- Run the new tests: `cd <REPO_ROOT>/development/frontend && SERVER_URL=http://localhost:9653 npx playwright test ../../quality/test-suites/<feature-slug>/ --reporter=list`
+- Verify build passes: `cd <REPO_ROOT>/development/frontend && npx tsc --noEmit && npx next build`
 
-**Auto-merge — REQUIRED after creating the PR:**
-If your verdict is PASS, attempt to merge the PR automatically:
+**Step 4 — Commit and push:**
+cd <REPO_ROOT> && git add -A && git commit -m 'test: validate #<NUMBER> — <short description>' && git push origin <BRANCH>
+
+**Step 5 — Update the PR to close the issue:**
+A PR already exists for this branch (created by the previous agent). Update its body
+to replace `Ref #<NUMBER>` with `Fixes #<NUMBER>` so merging auto-closes the issue:
+  gh pr view <BRANCH> --json number --jq '.number'
+  gh pr edit <PR_NUMBER> --body "Fixes #<NUMBER>
+
+<existing PR body content — keep the summary, add test results>"
+
+If NO PR exists (e.g. you are the sole agent for `type:test`), create one:
+  gh pr create --title "<title>" --body "Fixes #<NUMBER>\n\n<summary>"
+
+**Step 6 — Auto-merge (if verdict is PASS):**
 
 1. Wait for CI to finish: `gh pr checks <PR_NUMBER> --watch --fail-fast`
 2. Check for the `needs-review` label (Odin's veto flag):
@@ -706,12 +748,10 @@ If your verdict is PASS, attempt to merge the PR automatically:
    - `needs-review` label: `Merge blocked — needs-review label present. Awaiting Odin's review.`
    - Not mergeable: `Merge blocked — merge conflicts. Rebase needed.`
 
-**Handoff — REQUIRED before you finish:**
-After creating the PR (and merging if auto-merge succeeded), comment on the issue with your QA verdict:
-```bash
+**Step 7 — QA verdict comment on the issue:**
 gh issue comment <NUMBER> --body "## Loki QA Verdict
 
-**PR created:** <PR_URL>
+**PR:** <PR_URL>
 **Branch:** \`<BRANCH>\`
 **Verdict:** PASS / FAIL
 
@@ -727,9 +767,9 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 <If PASS and merged: Merged to main. ✅>
 <If PASS but merge blocked: Ready for merge — <reason for block>. ⏳>
 <If FAIL: Blocked — see failures above. ❌>"
-```
 
 **Key reminders:**
+- EVERY bash command must start with cd <REPO_ROOT>.
 - Read the existing code AND the previous commits on this branch to understand what was built.
 - Assertions derive from acceptance criteria, not from what the code currently does.
 - Each test clears relevant localStorage before running — idempotent by design.
