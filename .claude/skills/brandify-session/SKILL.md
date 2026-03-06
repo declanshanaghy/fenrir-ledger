@@ -1,9 +1,9 @@
 ---
-name: export-wolf
-description: Use this skill when the user says "export-wolf", "export session", "save session as HTML", or provides a session name to archive. Exports the current Claude Code session to a Fenrir-styled HTML chronicle and updates the sessions index.
+name: brandify-session
+description: Use this skill when the user says "brandify-session", "brandify session", "save session as HTML", or provides a session name to archive. Exports the current Claude Code session to a Fenrir-styled HTML chronicle and updates the sessions index.
 ---
 
-# Export Wolf — Session Chronicle Generator
+# Brandify Session — Session Chronicle Generator
 
 Exports the current session to a styled HTML chronicle using the Fenrir Ledger visual system.
 Reads the raw session `.txt` export, renders it as a narrative HTML document, and updates `sessions/index.html`.
