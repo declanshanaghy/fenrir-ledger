@@ -468,24 +468,26 @@ Launch the first agent in a **local background worktree** using the Agent tool:
 
 Use the appropriate template based on which agent is being spawned.
 
-**IMPORTANT — All agent prompts must include this git credential setup before any
-push or `gh` write operation:**
+**IMPORTANT — All agent prompts include a mandatory setup preamble** that runs
+before any task work. This preamble:
+1. Reads `CLAUDE.md` (project rules)
+2. Reads the agent's persona file (`.claude/agents/<name>.md`)
+3. Runs `.claude/scripts/sandbox-setup.sh` (git credentials, `npm ci`, version checks)
 
-```
-gh auth setup-git
-```
-
-This configures `gh` as the git credential helper so `git push` can authenticate
-using the `GITHUB_TOKEN` env var. Without this, pushes fail with
-`could not read Username for 'https://github.com'`.
+The setup script handles `gh auth setup-git` which configures the git credential
+helper so `git push` can authenticate using the `GITHUB_TOKEN` env var.
 
 #### Luna (UX Designer) — Step 1 for `type:ux`
 
 ```
 You are Luna, the UX Designer. Design wireframes for GitHub Issue #<NUMBER>: <TITLE>
 
-**First, set up git credentials and create your branch:**
-gh auth setup-git
+**Before anything else — mandatory setup (do these in order):**
+1. Read the project rules and follow them: cat CLAUDE.md
+2. Read your persona file and embody it: cat .claude/agents/luna.md
+3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+
+**Then, create your branch:**
 git checkout -b <BRANCH> && git push -u origin <BRANCH>
 
 **Issue details:**
@@ -534,8 +536,12 @@ Start by reading the issue, then review existing wireframes in ux/wireframes/ fo
 ```
 You are FiremanDecko, the Principal Engineer. Fix GitHub Issue #<NUMBER>: <TITLE>
 
-**First, set up git credentials and get on your branch:**
-gh auth setup-git
+**Before anything else — mandatory setup (do these in order):**
+1. Read the project rules and follow them: cat CLAUDE.md
+2. Read your persona file and embody it: cat .claude/agents/fireman-decko.md
+3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+
+**Then, get on your branch:**
 Check if the branch already exists (a previous agent may have created it):
   git fetch origin
   git branch -r | grep '<BRANCH>'
@@ -599,8 +605,12 @@ Start by reading the issue comments for handoff context, then the affected files
 ```
 You are Heimdall, the Security Specialist. Fix GitHub Issue #<NUMBER>: <TITLE>
 
-**First, set up git credentials and create your branch:**
-gh auth setup-git
+**Before anything else — mandatory setup (do these in order):**
+1. Read the project rules and follow them: cat CLAUDE.md
+2. Read your persona file and embody it: cat .claude/agents/heimdall.md
+3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+
+**Then, create your branch:**
 git checkout -b <BRANCH> && git push -u origin <BRANCH>
 
 **Issue details:**
@@ -648,8 +658,12 @@ Start by reading the affected files listed in the issue, then implement the fix.
 ```
 You are Loki, the QA Tester. Validate GitHub Issue #<NUMBER>: <TITLE>
 
-**First, set up git credentials and get on the branch:**
-gh auth setup-git
+**Before anything else — mandatory setup (do these in order):**
+1. Read the project rules and follow them: cat CLAUDE.md
+2. Read your persona file and embody it: cat .claude/agents/loki.md
+3. Run the sandbox setup script: bash .claude/scripts/sandbox-setup.sh
+
+**Then, get on the branch:**
 Check if the branch already exists (previous agents may have created it):
   git fetch origin
   git branch -r | grep '<BRANCH>'
