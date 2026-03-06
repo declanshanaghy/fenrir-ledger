@@ -21,6 +21,7 @@ This directory contains all security documentation for the Fenrir Ledger project
 | 2026-03-02 | Google API Integration | 0C / 3H / 3M / 3L / 3I | Active — findings partially open | [reports/2026-03-02-google-api-integration.md](reports/2026-03-02-google-api-integration.md) |
 | 2026-03-02 | Patreon Integration | 0C / 2H / 3M / 3L / 3I | **SUPERSEDED** — Patreon removed | [reports/2026-03-02-patreon-integration.md](reports/2026-03-02-patreon-integration.md) |
 | 2026-03-04 | Stripe Direct Integration | 0C / 0H / 0M / 3L / 3I | Active — CRITICAL/MEDIUM resolved | [reports/2026-03-04-stripe-direct-integration.md](reports/2026-03-04-stripe-direct-integration.md) |
+| 2026-03-05 | LLM Prompt Injection Remediation (#157) | 0C / 0H / 0M / 0L / 2I | Active | [reports/2026-03-05-llm-prompt-injection-remediation.md](reports/2026-03-05-llm-prompt-injection-remediation.md) |
 
 ### Risk Summary Notes
 

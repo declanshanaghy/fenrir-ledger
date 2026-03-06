@@ -6,7 +6,7 @@
  * Google Sheets pipeline and the direct CSV upload pipeline.
  */
 
-import { buildExtractionPrompt } from "./prompt";
+import { buildExtractionPrompt, sanitizeCsvForPrompt } from "./prompt";
 import { CardsArraySchema, ImportResponseSchema } from "./card-schema";
 import { getLlmProvider } from "@/lib/llm/extract";
 import type { SheetImportResponse } from "./types";
@@ -21,8 +21,10 @@ import { log } from "@/lib/logger";
 export async function extractCardsFromCsv(csv: string): Promise<SheetImportResponse> {
   log.debug("extractCardsFromCsv called", { csvLength: csv.length });
 
-  // 1. Build structured prompt (system/user separated) and call LLM
-  const prompt = buildExtractionPrompt(csv);
+  // 1. Sanitize CSV to strip injection patterns, then build structured prompt
+  const sanitizedCsv = sanitizeCsvForPrompt(csv);
+  log.debug("extractCardsFromCsv sanitized CSV", { originalLength: csv.length, sanitizedLength: sanitizedCsv.length });
+  const prompt = buildExtractionPrompt(sanitizedCsv);
   let rawText: string;
   try {
     const provider = getLlmProvider();
