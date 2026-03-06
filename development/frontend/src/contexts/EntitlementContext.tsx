@@ -32,7 +32,6 @@ import {
   getEntitlementCache,
   setEntitlementCache,
   clearEntitlementCache,
-  isEntitlementStale,
 } from "@/lib/entitlement/cache";
 import {
   tierMeetsRequirement,
@@ -60,11 +59,13 @@ export interface EntitlementContextValue {
   platform: EntitlementPlatform | null;
   /** Stripe subscription status (e.g. "active", "canceled", "past_due") */
   stripeStatus: string | null;
+  /** Whether the subscription is set to cancel at period end */
+  cancelAtPeriodEnd: boolean;
   /** Stripe subscription current period end (ISO 8601 string) */
   currentPeriodEnd: string | null;
 
-  /** Re-verifies entitlement status via the server API. */
-  refreshEntitlement: () => Promise<void>;
+  /** Re-verifies entitlement status via the server API. Optional sessionId for migration. */
+  refreshEntitlement: (sessionId?: string) => Promise<void>;
 
   /** Creates a Stripe Checkout session and redirects to Stripe's hosted checkout. */
   subscribeStripe: () => Promise<void>;
@@ -86,6 +87,7 @@ const DEFAULT_VALUE: EntitlementContextValue = {
   isLoading: false,
   platform: null,
   stripeStatus: null,
+  cancelAtPeriodEnd: false,
   currentPeriodEnd: null,
   refreshEntitlement: async () => {},
   subscribeStripe: async () => {},
@@ -108,6 +110,9 @@ interface MembershipApiResponse {
   stale?: boolean;
   customerId?: string;
   linkedAt?: string;
+  stripeStatus?: string;
+  cancelAtPeriodEnd?: boolean;
+  currentPeriodEnd?: string;
 }
 
 // -- Provider ----------------------------------------------------------------
@@ -123,6 +128,7 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
   const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [stripeStatus, setStripeStatus] = useState<string | null>(null);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
 
   // Prevent concurrent API calls
@@ -139,12 +145,15 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
 
   // -- Fetch Stripe membership (authenticated) --------------------------------
 
-  const fetchStripeMembership = useCallback(async (): Promise<MembershipApiResponse | null> => {
+  const fetchStripeMembership = useCallback(async (sessionId?: string): Promise<MembershipApiResponse | null> => {
     const token = await ensureFreshToken();
     if (!token) return null;
 
     try {
-      const response = await fetch("/api/stripe/membership", {
+      const url = sessionId
+        ? `/api/stripe/membership?session_id=${encodeURIComponent(sessionId)}`
+        : "/api/stripe/membership";
+      const response = await fetch(url, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -193,7 +202,7 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
 
   // -- Refresh entitlement ---------------------------------------------------
 
-  const refreshEntitlement = useCallback(async () => {
+  const refreshEntitlement = useCallback(async (sessionId?: string) => {
     if (fetchInProgressRef.current) return;
 
     fetchInProgressRef.current = true;
@@ -203,7 +212,7 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
       let data: MembershipApiResponse | null = null;
 
       if (isAuthenticated) {
-        data = await fetchStripeMembership();
+        data = await fetchStripeMembership(sessionId);
       }
 
       if (data) {
@@ -216,6 +225,10 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
           clearEntitlementCache();
           setEntitlement(null);
         }
+        // Populate Stripe-specific fields
+        setStripeStatus(data.stripeStatus ?? null);
+        setCancelAtPeriodEnd(data.cancelAtPeriodEnd ?? false);
+        setCurrentPeriodEnd(data.currentPeriodEnd ?? null);
       }
     } finally {
       fetchInProgressRef.current = false;
@@ -227,25 +240,30 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
 
   /**
    * Creates a Stripe Checkout session and redirects the user.
-   * For authenticated users, email comes from Google profile.
-   * For anonymous users, Stripe's hosted checkout page collects email.
+   * Requires authentication — if not signed in, redirects to /sign-in first
+   * with a returnTo that will auto-start checkout after sign-in.
    */
   const subscribeStripe = useCallback(async () => {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
+    if (!isAuthenticated) {
+      // Redirect to sign-in, then back to settings to auto-start checkout
+      window.location.href = "/sign-in?returnTo=" + encodeURIComponent("/settings?stripe=checkout");
+      return;
+    }
 
-    if (isAuthenticated) {
-      const token = await ensureFreshToken();
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+    const token = await ensureFreshToken();
+    if (!token) {
+      // Token expired mid-session — redirect to sign-in
+      window.location.href = "/sign-in?returnTo=" + encodeURIComponent("/settings?stripe=checkout");
+      return;
     }
 
     try {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({}),
       });
 
@@ -308,6 +326,7 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     clearEntitlementCache();
     setEntitlement(null);
     setStripeStatus(null);
+    setCancelAtPeriodEnd(false);
     setCurrentPeriodEnd(null);
 
     if (isAuthenticated) {
@@ -359,18 +378,26 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
 
     queryParamsProcessedRef.current = true;
 
+    const sessionId = params.get("session_id") ?? undefined;
+
     const cleanUrl = new URL(window.location.href);
     cleanUrl.searchParams.delete("stripe");
     cleanUrl.searchParams.delete("session_id");
     window.history.replaceState({}, "", cleanUrl.toString());
 
     if (stripeParam === "success") {
-      console.debug("[Fenrir] Stripe checkout success callback");
+      console.debug("[Fenrir] Stripe checkout success callback", { sessionId });
+      void refreshEntitlement(sessionId);
+    } else if (stripeParam === "checkout") {
+      console.debug("[Fenrir] Stripe auto-checkout after sign-in");
+      void subscribeStripe();
+    } else if (stripeParam === "portal_return") {
+      console.debug("[Fenrir] Stripe portal return — refreshing entitlement");
       void refreshEntitlement();
     } else if (stripeParam === "cancel") {
       console.debug("[Fenrir] Stripe checkout cancelled by user");
     }
-  }, [status, refreshEntitlement]);
+  }, [status, refreshEntitlement, subscribeStripe]);
 
   // -- Initialize from cache + refresh if stale ------------------------------
 
@@ -378,15 +405,13 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     if (typeof window === "undefined") return;
 
     if (isAuthenticated) {
+      // Load cache for instant UI (no loading flash), then always refresh
+      // from the server to pick up webhook-driven changes (cancellations, etc.)
       const cached = getEntitlementCache();
       if (cached) {
         setEntitlement(cached);
-        if (isEntitlementStale(cached)) {
-          void refreshEntitlement();
-        }
-      } else {
-        void refreshEntitlement();
       }
+      void refreshEntitlement();
     } else {
       // Anonymous: no entitlement by default
       setEntitlement(null);
@@ -402,6 +427,7 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     isLoading,
     platform,
     stripeStatus,
+    cancelAtPeriodEnd,
     currentPeriodEnd,
     refreshEntitlement,
     subscribeStripe,

@@ -62,6 +62,32 @@ You sit between the product/design pair and QA. You interpret, design, and imple
          QA validates
 ```
 
+## Issue Tracking: GitHub Issues (UNBREAKABLE RULE)
+
+**All work items — bugs, features, and security fixes — MUST be tracked as GitHub Issues.**
+When Loki hands off a defect, he provides a GitHub Issue URL. Reference it in your commits
+and PRs.
+
+**Receiving work from Loki:**
+- Loki files a GitHub Issue and hands off with: `"FiremanDecko, fix #<number>: <summary>"`
+- Create your branch referencing the issue: `fix/issue-<number>-<description>`
+- Include `Fixes #<number>` in your commit message or PR body to auto-close on merge
+
+**Filing your own issues:**
+- Use the title format: `[Type] [Priority]: Short description`
+  - Type: `Bug`, `Feature`, `UX`, `Security`, `Test`
+  - Priority: `P1` (critical), `P2` (high), `P3` (medium), `P4` (low)
+- Apply both a type label and a priority label:
+  - Type: `type:bug`, `type:ux`, `type:feature`, `type:security`, `type:test`
+  - Priority: `P1-critical`, `P2-high`, `P3-medium`, `P4-low`
+- Use the body template from `.github/ISSUE_TEMPLATE/issue.md`
+- Required sections: Problem, Expected Behavior, Affected Code, Acceptance Criteria
+- After every `gh issue create`, add to the project board:
+  `gh project item-add 1 --owner declanshanaghy --url <issue-url>`
+- Do not leave TODOs in code without a corresponding GitHub Issue
+
+---
+
 ## Collaboration Protocol
 
 ### Receiving Input

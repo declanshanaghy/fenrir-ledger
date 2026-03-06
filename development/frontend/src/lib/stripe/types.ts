@@ -57,6 +57,10 @@ export interface StoredStripeEntitlement {
   stripeSubscriptionId: string;
   /** Raw Stripe subscription status string */
   stripeStatus: string;
+  /** Whether the subscription is set to cancel at period end */
+  cancelAtPeriodEnd?: boolean;
+  /** ISO 8601 timestamp of current billing period end */
+  currentPeriodEnd?: string;
   /** ISO 8601 timestamp when Stripe was linked */
   linkedAt: string;
   /** ISO 8601 timestamp of last status check */
@@ -89,6 +93,12 @@ export interface StripeMembershipResponse {
   customerId?: string;
   /** ISO 8601 timestamp when Stripe was linked — included when linked */
   linkedAt?: string;
+  /** Raw Stripe subscription status (e.g. "active", "canceled") */
+  stripeStatus?: string;
+  /** Whether the subscription is set to cancel at period end */
+  cancelAtPeriodEnd?: boolean;
+  /** ISO 8601 timestamp of current billing period end */
+  currentPeriodEnd?: string;
 }
 
 /** Response from POST /api/stripe/checkout */

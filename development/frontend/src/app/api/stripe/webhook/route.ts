@@ -129,6 +129,8 @@ async function handleSubscriptionUpdated(
   log.debug("handleSubscriptionUpdated called", {
     subscriptionId: subscription.id,
     status: subscription.status,
+    cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    itemsCount: subscription.items?.data?.length ?? 0,
   });
 
   const customerId = typeof subscription.customer === "string"
@@ -151,6 +153,12 @@ async function handleSubscriptionUpdated(
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscription.id,
     stripeStatus: subscription.status,
+    cancelAtPeriodEnd: subscription.cancel_at_period_end || subscription.cancel_at !== null,
+    currentPeriodEnd: subscription.cancel_at
+      ? new Date(subscription.cancel_at * 1000).toISOString()
+      : subscription.items.data[0]
+        ? new Date(subscription.items.data[0].current_period_end * 1000).toISOString()
+        : new Date().toISOString(),
     linkedAt: new Date().toISOString(),
     checkedAt: new Date().toISOString(),
   };
@@ -218,6 +226,10 @@ async function handleSubscriptionDeleted(
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscription.id,
     stripeStatus: "canceled",
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: subscription.items.data[0]
+      ? new Date(subscription.items.data[0].current_period_end * 1000).toISOString()
+      : new Date().toISOString(),
     linkedAt: new Date().toISOString(),
     checkedAt: new Date().toISOString(),
   };

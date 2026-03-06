@@ -30,7 +30,7 @@
  */
 
 import { useEffect, useState, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/auth/pkce";
 import { isSessionValid } from "@/lib/auth/session";
 import { getAnonHouseholdId } from "@/lib/auth/household";
@@ -43,6 +43,7 @@ const PKCE_SESSION_KEY = "fenrir:pkce";
 
 function SignInContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [alreadyAuthed, setAlreadyAuthed] = useState(false);
   const [cardCount, setCardCount] = useState(0);
@@ -71,10 +72,11 @@ function SignInContent() {
     const state = generateState();
 
     // Persist PKCE transient values in sessionStorage (survives the redirect).
-    // callbackUrl is always "/" — after OAuth, user lands on the dashboard.
+    // callbackUrl: use returnTo query param if present, otherwise "/" (dashboard).
+    const returnTo = searchParams.get("returnTo") ?? "/";
     sessionStorage.setItem(
       PKCE_SESSION_KEY,
-      JSON.stringify({ verifier, state, callbackUrl: "/" })
+      JSON.stringify({ verifier, state, callbackUrl: returnTo })
     );
 
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;

@@ -20,7 +20,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
-import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
+import { getStripeEntitlement, setStripeEntitlement, migrateStripeEntitlement } from "@/lib/kv/entitlement-store";
+import { stripe } from "@/lib/stripe/api";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import type { StripeMembershipResponse } from "@/lib/stripe/types";
@@ -56,9 +57,47 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const googleSub = auth.user.sub;
 
   // Fetch cached entitlement from Vercel KV
-  const cached = await getStripeEntitlement(googleSub);
+  let cached = await getStripeEntitlement(googleSub);
 
-  // If no entitlement exists, user has not subscribed via Stripe
+  // If no entitlement found, attempt to migrate an anonymous Stripe entitlement
+  // using the checkout session_id from the success redirect
+  if (!cached) {
+    const sessionId = request.nextUrl.searchParams.get("session_id");
+    if (sessionId) {
+      log.debug("GET /api/stripe/membership: no entitlement found, attempting migration", {
+        googleSub,
+        sessionId,
+      });
+      try {
+        const checkoutSession = await stripe.checkout.sessions.retrieve(sessionId);
+        const customerId = typeof checkoutSession.customer === "string"
+          ? checkoutSession.customer
+          : checkoutSession.customer?.id;
+
+        if (customerId) {
+          const result = await migrateStripeEntitlement(customerId, googleSub);
+          log.debug("GET /api/stripe/membership: migration result", {
+            googleSub,
+            customerId,
+            ...result,
+          });
+          if (result.migrated) {
+            // Re-fetch after migration
+            cached = await getStripeEntitlement(googleSub);
+          }
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        log.debug("GET /api/stripe/membership: migration attempt failed", {
+          googleSub,
+          sessionId,
+          error: message,
+        });
+      }
+    }
+  }
+
+  // If still no entitlement exists, user has not subscribed via Stripe
   if (!cached) {
     const response: StripeMembershipResponse = {
       tier: "thrall",
@@ -76,6 +115,36 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
   }
 
+  // If cached entitlement is missing period end info (pre-existing records),
+  // do a live Stripe lookup to backfill it
+  let { cancelAtPeriodEnd, currentPeriodEnd } = cached;
+  if (cached.stripeSubscriptionId) {
+    try {
+      log.debug("GET /api/stripe/membership: backfilling period end from Stripe", {
+        subscriptionId: cached.stripeSubscriptionId,
+      });
+      const sub = await stripe.subscriptions.retrieve(cached.stripeSubscriptionId);
+      cancelAtPeriodEnd = sub.cancel_at_period_end || sub.cancel_at !== null;
+      currentPeriodEnd = sub.cancel_at
+        ? new Date(sub.cancel_at * 1000).toISOString()
+        : sub.items.data[0]
+          ? new Date(sub.items.data[0].current_period_end * 1000).toISOString()
+          : new Date().toISOString();
+
+      // Update KV cache with the new fields
+      await setStripeEntitlement(googleSub, {
+        ...cached,
+        cancelAtPeriodEnd,
+        currentPeriodEnd,
+        stripeStatus: sub.status,
+        checkedAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      log.debug("GET /api/stripe/membership: Stripe backfill failed", { error: message });
+    }
+  }
+
   // Return the cached entitlement — Stripe webhooks keep it up to date
   const response: StripeMembershipResponse = {
     tier: cached.tier,
@@ -84,11 +153,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     checkedAt: cached.checkedAt,
     customerId: cached.stripeCustomerId,
     linkedAt: cached.linkedAt,
+    stripeStatus: cached.stripeStatus,
+    ...(cancelAtPeriodEnd !== undefined && { cancelAtPeriodEnd }),
+    ...(currentPeriodEnd !== undefined && { currentPeriodEnd }),
   };
   log.debug("GET /api/stripe/membership returning", {
     status: 200,
     tier: cached.tier,
     active: cached.active,
+    cancelAtPeriodEnd,
+    currentPeriodEnd,
     reason: "cached entitlement",
   });
   return NextResponse.json(response, {

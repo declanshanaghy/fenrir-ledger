@@ -1,15 +1,10 @@
 ---
-description: Start, stop, restart, check status of, or tail logs for the Fenrir Ledger frontend (port 9653).
+description: Start, stop, restart, check status of, or tail logs for the Fenrir Ledger local dev environment.
 ---
 
-Manage the Fenrir Ledger frontend using scripts in `.claude/scripts/`:
+Manage the Fenrir Ledger local development environment.
 
-| Script | Purpose |
-|--------|---------|
-| `services.sh` | Convenience wrapper around frontend-server.sh |
-| `frontend-server.sh` | Frontend (Next.js) dev server |
-
-## Usage
+One script handles everything: Stripe webhook forwarding + secret injection + `vercel dev`.
 
 ```
 .claude/scripts/services.sh <action>
@@ -17,21 +12,25 @@ Manage the Fenrir Ledger frontend using scripts in `.claude/scripts/`:
 
 | Action | Effect |
 |--------|--------|
-| `start` | Start frontend server |
-| `stop` | Stop frontend server |
-| `restart` | Restart frontend server |
-| `status` | Show status of frontend server |
-| `logs` | Tail frontend log file |
+| `start` | Start Stripe webhook forwarding + frontend (`vercel dev`) |
+| `stop` | Stop everything, restore original webhook secret |
+| `restart` | Stop then start |
+| `status` | Show status of all services |
+| `logs` | Tail frontend log |
+| `stripe-logs` | Tail Stripe webhook log |
 
-## Individual Script
+## What `start` does
 
-### Frontend -- `frontend-server.sh`
+1. Starts `stripe listen` to forward Stripe events to localhost
+2. Captures the ephemeral webhook signing secret from Stripe CLI
+3. Injects it into `.env.local` (backs up the original)
+4. Starts `vercel dev` with the correct secret already in place
 
-```
-.claude/scripts/frontend-server.sh <action>
-```
+## What `stop` does
 
-Accepts: `start`, `stop`, `restart`, `status`, `logs`.
+1. Stops Stripe CLI
+2. Restores the original `STRIPE_WEBHOOK_SECRET` in `.env.local`
+3. Stops the frontend server
 
 ## When to use this
 
@@ -44,26 +43,23 @@ Accepts: `start`, `stop`, `restart`, `status`, `logs`.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `FENRIR_FRONTEND_PORT` | `9653` | Port the Next.js dev server listens on |
+| `FENRIR_FRONTEND_PORT` | `9653` | Port the dev server listens on |
 | `FENRIR_FRONTEND_DIR` | Auto-detected `development/frontend/` | Path to the Next.js project root |
 
 Backward-compatible aliases (deprecated): `FENRIR_PORT`, `FENRIR_DEV_DIR`.
 
-```
-.claude/scripts/frontend-server.sh start                          # Main repo
-FENRIR_FRONTEND_PORT=9654 FENRIR_FRONTEND_DIR=trees/my-branch/development/frontend .claude/scripts/frontend-server.sh start  # Worktree
-```
-
 ## Log files
 
 - Frontend: `<FRONTEND_DIR>/logs/frontend-server.log`
+- Stripe: `<FRONTEND_DIR>/logs/stripe-listen.log`
 
-Use `logs` action to stream, or read directly with the Read tool when diagnosing errors.
+## Prerequisites
+
+- Stripe CLI: `brew install stripe/stripe-cli/stripe`
+- `STRIPE_SECRET_KEY` in `.env.local` (run `npx vercel env pull .env.local --environment=development`)
 
 ## Notes
 
-- The scripts use `lsof -sTCP:LISTEN` to find only the listening server process, not browser connections to the same port.
+- `vercel dev` runs from the repo root because the Vercel project has `Root Directory = development/frontend/`.
+- The scripts use `lsof -sTCP:LISTEN` to find only the listening server process.
 - `nohup` is used so the server survives the shell session that spawned it.
-- The server runs from the configured directory regardless of the working directory when the command is called.
-- **Migration note**: `dev-server.sh` was renamed to `frontend-server.sh`. The old `FENRIR_PORT` and `FENRIR_DEV_DIR` env vars still work as fallbacks.
-- **Migration note**: The dedicated backend server (port 9753) was removed. All import functionality runs as a Vercel serverless function.

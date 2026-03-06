@@ -26,7 +26,8 @@
 import { useState, type ReactNode } from "react";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { SealedRuneModal } from "./SealedRuneModal";
-import type { PremiumFeature } from "@/lib/entitlement/types";
+import { PREMIUM_FEATURES, type PremiumFeature } from "@/lib/entitlement/types";
+import { FEATURE_DESCRIPTIONS } from "@/lib/entitlement/feature-descriptions";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -86,9 +87,10 @@ export function SubscriptionGate({ feature, children }: SubscriptionGateProps) {
     return <>{children}</>;
   }
 
-  // Feature is locked: show the locked placeholder with an option to open the modal.
-  // The modal is NOT auto-opened -- this prevents multiple modals stacking when
-  // several SubscriptionGate components render on the same page.
+  // Feature is locked: show the feature info as an upsell card.
+  const featureDef = PREMIUM_FEATURES[feature];
+  const featureDesc = FEATURE_DESCRIPTIONS[feature];
+
   return (
     <>
       <SealedRuneModal
@@ -96,21 +98,33 @@ export function SubscriptionGate({ feature, children }: SubscriptionGateProps) {
         open={modalOpen}
         onDismiss={() => setModalOpen(false)}
       />
-      <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-        <span className="text-3xl text-gold/40 mb-3" aria-hidden="true">
-          &#5765;
-        </span>
-        <p className="text-sm text-rune font-body">
-          This feature requires a Karl subscription.
+      <section
+        className="border border-border p-5 flex flex-col gap-3"
+        aria-label={`${featureDef.name} (locked)`}
+      >
+        <div className="flex items-center gap-2.5">
+          <span className="text-lg text-gold/40" aria-hidden="true">&#5765;</span>
+          <h2 className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-saga">
+            {featureDef.name}
+          </h2>
+          <span className="inline-flex items-center px-2 py-0.5 border border-gold/20 text-[9px] font-mono font-bold uppercase tracking-wide text-gold/60">
+            KARL
+          </span>
+        </div>
+        <p className="text-sm text-saga/90 leading-relaxed font-body">
+          {featureDesc.description}
+        </p>
+        <p className="text-[13px] italic text-rune/60 font-body">
+          &ldquo;{featureDesc.atmospheric}&rdquo;
         </p>
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="mt-3 text-sm text-gold underline hover:text-gold-bright transition-colors font-heading min-h-[44px] inline-flex items-center"
+          className="self-start mt-1 text-sm text-gold underline hover:text-gold-bright transition-colors font-heading min-h-[44px] inline-flex items-center"
         >
-          Learn more
+          Unlock with Karl
         </button>
-      </div>
+      </section>
     </>
   );
 }

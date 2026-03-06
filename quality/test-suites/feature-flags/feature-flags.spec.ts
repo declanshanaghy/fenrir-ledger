@@ -57,35 +57,40 @@ test.describe("Settings page structure", () => {
     await expect(stripeSection).toBeVisible();
   });
 
-  test("TC-FF-104: Cloud Sync gate shows locked placeholder for Thrall users", async ({
+  test("TC-FF-104: Cloud Sync gate shows locked upsell card for Thrall users", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    // SubscriptionGate renders a locked placeholder instead of children for Thrall users
-    const lockedPlaceholders = page.getByText("This feature requires a Karl subscription.");
-    await expect(lockedPlaceholders.first()).toBeVisible({ timeout: 5000 });
+    // SubscriptionGate renders a locked upsell card (aria-label ends with "(locked)")
+    // instead of children for Thrall users
+    const cloudSyncLocked = page.locator('[aria-label="Cloud Sync (locked)"]');
+    await expect(cloudSyncLocked).toBeVisible({ timeout: 5000 });
   });
 
-  test("TC-FF-105: Multi-Household gate shows locked placeholder for Thrall users", async ({
+  test("TC-FF-105: All three gates show locked upsell cards for Thrall users", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    // All three SubscriptionGate instances render locked placeholders
-    const lockedPlaceholders = page.getByText("This feature requires a Karl subscription.");
-    // There should be at least 3 (one per gated feature: Cloud Sync, Multi-Household, Data Export)
-    const count = await lockedPlaceholders.count();
-    expect(count).toBeGreaterThanOrEqual(3);
+    // All three SubscriptionGate instances render locked upsell cards with
+    // aria-label="<Feature Name> (locked)" when the user is a Thrall
+    const cloudSyncLocked = page.locator('[aria-label="Cloud Sync (locked)"]');
+    const multiHouseholdLocked = page.locator('[aria-label="Multi-Household (locked)"]');
+    const dataExportLocked = page.locator('[aria-label="Data Export (locked)"]');
+    await expect(cloudSyncLocked).toBeVisible({ timeout: 5000 });
+    await expect(multiHouseholdLocked).toBeVisible({ timeout: 5000 });
+    await expect(dataExportLocked).toBeVisible({ timeout: 5000 });
   });
 
-  test("TC-FF-106: Each locked gate has a 'Learn more' button", async ({
+  test("TC-FF-106: Each locked gate has an 'Unlock with Karl' button", async ({
     page,
   }) => {
     await clearEntitlementState(page);
     await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
-    const learnMoreButtons = page.getByRole("button", { name: /learn more/i });
-    const count = await learnMoreButtons.count();
+    // Locked upsell cards render an "Unlock with Karl" CTA button
+    const unlockButtons = page.getByRole("button", { name: /unlock with karl/i });
+    const count = await unlockButtons.count();
     expect(count).toBeGreaterThanOrEqual(3);
   });
 

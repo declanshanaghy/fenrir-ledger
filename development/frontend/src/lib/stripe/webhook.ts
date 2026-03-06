@@ -103,6 +103,12 @@ export function buildEntitlementFromSubscription(
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscription.id,
     stripeStatus: subscription.status,
+    cancelAtPeriodEnd: subscription.cancel_at_period_end || subscription.cancel_at !== null,
+    currentPeriodEnd: subscription.cancel_at
+      ? new Date(subscription.cancel_at * 1000).toISOString()
+      : subscription.items.data[0]
+        ? new Date(subscription.items.data[0].current_period_end * 1000).toISOString()
+        : new Date().toISOString(),
     linkedAt: now,
     checkedAt: now,
   };

@@ -127,14 +127,16 @@ test.describe("Soft gate banners -- shown above feature sections for Thrall user
     await clearSubscriptionState(page);
   });
 
-  test("TC-SSG-005: Banner regions are present on the settings page for non-subscribers", async ({ page }) => {
+  test("TC-SSG-005: Gate sections are present on the settings page for non-subscribers", async ({ page }) => {
     await navigateToSettings(page);
 
-    // When platform is active (stripe or patreon), banners should render.
-    // When no platform is active, banners are suppressed (children render directly).
-    // We verify that either banners exist OR sections exist -- soft mode always shows children.
-    const featureSections = page.locator('[aria-label="Cloud Sync"], [aria-label="Multi-Household"], [aria-label="Data Export"]');
-    await expect(featureSections.first()).toBeVisible();
+    // The SubscriptionGate renders sections for each feature. In hard-gate mode the
+    // locked upsell card sections carry aria-label="<Feature> (locked)"; in soft mode
+    // the children sections carry aria-label="<Feature>".  getByRole with a partial
+    // name string matches both variants (Playwright name matching is a substring check).
+    await expect(page.getByRole("region", { name: "Cloud Sync" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Multi-Household" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Data Export" })).toBeVisible();
   });
 
   test("TC-SSG-006: Banner heading 'Unlock this feature' appears for locked sections (Stripe mode)", async ({ page }) => {
@@ -167,12 +169,15 @@ test.describe("Soft gate banners -- shown above feature sections for Thrall user
     }
   });
 
-  test("TC-SSG-008: Feature sections render with content text regardless of subscription state (AC-2)", async ({ page }) => {
+  test("TC-SSG-008: Each feature gate renders descriptive content text for non-subscribers", async ({ page }) => {
     await navigateToSettings(page);
 
-    // Verify actual section content is present -- not blocked by hard gate
-    await expect(page.getByText("Sync your card data across devices")).toBeVisible();
-    await expect(page.getByText("Manage cards across multiple households")).toBeVisible();
+    // The SubscriptionGate upsell card always shows descriptive text for the feature.
+    // In hard-gate mode these are the FEATURE_DESCRIPTIONS strings rendered by the
+    // locked upsell card (not the section-children text, which is hidden for Thrall users).
+    // Assert partial text matches that are present regardless of gating mode.
+    await expect(page.getByText("Sync your card data across all your devices")).toBeVisible();
+    await expect(page.getByText("Track cards for multiple households")).toBeVisible();
     await expect(page.getByText("Export your card data as CSV or JSON")).toBeVisible();
   });
 });
@@ -250,11 +255,14 @@ test.describe("Settings page baseline rendering", () => {
     await expect(page.getByText("Forge your preferences")).toBeVisible();
   });
 
-  test("TC-SSG-013: Data Export button is disabled (coming soon placeholder)", async ({ page }) => {
+  test("TC-SSG-013: Data Export gate is visible for non-subscribers", async ({ page }) => {
     await navigateToSettings(page);
-    const exportBtn = page.getByRole("button", { name: /export data/i });
-    await expect(exportBtn).toBeVisible();
-    await expect(exportBtn).toBeDisabled();
+    // The Data Export SubscriptionGate renders for Thrall users. In hard-gate mode
+    // the locked upsell card replaces the section children (the "Export Data" disabled
+    // button is only rendered for Karl subscribers). Assert the gate section itself is present.
+    await expect(page.getByRole("region", { name: "Data Export" })).toBeVisible();
+    // The feature description from the upsell card must be present
+    await expect(page.getByText("Export your card data as CSV or JSON")).toBeVisible();
   });
 });
 
@@ -271,9 +279,10 @@ test.describe("Mobile responsiveness -- 375px viewport", () => {
 
   test("TC-SSG-014: Settings page renders at 375px viewport without overflow", async ({ page }) => {
     await navigateToSettings(page);
-    // Confirm sections are visible -- layout must not collapse to nothing
+    // Confirm heading and feature gate sections are visible -- layout must not collapse to nothing
     await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
-    await expect(page.getByText("Sync your card data across devices")).toBeVisible();
+    // The Cloud Sync gate section (upsell card or feature section) must be visible at mobile width
+    await expect(page.getByRole("region", { name: "Cloud Sync" })).toBeVisible();
   });
 
   test("TC-SSG-015: Feature sections remain readable at 375px", async ({ page }) => {
