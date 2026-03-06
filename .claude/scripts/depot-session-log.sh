@@ -79,9 +79,19 @@ if [ -z "$SESSION_FILE" ]; then
 fi
 
 LINES=$(wc -l < "$SESSION_FILE" | tr -d ' ')
-echo "Session: $QUERY" >&2
-echo "File: $(basename "$SESSION_FILE") ($LINES messages)" >&2
-echo "---" >&2
+
+# --- Step 3: Write output to log file ---
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
+LOG_DIR="$REPO_ROOT/tmp/depot-logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/${QUERY}.log"
+
+{
+echo "Session: $QUERY"
+echo "File: $(basename "$SESSION_FILE") ($LINES messages)"
+echo "Mode: $MODE"
+echo "---"
+echo ""
 
 case "$MODE" in
   --raw)
@@ -95,7 +105,7 @@ case "$MODE" in
         if .type == "tool_result" then
           .content as $c |
           if ($c | type) == "string" and ($c | test("(?i)error|fatal|failed|denied|not found|no such")) then
-            "ERROR: " + ($c | .[0:500])
+            "ERROR: " + ($c | .[0:2000])
           else empty end
         else empty end
       else empty end
@@ -107,14 +117,14 @@ case "$MODE" in
       if .type == "assistant" then
         .message.content[] |
         if .type == "tool_use" then
-          "TOOL: " + .name + "\n  INPUT: " + (.input | tostring | .[0:500])
+          "TOOL: " + .name + "\n  INPUT: " + (.input | tostring | .[0:2000])
         else empty end
       elif .type == "user" then
         .message.content[]? |
         if .type == "tool_result" then
           .content as $c |
           if ($c | type) == "string" and ($c | length) > 0 then
-            "  OUTPUT: " + ($c | .[0:500])
+            "  OUTPUT: " + ($c | .[0:2000])
           else empty end
         else empty end
       else empty end
@@ -137,9 +147,9 @@ case "$MODE" in
           .content as $c |
           if ($c | type) == "string" and ($c | length) > 0 then
             if ($c | test("(?i)error|fatal|failed|denied|warning")) then
-              "!!! " + ($c | .[0:500])
+              "!!! " + ($c | .[0:2000])
             else
-              "    " + ($c | .[0:500])
+              "    " + ($c | .[0:2000])
             end
           else empty end
         else empty end
@@ -147,3 +157,10 @@ case "$MODE" in
     ' "$SESSION_FILE"
     ;;
 esac
+} > "$LOG_FILE"
+
+# --- Step 4: Display the log and link to the file ---
+cat "$LOG_FILE"
+echo ""
+echo "---"
+echo "Log saved: $LOG_FILE"
