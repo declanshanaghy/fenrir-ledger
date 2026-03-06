@@ -151,6 +151,8 @@ async function handleSubscriptionUpdated(
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscription.id,
     stripeStatus: subscription.status,
+    cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
     linkedAt: new Date().toISOString(),
     checkedAt: new Date().toISOString(),
   };
@@ -218,6 +220,8 @@ async function handleSubscriptionDeleted(
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscription.id,
     stripeStatus: "canceled",
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
     linkedAt: new Date().toISOString(),
     checkedAt: new Date().toISOString(),
   };

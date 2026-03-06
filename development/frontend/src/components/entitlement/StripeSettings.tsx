@@ -75,6 +75,7 @@ export function StripeSettings() {
     isLinked,
     isLoading,
     platform,
+    cancelAtPeriodEnd,
     currentPeriodEnd,
     subscribeStripe,
     openPortal,
@@ -83,9 +84,14 @@ export function StripeSettings() {
   const [isSubscribing, setIsSubscribing] = useState(false);
 
   // Determine state
-  const isKarlActive = isLinked && isActive && tier === "karl" && platform === "stripe";
-  const isCanceled = isLinked && tier === "karl" && !isActive && platform === "stripe";
-  const isThrall = !isKarlActive && !isCanceled;
+  const isStripeLinked = isLinked && platform === "stripe";
+  // Active and NOT about to cancel
+  const isKarlActive = isStripeLinked && isActive && tier === "karl" && !cancelAtPeriodEnd;
+  // Active but set to cancel at period end (grandfathered)
+  const isCanceling = isStripeLinked && isActive && tier === "karl" && cancelAtPeriodEnd;
+  // Already fully canceled (subscription ended)
+  const isCanceled = isStripeLinked && tier === "karl" && !isActive;
+  const isThrall = !isKarlActive && !isCanceling && !isCanceled;
 
   // Format the current period end date
   const formattedPeriodEnd = currentPeriodEnd
@@ -151,6 +157,14 @@ export function StripeSettings() {
               KARL
             </span>
           )}
+          {isCanceling && (
+            <span
+              className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-amber-500/40 text-[10px] font-mono font-bold uppercase tracking-wide text-amber-500/80 h-5"
+              aria-label="Subscription canceling"
+            >
+              CANCELING
+            </span>
+          )}
           {isCanceled && (
             <span
               className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-rune/40 text-[10px] font-mono font-bold uppercase tracking-wide text-rune/60 h-5"
@@ -207,7 +221,7 @@ export function StripeSettings() {
                 disabled={isSubscribing}
                 className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold disabled:opacity-50"
               >
-                {isSubscribing ? "Starting checkout..." : "Subscribe for $3.99/month"}
+                {isSubscribing ? "Starting checkout..." : "Subscribe"}
               </Button>
             </div>
           </>
@@ -257,6 +271,52 @@ export function StripeSettings() {
                 aria-label="Cancel subscription"
               >
                 Cancel
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* ---- Canceling (grandfathered until period end) State ---- */}
+        {isCanceling && (
+          <>
+            {/* Atmospheric subhead */}
+            <p
+              className="text-xs italic text-rune/60 font-body leading-relaxed"
+              aria-hidden="true"
+            >
+              The chain loosens -- but it holds until the moon turns.
+            </p>
+
+            {/* Status row */}
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex items-center px-2.5 py-0.5 border border-gold/30 text-[11px] font-mono font-bold uppercase tracking-wide text-gold">
+                KARL
+              </span>
+              <span className="text-[13px] text-amber-500/80 font-body">Canceling</span>
+            </div>
+
+            {/* Cancellation details */}
+            <div className="text-xs text-saga/80 font-body leading-relaxed flex flex-col gap-1">
+              {formattedPeriodEnd ? (
+                <>
+                  <p>Your subscription is set to cancel on <strong className="text-saga">{formattedPeriodEnd}</strong>.</p>
+                  <p>You have full Karl access until then.</p>
+                </>
+              ) : (
+                <p>Your subscription is set to cancel at the end of your billing period.</p>
+              )}
+            </div>
+
+            <div className="border-t border-border" />
+
+            {/* Actions — resubscribe only, no cancel button */}
+            <div className="flex flex-col md:flex-row gap-3">
+              <Button
+                onClick={handleSubscribe}
+                disabled={isSubscribing}
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold disabled:opacity-50"
+              >
+                {isSubscribing ? "Starting checkout..." : "Resubscribe"}
               </Button>
             </div>
           </>

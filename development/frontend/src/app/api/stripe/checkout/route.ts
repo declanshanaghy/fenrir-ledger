@@ -2,21 +2,16 @@
  * POST /api/stripe/checkout
  *
  * Creates a Stripe Checkout Session and returns the session URL for
- * client-side redirect. Supports both authenticated and anonymous users.
+ * client-side redirect. Requires Google authentication (ADR-008).
  *
- *
- * Flow (authenticated — Google id_token present):
+ * Flow:
  *   1. Verify Google id_token from Authorization header
- *   2. Create Stripe Checkout Session with metadata.googleSub
+ *   2. Create Stripe Checkout Session with metadata.googleSub + customer_email
  *   3. Return the session URL for redirect
  *
- * Flow (anonymous — no Authorization header):
- *   1. Read `email` from the JSON request body
- *   2. Create Stripe Checkout Session with customer_email (no googleSub metadata)
- *   3. Return the session URL for redirect
- *
- * The checkout session metadata includes `googleSub` only for authenticated
- * users, so the webhook handler can map authenticated vs anonymous.
+ * Anonymous users are redirected to /sign-in by the frontend before reaching
+ * this endpoint. The checkout session always includes googleSub metadata so
+ * the webhook handler can map the subscription to the authenticated user.
  *
  * @see ADR-010 for the Stripe Direct integration decision
  */
@@ -49,23 +44,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // --- Dual auth path: authenticated (Google id_token) or anonymous (email in body) ---
+  // Require Google authentication — anonymous checkout is not supported.
+  // Anonymous users are redirected to sign-in first by the frontend.
   const auth = await requireAuth(request);
-  const isAuthenticated = auth.ok;
-
-  let customerEmail: string;
-  let googleSub: string | undefined;
-
-  if (isAuthenticated) {
-    customerEmail = auth.user.email;
-    googleSub = auth.user.sub;
-    log.debug("POST /api/stripe/checkout: authenticated user", { googleSub, customerEmail });
-  } else {
-    // Anonymous path — Stripe's hosted checkout page collects email
-    customerEmail = "";
-    googleSub = undefined;
-    log.debug("POST /api/stripe/checkout: anonymous user (email collected by Stripe)");
+  if (!auth.ok) {
+    log.debug("POST /api/stripe/checkout returning", { status: 401, reason: "auth required" });
+    return auth.response;
   }
+
+  const customerEmail = auth.user.email;
+  const googleSub = auth.user.sub;
+  log.debug("POST /api/stripe/checkout: authenticated user", { googleSub, customerEmail });
 
   const priceId = process.env.STRIPE_PRICE_ID;
 
@@ -91,11 +80,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           quantity: 1,
         },
       ],
-      // Only pre-fill email for authenticated users; anonymous users enter it on Stripe's page
-      ...(customerEmail ? { customer_email: customerEmail } : {}),
-      success_url: `${baseUrl}/settings?stripe=success`,
+      customer_email: customerEmail,
+      success_url: `${baseUrl}/settings?stripe=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/settings?stripe=cancel`,
-      metadata: googleSub ? { googleSub } : {},
+      metadata: { googleSub },
       // Allow promotion codes
       allow_promotion_codes: true,
     });
@@ -115,15 +103,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     log.debug("POST /api/stripe/checkout returning", {
       status: 200,
       sessionId: session.id,
-      isAuthenticated,
-      googleSub: googleSub ?? "anonymous",
+      googleSub,
     });
     return NextResponse.json(response);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error("POST /api/stripe/checkout: session creation failed", {
-      isAuthenticated,
-      googleSub: googleSub ?? "anonymous",
+      googleSub,
       error: message,
     });
     log.debug("POST /api/stripe/checkout returning", { status: 500, error: "stripe_error" });

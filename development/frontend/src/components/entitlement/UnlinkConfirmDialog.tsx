@@ -61,13 +61,10 @@ export function UnlinkConfirmDialog({
       <DialogContent
         className="w-[92vw] max-w-[440px] border-2 border-border bg-background p-0 gap-0"
         role="alertdialog"
-        aria-labelledby="unlink-heading"
-        aria-describedby="unlink-body"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border">
           <DialogTitle
-            id="unlink-heading"
             className="text-lg font-heading font-bold text-saga"
           >
             Unlink Subscription?
@@ -76,7 +73,7 @@ export function UnlinkConfirmDialog({
 
         {/* Body */}
         <DialogDescription asChild>
-          <div id="unlink-body" className="px-5 py-4 flex flex-col gap-3">
+          <div className="px-5 py-4 flex flex-col gap-3">
             <p className="text-sm text-saga/90 leading-relaxed font-body">
               Your subscription will be disconnected from Fenrir Ledger.
               You will lose access to premium features, but your card data

@@ -86,8 +86,6 @@ export function SealedRuneModal({
       <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onDismiss()}>
         <DialogContent
           className="w-[92vw] max-w-[480px] max-h-[90vh] overflow-y-auto border-2 border-gold/40 bg-background p-0 gap-0"
-          aria-labelledby={`sealed-rune-heading-${feature}`}
-          aria-describedby={`sealed-rune-desc-${feature}`}
         >
           {/* Rune glyph -- Algiz (protection) */}
           <div className="text-center pt-6 pb-2" aria-hidden="true">
@@ -98,7 +96,6 @@ export function SealedRuneModal({
 
           {/* Heading */}
           <DialogTitle
-            id={`sealed-rune-heading-${feature}`}
             className="text-center font-display text-lg md:text-[22px] font-bold uppercase tracking-[0.12em] text-saga px-6 pb-4"
           >
             THIS RUNE IS SEALED
@@ -111,7 +108,6 @@ export function SealedRuneModal({
                 {featureDef.name}
               </span>
               <DialogDescription
-                id={`sealed-rune-desc-${feature}`}
                 className="text-sm text-saga/90 leading-relaxed font-body"
               >
                 {featureDesc.description}
@@ -147,7 +143,7 @@ export function SealedRuneModal({
               disabled={isSubscribing}
               className="w-full min-h-[48px] text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold disabled:opacity-50"
             >
-              {isSubscribing ? "Starting checkout..." : "Subscribe for $3.99/month"}
+              {isSubscribing ? "Starting checkout..." : "Subscribe"}
             </Button>
           </div>
 
