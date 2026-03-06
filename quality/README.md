@@ -6,7 +6,7 @@ Loki's domain. The trickster tests. His verdicts are final.
 
 ## Test Suites (Playwright)
 
-All suites live in `quality/test-suites/`. Total: **577 tests across 26 spec files**.
+All suites live in `quality/test-suites/`. Total: **607 tests across 27 spec files**.
 
 Run the full suite:
 ```bash
@@ -47,17 +47,19 @@ SERVER_URL=http://localhost:9653 npx playwright test ../../quality/test-suites/s
 | theme-toggle — ui | [theme-toggle/theme-toggle-ui.spec.ts](test-suites/theme-toggle/theme-toggle-ui.spec.ts) | 13 | — |
 | valhalla | [valhalla/valhalla.spec.ts](test-suites/valhalla/valhalla.spec.ts) | 19 | — |
 | button-feedback | [button-feedback/button-feedback.spec.ts](test-suites/button-feedback/button-feedback.spec.ts) | 29 | #184 |
+| font-size-readability | [font-size-readability/font-size-readability.spec.ts](test-suites/font-size-readability/font-size-readability.spec.ts) | 30 | #183 |
 
 ---
 
 ## Quality Reports & Verdicts
 
-- [quality-report.md](quality-report.md) — Current quality report: 577 tests, all PASS, Stripe Direct live, Patreon removed. Recommendation: SHIP
+- [quality-report.md](quality-report.md) — Current quality report: 607 tests, all PASS, Stripe Direct live, Patreon removed, font sizes scaled up. Recommendation: SHIP
 
 ### Historical Verdicts (by PR / Story)
 
 | PR / Story | Verdict | Result |
 |------------|---------|--------|
+| PR #183 — font size readability (#149) | [font-size-readability.spec.ts](test-suites/font-size-readability/font-size-readability.spec.ts) | PASS |
 | PR #184 — button hover/click/loading feedback | [button-feedback.spec.ts](test-suites/button-feedback/button-feedback.spec.ts) | PASS |
 | PR #137 — settings-soft-gate | [settings-soft-gate.spec.ts](test-suites/settings-soft-gate/settings-soft-gate.spec.ts) | PASS |
 | PR #138 — auth + card-crud | [sign-in.spec.ts](test-suites/auth/sign-in.spec.ts), [auth-callback.spec.ts](test-suites/auth/auth-callback.spec.ts), [edit-card.spec.ts](test-suites/card-crud/edit-card.spec.ts) | PASS |
