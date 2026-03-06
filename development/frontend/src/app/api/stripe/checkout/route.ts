@@ -69,7 +69,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   try {
     // Determine the base URL for success/cancel redirects (SEV-002 fix: never use Origin header)
-    const baseUrl = process.env.APP_BASE_URL ?? "http://localhost:9653";
+    const baseUrl = process.env.APP_BASE_URL
+      ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:9653");
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

@@ -71,7 +71,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   try {
     // SEV-002 fix: never use Origin header for redirect URLs
-    const baseUrl = process.env.APP_BASE_URL ?? "http://localhost:9653";
+    const baseUrl = process.env.APP_BASE_URL
+      ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:9653");
 
     const session = await stripe.billingPortal.sessions.create({
       customer: entitlement.stripeCustomerId,
