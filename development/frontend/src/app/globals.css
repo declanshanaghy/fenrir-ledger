@@ -638,3 +638,55 @@ body.konami-shake-mobile {
     animation: none;
   }
 }
+
+/* ── Button Feedback States (Issue #150) ────────────────────────────────────
+ *
+ * Three-layer feedback system for all interactive buttons:
+ *   1. Hover — CSS-only brightness + border glow (150ms ease-out)
+ *   2. Active/Pressed — CSS-only scale(0.97) + darken (80ms ease-out)
+ *   3. Loading — React state: spinner + contextual text + disabled
+ *
+ * Spec from ux/wireframes/chrome/button-feedback-states.html
+ * and ux/interactions.md — Button Feedback States section.
+ *
+ * Touch devices: hover scoped to @media (hover: hover).
+ * Active/pressed works on all devices (primary tap feedback on mobile).
+ * Reduced motion: scale transforms and spinner rotation disabled.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/* Button spinner rotation */
+@keyframes btn-spinner {
+  to { transform: rotate(360deg); }
+}
+
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: btn-spinner 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Reduced motion: stop spinner rotation, show static circle */
+@media (prefers-reduced-motion: reduce) {
+  .btn-spinner {
+    animation: none;
+  }
+}
+
+/* ── Forge Flash — Save Success ────────────────────────────────────────── */
+/*
+ * Brief golden flash on the submit button after a successful card save.
+ * Spec from ux/interactions.md — Form Interactions section.
+ */
+@keyframes forge-flash {
+  0%   { box-shadow: 0 0 0 rgba(201, 146, 10, 0); }
+  30%  { box-shadow: 0 0 20px rgba(201, 146, 10, 0.6); }
+  100% { box-shadow: 0 0 0 rgba(201, 146, 10, 0); }
+}
+
+.btn-forge--success {
+  animation: forge-flash 0.7s ease-out;
+}

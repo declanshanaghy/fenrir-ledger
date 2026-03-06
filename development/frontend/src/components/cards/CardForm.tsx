@@ -666,12 +666,13 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? "Saving..."
-              : isEditMode
-              ? "Save changes"
-              : "Add card"}
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            isLoading={isSubmitting}
+            loadingText="Saving..."
+          >
+            {isEditMode ? "Save changes" : "Add card"}
           </Button>
         </div>
       </div>

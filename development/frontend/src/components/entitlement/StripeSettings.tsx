@@ -37,6 +37,9 @@ const KARL_BENEFITS = [
   "Unlock all hidden runes",
 ] as const;
 
+/** Timeout for portal redirect (ms). If exceeded, revert loading and show error toast. */
+const PORTAL_TIMEOUT_MS = 10_000;
+
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
@@ -82,6 +85,8 @@ export function StripeSettings() {
   } = useEntitlement();
 
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [isManaging, setIsManaging] = useState(false);
+  const [isCancelingAction, setIsCancelingAction] = useState(false);
 
   // Determine state
   const isStripeLinked = isLinked && platform === "stripe";
@@ -92,6 +97,9 @@ export function StripeSettings() {
   // Already fully canceled (subscription ended)
   const isCanceled = isStripeLinked && tier === "karl" && !isActive;
   const isThrall = !isKarlActive && !isCanceling && !isCanceled;
+
+  // Any button in this group loading? Disables siblings.
+  const isAnyLoading = isSubscribing || isManaging || isCancelingAction;
 
   // Format the current period end date
   const formattedPeriodEnd = currentPeriodEnd
@@ -111,7 +119,7 @@ export function StripeSettings() {
     setIsSubscribing(true);
     try {
       await subscribeStripe();
-      // If successful, user is redirected
+      // If successful, user is redirected -- loading persists until navigation
     } catch {
       toast.error("Could not start checkout. Please try again.");
       setIsSubscribing(false);
@@ -120,16 +128,48 @@ export function StripeSettings() {
 
   /**
    * Handle manage subscription click -- opens Stripe Customer Portal.
+   * Shows loading state with timeout for error recovery.
    */
   const handleManage = useCallback(async () => {
-    await openPortal();
+    setIsManaging(true);
+    const timeout = setTimeout(() => {
+      setIsManaging(false);
+      toast.error("Something went wrong. Try again.");
+    }, PORTAL_TIMEOUT_MS);
+
+    try {
+      await openPortal();
+      // Portal opens in new tab -- revert loading state after brief delay
+      setTimeout(() => setIsManaging(false), 500);
+    } catch {
+      toast.error("Something went wrong. Try again.");
+      setIsManaging(false);
+    } finally {
+      clearTimeout(timeout);
+    }
   }, [openPortal]);
 
   /**
    * Handle cancel click -- routes to Stripe Portal cancel flow.
+   * Shows loading state with timeout for error recovery.
    */
   const handleCancel = useCallback(async () => {
-    await openPortal();
+    setIsCancelingAction(true);
+    const timeout = setTimeout(() => {
+      setIsCancelingAction(false);
+      toast.error("Something went wrong. Try again.");
+    }, PORTAL_TIMEOUT_MS);
+
+    try {
+      await openPortal();
+      // Portal opens in new tab -- revert loading state after brief delay
+      setTimeout(() => setIsCancelingAction(false), 500);
+    } catch {
+      toast.error("Something went wrong. Try again.");
+      setIsCancelingAction(false);
+    } finally {
+      clearTimeout(timeout);
+    }
   }, [openPortal]);
 
   // Loading state
@@ -219,9 +259,11 @@ export function StripeSettings() {
               <Button
                 onClick={handleSubscribe}
                 disabled={isSubscribing}
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold disabled:opacity-50"
+                isLoading={isSubscribing}
+                loadingText="Redirecting..."
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
               >
-                {isSubscribing ? "Starting checkout..." : "Subscribe"}
+                Subscribe
               </Button>
             </div>
           </>
@@ -252,6 +294,9 @@ export function StripeSettings() {
             <div className="flex flex-col md:flex-row gap-3">
               <Button
                 onClick={handleManage}
+                disabled={isAnyLoading}
+                isLoading={isManaging}
+                loadingText="Redirecting..."
                 className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
               >
                 Manage Subscription
@@ -259,6 +304,9 @@ export function StripeSettings() {
               <Button
                 variant="outline"
                 onClick={handleCancel}
+                disabled={isAnyLoading}
+                isLoading={isCancelingAction}
+                loadingText="Redirecting..."
                 className="min-h-[44px] w-full md:w-auto font-heading text-[13px]"
                 aria-label="Cancel subscription"
               >
@@ -306,9 +354,11 @@ export function StripeSettings() {
               <Button
                 onClick={handleSubscribe}
                 disabled={isSubscribing}
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold disabled:opacity-50"
+                isLoading={isSubscribing}
+                loadingText="Redirecting..."
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
               >
-                {isSubscribing ? "Starting checkout..." : "Resubscribe"}
+                Resubscribe
               </Button>
             </div>
           </>
@@ -343,14 +393,19 @@ export function StripeSettings() {
             <div className="flex flex-col md:flex-row gap-3">
               <Button
                 onClick={handleSubscribe}
-                disabled={isSubscribing}
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold disabled:opacity-50"
+                disabled={isAnyLoading}
+                isLoading={isSubscribing}
+                loadingText="Redirecting..."
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
               >
-                {isSubscribing ? "Starting checkout..." : "Resubscribe"}
+                Resubscribe
               </Button>
               <Button
                 variant="outline"
                 onClick={handleManage}
+                disabled={isAnyLoading}
+                isLoading={isManaging}
+                loadingText="Redirecting..."
                 className="min-h-[44px] w-full md:w-auto font-heading text-[13px]"
               >
                 Manage Subscription
