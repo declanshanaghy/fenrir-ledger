@@ -48,6 +48,64 @@ When `--batch N` is passed, follow the **Batch Dispatch** section below.
 
 ---
 
+## Step 0 — Orphan PR Check
+
+Before dispatching new work, check for orphaned PRs that need attention.
+
+**An orphaned PR is one that:**
+- Is open
+- Has no agent chain actively working on it (no recent commits in the last 24h)
+- Is missing a Loki QA verdict comment
+- OR has a PASS verdict but was never merged
+
+```bash
+gh pr list --state open --json number,title,headRefName,updatedAt,labels --jq '.[] | {num: .number, title: .title, branch: .headRefName, updated: .updatedAt, labels: [.labels[].name]}'
+```
+
+For each open PR, check:
+
+1. **Has a Loki verdict?** — scan PR comments for `## Loki QA Verdict`:
+   ```bash
+   gh pr view <NUMBER> --comments --json comments --jq '[.comments[].body | select(test("## Loki QA Verdict"))] | length'
+   ```
+
+2. **Verdict was PASS but not merged?** — Loki approved but merge didn't happen:
+   ```bash
+   gh pr view <NUMBER> --comments --json comments --jq '[.comments[].body | select(test("Verdict.*PASS"))] | length'
+   ```
+
+3. **Stale?** — last update was more than 24h ago (no active work):
+   Compare `updatedAt` against current time.
+
+### Orphan categories and actions
+
+| Category | Condition | Action |
+|----------|-----------|--------|
+| **PASS but unmerged** | Loki PASS verdict exists, PR still open | Attempt auto-merge: check CI, `needs-review` label, mergeability. Merge if clear. |
+| **No verdict** | PR open, no Loki verdict comment, stale >24h | Resume the chain: run `/fire-next-up --resume #N` for the linked issue. |
+| **FAIL verdict** | Loki FAIL verdict, no subsequent fix commits | Report to user: `PR #N failed QA and is stale. Needs attention.` |
+| **No linked issue** | PR has no `Fixes #N` or `Ref #N` in body | Report to user: `PR #N has no linked issue. Review manually.` |
+
+### Report format
+
+If orphans are found, report them BEFORE proceeding to Step 1:
+
+```
+**Orphaned PRs detected:**
+
+| PR | Title | Status | Action Taken |
+|----|-------|--------|-------------|
+| #N | ... | PASS but unmerged | Merged |
+| #M | ... | No QA verdict, stale 3d | Resuming chain for #X |
+| #K | ... | FAIL verdict, stale 2d | Needs manual attention |
+
+Proceeding to dispatch next issue...
+```
+
+If no orphans are found, proceed silently to Step 1.
+
+---
+
 ## Step 1 — Query the Project Board
 
 Fetch all items from GitHub Project #1 and filter for the "Up Next" status column:
