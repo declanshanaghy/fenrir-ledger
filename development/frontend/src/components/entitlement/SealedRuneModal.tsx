@@ -141,9 +141,11 @@ export function SealedRuneModal({
             <Button
               onClick={handleStripeSubscribe}
               disabled={isSubscribing}
-              className="w-full min-h-[48px] text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold disabled:opacity-50"
+              isLoading={isSubscribing}
+              loadingText="Redirecting..."
+              className="w-full min-h-[48px] text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
             >
-              {isSubscribing ? "Starting checkout..." : "Subscribe"}
+              Subscribe
             </Button>
           </div>
 

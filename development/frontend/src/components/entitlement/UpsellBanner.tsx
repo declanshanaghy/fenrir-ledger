@@ -151,15 +151,26 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
         type="button"
         onClick={handleStripeUpgrade}
         disabled={isSubscribing}
+        aria-busy={isSubscribing || undefined}
+        aria-disabled={isSubscribing || undefined}
         className={[
           "self-start md:self-center px-3.5 py-1.5 text-xs font-heading font-bold tracking-wide",
           "border border-gold/50 text-gold",
-          "hover:bg-gold/10 transition-colors",
+          "hover:bg-gold/10 hover:brightness-110",
+          "active:scale-[0.97] active:brightness-90",
+          "transition-[transform,filter,background-color,color] duration-150 ease-out",
           "rounded-sm whitespace-nowrap min-h-[36px]",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
+          "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
         ].join(" ")}
       >
-        {isSubscribing ? "Starting..." : "Upgrade to Karl"}
+        {isSubscribing ? (
+          <span className="inline-flex items-center gap-2">
+            <span className="btn-spinner" aria-hidden="true" />
+            Redirecting...
+          </span>
+        ) : (
+          "Upgrade to Karl"
+        )}
       </button>
     </div>
   );

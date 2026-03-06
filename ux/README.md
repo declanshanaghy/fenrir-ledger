@@ -33,7 +33,7 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 | Category | Files |
 |----------|-------|
 | app | [dashboard.html](wireframes/app/dashboard.html), [valhalla.html](wireframes/app/valhalla.html) |
-| chrome | [topbar.html](wireframes/chrome/topbar.html), [howl-panel.html](wireframes/chrome/howl-panel.html), [footer.html](wireframes/chrome/footer.html) |
+| chrome | [topbar.html](wireframes/chrome/topbar.html), [howl-panel.html](wireframes/chrome/howl-panel.html), [footer.html](wireframes/chrome/footer.html), [button-feedback-states.html](wireframes/chrome/button-feedback-states.html) |
 | cards | [add-card.html](wireframes/cards/add-card.html), [wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) |
 | auth | [sign-in.html](wireframes/auth/sign-in.html), [multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html), [migration-prompt.html](wireframes/auth/migration-prompt.html), [upsell-banner.html](wireframes/auth/upsell-banner.html) |
 | notifications | [ragnarok-threshold.html](wireframes/notifications/ragnarok-threshold.html), [card-count-milestones.html](wireframes/notifications/card-count-milestones.html) |
@@ -97,7 +97,7 @@ All sprints (1--5) shipped. The Saga Ledger design system is fully implemented. 
 | Artifact | Status |
 |----------|--------|
 | Theme system (colors, fonts, tokens) | Implemented |
-| All 26 wireframes | Implemented |
+| All 27 wireframes | Implemented |
 | All 11 easter eggs | Implemented |
 | Stripe Direct integration (4 wireframes) | Implemented |
 | Anonymous-first auth model | Implemented |
