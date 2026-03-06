@@ -308,3 +308,89 @@ On the card grid and timeline view, switch to a wolf paw cursor:
 On the Norns/timeline view: switch to a spindle cursor (16x16 hotspot at center).
 
 Only implement if SVG cursors are stable across target browsers. Falls back gracefully to `pointer`.
+
+---
+
+## Typography Scale (Issue #149)
+
+A proportional font size increase across the entire app for modern readability. This is a polish pass, not a redesign -- the Saga Ledger aesthetic (dark Nordic, Cinzel/Source Serif 4/JetBrains Mono) is preserved. Visual hierarchy is maintained; everything simply scales up.
+
+**Reference:** Stripe docs/dashboard typography as the readability benchmark.
+
+### Font Size Scale
+
+| Level | Role | Before (px) | After (px) | Tailwind Before | Tailwind After |
+|-------|------|-------------|------------|-----------------|----------------|
+| H1 | Page title (display) | 24 | 32 | text-2xl | text-3xl / text-[32px] |
+| H2 | Section heading | 18 | 24 | text-lg | text-2xl |
+| H3 | Card / panel heading | 14 | 18 | text-sm | text-lg |
+| H4 | Subheading / fieldset legend | 12 | 16 | text-xs | text-base |
+| Body | Primary body text | 14 | 16 | text-sm | text-base |
+| Body Small | Secondary text, descriptions | 12 | 14 | text-xs | text-sm |
+| Label | Form labels, stat labels | 12 | 14 | text-xs | text-sm |
+| Meta | Timestamps, footnotes, helper | 11 | 13 | text-[11px] | text-[13px] |
+| Code / Mono | Dates, amounts, data values | 12 | 14 | text-xs font-mono | text-sm font-mono |
+| Button | Button labels, CTAs | 12 | 14 | text-xs | text-sm |
+| Badge | Status badges, realm tags | 10 | 12 | text-[10px] | text-xs |
+| Nav Item | Sidebar navigation links | 12 | 14 | text-xs | text-sm |
+| Input | Form input text | 12 | 16 | text-xs | text-base |
+
+### Base CSS Change
+
+```css
+/* globals.css — @layer base */
+body {
+  font-size: 16px; /* was 14px */
+}
+```
+
+This single change affects every element that inherits `font-size` from `body` without an explicit Tailwind class.
+
+### Tailwind Migration Strategy
+
+The primary approach is a systematic class migration:
+
+| Current Class | New Class | Scope |
+|---------------|-----------|-------|
+| `text-xs` (12px) | `text-sm` (14px) | Labels, buttons, nav, body-small, code |
+| `text-sm` (14px) | `text-base` (16px) | Body text, card names, descriptions |
+| `text-base` (16px) | `text-lg` (18px) | Only where used for subheadings |
+| `text-lg` (18px) | `text-2xl` (24px) | Section headings |
+| `text-2xl` (24px) | `text-3xl` / `text-[32px]` | Page titles (H1) |
+| `text-[10px]` | `text-xs` (12px) | Badges, uppercase labels |
+| `text-[11px]` | `text-[13px]` | Metadata, timestamps |
+
+**Audit scope:** 260 occurrences of `text-xs` or `text-sm` across 51 source files. Each should be reviewed in context -- not a blind find-replace.
+
+### Non-Negotiable Requirements
+
+1. **Input font-size must be 16px on all viewports** -- prevents iOS Safari zoom-on-focus. This was already documented for the anonymous checkout email field; it now applies universally to all `<input>`, `<textarea>`, and `<select>` elements.
+2. **Visual hierarchy preserved** -- the relative size ratios between levels must remain consistent. H1 is always significantly larger than body, body is always larger than meta.
+3. **Mobile at 375px must not overflow** -- the H1 at 32px may need a responsive step-down to 28px on mobile (`text-[28px] md:text-3xl`).
+
+### Exceptions (Do Not Change)
+
+| Component | Current Size | Reason |
+|-----------|-------------|--------|
+| `ConsoleSignature.tsx` | Various | ASCII art alignment |
+| `LcarsOverlay.tsx` | text-xs, text-[10px] | LCARS aesthetic requires dense text |
+| Gleipnir copyright tooltip (globals.css `::after`) | 10px | Easter egg hint, not primary UI |
+
+### Components Requiring Special Attention
+
+These components have the highest density of small text and will need careful review:
+
+| Component | Occurrences | Notes |
+|-----------|-------------|-------|
+| `TopBar.tsx` | 14 | Brand, avatar, dropdown text |
+| `HowlPanel.tsx` | 12 | Alert items, deadlines, actions |
+| `AboutModal.tsx` | 12 | Team credits, ingredients list |
+| `CardForm.tsx` | 11 | Labels, inputs, fieldset legends |
+| `ImportWizard.tsx` | 14 | Step labels, instructions |
+| `StripeSettings.tsx` | 15 | Subscription status, buttons |
+| `valhalla/page.tsx` | 15 | Tombstone cards, metadata |
+| `SafetyBanner.tsx` | 12 | Warning text, descriptions |
+
+### Wireframe
+
+See [Font Size Scale wireframe](wireframes/accessibility/font-size-scale.html) for a visual before/after comparison of the typography hierarchy and component samples (card tile, form, sidebar, Howl panel).
