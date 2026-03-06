@@ -48,6 +48,64 @@ When `--batch N` is passed, follow the **Batch Dispatch** section below.
 
 ---
 
+## Step 0 — Orphan PR Check
+
+Before dispatching new work, check for orphaned PRs that need attention.
+
+**An orphaned PR is one that:**
+- Is open
+- Has no agent chain actively working on it (no recent commits in the last 24h)
+- Is missing a Loki QA verdict comment
+- OR has a PASS verdict but was never merged
+
+```bash
+gh pr list --state open --json number,title,headRefName,updatedAt,labels --jq '.[] | {num: .number, title: .title, branch: .headRefName, updated: .updatedAt, labels: [.labels[].name]}'
+```
+
+For each open PR, check:
+
+1. **Has a Loki verdict?** — scan PR comments for `## Loki QA Verdict`:
+   ```bash
+   gh pr view <NUMBER> --comments --json comments --jq '[.comments[].body | select(test("## Loki QA Verdict"))] | length'
+   ```
+
+2. **Verdict was PASS but not merged?** — Loki approved but merge didn't happen:
+   ```bash
+   gh pr view <NUMBER> --comments --json comments --jq '[.comments[].body | select(test("Verdict.*PASS"))] | length'
+   ```
+
+3. **Stale?** — last update was more than 24h ago (no active work):
+   Compare `updatedAt` against current time.
+
+### Orphan categories and actions
+
+| Category | Condition | Action |
+|----------|-----------|--------|
+| **PASS but unmerged** | Loki PASS verdict exists, PR still open | Attempt auto-merge: check CI, `needs-review` label, mergeability. Merge if clear. |
+| **No verdict** | PR open, no Loki verdict comment, stale >24h | Resume the chain: run `/fire-next-up --resume #N` for the linked issue. |
+| **FAIL verdict** | Loki FAIL verdict, no subsequent fix commits | Report to user: `PR #N failed QA and is stale. Needs attention.` |
+| **No linked issue** | PR has no `Fixes #N` or `Ref #N` in body | Report to user: `PR #N has no linked issue. Review manually.` |
+
+### Report format
+
+If orphans are found, report them BEFORE proceeding to Step 1:
+
+```
+**Orphaned PRs detected:**
+
+| PR | Title | Status | Action Taken |
+|----|-------|--------|-------------|
+| #N | ... | PASS but unmerged | Merged |
+| #M | ... | No QA verdict, stale 3d | Resuming chain for #X |
+| #K | ... | FAIL verdict, stale 2d | Needs manual attention |
+
+Proceeding to dispatch next issue...
+```
+
+If no orphans are found, proceed silently to Step 1.
+
+---
+
 ## Step 1 — Query the Project Board
 
 Fetch all items from GitHub Project #1 and filter for the "Up Next" status column:
@@ -299,8 +357,23 @@ You are Loki, the QA Tester. Validate GitHub Issue #<NUMBER>: <TITLE>
 - The PR body MUST contain `Fixes #<NUMBER>` to auto-close the issue on merge.
 - Push to the branch when done.
 
+**Auto-merge — REQUIRED after creating the PR:**
+If your verdict is PASS, attempt to merge the PR automatically:
+
+1. Wait for CI to finish: `gh pr checks <PR_NUMBER> --watch --fail-fast`
+2. Check for the `needs-review` label (Odin's veto flag):
+   `gh issue view <NUMBER> --json labels --jq '[.labels[].name] | any(. == "needs-review")'`
+3. Check the PR is mergeable:
+   `gh pr view <PR_NUMBER> --json mergeable --jq '.mergeable'`
+4. **If CI green AND no `needs-review` label AND mergeable:**
+   `gh pr merge <PR_NUMBER> --squash --delete-branch`
+5. **If blocked by any condition**, skip the merge and note it in the verdict comment:
+   - CI failing: `Merge blocked — CI failing. Manual review needed.`
+   - `needs-review` label: `Merge blocked — needs-review label present. Awaiting Odin's review.`
+   - Not mergeable: `Merge blocked — merge conflicts. Rebase needed.`
+
 **Handoff — REQUIRED before you finish:**
-After creating the PR, comment on the issue with your QA verdict:
+After creating the PR (and merging if auto-merge succeeded), comment on the issue with your QA verdict:
 ```bash
 gh issue comment <NUMBER> --body "## Loki QA Verdict
 
@@ -317,7 +390,8 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 
 **Build status:** tsc clean, next build clean.
 
-<If PASS: Ready for merge. ✅>
+<If PASS and merged: Merged to main. ✅>
+<If PASS but merge blocked: Ready for merge — <reason for block>. ⏳>
 <If FAIL: Blocked — see failures above. ❌>"
 ```
 
