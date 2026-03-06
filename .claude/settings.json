@@ -1,1 +1,14 @@
-settings-bare.json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "teammateMode": "in-process",
+  "enabledPlugins": {
+    "playwright@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true
+  },
+  "statusLine": {
+    "type": "command",
+    "command": ".claude/statusline-command.sh"
+  }
+}

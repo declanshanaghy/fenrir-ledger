@@ -18,20 +18,20 @@ The user says `/imagen <prompt>` or `/imagen --preset <preset-name>`.
 ## How to Run
 
 ```bash
-python3 .claude/skills/imagen/generate.py "<prompt>"
+npx tsx .claude/skills/imagen/generate.ts "<prompt>"
 ```
 
 Or with a preset:
 
 ```bash
-python3 .claude/skills/imagen/generate.py --preset fenrir-logo
+npx tsx .claude/skills/imagen/generate.ts --preset fenrir-logo
 ```
 
 ### Requirements
 
-- Python 3.11+
+- Node.js 18+ (uses native `fetch`)
+- `tsx` (included in devDependencies)
 - `GOOGLE_API_KEY` or `GEMINI_API_KEY` environment variable set
-- No external dependencies (uses stdlib `urllib.request`)
 
 ---
 
@@ -71,25 +71,25 @@ All presets auto-prepend the Fenrir Ledger theme prefix to ensure visual consist
 ### Generate with a preset
 
 ```bash
-python3 .claude/skills/imagen/generate.py --preset fenrir-logo --output logo.png
+npx tsx .claude/skills/imagen/generate.ts --preset fenrir-logo --output logo.png
 ```
 
 ### Generate with a custom prompt
 
 ```bash
-python3 .claude/skills/imagen/generate.py "A Norse raven perched on a runic stone, gold and ice-blue palette"
+npx tsx .claude/skills/imagen/generate.ts "A Norse raven perched on a runic stone, gold and ice-blue palette"
 ```
 
 ### Generate multiple variants
 
 ```bash
-python3 .claude/skills/imagen/generate.py --preset fenrir-medallion --count 4
+npx tsx .claude/skills/imagen/generate.ts --preset fenrir-medallion --count 4
 ```
 
 ### Wide format banner
 
 ```bash
-python3 .claude/skills/imagen/generate.py "Fenrir breaking free from Gleipnir, panoramic scene" --size 16:9
+npx tsx .claude/skills/imagen/generate.ts "Fenrir breaking free from Gleipnir, panoramic scene" --size 16:9
 ```
 
 ---
@@ -111,4 +111,4 @@ python3 .claude/skills/imagen/generate.py "Fenrir breaking free from Gleipnir, p
 | API error | Prints status code and error body to stderr, exits 1 |
 | Network timeout | 60s timeout, prints timeout message to stderr, exits 1 |
 | No image in response | Prints diagnostic message to stderr, exits 1 |
-| Invalid preset | argparse shows valid choices, exits 2 |
+| Invalid preset | Prints valid choices to stderr, exits 1 |
