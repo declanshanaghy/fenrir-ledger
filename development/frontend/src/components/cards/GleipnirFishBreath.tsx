@@ -53,7 +53,7 @@ export function GleipnirFishBreath({ open, onClose }: GleipnirFishBreathProps) {
       }
       audioSrc="/sounds/fenrir-growl.mp3"
     >
-      <p className="font-body text-sm text-[hsl(var(--egg-text))] leading-relaxed">
+      <p className="font-body text-base text-[hsl(var(--egg-text))] leading-relaxed">
         One of the six impossible things woven into{" "}
         <a
           className="myth-link"
@@ -69,7 +69,7 @@ export function GleipnirFishBreath({ open, onClose }: GleipnirFishBreathProps) {
         like silk ribbon, no chain is stronger.
       </p>
 
-      <p className="font-body text-xs italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
+      <p className="font-body text-sm italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
         &ldquo;The dwarves of{" "}
         <a
           className="myth-link"

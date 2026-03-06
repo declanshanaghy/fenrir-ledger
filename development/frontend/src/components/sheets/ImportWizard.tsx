@@ -206,7 +206,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
         {step === "method" && (
           <>
             <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-lg">
+              <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Import Cards
               </DialogTitle>
             </DialogHeader>
@@ -218,7 +218,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
         {step === "url-entry" && (
           <>
             <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-lg">
+              <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Share a Scroll
               </DialogTitle>
             </DialogHeader>
@@ -237,7 +237,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
         {step === "csv-upload" && (
           <>
             <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-lg">
+              <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Deliver a Rune-Stone
               </DialogTitle>
             </DialogHeader>
@@ -252,7 +252,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
         {step === "picker" && (
           <>
             <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-lg">
+              <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Browse the Archives
               </DialogTitle>
             </DialogHeader>
@@ -268,7 +268,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
         {step === "loading" && (
           <>
             <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-lg">
+              <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Deciphering the runes...
               </DialogTitle>
             </DialogHeader>
@@ -281,7 +281,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
                 aria-label="Loading"
               />
 
-              <p className="font-body text-muted-foreground text-sm italic text-center">
+              <p className="font-body text-muted-foreground text-base italic text-center">
                 {importMethod === "picker"
                   ? "Deciphering the sacred scrolls from your archives..."
                   : importMethod === "csv"
@@ -292,7 +292,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               <button
                 type="button"
                 onClick={cancel}
-                className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
+                className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
               >
                 Cancel
               </button>
@@ -305,10 +305,10 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
           <>
             <DialogHeader>
               <div className="flex items-center gap-3">
-                <DialogTitle className="font-display text-gold tracking-wide text-lg">
+                <DialogTitle className="font-display text-gold tracking-wide text-xl">
                   Preview Import
                 </DialogTitle>
-                <span className="inline-flex items-center justify-center rounded-full bg-gold/20 text-gold font-mono text-xs font-bold px-2 py-0.5 border border-gold/30">
+                <span className="inline-flex items-center justify-center rounded-full bg-gold/20 text-gold font-mono text-sm font-bold px-2 py-0.5 border border-gold/30">
                   {cards.length} card{cards.length !== 1 ? "s" : ""}
                 </span>
               </div>
@@ -323,7 +323,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               {/* CSV/fetch warning banner */}
               {warning && (
                 <div className="rounded-sm border border-amber-500/40 bg-amber-500/10 px-3 py-2">
-                  <p className="text-xs font-body text-amber-400">{warning}</p>
+                  <p className="text-sm font-body text-amber-400">{warning}</p>
                 </div>
               )}
 
@@ -337,18 +337,18 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
                       className="flex items-center justify-between rounded-sm border border-border bg-card px-4 py-3 gap-4"
                     >
                       <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="font-heading text-sm text-foreground tracking-wide truncate">
+                        <span className="font-heading text-base text-foreground tracking-wide truncate">
                           {card.cardName}
                         </span>
-                        <span className="font-body text-xs text-muted-foreground">
+                        <span className="font-body text-sm text-muted-foreground">
                           {issuer?.name ?? card.issuerId}
                         </span>
                       </div>
                       <div className="flex items-center gap-4 shrink-0">
-                        <span className="font-mono text-xs text-muted-foreground">
+                        <span className="font-mono text-sm text-muted-foreground">
                           {formatDate(card.openDate)}
                         </span>
-                        <span className="font-mono text-xs text-gold">
+                        <span className="font-mono text-sm text-gold">
                           {formatFee(card.annualFee)}
                         </span>
                       </div>
@@ -362,14 +362,14 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
                 <button
                   type="button"
                   onClick={onClose}
-                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
+                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirm}
-                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px]"
+                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px]"
                 >
                   Import {cards.length} card{cards.length !== 1 ? "s" : ""}
                 </button>
@@ -393,13 +393,13 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
         {step === "error" && (
           <>
             <DialogHeader>
-              <DialogTitle className="font-display text-red-400 tracking-wide text-lg">
+              <DialogTitle className="font-display text-red-400 tracking-wide text-xl">
                 Import Failed
               </DialogTitle>
             </DialogHeader>
 
             <div className="flex flex-col gap-4 py-2">
-              <p className="font-body text-muted-foreground text-sm">
+              <p className="font-body text-muted-foreground text-base">
                 {errorCode ? ERROR_MESSAGES[errorCode] : errorMessage}
               </p>
 
@@ -407,14 +407,14 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
                 <button
                   type="button"
                   onClick={onClose}
-                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
+                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
                 >
                   Close
                 </button>
                 <button
                   type="button"
                   onClick={reset}
-                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px]"
+                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px]"
                 >
                   Try Again
                 </button>
@@ -427,7 +427,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
         {step === "success" && (
           <>
             <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-lg">
+              <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Cards imported!
               </DialogTitle>
             </DialogHeader>
@@ -436,7 +436,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               <div className="text-4xl" aria-hidden="true">
                 ᚠ
               </div>
-              <p className="font-body text-muted-foreground text-sm text-center">
+              <p className="font-body text-muted-foreground text-base text-center">
                 The runes have been inscribed in the ledger. Your cards have been
                 added to the household.
               </p>

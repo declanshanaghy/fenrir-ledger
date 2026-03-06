@@ -71,23 +71,23 @@ export function WolfHungerMeter() {
       {hasAny ? (
         <div className="flex flex-col gap-1">
           {totals.points > 0 && (
-            <p className="font-mono text-xs text-[hsl(var(--egg-accent))]">
+            <p className="font-mono text-sm text-[hsl(var(--egg-accent))]">
               {formatBonusLine("points", totals.points)}
             </p>
           )}
           {totals.miles > 0 && (
-            <p className="font-mono text-xs text-[hsl(var(--egg-accent))]">
+            <p className="font-mono text-sm text-[hsl(var(--egg-accent))]">
               {formatBonusLine("miles", totals.miles)}
             </p>
           )}
           {totals.cashback > 0 && (
-            <p className="font-mono text-xs text-[hsl(var(--egg-accent))]">
+            <p className="font-mono text-sm text-[hsl(var(--egg-accent))]">
               {formatBonusLine("cashback", totals.cashback)}
             </p>
           )}
         </div>
       ) : (
-        <p className="font-body text-xs italic text-muted-foreground/50">
+        <p className="font-body text-sm italic text-muted-foreground/50">
           The wolf has not yet fed.
         </p>
       )}

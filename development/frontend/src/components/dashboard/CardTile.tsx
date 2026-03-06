@@ -124,7 +124,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
                 />
                 <div className="min-w-0">
                   <CardDescription
-                    className="text-xs uppercase tracking-wide mb-1"
+                    className="text-sm uppercase tracking-wide mb-1"
                     title={issuerMeta ? `${issuerMeta.rune} ${issuerMeta.runeName} — ${issuerMeta.runeConnection}` : undefined}
                   >
                     <IssuerLogo issuerId={card.issuerId} className="inline-block align-middle opacity-90" />
@@ -142,7 +142,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-2 text-sm">
+          <CardContent className="space-y-2 text-base">
             {/* Credit limit */}
             <div className="flex justify-between text-muted-foreground">
               <span>Credit limit</span>
@@ -172,7 +172,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
                 >
                   {formatDate(card.annualFeeDate)}
                   {feeDays !== null && feeDays >= 0 && feeDays <= 60 && (
-                    <span className="ml-1 text-xs">({feeDays}d)</span>
+                    <span className="ml-1 text-sm">({feeDays}d)</span>
                   )}
                 </span>
               </div>
@@ -191,7 +191,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
                 >
                   {formatDate(card.signUpBonus.deadline)}
                   {bonusDays !== null && bonusDays >= 0 && bonusDays <= 30 && (
-                    <span className="ml-1 text-xs">({bonusDays}d)</span>
+                    <span className="ml-1 text-sm">({bonusDays}d)</span>
                   )}
                 </span>
               </div>

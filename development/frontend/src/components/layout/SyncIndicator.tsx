@@ -60,7 +60,7 @@ export function SyncIndicator() {
                      pointer-events-none whitespace-nowrap"
           aria-hidden="true"
         >
-          <span className="font-mono text-[10px] tracking-wide text-[hsl(var(--egg-accent))]">
+          <span className="font-mono text-xs tracking-wide text-[hsl(var(--egg-accent))]">
             The sound of a cat&apos;s footfall
           </span>
         </div>

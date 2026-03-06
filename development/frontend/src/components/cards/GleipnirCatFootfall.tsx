@@ -109,14 +109,14 @@ export function GleipnirCatFootfall({ open, onClose }: GleipnirCatFootfallProps)
 
           {/* Right — discovery text */}
           <div className="flex flex-col justify-center gap-3 px-6 py-6 md:px-8">
-            <p className="font-body text-sm text-[hsl(var(--egg-text))] leading-relaxed">
+            <p className="font-body text-base text-[hsl(var(--egg-text))] leading-relaxed">
               One of the six impossible things woven into{" "}
               <span className="text-[hsl(var(--egg-title))] italic">Gleipnir</span> — the only
               chain strong enough to bind the great wolf. Though it looks like silk
               ribbon, no chain is stronger.
             </p>
 
-            <p className="font-body text-xs italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
+            <p className="font-body text-sm italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
               &ldquo;The dwarves of Svartálfaheimr gathered six things that do not
               exist. From these they wove Gleipnir. When Fenrir felt its touch, he
               knew at last what true binding was.&rdquo;
@@ -140,7 +140,7 @@ export function GleipnirCatFootfall({ open, onClose }: GleipnirCatFootfallProps)
         <div className="flex justify-center px-6 py-4 border-t border-[hsl(var(--egg-border))]">
           <DialogClose asChild>
             <Button
-              className="px-10 font-heading text-sm font-semibold tracking-widest uppercase
+              className="px-10 font-heading text-base font-semibold tracking-widest uppercase
                          bg-[hsl(var(--egg-btn-bg))] text-[hsl(var(--egg-btn-text))] hover:bg-[hsl(var(--egg-btn-hover))]
                          rounded-none min-h-[44px]"
             >

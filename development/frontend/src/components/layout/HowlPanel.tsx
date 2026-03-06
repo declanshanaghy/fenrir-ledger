@@ -109,12 +109,12 @@ function UrgentRow({ row }: UrgentRowProps) {
           className={cn("h-2 w-2 rounded-full shrink-0", dotColor)}
           aria-hidden="true"
         />
-        <span className="text-xs text-muted-foreground uppercase tracking-wide">
+        <span className="text-sm text-muted-foreground uppercase tracking-wide">
           {typeLabel}
         </span>
         <span
           className={cn(
-            "ml-auto text-xs font-mono font-semibold",
+            "ml-auto text-sm font-mono font-semibold",
             daysRemaining <= 30 ? "text-[hsl(var(--realm-muspel))]" : "text-[hsl(var(--realm-hati))]"
           )}
           data-slot="count"
@@ -125,10 +125,10 @@ function UrgentRow({ row }: UrgentRowProps) {
 
       {/* Row 2: card name + issuer (rune badge + logo) */}
       <div className="mb-1">
-        <p className="text-sm font-heading text-foreground leading-tight truncate">
+        <p className="text-base font-heading text-foreground leading-tight truncate">
           {card.cardName}
         </p>
-        <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+        <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5">
           {getIssuerRune(card.issuerId) && (
             <span className="text-gold/70 text-[0.7rem]" aria-hidden="true">
               {getIssuerRune(card.issuerId)}
@@ -140,16 +140,16 @@ function UrgentRow({ row }: UrgentRowProps) {
 
       {/* Row 3: deadline date + amount */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-muted-foreground" data-slot="date">
+        <span className="text-sm text-muted-foreground" data-slot="date">
           {formatDate(deadlineDate)}
         </span>
         {isFee && card.annualFee > 0 && (
-          <span className="text-xs font-mono text-gold" data-slot="amount">
+          <span className="text-sm font-mono text-gold" data-slot="amount">
             {formatCurrency(card.annualFee)}
           </span>
         )}
         {!isFee && card.signUpBonus && (
-          <span className="text-xs font-mono text-gold" data-slot="amount">
+          <span className="text-sm font-mono text-gold" data-slot="amount">
             {card.signUpBonus.type === "cashback"
               ? formatCurrency(card.signUpBonus.amount)
               : `${card.signUpBonus.amount.toLocaleString()} ${card.signUpBonus.type}`}
@@ -161,7 +161,7 @@ function UrgentRow({ row }: UrgentRowProps) {
       <Link
         href={`/cards/${card.id}/edit`}
         className={cn(
-          "inline-flex items-center text-xs font-heading uppercase tracking-wide",
+          "inline-flex items-center text-sm font-heading uppercase tracking-wide",
           "text-gold hover:text-gold-bright transition-colors"
         )}
       >
@@ -205,7 +205,7 @@ function PanelHeader({ count, shake, onShakeEnd, ragnarokActive }: PanelHeaderPr
       <span
         aria-hidden="true"
         className={cn(
-          "text-lg leading-none shrink-0 select-none",
+          "text-xl leading-none shrink-0 select-none",
           ragnarokActive
             ? "text-[hsl(var(--realm-ragnarok-dark))] animate-muspel-pulse"
             : count > 0
@@ -218,13 +218,13 @@ function PanelHeader({ count, shake, onShakeEnd, ragnarokActive }: PanelHeaderPr
       >
         {ragnarokActive ? "ᚠ" : "ᚲ"}
       </span>
-      <h2 className="font-heading text-xs uppercase tracking-widest text-foreground flex-1">
+      <h2 className="font-heading text-sm uppercase tracking-widest text-foreground flex-1">
         {ragnarokActive ? "Ragnarök Approaches" : "The Howl"}
       </h2>
       {count > 0 && (
         <span
           className={cn(
-            "text-xs font-mono font-semibold px-1.5 py-0.5 rounded-sm",
+            "text-sm font-mono font-semibold px-1.5 py-0.5 rounded-sm",
             ragnarokActive
               ? "text-[hsl(var(--realm-ragnarok-dark))] bg-[hsl(var(--realm-ragnarok-dark))]/10"
               : "text-[hsl(var(--realm-muspel))] bg-[hsl(var(--realm-muspel))]/10"
@@ -256,7 +256,7 @@ function PanelEmptyState() {
       >
         ᚱ
       </span>
-      <p className="text-xs text-muted-foreground leading-relaxed italic">
+      <p className="text-sm text-muted-foreground leading-relaxed italic">
         The wolf is not howling.
         <br />
         All chains are silent.
@@ -430,7 +430,7 @@ export function AnimatedHowlPanel({
             <button
               type="button"
               onClick={onMobileClose}
-              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground text-xs font-heading uppercase tracking-wide"
+              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground text-sm font-heading uppercase tracking-wide"
               aria-label="Close urgent panel"
             >
               Close

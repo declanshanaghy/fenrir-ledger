@@ -227,15 +227,15 @@ export function MethodSelection({ onSelectMethod, pickerApiKey = null }: MethodS
             ].join(" ")}
           >
             {method.disabledLabel && (
-              <span className="absolute top-2 right-2 text-[10px] font-heading tracking-wide text-muted-foreground bg-muted px-1.5 py-0.5 rounded-sm">
+              <span className="absolute top-2 right-2 text-xs font-heading tracking-wide text-muted-foreground bg-muted px-1.5 py-0.5 rounded-sm">
                 {method.disabledLabel}
               </span>
             )}
             <div className="text-gold">{method.icon}</div>
-            <h3 className="font-heading text-sm text-foreground tracking-wide">
+            <h3 className="font-heading text-base text-foreground tracking-wide">
               {method.title}
             </h3>
-            <p className="text-[11px] font-body text-muted-foreground leading-relaxed">
+            <p className="text-[13px] font-body text-muted-foreground leading-relaxed">
               {method.description}
             </p>
           </div>

@@ -225,10 +225,10 @@ function AuthCallbackContent() {
       <div className="text-center flex flex-col items-center gap-4">
         {callbackStatus === "exchanging" && (
           <>
-            <p className="font-display text-gold tracking-wide text-sm">
+            <p className="font-display text-gold tracking-wide text-base">
               Binding the oath...
             </p>
-            <p className="text-muted-foreground font-body italic text-xs">
+            <p className="text-muted-foreground font-body italic text-sm">
               Securing your passage through the Bifröst.
             </p>
           </>
@@ -236,10 +236,10 @@ function AuthCallbackContent() {
 
         {callbackStatus === "success" && (
           <>
-            <p className="font-display text-gold tracking-wide text-sm">
+            <p className="font-display text-gold tracking-wide text-base">
               The wolf is named.
             </p>
-            <p className="text-muted-foreground font-body italic text-xs">
+            <p className="text-muted-foreground font-body italic text-sm">
               Entering the hall...
             </p>
           </>
@@ -247,15 +247,15 @@ function AuthCallbackContent() {
 
         {callbackStatus === "error" && (
           <>
-            <p className="font-heading text-sm text-destructive uppercase tracking-wide">
+            <p className="font-heading text-base text-destructive uppercase tracking-wide">
               The Bifröst trembled
             </p>
-            <p className="text-muted-foreground font-body text-xs max-w-xs">
+            <p className="text-muted-foreground font-body text-sm max-w-xs">
               {errorMessage}
             </p>
             <a
               href="/sign-in"
-              className="mt-2 text-sm text-gold hover:text-gold-bright font-heading tracking-wide underline underline-offset-4"
+              className="mt-2 text-base text-gold hover:text-gold-bright font-heading tracking-wide underline underline-offset-4"
             >
               Return to the gate
             </a>
@@ -273,7 +273,7 @@ export default function AuthCallbackPage() {
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-background px-4">
           <div className="text-center flex flex-col items-center gap-4">
-            <p className="font-display text-gold tracking-wide text-sm">
+            <p className="font-display text-gold tracking-wide text-base">
               Binding the oath...
             </p>
           </div>

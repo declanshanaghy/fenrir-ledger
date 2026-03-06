@@ -52,14 +52,14 @@ export function GleipnirBirdSpittle({ open, onClose }: GleipnirBirdSpittleProps)
       }
       audioSrc="/sounds/fenrir-growl.mp3"
     >
-      <p className="font-body text-sm text-[hsl(var(--egg-text))] leading-relaxed">
+      <p className="font-body text-base text-[hsl(var(--egg-text))] leading-relaxed">
         One of the six impossible things woven into{" "}
         <span className="text-[hsl(var(--egg-title))] italic">Gleipnir</span> — the only
         chain strong enough to bind the great wolf. Though it looks like silk
         ribbon, no chain is stronger.
       </p>
 
-      <p className="font-body text-xs italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
+      <p className="font-body text-sm italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
         &ldquo;The dwarves of Svartálfaheimr gathered six things that do not
         exist. From these they wove Gleipnir. When Fenrir felt its touch, he
         knew at last what true binding was.&rdquo;

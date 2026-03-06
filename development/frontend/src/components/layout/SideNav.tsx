@@ -29,7 +29,7 @@ function RuneIcon({ rune }: { rune: string }) {
   return (
     <span
       aria-hidden="true"
-      className="h-4 w-4 shrink-0 flex items-center justify-center text-sm leading-none"
+      className="h-4 w-4 shrink-0 flex items-center justify-center text-base leading-none"
       style={{ fontFamily: "serif" }}
     >
       {rune}
@@ -84,7 +84,7 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
               href={item.href}
               title={collapsed ? item.label : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-sm px-2.5 py-2 text-sm",
+                "flex items-center gap-3 rounded-sm px-2.5 py-2 text-base",
                 "transition-[transform,filter,background-color,color,border-color] duration-150 ease-out",
                 "active:scale-[0.98] active:brightness-90",
                 isActive
@@ -110,7 +110,7 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "flex items-center gap-3 w-full rounded-sm px-2.5 py-2 text-sm min-h-[44px]",
+            "flex items-center gap-3 w-full rounded-sm px-2.5 py-2 text-base min-h-[44px]",
             "text-muted-foreground hover:bg-secondary hover:text-foreground",
             "transition-[transform,filter,background-color,color] duration-150 ease-out",
             "active:scale-[0.98] active:brightness-90"

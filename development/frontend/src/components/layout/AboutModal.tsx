@@ -84,10 +84,10 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
         {/* pr-10 keeps title clear of the built-in X close button      */}
         <div className="flex items-center gap-3 px-5 py-3.5 pr-10 border-b border-border shrink-0">
           {/* Rune: visible only on mobile where the left column is hidden */}
-          <span className="text-xl text-gold leading-none md:hidden" aria-hidden="true">
+          <span className="text-2xl text-gold leading-none md:hidden" aria-hidden="true">
             ᛟ
           </span>
-          <DialogTitle className="font-heading text-xs font-bold uppercase tracking-[0.14em] text-gold">
+          <DialogTitle className="font-heading text-sm font-bold uppercase tracking-[0.14em] text-gold">
             About Fenrir Ledger
           </DialogTitle>
         </div>
@@ -107,14 +107,14 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
               ᛟ
             </span>
             <div>
-              <p className="font-display text-gold tracking-widest uppercase text-sm">
+              <p className="font-display text-gold tracking-widest uppercase text-base">
                 Fenrir Ledger
               </p>
-              <p className="font-body text-muted-foreground text-xs italic mt-1">
+              <p className="font-body text-muted-foreground text-sm italic mt-1">
                 Break free. Harvest every reward.
               </p>
             </div>
-            <p className="font-body text-muted-foreground text-[11px] italic leading-relaxed max-w-[160px]">
+            <p className="font-body text-muted-foreground text-[13px] italic leading-relaxed max-w-[160px]">
               &ldquo;The wolf watches what the issuers hope you forget.&rdquo;
             </p>
           </div>
@@ -126,21 +126,21 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
           <div className="flex flex-col overflow-y-auto px-5 py-5 gap-0">
 
             {/* The Pack */}
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-3">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-3">
               The Pack
             </p>
             <div className="flex flex-col gap-3.5 mb-5">
               {TEAM.map((member) => (
                 <div key={member.name}>
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="font-heading text-xs font-bold uppercase tracking-wide text-gold-bright">
+                    <span className="font-heading text-sm font-bold uppercase tracking-wide text-gold-bright">
                       {member.name}
                     </span>
-                    <span className="font-mono text-[10px] text-muted-foreground">
+                    <span className="font-mono text-xs text-muted-foreground">
                       {member.role}
                     </span>
                   </div>
-                  <p className="font-body text-sm italic text-muted-foreground leading-snug mt-0.5">
+                  <p className="font-body text-base italic text-muted-foreground leading-snug mt-0.5">
                     &ldquo;{member.voice}&rdquo;
                   </p>
                 </div>
@@ -151,13 +151,13 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
             <div className="border-t border-border mb-5" aria-hidden="true" />
 
             {/* Six Impossible Things */}
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-3">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-3">
               Gleipnir was made of:
             </p>
             <ol className="flex flex-col gap-2 list-none">
               {INGREDIENTS.map((ingredient, i) => (
                 <li key={i} className="flex items-baseline gap-3">
-                  <span className="font-mono text-[10px] text-gold shrink-0 w-5 text-right">
+                  <span className="font-mono text-xs text-gold shrink-0 w-5 text-right">
                     {ROMAN[i]}
                   </span>
                   {i === 1 ? (
@@ -167,12 +167,12 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
                     <button
                       type="button"
                       onClick={triggerBeard}
-                      className="font-body text-sm text-foreground leading-snug bg-transparent border-0 p-0 text-left cursor-default hover:text-gold transition-colors"
+                      className="font-body text-base text-foreground leading-snug bg-transparent border-0 p-0 text-left cursor-default hover:text-gold transition-colors"
                     >
                       {ingredient}
                     </button>
                   ) : (
-                    <span className="font-body text-sm text-foreground leading-snug">
+                    <span className="font-body text-base text-foreground leading-snug">
                       {ingredient}
                     </span>
                   )}

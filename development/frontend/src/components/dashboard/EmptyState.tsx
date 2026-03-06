@@ -19,7 +19,7 @@ export function EmptyState() {
       aria-description="the spittle of a bird"
     >
       {/* Voice 2: atmospheric — kennings from copywriting.md empty states */}
-      <h2 className="font-display text-2xl text-gold mb-3 tracking-wide">
+      <h2 className="font-display text-3xl text-gold mb-3 tracking-wide">
         Before{" "}
         <a
           className="myth-link"
@@ -49,7 +49,7 @@ export function EmptyState() {
 
       <Link
         href="/cards/new"
-        className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-10 px-6"
+        className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-10 px-6"
       >
         Add Card
       </Link>
@@ -60,7 +60,7 @@ export function EmptyState() {
           onClick={() => {
             window.dispatchEvent(new CustomEvent("fenrir:open-import-wizard"));
           }}
-          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-10 px-6 mt-3"
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-10 px-6 mt-3"
         >
           Import from Google Sheets
         </button>

@@ -32,17 +32,17 @@ export function SiteHeader({
           {backHref && (
             <Link
               href={backHref}
-              className="text-muted-foreground hover:text-foreground transition-colors text-sm shrink-0 font-body"
+              className="text-muted-foreground hover:text-foreground transition-colors text-base shrink-0 font-body"
             >
               ← Back
             </Link>
           )}
 
           <Link href="/" className="flex flex-col leading-tight group">
-            <span className="font-display text-gold tracking-widest uppercase text-sm group-hover:text-gold-bright transition-colors">
+            <span className="font-display text-gold tracking-widest uppercase text-base group-hover:text-gold-bright transition-colors">
               Fenrir Ledger
             </span>
-            <span className="font-body text-muted-foreground text-xs italic">
+            <span className="font-body text-muted-foreground text-sm italic">
               Break free. Harvest every reward.
             </span>
           </Link>

@@ -62,7 +62,7 @@ export default function EditCardPage() {
         <>
           <div className="mb-8">
             {/* Voice 2: atmospheric page heading from copywriting.md navigation labels */}
-            <h1 className="font-display text-2xl text-gold tracking-wide">
+            <h1 className="font-display text-3xl text-gold tracking-wide">
               {card.cardName}
             </h1>
             <p className="font-body text-muted-foreground mt-1 italic">

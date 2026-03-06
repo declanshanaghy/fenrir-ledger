@@ -196,23 +196,23 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
       <div className="flex items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2 min-w-0">
           <span
-            className="text-[hsl(var(--realm-stone))] text-lg shrink-0"
+            className="text-[hsl(var(--realm-stone))] text-xl shrink-0"
             aria-hidden="true"
             title={getRealmLabel("closed").sublabel}
           >
             ᛏ
           </span>
-          <h2 className="font-heading text-sm font-semibold tracking-wide uppercase truncate text-foreground">
+          <h2 className="font-heading text-base font-semibold tracking-wide uppercase truncate text-foreground">
             {card.cardName}
           </h2>
         </div>
-        <span className="text-xs text-muted-foreground shrink-0 font-mono">
+        <span className="text-sm text-muted-foreground shrink-0 font-mono">
           Closed {closedFormatted}
         </span>
       </div>
 
       {/* Meta: issuer (rune + logo) · opened · held duration */}
-      <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
+      <p className="text-sm text-muted-foreground flex items-center gap-1 flex-wrap">
         {getIssuerRune(card.issuerId) && (
           <span className="text-gold/60 text-[0.7rem]" aria-hidden="true">
             {getIssuerRune(card.issuerId)}
@@ -227,7 +227,7 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
       <hr className="border-border" />
 
       {/* Plunder row */}
-      <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-xs">
+      <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-sm">
         {bonusSummary && (
           <>
             <span className="text-muted-foreground">Rewards:</span>
@@ -245,7 +245,7 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
       </div>
 
       {/* Epitaph — atmospheric voice, Norse-flavoured */}
-      <p className="text-xs text-muted-foreground italic pt-0.5">
+      <p className="text-sm text-muted-foreground italic pt-0.5">
         {feeAvoided > 0
           ? `The chain is broken. ${formatCurrency(feeAvoided)} returned to the wolf.`
           : "The chain held no toll. Its rewards stand alone."}
@@ -256,7 +256,7 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
         <Link
           href={`/cards/${card.id}/edit`}
           className={[
-            "inline-block text-xs px-3 py-1.5 rounded-sm",
+            "inline-block text-sm px-3 py-1.5 rounded-sm",
             "border border-[hsl(var(--realm-stone))]/40 text-[hsl(var(--realm-stone))]",
             "hover:border-[hsl(var(--realm-stone))] hover:text-foreground",
             "transition-colors font-mono",
@@ -300,12 +300,12 @@ function ValhallaEmptyState() {
         <span className="text-[hsl(var(--realm-stone))] text-3xl" aria-hidden="true">
           ᛏ
         </span>
-        <p className="font-heading text-sm text-foreground">
+        <p className="font-heading text-base text-foreground">
           No wolves have returned from the hunt. All chains still bind.
         </p>
         <Link
           href="/"
-          className="text-xs text-muted-foreground hover:text-gold transition-colors underline underline-offset-2"
+          className="text-sm text-muted-foreground hover:text-gold transition-colors underline underline-offset-2"
         >
           Return to the Ledger of Fates
         </Link>
@@ -382,7 +382,7 @@ export default function ValhallaPage() {
     >
       {/* Page heading — Voice 2: atmospheric (from product/copywriting.md) */}
       <header className="mb-6 border-b border-border pb-4">
-        <h1 className="font-display text-xl text-gold tracking-wide mb-1">
+        <h1 className="font-display text-2xl text-gold tracking-wide mb-1">
           <a
             className="myth-link"
             href="https://en.wikipedia.org/wiki/Valhalla"
@@ -394,7 +394,7 @@ export default function ValhallaPage() {
           </a>
           {" — "}Hall of the Honored Dead
         </h1>
-        <p className="text-xs text-muted-foreground mt-2 font-body italic">
+        <p className="text-sm text-muted-foreground mt-2 font-body italic">
           The chains that were broken. The rewards that were harvested.
         </p>
       </header>
@@ -408,7 +408,7 @@ export default function ValhallaPage() {
             value={issuerFilter}
             onChange={(e) => setIssuerFilter(e.target.value)}
             className={[
-              "border border-border rounded-sm px-3 py-1.5 text-xs",
+              "border border-border rounded-sm px-3 py-1.5 text-sm",
               "bg-background text-foreground",
               "focus:outline-none focus:border-gold/50",
               "font-mono",
@@ -428,7 +428,7 @@ export default function ValhallaPage() {
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
             className={[
-              "border border-border rounded-sm px-3 py-1.5 text-xs",
+              "border border-border rounded-sm px-3 py-1.5 text-sm",
               "bg-background text-foreground",
               "focus:outline-none focus:border-gold/50",
               "font-mono",
@@ -445,14 +445,14 @@ export default function ValhallaPage() {
 
       {/* Content */}
       {isLoading || status === "loading" ? (
-        <p className="text-sm text-muted-foreground italic font-body">
+        <p className="text-base text-muted-foreground italic font-body">
           Consulting the runes...
         </p>
       ) : allClosed.length === 0 ? (
         <ValhallaEmptyState />
       ) : displayCards.length === 0 ? (
         /* Filter produced no results */
-        <p className="text-sm text-muted-foreground italic font-body">
+        <p className="text-base text-muted-foreground italic font-body">
           No cards bear this issuer&apos;s mark.
         </p>
       ) : (
@@ -463,12 +463,12 @@ export default function ValhallaPage() {
               aria-label="Gleipnir complete"
             >
               <div className="flex items-baseline gap-2">
-                <span className="text-[hsl(var(--egg-title))] text-lg" aria-hidden="true">✦</span>
-                <h2 className="font-heading text-sm font-semibold tracking-wide uppercase text-[hsl(var(--egg-title))]">
+                <span className="text-[hsl(var(--egg-title))] text-xl" aria-hidden="true">✦</span>
+                <h2 className="font-heading text-base font-semibold tracking-wide uppercase text-[hsl(var(--egg-title))]">
                   Gleipnir
                 </h2>
               </div>
-              <p className="font-body text-xs italic text-[hsl(var(--egg-text))] leading-relaxed">
+              <p className="font-body text-sm italic text-[hsl(var(--egg-text))] leading-relaxed">
                 The six impossible things are found. The ribbon is woven. The wolf is bound — and content.
               </p>
               <p className="font-mono text-[0.65rem] text-[hsl(var(--egg-accent))]">

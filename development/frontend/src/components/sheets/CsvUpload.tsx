@@ -223,17 +223,17 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            <p className="font-body text-sm text-muted-foreground">
+            <p className="font-body text-base text-muted-foreground">
               Drop a CSV file here, or click to browse
             </p>
-            <p className="font-body text-xs text-muted-foreground/60">
+            <p className="font-body text-sm text-muted-foreground/60">
               .csv files only, 1 MB maximum
             </p>
           </>
         )}
 
         {dropState === "drag-over" && (
-          <p className="font-heading text-sm text-gold tracking-wide">
+          <p className="font-heading text-base text-gold tracking-wide">
             Release to upload
           </p>
         )}
@@ -245,7 +245,7 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
               role="status"
               aria-label="Processing file"
             />
-            <p className="font-body text-sm text-muted-foreground">
+            <p className="font-body text-base text-muted-foreground">
               Reading file...
             </p>
           </div>
@@ -268,10 +268,10 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
             <div className="flex flex-col items-start min-w-0">
-              <span className="font-mono text-sm text-foreground truncate max-w-full">
+              <span className="font-mono text-base text-foreground truncate max-w-full">
                 {fileName}
               </span>
-              <span className="font-body text-xs text-muted-foreground">
+              <span className="font-body text-sm text-muted-foreground">
                 {formatBytes(fileSize)}
               </span>
             </div>
@@ -303,8 +303,8 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
 
         {dropState === "error" && (
           <div className="flex flex-col items-center gap-2">
-            <p className="font-body text-sm text-red-400">{errorMsg}</p>
-            <p className="font-body text-xs text-muted-foreground">
+            <p className="font-body text-base text-red-400">{errorMsg}</p>
+            <p className="font-body text-sm text-muted-foreground">
               Click to try again
             </p>
           </div>
@@ -312,8 +312,8 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
       </div>
 
       {/* Format help */}
-      <div className="text-xs font-body text-muted-foreground">
-        <p className="font-heading text-foreground text-xs mb-1.5 tracking-wide">
+      <div className="text-sm font-body text-muted-foreground">
+        <p className="font-heading text-foreground text-sm mb-1.5 tracking-wide">
           How to export CSV
         </p>
         <ul className="space-y-1 list-disc list-inside">
@@ -328,7 +328,7 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
         >
           Back
         </button>
@@ -336,7 +336,7 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
           type="button"
           onClick={handleSubmit}
           disabled={dropState !== "accepted"}
-          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors bg-primary text-primary-foreground hover:bg-gold-bright disabled:opacity-40 disabled:cursor-not-allowed h-11 px-6 min-w-[44px]"
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright disabled:opacity-40 disabled:cursor-not-allowed h-11 px-6 min-w-[44px]"
         >
           Begin Import
         </button>

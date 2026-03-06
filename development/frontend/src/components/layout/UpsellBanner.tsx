@@ -111,11 +111,11 @@ export function UpsellBanner() {
       <div className="hidden sm:flex items-center justify-between px-4 py-2.5 gap-4">
         <div className="flex flex-col gap-0.5 flex-1 min-w-0">
           {/* Voice 2: atmospheric frame */}
-          <p className="text-xs text-muted-foreground italic font-body">
+          <p className="text-sm text-muted-foreground italic font-body">
             Your chains are stored here alone.
           </p>
           {/* Voice 1: functional value prop */}
-          <p className="text-xs text-foreground font-body">
+          <p className="text-sm text-foreground font-body">
             Sign in to back up your cards and access them from any device.
           </p>
         </div>
@@ -125,7 +125,7 @@ export function UpsellBanner() {
             type="button"
             onClick={() => router.push("/sign-in")}
             className={[
-              "px-3 py-1.5 text-xs font-heading tracking-wide",
+              "px-3 py-1.5 text-sm font-heading tracking-wide",
               "border border-gold/50 text-gold",
               "hover:bg-gold/10 hover:brightness-110 active:scale-[0.97] active:brightness-90",
               "transition-[transform,filter,background-color,color] duration-150 ease-out",
@@ -155,7 +155,7 @@ export function UpsellBanner() {
       <div className="sm:hidden relative px-4 py-2.5 pr-12 flex flex-col gap-2">
         {/* Atmospheric line omitted on mobile — space is scarce */}
         {/* Voice 1: functional value prop */}
-        <p className="text-xs text-foreground font-body">
+        <p className="text-sm text-foreground font-body">
           Sign in to back up your cards and access them from any device.
         </p>
 
@@ -163,7 +163,7 @@ export function UpsellBanner() {
           type="button"
           onClick={() => router.push("/sign-in")}
           className={[
-            "self-start px-3 py-1.5 text-xs font-heading tracking-wide",
+            "self-start px-3 py-1.5 text-sm font-heading tracking-wide",
             "border border-gold/50 text-gold",
             "hover:bg-gold/10 hover:brightness-110 active:scale-[0.97] active:brightness-90",
               "transition-[transform,filter,background-color,color] duration-150 ease-out",

@@ -103,15 +103,15 @@ export function SubscriptionGate({ feature, children }: SubscriptionGateProps) {
         aria-label={`${featureDef.name} (locked)`}
       >
         <div className="flex items-center gap-2.5">
-          <span className="text-lg text-gold/40" aria-hidden="true">&#5765;</span>
-          <h2 className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-saga">
+          <span className="text-xl text-gold/40" aria-hidden="true">&#5765;</span>
+          <h2 className="text-sm font-heading font-bold uppercase tracking-[0.08em] text-saga">
             {featureDef.name}
           </h2>
           <span className="inline-flex items-center px-2 py-0.5 border border-gold/20 text-[9px] font-mono font-bold uppercase tracking-wide text-gold/60">
             KARL
           </span>
         </div>
-        <p className="text-sm text-saga/90 leading-relaxed font-body">
+        <p className="text-base text-saga/90 leading-relaxed font-body">
           {featureDesc.description}
         </p>
         <p className="text-[13px] italic text-rune/60 font-body">
@@ -120,7 +120,7 @@ export function SubscriptionGate({ feature, children }: SubscriptionGateProps) {
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="self-start mt-1 text-sm text-gold underline hover:text-gold-bright transition-colors font-heading min-h-[44px] inline-flex items-center"
+          className="self-start mt-1 text-base text-gold underline hover:text-gold-bright transition-colors font-heading min-h-[44px] inline-flex items-center"
         >
           Unlock with Karl
         </button>

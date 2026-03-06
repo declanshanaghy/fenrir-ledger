@@ -91,16 +91,16 @@ export function Dashboard({ cards }: DashboardProps) {
   return (
     <div>
       {/* Summary header */}
-      <div className="flex items-center gap-6 mb-6 text-sm text-muted-foreground">
+      <div className="flex items-center gap-6 mb-6 text-base text-muted-foreground">
         <span>
-          <span className="text-foreground font-semibold text-lg">
+          <span className="text-foreground font-semibold text-xl">
             {cards.length}
           </span>{" "}
           {cards.length === 1 ? "card" : "cards"}
         </span>
         {needsAttention.length > 0 && (
           <span>
-            <span className="text-amber-600 font-semibold text-lg">
+            <span className="text-amber-600 font-semibold text-xl">
               {needsAttention.length}
             </span>{" "}
             need{needsAttention.length === 1 ? "s" : ""} attention

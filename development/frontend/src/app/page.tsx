@@ -107,7 +107,7 @@ export default function DashboardPage() {
       {/* Page header: title + actions */}
       <div className="flex items-center justify-between mb-6 gap-3">
         {/* Voice 2: atmospheric page heading from copywriting.md navigation labels */}
-        <h1 className="font-display text-xl text-gold tracking-wide">
+        <h1 className="font-display text-2xl text-gold tracking-wide">
           The Ledger of Fates
         </h1>
 
@@ -131,7 +131,7 @@ export default function DashboardPage() {
               </span>
               {/* Urgent count badge */}
               <span
-                className="absolute -top-1.5 -right-1.5 h-4 w-4 flex items-center justify-center rounded-full bg-[hsl(var(--realm-muspel))] text-[10px] font-mono font-bold text-white"
+                className="absolute -top-1.5 -right-1.5 h-4 w-4 flex items-center justify-center rounded-full bg-[hsl(var(--realm-muspel))] text-xs font-mono font-bold text-white"
                 aria-hidden="true"
               >
                 {urgentCount}
@@ -145,7 +145,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setImportWizardOpen(true)}
-                className="inline-flex items-center justify-center rounded-sm text-sm font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-9 px-4 py-2"
+                className="inline-flex items-center justify-center rounded-sm text-base font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-9 px-4 py-2"
               >
                 Import
               </button>
@@ -154,7 +154,7 @@ export default function DashboardPage() {
 
           <Link
             href="/cards/new"
-            className="inline-flex items-center justify-center rounded-sm text-sm font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-gold-bright h-9 px-4 py-2"
+            className="inline-flex items-center justify-center rounded-sm text-base font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-gold-bright h-9 px-4 py-2"
           >
             Add Card
           </Link>
