@@ -67,7 +67,7 @@ function CompactBanner() {
       className="rounded-sm border border-border bg-card px-3 py-2"
     >
       <div className="flex items-center gap-1">
-        <p className="text-xs font-body text-muted-foreground flex-1">
+        <p className="text-sm font-body text-muted-foreground flex-1">
           <ShieldIcon className="inline h-3.5 w-3.5 text-gold mr-1.5 align-text-bottom" />
           Never share card numbers, CVVs, or SSNs. Only include card names, fees, and dates.
         </p>
@@ -76,15 +76,15 @@ function CompactBanner() {
           onClick={() => setExpanded((prev) => !prev)}
           aria-label="View full safety details"
           aria-expanded={expanded}
-          className="text-xs font-heading text-gold hover:text-gold-bright transition-colors shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="text-sm font-heading text-gold hover:text-gold-bright transition-colors shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
           {expanded ? "Hide" : "Details"}
         </button>
       </div>
       {expanded && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-body text-muted-foreground mt-3 pt-3 border-t border-border">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-body text-muted-foreground mt-3 pt-3 border-t border-border">
           <div>
-            <p className="text-foreground font-heading text-xs mb-1.5 tracking-wide">
+            <p className="text-foreground font-heading text-sm mb-1.5 tracking-wide">
               Safe to include
             </p>
             <ul className="space-y-1 list-none">
@@ -95,7 +95,7 @@ function CompactBanner() {
             </ul>
           </div>
           <div>
-            <p className="text-red-400 font-heading text-xs mb-1.5 tracking-wide">
+            <p className="text-red-400 font-heading text-sm mb-1.5 tracking-wide">
               Never include
             </p>
             <ul className="space-y-1 list-none">
@@ -120,13 +120,13 @@ export function SafetyBanner({ variant }: SafetyBannerProps) {
       >
         <div className="flex items-start gap-3 mb-3">
           <ShieldIcon className="h-5 w-5 text-gold shrink-0 mt-0.5" />
-          <h3 className="font-heading text-sm text-gold tracking-wide">
+          <h3 className="font-heading text-base text-gold tracking-wide">
             Protect Your Secrets
           </h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-body text-muted-foreground">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-body text-muted-foreground">
           <div>
-            <p className="text-foreground font-heading text-xs mb-1.5 tracking-wide">
+            <p className="text-foreground font-heading text-sm mb-1.5 tracking-wide">
               Safe to include
             </p>
             <ul className="space-y-1 list-none">
@@ -137,7 +137,7 @@ export function SafetyBanner({ variant }: SafetyBannerProps) {
             </ul>
           </div>
           <div>
-            <p className="text-red-400 font-heading text-xs mb-1.5 tracking-wide">
+            <p className="text-red-400 font-heading text-sm mb-1.5 tracking-wide">
               Never include
             </p>
             <ul className="space-y-1 list-none">
@@ -162,10 +162,10 @@ export function SafetyBanner({ variant }: SafetyBannerProps) {
         role="alert"
         className="rounded-sm border border-red-500/40 bg-red-500/10 px-3 py-2.5"
       >
-        <h4 className="font-heading text-xs text-red-400 tracking-wide mb-1">
+        <h4 className="font-heading text-sm text-red-400 tracking-wide mb-1">
           Sensitive Data Detected
         </h4>
-        <p className="text-xs font-body text-muted-foreground">
+        <p className="text-sm font-body text-muted-foreground">
           The source data appears to contain card numbers, CVVs, or other sensitive
           information. These values have been stripped from the import, but consider
           removing them from your source file.
@@ -180,7 +180,7 @@ export function SafetyBanner({ variant }: SafetyBannerProps) {
       role="note"
       className="rounded-sm border border-border bg-card px-3 py-2"
     >
-      <p className="text-xs font-body text-muted-foreground">
+      <p className="text-sm font-body text-muted-foreground">
         <LockIcon className="inline h-3.5 w-3.5 text-gold mr-1.5 align-text-bottom" />
         Consider revoking public access to your spreadsheet now that the import is complete.
       </p>

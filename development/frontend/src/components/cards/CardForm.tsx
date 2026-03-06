@@ -306,7 +306,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
     <form onSubmit={handleSubmit(onSubmit, scrollToFirstError)} className="space-y-4">
       {/* ── Card Details (full width) ───────────────────────────── */}
       <fieldset className="border border-border rounded-md p-4 space-y-4">
-        <legend className="text-xs font-bold uppercase tracking-wider px-1.5">Card Details</legend>
+        <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Card Details</legend>
 
         {/* Issuer */}
         <div className="space-y-1.5">
@@ -330,7 +330,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             </SelectContent>
           </Select>
           {errors.issuerId && (
-            <p className="text-sm text-destructive">{errors.issuerId.message}</p>
+            <p className="text-base text-destructive">{errors.issuerId.message}</p>
           )}
         </div>
 
@@ -344,7 +344,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             {...register("cardName")}
           />
           {errors.cardName && (
-            <p className="text-sm text-destructive">{errors.cardName.message}</p>
+            <p className="text-base text-destructive">{errors.cardName.message}</p>
           )}
         </div>
 
@@ -353,7 +353,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           <Label htmlFor="openDate">Date opened *</Label>
           <Input id="openDate" type="date" aria-required="true" {...register("openDate")} />
           {errors.openDate && (
-            <p className="text-sm text-destructive">{errors.openDate.message}</p>
+            <p className="text-base text-destructive">{errors.openDate.message}</p>
           )}
         </div>
 
@@ -378,7 +378,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             </SelectContent>
           </Select>
           {errors.creditLimit && (
-            <p className="text-sm text-destructive">
+            <p className="text-base text-destructive">
               {errors.creditLimit.message}
             </p>
           )}
@@ -390,7 +390,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
 
         {/* Annual Fee */}
         <fieldset className="border border-border rounded-md p-4 space-y-4">
-          <legend className="text-xs font-bold uppercase tracking-wider px-1.5">Annual Fee</legend>
+          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Annual Fee</legend>
 
           <div className="space-y-1.5">
             <Label htmlFor="annualFee">Annual fee</Label>
@@ -403,7 +403,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
               {...register("annualFee")}
             />
             {errors.annualFee && (
-              <p className="text-sm text-destructive">
+              <p className="text-base text-destructive">
                 {errors.annualFee.message}
               </p>
             )}
@@ -417,7 +417,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
 
         {/* Sign-up Bonus */}
         <fieldset className="border border-border rounded-md p-4 space-y-4">
-          <legend className="text-xs font-bold uppercase tracking-wider px-1.5">Sign-up Bonus</legend>
+          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Sign-up Bonus</legend>
 
           <div className="space-y-1.5">
             <Label htmlFor="bonusType">Bonus type</Label>
@@ -506,7 +506,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
       {/* ── Status (edit mode only) ────────────────────────────── */}
       {isEditMode && (
         <fieldset className="border border-border rounded-md p-4 space-y-4">
-          <legend className="text-xs font-bold uppercase tracking-wider px-1.5">Status</legend>
+          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Status</legend>
           <div className="space-y-1.5">
             <Label htmlFor="status">Card status</Label>
             <Select
@@ -528,7 +528,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
                 <SelectItem value="closed">Closed</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Status is automatically computed from dates. Set to &quot;Closed&quot; to
               manually mark this card as closed.
             </p>
@@ -538,7 +538,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
 
       {/* ── Notes (full width) ─────────────────────────────────── */}
       <fieldset className="border border-border rounded-md p-4 space-y-4">
-        <legend className="text-xs font-bold uppercase tracking-wider px-1.5">Notes</legend>
+        <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Notes</legend>
         <Textarea
           id="notes"
           placeholder="Any notes about this card..."

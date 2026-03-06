@@ -43,20 +43,20 @@ export function ShareUrlEntry({
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="Paste your Google Sheets URL..."
-          className="h-11 w-full rounded-sm border border-border bg-background px-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50"
+          className="h-11 w-full rounded-sm border border-border bg-background px-3 font-mono text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50"
           onKeyDown={(e) => {
             if (e.key === "Enter" && isValid) onSubmit();
           }}
           autoFocus
         />
         {showError && (
-          <p className="text-xs text-red-400 font-body">
+          <p className="text-sm text-red-400 font-body">
             Enter a valid Google Sheets URL
           </p>
         )}
       </div>
 
-      <p className="text-xs font-body text-muted-foreground">
+      <p className="text-sm font-body text-muted-foreground">
         The spreadsheet must be shared publicly (&ldquo;Anyone with the link can view&rdquo;).
       </p>
 
@@ -64,7 +64,7 @@ export function ShareUrlEntry({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
         >
           Back
         </button>
@@ -72,7 +72,7 @@ export function ShareUrlEntry({
           type="button"
           onClick={onSubmit}
           disabled={!isValid}
-          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors bg-primary text-primary-foreground hover:bg-gold-bright disabled:opacity-40 disabled:cursor-not-allowed h-11 px-6 min-w-[44px]"
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright disabled:opacity-40 disabled:cursor-not-allowed h-11 px-6 min-w-[44px]"
         >
           Begin Import
         </button>

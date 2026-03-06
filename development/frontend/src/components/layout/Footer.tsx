@@ -167,11 +167,11 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-0.5 sm:gap-0">
 
           {/* ── Left: wordmark · tagline ─────────────────────────────────── */}
-          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+          <span className="text-[13px] text-muted-foreground whitespace-nowrap">
             <button
               type="button"
               onClick={() => setAboutOpen(true)}
-              className="font-heading tracking-[0.06em] uppercase font-bold text-[11px] hover:text-foreground transition-colors"
+              className="font-heading tracking-[0.06em] uppercase font-bold text-[13px] hover:text-foreground transition-colors"
               aria-label="About Fenrir Ledger"
             >
               ᛟ FENRIR LEDGER
@@ -181,7 +181,7 @@ export function Footer() {
           </span>
 
           {/* ── Right: colophon · © ──────────────────────────────────────── */}
-          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+          <span className="text-[13px] text-muted-foreground whitespace-nowrap">
             {/*
              * Team colophon. "Loki" is Easter Egg #3 — Loki Mode trigger.
              * No visual affordance in default state (discoverable only).

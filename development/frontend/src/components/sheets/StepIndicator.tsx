@@ -37,7 +37,7 @@ export function StepIndicator({ activeStep }: StepIndicatorProps) {
               />
               <span
                 className={[
-                  "text-[10px] font-heading tracking-wide leading-none",
+                  "text-xs font-heading tracking-wide leading-none",
                   isActive
                     ? "text-gold"
                     : isCompleted

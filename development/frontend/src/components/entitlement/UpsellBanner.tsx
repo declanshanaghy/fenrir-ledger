@@ -131,17 +131,17 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
         className="absolute top-2 right-2 w-8 h-8 min-w-[44px] min-h-[44px] flex items-center justify-center text-rune/60 hover:text-saga transition-colors"
         aria-label="Dismiss upgrade banner"
       >
-        <span aria-hidden="true" className="text-sm">&times;</span>
+        <span aria-hidden="true" className="text-base">&times;</span>
       </button>
 
       {/* Content */}
       <div className="flex-1 flex flex-col gap-0.5 pr-8 md:pr-0">
         {/* Voice 2: atmospheric (hidden on mobile) */}
-        <span className="hidden sm:block text-[11px] italic text-rune/60 font-body">
+        <span className="hidden sm:block text-[13px] italic text-rune/60 font-body">
           The wolf hunts greater prey for those who forge the bond.
         </span>
         {/* Voice 1: functional value prop */}
-        <span className="text-xs text-saga/80 leading-snug font-body">
+        <span className="text-sm text-saga/80 leading-snug font-body">
           Upgrade to Karl for cloud sync, priority alerts, and advanced analytics -- $3.99/month.
         </span>
       </div>
@@ -152,7 +152,7 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
         onClick={handleStripeUpgrade}
         disabled={isSubscribing}
         className={[
-          "self-start md:self-center px-3.5 py-1.5 text-xs font-heading font-bold tracking-wide",
+          "self-start md:self-center px-3.5 py-1.5 text-sm font-heading font-bold tracking-wide",
           "border border-gold/50 text-gold",
           "hover:bg-gold/10 transition-colors",
           "rounded-sm whitespace-nowrap min-h-[36px]",

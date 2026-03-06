@@ -108,7 +108,7 @@ function SignInContent() {
   if (alreadyAuthed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground font-body italic text-sm">
+        <p className="text-muted-foreground font-body italic text-base">
           Crossing the Bifröst...
         </p>
       </div>
@@ -138,7 +138,7 @@ function SignInContent() {
         >
           {/* Atmospheric eyebrow (Voice 2) — sets emotional frame */}
           <p
-            className="text-xs text-gold/60 uppercase tracking-[0.12em] italic font-heading"
+            className="text-sm text-gold/60 uppercase tracking-[0.12em] italic font-heading"
             aria-hidden="true"
           >
             {hasLocalCards ? "Your ledger awaits a name" : "An invitation, not a demand"}
@@ -147,13 +147,13 @@ function SignInContent() {
           {/* Page heading (Voice 2) */}
           <h1
             id="signin-heading"
-            className="font-display text-2xl text-gold tracking-wide"
+            className="font-display text-3xl text-gold tracking-wide"
           >
             {hasLocalCards ? "Your chains are already here." : "Name the wolf."}
           </h1>
 
           {/* Atmospheric subheading (Voice 2) */}
-          <p className="text-sm text-muted-foreground italic font-body leading-relaxed">
+          <p className="text-base text-muted-foreground italic font-body leading-relaxed">
             {hasLocalCards
               ? `Sign in and we'll offer to add your ${cardCount} local card${cardCount === 1 ? "" : "s"} to your cloud account.`
               : "Your chains are already here. Sign in to carry them everywhere."}
@@ -188,7 +188,7 @@ function SignInContent() {
               "w-full flex items-center justify-center gap-3",
               "border border-border rounded-sm px-4 py-3",
               "bg-primary text-primary-foreground",
-              "font-heading text-sm tracking-wide",
+              "font-heading text-base tracking-wide",
               "transition-colors",
               isRedirecting
                 ? "opacity-50 cursor-not-allowed"
@@ -203,7 +203,7 @@ function SignInContent() {
           {/* Divider */}
           <div className="flex items-center gap-3" aria-hidden="true">
             <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground font-body">or</span>
+            <span className="text-sm text-muted-foreground font-body">or</span>
             <div className="flex-1 h-px bg-border" />
           </div>
 
@@ -216,7 +216,7 @@ function SignInContent() {
             className={[
               "w-full px-4 py-3",
               "border border-border rounded-sm",
-              "text-sm font-heading tracking-wide text-foreground",
+              "text-base font-heading tracking-wide text-foreground",
               "hover:border-gold/40 hover:text-gold transition-colors",
               "bg-transparent",
             ].join(" ")}
@@ -226,7 +226,7 @@ function SignInContent() {
           </button>
 
           {/* Atmospheric footnote (Voice 2) */}
-          <p className="text-xs text-muted-foreground italic text-center font-body leading-relaxed">
+          <p className="text-sm text-muted-foreground italic text-center font-body leading-relaxed">
             {hasLocalCards
               ? "Your local chains are safe either way. The ledger was already written before you named yourself."
               : "The ledger is already written. Signing in only shares it further."}
@@ -242,7 +242,7 @@ function SignInContent() {
 
 function FeatureItem({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-2 text-xs text-foreground font-body leading-relaxed">
+    <div className="flex items-start gap-2 text-sm text-foreground font-body leading-relaxed">
       <div
         className="w-4 h-4 rounded-full border border-gold/40 flex items-center justify-center text-gold shrink-0 mt-0.5"
         aria-hidden="true"
@@ -292,7 +292,7 @@ export default function SignInPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-background">
-          <p className="text-muted-foreground font-body italic text-sm">
+          <p className="text-muted-foreground font-body italic text-base">
             Crossing the Bifröst...
           </p>
         </div>

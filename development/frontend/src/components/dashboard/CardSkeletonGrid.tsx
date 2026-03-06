@@ -80,7 +80,7 @@ export function CardSkeletonGrid({ count = 6 }: CardSkeletonGridProps) {
       </div>
 
       {/* Norn loading copy — from ux/interactions.md Loading Copy section */}
-      <p className="mt-6 text-center text-sm text-muted-foreground font-body italic">
+      <p className="mt-6 text-center text-base text-muted-foreground font-body italic">
         The Norns are weaving...
       </p>
     </div>

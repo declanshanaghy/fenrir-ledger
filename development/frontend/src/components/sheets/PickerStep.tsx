@@ -176,7 +176,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
             Grant Archive Access
           </h3>
 
-          <p className="font-body text-sm text-muted-foreground max-w-md leading-relaxed">
+          <p className="font-body text-base text-muted-foreground max-w-md leading-relaxed">
             To browse your Google Drive, Fenrir Ledger needs read access to the
             spreadsheets you select. We never access your entire Drive — only
             the files you choose.
@@ -184,7 +184,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
 
           {(driveError || error) && (
             <div role="alert" className="rounded-sm border border-red-500/40 bg-red-500/10 px-3 py-2 w-full max-w-md">
-              <p className="text-xs font-body text-red-400">
+              <p className="text-sm font-body text-red-400">
                 {driveError?.code === "CONSENT_DECLINED" || driveError?.code === "POPUP_CLOSED"
                   ? "Google Drive access was not granted. You can still import using a share URL or CSV file."
                   : error || driveError?.message || "An error occurred. Please try again."}
@@ -196,7 +196,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
             <button
               type="button"
               onClick={handleDecline}
-              className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px] min-h-[44px]"
+              className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px] min-h-[44px]"
             >
               No thanks
             </button>
@@ -204,7 +204,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
               type="button"
               onClick={handleAllowAccess}
               disabled={isRequesting}
-              className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px] min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px] min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isRequesting ? (
                 <span className="flex items-center gap-2">
@@ -223,7 +223,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
           <button
             type="button"
             onClick={onBack}
-            className="text-xs font-body text-muted-foreground hover:text-gold transition-colors mt-1 min-h-[44px] flex items-center"
+            className="text-sm font-body text-muted-foreground hover:text-gold transition-colors mt-1 min-h-[44px] flex items-center"
           >
             &larr; Back to import methods
           </button>
@@ -242,7 +242,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
           role="status"
           aria-label="Fetching spreadsheet"
         />
-        <p className="font-body text-muted-foreground text-sm italic text-center">
+        <p className="font-body text-muted-foreground text-base italic text-center">
           Fetching the sacred scrolls from your archives...
         </p>
       </div>
@@ -259,20 +259,20 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
         {error ? (
           <>
             <div role="alert" className="rounded-sm border border-red-500/40 bg-red-500/10 px-3 py-2 w-full max-w-md">
-              <p className="text-xs font-body text-red-400">{error}</p>
+              <p className="text-sm font-body text-red-400">{error}</p>
             </div>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={onBack}
-                className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px] min-h-[44px]"
+                className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px] min-h-[44px]"
               >
                 Try another method
               </button>
               <button
                 type="button"
                 onClick={handleRetry}
-                className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-sm transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px] min-h-[44px]"
+                className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px] min-h-[44px]"
               >
                 Retry
               </button>
@@ -285,7 +285,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
               role="status"
               aria-label="Loading Google Drive Picker"
             />
-            <p className="font-body text-muted-foreground text-sm italic">
+            <p className="font-body text-muted-foreground text-base italic">
               Opening Google Drive...
             </p>
           </>
@@ -294,7 +294,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
         <button
           type="button"
           onClick={onBack}
-          className="text-xs font-body text-muted-foreground hover:text-gold transition-colors mt-1 min-h-[44px] flex items-center"
+          className="text-sm font-body text-muted-foreground hover:text-gold transition-colors mt-1 min-h-[44px] flex items-center"
         >
           &larr; Back to import methods
         </button>

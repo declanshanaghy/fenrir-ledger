@@ -32,10 +32,10 @@ function CloudSyncSection() {
       className="border border-border p-5 flex flex-col gap-3"
       aria-label="Cloud Sync"
     >
-      <h2 className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-saga">
+      <h2 className="text-sm font-heading font-bold uppercase tracking-[0.08em] text-saga">
         Cloud Sync
       </h2>
-      <p className="text-sm text-saga/90 leading-relaxed font-body">
+      <p className="text-base text-saga/90 leading-relaxed font-body">
         Sync your card data across devices. Your ledger, always within reach.
       </p>
       <p className="text-[13px] italic text-rune/60 font-body">
@@ -56,10 +56,10 @@ function MultiHouseholdSection() {
       className="border border-border p-5 flex flex-col gap-3"
       aria-label="Multi-Household"
     >
-      <h2 className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-saga">
+      <h2 className="text-sm font-heading font-bold uppercase tracking-[0.08em] text-saga">
         Multi-Household
       </h2>
-      <p className="text-sm text-saga/90 leading-relaxed font-body">
+      <p className="text-base text-saga/90 leading-relaxed font-body">
         Manage cards across multiple households from a single account.
       </p>
       <p className="text-[13px] italic text-rune/60 font-body">
@@ -80,17 +80,17 @@ function DataExportSection() {
       className="border border-border p-5 flex flex-col gap-3"
       aria-label="Data Export"
     >
-      <h2 className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-saga">
+      <h2 className="text-sm font-heading font-bold uppercase tracking-[0.08em] text-saga">
         Data Export
       </h2>
-      <p className="text-sm text-saga/90 leading-relaxed font-body">
+      <p className="text-base text-saga/90 leading-relaxed font-body">
         Export your card data as CSV or JSON. Take your records anywhere.
       </p>
       <div>
         <button
           type="button"
           disabled
-          className="inline-flex items-center gap-2 min-h-[44px] md:min-h-[40px] px-4 py-2 text-sm font-heading tracking-wide border border-border text-rune/60 rounded-sm cursor-not-allowed"
+          className="inline-flex items-center gap-2 min-h-[44px] md:min-h-[40px] px-4 py-2 text-base font-heading tracking-wide border border-border text-rune/60 rounded-sm cursor-not-allowed"
           aria-label="Export data (coming soon)"
         >
           <span aria-hidden="true" className="text-base">&#8615;</span>
@@ -120,10 +120,10 @@ export default function SettingsPage() {
     <div className="px-6 py-6 max-w-5xl">
       {/* Page heading */}
       <header className="mb-6 border-b border-border pb-4">
-        <h1 className="font-display text-xl text-gold tracking-wide mb-1">
+        <h1 className="font-display text-2xl text-gold tracking-wide mb-1">
           Settings
         </h1>
-        <p className="text-xs text-muted-foreground mt-2 font-body italic">
+        <p className="text-sm text-muted-foreground mt-2 font-body italic">
           Forge your preferences. Shape the ledger to your will.
         </p>
       </header>

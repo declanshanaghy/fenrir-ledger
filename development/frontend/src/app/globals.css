@@ -243,6 +243,13 @@
     font-family: var(--font-mono), monospace;
   }
 
+  /* iOS Safari zoom prevention: inputs must be >= 16px */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
   /* Input focus: gold ring treatment */
   input:focus-visible,
   textarea:focus-visible,

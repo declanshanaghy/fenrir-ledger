@@ -135,19 +135,19 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
       ].join(" ")}
     >
       {/* Voice 2: atmospheric frame — Norse saga */}
-      <p className="text-xs text-muted-foreground italic font-body leading-relaxed">
+      <p className="text-sm text-muted-foreground italic font-body leading-relaxed">
         The wolf runs unnamed. Your chains are stored here alone.
       </p>
 
       {/* Voice 1: functional value proposition — plain English */}
-      <p className="text-xs text-foreground font-body leading-relaxed">
+      <p className="text-sm text-foreground font-body leading-relaxed">
         Sign in to back up your cards and access them from any device. Your data
         is already here — signing in just keeps it safe.
       </p>
 
       {/* Theme toggle */}
       <div className="flex items-center justify-between pt-1">
-        <span className="text-xs text-muted-foreground font-body">Theme</span>
+        <span className="text-sm text-muted-foreground font-body">Theme</span>
         <ThemeToggle />
       </div>
 
@@ -161,7 +161,7 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
             router.push("/sign-in");
           }}
           className={[
-            "w-full px-4 py-2.5 text-sm font-heading tracking-wide",
+            "w-full px-4 py-2.5 text-base font-heading tracking-wide",
             "bg-primary text-primary-foreground",
             "hover:bg-gold-bright transition-colors",
             "rounded-sm",
@@ -177,7 +177,7 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
             triggerRef.current?.focus();
           }}
           className={[
-            "w-full px-4 py-2 text-sm text-muted-foreground font-body",
+            "w-full px-4 py-2 text-base text-muted-foreground font-body",
             "hover:text-foreground transition-colors",
           ].join(" ")}
         >
@@ -224,10 +224,10 @@ export function TopBar() {
           className="flex flex-col leading-tight group text-left"
           aria-label="Fenrir Ledger — visit the marketing site (opens in new tab)"
         >
-          <span className="font-display text-gold tracking-widest uppercase text-sm group-hover:text-gold-bright transition-colors">
+          <span className="font-display text-gold tracking-widest uppercase text-base group-hover:text-gold-bright transition-colors">
             Fenrir Ledger
           </span>
-          <span className="font-body text-muted-foreground text-xs italic">
+          <span className="font-body text-muted-foreground text-sm italic">
             Break free. Harvest every reward.
           </span>
         </a>
@@ -256,7 +256,7 @@ export function TopBar() {
           {isAuthenticated && user && (
             <>
               {/* Email — desktop only */}
-              <span className="text-xs text-muted-foreground font-body hidden sm:block mr-3 max-w-[200px] truncate">
+              <span className="text-sm text-muted-foreground font-body hidden sm:block mr-3 max-w-[200px] truncate">
                 {user.email}
               </span>
 
@@ -273,7 +273,7 @@ export function TopBar() {
                 style={{ minWidth: 44, minHeight: 44, justifyContent: "center" }}
               >
                 <Avatar picture={user.picture} name={user.name} size={32} goldRing={true} />
-                <span className="text-muted-foreground text-xs hidden sm:block" aria-hidden="true">
+                <span className="text-muted-foreground text-sm hidden sm:block" aria-hidden="true">
                   ▾
                 </span>
               </button>
@@ -306,14 +306,14 @@ export function TopBar() {
               <div className="px-4 py-3 border-b border-border flex items-center gap-3" aria-hidden="true">
                 <Avatar picture={user.picture} name={user.name} size={40} goldRing={true} />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-heading text-foreground truncate">
+                  <span className="text-base font-heading text-foreground truncate">
                     {user.name}
                   </span>
-                  <span className="text-xs text-muted-foreground font-mono truncate">
+                  <span className="text-sm text-muted-foreground font-mono truncate">
                     {user.email}
                   </span>
                   {/* Voice 2: atmospheric line — inside dropdown only, not in the header bar */}
-                  <span className="text-xs text-muted-foreground/60 italic font-body truncate">
+                  <span className="text-sm text-muted-foreground/60 italic font-body truncate">
                     The wolf is named.
                   </span>
                 </div>
@@ -321,7 +321,7 @@ export function TopBar() {
 
               {/* Theme section */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                <span className="text-xs text-muted-foreground font-body">Theme</span>
+                <span className="text-sm text-muted-foreground font-body">Theme</span>
                 <ThemeToggle />
               </div>
 
@@ -333,7 +333,7 @@ export function TopBar() {
                   setPanelOpen(false);
                   signOut();
                 }}
-                className="px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 text-left transition-colors font-body"
+                className="px-4 py-3 text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 text-left transition-colors font-body"
                 style={{ minHeight: 44 }}
               >
                 Sign out

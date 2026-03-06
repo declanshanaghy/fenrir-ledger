@@ -150,7 +150,7 @@ export function EasterEggModal({
         <div className="flex justify-center px-6 py-4 border-t border-[hsl(var(--egg-border))]">
           <DialogClose asChild>
             <Button
-              className="px-10 font-heading text-sm font-semibold tracking-widest uppercase
+              className="px-10 font-heading text-base font-semibold tracking-widest uppercase
                          bg-[hsl(var(--egg-btn-bg))] text-[hsl(var(--egg-btn-text))] hover:bg-[hsl(var(--egg-btn-hover))]
                          rounded-none min-h-[44px]"
             >

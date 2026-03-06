@@ -101,10 +101,10 @@ export function ForgeMasterEgg() {
         <div className="flex flex-col gap-2">
           {TEAM.map((member) => (
             <div key={member.name} className="flex items-baseline gap-2">
-              <span className="font-heading text-xs font-bold uppercase tracking-wide text-[hsl(var(--egg-title))]">
+              <span className="font-heading text-sm font-bold uppercase tracking-wide text-[hsl(var(--egg-title))]">
                 {member.name}
               </span>
-              <span className="font-mono text-[10px] text-[hsl(var(--egg-text-muted))]">
+              <span className="font-mono text-xs text-[hsl(var(--egg-text-muted))]">
                 {member.role}
               </span>
             </div>
@@ -113,7 +113,7 @@ export function ForgeMasterEgg() {
       </div>
 
       {/* Lore line */}
-      <p className="font-body text-xs italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
+      <p className="font-body text-sm italic text-[hsl(var(--egg-text-muted))] leading-relaxed">
         &ldquo;Forged in the fires of Muspelheim. No chain holds the wolf
         that built the chain.&rdquo;
       </p>

@@ -151,7 +151,7 @@ export function StripeSettings() {
           </h2>
           {isKarlActive && (
             <span
-              className="inline-flex items-center px-2.5 py-0.5 border border-gold/30 text-[10px] font-mono font-bold uppercase tracking-wide text-gold h-5"
+              className="inline-flex items-center px-2.5 py-0.5 border border-gold/30 text-xs font-mono font-bold uppercase tracking-wide text-gold h-5"
               aria-label="Karl tier active"
             >
               KARL
@@ -159,7 +159,7 @@ export function StripeSettings() {
           )}
           {isCanceling && (
             <span
-              className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-amber-500/40 text-[10px] font-mono font-bold uppercase tracking-wide text-amber-500/80 h-5"
+              className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-amber-500/40 text-xs font-mono font-bold uppercase tracking-wide text-amber-500/80 h-5"
               aria-label="Subscription canceling"
             >
               CANCELING
@@ -167,7 +167,7 @@ export function StripeSettings() {
           )}
           {isCanceled && (
             <span
-              className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-rune/40 text-[10px] font-mono font-bold uppercase tracking-wide text-rune/60 h-5"
+              className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-rune/40 text-xs font-mono font-bold uppercase tracking-wide text-rune/60 h-5"
               aria-label="Subscription canceled"
             >
               CANCELED
@@ -180,7 +180,7 @@ export function StripeSettings() {
           <>
             {/* Atmospheric subhead */}
             <p
-              className="text-xs italic text-rune/60 font-body leading-relaxed"
+              className="text-sm italic text-rune/60 font-body leading-relaxed"
               aria-hidden="true"
             >
               The wolf runs free -- but Karl&apos;s chains hold power.
@@ -188,7 +188,7 @@ export function StripeSettings() {
 
             {/* Current tier */}
             <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center px-2.5 py-0.5 border border-border text-[11px] font-mono font-bold uppercase tracking-wide text-rune/70">
+              <span className="inline-flex items-center px-2.5 py-0.5 border border-border text-[13px] font-mono font-bold uppercase tracking-wide text-rune/70">
                 THRALL
               </span>
               <span className="text-[13px] text-saga/80 font-body">Free tier</span>
@@ -198,13 +198,13 @@ export function StripeSettings() {
 
             {/* Karl benefits */}
             <div className="flex flex-col gap-1.5" aria-label="Karl tier benefits">
-              <p className="text-xs font-heading font-bold text-saga">
+              <p className="text-sm font-heading font-bold text-saga">
                 Upgrade to Karl -- $3.99/month:
               </p>
               {KARL_BENEFITS.map((benefit) => (
-                <div key={benefit} className="flex items-start gap-2 text-xs text-saga/80 font-body leading-relaxed">
+                <div key={benefit} className="flex items-start gap-2 text-sm text-saga/80 font-body leading-relaxed">
                   <span
-                    className="w-4 h-4 border border-gold/30 rounded-full flex items-center justify-center text-[10px] text-gold flex-shrink-0 mt-0.5"
+                    className="w-4 h-4 border border-gold/30 rounded-full flex items-center justify-center text-xs text-gold flex-shrink-0 mt-0.5"
                     aria-hidden="true"
                   >
                     +
@@ -232,14 +232,14 @@ export function StripeSettings() {
           <>
             {/* Atmospheric subhead */}
             <p
-              className="text-xs italic text-rune/60 font-body leading-relaxed"
+              className="text-sm italic text-rune/60 font-body leading-relaxed"
               aria-hidden="true"
             >
               The wolf is bound. The chains hold true.
             </p>
 
             {/* Subscription details */}
-            <div className="text-xs text-saga/80 font-body leading-relaxed">
+            <div className="text-sm text-saga/80 font-body leading-relaxed">
               <p>$3.99/month</p>
               {formattedPeriodEnd && (
                 <p>Next billing date: {formattedPeriodEnd}</p>
@@ -273,7 +273,7 @@ export function StripeSettings() {
           <>
             {/* Atmospheric subhead */}
             <p
-              className="text-xs italic text-rune/60 font-body leading-relaxed"
+              className="text-sm italic text-rune/60 font-body leading-relaxed"
               aria-hidden="true"
             >
               The chain loosens -- but it holds until the moon turns.
@@ -281,14 +281,14 @@ export function StripeSettings() {
 
             {/* Status row */}
             <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center px-2.5 py-0.5 border border-gold/30 text-[11px] font-mono font-bold uppercase tracking-wide text-gold">
+              <span className="inline-flex items-center px-2.5 py-0.5 border border-gold/30 text-[13px] font-mono font-bold uppercase tracking-wide text-gold">
                 KARL
               </span>
               <span className="text-[13px] text-amber-500/80 font-body">Canceling</span>
             </div>
 
             {/* Cancellation details */}
-            <div className="text-xs text-saga/80 font-body leading-relaxed flex flex-col gap-1">
+            <div className="text-sm text-saga/80 font-body leading-relaxed flex flex-col gap-1">
               {formattedPeriodEnd ? (
                 <>
                   <p>Your subscription is set to cancel on <strong className="text-saga">{formattedPeriodEnd}</strong>.</p>
@@ -319,14 +319,14 @@ export function StripeSettings() {
           <>
             {/* Atmospheric subhead */}
             <p
-              className="text-xs italic text-rune/60 font-body leading-relaxed"
+              className="text-sm italic text-rune/60 font-body leading-relaxed"
               aria-hidden="true"
             >
               The chain weakens -- but it holds until the moon turns.
             </p>
 
             {/* Cancellation details */}
-            <div className="text-xs text-saga/80 font-body leading-relaxed">
+            <div className="text-sm text-saga/80 font-body leading-relaxed">
               {formattedPeriodEnd ? (
                 <>
                   <p>Your Karl access continues until {formattedPeriodEnd}.</p>
