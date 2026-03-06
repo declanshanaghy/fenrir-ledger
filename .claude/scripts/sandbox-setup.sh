@@ -51,6 +51,11 @@ NEXT_VER=$(npx next --version 2>/dev/null || echo "unknown")
 NODE_VER=$(node -v)
 echo "[ok] Node ${NODE_VER}, Next.js ${NEXT_VER}"
 
-# 6. Return to repo root so the agent starts in the right place
+# 6. Print repo root so the agent knows where to cd for subsequent commands
 cd "$REPO_ROOT"
+echo ""
+echo "REPO_ROOT=$REPO_ROOT"
+echo ""
 echo "=== Setup Complete ==="
+echo "IMPORTANT: Each shell command runs in a fresh shell. Always prefix commands with:"
+echo "  cd $REPO_ROOT && <your command>"
