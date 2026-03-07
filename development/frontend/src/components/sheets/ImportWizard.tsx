@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -210,6 +211,9 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Import Cards
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Choose a method to import your credit cards into Fenrir Ledger
+              </DialogDescription>
             </DialogHeader>
             <MethodSelection onSelectMethod={handleSelectMethod} pickerApiKey={pickerApiKey} />
           </>
@@ -222,6 +226,9 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Share a Scroll
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Enter a Google Sheets URL to import your card data
+              </DialogDescription>
             </DialogHeader>
             <ShareUrlEntry
               url={url}
@@ -241,6 +248,9 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Deliver a Rune-Stone
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Upload a CSV or Excel file containing your credit card data
+              </DialogDescription>
             </DialogHeader>
             <CsvUpload
               onSubmit={submitCsv}
@@ -257,6 +267,9 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Browse the Archives
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Browse and select a spreadsheet from your Google Drive
+              </DialogDescription>
             </DialogHeader>
             <PickerStep
               onSubmitCsv={submitCsv}
@@ -273,6 +286,9 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Deciphering the runes...
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Processing your data and extracting card information
+              </DialogDescription>
             </DialogHeader>
 
             <div className="flex flex-col items-center gap-6 py-8">
@@ -314,6 +330,9 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
                   {cards.length} card{cards.length !== 1 ? "s" : ""}
                 </span>
               </div>
+              <DialogDescription className="sr-only">
+                Review the cards found before importing them to your ledger
+              </DialogDescription>
             </DialogHeader>
 
             <div className="flex flex-col gap-3 overflow-hidden flex-1">
@@ -398,6 +417,9 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               <DialogTitle className="font-display text-destructive tracking-wide text-xl">
                 Import Failed
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                An error occurred while importing your cards
+              </DialogDescription>
             </DialogHeader>
 
             <div className="flex flex-col gap-4 py-2">
@@ -432,6 +454,9 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
               <DialogTitle className="font-display text-gold tracking-wide text-xl">
                 Cards imported!
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Your cards have been successfully imported to Fenrir Ledger
+              </DialogDescription>
             </DialogHeader>
 
             <div className="flex flex-col items-center gap-4 py-6">
