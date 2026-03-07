@@ -46,19 +46,9 @@ to replace `Ref #<NUMBER>` with `Fixes #<NUMBER>` so merging auto-closes the iss
 If NO PR exists (e.g. you are the sole agent for `test`), create one:
   gh pr create --title "<title>" --body "Fixes #<NUMBER>\n\n<summary>"
 
-**Step 6 — Auto-merge (if verdict is PASS):**
-
-1. Wait for CI to finish: `gh pr checks <PR_NUMBER> --watch --fail-fast`
-2. Check for the `needs-review` label (Odin's veto flag):
-   `gh issue view <NUMBER> --json labels --jq '[.labels[].name] | any(. == "needs-review")'`
-3. Check the PR is mergeable:
-   `gh pr view <PR_NUMBER> --json mergeable --jq '.mergeable'`
-4. **If CI green AND no `needs-review` label AND mergeable:**
-   `gh pr merge <PR_NUMBER> --squash --delete-branch`
-5. **If blocked by any condition**, skip the merge and note it in the verdict comment:
-   - CI failing: `Merge blocked — CI failing. Manual review needed.`
-   - `needs-review` label: `Merge blocked — needs-review label present. Awaiting Odin's review.`
-   - Not mergeable: `Merge blocked — merge conflicts. Rebase needed.`
+**IMPORTANT — DO NOT MERGE:**
+You do NOT have merge authority. Only the orchestrator (via Odin's approval) merges PRs.
+Your job ends after posting the verdict comment. Do NOT run `gh pr merge` or any merge command.
 
 **IMPORTANT: If CI is failing, your verdict MUST be FAIL — not PASS.**
 A PASS verdict means the PR is ready to merge. If CI is red, it is NOT ready.
@@ -82,8 +72,7 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 
 **Build status:** tsc clean, next build clean.
 
-<If PASS and merged: Merged to main.>
-<If PASS but merge blocked: Ready for merge — <reason for block>.>
+<If PASS: Ready for merge — awaiting orchestrator.>
 <If FAIL: Blocked — see failures above.>"
 
 **Key reminders:**
