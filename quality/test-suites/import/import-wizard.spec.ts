@@ -306,8 +306,8 @@ test.describe("Import Wizard — Path C: Deliver a Rune-Stone (CSV Upload)", () 
    *
    * Spec source: ImportWizard.tsx step === "csv-upload" renders CsvUpload.
    * CsvUpload.tsx renders a drop zone div with role="button" and
-   * aria-label="Upload CSV file", plus idle-state text
-   * "Drop a CSV file here, or click to browse".
+   * aria-label="Upload spreadsheet file", plus idle-state text
+   * "Drop a spreadsheet here, or click to browse".
    */
   test("CSV upload drop zone renders after selecting Deliver a Rune-Stone", async ({ page }) => {
     const dialog = page.locator('[aria-label="Import Wizard"]');
@@ -316,14 +316,14 @@ test.describe("Import Wizard — Path C: Deliver a Rune-Stone (CSV Upload)", () 
     await expect(dialog.getByText("Deliver a Rune-Stone")).toBeVisible();
 
     // Drop zone is present
-    const dropZone = dialog.getByRole("button", { name: "Upload CSV file" });
+    const dropZone = dialog.getByRole("button", { name: "Upload spreadsheet file" });
     await expect(dropZone).toBeVisible();
 
     // Idle state instruction text
-    await expect(dialog.getByText("Drop a CSV file here, or click to browse")).toBeVisible();
+    await expect(dialog.getByText("Drop a spreadsheet here, or click to browse")).toBeVisible();
 
     // File size constraint is shown to the user
-    await expect(dialog.getByText(".csv files only, 1 MB maximum")).toBeVisible();
+    await expect(dialog.getByText(".csv, .tsv, .xls, .xlsx — up to 5 MB")).toBeVisible();
   });
 
   /**
