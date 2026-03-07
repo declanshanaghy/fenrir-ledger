@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import type { Card } from "@/lib/types";
 import type { SheetImportErrorCode } from "@/lib/sheets/types";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
+import type { FileFormat } from "@/components/sheets/CsvUpload";
 
 export type ImportStep =
   | "method"
@@ -31,6 +32,8 @@ export interface UseSheetImportReturn {
   errorMessage: string;
   submit: () => void;
   submitCsv: (csv: string) => void;
+  /** Submit a binary spreadsheet file as base64 (XLS/XLSX). */
+  submitFile: (base64: string, filename: string, format: FileFormat) => void;
   cancel: () => void;
   reset: () => void;
 }
@@ -230,6 +233,39 @@ export function useSheetImport(): UseSheetImportReturn {
     [handleResponse, handleFetchError]
   );
 
+  /** Submit a binary spreadsheet file (XLS/XLSX) as base64 for import. */
+  const submitFile = useCallback(
+    async (base64: string, filename: string, format: FileFormat) => {
+      setStep("loading");
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, IMPORT_TIMEOUT_MS);
+
+      try {
+        const headers = await buildHeaders();
+        const response = await fetch("/api/sheets/import", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ file: base64, filename, format }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        await handleResponse(response);
+      } catch (err) {
+        clearTimeout(timeoutId);
+        handleFetchError(err);
+      } finally {
+        abortRef.current = null;
+      }
+    },
+    [handleResponse, handleFetchError]
+  );
+
   const cancel = useCallback(() => {
     if (abortRef.current) {
       abortRef.current.abort();
@@ -256,6 +292,7 @@ export function useSheetImport(): UseSheetImportReturn {
     errorMessage,
     submit,
     submitCsv,
+    submitFile,
     cancel,
     reset,
   };

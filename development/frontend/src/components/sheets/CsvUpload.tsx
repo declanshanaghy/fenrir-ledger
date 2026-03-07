@@ -1,26 +1,48 @@
 "use client";
 
 /**
- * CsvUpload -- drag-and-drop / file picker for CSV import.
+ * CsvUpload -- drag-and-drop / file picker for CSV, TSV, XLS, and XLSX import.
  *
  * States: idle -> drag-over -> processing -> accepted | error
- * Validation: .csv extension, < 1 MB, non-empty, UTF-8 readable.
+ * Validation: .csv/.tsv/.xls/.xlsx extension, size limits, non-empty.
+ * - CSV/TSV: read as UTF-8 text, < 1 MB
+ * - XLS/XLSX: read as base64 binary, < 5 MB
  */
 
 import { useState, useRef, useCallback } from "react";
 import { SafetyBanner } from "./SafetyBanner";
 
+export type FileFormat = "csv" | "tsv" | "xls" | "xlsx";
+
 interface CsvUploadProps {
-  /** Called with the raw CSV text when a valid file is accepted. */
+  /** Called with the raw CSV/TSV text when a text file is accepted. */
   onSubmit: (csvText: string) => void;
+  /** Called with base64-encoded data and filename for binary spreadsheet files. */
+  onSubmitFile?: (base64: string, filename: string, format: FileFormat) => void;
   /** Navigate back to method selection. */
   onBack: () => void;
 }
 
 type DropState = "idle" | "drag-over" | "processing" | "accepted" | "error";
 
-/** Maximum file size: 1 MB. */
-const MAX_FILE_SIZE = 1_048_576;
+/** Maximum file size for text formats (CSV/TSV): 1 MB. */
+const MAX_TEXT_FILE_SIZE = 1_048_576;
+
+/** Maximum file size for binary formats (XLS/XLSX): 5 MB. */
+const MAX_BINARY_FILE_SIZE = 5 * 1_048_576;
+
+/** Accepted file extensions. */
+const ACCEPTED_EXTENSIONS = [".csv", ".tsv", ".xls", ".xlsx"] as const;
+
+/** Detect file format from extension. */
+function detectFormat(filename: string): FileFormat | null {
+  const lower = filename.toLowerCase();
+  if (lower.endsWith(".csv")) return "csv";
+  if (lower.endsWith(".tsv")) return "tsv";
+  if (lower.endsWith(".xls") && !lower.endsWith(".xlsx")) return "xls";
+  if (lower.endsWith(".xlsx")) return "xlsx";
+  return null;
+}
 
 /** Format bytes to a human-readable string. */
 function formatBytes(bytes: number): string {
@@ -29,12 +51,14 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
+export function CsvUpload({ onSubmit, onSubmitFile, onBack }: CsvUploadProps) {
   const [dropState, setDropState] = useState<DropState>("idle");
   const [fileName, setFileName] = useState("");
   const [fileSize, setFileSize] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [csvText, setCsvText] = useState("");
+  const [fileBase64, setFileBase64] = useState("");
+  const [fileFormat, setFileFormat] = useState<FileFormat | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCountRef = useRef(0);
@@ -45,34 +69,36 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
     setFileSize(0);
     setErrorMsg("");
     setCsvText("");
+    setFileBase64("");
+    setFileFormat(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   }, []);
 
   const processFile = useCallback((file: File) => {
-    // Validate extension with format-specific guidance
-    if (!file.name.toLowerCase().endsWith(".csv")) {
+    // Validate extension
+    const format = detectFormat(file.name);
+    if (!format) {
       setDropState("error");
-      const lower = file.name.toLowerCase();
-      if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
+      if (file.name.toLowerCase().endsWith(".numbers")) {
         setErrorMsg(
-          "Excel files are not supported directly. Please export as CSV from Excel first (File > Save As > CSV UTF-8)."
-        );
-      } else if (lower.endsWith(".numbers")) {
-        setErrorMsg(
-          "Numbers files are not supported directly. Please export as CSV from Numbers first (File > Export To > CSV)."
+          "Numbers files are not supported. Please export as CSV from Numbers first (File > Export To > CSV)."
         );
       } else {
-        setErrorMsg("Only .csv files are accepted.");
+        setErrorMsg(`Unsupported file type. Accepted formats: ${ACCEPTED_EXTENSIONS.join(", ")}.`);
       }
       return;
     }
 
+    const isBinary = format === "xls" || format === "xlsx";
+    const maxSize = isBinary ? MAX_BINARY_FILE_SIZE : MAX_TEXT_FILE_SIZE;
+    const maxSizeLabel = isBinary ? "5 MB" : "1 MB";
+
     // Validate size
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > maxSize) {
       setDropState("error");
-      setErrorMsg(`File too large (${formatBytes(file.size)}). Maximum is 1 MB.`);
+      setErrorMsg(`File too large (${formatBytes(file.size)}). Maximum is ${maxSizeLabel} for ${format.toUpperCase()} files.`);
       return;
     }
 
@@ -86,23 +112,52 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
     setDropState("processing");
     setFileName(file.name);
     setFileSize(file.size);
+    setFileFormat(format);
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result;
-      if (typeof text !== "string" || text.trim().length === 0) {
+    if (isBinary) {
+      // Read as base64 data URL for binary XLS/XLSX files
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result;
+        if (typeof dataUrl !== "string" || !dataUrl.includes(",")) {
+          setDropState("error");
+          setErrorMsg("Could not read the file.");
+          return;
+        }
+        // Strip the "data:...;base64," prefix to get raw base64
+        const base64 = dataUrl.split(",")[1];
+        if (!base64) {
+          setDropState("error");
+          setErrorMsg("Could not encode the file.");
+          return;
+        }
+        setFileBase64(base64);
+        setDropState("accepted");
+      };
+      reader.onerror = () => {
         setDropState("error");
-        setErrorMsg("Could not read the file or the file is empty.");
-        return;
-      }
-      setCsvText(text);
-      setDropState("accepted");
-    };
-    reader.onerror = () => {
-      setDropState("error");
-      setErrorMsg("Failed to read the file. Ensure it is a valid UTF-8 CSV.");
-    };
-    reader.readAsText(file, "utf-8");
+        setErrorMsg(`Failed to read the ${format.toUpperCase()} file.`);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Read as UTF-8 text for CSV/TSV files
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result;
+        if (typeof text !== "string" || text.trim().length === 0) {
+          setDropState("error");
+          setErrorMsg("Could not read the file or the file is empty.");
+          return;
+        }
+        setCsvText(text);
+        setDropState("accepted");
+      };
+      reader.onerror = () => {
+        setDropState("error");
+        setErrorMsg(`Failed to read the file. Ensure it is a valid UTF-8 ${format.toUpperCase()} file.`);
+      };
+      reader.readAsText(file, "utf-8");
+    }
   }, []);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -155,10 +210,14 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
   );
 
   const handleSubmit = useCallback(() => {
-    if (csvText) {
+    if (!fileFormat) return;
+    const isBinary = fileFormat === "xls" || fileFormat === "xlsx";
+    if (isBinary && fileBase64 && onSubmitFile) {
+      onSubmitFile(fileBase64, fileName, fileFormat);
+    } else if (!isBinary && csvText) {
       onSubmit(csvText);
     }
-  }, [csvText, onSubmit]);
+  }, [csvText, fileBase64, fileFormat, fileName, onSubmit, onSubmitFile]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -177,7 +236,7 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
         }}
         role="button"
         tabIndex={0}
-        aria-label="Upload CSV file"
+        aria-label="Upload spreadsheet file"
         onKeyDown={(e) => {
           if ((e.key === "Enter" || e.key === " ") && (dropState === "idle" || dropState === "error")) {
             e.preventDefault();
@@ -200,7 +259,7 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".csv"
+          accept=".csv,.tsv,.xls,.xlsx"
           onChange={handleFileInput}
           className="hidden"
           aria-hidden="true"
@@ -224,10 +283,10 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
             <p className="font-body text-base text-muted-foreground">
-              Drop a CSV file here, or click to browse
+              Drop a spreadsheet here, or click to browse
             </p>
             <p className="font-body text-sm text-muted-foreground/60">
-              .csv files only, 1 MB maximum
+              .csv, .tsv, .xls, .xlsx — up to 5 MB
             </p>
           </>
         )}
@@ -314,12 +373,13 @@ export function CsvUpload({ onSubmit, onBack }: CsvUploadProps) {
       {/* Format help */}
       <div className="text-sm font-body text-muted-foreground">
         <p className="font-heading text-foreground text-sm mb-1.5 tracking-wide">
-          How to export CSV
+          Supported formats
         </p>
         <ul className="space-y-1 list-disc list-inside">
-          <li>Google Sheets: File &gt; Download &gt; Comma-separated values (.csv)</li>
-          <li>Excel: File &gt; Save As &gt; CSV UTF-8</li>
-          <li>Numbers: File &gt; Export To &gt; CSV</li>
+          <li>Excel: upload .xlsx or .xls directly</li>
+          <li>Google Sheets: File &gt; Download &gt; .csv or .xlsx</li>
+          <li>Numbers: File &gt; Export To &gt; CSV or Excel</li>
+          <li>Any tab-separated (.tsv) or comma-separated (.csv) file</li>
         </ul>
       </div>
 

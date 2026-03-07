@@ -112,6 +112,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
     errorMessage,
     submit,
     submitCsv,
+    submitFile,
     cancel,
     reset,
   } = useSheetImport();
@@ -243,6 +244,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
             </DialogHeader>
             <CsvUpload
               onSubmit={submitCsv}
+              onSubmitFile={submitFile}
               onBack={handleBackToMethod}
             />
           </>

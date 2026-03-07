@@ -1,15 +1,16 @@
 /**
  * Shared card extraction logic.
  *
- * Takes raw CSV text, builds the extraction prompt, calls the LLM,
- * validates the response, and assigns UUIDs. Used by both the
- * Google Sheets pipeline and the direct CSV upload pipeline.
+ * Takes raw CSV/TSV text or binary spreadsheet content, builds the extraction
+ * prompt, calls the LLM, validates the response, and assigns UUIDs.
+ * Used by the Google Sheets pipeline, CSV upload pipeline, and file upload pipeline.
  */
 
 import { buildExtractionPrompt, sanitizeCsvForPrompt } from "./prompt";
 import { CardsArraySchema, ImportResponseSchema } from "./card-schema";
 import { getLlmProvider } from "@/lib/llm/extract";
 import type { SheetImportResponse } from "./types";
+import type { FileFormat } from "@/components/sheets/CsvUpload";
 import { log } from "@/lib/logger";
 
 /**
@@ -109,4 +110,76 @@ export async function extractCardsFromCsv(csv: string): Promise<SheetImportRespo
 
   log.debug("extractCardsFromCsv returning", { cardCount: cards.length, sensitiveDataWarning });
   return result;
+}
+
+/**
+ * Extract card data from a binary XLS/XLSX file via SheetJS + LLM.
+ *
+ * Converts all visible sheets to CSV (merged with newlines), then
+ * passes the combined text through the standard CSV extraction pipeline.
+ *
+ * @param base64 - Raw base64-encoded file content (no data URL prefix)
+ * @param mimeType - MIME type of the file (unused, format drives parsing)
+ * @param filename - Original filename (for logging)
+ * @param format - File format: "xls" or "xlsx"
+ */
+export async function extractCardsFromFile(
+  base64: string,
+  mimeType: string,
+  filename: string,
+  format: FileFormat
+): Promise<SheetImportResponse> {
+  log.debug("extractCardsFromFile called", { filename, format, mimeType, base64Length: base64.length });
+
+  let csvText: string;
+  try {
+    // Dynamically import SheetJS to avoid bundling on client
+    const XLSX = await import("xlsx");
+
+    // Decode base64 to binary
+    const binary = Buffer.from(base64, "base64");
+    const workbook = XLSX.read(binary, { type: "buffer" });
+
+    // Convert all visible sheets to CSV and concatenate
+    const sheetCsvParts: string[] = [];
+    for (const sheetName of workbook.SheetNames) {
+      const sheet = workbook.Sheets[sheetName];
+      if (!sheet) continue;
+
+      // Skip sheets explicitly hidden (SheetJS marks hidden sheets in !visiblity or via sheetVisibility)
+      // Access workbook properties safely
+      const wb = workbook as typeof workbook & { Workbook?: { Sheets?: Array<{ Hidden?: number }> } };
+      const sheetMeta = wb.Workbook?.Sheets?.[workbook.SheetNames.indexOf(sheetName)];
+      if (sheetMeta?.Hidden) continue;
+
+      const sheetCsv = XLSX.utils.sheet_to_csv(sheet, { forceQuotes: false });
+      if (sheetCsv.trim().length > 0) {
+        sheetCsvParts.push(`# Sheet: ${sheetName}\n${sheetCsv}`);
+      }
+    }
+
+    if (sheetCsvParts.length === 0) {
+      log.debug("extractCardsFromFile returning", { errorCode: "INVALID_CSV", reason: "no visible sheets with data" });
+      return {
+        error: {
+          code: "INVALID_CSV",
+          message: "The spreadsheet appears to be empty or has no visible sheets with data.",
+        },
+      };
+    }
+
+    csvText = sheetCsvParts.join("\n\n");
+    log.debug("extractCardsFromFile converted to CSV", { csvLength: csvText.length, sheetCount: sheetCsvParts.length });
+  } catch (err) {
+    log.error("extractCardsFromFile: SheetJS parsing failed", err);
+    return {
+      error: {
+        code: "INVALID_CSV",
+        message: `Could not parse the ${format.toUpperCase()} file. Ensure it is a valid Excel spreadsheet.`,
+      },
+    };
+  }
+
+  // Delegate to the standard CSV extraction pipeline
+  return extractCardsFromCsv(csvText);
 }

@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import type { SheetImportError } from "@/lib/sheets/types";
 import { importFromSheet } from "@/lib/sheets/import-pipeline";
 import { importFromCsv } from "@/lib/sheets/csv-import-pipeline";
+import { importFromFile } from "@/lib/sheets/file-import-pipeline";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { log } from "@/lib/logger";
+import type { FileFormat } from "@/components/sheets/CsvUpload";
 
 export const maxDuration = 60;
+
+const VALID_FILE_FORMATS: FileFormat[] = ["xls", "xlsx"];
 
 function errorResponse(code: SheetImportError["code"], message: string, status: number = 400): NextResponse {
   log.debug("errorResponse called", { code, status });
@@ -24,38 +28,55 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   let url: string | undefined;
   let csv: string | undefined;
+  let file: string | undefined;
+  let filename: string | undefined;
+  let format: string | undefined;
 
   try {
     const body = await request.json();
     url = body?.url;
     csv = body?.csv;
+    file = body?.file;
+    filename = body?.filename;
+    format = body?.format;
   } catch {
     log.debug("POST /api/sheets/import returning", { status: 400, error: "INVALID_URL", reason: "invalid JSON" });
     return errorResponse("INVALID_URL", "Invalid JSON body.");
   }
 
-  // Exactly one of url or csv must be provided
+  // Determine which mode we're in
   const hasUrl = url && typeof url === "string";
   const hasCsv = csv && typeof csv === "string";
-  log.debug("POST /api/sheets/import parsed body", { hasUrl, hasCsv, csvLength: csv?.length });
+  const hasFile = file && typeof file === "string" && filename && typeof filename === "string";
 
-  if (hasUrl && hasCsv) {
-    log.debug("POST /api/sheets/import returning", { status: 400, error: "INVALID_URL", reason: "both url and csv" });
-    return errorResponse("INVALID_URL", "Provide either 'url' or 'csv', not both.");
+  const modeCount = [hasUrl, hasCsv, hasFile].filter(Boolean).length;
+  log.debug("POST /api/sheets/import parsed body", { hasUrl, hasCsv, hasFile, csvLength: csv?.length, format });
+
+  if (modeCount > 1) {
+    log.debug("POST /api/sheets/import returning", { status: 400, error: "INVALID_URL", reason: "multiple modes" });
+    return errorResponse("INVALID_URL", "Provide exactly one of 'url', 'csv', or 'file'.");
   }
 
-  if (!hasUrl && !hasCsv) {
-    log.debug("POST /api/sheets/import returning", { status: 400, error: "INVALID_URL", reason: "neither url nor csv" });
-    return errorResponse("INVALID_URL", "Request body must include a 'url' or 'csv' string.");
+  if (modeCount === 0) {
+    log.debug("POST /api/sheets/import returning", { status: 400, error: "INVALID_URL", reason: "no mode provided" });
+    return errorResponse("INVALID_URL", "Request body must include a 'url', 'csv', or 'file' field.");
+  }
+
+  // Validate file format when using file upload
+  if (hasFile && (!format || !VALID_FILE_FORMATS.includes(format as FileFormat))) {
+    log.debug("POST /api/sheets/import returning", { status: 400, error: "INVALID_CSV", reason: "invalid file format", format });
+    return errorResponse("INVALID_CSV", `Unsupported file format '${format}'. Accepted: ${VALID_FILE_FORMATS.join(", ")}.`);
   }
 
   // Run the appropriate import pipeline
   try {
-    const mode = hasUrl ? "url" : "csv";
-    log.debug("POST /api/sheets/import running pipeline", { mode });
+    const mode = hasUrl ? "url" : hasCsv ? "csv" : "file";
+    log.debug("POST /api/sheets/import running pipeline", { mode, format });
     const result = hasUrl
       ? await importFromSheet(url!)
-      : await importFromCsv(csv!);
+      : hasCsv
+        ? await importFromCsv(csv!)
+        : await importFromFile(file!, filename!, format as FileFormat);
 
     if ("error" in result) {
       const status = result.error.code === "INVALID_URL" ? 400
