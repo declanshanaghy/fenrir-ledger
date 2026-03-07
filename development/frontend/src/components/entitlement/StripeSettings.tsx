@@ -193,6 +193,7 @@ export function StripeSettings() {
             <span
               className="inline-flex items-center px-2.5 py-0.5 border border-gold/30 text-xs font-mono font-bold uppercase tracking-wide text-gold h-5"
               aria-label="Karl tier active"
+              data-testid="tier-badge"
             >
               KARL
             </span>
@@ -201,6 +202,7 @@ export function StripeSettings() {
             <span
               className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-primary/40 text-xs font-mono font-bold uppercase tracking-wide text-primary/80 h-5"
               aria-label="Subscription canceling"
+              data-testid="tier-badge"
             >
               CANCELING
             </span>
@@ -209,6 +211,7 @@ export function StripeSettings() {
             <span
               className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-rune/40 text-xs font-mono font-bold uppercase tracking-wide text-muted-foreground h-5"
               aria-label="Subscription canceled"
+              data-testid="tier-badge"
             >
               CANCELED
             </span>
@@ -228,7 +231,7 @@ export function StripeSettings() {
 
             {/* Current tier */}
             <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center px-2.5 py-0.5 border border-border text-[13px] font-mono font-bold uppercase tracking-wide text-muted-foreground/70">
+              <span className="inline-flex items-center px-2.5 py-0.5 border border-border text-[13px] font-mono font-bold uppercase tracking-wide text-muted-foreground/70" data-testid="tier-badge">
                 THRALL
               </span>
               <span className="text-[13px] text-foreground/80 font-body">Free tier</span>
