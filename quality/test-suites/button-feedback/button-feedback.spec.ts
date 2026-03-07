@@ -517,7 +517,8 @@ test.describe("Regression: existing button functionality preserved", () => {
         !e.includes("favicon") &&
         !e.includes("404") &&
         !e.includes("net::ERR_") &&
-        !e.includes("Failed to load resource")
+        !e.includes("Failed to load resource") &&
+        !e.includes("_vercel/insights") // Vercel Insights not available in local builds
     );
     expect(criticalErrors, "Dashboard must render without JS errors").toHaveLength(0);
   });
@@ -536,7 +537,8 @@ test.describe("Regression: existing button functionality preserved", () => {
         !e.includes("favicon") &&
         !e.includes("404") &&
         !e.includes("net::ERR_") &&
-        !e.includes("Failed to load resource")
+        !e.includes("Failed to load resource") &&
+        !e.includes("_vercel/insights") // Vercel Insights not available in local builds
     );
     expect(criticalErrors, "Settings page must render without JS errors").toHaveLength(0);
   });
