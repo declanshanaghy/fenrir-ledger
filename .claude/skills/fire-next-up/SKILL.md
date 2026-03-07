@@ -264,11 +264,15 @@ If no orphans are found, proceed silently to Step 1.
 
 ## Step 1 — Query the Project Board
 
-Fetch all items from GitHub Project #1 and filter for the "Up Next" status column:
+Fetch all items from GitHub Project #1 and filter for the "Up Next" status column.
+
+**IMPORTANT:** `gh project item-list` returns items from ALL columns (Todo, Up Next,
+In Progress, Done) — not just "Up Next". The default page size is 30, which can miss
+recently added items. Always use `--limit 200` to ensure all items are fetched:
 
 ```bash
-gh project item-list 1 --owner declanshanaghy --format json \
-  --jq '[.items[] | select(.status == "Up Next") | {num: .content.number, title: .content.title}]'
+gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
+  | jq '[.items[] | select(.status == "Up Next") | {num: .content.number, title: .content.title}]'
 ```
 
 If no items are in "Up Next", tell the user:
