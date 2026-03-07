@@ -1,7 +1,8 @@
 # Interaction Spec: Claude Code Terminal Skin -- The Wolf's Forge
 
 **Owner**: Luna (UX Designer)
-**Status**: Design Complete
+**Status**: Design Complete — Not Yet Implemented
+**Product Brief**: [`designs/product/backlog/claude-terminal-skin.md`](../../product/backlog/claude-terminal-skin.md)
 **Target**: Claude Code CLI customization surfaces (statusline, splash, theme palette)
 
 ---

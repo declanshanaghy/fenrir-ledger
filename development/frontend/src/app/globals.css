@@ -11,7 +11,7 @@
    * :root = light palette (stone/marble — cool, crisp, Nordic daylight)
    * .dark = dark palette (original Norse war-room)
    *
-   * All surface, text, and status tokens follow design/theme-system.md.
+   * All surface, text, and status tokens follow designs/ux-design/theme-system.md.
    * shadcn/ui component tokens are remapped to the Norse palette.
    */
 

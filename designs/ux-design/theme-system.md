@@ -134,9 +134,26 @@ Beyond the core shadcn/ui tokens, Fenrir Ledger defines these additional variabl
 | LCARS Overlay | `--lcars-*` | Star Trek LCARS overlay colors |
 | Konami Howl | `--howl-*` | Wolf silhouette, pulse flash, status band |
 | Loki Toast | `--loki-toast-*` | Loki Mode toast notification |
-| Realm Status | `--realm-*` | Status ring and urgency indicator colors |
+| Realm Status | `--realm-*` | Status ring and urgency indicator colors (see table below) |
 
 All groups have values in both `:root` and `.dark` blocks.
+
+### Realm Status Tokens
+
+Seven `--realm-*` tokens map to the card status system. Each has `:root` (light) and `.dark` values in `globals.css`.
+
+| CSS Variable | Tailwind class | Card Status | Color | Notes |
+|---|---|---|---|---|
+| `--realm-asgard` | `realm-asgard` | `active` | Teal `#0a8c6e` | Healthy — active card |
+| `--realm-hati` | `realm-hati` | `promo_expiring` | Amber `#f59e0b` | Warning — promo ending |
+| `--realm-muspel` | `realm-muspel` | `fee_approaching` | Blood orange `#c94a0a` | Danger — fee due |
+| `--realm-ragnarok` | `realm-ragnarok` | _(overdue in tailwind.config)_ | Red `#ef4444` | Critical |
+| `--realm-ragnarok-dark` | — | — | `#c94020` | Ragnarok accent only |
+| `--realm-alfheim` | `realm-alfheim` | `bonus_open` | Teal `#1a99a5` | Opportunity — bonus window |
+| `--realm-niflheim` | `realm-niflheim` | `overdue` | Deep red `#aa1919` | Overdue — fee missed |
+| `--realm-stone` | — | _(light theme only)_ | Cool grey `#797e87` | Closed status (light) |
+
+**Note on `closed` status**: `badge.tsx` uses Tailwind class `realm-hel` which maps to the **direct color token** `realm.hel = "#8a8578"` in `tailwind.config.ts` (not a CSS variable). This is a static dark-theme value and does not adapt per-theme. `--realm-stone` is defined in `globals.css` but is only consumed via inline styles in components (e.g., `StatusRing.tsx`), not via Tailwind classes. The `realm-alfheim` and `realm-niflheim` Tailwind classes are resolved from CSS variables via component inline styles — they are **not** in the `tailwind.config.ts realm` object.
 
 ---
 
@@ -144,8 +161,11 @@ All groups have values in both `:root` and `.dark` blocks.
 
 | File | Role |
 |------|------|
-| `globals.css` | CSS variable definitions (`:root` + `.dark`) |
+| `src/app/globals.css` | CSS variable definitions (`:root` + `.dark`) |
 | `tailwind.config.ts` | Tailwind token-to-variable mappings |
-| `layout.tsx` | ThemeProvider wrapper |
-| `ThemeToggle.tsx` | Three-way toggle component |
-| `TopBar.tsx` | Toggle integration (both auth states) |
+| `src/app/layout.tsx` | ThemeProvider wrapper |
+| `src/components/layout/ThemeToggle.tsx` | Three-way toggle component |
+| `src/components/layout/TopBar.tsx` | Toggle integration (both auth states) |
+| `src/components/ui/badge.tsx` | Badge variants using realm status tokens |
+| `src/components/dashboard/StatusRing.tsx` | Ring component using realm status CSS vars |
+| `src/components/dashboard/StatusBadge.tsx` | Badge wrapper with Norse realm tooltip |

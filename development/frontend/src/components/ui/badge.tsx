@@ -18,8 +18,7 @@ const badgeVariants = cva(
           "border-border text-foreground",
 
         // ── Fenrir Ledger — Norse realm status variants ──────────────────
-        // Colors follow design/theme-system.md status palette.
-        // Labels (Active / Fee Approaching / etc.) are Wave 2 — see design/implementation-brief.md Story 3.
+        // Colors follow designs/ux-design/theme-system.md status palette.
         active:
           "border-transparent bg-realm-asgard/20 text-realm-asgard border-realm-asgard/25",
         fee_approaching:
