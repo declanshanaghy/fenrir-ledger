@@ -148,13 +148,18 @@ test.describe("Auth Callback — PKCE Session Data Missing", () => {
   }) => {
     // Spec: auth/callback/page.tsx — raw = sessionStorage.getItem(PKCE_SESSION_KEY)
     //       if (!raw) → "PKCE session data missing. Please try signing in again."
+    // Note: callback page has a 100ms delay to prevent race conditions with React StrictMode
     // Navigate with valid-looking code + state but no PKCE session data
     await page.goto("/auth/callback?code=fake_code&state=fake_state", {
       waitUntil: "networkidle",
     });
 
+    // Wait explicitly for the 100ms delay before checking
+    await page.waitForTimeout(200);
+
+    // Match partial text since locator matching can be finicky
     await expect(
-      page.locator("text=PKCE session data missing")
+      page.locator('text="PKCE session data missing"')
     ).toBeVisible({ timeout: 5000 });
   });
 
@@ -162,9 +167,13 @@ test.describe("Auth Callback — PKCE Session Data Missing", () => {
     page,
   }) => {
     // Spec: error state always renders the sign-in recovery link
+    // Note: callback page has a 100ms delay to prevent race conditions with React StrictMode
     await page.goto("/auth/callback?code=fake_code&state=fake_state", {
       waitUntil: "networkidle",
     });
+
+    // Wait explicitly for the 100ms delay before checking
+    await page.waitForTimeout(200);
 
     const link = page.locator("a:has-text('Return to the gate')");
     await expect(link).toBeVisible({ timeout: 5000 });

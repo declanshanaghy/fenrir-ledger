@@ -65,7 +65,7 @@ function SkeletonTile() {
  */
 export function CardSkeletonGrid({ count = 6 }: CardSkeletonGridProps) {
   return (
-    <div>
+    <div data-testid="skeleton-grid">
       {/* Summary header skeleton */}
       <div className="flex items-center gap-6 mb-6">
         <div className="skeleton h-4 w-20 rounded-sm" />
