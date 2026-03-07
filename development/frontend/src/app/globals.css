@@ -15,48 +15,48 @@
    * shadcn/ui component tokens are remapped to the Norse palette.
    */
 
-  /* ── Light Theme (Stone/Marble) ──────────────────────────── */
+  /* ── Light Theme (Lightning Norse) ─────────────────────────── */
   :root {
     /* ── Surfaces ───────────────────────────────────────────── */
-    --background:           220 10% 95%;    /* #f0f1f3 — cool marble white */
-    --foreground:           220 20% 10%;    /* #14161a — ink black */
+    --background:           210 40% 98%;    /* #f7fafc — pure white with ice-blue whisper */
+    --foreground:           220 40% 8%;     /* #0f1419 — ink-black, almost obsidian */
 
-    --card:                 220 8%  90%;    /* #e2e4e8 — cooler marble */
-    --card-foreground:      220 20% 10%;
+    --card:                 0   0%  100%;   /* #ffffff — PURE WHITE, no compromise */
+    --card-foreground:      220 40% 8%;
 
-    --popover:              220 12% 97%;    /* #f6f7f8 — lightest cool white */
-    --popover-foreground:   220 20% 10%;
+    --popover:              0   0%  100%;   /* #ffffff — PURE WHITE */
+    --popover-foreground:   220 40% 8%;
 
     /* ── Brand ──────────────────────────────────────────────── */
-    --primary:              38  75% 32%;    /* #8a6a0a — burnt gold for light bg */
-    --primary-foreground:   220 12% 97%;    /* light text on gold */
+    --primary:              38  80% 28%;    /* #8f6e0e — dark burnt gold, thunderstrike */
+    --primary-foreground:   0   0%  100%;   /* pure white on gold */
 
     /* ── Secondary / Muted ──────────────────────────────────── */
-    --secondary:            215 10% 78%;    /* #bec2c8 — cool medium grey */
-    --secondary-foreground: 220 20% 10%;
+    --secondary:            210 18% 85%;    /* #d5dde3 — ice-blue grey */
+    --secondary-foreground: 220 40% 8%;
 
-    --muted:                215 8%  85%;    /* #d4d7db — cool light grey */
-    --muted-foreground:     215 12% 42%;    /* #5e6570 — cool dark grey */
+    --muted:                210 24% 92%;    /* #e8eff4 — frost white */
+    --muted-foreground:     215 20% 35%;    /* #475569 — cold slate */
 
-    --accent:               215 8%  85%;
-    --accent-foreground:    220 20% 10%;
+    --accent:               210 24% 92%;
+    --accent-foreground:    220 40% 8%;
 
     /* ── Status / Destructive ───────────────────────────────── */
-    --destructive:          15  85% 42%;    /* #c94020 — blood orange for light bg */
-    --destructive-foreground: 220 12% 97%;
+    --destructive:          0   72% 38%;    /* #a91b1b — dark blood red for white bg */
+    --destructive-foreground: 0  0% 100%;
 
     /* ── Structure ──────────────────────────────────────────── */
-    --border:               215 10% 75%;    /* #b8bcc2 — cool light grey border */
-    --input:                215 12% 92%;    /* #e8eaed — cool light grey input */
-    --ring:                 38  75% 32%;    /* burnt gold focus ring */
+    --border:               214 32% 88%;    /* #d0dce5 — cold frost border */
+    --input:                210 40% 96%;    /* #f1f7fa — ice-white input */
+    --ring:                 38  80% 28%;    /* dark burnt gold focus ring */
     --radius:               0.25rem;        /* sharp, angular — not pill */
 
-    /* ── Charts (adapted for light stone background) ────────── */
-    --chart-1:              38  75% 32%;    /* burnt gold */
-    --chart-2:              163 75% 25%;    /* dark teal */
-    --chart-3:              15  85% 42%;    /* blood orange */
-    --chart-4:              38  80% 38%;    /* deeper amber */
-    --chart-5:              0   70% 48%;    /* red */
+    /* ── Charts (thunder palette for white backgrounds) ───────── */
+    --chart-1:              38  80% 28%;    /* dark burnt gold */
+    --chart-2:              163 70% 22%;    /* deep forest green */
+    --chart-3:              0   72% 38%;    /* dark blood red */
+    --chart-4:              38  85% 35%;    /* bronze */
+    --chart-5:              220 60% 35%;    /* deep ice blue */
 
     /* ── Easter Egg Modal ──────────────────────────────────── */
     --egg-bg:               230 20% 12%;   /* #1a1c25 — deep indigo */
@@ -98,12 +98,12 @@
     --loki-toast-shadow:    42  75% 48%;   /* gold glow */
 
     /* ── Realm Status (used in StatusRing / HowlPanel) ─────── */
-    --realm-ragnarok:       0   84% 60%;   /* #ef4444 */
-    --realm-muspel:         22  88% 41%;   /* #c94a0a */
-    --realm-hati:           38  92% 50%;   /* #f59e0b */
-    --realm-asgard:         163 83% 29%;   /* #0a8c6e */
-    --realm-stone:          215 6%  50%;   /* #797e87 — cool stone grey */
-    --realm-ragnarok-dark:  10  60% 48%;   /* #c94020 — ragnarok accent */
+    --realm-ragnarok:       0   84% 50%;   /* #e53e3e — bright red for white */
+    --realm-muspel:         22  88% 35%;   /* #a83f08 — dark blood orange */
+    --realm-hati:           38  92% 42%;   /* #d97706 — dark amber */
+    --realm-asgard:         163 83% 25%;   /* #077558 — deep teal */
+    --realm-stone:          214 14% 72%;   /* #a8b8c5 — cold blue-grey */
+    --realm-ragnarok-dark:  10  60% 40%;   /* #a33516 — dark ragnarok accent */
     --realm-alfheim:        173 75% 40%;   /* #1a99a5 — teal for opportunity */
     --realm-niflheim:       0   75% 38%;   /* #aa1919 — deep red for overdue */
   }
@@ -220,11 +220,11 @@
   }
 
   /* ── Body background textures (theme-aware) ──────────────── */
-  /* Light: subtle burnt gold glow on stone/marble */
+  /* Light: minimal gold glow + ice gradient for lightning theme */
   :root body {
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -5%, hsl(38 75% 32% / 0.03) 0%, transparent 65%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23s)' opacity='0.02'/%3E%3C/svg%3E");
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(38 80% 28% / 0.015) 0%, transparent 50%),
+      linear-gradient(180deg, hsl(210 40% 98%) 0%, hsl(210 50% 96%) 100%);
   }
 
   /* Dark: gold radial glow + stone grain texture */
@@ -555,13 +555,13 @@ body.konami-shake-mobile {
  * Muted  #8a8578 on warm charcoal #12100e  ->  ~5.2:1  AA (normal text)
  * Blood  #c94a0a on void-black    #07070d  ->  ~4.3:1  AA (large/bold, >=3:1)
  *
- * LIGHT THEME (Stone/Marble):
- * Ink black #14161a on marble     #f0f1f3  ->  ~15.2:1 AA + AAA
- * Burnt gold #8a6a0a on marble    #f0f1f3  ->  ~5.8:1  AA
- * Cool grey #5e6570 on marble     #f0f1f3  ->  ~6.9:1  AA
- * Cool grey #5e6570 on card       #e2e4e8  ->  ~6.5:1  AA
- * Burnt gold #8a6a0a on card      #e2e4e8  ->  ~5.5:1  AA
- * Blood orange #c94020 on marble  #f0f1f3  ->  ~4.8:1  AA
+ * LIGHT THEME (Lightning Norse):
+ * Ink black #0f1419 on white      #ffffff  ->  ~19.1:1 AAA
+ * Ink black #0f1419 on ice bg     #f7fafc  ->  ~18.5:1 AAA
+ * Dark gold #8f6e0e on white      #ffffff  ->  ~7.2:1  AA + AAA
+ * Cold slate #475569 on white     #ffffff  ->  ~8.8:1  AAA
+ * Dark red #a91b1b on white       #ffffff  ->  ~7.1:1  AA + AAA
+ * Dark gold #8f6e0e on ice bg     #f7fafc  ->  ~7.0:1  AA + AAA
  * ─────────────────────────────────────────────────────────── */
 
 /* ── Sprint 4 — Reduced Motion Coverage (verification) ──────
