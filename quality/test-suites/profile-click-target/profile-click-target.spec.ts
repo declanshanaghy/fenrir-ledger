@@ -145,6 +145,7 @@ test.describe("Profile Click Target (#230)", () => {
     });
 
     const profileButton = page.locator('[aria-label*="Open user menu"]');
+    await expect(profileButton).toBeVisible();
 
     // Verify the button has a Tailwind hover background class —
     // checking computed backgroundColor is unreliable with CSS variable + opacity combos.

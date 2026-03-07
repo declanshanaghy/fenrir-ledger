@@ -307,10 +307,10 @@ test.describe("Import Wireframe Fixes — CSV Upload Format Help Section", () =>
   });
 
   /**
-   * TC-WF-010 — "How to export CSV" section heading is visible
+   * TC-WF-010 — "Supported formats" section heading is visible
    *
-   * Spec source: csv-upload.html line 406 — <strong>How to export CSV:</strong>
-   * Implementation: CsvUpload.tsx — <p class="font-heading...">How to export CSV</p>
+   * Spec source: CsvUpload.tsx now supports CSV, TSV, XLS, and XLSX files
+   * Implementation: CsvUpload.tsx — <p class="font-heading...">Supported formats</p>
    * displayed below the drop zone at all times (always visible per wireframe note
    * line 414).
    */
@@ -319,56 +319,56 @@ test.describe("Import Wireframe Fixes — CSV Upload Format Help Section", () =>
   }) => {
     const dialog = page.locator('[aria-label="Import Wizard"]');
 
-    await expect(dialog.getByText("How to export CSV")).toBeVisible();
+    await expect(dialog.getByText("Supported formats")).toBeVisible();
   });
 
   /**
    * TC-WF-011 — Google Sheets export instruction is present
    *
-   * Spec source: csv-upload.html line 408 — "Google Sheets: File > Download >
-   * Comma-separated values (.csv)".
+   * Spec source: CsvUpload.tsx now lists supported formats including
+   * Google Sheets: File > Download > .csv or .xlsx
    */
   test("Google Sheets CSV export instruction is present", async ({ page }) => {
     const dialog = page.locator('[aria-label="Import Wizard"]');
 
     await expect(
-      dialog.getByText(
-        "Google Sheets: File > Download > Comma-separated values (.csv)"
-      )
+      dialog.getByText(/Google Sheets/)
     ).toBeVisible();
   });
 
   /**
    * TC-WF-012 — Excel export instruction is present
    *
-   * Spec source: csv-upload.html line 409 — "Excel: File > Save As > CSV UTF-8".
+   * Spec source: CsvUpload.tsx now supports uploading Excel files directly.
+   * Implementation: "Excel: upload .xlsx or .xls directly"
    */
-  test("Excel CSV export instruction is present", async ({ page }) => {
+  test("Excel upload instruction is present", async ({ page }) => {
     const dialog = page.locator('[aria-label="Import Wizard"]');
 
     await expect(
-      dialog.getByText("Excel: File > Save As > CSV UTF-8")
+      dialog.getByText(/Excel: upload.*xlsx or.*xls directly/)
     ).toBeVisible();
   });
 
   /**
    * TC-WF-013 — Numbers export instruction is present
    *
-   * Spec source: csv-upload.html line 410 — "Numbers: File > Export To > CSV".
+   * Spec source: CsvUpload.tsx format help now includes Numbers format
+   * Implementation: "Numbers: File > Export To > CSV or Excel"
    */
   test("Numbers CSV export instruction is present", async ({ page }) => {
     const dialog = page.locator('[aria-label="Import Wizard"]');
 
     await expect(
-      dialog.getByText("Numbers: File > Export To > CSV")
+      dialog.getByText(/Numbers: File.*Export To.*CSV or Excel/)
     ).toBeVisible();
   });
 
   /**
    * TC-WF-014 — Format help section is visible in initial idle state
    *
-   * Spec source: csv-upload.html line 414 — "Helper text for users who need
-   * guidance on CSV export. Displayed below the drop zone at all times."
+   * Spec source: CsvUpload.tsx — "Supported formats" section with instructions for
+   * multiple file formats. Displayed below the drop zone at all times.
    *
    * The section must be visible before any file is dropped, i.e., always rendered
    * regardless of dropState.
@@ -378,23 +378,21 @@ test.describe("Import Wireframe Fixes — CSV Upload Format Help Section", () =>
   }) => {
     const dialog = page.locator('[aria-label="Import Wizard"]');
 
-    // Confirm idle state is active — drop zone shows "Drop a CSV file here"
+    // Confirm idle state is active — drop zone shows "Drop a spreadsheet here"
     await expect(
-      dialog.getByText("Drop a CSV file here, or click to browse")
+      dialog.getByText("Drop a spreadsheet here, or click to browse")
     ).toBeVisible();
 
     // Format help is simultaneously visible
-    await expect(dialog.getByText("How to export CSV")).toBeVisible();
+    await expect(dialog.getByText("Supported formats")).toBeVisible();
     await expect(
-      dialog.getByText(
-        "Google Sheets: File > Download > Comma-separated values (.csv)"
-      )
+      dialog.getByText("Google Sheets: File > Download > .csv or .xlsx")
     ).toBeVisible();
     await expect(
-      dialog.getByText("Excel: File > Save As > CSV UTF-8")
+      dialog.getByText("Excel: upload .xlsx or .xls directly")
     ).toBeVisible();
     await expect(
-      dialog.getByText("Numbers: File > Export To > CSV")
+      dialog.getByText("Numbers: File > Export To > CSV or Excel")
     ).toBeVisible();
   });
 });
