@@ -239,8 +239,17 @@ function TombstoneCard({ card, index }: TombstoneCardProps) {
           {feeAvoided > 0 ? formatCurrency(feeAvoided) : "$0 (no-fee card)"}
         </span>
         <span className="text-[hsl(var(--realm-stone))] font-semibold">Net gain:</span>
-        <span className="font-mono font-semibold text-foreground">
-          {formatCurrency(netGainCents)}
+        <span
+          className={[
+            "font-mono font-semibold",
+            netGainCents > 0
+              ? "text-[hsl(var(--realm-asgard))]"
+              : netGainCents < 0
+                ? "text-[hsl(var(--realm-ragnarok))]"
+                : "text-muted-foreground",
+          ].join(" ")}
+        >
+          {netGainCents < 0 ? `−${formatCurrency(Math.abs(netGainCents))}` : formatCurrency(netGainCents)}
         </span>
       </div>
 
