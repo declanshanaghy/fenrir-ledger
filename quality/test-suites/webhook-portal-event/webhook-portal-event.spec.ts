@@ -67,7 +67,7 @@ test.describe("billing_portal.session.created webhook event", () => {
     expect(body.error).toBeDefined();
   });
 
-  test("TC-PORTAL-002: billing_portal.session.created in HANDLED_EVENTS (verified via code)", async () => {
+  test("TC-PORTAL-002: billing_portal.session.created in HANDLED_EVENTS (verified via code)", async ({ request }) => {
     /**
      * This test documents that billing_portal.session.created is in the
      * HANDLED_EVENTS set. We verify via endpoint behavior that it's recognized.
@@ -75,16 +75,11 @@ test.describe("billing_portal.session.created webhook event", () => {
      * Real verification requires source code inspection or running with
      * a valid HMAC signature (requires STRIPE_WEBHOOK_SECRET).
      *
-     * For now, we verify indirectly: when posted without signature,
+     * For now, we verify indirectly: when posted with an invalid signature,
      * the error is about signature, not "unhandled event type".
      */
-    const response = await fetch(`${BASE_URL}/api/stripe/webhook`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "stripe-signature": "t=invalid,v1=invalidsignature",
-      },
-      body: JSON.stringify({
+    const response = await request.post(`${BASE_URL}/api/stripe/webhook`, {
+      data: JSON.stringify({
         type: "billing_portal.session.created",
         id: "evt_test_portal",
         data: {
@@ -93,10 +88,14 @@ test.describe("billing_portal.session.created webhook event", () => {
           },
         },
       }),
+      headers: {
+        "Content-Type": "application/json",
+        "stripe-signature": "t=invalid,v1=invalidsignature",
+      },
     });
 
     // Should fail on signature, not reject as unhandled event
-    expect(response.status).toBe(400);
+    expect(response.status()).toBe(400);
     const body = await response.json();
     expect(body.error).toMatch(/signature/i);
   });
