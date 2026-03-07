@@ -30,37 +30,30 @@ async function mockAuthenticatedUser(page: Page, googleSub = "google_test123"): 
 }
 
 async function setupAuthenticatedSession(page: Page, googleSub = "google_test123"): Promise<void> {
-  // Set the FenrirSession in localStorage
   // Calculate expires_at as a timestamp far in the future (year 2050)
   const futureTimestamp = new Date("2050-01-01").getTime();
 
-  // Use page.evaluate to set localStorage directly on the loaded page
-  await page.evaluate(({ sub, expiresAt }) => {
-    const mockSession = {
-      access_token: "mock_access_token_" + sub,
-      id_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwicGljdHVyZSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vcGljdHVyZS5qcGciLCJpYXQiOjE2NzY2MzI0MDAsImV4cCI6OTk5OTk5OTk5OX0.8f2f-U2Y6L7Z3j6K0N4O5P8Q9R1S2T3U4V5W6X7Y8Z",
-      refresh_token: "mock_refresh_token_" + sub,
-      expires_at: expiresAt,
-      user: {
-        sub,
-        email: "test@example.com",
-        name: "Test User",
-        picture: "https://example.com/picture.jpg",
-      },
-    };
-    localStorage.setItem("fenrir:auth", JSON.stringify(mockSession));
-  }, { sub: googleSub, expiresAt: futureTimestamp });
+  // Create the mock session object
+  const mockSession = {
+    access_token: "mock_access_token_" + googleSub,
+    id_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwicGljdHVyZSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vcGljdHVyZS5qcGciLCJpYXQiOjE2NzY2MzI0MDAsImV4cCI6OTk5OTk5OTk5OX0.8f2f-U2Y6L7Z3j6K0N4O5P8Q9R1S2T3U4V5W6X7Y8Z",
+    refresh_token: "mock_refresh_token_" + googleSub,
+    expires_at: futureTimestamp,
+    user: {
+      sub: googleSub,
+      email: "test@example.com",
+      name: "Test User",
+      picture: "https://example.com/picture.jpg",
+    },
+  };
 
-  // Force the EntitlementContext to refresh by dispatching a storage event
-  await page.evaluate(() => {
-    window.dispatchEvent(new StorageEvent("storage", {
-      key: "fenrir:auth",
-      newValue: localStorage.getItem("fenrir:auth"),
-    }));
-  });
+  // Use addInitScript to set localStorage BEFORE page hydration
+  await page.addInitScript((session) => {
+    localStorage.setItem("fenrir:auth", JSON.stringify(session));
+  }, mockSession);
 
-  // Wait for React to rerender with the new auth state
-  await page.waitForTimeout(2000);
+  // Now navigate or reload so addInitScript takes effect
+  // (Must be called before navigation for it to inject on first load)
 }
 
 
@@ -73,6 +66,9 @@ test.describe("Authenticated Stripe UI States", () => {
     // Mock Karl active subscription
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + 30);
+
+    // Set up authenticated session FIRST (via addInitScript)
+    await setupAuthenticatedSession(page);
 
     // Set up API route mock BEFORE any navigation
     await page.route('**/api/stripe/membership*', async route => {
@@ -93,12 +89,9 @@ test.describe("Authenticated Stripe UI States", () => {
       });
     });
 
-    // Navigate directly to settings page
+    // Navigate to settings page (addInitScript will run before hydration)
     await page.goto(`${BASE_URL}/settings`);
     await page.waitForLoadState("networkidle");
-
-    // Set up authenticated session AFTER page loads
-    await setupAuthenticatedSession(page);
 
     // Wait for the badge to appear (with longer timeout since API mock should respond)
     const karlBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /KARL/i });
@@ -126,6 +119,9 @@ test.describe("Authenticated Stripe UI States", () => {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + 15);
 
+    // Set up authenticated session FIRST (via addInitScript)
+    await setupAuthenticatedSession(page);
+
     // Set up API route mock BEFORE any navigation
     await page.route('**/api/stripe/membership*', async route => {
       await route.fulfill({
@@ -145,12 +141,9 @@ test.describe("Authenticated Stripe UI States", () => {
       });
     });
 
-    // Navigate directly to settings page
+    // Navigate to settings page (addInitScript will run before hydration)
     await page.goto(`${BASE_URL}/settings`);
     await page.waitForLoadState("networkidle");
-
-    // Set up authenticated session AFTER page loads
-    await setupAuthenticatedSession(page);
 
     // Check for CANCELING badge
     const cancelingBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /CANCELING/i });
@@ -171,6 +164,9 @@ test.describe("Authenticated Stripe UI States", () => {
 
   test("TC-STR-AUTH-03: Canceled state UI (replaces part of MANUAL-02)", async ({ page }) => {
     // Mock canceled subscription (tier is still karl but not active)
+    // Set up authenticated session FIRST (via addInitScript)
+    await setupAuthenticatedSession(page);
+
     // Set up API route mock BEFORE any navigation
     await page.route('**/api/stripe/membership*', async route => {
       await route.fulfill({
@@ -189,12 +185,9 @@ test.describe("Authenticated Stripe UI States", () => {
       });
     });
 
-    // Navigate directly to settings page
+    // Navigate to settings page (addInitScript will run before hydration)
     await page.goto(`${BASE_URL}/settings`);
     await page.waitForLoadState("networkidle");
-
-    // Set up authenticated session AFTER page loads
-    await setupAuthenticatedSession(page);
 
     // Check for CANCELED badge (not THRALL - the canceled state shows CANCELED badge)
     const canceledBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /CANCELED/i });
@@ -208,6 +201,9 @@ test.describe("Authenticated Stripe UI States", () => {
   test("TC-STR-AUTH-04: Post-checkout redirect with session_id migration", async ({ page }) => {
     // Mock the session migration scenario
     const sessionId = "cs_test_migration123";
+
+    // Set up authenticated session FIRST (via addInitScript)
+    await setupAuthenticatedSession(page);
 
     // Mock the membership API to simulate migration
     let migrationAttempted = false;
@@ -246,11 +242,9 @@ test.describe("Authenticated Stripe UI States", () => {
     });
 
     // Navigate to settings with session_id param (simulating Stripe redirect)
+    // addInitScript will run before hydration
     await page.goto(`${BASE_URL}/settings?stripe=success&session_id=${sessionId}`);
     await page.waitForLoadState("networkidle");
-
-    // Set up authenticated session AFTER page loads
-    await setupAuthenticatedSession(page);
 
     // Check that Karl state is shown after migration
     const karlBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /KARL/i });
