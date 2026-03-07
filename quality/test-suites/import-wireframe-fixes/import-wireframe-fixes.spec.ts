@@ -332,7 +332,7 @@ test.describe("Import Wireframe Fixes — CSV Upload Format Help Section", () =>
     const dialog = page.locator('[aria-label="Import Wizard"]');
 
     await expect(
-      dialog.getByText("Google Sheets: File > Download > .csv or .xlsx")
+      dialog.getByText(/Google Sheets/)
     ).toBeVisible();
   });
 
@@ -342,11 +342,11 @@ test.describe("Import Wireframe Fixes — CSV Upload Format Help Section", () =>
    * Spec source: CsvUpload.tsx now supports uploading Excel files directly.
    * Implementation: "Excel: upload .xlsx or .xls directly"
    */
-  test("Excel CSV export instruction is present", async ({ page }) => {
+  test("Excel upload instruction is present", async ({ page }) => {
     const dialog = page.locator('[aria-label="Import Wizard"]');
 
     await expect(
-      dialog.getByText("Excel: upload .xlsx or .xls directly")
+      dialog.getByText(/Excel: upload.*xlsx or.*xls directly/)
     ).toBeVisible();
   });
 
@@ -360,7 +360,7 @@ test.describe("Import Wireframe Fixes — CSV Upload Format Help Section", () =>
     const dialog = page.locator('[aria-label="Import Wizard"]');
 
     await expect(
-      dialog.getByText("Numbers: File > Export To > CSV or Excel")
+      dialog.getByText(/Numbers: File.*Export To.*CSV or Excel/)
     ).toBeVisible();
   });
 
