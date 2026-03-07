@@ -53,32 +53,23 @@ SERVER_URL=http://localhost:9653 npx playwright test ../../quality/test-suites/s
 
 ## Quality Reports & Verdicts
 
-- [quality-report.md](quality-report.md) — Current quality report: 607 tests, all PASS, Stripe Direct live, Patreon removed, font sizes scaled up. Recommendation: SHIP
+- [quality-report.md](quality-report.md) — Current quality snapshot: 607 tests, all PASS, Stripe Direct live, Patreon fully removed, font sizes optimized. Last update: 2026-03-05 post-PR #170.
 
-### Historical Verdicts (by PR / Story)
+### Shipped Feature Verdicts (Story & PR Archive)
 
-| PR / Story | Verdict | Result |
-|------------|---------|--------|
-| PR #183 — font size readability (#149) | [font-size-readability.spec.ts](test-suites/font-size-readability/font-size-readability.spec.ts) | PASS |
-| PR #184 — button hover/click/loading feedback | [button-feedback.spec.ts](test-suites/button-feedback/button-feedback.spec.ts) | PASS |
-| PR #137 — settings-soft-gate | [settings-soft-gate.spec.ts](test-suites/settings-soft-gate/settings-soft-gate.spec.ts) | PASS |
-| PR #138 — auth + card-crud | [sign-in.spec.ts](test-suites/auth/sign-in.spec.ts), [auth-callback.spec.ts](test-suites/auth/auth-callback.spec.ts), [edit-card.spec.ts](test-suites/card-crud/edit-card.spec.ts) | PASS |
-| PR #136 — import wireframe fixes | [import-workflow-v2-verdict.md](import-workflow-v2-verdict.md) | PASS |
-| PR #128 — Patreon removal | [patreon-removal.spec.ts](test-suites/patreon-removal/patreon-removal.spec.ts) | PASS |
-| PR #119+#120 — Stripe Direct | [stripe-direct.spec.ts](test-suites/stripe-direct/stripe-direct.spec.ts) | PASS |
-| PR #116 — theme foundation | [quality-report.md](quality-report.md) (historical round 2) | FAIL (infra defect, not code) |
-| PR #113 — feature flags | [feature-flags.spec.ts](test-suites/feature-flags/feature-flags.spec.ts) | PASS |
-| PR #61 — import workflow v2 | [import-workflow-v2-verdict.md](import-workflow-v2-verdict.md) | FAIL then PASS (3 defects fixed before merge) |
-| feat/llm-provider-factory | [llm-provider-factory-verdict.md](llm-provider-factory-verdict.md) | SHIP WITH KNOWN ISSUES |
-| Story 3.5 — Valhalla | [story-3.5-verdict.md](story-3.5-verdict.md) | PASS (after DEF-001 fix) |
-| Story 3.4 — HowlPanel | [story-3.4-howl-panel-verdict.md](story-3.4-howl-panel-verdict.md) | PASS |
-| Story 3.3 — Framer Motion | [story-3.3-verdict.md](story-3.3-verdict.md) | PASS |
-| Story 3.2 — Anon Auth | [story-3.2-anon-auth-verdict.md](story-3.2-anon-auth-verdict.md) | PASS |
-| Story 3.2 — Norse Copy | [story-3.2-norse-copy-verdict.md](story-3.2-norse-copy-verdict.md) | PASS |
-| Story 3.1 — OIDC Auth | [story-3.1-verdict.md](story-3.1-verdict.md) | PASS |
-| Story 3.1 — realm-utils | [story-3.1-realm-utils-verdict.md](story-3.1-realm-utils-verdict.md) | PASS |
-| PR #41 — Backend pipeline | [backend-pr41-verdict.md](backend-pr41-verdict.md) | PASS (historical — backend removed in PR #60) |
-| Sprint 2 — Easter Eggs | [EASTER-EGGS-AUDIT.md](EASTER-EGGS-AUDIT.md) | PASS |
+| Feature | Verdict Doc | Status | Notes |
+|---------|-------------|--------|-------|
+| Sprint 2 — Easter Eggs | [EASTER-EGGS-AUDIT.md](EASTER-EGGS-AUDIT.md) | PASS | 22 test cases, all eggs production-ready |
+| Story 3.5 — Valhalla | [story-3.5-verdict.md](story-3.5-verdict.md) | PASS | Landing page copy & empty state |
+| Story 3.5 — Alternate version | [story-3.5-valhalla-verdict.md](story-3.5-valhalla-verdict.md) | HOLD | Merge conflict note (historical) |
+| Story 3.4 — HowlPanel | [story-3.4-howl-panel-verdict.md](story-3.4-howl-panel-verdict.md) | PASS | Howl chat UI & interactions |
+| Story 3.3 — Framer Motion | [story-3.3-verdict.md](story-3.3-verdict.md) | PASS | Animation framework integration |
+| Story 3.2 — Anon Auth | [story-3.2-anon-auth-verdict.md](story-3.2-anon-auth-verdict.md) | PASS | Anonymous household ID localStorage |
+| Story 3.2 — Norse Copy | [story-3.2-norse-copy-verdict.md](story-3.2-norse-copy-verdict.md) | PASS | UI copy & Norse naming |
+| Story 3.1 — OIDC Auth | [story-3.1-verdict.md](story-3.1-verdict.md) | PASS | Google OIDC integration |
+| Story 3.1 — realm-utils | [story-3.1-realm-utils-verdict.md](story-3.1-realm-utils-verdict.md) | PASS | Realm label & utility layer |
+| PR #136 — Import wireframe fixes | [import-workflow-v2-verdict.md](import-workflow-v2-verdict.md) | PASS | Google Sheets import UX |
+| PR #61 — Import workflow v2 | [import-workflow-v2-verdict.md](import-workflow-v2-verdict.md) | PASS | 3-path CSV/URL/Picker import |
 
 ---
 
@@ -94,11 +85,11 @@ SERVER_URL=http://localhost:9653 npx playwright test ../../quality/test-suites/s
 
 ## Infrastructure Notes
 
-- Sprints 1–5 shipped. Patreon fully removed (PR #128). Stripe Direct is the sole subscription platform.
-- Backend server removed in PR #60 — import pipeline is fully serverless on Vercel (Next.js API routes).
-- `development/src` renamed to `development/frontend` in PR #44.
-- `quality/scripts/` directory referenced in older docs no longer exists — test automation lives in `quality/test-suites/`.
-- The `specs/` directory has been deleted (stale orchestration plans).
+- **Sprints 1–5 shipped.** Patreon fully removed (PR #128). Stripe Direct is the sole subscription platform.
+- **Serverless architecture:** Backend server removed in PR #60 — import pipeline is fully serverless on Vercel (Next.js API routes).
+- **Directory structure:** `development/src` renamed to `development/frontend` in PR #44.
+- **Test automation:** Test suites live in `quality/test-suites/` (27 spec files, 607+ tests).
+- **Removed:** `quality/scripts/` (stale), `specs/` directory (stale orchestration plans), `backend-pr41-verdict.md` (historical backend removed), `llm-provider-factory-verdict.md` (feature not shipped).
 
 ---
 
