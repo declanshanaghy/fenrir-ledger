@@ -263,8 +263,15 @@
       font-family: var(--font-mono);
       font-size: 16px;
       line-height: 1.6;
-      color: #4ade80;
+      color: var(--text-rune);
       white-space: pre;
+    }
+
+    .code-block code {
+      color: inherit;
+      background: none;
+      padding: 0;
+      font-size: inherit;
     }
 
     .code-label {
@@ -279,11 +286,11 @@
     .code-label.want { color: var(--teal-asgard); }
     .code-label.have { color: var(--fire-muspel); }
 
-    .code-block .comment { color: #6b7280; }
-    .code-block .cmd { color: #86efac; }
-    .code-block .flag { color: #4ade80; }
-    .code-block .string { color: #a7f3d0; }
-    .code-block .output { color: #34d399; }
+    .code-block .comment { color: var(--text-void); }
+    .code-block .cmd { color: var(--text-saga); }
+    .code-block .flag { color: var(--gold); }
+    .code-block .string { color: var(--ice-blue); }
+    .code-block .output { color: var(--teal-asgard); }
 
     /* Verdict line */
     .wolf-says {
