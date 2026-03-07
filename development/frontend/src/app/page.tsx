@@ -108,7 +108,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between mb-6 gap-3">
         {/* Voice 2: atmospheric page heading from copywriting.md navigation labels */}
         <h1 className="font-display text-2xl text-gold tracking-wide">
-          The Ledger of Fates
+          The Ledger of Fates - Overhauled
         </h1>
 
         <div className="flex items-center gap-2">
