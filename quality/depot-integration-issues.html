@@ -62,6 +62,19 @@
     a { color: var(--gold); text-decoration: none; }
     a:hover { color: var(--gold-bright); }
 
+    a.norse {
+      color: var(--text-void);
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 3px;
+      text-decoration-color: var(--gold-dim);
+      transition: color 200ms ease-out;
+    }
+    a.norse:hover {
+      color: var(--gold);
+      text-decoration-color: var(--gold);
+    }
+
     .container {
       max-width: var(--max-width);
       margin: 0 auto;
@@ -426,7 +439,7 @@
         on Depot Claude sandboxes.
       </p>
       <hr class="rune-rule" />
-      <p class="hero-meta">FROM: Fenrir Ledger Engineering &nbsp;·&nbsp; TO: Depot Engineers &nbsp;·&nbsp; 2026-03-06</p>
+      <p class="hero-meta">FROM: <a class="norse" href="https://en.wikipedia.org/wiki/Fenrir" target="_blank">Fenrir</a> Ledger Engineering &nbsp;·&nbsp; TO: Depot Engineers &nbsp;·&nbsp; 2026-03-06</p>
     </div>
   </section>
 
@@ -434,12 +447,12 @@
   <section class="epigraph">
     <div class="container">
       <blockquote>
-        The wolf does not howl without cause.<br><br>
+        The <a class="norse" href="https://en.wikipedia.org/wiki/Fenrir" target="_blank">wolf</a> does not howl without cause.<br><br>
         We built an autonomous agent orchestration system on top of <a href="https://depot.dev/docs/claude" target="_blank" style="color:var(--ice-blue);text-decoration:underline;text-underline-offset:3px;"><code style="font-family:var(--font-mono);color:var(--ice-blue);">depot claude</code></a>.
         Multiple agents — engineers, testers, designers — each running in their own sandbox,
         each handing off to the next via git commits and GitHub issue comments.
         The architecture is sound. The wolf runs.<br><br>
-        But the chain that binds us is not the work itself — it is the tooling around it.
+        But the <a class="norse" href="https://en.wikipedia.org/wiki/Gleipnir" target="_blank">chain</a> that binds us is not the work itself — it is the tooling around it.
         We have fought these battles long enough to know the difference between friction
         that sharpens and friction that bleeds. This is the latter.<br><br>
         We are writing this because we <em>want</em> to stay. Depot's sandbox model is the
@@ -451,7 +464,7 @@
         options are as elegant as what Depot <em>could</em> be. That's what makes this
         worth writing.<br><br>
         What follows are the thorns we pulled from our paws. We offer them not as complaints,
-        but as prey laid at your door — problems worth hunting, before the wolf moves on.
+        but as prey laid at your door — problems worth <a class="norse" href="https://en.wikipedia.org/wiki/Wild_Hunt" target="_blank">hunting</a>, before the wolf moves on.
       </blockquote>
     </div>
   </section>
@@ -504,7 +517,7 @@
 <span class="cmd">cat</span> <span class="string">"$JSONL_FILE"</span> | <span class="cmd">jq</span> -r <span class="string">'...'</span> <span class="comment"># 40 more lines of jq incantations</span></pre>
         </div>
 
-        <p class="wolf-says">The wolf should not need to dig through filesystem internals to see what its pack did.</p>
+        <p class="wolf-says">The wolf should not need to dig through filesystem internals to see what its <a class="norse" href="https://en.wikipedia.org/wiki/Fenrir#Binding" target="_blank">pack</a> did.</p>
       </article>
 
       <!-- ── 2. Pager ─────────────────────────── -->
@@ -539,7 +552,7 @@
   | <span class="cmd">jq</span> <span class="string">'.[0].id'</span></pre>
         </div>
 
-        <p class="wolf-says">The wolf does not wait for permission to read its own kill log.</p>
+        <p class="wolf-says">The wolf does not wait for permission to read its own <a class="norse" href="https://en.wikipedia.org/wiki/Runes" target="_blank">rune</a> log.</p>
       </article>
 
       <!-- ── 3. One-Shot Sessions ─────────────── -->
@@ -584,7 +597,7 @@
 <span class="cmd">done</span></pre>
         </div>
 
-        <p class="wolf-says">The wolf needs to watch all its pups at once, not sit beside each one until it sleeps.</p>
+        <p class="wolf-says">The wolf needs to watch all its <a class="norse" href="https://en.wikipedia.org/wiki/Fenrir#Offspring" target="_blank">pups</a> at once, not sit beside each one until it sleeps.</p>
       </article>
 
       <!-- ── 4. No Backchannel ────────────────── -->
@@ -630,7 +643,7 @@
   <span class="flag">-p</span> <span class="string">"..."</span></pre>
         </div>
 
-        <p class="wolf-says">The wolf pack hunts in parallel. When one brings down its quarry, the others must know — without stopping to look over their shoulders.</p>
+        <p class="wolf-says">The <a class="norse" href="https://en.wikipedia.org/wiki/Fenrir" target="_blank">wolf pack</a> hunts in parallel. When one brings down its <a class="norse" href="https://en.wikipedia.org/wiki/Ragnar%C3%B6k" target="_blank">quarry</a>, the others must know — without stopping to look over their shoulders.</p>
       </article>
 
     </div>
@@ -639,7 +652,7 @@
   <!-- ── Summary Table ─────────────────────────── -->
   <section class="summary-section">
     <div class="container">
-      <h2>THE HUNT LIST</h2>
+      <h2>THE <a class="norse" href="https://en.wikipedia.org/wiki/Wild_Hunt" target="_blank" style="color:inherit;">HUNT</a> LIST</h2>
       <hr class="rune-rule" />
       <table class="summary-table">
         <thead>
@@ -712,16 +725,16 @@ With <span class="flag">session-status</span> or <span class="flag">webhooks</sp
         These are the refinements that would let us — and every team building agent
         orchestration on Depot — run at full stride.<br><br>
         Without them, we build the scaffolding ourselves, and at some point the
-        scaffolding outweighs the platform. That's when the wolf slips its chain
+        scaffolding outweighs the platform. That's when the wolf slips its <a class="norse" href="https://en.wikipedia.org/wiki/Gleipnir" target="_blank">chain</a>
         and finds open ground.
       </blockquote>
       <hr class="rune-rule" />
       <blockquote style="font-size:18px; margin-top:24px;">
         The wolf is patient. But the wolf is also hungry.<br>
-        And a hungry wolf does not stay leashed for long.
+        And a hungry wolf does not stay <a class="norse" href="https://en.wikipedia.org/wiki/Gleipnir" target="_blank">leashed</a> for long.
       </blockquote>
-      <cite>— Fenrir Ledger Engineering</cite>
-      <div class="footer-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
+      <cite>— <a class="norse" href="https://en.wikipedia.org/wiki/Fenrir" target="_blank">Fenrir</a> Ledger Engineering</cite>
+      <div class="footer-runes" aria-hidden="true"><a class="norse" href="https://en.wikipedia.org/wiki/Elder_Futhark" target="_blank">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</a></div>
     </div>
   </section>
 
