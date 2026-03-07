@@ -53,6 +53,50 @@ When `--local` is passed, use local worktrees instead of Depot for all agent spa
 
 ---
 
+## Project Board Transitions
+
+The orchestrator is responsible for moving issues through the GitHub Project board
+columns as the chain progresses. Agents do NOT touch the board — only the orchestrator.
+
+### Board Constants
+
+| Constant | Value |
+|----------|-------|
+| Project Number | `1` |
+| Project Node ID | `PVT_kwHOAAW5PM4BQ7LP` |
+| Status Field ID | `PVTSSF_lAHOAAW5PM4BQ7LPzg-54RA` |
+| Todo | `f75ad846` |
+| Up Next | `803797f4` |
+| In Progress | `47fc9ee4` |
+| Done | `98236657` |
+
+### How to Move an Issue
+
+1. **Get the project item ID** for the issue:
+   ```bash
+   gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
+     | jq -r '.items[] | select(.content.number == <NUMBER>) | .id'
+   ```
+
+2. **Update the status**:
+   ```bash
+   gh project item-edit \
+     --project-id "PVT_kwHOAAW5PM4BQ7LP" \
+     --id "<ITEM_ID>" \
+     --field-id "PVTSSF_lAHOAAW5PM4BQ7LPzg-54RA" \
+     --single-select-option-id "<STATUS_OPTION_ID>"
+   ```
+
+### Transition Points
+
+| When | From | To | Who triggers |
+|------|------|----|-------------|
+| Step 6 — Agent dispatched | Up Next | **In Progress** | Orchestrator (after spawning) |
+| Chain complete — Loki PASS + merged | In Progress | **Done** | Orchestrator (on `--resume` or auto-merge) |
+| Chain blocked — Loki FAIL or blocker | *(stays)* | In Progress | *(no move — needs attention)* |
+
+---
+
 ## Execution Modes: Remote (Default) vs Local
 
 ### Remote Mode (Default) — Depot Sandboxes
@@ -107,6 +151,7 @@ depot claude \
   --session-id "issue-<NUMBER>-step<N>-<agent>-<UUID8>" \
   --repository "https://github.com/declanshanaghy/fenrir-ledger" \
   --branch "main" \
+  --model "<MODEL — see Agent Model Mapping in Step 6>" \
   --dangerously-skip-permissions \
   -p "<AGENT PROMPT>"
 ```
@@ -236,7 +281,7 @@ For each open PR, check:
 
 | Category | Condition | Action |
 |----------|-----------|--------|
-| **PASS but unmerged** | Loki PASS verdict exists, PR still open | Attempt auto-merge: check CI, `needs-review` label, mergeability. Merge if clear. |
+| **PASS but unmerged** | Loki PASS verdict exists, PR still open | Attempt auto-merge: check CI, `needs-review` label, mergeability. Merge if clear. Move to **Done** on board. |
 | **No verdict** | PR open, no Loki verdict comment, stale >24h | Resume the chain: run `/fire-next-up --resume #N` for the linked issue. |
 | **FAIL verdict** | Loki FAIL verdict, no subsequent fix commits | Report to user: `PR #N failed QA and is stale. Needs attention.` |
 | **No linked issue** | PR has no `Fixes #N` or `Ref #N` in body | Report to user: `PR #N has no linked issue. Review manually.` |
@@ -397,6 +442,19 @@ non-existent remote branch.
 
 ## Step 6 — Spawn Step 1 Agent
 
+### Agent Model Mapping
+
+Each agent has a designated model. When spawning via Depot, pass `--model` to match
+the agent's local configuration:
+
+| Agent | Model | `--model` flag |
+|-------|-------|----------------|
+| Luna | Opus | `--model opus` |
+| FiremanDecko | Opus | `--model opus` |
+| Freya | Opus | `--model opus` |
+| Loki | Sonnet | `--model sonnet` |
+| Heimdall | Sonnet | `--model sonnet` |
+
 ### Remote Mode (Default — Depot)
 
 Launch the first agent in the chain as a **Depot remote session** (fire-and-forget):
@@ -407,12 +465,24 @@ depot claude \
   --session-id "issue-<NUMBER>-step1-<agent-name>-<UUID8>" \
   --repository "https://github.com/declanshanaghy/fenrir-ledger" \
   --branch "main" \
+  --model "<MODEL FROM TABLE ABOVE>" \
   --dangerously-skip-permissions \
   -p "<AGENT PROMPT FROM TEMPLATES BELOW>"
 ```
 
 **Always use `--branch main`** — the sandbox clones main and the agent creates its own
 feature branch. Passing a non-existent branch causes Depot to fail on checkout.
+
+**After spawning, move the issue to "In Progress"** on the project board:
+```bash
+ITEM_ID=$(gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
+  | jq -r '.items[] | select(.content.number == <NUMBER>) | .id')
+gh project item-edit \
+  --project-id "PVT_kwHOAAW5PM4BQ7LP" \
+  --id "$ITEM_ID" \
+  --field-id "PVTSSF_lAHOAAW5PM4BQ7LPzg-54RA" \
+  --single-select-option-id "47fc9ee4"
+```
 
 **Do NOT poll, wait, or block after spawning.** Report the dispatch summary (Step 8)
 and stop. The user will continue the chain with `/fire-next-up --resume #N` when ready.
@@ -1032,10 +1102,36 @@ When a chain is interrupted (session ended, agent failed, context lost), use `--
 
    | Condition | Action |
    |-----------|--------|
-   | CI green + verdict PASS + merged | Chain is complete. Tell the user. |
-   | CI green + verdict PASS + not merged | Attempt auto-merge (check `needs-review` label first). |
+   | CI green + verdict PASS + merged | Chain is complete. Move to **Done**. Tell the user. |
+   | CI green + verdict PASS + not merged | **Orchestrator merges** (see Orchestrator Merge below). Then move to **Done**. |
    | **CI failing + verdict PASS or FAIL** | **Bounce back to Loki** with the CI failure details. See **CI Failure Bounce-Back** below. |
    | Verdict FAIL (regardless of CI) | Chain is blocked. Report to user: needs manual intervention or re-dispatch. |
+
+   **Orchestrator Merge:**
+
+   When Loki's verdict is PASS and CI is green, the **orchestrator** (not Loki) is
+   responsible for merging. This handles the case where Loki's auto-merge failed or
+   the Depot session ended before CI completed.
+
+   ```bash
+   # 1. Check for needs-review label (Odin's veto)
+   gh issue view <NUMBER> --json labels --jq '[.labels[].name] | any(. == "needs-review")'
+   # 2. Check mergeable
+   gh pr view <PR_NUMBER> --json mergeable --jq '.mergeable'
+   # 3. If both clear, merge
+   gh pr merge <PR_NUMBER> --squash --delete-branch
+   ```
+
+   After a successful merge, move the issue to **Done** on the project board:
+   ```bash
+   ITEM_ID=$(gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
+     | jq -r '.items[] | select(.content.number == <NUMBER>) | .id')
+   gh project item-edit \
+     --project-id "PVT_kwHOAAW5PM4BQ7LP" \
+     --id "$ITEM_ID" \
+     --field-id "PVTSSF_lAHOAAW5PM4BQ7LPzg-54RA" \
+     --single-select-option-id "98236657"
+   ```
 
    **CI Failure Bounce-Back:**
 
