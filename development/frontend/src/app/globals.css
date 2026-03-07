@@ -386,6 +386,15 @@
 .ring--urgent {
   animation: muspel-pulse 1.8s ease-in-out infinite;
 }
+/* Suppress muspel-pulse animation (including drop-shadow) for reduced-motion users. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-muspel-pulse,
+  .ring--urgent {
+    animation: none;
+    filter: none;
+    opacity: 1;
+  }
+}
 
 /* Reduced motion: disable pulsing drop-shadow for accessibility */
 @media (prefers-reduced-motion: reduce) {
