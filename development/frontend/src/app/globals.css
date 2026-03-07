@@ -387,6 +387,16 @@
   animation: muspel-pulse 1.8s ease-in-out infinite;
 }
 
+/* Reduced motion: disable pulsing drop-shadow for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .animate-muspel-pulse,
+  .ring--urgent {
+    animation: none;
+    opacity: 1;
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+}
+
 /* ── Konami Howl — Easter Egg #2 ─────────────────────────────────────────
  *
  * wolf-rise: wolf silhouette slides up from below the viewport.
@@ -577,6 +587,7 @@ body.konami-shake-mobile {
  *   AnimatedCardGrid — respects useReducedMotion() via Framer Motion
  *   card-chain hover transition — see card-chain section
  *   .saga-reveal — see Saga Reveal section
+ *   .animate-muspel-pulse / .ring--urgent — see Muspel Pulse section (G4.2)
  * ─────────────────────────────────────────────────────────── */
 
 /* ── Milestone Toast Overrides ────────────────────────────── */
