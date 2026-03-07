@@ -137,7 +137,7 @@ export function IssuerLogo({ issuerId, className }: IssuerLogoProps) {
   if (!issuerMeta) {
     // Unknown issuer — fall back to text name
     return (
-      <span className={className} title={issuerName}>
+      <span className={className} title={issuerName} data-testid="issuer-logo">
         {issuerName}
       </span>
     );
@@ -148,14 +148,14 @@ export function IssuerLogo({ issuerId, className }: IssuerLogoProps) {
   if (!logo) {
     // Fallback for any issuer without a logo definition
     return (
-      <span className={className} title={issuerName}>
+      <span className={className} title={issuerName} data-testid="issuer-logo">
         {issuerName}
       </span>
     );
   }
 
   return (
-    <span className={className} title={issuerName} style={{ display: "inline-block", verticalAlign: "middle" }}>
+    <span className={className} title={issuerName} style={{ display: "inline-block", verticalAlign: "middle" }} data-testid="issuer-logo">
       {logo}
     </span>
   );
