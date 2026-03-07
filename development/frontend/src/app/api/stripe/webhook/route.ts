@@ -39,6 +39,7 @@ const HANDLED_EVENTS = new Set<string>([
   "checkout.session.completed",
   "customer.subscription.updated",
   "customer.subscription.deleted",
+  "billing_portal.session.created",
 ]);
 
 /**
@@ -327,6 +328,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
         return await handleSubscriptionDeleted(subscription);
+      }
+      case "billing_portal.session.created": {
+        // No-op acknowledgment — portal sessions are informational only
+        log.debug("billing_portal.session.created received — no action needed");
+        log.debug("POST /api/stripe/webhook returning", {
+          status: 200,
+          eventType: "billing_portal.session.created",
+          reason: "portal session acknowledged (no-op)",
+        });
+        return NextResponse.json({
+          status: "acknowledged",
+          eventType: "billing_portal.session.created",
+          reason: "portal session acknowledged (no-op)",
+        });
       }
       default: {
         log.debug("POST /api/stripe/webhook returning", { status: 200, reason: "unexpected event" });
