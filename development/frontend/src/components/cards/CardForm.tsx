@@ -85,7 +85,7 @@ const cardFormSchema = z
     bonusSpendRequirement: z.string().optional().default(""),
     bonusDeadline: z.string().optional().default(""),
     bonusMet: z.boolean().default(false),
-    status: z.enum(["active", "fee_approaching", "promo_expiring", "closed"]).optional(),
+    status: z.enum(["active", "fee_approaching", "promo_expiring", "closed", "bonus_open", "overdue"]).optional(),
     notes: z.string().optional().default(""),
   });
 

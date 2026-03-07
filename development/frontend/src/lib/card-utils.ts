@@ -102,11 +102,13 @@ export function daysUntil(isoDate: string, today?: Date): number {
 /**
  * Computes the display status for a card based on its dates.
  *
- * Status priority:
+ * Status priority (highest to lowest):
  * 1. "closed" — if explicitly set
- * 2. "fee_approaching" — annual fee within FEE_APPROACHING_DAYS days
- * 3. "promo_expiring" — sign-up bonus deadline within PROMO_EXPIRING_DAYS days
- * 4. "active" — otherwise
+ * 2. "overdue" — annual fee date is in the past
+ * 3. "fee_approaching" — annual fee within FEE_APPROACHING_DAYS days
+ * 4. "promo_expiring" — sign-up bonus deadline within PROMO_EXPIRING_DAYS days
+ * 5. "bonus_open" — in bonus window, not yet met
+ * 6. "active" — otherwise
  *
  * @param card - The card to evaluate
  * @param today - Reference date for calculation (defaults to current date)
@@ -115,6 +117,14 @@ export function daysUntil(isoDate: string, today?: Date): number {
 export function computeCardStatus(card: Card, today?: Date): CardStatus {
   if (card.status === "closed") {
     return "closed";
+  }
+
+  // Check overdue - annual fee was due but not addressed
+  if (card.annualFeeDate && card.annualFee > 0) {
+    const daysToFee = daysUntil(card.annualFeeDate, today);
+    if (daysToFee < 0) {
+      return "overdue";
+    }
   }
 
   // Check annual fee approaching
@@ -130,6 +140,14 @@ export function computeCardStatus(card: Card, today?: Date): CardStatus {
     const daysToDeadline = daysUntil(card.signUpBonus.deadline, today);
     if (daysToDeadline >= 0 && daysToDeadline <= PROMO_EXPIRING_DAYS) {
       return "promo_expiring";
+    }
+  }
+
+  // Check bonus_open - card in signup bonus earning window
+  if (card.signUpBonus && !card.signUpBonus.met && card.signUpBonus.deadline) {
+    const daysToDeadline = daysUntil(card.signUpBonus.deadline, today);
+    if (daysToDeadline > 0) {
+      return "bonus_open";
     }
   }
 

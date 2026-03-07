@@ -48,15 +48,15 @@ interface UrgentCardRow {
 
 /**
  * Computes UrgentCardRow entries for a list of cards that have status
- * "fee_approaching" or "promo_expiring". Sorted ascending by daysRemaining
+ * "fee_approaching", "promo_expiring", or "overdue". Sorted ascending by daysRemaining
  * (fewest days first = most urgent at top).
  *
- * For fee_approaching: uses annualFeeDate.
+ * For fee_approaching/overdue: uses annualFeeDate.
  * For promo_expiring: uses signUpBonus.deadline.
  */
 function toUrgentRows(cards: Card[]): UrgentCardRow[] {
   const rows: UrgentCardRow[] = cards.map((card) => {
-    const isFee = card.status === "fee_approaching";
+    const isFee = card.status === "fee_approaching" || card.status === "overdue";
     const deadlineDate = isFee
       ? card.annualFeeDate
       : (card.signUpBonus?.deadline ?? "");
@@ -293,7 +293,7 @@ export function HowlPanel({ cards, className }: HowlPanelProps) {
   const { ragnarokActive } = useRagnarok();
   const urgentRows = toUrgentRows(
     cards.filter(
-      (c) => c.status === "fee_approaching" || c.status === "promo_expiring"
+      (c) => c.status === "fee_approaching" || c.status === "promo_expiring" || c.status === "overdue"
     )
   );
 
@@ -375,7 +375,7 @@ export function AnimatedHowlPanel({
   className,
 }: AnimatedHowlPanelProps) {
   const urgentCount = cards.filter(
-    (c) => c.status === "fee_approaching" || c.status === "promo_expiring"
+    (c) => c.status === "fee_approaching" || c.status === "promo_expiring" || c.status === "overdue"
   ).length;
   const hasUrgent = urgentCount > 0;
 

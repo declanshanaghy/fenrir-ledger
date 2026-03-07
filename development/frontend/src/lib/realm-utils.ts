@@ -81,6 +81,20 @@ export function getRealmLabel(
         rune: "ᛏ",
         colorClass: "text-realm-hel",
       };
+    case "bonus_open":
+      return {
+        label: "Alfheim",
+        sublabel: "Light elves guide — bonus window open",
+        rune: "ᛅ",
+        colorClass: "text-realm-alfheim",
+      };
+    case "overdue":
+      return {
+        label: "Niflheim",
+        sublabel: "Ice realm — fee past due",
+        rune: "ᚾ",
+        colorClass: "text-realm-niflheim",
+      };
   }
 }
 
@@ -106,5 +120,9 @@ export function getRealmDescription(status: CardStatus): string {
       return "Hati approaches — promo deadline in N days";
     case "closed":
       return "In Valhalla — rewards harvested";
+    case "bonus_open":
+      return "Alfheim — bonus window open, earning rewards";
+    case "overdue":
+      return "Niflheim — annual fee past due";
   }
 }

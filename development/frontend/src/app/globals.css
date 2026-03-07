@@ -104,6 +104,8 @@
     --realm-asgard:         163 83% 29%;   /* #0a8c6e */
     --realm-stone:          215 6%  50%;   /* #797e87 — cool stone grey */
     --realm-ragnarok-dark:  10  60% 48%;   /* #c94020 — ragnarok accent */
+    --realm-alfheim:        173 75% 40%;   /* #1a99a5 — teal for opportunity */
+    --realm-niflheim:       0   75% 38%;   /* #aa1919 — deep red for overdue */
   }
 
 }
@@ -199,6 +201,8 @@
   --realm-asgard:         163 83% 29%;   /* #0a8c6e */
   --realm-stone:          37  6%  50%;   /* #8a8578 */
   --realm-ragnarok-dark:  10  60% 48%;   /* #c94020 — ragnarok accent */
+  --realm-alfheim:        173 75% 40%;   /* #1a99a5 — teal for opportunity */
+  --realm-niflheim:       0   75% 38%;   /* #aa1919 — deep red for overdue */
 }
 
 @layer base {

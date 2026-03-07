@@ -49,12 +49,20 @@ const COLOR_ASGARD = "hsl(var(--realm-asgard))";
 /** Stone: closed / inactive */
 const COLOR_STONE = "hsl(var(--realm-stone))";
 
+/** Alfheim: bonus open -- teal */
+const COLOR_ALFHEIM = "hsl(var(--realm-alfheim))";
+
+/** Niflheim: overdue -- deep red */
+const COLOR_NIFLHEIM = "hsl(var(--realm-niflheim))";
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 /**
  * Returns the stroke color for the ring based on card status and days remaining.
  *
  * For closed cards the ring uses stone gray regardless of days remaining.
+ * For bonus_open cards the ring uses Alfheim teal.
+ * For overdue cards the ring uses Niflheim deep red.
  * For all other statuses the color follows the realm thresholds from
  * ux/interactions.md.
  *
@@ -64,6 +72,8 @@ const COLOR_STONE = "hsl(var(--realm-stone))";
  */
 function getRingColor(status: CardStatus, daysRemaining: number): string {
   if (status === "closed") return COLOR_STONE;
+  if (status === "bonus_open") return COLOR_ALFHEIM;
+  if (status === "overdue") return COLOR_NIFLHEIM;
   if (daysRemaining <= 0) return COLOR_RAGNAROK;
   if (daysRemaining <= 30) return COLOR_MUSPEL;
   if (daysRemaining <= 60) return COLOR_HATI;
