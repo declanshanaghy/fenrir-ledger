@@ -64,6 +64,7 @@ function CompactBanner() {
   return (
     <div
       role="note"
+      aria-label="Data safety reminder"
       className="rounded-sm border border-border bg-card px-3 py-2"
     >
       <div className="flex items-center gap-1">
