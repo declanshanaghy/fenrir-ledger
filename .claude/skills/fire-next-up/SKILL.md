@@ -194,11 +194,11 @@ Max 50 characters. The orchestrator does NOT create the branch — the agent doe
 
 | Agent | `--model` flag |
 |-------|----------------|
-| Luna | `--model opus` |
-| FiremanDecko | `--model opus` |
-| Freya | `--model opus` |
-| Loki | `--model sonnet` |
-| Heimdall | `--model sonnet` |
+| Luna | `--model sonnet` |
+| FiremanDecko | `--model sonnet` |
+| Freya | `--model sonnet` |
+| Loki | `--model haiku` |
+| Heimdall | `--model haiku` |
 
 ### Agent Prompt Templates (read on demand)
 
