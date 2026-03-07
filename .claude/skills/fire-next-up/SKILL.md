@@ -192,6 +192,18 @@ Max 50 characters. The orchestrator does NOT create the branch — the agent doe
 
 ### Agent Model Mapping
 
+#### Remote (Depot) — use full model IDs (aliases may resolve to deprecated versions)
+
+| Agent | `--model` flag |
+|-------|----------------|
+| Luna | `--model claude-sonnet-4-6` |
+| FiremanDecko | `--model claude-sonnet-4-6` |
+| Freya | `--model claude-sonnet-4-6` |
+| Loki | `--model claude-haiku-4-5-20251001` |
+| Heimdall | `--model claude-haiku-4-5-20251001` |
+
+#### Local (`--local`) — aliases are fine
+
 | Agent | `--model` flag |
 |-------|----------------|
 | Luna | `--model sonnet` |
