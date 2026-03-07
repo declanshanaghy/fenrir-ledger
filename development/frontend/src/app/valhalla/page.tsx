@@ -84,15 +84,17 @@ type SortKey =
   | "alpha_asc"
   | "alpha_desc"
   | "rewards_desc"
-  | "fee_avoided_desc";
+  | "fee_avoided_desc"
+  | "net_gain_desc";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: "closed_date_desc", label: "Sort: Closed date (newest)" },
   { value: "closed_date_asc", label: "Sort: Closed date (oldest)" },
   { value: "alpha_asc", label: "Sort: A → Z" },
   { value: "alpha_desc", label: "Sort: Z → A" },
-  { value: "rewards_desc", label: "Sort: Rewards earned (highest)" },
   { value: "fee_avoided_desc", label: "Sort: Fee avoided (highest)" },
+  { value: "rewards_desc", label: "Sort: Rewards earned (highest)" },
+  { value: "net_gain_desc", label: "Sort: Net gain (highest)" },
 ];
 
 /**
@@ -104,6 +106,15 @@ function getRewardsCents(card: Card): number {
   if (!card.signUpBonus || !card.signUpBonus.met) return 0;
   if (card.signUpBonus.type !== "cashback") return 0;
   return card.signUpBonus.amount;
+}
+
+/**
+ * Returns net gain in cents: annual fee avoided + cashback rewards earned.
+ * Points/miles have no comparable monetary value and are excluded.
+ * Cards with no fee and no cashback bonus return 0.
+ */
+function getNetGainCents(card: Card): number {
+  return card.annualFee + getRewardsCents(card);
 }
 
 function sortCards(cards: Card[], sort: SortKey): Card[] {
@@ -129,6 +140,8 @@ function sortCards(cards: Card[], sort: SortKey): Card[] {
       return copy.sort((a, b) => getRewardsCents(b) - getRewardsCents(a));
     case "fee_avoided_desc":
       return copy.sort((a, b) => b.annualFee - a.annualFee);
+    case "net_gain_desc":
+      return copy.sort((a, b) => getNetGainCents(b) - getNetGainCents(a));
   }
 }
 
