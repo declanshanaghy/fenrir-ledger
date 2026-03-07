@@ -386,6 +386,17 @@
 .ring--urgent {
   animation: muspel-pulse 1.8s ease-in-out infinite;
 }
+/* Suppress muspel-pulse animation for reduced-motion users.
+ * Keeps a static base drop-shadow so the urgent indicator remains visible
+ * without any motion. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-muspel-pulse,
+  .ring--urgent {
+    animation: none;
+    opacity: 1;
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+}
 
 /* ── Konami Howl — Easter Egg #2 ─────────────────────────────────────────
  *
@@ -577,6 +588,7 @@ body.konami-shake-mobile {
  *   AnimatedCardGrid — respects useReducedMotion() via Framer Motion
  *   card-chain hover transition — see card-chain section
  *   .saga-reveal — see Saga Reveal section
+ *   .animate-muspel-pulse / .ring--urgent — see Muspel Pulse section (G4.2)
  * ─────────────────────────────────────────────────────────── */
 
 /* ── Milestone Toast Overrides ────────────────────────────── */
