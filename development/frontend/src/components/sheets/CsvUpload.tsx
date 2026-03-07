@@ -373,13 +373,12 @@ export function CsvUpload({ onSubmit, onSubmitFile, onBack }: CsvUploadProps) {
       {/* Format help */}
       <div className="text-sm font-body text-muted-foreground">
         <p className="font-heading text-foreground text-sm mb-1.5 tracking-wide">
-          Supported formats
+          How to export CSV
         </p>
         <ul className="space-y-1 list-disc list-inside">
-          <li>Excel: upload .xlsx or .xls directly</li>
-          <li>Google Sheets: File &gt; Download &gt; .csv or .xlsx</li>
-          <li>Numbers: File &gt; Export To &gt; CSV or Excel</li>
-          <li>Any tab-separated (.tsv) or comma-separated (.csv) file</li>
+          <li>Google Sheets: File &gt; Download &gt; Comma-separated values (.csv)</li>
+          <li>Excel: File &gt; Save As &gt; CSV UTF-8</li>
+          <li>Numbers: File &gt; Export To &gt; CSV</li>
         </ul>
       </div>
 
