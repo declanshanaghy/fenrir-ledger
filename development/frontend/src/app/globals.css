@@ -387,6 +387,15 @@
   animation: muspel-pulse 1.8s ease-in-out infinite;
 }
 
+/* Suppress muspel-pulse for reduced-motion users.
+ * Drop-shadow and opacity pulse are both decorative — disable entirely. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-muspel-pulse,
+  .ring--urgent {
+    animation: none;
+  }
+}
+
 /* ── Konami Howl — Easter Egg #2 ─────────────────────────────────────────
  *
  * wolf-rise: wolf silhouette slides up from below the viewport.
@@ -570,6 +579,7 @@ body.konami-shake-mobile {
  * rule inline. Listing them here for auditing purposes:
  *   .ragnarok-overlay { transition: none }   — see Ragnarok Threshold section
  *   .gleipnir-shimmer { animation: none }    — see Gleipnir Complete section
+ *   .animate-muspel-pulse, .ring--urgent { animation: none } — G4.2 muspel-pulse
  *   .skeleton shimmer is handled by .skeleton rule (no separate rm rule needed
  *     since loading states are short and functional, not decorative)
  *   Milestone toasts — Sonner manages their animation; no custom override needed
