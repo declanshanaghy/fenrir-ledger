@@ -25,6 +25,7 @@ env:
 
 jobs:
   deploy-preview:
+    if: vars.VERCEL_PREVIEW != 'false'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
