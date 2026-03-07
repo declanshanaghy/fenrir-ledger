@@ -29,6 +29,7 @@ import { AnimatedHowlPanel } from "@/components/layout/HowlPanel";
 import { ImportWizard } from "@/components/sheets/ImportWizard";
 import { AuthGate } from "@/components/shared/AuthGate";
 import { UpsellBanner } from "@/components/entitlement/UpsellBanner";
+import { SignInNudge } from "@/components/layout/SignInNudge";
 import { initializeHousehold, getCards, saveCard, migrateIfNeeded } from "@/lib/storage";
 import type { Card } from "@/lib/types";
 
@@ -112,6 +113,9 @@ export default function DashboardPage() {
     toast.success(`${count} card${count !== 1 ? "s" : ""} added to your ledger.`);
   }
 
+  // Whether we have at least one card (drives CTA visibility rules)
+  const hasCards = loaded && cards.length > 0;
+
   return (
     <div className="px-6 py-6">
       {/* Page header: title + actions */}
@@ -150,7 +154,7 @@ export default function DashboardPage() {
           )}
 
           {/* Import button — shown in toolbar only when cards exist and user is signed in */}
-          {loaded && cards.length > 0 && (
+          {hasCards && (
             <AuthGate>
               <button
                 type="button"
@@ -162,20 +166,30 @@ export default function DashboardPage() {
             </AuthGate>
           )}
 
-          <Link
-            href="/cards/new"
-            className="inline-flex items-center justify-center rounded-sm text-base font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-9 px-4 py-2"
-          >
-            Add Card
-          </Link>
+          {/* Add Card button in header — hidden when zero cards.
+              When empty, the single CTA lives in the EmptyState component. */}
+          {hasCards && (
+            <Link
+              href="/cards/new"
+              className="inline-flex items-center justify-center rounded-sm text-base font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-9 px-4 py-2"
+            >
+              Add Card
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* Upsell banner -- shown to Thrall users above the card grid.
+      {/* Karl upsell banner — hidden when zero cards to reduce noise on first visit.
           The UpsellBanner self-hides for Karl/dismissed users. */}
-      <div className="mb-4">
-        <UpsellBanner />
-      </div>
+      {hasCards && (
+        <div className="mb-4">
+          <UpsellBanner />
+        </div>
+      )}
+
+      {/* Sign-in nudge — subtle muted text when zero cards; full banner when has cards.
+          Hidden entirely for authenticated users. */}
+      <SignInNudge hasCards={hasCards} />
 
       {/* Main content row: card grid + HowlPanel side-by-side on desktop */}
       <div className="flex gap-6 items-start">
