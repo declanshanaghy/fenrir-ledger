@@ -4,7 +4,7 @@
  * MethodSelection -- choose an import method (URL, picker, or CSV upload).
  *
  * Three cards laid out as a grid:
- *  - Path A: "Share a Scroll" (URL entry)
+ *  - Path A: "Share a Rune Tablet" (URL entry)
  *  - Path B: "Browse the Archives" (Google Picker, disabled / coming soon)
  *  - Path C: "Deliver a Rune-Stone" (CSV upload)
  *
@@ -116,7 +116,7 @@ function buildMethods(isAuthenticated: boolean, pickerApiKey: string | null): Me
   return [
     {
       id: "url",
-      title: "Share a Scroll",
+      title: "Share a Rune Tablet",
       subtitle: "Google Sheets URL",
       description: "Paste a link to a publicly shared spreadsheet.",
       icon: <LinkIcon />,

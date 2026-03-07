@@ -76,7 +76,7 @@ test.describe("Import Wireframe Fixes — Compact Safety Banner Details Toggle",
     await setupAuthenticatedWithCards(page);
     await openImportWizard(page);
     // Navigate to URL entry where compact banner is rendered
-    await page.getByText("Share a Scroll").click();
+    await page.getByText("Share a Rune Tablet").click();
   });
 
   test.afterEach(async ({ page }) => {
@@ -442,7 +442,7 @@ test.describe("Import Wireframe Fixes — Begin Import Button Text", () => {
   test("URL entry submit button text is Begin Import", async ({ page }) => {
     await setupAuthenticatedWithCards(page);
     await openImportWizard(page);
-    await page.getByText("Share a Scroll").click();
+    await page.getByText("Share a Rune Tablet").click();
 
     const dialog = page.locator('[aria-label="Import Wizard"]');
 
@@ -467,7 +467,7 @@ test.describe("Import Wireframe Fixes — Begin Import Button Text", () => {
   }) => {
     await setupAuthenticatedWithCards(page);
     await openImportWizard(page);
-    await page.getByText("Share a Scroll").click();
+    await page.getByText("Share a Rune Tablet").click();
 
     const dialog = page.locator('[aria-label="Import Wizard"]');
     const urlInput = dialog.locator("#sheets-url");

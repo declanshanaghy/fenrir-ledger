@@ -108,7 +108,7 @@ async function openImportWizard(page: any): Promise<void> {
   await importButton.click();
   // The dialog has aria-label="Import Wizard" on its DialogContent element.
   // NOTE: The dialog also has aria-labelledby pointing to the visible DialogTitle,
-  // so its computed accessible name changes per step (e.g. "Import Cards", "Share a Scroll").
+  // so its computed accessible name changes per step (e.g. "Import Cards", "Share a Rune Tablet").
   // We use the stable aria-label attribute as a locator rather than getByRole(name:).
   await expect(page.locator('[aria-label="Import Wizard"]')).toBeVisible();
 }
@@ -129,7 +129,7 @@ test.describe("Import Wizard — Method Selection", () => {
    * TC-IMP-001 — Three import methods are visible
    *
    * Spec source: MethodSelection.tsx — buildMethods() returns three cards:
-   *   - "Share a Scroll"      (url)
+   *   - "Share a Rune Tablet"      (url)
    *   - "Browse the Archives" (picker — disabled without pickerApiKey)
    *   - "Deliver a Rune-Stone" (csv)
    *
@@ -145,7 +145,7 @@ test.describe("Import Wizard — Method Selection", () => {
     await expect(listbox).toBeVisible();
 
     // Verify each method by its title heading
-    await expect(dialog.getByText("Share a Scroll")).toBeVisible();
+    await expect(dialog.getByText("Share a Rune Tablet")).toBeVisible();
     await expect(dialog.getByText("Browse the Archives")).toBeVisible();
     await expect(dialog.getByText("Deliver a Rune-Stone")).toBeVisible();
   });
@@ -186,12 +186,12 @@ test.describe("Import Wizard — Method Selection", () => {
 
 // ─── Suite: Path A — URL Entry ────────────────────────────────────────────────
 
-test.describe("Import Wizard — Path A: Share a Scroll (URL Entry)", () => {
+test.describe("Import Wizard — Path A: Share a Rune Tablet (URL Entry)", () => {
   test.beforeEach(async ({ page }) => {
     await setupAuthenticatedWithCards(page);
     await openImportWizard(page);
     // Navigate into the URL entry step
-    await page.getByText("Share a Scroll").click();
+    await page.getByText("Share a Rune Tablet").click();
   });
 
   test.afterEach(async ({ page }) => {
@@ -199,17 +199,17 @@ test.describe("Import Wizard — Path A: Share a Scroll (URL Entry)", () => {
   });
 
   /**
-   * TC-IMP-010 — URL input field renders after selecting "Share a Scroll"
+   * TC-IMP-010 — URL input field renders after selecting "Share a Rune Tablet"
    *
    * Spec source: ImportWizard.tsx step === "url-entry" renders ShareUrlEntry.
    * ShareUrlEntry.tsx renders an <input type="url" id="sheets-url" /> with
    * placeholder "Paste your Google Sheets URL...".
    */
-  test("URL input renders after selecting Share a Scroll", async ({ page }) => {
+  test("URL input renders after selecting Share a Rune Tablet", async ({ page }) => {
     const dialog = page.locator('[aria-label="Import Wizard"]');
 
-    // Dialog header updates to "Share a Scroll"
-    await expect(dialog.getByText("Share a Scroll")).toBeVisible();
+    // Dialog header updates to "Share a Rune Tablet"
+    await expect(dialog.getByText("Share a Rune Tablet")).toBeVisible();
 
     // URL input is present
     const urlInput = dialog.locator("#sheets-url");
@@ -281,7 +281,7 @@ test.describe("Import Wizard — Path A: Share a Scroll (URL Entry)", () => {
 
     // Method selection is restored
     await expect(dialog.getByRole("listbox", { name: "Choose import method" })).toBeVisible();
-    await expect(dialog.getByText("Share a Scroll")).toBeVisible();
+    await expect(dialog.getByText("Share a Rune Tablet")).toBeVisible();
     await expect(dialog.getByText("Browse the Archives")).toBeVisible();
     await expect(dialog.getByText("Deliver a Rune-Stone")).toBeVisible();
   });
@@ -344,7 +344,7 @@ test.describe("Import Wizard — Path C: Deliver a Rune-Stone (CSV Upload)", () 
 
     // Method selection step is visible again
     await expect(dialog.getByRole("listbox", { name: "Choose import method" })).toBeVisible();
-    await expect(dialog.getByText("Share a Scroll")).toBeVisible();
+    await expect(dialog.getByText("Share a Rune Tablet")).toBeVisible();
     await expect(dialog.getByText("Deliver a Rune-Stone")).toBeVisible();
   });
 });
@@ -400,7 +400,7 @@ test.describe("Import Wizard — Step Indicator", () => {
     await expect(dots).toHaveCount(1);
 
     // Navigate to URL entry — the active dot should shift to step 1 (Import)
-    await page.getByText("Share a Scroll").click();
+    await page.getByText("Share a Rune Tablet").click();
 
     // Step indicator still present
     await expect(progressNav).toBeVisible();
@@ -500,7 +500,7 @@ test.describe("Import Wizard — Dialog Behaviour", () => {
     const dialog = page.locator('[aria-label="Import Wizard"]');
 
     // Navigate to URL entry
-    await page.getByText("Share a Scroll").click();
+    await page.getByText("Share a Rune Tablet").click();
     await expect(dialog.locator("#sheets-url")).toBeVisible();
 
     // Close via X button — same dismiss path as Cancel
@@ -763,7 +763,7 @@ test.describe("Import Wizard — Toolbar Import Button Visibility", () => {
 
     // Method selection step is shown first
     await expect(dialog.getByRole("listbox", { name: "Choose import method" })).toBeVisible();
-    await expect(dialog.getByText("Share a Scroll")).toBeVisible();
+    await expect(dialog.getByText("Share a Rune Tablet")).toBeVisible();
     await expect(dialog.getByText("Browse the Archives")).toBeVisible();
     await expect(dialog.getByText("Deliver a Rune-Stone")).toBeVisible();
   });
