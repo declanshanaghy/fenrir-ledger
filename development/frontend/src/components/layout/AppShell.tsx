@@ -3,20 +3,16 @@
 /**
  * AppShell — the persistent application frame.
  *
- * Renders the TopBar, dismissible UpsellBanner (dashboard only),
- * collapsible SideNav, and the main content slot.
+ * Renders the TopBar, collapsible SideNav, and the main content slot.
  * Collapse state is persisted to localStorage so it survives navigation.
  *
  * Layout grid:
  *   Row 1: TopBar (full width)
- *   Row 2: UpsellBanner (full width, dashboard-only, anonymous users only)
- *   Row 3: SideNav (left) + main content + Footer (right)
- *
- * See ux/wireframes/upsell-banner.html for the banner grid placement spec.
+ *   Row 2: SideNav (left) + main content + Footer (right)
  */
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+
 import type { ReactNode } from "react";
 import { TopBar } from "./TopBar";
 import { SideNav } from "./SideNav";
@@ -26,7 +22,7 @@ import { ForgeMasterEgg } from "./ForgeMasterEgg";
 import { LcarsOverlay } from "@/components/easter-eggs/LcarsOverlay";
 import { Toaster } from "sonner";
 import { Footer } from "./Footer";
-import { UpsellBanner } from "./UpsellBanner";
+
 import { StaleAuthNudge } from "./StaleAuthNudge";
 import {
   GleipnirMountainRoots,
@@ -43,7 +39,7 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const pathname = usePathname();
+
   const { open: rootsOpen, trigger: triggerRoots, dismiss: dismissRoots } = useGleipnirFragment3();
   const { ragnarokActive } = useRagnarok();
 
@@ -82,9 +78,6 @@ export function AppShell({ children }: AppShellProps) {
     if (next) triggerRoots();
   }
 
-  // The upsell banner is shown on the dashboard (/) only.
-  const isDashboard = pathname === "/";
-
   // Suppress layout until client state is known to avoid flash
   if (!mounted) {
     return (
@@ -106,10 +99,6 @@ export function AppShell({ children }: AppShellProps) {
           Shown when entitlement cache exists but auth is anonymous. */}
       <StaleAuthNudge />
 
-      {/* Upsell banner — dashboard only, anonymous users only.
-          Sits between TopBar and the sidebar/content split.
-          The banner component itself handles the isAnonymous + dismissed checks. */}
-      {isDashboard && <UpsellBanner />}
 
       <div className="flex flex-1 overflow-hidden">
         <SideNav collapsed={collapsed} onToggle={handleToggle} />

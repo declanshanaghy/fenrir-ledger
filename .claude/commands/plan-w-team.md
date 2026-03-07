@@ -27,7 +27,7 @@ TEAM_MEMBERS:
 - Understand the codebase directly (no subagents) to understand existing patterns.
 - Each issue must be small enough for a single agent chain to complete (1 branch, 1 PR).
 - Max 5 issues per plan. If the work is larger, split into phases and plan one phase at a time.
-- Issues must have correct `type:` and priority labels so `/fire-next-up` routes them to the right agent chain.
+- Issues must have correct type and priority labels so `/fire-next-up` routes them to the right agent chain.
 
 ## Workflow
 
@@ -61,7 +61,7 @@ Agent({
     - Problem statement
     - Requirements (numbered)
     - Acceptance criteria (checkboxes)
-    - Priority recommendation (P1-P4)
+    - Priority recommendation (critical/high/normal/low)
     - Suggested issue breakdown (if multiple issues needed)"
 })
 ```
@@ -102,74 +102,29 @@ Using Freya's brief (and Luna's wireframes if applicable), break the work into 1
 
 **Issue sizing rules:**
 - Each issue = 1 branch + 1 PR + 1 agent chain
-- A `type:ux` issue runs Luna -> FiremanDecko -> Loki (3-step chain)
-- A `type:feature` or `type:bug` issue runs FiremanDecko -> Loki (2-step chain)
-- A `type:security` issue runs Heimdall -> Loki (2-step chain)
-- A `type:test` issue runs Loki only (1-step chain)
-- If an issue needs both UX design AND implementation, make it `type:ux` — the chain handles both
+- A `ux` issue runs Luna -> FiremanDecko -> Loki (3-step chain)
+- A `enhancement` or `bug` issue runs FiremanDecko -> Loki (2-step chain)
+- A `security` issue runs Heimdall -> Loki (2-step chain)
+- A test-only issue runs Loki only (1-step chain)
+- If an issue needs both UX design AND implementation, label it `ux` — the chain handles both
 
 **Dependency rules:**
 - Issues that can be worked in parallel should have NO dependency references
 - Issues that depend on others include `Blocked by #N` in their body
 - `/fire-next-up` checks if blocking issues are still open before dispatching
 
-**Label assignment:**
-
-Each issue gets exactly one type label and one priority label:
-
-| Type label | When to use |
-|------------|-------------|
-| `type:bug` | Fixing broken behavior |
-| `type:feature` | New functionality |
-| `type:ux` | UI/layout changes that need wireframes first |
-| `type:security` | Security fixes or audits |
-| `type:test` | Test coverage gaps |
-
-| Priority label | When to use |
-|----------------|-------------|
-| `P1-critical` | Blocking production or users |
-| `P2-high` | Important, do soon |
-| `P3-medium` | Normal priority |
-| `P4-low` | Nice to have |
+**Label assignment:** See `quality/issue-template.md` for the full schema.
+Each issue gets one type label (`bug`, `enhancement`, `ux`, `security`) and one
+priority label (`critical`, `high`, `normal`, `low`).
 
 ### Step 5 — Create Issues
 
 Create each issue sequentially (need the issue number from each to set dependencies on later ones).
 
-**Title format:** `[Type] [Priority]: Short description`
+**Title format:** Short and descriptive — no `[Type]` or `[Priority]` prefixes (labels carry that).
 
-**Body template:**
-
-```markdown
-## Problem
-<!-- 2-3 sentences from Freya's brief -->
-
-## Expected Behavior
-<!-- What should happen when this issue is resolved -->
-
-## Affected Code
-- `path/to/file.ts` — what needs to change
-
-## Acceptance Criteria
-- [ ] Criterion 1 (from Freya's brief)
-- [ ] Criterion 2
-- [ ] Criterion 3
-
-## Dependencies
-<!-- If this issue depends on another issue from this plan -->
-Blocked by #N
-
-## Implementation Notes
-<!-- Technical guidance for the agent -->
-- Key files to read first
-- Patterns to follow
-- Edge cases to handle
-<!-- If Luna created wireframes for this issue -->
-- Wireframes: `ux/wireframes/<feature-slug>/`
-
-## Notes
-<!-- Any additional context -->
-```
+**Body template:** Use the template from `quality/issue-template.md`. Add an
+`## Implementation Notes` section with key files, patterns, and wireframe paths.
 
 **For each issue, run:**
 
@@ -177,7 +132,7 @@ Blocked by #N
 # Create the issue
 gh issue create \
   --title "Short descriptive title" \
-  --label "type:<type>,<Priority>-<level>" \
+  --label "<type>,<priority>" \
   --body "$(cat <<'EOF'
 <issue body from template above>
 EOF
@@ -206,8 +161,8 @@ After all issues are created, report:
 
 | # | Title | Type | Priority | Chain | Depends On |
 |---|-------|------|----------|-------|------------|
-| #N | ... | feature | P3 | Decko -> Loki | — |
-| #M | ... | ux | P2 | Luna -> Decko -> Loki | #N |
+| #N | ... | enhancement | normal | Decko -> Loki | — |
+| #M | ... | ux | high | Luna -> Decko -> Loki | #N |
 
 **Wireframes:** <path or "none">
 
@@ -221,7 +176,7 @@ To start execution:
 
 1. **Max 5 issues per plan** — if the work is bigger, plan in phases
 2. **Each issue must be self-contained** — one branch, one PR, one agent chain
-3. **Labels are mandatory** — every issue gets exactly one `type:` and one priority label
+3. **Labels are mandatory** — every issue gets one type label and one priority label
 4. **Add to project board** — every issue goes to Project #1 via `gh project item-add`
 5. **Sequential creation** — create issues one at a time to capture numbers for dependencies
 6. **No spec files** — the issues ARE the spec. Do not write to `specs/`
