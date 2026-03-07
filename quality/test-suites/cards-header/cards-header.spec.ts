@@ -1,9 +1,9 @@
 /**
  * Test Suite: Cards Page Header Text
- * Issue: #199
+ * Issue: #209
  *
  * Validates that the Cards page header displays the correct text:
- * "The Ledger of Fates - Overhauled"
+ * "The Ledger of Fates"
  */
 
 import { test, expect } from '@playwright/test';
@@ -17,28 +17,28 @@ test.describe('Cards Page Header', () => {
     });
   });
 
-  test('displays "The Ledger of Fates - Overhauled" as exact header text', async ({ page }) => {
+  test('displays "The Ledger of Fates" as exact header text', async ({ page }) => {
     await page.goto('/');
 
     // Wait for page to load and header to be visible
-    const header = page.locator('h1').filter({ hasText: 'The Ledger of Fates - Overhauled' });
+    const header = page.locator('h1').filter({ hasText: 'The Ledger of Fates' });
     await expect(header).toBeVisible();
 
     // Verify exact text match (not partial)
-    await expect(header).toHaveText('The Ledger of Fates - Overhauled');
+    await expect(header).toHaveText('The Ledger of Fates');
   });
 
   test('header has correct styling classes', async ({ page }) => {
     await page.goto('/');
 
     // Verify the header element has the expected CSS classes for Voice 2 atmospheric heading
-    const header = page.locator('h1').filter({ hasText: 'The Ledger of Fates - Overhauled' });
+    const header = page.locator('h1').filter({ hasText: 'The Ledger of Fates' });
     await expect(header).toBeVisible();
     await expect(header).toHaveClass(/font-display/);
     await expect(header).toHaveClass(/text-gold/);
   });
 
-  test('no other headers contain the old text "The Ledger of Fates" without "- Overhauled"', async ({ page }) => {
+  test('header contains exactly "The Ledger of Fates" without extra suffixes', async ({ page }) => {
     await page.goto('/');
 
     // Wait for page to fully load
@@ -49,9 +49,9 @@ test.describe('Cards Page Header', () => {
 
     for (const h1 of h1Elements) {
       const text = await h1.textContent();
-      // If it contains "The Ledger of Fates", it must include "- Overhauled"
+      // If it contains "The Ledger of Fates", it must not have "- Overhauled" suffix
       if (text?.includes('The Ledger of Fates')) {
-        expect(text).toContain('- Overhauled');
+        expect(text).not.toContain('- Overhauled');
       }
     }
   });
@@ -60,7 +60,7 @@ test.describe('Cards Page Header', () => {
     await page.goto('/');
 
     // Header should be immediately visible on load
-    const header = page.locator('h1', { hasText: 'The Ledger of Fates - Overhauled' });
+    const header = page.locator('h1', { hasText: 'The Ledger of Fates' });
     await expect(header).toBeVisible({ timeout: 5000 });
   });
 });
