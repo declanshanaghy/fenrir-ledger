@@ -86,7 +86,7 @@ export default function DashboardPage() {
   }, []);
 
   const urgentCount = cards.filter(
-    (c) => c.status === "fee_approaching" || c.status === "promo_expiring"
+    (c) => c.status === "fee_approaching" || c.status === "promo_expiring" || c.status === "overdue"
   ).length;
 
   const loaded = !isLoading && status !== "loading";
