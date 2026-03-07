@@ -1,5 +1,9 @@
 # Backlog: Security Review — Google Sheets API Integration
 
+**Status:** Partially Done | **Priority:** P1-High
+
+> Initial security reports filed: `security/reports/2026-03-02-google-api-integration.md` and `security/reports/2026-03-05-llm-prompt-injection-remediation.md`. LLM prompt injection hardened in PR #171. Remaining checklist items are open.
+
 ## Problem Statement
 
 Fenrir Ledger integrates with Google APIs across multiple surfaces (OAuth, Sheets import, Drive Picker). These integrations handle authentication tokens, API keys, and user data. A focused security review is needed to verify that:
@@ -25,7 +29,7 @@ Fenrir Ledger integrates with Google APIs across multiple surfaces (OAuth, Sheet
 ### Out of scope (for now)
 - General frontend XSS/CSRF (covered by Next.js defaults)
 - Infrastructure/hosting security (Vercel platform responsibility)
-- LLM prompt injection (separate concern)
+- ~~LLM prompt injection~~ — Addressed in PR #171 (`security/reports/2026-03-05-llm-prompt-injection-remediation.md`)
 
 ## Key Files to Review
 
