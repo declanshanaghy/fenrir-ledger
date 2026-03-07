@@ -66,7 +66,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
   const handleOpenPicker = useCallback(
     async (token: string) => {
       if (!PICKER_API_KEY) {
-        setError("Google Picker is not configured. Try using Share a Scroll or Upload CSV instead.");
+        setError("Google Picker is not configured. Try using Share a Rune Tablet or Upload CSV instead.");
         return;
       }
 
@@ -124,7 +124,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
       } catch (pickerErr) {
         if (pickerErr instanceof PickerError && pickerErr.code === "SCRIPT_LOAD_FAILED") {
           setError(
-            "Unable to load Google Drive. Try using Share a Scroll or Upload CSV instead."
+            "Unable to load Google Drive. Try using Share a Rune Tablet or Upload CSV instead."
           );
         } else {
           setError("Something went wrong with Google Drive. Please try again.");
@@ -243,7 +243,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
           aria-label="Fetching spreadsheet"
         />
         <p className="font-body text-muted-foreground text-base italic text-center">
-          Fetching the sacred scrolls from your archives...
+          Reading the rune-stones from your archives...
         </p>
       </div>
     );

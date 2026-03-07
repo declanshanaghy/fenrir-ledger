@@ -5,7 +5,7 @@
  *
  * Steps: method -> url-entry|csv-upload -> loading -> preview -> dedup -> error -> success
  *
- * Path A: Google Sheets URL ("Share a Scroll")
+ * Path A: Google Sheets URL ("Share a Rune Tablet")
  * Path B: Google Drive Picker ("Browse the Archives") — disabled, coming soon
  * Path C: CSV file upload ("Deliver a Rune-Stone")
  *
@@ -220,7 +220,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
           <>
             <DialogHeader>
               <DialogTitle className="font-display text-gold tracking-wide text-xl">
-                Share a Scroll
+                Share a Rune Tablet
               </DialogTitle>
             </DialogHeader>
             <ShareUrlEntry
@@ -285,7 +285,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
 
               <p className="font-body text-muted-foreground text-base italic text-center">
                 {importMethod === "picker"
-                  ? "Deciphering the sacred scrolls from your archives..."
+                  ? "Reading the rune-stones from your archives..."
                   : importMethod === "csv"
                     ? "Reading the inscriptions from your rune-stone..."
                     : "Reading the runes from your spreadsheet..."}
