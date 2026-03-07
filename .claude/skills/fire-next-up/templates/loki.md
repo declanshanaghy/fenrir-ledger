@@ -19,11 +19,11 @@ Use the previous agent's handoff comment to understand what was built, how to ve
 **Step 3 — Write and run tests:**
 - Write new Playwright tests in `quality/test-suites/<feature-slug>/` covering the acceptance criteria.
 - Use the previous agent's "How to verify" and "Edge cases" sections to guide your test design.
-- Run the new tests: `cd <REPO_ROOT>/development/frontend && SERVER_URL=http://localhost:9653 npx playwright test ../../quality/test-suites/<feature-slug>/ --reporter=list`
+- Run the new tests: `cd <REPO_ROOT>/development/frontend && npx playwright test ../../quality/test-suites/<feature-slug>/ --reporter=list`
 - Verify build passes: `cd <REPO_ROOT>/development/frontend && npx tsc --noEmit && npx next build`
 
 **Step 3b — Run the FULL test suite and fix ANY failures:**
-- Run ALL Playwright tests: `cd <REPO_ROOT>/development/frontend && SERVER_URL=http://localhost:9653 npx playwright test --reporter=list`
+- Run ALL Playwright tests: `cd <REPO_ROOT>/development/frontend && npx playwright test --reporter=list`
 - If ANY tests fail — whether your new tests or pre-existing tests — you MUST fix them.
 - Pre-existing test failures are NOT acceptable. They block CI and prevent merging.
 - Read each failing test file, understand what it expects, read the actual page/component

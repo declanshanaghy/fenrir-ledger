@@ -26,4 +26,18 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
+
+  // Start the dev server automatically when no SERVER_URL is provided.
+  // Reuses an existing server if one is already running (local dev).
+  // Skipped entirely when SERVER_URL is set (CI hitting a Vercel preview).
+  ...(!process.env.SERVER_URL
+    ? {
+        webServer: {
+          command: "npm run dev",
+          url: "http://localhost:9653",
+          reuseExistingServer: true,
+          timeout: 120_000,
+        },
+      }
+    : {}),
 });
