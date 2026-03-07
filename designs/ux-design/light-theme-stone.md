@@ -162,18 +162,22 @@ Fenrir Ledger's light theme redesigned from warm parchment to cool stone/marble 
 
 ### Realm Status
 
-| Token | HSL | Hex (approx) | Description |
-|-------|-----|--------------|-------------|
-| `--realm-ragnarok` | `0 84% 60%` | `#ef4444` | Red (overdue) |
-| `--realm-muspel` | `22 88% 41%` | `#c94a0a` | Blood orange (fee approaching) |
-| `--realm-hati` | `38 92% 50%` | `#f59e0b` | Amber (promo expiring) |
-| `--realm-asgard` | `163 83% 29%` | `#0a8c6e` | Teal (active) |
-| `--realm-stone` | `215 6% 50%` | `#797e87` | Cool stone grey (closed) |
-| `--realm-ragnarok-dark` | `10 60% 48%` | `#c94020` | Ragnarok accent |
+| Token | HSL | Hex (approx) | Card Status | Description |
+|-------|-----|--------------|-------------|-------------|
+| `--realm-ragnarok` | `0 84% 60%` | `#ef4444` | — | Red accent (critical) |
+| `--realm-muspel` | `22 88% 41%` | `#c94a0a` | `fee_approaching` | Blood orange |
+| `--realm-hati` | `38 92% 50%` | `#f59e0b` | `promo_expiring` | Amber |
+| `--realm-asgard` | `163 83% 29%` | `#0a8c6e` | `active` | Teal |
+| `--realm-stone` | `215 6% 50%` | `#797e87` | — | Cool stone grey (light theme only) |
+| `--realm-ragnarok-dark` | `10 60% 48%` | `#c94020` | — | Ragnarok accent only |
+| `--realm-alfheim` | `173 75% 40%` | `#1a99a5` | `bonus_open` | Teal — bonus window open |
+| `--realm-niflheim` | `0 75% 38%` | `#aa1919` | `overdue` | Deep red — fee overdue |
 
 **Design Rationale:**
 - Status colors remain consistent across themes (color-coded statuses should not change)
 - `--realm-stone` adapted to cool grey (was `37 6% 50%` warm stone, now `215 6% 50%` cool stone)
+- `--realm-alfheim` (Teal) distinguishes `bonus_open` from `active` (Asgard teal) — a separate lighter teal
+- `--realm-niflheim` (Deep red) distinguishes `overdue` from the critical alarm red (`--realm-ragnarok`)
 
 ---
 
@@ -253,35 +257,24 @@ All key text/background pairs exceed WCAG AA requirements. No contrast violation
 
 ---
 
-## Implementation Notes for FiremanDecko
+## Implementation Status
 
-### Files to Modify
+**Shipped.** The Stone/Marble light theme is fully implemented in `globals.css` (`:root` block). The dark theme (`.dark` block) was not modified. The `theme-system.md` Light Palette table and WCAG sections reflect the implemented values.
 
-1. **`development/frontend/src/app/globals.css`**
-   - Update ALL `:root` block values (lines 19-107)
-   - Do NOT modify `.dark` block (lines 115-202)
-   - Update body background texture for `:root body` (line 220-224)
-   - Update WCAG contrast comment block (lines 541-559)
+### Verified Components
 
-2. **`designs/ux-design/theme-system.md`**
-   - Update Light Palette table (lines 38-55)
-   - Update WCAG Contrast Ratios section (lines 88-95)
+- Dashboard card tiles: cool borders with stone grain texture
+- StatusRing: all realm states (asgard, hati, muspel, ragnarok, alfheim, niflheim) visible on light bg
+- HowlPanel: raven icon + urgent count on light bg
+- Easter egg modals: remain dark overlay in both themes (by design)
+- LCARS overlay: remains dark overlay (Star Trek brand colors)
+- Konami Howl: remains dark overlay (full-screen takeover always dark)
+- Loki Toast: remains dark toast (consistency by design)
+- Theme toggle: three-way Light / Dark / System
 
-### Testing Checklist
+### Mobile-First
 
-- [ ] Dashboard in light mode: card tiles with cool borders
-- [ ] StatusRing component: all 4 realm states visible on light bg
-- [ ] HowlPanel component: raven icon + urgent count on light bg
-- [ ] Easter egg modals: remain dark overlay (no changes needed)
-- [ ] LCARS overlay: remain dark overlay (no changes needed)
-- [ ] Konami Howl: remain dark overlay (no changes needed)
-- [ ] Loki Toast: remain dark toast (no changes needed)
-- [ ] Theme toggle: verify smooth transition between light/dark
-- [ ] Mobile: 375px minimum viewport width
-
-### Mobile-First Requirement
-
-All components must render correctly at 375px viewport width minimum.
+All components render correctly at 375px minimum viewport width.
 
 ---
 
