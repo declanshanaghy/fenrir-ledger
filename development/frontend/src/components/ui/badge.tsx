@@ -28,6 +28,10 @@ const badgeVariants = cva(
           "border-transparent bg-realm-hati/20 text-realm-hati border-realm-hati/25",
         closed:
           "border-transparent bg-realm-hel/10 text-realm-hel border-realm-hel/20",
+        bonus_open:
+          "border-transparent bg-realm-alfheim/20 text-realm-alfheim border-realm-alfheim/25",
+        overdue:
+          "border-transparent bg-realm-niflheim/20 text-realm-niflheim border-realm-niflheim/30 animate-muspel-pulse",
       },
     },
     defaultVariants: {

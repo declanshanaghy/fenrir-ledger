@@ -61,6 +61,8 @@ export const STATUS_LABELS: Record<string, string> = {
   fee_approaching: "Fee Due Soon",
   promo_expiring: "Promo Expiring",
   closed: "Closed",
+  bonus_open: "Bonus Open",
+  overdue: "Overdue",
 };
 
 /**
@@ -73,4 +75,6 @@ export const STATUS_TOOLTIPS: Record<CardStatus, string> = {
   fee_approaching: getRealmDescription("fee_approaching"),
   promo_expiring: getRealmDescription("promo_expiring"),
   closed: getRealmDescription("closed"),
+  bonus_open: getRealmDescription("bonus_open"),
+  overdue: getRealmDescription("overdue"),
 };
