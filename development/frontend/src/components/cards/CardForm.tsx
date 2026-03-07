@@ -9,6 +9,9 @@
  *
  * Sprint 3.1: householdId is now a required prop derived from the authenticated
  * session. The form no longer uses the hardcoded DEFAULT_HOUSEHOLD_ID constant.
+ *
+ * Issue #188: Refactored into 2-step wizard for new cards.
+ * Edit mode bypasses wizard and shows all fields on single page.
  */
 
 import { useState, useEffect, useRef } from "react";
@@ -110,6 +113,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const { open: bearOpen, trigger: triggerBear, dismiss: dismissBear } = useGleipnirFragment4();
 
   // Precompute today + derived defaults (used for new cards)
@@ -191,11 +195,39 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
     setValue("bonusDeadline", deadline.toISOString().split("T")[0] ?? "");
   }, [openDate, setValue]);
 
+  // Handler for "More Details" button - validates Step 1 fields and advances to Step 2
+  const handleMoreDetails = () => {
+    handleSubmit(() => {
+      setCurrentStep(2);
+    }, scrollToFirstError)();
+  };
+
   const onSubmit = (data: CardFormValues) => {
     setIsSubmitting(true);
 
     try {
       const now = new Date().toISOString();
+
+      // Auto-calculate derived fields when saving from Step 1 (wizard mode only)
+      if (!isEditMode && currentStep === 1) {
+        // Annual Fee Date = Open Date + 1 year
+        if (!data.annualFeeDate && data.openDate) {
+          const openDateObj = new Date(data.openDate + "T00:00:00");
+          const feeDate = new Date(openDateObj);
+          feeDate.setFullYear(feeDate.getFullYear() + 1);
+          data.annualFeeDate = feeDate.toISOString().split("T")[0] ?? "";
+        }
+
+        // Bonus Deadline = Open Date + 90 days (standard signup bonus window)
+        if (!data.bonusDeadline && data.openDate) {
+          const openDateObj = new Date(data.openDate + "T00:00:00");
+          const deadline = new Date(openDateObj);
+          deadline.setDate(deadline.getDate() + 90);
+          data.bonusDeadline = deadline.toISOString().split("T")[0] ?? "";
+        }
+
+        // Bonus Met defaults to false (already handled by default values)
+      }
 
       // Convert local YYYY-MM-DD strings from date pickers to UTC ISO strings.
       // localDateStringToIso() treats the picker value as a local-timezone date
@@ -304,9 +336,28 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   return (
     <>
     <form onSubmit={handleSubmit(onSubmit, scrollToFirstError)} className="space-y-4">
-      {/* ── Card Details (full width) ───────────────────────────── */}
-      <fieldset className="border border-border rounded-md p-4 space-y-4">
-        <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Card Details</legend>
+      {/* Step Indicator - only show in wizard mode (new card) */}
+      {!isEditMode && (
+        <div className="flex items-center justify-center gap-3 py-4">
+          <div
+            className={`w-2 h-2 rounded-full transition-colors ${
+              currentStep === 1 ? 'bg-gold' : 'bg-muted-foreground'
+            }`}
+            aria-label="Step 1"
+          />
+          <div
+            className={`w-2 h-2 rounded-full transition-colors ${
+              currentStep === 2 ? 'bg-gold' : 'bg-muted-foreground'
+            }`}
+            aria-label="Step 2"
+          />
+        </div>
+      )}
+
+      {/* ── Step 1 or Edit Mode: Card Details ───────────────────────────── */}
+      {(isEditMode || currentStep === 1) && (
+        <fieldset className="border border-border rounded-md p-4 space-y-4">
+          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Card Details</legend>
 
         {/* Issuer */}
         <div className="space-y-1.5">
@@ -357,67 +408,74 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           )}
         </div>
 
-        {/* Credit limit */}
-        <div className="space-y-1.5">
-          <Label htmlFor="creditLimit">Credit limit</Label>
-          <Select
-            {...(defaultValues.creditLimit ? { defaultValue: defaultValues.creditLimit } : {})}
-            onValueChange={(v) => setValue("creditLimit", v)}
-          >
-            <SelectTrigger id="creditLimit">
-              <SelectValue placeholder="Select limit" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">Not set</SelectItem>
-              {Array.from({ length: 10 }, (_, i) => (i + 1) * 1000).map((v) => (
-                <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
-              ))}
-              {Array.from({ length: 18 }, (_, i) => 15000 + i * 5000).map((v) => (
-                <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.creditLimit && (
-            <p className="text-base text-destructive">
-              {errors.creditLimit.message}
-            </p>
-          )}
-        </div>
-      </fieldset>
-
-      {/* ── Annual Fee + Sign-up Bonus (side by side) ─────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        {/* Annual Fee */}
-        <fieldset className="border border-border rounded-md p-4 space-y-4">
-          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Annual Fee</legend>
-
+        {/* Credit limit - only show in Step 2 or edit mode */}
+        {(isEditMode || currentStep === 2) && (
           <div className="space-y-1.5">
-            <Label htmlFor="annualFee">Annual fee</Label>
-            <Input
-              id="annualFee"
-              type="number"
-              min="0"
-              step="1"
-              placeholder="e.g. 95"
-              {...register("annualFee")}
-            />
-            {errors.annualFee && (
+            <Label htmlFor="creditLimit">Credit limit</Label>
+            <Select
+              {...(defaultValues.creditLimit ? { defaultValue: defaultValues.creditLimit } : {})}
+              onValueChange={(v) => setValue("creditLimit", v)}
+            >
+              <SelectTrigger id="creditLimit">
+                <SelectValue placeholder="Select limit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">Not set</SelectItem>
+                {Array.from({ length: 10 }, (_, i) => (i + 1) * 1000).map((v) => (
+                  <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
+                ))}
+                {Array.from({ length: 18 }, (_, i) => 15000 + i * 5000).map((v) => (
+                  <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.creditLimit && (
               <p className="text-base text-destructive">
-                {errors.annualFee.message}
+                {errors.creditLimit.message}
               </p>
             )}
           </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="annualFeeDate">Annual fee date</Label>
-            <Input id="annualFeeDate" type="date" {...register("annualFeeDate")} />
-          </div>
+        )}
         </fieldset>
+      )}
 
-        {/* Sign-up Bonus */}
-        <fieldset className="border border-border rounded-md p-4 space-y-4">
-          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Sign-up Bonus</legend>
+      {/* ── Step 1 or Edit Mode: Annual Fee + Sign-up Bonus ─────────── */}
+      {(isEditMode || currentStep === 1) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Annual Fee */}
+          <fieldset className="border border-border rounded-md p-4 space-y-4">
+            <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Annual Fee</legend>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="annualFee">Annual fee</Label>
+              <Input
+                id="annualFee"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="e.g. 95"
+                {...register("annualFee")}
+              />
+              {errors.annualFee && (
+                <p className="text-base text-destructive">
+                  {errors.annualFee.message}
+                </p>
+              )}
+            </div>
+
+            {/* Annual fee date - only show in Step 2 or edit mode */}
+            {(isEditMode || currentStep === 2) && (
+              <div className="space-y-1.5">
+                <Label htmlFor="annualFeeDate">Annual fee date</Label>
+                <Input id="annualFeeDate" type="date" {...register("annualFeeDate")} />
+              </div>
+            )}
+          </fieldset>
+
+          {/* Sign-up Bonus */}
+          <fieldset className="border border-border rounded-md p-4 space-y-4">
+            <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Sign-up Bonus</legend>
 
           <div className="space-y-1.5">
             <Label htmlFor="bonusType">Bonus type</Label>
@@ -478,30 +536,36 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             </Select>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="bonusDeadline">Bonus deadline</Label>
-            <Input
-              id="bonusDeadline"
-              type="date"
-              {...register("bonusDeadline")}
-            />
-          </div>
+          {/* Bonus deadline and met - only show in Step 2 or edit mode */}
+          {(isEditMode || currentStep === 2) && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="bonusDeadline">Bonus deadline</Label>
+                <Input
+                  id="bonusDeadline"
+                  type="date"
+                  {...register("bonusDeadline")}
+                />
+              </div>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="bonusMet"
-              checked={watch("bonusMet")}
-              onCheckedChange={(checked) =>
-                setValue("bonusMet", checked === true)
-              }
-            />
-            <Label htmlFor="bonusMet" className="cursor-pointer">
-              Minimum spend met
-            </Label>
-          </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="bonusMet"
+                  checked={watch("bonusMet")}
+                  onCheckedChange={(checked) =>
+                    setValue("bonusMet", checked === true)
+                  }
+                />
+                <Label htmlFor="bonusMet" className="cursor-pointer">
+                  Minimum spend met
+                </Label>
+              </div>
+            </>
+          )}
         </fieldset>
 
-      </div>
+        </div>
+      )}
 
       {/* ── Status (edit mode only) ────────────────────────────── */}
       {isEditMode && (
@@ -536,16 +600,18 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         </fieldset>
       )}
 
-      {/* ── Notes (full width) ─────────────────────────────────── */}
-      <fieldset className="border border-border rounded-md p-4 space-y-4">
-        <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Notes</legend>
-        <Textarea
-          id="notes"
-          placeholder="Any notes about this card..."
-          rows={3}
-          {...register("notes")}
-        />
-      </fieldset>
+      {/* ── Notes (Step 2 or edit mode only) ─────────────────────────────────── */}
+      {(isEditMode || currentStep === 2) && (
+        <fieldset className="border border-border rounded-md p-4 space-y-4">
+          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Notes</legend>
+          <Textarea
+            id="notes"
+            placeholder="Any notes about this card..."
+            rows={3}
+            {...register("notes")}
+          />
+        </fieldset>
+      )}
 
       {/* ── Actions ───────────────────────────────────────────── */}
       {/*
@@ -666,14 +732,39 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            isLoading={isSubmitting}
-            loadingText="Saving..."
-          >
-            {isEditMode ? "Save changes" : "Add card"}
-          </Button>
+
+          {/* Step 1 buttons in wizard mode */}
+          {!isEditMode && currentStep === 1 && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleMoreDetails}
+              >
+                More Details
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                isLoading={isSubmitting}
+                loadingText="Saving..."
+              >
+                Save Card
+              </Button>
+            </>
+          )}
+
+          {/* Step 2 or edit mode button */}
+          {(isEditMode || currentStep === 2) && (
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              isLoading={isSubmitting}
+              loadingText="Saving..."
+            >
+              {isEditMode ? "Save changes" : "Save Card"}
+            </Button>
+          )}
         </div>
       </div>
     </form>
