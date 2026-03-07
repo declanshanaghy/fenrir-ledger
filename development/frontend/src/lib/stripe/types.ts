@@ -34,6 +34,7 @@ export type StripeTier = "thrall" | "karl";
 export const ACTIVE_STRIPE_STATUSES = new Set([
   "active",
   "trialing",
+  "past_due", // Users with payment issues still have access
 ]);
 
 // ---------------------------------------------------------------------------
