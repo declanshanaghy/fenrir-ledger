@@ -76,7 +76,7 @@ function CompactBanner() {
           onClick={() => setExpanded((prev) => !prev)}
           aria-label="View full safety details"
           aria-expanded={expanded}
-          className="text-sm font-heading text-gold hover:text-gold-bright transition-colors shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="text-sm font-heading text-gold hover:text-primary hover:brightness-110 transition-colors shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
           {expanded ? "Hide" : "Details"}
         </button>
@@ -95,7 +95,7 @@ function CompactBanner() {
             </ul>
           </div>
           <div>
-            <p className="text-red-400 font-heading text-sm mb-1.5 tracking-wide">
+            <p className="text-destructive font-heading text-sm mb-1.5 tracking-wide">
               Never include
             </p>
             <ul className="space-y-1 list-none">
@@ -137,7 +137,7 @@ export function SafetyBanner({ variant }: SafetyBannerProps) {
             </ul>
           </div>
           <div>
-            <p className="text-red-400 font-heading text-sm mb-1.5 tracking-wide">
+            <p className="text-destructive font-heading text-sm mb-1.5 tracking-wide">
               Never include
             </p>
             <ul className="space-y-1 list-none">
@@ -160,9 +160,9 @@ export function SafetyBanner({ variant }: SafetyBannerProps) {
     return (
       <div
         role="alert"
-        className="rounded-sm border border-red-500/40 bg-red-500/10 px-3 py-2.5"
+        className="rounded-sm border border-destructive/40 bg-destructive/10 px-3 py-2.5"
       >
-        <h4 className="font-heading text-sm text-red-400 tracking-wide mb-1">
+        <h4 className="font-heading text-sm text-destructive tracking-wide mb-1">
           Sensitive Data Detected
         </h4>
         <p className="text-sm font-body text-muted-foreground">

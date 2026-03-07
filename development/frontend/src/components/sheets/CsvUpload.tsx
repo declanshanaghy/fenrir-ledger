@@ -249,7 +249,7 @@ export function CsvUpload({ onSubmit, onSubmitFile, onBack }: CsvUploadProps) {
           dropState === "drag-over"
             ? "border-gold bg-gold/10"
             : dropState === "error"
-              ? "border-red-500/40 bg-red-500/5"
+              ? "border-destructive/40 bg-destructive/5"
               : dropState === "accepted"
                 ? "border-gold/40 bg-gold/5 cursor-default"
                 : "border-border bg-card hover:border-gold/30",
@@ -340,7 +340,7 @@ export function CsvUpload({ onSubmit, onSubmitFile, onBack }: CsvUploadProps) {
                 e.stopPropagation();
                 resetFile();
               }}
-              className="ml-auto text-muted-foreground hover:text-red-400 transition-colors p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="ml-auto text-muted-foreground hover:text-destructive transition-colors p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Remove file"
             >
               <svg
@@ -362,7 +362,7 @@ export function CsvUpload({ onSubmit, onSubmitFile, onBack }: CsvUploadProps) {
 
         {dropState === "error" && (
           <div className="flex flex-col items-center gap-2">
-            <p className="font-body text-base text-red-400">{errorMsg}</p>
+            <p className="font-body text-base text-destructive">{errorMsg}</p>
             <p className="font-body text-sm text-muted-foreground">
               Click to try again
             </p>
@@ -396,7 +396,7 @@ export function CsvUpload({ onSubmit, onSubmitFile, onBack }: CsvUploadProps) {
           type="button"
           onClick={handleSubmit}
           disabled={dropState !== "accepted"}
-          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright disabled:opacity-40 disabled:cursor-not-allowed h-11 px-6 min-w-[44px]"
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed h-11 px-6 min-w-[44px]"
         >
           Begin Import
         </button>

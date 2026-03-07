@@ -253,7 +253,7 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
           className={[
             "w-full px-4 py-2.5 text-base font-heading tracking-wide",
             "bg-primary text-primary-foreground",
-            "hover:bg-gold-bright transition-colors",
+            "hover:bg-primary hover:brightness-110 transition-colors",
             "rounded-sm",
           ].join(" ")}
         >
@@ -335,7 +335,7 @@ export function TopBar() {
           className="flex flex-col leading-tight group text-left"
           aria-label="Fenrir Ledger — visit the marketing site (opens in new tab)"
         >
-          <span className="font-display text-gold tracking-widest uppercase text-base group-hover:text-gold-bright transition-colors">
+          <span className="font-display text-gold tracking-widest uppercase text-base group-hover:text-primary hover:brightness-110 transition-colors">
             Fenrir Ledger
           </span>
           <span className="font-body text-muted-foreground text-sm italic">

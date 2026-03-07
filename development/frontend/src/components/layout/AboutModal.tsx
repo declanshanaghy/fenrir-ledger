@@ -133,7 +133,7 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
               {TEAM.map((member) => (
                 <div key={member.name}>
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="font-heading text-sm font-bold uppercase tracking-wide text-gold-bright">
+                    <span className="font-heading text-sm font-bold uppercase tracking-wide text-primary">
                       {member.name}
                     </span>
                     <span className="font-mono text-xs text-muted-foreground">

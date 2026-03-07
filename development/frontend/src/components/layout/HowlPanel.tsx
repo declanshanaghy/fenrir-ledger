@@ -162,7 +162,7 @@ function UrgentRow({ row }: UrgentRowProps) {
         href={`/cards/${card.id}/edit`}
         className={cn(
           "inline-flex items-center text-sm font-heading uppercase tracking-wide",
-          "text-gold hover:text-gold-bright transition-colors"
+          "text-gold hover:text-primary hover:brightness-110 transition-colors"
         )}
       >
         View

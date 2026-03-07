@@ -65,7 +65,7 @@ export function UnlinkConfirmDialog({
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border">
           <DialogTitle
-            className="text-xl font-heading font-bold text-saga"
+            className="text-xl font-heading font-bold text-foreground"
           >
             Unlink Subscription?
           </DialogTitle>
@@ -74,12 +74,12 @@ export function UnlinkConfirmDialog({
         {/* Body */}
         <DialogDescription asChild>
           <div className="px-5 py-4 flex flex-col gap-3">
-            <p className="text-base text-saga/90 leading-relaxed font-body">
+            <p className="text-base text-foreground/90 leading-relaxed font-body">
               Your subscription will be disconnected from Fenrir Ledger.
               You will lose access to premium features, but your card data
               will not be affected.
             </p>
-            <p className="text-base text-saga/90 leading-relaxed font-body">
+            <p className="text-base text-foreground/90 leading-relaxed font-body">
               If you have an active subscription, it will continue on
               Stripe until you cancel it there.
             </p>

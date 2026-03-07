@@ -186,7 +186,7 @@ export function StripeSettings() {
       >
         {/* Section heading */}
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-heading font-bold text-saga">
+          <h2 className="text-base font-heading font-bold text-foreground">
             Subscription
           </h2>
           {isKarlActive && (
@@ -199,7 +199,7 @@ export function StripeSettings() {
           )}
           {isCanceling && (
             <span
-              className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-amber-500/40 text-xs font-mono font-bold uppercase tracking-wide text-amber-500/80 h-5"
+              className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-primary/40 text-xs font-mono font-bold uppercase tracking-wide text-primary/80 h-5"
               aria-label="Subscription canceling"
             >
               CANCELING
@@ -207,7 +207,7 @@ export function StripeSettings() {
           )}
           {isCanceled && (
             <span
-              className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-rune/40 text-xs font-mono font-bold uppercase tracking-wide text-rune/60 h-5"
+              className="inline-flex items-center px-2.5 py-0.5 border border-dashed border-rune/40 text-xs font-mono font-bold uppercase tracking-wide text-muted-foreground h-5"
               aria-label="Subscription canceled"
             >
               CANCELED
@@ -220,7 +220,7 @@ export function StripeSettings() {
           <>
             {/* Atmospheric subhead */}
             <p
-              className="text-sm italic text-rune/60 font-body leading-relaxed"
+              className="text-sm italic text-muted-foreground font-body leading-relaxed"
               aria-hidden="true"
             >
               The wolf runs free -- but Karl&apos;s chains hold power.
@@ -228,21 +228,21 @@ export function StripeSettings() {
 
             {/* Current tier */}
             <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center px-2.5 py-0.5 border border-border text-[13px] font-mono font-bold uppercase tracking-wide text-rune/70">
+              <span className="inline-flex items-center px-2.5 py-0.5 border border-border text-[13px] font-mono font-bold uppercase tracking-wide text-muted-foreground/70">
                 THRALL
               </span>
-              <span className="text-[13px] text-saga/80 font-body">Free tier</span>
+              <span className="text-[13px] text-foreground/80 font-body">Free tier</span>
             </div>
 
             <div className="border-t border-border" />
 
             {/* Karl benefits */}
             <div className="flex flex-col gap-1.5" aria-label="Karl tier benefits">
-              <p className="text-sm font-heading font-bold text-saga">
+              <p className="text-sm font-heading font-bold text-foreground">
                 Upgrade to Karl -- $3.99/month:
               </p>
               {KARL_BENEFITS.map((benefit) => (
-                <div key={benefit} className="flex items-start gap-2 text-sm text-saga/80 font-body leading-relaxed">
+                <div key={benefit} className="flex items-start gap-2 text-sm text-foreground/80 font-body leading-relaxed">
                   <span
                     className="w-4 h-4 border border-gold/30 rounded-full flex items-center justify-center text-xs text-gold flex-shrink-0 mt-0.5"
                     aria-hidden="true"
@@ -261,7 +261,7 @@ export function StripeSettings() {
                 disabled={isSubscribing}
                 isLoading={isSubscribing}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
               >
                 Subscribe
               </Button>
@@ -274,14 +274,14 @@ export function StripeSettings() {
           <>
             {/* Atmospheric subhead */}
             <p
-              className="text-sm italic text-rune/60 font-body leading-relaxed"
+              className="text-sm italic text-muted-foreground font-body leading-relaxed"
               aria-hidden="true"
             >
               The wolf is bound. The chains hold true.
             </p>
 
             {/* Subscription details */}
-            <div className="text-sm text-saga/80 font-body leading-relaxed">
+            <div className="text-sm text-foreground/80 font-body leading-relaxed">
               <p>$3.99/month</p>
               {formattedPeriodEnd && (
                 <p>Next billing date: {formattedPeriodEnd}</p>
@@ -297,7 +297,7 @@ export function StripeSettings() {
                 disabled={isAnyLoading}
                 isLoading={isManaging}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
               >
                 Manage Subscription
               </Button>
@@ -321,7 +321,7 @@ export function StripeSettings() {
           <>
             {/* Atmospheric subhead */}
             <p
-              className="text-sm italic text-rune/60 font-body leading-relaxed"
+              className="text-sm italic text-muted-foreground font-body leading-relaxed"
               aria-hidden="true"
             >
               The chain loosens -- but it holds until the moon turns.
@@ -332,14 +332,14 @@ export function StripeSettings() {
               <span className="inline-flex items-center px-2.5 py-0.5 border border-gold/30 text-[13px] font-mono font-bold uppercase tracking-wide text-gold">
                 KARL
               </span>
-              <span className="text-[13px] text-amber-500/80 font-body">Canceling</span>
+              <span className="text-[13px] text-primary/80 font-body">Canceling</span>
             </div>
 
             {/* Cancellation details */}
-            <div className="text-sm text-saga/80 font-body leading-relaxed flex flex-col gap-1">
+            <div className="text-sm text-foreground/80 font-body leading-relaxed flex flex-col gap-1">
               {formattedPeriodEnd ? (
                 <>
-                  <p>Your subscription is set to cancel on <strong className="text-saga">{formattedPeriodEnd}</strong>.</p>
+                  <p>Your subscription is set to cancel on <strong className="text-foreground">{formattedPeriodEnd}</strong>.</p>
                   <p>You have full Karl access until then.</p>
                 </>
               ) : (
@@ -356,7 +356,7 @@ export function StripeSettings() {
                 disabled={isSubscribing}
                 isLoading={isSubscribing}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
               >
                 Resubscribe
               </Button>
@@ -369,14 +369,14 @@ export function StripeSettings() {
           <>
             {/* Atmospheric subhead */}
             <p
-              className="text-sm italic text-rune/60 font-body leading-relaxed"
+              className="text-sm italic text-muted-foreground font-body leading-relaxed"
               aria-hidden="true"
             >
               The chain weakens -- but it holds until the moon turns.
             </p>
 
             {/* Cancellation details */}
-            <div className="text-sm text-saga/80 font-body leading-relaxed">
+            <div className="text-sm text-foreground/80 font-body leading-relaxed">
               {formattedPeriodEnd ? (
                 <>
                   <p>Your Karl access continues until {formattedPeriodEnd}.</p>
@@ -396,7 +396,7 @@ export function StripeSettings() {
                 disabled={isAnyLoading}
                 isLoading={isSubscribing}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-gold-bright border-2 border-gold"
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
               >
                 Resubscribe
               </Button>

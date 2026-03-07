@@ -166,7 +166,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
                 <span
                   className={`font-medium ${
                     feeDays !== null && feeDays <= 60
-                      ? "text-amber-600"
+                      ? "text-primary"
                       : "text-foreground"
                   }`}
                 >
@@ -185,7 +185,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
                 <span
                   className={`font-medium ${
                     bonusDays !== null && bonusDays <= 30
-                      ? "text-amber-600"
+                      ? "text-primary"
                       : "text-foreground"
                   }`}
                 >

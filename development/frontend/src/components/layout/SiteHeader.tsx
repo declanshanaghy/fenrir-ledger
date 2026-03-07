@@ -39,7 +39,7 @@ export function SiteHeader({
           )}
 
           <Link href="/" className="flex flex-col leading-tight group">
-            <span className="font-display text-gold tracking-widest uppercase text-base group-hover:text-gold-bright transition-colors">
+            <span className="font-display text-gold tracking-widest uppercase text-base group-hover:text-primary hover:brightness-110 transition-colors">
               Fenrir Ledger
             </span>
             <span className="font-body text-muted-foreground text-sm italic">

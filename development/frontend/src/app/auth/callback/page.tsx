@@ -276,7 +276,7 @@ function AuthCallbackContent() {
             </p>
             <a
               href="/sign-in"
-              className="mt-2 text-base text-gold hover:text-gold-bright font-heading tracking-wide underline underline-offset-4"
+              className="mt-2 text-base text-gold hover:text-primary hover:brightness-110 font-heading tracking-wide underline underline-offset-4"
             >
               Return to the gate
             </a>

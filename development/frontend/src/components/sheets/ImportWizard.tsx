@@ -324,8 +324,8 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
 
               {/* CSV/fetch warning banner */}
               {warning && (
-                <div className="rounded-sm border border-amber-500/40 bg-amber-500/10 px-3 py-2">
-                  <p className="text-sm font-body text-amber-400">{warning}</p>
+                <div className="rounded-sm border border-primary/40 bg-primary/10 px-3 py-2">
+                  <p className="text-sm font-body text-primary">{warning}</p>
                 </div>
               )}
 
@@ -371,7 +371,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
                 <button
                   type="button"
                   onClick={handleConfirm}
-                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px]"
+                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-11 px-6 min-w-[44px]"
                 >
                   Import {cards.length} card{cards.length !== 1 ? "s" : ""}
                 </button>
@@ -395,7 +395,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
         {step === "error" && (
           <>
             <DialogHeader>
-              <DialogTitle className="font-display text-red-400 tracking-wide text-xl">
+              <DialogTitle className="font-display text-destructive tracking-wide text-xl">
                 Import Failed
               </DialogTitle>
             </DialogHeader>
@@ -416,7 +416,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
                 <button
                   type="button"
                   onClick={reset}
-                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px]"
+                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-11 px-6 min-w-[44px]"
                 >
                   Try Again
                 </button>

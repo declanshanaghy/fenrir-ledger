@@ -128,7 +128,7 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
       <button
         type="button"
         onClick={handleDismiss}
-        className="absolute top-2 right-2 w-8 h-8 min-w-[44px] min-h-[44px] flex items-center justify-center text-rune/60 hover:text-saga transition-colors"
+        className="absolute top-2 right-2 w-8 h-8 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
         aria-label="Dismiss upgrade banner"
       >
         <span aria-hidden="true" className="text-base">&times;</span>
@@ -137,11 +137,11 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
       {/* Content */}
       <div className="flex-1 flex flex-col gap-0.5 pr-8 md:pr-0">
         {/* Voice 2: atmospheric (hidden on mobile) */}
-        <span className="hidden sm:block text-[13px] italic text-rune/60 font-body">
+        <span className="hidden sm:block text-[13px] italic text-muted-foreground font-body">
           The wolf hunts greater prey for those who forge the bond.
         </span>
         {/* Voice 1: functional value prop */}
-        <span className="text-sm text-saga/80 leading-snug font-body">
+        <span className="text-sm text-muted-foreground leading-snug font-body">
           Upgrade to Karl for cloud sync, priority alerts, and advanced analytics -- $3.99/month.
         </span>
       </div>
