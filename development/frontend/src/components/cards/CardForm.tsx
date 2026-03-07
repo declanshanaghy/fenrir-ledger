@@ -414,38 +414,6 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         </fieldset>
       )}
 
-      {/* ── Credit Limit (Step 2 or edit mode) ───────────────────────────── */}
-      {(isEditMode || currentStep === 2) && (
-        <fieldset className="border border-border rounded-md p-4 space-y-4">
-          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Credit Limit</legend>
-          <div className="space-y-1.5">
-            <Label htmlFor="creditLimit">Credit limit</Label>
-            <Select
-              {...(defaultValues.creditLimit ? { defaultValue: defaultValues.creditLimit } : {})}
-              onValueChange={(v) => setValue("creditLimit", v)}
-            >
-              <SelectTrigger id="creditLimit">
-                <SelectValue placeholder="Select limit" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">Not set</SelectItem>
-                {Array.from({ length: 10 }, (_, i) => (i + 1) * 1000).map((v) => (
-                  <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
-                ))}
-                {Array.from({ length: 18 }, (_, i) => 15000 + i * 5000).map((v) => (
-                  <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.creditLimit && (
-              <p className="text-base text-destructive">
-                {errors.creditLimit.message}
-              </p>
-            )}
-          </div>
-        </fieldset>
-      )}
-
       {/* ── Step 1/2 or Edit Mode: Annual Fee + Sign-up Bonus ─────────── */}
       {(isEditMode || currentStep === 1 || currentStep === 2) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -474,8 +442,8 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             </div>
             )}
 
-            {/* Annual fee date - only show in Step 2 or edit mode */}
-            {(isEditMode || currentStep === 2) && (
+            {/* Annual fee date - only show in edit mode on step 1 */}
+            {isEditMode && (
               <div className="space-y-1.5">
                 <Label htmlFor="annualFeeDate">Annual fee date</Label>
                 <Input id="annualFeeDate" type="date" {...register("annualFeeDate")} />
@@ -549,8 +517,8 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           </>
           )}
 
-          {/* Bonus deadline and met - only show in Step 2 or edit mode */}
-          {(isEditMode || currentStep === 2) && (
+          {/* Bonus deadline and met - only show in edit mode on step 1 */}
+          {isEditMode && (
             <>
               <div className="space-y-1.5">
                 <Label htmlFor="bonusDeadline">Bonus deadline</Label>
@@ -578,6 +546,77 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         </fieldset>
 
         </div>
+      )}
+
+      {/* ── Step 2 (wizard mode only): More Details ──────────────────────────── */}
+      {!isEditMode && currentStep === 2 && (
+        <>
+          {/* Credit Limit */}
+          <fieldset className="border border-border rounded-md p-4 space-y-4">
+            <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Card Details</legend>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="creditLimit">Credit limit</Label>
+              <Select
+                {...(defaultValues.creditLimit ? { defaultValue: defaultValues.creditLimit } : {})}
+                onValueChange={(v) => setValue("creditLimit", v)}
+              >
+                <SelectTrigger id="creditLimit">
+                  <SelectValue placeholder="Select limit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Not set</SelectItem>
+                  {Array.from({ length: 10 }, (_, i) => (i + 1) * 1000).map((v) => (
+                    <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
+                  ))}
+                  {Array.from({ length: 18 }, (_, i) => 15000 + i * 5000).map((v) => (
+                    <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.creditLimit && (
+                <p className="text-base text-destructive">
+                  {errors.creditLimit.message}
+                </p>
+              )}
+            </div>
+          </fieldset>
+
+          {/* Annual Fee Date + Bonus Deadline / Met */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <fieldset className="border border-border rounded-md p-4 space-y-4">
+              <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Annual Fee</legend>
+              <div className="space-y-1.5">
+                <Label htmlFor="annualFeeDate">Annual fee date</Label>
+                <Input id="annualFeeDate" type="date" {...register("annualFeeDate")} />
+              </div>
+            </fieldset>
+
+            <fieldset className="border border-border rounded-md p-4 space-y-4">
+              <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Sign-up Bonus</legend>
+              <div className="space-y-1.5">
+                <Label htmlFor="bonusDeadline">Bonus deadline</Label>
+                <Input
+                  id="bonusDeadline"
+                  type="date"
+                  {...register("bonusDeadline")}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="bonusMet"
+                  checked={watch("bonusMet")}
+                  onCheckedChange={(checked) =>
+                    setValue("bonusMet", checked === true)
+                  }
+                />
+                <Label htmlFor="bonusMet" className="cursor-pointer">
+                  Minimum spend met
+                </Label>
+              </div>
+            </fieldset>
+          </div>
+        </>
       )}
 
       {/* ── Status (edit mode only) ────────────────────────────── */}
