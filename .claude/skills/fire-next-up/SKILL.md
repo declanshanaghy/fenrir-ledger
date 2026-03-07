@@ -88,7 +88,7 @@ sequenceDiagram
 
     ☁️->>🌿: git push (commits on feature branch)
 
-    Note over 🐺,🌿: ᚱ COMPLETION — User checks with<br/>/depot-logs or /fire-next-up --resume
+    Note over 🐺,🌿: ᚱ COMPLETION — User checks with<br/>/fire-next-up --resume
 ```
 
 ### Depot Session Lifecycle
@@ -120,8 +120,6 @@ Examples: `issue-42-step1-firemandecko-a1b2c3d4`, `issue-42-step2-loki-e5f6a7b8`
 **Do NOT poll, wait, or block.** Report the dispatch summary to the user and stop.
 
 The user will check on the session later using:
-- `/depot-logs <session-id>` — view the session transcript
-- `/depot-logs <session-id> --critique` — audit agent compliance
 - `/fire-next-up --resume #N` — continue the chain once the agent completes
 
 The orchestrator does NOT manage the session lifecycle. Depot sessions complete
@@ -387,8 +385,7 @@ depot claude \
 feature branch. Passing a non-existent branch causes Depot to fail on checkout.
 
 **Do NOT poll, wait, or block after spawning.** Report the dispatch summary (Step 8)
-and stop. The user will check on the session with `/depot-logs` and continue the
-chain with `/fire-next-up --resume #N` when ready.
+and stop. The user will continue the chain with `/fire-next-up --resume #N` when ready.
 
 ### Local Mode (`--local`)
 
@@ -812,8 +809,7 @@ The user continues the chain manually using `/fire-next-up --resume #N`, which:
 2. Spawns the next agent in the chain
 3. Reports the dispatch summary and stops again
 
-The user can inspect any session with `/depot-logs <session-id>` or
-`/depot-logs <session-id> --critique`.
+The user can inspect any session via the Depot dashboard.
 
 ### Local Mode (`--local`)
 
