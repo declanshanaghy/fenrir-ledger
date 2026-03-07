@@ -173,13 +173,14 @@
 - Import route: exactly one of `url` or `csv` required; both checked as strings
 - Stripe checkout redirect URLs: `APP_BASE_URL`/`VERCEL_URL` only (no user-controlled headers)
 
-### Stripe-Specific
+### Stripe-Specific (Stripe Direct)
 
 - SHA-256 HMAC webhook signature verification (`stripe.webhooks.constructEvent()`)
 - Raw body read before JSON parsing for webhook signature validation
 - `STRIPE_WEBHOOK_SECRET` never logged or returned to clients
 - Stripe entitlements in KV with 30-day TTL
 - Reverse index (`stripe-customer:{id}`) for webhook-to-user mapping
+- No token encryption in KV (unlike previous platforms) — only subscription status stored
 
 ---
 

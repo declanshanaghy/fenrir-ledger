@@ -248,16 +248,16 @@ These are the minimum scopes required for Path B. `drive.file` is narrower than
 
 ### 5.1 Overview
 
-Subscription management uses Stripe Direct. There is no longer a Patreon integration.
-Users subscribe via Stripe Checkout (hosted payment page). Entitlements are stored
-in Vercel KV keyed on the Google `sub` claim.
+Subscription management uses Stripe Direct exclusively. Users subscribe via Stripe
+Checkout (hosted payment page). Entitlements are stored in Vercel KV keyed on the
+Google `sub` claim.
 
 The Stripe integration creates a **layered model**:
 - Google `id_token` in `localStorage` — identity on every API request
 - Stripe subscription status in Vercel KV — entitlement lookup
 
-Unlike the previous Patreon design, no Stripe secrets are stored in KV. The Stripe
-secret key is a server-side process.env variable used server-to-server only.
+No Stripe secrets are stored in KV. The Stripe secret key is a server-side
+process.env variable used server-to-server only.
 
 ### 5.2 Checkout Flow
 
