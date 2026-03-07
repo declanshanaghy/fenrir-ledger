@@ -28,23 +28,13 @@ debugging agent failures, auditing what an agent did, and checking for errors.
 
 ### Default mode (and --errors, --tools, --raw)
 
-1. **Run the script** to generate the log file:
-   ```bash
-   bash .claude/scripts/depot-session-log.sh <session-id> [--errors|--tools|--raw]
-   ```
-2. **Read the log file** with the Read tool:
-   ```
-   Read: tmp/depot-logs/<session>.log
-   ```
-3. **Output the full file contents** directly as text in your response. Do NOT
-   summarize, condense, or paraphrase. Show the complete log.
-4. **Show the file path** at the end:
-   ```
-   Log saved to: tmp/depot-logs/<session>.log
-   ```
+Run the script. It saves to `tmp/depot-logs/<session>.log` and cats the output:
 
-**IMPORTANT:** The user cannot see Bash tool output. You MUST read the log file
-with the Read tool and output its FULL contents as text. No summaries.
+```bash
+bash .claude/scripts/depot-session-log.sh <session-id> [--errors|--tools|--raw]
+```
+
+That's it. The script handles everything — saving the file and printing the output.
 
 ### --critique mode
 

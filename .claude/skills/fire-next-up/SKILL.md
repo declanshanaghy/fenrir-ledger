@@ -103,15 +103,17 @@ Launch a Depot session. The command returns immediately with a session ID and li
 ```bash
 depot claude \
   --org "$DEPOT_ORG_ID" \
-  --session-id "issue-<NUMBER>-step<N>-<agent>" \
+  --session-id "issue-<NUMBER>-step<N>-<agent>-<UUID8>" \
   --repository "https://github.com/declanshanaghy/fenrir-ledger" \
   --branch "main" \
   --dangerously-skip-permissions \
   -p "<AGENT PROMPT>"
 ```
 
-Session ID naming convention: `issue-<NUMBER>-step<N>-<agent-name>`
-Examples: `issue-42-step1-firemandecko`, `issue-42-step2-loki`
+Session ID naming convention: `issue-<NUMBER>-step<N>-<agent-name>-<UUID8>`
+where `<UUID8>` is the first 8 characters of a random UUID (generate via `uuidgen | cut -c1-8 | tr 'A-Z' 'a-z'`).
+This ensures session IDs are unique across retries of the same issue/step.
+Examples: `issue-42-step1-firemandecko-a1b2c3d4`, `issue-42-step2-loki-e5f6a7b8`
 
 #### After Spawning
 
@@ -370,7 +372,7 @@ Launch the first agent in the chain as a **Depot remote session** (fire-and-forg
 ```bash
 depot claude \
   --org "$DEPOT_ORG_ID" \
-  --session-id "issue-<NUMBER>-step1-<agent-name>" \
+  --session-id "issue-<NUMBER>-step1-<agent-name>-<UUID8>" \
   --repository "https://github.com/declanshanaghy/fenrir-ledger" \
   --branch "main" \
   --dangerously-skip-permissions \
