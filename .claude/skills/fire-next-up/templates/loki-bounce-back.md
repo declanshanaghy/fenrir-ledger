@@ -63,14 +63,12 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict (Revised)
 
 **Build status:** tsc clean, next build clean.
 
-<If all tests pass: All CI failures resolved. Ready for merge.>
+<If all tests pass: All CI failures resolved. Ready for merge — awaiting orchestrator.>
 <If still failing: FAIL — <what is still broken>.>"
 
-**Step 7 — Auto-merge (if verdict is PASS):**
-1. Wait for CI: `gh pr checks <PR_NUMBER> --watch --fail-fast`
-2. Check needs-review: `gh issue view <NUMBER> --json labels --jq '[.labels[].name] | any(. == "needs-review")'`
-3. Check mergeable: `gh pr view <PR_NUMBER> --json mergeable --jq '.mergeable'`
-4. If all clear: `gh pr merge <PR_NUMBER> --squash --delete-branch`
+**IMPORTANT — DO NOT MERGE:**
+You do NOT have merge authority. Only the orchestrator (via Odin's approval) merges PRs.
+Your job ends after posting the verdict comment. Do NOT run `gh pr merge` or any merge command.
 
 **Key reminders:**
 - EVERY bash command must start with cd <REPO_ROOT>.
