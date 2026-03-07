@@ -392,7 +392,7 @@ export function AnimatedHowlPanel({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="hidden lg:flex lg:flex-col w-72 shrink-0"
+            className="hidden lg:flex lg:flex-col w-72 shrink-0 self-start"
             style={{ zIndex: 30 }}
           >
             <HowlPanel cards={cards} className={className} />
