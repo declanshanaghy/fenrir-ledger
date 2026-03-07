@@ -393,7 +393,7 @@ export function AnimatedHowlPanel({
             exit={{ x: "100%", opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="hidden lg:flex lg:flex-col w-72 shrink-0"
-            style={{ zIndex: 50 }}
+            style={{ zIndex: 30 }}
           >
             <HowlPanel cards={cards} className={className} />
           </motion.div>
@@ -410,7 +410,7 @@ export function AnimatedHowlPanel({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="lg:hidden fixed inset-0 bg-black/60 z-40"
+            className="lg:hidden fixed inset-0 bg-black/60 z-30"
             onClick={onMobileClose}
             aria-hidden="true"
           />
@@ -424,7 +424,7 @@ export function AnimatedHowlPanel({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:hidden fixed bottom-0 left-0 right-0 z-50 max-h-[70vh] flex flex-col"
+            className="lg:hidden fixed bottom-0 left-0 right-0 z-40 max-h-[70vh] flex flex-col"
           >
             <HowlPanel cards={cards} className="h-full rounded-t-sm rounded-b-none" />
             <button
