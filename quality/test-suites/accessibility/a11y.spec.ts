@@ -150,17 +150,25 @@ test.describe("Form Accessibility", () => {
     //
     // Each label-input pair is verified by checking the label's for= attribute
     // matches the target element's id attribute.
+    //
+    // Note: CardForm in new-card mode uses a 2-step wizard. Step 1 shows cardName,
+    // openDate, and annualFee. Step 2 shows annualFeeDate, bonusAmount, and bonusDeadline.
+    // This test verifies Step 1 fields on the /cards/new form, which is all that's visible
+    // without navigating the wizard steps.
 
-    const fieldPairs: Array<{ labelFor: string; inputId: string }> = [
+    // Verify Step 1 form fields (visible on the /cards/new page by default)
+    // In new-card mode, CardForm displays Step 1 with: issuerId, cardName, openDate,
+    // annualFee, and bonusType. Step 2 fields (annualFeeDate, bonusDeadline) are only
+    // rendered when currentStep === 2 or in edit mode, so they're not present on Step 1.
+    const step1Pairs: Array<{ labelFor: string; inputId: string }> = [
+      { labelFor: "issuerId", inputId: "issuerId" },
       { labelFor: "cardName", inputId: "cardName" },
       { labelFor: "openDate", inputId: "openDate" },
       { labelFor: "annualFee", inputId: "annualFee" },
-      { labelFor: "annualFeeDate", inputId: "annualFeeDate" },
-      { labelFor: "bonusAmount", inputId: "bonusAmount" },
-      { labelFor: "bonusDeadline", inputId: "bonusDeadline" },
+      { labelFor: "bonusType", inputId: "bonusType" },
     ];
 
-    for (const { labelFor, inputId } of fieldPairs) {
+    for (const { labelFor, inputId } of step1Pairs) {
       // Label must exist with the correct for= attribute
       const label = page.locator(`label[for="${labelFor}"]`);
       await expect(label).toBeAttached();

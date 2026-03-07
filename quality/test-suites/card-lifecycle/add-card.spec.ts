@@ -68,10 +68,10 @@ test.describe("Add Card — Form Loads", () => {
   test("submit button reads 'Add card' (not 'Save changes') for new card", async ({
     page,
   }) => {
-    // Spec: CardForm.tsx — isEditMode ? "Save changes" : "Add card"
-    // In new-card mode isEditMode === false
+    // Spec: CardForm.tsx — isEditMode ? "Save changes" : "Save Card"
+    // In new-card mode isEditMode === false, Step 1 shows "Save Card" button
     const submitBtn = page.locator('button[type="submit"]');
-    await expect(submitBtn).toContainText("Add card");
+    await expect(submitBtn).toContainText("Save Card");
   });
 });
 
