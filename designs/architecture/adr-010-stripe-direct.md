@@ -2,11 +2,17 @@
 
 ## Status: Accepted
 
+> **Addendum (2026-03-07):** Patreon has been fully removed. Stripe is the sole subscription
+> platform. The `SUBSCRIPTION_PLATFORM` feature flag, `isPatreon()`, `isStripe()` helpers,
+> and `src/lib/feature-flags.ts` have all been deleted. The feature flag guards on routes
+> are no longer needed — all Stripe routes are always active. See `adr-feature-flags.md`
+> (superseded) for the transition history.
+
 ## Context
 
-Fenrir Ledger currently uses Patreon as its subscription platform (ADR-009). The product team has decided to add Stripe as an alternative subscription platform to provide a more streamlined payment experience with lower fees and better control over the billing lifecycle.
+Fenrir Ledger originally used Patreon as its subscription platform (ADR-009). The product team decided to add Stripe as an alternative subscription platform, and subsequently migrated fully to Stripe to provide a more streamlined payment experience with lower fees and better control over the billing lifecycle.
 
-The SUBSCRIPTION_PLATFORM feature flag (see adr-feature-flags.md) already supports toggling between "patreon" and "stripe". This ADR documents the technical architecture for the Stripe Direct integration.
+The SUBSCRIPTION_PLATFORM feature flag (see adr-feature-flags.md, now superseded) was used to toggle between "patreon" and "stripe" during migration. This ADR documents the technical architecture for the Stripe Direct integration.
 
 Key requirements:
 - Stripe Checkout for subscription creation (no custom payment forms)

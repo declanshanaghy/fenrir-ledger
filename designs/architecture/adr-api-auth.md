@@ -39,8 +39,14 @@ Per-route auth guard (not middleware):
 
 | Route | Protected | Reason |
 |-------|-----------|--------|
+| `GET /api/config/picker` | Yes | Serves server-side API key to client |
 | `POST /api/sheets/import` | Yes | Consumes LLM API credits |
+| `POST /api/stripe/checkout` | Yes | Creates paid checkout sessions on behalf of user |
+| `GET /api/stripe/membership` | Yes | Returns user-specific entitlement data |
+| `POST /api/stripe/portal` | Yes | Creates billing portal sessions on behalf of user |
+| `POST /api/stripe/unlink` | Yes | Cancels user subscription |
 | `POST /api/auth/token` | No | Token exchange — no token exists yet |
+| `POST /api/stripe/webhook` | No (Stripe signature) | Stripe sends webhooks — secured by SHA-256 HMAC via `constructEvent()` |
 
 All future API routes must use `requireAuth()` (CLAUDE.md unbreakable rule).
 
