@@ -317,7 +317,7 @@ export function HowlPanel({ cards, className }: HowlPanelProps) {
   return (
     <aside
       className={cn(
-        "flex flex-col",
+        "flex flex-col self-start",
         "bg-background border rounded-sm",
         ragnarokActive ? "border-[hsl(var(--realm-ragnarok-dark))]" : "border-border",
         "w-full",
@@ -393,10 +393,10 @@ export function AnimatedHowlPanel({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="hidden lg:flex lg:flex-col w-72 shrink-0"
+            className="hidden lg:block w-72 shrink-0"
             style={{ zIndex: 30 }}
           >
-            <HowlPanel cards={cards} className={className} />
+            <HowlPanel cards={cards} className={cn(className, "mt-[52px]")} />
           </motion.div>
         )}
       </AnimatePresence>
