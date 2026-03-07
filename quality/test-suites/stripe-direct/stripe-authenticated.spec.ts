@@ -24,11 +24,18 @@ const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9653";
 
 async function mockAuthenticatedUser(page: Page, googleSub = "google_test123"): Promise<void> {
   // Mock the FenrirSession in localStorage ("fenrir:auth")
+  // This must be done AFTER page.goto() so localStorage is available
+  // It will be set by the test right after navigation
+  return Promise.resolve();
+}
+
+async function setupAuthenticatedSession(page: Page, googleSub = "google_test123"): Promise<void> {
+  // Set the FenrirSession in localStorage
   // Calculate expires_at as a timestamp far in the future (year 2050)
   const futureTimestamp = new Date("2050-01-01").getTime();
 
-  // Use addInitScript to inject session code before ANY page loads (before frame creation)
-  await page.addInitScript(({ sub, expiresAt }) => {
+  // Use page.evaluate to set localStorage directly on the loaded page
+  await page.evaluate(({ sub, expiresAt }) => {
     const mockSession = {
       access_token: "mock_access_token_" + sub,
       id_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwicGljdHVyZSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vcGljdHVyZS5qcGciLCJpYXQiOjE2NzY2MzI0MDAsImV4cCI6OTk5OTk5OTk5OX0.8f2f-U2Y6L7Z3j6K0N4O5P8Q9R1S2T3U4V5W6X7Y8Z",
@@ -41,9 +48,19 @@ async function mockAuthenticatedUser(page: Page, googleSub = "google_test123"): 
         picture: "https://example.com/picture.jpg",
       },
     };
-    (window as any).localStorage = window.localStorage || {};
     localStorage.setItem("fenrir:auth", JSON.stringify(mockSession));
   }, { sub: googleSub, expiresAt: futureTimestamp });
+
+  // Force the EntitlementContext to refresh by dispatching a storage event
+  await page.evaluate(() => {
+    window.dispatchEvent(new StorageEvent("storage", {
+      key: "fenrir:auth",
+      newValue: localStorage.getItem("fenrir:auth"),
+    }));
+  });
+
+  // Wait for React to rerender with the new auth state
+  await page.waitForTimeout(2000);
 }
 
 
@@ -56,9 +73,6 @@ test.describe("Authenticated Stripe UI States", () => {
     // Mock Karl active subscription
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + 30);
-
-    // Set up authenticated session FIRST, before any routing setup
-    await mockAuthenticatedUser(page);
 
     // Set up API route mock BEFORE any navigation
     await page.route('**/api/stripe/membership*', async route => {
@@ -83,8 +97,8 @@ test.describe("Authenticated Stripe UI States", () => {
     await page.goto(`${BASE_URL}/settings`);
     await page.waitForLoadState("networkidle");
 
-    // Give a moment for the context to load and refresh entitlement
-    await page.waitForTimeout(1000);
+    // Set up authenticated session AFTER page loads
+    await setupAuthenticatedSession(page);
 
     // Wait for the badge to appear (with longer timeout since API mock should respond)
     const karlBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /KARL/i });
@@ -131,15 +145,12 @@ test.describe("Authenticated Stripe UI States", () => {
       });
     });
 
-    // Set up authenticated session BEFORE any navigation
-    await mockAuthenticatedUser(page);
-
     // Navigate directly to settings page
     await page.goto(`${BASE_URL}/settings`);
     await page.waitForLoadState("networkidle");
 
-    // Give a moment for the context to load and refresh entitlement
-    await page.waitForTimeout(500);
+    // Set up authenticated session AFTER page loads
+    await setupAuthenticatedSession(page);
 
     // Check for CANCELING badge
     const cancelingBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /CANCELING/i });
@@ -178,15 +189,12 @@ test.describe("Authenticated Stripe UI States", () => {
       });
     });
 
-    // Set up authenticated session BEFORE any navigation
-    await mockAuthenticatedUser(page);
-
     // Navigate directly to settings page
     await page.goto(`${BASE_URL}/settings`);
     await page.waitForLoadState("networkidle");
 
-    // Give a moment for the context to load and refresh entitlement
-    await page.waitForTimeout(500);
+    // Set up authenticated session AFTER page loads
+    await setupAuthenticatedSession(page);
 
     // Check for CANCELED badge (not THRALL - the canceled state shows CANCELED badge)
     const canceledBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /CANCELED/i });
@@ -237,15 +245,12 @@ test.describe("Authenticated Stripe UI States", () => {
       }
     });
 
-    // Set up authenticated session BEFORE any navigation
-    await mockAuthenticatedUser(page);
-
     // Navigate to settings with session_id param (simulating Stripe redirect)
     await page.goto(`${BASE_URL}/settings?stripe=success&session_id=${sessionId}`);
     await page.waitForLoadState("networkidle");
 
-    // Give a moment for the context to load and refresh entitlement with session_id
-    await page.waitForTimeout(500);
+    // Set up authenticated session AFTER page loads
+    await setupAuthenticatedSession(page);
 
     // Check that Karl state is shown after migration
     const karlBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /KARL/i });
