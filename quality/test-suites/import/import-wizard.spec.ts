@@ -325,8 +325,8 @@ test.describe("Import Wizard — Path C: Deliver a Rune-Stone (CSV Upload)", () 
     // File size constraint is shown to the user
     await expect(dialog.getByText(".csv, .tsv, .xls, .xlsx — up to 5 MB")).toBeVisible();
 
-    // Supported formats heading
-    await expect(dialog.getByText("Supported formats")).toBeVisible();
+    // How to export CSV heading
+    await expect(dialog.getByText("How to export CSV")).toBeVisible();
   });
 
   /**
