@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════╗
+  ║     DEPOT INTEGRATION — THE WOLF'S GRIEVANCES       ║
+  ║     Filed from the forge of Fenrir Ledger.           ║
+  ╚══════════════════════════════════════════════════════╝
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Pain points and feature requests for Depot Claude integration, from the Fenrir Ledger engineering team." />
+  <title>Depot Integration — The Wolf's Grievances</title>
+  <link rel="icon" href="/static/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --void: #12100e;
+      --forge: #1c1917;
+      --chain: #242120;
+      --border: #3a3530;
+      --border-strong: #4a4540;
+      --gold: #d4a520;
+      --gold-bright: #f0c040;
+      --gold-dim: #8a6a10;
+      --gold-glow: rgba(212, 165, 32, 0.15);
+      --ice-blue: #5b9ec9;
+      --ice-blue-dim: rgba(91, 158, 201, 0.12);
+      --text-saga: #f5f3ed;
+      --text-rune: #d0c8b8;
+      --text-void: #6a6560;
+      --fire-muspel: #c94a0a;
+      --red-ragnarok: #ef4444;
+      --teal-asgard: #0a8c6e;
+      --amber-hati: #f59e0b;
+      --font-display: 'Cinzel Decorative', serif;
+      --font-heading: 'Cinzel', serif;
+      --font-body: 'Source Serif 4', serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius: 3px;
+      --max-width: 960px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0; padding: 0;
+      background-color: var(--void);
+      background-image:
+        radial-gradient(ellipse 60% 40% at 50% -5%, rgba(212, 165, 32, 0.05) 0%, transparent 60%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23s)' opacity='0.05'/%3E%3C/svg%3E");
+      background-attachment: fixed;
+      color: var(--text-saga);
+      font-family: var(--font-body);
+      font-size: 22px;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--gold); text-decoration: none; }
+    a:hover { color: var(--gold-bright); }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .rune-rule {
+      width: 80px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 24px auto; border: none;
+    }
+
+    .rune-rule-left {
+      width: 60px; height: 1px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+      margin: 16px 0; border: none;
+    }
+
+    /* ── Animations ───────────────────────────── */
+    .saga-reveal > * {
+      opacity: 0; transform: translateY(14px);
+      animation: saga-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .saga-reveal > *:nth-child(1) { animation-delay: 100ms; }
+    .saga-reveal > *:nth-child(2) { animation-delay: 180ms; }
+    .saga-reveal > *:nth-child(3) { animation-delay: 260ms; }
+    .saga-reveal > *:nth-child(4) { animation-delay: 340ms; }
+    .saga-reveal > *:nth-child(5) { animation-delay: 420ms; }
+    .saga-reveal > *:nth-child(n+6) { animation-delay: 500ms; }
+    @keyframes saga-enter { to { opacity: 1; transform: translateY(0); } }
+
+    @keyframes gold-pulse {
+      0%, 100% { box-shadow: 0 0 12px rgba(212, 165, 32, 0.3); }
+      50%      { box-shadow: 0 0 28px rgba(212, 165, 32, 0.6), 0 0 48px rgba(212, 165, 32, 0.2); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .saga-reveal > * { animation: none; opacity: 1; transform: none; }
+    }
+
+    /* ── Hero ─────────────────────────────────── */
+    .hero {
+      padding: 80px 0 48px;
+      text-align: center;
+      position: relative;
+      background:
+        radial-gradient(ellipse 50% 40% at 50% 0%, rgba(91, 158, 201, 0.12) 0%, transparent 65%),
+        radial-gradient(ellipse 80% 40% at 50% 100%, rgba(18, 16, 14, 0.9) 0%, transparent 60%),
+        linear-gradient(to bottom, #04091a 0%, #08152a 25%, #0f1c2e 50%, #12100e 100%);
+    }
+
+    .hero-eyebrow {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--gold);
+      letter-spacing: 0.4em;
+      opacity: 0.7;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: clamp(28px, 5vw, 52px);
+      color: var(--text-saga);
+      line-height: 1.1;
+      letter-spacing: 0.02em;
+      margin: 0 0 16px;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.12), 0 -1px 0 rgba(0,0,0,0.8),
+        2px 4px 8px rgba(0,0,0,0.95), 0 0 40px rgba(91, 158, 201, 0.1);
+    }
+
+    .hero-sub {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 22px;
+      color: var(--text-rune);
+      max-width: 600px;
+      margin: 0 auto 8px;
+      line-height: 1.7;
+    }
+
+    .hero-meta {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-void);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Epigraph ─────────────────────────────── */
+    .epigraph {
+      padding: 40px 0;
+      text-align: center;
+    }
+    .epigraph blockquote {
+      margin: 0 auto;
+      max-width: 760px;
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-style: italic;
+      font-size: 22px;
+      color: var(--text-rune);
+      line-height: 1.8;
+      border-left: 2px solid var(--gold-dim);
+      padding-left: 24px;
+      text-align: left;
+    }
+
+    /* ── Grievance Cards ──────────────────────── */
+    .grievances { padding: 24px 0 64px; }
+
+    .grievance {
+      background: var(--forge);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--fire-muspel);
+      border-radius: var(--radius);
+      padding: 40px 36px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.02);
+      transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+    }
+    .grievance:hover {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 1px var(--gold), 0 0 28px rgba(212, 165, 32, 0.15), 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    .grievance-number {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--fire-muspel);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .grievance h2 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: clamp(20px, 3vw, 26px);
+      color: var(--text-saga);
+      letter-spacing: 0.06em;
+      margin: 0 0 8px;
+    }
+
+    .grievance-pain {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 20px;
+      color: var(--gold);
+      margin: 0 0 16px;
+      line-height: 1.6;
+    }
+
+    .grievance p {
+      color: var(--text-rune);
+      font-size: 20px;
+      line-height: 1.75;
+      margin: 0 0 16px;
+    }
+
+    .grievance p:last-child { margin-bottom: 0; }
+
+    /* Code blocks */
+    .code-block {
+      background: var(--void);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin: 16px 0;
+      overflow-x: auto;
+    }
+
+    .code-block pre {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text-rune);
+      white-space: pre;
+    }
+
+    .code-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .code-label.want { color: var(--teal-asgard); }
+    .code-label.have { color: var(--fire-muspel); }
+
+    .code-block .comment { color: var(--text-void); }
+    .code-block .cmd { color: var(--text-saga); }
+    .code-block .flag { color: var(--gold); }
+    .code-block .string { color: var(--ice-blue); }
+    .code-block .output { color: var(--teal-asgard); }
+
+    /* Verdict line */
+    .wolf-says {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 19px;
+      color: var(--text-rune);
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Summary Table ────────────────────────── */
+    .summary-section {
+      padding: 48px 0;
+      background: var(--forge);
+    }
+
+    .summary-section h2 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 24px;
+      color: var(--text-saga);
+      text-align: center;
+      letter-spacing: 0.06em;
+      margin: 0 0 32px;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .summary-table th {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--gold-dim);
+    }
+
+    .summary-table td {
+      font-family: var(--font-body);
+      font-size: 18px;
+      color: var(--text-rune);
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .summary-table td code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--ice-blue);
+      background: var(--void);
+      padding: 2px 6px;
+      border-radius: 2px;
+    }
+
+    .summary-table tr:hover td {
+      background: rgba(212, 165, 32, 0.03);
+    }
+
+    /* ── Architecture Diagram ─────────────────── */
+    .arch-section { padding: 48px 0; }
+
+    .arch-section h2 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 24px;
+      color: var(--text-saga);
+      text-align: center;
+      letter-spacing: 0.06em;
+      margin: 0 0 12px;
+    }
+
+    .arch-sub {
+      text-align: center;
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--text-rune);
+      margin: 0 0 32px;
+    }
+
+    .arch-diagram {
+      background: var(--forge);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--text-rune);
+      overflow-x: auto;
+    }
+
+    .arch-diagram .label { color: var(--gold); }
+    .arch-diagram .arrow { color: var(--text-void); }
+    .arch-diagram .agent { color: var(--ice-blue); }
+    .arch-diagram .action { color: var(--text-rune); }
+    .arch-diagram .highlight { color: var(--fire-muspel); }
+
+    /* ── Footer ───────────────────────────────── */
+    .closing {
+      padding: 64px 0;
+      text-align: center;
+    }
+
+    .closing blockquote {
+      margin: 0 auto;
+      max-width: 700px;
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-style: italic;
+      font-size: 22px;
+      color: var(--text-rune);
+      line-height: 1.8;
+    }
+
+    .closing cite {
+      display: block;
+      margin-top: 12px;
+      font-style: normal;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-void);
+      letter-spacing: 0.15em;
+    }
+
+    .footer-runes {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      color: var(--text-void);
+      letter-spacing: 0.5em;
+      margin-top: 32px;
+    }
+
+    @media (max-width: 639px) {
+      .grievance { padding: 28px 20px; }
+      .code-block { padding: 16px; }
+      .code-block pre { font-size: 11px; }
+      .summary-table { font-size: 12px; }
+      .summary-table th, .summary-table td { padding: 10px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Hero ──────────────────────────────────── -->
+  <section class="hero">
+    <div class="container saga-reveal">
+      <span class="hero-eyebrow">ᚠ · FIELD REPORT · ᚠ</span>
+      <h1>THE WOLF'S GRIEVANCES</h1>
+      <p class="hero-sub">
+        Pain points from building autonomous agent orchestration<br>
+        on Depot Claude sandboxes.
+      </p>
+      <hr class="rune-rule" />
+      <p class="hero-meta">FROM: Fenrir Ledger Engineering &nbsp;·&nbsp; TO: Depot Engineers &nbsp;·&nbsp; 2026-03-06</p>
+    </div>
+  </section>
+
+  <!-- ── Epigraph ──────────────────────────────── -->
+  <section class="epigraph">
+    <div class="container">
+      <blockquote>
+        The wolf does not howl without cause.<br><br>
+        We built an autonomous agent orchestration system on top of <code style="font-family:var(--font-mono);color:var(--ice-blue);">depot claude</code>.
+        Multiple agents — engineers, testers, designers — each running in their own sandbox,
+        each handing off to the next via git commits and GitHub issue comments.
+        The architecture is sound. The wolf runs.<br><br>
+        But the chain that binds us is not the work itself — it is the tooling around it.
+        We have fought these battles long enough to know the difference between friction
+        that sharpens and friction that bleeds. This is the latter.<br><br>
+        We are writing this because we <em>want</em> to stay. Depot's sandbox model is the
+        closest thing to what we need. But a wolf that cannot see its pack, cannot hear
+        when the hunt ends, and must claw through the underbrush for every scrap of
+        information — that wolf will eventually find another forest.<br><br>
+        If these gaps remain, we will be forced to evaluate alternatives — raw EC2
+        sandboxes, modal.com, or rolling our own container orchestration. None of those
+        options are as elegant as what Depot <em>could</em> be. That's what makes this
+        worth writing.<br><br>
+        What follows are the thorns we pulled from our paws. We offer them not as complaints,
+        but as prey laid at your door — problems worth hunting, before the wolf moves on.
+      </blockquote>
+    </div>
+  </section>
+
+  <hr class="rune-rule" />
+
+  <!-- ── Grievances ────────────────────────────── -->
+  <section class="grievances">
+    <div class="container">
+
+      <!-- ── 1. Session Logs ──────────────────── -->
+      <article class="grievance">
+        <span class="grievance-number">Grievance I</span>
+        <h2>No Simple Way to Retrieve a Session Log</h2>
+        <p class="grievance-pain">There is no <code>depot claude session-log &lt;id&gt;</code> command.</p>
+
+        <p>To get the transcript of what an agent did in a sandbox, we must: search
+        <code>~/.claude/projects/&lt;hash&gt;/</code> for JSONL files, filter by file size
+        (Depot sessions are small; local conversations are large), grep inside each file
+        for the session ID or branch name, and if not found locally, run
+        <code>depot claude --wait --resume &lt;id&gt;</code> to trigger a download, then
+        parse the JSONL with <code>jq</code>.</p>
+
+        <p>We wrote a 90-line bash script to automate this. It should be one command.</p>
+
+        <span class="code-label want">What we want</span>
+        <div class="code-block">
+<pre><span class="comment"># Get the full session transcript</span>
+<span class="cmd">depot claude</span> <span class="flag">session-log</span> <span class="string">&lt;session-id&gt;</span>
+
+<span class="comment"># Raw JSONL for piping</span>
+<span class="cmd">depot claude</span> <span class="flag">session-log</span> <span class="string">&lt;session-id&gt;</span> <span class="flag">--format</span> jsonl
+
+<span class="comment"># Just assistant messages, human-readable</span>
+<span class="cmd">depot claude</span> <span class="flag">session-log</span> <span class="string">&lt;session-id&gt;</span> <span class="flag">--format</span> text</pre>
+        </div>
+
+        <span class="code-label have">What we have to do instead</span>
+        <div class="code-block">
+<pre><span class="comment"># Our actual script — this is what "get a log" looks like today</span>
+<span class="cmd">JSONL_FILE</span>=$(<span class="cmd">find</span> ~/.claude/projects/ -name "*.jsonl" -size -500k \
+  -exec grep -l <span class="string">"$SESSION_ID"</span> {} \;)
+
+<span class="cmd">if</span> [ -z <span class="string">"$JSONL_FILE"</span> ]; <span class="cmd">then</span>
+  <span class="cmd">depot claude</span> <span class="flag">--wait --resume</span> <span class="string">"$SESSION_ID"</span> <span class="flag">--org</span> <span class="string">"$ORG_ID"</span> &gt;/dev/null 2&gt;&amp;1
+  <span class="cmd">JSONL_FILE</span>=$(<span class="cmd">find</span> ~/.claude/projects/ -name "*.jsonl" -size -500k \
+    -exec grep -l <span class="string">"$SESSION_ID"</span> {} \;)
+<span class="cmd">fi</span>
+
+<span class="cmd">cat</span> <span class="string">"$JSONL_FILE"</span> | <span class="cmd">jq</span> -r <span class="string">'...'</span> <span class="comment"># 40 more lines of jq incantations</span></pre>
+        </div>
+
+        <p class="wolf-says">The wolf should not need to dig through filesystem internals to see what its pack did.</p>
+      </article>
+
+      <!-- ── 2. Pager ─────────────────────────── -->
+      <article class="grievance">
+        <span class="grievance-number">Grievance II</span>
+        <h2>CLI Defaults to Pager — Hostile to Automation</h2>
+        <p class="grievance-pain"><code>depot claude list-sessions</code> opens an interactive pager by default. This is death for automation.</p>
+
+        <p>Every script that calls <code>list-sessions</code> must pass <code>--output json</code>
+        to avoid hanging on a pager that will never receive a keypress. There is no environment
+        variable (<code>DEPOT_PAGER</code>, <code>DEPOT_NO_PAGER</code>, <code>NO_PAGER</code>)
+        to disable this globally.</p>
+
+        <p>Even with <code>--output json</code>, the command prefixes a pagination token line
+        before the JSON array, requiring an additional <code>sed -n '/^\[/,$ p'</code> to
+        extract valid JSON. The pagination token should not be mixed into the JSON output —
+        put it in stderr, a header, or a separate <code>--next-token</code> flag.</p>
+
+        <span class="code-label want">What we want</span>
+        <div class="code-block">
+<pre><span class="comment"># Environment variable to disable pager globally</span>
+<span class="cmd">export</span> <span class="flag">DEPOT_PAGER</span>=<span class="string">off</span>
+
+<span class="comment"># Or at minimum, detect non-TTY and disable automatically</span>
+<span class="cmd">depot claude list-sessions</span> | <span class="cmd">jq</span> <span class="string">'.[0].id'</span>   <span class="comment"># should just work</span></pre>
+        </div>
+
+        <span class="code-label have">What we have to do instead</span>
+        <div class="code-block">
+<pre><span class="cmd">depot claude list-sessions</span> <span class="flag">--output json</span> 2&gt;/dev/null \
+  | <span class="cmd">sed</span> -n <span class="string">'/^\[/,$ p'</span> \
+  | <span class="cmd">jq</span> <span class="string">'.[0].id'</span></pre>
+        </div>
+
+        <p class="wolf-says">The wolf does not wait for permission to read its own kill log.</p>
+      </article>
+
+      <!-- ── 3. One-Shot Sessions ─────────────── -->
+      <article class="grievance">
+        <span class="grievance-number">Grievance III</span>
+        <h2>Sessions Are Resumable — But We Want One-Shot</h2>
+        <p class="grievance-pain">The session model assumes you'll come back. We never do.</p>
+
+        <p>The <code>depot claude</code> session model is built around resumption — start a
+        session, leave, come back, resume. This is useful for interactive work. But our use case
+        is <strong>fire-and-forget agent dispatch</strong>: launch an agent with a prompt, it
+        does its work, it's done. We never resume it. We just want to know when it finishes.</p>
+
+        <p>The <code>--wait</code> flag blocks until completion, which helps. But there's no
+        lightweight way to check "is this session done yet?" without either running
+        <code>--wait --resume</code> (blocks and downloads the full session) or listing all
+        sessions and filtering (paginated, pager-hostile — see Grievance II).</p>
+
+        <span class="code-label want">What we want</span>
+        <div class="code-block">
+<pre><span class="comment"># Simple status check — returns immediately</span>
+<span class="cmd">depot claude</span> <span class="flag">session-status</span> <span class="string">&lt;session-id&gt;</span>
+<span class="output">{ "id": "...", "status": "completed", "exit_code": 0, "duration": "3m42s" }</span>
+
+<span class="comment"># Exit-code-based check for scripting</span>
+<span class="cmd">depot claude</span> <span class="flag">session-status</span> <span class="string">&lt;session-id&gt;</span> <span class="flag">--quiet</span>
+<span class="comment"># Exit 0 = completed, Exit 1 = running, Exit 2 = failed</span></pre>
+        </div>
+
+        <span class="code-label have">What we have to do instead</span>
+        <div class="code-block">
+<pre><span class="comment"># Option A: Block forever</span>
+<span class="cmd">depot claude</span> <span class="flag">--wait --resume</span> <span class="string">"$SESSION_ID"</span> <span class="flag">--org</span> <span class="string">"$ORG_ID"</span>
+
+<span class="comment"># Option B: Poll the session list (paginated, pager-hostile)</span>
+<span class="cmd">while</span> true; <span class="cmd">do</span>
+  STATUS=$(<span class="cmd">depot claude list-sessions</span> <span class="flag">--output json</span> 2&gt;/dev/null \
+    | <span class="cmd">sed</span> -n <span class="string">'/^\[/,$ p'</span> \
+    | <span class="cmd">jq</span> -r <span class="string">".[] | select(.id == \"$SESSION_ID\") | .status"</span>)
+  [ <span class="string">"$STATUS"</span> = <span class="string">"completed"</span> ] &amp;&amp; break
+  sleep 30
+<span class="cmd">done</span></pre>
+        </div>
+
+        <p class="wolf-says">The wolf needs to watch all its pups at once, not sit beside each one until it sleeps.</p>
+      </article>
+
+      <!-- ── 4. No Backchannel ────────────────── -->
+      <article class="grievance">
+        <span class="grievance-number">Grievance IV</span>
+        <h2>No Backchannel for Session Completion</h2>
+        <p class="grievance-pain">When an agent finishes, nothing happens on our end. No webhook. No callback. No event.</p>
+
+        <p>Our current architecture is "fire-and-forget, then the human checks manually."
+        This works, but it means the human is the event loop. The wolf is leashed to the
+        handler's schedule.</p>
+
+        <p>Our best workaround is to run <code>depot claude --wait --resume</code> as a
+        background process and rely on our CLI framework's task notification system. But
+        this means holding an open process per session, which doesn't scale to 5+ parallel
+        agent chains.</p>
+
+        <span class="code-label want">What we want — webhooks</span>
+        <div class="code-block">
+<pre><span class="comment"># Register a webhook for session lifecycle events</span>
+<span class="cmd">depot claude</span> <span class="flag">webhooks add</span> \
+  <span class="flag">--url</span> <span class="string">"https://our-api.example.com/depot/callback"</span> \
+  <span class="flag">--secret</span> <span class="string">"$WEBHOOK_SECRET"</span> \
+  <span class="flag">--events</span> <span class="string">session.completed,session.failed</span>
+
+<span class="comment"># Signed payload (HMAC-SHA256):</span>
+<span class="output">{
+  "event": "session.completed",
+  "session_id": "issue-199-step2-loki-fe3adaf1",
+  "org_id": "pqtm7s538l",
+  "exit_code": 0,
+  "duration_seconds": 222,
+  "repository": "declanshanaghy/fenrir-ledger",
+  "branch": "fix/issue-199-cards-header-text"
+}</span></pre>
+        </div>
+
+        <span class="code-label want">Or even simpler — per-session callback</span>
+        <div class="code-block">
+<pre><span class="cmd">depot claude</span> \
+  <span class="flag">--session-id</span> <span class="string">"issue-199-step2-loki"</span> \
+  <span class="flag">--on-complete</span> <span class="string">"https://our-api.example.com/depot/done"</span> \
+  <span class="flag">-p</span> <span class="string">"..."</span></pre>
+        </div>
+
+        <p class="wolf-says">The wolf pack hunts in parallel. When one brings down its quarry, the others must know — without stopping to look over their shoulders.</p>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ── Summary Table ─────────────────────────── -->
+  <section class="summary-section">
+    <div class="container">
+      <h2>THE HUNT LIST</h2>
+      <hr class="rune-rule" />
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Proposed Command</th>
+            <th>Purpose</th>
+            <th>Today's Workaround</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>session-log &lt;id&gt;</code></td>
+            <td>Get session transcript</td>
+            <td>90-line bash script searching filesystem + jq</td>
+          </tr>
+          <tr>
+            <td><code>session-status &lt;id&gt;</code></td>
+            <td>Check if session is done</td>
+            <td><code>--wait --resume</code> (blocking) or poll <code>list-sessions</code></td>
+          </tr>
+          <tr>
+            <td><code>webhooks add</code></td>
+            <td>Event-driven completion notification</td>
+            <td>Human-in-the-loop or background <code>--wait</code> per session</td>
+          </tr>
+          <tr>
+            <td><code>DEPOT_PAGER=off</code></td>
+            <td>Disable interactive pager globally</td>
+            <td><code>--output json</code> on every invocation + <code>sed</code> to strip tokens</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Architecture ──────────────────────────── -->
+  <section class="arch-section">
+    <div class="container">
+      <h2>WHY THIS MATTERS</h2>
+      <p class="arch-sub">Our multi-agent architecture — and why the wolf needs these tools.</p>
+      <hr class="rune-rule" />
+
+      <div class="arch-diagram">
+<pre>
+<span class="label">Orchestrator</span> <span class="action">(local)</span>
+<span class="arrow">  │</span>
+<span class="arrow">  ├──</span> spawn <span class="agent">FiremanDecko</span> <span class="action">(Depot session)</span> <span class="arrow">──►</span> <span class="action">git push</span> <span class="arrow">──►</span> <span class="action">handoff comment</span>
+<span class="arrow">  │     └──</span> <span class="highlight">on complete:</span> spawn <span class="agent">Loki</span> <span class="action">(Depot session)</span> <span class="arrow">──►</span> <span class="action">test, merge</span>
+<span class="arrow">  │</span>
+<span class="arrow">  ├──</span> spawn <span class="agent">Luna</span> <span class="action">(Depot session)</span> <span class="arrow">──►</span> <span class="action">wireframes</span> <span class="arrow">──►</span> <span class="action">handoff</span>
+<span class="arrow">  │     └──</span> <span class="highlight">on complete:</span> spawn <span class="agent">FiremanDecko</span> <span class="arrow">──►</span> <span class="action">implement</span> <span class="arrow">──►</span> <span class="action">handoff</span>
+<span class="arrow">  │           └──</span> <span class="highlight">on complete:</span> spawn <span class="agent">Loki</span> <span class="arrow">──►</span> <span class="action">test, merge</span>
+<span class="arrow">  │</span>
+<span class="arrow">  └──</span> <span class="action">... up to 5 parallel chains</span>
+
+<span class="comment">Today, every "<span class="highlight">on complete</span>" requires a human to run /fire-next-up --resume.
+With <span class="flag">session-status</span> or <span class="flag">webhooks</span>, the orchestrator runs autonomously.</span>
+</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Closing ───────────────────────────────── -->
+  <section class="closing">
+    <div class="container saga-reveal">
+      <hr class="rune-rule" />
+      <blockquote>
+        We chose Depot because the sandboxes are clean, the Claude integration is native,
+        and the fire-and-forget model fits our architecture. The foundation is strong.
+        These are the refinements that would let us — and every team building agent
+        orchestration on Depot — run at full stride.<br><br>
+        Without them, we build the scaffolding ourselves, and at some point the
+        scaffolding outweighs the platform. That's when the wolf slips its chain
+        and finds open ground.
+      </blockquote>
+      <hr class="rune-rule" />
+      <blockquote style="font-size:18px; margin-top:24px;">
+        The wolf is patient. But the wolf is also hungry.<br>
+        And a hungry wolf does not stay leashed for long.
+      </blockquote>
+      <cite>— Fenrir Ledger Engineering</cite>
+      <div class="footer-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
+    </div>
+  </section>
+
+</body>
+</html>
