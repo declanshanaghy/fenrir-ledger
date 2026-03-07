@@ -329,10 +329,39 @@ Odin — does this look right? Any adjustments to the approach, scope, or ACs be
 | Rejection (e.g. "skip this one", "not now") | Skip this issue. Pick the next Up Next item and return to Step 2. |
 | Different issue (e.g. "do #154 instead") | Switch to the requested issue and restart from Step 2. |
 | Question back | Answer from the issue context, then re-ask for approval. |
+| Interview request (e.g. "interview Luna", "have Luna design it") | Run a **local design interview** — see Step 3b below. |
 
 **Skip refinement when:**
 - `--batch` flag is used (too many items for interactive review)
 - Issue body contains `skip-refinement` tag
+
+### Step 3b — Local Design Interview (when requested)
+
+When Odin asks for an agent interview during refinement (e.g. "have Luna make it better",
+"interview her", "I need her here"), the orchestrator runs the interview **locally in the
+main conversation** — NOT via Depot. This allows Odin to have an interactive back-and-forth
+with the agent persona.
+
+**Why local:** Design interviews are interactive — Odin needs to answer questions, give
+feedback, and steer direction in real time. Depot sessions are fire-and-forget and cannot
+ask Odin questions. The interview must happen in the main conversation context.
+
+**Interview flow:**
+
+1. The orchestrator adopts the agent persona (e.g. Luna) and conducts a structured
+   design interview with Odin, asking 4-6 targeted questions about preferences,
+   constraints, and aesthetic direction.
+2. Odin answers. The orchestrator may ask follow-up questions if answers are ambiguous.
+3. Once all questions are answered, the orchestrator **posts a summary comment** on the
+   issue with Odin's design direction (so the remote agent has full context).
+4. The orchestrator **returns to remote execution** — proceeds to Step 4 (Determine
+   Chain) and Step 6 (Spawn via Depot) with the interview results baked into the
+   agent prompt.
+
+**Key rule:** The interview is local but the actual work is remote. Once the interview
+concludes and the design direction is captured on the issue, execution resumes via Depot
+(or `--local` if that flag was passed). Do NOT spawn the agent locally for the
+implementation work unless `--local` was explicitly passed.
 
 ---
 
