@@ -254,30 +254,30 @@ export function TopBar() {
 
           {/* ── Signed-in state ── */}
           {isAuthenticated && user && (
-            <>
+            <button
+              ref={avatarTriggerRef}
+              type="button"
+              onClick={() => setPanelOpen((prev) => !prev)}
+              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-secondary/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 cursor-pointer"
+              aria-label={`Open user menu, signed in as ${user.email}`}
+              aria-expanded={panelOpen}
+              aria-haspopup="true"
+              aria-controls="user-menu"
+              style={{ minHeight: 44 }}
+            >
               {/* Email — desktop only */}
-              <span className="text-sm text-muted-foreground font-body hidden sm:block mr-3 max-w-[200px] truncate">
+              <span className="text-sm text-muted-foreground font-body hidden sm:block max-w-[200px] truncate">
                 {user.email}
               </span>
 
-              {/* Avatar trigger — opens profile dropdown */}
-              <button
-                ref={avatarTriggerRef}
-                type="button"
-                onClick={() => setPanelOpen((prev) => !prev)}
-                className="flex items-center gap-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
-                aria-label={`Open user menu, signed in as ${user.email}`}
-                aria-expanded={panelOpen}
-                aria-haspopup="true"
-                aria-controls="user-menu"
-                style={{ minWidth: 44, minHeight: 44, justifyContent: "center" }}
-              >
-                <Avatar picture={user.picture} name={user.name} size={32} goldRing={true} />
-                <span className="text-muted-foreground text-sm hidden sm:block" aria-hidden="true">
-                  ▾
-                </span>
-              </button>
-            </>
+              {/* Avatar */}
+              <Avatar picture={user.picture} name={user.name} size={32} goldRing={true} />
+
+              {/* Dropdown caret */}
+              <span className="text-muted-foreground text-sm hidden sm:block" aria-hidden="true">
+                ▾
+              </span>
+            </button>
           )}
 
           {/* ── Anonymous upsell prompt panel ── */}
