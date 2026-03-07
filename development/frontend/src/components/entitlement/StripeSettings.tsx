@@ -261,7 +261,7 @@ export function StripeSettings() {
                 disabled={isSubscribing}
                 isLoading={isSubscribing}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-primary hover:brightness-110 border-2 border-gold"
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
               >
                 Subscribe
               </Button>
@@ -297,7 +297,7 @@ export function StripeSettings() {
                 disabled={isAnyLoading}
                 isLoading={isManaging}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-primary hover:brightness-110 border-2 border-gold"
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
               >
                 Manage Subscription
               </Button>
@@ -356,7 +356,7 @@ export function StripeSettings() {
                 disabled={isSubscribing}
                 isLoading={isSubscribing}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-primary hover:brightness-110 border-2 border-gold"
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
               >
                 Resubscribe
               </Button>
@@ -396,7 +396,7 @@ export function StripeSettings() {
                 disabled={isAnyLoading}
                 isLoading={isSubscribing}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground hover:bg-primary hover:brightness-110 border-2 border-gold"
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
               >
                 Resubscribe
               </Button>
