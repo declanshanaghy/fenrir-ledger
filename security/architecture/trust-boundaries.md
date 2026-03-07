@@ -90,10 +90,10 @@ is trusted for payment processing and subscription lifecycle events.
 | `GOOGLE_PICKER_API_KEY` | `process.env` (server) | Yes — served on request | Auth-gated; GCP referrer restriction required |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | `process.env` (public) | Yes — by design | OAuth Client ID is public; embedded in auth URL |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `process.env` (public) | Yes — by design | Stripe publishable key is safe for client exposure |
-| Google `access_token` | `localStorage["fenrir:auth"]` | Yes — same-origin JS | XSS risk; 1-hour TTL |
+| Google `access_token` | `localStorage["fenrir:auth"]` | Yes — same-origin JS | XSS risk; ~1-hour TTL |
 | Google `id_token` | `localStorage["fenrir:auth"]` | Yes — same-origin JS | XSS risk; used as API Bearer token |
-| Google `refresh_token` | `localStorage["fenrir:auth"]` | Yes — same-origin JS | XSS risk; long-lived |
-| Drive `access_token` | `localStorage["fenrir:drive-token"]` | Yes — same-origin JS | XSS risk; 1-hour TTL |
+| Google `refresh_token` | `localStorage["fenrir:auth"]` | Yes — same-origin JS | XSS risk; long-lived (no TTL) |
+| Drive `access_token` | `localStorage["fenrir:drive-token"]` | Yes — same-origin JS | XSS risk; ~1-hour TTL |
 | PKCE `code_verifier` | `sessionStorage["fenrir:pkce"]` | Yes — same-origin JS | Transient; removed after callback |
 
 ---
