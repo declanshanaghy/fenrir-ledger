@@ -105,7 +105,7 @@ test.describe("Session Archive — /sessions/", () => {
 
     // Page title
     const title = await page.title();
-    expect(title).toContain("Session Archive");
+    expect(title).toContain("The Dev Blog");
 
     // "Open the Ledger →" nav link must be present and point to "/"
     const appLink = page.locator('[data-testid="open-ledger-link"]');
