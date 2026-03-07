@@ -154,14 +154,11 @@ test.describe("Auth Callback — PKCE Session Data Missing", () => {
       waitUntil: "networkidle",
     });
 
-    // Wait for the 100ms delay introduced to prevent flash during state transitions
-    // plus some buffer for state update and re-render
-    await page.waitForTimeout(500);
-
-    // Match partial text since locator matching can be finicky
+    // Wait for the error message to appear (100ms delay + React render time)
+    // Use waitFor with a longer timeout to account for component mount, effect run, and re-render
     await expect(
-      page.locator('text="PKCE session data missing"')
-    ).toBeVisible({ timeout: 5000 });
+      page.locator("text=PKCE session data missing")
+    ).toBeVisible({ timeout: 10000 });
   });
 
   test("shows 'Return to the gate' link when PKCE data is missing", async ({
@@ -173,12 +170,9 @@ test.describe("Auth Callback — PKCE Session Data Missing", () => {
       waitUntil: "networkidle",
     });
 
-    // Wait for the 100ms delay introduced to prevent flash during state transitions
-    // plus some buffer for state update and re-render
-    await page.waitForTimeout(500);
-
+    // Wait for the error state to render with a longer timeout
     const link = page.locator("a:has-text('Return to the gate')");
-    await expect(link).toBeVisible({ timeout: 5000 });
+    await expect(link).toBeVisible({ timeout: 10000 });
   });
 });
 

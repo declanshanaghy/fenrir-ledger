@@ -100,7 +100,7 @@ test.describe("Sign-in State Transitions", () => {
         "fenrir:pkce",
         JSON.stringify({
           state: "mock_state",
-          codeVerifier: "mock_verifier",
+          verifier: "mock_verifier",
           callbackUrl: "/",
         })
       );
@@ -125,9 +125,16 @@ test.describe("Sign-in State Transitions", () => {
       });
     });
 
-    // Navigate to callback (will fail without real OAuth, but we can test the UI behavior)
-    await page.goto(mockCallbackUrl).catch(() => {
-      // Expected to fail without backend, that's OK
+    // Intercept the token exchange API to keep it in "exchanging" state
+    // This prevents error states from appearing and lets us test the binding message stays visible
+    await page.route("/api/auth/token", async (route) => {
+      // Never resolve - keeps the page in "exchanging" state
+      await new Promise(() => {});
+    });
+
+    // Navigate to callback
+    await page.goto(mockCallbackUrl, { waitUntil: "domcontentloaded" }).catch(() => {
+      // Expected to timeout due to stalled API call
     });
 
     // Check that "Binding the oath" message is visible
@@ -144,6 +151,9 @@ test.describe("Sign-in State Transitions", () => {
       const stillVisible = await bindingText.isVisible().catch(() => false);
       expect(stillVisible).toBeTruthy();
     }
+
+    // Clean up the route to prevent hanging
+    await page.unroute("/api/auth/token");
   });
 
   test("should not show rapid success state before redirect", async ({

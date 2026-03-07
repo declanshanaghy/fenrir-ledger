@@ -89,7 +89,8 @@ function AuthCallbackContent() {
   const isMountedRef = useRef(true);
 
   useEffect(() => {
-    // Cleanup function to track unmount
+    // Set mounted flag on mount and clear on unmount
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };
