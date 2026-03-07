@@ -79,6 +79,9 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 - EVERY bash command must start with cd <REPO_ROOT>.
 - Read the existing code AND the previous commits on this branch to understand what was built.
 - Assertions derive from acceptance criteria, not from what the code currently does.
+- ONLY test behavior that THIS PR actually implements. Do NOT write tests for features
+  that don't exist yet or UI elements that haven't been built. If the issue says "add X"
+  but the code doesn't add X, that's a FAIL verdict — not a test for X that will break CI.
 - Each test clears relevant localStorage before running — idempotent by design.
 - Follow the git-commit skill for branch workflow and commit format.
 - You MUST run the full test suite (Step 3b) and fix ALL failures. No exceptions.
