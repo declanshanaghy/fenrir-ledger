@@ -27,6 +27,11 @@ Read the commits already on this branch (if any):
 cd <REPO_ROOT>/development/frontend && npx tsc --noEmit
 cd <REPO_ROOT>/development/frontend && npx next build
 
+**Step 4b — Run the FULL Playwright test suite (CI gate):**
+cd <REPO_ROOT>/development/frontend && SERVER_URL=http://localhost:9653 npx playwright test --reporter=list
+If ANY tests fail — fix either the code or the test. Do NOT push with failing tests.
+Pre-existing test failures are YOUR responsibility — they block CI and bounce the PR.
+
 **Step 5 — Commit and push:**
 cd <REPO_ROOT> && git add -A && git commit -m 'fix: <description> — Ref #<NUMBER>' && git push origin <BRANCH>
 
