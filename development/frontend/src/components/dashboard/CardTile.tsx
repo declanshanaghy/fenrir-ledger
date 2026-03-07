@@ -110,7 +110,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
       })}
     >
       <Link href={`/cards/${card.id}/edit`} className="block group">
-        <Card className="h-full border border-secondary cursor-pointer">
+        <Card className="h-full border border-secondary cursor-pointer" data-testid="card-tile">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">

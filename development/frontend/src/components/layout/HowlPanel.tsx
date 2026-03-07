@@ -324,6 +324,7 @@ export function HowlPanel({ cards, className }: HowlPanelProps) {
         className
       )}
       aria-label="Urgent deadlines"
+      data-testid="howl-panel"
     >
       <PanelHeader
         count={urgentRows.length}
