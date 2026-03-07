@@ -211,10 +211,10 @@ describe('mapStripeStatusToTier', () => {
     expect(result.active).toBe(true);
   });
 
-  it('should map past_due status to thrall tier', () => {
+  it('should map past_due status to karl tier', () => {
     const result = mapStripeStatusToTier('past_due');
-    expect(result.tier).toBe('thrall');
-    expect(result.active).toBe(false);
+    expect(result.tier).toBe('karl');
+    expect(result.active).toBe(true);
   });
 
   it('should map canceled status to thrall tier', () => {

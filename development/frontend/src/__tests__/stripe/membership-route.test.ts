@@ -262,22 +262,7 @@ describe('GET /api/stripe/membership', () => {
 
       vi.mocked(kvStore.getStripeEntitlement).mockResolvedValue(mockEntitlement);
 
-      // Mock Stripe subscription retrieve to return the same data (since backfill will be called)
-      vi.mocked(stripe.subscriptions.retrieve).mockResolvedValue({
-        id: 'sub_existing',
-        status: 'active',
-        cancel_at_period_end: false,
-        cancel_at: null,
-        items: {
-          object: 'list',
-          data: [{
-            current_period_end: new Date('2024-02-01T00:00:00Z').getTime() / 1000,
-          }],
-          has_more: false,
-          url: '/v1/subscription_items',
-        },
-      } as any);
-
+      // No backfill should occur since all fields are present
       const request = createMockRequest();
       const response = await GET(request);
       const data = await response.json();
@@ -288,7 +273,10 @@ describe('GET /api/stripe/membership', () => {
       expect(data.customerId).toBe('cus_existing');
       expect(data.linkedAt).toBe('2024-01-01T00:00:00Z');
       expect(data.cancelAtPeriodEnd).toBe(false);
-      expect(data.currentPeriodEnd).toBe('2024-02-01T00:00:00.000Z');
+      expect(data.currentPeriodEnd).toBe('2024-02-01T00:00:00Z');
+
+      // Verify backfill was not called since fields are already present
+      expect(stripe.subscriptions.retrieve).not.toHaveBeenCalled();
     });
   });
 

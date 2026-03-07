@@ -118,7 +118,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // If cached entitlement is missing period end info (pre-existing records),
   // do a live Stripe lookup to backfill it
   let { cancelAtPeriodEnd, currentPeriodEnd } = cached;
-  if (cached.stripeSubscriptionId) {
+  if (cached.stripeSubscriptionId && (cancelAtPeriodEnd === undefined || currentPeriodEnd === undefined)) {
     try {
       log.debug("GET /api/stripe/membership: backfilling period end from Stripe", {
         subscriptionId: cached.stripeSubscriptionId,
