@@ -158,6 +158,8 @@ async function isUserAuthenticated(page: Page): Promise<boolean> {
 
 test.describe("Auth Session Persistence", () => {
   test.beforeEach(async ({ page }) => {
+    // Navigate to app first to initialize browser context before accessing localStorage
+    await page.goto("/");
     // Clear storage before each test to ensure clean state
     await clearAllStorage(page);
   });
