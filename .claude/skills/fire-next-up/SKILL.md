@@ -720,6 +720,16 @@ Use the previous agent's handoff comment to understand what was built, how to ve
 - Run the new tests: `cd <REPO_ROOT>/development/frontend && SERVER_URL=http://localhost:9653 npx playwright test ../../quality/test-suites/<feature-slug>/ --reporter=list`
 - Verify build passes: `cd <REPO_ROOT>/development/frontend && npx tsc --noEmit && npx next build`
 
+**Step 3b — Run the FULL test suite and fix ANY failures:**
+- Run ALL Playwright tests: `cd <REPO_ROOT>/development/frontend && SERVER_URL=http://localhost:9653 npx playwright test --reporter=list`
+- If ANY tests fail — whether your new tests or pre-existing tests — you MUST fix them.
+- Pre-existing test failures are NOT acceptable. They block CI and prevent merging.
+- Read each failing test file, understand what it expects, read the actual page/component
+  it tests, and fix either the test or the code to make it pass.
+- Re-run the full suite after each fix until ALL tests pass (0 failures).
+- Do NOT skip this step. Do NOT mark your verdict as PASS if any test is failing.
+- Do NOT dismiss failures as "pre-existing" or "unrelated" — if it fails in CI, fix it.
+
 **Step 4 — Commit and push:**
 cd <REPO_ROOT> && git add -A && git commit -m 'test: validate #<NUMBER> — <short description>' && git push origin <BRANCH>
 
@@ -748,6 +758,11 @@ If NO PR exists (e.g. you are the sole agent for `type:test`), create one:
    - `needs-review` label: `Merge blocked — needs-review label present. Awaiting Odin's review.`
    - Not mergeable: `Merge blocked — merge conflicts. Rebase needed.`
 
+**IMPORTANT: If CI is failing, your verdict MUST be FAIL — not PASS.**
+A PASS verdict means the PR is ready to merge. If CI is red, it is NOT ready.
+You should have already fixed all test failures in Step 3b. If CI still fails
+after your fixes, your verdict is FAIL and you must explain what is still broken.
+
 **Step 7 — QA verdict comment on the issue:**
 gh issue comment <NUMBER> --body "## Loki QA Verdict
 
@@ -757,6 +772,7 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 
 **Tests written:** <N> tests in \`quality/test-suites/<slug>/\`
 **Tests passing:** <N>/<N>
+**Full suite:** <N>/<N> (all Playwright tests)
 
 **What was validated:**
 - <AC-1 result>
@@ -774,7 +790,7 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 - Assertions derive from acceptance criteria, not from what the code currently does.
 - Each test clears relevant localStorage before running — idempotent by design.
 - Follow the git-commit skill for branch workflow and commit format.
-- Do NOT run the full regression suite — CI handles that. Only run your new tests.
+- You MUST run the full test suite (Step 3b) and fix ALL failures. No exceptions.
 
 Start by reading the issue comments for handoff context, then the acceptance criteria, then write and run tests.
 ```
@@ -971,13 +987,151 @@ When a chain is interrupted (session ended, agent failed, context lost), use `--
    - No handoff comments → Step 1 agent failed before completing. Re-run Step 1.
    - `Luna → FiremanDecko Handoff` exists but no further → spawn FiremanDecko.
    - `FiremanDecko → Loki Handoff` or `Heimdall → Loki Handoff` exists but no verdict → spawn Loki.
-   - `Loki QA Verdict` exists → chain is complete, tell the user.
+   - `Loki QA Verdict` exists → check CI status (see Step 5b below).
+
+5b. **If Loki QA Verdict exists — check CI before declaring complete:**
+
+   A Loki verdict does NOT mean the chain is complete. CI must also be green.
+
+   ```bash
+   # Find the PR number
+   PR_NUM=$(gh pr list --head "<BRANCH>" --json number --jq '.[0].number')
+   # Check CI status
+   gh pr checks "$PR_NUM" 2>&1
+   ```
+
+   | Condition | Action |
+   |-----------|--------|
+   | CI green + verdict PASS + merged | Chain is complete. Tell the user. |
+   | CI green + verdict PASS + not merged | Attempt auto-merge (check `needs-review` label first). |
+   | **CI failing + verdict PASS or FAIL** | **Bounce back to Loki** with the CI failure details. See **CI Failure Bounce-Back** below. |
+   | Verdict FAIL (regardless of CI) | Chain is blocked. Report to user: needs manual intervention or re-dispatch. |
+
+   **CI Failure Bounce-Back:**
+
+   When Loki posted a verdict but CI is still failing, the chain is NOT complete.
+   The orchestrator must:
+
+   1. **Gather CI failure details** — run `gh run view <RUN_ID> --log-failed` and
+      extract the specific test failures (file names, line numbers, error messages,
+      expected vs actual values).
+   2. **Read the failing test files** locally to understand what they test.
+   3. **Build a detailed bounce-back prompt** using the **Loki Bounce-Back Template**
+      below. Include ALL of the following in the prompt:
+      - The exact error output from CI (copy-paste the failure lines)
+      - Which test files are failing and at which line numbers
+      - The expected vs actual values from each assertion
+      - Any context about what changed (e.g. "the page title was renamed from
+        'Session Archive' to 'The Dev Blog' but the test still expects the old name")
+      - Whether the fix should be in the test or in the code (the agent must determine
+        this, but give it enough context to decide correctly)
+   4. **Spawn a new Loki session** on the same branch with the bounce-back prompt.
+   5. Report a **step transition** showing the bounce-back.
 
 6. **Fallback — inspect commits** if no handoff comments exist (agent forgot to comment):
    ```bash
    git log origin/main..origin/<BRANCH> --oneline
    ```
    Use commit prefixes (`design:`, `fix:`, `security:`, `test:`) as a secondary signal.
+
+### Loki Bounce-Back Template
+
+Use this template when CI is failing and Loki needs to be re-dispatched to fix tests.
+The orchestrator MUST fill in the CI failure details — do not send Loki in blind.
+
+```
+You are Loki, the QA Tester. CI is FAILING on PR #<PR_NUMBER> for Issue #<NUMBER>: <TITLE>
+
+Your previous session posted a QA verdict, but CI is red. The chain cannot complete
+until ALL tests pass. You must fix the failing tests before posting a new verdict.
+
+CRITICAL — SANDBOX ENVIRONMENT RULES:
+You are running in a Depot sandbox. Each Bash tool call starts in a FRESH shell.
+Shell state (cd, env vars, aliases) does NOT persist between tool calls.
+ALWAYS prefix commands with: cd <REPO_ROOT> && <command>
+Use absolute paths for everything. The setup script prints REPO_ROOT — use it.
+
+STRICT SCOPE — DO NOT DEVIATE:
+You are a worker in a chain. Execute ONLY the numbered steps listed below — nothing
+more, nothing less. Do not improvise, ad-lib, or take actions not explicitly listed.
+- Do NOT declare the issue "resolved", "fixed", or "done" — only the final agent
+  in the chain (Loki) determines the outcome after QA.
+- Do NOT close issues, merge PRs, or take any action beyond your listed steps.
+- Do NOT add summary messages, status updates, or conclusions beyond what the
+  handoff step requires.
+- If something is ambiguous or unclear, stop and comment on the issue asking for
+  clarification — do not guess.
+- Your ONLY outputs are: code changes, commits, pushes, and the verdict comment
+  specified in your steps. Nothing else.
+
+**Step 1 — Setup (run this single command):**
+bash <REPO_ROOT>/.claude/scripts/sandbox-setup.sh <BRANCH>
+
+**Step 2 — Understand the CI failures:**
+
+The following tests are failing in CI. You MUST fix ALL of them.
+
+<FOR EACH FAILING TEST, INCLUDE ALL OF THE FOLLOWING:>
+
+**Failure <N>:**
+- **File:** `<test-file-path>:<line-number>`
+- **Test name:** `<describe block> › <test name>`
+- **Error:** `<exact error message from CI>`
+- **Expected:** `<expected value>`
+- **Actual:** `<actual value>`
+- **Context:** <explanation of why it's failing — e.g. "the page title was changed
+  from 'X' to 'Y' but the test still asserts the old title">
+
+</FOR EACH>
+
+**Step 3 — Read the failing test files and the code they test:**
+- Read each failing test file listed above.
+- Read the actual page/component the test is asserting against.
+- Determine whether the fix belongs in the TEST (wrong assertion) or in the CODE
+  (regression introduced by this PR).
+- If the test expects old behavior that was intentionally changed, update the test.
+- If the test catches a real regression, fix the code.
+
+**Step 4 — Fix all failures:**
+- Make the minimum changes needed to make all tests pass.
+- After fixing, run the FULL test suite to verify zero failures:
+  `cd <REPO_ROOT>/development/frontend && npx playwright test --reporter=list`
+- Also verify build: `cd <REPO_ROOT>/development/frontend && npx tsc --noEmit && npx next build`
+- If any tests still fail, keep fixing until ALL pass. Do not stop with failures remaining.
+
+**Step 5 — Commit and push:**
+cd <REPO_ROOT> && git add -A && git commit -m 'fix: repair failing tests — Ref #<NUMBER>' && git push origin <BRANCH>
+
+**Step 6 — Post updated verdict:**
+gh issue comment <NUMBER> --body "## Loki QA Verdict (Revised)
+
+**PR:** <PR_URL>
+**Branch:** \`<BRANCH>\`
+**Verdict:** PASS / FAIL
+
+**Tests fixed:** <list of tests that were fixed and how>
+**Full suite:** <N>/<N> (all Playwright tests)
+
+**What was validated:**
+- <AC results>
+
+**Build status:** tsc clean, next build clean.
+
+<If all tests pass: All CI failures resolved. Ready for merge. ✅>
+<If still failing: FAIL — <what is still broken>. ❌>"
+
+**Step 7 — Auto-merge (if verdict is PASS):**
+1. Wait for CI: `gh pr checks <PR_NUMBER> --watch --fail-fast`
+2. Check needs-review: `gh issue view <NUMBER> --json labels --jq '[.labels[].name] | any(. == "needs-review")'`
+3. Check mergeable: `gh pr view <PR_NUMBER> --json mergeable --jq '.mergeable'`
+4. If all clear: `gh pr merge <PR_NUMBER> --squash --delete-branch`
+
+**Key reminders:**
+- EVERY bash command must start with cd <REPO_ROOT>.
+- You MUST fix ALL failing tests, not just the ones related to this issue.
+- Run the FULL suite after fixing — do not stop until 0 failures.
+- A PASS verdict requires ALL tests green. No exceptions.
+```
 
 ### Resume Execution
 
@@ -999,7 +1153,7 @@ Once the next agent is identified:
 
 - **Branch exists but no commits beyond main** — the previous agent failed before committing. Re-run that step (same agent, same branch).
 - **Multiple agents' commits exist but chain isn't complete** — skip to the next incomplete step.
-- **PR exists but CI failed** — tell the user. They may want to fix CI issues manually or re-run the failing agent.
+- **PR exists but CI failed** — bounce back to Loki with CI failure details (see Step 5b).
 - **Issue is closed** — tell the user the issue is already closed. Do not spawn agents.
 
 ---
