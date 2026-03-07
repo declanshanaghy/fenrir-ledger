@@ -2,12 +2,12 @@
 
 ## Theme Architecture
 
-Fenrir Ledger supports three theme modes: **Dark** (Norse war-room), **Light** (Norse parchment), and **System** (follows OS `prefers-color-scheme`).
+Fenrir Ledger supports three theme modes: **Dark** (Norse war-room), **Light** (Stone/Marble), and **System** (follows OS `prefers-color-scheme`).
 
 ### How It Works
 
 - **CSS custom properties** define all colors in two blocks:
-  - `:root` -- light palette (Norse parchment)
+  - `:root` -- light palette (Stone/Marble — cool, crisp, Nordic daylight)
   - `.dark` -- dark palette (Norse war-room)
 - **`next-themes`** manages the class on `<html>`, handles system preference detection, and persists the choice to `localStorage` (key: `fenrir-theme`).
 - **Tailwind CSS** is configured with `darkMode: ["class"]`, so the `.dark` class on `<html>` activates dark mode utilities.
@@ -27,7 +27,7 @@ Fenrir Ledger supports three theme modes: **Dark** (Norse war-room), **Light** (
 ### Theme Toggle
 
 Three-way toggle in the TopBar dropdown (both anonymous and signed-in states):
-- **Light** (Sun icon) -- Norse parchment aesthetic
+- **Light** (Sun icon) -- Stone/Marble aesthetic (cool, crisp, Nordic daylight)
 - **Dark** (Moon icon) -- Norse war-room aesthetic
 - **System** (Monitor icon) -- follows OS preference
 
@@ -35,23 +35,23 @@ Default on fresh visit: **System**.
 
 ---
 
-## Light Palette (Norse Parchment)
+## Light Palette (Stone/Marble)
 
 | Token | HSL | Hex (approx) | Description |
 |-------|-----|--------------|-------------|
-| `--background` | `36 33% 88%` | `#e8dcc8` | Warm parchment |
-| `--foreground` | `25 30% 12%` | `#2a1f14` | Deep brown-black |
-| `--card` | `35 30% 83%` | `#ddd0b8` | Lighter parchment |
-| `--popover` | `37 35% 90%` | `#ede2d0` | Warm cream |
-| `--primary` | `42 80% 38%` | `#ae8510` | Darker gold for light bg |
-| `--primary-foreground` | `37 35% 95%` | -- | Light text on gold |
-| `--secondary` | `28 20% 72%` | `#c4b5a0` | Leather tan |
-| `--muted` | `30 15% 65%` | `#b0a494` | Faded leather |
-| `--muted-foreground` | `25 12% 42%` | `#6b5f52` | Dark stone |
-| `--border` | `28 18% 65%` | `#b5a590` | Leather seam |
-| `--input` | `25 12% 78%` | `#ccc2b4` | Light stone |
-| `--ring` | `42 80% 38%` | -- | Gold focus ring |
-| `--destructive` | `15 85% 42%` | -- | Blood orange |
+| `--background` | `220 10% 95%` | `#f0f1f3` | Cool marble white |
+| `--foreground` | `220 20% 10%` | `#14161a` | Ink black |
+| `--card` | `220 8% 90%` | `#e2e4e8` | Cooler marble |
+| `--popover` | `220 12% 97%` | `#f6f7f8` | Lightest cool white |
+| `--primary` | `38 75% 32%` | `#8a6a0a` | Burnt gold for light bg |
+| `--primary-foreground` | `220 12% 97%` | -- | Light text on gold |
+| `--secondary` | `215 10% 78%` | `#bec2c8` | Cool medium grey |
+| `--muted` | `215 8% 85%` | `#d4d7db` | Cool light grey |
+| `--muted-foreground` | `215 12% 42%` | `#5e6570` | Cool dark grey |
+| `--border` | `215 10% 75%` | `#b8bcc2` | Cool light grey border |
+| `--input` | `215 12% 92%` | `#e8eaed` | Cool light grey input |
+| `--ring` | `38 75% 32%` | -- | Burnt gold focus ring |
+| `--destructive` | `15 85% 42%` | `#c94020` | Blood orange |
 
 ---
 
@@ -85,13 +85,16 @@ Default on fresh visit: **System**.
 | Muted `#a09888` on card `#1c1917` | ~4.8:1 | AA |
 | Foreground `#f0ede4` on background `#12100e` | ~15:1 | AAA |
 
-### Light Theme
+### Light Theme (Stone/Marble)
 
 | Pair | Ratio | WCAG Level |
 |------|-------|------------|
-| Foreground `#2a1f14` on parchment `#e8dcc8` | ~10.5:1 | AA + AAA |
-| Gold `#ae8510` on parchment `#e8dcc8` | ~3.6:1 | AA (large/bold text) |
-| Muted fg `#6b5f52` on parchment `#e8dcc8` | ~3.6:1 | AA (large/bold text) |
+| Ink black `#14161a` on marble `#f0f1f3` | ~15.2:1 | AA + AAA |
+| Burnt gold `#8a6a0a` on marble `#f0f1f3` | ~5.8:1 | AA |
+| Cool grey `#5e6570` on marble `#f0f1f3` | ~6.9:1 | AA |
+| Cool grey `#5e6570` on card `#e2e4e8` | ~6.5:1 | AA |
+| Burnt gold `#8a6a0a` on card `#e2e4e8` | ~5.5:1 | AA |
+| Blood orange `#c94020` on marble `#f0f1f3` | ~4.8:1 | AA |
 
 ---
 

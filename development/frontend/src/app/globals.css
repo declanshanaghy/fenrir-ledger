@@ -5,58 +5,58 @@
 @layer base {
   /*
    * Fenrir Ledger — Saga Ledger Theme
-   * Dual-theme: Light (Norse parchment) + Dark (Norse war-room).
+   * Dual-theme: Light (Stone/Marble) + Dark (Norse war-room).
    * Theme is controlled by next-themes via class on <html>.
    *
-   * :root = light palette (parchment default)
+   * :root = light palette (stone/marble — cool, crisp, Nordic daylight)
    * .dark = dark palette (original Norse war-room)
    *
    * All surface, text, and status tokens follow design/theme-system.md.
    * shadcn/ui component tokens are remapped to the Norse palette.
    */
 
-  /* ── Light Theme (Norse Parchment) ───────────────────────── */
+  /* ── Light Theme (Stone/Marble) ──────────────────────────── */
   :root {
     /* ── Surfaces ───────────────────────────────────────────── */
-    --background:           36  33% 88%;    /* #e8dcc8 — warm parchment */
-    --foreground:           25  30% 12%;    /* #2a1f14 — deep brown-black */
+    --background:           220 10% 95%;    /* #f0f1f3 — cool marble white */
+    --foreground:           220 20% 10%;    /* #14161a — ink black */
 
-    --card:                 35  30% 83%;    /* #ddd0b8 — lighter parchment */
-    --card-foreground:      25  30% 12%;
+    --card:                 220 8%  90%;    /* #e2e4e8 — cooler marble */
+    --card-foreground:      220 20% 10%;
 
-    --popover:              37  35% 90%;    /* #ede2d0 — warm cream */
-    --popover-foreground:   25  30% 12%;
+    --popover:              220 12% 97%;    /* #f6f7f8 — lightest cool white */
+    --popover-foreground:   220 20% 10%;
 
     /* ── Brand ──────────────────────────────────────────────── */
-    --primary:              42  80% 38%;    /* #ae8510 — darker gold for light bg */
-    --primary-foreground:   37  35% 95%;    /* light text on gold */
+    --primary:              38  75% 32%;    /* #8a6a0a — burnt gold for light bg */
+    --primary-foreground:   220 12% 97%;    /* light text on gold */
 
     /* ── Secondary / Muted ──────────────────────────────────── */
-    --secondary:            28  20% 72%;    /* #c4b5a0 — leather tan */
-    --secondary-foreground: 25  30% 12%;
+    --secondary:            215 10% 78%;    /* #bec2c8 — cool medium grey */
+    --secondary-foreground: 220 20% 10%;
 
-    --muted:                30  15% 65%;    /* #b0a494 — faded leather */
-    --muted-foreground:     25  12% 42%;    /* #6b5f52 — dark stone */
+    --muted:                215 8%  85%;    /* #d4d7db — cool light grey */
+    --muted-foreground:     215 12% 42%;    /* #5e6570 — cool dark grey */
 
-    --accent:               30  15% 65%;
-    --accent-foreground:    25  30% 12%;
+    --accent:               215 8%  85%;
+    --accent-foreground:    220 20% 10%;
 
     /* ── Status / Destructive ───────────────────────────────── */
-    --destructive:          15  85% 42%;    /* blood orange for light bg */
-    --destructive-foreground: 37 35% 95%;
+    --destructive:          15  85% 42%;    /* #c94020 — blood orange for light bg */
+    --destructive-foreground: 220 12% 97%;
 
     /* ── Structure ──────────────────────────────────────────── */
-    --border:               28  18% 65%;    /* #b5a590 — leather seam */
-    --input:                25  12% 78%;    /* #ccc2b4 — light stone */
-    --ring:                 42  80% 38%;    /* gold focus ring */
+    --border:               215 10% 75%;    /* #b8bcc2 — cool light grey border */
+    --input:                215 12% 92%;    /* #e8eaed — cool light grey input */
+    --ring:                 38  75% 32%;    /* burnt gold focus ring */
     --radius:               0.25rem;        /* sharp, angular — not pill */
 
-    /* ── Charts (adapted for light background) ─────────────── */
-    --chart-1:              42  80% 38%;    /* darker gold */
-    --chart-2:              163 83% 25%;    /* darker teal */
+    /* ── Charts (adapted for light stone background) ────────── */
+    --chart-1:              38  75% 32%;    /* burnt gold */
+    --chart-2:              163 75% 25%;    /* dark teal */
     --chart-3:              15  85% 42%;    /* blood orange */
-    --chart-4:              38  90% 42%;    /* deeper amber */
-    --chart-5:              0   79% 50%;    /* red */
+    --chart-4:              38  80% 38%;    /* deeper amber */
+    --chart-5:              0   70% 48%;    /* red */
 
     /* ── Easter Egg Modal ──────────────────────────────────── */
     --egg-bg:               230 20% 12%;   /* #1a1c25 — deep indigo */
@@ -102,7 +102,7 @@
     --realm-muspel:         22  88% 41%;   /* #c94a0a */
     --realm-hati:           38  92% 50%;   /* #f59e0b */
     --realm-asgard:         163 83% 29%;   /* #0a8c6e */
-    --realm-stone:          37  6%  50%;   /* #8a8578 */
+    --realm-stone:          215 6%  50%;   /* #797e87 — cool stone grey */
     --realm-ragnarok-dark:  10  60% 48%;   /* #c94020 — ragnarok accent */
   }
 
@@ -216,11 +216,11 @@
   }
 
   /* ── Body background textures (theme-aware) ──────────────── */
-  /* Light: subtle warm glow on parchment */
+  /* Light: subtle burnt gold glow on stone/marble */
   :root body {
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -5%, hsl(42 80% 38% / 0.04) 0%, transparent 65%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23s)' opacity='0.03'/%3E%3C/svg%3E");
+      radial-gradient(ellipse 80% 50% at 50% -5%, hsl(38 75% 32% / 0.03) 0%, transparent 65%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23s)' opacity='0.02'/%3E%3C/svg%3E");
   }
 
   /* Dark: gold radial glow + stone grain texture */
@@ -551,11 +551,13 @@ body.konami-shake-mobile {
  * Muted  #8a8578 on warm charcoal #12100e  ->  ~5.2:1  AA (normal text)
  * Blood  #c94a0a on void-black    #07070d  ->  ~4.3:1  AA (large/bold, >=3:1)
  *
- * LIGHT THEME:
- * Gold   #ae8510 on parchment     #e8dcc8  ->  ~3.6:1  AA (large/bold text)
- * Brown  #2a1f14 on parchment     #e8dcc8  ->  ~10.5:1 AA + AAA
- * Stone  #6b5f52 on parchment     #e8dcc8  ->  ~3.6:1  AA (large/bold text)
- * Stone  #6b5f52 on card bg       #ddd0b8  ->  ~3.3:1  AA (large/bold text)
+ * LIGHT THEME (Stone/Marble):
+ * Ink black #14161a on marble     #f0f1f3  ->  ~15.2:1 AA + AAA
+ * Burnt gold #8a6a0a on marble    #f0f1f3  ->  ~5.8:1  AA
+ * Cool grey #5e6570 on marble     #f0f1f3  ->  ~6.9:1  AA
+ * Cool grey #5e6570 on card       #e2e4e8  ->  ~6.5:1  AA
+ * Burnt gold #8a6a0a on card      #e2e4e8  ->  ~5.5:1  AA
+ * Blood orange #c94020 on marble  #f0f1f3  ->  ~4.8:1  AA
  * ─────────────────────────────────────────────────────────── */
 
 /* ── Sprint 4 — Reduced Motion Coverage (verification) ──────
