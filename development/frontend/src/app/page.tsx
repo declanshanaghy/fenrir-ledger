@@ -36,6 +36,7 @@ export default function DashboardPage() {
   const { householdId, status } = useAuth();
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSkeleton, setShowSkeleton] = useState(false);
   // Mobile HowlPanel bottom-sheet visibility
   const [mobileHowlOpen, setMobileHowlOpen] = useState(false);
   // Import wizard visibility
@@ -47,11 +48,20 @@ export default function DashboardPage() {
     // householdId is always set once status resolves (anonymous or authenticated)
     if (!householdId) return;
 
+    // Start loading timer - only show skeleton if loading takes > 500ms
+    const skeletonTimer = setTimeout(() => {
+      if (isLoading) {
+        setShowSkeleton(true);
+      }
+    }, 500);
+
     migrateIfNeeded();
     initializeHousehold(householdId);
     const loaded = getCards(householdId);
     setCards(loaded);
     setIsLoading(false);
+    clearTimeout(skeletonTimer);
+    setShowSkeleton(false);
 
     // Pick up merge result from auth callback redirect
     const mergeResult = sessionStorage.getItem("fenrir:merge-result");
@@ -64,7 +74,7 @@ export default function DashboardPage() {
         // Corrupt data — ignore silently
       }
     }
-  }, [householdId, status]);
+  }, [householdId, status, isLoading]);
 
   // Listen for custom event from EmptyState's "Import from Google Sheets" button
   useEffect(() => {
@@ -172,11 +182,14 @@ export default function DashboardPage() {
         {/* Card grid — takes all available space */}
         <div className="flex-1 min-w-0">
           {!loaded ? (
-            /* Skeleton shimmer grid — replaces plain loading text.
-               CardSkeletonGrid renders a structural mirror of the real card grid
-               with a Norse gold shimmer animation (saga-shimmer in globals.css).
-               "The Norns are weaving..." caption still appears beneath the grid. */
-            <CardSkeletonGrid count={6} />
+            /* Only show skeleton if loading takes > 500ms to prevent flash */
+            showSkeleton ? (
+              /* Skeleton shimmer grid — replaces plain loading text.
+                 CardSkeletonGrid renders a structural mirror of the real card grid
+                 with a Norse gold shimmer animation (saga-shimmer in globals.css).
+                 "The Norns are weaving..." caption still appears beneath the grid. */
+              <CardSkeletonGrid count={6} />
+            ) : null
           ) : (
             /* saga-reveal CSS class is no longer needed here — Framer Motion
                AnimatedCardGrid inside Dashboard handles the staggered entrance. */

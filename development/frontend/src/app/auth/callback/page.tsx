@@ -85,6 +85,15 @@ function AuthCallbackContent() {
   const [errorMessage, setErrorMessage] = useState<string>("");
   // Guard against React StrictMode double-mount: only one exchange should run.
   const exchangeStartedRef = useRef(false);
+  // Track if component is mounted to prevent state updates after unmount
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    // Cleanup function to track unmount
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     // If an exchange is already in progress (StrictMode re-mount), skip silently
@@ -98,22 +107,31 @@ function AuthCallbackContent() {
 
     // Google returned an error (e.g., access_denied)
     if (errorParam) {
-      setErrorMessage(`Google returned: ${errorParam}`);
-      setCallbackStatus("error");
+      if (isMountedRef.current) {
+        setErrorMessage(`Google returned: ${errorParam}`);
+        setCallbackStatus("error");
+      }
       return;
     }
 
     if (!code || !stateParam) {
-      setErrorMessage("Missing code or state in callback URL.");
-      setCallbackStatus("error");
+      if (isMountedRef.current) {
+        setErrorMessage("Missing code or state in callback URL.");
+        setCallbackStatus("error");
+      }
       return;
     }
 
     // Read PKCE transient values stored by /sign-in
     const raw = sessionStorage.getItem(PKCE_SESSION_KEY);
     if (!raw) {
-      setErrorMessage("PKCE session data missing. Please try signing in again.");
-      setCallbackStatus("error");
+      // Add a small delay to prevent flash in case of race condition
+      setTimeout(() => {
+        if (isMountedRef.current && !sessionStorage.getItem(PKCE_SESSION_KEY)) {
+          setErrorMessage("PKCE session data missing. Please try signing in again.");
+          setCallbackStatus("error");
+        }
+      }, 100);
       return;
     }
 
@@ -121,15 +139,19 @@ function AuthCallbackContent() {
     try {
       pkceData = JSON.parse(raw) as typeof pkceData;
     } catch {
-      setErrorMessage("Corrupt PKCE session data.");
-      setCallbackStatus("error");
+      if (isMountedRef.current) {
+        setErrorMessage("Corrupt PKCE session data.");
+        setCallbackStatus("error");
+      }
       return;
     }
 
     // CSRF check
     if (pkceData.state !== stateParam) {
-      setErrorMessage("State mismatch — possible CSRF attack. Please sign in again.");
-      setCallbackStatus("error");
+      if (isMountedRef.current) {
+        setErrorMessage("State mismatch — possible CSRF attack. Please sign in again.");
+        setCallbackStatus("error");
+      }
       return;
     }
 
@@ -200,18 +222,25 @@ function AuthCallbackContent() {
           }
         }
 
-        setCallbackStatus("success");
+        // Don't show the success state - keep the exchanging state visible
+        // until redirect completes to avoid rapid visual transitions.
+        // The success state would only flash briefly before redirect anyway.
 
         // Redirect to the original destination (with origin validation).
         const destination = isSafeCallbackUrl(pkceData.callbackUrl)
           ? pkceData.callbackUrl
           : "/";
-        window.location.href = destination;
+
+        // Use replace instead of href to prevent back button issues
+        window.location.replace(destination);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         console.error("[Fenrir] Auth callback error:", message);
-        setErrorMessage(message);
-        setCallbackStatus("error");
+        // Only update state if component is still mounted
+        if (isMountedRef.current) {
+          setErrorMessage(message);
+          setCallbackStatus("error");
+        }
       }
     }
 
@@ -234,16 +263,7 @@ function AuthCallbackContent() {
           </>
         )}
 
-        {callbackStatus === "success" && (
-          <>
-            <p className="font-display text-gold tracking-wide text-base">
-              The wolf is named.
-            </p>
-            <p className="text-muted-foreground font-body italic text-sm">
-              Entering the hall...
-            </p>
-          </>
-        )}
+        {/* Success state removed - we now keep exchanging state until redirect */}
 
         {callbackStatus === "error" && (
           <>
