@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # sandbox-setup.sh — Run at the start of every Depot sandbox session.
-# Ensures consistent tooling, auth, dependency versions, and branch state.
+# Ensures consistent tooling, auth, dependency versions, branch state,
+# and test infrastructure (Playwright + system deps).
 #
 # Usage: bash .claude/scripts/sandbox-setup.sh [BRANCH_NAME]
 #
@@ -46,12 +47,23 @@ cd "$REPO_ROOT/development/frontend"
 npm ci --prefer-offline 2>/dev/null || npm ci
 echo "[ok] frontend dependencies installed from lockfile"
 
-# 5. Verify critical versions
+# 5. Playwright setup — tests live in quality/test-suites/ but node_modules
+#    is in development/frontend/. Symlink so Node can resolve @playwright/test.
+if [ ! -e "$REPO_ROOT/quality/node_modules" ]; then
+  ln -s "$REPO_ROOT/development/frontend/node_modules" "$REPO_ROOT/quality/node_modules"
+  echo "[ok] quality/node_modules symlinked to frontend"
+fi
+
+# 6. Install Playwright browsers + system deps (Chromium only for speed)
+npx playwright install --with-deps chromium 2>/dev/null || npx playwright install chromium
+echo "[ok] Playwright chromium installed"
+
+# 7. Verify critical versions
 NEXT_VER=$(npx next --version 2>/dev/null || echo "unknown")
 NODE_VER=$(node -v)
 echo "[ok] Node ${NODE_VER}, Next.js ${NEXT_VER}"
 
-# 6. Print repo root so the agent knows where to cd for subsequent commands
+# 8. Print repo root so the agent knows where to cd for subsequent commands
 cd "$REPO_ROOT"
 echo ""
 echo "REPO_ROOT=$REPO_ROOT"
