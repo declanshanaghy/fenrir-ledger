@@ -7,11 +7,8 @@
     </td>
   </tr>
   <tr>
-    <td colspan="2">
+    <td colspan="4">
       <a href="https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-production.yml"><img src="https://img.shields.io/github/actions/workflow/status/declanshanaghy/fenrir-ledger/vercel-production.yml?branch=main&style=for-the-badge&label=Production&logo=vercel&logoColor=white&labelColor=07070d" alt="Production Deploy"></a>
-    </td>
-    <td colspan="2">
-      <a href="https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-preview.yml"><img src="https://img.shields.io/github/actions/workflow/status/declanshanaghy/fenrir-ledger/vercel-preview.yml?branch=main&style=for-the-badge&label=Preview&logo=vercel&logoColor=white&labelColor=07070d" alt="Preview Deploy"></a>
     </td>
   </tr>
   <tr>
