@@ -87,40 +87,7 @@ documentation, not the tracking system.
    `"FiremanDecko, fix #<issue-number>: <one-line summary>"`
 4. Reference the Issue URL in your QA verdict under each defect
 
-**Title format:** `[Type] [Priority]: Short description`
-- Type: `Bug`, `Feature`, `UX`, `Security`, `Test`
-- Priority: `P1` (critical), `P2` (high), `P3` (medium), `P4` (low)
-
-**Labels (REQUIRED on every issue):** Apply both a type label and a priority label.
-- Type labels: `type:bug`, `type:ux`, `type:feature`, `type:security`, `type:test`
-- Priority labels: `P1-critical`, `P2-high`, `P3-medium`, `P4-low`
-
-**Issue body template:**
-```markdown
-## Problem
-<!-- What's wrong or what's missing? 2-3 sentences. -->
-
-## Screenshots
-<!-- Attach if applicable. Delete if not needed. -->
-
-## Expected Behavior
-<!-- What should happen instead? -->
-
-## Affected Code
-- `src/path/to/file.ts:line`
-
-## Reproduction Steps
-1. Go to...
-2. Click...
-3. Observe...
-
-## Acceptance Criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
-
-## Notes
-<!-- Implementation hints, related issues. Delete if empty. -->
-```
+Follow the labeling schema, title format, and body template in `quality/issue-template.md`.
 
 **Example:**
 ```bash
@@ -366,7 +333,7 @@ Overall quality assessment.
 ```
 # TC-{ID}: {Title}
 ## Category: Functional | Integration | Edge Case | Regression
-## Priority: P1-Critical | P2-High | P3-Medium | P4-Low
+## Priority: critical | high | normal | low  (see quality/issue-template.md)
 ## Type: API | UI | Deployment
 ## Preconditions
 ## Steps

@@ -74,11 +74,7 @@ and PRs.
 
 **Filing your own issues:**
 - Title: short, descriptive. No `[Type]` or `[Priority]` prefixes — use labels instead.
-- Apply both a type label and a priority label:
-  - Type: `type:bug`, `type:ux`, `type:feature`, `type:security`, `type:test`
-  - Priority: `P1-critical`, `P2-high`, `P3-medium`, `P4-low`
-- Use the body template from `.github/ISSUE_TEMPLATE/issue.md`
-- Required sections: Problem, Expected Behavior, Affected Code, Acceptance Criteria
+- Follow the labeling schema and body template in `quality/issue-template.md`
 - After every `gh issue create`, add to the project board:
   `gh project item-add 1 --owner declanshanaghy --url <issue-url>`
 - Do not leave TODOs in code without a corresponding GitHub Issue

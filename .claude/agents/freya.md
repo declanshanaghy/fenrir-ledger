@@ -99,7 +99,7 @@ What makes Fenrir Ledger worth using over alternatives?
 - [ ] Testable criterion 2
 
 ## Priority & Constraints
-- Priority: P1/P2/P3
+- Priority: critical/high/normal/low
 - Sprint target: {sprint number}
 - Dependencies: {any blockers}
 - Max stories this sprint: 5
@@ -116,7 +116,7 @@ Things the Principal Engineer needs to resolve technically.
 - **As a**: Credit card churners and rewards optimizers
 - **I want**: {capability}
 - **So that**: {benefit}
-- **Priority**: P1-Critical / P2-High / P3-Medium / P4-Nice-to-have
+- **Priority**: critical / high / normal / low
 - **Acceptance Criteria**:
   - [ ] Criterion (must be testable by QA)
 - **UX Notes**: Reference to design brief or wireframe

@@ -15,11 +15,12 @@ Each issue type has a defined chain of agents. When one agent completes, the orc
 
 | Type | Step 1 | Step 2 | Step 3 |
 |------|--------|--------|--------|
-| `type:bug` | FiremanDecko (fix) | Loki (validate) | — |
-| `type:feature` | FiremanDecko (implement) | Loki (validate) | — |
-| `type:ux` | Luna (wireframes) | FiremanDecko (implement) | Loki (validate) |
-| `type:security` | Heimdall (fix/audit) | Loki (validate) | — |
-| `type:test` | Loki (write tests) | — | — |
+| `bug` | FiremanDecko (fix) | Loki (validate) | -- |
+| `enhancement` | FiremanDecko (implement) | Loki (validate) | -- |
+| `ux` | Luna (wireframes) | FiremanDecko (implement) | Loki (validate) |
+| `security` | Heimdall (fix/audit) | Loki (validate) | -- |
+
+See `quality/issue-template.md` for the full labeling schema and issue body template.
 
 **Chain execution rules:**
 - All agents in a chain work on the **same branch** — each one commits and pushes before handing off.
@@ -282,7 +283,7 @@ If no items are in "Up Next", tell the user:
 
 From the "Up Next" list, select the highest-priority item using these rules (in order):
 
-1. **P1-critical** before P2-high before P3-medium before P4-low (read from labels)
+1. **critical** before high before normal before low (read from labels)
 2. Within the same priority, prefer **bugs** over **security** over **UX** over **features** over **tests**
 3. Within the same priority and type, prefer the **lowest issue number** (oldest first)
 
@@ -428,7 +429,7 @@ more, nothing less. Do not improvise, ad-lib, or take actions not explicitly lis
   specified in your steps. Nothing else.
 ```
 
-#### Luna (UX Designer) — Step 1 for `type:ux`
+#### Luna (UX Designer) — Step 1 for `ux`
 
 ```
 You are Luna, the UX Designer. Design wireframes for GitHub Issue #<NUMBER>: <TITLE>
@@ -596,7 +597,7 @@ Ready for QA. 🧪"
 Start by running the setup script, then read the affected files, then implement.
 ```
 
-#### Heimdall (Security Specialist) — Step 1 for `type:security`
+#### Heimdall (Security Specialist) — Step 1 for `security`
 
 ```
 You are Heimdall, the Security Specialist. Fix GitHub Issue #<NUMBER>: <TITLE>
@@ -676,7 +677,7 @@ Ready for QA. 🧪"
 Start by reading the affected files listed in the issue, then implement the fix.
 ```
 
-#### Loki (QA Tester) — Final agent in chain (or sole agent for `type:test`)
+#### Loki (QA Tester) — Final agent in chain (or sole agent for `test`)
 
 ```
 You are Loki, the QA Tester. Validate GitHub Issue #<NUMBER>: <TITLE>
@@ -742,7 +743,7 @@ to replace `Ref #<NUMBER>` with `Fixes #<NUMBER>` so merging auto-closes the iss
 
 <existing PR body content — keep the summary, add test results>"
 
-If NO PR exists (e.g. you are the sole agent for `type:test`), create one:
+If NO PR exists (e.g. you are the sole agent for `test`), create one:
   gh pr create --title "<title>" --body "Fixes #<NUMBER>\n\n<summary>"
 
 **Step 6 — Auto-merge (if verdict is PASS):**
@@ -1223,4 +1224,4 @@ Before dispatching ANY issue (single or batch), check if it's blocked:
 - Each agent in the chain handles its own commits and pushes. Do NOT duplicate their work in the main context.
 - The orchestrator's job is to **coordinate the chain**, not to build. Never do an agent's work yourself.
 - If an agent goes idle (no completion after a reasonable time), kill and respawn per team norms.
-- For `type:test` issues, Loki is both the first and final agent — he writes tests AND creates the PR.
+- For `test` issues, Loki is both the first and final agent — he writes tests AND creates the PR.
