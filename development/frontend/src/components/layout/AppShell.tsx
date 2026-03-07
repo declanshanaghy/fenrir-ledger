@@ -23,7 +23,6 @@ import { LcarsOverlay } from "@/components/easter-eggs/LcarsOverlay";
 import { Toaster } from "sonner";
 import { Footer } from "./Footer";
 
-import { StaleAuthNudge } from "./StaleAuthNudge";
 import {
   GleipnirMountainRoots,
   useGleipnirFragment3,
@@ -94,11 +93,6 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="flex flex-col h-screen bg-background">
       <TopBar />
-
-      {/* Stale auth nudge — all pages, returning users with expired session.
-          Shown when entitlement cache exists but auth is anonymous. */}
-      <StaleAuthNudge />
-
 
       <div className="flex flex-1 overflow-hidden">
         <SideNav collapsed={collapsed} onToggle={handleToggle} />

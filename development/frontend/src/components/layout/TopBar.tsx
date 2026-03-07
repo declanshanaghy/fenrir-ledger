@@ -27,6 +27,33 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** sessionStorage key -- stale auth nudge dismissed for this session only */
+const STALE_NUDGE_DISMISSED_KEY = "fenrir:stale-auth-nudge-dismissed";
+
+/**
+ * Returns true if a stale entitlement cache exists in localStorage,
+ * indicating the user was previously signed in with a subscription.
+ */
+function hasStaleEntitlementCache(): boolean {
+  if (typeof window === "undefined") return false;
+  return getEntitlementCache() !== null;
+}
+
+/**
+ * Returns true if the stale auth nudge was dismissed in this browser tab session.
+ */
+function isStaleNudgeDismissed(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    return sessionStorage.getItem(STALE_NUDGE_DISMISSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
 
 // ── Avatar component ──────────────────────────────────────────────────────────
 
@@ -81,6 +108,69 @@ function Avatar({ picture, name, size = 32, goldRing = false }: AvatarProps) {
           onError={() => setImgError(true)}
         />
       )}
+    </div>
+  );
+}
+
+// ── Compact sign-in nudge (stale auth) ────────────────────────────────────────
+
+interface SignInNudgeProps {
+  onDismiss: () => void;
+}
+
+/**
+ * Compact sign-in nudge shown in the header when the user has a stale
+ * entitlement cache (previously signed in, session expired).
+ * Replaces the full-width StaleAuthNudge banner.
+ *
+ * Mobile (< 640px): Just "Sign In" button
+ * Desktop: Norse text + "Sign In" button + X dismiss
+ */
+function CompactSignInNudge({ onDismiss }: SignInNudgeProps) {
+  const router = useRouter();
+
+  function handleDismiss() {
+    clearEntitlementCache();
+    try {
+      sessionStorage.setItem(STALE_NUDGE_DISMISSED_KEY, "true");
+    } catch {
+      // sessionStorage blocked -- fail silently
+    }
+    onDismiss();
+  }
+
+  return (
+    <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gold/30 bg-gold/5">
+      {/* Norse text — desktop only */}
+      <span className="hidden sm:block text-xs text-gold/80 italic font-body whitespace-nowrap">
+        The wolf remembers your oath
+      </span>
+
+      {/* Sign In button */}
+      <button
+        type="button"
+        onClick={() => router.push("/sign-in")}
+        className={[
+          "px-3 py-1 text-xs font-heading tracking-wide",
+          "border border-gold/50 text-gold",
+          "hover:bg-gold/10 transition-colors",
+          "rounded-sm whitespace-nowrap",
+        ].join(" ")}
+        style={{ minHeight: 32 }}
+      >
+        Sign in
+      </button>
+
+      {/* Dismiss X — desktop only */}
+      <button
+        type="button"
+        onClick={handleDismiss}
+        aria-label="Dismiss sign-in reminder"
+        className="hidden sm:flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-sm"
+        style={{ minWidth: 28, minHeight: 28 }}
+      >
+        ×
+      </button>
     </div>
   );
 }
@@ -196,8 +286,29 @@ export function TopBar() {
   const panelRef = useRef<HTMLDivElement>(null);
   const avatarTriggerRef = useRef<HTMLButtonElement>(null);
 
+  // Stale auth nudge state
+  const [showStaleNudge, setShowStaleNudge] = useState(false);
+
   const isAuthenticated = status === "authenticated";
   const user = session?.user;
+
+  // Check if we should show the stale auth nudge
+  useEffect(() => {
+    if (status === "loading") return;
+
+    const isAnonymous = status === "anonymous";
+    const hasCache = hasStaleEntitlementCache();
+    const dismissed = isStaleNudgeDismissed();
+
+    setShowStaleNudge(isAnonymous && hasCache && !dismissed);
+  }, [status]);
+
+  // Hide nudge when user authenticates
+  useEffect(() => {
+    if (status === "authenticated") {
+      setShowStaleNudge(false);
+    }
+  }, [status]);
 
   // Close panel when clicking outside.
   useEffect(() => {
@@ -232,11 +343,16 @@ export function TopBar() {
           </span>
         </a>
 
-        {/* User cluster — conditionally renders anonymous or signed-in state */}
+        {/* User cluster — conditionally renders stale nudge, anonymous avatar, or signed-in state */}
         <div className="relative flex items-center" ref={panelRef}>
 
-          {/* ── Anonymous state ── */}
-          {!isAuthenticated && (
+          {/* ── Stale auth nudge (returning user with expired session) ── */}
+          {!isAuthenticated && showStaleNudge && (
+            <CompactSignInNudge onDismiss={() => setShowStaleNudge(false)} />
+          )}
+
+          {/* ── Anonymous state (no stale session) ── */}
+          {!isAuthenticated && !showStaleNudge && (
             <button
               ref={avatarTriggerRef}
               type="button"
@@ -280,8 +396,8 @@ export function TopBar() {
             </button>
           )}
 
-          {/* ── Anonymous upsell prompt panel ── */}
-          {!isAuthenticated && panelOpen && (
+          {/* ── Anonymous upsell prompt panel (only when no stale nudge) ── */}
+          {!isAuthenticated && !showStaleNudge && panelOpen && (
             <UpsellPromptPanel
               panelId="anon-upsell-panel"
               onClose={() => setPanelOpen(false)}
