@@ -228,7 +228,7 @@ return { error: { code: "INVALID_URL", message: "..." } };
 - CSV/body content: log `{ csvLength: csv.length }` — never the content
 - URLs: safe to log (not secret)
 - Error messages: safe to log
-- User email/sub: safe to log (not secret, needed for tracing)
+- User email/sub: PII — hash before logging (e.g. SHA-256 prefix), never log raw
 
 ### What NEVER to Log
 
