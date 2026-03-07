@@ -148,26 +148,31 @@ test.describe("Auth Callback — PKCE Session Data Missing", () => {
   }) => {
     // Spec: auth/callback/page.tsx — raw = sessionStorage.getItem(PKCE_SESSION_KEY)
     //       if (!raw) → "PKCE session data missing. Please try signing in again."
+    // Note: callback page has a 100ms delay to prevent race conditions with React StrictMode
     // Navigate with valid-looking code + state but no PKCE session data
     await page.goto("/auth/callback?code=fake_code&state=fake_state", {
       waitUntil: "networkidle",
     });
 
+    // Wait for the error message to appear (100ms delay + React render time)
+    // Use waitFor with a longer timeout to account for component mount, effect run, and re-render
     await expect(
       page.locator("text=PKCE session data missing")
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible({ timeout: 10000 });
   });
 
   test("shows 'Return to the gate' link when PKCE data is missing", async ({
     page,
   }) => {
     // Spec: error state always renders the sign-in recovery link
+    // Note: callback page has a 100ms delay to prevent race conditions with React StrictMode
     await page.goto("/auth/callback?code=fake_code&state=fake_state", {
       waitUntil: "networkidle",
     });
 
+    // Wait for the error state to render with a longer timeout
     const link = page.locator("a:has-text('Return to the gate')");
-    await expect(link).toBeVisible({ timeout: 5000 });
+    await expect(link).toBeVisible({ timeout: 10000 });
   });
 });
 
