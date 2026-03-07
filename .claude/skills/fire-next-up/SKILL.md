@@ -45,10 +45,9 @@ When `--peek` is passed, run **Step 1 only**, then display the full queue as a t
 | Project Number | `1` |
 | Project Node ID | `PVT_kwHOAAW5PM4BQ7LP` |
 | Status Field ID | `PVTSSF_lAHOAAW5PM4BQ7LPzg-54RA` |
-| Todo | `f75ad846` |
-| Up Next | `803797f4` |
-| In Progress | `47fc9ee4` |
-| Done | `98236657` |
+| Up Next | `6e492bcc` |
+| In Progress | `1d9139d4` |
+| Done | `c5fe053a` |
 
 ### How to Move an Issue
 
