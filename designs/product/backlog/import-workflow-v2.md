@@ -1,6 +1,6 @@
 # Product Design Brief: Import Workflow v2 — Three Paths to the Forge
 
-**Priority**: P1 | **Sprint**: 6 | **Max stories**: 5
+**Priority**: P1 | **Sprint**: 5 (Shipped) | **Max stories**: 5
 
 ## Problem
 
@@ -67,48 +67,50 @@ All paths converge on the same pipeline: LLM extraction → preview → dedup �
 
 ### 6.1: Import Method Selection Step
 **As a** churner | **I want** to choose import method (URL, Drive, CSV) | **So that** I use whichever fits my setup
-**P1-Critical** | Status: Backlog
-- [ ] Three method cards with icon, title, description
-- [ ] Safety banner above options
-- [ ] Mobile stacking, keyboard nav, ARIA labels
+**P1-Critical** | Status: **Shipped** (Sprint 5)
+- [x] Three method cards with icon, title, description
+- [x] Safety banner above options
+- [x] Mobile stacking, keyboard nav, ARIA labels
 
 ### 6.2: CSV File Upload (Path C)
 **As a** churner with non-Google spreadsheet | **I want** to upload a CSV | **So that** I import without Google
-**P1-Critical** | Status: Backlog
-- [ ] Drag-and-drop zone + file picker, `.csv` only, 1 MB limit
-- [ ] Client-side FileReader → LLM pipeline
-- [ ] Same preview/dedup/success as URL import
-- [ ] Works for all users (signed-in and anonymous)
+**P1-Critical** | Status: **Shipped** (Sprint 5)
+- [x] Drag-and-drop zone + file picker, `.csv` only, 1 MB limit
+- [x] Client-side FileReader → LLM pipeline
+- [x] Same preview/dedup/success as URL import
+- [x] Works for all users (signed-in and anonymous)
 
 ### 6.3: Share URL Enhancement (Path A Safety)
 **As a** user importing via share URL | **I want** safety guidance and post-import reminder | **So that** I don't expose sensitive data
-**P1-Critical** | Status: Backlog
-- [ ] Safety banner before URL entry
-- [ ] Post-import reminder to remove public share
+**P1-Critical** | Status: **Shipped** (Sprint 5)
+- [x] Safety banner before URL entry
+- [x] Post-import reminder to remove public share
 
 ### 6.4: LLM Extraction Prompt Hardening
 **As a** user who may have card numbers in my spreadsheet | **I want** the system to detect and discard them | **So that** sensitive data is never stored
-**P2-High** | Status: Backlog
-- [ ] Prompt instructs LLM to ignore card numbers, CVVs, SSNs
-- [ ] `sensitiveDataWarning` flag triggers preview warning
-- [ ] No sensitive data in extracted output
+**P2-High** | Status: **Shipped** (Sprint 5, PR #171)
+- [x] Prompt instructs LLM to ignore card numbers, CVVs, SSNs
+- [x] `sensitiveDataWarning` flag triggers preview warning
+- [x] No sensitive data in extracted output
 
 ### 6.5: Google Drive Picker (Path B)
 **As a** Google Sheets user who won't make sheets public | **I want** to browse and select from Drive | **So that** I import without changing sharing settings
-**P2-High** | Status: Backlog
-- [ ] Google Picker overlay, Sheets-only filter
-- [ ] Incremental consent for Drive scopes
-- [ ] Graceful fallback if user declines or is anonymous
-- [ ] Same pipeline as other paths
+**P2-High** | Status: **Shipped** (Sprint 5)
+- [x] Google Picker overlay, Sheets-only filter
+- [x] Incremental consent for Drive scopes
+- [x] Graceful fallback if user declines or is anonymous
+- [x] Same pipeline as other paths
 
 ## Open Questions for Principal Engineer
 
-1. Does `getLlmProvider()` support receiving raw CSV text (not from URL)? Path C needs to skip URL-parse/fetch.
-2. Should CSV upload go through WebSocket backend or serverless HTTP? Recommend: support both (same as Path A).
-3. Google Picker API key: store as `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` in `.env`?
-4. Incremental consent pattern for adding Drive scopes to existing PKCE flow?
-5. Is `CSV_TRUNCATION_LIMIT` (100K chars) appropriate for uploaded CSVs?
-6. New endpoint `POST /import/csv` or extend existing `POST /import` to accept `{ csv: string }`?
+> **All resolved** — feature shipped in Sprint 5.
+
+1. ~~Does `getLlmProvider()` support receiving raw CSV text (not from URL)?~~ Resolved: `csv-import-pipeline.ts` handles CSV text separately from URL pipeline.
+2. ~~Should CSV upload go through WebSocket backend or serverless HTTP?~~ Resolved: Serverless HTTP (`/api/sheets/import`), no WebSocket backend deployed.
+3. ~~Google Picker API key: store as `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` in `.env`?~~ Resolved: Served via authenticated API route (`/api/config/picker`) — never public.
+4. ~~Incremental consent pattern for adding Drive scopes to existing PKCE flow?~~ Resolved: `useDriveToken` hook manages incremental consent.
+5. ~~Is `CSV_TRUNCATION_LIMIT` (100K chars) appropriate for uploaded CSVs?~~ Resolved: 100K limit retained.
+6. ~~New endpoint `POST /import/csv` or extend existing `POST /import`?~~ Resolved: Extended existing `POST /api/sheets/import` to accept `{ csv: string }` body variant.
 
 ## Handoff Notes for Principal Engineer
 
