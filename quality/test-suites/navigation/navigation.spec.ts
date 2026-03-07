@@ -132,11 +132,14 @@ test.describe("Session Archive — /sessions/", () => {
 
     await cards.nth(0).click();
 
+    // Wait for navigation to complete
+    await page.waitForLoadState("networkidle");
+
     // Chronicle page must have a back-nav link pointing to the archive index
     // Per design spec: root-relative /sessions/ so it resolves correctly
     // regardless of whether the URL has a trailing slash.
     const backLink = page.locator('.back-link[href="/sessions/"]');
-    await expect(backLink).toBeVisible();
+    await expect(backLink).toBeVisible({ timeout: 5000 });
 
     // Chronicle must have an <h1> with content
     const h1 = page.locator("h1").first();

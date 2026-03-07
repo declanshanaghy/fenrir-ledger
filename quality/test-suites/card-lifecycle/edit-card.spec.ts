@@ -226,6 +226,9 @@ test.describe("Edit Card — Cancel Without Saving", () => {
     await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.goBack({ waitUntil: "networkidle" });
+
+    // Wait for navigation to complete and check we're back on dashboard
+    await page.waitForURL(/\/$/, { timeout: 5000 });
     expect(page.url()).not.toContain("/cards/");
   });
 

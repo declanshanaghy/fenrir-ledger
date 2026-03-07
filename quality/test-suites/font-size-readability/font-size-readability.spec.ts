@@ -419,13 +419,16 @@ test.describe("AC-6: No layout breakage", () => {
 
   test("TC-FS-051: card form page renders inputs and submit button", async ({ page }) => {
     // Spec: the card form must work correctly after font size changes.
-    await page.goto("/cards/new");
+    await page.goto("/cards/new", { waitUntil: "networkidle" });
     await page.waitForLoadState("domcontentloaded");
+
+    // Wait for the submit button to appear first (this ensures form is loaded)
+    const submitButton = page.getByRole("button", { name: /forge|save|create|add/i });
+    await expect(submitButton.first(), "card form must have a submit/save button").toBeVisible({ timeout: 10000 });
+
     const inputs = page.locator("input, select, textarea");
     const count = await inputs.count();
     expect(count, "card form should render multiple input fields").toBeGreaterThan(2);
-    const submitButton = page.getByRole("button", { name: /forge|save|create|add/i });
-    await expect(submitButton.first(), "card form must have a submit/save button").toBeVisible({ timeout: 10000 });
   });
 
   test("TC-FS-052: sign-in page renders a heading", async ({ page }) => {
