@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * EmptyState — displayed on the dashboard when no cards exist.
  *
@@ -9,9 +11,13 @@
  */
 
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 import { AuthGate } from "@/components/shared/AuthGate";
 
 export function EmptyState() {
+  const { status } = useAuth();
+  const isAnonymous = status === "anonymous";
+
   return (
     <div
       className="flex flex-col items-center justify-center py-24 text-center"
@@ -65,6 +71,19 @@ export function EmptyState() {
           Import from Google Sheets
         </button>
       </AuthGate>
+
+      {/* Subtle sign-in nudge for anonymous users — muted text, not a banner */}
+      {isAnonymous && (
+        <p className="mt-6 text-sm text-muted-foreground/60 font-body">
+          <Link
+            href="/sign-in"
+            className="underline underline-offset-2 hover:text-gold transition-colors"
+          >
+            Sign in
+          </Link>{" "}
+          to sync across devices.
+        </p>
+      )}
     </div>
   );
 }

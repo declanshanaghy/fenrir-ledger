@@ -162,20 +162,26 @@ export default function DashboardPage() {
             </AuthGate>
           )}
 
-          <Link
-            href="/cards/new"
-            className="inline-flex items-center justify-center rounded-sm text-base font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-9 px-4 py-2"
-          >
-            Add Card
-          </Link>
+          {/* Hide header "Add Card" when zero cards — the EmptyState has its own CTA */}
+          {loaded && cards.length > 0 && (
+            <Link
+              href="/cards/new"
+              className="inline-flex items-center justify-center rounded-sm text-base font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-9 px-4 py-2"
+            >
+              Add Card
+            </Link>
+          )}
         </div>
       </div>
 
       {/* Upsell banner -- shown to Thrall users above the card grid.
+          Hidden when zero cards to avoid overwhelming the empty state.
           The UpsellBanner self-hides for Karl/dismissed users. */}
-      <div className="mb-4">
-        <UpsellBanner />
-      </div>
+      {loaded && cards.length > 0 && (
+        <div className="mb-4">
+          <UpsellBanner />
+        </div>
+      )}
 
       {/* Main content row: card grid + HowlPanel side-by-side on desktop */}
       <div className="flex gap-6 items-start">
