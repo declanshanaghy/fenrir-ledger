@@ -9,6 +9,7 @@
  *  - Reads "fenrir:auth" from localStorage.
  *  - If valid → status = "authenticated", session = FenrirSession,
  *               householdId = session.user.sub
+ *  - If expired but has refresh_token → attempts to refresh the session
  *  - Else → status = "anonymous", session = null,
  *            householdId = getOrCreateAnonHouseholdId() (localStorage "fenrir:household")
  *
@@ -35,6 +36,7 @@ import {
 import { getSession, clearSession, isSessionValid } from "@/lib/auth/session";
 import { getOrCreateAnonHouseholdId } from "@/lib/auth/household";
 import { clearEntitlementCache } from "@/lib/entitlement/cache";
+import { refreshSession } from "@/lib/auth/refresh-session";
 import type { FenrirSession } from "@/lib/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -82,19 +84,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const stored = getSession();
+    async function initializeAuth() {
+      const stored = getSession();
 
-    if (stored && isSessionValid()) {
-      // Authenticated: use session sub as householdId
-      setSession(stored);
-      setStatus("authenticated");
-      setHouseholdId(stored.user.sub);
-    } else {
-      // Anonymous: generate or retrieve the anonymous householdId
-      setSession(null);
-      setStatus("anonymous");
-      setHouseholdId(getOrCreateAnonHouseholdId());
+      if (stored && isSessionValid()) {
+        // Authenticated: use session sub as householdId
+        setSession(stored);
+        setStatus("authenticated");
+        setHouseholdId(stored.user.sub);
+      } else if (stored?.refresh_token) {
+        // Session expired but we have a refresh token — attempt to refresh
+        try {
+          const refreshed = await refreshSession();
+          if (refreshed) {
+            // Successfully refreshed the session
+            setSession(refreshed);
+            setStatus("authenticated");
+            setHouseholdId(refreshed.user.sub);
+            return;
+          }
+        } catch (err) {
+          // Refresh failed, fall through to anonymous
+          console.error("[Fenrir] Session refresh failed:", err);
+        }
+        // Refresh failed or returned null — treat as anonymous
+        setSession(null);
+        setStatus("anonymous");
+        setHouseholdId(getOrCreateAnonHouseholdId());
+      } else {
+        // No session or no refresh token — anonymous user
+        setSession(null);
+        setStatus("anonymous");
+        setHouseholdId(getOrCreateAnonHouseholdId());
+      }
     }
+
+    initializeAuth();
   }, []);
 
   const signOut = useCallback(() => {
