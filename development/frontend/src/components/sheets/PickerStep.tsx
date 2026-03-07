@@ -183,8 +183,8 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
           </p>
 
           {(driveError || error) && (
-            <div role="alert" className="rounded-sm border border-red-500/40 bg-red-500/10 px-3 py-2 w-full max-w-md">
-              <p className="text-sm font-body text-red-400">
+            <div role="alert" className="rounded-sm border border-destructive/40 bg-destructive/10 px-3 py-2 w-full max-w-md">
+              <p className="text-sm font-body text-destructive">
                 {driveError?.code === "CONSENT_DECLINED" || driveError?.code === "POPUP_CLOSED"
                   ? "Google Drive access was not granted. You can still import using a share URL or CSV file."
                   : error || driveError?.message || "An error occurred. Please try again."}
@@ -204,7 +204,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
               type="button"
               onClick={handleAllowAccess}
               disabled={isRequesting}
-              className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px] min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-11 px-6 min-w-[44px] min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isRequesting ? (
                 <span className="flex items-center gap-2">
@@ -258,8 +258,8 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
       <div className="flex flex-col items-center gap-4 py-4 text-center">
         {error ? (
           <>
-            <div role="alert" className="rounded-sm border border-red-500/40 bg-red-500/10 px-3 py-2 w-full max-w-md">
-              <p className="text-sm font-body text-red-400">{error}</p>
+            <div role="alert" className="rounded-sm border border-destructive/40 bg-destructive/10 px-3 py-2 w-full max-w-md">
+              <p className="text-sm font-body text-destructive">{error}</p>
             </div>
             <div className="flex gap-3">
               <button
@@ -272,7 +272,7 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
               <button
                 type="button"
                 onClick={handleRetry}
-                className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px] min-h-[44px]"
+                className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-11 px-6 min-w-[44px] min-h-[44px]"
               >
                 Retry
               </button>

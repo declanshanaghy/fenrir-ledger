@@ -30,7 +30,7 @@ export function ImportDedupStep({
         <h2 className="font-display text-gold tracking-wide text-xl">
           Duplicates Found
         </h2>
-        <span className="inline-flex items-center justify-center rounded-full bg-amber-500/20 text-amber-400 font-mono text-sm font-bold px-2 py-0.5 border border-amber-500/30">
+        <span className="inline-flex items-center justify-center rounded-full bg-primary/20 text-primary font-mono text-sm font-bold px-2 py-0.5 border border-primary/30">
           {dupCount} duplicate{dupCount !== 1 ? "s" : ""}
         </span>
       </div>
@@ -46,12 +46,12 @@ export function ImportDedupStep({
           {duplicates.map((match, i) => (
             <div
               key={i}
-              className="rounded-sm border border-amber-500/40 bg-amber-500/5 px-4 py-3 flex flex-col gap-2"
+              className="rounded-sm border border-primary/40 bg-primary/5 px-4 py-3 flex flex-col gap-2"
             >
               {/* Imported card */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="font-heading text-sm text-amber-400 tracking-wide uppercase">
+                  <span className="font-heading text-sm text-primary tracking-wide uppercase">
                     Importing
                   </span>
                   <span className="font-heading text-base text-foreground tracking-wide truncate">
@@ -95,7 +95,7 @@ export function ImportDedupStep({
             <button
               type="button"
               onClick={onSkipDuplicates}
-              className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-11 px-6 min-w-[44px] w-full"
+              className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-11 px-6 min-w-[44px] w-full"
             >
               Skip {dupCount} duplicate{dupCount !== 1 ? "s" : ""} and import {uniqueCount} new
             </button>
@@ -105,7 +105,7 @@ export function ImportDedupStep({
           <button
             type="button"
             onClick={onImportAll}
-            className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-amber-500/40 text-amber-400 hover:border-amber-500 hover:text-amber-300 h-11 px-6 min-w-[44px] w-full"
+            className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-primary/40 text-primary hover:border-primary hover:text-primary/80 h-11 px-6 min-w-[44px] w-full"
           >
             Import all anyway ({dupCount + uniqueCount} card{dupCount + uniqueCount !== 1 ? "s" : ""})
           </button>

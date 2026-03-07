@@ -192,7 +192,7 @@ function SignInContent() {
               "transition-colors",
               isRedirecting
                 ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-gold-bright",
+                : "hover:bg-primary hover:brightness-110",
             ].join(" ")}
             style={{ minHeight: 46 }}
           >

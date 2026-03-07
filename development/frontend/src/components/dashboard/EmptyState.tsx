@@ -49,7 +49,7 @@ export function EmptyState() {
 
       <Link
         href="/cards/new"
-        className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright h-10 px-6"
+        className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-10 px-6"
       >
         Add Card
       </Link>

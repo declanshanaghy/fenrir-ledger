@@ -50,7 +50,7 @@ export function ShareUrlEntry({
           autoFocus
         />
         {showError && (
-          <p className="text-sm text-red-400 font-body">
+          <p className="text-sm text-destructive font-body">
             Enter a valid Google Sheets URL
           </p>
         )}
@@ -72,7 +72,7 @@ export function ShareUrlEntry({
           type="button"
           onClick={onSubmit}
           disabled={!isValid}
-          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-gold-bright disabled:opacity-40 disabled:cursor-not-allowed h-11 px-6 min-w-[44px]"
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed h-11 px-6 min-w-[44px]"
         >
           Begin Import
         </button>
