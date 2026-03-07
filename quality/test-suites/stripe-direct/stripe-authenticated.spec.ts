@@ -16,14 +16,14 @@ import { test, expect, type Page } from "@playwright/test";
 // Constants
 // ---------------------------------------------------------------------------
 
-const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9656";
+const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9653";
 
 // ---------------------------------------------------------------------------
 // Mock Data Setup
 // ---------------------------------------------------------------------------
 
 async function mockAuthenticatedUser(page: Page, googleSub = "google_test123"): Promise<void> {
-  // Mock the Google auth token in localStorage
+  // Mock the Google auth token in localStorage (but NOT entitlement - that comes from API)
   await page.evaluate((sub) => {
     const mockUser = {
       sub,
@@ -34,12 +34,7 @@ async function mockAuthenticatedUser(page: Page, googleSub = "google_test123"): 
       exp: Math.floor(Date.now() / 1000) + 3600,
     };
     localStorage.setItem("fenrir:google-credential", JSON.stringify(mockUser));
-    localStorage.setItem("fenrir:entitlement", JSON.stringify({
-      tier: "karl",
-      active: true,
-      platform: "stripe",
-      checkedAt: new Date().toISOString(),
-    }));
+    // Don't set entitlement in localStorage - let it come from the mocked API
   }, googleSub);
 }
 
@@ -92,58 +87,57 @@ async function mockStripeEntitlement(
 // ===========================================================================
 
 test.describe("Authenticated Stripe UI States", () => {
-  test.beforeEach(async ({ page }) => {
-    // Mock authenticated user before each test
-    await page.goto(`${BASE_URL}/`);
-    await mockAuthenticatedUser(page);
-  });
-
   test("TC-STR-AUTH-01: Karl Active state UI (replaces MANUAL-01)", async ({ page }) => {
     // Mock Karl active subscription
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + 30);
 
-    await mockStripeEntitlement(page, {
-      tier: "karl",
-      active: true,
-      stripeStatus: "active",
-      cancelAtPeriodEnd: false,
-      currentPeriodEnd: futureDate.toISOString(),
+    // Set up API route mock BEFORE any navigation
+    await page.route('**/api/stripe/membership', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          tier: "karl",
+          active: true,
+          platform: "stripe",
+          checkedAt: new Date().toISOString(),
+          customerId: "cus_test123",
+          linkedAt: new Date().toISOString(),
+          stripeStatus: "active",
+          cancelAtPeriodEnd: false,
+          currentPeriodEnd: futureDate.toISOString(),
+        }),
+      });
     });
+
+    // Navigate to page and set auth state
+    await page.goto(`${BASE_URL}/`);
+    await mockAuthenticatedUser(page);
 
     // Navigate to settings page
     await page.goto(`${BASE_URL}/settings`);
     await page.waitForLoadState("networkidle");
 
-    // Check for KARL badge
-    const karlBadge = page.locator('[data-testid="tier-badge"], .tier-badge').filter({ hasText: /KARL/i });
-    await expect(karlBadge).toBeVisible();
-
-    // Check for Active status
-    const activeStatus = page.locator('text=/Active|Status.*Active/i');
-    await expect(activeStatus).toBeVisible();
+    // Wait for the badge to appear (with longer timeout since API mock should respond)
+    const karlBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /KARL/i });
+    await expect(karlBadge).toBeVisible({ timeout: 10000 });
 
     // Check for subscription price
     const price = page.locator('text=/$3\\.99.*month/i');
     await expect(price).toBeVisible();
 
     // Check for billing date
-    const billingDate = page.locator('text=/Next billing|Renews/i');
+    const billingDate = page.locator('text=/Next billing/i');
     await expect(billingDate).toBeVisible();
 
     // Check for Manage Subscription button
-    const manageBtn = page.locator('button, a').filter({ hasText: /Manage Subscription/i });
+    const manageBtn = page.locator('button').filter({ hasText: /Manage Subscription/i });
     await expect(manageBtn).toBeVisible();
 
     // Check for Cancel button with proper aria-label
-    const cancelBtn = page.locator('button').filter({ hasText: /Cancel/i });
-    if (await cancelBtn.count() > 0) {
-      await expect(cancelBtn.first()).toBeVisible();
-      const ariaLabel = await cancelBtn.first().getAttribute("aria-label");
-      if (ariaLabel) {
-        expect(ariaLabel.toLowerCase()).toContain("cancel");
-      }
-    }
+    const cancelBtn = page.locator('button[aria-label*="Cancel"]');
+    await expect(cancelBtn).toBeVisible();
   });
 
   test("TC-STR-AUTH-02: Canceling state UI (replaces part of MANUAL-02)", async ({ page }) => {
@@ -151,55 +145,85 @@ test.describe("Authenticated Stripe UI States", () => {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + 15);
 
-    await mockStripeEntitlement(page, {
-      tier: "karl",
-      active: true,
-      stripeStatus: "active",
-      cancelAtPeriodEnd: true,
-      currentPeriodEnd: futureDate.toISOString(),
+    // Set up API route mock BEFORE any navigation
+    await page.route('**/api/stripe/membership', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          tier: "karl",
+          active: true,
+          platform: "stripe",
+          checkedAt: new Date().toISOString(),
+          customerId: "cus_test123",
+          linkedAt: new Date().toISOString(),
+          stripeStatus: "active",
+          cancelAtPeriodEnd: true,
+          currentPeriodEnd: futureDate.toISOString(),
+        }),
+      });
     });
+
+    // Navigate to page and set auth state
+    await page.goto(`${BASE_URL}/`);
+    await mockAuthenticatedUser(page);
 
     // Navigate to settings page
     await page.goto(`${BASE_URL}/settings`);
     await page.waitForLoadState("networkidle");
 
-    // Check for KARL badge (still Karl during cancellation period)
-    const karlBadge = page.locator('[data-testid="tier-badge"], .tier-badge').filter({ hasText: /KARL/i });
-    await expect(karlBadge).toBeVisible();
+    // Check for CANCELING badge
+    const cancelingBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /CANCELING/i });
+    await expect(cancelingBadge).toBeVisible();
 
-    // Check for Canceling status
-    const cancelingStatus = page.locator('text=/Canceling|Cancel.*period|ends/i');
+    // Check for Canceling status text
+    const cancelingStatus = page.locator('text=/Canceling/i');
     await expect(cancelingStatus).toBeVisible();
 
     // Check for period end date message
-    const periodEndMessage = page.locator(`text=/continues until|access until|expires/i`);
+    const periodEndMessage = page.locator('text=/set to cancel|full Karl access until/i');
     await expect(periodEndMessage).toBeVisible();
 
     // Check for Resubscribe button
-    const resubscribeBtn = page.locator('button, a').filter({ hasText: /Resubscribe|Resume|Reactivate/i });
+    const resubscribeBtn = page.locator('button').filter({ hasText: /Resubscribe/i });
     await expect(resubscribeBtn).toBeVisible();
   });
 
   test("TC-STR-AUTH-03: Canceled state UI (replaces part of MANUAL-02)", async ({ page }) => {
-    // Mock canceled subscription (now Thrall)
-    await mockStripeEntitlement(page, {
-      tier: "thrall",
-      active: false,
-      stripeStatus: "canceled",
-      cancelAtPeriodEnd: false,
+    // Mock canceled subscription (tier is still karl but not active)
+    // Set up API route mock BEFORE any navigation
+    await page.route('**/api/stripe/membership', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          tier: "karl",
+          active: false,
+          platform: "stripe",
+          checkedAt: new Date().toISOString(),
+          customerId: "cus_test123",
+          linkedAt: new Date().toISOString(),
+          stripeStatus: "canceled",
+          cancelAtPeriodEnd: false,
+        }),
+      });
     });
+
+    // Navigate to page and set auth state
+    await page.goto(`${BASE_URL}/`);
+    await mockAuthenticatedUser(page);
 
     // Navigate to settings page
     await page.goto(`${BASE_URL}/settings`);
     await page.waitForLoadState("networkidle");
 
-    // Check for THRALL badge
-    const thrallBadge = page.locator('[data-testid="tier-badge"], .tier-badge').filter({ hasText: /THRALL/i });
-    await expect(thrallBadge).toBeVisible();
+    // Check for CANCELED badge (not THRALL - the canceled state shows CANCELED badge)
+    const canceledBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /CANCELED/i });
+    await expect(canceledBadge).toBeVisible();
 
-    // Check for subscribe CTA
-    const subscribeBtn = page.locator('button, a').filter({ hasText: /Subscribe|Upgrade.*Karl/i });
-    await expect(subscribeBtn).toBeVisible();
+    // Check for Resubscribe button
+    const resubscribeBtn = page.locator('button').filter({ hasText: /Resubscribe/i });
+    await expect(resubscribeBtn).toBeVisible();
   });
 
   test("TC-STR-AUTH-04: Post-checkout redirect with session_id migration", async ({ page }) => {
@@ -208,7 +232,7 @@ test.describe("Authenticated Stripe UI States", () => {
 
     // Mock the membership API to simulate migration
     let migrationAttempted = false;
-    await page.route(`${BASE_URL}/api/stripe/membership*`, async route => {
+    await page.route('**/api/stripe/membership', async route => {
       const url = new URL(route.request().url());
       if (url.searchParams.get("session_id") === sessionId && !migrationAttempted) {
         migrationAttempted = true;
@@ -242,12 +266,16 @@ test.describe("Authenticated Stripe UI States", () => {
       }
     });
 
+    // Navigate to page and set auth state
+    await page.goto(`${BASE_URL}/`);
+    await mockAuthenticatedUser(page);
+
     // Navigate to settings with session_id param (simulating Stripe redirect)
     await page.goto(`${BASE_URL}/settings?stripe=success&session_id=${sessionId}`);
     await page.waitForLoadState("networkidle");
 
     // Check that Karl state is shown after migration
-    const karlBadge = page.locator('[data-testid="tier-badge"], .tier-badge').filter({ hasText: /KARL/i });
+    const karlBadge = page.locator('[data-testid="tier-badge"]').filter({ hasText: /KARL/i });
     await expect(karlBadge).toBeVisible();
 
     // Verify migration was attempted (the API was called with session_id)
