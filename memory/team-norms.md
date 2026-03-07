@@ -99,40 +99,38 @@ both frontend and backend code.
 
 ### Backend Logging Format
 
-Use a `[fenrir-backend]` prefix on all operational log lines so they can be
-filtered in aggregated log streams.
+All server-side code uses the fenrir logger: `import { log } from "@/lib/logger"`.
+The logger is a tslog wrapper (`development/frontend/src/lib/logger.ts`) that provides:
+- `[fenrir-backend]` prefix on all entries automatically
+- JSON output in production, pretty output in development
+- Automatic secret masking via `maskValuesOfKeys` + `maskValuesRegEx`
+
+**Never use raw `console.*` in backend code.** Always use `log.*`.
 
 | Level | When to use |
 |---|---|
-| `console.error()` | Caught errors. Always include error code, relevant entity IDs, and a summary of the input that caused the failure. |
-| `console.info()` | Operational events: server startup, request lifecycle milestones, external API call initiation/completion. |
-| `console.log()` | General-purpose trace lines during development (acceptable in backend; prefer `console.info` for production-important events). |
+| `log.error()` | Caught errors. Always include error code, relevant entity IDs, and a summary of the input that caused the failure. |
+| `log.info()` | Operational events: server startup, request lifecycle milestones, external API call initiation/completion. |
+| `log.debug()` | Development-time tracing, entry/exit logging. Stripped in production via minLevel. |
 
 **Backend example patterns:**
 
 ```ts
-// Server startup
-console.info("[fenrir-backend] server listening on port", port);
+import { log } from "@/lib/logger";
 
 // External API call
-console.info("[fenrir-backend] calling Google Sheets API", { sheetId, range });
+log.info("calling Google Sheets API", { sheetId, range });
 // ...on success
-console.info("[fenrir-backend] Google Sheets API returned", { rowCount: rows.length });
+log.info("Google Sheets API returned", { rowCount: rows.length });
 // ...on failure
-console.error("[fenrir-backend] Google Sheets API error", {
+log.error("Google Sheets API error", {
   sheetId,
   status: error.status,
   message: error.message,
 });
 
-// WebSocket events
-console.info("[fenrir-backend] ws connected", { clientId });
-console.info("[fenrir-backend] ws message received", { clientId, type: msg.type });
-console.error("[fenrir-backend] ws error", { clientId, error: err.message });
-console.info("[fenrir-backend] ws disconnected", { clientId, code, reason });
-
 // Import pipeline phases
-console.info("[fenrir-backend] import phase transition", {
+log.info("import phase transition", {
   importId,
   from: previousPhase,
   to: nextPhase,
@@ -140,7 +138,7 @@ console.info("[fenrir-backend] import phase transition", {
 });
 
 // Error handler (catch block or error middleware)
-console.error("[fenrir-backend] unhandled route error", {
+log.error("unhandled route error", {
   path: req.path,
   method: req.method,
   error: err.message,
@@ -150,7 +148,8 @@ console.error("[fenrir-backend] unhandled route error", {
 
 ### Frontend Logging Format
 
-Frontend logging is split into two tiers to keep production bundles clean.
+Frontend (client-side) code cannot use the fenrir logger (it's server-only / tslog).
+Use `console.error` and `console.debug` with a bracketed module prefix.
 
 | Level | When to use |
 |---|---|
@@ -198,27 +197,29 @@ console.debug("[ImportWizard] phase changed", { from: prev, to: next });
 **Rule:** Every function and method in backend (server-side) code must log at entry
 and before every return.
 
-**Entry logging:** At the top of every function, log a `console.debug` with the
-`[fenrir-backend]` prefix, the function name, and a structured object of all input
-parameters. For sensitive inputs (tokens, secrets, CSV bodies), log safe summaries
-(presence booleans, lengths, truncated previews) — never raw values.
+**Entry logging:** At the top of every function, call `log.debug` with the function
+name and a structured object of all input parameters. For sensitive inputs (tokens,
+secrets, CSV bodies), log safe summaries (presence booleans, lengths) — the logger's
+auto-masking handles the rest, but don't rely on it for intentional secrets.
 
-**Exit logging:** Before every `return` statement, log a `console.debug` with the
-function name and a structured summary of the return value. For complex objects,
-log key fields (counts, status codes, boolean flags) rather than the full object.
+**Exit logging:** Before every `return` statement, call `log.debug` with the function
+name and a structured summary of the return value. For complex objects, log key
+fields (counts, status codes, boolean flags) rather than the full object.
 
 **Format:**
 
 ```ts
+import { log } from "@/lib/logger";
+
 // Entry
-console.debug("[fenrir-backend] myFunction called", { param1, param2 });
+log.debug("myFunction called", { param1, param2 });
 
 // Exit (success)
-console.debug("[fenrir-backend] myFunction returning", { cardCount: cards.length, hasWarning: !!warning });
+log.debug("myFunction returning", { cardCount: cards.length, hasWarning: !!warning });
 return { cards, warning };
 
 // Exit (error)
-console.debug("[fenrir-backend] myFunction returning error", { code: "INVALID_URL" });
+log.debug("myFunction returning error", { code: "INVALID_URL" });
 return { error: { code: "INVALID_URL", message: "..." } };
 ```
 
