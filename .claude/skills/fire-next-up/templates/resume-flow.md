@@ -28,6 +28,8 @@ When a chain is interrupted (session ended, agent failed, context lost), use `--
    | `## FiremanDecko → Loki Handoff` | FiremanDecko | Loki |
    | `## Heimdall → Loki Handoff` | Heimdall | Loki |
    | `## Loki QA Verdict` | Loki (chain complete) | — |
+   | `## Freya Handoff` | Freya (research) | Orchestrator Review |
+   | `## FiremanDecko Handoff` (no `→ Loki`) | FiremanDecko (research) | Orchestrator Review |
 
    The **last handoff comment** tells you exactly where the chain stopped and who's next.
 
@@ -42,6 +44,7 @@ When a chain is interrupted (session ended, agent failed, context lost), use `--
    - `Luna → FiremanDecko Handoff` exists but no further → spawn FiremanDecko.
    - `FiremanDecko → Loki Handoff` or `Heimdall → Loki Handoff` exists but no verdict → spawn Loki.
    - `Loki QA Verdict` exists → check CI status (see Step 5b below).
+   - `Freya Handoff` or `FiremanDecko Handoff` (without `→ Loki`) on a research issue → **Research Review** (see Step 5c below).
 
 5b. **If Loki QA Verdict exists — check CI before declaring complete:**
 
@@ -58,6 +61,19 @@ When a chain is interrupted (session ended, agent failed, context lost), use `--
    | CI green + verdict PASS + not merged | **Orchestrator merges** (see below). Then move to **Done**. |
    | **CI failing + verdict PASS or FAIL** | **Bounce back to Loki** — read `templates/loki-bounce-back.md`. |
    | Verdict FAIL (regardless of CI) | Chain is blocked. Report to user: needs manual intervention or re-dispatch. |
+
+5c. **If research handoff exists — run Research Review:**
+
+   Research chains have no Loki step. When the agent's handoff is found:
+
+   1. Check if the PR is merged: `gh pr list --state merged --head "<BRANCH>" --json number`
+   2. If merged, read the deliverable file(s) from the PR's changed files.
+   3. Present findings to Odin using the Research Review format from SKILL.md.
+   4. Execute Odin's decision (plan it / shelve it / drop it).
+
+   Do NOT spawn any agents — the orchestrator handles this step directly.
+
+---
 
 ## Orchestrator Merge
 

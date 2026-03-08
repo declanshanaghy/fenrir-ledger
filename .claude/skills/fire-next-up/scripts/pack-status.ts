@@ -241,11 +241,39 @@ function analyzeChain(
   const hasLunaHandoff = comments.some((c) =>
     c.includes("## Luna \u2192 FiremanDecko Handoff")
   );
+  // Research handoffs: "## Freya Handoff" or "## FiremanDecko Handoff" (without → Loki)
+  const hasResearchHandoff = comments.some(
+    (c) =>
+      (c.includes("## Freya Handoff") ||
+        (c.includes("## FiremanDecko Handoff") &&
+          !c.includes("\u2192 Loki")))
+  );
 
   let position: string;
   let verdict: string | null = null;
   let next_action: string;
   let command: string;
+
+  // Research chains: agent posted handoff, no Loki step
+  if (hasResearchHandoff && type === "research") {
+    position = "Research complete \u2014 awaiting review";
+    next_action = "review";
+    command = `/fire-next-up --resume #${item.num}`;
+    return {
+      issue: item.num,
+      title: item.title,
+      type,
+      priority,
+      chain,
+      position,
+      pr: matchingPR?.number ?? null,
+      branch: matchingPR?.headRefName ?? "",
+      verdict: null,
+      ci: null,
+      next_action,
+      command,
+    };
+  }
 
   if (hasLokiPass) {
     verdict = "PASS";
@@ -332,6 +360,9 @@ async function statusDashboard() {
         .filter(
           (c) => c.position.includes("No PR") || c.position.includes("running")
         )
+        .map((c) => c.issue),
+      research_review: chains
+        .filter((c) => c.next_action === "review")
         .map((c) => c.issue),
     },
     actions: chains.map((c) => ({
@@ -476,6 +507,11 @@ async function resumeDetect(issueNum: number) {
   const lokiFail = effectiveComments.some(
     (c) => c.includes("## Loki QA Verdict") && /Verdict.*FAIL/.test(c)
   );
+  const hasResearchHandoff = effectiveComments.some(
+    (c) =>
+      c.includes("## Freya Handoff") ||
+      (c.includes("## FiremanDecko Handoff") && !c.includes("\u2192 Loki"))
+  );
 
   let completedSteps: string[] = [];
   let nextAgent = "";
@@ -530,6 +566,17 @@ async function resumeDetect(issueNum: number) {
         nextStep = 0;
       } else {
         nextAgent = "Heimdall";
+        nextStep = 1;
+      }
+      break;
+    case "research":
+      totalSteps = 1;
+      if (hasResearchHandoff) {
+        completedSteps = [hasResearchHandoff ? "Research Agent" : ""];
+        nextAgent = "Orchestrator Review";
+        nextStep = 0;
+      } else {
+        nextAgent = "FiremanDecko";
         nextStep = 1;
       }
       break;

@@ -1,6 +1,6 @@
 #!/usr/bin/env -S npx tsx
 
-// .claude/skills/fire-next-up/scripts/pack-status.ts
+// pack-status.ts
 import { execSync } from "child_process";
 var OWNER = "declanshanaghy";
 var REPO = "fenrir-ledger";
@@ -168,10 +168,32 @@ function analyzeChain(item, comments, prs) {
   const hasLunaHandoff = comments.some(
     (c) => c.includes("## Luna \u2192 FiremanDecko Handoff")
   );
+  const hasResearchHandoff = comments.some(
+    (c) => c.includes("## Freya Handoff") || c.includes("## FiremanDecko Handoff") && !c.includes("\u2192 Loki")
+  );
   let position;
   let verdict = null;
   let next_action;
   let command;
+  if (hasResearchHandoff && type === "research") {
+    position = "Research complete \u2014 awaiting review";
+    next_action = "review";
+    command = `/fire-next-up --resume #${item.num}`;
+    return {
+      issue: item.num,
+      title: item.title,
+      type,
+      priority,
+      chain,
+      position,
+      pr: matchingPR?.number ?? null,
+      branch: matchingPR?.headRefName ?? "",
+      verdict: null,
+      ci: null,
+      next_action,
+      command
+    };
+  }
   if (hasLokiPass) {
     verdict = "PASS";
     if (matchingPR) {
@@ -244,7 +266,8 @@ async function statusDashboard() {
       awaiting_decko: chains.filter((c) => c.position.includes("Awaiting FiremanDecko")).map((c) => c.issue),
       no_response: chains.filter(
         (c) => c.position.includes("No PR") || c.position.includes("running")
-      ).map((c) => c.issue)
+      ).map((c) => c.issue),
+      research_review: chains.filter((c) => c.next_action === "review").map((c) => c.issue)
     },
     actions: chains.map((c) => ({
       issue: c.issue,
@@ -367,6 +390,9 @@ async function resumeDetect(issueNum) {
   const lokiFail = effectiveComments.some(
     (c) => c.includes("## Loki QA Verdict") && /Verdict.*FAIL/.test(c)
   );
+  const hasResearchHandoff = effectiveComments.some(
+    (c) => c.includes("## Freya Handoff") || c.includes("## FiremanDecko Handoff") && !c.includes("\u2192 Loki")
+  );
   let completedSteps = [];
   let nextAgent = "";
   let nextStep = 0;
@@ -419,6 +445,17 @@ async function resumeDetect(issueNum) {
         nextStep = 0;
       } else {
         nextAgent = "Heimdall";
+        nextStep = 1;
+      }
+      break;
+    case "research":
+      totalSteps = 1;
+      if (hasResearchHandoff) {
+        completedSteps = [hasResearchHandoff ? "Research Agent" : ""];
+        nextAgent = "Orchestrator Review";
+        nextStep = 0;
+      } else {
+        nextAgent = "FiremanDecko";
         nextStep = 1;
       }
       break;
