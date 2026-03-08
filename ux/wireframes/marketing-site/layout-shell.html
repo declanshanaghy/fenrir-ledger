@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketing Site Layout Shell — Fenrir Ledger</title>
+  <style>
+    /* Wireframe CSS — structural only, no theme styling */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    nav {
+      border-bottom: 1px solid #ccc;
+      position: sticky;
+      top: 0;
+      background: #f9f9f9;
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-placeholder {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+    .nav-center {
+      display: flex;
+      gap: 32px;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .theme-toggle {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+    .btn {
+      border: 1px solid #333;
+      padding: 10px 22px;
+      text-align: center;
+      display: inline-block;
+    }
+
+    /* Mobile nav */
+    .hamburger {
+      display: none;
+      width: 32px;
+      height: 32px;
+      border: 1px solid #333;
+      align-items: center;
+      justify-content: center;
+    }
+    .mobile-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      z-index: 1000;
+      padding: 24px;
+    }
+    .mobile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 48px;
+    }
+    .mobile-nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .mobile-nav-links a {
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 18px;
+    }
+
+    /* Main content area */
+    main {
+      min-height: 400px;
+      padding: 80px 0;
+      border: 2px dashed #999;
+      margin: 40px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #666;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid #ccc;
+      padding: 72px 0 48px;
+      background: #f5f5f5;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+    .footer-column h4 {
+      font-size: 12px;
+      font-weight: 600;
+      margin: 0 0 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .footer-links a {
+      text-decoration: none;
+      color: inherit;
+    }
+    .footer-bottom {
+      text-align: center;
+      padding-top: 32px;
+      border-top: 1px solid #ddd;
+    }
+    .footer-logo {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .footer-cta {
+      text-align: center;
+      margin: 32px 0;
+    }
+    .footer-credit {
+      font-size: 12px;
+      color: #666;
+      margin-top: 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-center, .theme-toggle-desktop {
+        display: none;
+      }
+      .hamburger {
+        display: flex;
+      }
+      .footer-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+    }
+
+    /* Annotations */
+    .note {
+      background: #fffbcc;
+      border: 1px solid #e6d600;
+      padding: 8px 12px;
+      margin: 16px 0;
+      font-size: 12px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- DESKTOP & MOBILE NAVIGATION -->
+  <nav>
+    <div class="container nav-inner">
+      <!-- Logo/Brand -->
+      <div class="nav-left">
+        <a href="/" class="logo-placeholder">ICON</a>
+        <span style="font-weight: 700; letter-spacing: 0.1em;">FENRIR LEDGER</span>
+      </div>
+
+      <!-- Desktop nav links (hidden on mobile) -->
+      <div class="nav-center">
+        <a href="/features">Features</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/blog">Blog</a>
+        <a href="/about">About</a>
+      </div>
+
+      <!-- Right side: theme toggle + CTA (desktop) -->
+      <div class="nav-right">
+        <button class="theme-toggle theme-toggle-desktop" aria-label="Toggle theme">
+          ☀/☾
+        </button>
+        <a href="/app" class="btn">Open the Ledger →</a>
+      </div>
+
+      <!-- Mobile hamburger (hidden on desktop) -->
+      <button class="hamburger" aria-label="Menu">
+        ☰
+      </button>
+    </div>
+  </nav>
+
+  <!-- MOBILE MENU OVERLAY (shown when hamburger clicked) -->
+  <div class="mobile-overlay">
+    <div class="mobile-header">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="logo-placeholder">ICON</div>
+        <span style="font-weight: 700;">FENRIR LEDGER</span>
+      </div>
+      <button style="width: 32px; height: 32px; border: 1px solid #333;">✕</button>
+    </div>
+
+    <nav class="mobile-nav-links">
+      <a href="/features">Features</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/blog">Blog</a>
+      <a href="/about">About</a>
+    </nav>
+
+    <div style="margin-top: 48px; display: flex; flex-direction: column; gap: 16px;">
+      <a href="/app" class="btn" style="display: block; text-align: center;">Open the Ledger →</a>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+        <span>Theme:</span>
+        <button class="theme-toggle">☀/☾</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT PLACEHOLDER -->
+  <main>
+    <div>
+      [Page Content Goes Here]
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <!-- Brand/Logo -->
+      <div class="footer-logo">ᛟ FENRIR LEDGER</div>
+
+      <!-- 3-column link grid -->
+      <div class="footer-grid">
+        <div class="footer-column">
+          <h4>Product</h4>
+          <div class="footer-links">
+            <a href="/features">Features</a>
+            <a href="/pricing">Pricing</a>
+            <a href="/faq">FAQ</a>
+          </div>
+        </div>
+
+        <div class="footer-column">
+          <h4>Resources</h4>
+          <div class="footer-links">
+            <a href="/blog">Session Chronicles</a>
+            <a href="/changelog">Changelog</a>
+            <a href="/about">About</a>
+          </div>
+        </div>
+
+        <div class="footer-column">
+          <h4>Legal</h4>
+          <div class="footer-links">
+            <a href="/privacy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="footer-cta">
+        <a href="/app" class="btn">Open the Ledger</a>
+      </div>
+
+      <!-- Bottom section -->
+      <div class="footer-bottom">
+        <div class="footer-credit">
+          © 2026 Fenrir Ledger · Forged by FiremanDecko · Guarded by Freya · Tested by Loki
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <p class="note">
+    <strong>Layout Implementation Notes:</strong><br>
+    - Navigation is sticky and becomes translucent with backdrop-filter on scroll<br>
+    - Theme toggle: sun icon for light mode, moon icon for dark mode, positioned top-right in nav<br>
+    - Mobile breakpoint at 768px: hamburger menu triggers full-screen overlay<br>
+    - Footer uses 3-column grid on desktop, stacks to single column on mobile<br>
+    - All marketing pages will inherit this shared layout via Next.js (marketing) route group<br>
+    - "Open the Ledger" CTA always links to authenticated app (/app route)
+  </p>
+
+</body>
+</html>

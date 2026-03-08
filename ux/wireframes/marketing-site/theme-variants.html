@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theme Variants Wireframe — Fenrir Ledger</title>
+  <style>
+    /* Wireframe CSS — structural only */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 40px 24px;
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 32px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #333;
+    }
+    h2 {
+      font-size: 18px;
+      margin: 40px 0 16px;
+      font-weight: 600;
+    }
+
+    /* Split view container */
+    .theme-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+    .theme-variant {
+      border: 2px solid #333;
+      padding: 24px;
+      position: relative;
+    }
+    .theme-label {
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: #fff;
+      padding: 0 8px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Component examples */
+    .component {
+      margin-bottom: 32px;
+      padding: 16px;
+      border: 1px dashed #ccc;
+    }
+    .component-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin: 0 0 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Mock components */
+    .nav-example {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 48px;
+      padding: 0 16px;
+      border: 1px solid;
+    }
+    .btn-example {
+      display: inline-block;
+      padding: 10px 24px;
+      border: 2px solid;
+      font-weight: 600;
+      text-align: center;
+      margin-right: 16px;
+    }
+    .card-example {
+      border: 1px solid;
+      border-left: 3px solid;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .input-example {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid;
+      margin-bottom: 8px;
+    }
+    .badge-example {
+      display: inline-block;
+      padding: 4px 12px;
+      border: 1px solid;
+      font-size: 11px;
+      font-weight: 600;
+      margin-right: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Color swatches */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .color-swatch {
+      height: 60px;
+      border: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    /* Typography samples */
+    .type-sample {
+      margin-bottom: 16px;
+      padding: 8px;
+      border-left: 2px solid #ccc;
+    }
+    .display-text {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+    .heading-text {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .body-text {
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    .mono-text {
+      font-family: monospace;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Annotations */
+    .note {
+      background: #fffbcc;
+      border: 1px solid #e6d600;
+      padding: 12px 16px;
+      margin: 24px 0;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+    .spec-table th,
+    .spec-table td {
+      text-align: left;
+      padding: 8px;
+      border: 1px solid #ddd;
+      font-size: 12px;
+    }
+    .spec-table th {
+      background: #f5f5f5;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Theme Variants — Light & Dark Mode Components</h1>
+
+  <p class="note">
+    <strong>Design Intent:</strong> Fenrir Ledger supports both light and dark themes.
+    Dark mode is the default (matching existing Saga Ledger aesthetic).
+    Light mode inverts backgrounds to warm cream/stone while preserving the gold accent color.
+    Theme detection follows system preference (prefers-color-scheme) with manual toggle override.
+  </p>
+
+  <!-- COLOR PALETTE COMPARISON -->
+  <h2>1. Color Palette</h2>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">DARK THEME</span>
+      <div class="color-grid">
+        <div class="color-swatch" style="background: #12100e; color: white;">
+          void<br>#12100e
+        </div>
+        <div class="color-swatch" style="background: #1c1917; color: white;">
+          forge<br>#1c1917
+        </div>
+        <div class="color-swatch" style="background: #d4a520;">
+          gold<br>#d4a520
+        </div>
+        <div class="color-swatch" style="background: #5b9ec9;">
+          ice-blue<br>#5b9ec9
+        </div>
+        <div class="color-swatch" style="background: #f0ede4;">
+          text-saga<br>#f0ede4
+        </div>
+        <div class="color-swatch" style="background: #a09888;">
+          text-rune<br>#a09888
+        </div>
+        <div class="color-swatch" style="background: #0a8c6e; color: white;">
+          teal<br>#0a8c6e
+        </div>
+        <div class="color-swatch" style="background: #c94a0a; color: white;">
+          fire<br>#c94a0a
+        </div>
+      </div>
+    </div>
+
+    <div class="theme-variant">
+      <span class="theme-label">LIGHT THEME</span>
+      <div class="color-grid">
+        <div class="color-swatch" style="background: #faf8f3;">
+          cream<br>#faf8f3
+        </div>
+        <div class="color-swatch" style="background: #f0ede4;">
+          stone<br>#f0ede4
+        </div>
+        <div class="color-swatch" style="background: #d4a520;">
+          gold<br>#d4a520
+        </div>
+        <div class="color-swatch" style="background: #3a7399; color: white;">
+          deep-blue<br>#3a7399
+        </div>
+        <div class="color-swatch" style="background: #1c1917; color: white;">
+          text-dark<br>#1c1917
+        </div>
+        <div class="color-swatch" style="background: #6a6560; color: white;">
+          text-dim<br>#6a6560
+        </div>
+        <div class="color-swatch" style="background: #0a8c6e; color: white;">
+          teal<br>#0a8c6e
+        </div>
+        <div class="color-swatch" style="background: #c94a0a; color: white;">
+          fire<br>#c94a0a
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION BAR -->
+  <h2>2. Navigation Bar</h2>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">DARK THEME</span>
+      <div class="nav-example" style="background: #12100e; color: #f0ede4; border-color: #3a3530;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="color: #d4a520; font-weight: 700;">ᚠ FENRIR</span>
+          <span>Features</span>
+          <span>Pricing</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span>☾</span>
+          <span style="background: #d4a520; color: #12100e; padding: 6px 16px;">Open Ledger</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="theme-variant">
+      <span class="theme-label">LIGHT THEME</span>
+      <div class="nav-example" style="background: #faf8f3; color: #1c1917; border-color: #e0ddd4;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="color: #d4a520; font-weight: 700;">ᚠ FENRIR</span>
+          <span>Features</span>
+          <span>Pricing</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span>☀</span>
+          <span style="background: #d4a520; color: #1c1917; padding: 6px 16px;">Open Ledger</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUTTONS -->
+  <h2>3. Buttons</h2>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">DARK THEME</span>
+      <div class="component">
+        <div class="btn-example" style="background: #d4a520; color: #12100e; border-color: #d4a520;">
+          Primary CTA
+        </div>
+        <div class="btn-example" style="background: transparent; color: #f0ede4; border-color: #3a3530;">
+          Secondary
+        </div>
+        <div class="btn-example" style="background: #c94a0a; color: #f0ede4; border-color: #c94a0a;">
+          Danger
+        </div>
+      </div>
+    </div>
+
+    <div class="theme-variant">
+      <span class="theme-label">LIGHT THEME</span>
+      <div class="component">
+        <div class="btn-example" style="background: #d4a520; color: #1c1917; border-color: #d4a520;">
+          Primary CTA
+        </div>
+        <div class="btn-example" style="background: transparent; color: #1c1917; border-color: #d0cdc4;">
+          Secondary
+        </div>
+        <div class="btn-example" style="background: #c94a0a; color: #faf8f3; border-color: #c94a0a;">
+          Danger
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARDS -->
+  <h2>4. Content Cards</h2>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">DARK THEME</span>
+      <div class="card-example" style="background: #1c1917; color: #f0ede4; border-color: #3a3530; border-left-color: #d4a520;">
+        <div style="font-size: 24px; margin-bottom: 12px;">ᚺ</div>
+        <div style="font-weight: 600; margin-bottom: 8px;">Feature Name</div>
+        <div style="color: #a09888; font-size: 13px;">
+          Card description text appears here with secondary text color for hierarchy.
+        </div>
+      </div>
+    </div>
+
+    <div class="theme-variant">
+      <span class="theme-label">LIGHT THEME</span>
+      <div class="card-example" style="background: white; color: #1c1917; border-color: #e0ddd4; border-left-color: #d4a520;">
+        <div style="font-size: 24px; margin-bottom: 12px;">ᚺ</div>
+        <div style="font-weight: 600; margin-bottom: 8px;">Feature Name</div>
+        <div style="color: #6a6560; font-size: 13px;">
+          Card description text appears here with secondary text color for hierarchy.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM INPUTS -->
+  <h2>5. Form Inputs</h2>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">DARK THEME</span>
+      <div class="component">
+        <input class="input-example" style="background: #242120; color: #f0ede4; border-color: #3a3530;"
+               placeholder="Card nickname" />
+        <input class="input-example" style="background: #242120; color: #f0ede4; border-color: #d4a520;"
+               placeholder="Focused input (gold border)" />
+      </div>
+    </div>
+
+    <div class="theme-variant">
+      <span class="theme-label">LIGHT THEME</span>
+      <div class="component">
+        <input class="input-example" style="background: white; color: #1c1917; border-color: #d0cdc4;"
+               placeholder="Card nickname" />
+        <input class="input-example" style="background: white; color: #1c1917; border-color: #d4a520;"
+               placeholder="Focused input (gold border)" />
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS BADGES -->
+  <h2>6. Status Badges (Nine Realms)</h2>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">DARK THEME</span>
+      <div class="component">
+        <div class="badge-example" style="background: rgba(10,140,110,0.2); color: #0a8c6e; border-color: #0a8c6e;">
+          ASGARD
+        </div>
+        <div class="badge-example" style="background: rgba(245,158,11,0.2); color: #f59e0b; border-color: #f59e0b;">
+          MIDGARD
+        </div>
+        <div class="badge-example" style="background: rgba(201,74,10,0.2); color: #c94a0a; border-color: #c94a0a;">
+          MUSPELHEIM
+        </div>
+      </div>
+    </div>
+
+    <div class="theme-variant">
+      <span class="theme-label">LIGHT THEME</span>
+      <div class="component">
+        <div class="badge-example" style="background: rgba(10,140,110,0.1); color: #0a8c6e; border-color: #0a8c6e;">
+          ASGARD
+        </div>
+        <div class="badge-example" style="background: rgba(245,158,11,0.1); color: #d4a520; border-color: #d4a520;">
+          MIDGARD
+        </div>
+        <div class="badge-example" style="background: rgba(201,74,10,0.1); color: #c94a0a; border-color: #c94a0a;">
+          MUSPELHEIM
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TYPOGRAPHY -->
+  <h2>7. Typography Hierarchy</h2>
+  <div class="theme-comparison">
+    <div class="theme-variant" style="background: #12100e;">
+      <span class="theme-label">DARK THEME</span>
+      <div class="type-sample display-text" style="color: #f0ede4;">
+        FENRIR LEDGER
+      </div>
+      <div class="type-sample heading-text" style="color: #f0ede4;">
+        Section Heading
+      </div>
+      <div class="type-sample body-text" style="color: #a09888;">
+        Body text appears in a lighter shade for readability against the dark background.
+      </div>
+      <div class="type-sample mono-text" style="color: #d4a520;">
+        STEP_01: CODE_SAMPLE
+      </div>
+    </div>
+
+    <div class="theme-variant" style="background: #faf8f3;">
+      <span class="theme-label">LIGHT THEME</span>
+      <div class="type-sample display-text" style="color: #1c1917;">
+        FENRIR LEDGER
+      </div>
+      <div class="type-sample heading-text" style="color: #1c1917;">
+        Section Heading
+      </div>
+      <div class="type-sample body-text" style="color: #6a6560;">
+        Body text appears in a darker shade for sufficient contrast on light backgrounds.
+      </div>
+      <div class="type-sample mono-text" style="color: #d4a520;">
+        STEP_01: CODE_SAMPLE
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPLEMENTATION SPECS -->
+  <h2>Implementation Specifications</h2>
+  <table class="spec-table">
+    <thead>
+      <tr>
+        <th>Element</th>
+        <th>Dark Theme</th>
+        <th>Light Theme</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Page Background</td>
+        <td>--void (#12100e)</td>
+        <td>--cream (#faf8f3)</td>
+        <td>Warm tones in both modes</td>
+      </tr>
+      <tr>
+        <td>Card Background</td>
+        <td>--forge (#1c1917)</td>
+        <td>white (#ffffff)</td>
+        <td>Slight elevation from page bg</td>
+      </tr>
+      <tr>
+        <td>Primary Text</td>
+        <td>--text-saga (#f0ede4)</td>
+        <td>--text-dark (#1c1917)</td>
+        <td>High contrast for readability</td>
+      </tr>
+      <tr>
+        <td>Secondary Text</td>
+        <td>--text-rune (#a09888)</td>
+        <td>--text-dim (#6a6560)</td>
+        <td>60-70% opacity of primary</td>
+      </tr>
+      <tr>
+        <td>Gold Accent</td>
+        <td>--gold (#d4a520)</td>
+        <td>--gold (#d4a520)</td>
+        <td>Unchanged - brand color</td>
+      </tr>
+      <tr>
+        <td>Borders</td>
+        <td>--border (#3a3530)</td>
+        <td>--border-light (#e0ddd4)</td>
+        <td>Subtle definition</td>
+      </tr>
+      <tr>
+        <td>Theme Toggle Icon</td>
+        <td>Moon (☾)</td>
+        <td>Sun (☀)</td>
+        <td>Shows current mode</td>
+      </tr>
+      <tr>
+        <td>Shadow/Glow</td>
+        <td>Gold/ice-blue glows</td>
+        <td>Subtle shadows only</td>
+        <td>Less glow in light mode</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Implementation Strategy:</strong><br>
+    1. Use CSS custom properties that switch based on [data-theme] attribute on body<br>
+    2. Default to system preference via @media (prefers-color-scheme)<br>
+    3. Store user's manual theme choice in localStorage<br>
+    4. Theme toggle in nav updates data-theme and localStorage<br>
+    5. All color values should reference CSS variables, never hardcoded hex<br>
+    6. Test both themes for WCAG AA contrast compliance<br>
+    7. Consider reduced motion preferences for theme transition animations
+  </div>
+
+</body>
+</html>

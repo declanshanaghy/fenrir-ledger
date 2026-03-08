@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Page Wireframe — Fenrir Ledger</title>
+  <style>
+    /* Wireframe CSS — structural only, no theme styling */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    section {
+      padding: 56px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 40px 24px;
+      min-height: 500px;
+      border: 2px solid #333;
+      background: #f9f9f9;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+    .hero-icon {
+      width: 160px;
+      height: 160px;
+      border: 2px solid #666;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .hero-content > * {
+      margin: 0 0 16px;
+    }
+    .hero-eyebrow {
+      font-size: 13px;
+      letter-spacing: 0.3em;
+      font-weight: 600;
+    }
+    .hero-title {
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+    .hero-tagline {
+      font-size: 20px;
+      font-style: italic;
+    }
+    .hero-description {
+      font-size: 16px;
+      max-width: 640px;
+      line-height: 1.7;
+    }
+    .btn-large {
+      border: 2px solid #333;
+      padding: 15px 36px;
+      display: inline-block;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* Pain Points (Chains) Section */
+    .chains-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .chain-card {
+      border: 1px solid #333;
+      border-left: 3px solid #666;
+      padding: 32px 28px;
+    }
+    .card-icon {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 12px;
+    }
+    .card-desc {
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    /* Features Section */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .feature-card {
+      border: 1px solid #333;
+      padding: 28px 24px;
+      min-height: 200px;
+    }
+
+    /* Onboarding Steps */
+    .steps-container {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .step {
+      flex: 1;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .step-circle {
+      width: 80px;
+      height: 80px;
+      border: 2px solid #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+    .step-number {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      margin-bottom: 8px;
+    }
+    .step-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 10px;
+    }
+    .step-desc {
+      font-size: 14px;
+      line-height: 1.7;
+      max-width: 260px;
+    }
+    .step-connector {
+      width: 60px;
+      height: 1px;
+      background: #666;
+      align-self: center;
+      margin-top: 40px;
+    }
+
+    /* Section headings */
+    .section-heading {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .section-pre {
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 16px;
+    }
+    .section-subtitle {
+      font-size: 17px;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* Final CTA */
+    .final-cta {
+      text-align: center;
+      padding: 80px 0;
+      background: #f5f5f5;
+    }
+
+    /* Responsive */
+    @media (max-width: 1023px) {
+      .chains-grid, .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 639px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .hero-icon {
+        margin: 0 auto 24px;
+        width: 120px;
+        height: 120px;
+      }
+      .chains-grid, .features-grid {
+        grid-template-columns: 1fr;
+      }
+      .steps-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .step-connector {
+        width: 1px;
+        height: 40px;
+        margin: 20px 0;
+      }
+    }
+
+    /* Annotations */
+    .note {
+      background: #fffbcc;
+      border: 1px solid #e6d600;
+      padding: 8px 12px;
+      margin: 16px 0;
+      font-size: 12px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-grid">
+      <!-- Wolf icon -->
+      <div class="hero-icon">
+        WOLF ICON<br>
+        (160x160)
+      </div>
+
+      <!-- Hero content -->
+      <div class="hero-content">
+        <div class="hero-eyebrow">ᚠ · ᛟ · ᛏ</div>
+        <h1 class="hero-title">FENRIR LEDGER</h1>
+        <p class="hero-tagline">Every reward has a deadline. Fenrir doesn't forget.</p>
+        <p class="hero-description">
+          Credit card churning lives and dies by dates — fee anniversaries,
+          promo windows, spend thresholds. Miss one and the issuer wins.
+          Fenrir Ledger puts every deadline in front of you, named and counted,
+          before the chain pulls tight.
+        </p>
+        <a href="#" class="btn-large">Break the Chain</a>
+
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #ddd;">
+          <blockquote style="font-style: italic; font-size: 13px; color: #666;">
+            "Though it looks like silk ribbon, no chain is stronger."
+            <cite style="display: block; margin-top: 8px;">— Prose Edda, Gylfaginning</cite>
+          </blockquote>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAIN POINTS (CHAINS) SECTION -->
+  <section>
+    <div class="container">
+      <div class="section-heading">
+        <div class="section-pre">ᚺ</div>
+        <h2 class="section-title">THE CHAINS THEY FORGED FOR YOU</h2>
+        <p class="section-subtitle">
+          The traps aren't loud. They're quiet by design — dates buried in terms,
+          thresholds easy to miss, windows that close without ceremony.
+          Three of them catch most people.
+        </p>
+      </div>
+
+      <div class="chains-grid">
+        <div class="chain-card" style="border-left-color: #c94a0a;">
+          <div class="card-icon">ᚲ</div>
+          <h3 class="card-title">The Fee-Serpent</h3>
+          <p class="card-desc">
+            The annual fee is zero work for the issuer and easy to forget for you.
+            It charges automatically, on a date you set and then lost.
+            No warning. No negotiation. It was always going to land —
+            the question is whether you were ready.
+          </p>
+        </div>
+
+        <div class="chain-card" style="border-left-color: #f59e0b;">
+          <div class="card-icon">ᚺ</div>
+          <h3 class="card-title">The Promo Tide</h3>
+          <p class="card-desc">
+            Every sign-up offer has an expiration. Spend threshold by this date.
+            Earn the bonus before the window closes. Miss it, and the points
+            that were practically yours vanish — not stolen, just quietly allowed
+            to expire. Hati runs. The moon doesn't wait.
+          </p>
+        </div>
+
+        <div class="chain-card" style="border-left-color: #8a8578;">
+          <div class="card-icon">ᚠ</div>
+          <h3 class="card-title">The Unclaimed Plunder</h3>
+          <p class="card-desc">
+            Statement credits. Quarterly bonuses. Rewards that require activation.
+            The issuers know most cardholders won't claim them — that's the business model.
+            The wolf who tracks what's owed collects what others leave behind.
+          </p>
+        </div>
+      </div>
+
+      <p style="text-align: center; margin-top: 56px; font-size: 19px; font-style: italic; font-weight: 600;">
+        The issuers built these traps carefully. Fenrir was built to dismantle them.
+      </p>
+    </div>
+  </section>
+
+  <!-- FEATURES SECTION -->
+  <section>
+    <div class="container">
+      <div class="section-heading">
+        <div class="section-pre">ᛊ</div>
+        <h2 class="section-title">WHAT THE WOLF WATCHES</h2>
+        <p class="section-subtitle">
+          Six tools that track every card in your household — deadlines, balances,
+          open windows, and history. Nothing slips. Nothing closes unnoticed.
+          Everything that's yours stays yours.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="card-icon">ᚲ</div>
+          <h3 class="card-title">Sköll & Hati</h3>
+          <p class="card-desc">
+            Two deadline trackers named for the wolves who chase the sun and moon
+            across the sky. Sköll watches your annual fee dates; Hati watches your
+            promo windows. Each one counts down.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="card-icon">ᚺ</div>
+          <h3 class="card-title">The Norns' Weave</h3>
+          <p class="card-desc">
+            Past, present, and future — what you've spent, where your balances
+            stand today, and what needs to happen before each deadline closes.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="card-icon">ᛟ</div>
+          <h3 class="card-title">The Ledger of Fates</h3>
+          <p class="card-desc">
+            Every card in your household, laid out cleanly. Annual fees, credit limits,
+            reward balances, issuer details, fee schedules. The full picture.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="card-icon">ᛏ</div>
+          <h3 class="card-title">Valhalla</h3>
+          <p class="card-desc">
+            Closed cards don't disappear. They're archived — every fee you avoided,
+            every bonus you collected, every card you closed at exactly the right moment.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="card-icon">ᛉ</div>
+          <h3 class="card-title">The Howl</h3>
+          <p class="card-desc">
+            Alerts before deadlines, not after. The Howl fires when a fee date
+            is approaching, when a promo window is tightening, when a spend threshold
+            needs attention.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="card-icon">ᛗ</div>
+          <h3 class="card-title">The Nine Realms</h3>
+          <p class="card-desc">
+            Each card carries a status badge drawn from the Nine Realms —
+            a single word that tells you exactly where it stands.
+            Earning, warning, burning, or closed with honor.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ONBOARDING FLOW SECTION -->
+  <section style="background: #f5f5f5;">
+    <div class="container">
+      <div class="section-heading">
+        <div class="section-pre">ᛞ</div>
+        <h2 class="section-title">THREE RUNES TO FREEDOM</h2>
+        <p class="section-subtitle">
+          No spreadsheets. No calendar reminders that drift out of sync.
+          Three steps to get every card tracked and every deadline visible.
+        </p>
+      </div>
+
+      <div class="steps-container">
+        <!-- Step 1 -->
+        <div class="step">
+          <div class="step-circle">ᛏ</div>
+          <span class="step-number">01</span>
+          <h3 class="step-title">Forge Your Chains</h3>
+          <p class="step-desc">
+            Add your cards. Name the issuer, the annual fee date, the sign-up offer
+            deadline, the spend threshold. Takes two minutes per card.
+          </p>
+        </div>
+
+        <div class="step-connector"></div>
+
+        <!-- Step 2 -->
+        <div class="step">
+          <div class="step-circle">ᚺ</div>
+          <span class="step-number">02</span>
+          <h3 class="step-title">Watch the Norns Weave</h3>
+          <p class="step-desc">
+            The dashboard shows every active card, every approaching deadline,
+            every open reward window. Sköll and Hati count the days.
+          </p>
+        </div>
+
+        <div class="step-connector"></div>
+
+        <!-- Step 3 -->
+        <div class="step">
+          <div class="step-circle">ᛊ</div>
+          <span class="step-number">03</span>
+          <h3 class="step-title">Break Free</h3>
+          <p class="step-desc">
+            Close before the fee hits. Claim before the window closes.
+            Collect what you earned and mark the card closed.
+            It moves to Valhalla — honored, recorded, done.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA SECTION -->
+  <section class="final-cta">
+    <div class="container">
+      <h2 style="font-size: 36px; font-weight: 700; margin: 0 0 24px;">
+        The wolf waits. The chain weakens.
+      </h2>
+      <p style="font-size: 18px; margin: 0 0 32px; max-width: 600px; margin-left: auto; margin-right: auto;">
+        Every day you delay is another fee that might land, another bonus that might expire.
+        Start tracking before the next deadline passes.
+      </p>
+      <a href="#" class="btn-large">Open the Ledger</a>
+    </div>
+  </section>
+
+  <p class="note">
+    <strong>Home Page Implementation Notes:</strong><br>
+    - Hero: 2-column grid on desktop (icon + content), stacks on mobile<br>
+    - Wolf icon gets ice-blue glow animation in dark theme<br>
+    - Pain points: 3 cards with colored left borders matching status colors (fire, amber, stone)<br>
+    - Features: 6-card grid showcasing all named features<br>
+    - Onboarding: 3 steps with connecting lines on desktop, vertical stack on mobile<br>
+    - All mythology references (Sköll, Hati, Norns, Valhalla) should have Wikipedia links<br>
+    - Final CTA section should have subtle background texture<br>
+    - Migrate all content from existing /static/index.html preserving copy exactly
+  </p>
+
+</body>
+</html>
