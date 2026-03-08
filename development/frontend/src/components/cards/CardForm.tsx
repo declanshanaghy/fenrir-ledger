@@ -754,15 +754,36 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             </>
           )}
 
-          {/* Step 2 or edit mode button */}
-          {(isEditMode || currentStep === 2) && (
+          {/* Step 2 buttons in wizard mode */}
+          {!isEditMode && currentStep === 2 && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCurrentStep(1)}
+              >
+                Back
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                isLoading={isSubmitting}
+                loadingText="Saving..."
+              >
+                Save Card
+              </Button>
+            </>
+          )}
+
+          {/* Edit mode button */}
+          {isEditMode && (
             <Button
               type="submit"
               disabled={isSubmitting}
               isLoading={isSubmitting}
               loadingText="Saving..."
             >
-              {isEditMode ? "Save changes" : "Save Card"}
+              Save changes
             </Button>
           )}
         </div>
