@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'development/frontend/**'
+      - 'sessions/**'
   workflow_dispatch:
 
 env:
