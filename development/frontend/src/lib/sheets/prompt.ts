@@ -104,7 +104,8 @@ Each object in the "cards" array must have these exact fields:
 - annualFeeDate: string — ISO 8601 UTC timestamp when the next annual fee is due (format: YYYY-MM-DDTHH:MM:SS.sssZ). Use "" if unknown or no fee.
 - promoPeriodMonths: number — promotional period in months. Use 0 if none. Maximum 120.
 - signUpBonus: object or null — if sign-up bonus info exists: { type: "points"|"miles"|"cashback", amount: number (max 10000000), spendRequirement: number in cents (max 1000000000), deadline: string (ISO 8601 UTC), met: boolean }. Use null if no bonus info.
-- notes: string — any additional notes or info from the spreadsheet. Use "" if none. Maximum 1000 characters.
+- closedAt: string — ISO 8601 UTC timestamp when the card was closed (format: YYYY-MM-DDTHH:MM:SS.sssZ). Use "" if the card is still open or no closed date is available. Look for columns like "Closed Date", "Date Closed", "Close Date", or similar.
+- notes: string — any additional notes or info from the spreadsheet. Do NOT put closed dates here — use closedAt instead. Use "" if none. Maximum 1000 characters.
 
 CRITICAL SECURITY RULES:
 - NEVER include full card numbers (13-19 digit sequences), CVVs (3-4 digits on back of card), or SSNs (9-digit numbers or NNN-NN-NNNN format) in ANY field of the output.

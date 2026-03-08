@@ -53,6 +53,8 @@ export const CardSchema = z.object({
   signUpBonus: SignUpBonusSchema.nullable(),
   /** Free-form notes. Max 1000 chars to limit injection payload size. */
   notes: z.string().max(1000),
+  /** ISO 8601 UTC timestamp when the card was closed. Empty if still open. */
+  closedAt: ISO_DATE_OR_EMPTY.default(""),
 });
 
 export const CardsArraySchema = z.array(CardSchema);
