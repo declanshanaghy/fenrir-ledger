@@ -115,6 +115,10 @@ Every bug, feature, and security finding MUST be a GitHub Issue.
 See `quality/issue-template.md` for labels, template, and workflow.
 Disk-only tracking (QA verdicts, TODOs, PR comments) does NOT count.
 
+**Every issue MUST be on the Project Board.** When filing a new issue, immediately
+add it to Project #1 and set its status to "Up Next" (unless it belongs elsewhere).
+Never leave an issue orphaned off the board.
+
 ---
 
 ## Behaviour Changes: Replace, Don't Layer
@@ -126,7 +130,7 @@ flags or conditionals to preserve both. Ask if ambiguous.
 
 ## Research: File an Issue First
 
-Open a GitHub Issue (`enhancement` + `low`) before starting any research.
+Open a GitHub Issue with the `research` label before starting any research.
 Post findings as a comment and close when done.
 
 ---

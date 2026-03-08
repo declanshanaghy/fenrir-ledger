@@ -1,6 +1,6 @@
 ---
 name: fire-next-up
-description: "Pull the next 'Up Next' item from the GitHub Project board and run the full agent chain (design → build → validate) via Depot remote sandboxes (default) or local worktrees (--local). Use when the user says 'fire next up', 'pull next item', 'work on next issue', or wants to dispatch work from the project board. Supports --peek flag to show the queue without dispatching, and --resume #N to continue a chain that was interrupted."
+description: "Pull the next 'Up Next' item from the GitHub Project board and run the full agent chain (design → build → validate) via Depot remote sandboxes (default) or local worktrees (--local). Use when the user says 'fire next up', 'pull next item', 'work on next issue', or wants to dispatch work from the project board. Supports --peek flag to show the queue without dispatching, --resume #N to continue a chain that was interrupted, and --status for a full dashboard of everything in flight."
 ---
 
 # Fire Next Up — Pull, Dispatch, and Chain Agents
@@ -15,6 +15,12 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 | `enhancement` | FiremanDecko (implement) | Loki (validate) | -- |
 | `ux` | Luna (wireframes) | FiremanDecko (implement) | Loki (validate) |
 | `security` | Heimdall (fix/audit) | Loki (validate) | -- |
+| `research` | *(varies — see below)* | -- | -- |
+
+**Research chains** are flexible — the agent is determined by the issue body:
+- Technical research → FiremanDecko (sole agent, posts findings as issue comment)
+- Product research → Freya (sole agent, posts findings as issue comment)
+- No Loki step — research issues produce recommendations, not code.
 
 **Chain execution rules:**
 - All agents work on the **same branch** — each commits and pushes before handing off.
@@ -29,12 +35,81 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 |------|--------|
 | `--peek` | Show the prioritized Up Next queue — do NOT spawn anything. |
 | `--resume #N` | Resume an interrupted chain for issue #N. Read `templates/resume-flow.md` for detection and execution logic. |
+| `--resume` | (no issue number) Scan ALL in-progress chains and report status for each. |
+| `--status` | Full status dashboard: In Progress chains, Up Next queue, orphan PRs, and suggested next actions. |
 | `--batch N` | Pull the top N **unblocked** items from "Up Next" and start chains for all in parallel. Max 5. |
 | `--local` | Force local worktree execution instead of Depot remote sandboxes. |
 | `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
 | *(no flag)* | Default: pick the top item and start the agent chain via Depot. |
 
 When `--peek` is passed, run **Step 1 only**, then display the full queue as a table with columns: `#`, `Title`, `Priority`, `Type`, `Chain`. Stop after the table.
+
+When `--status` is passed, run the **Status Dashboard** (see below). Do NOT dispatch anything.
+
+---
+
+## Status Dashboard (`--status`)
+
+Gather data from the project board, open PRs, and issue comments, then output a structured report.
+
+### Data Gathering (run in parallel)
+
+```bash
+# 1. All In Progress items
+gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
+  | tr -d '\000-\037' \
+  | jq '[.items[] | select(.status == "In Progress") | {num: .content.number, title: .content.title, labels: .labels}]'
+
+# 2. All Up Next items (count only)
+gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
+  | tr -d '\000-\037' \
+  | jq '[.items[] | select(.status == "Up Next")] | length'
+
+# 3. Open PRs
+gh pr list --state open --json number,title,headRefName,updatedAt
+
+# 4. For each In Progress issue, check latest comment for handoff/verdict
+```
+
+### For Each In Progress Issue, Determine Chain Position
+
+Check issue comments for these markers (in priority order):
+1. `## Loki QA Verdict` with `PASS` → **Chain complete — ready to merge**
+2. `## Loki QA Verdict` with `FAIL` → **Chain blocked — needs fix**
+3. `## FiremanDecko → Loki Handoff` or `## Heimdall → Loki Handoff` → **Awaiting Loki QA**
+4. `## Luna → FiremanDecko Handoff` → **Awaiting FiremanDecko**
+5. No handoff comment + has PR → **Step 1 agent still running or failed**
+6. No handoff comment + no PR → **Step 1 agent still running or failed**
+
+### Output Format
+
+```
+## Pack Status Dashboard
+
+### In Flight (N issues)
+
+| # | Title | Type | Chain Position | PR | Next Action |
+|---|-------|------|----------------|-----|-------------|
+| 269 | Back button | bug | Loki running | #286 | Wait / --resume #269 |
+| 279 | Dashboard tabs | ux | Awaiting FiremanDecko | #288 | --resume #279 |
+
+### Verdict Summary
+- PASS, ready to merge: #X, #Y
+- FAIL, needs attention: #Z
+- Awaiting Loki: #A, #B
+- No response (may need re-dispatch): #C
+
+### Up Next Queue
+N items queued. Top 3: #X (critical/bug), #Y (high/ux), #Z (normal/enhancement)
+
+### Suggested Next Actions
+1. `--resume #X` — Loki QA needed
+2. `--resume #Y` — FiremanDecko needed
+3. Merge PR #Z — Loki PASS, ready
+4. Investigate #W — no PR after dispatch, may have failed
+```
+
+Stop after the report. Do NOT dispatch anything.
 
 ---
 
@@ -127,7 +202,7 @@ gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
 
 Priority rules (in order):
 1. **critical** > high > normal > low (from labels)
-2. **bugs** > security > UX > features > tests
+2. **bugs** > security > UX > features > tests > research
 3. **Lowest issue number** (oldest first)
 
 ```bash
@@ -161,7 +236,9 @@ Odin — does this look right? Any adjustments before I fire it off?
 | Question | Answer from context, re-ask. |
 | Interview request | Run **local design interview** (Step 3b). |
 
-**Skip refinement when:** `--batch` flag or issue body contains `skip-refinement`.
+**Skip refinement when:** `--batch` flag, issue body contains `skip-refinement`, OR `--resume` (issue is already in progress).
+
+**Always refine when:** The issue is being dispatched for the first time (moving from Up Next → In Progress). This is the default — Odin must approve before any wolf runs.
 
 ### Step 3b — Local Design Interview
 

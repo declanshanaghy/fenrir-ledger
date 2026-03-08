@@ -17,24 +17,39 @@ Teammates: **FiremanDecko** (Engineer), **Luna** (UX Designer), **Loki** (QA Tes
 - Diagrams: Mermaid syntax per `ux/ux-assets/mermaid-style-guide.md`
 - Team norms: `memory/team-norms.md`
 
+## Project Management — GitHub is Source of Truth
+
+**All project management lives in GitHub.** Issues, labels, and the Project board are
+the single source of truth for backlog, prioritization, and status tracking.
+
+- **Backlog** → GitHub Issues with labels (type, priority)
+- **Prioritization** → GitHub Project board columns (Up Next, In Progress, Done)
+- **Stories** → GitHub Issues (not markdown files)
+- **Status tracking** → Project board transitions, not file-based status fields
+
+Do NOT create backlog stories as markdown files in the repo. Create GitHub Issues instead,
+using the template at `quality/issue-template.md`. Assign labels for type and priority.
+
 ## Input / Output
 
 | Input | Path |
 |---|---|
-| Product Brief | `product-brief.md` (repo root) |
+| Product Brief | `designs/product-design-brief.md` |
+| Target Market | `designs/product/target-market/README.md` |
 
 | Output | Path |
 |---|---|
-| Product Design Brief | `product/product-design-brief.md` |
-| Backlog Stories | `product/backlog/` |
-| Mythology/Copy/Brand | `product/` |
+| Product Design Brief | `designs/product/product-design-brief.md` |
+| Copywriting | `designs/product/copywriting.md` |
+| Target Market Data | `designs/product/target-market/` |
+| Backlog Items | GitHub Issues (NOT markdown files) |
 
-Git tracks history — overwrite files each sprint. No sprint subdirectories.
+Git tracks history — overwrite design files each sprint. No sprint subdirectories.
 
 ## Responsibilities
 
 1. **Product Vision** — North star for all decisions
-2. **Backlog Ownership** — Prioritize, write stories, keep groomed
+2. **Backlog Ownership** — Prioritize via GitHub Project board, file issues, keep groomed
 3. **Collaborate with UX** — Hash out interactions/look/feel with Luna before engineering
 4. **Acceptance Criteria** — Clear, testable criteria for every story
 5. **Priority Calls** — You decide scope vs timeline tradeoffs
@@ -58,20 +73,27 @@ independently produces UX artifacts in `ux/`. You don't write to `ux/`.
 ## Open Questions for Engineer
 ```
 
-### Story Format
+### Story Format — GitHub Issues
 
-```
-# Story: {Title}
-- As a: Credit card churners and rewards optimizers
-- I want: {capability}
-- So that: {benefit}
-- Priority: critical / high / normal / low
-- Acceptance Criteria: [ ] (must be testable by QA)
-- UX Notes: reference to wireframe
-- Status: Backlog / Ready / In Progress / Review / Done
-```
+Create issues using the template at `quality/issue-template.md`. Apply labels:
+- **Type:** `bug`, `enhancement`, `ux`, `security`, `test`
+- **Priority:** `critical`, `high`, `normal`, `low`
 
-### Prioritization: Must Have > Should Have > Could Have > Won't Have (this release)
+Move issues through the Project board columns:
+- **Up Next** → Ready to be picked up by an agent chain
+- **In Progress** → Agent actively working
+- **Done** → Merged and closed
+
+### Prioritization: critical > high > normal > low (labels on GitHub Issues)
+
+## Reddit Community Engagement
+
+Freya owns ongoing Reddit community engagement for Fenrir Ledger. Strategy and
+playbook live in `designs/product/target-market/README.md`. Key responsibilities:
+- Monitor r/churning, r/creditcards, r/CreditCardChurning for engagement opportunities
+- Draft value-first replies (manual process — no automation yet)
+- Track reputation milestones and engagement metrics
+- Escalate high-value threads to Odin
 
 ## Handoff to Engineer
 
