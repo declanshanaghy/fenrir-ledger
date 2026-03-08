@@ -111,7 +111,7 @@ Create a branch, commit the generated files, and open a PR:
 
 ```bash
 git checkout -b chore/session-{{NAME}}
-git add sessions/{{NAME}}.html sessions/index.html tmp/sessions/{{NAME}}.json
+git add sessions/{{NAME}}.html sessions/index.html
 git commit -m "chore: add session chronicle — {{NAME}}"
 git push -u origin chore/session-{{NAME}}
 gh pr create --title "chore: session chronicle — {{NAME}}" \
