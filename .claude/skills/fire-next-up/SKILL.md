@@ -50,30 +50,25 @@ When `--status` is passed, run the **Status Dashboard** (see below). Do NOT disp
 
 ## Status Dashboard (`--status`)
 
-Gather data from the project board, open PRs, and issue comments, then output a structured report.
+### Quick Path — Use the Script
 
-### Data Gathering (run in parallel)
+Run the pre-compiled pack-status script (GraphQL-based, ~1.4s vs ~5s for manual CLI calls):
 
 ```bash
-# 1. All In Progress items
-gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
-  | tr -d '\000-\037' \
-  | jq '[.items[] | select(.status == "In Progress") | {num: .content.number, title: .content.title, labels: .labels}]'
-
-# 2. All Up Next items (count only)
-gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
-  | tr -d '\000-\037' \
-  | jq '[.items[] | select(.status == "Up Next")] | length'
-
-# 3. Open PRs
-gh pr list --state open --json number,title,headRefName,updatedAt
-
-# 4. For each In Progress issue, check latest comment for handoff/verdict
+SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
+node "$SCRIPT_DIR/pack-status.mjs" --status
 ```
 
-### For Each In Progress Issue, Determine Chain Position
+All subcommands: `--status`, `--chain-status N`, `--resume-detect N`, `--peek`, `--move N <status>`
 
-Check issue comments for these markers (in priority order):
+The script outputs structured JSON. Render it as the markdown dashboard below.
+
+**Fallback chain:** `npx tsx pack-status.ts` → `status-dashboard.sh`
+**After editing `pack-status.ts`:** run `scripts/build.sh` to rebuild the `.mjs`
+
+### Chain Position Detection
+
+The scripts detect chain position by scanning issue comments for these markers (priority order):
 1. `## Loki QA Verdict` with `PASS` → **Chain complete — ready to merge**
 2. `## Loki QA Verdict` with `FAIL` → **Chain blocked — needs fix**
 3. `## FiremanDecko → Loki Handoff` or `## Heimdall → Loki Handoff` → **Awaiting Loki QA**
@@ -83,6 +78,8 @@ Check issue comments for these markers (in priority order):
 
 ### Output Format
 
+Render the script's JSON as this markdown:
+
 ```
 ## Pack Status Dashboard
 
@@ -90,8 +87,8 @@ Check issue comments for these markers (in priority order):
 
 | # | Title | Type | Chain Position | PR | Next Action |
 |---|-------|------|----------------|-----|-------------|
-| 269 | Back button | bug | Loki running | #286 | Wait / --resume #269 |
-| 279 | Dashboard tabs | ux | Awaiting FiremanDecko | #288 | --resume #279 |
+| 269 | Back button | bug | Loki PASS | #286 | `gh pr merge 286 --squash --delete-branch` |
+| 279 | Dashboard tabs | ux | Awaiting FiremanDecko | #288 | `/fire-next-up --resume #279` |
 
 ### Verdict Summary
 - PASS, ready to merge: #X, #Y
@@ -103,25 +100,10 @@ Check issue comments for these markers (in priority order):
 N items queued. Top 3: #X (critical/bug), #Y (high/ux), #Z (normal/enhancement)
 
 ### Suggested Next Actions (copy-paste ready)
-
-Generate exact commands for each action. Use this mapping:
-
-| Situation | Command |
-|-----------|---------|
-| Needs Loki QA | `/fire-next-up --resume #<N>` |
-| Needs FiremanDecko | `/fire-next-up --resume #<N>` |
-| Loki PASS, ready to merge | `gh pr merge <PR_NUM> --squash --delete-branch` |
-| No PR, may have failed | `/fire-next-up #<N> --local` |
-| FAIL, needs re-dispatch | `/fire-next-up --resume #<N>` |
-| Up Next, ready to start | `/fire-next-up #<N>` |
-
-Example output:
-```
 gh pr merge 286 --squash --delete-branch   # #269 Loki PASS — merge it
 /fire-next-up --resume #277                # Loki QA needed
 /fire-next-up --resume #279                # FiremanDecko needed
 /fire-next-up #272 --local                 # no PR after 3 attempts — try local
-```
 ```
 
 Stop after the report. Do NOT dispatch anything.
@@ -141,8 +123,21 @@ Stop after the report. Do NOT dispatch anything.
 
 ### How to Move an Issue
 
+**Preferred — use the script:**
+```bash
+SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
+"$SCRIPT_DIR/move-issue.sh" <NUMBER> <up-next|in-progress|done>
+```
+
+**Or via pre-compiled script (also handles item ID lookup):**
+```bash
+node "$SCRIPT_DIR/pack-status.mjs" --move <NUMBER> <up-next|in-progress|done>
+```
+
+**Manual fallback:**
 ```bash
 ITEM_ID=$(gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
+  | tr -d '\000-\037' \
   | jq -r '.items[] | select(.content.number == <NUMBER>) | .id')
 gh project item-edit \
   --project-id "PVT_kwHOAAW5PM4BQ7LP" \
