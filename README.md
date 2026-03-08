@@ -73,13 +73,86 @@ cd fenrir-ledger
 
 ## The Pack
 
-| Role | Wolf | Scroll | Domain |
-|------|------|--------|--------|
-| Product Owner | Freya | [Agent](.claude/agents/freya.md) | [product/](product/README.md) |
-| UX Designer | Luna | [Agent](.claude/agents/luna.md) | [ux/](ux/README.md) |
-| Principal Engineer | FiremanDecko | [Agent](.claude/agents/fireman-decko.md) | [development/](development/README.md) · [architecture/](architecture/) |
-| Security Specialist | Heimdall | [Agent](.claude/agents/heimdall.md) | [security/](security/README.md) |
-| QA Tester | Loki | [Agent](.claude/agents/loki.md) | [quality/](quality/README.md) — 577 tests across 26 suites |
+*Six wolves, one purpose. Each forged in a different fire, each bound by the same chain — to build the ledger that [Fenrir](https://en.wikipedia.org/wiki/Fenrir) never could break.*
+
+---
+
+<table>
+<tr>
+<td width="80" align="center" valign="top">
+<img src=".claude/agents/odin-dark.png" width="64" alt="Odin" onerror="this.style.display='none'"><br><sub>ᚨ</sub>
+</td>
+<td valign="top">
+
+**[Odin — The All-Father](https://en.wikipedia.org/wiki/Odin)** · *Orchestrator of the Pack* · [Full Profile](.claude/agents/odin-profile.md)
+
+[Odin](https://en.wikipedia.org/wiki/Odin) does not build with his hands — he sees with his ravens, commands with his runes, and shapes the will of the pack. He owns the mission, guards the vision, and decides what the wolf hunts next. Where others forge and test and question, the All-Father watches the horizon — and speaks when the path must change.
+
+</td>
+</tr>
+<tr>
+<td width="80" align="center" valign="top">
+<img src=".claude/agents/freya-dark.png" width="64" alt="Freya" onerror="this.style.display='none'"><br><sub>ᚠ</sub>
+</td>
+<td valign="top">
+
+**[Freya — The Seer of Fates](https://en.wikipedia.org/wiki/Freyja)** · *Product Owner* · [Full Profile](.claude/agents/freya-profile.md)
+
+[Freya](https://en.wikipedia.org/wiki/Freyja) reads what is coming before the rest of the pack can smell it. She owns the backlog, names the hunts, and decides when a feature is worthy of the wolf's bite. No engineer lifts a hammer, no designer draws a rune, until Freya has spoken. She is the voice the user never hears — but always feels.
+
+</td>
+</tr>
+<tr>
+<td width="80" align="center" valign="top">
+<img src=".claude/agents/luna-dark.png" width="64" alt="Luna" onerror="this.style.display='none'"><br><sub>ᛚ</sub>
+</td>
+<td valign="top">
+
+**[Luna — The Shaper of Worlds](https://en.wikipedia.org/wiki/M%C3%A1ni)** · *UX Designer* · [Full Profile](.claude/agents/luna-profile.md)
+
+Before steel is poured, [Luna](https://en.wikipedia.org/wiki/M%C3%A1ni) draws the bones. She designs every screen that a mortal hand will touch — wireframes carved from bone and shadow, interaction flows mapped with the precision of tides. What she shapes, FiremanDecko builds. What she guards, the user never has to think about.
+
+</td>
+</tr>
+<tr>
+<td width="80" align="center" valign="top">
+<img src=".claude/agents/fireman-decko-dark.png" width="64" alt="FiremanDecko" onerror="this.style.display='none'"><br><sub>ᛞ</sub>
+</td>
+<td valign="top">
+
+**FiremanDecko — The Forge-Master** · *Principal Engineer* · [Full Profile](.claude/agents/fireman-decko-profile.md)
+
+FiremanDecko receives the brief and turns vision into iron. He architects the system, pours the code, and carries the full technical weight from design to deployment. No dependency goes unvetted, no API contract unsigned. Every line he writes is built to endure — not just through testing, but through the long silence after [Ragnarök](https://en.wikipedia.org/wiki/Ragnar%C3%B6k).
+
+</td>
+</tr>
+<tr>
+<td width="80" align="center" valign="top">
+<img src=".claude/agents/loki-dark.png" width="64" alt="Loki" onerror="this.style.display='none'"><br><sub>ᛏ</sub>
+</td>
+<td valign="top">
+
+**[Loki — Son of the Wolf](https://en.wikipedia.org/wiki/Loki)** · *QA Tester* · [Full Profile](.claude/agents/loki-profile.md)
+
+In the old songs, [Loki](https://en.wikipedia.org/wiki/Loki) is father to [Fenrir](https://en.wikipedia.org/wiki/Fenrir) — and here, the trickster's blood runs true. Loki does not confirm that the code works. He proves it doesn't. Every edge case is his hunting ground, every assumption a trap he walks into on purpose. If FiremanDecko's forge did not hold, Loki will find the crack before [Ragnarök](https://en.wikipedia.org/wiki/Ragnar%C3%B6k) does.
+
+</td>
+</tr>
+<tr>
+<td width="80" align="center" valign="top">
+<br><sub>ᚺ</sub>
+</td>
+<td valign="top">
+
+**[Heimdall — Guardian of the Bifröst](https://en.wikipedia.org/wiki/Heimdall)** · *Security Specialist* · [Full Profile](.claude/agents/heimdall-profile.md)
+
+[Heimdall](https://en.wikipedia.org/wiki/Heimdall) stands at the boundary between what is trusted and what is not. He watches the [Bifröst](https://en.wikipedia.org/wiki/Bifr%C3%B6st) — every API route, every token, every input that arrives from outside the walls. If a secret travels unmasked, if an auth check is missing, if data crosses without validation, Heimdall sees it before it lands. Nothing enters this codebase unwatched.
+
+</td>
+</tr>
+</table>
+
+---
 
 ## The Pipeline
 
