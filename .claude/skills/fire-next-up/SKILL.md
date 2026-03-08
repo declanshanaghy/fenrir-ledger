@@ -15,70 +15,50 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 | `enhancement` | FiremanDecko (implement) | Loki (validate) | -- |
 | `ux` | Luna (wireframes) | FiremanDecko (implement) | Loki (validate) |
 | `security` | Heimdall (fix/audit) | Loki (validate) | -- |
-| `research` | *(varies — see below)* | -- | -- |
+| `research` | *(varies)* | -- | -- |
 
-**Research chains** are flexible — the agent is determined by the issue body:
-- Technical research → FiremanDecko (sole agent, posts findings as issue comment)
-- Product research → Freya (sole agent, posts findings as issue comment)
-- No Loki step — research issues produce recommendations, not code.
+**Research:** Technical → FiremanDecko, Product → Freya. Sole agent, posts findings as issue comment. No Loki step.
 
-**Chain execution rules:**
-- All agents work on the **same branch** — each commits and pushes before handing off.
-- The **first agent** creates the PR with `Ref #<NUMBER>` in the body (does NOT close the issue).
-- Subsequent agents push to the same branch — the PR updates automatically.
-- The **final agent** (Loki) edits the PR body to replace `Ref` with `Fixes` so merging auto-closes the issue.
-- If any agent fails or reports a blocker, the chain stops and the orchestrator reports to the user.
+**Chain rules:** Same branch throughout. First agent creates PR with `Ref #<NUMBER>`. Final agent (Loki) changes `Ref` to `Fixes`. If any agent fails, chain stops and orchestrator reports.
 
 ## Flags
 
 | Flag | Effect |
 |------|--------|
 | `--peek` | Show the prioritized Up Next queue — do NOT spawn anything. |
-| `--resume #N` | Resume an interrupted chain for issue #N. Read `templates/resume-flow.md` for detection and execution logic. |
-| `--resume` | (no issue number) Scan ALL in-progress chains and report status for each. |
-| `--status` | Full status dashboard: In Progress chains, Up Next queue, orphan PRs, and suggested next actions. |
-| `--batch N` | Pull the top N **unblocked** items from "Up Next" and start chains for all in parallel. Max 5. |
-| `--local` | Force local worktree execution instead of Depot remote sandboxes. |
+| `--resume #N` | Resume an interrupted chain for issue #N. Read `templates/resume-flow.md`. |
+| `--resume` | (no issue number) Scan ALL in-progress chains and report status. |
+| `--status` | Full status dashboard. Do NOT dispatch anything. |
+| `--batch N` | Pull top N **unblocked** items from "Up Next", start chains in parallel. Max 5. |
+| `--local` | Force local worktree execution instead of Depot. |
 | `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
 | *(no flag)* | Default: pick the top item and start the agent chain via Depot. |
 
-When `--peek` is passed, run **Step 1 only**, then display the full queue as a table with columns: `#`, `Title`, `Priority`, `Type`, `Chain`. Stop after the table.
-
-When `--status` is passed, run the **Status Dashboard** (see below). Do NOT dispatch anything.
-
 ---
 
-## Status Dashboard (`--status`)
+## Pack Status Script
 
-### Quick Path — Use the Script
-
-Run the pre-compiled pack-status script (GraphQL-based, ~1.4s vs ~5s for manual CLI calls):
+All data queries go through the pre-compiled script. **Do not use `gh project item-list` or manual GraphQL.**
 
 ```bash
 SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
-node "$SCRIPT_DIR/pack-status.mjs" --status
+node "$SCRIPT_DIR/pack-status.mjs" <subcommand>
 ```
 
-All subcommands: `--status`, `--chain-status N`, `--resume-detect N`, `--peek`, `--move N <status>`
-
-The script outputs structured JSON. Render it as the markdown dashboard below.
+| Subcommand | Returns |
+|------------|---------|
+| `--status` | Full dashboard JSON (in-flight chains, up-next queue, verdicts, actions) |
+| `--peek` | Prioritized Up Next queue JSON (sorted by priority → type → issue number) |
+| `--chain-status N` | Single issue chain analysis JSON |
+| `--resume-detect N` | Chain position + next agent + completed steps JSON |
+| `--move N <up-next\|in-progress\|done>` | Moves issue on project board |
 
 **Fallback:** `npx tsx pack-status.ts` (if `.mjs` is stale)
 **After editing `pack-status.ts`:** run `scripts/build.sh` to rebuild the `.mjs`
 
-### Chain Position Detection
+### Status Dashboard Output Format
 
-The scripts detect chain position by scanning issue comments for these markers (priority order):
-1. `## Loki QA Verdict` with `PASS` → **Chain complete — ready to merge**
-2. `## Loki QA Verdict` with `FAIL` → **Chain blocked — needs fix**
-3. `## FiremanDecko → Loki Handoff` or `## Heimdall → Loki Handoff` → **Awaiting Loki QA**
-4. `## Luna → FiremanDecko Handoff` → **Awaiting FiremanDecko**
-5. No handoff comment + has PR → **Step 1 agent still running or failed**
-6. No handoff comment + no PR → **Step 1 agent still running or failed**
-
-### Output Format
-
-Render the script's JSON as this markdown:
+Render `--status` JSON as this markdown:
 
 ```
 ## Pack Status Dashboard
@@ -103,109 +83,25 @@ N items queued. Top 3: #X (critical/bug), #Y (high/ux), #Z (normal/enhancement)
 gh pr merge 286 --squash --delete-branch   # #269 Loki PASS — merge it
 /fire-next-up --resume #277                # Loki QA needed
 /fire-next-up --resume #279                # FiremanDecko needed
-/fire-next-up #272 --local                 # no PR after 3 attempts — try local
-```
-
-Stop after the report. Do NOT dispatch anything.
-
----
-
-## Project Board Constants
-
-| Constant | Value |
-|----------|-------|
-| Project Number | `1` |
-| Project Node ID | `PVT_kwHOAAW5PM4BQ7LP` |
-| Status Field ID | `PVTSSF_lAHOAAW5PM4BQ7LPzg-54RA` |
-| Up Next | `6e492bcc` |
-| In Progress | `1d9139d4` |
-| Done | `c5fe053a` |
-
-### How to Move an Issue
-
-```bash
-SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
-node "$SCRIPT_DIR/pack-status.mjs" --move <NUMBER> <up-next|in-progress|done>
-```
-
-### Board Transitions
-
-| When | From | To | Who |
-|------|------|----|-----|
-| Agent dispatched | Up Next | **In Progress** | Orchestrator |
-| Chain complete — Loki PASS + merged | In Progress | **Done** | Orchestrator |
-| Chain blocked | *(stays)* | In Progress | *(needs attention)* |
-
----
-
-## Pre-Flight — Worktree Health Check
-
-```bash
-REPO_ROOT=$(git worktree list --porcelain | head -1 | sed 's/^worktree //')
-git worktree list --porcelain | grep '^worktree ' | sed 's/^worktree //' | while read -r wt; do
-  [ "$wt" = "$REPO_ROOT" ] && continue
-  COUNT=$(echo "$wt" | grep -o '\.claude/worktrees/' | wc -l)
-  if [ "$COUNT" -gt 1 ]; then
-    echo "WARNING: Nested worktree detected: $wt"
-    git worktree remove "$wt" --force 2>/dev/null || rm -rf "$wt"
-  fi
-done
-git worktree prune
 ```
 
 ---
 
-## Step 0 — Orphan PR Check
+## Dispatch Flow
 
-Before dispatching new work, check for orphaned PRs that need attention.
+### Step 1 — Select the Issue
 
-```bash
-gh pr list --state open --json number,title,headRefName,updatedAt,labels --jq '.[] | {num: .number, title: .title, branch: .headRefName, updated: .updatedAt, labels: [.labels[].name]}'
-```
-
-For each open PR, check:
-1. **Has a Loki verdict?** `gh pr view <N> --comments --json comments --jq '[.comments[].body | select(test("## Loki QA Verdict"))] | length'`
-2. **Verdict was PASS but not merged?** `gh pr view <N> --comments --json comments --jq '[.comments[].body | select(test("Verdict.*PASS"))] | length'`
-3. **Stale?** Last update >24h ago.
-
-| Category | Action |
-|----------|--------|
-| PASS but unmerged | Attempt auto-merge. Move to **Done**. |
-| No verdict, stale >24h | Resume chain via `--resume`. |
-| FAIL verdict, stale | Report to user: needs attention. |
-| No linked issue | Report to user: review manually. |
-
-Report orphans before proceeding. If none found, proceed silently.
-
----
-
-## Step 1 — Query the Project Board
-
-```bash
-gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
-  | jq '[.items[] | select(.status == "Up Next") | {num: .content.number, title: .content.title}]'
-```
-
-**IMPORTANT:** `gh project item-list` returns ALL columns. Always use `--limit 200`.
-
----
-
-## Step 2 — Select the Item
-
-Priority rules (in order):
-1. **critical** > high > normal > low (from labels)
-2. **bugs** > security > UX > features > tests > research
-3. **Lowest issue number** (oldest first)
+For default dispatch: run `--peek`, pick top item. For `#N`: use that issue directly.
 
 ```bash
 gh issue view <NUMBER> --json number,title,body,labels
 ```
 
----
+Before dispatching, check body for `Blocked by #N` — if blocking issue is open, warn and ask (single) or skip (batch).
 
-## Step 3 — Refine with Odin
+### Step 2 — Refine with Odin
 
-Present the selected issue for refinement:
+Present the selected issue:
 
 ```
 **Issue #<NUMBER>**: <TITLE>
@@ -221,80 +117,52 @@ Odin — does this look right? Any adjustments before I fire it off?
 
 | Response | Action |
 |----------|--------|
-| Approval | Proceed to Step 4. |
-| Scope adjustment | Update agent prompt, note adjustment. |
-| Rejection | Skip, pick next item. |
-| Different issue | Switch and restart from Step 2. |
-| Question | Answer from context, re-ask. |
-| Interview request | Run **local design interview** (Step 3b). |
+| Approval | Proceed to spawn. |
+| Scope adjustment | Update agent prompt. |
+| Rejection | Skip, pick next. |
+| Different issue | Switch issue. |
+| Interview request | Run **local design interview** (Step 2b). |
 
-**Skip refinement when:** `--batch` flag, issue body contains `skip-refinement`, OR `--resume` (issue is already in progress).
+**Skip refinement when:** `--batch`, `skip-refinement` in body, or `--resume`.
+**Always refine when:** First dispatch (Up Next → In Progress).
 
-**Always refine when:** The issue is being dispatched for the first time (moving from Up Next → In Progress). This is the default — Odin must approve before any wolf runs.
+#### Step 2b — Local Design Interview
 
-### Step 3b — Local Design Interview
+When Odin requests: adopt agent persona locally, ask 4-6 questions, post summary comment on issue. Return to remote execution.
 
-When Odin requests an agent interview, run it **locally** (interactive, not Depot).
-Adopt the agent persona, ask 4-6 targeted questions, then post a summary comment
-on the issue. Return to remote execution for Steps 4-6.
-
----
-
-## Step 4 — Determine the Chain
-
-Map the issue type label to its agent chain. If multiple type labels, use priority order: bug > security > ux > feature > test.
-
----
-
-## Step 5 — Build the Branch Name
+### Step 3 — Build Branch Name
 
 ```
 fix/issue-<NUMBER>-<kebab-description>
 ```
 
-Max 50 characters. The orchestrator does NOT create the branch — the agent does inside the sandbox.
+Max 50 chars. The orchestrator does NOT create the branch — the agent does inside the sandbox.
 
----
+### Step 4 — Spawn Agent
 
-## Step 6 — Spawn Step 1 Agent
+#### Agent Model Mapping
 
-### Agent Model Mapping
+| Agent | Remote (Depot) | Local (`--local`) |
+|-------|----------------|-------------------|
+| Luna | `claude-sonnet-4-6` | `sonnet` |
+| FiremanDecko | `claude-sonnet-4-6` | `sonnet` |
+| Freya | `claude-sonnet-4-6` | `sonnet` |
+| Loki | `claude-haiku-4-5-20251001` | `haiku` |
+| Heimdall | `claude-haiku-4-5-20251001` | `haiku` |
 
-#### Remote (Depot) — use full model IDs (aliases may resolve to deprecated versions)
+#### Agent Prompt Templates (read on demand)
 
-| Agent | `--model` flag |
-|-------|----------------|
-| Luna | `--model claude-sonnet-4-6` |
-| FiremanDecko | `--model claude-sonnet-4-6` |
-| Freya | `--model claude-sonnet-4-6` |
-| Loki | `--model claude-haiku-4-5-20251001` |
-| Heimdall | `--model claude-haiku-4-5-20251001` |
-
-#### Local (`--local`) — aliases are fine
-
-| Agent | `--model` flag |
-|-------|----------------|
-| Luna | `--model sonnet` |
-| FiremanDecko | `--model sonnet` |
-| Freya | `--model sonnet` |
-| Loki | `--model haiku` |
-| Heimdall | `--model haiku` |
-
-### Agent Prompt Templates (read on demand)
-
-Each agent has a prompt template in `templates/`. Read the appropriate one when spawning:
-
-| Agent | Template file |
-|-------|--------------|
+| Agent | Template |
+|-------|----------|
 | Luna | `templates/luna.md` |
 | FiremanDecko | `templates/firemandecko.md` |
 | Heimdall | `templates/heimdall.md` |
 | Loki | `templates/loki.md` |
 | Loki (CI bounce-back) | `templates/loki-bounce-back.md` |
 
-All templates use `{{SANDBOX_PREAMBLE}}` — replace with the content from `templates/sandbox-preamble.md`.
+All templates use `{{SANDBOX_PREAMBLE}}` — replace with content from `templates/sandbox-preamble.md`.
 
-### Remote Mode (Default — Depot)
+#### Remote Mode (Default — Depot)
 
 ```bash
 depot claude \
@@ -302,84 +170,56 @@ depot claude \
   --session-id "issue-<NUMBER>-step<N>-<agent-name>-<UUID8>" \
   --repository "https://github.com/declanshanaghy/fenrir-ledger" \
   --branch "main" \
-  --model "<MODEL FROM TABLE ABOVE>" \
+  --model "<MODEL FROM TABLE>" \
   --dangerously-skip-permissions \
-  -p "<AGENT PROMPT — composed from template>"
+  -p "<AGENT PROMPT>"
 ```
-
-**Always use `--branch main`** — the sandbox clones main and the agent creates its own feature branch.
 
 Session ID: `issue-<NUMBER>-step<N>-<agent-name>-<UUID8>` where UUID8 = `uuidgen | cut -c1-8 | tr 'A-Z' 'a-z'`.
 
-After spawning, move the issue to **In Progress** on the project board.
+After spawning: move issue to **In Progress** via `--move`. **Do NOT poll, wait, or block.**
 
-**Do NOT poll, wait, or block.** Report the dispatch summary and stop.
-
-### Local Mode (`--local`)
+#### Local Mode (`--local`)
 
 Launch via Agent tool with `isolation: worktree`, `run_in_background: true`.
 
-### Mode Selection
+#### Mode Selection
 
-- No `--local` flag → check `DEPOT_ORG_ID` in `.env` → check `depot claude` auth → Depot
-- `--local` flag → local worktree
+- No `--local` → check `DEPOT_ORG_ID` in `.env` → Depot
+- `--local` → local worktree
 - Depot auth fails without `--local` → **ERROR**, do NOT fall back silently
 
 ---
 
-## Step 7 — Chain Continuation
+## Chain Continuation
 
-Depot sessions are fire-and-forget. After spawning Step 1, the orchestrator's job is done.
+Depot: fire-and-forget. User continues with `/fire-next-up --resume #N`. Read `templates/resume-flow.md`.
 
-The user continues the chain with `/fire-next-up --resume #N`. Read `templates/resume-flow.md` for the full resume detection and execution logic.
-
-### Local Mode (`--local`)
-
-When a background agent completes:
-1. Check result. If failure/blocker, stop and report.
-2. If more steps remain, spawn next agent on same branch.
-3. If final step (Loki), report completion with PR URL.
+Local: when background agent completes, check result → spawn next agent on same branch → Loki = final step, report PR URL.
 
 ---
 
-## Step 8 — Report
+## Reports
 
-Read `templates/reports.md` for the dispatch summary, step transition, and chain completion report formats.
-
----
-
-## Batch Dispatch (`--batch N`)
-
-Pull the top N unblocked items from "Up Next" and start chains in parallel. Max 5.
-
-1. Query the board (Step 1).
-2. Prioritize and filter (Step 2), select top N.
-3. Check for blocked issues: scan body for `Blocked by #N`, check if blocking issue is open.
-4. Spawn chains for unblocked items (Steps 4-6 for each).
-5. Report all dispatched chains and skipped (blocked) items.
-
-Rules:
-- Max 5 parallel chains.
-- Each chain is independent — failure in one does not stop others.
-- Blocked items are skipped, not queued.
+Read `templates/reports.md` for dispatch summary, step transition, and chain completion report formats.
 
 ---
 
-## Dependency Checking
-
-Before dispatching ANY issue:
-1. Read body for `Blocked by #N`.
-2. Check if blocking issues are still open.
-3. Single dispatch: warn and ask. Batch: skip silently.
-
----
-
-## Worktree Cleanup (Local Mode Only)
-
-After a chain completes, clean up:
+## Pre-Flight (Local Mode)
 
 ```bash
 REPO_ROOT=$(git worktree list --porcelain | head -1 | sed 's/^worktree //')
+git worktree list --porcelain | grep '^worktree ' | sed 's/^worktree //' | while read -r wt; do
+  [ "$wt" = "$REPO_ROOT" ] && continue
+  echo "$wt" | grep -q '\.claude/worktrees/.*\.claude/worktrees/' && \
+    git worktree remove "$wt" --force 2>/dev/null || rm -rf "$wt"
+done
+git worktree prune
+```
+
+After chain completes, clean up worktrees for the issue:
+
+```bash
 for wt in "$REPO_ROOT/.claude/worktrees/issue-<NUMBER>-"*; do
   [ -d "$wt" ] && git worktree remove "$wt" --force 2>/dev/null || rm -rf "$wt"
 done
@@ -388,9 +228,10 @@ git worktree prune
 
 ---
 
-## Notes
+## Rules
 
-- Only spawn **one chain per invocation** unless `--batch` is used.
+- One chain per invocation unless `--batch`.
 - The orchestrator **coordinates** — never do an agent's work yourself.
 - Each agent handles its own commits and pushes.
-- For `test` issues, Loki is both the first and final agent.
+- For `test` issues, Loki is both first and final agent.
+- Board transitions: dispatched → **In Progress**, Loki PASS + merged → **Done**.
