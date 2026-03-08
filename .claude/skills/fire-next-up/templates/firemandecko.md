@@ -32,6 +32,10 @@ cd <REPO_ROOT>/development/frontend && npx playwright test --reporter=list
 If ANY tests fail — fix either the code or the test. Do NOT push with failing tests.
 Pre-existing test failures are YOUR responsibility — they block CI and bounce the PR.
 
+**Step 4c — Rebase on main before pushing:**
+cd <REPO_ROOT> && git fetch origin && git rebase origin/main
+If conflicts arise, resolve them, then re-run Steps 4 and 4b to verify the build still passes.
+
 **Step 5 — Commit and push:**
 cd <REPO_ROOT> && git add -A && git commit -m 'fix: <description> — Ref #<NUMBER>' && git push origin <BRANCH>
 
