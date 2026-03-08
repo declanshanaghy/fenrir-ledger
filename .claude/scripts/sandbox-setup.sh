@@ -34,7 +34,14 @@ if [ -n "$BRANCH" ]; then
   if git branch -r | grep -q "origin/${BRANCH}$"; then
     git checkout "$BRANCH"
     git pull origin "$BRANCH"
-    echo "[ok] checked out existing branch: $BRANCH"
+    # Rebase on main to avoid stale-branch merge conflicts.
+    # Agents run in parallel — main moves while branches are in flight.
+    git rebase origin/main || {
+      echo "[WARN] rebase conflict — attempting resolution"
+      git rebase --abort
+      echo "[FAIL] auto-rebase failed. Agent must rebase manually."
+    }
+    echo "[ok] checked out existing branch: $BRANCH (rebased on main)"
   else
     git checkout -b "$BRANCH"
     git push -u origin "$BRANCH"
