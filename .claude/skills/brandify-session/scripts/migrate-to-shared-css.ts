@@ -17,9 +17,13 @@ const files = process.argv.slice(2).filter(f => !f.endsWith('index.html'));
 for (const file of files) {
   let html = readFileSync(file, 'utf-8');
 
-  // Check if already migrated
+  // Check if already migrated or explicitly excluded
   if (html.includes('chronicle.css')) {
     console.log(`SKIP ${file} (already migrated)`);
+    continue;
+  }
+  if (html.includes('chronicle:skip')) {
+    console.log(`SKIP ${file} (marked chronicle:skip)`);
     continue;
   }
 
