@@ -8,8 +8,6 @@
  * Click:   fires useGleipnirFragment1() if not yet discovered. No-op if already found.
  *
  * Sync pulses fire:
- *   - Immediately on mount (so there's something to see right away)
- *   - Every 45 s (fake periodic background sync)
  *   - On the "fenrir:sync" CustomEvent dispatched by storage.ts on real writes
  */
 
@@ -20,7 +18,6 @@ import {
 } from "@/components/cards/GleipnirCatFootfall";
 
 const SYNC_DURATION_MS = 1500;
-const SYNC_INTERVAL_MS = 45_000;
 
 export function SyncIndicator() {
   const [syncing, setSyncing] = useState(false);
@@ -32,17 +29,10 @@ export function SyncIndicator() {
   }, []);
 
   useEffect(() => {
-    // Fire immediately so the animation is visible on load
-    pulse();
-
-    // Periodic fake sync so the indicator stays alive
-    const intervalId = setInterval(pulse, SYNC_INTERVAL_MS);
-
     // Real sync events dispatched by storage.ts on every card write
     window.addEventListener("fenrir:sync", pulse);
 
     return () => {
-      clearInterval(intervalId);
       window.removeEventListener("fenrir:sync", pulse);
     };
   }, [pulse]);
