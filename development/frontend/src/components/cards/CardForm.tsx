@@ -408,8 +408,13 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           )}
         </div>
 
-        {/* Credit limit - only show in Step 2 or edit mode */}
-        {(isEditMode || currentStep === 2) && (
+        </fieldset>
+      )}
+
+      {/* ── Credit Limit (Step 2 or edit mode) ───────────────────────────── */}
+      {(isEditMode || currentStep === 2) && (
+        <fieldset className="border border-border rounded-md p-4 space-y-4">
+          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Credit Limit</legend>
           <div className="space-y-1.5">
             <Label htmlFor="creditLimit">Credit limit</Label>
             <Select
@@ -435,7 +440,6 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
               </p>
             )}
           </div>
-        )}
         </fieldset>
       )}
 
