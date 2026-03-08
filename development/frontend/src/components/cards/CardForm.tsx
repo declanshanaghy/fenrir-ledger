@@ -415,8 +415,8 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         </fieldset>
       )}
 
-      {/* ── Step 1/2 or Edit Mode: Annual Fee + Sign-up Bonus ─────────── */}
-      {(isEditMode || currentStep === 1 || currentStep === 2) && (
+      {/* ── Step 1 or Edit Mode: Annual Fee + Sign-up Bonus ──────────── */}
+      {(isEditMode || currentStep === 1) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Annual Fee */}
