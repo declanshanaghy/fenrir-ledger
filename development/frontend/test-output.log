@@ -1,0 +1,21 @@
+[2m[WebServer] [22m [33m[1m⚠[22m[39m Found lockfile missing swc dependencies, patching...
+[2m[WebServer] [22m [31m[1m⨯[22m[39m Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
+[2m[WebServer] [22m[TypeError: Cannot read properties of undefined (reading 'os')]
+[2m[WebServer] [22m [33m[1m⚠[22m[39m Found lockfile missing swc dependencies, patching...
+[2m[WebServer] [22m [31m[1m⨯[22m[39m Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
+[2m[WebServer] [22m[TypeError: Cannot read properties of undefined (reading 'os')]
+
+Running 10 tests using 9 workers
+
+  ✓   4 [chromium] › ../../quality/test-suites/audio-autoplay/audio-autoplay.spec.ts:151:7 › Audio Autoplay — Issue #219 › should handle AbortError gracefully when audio is paused (2.4s)
+  ✓   5 [chromium] › ../../quality/test-suites/audio-autoplay/audio-autoplay.spec.ts:117:7 › Audio Autoplay — Issue #219 › should attempt audio playback when modal with audioSrc opens (2.5s)
+  ✓   1 [chromium] › ../../quality/test-suites/audio-autoplay/audio-autoplay.spec.ts:185:7 › Audio Autoplay — Issue #219 › should show modal content correctly regardless of audio playback (2.7s)
+  ✓   6 [chromium] › ../../quality/test-suites/audio-autoplay/audio-autoplay.spec.ts:274:9 › Audio Autoplay — Issue #219 › Error Handling Edge Cases › should handle NotAllowedError specifically (not other DOMExceptions) (2.9s)
+  ✓   7 [chromium] › ../../quality/test-suites/audio-autoplay/audio-autoplay.spec.ts:84:7 › Audio Autoplay — Issue #219 › should silently handle autoplay blocks without console warnings (3.0s)
+  ✓   8 [chromium] › ../../quality/test-suites/audio-autoplay/audio-autoplay.spec.ts:324:9 › Audio Autoplay — Issue #219 › Error Handling Edge Cases › should log other DOMException errors (not NotAllowedError or AbortError) (3.0s)
+  ✓   3 [chromium] › ../../quality/test-suites/audio-autoplay/audio-autoplay.spec.ts:241:7 › Audio Autoplay — Issue #219 › should handle missing or invalid audio file gracefully (3.2s)
+  ✓   2 [chromium] › ../../quality/test-suites/audio-autoplay/audio-autoplay.spec.ts:42:7 › Audio Autoplay — Issue #219 › should not log NotAllowedError when autoplay is blocked (3.4s)
+  ✓  10 [chromium] › ../../quality/test-suites/audio-autoplay/audio-autoplay.spec.ts:371:9 › Audio Autoplay — Issue #219 › Error Handling Edge Cases › should ignore non-DOMException errors silently (1.6s)
+  ✓   9 [chromium] › ../../quality/test-suites/audio-autoplay/audio-autoplay.spec.ts:216:7 › Audio Autoplay — Issue #219 › should not re-open modal on second trigger after audio playback (4.2s)
+
+  10 passed (18.7s)
