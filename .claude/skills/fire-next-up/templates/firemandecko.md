@@ -23,18 +23,16 @@ Read the commits already on this branch (if any):
 - <If UX Step 2: Follow Luna's wireframes for layout and structure.>
 - All file paths are relative to REPO_ROOT. Do NOT double-nest paths.
 
-**Step 4 — Verify:**
-cd <REPO_ROOT>/development/frontend && npx tsc --noEmit
-cd <REPO_ROOT>/development/frontend && npx next build
-
-**Step 4b — Run the FULL Playwright test suite (CI gate):**
-cd <REPO_ROOT>/development/frontend && npx playwright test --reporter=list
+**Step 4 — Verify (single command):**
+cd <REPO_ROOT> && bash scripts/verify.sh
+If it fails, read the specific report file mentioned in the output to understand the error.
+Fix the issue, then re-run verify.sh.
 If ANY tests fail — fix either the code or the test. Do NOT push with failing tests.
 Pre-existing test failures are YOUR responsibility — they block CI and bounce the PR.
 
 **Step 4c — Rebase on main before pushing:**
 cd <REPO_ROOT> && git fetch origin && git rebase origin/main
-If conflicts arise, resolve them, then re-run Steps 4 and 4b to verify the build still passes.
+If conflicts arise, resolve them, then re-run verify.sh to verify the build still passes.
 
 **Step 5 — Commit and push:**
 cd <REPO_ROOT> && git add -A && git commit -m 'fix: <description> — Ref #<NUMBER>' && git push origin <BRANCH>
@@ -67,7 +65,7 @@ gh issue comment <NUMBER> --body "## FiremanDecko → Loki Handoff
 **Edge cases to cover in tests:**
 - <Any tricky scenarios Loki should write tests for>
 
-**Build status:** tsc clean, next build clean.
+**Build status:** verify.sh PASS (tsc clean, next build clean, all tests passing).
 Ready for QA."
 
 **Key reminders:**

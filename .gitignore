@@ -33,6 +33,7 @@ Thumbs.db
 coverage/
 test-results/
 playwright-report/
+quality/reports/
 .playwright-mcp/
 .playwright-cli/
 .vercel

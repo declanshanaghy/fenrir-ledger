@@ -20,21 +20,24 @@ Use the previous agent's handoff comment to understand what was built, how to ve
 - Write new Playwright tests in `quality/test-suites/<feature-slug>/` covering the acceptance criteria.
 - Use the previous agent's "How to verify" and "Edge cases" sections to guide your test design.
 - Run the new tests: `cd <REPO_ROOT>/development/frontend && npx playwright test ../../quality/test-suites/<feature-slug>/ --reporter=list`
-- Verify build passes: `cd <REPO_ROOT>/development/frontend && npx tsc --noEmit && npx next build`
 
-**Step 3b — Run the FULL test suite and fix ANY failures:**
-- Run ALL Playwright tests: `cd <REPO_ROOT>/development/frontend && npx playwright test --reporter=list`
+**Step 3b — Verify (single command):**
+cd <REPO_ROOT> && bash scripts/verify.sh
+If it fails, read the specific report file mentioned in the output to understand the error.
 - If ANY tests fail — whether your new tests or pre-existing tests — you MUST fix them.
 - Pre-existing test failures are NOT acceptable. They block CI and prevent merging.
 - Read each failing test file, understand what it expects, read the actual page/component
   it tests, and fix either the test or the code to make it pass.
-- Re-run the full suite after each fix until ALL tests pass (0 failures).
-- Do NOT skip this step. Do NOT mark your verdict as PASS if any test is failing.
+- Re-run verify.sh after each fix until ALL checks pass (0 failures).
+- Do NOT skip this step. Do NOT mark your verdict as PASS if any check is failing.
 - Do NOT dismiss failures as "pre-existing" or "unrelated" — if it fails in CI, fix it.
 
 **Step 3c — Rebase on main before pushing:**
 cd <REPO_ROOT> && git fetch origin && git rebase origin/main
-If conflicts arise, resolve them, then re-run Steps 3 and 3b to verify tests still pass.
+If conflicts arise, resolve them, then re-run verify.sh to verify tests still pass.
+
+**Step 3d — Clean up reports before committing:**
+cd <REPO_ROOT> && rm -rf quality/reports/
 
 **Step 4 — Commit and push:**
 cd <REPO_ROOT> && git add -A && git commit -m 'test: validate #<NUMBER> — <short description>' && git push origin <BRANCH>
@@ -74,7 +77,7 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 - <AC-1 result>
 - <AC-2 result>
 
-**Build status:** tsc clean, next build clean.
+**Build status:** verify.sh PASS (tsc clean, next build clean, all tests passing).
 
 <If PASS: Ready for merge — awaiting orchestrator.>
 <If FAIL: Blocked — see failures above.>"
