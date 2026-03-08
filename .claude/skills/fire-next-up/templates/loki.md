@@ -32,6 +32,10 @@ Use the previous agent's handoff comment to understand what was built, how to ve
 - Do NOT skip this step. Do NOT mark your verdict as PASS if any test is failing.
 - Do NOT dismiss failures as "pre-existing" or "unrelated" — if it fails in CI, fix it.
 
+**Step 3c — Rebase on main before pushing:**
+cd <REPO_ROOT> && git fetch origin && git rebase origin/main
+If conflicts arise, resolve them, then re-run Steps 3 and 3b to verify tests still pass.
+
 **Step 4 — Commit and push:**
 cd <REPO_ROOT> && git add -A && git commit -m 'test: validate #<NUMBER> — <short description>' && git push origin <BRANCH>
 
