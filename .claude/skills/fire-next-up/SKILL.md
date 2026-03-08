@@ -63,7 +63,7 @@ All subcommands: `--status`, `--chain-status N`, `--resume-detect N`, `--peek`, 
 
 The script outputs structured JSON. Render it as the markdown dashboard below.
 
-**Fallback chain:** `npx tsx pack-status.ts` → `status-dashboard.sh`
+**Fallback:** `npx tsx pack-status.ts` (if `.mjs` is stale)
 **After editing `pack-status.ts`:** run `scripts/build.sh` to rebuild the `.mjs`
 
 ### Chain Position Detection
@@ -123,27 +123,9 @@ Stop after the report. Do NOT dispatch anything.
 
 ### How to Move an Issue
 
-**Preferred — use the script:**
 ```bash
 SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
-"$SCRIPT_DIR/move-issue.sh" <NUMBER> <up-next|in-progress|done>
-```
-
-**Or via pre-compiled script (also handles item ID lookup):**
-```bash
 node "$SCRIPT_DIR/pack-status.mjs" --move <NUMBER> <up-next|in-progress|done>
-```
-
-**Manual fallback:**
-```bash
-ITEM_ID=$(gh project item-list 1 --owner declanshanaghy --format json --limit 200 \
-  | tr -d '\000-\037' \
-  | jq -r '.items[] | select(.content.number == <NUMBER>) | .id')
-gh project item-edit \
-  --project-id "PVT_kwHOAAW5PM4BQ7LP" \
-  --id "$ITEM_ID" \
-  --field-id "PVTSSF_lAHOAAW5PM4BQ7LPzg-54RA" \
-  --single-select-option-id "<STATUS_OPTION_ID>"
 ```
 
 ### Board Transitions
