@@ -329,7 +329,7 @@ function formatMessage(msg) {
     from: getHeader(payload, "From"),
     to: getHeader(payload, "To"),
     date: getHeader(payload, "Date"),
-    snippet: msg.snippet || "",
+    snippet: wrapUntrusted(msg.snippet || ""),
     body: wrapUntrusted(extractBody(payload)),
   };
 }
@@ -347,7 +347,7 @@ function formatSummary(msg) {
     subject: getHeader(payload, "Subject"),
     from: getHeader(payload, "From"),
     date: getHeader(payload, "Date"),
-    snippet: msg.snippet || "",
+    snippet: wrapUntrusted(msg.snippet || ""),
   };
 }
 
@@ -412,11 +412,15 @@ server.tool(
         ],
       };
     } catch (err) {
+      const safeMsg = (err.status === 401 || err.code === 401)
+        ? "Authentication required — re-authorize the server"
+        : "Gmail API error — check server logs";
+      process.stderr.write(`Gmail error detail: ${err.message}\n`);
       return {
         content: [
           {
             type: "text",
-            text: `Failed to list messages: ${err.message || "Authentication failed"}`,
+            text: safeMsg,
           },
         ],
         isError: true,
@@ -449,11 +453,15 @@ server.tool(
         ],
       };
     } catch (err) {
+      const safeMsg = (err.status === 401 || err.code === 401)
+        ? "Authentication required — re-authorize the server"
+        : "Gmail API error — check server logs";
+      process.stderr.write(`Gmail error detail: ${err.message}\n`);
       return {
         content: [
           {
             type: "text",
-            text: `Failed to read message: ${err.message || "Authentication failed"}`,
+            text: safeMsg,
           },
         ],
         isError: true,
@@ -511,11 +519,15 @@ server.tool(
         ],
       };
     } catch (err) {
+      const safeMsg = (err.status === 401 || err.code === 401)
+        ? "Authentication required — re-authorize the server"
+        : "Gmail API error — check server logs";
+      process.stderr.write(`Gmail error detail: ${err.message}\n`);
       return {
         content: [
           {
             type: "text",
-            text: `Failed to search messages: ${err.message || "Authentication failed"}`,
+            text: safeMsg,
           },
         ],
         isError: true,
@@ -548,11 +560,15 @@ server.tool(
         ],
       };
     } catch (err) {
+      const safeMsg = (err.status === 401 || err.code === 401)
+        ? "Authentication required — re-authorize the server"
+        : "Gmail API error — check server logs";
+      process.stderr.write(`Gmail error detail: ${err.message}\n`);
       return {
         content: [
           {
             type: "text",
-            text: `Failed to read thread: ${err.message || "Authentication failed"}`,
+            text: safeMsg,
           },
         ],
         isError: true,
