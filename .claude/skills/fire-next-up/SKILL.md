@@ -102,11 +102,26 @@ Check issue comments for these markers (in priority order):
 ### Up Next Queue
 N items queued. Top 3: #X (critical/bug), #Y (high/ux), #Z (normal/enhancement)
 
-### Suggested Next Actions
-1. `--resume #X` — Loki QA needed
-2. `--resume #Y` — FiremanDecko needed
-3. Merge PR #Z — Loki PASS, ready
-4. Investigate #W — no PR after dispatch, may have failed
+### Suggested Next Actions (copy-paste ready)
+
+Generate exact commands for each action. Use this mapping:
+
+| Situation | Command |
+|-----------|---------|
+| Needs Loki QA | `/fire-next-up --resume #<N>` |
+| Needs FiremanDecko | `/fire-next-up --resume #<N>` |
+| Loki PASS, ready to merge | `gh pr merge <PR_NUM> --squash --delete-branch` |
+| No PR, may have failed | `/fire-next-up #<N> --local` |
+| FAIL, needs re-dispatch | `/fire-next-up --resume #<N>` |
+| Up Next, ready to start | `/fire-next-up #<N>` |
+
+Example output:
+```
+gh pr merge 286 --squash --delete-branch   # #269 Loki PASS — merge it
+/fire-next-up --resume #277                # Loki QA needed
+/fire-next-up --resume #279                # FiremanDecko needed
+/fire-next-up #272 --local                 # no PR after 3 attempts — try local
+```
 ```
 
 Stop after the report. Do NOT dispatch anything.

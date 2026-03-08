@@ -42,6 +42,9 @@ logs/
 tmp/
 development/frontend/.claude/
 
+# Lock files (ephemeral)
+*.lock
+
 # Agent worktrees (ephemeral, cleaned up after chain completion)
 .claude/worktrees/
 .claire/
