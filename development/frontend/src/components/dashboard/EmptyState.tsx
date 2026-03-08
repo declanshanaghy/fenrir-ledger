@@ -47,24 +47,24 @@ export function EmptyState() {
         Before your first card is added, no chain can be broken.
       </p>
 
-      <Link
-        href="/cards/new"
-        className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-10 px-6"
-      >
-        Add Card
-      </Link>
-
       <AuthGate>
         <button
           type="button"
           onClick={() => {
             window.dispatchEvent(new CustomEvent("fenrir:open-import-wizard"));
           }}
-          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-10 px-6 mt-3"
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-10 px-6"
         >
           Import from Google Sheets
         </button>
       </AuthGate>
+
+      <Link
+        href="/cards/new"
+        className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-10 px-6 mt-3"
+      >
+        Add Card
+      </Link>
     </div>
   );
 }
