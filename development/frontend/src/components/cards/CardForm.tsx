@@ -175,9 +175,10 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   });
 
   const openDate = watch("openDate");
-  const watchedIssuerId = watch("issuerId");
-  const watchedBonusType = watch("bonusType");
-  const watchedBonusSpendRequirement = watch("bonusSpendRequirement");
+  const issuerId = watch("issuerId");
+  const creditLimit = watch("creditLimit");
+  const bonusType = watch("bonusType");
+  const bonusSpendRequirement = watch("bonusSpendRequirement");
 
   // When openDate changes (user edits it), auto-derive annualFeeDate and bonusDeadline.
   // Skip on initial render so stored values aren't clobbered in edit mode.
@@ -366,7 +367,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         <div className="space-y-1.5">
           <Label htmlFor="issuerId">Issuer *</Label>
           <Select
-            value={watchedIssuerId ?? ""}
+            value={issuerId ?? ""}
             onValueChange={(v) => setValue("issuerId", v)}
           >
             <SelectTrigger id="issuerId" aria-required="true">
@@ -461,7 +462,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           <div className="space-y-1.5">
             <Label htmlFor="bonusType">Bonus type</Label>
             <Select
-              value={watchedBonusType ?? ""}
+              value={bonusType ?? ""}
               onValueChange={(v) =>
                 setValue("bonusType", v as "points" | "miles" | "cashback")
               }
@@ -492,7 +493,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           <div className="space-y-1.5">
             <Label htmlFor="bonusSpendRequirement">Minimum spend</Label>
             <Select
-              value={watchedBonusSpendRequirement ?? ""}
+              value={bonusSpendRequirement ?? ""}
               onValueChange={(v) => setValue("bonusSpendRequirement", v)}
             >
               <SelectTrigger id="bonusSpendRequirement">
@@ -558,7 +559,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             <div className="space-y-1.5">
               <Label htmlFor="creditLimit">Credit limit</Label>
               <Select
-                {...(defaultValues.creditLimit ? { defaultValue: defaultValues.creditLimit } : {})}
+                value={creditLimit ?? ""}
                 onValueChange={(v) => setValue("creditLimit", v)}
               >
                 <SelectTrigger id="creditLimit">
