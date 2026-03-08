@@ -25,6 +25,26 @@
   <meta property="og:image" content="/static/icon.png" />
   <title>Fenrir Ledger — Track Every Card. Keep Every Reward.</title>
   <link rel="icon" href="/static/favicon.ico" />
+  <!-- GA4 — loads only when measurement ID is configured -->
+  <!-- NEXT_PUBLIC_GA4_MEASUREMENT_ID placeholder: replaced by build/deploy tooling -->
+  <script>
+    window.__GA4_ID = typeof __GA4_MEASUREMENT_ID__ !== 'undefined' ? __GA4_MEASUREMENT_ID__ : '';
+  </script>
+  <script>
+    (function() {
+      var id = window.__GA4_ID;
+      if (!id) return;
+      var s = document.createElement('script');
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+      s.async = true;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', id);
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
