@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=375, initial-scale=1.0" />
+  <title>Wireframe: About Page Mobile — 375px viewport</title>
+  <style>
+    /* Mobile-specific wireframe at 375px */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      font-size: 14px;
+      width: 375px;
+      margin: 0 auto;
+      border-left: 1px solid #ccc;
+      border-right: 1px solid #ccc;
+    }
+
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+
+    /* ── Mobile Nav ──────────────────────────────────────────────────── */
+    nav.mobile-nav {
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      height: 56px;
+      z-index: 10;
+    }
+    .nav-brand { font-weight: bold; font-size: 13px; }
+    .hamburger {
+      width: 32px;
+      height: 32px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .hamburger span {
+      width: 18px;
+      height: 2px;
+      background: currentColor;
+    }
+
+    /* ── Sections ────────────────────────────────────────────────────── */
+    section { padding: 48px 20px; border-bottom: 1px solid; }
+
+    /* ── Origin Hero Mobile ──────────────────────────────────────────── */
+    .origin-hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      padding: 48px 20px;
+    }
+    .origin-hero h1 {
+      font-size: 28px;
+      font-weight: bold;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .subtitle {
+      font-size: 16px;
+      margin-bottom: 24px;
+      opacity: 0.8;
+    }
+    .origin-myth p {
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    /* ── Agent Cards Mobile ──────────────────────────────────────────── */
+    .agent-card {
+      border: 2px solid;
+      margin-bottom: 24px;
+    }
+    .agent-portrait {
+      width: 100%;
+      height: 200px;
+      border-bottom: 2px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+    .agent-info {
+      padding: 20px;
+    }
+    .agent-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .agent-role {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.7;
+      margin-bottom: 12px;
+    }
+    .agent-bio {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* ── Chain Mobile ────────────────────────────────────────────────── */
+    .chain-node {
+      border: 1px solid;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .chain-icon {
+      width: 48px;
+      height: 48px;
+      border: 2px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .chain-content {
+      flex: 1;
+    }
+    .chain-label { font-weight: bold; font-size: 14px; }
+    .chain-desc { font-size: 12px; opacity: 0.8; }
+    .chain-arrow {
+      text-align: center;
+      font-size: 20px;
+      margin: 8px 0;
+      opacity: 0.5;
+    }
+
+    /* ── Footer Mobile ───────────────────────────────────────────────── */
+    footer {
+      padding: 32px 20px;
+      border-top: 1px solid;
+    }
+    .footer-brand {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .footer-cta {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    button {
+      border: 1px solid;
+      padding: 12px 24px;
+      cursor: pointer;
+      background: none;
+      font-family: inherit;
+      font-size: 14px;
+      width: 100%;
+      max-width: 200px;
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Mobile Navigation ───────────────────────────────────────────────── -->
+  <nav class="mobile-nav">
+    <div class="nav-brand">FENRIR LEDGER</div>
+    <div class="hamburger" aria-label="Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </nav>
+  <p class="note" style="padding: 8px 20px;">
+    Hamburger opens full-screen nav overlay with: Home, About (active), Pricing, Enter Ledger CTA
+  </p>
+
+  <!-- ── Origin Hero Mobile ─────────────────────────────────────────────── -->
+  <section class="origin-hero">
+    <h1>THE WOLF WAS NOT BOUND. YOU ARE.</h1>
+    <p class="subtitle">Every annual fee is Gleipnir</p>
+
+    <div style="font-size: 20px; margin: 24px 0; opacity: 0.4;">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
+
+    <div class="origin-myth">
+      <p>
+        Fenrir was the wolf prophesied to devour Odin. The gods bound him with Gleipnir —
+        a chain forged from impossible things.
+      </p>
+      <p>
+        <strong>Credit cards are your Gleipnir.</strong> Annual fees, forgotten bonuses, lost rewards.
+      </p>
+      <p>
+        <strong>Fenrir Ledger breaks the chain.</strong>
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Agent Cards Mobile ─────────────────────────────────────────────── -->
+  <section>
+    <h2 style="font-size: 24px; text-align: center; margin-bottom: 24px;">THE PACK</h2>
+
+    <!-- Freya Card -->
+    <div class="agent-card">
+      <div class="agent-portrait">
+        [freya portrait - swaps dark/light with theme]
+      </div>
+      <div class="agent-info">
+        <div class="agent-name">Freya</div>
+        <div class="agent-role">Product Owner</div>
+        <div class="agent-bio">
+          Guardian of the product vision. Powers the AI import pipeline.
+        </div>
+      </div>
+    </div>
+
+    <!-- Luna Card -->
+    <div class="agent-card">
+      <div class="agent-portrait">
+        [luna portrait - swaps dark/light with theme]
+      </div>
+      <div class="agent-info">
+        <div class="agent-name">Luna</div>
+        <div class="agent-role">UX Designer</div>
+        <div class="agent-bio">
+          Architect of every interface. The wolf's eyes see through her designs.
+        </div>
+      </div>
+    </div>
+
+    <!-- FiremanDecko Card -->
+    <div class="agent-card">
+      <div class="agent-portrait">
+        [fireman-decko portrait - swaps dark/light]
+      </div>
+      <div class="agent-info">
+        <div class="agent-name">FiremanDecko</div>
+        <div class="agent-role">Principal Engineer</div>
+        <div class="agent-bio">
+          The forge-master who transforms design into reality.
+        </div>
+      </div>
+    </div>
+
+    <!-- Loki Card -->
+    <div class="agent-card">
+      <div class="agent-portrait">
+        [loki portrait - swaps dark/light with theme]
+      </div>
+      <div class="agent-info">
+        <div class="agent-name">Loki</div>
+        <div class="agent-role">QA Tester</div>
+        <div class="agent-bio">
+          Son of the wolf. If it can break, Loki breaks it first.
+        </div>
+      </div>
+    </div>
+
+    <!-- Heimdall Card -->
+    <div class="agent-card">
+      <div class="agent-portrait">
+        [ᚺ runic symbol - no portrait yet]
+      </div>
+      <div class="agent-info">
+        <div class="agent-name">Heimdall</div>
+        <div class="agent-role">Security Guardian</div>
+        <div class="agent-bio">
+          Watcher of the Rainbow Bridge, guardian of your data.
+        </div>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top: 16px;">
+      Tap cards for extended bio modal. Swipe horizontally on tablets (600-1024px).
+    </p>
+  </section>
+
+  <!-- ── Built by AI Chain Mobile ──────────────────────────────────────── -->
+  <section>
+    <h2 style="font-size: 24px; text-align: center; margin-bottom: 24px;">BUILT BY AI</h2>
+
+    <div class="chain-node">
+      <div class="chain-icon">ᚠ</div>
+      <div class="chain-content">
+        <div class="chain-label">Freya Defines</div>
+        <div class="chain-desc">Requirements & stories</div>
+      </div>
+    </div>
+
+    <div class="chain-arrow">↓</div>
+
+    <div class="chain-node">
+      <div class="chain-icon">ᛚ</div>
+      <div class="chain-content">
+        <div class="chain-label">Luna Designs</div>
+        <div class="chain-desc">Wireframes & UX</div>
+      </div>
+    </div>
+
+    <div class="chain-arrow">↓</div>
+
+    <div class="chain-node">
+      <div class="chain-icon">ᛏ</div>
+      <div class="chain-content">
+        <div class="chain-label">FiremanDecko Builds</div>
+        <div class="chain-desc">Code & features</div>
+      </div>
+    </div>
+
+    <div class="chain-arrow">↓</div>
+
+    <div class="chain-node">
+      <div class="chain-icon">ᛚ</div>
+      <div class="chain-content">
+        <div class="chain-label">Loki Validates</div>
+        <div class="chain-desc">Testing & QA</div>
+      </div>
+    </div>
+
+    <p style="text-align: center; margin-top: 24px; font-size: 13px;">
+      No human wrote this code.<br/>
+      This is how modern software should be built.
+    </p>
+  </section>
+
+  <!-- ── Footer Mobile ──────────────────────────────────────────────────── -->
+  <footer>
+    <div class="footer-brand">
+      <strong>ᛟ FENRIR LEDGER</strong><br/>
+      <em style="font-size: 12px;">"Though it looks like silk ribbon…"</em>
+    </div>
+
+    <div class="footer-cta">
+      <button>[Enter the Ledger]</button>
+    </div>
+
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </div>
+
+    <p style="text-align: center; font-size: 11px;">
+      © 2026 · Built by AI Agents
+    </p>
+  </footer>
+
+  <p class="note" style="padding: 16px 20px; border-top: 1px solid;">
+    Mobile notes:
+    - All sections stack vertically
+    - Agent cards full width, reduced portrait height
+    - Chain visualization vertical with arrows
+    - Touch-optimized tap targets (min 44px)
+    - Hamburger menu for navigation
+    - Simplified content, shorter bios
+    - No hover effects, tap interactions only
+  </p>
+
+</body>
+</html>

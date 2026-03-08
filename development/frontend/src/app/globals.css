@@ -742,3 +742,98 @@ body.konami-shake-mobile {
 .btn-forge--success {
   animation: forge-flash 0.7s ease-out;
 }
+
+/* ── About Page — Hover Effects ──────────────────────────────────────────── */
+/*
+ * Per-agent hover effects for the About page profile cards.
+ * Freya = golden glow, Luna = shimmer sweep, FiremanDecko = fire gradient,
+ * Loki = glitch distortion, Heimdall = golden glow (shared with Freya).
+ */
+
+/* Freya / Heimdall — warm golden glow */
+.about-hover-glow {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(212, 165, 32, 0.25) 0%,
+    transparent 70%
+  );
+}
+
+/* Luna — horizontal shimmer sweep */
+.about-hover-shimmer {
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(91, 158, 201, 0.18) 40%,
+    rgba(91, 158, 201, 0.25) 50%,
+    rgba(91, 158, 201, 0.18) 60%,
+    transparent 80%
+  );
+  background-size: 250% 100%;
+  animation: about-shimmer-sweep 2s ease-in-out infinite;
+}
+
+@keyframes about-shimmer-sweep {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -50% 0; }
+}
+
+/* FiremanDecko — ember gradient */
+.about-hover-fire {
+  background: linear-gradient(
+    to top,
+    rgba(201, 74, 10, 0.35) 0%,
+    rgba(240, 192, 64, 0.15) 50%,
+    transparent 100%
+  );
+  animation: about-fire-flicker 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes about-fire-flicker {
+  0%   { opacity: 0.7; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+/* Loki — glitch distortion bands */
+.about-hover-glitch {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 4px,
+    rgba(201, 74, 10, 0.08) 4px,
+    rgba(201, 74, 10, 0.08) 5px
+  );
+  animation: about-glitch-shift 0.4s steps(3) infinite;
+}
+
+@keyframes about-glitch-shift {
+  0%   { transform: translateX(0); }
+  33%  { transform: translateX(-2px); }
+  66%  { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+/* About page — runic background pattern */
+.about-runic-bg {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 60px,
+      currentColor 60px,
+      currentColor 61px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 60px,
+      currentColor 60px,
+      currentColor 61px
+    );
+}
+
+/* About page — negative margin reset to fill AppShell main area */
+.about-page {
+  min-height: 100%;
+}
