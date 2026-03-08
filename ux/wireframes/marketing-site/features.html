@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features Page Wireframe — Fenrir Ledger</title>
+  <style>
+    /* Wireframe CSS — structural only, no theme styling */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    section {
+      padding: 56px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    /* Page hero */
+    .page-hero {
+      padding: 64px 0 48px;
+      border-bottom: 1px solid #ddd;
+      background: #f9f9f9;
+      text-align: center;
+    }
+    .page-hero-rune {
+      font-size: 13px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .page-hero-title {
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin: 0 0 16px;
+      line-height: 1.1;
+    }
+    .page-hero-subtitle {
+      font-size: 18px;
+      font-style: italic;
+      max-width: 600px;
+      margin: 0 auto 28px;
+      line-height: 1.7;
+    }
+    .page-hero-intro {
+      font-size: 16px;
+      max-width: 640px;
+      margin: 0 auto 32px;
+      line-height: 1.75;
+    }
+    .btn {
+      border: 2px solid #333;
+      padding: 14px 32px;
+      display: inline-block;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .btn-secondary {
+      border: 1px solid #666;
+      padding: 10px 22px;
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      margin-left: 12px;
+    }
+
+    /* Section headings */
+    .section-heading {
+      margin-bottom: 48px;
+    }
+    .section-pre {
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      margin: 0 0 14px;
+    }
+    .section-subtitle {
+      font-size: 15px;
+      max-width: 560px;
+      line-height: 1.75;
+    }
+
+    /* ── Feature sections (alternating layout) ── */
+    /* Each feature: 2-col grid (content + visual). Odd = content left, Even = content right */
+    .feature-section {
+      padding: 64px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .feature-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 56px;
+      align-items: center;
+    }
+    .feature-row.reverse {
+      direction: rtl; /* visual trick for alternating — children reset direction */
+    }
+    .feature-row.reverse > * {
+      direction: ltr;
+    }
+    .feature-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .feature-rune {
+      font-size: 32px;
+      line-height: 1;
+    }
+    .feature-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .feature-tier-badge {
+      display: inline-block;
+      border: 1px solid #888;
+      padding: 3px 8px;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-left: 8px;
+    }
+    .feature-tier-badge.free {
+      border-style: dashed;
+    }
+    .feature-title {
+      font-size: 26px;
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .feature-benefit {
+      font-size: 16px;
+      font-style: italic;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+    .feature-description {
+      font-size: 15px;
+      line-height: 1.8;
+    }
+    .feature-atmospheric {
+      font-size: 13px;
+      font-style: italic;
+      padding-left: 16px;
+      border-left: 2px solid #aaa;
+      line-height: 1.6;
+    }
+
+    /* Feature visual placeholder */
+    .feature-visual {
+      border: 1px solid #ccc;
+      background: #f5f5f5;
+      min-height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+    .feature-visual .visual-label {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #777;
+    }
+    .feature-visual .visual-desc {
+      font-size: 13px;
+      color: #666;
+      max-width: 200px;
+      line-height: 1.6;
+    }
+
+    /* Feature detail list (bullet points) */
+    .feature-details {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .feature-details li {
+      font-size: 14px;
+      padding-left: 20px;
+      position: relative;
+      line-height: 1.6;
+    }
+    .feature-details li::before {
+      content: "ᚢ";
+      position: absolute;
+      left: 0;
+      font-size: 10px;
+      top: 2px;
+    }
+
+    /* Tier divider — marks transition from Thrall to Karl features */
+    .tier-divider {
+      text-align: center;
+      padding: 40px 0;
+      border-top: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+      background: #fafafa;
+      margin: 0;
+    }
+    .tier-divider-label {
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .tier-divider-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    .tier-divider-desc {
+      font-size: 14px;
+      max-width: 440px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+    .tier-link {
+      display: inline-block;
+      margin-top: 16px;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: underline;
+    }
+
+    /* Final CTA */
+    .features-cta {
+      text-align: center;
+      padding: 72px 0;
+      background: #f5f5f5;
+    }
+    .features-cta h2 {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 16px;
+    }
+    .features-cta p {
+      font-size: 17px;
+      max-width: 520px;
+      margin: 0 auto 28px;
+      line-height: 1.7;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .feature-row,
+      .feature-row.reverse {
+        grid-template-columns: 1fr;
+        direction: ltr;
+      }
+      .feature-row.reverse > * {
+        direction: ltr;
+      }
+      .page-hero-title {
+        font-size: 28px;
+      }
+      .section-title {
+        font-size: 22px;
+      }
+    }
+    @media (max-width: 480px) {
+      .feature-visual {
+        min-height: 180px;
+      }
+    }
+
+    /* Annotations */
+    .note {
+      background: #fffbcc;
+      border: 1px solid #e6d600;
+      padding: 8px 12px;
+      margin: 16px 0;
+      font-size: 12px;
+      font-style: italic;
+    }
+    .note strong {
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       PAGE HERO
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="page-hero">
+    <div class="container">
+      <p class="page-hero-rune">ᛊ · ᚲ · ᛟ</p>
+      <h1 class="page-hero-title">The Wolf's Arsenal</h1>
+      <p class="page-hero-subtitle">
+        Every tool in Fenrir Ledger was built to solve a real problem.
+        No dashboards for the sake of dashboards. No features for demo decks.
+      </p>
+      <p class="page-hero-intro">
+        Credit card churning is a game of dates. The issuers know this — they built
+        their business on the gap between what they promise and what you remember to claim.
+        Fenrir closes that gap. Here's how.
+      </p>
+      <a href="/app" class="btn">Open the Ledger</a>
+      <a href="/pricing" class="btn-secondary">View Pricing</a>
+    </div>
+  </section>
+
+  <p class="note container">
+    <strong>Page structure note:</strong>
+    Features are ordered by user priority: free core features first, then Karl-tier upgrades.
+    A tier divider separates them with a soft upsell. No easter eggs or cosmetic features listed here.
+  </p>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION: THRALL FEATURES (available to all)
+       ════════════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="container">
+      <div class="section-heading">
+        <p class="section-pre">ᛏ · Free for All</p>
+        <h2 class="section-title">What Every Thrall Commands</h2>
+        <p class="section-subtitle">
+          No payment required. These are the core tools — available the moment
+          you sign in with your Google account.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURE 1: Annual Fee Tracking ──────────────────────────────── -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-row">
+
+        <div class="feature-content">
+          <div>
+            <span class="feature-rune">ᛊ</span>
+            <span class="feature-tier-badge free">Thrall — Free</span>
+          </div>
+          <p class="feature-eyebrow">Feature 01 · Annual Fee Tracking</p>
+          <h2 class="feature-title">Sköll Watches the Fee</h2>
+          <p class="feature-benefit">
+            Know your annual fee date 60 days before it hits. Never get charged
+            for a card you meant to cancel.
+          </p>
+          <p class="feature-description">
+            Every credit card carries an annual fee anniversary — a date buried
+            in your original application, quietly waiting to charge. Fenrir tracks
+            every fee date and fires a 60-day advance warning so you can decide:
+            keep it, downgrade it, or close it before the charge lands.
+          </p>
+          <ul class="feature-details">
+            <li>60-day advance reminder before each annual fee date</li>
+            <li>Calculates exact fee date from card open date</li>
+            <li>Marks cards as "fee approaching" in dashboard and The Howl</li>
+            <li>Tracks whether fee has been offset by credits or bonuses</li>
+          </ul>
+          <p class="feature-atmospheric">
+            "Sköll chases the sun. He has never caught it — but he never stops."
+          </p>
+        </div>
+
+        <div class="feature-visual">
+          <span class="visual-label">Visual: Fee Countdown</span>
+          <span class="visual-desc">
+            Card thumbnail with annual fee amount, open date, next fee date.
+            Countdown badge: "Fee in 47 days."
+            Progress bar showing proximity to fee date.
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURE 2: Sign-Up Bonus Tracking ────────────────────────────── -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-row reverse">
+
+        <div class="feature-content">
+          <div>
+            <span class="feature-rune">ᚺ</span>
+            <span class="feature-tier-badge free">Thrall — Free</span>
+          </div>
+          <p class="feature-eyebrow">Feature 02 · Sign-Up Bonus Tracking</p>
+          <h2 class="feature-title">Hati Watches the Deadline</h2>
+          <p class="feature-benefit">
+            Track every minimum spend requirement. Never let a sign-up bonus
+            expire because you lost track of the window.
+          </p>
+          <p class="feature-description">
+            Sign-up bonuses live and die by spend thresholds and deadlines.
+            Hati tracks both — the amount you need to hit and the date you need
+            to hit it by. As the deadline approaches, Hati howls louder.
+          </p>
+          <ul class="feature-details">
+            <li>Tracks minimum spend amount and deadline per card</li>
+            <li>Displays remaining spend needed to hit threshold</li>
+            <li>Escalating urgency indicators as deadline approaches</li>
+            <li>Marks bonus as earned once threshold is met</li>
+          </ul>
+          <p class="feature-atmospheric">
+            "Hati runs after the moon. The moon has no place to hide."
+          </p>
+        </div>
+
+        <div class="feature-visual">
+          <span class="visual-label">Visual: Bonus Progress</span>
+          <span class="visual-desc">
+            Spend progress bar: "$1,200 of $3,000 spent."
+            Deadline: "47 days remaining."
+            Urgency badge escalates color as deadline nears.
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURE 3: Velocity Management ───────────────────────────────── -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-row">
+
+        <div class="feature-content">
+          <div>
+            <span class="feature-rune">ᚹ</span>
+            <span class="feature-tier-badge free">Thrall — Free</span>
+          </div>
+          <p class="feature-eyebrow">Feature 03 · Velocity Management</p>
+          <h2 class="feature-title">The Issuer's Rules</h2>
+          <p class="feature-benefit">
+            Know exactly where you stand against Chase 5/24, Citi 1/8,
+            and other issuer-specific application limits.
+          </p>
+          <p class="feature-description">
+            Every major issuer has application velocity rules — limits on how
+            many cards you can open in a rolling window. Violate them and your
+            application is denied. Fenrir tracks your open-date history against
+            each issuer's known rules so you always know if you're eligible
+            before you apply.
+          </p>
+          <ul class="feature-details">
+            <li>Chase 5/24: tracks cards opened in last 24 months</li>
+            <li>Citi 1/8 and 2/65: tracks application windows</li>
+            <li>American Express once-per-lifetime bonus tracking</li>
+            <li>Issuer-specific rule summaries with plain-English explanations</li>
+            <li>Shows current count and remaining slots per issuer</li>
+          </ul>
+          <p class="feature-atmospheric">
+            "Know the rules of the hall before you enter it."
+          </p>
+        </div>
+
+        <div class="feature-visual">
+          <span class="visual-label">Visual: Velocity Dashboard</span>
+          <span class="visual-desc">
+            Per-issuer rule cards.
+            Chase: "3/24 — 2 slots remaining. Oldest card ages off in 4 months."
+            Citi: "0/8 — eligible now."
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURE 4: The Howl ───────────────────────────────────────────── -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-row reverse">
+
+        <div class="feature-content">
+          <div>
+            <span class="feature-rune">ᛉ</span>
+            <span class="feature-tier-badge free">Thrall — Free</span>
+          </div>
+          <p class="feature-eyebrow">Feature 04 · The Howl</p>
+          <h2 class="feature-title">Urgent Cards Dashboard</h2>
+          <p class="feature-benefit">
+            A single view of everything that needs attention right now —
+            no searching, no missing deadlines.
+          </p>
+          <p class="feature-description">
+            The Howl is Fenrir's alert surface — a panel that surfaces only
+            the cards that need action. Fee approaching. Promo expiring.
+            Spend threshold at risk. It's not a full dashboard; it's triage.
+            The Howl shows you what to do next.
+          </p>
+          <ul class="feature-details">
+            <li>Cards with annual fee within 60 days</li>
+            <li>Cards with sign-up bonus deadline within 30 days</li>
+            <li>Cards with incomplete spend threshold (behind pace)</li>
+            <li>Sortable by urgency (days remaining)</li>
+            <li>Accessible from dashboard and as collapsible side panel</li>
+          </ul>
+          <p class="feature-atmospheric">
+            "The wolf does not howl when everything is calm."
+          </p>
+        </div>
+
+        <div class="feature-visual">
+          <span class="visual-label">Visual: The Howl Panel</span>
+          <span class="visual-desc">
+            Compact card list sorted by urgency.
+            Each entry: card name, alert type, days remaining.
+            "Chase Sapphire — Fee in 12 days."
+            "Amex Gold — Bonus deadline in 8 days."
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TIER DIVIDER — Karl Upgrade
+       ════════════════════════════════════════════════════════════════════ -->
+  <div class="tier-divider">
+    <div class="container">
+      <p class="tier-divider-label">ᛟ · Karl Tier · $3.99 / month</p>
+      <h2 class="tier-divider-title">Upgrade Your Arsenal</h2>
+      <p class="tier-divider-desc">
+        The following features require a Karl subscription. They're built for
+        churners who manage multiple devices, multiple households, or want
+        to move their data freely.
+      </p>
+      <a href="/pricing" class="tier-link">See full pricing →</a>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION: KARL FEATURES (premium)
+       ════════════════════════════════════════════════════════════════════ -->
+
+  <!-- ── FEATURE 5: Cloud Sync ─────────────────────────────────────────── -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-row">
+
+        <div class="feature-content">
+          <div>
+            <span class="feature-rune">ᚲ</span>
+            <span class="feature-tier-badge">Karl — $3.99/mo</span>
+          </div>
+          <p class="feature-eyebrow">Feature 05 · Cloud Sync</p>
+          <h2 class="feature-title">Your Ledger Follows You</h2>
+          <p class="feature-benefit">
+            Add a card on mobile. See it on desktop. Your data syncs across
+            every device via your Google account — no manual export, no sync button.
+          </p>
+          <p class="feature-description">
+            Cloud Sync stores your card data in Fenrir's servers, tied to your
+            Google identity. Every change — new card, updated fee date, earned bonus —
+            propagates instantly across all your signed-in devices. The ledger
+            is always current.
+          </p>
+          <ul class="feature-details">
+            <li>Real-time sync across all devices signed into your Google account</li>
+            <li>Data stored securely in Fenrir's cloud (Vercel KV)</li>
+            <li>No manual export / import required between devices</li>
+            <li>Offline changes sync on reconnect</li>
+          </ul>
+          <p class="feature-atmospheric">
+            "The wolf who roams far keeps his saga close."
+          </p>
+        </div>
+
+        <div class="feature-visual">
+          <span class="visual-label">Visual: Sync Indicator</span>
+          <span class="visual-desc">
+            Three device silhouettes (mobile, tablet, desktop) connected by arrows.
+            Sync status badge: "Last synced: just now."
+            Google account avatar shown at top.
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURE 6: Multi-Household ───────────────────────────────────── -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-row reverse">
+
+        <div class="feature-content">
+          <div>
+            <span class="feature-rune">ᛟ</span>
+            <span class="feature-tier-badge">Karl — $3.99/mo</span>
+          </div>
+          <p class="feature-eyebrow">Feature 06 · Multi-Household</p>
+          <h2 class="feature-title">One Wolf, Many Dens</h2>
+          <p class="feature-benefit">
+            Manage cards across multiple households under a single account.
+            Your cards, your partner's cards, separate ledgers, one login.
+          </p>
+          <p class="feature-description">
+            Serious churners often manage cards for multiple people —
+            a partner, a spouse, a household that pools points.
+            Multi-Household lets you create named household groups and assign
+            cards to each one. Deadlines, bonuses, and velocity rules track
+            per-household, not just per-person.
+          </p>
+          <ul class="feature-details">
+            <li>Create named households (e.g. "Self", "Partner", "Joint")</li>
+            <li>Cards assigned to a household; dashboard filters by household</li>
+            <li>Velocity rules tracked separately per household</li>
+            <li>Combined Howl view across all households</li>
+          </ul>
+          <p class="feature-atmospheric">
+            "One wolf may guard many dens."
+          </p>
+        </div>
+
+        <div class="feature-visual">
+          <span class="visual-label">Visual: Household Switcher</span>
+          <span class="visual-desc">
+            Dropdown showing household names: "Self (12 cards)", "Partner (7 cards)".
+            Card count badge per household.
+            Active household highlighted.
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURE 7: Smart Import (AI-Powered) ─────────────────────────── -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-row">
+
+        <div class="feature-content">
+          <div>
+            <span class="feature-rune">ᛗ</span>
+            <span class="feature-tier-badge">Karl — $3.99/mo</span>
+          </div>
+          <p class="feature-eyebrow">Feature 07 · Smart Import (AI-Powered)</p>
+          <h2 class="feature-title">The Rune-Reader</h2>
+          <p class="feature-benefit">
+            Drop in your existing spreadsheet. Fenrir's AI extracts card names,
+            dates, and fee amounts automatically — no reformatting required.
+          </p>
+          <p class="feature-description">
+            If you've been tracking cards in a spreadsheet, moving to Fenrir
+            shouldn't mean re-entering everything by hand. Smart Import uses
+            AI to read your spreadsheet's structure — whatever columns you used —
+            and maps each row to a Fenrir card record. It handles messy,
+            inconsistent formatting and asks you to confirm before saving.
+          </p>
+          <ul class="feature-details">
+            <li>Accepts CSV, XLSX, and Google Sheets exports</li>
+            <li>AI identifies card name, issuer, fee date, open date, bonus fields</li>
+            <li>Handles non-standard column names and partial data</li>
+            <li>Preview step: review all mapped cards before importing</li>
+            <li>Unrecognized fields flagged for manual review</li>
+          </ul>
+          <p class="feature-atmospheric">
+            "The runes reveal what the untrained eye cannot see."
+          </p>
+        </div>
+
+        <div class="feature-visual">
+          <span class="visual-label">Visual: Import Flow</span>
+          <span class="visual-desc">
+            File drop zone.
+            Below: extracted card rows in a preview table.
+            Confidence indicators per field (✓ confirmed, ? review needed).
+            "Import 14 cards" CTA button.
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURE 8: Data Export ─────────────────────────────────────────── -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-row reverse">
+
+        <div class="feature-content">
+          <div>
+            <span class="feature-rune">ᛞ</span>
+            <span class="feature-tier-badge">Karl — $3.99/mo</span>
+          </div>
+          <p class="feature-eyebrow">Feature 08 · Data Export</p>
+          <h2 class="feature-title">Your Data, Your Terms</h2>
+          <p class="feature-benefit">
+            Export everything Fenrir knows about your cards — as CSV or JSON —
+            whenever you want, with no lock-in.
+          </p>
+          <p class="feature-description">
+            Your card data belongs to you. Data Export lets you pull a complete
+            snapshot of your ledger at any time: all active cards, all archived
+            cards, all dates and amounts. Use it to back up, migrate, or run
+            your own analysis.
+          </p>
+          <ul class="feature-details">
+            <li>Export all active cards as CSV or JSON</li>
+            <li>Includes archived (Valhalla) cards in export</li>
+            <li>Fields: card name, issuer, open date, fee date, bonus status, notes</li>
+            <li>Instant download — no email required</li>
+          </ul>
+          <p class="feature-atmospheric">
+            "Carry the runes beyond these walls."
+          </p>
+        </div>
+
+        <div class="feature-visual">
+          <span class="visual-label">Visual: Export Controls</span>
+          <span class="visual-desc">
+            Two format toggle buttons: CSV | JSON.
+            Scope selector: "Active cards" / "All cards incl. archived."
+            "Download Export" button with file size estimate.
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       FINAL CTA
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="features-cta">
+    <div class="container">
+      <p style="font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 16px;">ᛟ</p>
+      <h2>The tools are here. The deadlines are not waiting.</h2>
+      <p>
+        Start with a free Thrall account — no card required, no time limit.
+        Upgrade to Karl when you're ready for the full arsenal.
+      </p>
+      <a href="/app" class="btn">Open the Ledger</a>
+      <a href="/pricing" class="btn-secondary">View Pricing</a>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       INTERACTION SPEC
+       ════════════════════════════════════════════════════════════════════ -->
+  <p class="note container">
+    <strong>Interaction Spec — Features Page:</strong><br>
+    <br>
+    <strong>Alternating layout:</strong> Features alternate content-left / content-right for
+    desktop. On mobile (&lt;768px) all features stack content above visual.<br>
+    <br>
+    <strong>Tier badge:</strong> "Thrall — Free" badge uses dashed border.
+    "Karl — $3.99/mo" badge uses solid border. Both are non-interactive labels.<br>
+    <br>
+    <strong>Tier divider:</strong> Not a full-bleed section header — it's a compact band
+    between free and paid features. CTA links to /pricing. No modal or drawer triggered.<br>
+    <br>
+    <strong>Atmospheric quotes:</strong> Italicized, with a left border. No tooltip or
+    popover — purely typographic.<br>
+    <br>
+    <strong>Feature visuals:</strong> Placeholder wireframe boxes. Implementation should use
+    actual UI screenshots or simplified illustrations of the relevant UI element —
+    not generic icons or stock imagery.<br>
+    <br>
+    <strong>Karl-gated features:</strong> Feature sections are NOT locked/blurred —
+    they're described openly. The page is marketing, not the app itself.
+    Gating happens inside the app at the feature level.<br>
+    <br>
+    <strong>Scroll anchors:</strong> Each feature section should have an id for direct linking
+    (e.g., #annual-fee-tracking, #cloud-sync). The page hero can include an anchor nav
+    on desktop if the feature count warrants it (8 features total).<br>
+    <br>
+    <strong>Light/dark:</strong> All section backgrounds alternate between bg-background
+    and bg-card. Tier divider uses bg-muted. No hardcoded colors — all semantic tokens.<br>
+    <br>
+    <strong>export const dynamic = 'force-static'</strong> — no server data fetching.
+  </p>
+
+</body>
+</html>
