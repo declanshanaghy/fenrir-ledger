@@ -82,7 +82,10 @@ export function EasterEggModal({
     audio.currentTime = 0;
 
     audio.play().catch((err: unknown) => {
-      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (!(err instanceof DOMException)) return;
+      // Silently ignore autoplay policy blocks and abort signals — both are expected
+      // in headless / background contexts and require no user-facing action.
+      if (err.name === "NotAllowedError" || err.name === "AbortError") return;
       console.warn("[EasterEggModal] audio playback error:", err);
     });
 
