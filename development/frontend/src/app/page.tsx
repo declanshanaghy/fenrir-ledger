@@ -187,10 +187,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Sign-in nudge — subtle muted text when zero cards; full banner when has cards.
-          Hidden entirely for authenticated users. */}
-      <SignInNudge hasCards={hasCards} />
-
       {/* Main content row: card grid + HowlPanel side-by-side on desktop */}
       <div className="flex gap-6 items-start">
         {/* Card grid — takes all available space */}
@@ -225,6 +221,11 @@ export default function DashboardPage() {
           />
         )}
       </div>
+
+      {/* Sign-in nudge — subtle muted text when zero cards; full banner when has cards.
+          Hidden entirely for authenticated users.
+          Rendered AFTER Dashboard/EmptyState so visual order is: heading → CTA → nudge */}
+      <SignInNudge hasCards={hasCards} />
 
       {/* Import Wizard modal */}
       <ImportWizard
