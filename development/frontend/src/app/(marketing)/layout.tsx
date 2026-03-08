@@ -2,7 +2,7 @@
  * Marketing Layout Shell — Fenrir Ledger
  *
  * Shared layout for all public marketing pages:
- *   /home, /features, /pricing, /about, /blog
+ *   /home, /features, /pricing, /about, /blog, /privacy, /terms, /faq
  *
  * Provides:
  *   - Sticky navbar: logo, nav links, theme toggle, Launch App CTA, mobile hamburger

@@ -204,14 +204,14 @@ function SignInContent() {
           <p className="text-xs text-muted-foreground text-center font-body leading-relaxed">
             By signing in, you agree to our{" "}
             <a
-              href="/static/privacy.html"
+              href="/privacy"
               className="underline hover:text-gold transition-colors"
             >
               Privacy Policy
             </a>{" "}
             and{" "}
             <a
-              href="/static/terms.html"
+              href="/terms"
               className="underline hover:text-gold transition-colors"
             >
               Terms of Service

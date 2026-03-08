@@ -1,0 +1,117 @@
+[
+  {
+    "id": "getting-started",
+    "category": "Getting Started",
+    "questions": [
+      {
+        "id": "what-is-fenrir-ledger",
+        "question": "What is Fenrir Ledger?",
+        "answer": "Fenrir Ledger is a credit card rewards tracker that helps you stay on top of signup bonuses, annual fees, and reward deadlines. It stores your card data locally in your browser — no account required to get started."
+      },
+      {
+        "id": "how-to-sign-up",
+        "question": "Do I need to create an account?",
+        "answer": "No account is needed to start tracking. You can use Fenrir Ledger immediately without signing in. Signing in with Google unlocks cloud sync and import features, but all core tracking works anonymously."
+      },
+      {
+        "id": "how-to-add-cards",
+        "question": "How do I add my credit cards?",
+        "answer": "Click the \"Add Card\" button on the dashboard and fill in your card details — name, issuer, annual fee, signup bonus target, and key dates. You can also import cards in bulk from a Google Sheet or CSV file."
+      },
+      {
+        "id": "is-it-free",
+        "question": "Is Fenrir Ledger free to use?",
+        "answer": "Yes. The core tracking features are free forever. The Karl tier (premium) adds advanced features like cloud sync, import/export, and multi-household support. See the Pricing section for details."
+      }
+    ]
+  },
+  {
+    "id": "features",
+    "category": "Features",
+    "questions": [
+      {
+        "id": "cloud-sync",
+        "question": "What is cloud sync and how does it work?",
+        "answer": "Cloud sync keeps your card data consistent across all your devices. When you sign in with Google, your ledger is tied to your account so you can pick up on any browser without re-entering your cards."
+      },
+      {
+        "id": "import-export",
+        "question": "Can I import cards from a spreadsheet?",
+        "answer": "Yes. The import wizard lets you connect a Google Sheet or upload a CSV file. Fenrir Ledger reads your data, maps the columns to card fields, and adds everything to your ledger in seconds."
+      },
+      {
+        "id": "multi-household",
+        "question": "Can my partner and I share a ledger?",
+        "answer": "Multi-household support lets you track cards across a household — useful if you and a partner churn together (P1 and P2 in churning parlance). This feature is available on the Karl tier."
+      },
+      {
+        "id": "tracking-bonuses",
+        "question": "How does bonus tracking work?",
+        "answer": "For each card you can set a signup bonus target (e.g. spend $4,000 in 90 days), a minimum spend deadline, and a reward status. Fenrir Ledger calculates your progress and surfaces upcoming deadlines so nothing slips past you."
+      }
+    ]
+  },
+  {
+    "id": "pricing",
+    "category": "Pricing",
+    "questions": [
+      {
+        "id": "thrall-vs-karl",
+        "question": "What is the difference between Thrall and Karl tiers?",
+        "answer": "Thrall is the free tier — full local tracking, unlimited cards, no account needed. Karl is the premium tier and adds cloud sync, Google Sheets import, CSV export, multi-household tracking, and priority support."
+      },
+      {
+        "id": "whats-free",
+        "question": "What is included in the free tier?",
+        "answer": "The Thrall (free) tier includes: unlimited card tracking, signup bonus tracking, annual fee reminders, deadline alerts, light and dark theme, and full access to all card views including Valhalla (closed cards)."
+      },
+      {
+        "id": "whats-premium",
+        "question": "What do I get with Karl (premium)?",
+        "answer": "Karl adds: cross-device cloud sync, Google Sheets import wizard, CSV export, multi-household support (P1 + P2 tracking), and priority support. Pricing details are on the main site."
+      }
+    ]
+  },
+  {
+    "id": "privacy-security",
+    "category": "Privacy and Security",
+    "questions": [
+      {
+        "id": "data-storage",
+        "question": "Where is my card data stored?",
+        "answer": "Your card data is stored in your browser's localStorage by default. It never leaves your device unless you explicitly use the cloud sync or import/export features. We do not maintain a database of your financial data on our servers."
+      },
+      {
+        "id": "google-sign-in",
+        "question": "Why do you use Google Sign-In?",
+        "answer": "Google Sign-In lets us authenticate you securely without managing passwords. We receive only your name, email address, and profile picture — and only to identify your account. We do not access any other Google data without your explicit permission."
+      },
+      {
+        "id": "what-we-collect",
+        "question": "What data do you collect?",
+        "answer": "We collect minimal data: authentication info from Google (name, email, profile picture) and anonymous analytics to understand how the app is used. Your card and financial tracking data stays in your browser. See our Privacy Policy for full details."
+      }
+    ]
+  },
+  {
+    "id": "technical",
+    "category": "Technical",
+    "questions": [
+      {
+        "id": "browser-support",
+        "question": "Which browsers are supported?",
+        "answer": "Fenrir Ledger works in all modern browsers — Chrome, Firefox, Safari, and Edge. We recommend keeping your browser up to date for the best experience."
+      },
+      {
+        "id": "mobile-support",
+        "question": "Does it work on mobile?",
+        "answer": "Yes. Fenrir Ledger is fully responsive and works on smartphones and tablets. The layout adapts automatically so you can track rewards on the go."
+      },
+      {
+        "id": "data-format",
+        "question": "What format is the exported data?",
+        "answer": "Card data can be exported as a CSV file, which you can open in any spreadsheet application including Google Sheets, Excel, or Numbers. The export includes all card fields: name, issuer, annual fee, bonus targets, dates, and status."
+      }
+    ]
+  }
+]
