@@ -184,11 +184,23 @@ export function StripeSettings() {
         role="region"
         aria-label="Subscription"
       >
-        {/* Section heading */}
-        <div className="flex items-center justify-between">
+        {/* Section heading — flex row: title left, tier badge right */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <h2 className="text-base font-heading font-bold text-foreground">
             Subscription
           </h2>
+          {isThrall && (
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-flex items-center px-2.5 py-0.5 border border-border text-xs font-mono font-bold uppercase tracking-wide text-muted-foreground/70 h-5"
+                data-testid="tier-badge"
+                aria-label="Thrall tier free"
+              >
+                THRALL
+              </span>
+              <span className="text-xs text-foreground/80 font-body">Free tier</span>
+            </div>
+          )}
           {isKarlActive && (
             <span
               className="inline-flex items-center px-2.5 py-0.5 border border-gold/30 text-xs font-mono font-bold uppercase tracking-wide text-gold h-5"
@@ -228,14 +240,6 @@ export function StripeSettings() {
             >
               The wolf runs free -- but Karl&apos;s chains hold power.
             </p>
-
-            {/* Current tier */}
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center px-2.5 py-0.5 border border-border text-[13px] font-mono font-bold uppercase tracking-wide text-muted-foreground/70" data-testid="tier-badge">
-                THRALL
-              </span>
-              <span className="text-[13px] text-foreground/80 font-body">Free tier</span>
-            </div>
 
             <div className="border-t border-border" />
 
