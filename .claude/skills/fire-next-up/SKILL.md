@@ -17,7 +17,7 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 | `security` | Heimdall (fix/audit) | Loki (validate) | -- |
 | `research` | *(varies)* | -- | -- |
 
-**Research:** Technical → FiremanDecko, Product → Freya. Sole agent, posts findings as issue comment. No Loki step.
+**Research:** Technical → FiremanDecko, Product → Freya. Sole agent, posts findings and creates PR. No Loki step. After PR merges, orchestrator presents findings to Odin for **Review** (plan into issues, shelve, or drop).
 
 **Chain rules:** Same branch throughout. First agent creates PR with `Ref #<NUMBER>`. Final agent (Loki) changes `Ref` to `Fixes`. If any agent fails, chain stops and orchestrator reports.
 
@@ -79,11 +79,55 @@ Render `--status` JSON as this markdown:
 ### Up Next Queue
 N items queued. Top 3: #X (critical/bug), #Y (high/ux), #Z (normal/enhancement)
 
+### Research Awaiting Review
+- #168 Marketing campaign plan — `/fire-next-up --resume #168`
+
 ### Suggested Next Actions (copy-paste ready)
 gh pr merge 286 --squash --delete-branch   # #269 Loki PASS — merge it
 /fire-next-up --resume #277                # Loki QA needed
 /fire-next-up --resume #279                # FiremanDecko needed
+/fire-next-up --resume #168                # Research review needed
 ```
+
+---
+
+## Research Review Flow
+
+When `--resume` detects a completed research chain (handoff comment exists, PR merged, issue still open), the orchestrator runs the review flow instead of spawning another agent.
+
+### Detection
+
+The `--status` dashboard and `resumeDetect()` identify research issues where:
+- Has a `## Freya Handoff` or `## FiremanDecko Handoff` comment (without `→ Loki`)
+- PR is merged (check via `gh pr list --state merged --head <branch>`)
+- Issue is still open
+- These show as `next_action: "review"` in the dashboard
+
+### Review Presentation
+
+Read the deliverable file(s) from the merged PR, then present to Odin:
+
+```
+**Research Complete: #<N> — <TITLE>**
+**Agent:** <Freya/FiremanDecko>
+**Deliverable:** `<file path>`
+
+**Key findings:**
+- <3-5 bullet summary from the deliverable>
+
+**Odin — what's the call?**
+1. **Plan it** → Break findings into actionable issues via /plan-w-team
+2. **Shelve it** → Close issue, findings stay in repo for future reference
+3. **Drop it** → Close issue, delete the deliverable file
+```
+
+### Odin's Decision
+
+| Response | Action |
+|----------|--------|
+| **Plan it** | Read the deliverable, invoke `/plan-w-team` with the research as input context. Close the research issue with a comment linking to the new issues. Move to **Done**. |
+| **Shelve it** | Close the issue with comment: "Shelved — deliverable at `<path>` for future reference." Move to **Done**. |
+| **Drop it** | Delete the deliverable file, commit, close issue. Move to **Done**. |
 
 ---
 
