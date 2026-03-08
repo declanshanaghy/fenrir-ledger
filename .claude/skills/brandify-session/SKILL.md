@@ -102,3 +102,20 @@ Insert a new session card inside `<div id="sessions">`, **before** existing entr
 Confirm `sessions/{{NAME}}.html` and `sessions/index.html` exist and are non-empty.
 
 Report: chronicle path, act count, files documented, index updated.
+
+---
+
+## Step 7 — Commit, Push & PR
+
+Create a branch, commit the generated files, and open a PR:
+
+```bash
+git checkout -b chore/session-{{NAME}}
+git add sessions/{{NAME}}.html sessions/index.html
+git commit -m "chore: add session chronicle — {{NAME}}"
+git push -u origin chore/session-{{NAME}}
+gh pr create --title "chore: session chronicle — {{NAME}}" \
+  --body "Adds brandified session chronicle for **{{NAME}}**."
+```
+
+Report the PR URL to the user. Do NOT merge — Odin decides when to merge.
