@@ -5,7 +5,7 @@ description: Use this skill when the user says "brandify-session", "brandify ses
 
 # Brandify Session — Session Chronicle Generator
 
-Exports the current session to a styled HTML chronicle using the Fenrir Ledger visual system.
+Exports the current session to a styled HTML chronicle using the Fenrir Ledger visual system. CSS is shared via `sessions/chronicle.css` (served by Vercel). HTML is generated from JSON by a pre-compiled script.
 
 ---
 
@@ -22,39 +22,60 @@ Check for the file at `tmp/sessions/{{NAME}}.txt`, then `sessions/{{NAME}}.txt`,
 
 If not found: tell the user to run `/export tmp/sessions/{{NAME}}.txt` first.
 
-Copy to `tmp/{{NAME}}.txt` if found elsewhere.
-
 ---
 
-## Step 3 — Parse the Session
+## Step 3 — Parse the Session into Acts JSON
 
-Read `tmp/{{NAME}}.txt`. Parse into **Acts** — logical groupings of user intent + Claude response.
+Read `tmp/sessions/{{NAME}}.txt`. Parse into **Acts** — logical groupings of user intent + Claude response.
 
-**How to identify Acts:** Each Act begins with a user message (after `>` prompt). Group all tool uses, output, and narrative that follow.
+**How to identify Acts:** Each Act begins with a user message (after `>` or `❯` prompt). Group all tool uses, output, and narrative that follow.
 
-**Extract per Act:**
+Write a JSON file to `tmp/sessions/{{NAME}}.json` with this schema:
 
-| Field | Source |
-|-------|--------|
-| `act_title` | Summarise user's request in 5 words or fewer |
-| `act_rune` | Read `templates/rune-guide.md` for the Elder Futhark rune table |
-| `user_msg` | Raw user message text |
-| `work_summary` | 2-3 sentence prose summary |
-| `files_changed` | Paths from Write/Edit/Read tool calls |
-| `code_snippets` | Key blocks worth preserving (1-2 per act) |
-| `bugs_fixed` | Errors caught and corrected |
-| `decisions` | Architectural or design decisions |
+```json
+{
+  "title": "Evocative Session Title",
+  "date": "2026-03-07",
+  "runes": "ᛏ ᚢ ᚢ ᛚ",
+  "primary_rune": "ᛏ",
+  "acts": [
+    {
+      "title": "Act Title (5 words max)",
+      "rune": "ᛏ",
+      "category": "Refactoring",
+      "user_msg": "the user's raw message",
+      "work_summary": "<p>HTML paragraphs. Use <span class=\"hl\">highlights</span> and <span class=\"mono\">code refs</span>.</p>",
+      "code_snippet": "optional pre-formatted code (use <span class=\"ca\"> for adds, <span class=\"cr\"> for removes)",
+      "bug_fix": "optional bug description",
+      "files_new": ["new-file.ts"],
+      "files_mod": ["existing-file.ts"],
+      "files_mem": ["memory-file.md"]
+    }
+  ]
+}
+```
 
-**Session-level metadata:** title, date, total acts, files created, files modified.
+**Rune assignment:** Read `templates/rune-guide.md` for the Elder Futhark rune table.
+
+**Voice:** Ancient, unhurried, knowing — rune inscriptions, not UI copy.
 
 ---
 
 ## Step 4 — Generate `sessions/{{NAME}}.html`
 
-Read `templates/chronicle-skeleton.md` for the HTML structure and component rules.
-Read `sessions/wireframes-modals.html` for the exact CSS — copy it, don't simplify.
+Run the pre-compiled generator script:
 
-Output a complete, self-contained HTML file. All CSS inline in `<style>`, fully viewable as a static file.
+```bash
+SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/brandify-session/scripts"
+node "$SCRIPT_DIR/generate-chronicle.mjs" \
+  --input tmp/sessions/{{NAME}}.json \
+  --output sessions/{{NAME}}.html
+```
+
+The script links to `sessions/chronicle.css` — **do NOT inline CSS**.
+
+**Fallback:** `npx tsx generate-chronicle.ts` (if `.mjs` is stale)
+**After editing `generate-chronicle.ts`:** run `scripts/build.sh` to rebuild
 
 ---
 
@@ -70,6 +91,7 @@ Insert a new session card inside `<div id="sessions">`, **before** existing entr
   <p class="card-title">{{SESSION_TITLE}}</p>
   <p class="card-meta">{{DATE}} &middot; {{TOTAL_ACTS}} acts &middot; {{TOTAL_FILES}} files</p>
   <p class="card-excerpt">{{ONE_SENTENCE_SUMMARY}}</p>
+  <span class="card-arrow">&rarr;</span>
 </a>
 ```
 
