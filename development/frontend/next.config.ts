@@ -85,6 +85,21 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/static/privacy.html",
+        destination: "/privacy",
+        permanent: true,
+      },
+      {
+        source: "/static/terms.html",
+        destination: "/terms",
+        permanent: true,
+      },
+    ];
+  },
+
   async rewrites() {
     return [
       { source: "/static", destination: "/static/index.html" },
