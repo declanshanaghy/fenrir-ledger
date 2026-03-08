@@ -244,7 +244,7 @@ export function CsvUpload({ onSubmit, onSubmitFile, onBack }: CsvUploadProps) {
           }
         }}
         className={[
-          "flex flex-col items-center justify-center gap-3 rounded-sm border-2 border-dashed p-8 text-center transition-colors cursor-pointer min-h-[160px]",
+          "flex flex-col items-center justify-center gap-3 rounded-sm border-2 border-dashed p-8 text-center card-interactive cursor-pointer min-h-[160px]",
           "focus:outline-none focus:ring-2 focus:ring-gold/50",
           dropState === "drag-over"
             ? "border-gold bg-gold/10"

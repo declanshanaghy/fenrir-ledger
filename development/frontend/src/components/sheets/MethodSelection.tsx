@@ -219,7 +219,7 @@ export function MethodSelection({ onSelectMethod, pickerApiKey = null }: MethodS
               if (!method.disabled) onSelectMethod(method.id);
             }}
             className={[
-              "relative flex flex-col items-center gap-2 rounded-sm border p-4 text-center transition-colors cursor-pointer",
+              "relative flex flex-col items-center gap-2 rounded-sm border p-4 text-center card-interactive cursor-pointer",
               "focus:outline-none focus:ring-2 focus:ring-gold/50",
               method.disabled
                 ? "border-border bg-card/50 opacity-50 cursor-not-allowed"
