@@ -100,16 +100,16 @@ graph LR
 
 ---
 
-## Key Documentation
+## ᚱ Key Documentation ᚢᚾᛖᛋ
 
-| Domain | Key Files |
-|--------|-----------|
-| **Product** | [Product Brief](product-brief.md) · [Design Brief](product/product-design-brief.md) · [Backlog](product/backlog/README.md) |
-| **UX** | [Theme System](ux/theme-system.md) · [Wireframes](ux/wireframes.md) · [Interactions](ux/interactions.md) |
-| **Architecture** | [System Design](architecture/system-design.md) · [ADRs](architecture/adrs/) · [Pipeline](architecture/pipeline.md) · [Remote Builders (ADR-007)](architecture/adrs/ADR-007-remote-builder-platforms.md) |
-| **Security** | [Security Index](security/README.md) · [Google API Review](security/reports/2026-03-02-google-api-integration.md) |
-| **Quality** | [Test Suites](quality/test-suites/) · [Quality Report](quality/quality-report.md) · [Test Plan](quality/test-plan.md) |
-| **Operations** | [Git Convention](.claude/skills/git-commit/SKILL.md) · [Mermaid Guide](ux/ux-assets/mermaid-style-guide.md) · [Depot Setup](.claude/scripts/depot-setup.sh) · [Fire Next Up](.claude/skills/fire-next-up/SKILL.md) |
+| ᚱᚢᚾᛖ | Domain | Sacred Scrolls |
+|------|--------|----------------|
+| ᚠ | **Product** *(Freya speaks)* | [Product Brief](product-brief.md) — *The vision I have laid before the pack* · [Design Brief](product/product-design-brief.md) — *My counsel to the forge-master* · [Backlog](product/backlog/README.md) — *The hunts I have ordered by urgency* |
+| ᛚ | **UX** *(Luna shapes)* | [Theme System](ux/theme-system.md) — *The runes of color and shadow I have woven* · [Wireframes](ux/wireframes.md) — *Bones of every screen, drawn before steel is poured* · [Interactions](ux/interactions.md) — *How the wolf moves when touched* |
+| ᛞ | **Architecture** *(FiremanDecko engineers)* | [System Design](architecture/system-design.md) — *The load-bearing bones of this hall* · [ADRs](architecture/adrs/) — *Every decision forged in fire, never undone lightly* · [Pipeline](architecture/pipeline.md) — *The channel through which all work flows* · [Remote Builders (ADR-007)](architecture/adrs/ADR-007-remote-builder-platforms.md) — *Why Depot carries our iron* |
+| ᚺ | **Security** *(Heimdall watches)* | [Security Index](security/README.md) — *I see all nine worlds; nothing passes unwatched* · [Google API Review](security/reports/2026-03-02-google-api-integration.md) — *The reckoning of keys and scopes I have audited* |
+| ᛏ | **Quality** *(Loki tests)* | [Test Suites](quality/test-suites/) — *Every trap I have laid to catch the careless* · [Quality Report](quality/quality-report.md) — *My verdict on what stands and what crumbles* · [Test Plan](quality/test-plan.md) — *The chaos I have scheduled, in order* |
+| ᛟ | **Operations** *(the pack's shared craft)* | [Git Convention](.claude/skills/git-commit/SKILL.md) — *How all wolves mark their kills* · [Mermaid Guide](ux/ux-assets/mermaid-style-guide.md) — *Runes for rendering diagrams* · [Depot Setup](.claude/scripts/depot-setup.sh) — *Lighting the forge from cold iron* · [Fire Next Up](.claude/skills/fire-next-up/SKILL.md) — *The rite of passing the flame* |
 
 ---
 
