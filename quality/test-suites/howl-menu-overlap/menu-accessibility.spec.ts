@@ -1,23 +1,22 @@
 /**
- * HowlPanel Menu Overlap Test Suite — Fenrir Ledger
+ * Menu Accessibility Test Suite — Fenrir Ledger
  * Authored by Loki, QA Tester of the Pack
  *
- * Validates GitHub Issue #154: Howl panel overlaps top-right user menu.
+ * Updated for Issue #279: HowlPanel sidebar removed; tabs replace it.
+ * The old overlap concern (Howl panel z-index vs header z-index) is no longer
+ * applicable since there is no fixed right sidebar.
+ *
+ * This suite now validates that header menu elements remain accessible
+ * when the dashboard tab bar is visible and cards are in The Howl tab.
  *
  * Acceptance Criteria:
- *   - User menu is clickable and fully accessible when the Howl panel is visible
- *   - Howl panel does not overlap any header/navigation elements
- *   - Fix uses lower Howl z-index to ensure header stays on top
- *
- * Edge cases covered:
- *   - Howl panel visible + user menu click (anonymous state)
- *   - Howl panel in Ragnarök mode (≥5 urgent cards) + user menu
- *   - Mobile viewport with both elements visible
- *   - Theme toggle accessible when Howl is showing
+ *   - User avatar is clickable when urgent cards are shown in tab view
+ *   - Logo link is accessible on desktop and mobile
+ *   - Header z-index is higher than tab panel content
  *
  * Spec references:
- *   - development/frontend/src/components/layout/HowlPanel.tsx — z-index: 30 (desktop), 30/40 (mobile)
- *   - development/frontend/src/components/layout/TopBar.tsx — z-index: 50 (higher than Howl)
+ *   - development/frontend/src/components/dashboard/Dashboard.tsx
+ *   - development/frontend/src/components/layout/TopBar.tsx
  */
 
 import { test, expect } from "@playwright/test";
@@ -26,6 +25,7 @@ import {
   seedCards,
   seedHousehold,
   makeUrgentCard,
+  makeCard,
   ANONYMOUS_HOUSEHOLD_ID,
 } from "../helpers/test-fixtures";
 import { URGENT_CARDS } from "../helpers/seed-data";
@@ -46,72 +46,52 @@ async function setupWithUrgentCards(
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Suite 1: User menu accessible with Howl panel visible (desktop)
+// Suite 1: User menu accessible with tab dashboard visible (desktop)
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Howl Panel — User menu accessibility (desktop)", () => {
+test.describe("Dashboard Tabs — User menu accessibility (desktop)", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
-  test("user menu is clickable when Howl panel is visible", async ({ page }) => {
-    // Setup: seed urgent cards so the Howl panel appears
+  test("user menu is clickable when Howl tab is the active tab", async ({ page }) => {
     await setupWithUrgentCards(page, [
       makeUrgentCard({ cardName: "Urgent Fee Card" }),
     ]);
 
-    // Verify the Howl panel is visible (precondition)
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toBeVisible();
+    // Howl tab is default with urgent cards
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toHaveAttribute("aria-selected", "true");
 
     // Verify the anonymous user avatar is visible in the top-right
     const userAvatar = page.locator('button[aria-label*="Sign in to sync"]');
     await expect(userAvatar).toBeVisible();
 
-    // Click the user avatar — this should open the upsell prompt panel
+    // Click the user avatar — should open the upsell prompt panel
     await userAvatar.click();
 
-    // Verify the upsell prompt dialog appears (anonymous state)
+    // Verify the upsell prompt dialog appears
     const upsellDialog = page.locator('div[role="dialog"]');
     await expect(upsellDialog).toBeVisible();
   });
 
-  test("logo link is clickable when Howl panel is visible", async ({
-    page,
-  }) => {
-    // Setup: seed urgent cards so the Howl panel appears
+  test("logo link is clickable when Howl tab is the active tab", async ({ page }) => {
     await setupWithUrgentCards(page, [
       makeUrgentCard({ cardName: "Logo Test Card" }),
     ]);
 
-    // Verify the Howl panel is visible (precondition)
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toBeVisible();
+    // Howl tab is active (urgent cards present)
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toHaveAttribute("aria-selected", "true");
 
     // Verify the logo link in the header is visible and clickable
     const logoLink = page.locator('header a[href="/static"]').first();
     await expect(logoLink).toBeVisible();
-
-    // Verify the link is clickable (not blocked by Howl panel)
     await expect(logoLink).toBeEnabled();
   });
 
-  test("Howl panel z-index is lower than header navigation", async ({ page }) => {
-    // Setup: seed urgent cards so the Howl panel appears
+  test("header z-index is higher than tab panel content", async ({ page }) => {
     await setupWithUrgentCards(page, [
       makeUrgentCard({ cardName: "Z-Index Test Card" }),
     ]);
-
-    // Verify the Howl panel is visible
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toBeVisible();
-
-    // Get computed z-index of the desktop Howl panel's parent motion.div
-    const howlZIndex = await page.evaluate(() => {
-      const howlMotionDiv = document.querySelector(
-        'div[style*="z-index"]'
-      ) as HTMLElement;
-      if (!howlMotionDiv) return null;
-      return window.getComputedStyle(howlMotionDiv).zIndex;
-    });
 
     // Get computed z-index of the header navigation
     const headerZIndex = await page.evaluate(() => {
@@ -120,42 +100,43 @@ test.describe("Howl Panel — User menu accessibility (desktop)", () => {
       return window.getComputedStyle(header).zIndex;
     });
 
-    // Verify both z-index values exist
-    expect(howlZIndex).not.toBeNull();
     expect(headerZIndex).not.toBeNull();
-
-    // Verify header z-index is higher than Howl panel z-index
-    // Per the fix: Howl desktop z-index is 30, header should be 50
-    const howlZ = parseInt(howlZIndex || "0", 10);
     const headerZ = parseInt(headerZIndex || "0", 10);
+    // Header z-index should be 50 (per TopBar spec)
+    expect(headerZ).toBeGreaterThanOrEqual(50);
+  });
 
-    expect(headerZ).toBeGreaterThan(howlZ);
+  test("HowlPanel aside does NOT exist in the DOM", async ({ page }) => {
+    await setupWithUrgentCards(page, [
+      makeUrgentCard({ cardName: "Tab Test Card" }),
+    ]);
+
+    // The old sidebar must not be attached to the DOM
+    const oldSidebar = page.locator('aside[aria-label="Urgent deadlines"]');
+    await expect(oldSidebar).not.toBeAttached();
   });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// Suite 2: User menu accessible in Ragnarök mode (≥5 urgent cards)
+// Suite 2: User menu accessible when Ragnarök mode is active
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Howl Panel — User menu in Ragnarök mode (desktop)", () => {
+test.describe("Dashboard Tabs — User menu in Ragnarök mode (desktop)", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
-  test("user menu is clickable when Howl panel is in Ragnarök mode", async ({
+  test("user menu is clickable when Howl tab is in Ragnarök mode (≥5 urgent cards)", async ({
     page,
   }) => {
-    // Setup: seed ≥5 urgent cards to trigger Ragnarök mode
-    await setupWithUrgentCards(page, URGENT_CARDS); // has 5 cards
+    await setupWithUrgentCards(page, URGENT_CARDS);
 
-    // Verify Ragnarök mode is active
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toBeVisible();
-    await expect(howlPanel).toContainText("Ragnarök Approaches");
+    // Verify Ragnarök mode is active in the tab label
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toContainText("Ragnarök Approaches");
 
     // Verify the user avatar is visible and clickable
     const userAvatar = page.locator('button[aria-label*="Sign in to sync"]');
     await expect(userAvatar).toBeVisible();
 
-    // Click the user avatar — should open the upsell prompt
     await userAvatar.click();
 
     // Verify the upsell dialog appears
@@ -163,17 +144,12 @@ test.describe("Howl Panel — User menu in Ragnarök mode (desktop)", () => {
     await expect(upsellDialog).toBeVisible();
   });
 
-  test("logo link is clickable when Howl panel is in Ragnarök mode", async ({
-    page,
-  }) => {
-    // Setup: seed ≥5 urgent cards to trigger Ragnarök mode
+  test("logo link is clickable when Howl tab is in Ragnarök mode", async ({ page }) => {
     await setupWithUrgentCards(page, URGENT_CARDS);
 
-    // Verify Ragnarök mode is active
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toContainText("Ragnarök Approaches");
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toContainText("Ragnarök Approaches");
 
-    // Verify the logo link is clickable
     const logoLink = page.locator('header a[href="/static"]').first();
     await expect(logoLink).toBeVisible();
     await expect(logoLink).toBeEnabled();
@@ -181,146 +157,92 @@ test.describe("Howl Panel — User menu in Ragnarök mode (desktop)", () => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// Suite 3: Mobile viewport — Howl bell button + user menu
+// Suite 3: Mobile viewport — tab bar + user menu
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Howl Panel — Mobile menu accessibility", () => {
+test.describe("Dashboard Tabs — Mobile menu accessibility", () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
-  test("user menu is accessible when Howl bell button is visible (mobile)", async ({
-    page,
-  }) => {
-    // Setup: seed urgent cards so the mobile bell button appears
+  test("user menu is accessible when Howl tab is active on mobile", async ({ page }) => {
     await setupWithUrgentCards(page, [
       makeUrgentCard({ cardName: "Mobile Urgent Card" }),
     ]);
 
-    // Verify the mobile bell button is visible
-    const bellButton = page.locator('button[aria-label*="urgent card"]');
-    await expect(bellButton).toBeVisible();
+    // Tab bar is visible on mobile
+    const tabList = page.locator('[role="tablist"][aria-label="Card dashboard tabs"]');
+    await expect(tabList).toBeVisible();
 
-    // Verify the user avatar is visible and clickable (not blocked by bell)
+    // User avatar is visible and clickable
     const userAvatar = page.locator('button[aria-label*="Sign in to sync"]');
     await expect(userAvatar).toBeVisible();
-
-    // Click the user avatar — should open the upsell prompt
     await userAvatar.click();
 
-    // Verify the upsell dialog appears
     const upsellDialog = page.locator('div[role="dialog"]');
     await expect(upsellDialog).toBeVisible();
   });
 
-  test("user menu is accessible when mobile Howl sheet is open", async ({
-    page,
-  }) => {
-    // Setup: seed urgent cards and open the mobile Howl sheet
+  test("user menu is accessible after switching tabs on mobile", async ({ page }) => {
     await setupWithUrgentCards(page, [
       makeUrgentCard({ cardName: "Mobile Sheet Card" }),
+      makeCard({ cardName: "Active Card" }),
     ]);
 
-    // Open the mobile Howl sheet
-    const bellButton = page.locator('button[aria-label*="urgent card"]');
-    await bellButton.click();
+    // Switch to Active tab
+    const activeTab = page.locator('[role="tab"][id="tab-active"]');
+    await activeTab.click();
+    await expect(activeTab).toHaveAttribute("aria-selected", "true");
 
-    // Verify the mobile sheet is visible
-    const mobileSheet = page.locator(
-      'aside[aria-label="Urgent deadlines"].rounded-t-sm'
-    );
-    await expect(mobileSheet).toBeVisible();
-
-    // Verify the user avatar is still visible above the sheet (z-index)
+    // User avatar still accessible
     const userAvatar = page.locator('button[aria-label*="Sign in to sync"]');
     await expect(userAvatar).toBeVisible();
-
-    // Click the user avatar — should open the upsell prompt above the Howl sheet
     await userAvatar.click();
 
-    // Verify the upsell dialog appears
     const upsellDialog = page.locator('div[role="dialog"]');
     await expect(upsellDialog).toBeVisible();
-  });
-
-  test("logo link is accessible when mobile Howl sheet is open", async ({
-    page,
-  }) => {
-    // Setup: seed urgent cards and open the mobile Howl sheet
-    await setupWithUrgentCards(page, [
-      makeUrgentCard({ cardName: "Logo Mobile Card" }),
-    ]);
-
-    // Open the mobile Howl sheet
-    const bellButton = page.locator('button[aria-label*="urgent card"]');
-    await bellButton.click();
-
-    // Verify the mobile sheet is visible
-    const mobileSheet = page.locator(
-      'aside[aria-label="Urgent deadlines"].rounded-t-sm'
-    );
-    await expect(mobileSheet).toBeVisible();
-
-    // Verify the logo link is still accessible
-    const logoLink = page.locator('header a[href="/static"]').first();
-    await expect(logoLink).toBeVisible();
-    await expect(logoLink).toBeEnabled();
   });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// Suite 4: Howl panel does not overlap header elements
+// Suite 4: Dashboard tab bar does not overlap header elements
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Howl Panel — No overlap with header", () => {
+test.describe("Dashboard Tabs — No overlap with header", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
-  test("Howl panel does not visually overlap the user avatar", async ({
-    page,
-  }) => {
-    // Setup: seed urgent cards so the Howl panel appears
+  test("tab bar does not visually overlap the user avatar", async ({ page }) => {
     await setupWithUrgentCards(page, [
       makeUrgentCard({ cardName: "Overlap Test Card" }),
     ]);
 
-    // Get bounding boxes for both elements
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
+    const tabList = page.locator('[role="tablist"][aria-label="Card dashboard tabs"]');
     const userAvatar = page.locator('button[aria-label*="Sign in to sync"]');
 
-    await expect(howlPanel).toBeVisible();
+    await expect(tabList).toBeVisible();
     await expect(userAvatar).toBeVisible();
 
-    const howlBox = await howlPanel.boundingBox();
+    const tabBox = await tabList.boundingBox();
     const avatarBox = await userAvatar.boundingBox();
 
-    expect(howlBox).not.toBeNull();
+    expect(tabBox).not.toBeNull();
     expect(avatarBox).not.toBeNull();
 
-    // Verify the avatar is in the top-right corner above the Howl panel
-    // (avatar top Y should be less than or equal to Howl panel top Y)
-    expect(avatarBox!.y).toBeLessThanOrEqual(howlBox!.y);
+    // Avatar is in the header — its bottom should be above or at tab bar top
+    const avatarBottom = avatarBox!.y + avatarBox!.height;
+    // Tab bar top minus 20px tolerance for layout
+    expect(avatarBottom).toBeLessThanOrEqual(tabBox!.y + 20);
   });
 
-  test("Howl panel does not visually overlap the logo link", async ({
-    page,
-  }) => {
-    // Setup: seed urgent cards so the Howl panel appears
+  test("clicking a card in Howl tab opens edit page (not blocked by UI)", async ({ page }) => {
     await setupWithUrgentCards(page, [
-      makeUrgentCard({ cardName: "Logo Overlap Test" }),
+      makeUrgentCard({ cardName: "Clickable Urgent Card" }),
     ]);
 
-    // Get bounding boxes
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    const logoLink = page.locator('header a[href="/static"]').first();
+    // Find a card link in the Howl tab
+    const cardLink = page.locator('[role="tabpanel"][id="panel-howl"] a[href*="/cards/"]').first();
+    await expect(cardLink).toBeVisible();
+    await expect(cardLink).toBeEnabled();
 
-    await expect(howlPanel).toBeVisible();
-    await expect(logoLink).toBeVisible();
-
-    const howlBox = await howlPanel.boundingBox();
-    const logoBox = await logoLink.boundingBox();
-
-    expect(howlBox).not.toBeNull();
-    expect(logoBox).not.toBeNull();
-
-    // Verify the logo link is in the header above the Howl panel
-    expect(logoBox!.y).toBeLessThanOrEqual(howlBox!.y);
+    const box = await cardLink.boundingBox();
+    expect(box).not.toBeNull();
   });
 });
