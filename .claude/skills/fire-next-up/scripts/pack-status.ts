@@ -4,8 +4,8 @@
  *
  * Usage: npx tsx pack-status.ts [--status] [--chain-status <N>] [--move <N> <up-next|in-progress|done>]
  *
- * Key advantage over bash: batches all data into 2 GraphQL queries instead of N+3 REST calls.
- * For a board with 5 in-progress issues, bash makes ~13 API calls; this makes 2.
+ * Uses native fetch + GitHub GraphQL API directly (no child process spawning).
+ * Auth token obtained from `gh auth token` once at startup.
  */
 import { execSync } from "child_process";
 
@@ -20,34 +20,49 @@ const STATUS_OPTIONS: Record<string, string> = {
   done: "c5fe053a",
 };
 
+const GH_API = "https://api.github.com";
+const GH_GQL = "https://api.github.com/graphql";
+
+// Get token once at startup (only execSync we keep)
+const TOKEN = execSync("gh auth token", { encoding: "utf-8" }).trim();
+
+const HEADERS = {
+  Authorization: `bearer ${TOKEN}`,
+  "Content-Type": "application/json",
+  "User-Agent": "fenrir-pack-status",
+  Accept: "application/json",
+};
+
 // --- Helpers ---
 
-function gh(args: string): string {
-  return execSync(`gh ${args}`, { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024 }).trim();
+async function graphql(
+  query: string,
+  variables: Record<string, unknown> = {}
+): Promise<any> {
+  const res = await fetch(GH_GQL, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify({ query, variables }),
+  });
+  if (!res.ok) {
+    throw new Error(`GraphQL request failed: ${res.status} ${res.statusText}`);
+  }
+  const json = await res.json();
+  if (json.errors?.length && !json.data) {
+    throw new Error(`GraphQL errors: ${JSON.stringify(json.errors)}`);
+  }
+  return json;
 }
 
-function ghGraphQL(query: string, variables: Record<string, unknown> = {}): unknown {
-  // Use -F for numeric values (sends as JSON number), -f for strings
-  const varsStr = Object.entries(variables)
-    .map(([k, v]) => {
-      if (typeof v === "number") return `-F ${k}=${v}`;
-      return `-f ${k}=${String(v)}`;
-    })
-    .join(" ");
-  const escapedQuery = query.replace(/'/g, "'\\''");
-  try {
-    const raw = execSync(
-      `gh api graphql -f query='${escapedQuery}' ${varsStr}`,
-      { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024 }
-    );
-    return JSON.parse(raw);
-  } catch (e: any) {
-    // GraphQL may return partial data with errors — parse stdout if available
-    if (e.stdout) {
-      try { return JSON.parse(e.stdout); } catch { /* fall through */ }
-    }
-    throw e;
+async function restGet(path: string): Promise<any> {
+  const res = await fetch(`${GH_API}${path}`, {
+    method: "GET",
+    headers: HEADERS,
+  });
+  if (!res.ok) {
+    throw new Error(`REST request failed: ${res.status} ${res.statusText} — ${path}`);
   }
+  return res.json();
 }
 
 // --- Types ---
@@ -76,12 +91,16 @@ interface BoardItem {
 
 // --- Board Fetch (single GraphQL query for ALL project items + comments) ---
 
-function fetchBoardAndComments(): {
+async function fetchBoardAndComments(): Promise<{
   items: BoardItem[];
   issueComments: Record<number, string[]>;
-  pullRequests: Array<{ number: number; title: string; headRefName: string; state: string }>;
-} {
-  // GraphQL: fetch project items with their issue details and recent comments
+  pullRequests: Array<{
+    number: number;
+    title: string;
+    headRefName: string;
+    state: string;
+  }>;
+}> {
   const query = `
     query($owner: String!, $number: Int!) {
       user(login: $owner) {
@@ -123,7 +142,7 @@ function fetchBoardAndComments(): {
     }
   `;
 
-  const result = ghGraphQL(query, { owner: OWNER, number: PROJECT_NUMBER }) as any;
+  const result = await graphql(query, { owner: OWNER, number: PROJECT_NUMBER });
 
   const projectItems = result.data.user.projectV2.items.nodes;
   const items: BoardItem[] = [];
@@ -148,12 +167,14 @@ function fetchBoardAndComments(): {
     }
   }
 
-  const prs = (result.data.repository.pullRequests.nodes ?? []).map((pr: any) => ({
-    number: pr.number,
-    title: pr.title,
-    headRefName: pr.headRefName,
-    state: pr.state,
-  }));
+  const prs = (result.data.repository.pullRequests.nodes ?? []).map(
+    (pr: any) => ({
+      number: pr.number,
+      title: pr.title,
+      headRefName: pr.headRefName,
+      state: pr.state,
+    })
+  );
 
   return { items, issueComments, pullRequests: prs };
 }
@@ -180,11 +201,11 @@ function chainForType(type: string): string {
   switch (type) {
     case "bug":
     case "enhancement":
-      return "FiremanDecko → Loki";
+      return "FiremanDecko \u2192 Loki";
     case "ux":
-      return "Luna → FiremanDecko → Loki";
+      return "Luna \u2192 FiremanDecko \u2192 Loki";
     case "security":
-      return "Heimdall → Loki";
+      return "Heimdall \u2192 Loki";
     case "research":
       return "FiremanDecko (research)";
     default:
@@ -201,12 +222,10 @@ function analyzeChain(
   const priority = detectPriority(item.labels);
   const chain = chainForType(type);
 
-  // Find matching PR
   const matchingPR = prs.find((pr) =>
     pr.headRefName.includes(`issue-${item.num}`)
   );
 
-  // Scan comments for handoff markers
   const hasLokiPass = comments.some(
     (c) => c.includes("## Loki QA Verdict") && /Verdict.*PASS/.test(c)
   );
@@ -214,13 +233,13 @@ function analyzeChain(
     (c) => c.includes("## Loki QA Verdict") && /Verdict.*FAIL/.test(c)
   );
   const hasDeckoHandoff = comments.some((c) =>
-    c.includes("## FiremanDecko → Loki Handoff")
+    c.includes("## FiremanDecko \u2192 Loki Handoff")
   );
   const hasHeimdallHandoff = comments.some((c) =>
-    c.includes("## Heimdall → Loki Handoff")
+    c.includes("## Heimdall \u2192 Loki Handoff")
   );
   const hasLunaHandoff = comments.some((c) =>
-    c.includes("## Luna → FiremanDecko Handoff")
+    c.includes("## Luna \u2192 FiremanDecko Handoff")
   );
 
   let position: string;
@@ -231,7 +250,7 @@ function analyzeChain(
   if (hasLokiPass) {
     verdict = "PASS";
     if (matchingPR) {
-      position = "Loki PASS — ready to merge";
+      position = "Loki PASS \u2014 ready to merge";
       next_action = "merge";
       command = `gh pr merge ${matchingPR.number} --squash --delete-branch`;
     } else {
@@ -257,7 +276,7 @@ function analyzeChain(
     next_action = "wait";
     command = `/fire-next-up --resume #${item.num}`;
   } else {
-    position = "No PR — agent may have failed";
+    position = "No PR \u2014 agent may have failed";
     next_action = "re-dispatch";
     command = `/fire-next-up #${item.num} --local`;
   }
@@ -272,7 +291,7 @@ function analyzeChain(
     pr: matchingPR?.number ?? null,
     branch: matchingPR?.headRefName ?? "",
     verdict,
-    ci: null, // Would need separate checks per PR — skip for speed
+    ci: null,
     next_action,
     command,
   };
@@ -280,18 +299,14 @@ function analyzeChain(
 
 // --- Commands ---
 
-function statusDashboard() {
-  const { items, issueComments, pullRequests } = fetchBoardAndComments();
+async function statusDashboard() {
+  const { items, issueComments, pullRequests } = await fetchBoardAndComments();
 
   const inProgress = items.filter((i) => i.status === "In Progress");
   const upNext = items.filter((i) => i.status === "Up Next");
 
   const chains: ChainStatus[] = inProgress.map((item) =>
-    analyzeChain(
-      item,
-      issueComments[item.num] ?? [],
-      pullRequests
-    )
+    analyzeChain(item, issueComments[item.num] ?? [], pullRequests)
   );
 
   const result = {
@@ -314,7 +329,9 @@ function statusDashboard() {
         .filter((c) => c.position.includes("Awaiting FiremanDecko"))
         .map((c) => c.issue),
       no_response: chains
-        .filter((c) => c.position.includes("No PR") || c.position.includes("running"))
+        .filter(
+          (c) => c.position.includes("No PR") || c.position.includes("running")
+        )
         .map((c) => c.issue),
     },
     actions: chains.map((c) => ({
@@ -327,18 +344,22 @@ function statusDashboard() {
   console.log(JSON.stringify(result, null, 2));
 }
 
-function chainStatus(issueNum: number) {
-  const { items, issueComments, pullRequests } = fetchBoardAndComments();
+async function chainStatus(issueNum: number) {
+  const { items, issueComments, pullRequests } = await fetchBoardAndComments();
   const item = items.find((i) => i.num === issueNum);
   if (!item) {
     console.error(`Issue #${issueNum} not found on project board`);
     process.exit(1);
   }
-  const status = analyzeChain(item, issueComments[issueNum] ?? [], pullRequests);
+  const status = analyzeChain(
+    item,
+    issueComments[issueNum] ?? [],
+    pullRequests
+  );
   console.log(JSON.stringify(status, null, 2));
 }
 
-function moveIssue(issueNum: number, status: string) {
+async function moveIssue(issueNum: number, status: string) {
   const optionId = STATUS_OPTIONS[status];
   if (!optionId) {
     console.error(`Invalid status: ${status} (use up-next, in-progress, done)`);
@@ -346,7 +367,7 @@ function moveIssue(issueNum: number, status: string) {
   }
 
   // Find item ID via GraphQL
-  const query = `
+  const findQuery = `
     query($owner: String!, $number: Int!) {
       user(login: $owner) {
         projectV2(number: $number) {
@@ -360,8 +381,11 @@ function moveIssue(issueNum: number, status: string) {
       }
     }
   `;
-  const result = ghGraphQL(query, { owner: OWNER, number: PROJECT_NUMBER }) as any;
-  const node = result.data.user.projectV2.items.nodes.find(
+  const findResult = await graphql(findQuery, {
+    owner: OWNER,
+    number: PROJECT_NUMBER,
+  });
+  const node = findResult.data.user.projectV2.items.nodes.find(
     (n: any) => n.content?.number === issueNum
   );
   if (!node) {
@@ -369,44 +393,89 @@ function moveIssue(issueNum: number, status: string) {
     process.exit(1);
   }
 
-  gh(
-    `project item-edit --project-id "${PROJECT_ID}" --id "${node.id}" --field-id "${FIELD_ID}" --single-select-option-id "${optionId}"`
-  );
+  // Mutate via GraphQL (replaces `gh project item-edit`)
+  const mutation = `
+    mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+      updateProjectV2ItemFieldValue(input: {
+        projectId: $projectId
+        itemId: $itemId
+        fieldId: $fieldId
+        value: { singleSelectOptionId: $optionId }
+      }) {
+        projectV2Item { id }
+      }
+    }
+  `;
+  await graphql(mutation, {
+    projectId: PROJECT_ID,
+    itemId: node.id,
+    fieldId: FIELD_ID,
+    optionId: optionId,
+  });
+
   console.log(`Moved #${issueNum} to ${status}`);
 }
 
 // --- Resume Detection ---
 
-function resumeDetect(issueNum: number) {
-  const { items, issueComments, pullRequests } = fetchBoardAndComments();
-  const item = items.find((i) => i.num === issueNum);
+async function resumeDetect(issueNum: number) {
+  // Fire all requests concurrently
+  const [boardData, issueJSON, refsData] = await Promise.all([
+    fetchBoardAndComments(),
+    restGet(`/repos/${OWNER}/${REPO}/issues/${issueNum}`),
+    restGet(`/repos/${OWNER}/${REPO}/git/matching-refs/heads/fix/issue-${issueNum}`)
+      .catch(() => []),
+  ]);
 
-  // Get issue details even if not on board
-  const issueJSON = JSON.parse(gh(`issue view ${issueNum} --json number,title,body,labels,state`));
-  const type = detectType((issueJSON.labels ?? []).map((l: any) => l.name));
+  const { items, issueComments, pullRequests } = boardData;
+  const type = detectType(
+    (issueJSON.labels ?? []).map((l: any) => l.name)
+  );
   const chain = chainForType(type);
 
-  // Find branch
-  const branches = gh(`api repos/${OWNER}/${REPO}/branches --paginate --jq '.[].name'`)
-    .split("\n")
-    .filter((b) => b.includes(`issue-${issueNum}`));
-  const branch = branches[0] ?? "";
-
-  // Find PR
+  // Find branch from PR or refs
+  let branch = "";
   const matchingPR = pullRequests.find((pr) =>
     pr.headRefName.includes(`issue-${issueNum}`)
   );
+  if (matchingPR) {
+    branch = matchingPR.headRefName;
+  } else if (Array.isArray(refsData) && refsData.length > 0) {
+    branch = refsData[0].ref.replace("refs/heads/", "");
+  }
 
-  // Get comments
-  const comments = issueComments[issueNum] ?? [];
+  // Get comments from board data, fallback to REST if not found
+  let effectiveComments = issueComments[issueNum] ?? [];
+  if (effectiveComments.length === 0) {
+    try {
+      const commentsData = await restGet(
+        `/repos/${OWNER}/${REPO}/issues/${issueNum}/comments?per_page=30`
+      );
+      effectiveComments = commentsData.map((c: any) => c.body);
+    } catch {
+      // No comments
+    }
+  }
 
   // Determine completed steps and next agent
-  const hasLunaHandoff = comments.some((c) => c.includes("## Luna → FiremanDecko Handoff"));
-  const hasDeckoHandoff = comments.some((c) => c.includes("## FiremanDecko → Loki Handoff"));
-  const hasHeimdallHandoff = comments.some((c) => c.includes("## Heimdall → Loki Handoff"));
-  const hasLokiVerdict = comments.some((c) => c.includes("## Loki QA Verdict"));
-  const lokiPass = comments.some((c) => c.includes("## Loki QA Verdict") && /Verdict.*PASS/.test(c));
-  const lokiFail = comments.some((c) => c.includes("## Loki QA Verdict") && /Verdict.*FAIL/.test(c));
+  const hasLunaHandoff = effectiveComments.some((c) =>
+    c.includes("## Luna \u2192 FiremanDecko Handoff")
+  );
+  const hasDeckoHandoff = effectiveComments.some((c) =>
+    c.includes("## FiremanDecko \u2192 Loki Handoff")
+  );
+  const hasHeimdallHandoff = effectiveComments.some((c) =>
+    c.includes("## Heimdall \u2192 Loki Handoff")
+  );
+  const hasLokiVerdict = effectiveComments.some((c) =>
+    c.includes("## Loki QA Verdict")
+  );
+  const lokiPass = effectiveComments.some(
+    (c) => c.includes("## Loki QA Verdict") && /Verdict.*PASS/.test(c)
+  );
+  const lokiFail = effectiveComments.some(
+    (c) => c.includes("## Loki QA Verdict") && /Verdict.*FAIL/.test(c)
+  );
 
   let completedSteps: string[] = [];
   let nextAgent = "";
@@ -417,22 +486,52 @@ function resumeDetect(issueNum: number) {
     case "bug":
     case "enhancement":
       totalSteps = 2;
-      if (hasDeckoHandoff) { completedSteps = ["FiremanDecko"]; nextAgent = "Loki"; nextStep = 2; }
-      else if (hasLokiVerdict) { completedSteps = ["FiremanDecko", "Loki"]; nextAgent = ""; nextStep = 0; }
-      else { nextAgent = "FiremanDecko"; nextStep = 1; }
+      if (hasDeckoHandoff) {
+        completedSteps = ["FiremanDecko"];
+        nextAgent = "Loki";
+        nextStep = 2;
+      } else if (hasLokiVerdict) {
+        completedSteps = ["FiremanDecko", "Loki"];
+        nextAgent = "";
+        nextStep = 0;
+      } else {
+        nextAgent = "FiremanDecko";
+        nextStep = 1;
+      }
       break;
     case "ux":
       totalSteps = 3;
-      if (hasLokiVerdict) { completedSteps = ["Luna", "FiremanDecko", "Loki"]; nextAgent = ""; nextStep = 0; }
-      else if (hasDeckoHandoff) { completedSteps = ["Luna", "FiremanDecko"]; nextAgent = "Loki"; nextStep = 3; }
-      else if (hasLunaHandoff) { completedSteps = ["Luna"]; nextAgent = "FiremanDecko"; nextStep = 2; }
-      else { nextAgent = "Luna"; nextStep = 1; }
+      if (hasLokiVerdict) {
+        completedSteps = ["Luna", "FiremanDecko", "Loki"];
+        nextAgent = "";
+        nextStep = 0;
+      } else if (hasDeckoHandoff) {
+        completedSteps = ["Luna", "FiremanDecko"];
+        nextAgent = "Loki";
+        nextStep = 3;
+      } else if (hasLunaHandoff) {
+        completedSteps = ["Luna"];
+        nextAgent = "FiremanDecko";
+        nextStep = 2;
+      } else {
+        nextAgent = "Luna";
+        nextStep = 1;
+      }
       break;
     case "security":
       totalSteps = 2;
-      if (hasHeimdallHandoff) { completedSteps = ["Heimdall"]; nextAgent = "Loki"; nextStep = 2; }
-      else if (hasLokiVerdict) { completedSteps = ["Heimdall", "Loki"]; nextAgent = ""; nextStep = 0; }
-      else { nextAgent = "Heimdall"; nextStep = 1; }
+      if (hasHeimdallHandoff) {
+        completedSteps = ["Heimdall"];
+        nextAgent = "Loki";
+        nextStep = 2;
+      } else if (hasLokiVerdict) {
+        completedSteps = ["Heimdall", "Loki"];
+        nextAgent = "";
+        nextStep = 0;
+      } else {
+        nextAgent = "Heimdall";
+        nextStep = 1;
+      }
       break;
     default:
       totalSteps = 1;
@@ -453,7 +552,8 @@ function resumeDetect(issueNum: number) {
     next_step: nextStep,
     total_steps: totalSteps,
     verdict: lokiPass ? "PASS" : lokiFail ? "FAIL" : null,
-    chain_complete: hasLokiVerdict || (type === "research" && completedSteps.length > 0),
+    chain_complete:
+      hasLokiVerdict || (type === "research" && completedSteps.length > 0),
   };
 
   console.log(JSON.stringify(result, null, 2));
@@ -461,13 +561,23 @@ function resumeDetect(issueNum: number) {
 
 // --- Peek (Up Next Queue) ---
 
-function peek() {
-  const { items } = fetchBoardAndComments();
+async function peek() {
+  const { items } = await fetchBoardAndComments();
   const upNext = items.filter((i) => i.status === "Up Next");
 
-  // Sort by priority then type then issue number
-  const priorityOrder: Record<string, number> = { critical: 0, high: 1, normal: 2, low: 3 };
-  const typeOrder: Record<string, number> = { bug: 0, security: 1, ux: 2, enhancement: 3, research: 4 };
+  const priorityOrder: Record<string, number> = {
+    critical: 0,
+    high: 1,
+    normal: 2,
+    low: 3,
+  };
+  const typeOrder: Record<string, number> = {
+    bug: 0,
+    security: 1,
+    ux: 2,
+    enhancement: 3,
+    research: 4,
+  };
 
   upNext.sort((a, b) => {
     const aPri = Math.min(...a.labels.map((l) => priorityOrder[l] ?? 2));
@@ -499,19 +609,19 @@ const cmd = args[0] ?? "--status";
 
 switch (cmd) {
   case "--status":
-    statusDashboard();
+    await statusDashboard();
     break;
   case "--chain-status":
-    chainStatus(Number(args[1]));
+    await chainStatus(Number(args[1]));
     break;
   case "--resume-detect":
-    resumeDetect(Number(args[1]));
+    await resumeDetect(Number(args[1]));
     break;
   case "--peek":
-    peek();
+    await peek();
     break;
   case "--move":
-    moveIssue(Number(args[1]), args[2]);
+    await moveIssue(Number(args[1]), args[2]);
     break;
   default:
     console.error(

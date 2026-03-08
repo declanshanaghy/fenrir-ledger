@@ -12,32 +12,41 @@ var STATUS_OPTIONS = {
   "in-progress": "1d9139d4",
   done: "c5fe053a"
 };
-function gh(args2) {
-  return execSync(`gh ${args2}`, { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024 }).trim();
-}
-function ghGraphQL(query, variables = {}) {
-  const varsStr = Object.entries(variables).map(([k, v]) => {
-    if (typeof v === "number") return `-F ${k}=${v}`;
-    return `-f ${k}=${String(v)}`;
-  }).join(" ");
-  const escapedQuery = query.replace(/'/g, "'\\''");
-  try {
-    const raw = execSync(
-      `gh api graphql -f query='${escapedQuery}' ${varsStr}`,
-      { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024 }
-    );
-    return JSON.parse(raw);
-  } catch (e) {
-    if (e.stdout) {
-      try {
-        return JSON.parse(e.stdout);
-      } catch {
-      }
-    }
-    throw e;
+var GH_API = "https://api.github.com";
+var GH_GQL = "https://api.github.com/graphql";
+var TOKEN = execSync("gh auth token", { encoding: "utf-8" }).trim();
+var HEADERS = {
+  Authorization: `bearer ${TOKEN}`,
+  "Content-Type": "application/json",
+  "User-Agent": "fenrir-pack-status",
+  Accept: "application/json"
+};
+async function graphql(query, variables = {}) {
+  const res = await fetch(GH_GQL, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify({ query, variables })
+  });
+  if (!res.ok) {
+    throw new Error(`GraphQL request failed: ${res.status} ${res.statusText}`);
   }
+  const json = await res.json();
+  if (json.errors?.length && !json.data) {
+    throw new Error(`GraphQL errors: ${JSON.stringify(json.errors)}`);
+  }
+  return json;
 }
-function fetchBoardAndComments() {
+async function restGet(path) {
+  const res = await fetch(`${GH_API}${path}`, {
+    method: "GET",
+    headers: HEADERS
+  });
+  if (!res.ok) {
+    throw new Error(`REST request failed: ${res.status} ${res.statusText} \u2014 ${path}`);
+  }
+  return res.json();
+}
+async function fetchBoardAndComments() {
   const query = `
     query($owner: String!, $number: Int!) {
       user(login: $owner) {
@@ -78,7 +87,7 @@ function fetchBoardAndComments() {
       }
     }
   `;
-  const result = ghGraphQL(query, { owner: OWNER, number: PROJECT_NUMBER });
+  const result = await graphql(query, { owner: OWNER, number: PROJECT_NUMBER });
   const projectItems = result.data.user.projectV2.items.nodes;
   const items = [];
   const issueComments = {};
@@ -98,12 +107,14 @@ function fetchBoardAndComments() {
       );
     }
   }
-  const prs = (result.data.repository.pullRequests.nodes ?? []).map((pr) => ({
-    number: pr.number,
-    title: pr.title,
-    headRefName: pr.headRefName,
-    state: pr.state
-  }));
+  const prs = (result.data.repository.pullRequests.nodes ?? []).map(
+    (pr) => ({
+      number: pr.number,
+      title: pr.title,
+      headRefName: pr.headRefName,
+      state: pr.state
+    })
+  );
   return { items, issueComments, pullRequests: prs };
 }
 function detectType(labels) {
@@ -205,21 +216,16 @@ function analyzeChain(item, comments, prs) {
     branch: matchingPR?.headRefName ?? "",
     verdict,
     ci: null,
-    // Would need separate checks per PR — skip for speed
     next_action,
     command
   };
 }
-function statusDashboard() {
-  const { items, issueComments, pullRequests } = fetchBoardAndComments();
+async function statusDashboard() {
+  const { items, issueComments, pullRequests } = await fetchBoardAndComments();
   const inProgress = items.filter((i) => i.status === "In Progress");
   const upNext = items.filter((i) => i.status === "Up Next");
   const chains = inProgress.map(
-    (item) => analyzeChain(
-      item,
-      issueComments[item.num] ?? [],
-      pullRequests
-    )
+    (item) => analyzeChain(item, issueComments[item.num] ?? [], pullRequests)
   );
   const result = {
     in_flight: chains,
@@ -236,7 +242,9 @@ function statusDashboard() {
       fail: chains.filter((c) => c.verdict === "FAIL").map((c) => c.issue),
       awaiting_loki: chains.filter((c) => c.position.includes("Awaiting Loki")).map((c) => c.issue),
       awaiting_decko: chains.filter((c) => c.position.includes("Awaiting FiremanDecko")).map((c) => c.issue),
-      no_response: chains.filter((c) => c.position.includes("No PR") || c.position.includes("running")).map((c) => c.issue)
+      no_response: chains.filter(
+        (c) => c.position.includes("No PR") || c.position.includes("running")
+      ).map((c) => c.issue)
     },
     actions: chains.map((c) => ({
       issue: c.issue,
@@ -246,23 +254,27 @@ function statusDashboard() {
   };
   console.log(JSON.stringify(result, null, 2));
 }
-function chainStatus(issueNum) {
-  const { items, issueComments, pullRequests } = fetchBoardAndComments();
+async function chainStatus(issueNum) {
+  const { items, issueComments, pullRequests } = await fetchBoardAndComments();
   const item = items.find((i) => i.num === issueNum);
   if (!item) {
     console.error(`Issue #${issueNum} not found on project board`);
     process.exit(1);
   }
-  const status = analyzeChain(item, issueComments[issueNum] ?? [], pullRequests);
+  const status = analyzeChain(
+    item,
+    issueComments[issueNum] ?? [],
+    pullRequests
+  );
   console.log(JSON.stringify(status, null, 2));
 }
-function moveIssue(issueNum, status) {
+async function moveIssue(issueNum, status) {
   const optionId = STATUS_OPTIONS[status];
   if (!optionId) {
     console.error(`Invalid status: ${status} (use up-next, in-progress, done)`);
     process.exit(1);
   }
-  const query = `
+  const findQuery = `
     query($owner: String!, $number: Int!) {
       user(login: $owner) {
         projectV2(number: $number) {
@@ -276,37 +288,85 @@ function moveIssue(issueNum, status) {
       }
     }
   `;
-  const result = ghGraphQL(query, { owner: OWNER, number: PROJECT_NUMBER });
-  const node = result.data.user.projectV2.items.nodes.find(
+  const findResult = await graphql(findQuery, {
+    owner: OWNER,
+    number: PROJECT_NUMBER
+  });
+  const node = findResult.data.user.projectV2.items.nodes.find(
     (n) => n.content?.number === issueNum
   );
   if (!node) {
     console.error(`Issue #${issueNum} not found on project board`);
     process.exit(1);
   }
-  gh(
-    `project item-edit --project-id "${PROJECT_ID}" --id "${node.id}" --field-id "${FIELD_ID}" --single-select-option-id "${optionId}"`
-  );
+  const mutation = `
+    mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+      updateProjectV2ItemFieldValue(input: {
+        projectId: $projectId
+        itemId: $itemId
+        fieldId: $fieldId
+        value: { singleSelectOptionId: $optionId }
+      }) {
+        projectV2Item { id }
+      }
+    }
+  `;
+  await graphql(mutation, {
+    projectId: PROJECT_ID,
+    itemId: node.id,
+    fieldId: FIELD_ID,
+    optionId
+  });
   console.log(`Moved #${issueNum} to ${status}`);
 }
-function resumeDetect(issueNum) {
-  const { items, issueComments, pullRequests } = fetchBoardAndComments();
-  const item = items.find((i) => i.num === issueNum);
-  const issueJSON = JSON.parse(gh(`issue view ${issueNum} --json number,title,body,labels,state`));
-  const type = detectType((issueJSON.labels ?? []).map((l) => l.name));
+async function resumeDetect(issueNum) {
+  const [boardData, issueJSON, refsData] = await Promise.all([
+    fetchBoardAndComments(),
+    restGet(`/repos/${OWNER}/${REPO}/issues/${issueNum}`),
+    restGet(`/repos/${OWNER}/${REPO}/git/matching-refs/heads/fix/issue-${issueNum}`).catch(() => [])
+  ]);
+  const { items, issueComments, pullRequests } = boardData;
+  const type = detectType(
+    (issueJSON.labels ?? []).map((l) => l.name)
+  );
   const chain = chainForType(type);
-  const branches = gh(`api repos/${OWNER}/${REPO}/branches --paginate --jq '.[].name'`).split("\n").filter((b) => b.includes(`issue-${issueNum}`));
-  const branch = branches[0] ?? "";
+  let branch = "";
   const matchingPR = pullRequests.find(
     (pr) => pr.headRefName.includes(`issue-${issueNum}`)
   );
-  const comments = issueComments[issueNum] ?? [];
-  const hasLunaHandoff = comments.some((c) => c.includes("## Luna \u2192 FiremanDecko Handoff"));
-  const hasDeckoHandoff = comments.some((c) => c.includes("## FiremanDecko \u2192 Loki Handoff"));
-  const hasHeimdallHandoff = comments.some((c) => c.includes("## Heimdall \u2192 Loki Handoff"));
-  const hasLokiVerdict = comments.some((c) => c.includes("## Loki QA Verdict"));
-  const lokiPass = comments.some((c) => c.includes("## Loki QA Verdict") && /Verdict.*PASS/.test(c));
-  const lokiFail = comments.some((c) => c.includes("## Loki QA Verdict") && /Verdict.*FAIL/.test(c));
+  if (matchingPR) {
+    branch = matchingPR.headRefName;
+  } else if (Array.isArray(refsData) && refsData.length > 0) {
+    branch = refsData[0].ref.replace("refs/heads/", "");
+  }
+  let effectiveComments = issueComments[issueNum] ?? [];
+  if (effectiveComments.length === 0) {
+    try {
+      const commentsData = await restGet(
+        `/repos/${OWNER}/${REPO}/issues/${issueNum}/comments?per_page=30`
+      );
+      effectiveComments = commentsData.map((c) => c.body);
+    } catch {
+    }
+  }
+  const hasLunaHandoff = effectiveComments.some(
+    (c) => c.includes("## Luna \u2192 FiremanDecko Handoff")
+  );
+  const hasDeckoHandoff = effectiveComments.some(
+    (c) => c.includes("## FiremanDecko \u2192 Loki Handoff")
+  );
+  const hasHeimdallHandoff = effectiveComments.some(
+    (c) => c.includes("## Heimdall \u2192 Loki Handoff")
+  );
+  const hasLokiVerdict = effectiveComments.some(
+    (c) => c.includes("## Loki QA Verdict")
+  );
+  const lokiPass = effectiveComments.some(
+    (c) => c.includes("## Loki QA Verdict") && /Verdict.*PASS/.test(c)
+  );
+  const lokiFail = effectiveComments.some(
+    (c) => c.includes("## Loki QA Verdict") && /Verdict.*FAIL/.test(c)
+  );
   let completedSteps = [];
   let nextAgent = "";
   let nextStep = 0;
@@ -384,11 +444,22 @@ function resumeDetect(issueNum) {
   };
   console.log(JSON.stringify(result, null, 2));
 }
-function peek() {
-  const { items } = fetchBoardAndComments();
+async function peek() {
+  const { items } = await fetchBoardAndComments();
   const upNext = items.filter((i) => i.status === "Up Next");
-  const priorityOrder = { critical: 0, high: 1, normal: 2, low: 3 };
-  const typeOrder = { bug: 0, security: 1, ux: 2, enhancement: 3, research: 4 };
+  const priorityOrder = {
+    critical: 0,
+    high: 1,
+    normal: 2,
+    low: 3
+  };
+  const typeOrder = {
+    bug: 0,
+    security: 1,
+    ux: 2,
+    enhancement: 3,
+    research: 4
+  };
   upNext.sort((a, b) => {
     const aPri = Math.min(...a.labels.map((l) => priorityOrder[l] ?? 2));
     const bPri = Math.min(...b.labels.map((l) => priorityOrder[l] ?? 2));
@@ -411,19 +482,19 @@ var args = process.argv.slice(2);
 var cmd = args[0] ?? "--status";
 switch (cmd) {
   case "--status":
-    statusDashboard();
+    await statusDashboard();
     break;
   case "--chain-status":
-    chainStatus(Number(args[1]));
+    await chainStatus(Number(args[1]));
     break;
   case "--resume-detect":
-    resumeDetect(Number(args[1]));
+    await resumeDetect(Number(args[1]));
     break;
   case "--peek":
-    peek();
+    await peek();
     break;
   case "--move":
-    moveIssue(Number(args[1]), args[2]);
+    await moveIssue(Number(args[1]), args[2]);
     break;
   default:
     console.error(
