@@ -23,6 +23,7 @@
   <meta property="og:title" content="Fenrir Ledger — Break the Chain" />
   <meta property="og:description" content="The wolf watches what the issuers hope you forget." />
   <meta property="og:image" content="/static/icon.png" />
+  <meta name="ga4-measurement-id" content="" />
   <title>Fenrir Ledger — Track Every Card. Keep Every Reward.</title>
   <link rel="icon" href="/static/favicon.ico" />
   <!-- GA4 — loads only when measurement ID is configured -->
@@ -1077,6 +1078,23 @@
   window.addEventListener('scroll', function() {
     nav.classList.toggle('scrolled', window.scrollY > 40);
   }, { passive: true });
+})();
+  </script>
+
+  <!-- GA4 — only loads when measurement ID meta tag has a value -->
+  <script>
+(function() {
+  var meta = document.querySelector('meta[name="ga4-measurement-id"]');
+  var id = meta && meta.getAttribute('content');
+  if (!id) return;
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+  document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', id);
 })();
   </script>
 

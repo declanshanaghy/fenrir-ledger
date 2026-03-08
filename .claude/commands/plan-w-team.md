@@ -140,6 +140,10 @@ EOF
 
 # Add to project board
 gh project item-add 1 --owner declanshanaghy --url <issue-url>
+
+# MANDATORY: Set status to "Up Next" (otherwise it lands in "No Status")
+SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
+node "$SCRIPT_DIR/pack-status.mjs" --move <issue-number> up-next
 ```
 
 **After creating all issues:** If any issue references `Blocked by #N`, edit the earlier issue to add a note:
@@ -177,7 +181,7 @@ To start execution:
 1. **Max 5 issues per plan** — if the work is bigger, plan in phases
 2. **Each issue must be self-contained** — one branch, one PR, one agent chain
 3. **Labels are mandatory** — every issue gets one type label and one priority label
-4. **Add to project board** — every issue goes to Project #1 via `gh project item-add`
+4. **Add to project board** — every issue goes to Project #1 via `gh project item-add`, then **immediately set status to "Up Next"** via `pack-status.mjs --move N up-next`
 5. **Sequential creation** — create issues one at a time to capture numbers for dependencies
 6. **No spec files** — the issues ARE the spec. Do not write to `specs/`
 7. **No code** — planning only. Agents do the building via `/fire-next-up`
