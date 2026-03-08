@@ -443,14 +443,16 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         </fieldset>
       )}
 
-      {/* ── Step 1 or Edit Mode: Annual Fee + Sign-up Bonus ─────────── */}
-      {(isEditMode || currentStep === 1) && (
+      {/* ── Step 1/2 or Edit Mode: Annual Fee + Sign-up Bonus ─────────── */}
+      {(isEditMode || currentStep === 1 || currentStep === 2) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Annual Fee */}
           <fieldset className="border border-border rounded-md p-4 space-y-4">
             <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Annual Fee</legend>
 
+            {/* Annual fee amount - only show in Step 1 or edit mode */}
+            {(isEditMode || currentStep === 1) && (
             <div className="space-y-1.5">
               <Label htmlFor="annualFee">Annual fee</Label>
               <Input
@@ -467,6 +469,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
                 </p>
               )}
             </div>
+            )}
 
             {/* Annual fee date - only show in Step 2 or edit mode */}
             {(isEditMode || currentStep === 2) && (
@@ -481,6 +484,9 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           <fieldset className="border border-border rounded-md p-4 space-y-4">
             <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Sign-up Bonus</legend>
 
+          {/* Bonus type, amount, spend - only show in Step 1 or edit mode */}
+          {(isEditMode || currentStep === 1) && (
+          <>
           <div className="space-y-1.5">
             <Label htmlFor="bonusType">Bonus type</Label>
             <Select
@@ -539,6 +545,8 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
               </SelectContent>
             </Select>
           </div>
+          </>
+          )}
 
           {/* Bonus deadline and met - only show in Step 2 or edit mode */}
           {(isEditMode || currentStep === 2) && (
