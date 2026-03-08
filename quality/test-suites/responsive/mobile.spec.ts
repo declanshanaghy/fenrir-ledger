@@ -250,52 +250,45 @@ test.describe("Import Wizard Modal Sizing", () => {
 // Suite 4 — HowlPanel Mobile Behaviour
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("HowlPanel Mobile Behaviour", () => {
-  test("TC-M08: bell button appears in header when urgent cards exist on mobile", async ({
+test.describe("Dashboard Tab Behaviour on Mobile (Issue #279)", () => {
+  test("TC-M08: tab bar is visible on mobile when urgent cards exist", async ({
     page,
   }) => {
-    // Spec (page.tsx): "Mobile (< lg): single column. Bell button (ᚲ) in header
-    // opens HowlPanel as a fixed bottom sheet via AnimatedHowlPanel mobileOpen prop."
-    //
-    // The bell button is rendered by:
-    //   {loaded && urgentCount > 0 && (
-    //     <button className="lg:hidden ..." aria-label="N urgent cards — open urgent panel">
-    //
-    // At 375px, the lg: prefix means this element is visible (lg = 1024px breakpoint).
-    // The button has class "lg:hidden" so it hides at >=1024px and shows below that.
+    // Spec (Issue #279): HowlPanel sidebar and bell button replaced by tab bar.
+    // On mobile, the tab bar renders horizontally scrollable with The Howl + Active tabs.
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, URGENT_CARDS);
     await page.reload({ waitUntil: "networkidle" });
 
-    // The bell button aria-label matches the pattern "{N} urgent card(s) — open urgent panel"
-    const bellButton = page.locator(
-      'button[aria-label*="urgent"][aria-label*="open urgent panel"]'
-    );
-    await expect(bellButton).toBeVisible({ timeout: 5000 });
+    // The tab bar must be visible on mobile
+    const tabList = page.locator('[role="tablist"][aria-label="Card dashboard tabs"]');
+    await expect(tabList).toBeVisible({ timeout: 5000 });
 
-    // Verify it contains the ᚲ rune character
-    const buttonText = await bellButton.textContent();
-    expect(buttonText).toContain("ᚲ");
+    // The Howl tab must be visible and selected by default (has urgent cards)
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toBeVisible();
+    await expect(howlTab).toHaveAttribute("aria-selected", "true");
+
+    // The ᚲ rune must be present in the tab
+    const tabText = await howlTab.textContent();
+    expect(tabText).toContain("ᚲ");
   });
 
-  test("TC-M09: HowlPanel does not render as a persistent inline sidebar on mobile [KNOWN DEFECT DEF-M01]", async ({
+  test("TC-M09: main content area is not constrained by HowlPanel sidebar on mobile [KNOWN DEFECT DEF-M01]", async ({
     page,
   }) => {
-    // Spec (HowlPanel.tsx, page.tsx): "Desktop (lg+): fixed right sidebar alongside
-    // the card grid. Mobile (< lg): collapsible panel toggled by a button."
-    //
-    // The AnimatedHowlPanel desktop panel has class "hidden lg:flex" — at 375px
-    // it should be CSS-hidden. However, main content must still be >= 280px wide.
+    // Spec (Issue #279): HowlPanel sidebar removed — no longer constrains main width.
+    // However, SideNav still causes DEF-M01 (not auto-collapsing at mobile widths).
     //
     // KNOWN DEFECT DEF-M01 (consequence): because the SideNav sidebar is not
     // auto-collapsing at mobile widths (224px at 375px), main renders at only
-    // 151px regardless of whether HowlPanel is hidden. This fails the main
-    // column width check even when HowlPanel is correctly hidden via CSS.
+    // 151px regardless of whether HowlPanel is present. This fails the main
+    // column width check.
     //
     // Root cause: DEF-M01 (SideNav not auto-collapsing on mobile).
-    // This test will pass once DEF-M01 is resolved.
+    // This test will pass once DEF-M01 is fixed.
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
@@ -306,52 +299,34 @@ test.describe("HowlPanel Mobile Behaviour", () => {
     const mainBox = await main.boundingBox();
     expect(mainBox).not.toBeNull();
 
-    // Spec: main content must be >= 280px at 375px viewport (HowlPanel hidden via CSS).
+    // Spec: main content must be >= 280px at 375px viewport.
     // Currently 151px — DEF-M01.
     expect(mainBox!.width).toBeGreaterThanOrEqual(280);
   });
 
-  test("TC-M10: HowlPanel bottom sheet opens when bell button is tapped", async ({
+  test("TC-M10: switching tabs on mobile works correctly", async ({
     page,
   }) => {
-    // Spec (page.tsx, HowlPanel.tsx): tapping the bell button sets mobileOpen=true,
-    // which renders AnimatedHowlPanel in bottom-sheet mode (fixed, bottom-0).
-    // The bottom sheet must become visible after tap.
+    // Spec (Issue #279): The Howl tab and Active tab must be clickable on mobile.
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, URGENT_CARDS);
     await page.reload({ waitUntil: "networkidle" });
 
-    const bellButton = page.locator(
-      'button[aria-label*="urgent"][aria-label*="open urgent panel"]'
-    );
-    await expect(bellButton).toBeVisible({ timeout: 5000 });
+    // The Howl tab is default (urgent cards present)
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toHaveAttribute("aria-selected", "true");
 
-    // Tap the bell button
-    await bellButton.click();
+    // Click Active tab
+    const activeTab = page.locator('[role="tab"][id="tab-active"]');
+    await activeTab.click();
+    await expect(activeTab).toHaveAttribute("aria-selected", "true");
+    await expect(howlTab).toHaveAttribute("aria-selected", "false");
 
-    // After click, the bottom sheet (mobile HowlPanel) must become visible.
-    // The mobile panel is rendered as a fixed overlay at the bottom.
-    // It contains the urgent card list — we look for a close button or panel
-    // indicator that appears in mobile mode.
-    //
-    // The AnimatedHowlPanel mobile sheet has a close button and renders the
-    // same urgent card rows as the desktop panel.
-    await page.waitForTimeout(400); // Allow Framer Motion animation to begin
-
-    // Verify the panel content is now visible somewhere in the page
-    // The HowlPanel contains urgent card rows — at least one should be visible
-    // HowlPanel renders a header with "Urgent Deadlines" or similar text
-    const panelContent = page.locator(
-      'text=Urgent, text=urgent, [aria-label*="Urgent"], [aria-label*="urgent"]'
-    ).first();
-
-    // The panel must have rendered something related to urgency
-    const pageContent = await page.content();
-    // After opening, either a close button or additional urgent indicators appear
-    // We verify the page has more content related to the urgent cards
-    expect(pageContent).toContain("ᚲ");
+    // Active panel must be visible
+    const activePanel = page.locator('[role="tabpanel"][id="panel-active"]');
+    await expect(activePanel).not.toHaveAttribute("hidden");
   });
 });
 

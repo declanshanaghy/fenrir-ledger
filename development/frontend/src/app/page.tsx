@@ -9,14 +9,12 @@
  * users, or the anonymous UUID from localStorage("fenrir:household")).
  * Loads all active cards from localStorage under the per-household key.
  *
- * Layout (Sprint 3.4 — HowlPanel):
- *   Desktop (lg+): two-column flex row.
- *     Left: card grid (flex-1, min-w-0)
- *     Right: HowlPanel sidebar (w-72, shrink-0) — slides in when urgent cards exist
- *   Mobile (< lg): single column. Bell button (ᚲ) in header opens HowlPanel
- *     as a fixed bottom sheet via AnimatedHowlPanel mobileOpen prop.
+ * Layout (Issue #279 — tabbed redesign):
+ *   Card grid is now inside a tabbed layout inside the Dashboard component.
+ *   The HowlPanel sidebar and mobile bottom sheet have been replaced by the
+ *   tab bar inside Dashboard (The Howl tab + Active tab).
  *
- * See AnimatedHowlPanel in components/layout/HowlPanel.tsx for animation spec.
+ * See Dashboard.tsx for tab layout spec.
  */
 
 import { useEffect, useState } from "react";
@@ -25,7 +23,6 @@ import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { CardSkeletonGrid } from "@/components/dashboard/CardSkeletonGrid";
-import { AnimatedHowlPanel } from "@/components/layout/HowlPanel";
 import { ImportWizard } from "@/components/sheets/ImportWizard";
 import { AuthGate } from "@/components/shared/AuthGate";
 import { UpsellBanner } from "@/components/entitlement/UpsellBanner";
@@ -38,8 +35,6 @@ export default function DashboardPage() {
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(false);
-  // Mobile HowlPanel bottom-sheet visibility
-  const [mobileHowlOpen, setMobileHowlOpen] = useState(false);
   // Import wizard visibility
   const [importWizardOpen, setImportWizardOpen] = useState(false);
 
@@ -86,10 +81,6 @@ export default function DashboardPage() {
     return () => window.removeEventListener("fenrir:open-import-wizard", handleOpenWizard);
   }, []);
 
-  const urgentCount = cards.filter(
-    (c) => c.status === "fee_approaching" || c.status === "promo_expiring" || c.status === "overdue"
-  ).length;
-
   const loaded = !isLoading && status !== "loading";
 
   function handleConfirmImport(importedCards: Omit<Card, "householdId">[]) {
@@ -126,33 +117,6 @@ export default function DashboardPage() {
         </h1>
 
         <div className="flex items-center gap-2">
-          {/* Mobile bell button — ᚲ Kenaz rune as urgency indicator.
-              Shown only on mobile (lg:hidden) when urgent cards exist.
-              On desktop the HowlPanel is inline; no button needed. */}
-          {loaded && urgentCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setMobileHowlOpen(true)}
-              aria-label={`${urgentCount} urgent card${urgentCount === 1 ? "" : "s"} — open urgent panel`}
-              className="lg:hidden relative inline-flex items-center justify-center h-9 w-9 rounded-sm border border-border text-muted-foreground hover:border-gold/50 hover:text-gold transition-colors"
-            >
-              <span
-                aria-hidden="true"
-                className="text-base leading-none"
-                style={{ fontFamily: "serif" }}
-              >
-                ᚲ
-              </span>
-              {/* Urgent count badge */}
-              <span
-                className="absolute -top-1.5 -right-1.5 h-4 w-4 flex items-center justify-center rounded-full bg-[hsl(var(--realm-muspel))] text-xs font-mono font-bold text-white"
-                aria-hidden="true"
-              >
-                {urgentCount}
-              </span>
-            </button>
-          )}
-
           {/* Import button — shown in toolbar only when cards exist and user is signed in */}
           {hasCards && (
             <AuthGate>
@@ -187,45 +151,23 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Main content row: card grid + HowlPanel side-by-side on desktop */}
-      <div className="flex gap-6 items-start">
-        {/* Card grid — takes all available space */}
-        <div className="flex-1 min-w-0">
-          {!loaded ? (
-            /* Only show skeleton if loading takes > 500ms to prevent flash */
-            showSkeleton ? (
-              /* Skeleton shimmer grid — replaces plain loading text.
-                 CardSkeletonGrid renders a structural mirror of the real card grid
-                 with a Norse gold shimmer animation (saga-shimmer in globals.css).
-                 "The Norns are weaving..." caption still appears beneath the grid. */
-              <CardSkeletonGrid count={6} />
-            ) : null
-          ) : (
-            /* saga-reveal CSS class is no longer needed here — Framer Motion
-               AnimatedCardGrid inside Dashboard handles the staggered entrance. */
-            <Dashboard cards={cards} />
-          )}
-        </div>
-
-        {/* HowlPanel — desktop inline sidebar + mobile bottom sheet.
-            AnimatedHowlPanel handles both:
-              - Desktop: AnimatePresence slide-in from right (hidden lg:flex inside)
-              - Mobile: fixed bottom sheet when mobileOpen === true
-            The outer div reserves the sidebar slot on lg+ so the card grid
-            doesn't jump when the panel appears/disappears. */}
-        {loaded && (
-          <AnimatedHowlPanel
-            cards={cards}
-            mobileOpen={mobileHowlOpen}
-            onMobileClose={() => setMobileHowlOpen(false)}
-          />
-        )}
-      </div>
-
       {/* Sign-in nudge — subtle muted text when zero cards; full banner when has cards.
-          Hidden entirely for authenticated users.
-          Rendered AFTER Dashboard/EmptyState so visual order is: heading → CTA → nudge */}
+          Hidden entirely for authenticated users. */}
       <SignInNudge hasCards={hasCards} />
+
+      {/* Dashboard — tabbed card layout (The Howl tab + Active tab) */}
+      {!loaded ? (
+        /* Only show skeleton if loading takes > 500ms to prevent flash */
+        showSkeleton ? (
+          /* Skeleton shimmer grid — replaces plain loading text.
+             CardSkeletonGrid renders a structural mirror of the real card grid
+             with a Norse gold shimmer animation (saga-shimmer in globals.css).
+             "The Norns are weaving..." caption still appears beneath the grid. */
+          <CardSkeletonGrid count={6} />
+        ) : null
+      ) : (
+        <Dashboard cards={cards} />
+      )}
 
       {/* Import Wizard modal */}
       <ImportWizard

@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Sprint 5 Wireframes
+
+| Story | File | Description |
+|-------|------|-------------|
+| #279 — Dashboard Tabs Redesign | [wireframes/app/dashboard-tabs.html](wireframes/app/dashboard-tabs.html) | Tabbed dashboard layout replacing grid + Howl side panel: 6 scenarios covering desktop Howl tab active, desktop Active tab active, empty Howl state, empty Howl panel content, mobile Howl tab, mobile Active tab; interaction spec covering tab switching, default tab logic, badge updates, urgency styling |
+
+---
+
 ## Sprint 4 Wireframes
 
 | Story | File | Description |
@@ -29,6 +37,7 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 |------|------|-------------|
 | **app** | | |
 | Dashboard — The Ledger of Fates | [wireframes/app/dashboard.html](wireframes/app/dashboard.html) | TopBar (row 1) + sidebar shell + card grid + summary bar + footer |
+| Dashboard — Tabs Redesign | [wireframes/app/dashboard-tabs.html](wireframes/app/dashboard-tabs.html) | Tabbed layout (Issue #279): The Howl tab + Active tab replacing grid + side panel; 6 scenarios; interaction spec |
 | Valhalla — Hall of the Honored Dead | [wireframes/app/valhalla.html](wireframes/app/valhalla.html) | Tombstone cards, filter bar, empty state |
 | **chrome** | | |
 | TopBar — Anonymous + Signed-In States | [wireframes/chrome/topbar.html](wireframes/chrome/topbar.html) | Global sticky header: 7 scenarios covering anonymous ᛟ rune avatar + upsell prompt, signed-in Google avatar + dropdown, and the avatar transition animation (anonymous-first model, Sprint 3.2) |

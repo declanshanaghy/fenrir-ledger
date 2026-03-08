@@ -1,25 +1,24 @@
 /**
- * HowlPanel Test Suite — Fenrir Ledger
+ * Dashboard Tabs — The Howl Tab Test Suite — Fenrir Ledger
  * Authored by Loki, QA Tester of the Pack
  *
- * Validates the HowlPanel component against the design spec:
- *   - Hidden when no urgent cards: no ᚲ bell and no "The Howl" header visible on desktop
- *   - Shows when urgent cards seeded: panel/bell appears with count
- *   - Urgent cards listed with card names and "days" remaining text
- *   - Most urgent first: card with fewer days remaining appears above card with more days
+ * Updated for Issue #279: Redesign card dashboard into tabs.
+ * The HowlPanel sidebar has been replaced by a tab bar with two tabs:
+ *   - "The Howl" tab — cards needing attention (fee_approaching, promo_expiring, overdue)
+ *   - "Active" tab   — cards in good standing
+ *
+ * Each card appears in exactly one tab. No duplication across tabs.
+ * The Howl tab is the default when it has cards.
+ * Active tab is the default when The Howl is empty.
  *
  * Spec references:
- *   - development/frontend/src/components/layout/HowlPanel.tsx
- *   - AnimatedHowlPanel: desktop hidden lg:flex, only shown when hasUrgent
- *   - Mobile: bell button ᚲ in dashboard header (lg:hidden) when urgentCount > 0
- *   - UrgentRow: daysLabel shows "N days" for each urgent card
- *   - Sorted ascending by daysRemaining (fewest first = most urgent at top)
+ *   - development/frontend/src/components/dashboard/Dashboard.tsx
+ *   - ux/wireframes/app/dashboard-tabs.html
+ *   - Issue #279 acceptance criteria
  *
  * Viewport strategy:
- *   - Desktop (1280px wide): desktop HowlPanel sidebar visible
- *   - Mobile (375px wide): desktop panel hidden; bell button (ᚲ) in header visible
- *
- * All assertions derived from the design spec — not from observed code output.
+ *   - Desktop (1280px wide): tab bar visible, both tabs clickable
+ *   - Mobile (375px wide): tab bar horizontally scrollable, both tabs accessible
  */
 
 import { test, expect } from "@playwright/test";
@@ -50,197 +49,349 @@ async function setup(
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Suite: Hidden when no urgent cards (desktop viewport)
+// Suite: Tab bar visible when cards exist
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("HowlPanel — Hidden when no urgent cards (desktop)", () => {
+test.describe("Dashboard Tabs — Tab bar visible with cards", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
-  test("desktop HowlPanel is NOT visible when only active cards are seeded", async ({
+  test("tab bar renders with 'The Howl' and 'Active' tabs when cards exist", async ({
+    page,
+  }) => {
+    await setup(page, [makeCard({ cardName: "Some Card" })]);
+
+    const tabList = page.locator('[role="tablist"][aria-label="Card dashboard tabs"]');
+    await expect(tabList).toBeVisible();
+
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    const activeTab = page.locator('[role="tab"][id="tab-active"]');
+    await expect(howlTab).toBeVisible();
+    await expect(activeTab).toBeVisible();
+  });
+
+  test("'The Howl' tab contains ᚲ Kenaz rune", async ({ page }) => {
+    await setup(page, [makeUrgentCard({ cardName: "Urgent Test Card" })]);
+
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toContainText("ᚲ");
+  });
+
+  test("'The Howl' tab contains 'The Howl' label", async ({ page }) => {
+    await setup(page, [makeUrgentCard({ cardName: "Urgent Test Card" })]);
+
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toContainText("The Howl");
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite: Default tab selection
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("Dashboard Tabs — Default tab selection", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("The Howl tab is default (aria-selected=true) when urgent cards exist", async ({
     page,
   }) => {
     await setup(page, [
-      makeCard({ cardName: "Calm Card A" }),
-      makeCard({ cardName: "Calm Card B" }),
+      makeUrgentCard({ cardName: "Urgent Card" }),
+      makeCard({ cardName: "Active Card" }),
     ]);
 
-    // Spec: AnimatedHowlPanel only renders hidden lg:flex div when hasUrgent.
-    // When no urgent cards, AnimatePresence removes the motion.div from DOM.
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).not.toBeVisible();
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toHaveAttribute("aria-selected", "true");
+
+    const activeTab = page.locator('[role="tab"][id="tab-active"]');
+    await expect(activeTab).toHaveAttribute("aria-selected", "false");
   });
 
-  test("mobile bell button (ᚲ) is NOT visible when only active cards are seeded", async ({
+  test("Active tab is default (aria-selected=true) when no urgent cards exist", async ({
     page,
   }) => {
-    await setup(page, [makeCard({ cardName: "Quiet Card" })]);
+    await setup(page, [
+      makeCard({ cardName: "Active Card A" }),
+      makeCard({ cardName: "Active Card B" }),
+    ]);
 
-    // Spec: bell button in dashboard header is lg:hidden AND only rendered
-    // when loaded && urgentCount > 0.  With zero urgent cards it never renders.
-    const bellButton = page.locator(
-      'button[aria-label*="urgent card"]'
-    );
+    const activeTab = page.locator('[role="tab"][id="tab-active"]');
+    await expect(activeTab).toHaveAttribute("aria-selected", "true");
+
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toHaveAttribute("aria-selected", "false");
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite: Cards appear in correct tab (no duplication)
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("Dashboard Tabs — Card categorization", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("fee_approaching card appears in The Howl tab panel", async ({ page }) => {
+    await setup(page, [makeUrgentCard({ cardName: "Fee Due Card" })]);
+
+    // The Howl tab should be active by default (has urgent cards)
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    await expect(howlPanel).not.toHaveAttribute("hidden");
+    await expect(howlPanel).toContainText("Fee Due Card");
+  });
+
+  test("promo_expiring card appears in The Howl tab panel", async ({ page }) => {
+    await setup(page, [makePromoCard({ cardName: "Promo Expiring Card" })]);
+
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    await expect(howlPanel).not.toHaveAttribute("hidden");
+    await expect(howlPanel).toContainText("Promo Expiring Card");
+  });
+
+  test("active card appears in Active tab panel (not in Howl panel)", async ({ page }) => {
+    await setup(page, [
+      makeCard({ cardName: "Calm Active Card" }),
+    ]);
+
+    // No urgent cards → Active tab is default
+    const activePanel = page.locator('[role="tabpanel"][id="panel-active"]');
+    await expect(activePanel).not.toHaveAttribute("hidden");
+    await expect(activePanel).toContainText("Calm Active Card");
+
+    // Switch to Howl tab — active card should NOT be there
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await howlTab.click();
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    const howlText = await howlPanel.textContent();
+    expect(howlText).not.toContain("Calm Active Card");
+  });
+
+  test("mixed cards: fee_approaching in Howl, active in Active — no duplication", async ({
+    page,
+  }) => {
+    await setup(page, [
+      makeUrgentCard({ cardName: "Urgent Fee Card" }),
+      makeCard({ cardName: "Normal Active Card" }),
+    ]);
+
+    // Howl tab is default (has urgent cards)
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    await expect(howlPanel).not.toHaveAttribute("hidden");
+    await expect(howlPanel).toContainText("Urgent Fee Card");
+
+    // Urgent card should NOT appear in Howl panel text as the Active card
+    const howlText = await howlPanel.textContent();
+    expect(howlText).not.toContain("Normal Active Card");
+
+    // Switch to Active tab
+    const activeTab = page.locator('[role="tab"][id="tab-active"]');
+    await activeTab.click();
+    const activePanel = page.locator('[role="tabpanel"][id="panel-active"]');
+    const activeText = await activePanel.textContent();
+    expect(activeText).toContain("Normal Active Card");
+    expect(activeText).not.toContain("Urgent Fee Card");
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite: Urgency bars in The Howl tab
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("Dashboard Tabs — Urgency bars in Howl tab", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("cards in The Howl tab display urgency bars", async ({ page }) => {
+    await setup(page, [makeUrgentCard({ cardName: "Urgent With Bar" })]);
+
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    await expect(howlPanel).not.toHaveAttribute("hidden");
+
+    // Urgency bar has data-testid="urgency-bar"
+    const urgencyBar = howlPanel.locator('[data-testid="urgency-bar"]').first();
+    await expect(urgencyBar).toBeVisible();
+  });
+
+  test("active cards in Active tab do NOT display urgency bars", async ({ page }) => {
+    await setup(page, [makeCard({ cardName: "Normal Card" })]);
+
+    // Switch to Active tab (which is default here)
+    const activePanel = page.locator('[role="tabpanel"][id="panel-active"]');
+    await expect(activePanel).not.toHaveAttribute("hidden");
+
+    const urgencyBars = activePanel.locator('[data-testid="urgency-bar"]');
+    await expect(urgencyBars).toHaveCount(0);
+  });
+
+  test("urgency bar shows 'FEE APPROACHING' label for fee_approaching cards", async ({
+    page,
+  }) => {
+    await setup(page, [makeUrgentCard({ cardName: "Fee Bar Card" })]);
+
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    const urgencyBar = howlPanel.locator('[data-testid="urgency-bar"]').first();
+    await expect(urgencyBar).toContainText("FEE APPROACHING");
+  });
+
+  test("urgency bar shows 'PROMO EXPIRING' label for promo_expiring cards", async ({
+    page,
+  }) => {
+    await setup(page, [makePromoCard({ cardName: "Promo Bar Card" })]);
+
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    const urgencyBar = howlPanel.locator('[data-testid="urgency-bar"]').first();
+    await expect(urgencyBar).toContainText("PROMO EXPIRING");
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite: Tab badge counts
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("Dashboard Tabs — Badge counts", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("Howl tab badge shows count of urgent cards", async ({ page }) => {
+    await setup(page, [
+      makeUrgentCard({ cardName: "Fee A" }),
+      makePromoCard({ cardName: "Promo B" }),
+    ]);
+
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    // Badge is the span inside the tab with aria-label like "2 cards"
+    const badge = howlTab.locator('span[aria-label*="cards"], span[aria-label*="card"]').first();
+    await expect(badge).toContainText("2");
+  });
+
+  test("Active tab badge shows count of non-urgent cards", async ({ page }) => {
+    await setup(page, [
+      makeUrgentCard({ cardName: "Urgent One" }),
+      makeCard({ cardName: "Active A" }),
+      makeCard({ cardName: "Active B" }),
+    ]);
+
+    const activeTab = page.locator('[role="tab"][id="tab-active"]');
+    const badge = activeTab.locator('span[aria-label*="cards"], span[aria-label*="card"]').first();
+    await expect(badge).toContainText("2");
+  });
+
+  test("Howl badge shows 0 at reduced opacity when no urgent cards", async ({ page }) => {
+    await setup(page, [makeCard({ cardName: "Calm Card" })]);
+
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    const badge = howlTab.locator('span').filter({ hasText: "0" }).first();
+    await expect(badge).toBeVisible();
+    await expect(badge).toContainText("0");
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite: Tab switching
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("Dashboard Tabs — Tab switching", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("clicking Active tab switches panel content", async ({ page }) => {
+    await setup(page, [
+      makeUrgentCard({ cardName: "Urgent Card" }),
+      makeCard({ cardName: "Calm Card" }),
+    ]);
+
+    // Howl tab is default
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    await expect(howlPanel).not.toHaveAttribute("hidden");
+
+    // Click Active tab
+    const activeTab = page.locator('[role="tab"][id="tab-active"]');
+    await activeTab.click();
+
+    // Active panel should now be visible, Calm Card visible
+    const activePanel = page.locator('[role="tabpanel"][id="panel-active"]');
+    await expect(activePanel).not.toHaveAttribute("hidden");
+    await expect(activePanel).toContainText("Calm Card");
+
+    // Howl panel should now be hidden
+    await expect(howlPanel).toHaveAttribute("hidden", "");
+  });
+
+  test("clicking back to Howl tab restores Howl panel", async ({ page }) => {
+    await setup(page, [
+      makeUrgentCard({ cardName: "Urgent Card" }),
+      makeCard({ cardName: "Calm Card" }),
+    ]);
+
+    // Click Active tab
+    const activeTab = page.locator('[role="tab"][id="tab-active"]');
+    await activeTab.click();
+
+    // Click Howl tab
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await howlTab.click();
+
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    await expect(howlPanel).not.toHaveAttribute("hidden");
+    await expect(howlPanel).toContainText("Urgent Card");
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite: Empty states
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("Dashboard Tabs — Empty states", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("Howl tab shows empty state ('The wolf is silent.') when no urgent cards and user clicks it", async ({
+    page,
+  }) => {
+    await setup(page, [makeCard({ cardName: "Calm Only" })]);
+
+    // Active tab is default (no urgent cards). Click The Howl tab to see empty state.
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await howlTab.click();
+
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    await expect(howlPanel).not.toHaveAttribute("hidden");
+    await expect(howlPanel).toContainText("The wolf is silent.");
+  });
+
+  test("Ragnarök mode: Howl tab shows 'Ragnarök Approaches' when ≥5 urgent cards", async ({
+    page,
+  }) => {
+    // URGENT_CARDS has 5 cards → triggers Ragnarök threshold
+    await setup(page, URGENT_CARDS);
+
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toContainText("Ragnarök Approaches");
+    await expect(howlTab).toContainText("ᚲ");
+  });
+
+  test("The old HowlPanel aside is NOT present in the DOM", async ({ page }) => {
+    await setup(page, [makeUrgentCard({ cardName: "Some Urgent Card" })]);
+
+    // Spec: HowlPanel sidebar has been replaced by tab bar.
+    // The aside with aria-label="Urgent deadlines" must NOT exist.
+    const oldPanel = page.locator('aside[aria-label="Urgent deadlines"]');
+    await expect(oldPanel).not.toBeAttached();
+  });
+
+  test("mobile bell button for Howl is NOT present (replaced by tab bar)", async ({
+    page,
+  }) => {
+    await setup(page, [makeUrgentCard({ cardName: "Urgent Card" })]);
+
+    // Spec: mobile bell button was removed — tabs replace the bottom drawer.
+    const bellButton = page.locator('button[aria-label*="urgent card"]');
     await expect(bellButton).not.toBeAttached();
   });
-
-  test("'The Howl' text is not visible on desktop with no urgent cards", async ({
-    page,
-  }) => {
-    await setup(page, [makeCard({ cardName: "Silent Card" })]);
-
-    // Spec: PanelHeader renders "The Howl" label only inside the HowlPanel aside.
-    // Since the panel is removed from DOM when !hasUrgent, this text should be absent.
-    const howlHeader = page.locator("text=The Howl");
-    await expect(howlHeader).not.toBeVisible();
-  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// Suite: Shows when urgent cards exist (desktop viewport)
+// Suite: Sort order in Howl tab
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("HowlPanel — Shows with urgent cards (desktop)", () => {
+test.describe("Dashboard Tabs — Sort order in Howl tab", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
-  test("desktop HowlPanel aside is visible when URGENT_CARDS are seeded", async ({
-    page,
-  }) => {
-    await setup(page, URGENT_CARDS);
-
-    // Spec: AnimatedHowlPanel renders lg:flex motion.div when hasUrgent.
-    // HowlPanel inside that div has aria-label="Urgent deadlines".
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toBeVisible();
-  });
-
-  test("HowlPanel shows 'The Howl' heading when urgent cards exist (non-Ragnarok)", async ({
-    page,
-  }) => {
-    // Use exactly 3 urgent cards — below the Ragnarök threshold of 5.
-    // Spec: PanelHeader h2 text = "The Howl" when !ragnarokActive.
-    // With ≥5 urgent cards Ragnarök activates and the heading changes to
-    // "Ragnarök Approaches" — that is tested separately.
-    await setup(page, [
-      makeUrgentCard({ issuerId: "chase", cardName: "Below Threshold A" }),
-      makeUrgentCard({ issuerId: "amex", cardName: "Below Threshold B" }),
-      makePromoCard({ issuerId: "citibank", cardName: "Below Threshold C" }),
-    ]);
-
-    // Spec: PanelHeader h2 text = "The Howl" (when !ragnarokActive)
-    await expect(page.locator("text=The Howl")).toBeVisible();
-  });
-
-  test("HowlPanel shows the ᚲ (Kenaz) rune in the panel header (non-Ragnarok)", async ({
-    page,
-  }) => {
-    // Use 3 urgent cards — below the 5-card Ragnarök threshold.
-    // Above threshold the rune changes to ᚠ (Fehu/fire) for Ragnarök mode.
-    await setup(page, [
-      makeUrgentCard({ issuerId: "chase", cardName: "Rune Test A" }),
-      makeUrgentCard({ issuerId: "amex", cardName: "Rune Test B" }),
-      makePromoCard({ issuerId: "citibank", cardName: "Rune Test C" }),
-    ]);
-
-    // Spec: PanelHeader renders ᚲ rune (torch) in normal mode
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toContainText("ᚲ");
-  });
-
-  test("HowlPanel shows 'Ragnarök Approaches' heading when ≥5 urgent cards (Ragnarök mode)", async ({
-    page,
-  }) => {
-    // URGENT_CARDS has exactly 5 → triggers Ragnarök threshold (≥5)
-    await setup(page, URGENT_CARDS);
-
-    // Spec: PanelHeader h2 = "Ragnarök Approaches" when ragnarokActive
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toBeVisible();
-    await expect(howlPanel).toContainText("Ragnarök Approaches");
-    // Spec: rune changes to ᚠ (Fehu) in Ragnarök mode
-    await expect(howlPanel).toContainText("ᚠ");
-  });
-
-  test("urgent count badge shows the number of urgent cards", async ({ page }) => {
-    await setup(page, URGENT_CARDS);
-
-    // URGENT_CARDS has 5 cards: 3 fee_approaching + 2 promo_expiring
-    // Spec: count badge data-slot="count" aria-label="{N} urgent cards"
-    const countBadge = page.locator(
-      '[aria-label="5 urgent cards"]'
-    );
-    await expect(countBadge).toBeVisible();
-  });
-});
-
-// ════════════════════════════════════════════════════════════════════════════
-// Suite: Urgent cards listed with names and days remaining
-// ════════════════════════════════════════════════════════════════════════════
-
-test.describe("HowlPanel — Card names and days remaining", () => {
-  test.use({ viewport: { width: 1280, height: 800 } });
-
-  test("urgent card names appear in the HowlPanel", async ({ page }) => {
-    await setup(page, [
-      makeUrgentCard({ cardName: "Fee Due Immediately" }),
-      makePromoCard({ cardName: "Bonus Expiring Soon" }),
-    ]);
-
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toBeVisible();
-
-    // Spec: UrgentRow renders card.cardName in p.font-heading
-    await expect(howlPanel).toContainText("Fee Due Immediately");
-    await expect(howlPanel).toContainText("Bonus Expiring Soon");
-  });
-
-  test("days remaining text is visible for urgent cards", async ({ page }) => {
-    await setup(page, [makeUrgentCard({ cardName: "Days Test Card" })]);
-
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toBeVisible();
-
-    // Spec: daysLabel format is "N days" (or "1 day" or "Overdue") displayed in
-    // UrgentRow's days-remaining span (data-slot="count" inside a card row article).
-    // makeUrgentCard sets annualFeeDate 30 days from now → "30 days"
-    // Note: the panel header also has a data-slot="count" badge (the card count).
-    // We target the days slot specifically within an article (card row).
-    const cardRow = howlPanel.locator("article").first();
-    await expect(cardRow).toBeVisible();
-    const daysSlot = cardRow.locator('[data-slot="count"]');
-    await expect(daysSlot).toBeVisible();
-    const daysText = await daysSlot.textContent();
-    expect(daysText).toMatch(/\d+\s+day|Overdue/);
-  });
-
-  test("type label 'Annual Fee' appears for fee_approaching cards", async ({
-    page,
-  }) => {
-    await setup(page, [makeUrgentCard({ cardName: "Fee Label Card" })]);
-
-    // Spec: UrgentRow typeLabel = "Annual Fee" when isFee = true
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toContainText("Annual Fee");
-  });
-
-  test("type label 'Promo Deadline' appears for promo_expiring cards", async ({
-    page,
-  }) => {
-    await setup(page, [makePromoCard({ cardName: "Promo Label Card" })]);
-
-    // Spec: UrgentRow typeLabel = "Promo Deadline" when !isFee
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toContainText("Promo Deadline");
-  });
-});
-
-// ════════════════════════════════════════════════════════════════════════════
-// Suite: Most urgent card appears first (sorting)
-// ════════════════════════════════════════════════════════════════════════════
-
-test.describe("HowlPanel — Sort order: most urgent first", () => {
-  test.use({ viewport: { width: 1280, height: 800 } });
-
-  test("card with fewer days remaining appears above card with more days remaining", async ({
+  test("card with fewer days remaining appears above card with more days remaining in Howl tab", async ({
     page,
   }) => {
     // Build two urgent cards with clearly different deadlines:
@@ -262,18 +413,17 @@ test.describe("HowlPanel — Sort order: most urgent first", () => {
 
     await setup(page, [urgentInFortyFiveDays, urgentInTenDays]); // seeded in reverse order
 
-    const howlPanel = page.locator('aside[aria-label="Urgent deadlines"]');
-    await expect(howlPanel).toBeVisible();
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    await expect(howlPanel).not.toHaveAttribute("hidden");
 
-    // Get positions of the two card names within the panel
-    const firstCardElem = howlPanel.locator('p.font-heading:has-text("Urgent In Ten Days")');
-    const secondCardElem = howlPanel.locator('p.font-heading:has-text("Urgent In Forty Five Days")');
+    const firstCardName = howlPanel.locator('text=Urgent In Ten Days').first();
+    const secondCardName = howlPanel.locator('text=Urgent In Forty Five Days').first();
 
-    await expect(firstCardElem).toBeVisible();
-    await expect(secondCardElem).toBeVisible();
+    await expect(firstCardName).toBeVisible();
+    await expect(secondCardName).toBeVisible();
 
-    const firstBox = await firstCardElem.boundingBox();
-    const secondBox = await secondCardElem.boundingBox();
+    const firstBox = await firstCardName.boundingBox();
+    const secondBox = await secondCardName.boundingBox();
 
     expect(firstBox).not.toBeNull();
     expect(secondBox).not.toBeNull();
@@ -284,61 +434,44 @@ test.describe("HowlPanel — Sort order: most urgent first", () => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// Suite: Mobile bell button (ᚲ)
+// Suite: Mobile tab bar
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("HowlPanel — Mobile bell button", () => {
+test.describe("Dashboard Tabs — Mobile (375px)", () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
-  test("ᚲ bell button is visible on mobile when urgent cards exist", async ({
-    page,
-  }) => {
+  test("tab bar is visible on mobile when cards exist", async ({ page }) => {
     await setup(page, [makeUrgentCard({ cardName: "Mobile Urgent Card" })]);
 
-    // Spec: mobile bell button is lg:hidden but visible on < lg viewports.
-    // It renders only when loaded && urgentCount > 0.
-    const bellButton = page.locator('button[aria-label*="urgent card"]');
-    await expect(bellButton).toBeVisible();
+    const tabList = page.locator('[role="tablist"][aria-label="Card dashboard tabs"]');
+    await expect(tabList).toBeVisible();
   });
 
-  test("ᚲ bell button shows the urgent count badge", async ({ page }) => {
+  test("both tabs are accessible on mobile", async ({ page }) => {
     await setup(page, [
-      makeUrgentCard({ cardName: "Mobile Fee Card A" }),
-      makeUrgentCard({ cardName: "Mobile Fee Card B" }),
+      makeUrgentCard({ cardName: "Mobile Urgent" }),
+      makeCard({ cardName: "Mobile Active" }),
     ]);
 
-    // Spec: badge span -top-1.5 -right-1.5 shows urgentCount
-    const bellButton = page.locator('button[aria-label*="2 urgent"]');
-    await expect(bellButton).toBeVisible();
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    const activeTab = page.locator('[role="tab"][id="tab-active"]');
+    await expect(howlTab).toBeVisible();
+    await expect(activeTab).toBeVisible();
   });
 
-  test("bell button is NOT visible on mobile when only active cards seeded", async ({
-    page,
-  }) => {
-    await setup(page, [makeCard({ cardName: "Quiet Mobile Card" })]);
+  test("The Howl tab is default on mobile when urgent cards exist", async ({ page }) => {
+    await setup(page, [makeUrgentCard({ cardName: "Mobile Fee Card" })]);
 
-    // Spec: button only rendered when urgentCount > 0
-    const bellButton = page.locator('button[aria-label*="urgent card"]');
-    await expect(bellButton).not.toBeAttached();
+    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
+    await expect(howlTab).toHaveAttribute("aria-selected", "true");
   });
 
-  test("clicking bell button on mobile opens the HowlPanel bottom sheet", async ({
-    page,
-  }) => {
-    await setup(page, [makeUrgentCard({ cardName: "Mobile Sheet Card" })]);
+  test("cards in Howl tab show urgency bars on mobile", async ({ page }) => {
+    await setup(page, [makeUrgentCard({ cardName: "Mobile Urgent Card" })]);
 
-    const bellButton = page.locator('button[aria-label*="urgent card"]');
-    await bellButton.click();
-
-    // Spec: mobileOpen=true → AnimatedHowlPanel renders fixed bottom sheet.
-    // The mobile sheet renders a second HowlPanel aside (the desktop panel
-    // may also render even on mobile viewports when the component is mounted).
-    // The mobile sheet has class "rounded-t-sm rounded-b-none" per AnimatedHowlPanel.
-    // We target the mobile-specific aside with those rounded corner classes.
-    const mobileSheet = page.locator('aside[aria-label="Urgent deadlines"].rounded-t-sm');
-    await expect(mobileSheet).toBeVisible();
-
-    // The seeded card should appear in the open sheet
-    await expect(mobileSheet).toContainText("Mobile Sheet Card");
+    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
+    await expect(howlPanel).not.toHaveAttribute("hidden");
+    const urgencyBar = howlPanel.locator('[data-testid="urgency-bar"]').first();
+    await expect(urgencyBar).toBeVisible();
   });
 });
