@@ -42,7 +42,12 @@ All defects MUST be filed as GitHub Issues per `quality/issue-template.md`.
 1. Find defect → file GitHub Issue immediately
 2. Hand off: `"FiremanDecko, fix #N: <summary>"`
 3. Reference Issue URL in QA verdict: `### DEF-001 [HIGH] — Desc / GitHub Issue: #N`
-4. After `gh issue create`, add to Project #1
+4. After `gh issue create`, add to Project #1, then set status to "Up Next":
+   ```
+   gh project item-add 1 --owner declanshanaghy --url <issue-url>
+   SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
+   node "$SCRIPT_DIR/pack-status.mjs" --move <issue-number> up-next
+   ```
 
 A defect without a GitHub Issue is untracked.
 

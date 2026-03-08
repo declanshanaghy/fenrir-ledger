@@ -96,6 +96,10 @@ EOF
 # 2. Add to project board
 gh project item-add 1 --owner declanshanaghy \
   --url "https://github.com/declanshanaghy/fenrir-ledger/issues/ISSUE_NUMBER"
+
+# 3. MANDATORY: Set status to "Up Next" (otherwise it lands in "No Status")
+SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
+node "$SCRIPT_DIR/pack-status.mjs" --move ISSUE_NUMBER up-next
 ```
 
 ## Agent chain routing
