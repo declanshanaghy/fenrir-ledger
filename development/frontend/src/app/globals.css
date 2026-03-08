@@ -70,17 +70,6 @@
     --egg-btn-text:         230 40% 5%;    /* #07070d — near-black */
     --egg-btn-hover:        42  90% 55%;   /* #f0b429 — bright gold hover */
 
-    /* ── LCARS Overlay ─────────────────────────────────────── */
-    --lcars-orange:         30  100% 50%;  /* #ff9900 */
-    --lcars-lavender:       300 33% 72%;   /* #cc99cc */
-    --lcars-periwinkle:     240 100% 80%;  /* #9999ff */
-    --lcars-red:            0   100% 60%;  /* #ff3333 */
-    --lcars-green:          145 60% 50%;   /* #33cc66 */
-    --lcars-rose:           0   40% 60%;   /* #cc6666 */
-    --lcars-bg:             0   0%  0%;    /* #000000 — deep black */
-    --lcars-scanline:       30  100% 50%;  /* orange scanline */
-    --lcars-text-dark:      0   0%  0%;    /* #000 — text on bright bars */
-
     /* ── Konami Howl ───────────────────────────────────────── */
     --howl-wolf-fill:       42  75% 40%;   /* #c9920a — wolf gold */
     --howl-eye-fill:        230 40% 5%;    /* #07070d — void cutouts */
@@ -166,17 +155,6 @@
   --egg-btn-bg:           42  75% 40%;   /* #c9920a — gold button */
   --egg-btn-text:         230 40% 5%;    /* #07070d — near-black */
   --egg-btn-hover:        42  90% 55%;   /* #f0b429 — bright gold hover */
-
-  /* ── LCARS Overlay ─────────────────────────────────────── */
-  --lcars-orange:         30  100% 50%;  /* #ff9900 */
-  --lcars-lavender:       300 33% 72%;   /* #cc99cc */
-  --lcars-periwinkle:     240 100% 80%;  /* #9999ff */
-  --lcars-red:            0   100% 60%;  /* #ff3333 */
-  --lcars-green:          145 60% 50%;   /* #33cc66 */
-  --lcars-rose:           0   40% 60%;   /* #cc6666 */
-  --lcars-bg:             0   0%  0%;    /* #000000 — deep black */
-  --lcars-scanline:       30  100% 50%;  /* orange scanline */
-  --lcars-text-dark:      0   0%  0%;    /* #000 — text on bright bars */
 
   /* ── Konami Howl ───────────────────────────────────────── */
   --howl-wolf-fill:       42  75% 40%;   /* #c9920a — wolf gold */

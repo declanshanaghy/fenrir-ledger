@@ -31,6 +31,7 @@ All implemented eggs work as designed. No blockers found. Tests are idempotent a
 | 3 | Mountain Roots | Sidebar collapse (1st time) | "The Roots of a Mountain" | ✓ PASS |
 | 5 | Fish Breath | Footer © hover/touch | "The Breath of a Fish" | ✓ PASS |
 | 9 | Forgemaster | Press ? key | "The Forgemaster's Signature" | ✓ PASS |
+| 10 | Heilung Krigsgaldr | Ctrl+Shift+L | 2-col modal: band profile + YouTube embed | ⏳ PENDING QA |
 | 3v | Loki Mode | Click "Loki" 7 times | Gold toast "Loki was here..." | ✓ PASS |
 
 ---
@@ -267,7 +268,7 @@ I verified all SVG files referenced in eggs exist and are loadable:
 
 5. **Eggs #1, #4, #6 Not Yet Implemented**
    - Full Gleipnir Hunt (#1) is out of scope for Sprint 2
-   - Console ASCII (#4) and LCARS mode (#6) are complex
+   - Console ASCII (#4) is complex
    - Fragment count already supports them (future-proof)
 
 ---
