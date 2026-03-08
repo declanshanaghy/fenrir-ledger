@@ -14,11 +14,12 @@
  * Edit mode bypasses wizard and shows all fields on single page.
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,7 +115,39 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  /** Direction: 1 = forward (step 1 → 2), -1 = backward (step 2 → 1) */
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const prefersReducedMotion = useReducedMotion();
   const { open: bearOpen, trigger: triggerBear, dismiss: dismissBear } = useGleipnirFragment4();
+
+  // Step transition animation variants (directional slide)
+  const STEP_TRANSITION_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+  const stepVariants = {
+    enter: (dir: number) => ({
+      x: dir > 0 ? "100%" : "-100%",
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (dir: number) => ({
+      x: dir < 0 ? "30%" : "-30%",
+      opacity: 0,
+    }),
+  };
+  const stepTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : {
+        x: { duration: 0.25, ease: STEP_TRANSITION_EASE },
+        opacity: { duration: 0.2 },
+      };
+
+  /** Navigate to a specific step, tracking direction for animation */
+  const goToStep = useCallback((target: 1 | 2) => {
+    setDirection(target > currentStep ? 1 : -1);
+    setCurrentStep(target);
+  }, [currentStep]);
 
   // Precompute today + derived defaults (used for new cards)
   const todayStr = new Date().toISOString().split("T")[0] ?? "";
@@ -202,7 +235,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   // Handler for "More Details" button - validates Step 1 fields and advances to Step 2
   const handleMoreDetails = () => {
     handleSubmit(() => {
-      setCurrentStep(2);
+      goToStep(2);
     }, scrollToFirstError)();
   };
 
@@ -340,253 +373,397 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   return (
     <>
     <form onSubmit={handleSubmit(onSubmit, scrollToFirstError)} className="space-y-4">
-      {/* Step Indicator - only show in wizard mode (new card) */}
+      {/* Step Indicator — accessible tablist with animated dots */}
       {!isEditMode && (
-        <div className="flex items-center justify-center gap-3 py-4">
-          <div
-            className={`w-2 h-2 rounded-full transition-colors ${
-              currentStep === 1 ? 'bg-gold' : 'bg-muted-foreground'
-            }`}
-            aria-label="Step 1"
-          />
-          <div
-            className={`w-2 h-2 rounded-full transition-colors ${
-              currentStep === 2 ? 'bg-gold' : 'bg-muted-foreground'
-            }`}
-            aria-label="Step 2"
-          />
-        </div>
+        <nav role="tablist" aria-label="Card creation progress">
+          <div className="flex items-center justify-center gap-4 py-4">
+            {([
+              { step: 1 as const, title: "Card and Bonus Details" },
+              { step: 2 as const, title: "Additional Information" },
+            ]).map(({ step, title }) => {
+              const isActive = currentStep === step;
+              return (
+                <button
+                  key={step}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-label={`Step ${step} of 2: ${title}`}
+                  tabIndex={isActive ? 0 : -1}
+                  onClick={() => {
+                    if (step === 2 && currentStep === 1) {
+                      handleMoreDetails();
+                    } else if (step === 1 && currentStep === 2) {
+                      goToStep(1);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowRight" && step === 1) {
+                      e.preventDefault();
+                      handleMoreDetails();
+                    } else if (e.key === "ArrowLeft" && step === 2) {
+                      e.preventDefault();
+                      goToStep(1);
+                    }
+                  }}
+                  className="relative w-11 h-11 flex items-center justify-center cursor-pointer focus:outline-none group"
+                >
+                  <motion.div
+                    className={`w-2.5 h-2.5 rounded-full border-2 ${
+                      isActive
+                        ? "bg-gold border-gold"
+                        : "bg-transparent border-muted-foreground"
+                    }`}
+                    animate={{
+                      scale: isActive ? [1, 0.9, 1.2, 1] : 1,
+                    }}
+                    transition={
+                      prefersReducedMotion
+                        ? { duration: 0 }
+                        : {
+                            scale: {
+                              duration: 0.3,
+                              ease: STEP_TRANSITION_EASE,
+                              times: [0, 0.3, 0.6, 1],
+                            },
+                          }
+                    }
+                  />
+                  <span className="absolute inset-0 rounded-full group-focus-visible:ring-2 group-focus-visible:ring-gold/40 group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-background" />
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       )}
 
-      {/* ── Step 1 or Edit Mode: Card Details ───────────────────────────── */}
-      {(isEditMode || currentStep === 1) && (
-        <fieldset className="border border-border rounded-md p-4 space-y-4">
-          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Card Details</legend>
+      {/* ── Wizard mode: animated step content ────────────────────────── */}
+      {!isEditMode && (
+        <div className="overflow-hidden">
+          <AnimatePresence mode="wait" initial={false} custom={direction}>
+            {currentStep === 1 && (
+              <motion.div
+                key="wizard-step-1"
+                custom={direction}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={stepTransition}
+                className="space-y-4"
+              >
+                {/* Card Details */}
+                <fieldset className="border border-border rounded-md p-4 space-y-4">
+                  <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Card Details</legend>
 
-        {/* Issuer */}
-        <div className="space-y-1.5">
-          <Label htmlFor="issuerId">Issuer *</Label>
-          <Select
-            value={issuerId ?? ""}
-            onValueChange={(v) => setValue("issuerId", v)}
-          >
-            <SelectTrigger id="issuerId" aria-required="true">
-              <SelectValue placeholder="Select issuer" />
-            </SelectTrigger>
-            <SelectContent>
-              {KNOWN_ISSUERS.map((issuer) => {
-                const rune = getIssuerRune(issuer.id);
-                return (
-                  <SelectItem key={issuer.id} value={issuer.id}>
-                    {rune ? `${rune} ` : ""}{issuer.name}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-          {errors.issuerId && (
-            <p className="text-base text-destructive">{errors.issuerId.message}</p>
-          )}
-        </div>
+                  {/* Issuer */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="issuerId">Issuer *</Label>
+                    <Select
+                      value={issuerId ?? ""}
+                      onValueChange={(v) => setValue("issuerId", v)}
+                    >
+                      <SelectTrigger id="issuerId" aria-required="true" className="min-h-[44px]">
+                        <SelectValue placeholder="Select issuer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {KNOWN_ISSUERS.map((issuer) => {
+                          const rune = getIssuerRune(issuer.id);
+                          return (
+                            <SelectItem key={issuer.id} value={issuer.id}>
+                              {rune ? `${rune} ` : ""}{issuer.name}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {errors.issuerId && (
+                      <p className="text-base text-destructive">{errors.issuerId.message}</p>
+                    )}
+                  </div>
 
-        {/* Card name */}
-        <div className="space-y-1.5">
-          <Label htmlFor="cardName">Card name *</Label>
-          <Input
-            id="cardName"
-            placeholder="e.g. Sapphire Preferred"
-            aria-required="true"
-            {...register("cardName")}
-          />
-          {errors.cardName && (
-            <p className="text-base text-destructive">{errors.cardName.message}</p>
-          )}
-        </div>
+                  {/* Card name */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cardName">Card name *</Label>
+                    <Input
+                      id="cardName"
+                      placeholder="e.g. Sapphire Preferred"
+                      aria-required="true"
+                      className="min-h-[44px]"
+                      {...register("cardName")}
+                    />
+                    {errors.cardName && (
+                      <p className="text-base text-destructive">{errors.cardName.message}</p>
+                    )}
+                  </div>
 
-        {/* Open date */}
-        <div className="space-y-1.5">
-          <Label htmlFor="openDate">Date opened *</Label>
-          <Input id="openDate" type="date" aria-required="true" {...register("openDate")} />
-          {errors.openDate && (
-            <p className="text-base text-destructive">{errors.openDate.message}</p>
-          )}
-        </div>
+                  {/* Open date */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="openDate">Date opened *</Label>
+                    <Input id="openDate" type="date" aria-required="true" className="min-h-[44px]" {...register("openDate")} />
+                    {errors.openDate && (
+                      <p className="text-base text-destructive">{errors.openDate.message}</p>
+                    )}
+                  </div>
+                </fieldset>
 
-        </fieldset>
-      )}
+                {/* Annual Fee + Sign-up Bonus (Step 1) */}
+                <div className="flex flex-col md:grid md:grid-cols-2 gap-4">
+                  <fieldset className="border border-border rounded-md p-4 space-y-4">
+                    <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Annual Fee</legend>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="annualFee">Annual fee</Label>
+                      <Input
+                        id="annualFee"
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="e.g. 95"
+                        className="min-h-[44px]"
+                        {...register("annualFee")}
+                      />
+                      {errors.annualFee && (
+                        <p className="text-base text-destructive">
+                          {errors.annualFee.message}
+                        </p>
+                      )}
+                    </div>
+                  </fieldset>
 
-      {/* ── Step 1 or Edit Mode: Annual Fee + Sign-up Bonus ──────────── */}
-      {(isEditMode || currentStep === 1) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <fieldset className="border border-border rounded-md p-4 space-y-4">
+                    <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Sign-up Bonus</legend>
 
-          {/* Annual Fee */}
-          <fieldset className="border border-border rounded-md p-4 space-y-4">
-            <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Annual Fee</legend>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="bonusType">Bonus type</Label>
+                      <Select
+                        value={bonusType ?? ""}
+                        onValueChange={(v) =>
+                          setValue("bonusType", v as "points" | "miles" | "cashback")
+                        }
+                      >
+                        <SelectTrigger id="bonusType">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="points">Points</SelectItem>
+                          <SelectItem value="miles">Miles</SelectItem>
+                          <SelectItem value="cashback">Cashback ($)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-            {/* Annual fee amount - only show in Step 1 or edit mode */}
-            {(isEditMode || currentStep === 1) && (
-            <div className="space-y-1.5">
-              <Label htmlFor="annualFee">Annual fee</Label>
-              <Input
-                id="annualFee"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="e.g. 95"
-                {...register("annualFee")}
-              />
-              {errors.annualFee && (
-                <p className="text-base text-destructive">
-                  {errors.annualFee.message}
-                </p>
-              )}
-            </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="bonusAmount">Bonus amount</Label>
+                      <Input
+                        id="bonusAmount"
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="e.g. 60000"
+                        {...register("bonusAmount")}
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="bonusSpendRequirement">Minimum spend</Label>
+                      <Select
+                        value={bonusSpendRequirement ?? ""}
+                        onValueChange={(v) => setValue("bonusSpendRequirement", v)}
+                      >
+                        <SelectTrigger id="bonusSpendRequirement">
+                          <SelectValue placeholder="Select amount" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="100">$100</SelectItem>
+                          <SelectItem value="500">$500</SelectItem>
+                          <SelectItem value="1000">$1,000</SelectItem>
+                          <SelectItem value="2000">$2,000</SelectItem>
+                          <SelectItem value="3000">$3,000</SelectItem>
+                          <SelectItem value="4000">$4,000</SelectItem>
+                          <SelectItem value="5000">$5,000</SelectItem>
+                          <SelectItem value="6000">$6,000</SelectItem>
+                          <SelectItem value="7000">$7,000</SelectItem>
+                          <SelectItem value="8000">$8,000</SelectItem>
+                          <SelectItem value="9000">$9,000</SelectItem>
+                          <SelectItem value="10000">$10,000</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </fieldset>
+                </div>
+              </motion.div>
             )}
 
-            {/* Annual fee date - only show in edit mode on step 1 */}
-            {isEditMode && (
-              <div className="space-y-1.5">
-                <Label htmlFor="annualFeeDate">Annual fee date</Label>
-                <Input id="annualFeeDate" type="date" {...register("annualFeeDate")} />
-              </div>
+            {currentStep === 2 && (
+              <motion.div
+                key="wizard-step-2"
+                custom={direction}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={stepTransition}
+                className="space-y-4"
+              >
+                {/* Credit Limit */}
+                <fieldset className="border border-border rounded-md p-4 space-y-4">
+                  <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Card Details</legend>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="creditLimit">Credit limit</Label>
+                    <Select
+                      value={creditLimit ?? ""}
+                      onValueChange={(v) => setValue("creditLimit", v)}
+                    >
+                      <SelectTrigger id="creditLimit" className="min-h-[44px]">
+                        <SelectValue placeholder="Select limit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Not set</SelectItem>
+                        {Array.from({ length: 10 }, (_, i) => (i + 1) * 1000).map((v) => (
+                          <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
+                        ))}
+                        {Array.from({ length: 18 }, (_, i) => 15000 + i * 5000).map((v) => (
+                          <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.creditLimit && (
+                      <p className="text-base text-destructive">
+                        {errors.creditLimit.message}
+                      </p>
+                    )}
+                  </div>
+                </fieldset>
+
+                {/* Annual Fee Date + Bonus Deadline / Met */}
+                <div className="flex flex-col md:grid md:grid-cols-2 gap-4">
+                  <fieldset className="border border-border rounded-md p-4 space-y-4">
+                    <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Annual Fee</legend>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="annualFeeDate">Annual fee date</Label>
+                      <Input id="annualFeeDate" type="date" className="min-h-[44px]" {...register("annualFeeDate")} />
+                    </div>
+                  </fieldset>
+
+                  <fieldset className="border border-border rounded-md p-4 space-y-4">
+                    <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Sign-up Bonus</legend>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="bonusDeadline">Bonus deadline</Label>
+                      <Input
+                        id="bonusDeadline"
+                        type="date"
+                        className="min-h-[44px]"
+                        {...register("bonusDeadline")}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 min-h-[44px]">
+                      <Checkbox
+                        id="bonusMet"
+                        checked={watch("bonusMet")}
+                        onCheckedChange={(checked) =>
+                          setValue("bonusMet", checked === true)
+                        }
+                      />
+                      <Label htmlFor="bonusMet" className="cursor-pointer">
+                        Minimum spend met
+                      </Label>
+                    </div>
+                  </fieldset>
+                </div>
+
+                {/* Notes */}
+                <fieldset className="border border-border rounded-md p-4 space-y-4">
+                  <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Notes</legend>
+                  <Textarea
+                    id="notes"
+                    placeholder="Any notes about this card..."
+                    rows={3}
+                    className="min-h-[44px]"
+                    {...register("notes")}
+                  />
+                </fieldset>
+              </motion.div>
             )}
-          </fieldset>
-
-          {/* Sign-up Bonus */}
-          <fieldset className="border border-border rounded-md p-4 space-y-4">
-            <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Sign-up Bonus</legend>
-
-          {/* Bonus type, amount, spend - only show in Step 1 or edit mode */}
-          {(isEditMode || currentStep === 1) && (
-          <>
-          <div className="space-y-1.5">
-            <Label htmlFor="bonusType">Bonus type</Label>
-            <Select
-              value={bonusType ?? ""}
-              onValueChange={(v) =>
-                setValue("bonusType", v as "points" | "miles" | "cashback")
-              }
-            >
-              <SelectTrigger id="bonusType">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="points">Points</SelectItem>
-                <SelectItem value="miles">Miles</SelectItem>
-                <SelectItem value="cashback">Cashback ($)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="bonusAmount">Bonus amount</Label>
-            <Input
-              id="bonusAmount"
-              type="number"
-              min="0"
-              step="1"
-              placeholder="e.g. 60000"
-              {...register("bonusAmount")}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="bonusSpendRequirement">Minimum spend</Label>
-            <Select
-              value={bonusSpendRequirement ?? ""}
-              onValueChange={(v) => setValue("bonusSpendRequirement", v)}
-            >
-              <SelectTrigger id="bonusSpendRequirement">
-                <SelectValue placeholder="Select amount" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="100">$100</SelectItem>
-                <SelectItem value="500">$500</SelectItem>
-                <SelectItem value="1000">$1,000</SelectItem>
-                <SelectItem value="2000">$2,000</SelectItem>
-                <SelectItem value="3000">$3,000</SelectItem>
-                <SelectItem value="4000">$4,000</SelectItem>
-                <SelectItem value="5000">$5,000</SelectItem>
-                <SelectItem value="6000">$6,000</SelectItem>
-                <SelectItem value="7000">$7,000</SelectItem>
-                <SelectItem value="8000">$8,000</SelectItem>
-                <SelectItem value="9000">$9,000</SelectItem>
-                <SelectItem value="10000">$10,000</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          </>
-          )}
-
-          {/* Bonus deadline and met - only show in edit mode on step 1 */}
-          {isEditMode && (
-            <>
-              <div className="space-y-1.5">
-                <Label htmlFor="bonusDeadline">Bonus deadline</Label>
-                <Input
-                  id="bonusDeadline"
-                  type="date"
-                  {...register("bonusDeadline")}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="bonusMet"
-                  checked={watch("bonusMet")}
-                  onCheckedChange={(checked) =>
-                    setValue("bonusMet", checked === true)
-                  }
-                />
-                <Label htmlFor="bonusMet" className="cursor-pointer">
-                  Minimum spend met
-                </Label>
-              </div>
-            </>
-          )}
-        </fieldset>
-
+          </AnimatePresence>
         </div>
       )}
 
-      {/* ── Step 2 (wizard mode only): More Details ──────────────────────────── */}
-      {!isEditMode && currentStep === 2 && (
+      {/* ── Edit mode: all fields on one page (no animation) ─────────── */}
+      {isEditMode && (
         <>
-          {/* Credit Limit */}
           <fieldset className="border border-border rounded-md p-4 space-y-4">
             <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Card Details</legend>
 
+            {/* Issuer */}
             <div className="space-y-1.5">
-              <Label htmlFor="creditLimit">Credit limit</Label>
+              <Label htmlFor="issuerId">Issuer *</Label>
               <Select
-                value={creditLimit ?? ""}
-                onValueChange={(v) => setValue("creditLimit", v)}
+                value={issuerId ?? ""}
+                onValueChange={(v) => setValue("issuerId", v)}
               >
-                <SelectTrigger id="creditLimit">
-                  <SelectValue placeholder="Select limit" />
+                <SelectTrigger id="issuerId" aria-required="true">
+                  <SelectValue placeholder="Select issuer" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">Not set</SelectItem>
-                  {Array.from({ length: 10 }, (_, i) => (i + 1) * 1000).map((v) => (
-                    <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
-                  ))}
-                  {Array.from({ length: 18 }, (_, i) => 15000 + i * 5000).map((v) => (
-                    <SelectItem key={v} value={String(v)}>${v.toLocaleString()}</SelectItem>
-                  ))}
+                  {KNOWN_ISSUERS.map((issuer) => {
+                    const rune = getIssuerRune(issuer.id);
+                    return (
+                      <SelectItem key={issuer.id} value={issuer.id}>
+                        {rune ? `${rune} ` : ""}{issuer.name}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
-              {errors.creditLimit && (
-                <p className="text-base text-destructive">
-                  {errors.creditLimit.message}
-                </p>
+              {errors.issuerId && (
+                <p className="text-base text-destructive">{errors.issuerId.message}</p>
+              )}
+            </div>
+
+            {/* Card name */}
+            <div className="space-y-1.5">
+              <Label htmlFor="cardName">Card name *</Label>
+              <Input
+                id="cardName"
+                placeholder="e.g. Sapphire Preferred"
+                aria-required="true"
+                {...register("cardName")}
+              />
+              {errors.cardName && (
+                <p className="text-base text-destructive">{errors.cardName.message}</p>
+              )}
+            </div>
+
+            {/* Open date */}
+            <div className="space-y-1.5">
+              <Label htmlFor="openDate">Date opened *</Label>
+              <Input id="openDate" type="date" aria-required="true" {...register("openDate")} />
+              {errors.openDate && (
+                <p className="text-base text-destructive">{errors.openDate.message}</p>
               )}
             </div>
           </fieldset>
 
-          {/* Annual Fee Date + Bonus Deadline / Met */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Annual Fee + Sign-up Bonus */}
+          <div className="flex flex-col md:grid md:grid-cols-2 gap-4">
             <fieldset className="border border-border rounded-md p-4 space-y-4">
               <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Annual Fee</legend>
+              <div className="space-y-1.5">
+                <Label htmlFor="annualFee">Annual fee</Label>
+                <Input
+                  id="annualFee"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="e.g. 95"
+                  {...register("annualFee")}
+                />
+                {errors.annualFee && (
+                  <p className="text-base text-destructive">
+                    {errors.annualFee.message}
+                  </p>
+                )}
+              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="annualFeeDate">Annual fee date</Label>
                 <Input id="annualFeeDate" type="date" {...register("annualFeeDate")} />
@@ -596,6 +773,63 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             <fieldset className="border border-border rounded-md p-4 space-y-4">
               <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Sign-up Bonus</legend>
               <div className="space-y-1.5">
+                <Label htmlFor="bonusType">Bonus type</Label>
+                <Select
+                  value={bonusType ?? ""}
+                  onValueChange={(v) =>
+                    setValue("bonusType", v as "points" | "miles" | "cashback")
+                  }
+                >
+                  <SelectTrigger id="bonusType">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="points">Points</SelectItem>
+                    <SelectItem value="miles">Miles</SelectItem>
+                    <SelectItem value="cashback">Cashback ($)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="bonusAmount">Bonus amount</Label>
+                <Input
+                  id="bonusAmount"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="e.g. 60000"
+                  {...register("bonusAmount")}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="bonusSpendRequirement">Minimum spend</Label>
+                <Select
+                  value={bonusSpendRequirement ?? ""}
+                  onValueChange={(v) => setValue("bonusSpendRequirement", v)}
+                >
+                  <SelectTrigger id="bonusSpendRequirement">
+                    <SelectValue placeholder="Select amount" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="100">$100</SelectItem>
+                    <SelectItem value="500">$500</SelectItem>
+                    <SelectItem value="1000">$1,000</SelectItem>
+                    <SelectItem value="2000">$2,000</SelectItem>
+                    <SelectItem value="3000">$3,000</SelectItem>
+                    <SelectItem value="4000">$4,000</SelectItem>
+                    <SelectItem value="5000">$5,000</SelectItem>
+                    <SelectItem value="6000">$6,000</SelectItem>
+                    <SelectItem value="7000">$7,000</SelectItem>
+                    <SelectItem value="8000">$8,000</SelectItem>
+                    <SelectItem value="9000">$9,000</SelectItem>
+                    <SelectItem value="10000">$10,000</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
                 <Label htmlFor="bonusDeadline">Bonus deadline</Label>
                 <Input
                   id="bonusDeadline"
@@ -603,6 +837,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
                   {...register("bonusDeadline")}
                 />
               </div>
+
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="bonusMet"
@@ -617,53 +852,49 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
               </div>
             </fieldset>
           </div>
+
+          {/* Status */}
+          <fieldset className="border border-border rounded-md p-4 space-y-4">
+            <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Status</legend>
+            <div className="space-y-1.5">
+              <Label htmlFor="status">Card status</Label>
+              <Select
+                {...(defaultValues.status !== undefined && { defaultValue: defaultValues.status })}
+                onValueChange={(v) =>
+                  setValue(
+                    "status",
+                    v as "active" | "fee_approaching" | "promo_expiring" | "closed"
+                  )
+                }
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Status is computed automatically" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="fee_approaching">Fee Approaching</SelectItem>
+                  <SelectItem value="promo_expiring">Promo Expiring</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Status is automatically computed from dates. Set to &quot;Closed&quot; to
+                manually mark this card as closed.
+              </p>
+            </div>
+          </fieldset>
+
+          {/* Notes */}
+          <fieldset className="border border-border rounded-md p-4 space-y-4">
+            <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Notes</legend>
+            <Textarea
+              id="notes"
+              placeholder="Any notes about this card..."
+              rows={3}
+              {...register("notes")}
+            />
+          </fieldset>
         </>
-      )}
-
-      {/* ── Status (edit mode only) ────────────────────────────── */}
-      {isEditMode && (
-        <fieldset className="border border-border rounded-md p-4 space-y-4">
-          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Status</legend>
-          <div className="space-y-1.5">
-            <Label htmlFor="status">Card status</Label>
-            <Select
-              {...(defaultValues.status !== undefined && { defaultValue: defaultValues.status })}
-              onValueChange={(v) =>
-                setValue(
-                  "status",
-                  v as "active" | "fee_approaching" | "promo_expiring" | "closed"
-                )
-              }
-            >
-              <SelectTrigger id="status">
-                <SelectValue placeholder="Status is computed automatically" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="fee_approaching">Fee Approaching</SelectItem>
-                <SelectItem value="promo_expiring">Promo Expiring</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-sm text-muted-foreground">
-              Status is automatically computed from dates. Set to &quot;Closed&quot; to
-              manually mark this card as closed.
-            </p>
-          </div>
-        </fieldset>
-      )}
-
-      {/* ── Notes (Step 2 or edit mode only) ─────────────────────────────────── */}
-      {(isEditMode || currentStep === 2) && (
-        <fieldset className="border border-border rounded-md p-4 space-y-4">
-          <legend className="text-sm font-bold uppercase tracking-wider px-1.5">Notes</legend>
-          <Textarea
-            id="notes"
-            placeholder="Any notes about this card..."
-            rows={3}
-            {...register("notes")}
-          />
-        </fieldset>
       )}
 
       {/* ── Actions ───────────────────────────────────────────── */}
@@ -673,8 +904,10 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
        * Right — [Cancel] [Primary action] — always right-aligned
        * This matches the global form button rule: positive action far right,
        * Cancel immediately to its left, destructive actions isolated on left.
+       *
+       * Mobile (375px): buttons stack vertically via flex-col / md:flex-row.
        */}
-      <div className="flex items-center pt-2">
+      <div className="flex flex-col gap-3 pt-2 md:flex-row md:items-center">
         {/* Left slot — destructive actions (edit mode only) */}
         <div className="flex gap-2">
 
@@ -684,7 +917,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             {/* Close Card — sends card to Valhalla, record preserved */}
             <Dialog open={closeDialogOpen} onOpenChange={setCloseDialogOpen}>
               <DialogTrigger asChild>
-                <Button type="button" variant="outline" size="sm">
+                <Button type="button" variant="outline" size="sm" className="min-h-[44px]">
                   Close Card
                 </Button>
               </DialogTrigger>
@@ -713,7 +946,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             {/* Delete card — hard delete, record gone forever */}
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
               <DialogTrigger asChild>
-                <Button type="button" variant="destructive" size="sm">
+                <Button type="button" variant="destructive" size="sm" className="min-h-[44px]">
                   Delete card
                 </Button>
               </DialogTrigger>
@@ -746,7 +979,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         {isEditMode && initialValues?.status === "closed" && (
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
-              <Button type="button" variant="destructive" size="sm">
+              <Button type="button" variant="destructive" size="sm" className="min-h-[44px]">
                 Delete card
               </Button>
             </DialogTrigger>
@@ -776,11 +1009,12 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
 
         </div>{/* /left slot */}
 
-        {/* Right slot — Cancel + primary action, always right-aligned */}
-        <div className="flex gap-3 ml-auto">
+        {/* Right slot — Cancel + primary action */}
+        <div className="flex flex-col gap-2 md:flex-row md:gap-3 md:ml-auto">
           <Button
             type="button"
             variant="outline"
+            className="min-h-[44px]"
             onClick={() => router.push("/")}
           >
             Cancel
@@ -792,12 +1026,14 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
               <Button
                 type="button"
                 variant="outline"
+                className="min-h-[44px]"
                 onClick={handleMoreDetails}
               >
                 More Details
               </Button>
               <Button
                 type="submit"
+                className="min-h-[44px]"
                 disabled={isSubmitting}
                 isLoading={isSubmitting}
                 loadingText="Saving..."
@@ -813,12 +1049,14 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setCurrentStep(1)}
+                className="min-h-[44px]"
+                onClick={() => goToStep(1)}
               >
                 Back
               </Button>
               <Button
                 type="submit"
+                className="min-h-[44px]"
                 disabled={isSubmitting}
                 isLoading={isSubmitting}
                 loadingText="Saving..."
@@ -832,6 +1070,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           {isEditMode && (
             <Button
               type="submit"
+              className="min-h-[44px]"
               disabled={isSubmitting}
               isLoading={isSubmitting}
               loadingText="Saving..."

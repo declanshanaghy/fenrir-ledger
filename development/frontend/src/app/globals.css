@@ -815,3 +815,16 @@ body.konami-shake-mobile {
 .about-page {
   min-height: 100%;
 }
+
+/* ── Wizard Step Dot — Focus Ring ────────────────────────────────────── */
+/*
+ * Step indicator dots use Framer Motion for active-state animation.
+ * The focus ring is handled via Tailwind group-focus-visible utilities.
+ * Reduced motion: Framer Motion durations are set to 0 via useReducedMotion().
+ */
+@media (prefers-reduced-motion: reduce) {
+  [role="tablist"] [role="tab"] * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
