@@ -1,0 +1,25 @@
+npm warn exec The following package was not found and will be installed: playwright@1.58.2
+Error: Playwright Test did not expect test.beforeEach() to be called here.
+Most common reasons include:
+- You are calling test.beforeEach() in a configuration file.
+- You are calling test.beforeEach() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+
+   at quality/test-suites/credit-limit-step2/credit-limit-step2.spec.ts:33
+
+  31 | // Every credit-limit-step2 test starts from clean state with a known household.
+  32 |
+> 33 | test.beforeEach(async ({ page }) => {
+     |      ^
+  34 |   await page.goto("/");
+  35 |   await clearAllStorage(page);
+  36 |   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+    at TestTypeImpl._currentSuite (/workspace/development/frontend/node_modules/playwright/lib/common/testType.js:75:13)
+    at TestTypeImpl._hook (/workspace/development/frontend/node_modules/playwright/lib/common/testType.js:160:24)
+    at Function.beforeEach (/workspace/development/frontend/node_modules/playwright/lib/transform/transform.js:282:12)
+    at Object.<anonymous> (/workspace/quality/test-suites/credit-limit-step2/credit-limit-step2.spec.ts:33:6)
+Error: No tests found.
+Make sure that arguments are regular expressions matching test files.
+You may need to escape symbols like "$" or "*" and quote the arguments.
+

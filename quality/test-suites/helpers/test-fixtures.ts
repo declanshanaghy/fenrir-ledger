@@ -283,3 +283,20 @@ export async function clearAllStorage(page: Page): Promise<void> {
     }
   });
 }
+
+/**
+ * Retrieves all cards for a given household from localStorage.
+ * Returns an empty array if no cards are stored.
+ *
+ * @param page - Playwright Page
+ * @param householdId - The household ID to retrieve cards for
+ * @returns Array of Card objects
+ */
+export async function getCards(page: Page, householdId: string): Promise<Card[]> {
+  const storageKey = `${STORAGE_KEY_PREFIX}:${householdId}:cards`;
+  const cards = await page.evaluate((key: string) => {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : [];
+  }, storageKey);
+  return cards as Card[];
+}
