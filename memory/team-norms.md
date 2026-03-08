@@ -135,6 +135,14 @@ Post findings as a comment and close when done.
 
 ---
 
+## "Hunt. Kill. Return."
+
+When Odin says this (or similar wolf phrases), it means: commit all outstanding
+orchestrator changes, push to a branch, create/update a PR, merge it, and get
+back onto `main`. Full cycle, no pausing.
+
+---
+
 ## Non-Responsive Subagents: Kill and Respawn
 
 If a subagent is idle after 2 pings / ~60s, kill it and spawn a fresh one.
