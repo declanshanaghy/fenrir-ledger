@@ -294,13 +294,13 @@ export function StripeSettings() {
             <div className="border-t border-border" />
 
             {/* Actions */}
-            <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex flex-row flex-wrap gap-3">
               <Button
                 onClick={handleManage}
                 disabled={isAnyLoading}
                 isLoading={isManaging}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
+                className="min-h-[44px] w-full sm:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
               >
                 Manage Subscription
               </Button>
@@ -310,7 +310,7 @@ export function StripeSettings() {
                 disabled={isAnyLoading}
                 isLoading={isCancelingAction}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading text-[13px]"
+                className="min-h-[44px] w-full sm:w-auto font-heading text-[13px]"
                 aria-label="Cancel subscription"
               >
                 Cancel
@@ -393,13 +393,13 @@ export function StripeSettings() {
             <div className="border-t border-border" />
 
             {/* Actions */}
-            <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex flex-row flex-wrap gap-3">
               <Button
                 onClick={handleSubscribe}
                 disabled={isAnyLoading}
                 isLoading={isSubscribing}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
+                className="min-h-[44px] w-full sm:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
               >
                 Resubscribe
               </Button>
@@ -409,7 +409,7 @@ export function StripeSettings() {
                 disabled={isAnyLoading}
                 isLoading={isManaging}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading text-[13px]"
+                className="min-h-[44px] w-full sm:w-auto font-heading text-[13px]"
               >
                 Manage Subscription
               </Button>
