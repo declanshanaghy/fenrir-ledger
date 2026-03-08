@@ -93,15 +93,26 @@ export async function extractCardsFromCsv(csv: string): Promise<SheetImportRespo
     };
   }
 
-  // 4. Assign UUIDs and timestamps
+  // 4. Assign UUIDs and timestamps; auto-close cards with closedAt
   const now = new Date().toISOString();
-  const cards = extractedCards.map((card) => ({
-    ...card,
-    id: crypto.randomUUID(),
-    status: "active" as const,
-    createdAt: now,
-    updatedAt: now,
-  }));
+  const cards = extractedCards.map((card) => {
+    const hasClosed = card.closedAt !== undefined && card.closedAt !== "";
+    const base = {
+      ...card,
+      id: crypto.randomUUID(),
+      status: hasClosed ? ("closed" as const) : ("active" as const),
+      createdAt: now,
+      updatedAt: now,
+    };
+    // Only set closedAt when present to satisfy exactOptionalPropertyTypes
+    if (hasClosed) {
+      return { ...base, closedAt: card.closedAt };
+    }
+    // Remove the empty-string closedAt from the spread so it stays undefined
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { closedAt: _removed, ...rest } = base;
+    return rest;
+  });
 
   const result: SheetImportResponse = { cards };
   if (sensitiveDataWarning) {

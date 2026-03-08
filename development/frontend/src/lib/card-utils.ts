@@ -115,7 +115,7 @@ export function daysUntil(isoDate: string, today?: Date): number {
  * @returns The computed CardStatus
  */
 export function computeCardStatus(card: Card, today?: Date): CardStatus {
-  if (card.status === "closed") {
+  if (card.status === "closed" || (card.closedAt && card.closedAt !== "")) {
     return "closed";
   }
 
