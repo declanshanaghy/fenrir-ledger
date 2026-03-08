@@ -175,6 +175,9 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   });
 
   const openDate = watch("openDate");
+  const watchedIssuerId = watch("issuerId");
+  const watchedBonusType = watch("bonusType");
+  const watchedBonusSpendRequirement = watch("bonusSpendRequirement");
 
   // When openDate changes (user edits it), auto-derive annualFeeDate and bonusDeadline.
   // Skip on initial render so stored values aren't clobbered in edit mode.
@@ -363,7 +366,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         <div className="space-y-1.5">
           <Label htmlFor="issuerId">Issuer *</Label>
           <Select
-            {...(defaultValues.issuerId !== undefined && { defaultValue: defaultValues.issuerId })}
+            value={watchedIssuerId ?? ""}
             onValueChange={(v) => setValue("issuerId", v)}
           >
             <SelectTrigger id="issuerId" aria-required="true">
@@ -490,7 +493,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           <div className="space-y-1.5">
             <Label htmlFor="bonusType">Bonus type</Label>
             <Select
-              {...(defaultValues.bonusType !== undefined && { defaultValue: defaultValues.bonusType })}
+              value={watchedBonusType ?? ""}
               onValueChange={(v) =>
                 setValue("bonusType", v as "points" | "miles" | "cashback")
               }
@@ -521,9 +524,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           <div className="space-y-1.5">
             <Label htmlFor="bonusSpendRequirement">Minimum spend</Label>
             <Select
-              {...(defaultValues.bonusSpendRequirement
-                ? { defaultValue: defaultValues.bonusSpendRequirement }
-                : {})}
+              value={watchedBonusSpendRequirement ?? ""}
               onValueChange={(v) => setValue("bonusSpendRequirement", v)}
             >
               <SelectTrigger id="bonusSpendRequirement">
