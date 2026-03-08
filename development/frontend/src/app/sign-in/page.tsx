@@ -200,6 +200,25 @@ function SignInContent() {
             {isRedirecting ? "Crossing the Bifröst..." : "Sign in to Google"}
           </button>
 
+          {/* Implicit agreement text */}
+          <p className="text-xs text-muted-foreground text-center font-body leading-relaxed">
+            By signing in, you agree to our{" "}
+            <a
+              href="/static/privacy.html"
+              className="underline hover:text-gold transition-colors"
+            >
+              Privacy Policy
+            </a>{" "}
+            and{" "}
+            <a
+              href="/static/terms.html"
+              className="underline hover:text-gold transition-colors"
+            >
+              Terms of Service
+            </a>
+            .
+          </p>
+
           {/* Divider */}
           <div className="flex items-center gap-3" aria-hidden="true">
             <div className="flex-1 h-px bg-border" />
