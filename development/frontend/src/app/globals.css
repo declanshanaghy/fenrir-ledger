@@ -267,6 +267,33 @@
   }
 }
 
+/* ── Interactive Card Hover ─────────────────────────────────────────────────
+ *
+ * .card-interactive — safe hover transition for card-like surfaces.
+ *
+ * Problem (Issue #298): using Tailwind's `transition-colors` on cards causes
+ * a white flash in Light theme when hovering.  The flash happens because
+ * `transition-colors` transitions `background-color`, and interpolating
+ * from an opaque surface (bg-card = #ffffff in Light) to a semi-transparent
+ * overlay (e.g. bg-gold/5) produces a bright intermediate frame.
+ *
+ * Fix: only transition border-color and box-shadow on card surfaces.
+ * Background changes are applied instantly (no interpolation = no flash).
+ * Use this class INSTEAD of `transition-colors` on any card/tile element
+ * that has a bg-card resting state with a hover bg change.
+ */
+.card-interactive {
+  transition-property: border-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-interactive {
+    transition: none;
+  }
+}
+
 /* ── Card Chain: hover gold glow ────────────────────────────────────────── */
 /*
  * Applied to each CardTile wrapper. CSS handles box-shadow and border-color
