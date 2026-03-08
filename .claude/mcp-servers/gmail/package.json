@@ -1,0 +1,17 @@
+{
+  "name": "fenrir-gmail-mcp",
+  "version": "1.0.0",
+  "description": "Secure read-only Gmail MCP server for Claude Code — macOS Keychain token storage, role-wrapped email content",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "googleapis": "^146.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "private": true
+}
