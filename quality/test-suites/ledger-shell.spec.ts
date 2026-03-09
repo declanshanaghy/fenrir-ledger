@@ -55,10 +55,8 @@ test.describe("LedgerShell — Slim top bar", () => {
     const backLinks = page.locator('header a[aria-label*="Back to Fenrir"]');
     await expect(backLinks).not.toHaveCount(0);
 
-    // Theme toggle button present
-    const themeToggle = page.locator('header button[aria-label*="theme"]', {
-      ignoreCase: true,
-    });
+    // Theme toggle button present (icon variant with aria-label="Theme: ...")
+    const themeToggle = page.locator('header button[aria-label*="Theme"]');
     await expect(themeToggle).toHaveCount(1);
   });
 
@@ -191,14 +189,12 @@ test.describe("LedgerShell — Mobile (<768px)", () => {
 
 test.describe("LedgerShell — Theme toggle", () => {
   test("theme toggle button is accessible and clickable", async ({ page }) => {
-    const themeToggle = page.locator('button[aria-label*="theme"]', {
-      ignoreCase: true,
-    });
+    const themeToggle = page.locator('button[aria-label*="Theme"]');
     await expect(themeToggle).toBeVisible();
 
     // Should be focusable and interactive
-    await themeToggle.focus();
-    const hasFocus = await themeToggle.evaluate(
+    await themeToggle.first().focus();
+    const hasFocus = await themeToggle.first().evaluate(
       (el) => el === document.activeElement
     );
     expect(hasFocus).toBe(true);
@@ -213,10 +209,8 @@ test.describe("LedgerShell — Theme toggle", () => {
     );
 
     // Click theme toggle
-    const themeToggle = page.locator('button[aria-label*="theme"]', {
-      ignoreCase: true,
-    });
-    await themeToggle.click();
+    const themeToggle = page.locator('button[aria-label*="Theme"]');
+    await themeToggle.first().click();
 
     // Wait a moment for the change
     await page.waitForTimeout(200);
