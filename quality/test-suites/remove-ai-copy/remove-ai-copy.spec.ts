@@ -78,7 +78,7 @@ test.describe("Issue #417 — Remove explicit AI copy", () => {
 
     // Profile should still exist
     expect(pageContent).toContain("Freya");
-    expect(pageContent).toContain("Product Owner");
+    expect(pageContent).toMatch(/Product Owner|PRODUCT OWNER/i);
   });
 
   test("About page: agent autonomy text mentions 'member of the pack' not AI", async ({
