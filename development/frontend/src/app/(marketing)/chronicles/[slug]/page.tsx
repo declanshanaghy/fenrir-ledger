@@ -1,14 +1,14 @@
 /**
- * Blog Entry — /blog/[slug]
+ * Chronicle Detail — /chronicles/[slug]
  *
  * Renders individual session chronicle natively from MDX via next-mdx-remote/rsc.
  * No dangerouslySetInnerHTML — MDX compiles to React components at build time.
- * - Breadcrumb: Home > Blog > [Session Title]
+ * - Breadcrumb: Home > Chronicles > [Session Title]
  * - Chronicle styling via chronicle.css scoped to .chronicle-page
  * - Previous / Next navigation between entries (sorted newest-first)
  * - Static generation via generateStaticParams
  *
- * Ref: GitHub Issue #340
+ * Ref: GitHub Issue #373
  */
 
 import type { Metadata } from "next";
@@ -19,7 +19,7 @@ import {
   getAllChronicles,
   getAllChroniclesSlugs,
   getChronicleBySlug,
-} from "@/lib/blog";
+} from "@/lib/chronicles";
 import "../chronicle.css";
 
 // ── Static generation ────────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ function formatDate(iso: string): string {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function BlogEntryPage({
+export default async function ChronicleDetailPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -92,8 +92,8 @@ export default async function BlogEntryPage({
             /
           </li>
           <li>
-            <Link href="/blog" className="hover:text-primary transition-colors">
-              Blog
+            <Link href="/chronicles" className="hover:text-primary transition-colors">
+              Chronicles
             </Link>
           </li>
           <li aria-hidden="true" className="opacity-40">
@@ -125,7 +125,7 @@ export default async function BlogEntryPage({
           {/* Prev = older entry */}
           {prevEntry ? (
             <Link
-              href={`/blog/${prevEntry.slug}`}
+              href={`/chronicles/${prevEntry.slug}`}
               className="group flex-1 min-w-0 flex flex-col gap-1 max-w-xs"
             >
               <span className="font-mono text-[0.6rem] text-muted-foreground tracking-widest uppercase">
@@ -153,7 +153,7 @@ export default async function BlogEntryPage({
           {/* Next = newer entry */}
           {nextEntry ? (
             <Link
-              href={`/blog/${nextEntry.slug}`}
+              href={`/chronicles/${nextEntry.slug}`}
               className="group flex-1 min-w-0 flex flex-col gap-1 text-right max-w-xs ml-auto"
             >
               <span className="font-mono text-[0.6rem] text-muted-foreground tracking-widest uppercase">
@@ -174,7 +174,7 @@ export default async function BlogEntryPage({
         {/* Back to index */}
         <div className="mt-8 text-center">
           <Link
-            href="/blog"
+            href="/chronicles"
             className="font-mono text-[0.65rem] text-muted-foreground hover:text-primary transition-colors tracking-widest uppercase"
           >
             ↑ All Chronicles

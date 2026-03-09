@@ -1,12 +1,12 @@
 /**
- * blog.ts — Blog/Chronicle utilities for Fenrir Ledger
+ * chronicles.ts — Chronicle utilities for Fenrir Ledger
  *
  * Reads MDX files from content/blog/, parses frontmatter via gray-matter,
  * and returns typed chronicle metadata.
  *
  * Used by:
- *   - (marketing)/blog/page.tsx — blog index listing
- *   - (marketing)/blog/[slug]/page.tsx — individual entry renderer
+ *   - (marketing)/chronicles/page.tsx — chronicles index listing
+ *   - (marketing)/chronicles/[slug]/page.tsx — individual entry renderer
  */
 
 import fs from "fs";
@@ -35,19 +35,19 @@ export interface ChronicleEntryWithContent extends ChronicleEntry {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const BLOG_DIR = path.join(process.cwd(), "content/blog");
+const CONTENT_DIR = path.join(process.cwd(), "content/blog");
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Read all .mdx files from content/blog/ and return parsed frontmatter. */
 export function getAllChronicles(): ChronicleEntry[] {
   const files = fs
-    .readdirSync(BLOG_DIR)
+    .readdirSync(CONTENT_DIR)
     .filter((f) => f.endsWith(".mdx"));
 
   const entries: ChronicleEntry[] = files.map((file) => {
     const slug = file.replace(/\.mdx$/, "");
-    const raw = fs.readFileSync(path.join(BLOG_DIR, file), "utf8");
+    const raw = fs.readFileSync(path.join(CONTENT_DIR, file), "utf8");
     const { data } = matter(raw);
     return {
       slug,
@@ -65,14 +65,14 @@ export function getAllChronicles(): ChronicleEntry[] {
 /** Return all slugs — used by generateStaticParams */
 export function getAllChroniclesSlugs(): string[] {
   return fs
-    .readdirSync(BLOG_DIR)
+    .readdirSync(CONTENT_DIR)
     .filter((f) => f.endsWith(".mdx"))
     .map((f) => f.replace(/\.mdx$/, ""));
 }
 
 /** Read a single chronicle by slug, including raw MDX content. */
 export function getChronicleBySlug(slug: string): ChronicleEntryWithContent | null {
-  const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
+  const filePath = path.join(CONTENT_DIR, `${slug}.mdx`);
   if (!fs.existsSync(filePath)) return null;
 
   const raw = fs.readFileSync(filePath, "utf8");
