@@ -25,7 +25,7 @@ const FOOTER_COLUMNS = [
   {
     heading: "Resources",
     links: [
-      { href: "/blog", label: "Session Chronicles" },
+      { href: "/chronicles", label: "Session Chronicles" },
       { href: "/changelog", label: "Changelog" },
       { href: "/about", label: "About" },
     ],
@@ -49,7 +49,7 @@ export function MarketingFooter() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link
-            href="/home"
+            href="/"
             className="inline-block font-display text-xl font-bold tracking-widest uppercase text-foreground hover:text-primary transition-colors"
             aria-label="Fenrir Ledger — home"
           >
@@ -86,7 +86,7 @@ export function MarketingFooter() {
         {/* CTA */}
         <div className="text-center mb-12">
           <Link
-            href="/app"
+            href="/ledger"
             className={[
               "inline-flex items-center justify-center px-8 py-3",
               "font-heading text-sm tracking-wide",

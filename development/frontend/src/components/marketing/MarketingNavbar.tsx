@@ -28,7 +28,7 @@ const NAV_LINKS = [
   { href: "/features", label: "Features" },
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
-  { href: "/blog", label: "Blog" },
+  { href: "/chronicles", label: "Chronicles" },
 ] as const;
 
 const THEMES = [
@@ -134,7 +134,7 @@ export function MarketingNavbar() {
 
           {/* Logo */}
           <Link
-            href="/home"
+            href="/"
             className="flex items-center gap-2 group"
             aria-label="Fenrir Ledger — home"
           >
@@ -161,7 +161,7 @@ export function MarketingNavbar() {
           <div className="hidden md:flex items-center gap-4">
             <NavThemeToggle />
             <Link
-              href="/app"
+              href="/ledger"
               className={[
                 "inline-flex items-center justify-center px-5 py-2",
                 "font-heading text-sm tracking-wide",
@@ -209,7 +209,7 @@ export function MarketingNavbar() {
           {/* Overlay header */}
           <div className="flex items-center justify-between mb-12">
             <Link
-              href="/home"
+              href="/"
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-2"
             >
@@ -254,7 +254,7 @@ export function MarketingNavbar() {
           {/* Mobile CTA + theme toggle */}
           <div className="mt-12 flex flex-col gap-4">
             <Link
-              href="/app"
+              href="/ledger"
               onClick={() => setMobileOpen(false)}
               className={[
                 "flex items-center justify-center px-5 py-3",

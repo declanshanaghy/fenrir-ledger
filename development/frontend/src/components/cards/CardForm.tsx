@@ -329,7 +329,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
       }
 
 
-      router.push("/");
+      router.push("/ledger");
     } catch (err) {
       console.error("Failed to save card:", err);
       setIsSubmitting(false);
@@ -340,7 +340,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
     if (!initialValues?.id) return;
     // deleteCard now takes (householdId, cardId) — use the prop householdId
     deleteCard(householdId, initialValues.id);
-    router.push("/");
+    router.push("/ledger");
   };
 
   /**
@@ -351,7 +351,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   const handleClose = () => {
     if (!initialValues?.id) return;
     closeCard(householdId, initialValues.id);
-    router.push("/");
+    router.push("/ledger");
   };
 
   // Team norm: on validation failure, scroll the first invalid field into view.

@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * Dashboard Page — root route (/)
+ * Dashboard Page — /ledger route
  *
- * Anonymous-first: all users land here directly. No redirect to /sign-in.
+ * Anonymous-first: all users land here directly. No redirect to /ledger/sign-in.
  *
  * Reads householdId from AuthContext (either session.user.sub for signed-in
  * users, or the anonymous UUID from localStorage("fenrir:household")).
@@ -148,7 +148,7 @@ function DashboardPageContent() {
               When empty, the single CTA lives in the EmptyState component. */}
           {hasCards && (
             <Link
-              href="/cards/new"
+              href="/ledger/cards/new"
               className="inline-flex items-center justify-center rounded-sm text-base font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-9 px-4 py-2"
             >
               Add Card

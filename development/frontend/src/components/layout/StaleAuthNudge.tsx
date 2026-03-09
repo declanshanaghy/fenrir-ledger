@@ -131,7 +131,7 @@ export function StaleAuthNudge(): React.ReactElement | null {
   }
 
   function handleSignIn(): void {
-    router.push("/sign-in");
+    router.push("/ledger/sign-in");
   }
 
   return (

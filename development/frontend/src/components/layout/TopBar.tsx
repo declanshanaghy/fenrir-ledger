@@ -149,7 +149,7 @@ function CompactSignInNudge({ onDismiss }: SignInNudgeProps) {
       {/* Sign In button */}
       <button
         type="button"
-        onClick={() => router.push("/sign-in")}
+        onClick={() => router.push("/ledger/sign-in")}
         className={[
           "px-3 py-1 text-xs font-heading tracking-wide",
           "border border-gold/50 text-gold",
@@ -248,7 +248,7 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
           type="button"
           onClick={() => {
             onClose();
-            router.push("/sign-in");
+            router.push("/ledger/sign-in");
           }}
           className={[
             "w-full px-4 py-2.5 text-base font-heading tracking-wide",
@@ -327,13 +327,11 @@ export function TopBar() {
     <>
       <header className="h-14 shrink-0 border-b border-border bg-background/90 backdrop-blur-sm flex items-center justify-between px-4 z-50">
 
-        {/* Logo — click to visit the marketing site */}
+        {/* Logo — click to visit the marketing home page */}
         <a
-          href="/static"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/"
           className="flex flex-col leading-tight group text-left"
-          aria-label="Fenrir Ledger — visit the marketing site (opens in new tab)"
+          aria-label="Fenrir Ledger — home"
         >
           <span className="font-display text-gold tracking-widest uppercase text-base group-hover:text-primary hover:brightness-110 transition-colors">
             Fenrir Ledger

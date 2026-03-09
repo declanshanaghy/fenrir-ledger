@@ -263,7 +263,7 @@ function ActiveEmptyState() {
       <p className="text-base font-heading text-foreground">No active cards.</p>
       <p className="text-sm text-muted-foreground max-w-xs">
         All your cards are currently in The Howl.{" "}
-        <Link href="/cards/new" className="text-gold hover:text-primary transition-colors">
+        <Link href="/ledger/cards/new" className="text-gold hover:text-primary transition-colors">
           Add a card
         </Link>{" "}
         to see it here.

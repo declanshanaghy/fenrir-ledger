@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Auth Callback Page — /auth/callback
+ * Auth Callback Page — /ledger/auth/callback
  *
  * Handles the redirect from Google's OAuth2 consent screen.
  * Expected URL params: ?code=<auth_code>&state=<csrf_state>
@@ -161,7 +161,7 @@ function AuthCallbackContent() {
     // double-mount or a re-render would find the data already cleared and flash
     // an error before the first mount's async exchange completes.
 
-    const redirectUri = `${window.location.origin}/auth/callback`;
+    const redirectUri = `${window.location.origin}/ledger/auth/callback`;
 
     // Exchange code for tokens via the server-side proxy.
     // The proxy adds the client_secret before forwarding to Google — the secret
@@ -230,7 +230,7 @@ function AuthCallbackContent() {
         // Redirect to the original destination (with origin validation).
         const destination = isSafeCallbackUrl(pkceData.callbackUrl)
           ? pkceData.callbackUrl
-          : "/";
+          : "/ledger";
 
         // Use replace instead of href to prevent back button issues
         window.location.replace(destination);
@@ -275,7 +275,7 @@ function AuthCallbackContent() {
               {errorMessage}
             </p>
             <a
-              href="/sign-in"
+              href="/ledger/sign-in"
               className="mt-2 text-base text-gold hover:text-primary hover:brightness-110 font-heading tracking-wide underline underline-offset-4"
             >
               Return to the gate
