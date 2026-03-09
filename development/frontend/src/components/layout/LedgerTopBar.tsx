@@ -25,7 +25,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Settings, LogOut } from "lucide-react";
+import { LayoutGrid, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle, cycleTheme } from "@/components/layout/ThemeToggle";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
@@ -184,6 +184,7 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const isMyCardsActive = pathname === "/ledger";
   const isSettingsActive = pathname === "/ledger/settings";
 
   return (
@@ -209,6 +210,29 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
           </span>
         </div>
       </div>
+      {/* My Cards link */}
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => {
+          onClose();
+          router.push("/ledger");
+        }}
+        className={[
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border relative",
+          isMyCardsActive ? "text-gold font-semibold" : "text-muted-foreground hover:text-foreground",
+        ].join(" ")}
+        style={{ minHeight: 44 }}
+      >
+        <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden="true" />
+        My Cards
+        {isMyCardsActive && (
+          <span
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-gold"
+            aria-hidden="true"
+          />
+        )}
+      </button>
       {/* Theme row — click anywhere to cycle dark → light → system */}
       <button
         type="button"

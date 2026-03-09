@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <title>Profile Dropdown — My Cards Nav Entry — Wireframe — Issue #441</title>
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace, sans-serif;
+      background: #f0f0f0;
+      color: #111;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    /* ── Annotation system ─────────────────────────────────────── */
+    .page-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .page-meta {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 32px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888;
+      margin-bottom: 12px;
+    }
+
+    .annotation {
+      font-size: 11px;
+      color: #c00;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    .spec-note {
+      font-size: 11px;
+      color: #555;
+      border-left: 3px solid #bbb;
+      padding-left: 8px;
+      margin-top: 8px;
+    }
+
+    /* ── Layout: two-column on wide, stacked on mobile ─────────── */
+    .wireframe-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+      max-width: 900px;
+    }
+
+    @media (min-width: 640px) {
+      .wireframe-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .wireframe-block {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 20px;
+    }
+
+    /* ── Top bar chrome ─────────────────────────────────────────── */
+    .topbar {
+      height: 48px;
+      background: #fafafa;
+      border: 1px solid #ccc;
+      border-bottom: 2px solid #999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .topbar-logo {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #444;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .topbar-logo .rune {
+      font-size: 18px;
+      color: #888;
+    }
+
+    .topbar-logo .wordmark-short {
+      display: none;
+    }
+
+    @media (max-width: 375px) {
+      .topbar-logo .wordmark-full { display: none; }
+      .topbar-logo .wordmark-short { display: inline; }
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+    }
+
+    .avatar-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px dashed #999;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .avatar-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px dashed #aaa;
+      background: #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #777;
+    }
+
+    /* ── Dropdown panel ──────────────────────────────────────────── */
+    .dropdown {
+      position: absolute;
+      right: 0;
+      top: 100%;
+      margin-top: 8px;
+      width: 256px;
+      border: 1px solid #aaa;
+      background: #fafafa;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      z-index: 50;
+    }
+
+    /* Profile header */
+    .dropdown-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px dashed #aaa;
+      background: #e8e8e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #888;
+      flex-shrink: 0;
+    }
+
+    .header-info {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .header-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #222;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-email {
+      font-size: 12px;
+      color: #666;
+      font-family: monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-tagline {
+      font-size: 11px;
+      color: #999;
+      font-style: italic;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Menu rows */
+    .menu-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      min-height: 44px;
+      border-bottom: 1px solid #ddd;
+      font-size: 14px;
+      color: #444;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .menu-row:last-child {
+      border-bottom: none;
+    }
+
+    .menu-row:hover {
+      background: #efefef;
+    }
+
+    .menu-icon {
+      width: 16px;
+      height: 16px;
+      border: 1px dashed #999;
+      background: #e8e8e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: #888;
+      flex-shrink: 0;
+    }
+
+    /* NEW: My Cards row — highlighted as new addition */
+    .menu-row.new-item {
+      background: #fffbe6;
+      border-left: 3px solid #c00;
+      padding-left: 13px; /* compensate for border-left */
+    }
+
+    .menu-row.new-item::after {
+      content: 'NEW';
+      position: absolute;
+      right: 12px;
+      font-size: 9px;
+      font-weight: 700;
+      color: #c00;
+      letter-spacing: 0.05em;
+      border: 1px solid #c00;
+      padding: 1px 4px;
+    }
+
+    /* Active state on My Cards */
+    .menu-row.active-state {
+      background: #f5f5f5;
+      border-left: 3px solid #888;
+      padding-left: 13px;
+    }
+
+    .menu-row.active-state .menu-row-label {
+      font-weight: 600;
+      color: #222;
+    }
+
+    .active-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #555;
+      position: absolute;
+      right: 12px;
+    }
+
+    /* Separator label */
+    .separator-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #aaa;
+      padding: 6px 16px 4px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    /* ── Comparison section ──────────────────────────────────────── */
+    .comparison-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 640px;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 500px) {
+      .comparison-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .comparison-panel {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 16px;
+    }
+
+    .comparison-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #555;
+    }
+
+    .item-list {
+      list-style: none;
+      font-size: 13px;
+      color: #444;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .item-list li {
+      padding: 4px 0;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .item-list li:last-child { border-bottom: none; }
+
+    .item-list .new {
+      color: #c00;
+      font-weight: 600;
+    }
+
+    .item-list .badge {
+      font-size: 9px;
+      background: #c00;
+      color: #fff;
+      padding: 1px 5px;
+      border-radius: 2px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Interaction spec box ─────────────────────────────────────── */
+    .spec-box {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 20px;
+      max-width: 900px;
+      margin-top: 40px;
+    }
+
+    .spec-box h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #444;
+    }
+
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .spec-table th {
+      text-align: left;
+      background: #f0f0f0;
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      font-weight: 700;
+      color: #555;
+    }
+
+    .spec-table td {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      color: #333;
+      vertical-align: top;
+    }
+
+    .spec-table tr:nth-child(even) td { background: #fafafa; }
+
+    /* ── Mobile viewport indicator ───────────────────────────────── */
+    .viewport-label {
+      display: inline-block;
+      font-size: 10px;
+      background: #ddd;
+      color: #555;
+      padding: 2px 8px;
+      margin-bottom: 8px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="page-title">Profile Dropdown — My Cards Nav Entry</h1>
+  <p class="page-meta">Issue #441 · Luna wireframe · Component: LedgerTopBar &gt; ProfileDropdown</p>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- COMPARISON: Before / After                                      -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+
+  <div class="section-label">Before / After — Dropdown Item Order</div>
+
+  <div class="comparison-row">
+    <div class="comparison-panel">
+      <div class="comparison-title">BEFORE (current)</div>
+      <ul class="item-list">
+        <li>① User info (name, email, tagline)</li>
+        <li>② Theme</li>
+        <li>③ Settings</li>
+        <li>④ Sign out</li>
+      </ul>
+    </div>
+    <div class="comparison-panel">
+      <div class="comparison-title">AFTER (proposed)</div>
+      <ul class="item-list">
+        <li>① User info (name, email, tagline)</li>
+        <li class="new">② My Cards <span class="badge">NEW</span></li>
+        <li>③ Theme</li>
+        <li>④ Settings</li>
+        <li>⑤ Sign out</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- WIREFRAMES: Desktop + Mobile                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+
+  <div style="margin-top: 40px;">
+    <div class="section-label">Wireframes — Desktop (≥769px) &amp; Mobile (375px)</div>
+
+    <div class="wireframe-grid">
+
+      <!-- ── Desktop: Dropdown closed ── -->
+      <div>
+        <span class="viewport-label">DESKTOP — Dropdown Closed</span>
+        <div class="wireframe-block">
+          <div class="topbar">
+            <div class="topbar-logo">
+              <span class="rune">ᛟ</span>
+              <span class="wordmark-full">FENRIR LEDGER</span>
+              <span class="wordmark-short">FL</span>
+            </div>
+            <div class="topbar-right">
+              <div class="avatar-btn" title="Click to open user menu" aria-label="Open user menu">
+                <div class="avatar-circle">ᛟ</div>
+              </div>
+            </div>
+          </div>
+          <p class="annotation">↑ No change to top bar — avatar triggers dropdown</p>
+        </div>
+      </div>
+
+      <!-- ── Desktop: Dropdown open (default / not on /ledger) ── -->
+      <div>
+        <span class="viewport-label">DESKTOP — Dropdown Open (not on /ledger)</span>
+        <div class="wireframe-block">
+          <div class="topbar">
+            <div class="topbar-logo">
+              <span class="rune">ᛟ</span>
+              <span class="wordmark-full">FENRIR LEDGER</span>
+            </div>
+            <div class="topbar-right">
+              <div class="avatar-btn">
+                <div class="avatar-circle">ᛟ</div>
+              </div>
+
+              <!-- Dropdown panel -->
+              <div class="dropdown">
+                <!-- Header: user info -->
+                <div class="dropdown-header">
+                  <div class="header-avatar">ᛟ</div>
+                  <div class="header-info">
+                    <span class="header-name">Sigrid Volsung</span>
+                    <span class="header-email">sigrid@example.com</span>
+                    <span class="header-tagline">The wolf is named.</span>
+                  </div>
+                </div>
+
+                <!-- My Cards — NEW nav item -->
+                <div class="menu-row new-item">
+                  <div class="menu-icon">☰</div>
+                  <span class="menu-row-label">My Cards</span>
+                </div>
+
+                <!-- Theme -->
+                <div class="menu-row">
+                  <div class="menu-icon">◑</div>
+                  <span class="menu-row-label">Theme</span>
+                </div>
+
+                <!-- Settings -->
+                <div class="menu-row">
+                  <div class="menu-icon">⚙</div>
+                  <span class="menu-row-label">Settings</span>
+                </div>
+
+                <!-- Sign out -->
+                <div class="menu-row">
+                  <div class="menu-icon">→</div>
+                  <span class="menu-row-label">Sign out</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="annotation">↑ "My Cards" appears first below user info. Links to /ledger.</p>
+        </div>
+      </div>
+
+      <!-- ── Desktop: Dropdown open (active state — on /ledger) ── -->
+      <div>
+        <span class="viewport-label">DESKTOP — Dropdown Open (active: on /ledger)</span>
+        <div class="wireframe-block">
+          <div class="topbar">
+            <div class="topbar-logo">
+              <span class="rune">ᛟ</span>
+              <span class="wordmark-full">FENRIR LEDGER</span>
+            </div>
+            <div class="topbar-right">
+              <div class="avatar-btn">
+                <div class="avatar-circle">ᛟ</div>
+              </div>
+
+              <div class="dropdown">
+                <div class="dropdown-header">
+                  <div class="header-avatar">ᛟ</div>
+                  <div class="header-info">
+                    <span class="header-name">Sigrid Volsung</span>
+                    <span class="header-email">sigrid@example.com</span>
+                    <span class="header-tagline">The wolf is named.</span>
+                  </div>
+                </div>
+
+                <!-- My Cards — active state when pathname === "/ledger" -->
+                <div class="menu-row active-state">
+                  <div class="menu-icon">☰</div>
+                  <span class="menu-row-label">My Cards</span>
+                  <div class="active-dot" title="Active: you are on /ledger"></div>
+                </div>
+
+                <div class="menu-row">
+                  <div class="menu-icon">◑</div>
+                  <span class="menu-row-label">Theme</span>
+                </div>
+
+                <div class="menu-row">
+                  <div class="menu-icon">⚙</div>
+                  <span class="menu-row-label">Settings</span>
+                </div>
+
+                <div class="menu-row">
+                  <div class="menu-icon">→</div>
+                  <span class="menu-row-label">Sign out</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="annotation">↑ "My Cards" active state: bold label + indicator dot when pathname === "/ledger"</p>
+        </div>
+      </div>
+
+      <!-- ── Mobile: 375px — Dropdown open ── -->
+      <div>
+        <span class="viewport-label">MOBILE — 375px — Dropdown Open</span>
+        <div class="wireframe-block" style="max-width: 375px;">
+          <div class="topbar">
+            <div class="topbar-logo">
+              <span class="rune">ᛟ</span>
+              <!-- On ≤375px show short wordmark -->
+              <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em;">FL</span>
+            </div>
+            <div class="topbar-right">
+              <div class="avatar-btn">
+                <div class="avatar-circle">ᛟ</div>
+              </div>
+
+              <!-- Mobile dropdown: same structure, panel fills available width -->
+              <div class="dropdown" style="width: calc(100vw - 32px); max-width: 256px;">
+                <div class="dropdown-header">
+                  <div class="header-avatar">ᛟ</div>
+                  <div class="header-info">
+                    <span class="header-name">Sigrid Volsung</span>
+                    <span class="header-email">sigrid@example.com</span>
+                    <span class="header-tagline">The wolf is named.</span>
+                  </div>
+                </div>
+
+                <!-- My Cards — larger tap target on mobile (min-height: 48px) -->
+                <div class="menu-row new-item" style="min-height: 48px;">
+                  <div class="menu-icon">☰</div>
+                  <span class="menu-row-label">My Cards</span>
+                </div>
+
+                <div class="menu-row" style="min-height: 48px;">
+                  <div class="menu-icon">◑</div>
+                  <span class="menu-row-label">Theme</span>
+                </div>
+
+                <div class="menu-row" style="min-height: 48px;">
+                  <div class="menu-icon">⚙</div>
+                  <span class="menu-row-label">Settings</span>
+                </div>
+
+                <div class="menu-row" style="min-height: 48px;">
+                  <div class="menu-icon">→</div>
+                  <span class="menu-row-label">Sign out</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="annotation">↑ Mobile: "FL" short wordmark. Dropdown rows min-height: 48px for touch targets. Panel max-width: 256px, right-anchored.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- INTERACTION SPEC                                                -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+
+  <div class="spec-box">
+    <h3>Interaction Spec — My Cards Nav Entry</h3>
+
+    <table class="spec-table">
+      <thead>
+        <tr>
+          <th>Behaviour</th>
+          <th>Spec</th>
+          <th>Implementation Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Navigation target</td>
+          <td>Links to <code>/ledger</code></td>
+          <td>Use Next.js <code>&lt;Link href="/ledger"&gt;</code> wrapped in a <code>button</code> (same pattern as Settings row). Call <code>onClose()</code> before push.</td>
+        </tr>
+        <tr>
+          <td>Position in dropdown</td>
+          <td>Immediately below the profile header (user info), above Theme row</td>
+          <td>Insert before the Theme <code>menuitem</code> div in <code>ProfileDropdown</code> in <code>LedgerTopBar.tsx</code></td>
+        </tr>
+        <tr>
+          <td>Active state</td>
+          <td>When <code>pathname === "/ledger"</code>: label is bold, a visual indicator (dot or left border accent) is shown — matching the existing <code>isSettingsActive</code> pattern</td>
+          <td>Add <code>const isMyCardsActive = pathname === "/ledger"</code> alongside existing <code>isSettingsActive</code>. Apply same gold colour class as Settings active state.</td>
+        </tr>
+        <tr>
+          <td>Icon</td>
+          <td>Grid / cards icon from lucide-react (e.g. <code>LayoutGrid</code> or <code>CreditCard</code>)</td>
+          <td>Match size and style of Settings icon: <code>className="h-4 w-4 shrink-0"</code></td>
+        </tr>
+        <tr>
+          <td>Touch target</td>
+          <td>min-height: 44px desktop / 48px mobile</td>
+          <td>Existing rows use <code>style={{ minHeight: 44 }}</code> — keep consistent</td>
+        </tr>
+        <tr>
+          <td>Keyboard nav</td>
+          <td>Tab order: My Cards → Theme → Settings → Sign out. Activates on Enter/Space.</td>
+          <td>Inherits from <code>role="menuitem"</code> on <code>&lt;button&gt;</code> element — no extra work needed</td>
+        </tr>
+        <tr>
+          <td>Dropdown close behaviour</td>
+          <td>Clicking My Cards closes the dropdown then navigates</td>
+          <td>Call <code>onClose()</code> then <code>router.push("/ledger")</code></td>
+        </tr>
+        <tr>
+          <td>Accessibility label</td>
+          <td>Visible text "My Cards" is sufficient. No aria-label needed.</td>
+          <td>Inherits <code>role="menuitem"</code> from parent menu pattern</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="spec-note" style="margin-top: 16px;">
+      The "My Cards" entry is only shown in the <strong>signed-in</strong> ProfileDropdown (not in the anonymous UpsellPromptPanel). Anonymous users have no card list to navigate to.
+    </p>
+    <p class="spec-note">
+      No change to the anonymous upsell panel (<code>UpsellPromptPanel</code>).
+    </p>
+    <p class="spec-note">
+      Active state colour token: use <code>text-gold</code> matching the existing <code>isSettingsActive</code> class pattern already in <code>LedgerTopBar.tsx</code>.
+    </p>
+  </div>
+
+</body>
+</html>
