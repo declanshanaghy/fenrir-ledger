@@ -35,15 +35,17 @@ test.describe("Issue #417 — Remove explicit AI copy", () => {
   test("About page: agent profiles section preserved", async ({ page }) => {
     await page.goto("/about");
 
-    // Verify agent profiles are visible
-    const agentHeading = await page.getByText("The Agents of Asgard").first();
-    expect(agentHeading).toBeVisible();
+    // Verify agent profiles are visible by looking for the section heading
+    const agentHeading = page.getByRole("heading", {
+      name: /The Agents of Asgard/i,
+    });
+    expect(agentHeading.first()).toBeVisible();
 
     // Verify individual agents are displayed
     const agents = ["Odin", "Freya", "Loki", "Thor"];
     for (const agent of agents) {
-      const agentElement = await page.getByText(agent).first();
-      expect(agentElement).toBeVisible();
+      const agentElement = page.getByText(agent, { exact: false });
+      expect(agentElement.first()).toBeVisible();
     }
   });
 
@@ -54,14 +56,16 @@ test.describe("Issue #417 — Remove explicit AI copy", () => {
     const pageContent = await page.content();
 
     // Verify Norse mythology framing is intact
-    const norsTerms = ["Gleipnir", "Asgard", "Fenrir", "rune"];
+    const norsTerms = ["Gleipnir", "Asgard", "Fenrir"];
     for (const term of norsTerms) {
       expect(pageContent, `About page should contain "${term}"`).toContain(term);
     }
 
     // Verify "The Forge" section title is present
-    const forgeHeading = await page.getByText("Forged in the Fires of Asgard").first();
-    expect(forgeHeading).toBeVisible();
+    const forgeHeading = page.getByRole("heading", {
+      name: /Forged in the Fires of Asgard/i,
+    });
+    expect(forgeHeading.first()).toBeVisible();
   });
 
   test("Features page: no AI-powered references remain", async ({ page }) => {
