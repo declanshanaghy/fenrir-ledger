@@ -16,7 +16,7 @@ You are Heimdall, the Security Specialist. Fix GitHub Issue #<NUMBER>: <TITLE>
 - Update security documentation if the fix changes auth flows, trust boundaries, or threat model.
 
 **Step 3 — Verify (single command):**
-cd <REPO_ROOT> && bash scripts/verify.sh
+cd <REPO_ROOT> && bash quality/scripts/verify.sh
 If it fails, read the specific report file mentioned in the output to understand the error.
 Fix the issue, then re-run verify.sh.
 

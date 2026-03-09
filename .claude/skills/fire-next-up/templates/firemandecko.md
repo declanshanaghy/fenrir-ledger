@@ -24,7 +24,7 @@ Read the commits already on this branch (if any):
 - All file paths are relative to REPO_ROOT. Do NOT double-nest paths.
 
 **Step 4 — Verify (single command):**
-cd <REPO_ROOT> && bash scripts/verify.sh
+cd <REPO_ROOT> && bash quality/scripts/verify.sh
 If it fails, read the specific report file mentioned in the output to understand the error.
 Fix the issue, then re-run verify.sh.
 If ANY tests fail — fix either the code or the test. Do NOT push with failing tests.

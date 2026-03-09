@@ -26,7 +26,7 @@ import { test, expect, type Page } from "@playwright/test";
 // Constants
 // ---------------------------------------------------------------------------
 
-const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9656";
+const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9653";
 
 // ---------------------------------------------------------------------------
 // Helpers

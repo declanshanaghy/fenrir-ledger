@@ -27,16 +27,17 @@ export default defineConfig({
     },
   ],
 
-  // Start the dev server automatically when no SERVER_URL is provided.
-  // Reuses an existing server if one is already running (local dev).
+  // Start a production server when no SERVER_URL is provided.
+  // Uses `npm start` (serves pre-built .next output) — no on-demand compilation.
+  // Reuses an existing server if one is already running.
   // Skipped entirely when SERVER_URL is set (CI hitting a Vercel preview).
   ...(!process.env.SERVER_URL
     ? {
         webServer: {
-          command: "npm run dev",
+          command: "npm start",
           url: "http://localhost:9653",
           reuseExistingServer: true,
-          timeout: 120_000,
+          timeout: 30_000,
         },
       }
     : {}),
