@@ -27,7 +27,6 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "next-themes";
 import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
-import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { EntitlementProvider } from "@/contexts/EntitlementContext";
 import { RagnarokProvider } from "@/contexts/RagnarokContext";
@@ -67,10 +66,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    // Dashboard (/) inherits this default: "Ledger of Fates — Fenrir Ledger"
-    // Sub-pages set their own title via route segment layouts and use the template.
-    // Per product/copywriting.md page title table.
-    default: "Ledger of Fates — Fenrir Ledger",
+    default: "Fenrir Ledger — Break Free from Credit Card Traps",
     template: "%s — Fenrir Ledger",
   },
   description:
@@ -114,7 +110,7 @@ export default function RootLayout({
               <RagnarokProvider>
                 {/* Easter egg #4 — console ASCII art (client-only, once per session) */}
                 <ConsoleSignature />
-                <AppShell>{children}</AppShell>
+                {children}
               </RagnarokProvider>
             </EntitlementProvider>
           </AuthProvider>
