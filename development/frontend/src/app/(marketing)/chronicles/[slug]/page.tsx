@@ -41,7 +41,7 @@ export async function generateMetadata({
   const entry = getChronicleBySlug(slug);
   if (!entry) return { title: "Not Found" };
   return {
-    title: `${entry.title} — Session Chronicle · Fenrir Ledger`,
+    title: `${entry.title} — Prose Edda · Fenrir Ledger`,
     description: entry.excerpt,
   };
 }
@@ -164,7 +164,7 @@ export default async function ChronicleDetailPage({
             href="/chronicles"
             className="font-mono text-[0.65rem] text-muted-foreground hover:text-primary transition-colors tracking-widest uppercase"
           >
-            ↑ All Chronicles
+            ↑ All Sagas
           </Link>
         </div>
       </nav>
