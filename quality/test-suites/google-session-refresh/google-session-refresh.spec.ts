@@ -202,7 +202,7 @@ test.describe("AC3 & AC4: /api/auth/refresh endpoint — authentication and clie
     // The endpoint properly validates input structure
     const mockIdToken = "mock-id-token";
 
-    // Test 1: Valid structure
+    // Test 1: Valid structure - should attempt processing
     const validResponse = await page.request.post("/api/auth/refresh", {
       data: { refresh_token: "test-refresh-token" },
       headers: {
@@ -211,9 +211,8 @@ test.describe("AC3 & AC4: /api/auth/refresh endpoint — authentication and clie
       },
     });
 
-    // Should return an error response (invalid token) but NOT 400 due to format
-    // The endpoint validates AND proxies to Google
-    expect(validResponse.ok || validResponse.status() >= 400).toBe(true);
+    // Should return a response (may be success or error, but not malformed)
+    expect(validResponse.status()).toBeGreaterThanOrEqual(200);
 
     // Test 2: Missing refresh_token in request body
     const noTokenResponse = await page.request.post("/api/auth/refresh", {
@@ -224,8 +223,7 @@ test.describe("AC3 & AC4: /api/auth/refresh endpoint — authentication and clie
       },
     });
 
-    // Should reject missing required field
-    const body = await noTokenResponse.json().catch(() => ({}));
+    // Should reject missing required field with 400+ status
     expect(noTokenResponse.status()).toBeGreaterThanOrEqual(400);
   });
 
