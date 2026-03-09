@@ -36,16 +36,16 @@ function HeroSection() {
       className="border-b border-border bg-card"
     >
       <div className="max-w-[1100px] mx-auto px-6 py-16 sm:py-24">
-        <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-10 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-10 items-center">
 
           {/* Fenrir wolf logo */}
           <div className="flex justify-center sm:justify-start">
             <Image
               src="/images/fenrir-logo.png"
               alt="Fenrir Ledger wolf logo"
-              width={160}
-              height={160}
-              className="w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] rounded-lg dark:drop-shadow-[0_0_32px_rgba(91,158,201,0.2)]"
+              width={1536}
+              height={1024}
+              className="max-w-[200px] sm:max-w-[280px] h-auto rounded-lg dark:drop-shadow-[0_0_32px_rgba(91,158,201,0.2)]"
               priority
             />
           </div>
