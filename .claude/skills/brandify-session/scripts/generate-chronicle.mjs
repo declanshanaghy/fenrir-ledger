@@ -28,46 +28,46 @@ function generateAct(act, index) {
   let userBlock = "";
   if (act.user_msg) {
     userBlock = `
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">Odin</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
           </div>
-          <p class="msg-text">${esc(act.user_msg)}</p>
+          <p className="msg-text">${esc(act.user_msg)}</p>
         </div>`;
   }
   let codeBlock = "";
   if (act.code_snippet) {
     codeBlock = `
-          <div class="code-block"><pre>${act.code_snippet}</pre></div>`;
+          <div className="code-block"><pre>${act.code_snippet}</pre></div>`;
   }
   let bugBlock = "";
   if (act.bug_fix) {
     bugBlock = `
-          <div class="bug-box">
-            <p class="bug-label">Bug Fixed</p>
-            <p class="bug-text">${esc(act.bug_fix)}</p>
+          <div className="bug-box">
+            <p className="bug-label">Bug Fixed</p>
+            <p className="bug-text">${esc(act.bug_fix)}</p>
           </div>`;
   }
   const chips = [];
-  for (const f of act.files_new ?? []) chips.push(`<span class="chip chip-new">${esc(f)}</span>`);
-  for (const f of act.files_mod ?? []) chips.push(`<span class="chip chip-mod">${esc(f)}</span>`);
-  for (const f of act.files_mem ?? []) chips.push(`<span class="chip chip-mem">${esc(f)}</span>`);
+  for (const f of act.files_new ?? []) chips.push(`<span className="chip chip-new">${esc(f)}</span>`);
+  for (const f of act.files_mod ?? []) chips.push(`<span className="chip chip-mod">${esc(f)}</span>`);
+  for (const f of act.files_mem ?? []) chips.push(`<span className="chip chip-mem">${esc(f)}</span>`);
   let chipsBlock = "";
   if (chips.length > 0) {
     chipsBlock = `
-          <div class="file-chips">
+          <div className="file-chips">
             ${chips.join("\n            ")}
           </div>`;
   }
   return `
-    <section class="entry" id="act-${num}">
-      <div class="entry-rune" title="${esc(act.title)}">${act.rune}</div>
-      <div class="entry-body">
-        <p class="act-label">Act ${roman} &middot; ${esc(act.category)}</p>
-        <h2 class="entry-title">${esc(act.title)}</h2>
+    <section className="entry" id="act-${num}">
+      <div className="entry-rune" title="${esc(act.title)}">${act.rune}</div>
+      <div className="entry-body">
+        <p className="act-label">Act ${roman} \xB7 ${esc(act.category)}</p>
+        <h2 className="entry-title">${esc(act.title)}</h2>
 ${userBlock}
-        <div class="work-card">
-          <div class="work-body">${act.work_summary}</div>${codeBlock}${bugBlock}${chipsBlock}
+        <div className="work-card">
+          <div className="work-body">${act.work_summary}</div>${codeBlock}${bugBlock}${chipsBlock}
         </div>
       </div>
     </section>`;
@@ -75,7 +75,7 @@ ${userBlock}
 function generateTocEntry(act, index) {
   const num = index + 1;
   const roman = ROMAN[index] ?? String(num);
-  return `      <li><a href="#act-${num}"><span class="toc-rune">${act.rune}</span> <span class="toc-num">${roman}</span> ${esc(act.title)}</a></li>`;
+  return `      <li><a href="#act-${num}"><span className="toc-rune">${act.rune}</span> <span className="toc-num">${roman}</span> ${esc(act.title)}</a></li>`;
 }
 function countFiles(data2) {
   const all = /* @__PURE__ */ new Set();
@@ -98,35 +98,35 @@ excerpt: "${data2.excerpt.replace(/"/g, '\\"')}"
 slug: "${data2.slug}"
 ---
 
-<div class="chronicle-page">
+<div className="chronicle-page">
 
-<header class="session-header">
-  <span class="header-runes" aria-hidden="true">${data2.runes}</span>
-  <h1 class="session-title">${esc(data2.title)}</h1>
-  <p class="session-subtitle">Session Chronicle &middot; Fenrir Ledger</p>
-  <div class="session-meta">
-      <span>Date <span class="val">${data2.date}</span></span>
-      <span>Session <span class="val">${data2.slug}</span></span>
-      <span>Acts <span class="val">${data2.acts.length}</span></span>
-      <span>Files changed <span class="val">${totalFiles}</span></span>
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">${data2.runes}</span>
+  <h1 className="session-title">${esc(data2.title)}</h1>
+  <p className="session-subtitle">Session Chronicle \xB7 Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">${data2.date}</span></span>
+      <span>Session <span className="val">${data2.slug}</span></span>
+      <span>Acts <span className="val">${data2.acts.length}</span></span>
+      <span>Files changed <span className="val">${totalFiles}</span></span>
   </div>
 </header>
 
-<nav class="toc">
-  <div class="toc-title">Chronicle of Acts</div>
-  <ul class="toc-list">
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
 ${toc}
   </ul>
 </nav>
 
-<div class="timeline">
+<div className="timeline">
 ${acts}
 </div>
 
-<footer class="session-footer">
-  <div class="footer-cipher">${data2.runes}</div>
-  <div class="footer-text">${esc(data2.title)} &middot; Fenrir Ledger Session Chronicle</div>
-  <p class="footer-sub">The wolf remembers everything.</p>
+<footer className="session-footer">
+  <div className="footer-cipher">${data2.runes}</div>
+  <div className="footer-text">${esc(data2.title)} \xB7 Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
 </footer>
 
 </div>

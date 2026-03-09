@@ -13,7 +13,8 @@ node "$SCRIPT_DIR/generate-chronicle.mjs" \
 
 The script generates a complete MDX file with:
 - Frontmatter: `title`, `date`, `rune`, `excerpt`, `slug`
-- Chronicle body inside `<div class="chronicle-page">` — styled via `chronicle.css`
+- Chronicle body inside `<div className="chronicle-page">` — styled via `chronicle.css`
+- All attributes use JSX-compatible `className` (not `class`)
 
 ## Component Rules
 
@@ -23,4 +24,5 @@ The script generates a complete MDX file with:
 - Session title: title-cased, evocative, not mechanical
 - Code syntax highlighting: `.ca` (add/green), `.cr` (remove/red), `.cc` (comment/subtle)
 - Voice: ancient, unhurried, knowing — rune inscriptions, not UI copy
-- `work_summary` field supports inline HTML: use `<span class="hl">` for highlights, `<span class="mono">` for code refs
+- `work_summary` field supports inline JSX: use `<span className="hl">` for highlights, `<span className="mono">` for code refs
+- Use unicode characters directly (·, —, ×) instead of HTML entities (&middot;, &mdash;, &times;)

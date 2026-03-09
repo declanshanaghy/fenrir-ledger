@@ -5,7 +5,7 @@ description: Use this skill when the user says "brandify-session", "brandify ses
 
 # Brandify Session — Session Chronicle Generator
 
-Exports the current session to a styled MDX chronicle using the Fenrir Ledger visual system. Styling is provided by `chronicle.css` scoped to `.chronicle-page`. MDX is generated from JSON by a pre-compiled script and written to `content/blog/`.
+Exports the current session to a styled MDX chronicle using the Fenrir Ledger visual system. Styling is provided by `chronicle.css` scoped to `.chronicle-page`. MDX with JSX-compatible markup (`className`, not `class`) is generated from JSON by a pre-compiled script and written to `content/blog/`.
 
 ---
 
@@ -46,8 +46,8 @@ Write a JSON file to `tmp/sessions/{{NAME}}.json` with this schema:
       "rune": "ᛏ",
       "category": "Refactoring",
       "user_msg": "the user's raw message",
-      "work_summary": "<p>HTML paragraphs. Use <span class=\"hl\">highlights</span> and <span class=\"mono\">code refs</span>.</p>",
-      "code_snippet": "optional pre-formatted code (use <span class=\"ca\"> for adds, <span class=\"cr\"> for removes)",
+      "work_summary": "<p>JSX paragraphs. Use <span className=\"hl\">highlights</span> and <span className=\"mono\">code refs</span>.</p>",
+      "code_snippet": "optional pre-formatted code (use <span className=\"ca\"> for adds, <span className=\"cr\"> for removes)",
       "bug_fix": "optional bug description",
       "files_new": ["new-file.ts"],
       "files_mod": ["existing-file.ts"],
@@ -78,7 +78,7 @@ node "$SCRIPT_DIR/generate-chronicle.mjs" \
   --output "$BLOG_DIR/{{NAME}}.mdx"
 ```
 
-The script generates a complete MDX file with frontmatter (`title`, `date`, `rune`, `excerpt`, `slug`) and chronicle body styled via `.chronicle-page` classes from `chronicle.css`.
+The script generates a complete MDX file with frontmatter (`title`, `date`, `rune`, `excerpt`, `slug`) and chronicle body using JSX-compatible `className` attributes, styled via `.chronicle-page` classes from `chronicle.css`.
 
 **Fallback:** `npx tsx generate-chronicle.ts` (if `.mjs` is stale)
 **After editing `generate-chronicle.ts`:** run `scripts/build.sh` to rebuild
