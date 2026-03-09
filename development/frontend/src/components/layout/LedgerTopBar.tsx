@@ -8,13 +8,11 @@
  *
  * Desktop (>= 769px):
  *   Left:   ᛟ FENRIR LEDGER logo -> /
- *   Center: "<- Back to site" text link -> /
  *   Right:  Theme toggle (icon) + User avatar button
  *
  * Mobile (<= 768px):
  *   Left:   ᛟ FL (rune + initials)
- *   Right:  Back icon + Theme toggle + Avatar
- *   No center text link.
+ *   Right:  Theme toggle + Avatar
  *
  * Height: 48px (h-12). Sticky top-0 z-[100].
  * Border-bottom: border-border.
@@ -26,7 +24,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { ArrowLeft, Settings, ChevronRight } from "lucide-react";
+import { Settings, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
@@ -368,30 +366,8 @@ export function LedgerTopBar() {
         </Link>
       </div>
 
-      {/* CENTER: "Back to site" -- desktop only */}
-      <div className="hidden md:flex items-center">
-        <Link
-          href="/"
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] px-2"
-          aria-label="Back to Fenrir Ledger site"
-        >
-          <span aria-hidden="true" className="text-xs">←</span>
-          <span className="font-body">Back to site</span>
-        </Link>
-      </div>
-
       {/* RIGHT: Controls cluster */}
       <div className="relative flex items-center gap-0.5" ref={panelRef}>
-
-        {/* Back icon -- mobile only */}
-        <Link
-          href="/"
-          className="md:hidden flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-          style={{ minWidth: 44, minHeight: 44 }}
-          aria-label="Back to Fenrir Ledger site"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
 
         {/* Theme toggle (icon variant) */}
         <ThemeToggle variant="icon" />
