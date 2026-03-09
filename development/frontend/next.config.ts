@@ -22,8 +22,8 @@ const cspDirectives = [
   // Styles: self + unsafe-inline (Tailwind inline styles) + Google Fonts
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
 
-  // Images: self + Google profile pictures + data: URIs
-  "img-src 'self' https://lh3.googleusercontent.com data:",
+  // Images: self + Google profile pictures + YouTube thumbnails + data: URIs
+  "img-src 'self' https://lh3.googleusercontent.com https://img.youtube.com data:",
 
   // Fonts: self + Google Fonts CDN + data: URIs
   "font-src 'self' https://fonts.gstatic.com data:",
