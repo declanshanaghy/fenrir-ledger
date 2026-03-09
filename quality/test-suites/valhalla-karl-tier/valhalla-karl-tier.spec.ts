@@ -19,7 +19,7 @@ import { test, expect, type Page } from "@playwright/test";
 // Test Setup & Helpers
 // ============================================================================
 
-const BASE_URL = process.env.SERVER_URL ?? "http://localhost:3000";
+const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9653";
 
 /**
  * Helper: Set Thrall (free) entitlement in localStorage
