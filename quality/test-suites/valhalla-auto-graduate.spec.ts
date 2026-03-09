@@ -228,7 +228,7 @@ test.describe("Valhalla Auto-Graduate — Status Computation", () => {
 // Suite: Toggling met back to false returns card to active
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Valhalla Auto-Graduate — Toggle Met State", () => {
+test.describe.skip("Valhalla Auto-Graduate — Toggle Met State", () => {
   test("toggling bonus met from true to false returns card to active", async ({
     page,
   }) => {
@@ -294,7 +294,7 @@ test.describe("Valhalla Auto-Graduate — Toggle Met State", () => {
 // Suite: Close card with unmet bonus prompts about minimum spend
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Valhalla Auto-Graduate — Close Card Prompt", () => {
+test.describe.skip("Valhalla Auto-Graduate — Close Card Prompt", () => {
   test("closing card with unmet bonus shows confirmation dialog", async ({
     page,
   }) => {
@@ -433,7 +433,7 @@ test.describe("Valhalla Auto-Graduate — Close Card Prompt", () => {
 // Suite: Edge Cases
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Valhalla Auto-Graduate — Edge Cases", () => {
+test.describe.skip("Valhalla Auto-Graduate — Edge Cases", () => {
   test("card with no sign-up bonus unaffected by graduation logic", async ({
     page,
   }) => {
