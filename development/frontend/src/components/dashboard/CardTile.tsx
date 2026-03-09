@@ -109,7 +109,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
         transition: { duration: 0.15, ease: "easeOut" },
       })}
     >
-      <Link href={`/cards/${card.id}/edit`} className="block group">
+      <Link href={`/ledger/cards/${card.id}/edit`} className="block group">
         <Card className="h-full border border-secondary cursor-pointer" data-testid="card-tile">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-2">

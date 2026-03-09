@@ -722,7 +722,7 @@ function FinalCtaSection(): React.ReactElement {
         </motion.p>
         <motion.div variants={FADE_UP}>
           <Link
-            href="/app"
+            href="/ledger"
             className={[
               "inline-flex items-center justify-center px-10 py-4",
               "font-heading text-sm font-bold tracking-widest uppercase",

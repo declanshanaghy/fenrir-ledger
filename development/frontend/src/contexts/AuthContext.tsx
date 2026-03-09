@@ -133,9 +133,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setSession(null);
     setStatus("anonymous");
     setHouseholdId(anonId);
-    // Navigate to dashboard in anonymous state — NOT to /sign-in.
-    // The app is not gated. Returning to / shows the dashboard.
-    window.location.href = "/";
+    // Navigate to dashboard in anonymous state — NOT to /ledger/sign-in.
+    // The app is not gated. Returning to /ledger shows the dashboard.
+    window.location.href = "/ledger";
   }, []);
 
   return (

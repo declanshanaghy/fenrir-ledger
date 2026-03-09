@@ -159,7 +159,7 @@ function UrgentRow({ row }: UrgentRowProps) {
 
       {/* Row 4: View action */}
       <Link
-        href={`/cards/${card.id}/edit`}
+        href={`/ledger/cards/${card.id}/edit`}
         className={cn(
           "inline-flex items-center text-sm font-heading uppercase tracking-wide",
           "text-gold hover:text-primary hover:brightness-110 transition-colors"

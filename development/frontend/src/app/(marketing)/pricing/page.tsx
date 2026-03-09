@@ -99,7 +99,7 @@ function TierCardsSection() {
             </p>
 
             <Link
-              href="/app"
+              href="/ledger"
               className={[
                 "block text-center px-6 py-3.5 mb-7",
                 "font-heading text-xs font-bold tracking-widest uppercase",
@@ -182,7 +182,7 @@ function TierCardsSection() {
             </p>
 
             <Link
-              href="/app"
+              href="/ledger"
               className={[
                 "block text-center px-6 py-3.5 mb-7",
                 "font-heading text-xs font-bold tracking-widest uppercase",
@@ -410,7 +410,7 @@ function FinalCta() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href="/app"
+            href="/ledger"
             className={[
               "inline-flex items-center justify-center px-10 py-4",
               "font-heading text-sm font-bold tracking-widest uppercase",

@@ -66,7 +66,7 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
       <p className="text-center text-sm text-muted-foreground/70 font-body mt-2 mb-4">
         <button
           type="button"
-          onClick={() => router.push("/sign-in")}
+          onClick={() => router.push("/ledger/sign-in")}
           className="underline underline-offset-2 decoration-muted-foreground/40 hover:text-muted-foreground transition-colors"
         >
           Sign in to sync your data
@@ -127,7 +127,7 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => router.push("/sign-in")}
+            onClick={() => router.push("/ledger/sign-in")}
             className={[
               "px-3 py-1.5 text-sm font-heading tracking-wide",
               "border border-gold/50 text-gold",
@@ -160,7 +160,7 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
 
         <button
           type="button"
-          onClick={() => router.push("/sign-in")}
+          onClick={() => router.push("/ledger/sign-in")}
           className={[
             "self-start px-3 py-1.5 text-sm font-heading tracking-wide",
             "border border-gold/50 text-gold",
