@@ -340,11 +340,11 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
     // Check files exist and are readable
     const fs = require("fs");
     const path = require("path");
-    const repoRoot = process.cwd();
 
-    const indexPage = path.join(repoRoot, "development/frontend/src/app/(marketing)/chronicles/page.tsx");
-    const detailPage = path.join(repoRoot, "development/frontend/src/app/(marketing)/chronicles/[slug]/page.tsx");
-    const chroniclesLib = path.join(repoRoot, "development/frontend/src/lib/chronicles.ts");
+    // From playwright test, cwd() is the frontend directory
+    const indexPage = path.join("src/app/(marketing)/chronicles/page.tsx");
+    const detailPage = path.join("src/app/(marketing)/chronicles/[slug]/page.tsx");
+    const chroniclesLib = path.join("src/lib/chronicles.ts");
 
     expect(fs.existsSync(indexPage)).toBeTruthy();
     expect(fs.existsSync(detailPage)).toBeTruthy();
