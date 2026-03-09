@@ -37,7 +37,7 @@ const FAQ_ITEMS: FaqItem[] = [
     id: "cancel-data",
     question: "What happens to my data if I cancel Karl?",
     answer:
-      "Your card data stays intact. If you were using Cloud Sync, your cards remain in the cloud and continue to be accessible — but new changes will only sync after re-subscribing. Multi-Household cards are preserved but you'll only be able to view your primary household until you re-subscribe. We never delete your data when you downgrade.",
+      "Your card data stays intact. If you were using Cloud Sync, your cards remain in the cloud and continue to be accessible — but new changes will only sync after re-subscribing. Whole-Household cards are preserved but you'll only be able to view your primary household until you re-subscribe. We never delete your data when you downgrade.",
   },
   {
     id: "why-not-free",
