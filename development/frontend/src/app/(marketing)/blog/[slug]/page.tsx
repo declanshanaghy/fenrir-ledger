@@ -109,7 +109,8 @@ export default async function BlogEntryPage({
       </nav>
 
       {/* ── Chronicle content — native MDX rendering ── */}
-      {/* format:'md' allows HTML mixed content (<pre> with nested elements) */}
+      {/* format:'md' compiles HTML+markdown to React components at build time.
+          All MDX files use JSX-compatible className attributes. */}
       <MDXRemote
         source={entry.content}
         options={{ mdxOptions: { format: "md" } }}
