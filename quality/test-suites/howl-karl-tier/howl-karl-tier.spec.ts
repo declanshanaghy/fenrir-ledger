@@ -62,6 +62,8 @@ async function seedEntitlement(
  * Navigate to dashboard, seeding household and entitlement first.
  */
 async function goToDashboardWithTier(page: Page, tier: "thrall" | "karl") {
+  // Navigate first to establish origin, then seed data
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await seedEntitlement(page, ANONYMOUS_HOUSEHOLD_ID, tier);
