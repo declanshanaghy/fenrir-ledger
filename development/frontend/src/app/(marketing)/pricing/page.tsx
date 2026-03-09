@@ -121,33 +121,12 @@ function TierCardsSection() {
                 "Sign-up bonus & minimum spend tracking",
                 "Velocity management (Chase 5/24, Citi 1/8, etc.)",
                 "The Howl — preview with blurred teaser",
-                "Single household",
+                "Single User",
                 "Google sign-in",
               ].map((feat) => (
                 <li key={feat} className="flex items-start gap-3">
                   <CheckIcon included />
                   <span className="font-body text-sm text-foreground">{feat}</span>
-                </li>
-              ))}
-              {/* Karl features shown as excluded */}
-              {[
-                "Card archive (Valhalla)",
-                "The Howl — full proactive alerts & Ragnarök",
-                "Cloud Sync (multi-device)",
-                "Multi-Household management",
-                "Smart Import (AI-Powered)",
-                "Data Export (CSV / JSON)",
-              ].map((feat) => (
-                <li key={feat} className="flex items-start gap-3">
-                  <span
-                    className="shrink-0 font-mono text-sm text-muted-foreground/30"
-                    aria-label="Not included"
-                  >
-                    ✗
-                  </span>
-                  <span className="font-body text-sm text-muted-foreground/40 line-through decoration-solid">
-                    {feat}
-                  </span>
                 </li>
               ))}
             </ul>
@@ -337,7 +316,7 @@ function ComparisonTableSection() {
                 </td>
               </tr>
               {[
-                { name: "Single household", thrall: true, karl: true },
+                { name: "Single User", thrall: true, karl: true },
                 { name: "Multi-Household — create and manage multiple household ledgers", thrall: false, karl: true },
               ].map(({ name, thrall, karl }) => (
                 <tr key={name} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
