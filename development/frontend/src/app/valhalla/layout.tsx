@@ -1,11 +1,5 @@
 /**
- * /valhalla route segment layout — server component.
- *
- * Sets the page <title> for the Valhalla (Closed Cards) route.
- * Per product/copywriting.md: "Valhalla — Fenrir Ledger"
- *
- * A separate layout.tsx is required because the page itself is a client
- * component ("use client") and cannot export Next.js metadata directly.
+ * /valhalla layout — Issue #352: route removed, redirects to /?tab=valhalla.
  */
 
 import type { Metadata } from "next";

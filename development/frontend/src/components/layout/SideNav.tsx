@@ -7,11 +7,17 @@
  * Collapsed (w-14): icon only (native title tooltip)
  *
  * Active route is highlighted with a gold left border.
- * Stub items are shown disabled for future routes.
+ *
+ * Issue #352: The "Valhalla" sidebar link no longer navigates to /valhalla.
+ * Instead, it dispatches a `fenrir:activate-tab` custom event (if already on
+ * the dashboard) or navigates to /?tab=valhalla (from any other route).
+ * The /valhalla route is removed. Both "Cards" and "Valhalla" sidebar items
+ * show the active state simultaneously when the Valhalla dashboard tab is open.
  */
 
+import { useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { CreditCard, PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,33 +43,43 @@ function RuneIcon({ rune }: { rune: string }) {
   );
 }
 
-interface NavItem {
-  label: string;
-  href: string;
-  /** Lucide icon component or custom component accepting className */
-  icon: React.ElementType;
-  /** Custom icon node — used when icon cannot be a standard Lucide component */
-  iconNode?: React.ReactNode;
-  disabled?: boolean;
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { label: "Cards", href: "/", icon: CreditCard },
-  {
-    label: "Valhalla",
-    href: "/valhalla",
-    icon: CreditCard, // Fallback (unused when iconNode is set)
-    iconNode: <RuneIcon rune="ᛏ" />,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
-];
-
 export function SideNav({ collapsed, onToggle }: SideNavProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Whether the Valhalla dashboard tab is currently active
+  const isOnDashboard = pathname === "/";
+  const activeTab = searchParams?.get("tab");
+  const valhallaTabActive = isOnDashboard && activeTab === "valhalla";
+
+  /**
+   * Handle Valhalla sidebar link click.
+   * - If on dashboard: dispatch custom event to activate Valhalla tab in-place.
+   * - Otherwise: navigate to /?tab=valhalla.
+   */
+  const handleValhallaClick = useCallback(
+    (e: React.MouseEvent | React.KeyboardEvent) => {
+      if ("key" in e && e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+
+      if (isOnDashboard) {
+        // Dispatch event — Dashboard.tsx listens and activates the tab
+        window.dispatchEvent(
+          new CustomEvent("fenrir:activate-tab", { detail: { tab: "valhalla" } })
+        );
+        // Also update localStorage so the tab persists on next load
+        try {
+          localStorage.setItem("fenrir:dashboard-tab", "valhalla");
+        } catch {
+          // ignore
+        }
+      } else {
+        // Navigate to dashboard with tab query param
+        window.location.href = "/?tab=valhalla";
+      }
+    },
+    [isOnDashboard]
+  );
 
   return (
     <aside
@@ -75,31 +91,62 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
     >
       {/* Nav items */}
       <nav className="flex-1 py-3 space-y-0.5 px-1.5">
-        {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={collapsed ? item.label : undefined}
-              className={cn(
-                "flex items-center gap-3 rounded-sm px-2.5 py-2 text-base",
-                "transition-[transform,filter,background-color,color,border-color] duration-150 ease-out",
-                "active:scale-[0.98] active:brightness-90",
-                isActive
-                  ? "bg-primary/10 text-gold border-l-2 border-gold"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground hover:brightness-110 border-l-2 border-transparent"
-              )}
-            >
-              {/* Render custom iconNode (rune) or fallback to Lucide icon */}
-              {item.iconNode ?? <Icon className="h-4 w-4 shrink-0" />}
-              {!collapsed && (
-                <span className="font-body truncate">{item.label}</span>
-              )}
-            </Link>
-          );
-        })}
+
+        {/* Cards — main dashboard link */}
+        <Link
+          href="/"
+          title={collapsed ? "Cards" : undefined}
+          className={cn(
+            "flex items-center gap-3 rounded-sm px-2.5 py-2 text-base",
+            "transition-[transform,filter,background-color,color,border-color] duration-150 ease-out",
+            "active:scale-[0.98] active:brightness-90",
+            pathname === "/"
+              ? "bg-primary/10 text-gold border-l-2 border-gold"
+              : "text-muted-foreground hover:bg-secondary hover:text-foreground hover:brightness-110 border-l-2 border-transparent"
+          )}
+        >
+          <CreditCard className="h-4 w-4 shrink-0" />
+          {!collapsed && <span className="font-body truncate">Cards</span>}
+        </Link>
+
+        {/* Valhalla — activates dashboard Valhalla tab (not a separate route) */}
+        {/* Shows active state both when on /valhalla tab AND when sidebar Valhalla is active */}
+        <button
+          type="button"
+          title={collapsed ? "Valhalla" : undefined}
+          aria-label="Open Valhalla tab"
+          onClick={handleValhallaClick}
+          onKeyDown={handleValhallaClick}
+          className={cn(
+            "flex items-center gap-3 rounded-sm px-2.5 py-2 text-base w-full text-left",
+            "transition-[transform,filter,background-color,color,border-color] duration-150 ease-out",
+            "active:scale-[0.98] active:brightness-90",
+            valhallaTabActive
+              ? "bg-primary/10 text-gold border-l-2 border-gold"
+              : "text-muted-foreground hover:bg-secondary hover:text-foreground hover:brightness-110 border-l-2 border-transparent"
+          )}
+        >
+          <RuneIcon rune="↑" />
+          {!collapsed && <span className="font-body truncate">Valhalla</span>}
+        </button>
+
+        {/* Settings */}
+        <Link
+          href="/settings"
+          title={collapsed ? "Settings" : undefined}
+          className={cn(
+            "flex items-center gap-3 rounded-sm px-2.5 py-2 text-base",
+            "transition-[transform,filter,background-color,color,border-color] duration-150 ease-out",
+            "active:scale-[0.98] active:brightness-90",
+            pathname === "/settings"
+              ? "bg-primary/10 text-gold border-l-2 border-gold"
+              : "text-muted-foreground hover:bg-secondary hover:text-foreground hover:brightness-110 border-l-2 border-transparent"
+          )}
+        >
+          <Settings className="h-4 w-4 shrink-0" />
+          {!collapsed && <span className="font-body truncate">Settings</span>}
+        </Link>
+
       </nav>
 
       {/* Collapse toggle */}

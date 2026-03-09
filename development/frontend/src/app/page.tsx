@@ -11,13 +11,20 @@
  *
  * Layout (Issue #279 — tabbed redesign):
  *   Card grid is now inside a tabbed layout inside the Dashboard component.
- *   The HowlPanel sidebar and mobile bottom sheet have been replaced by the
- *   tab bar inside Dashboard (The Howl tab + Active tab).
+ *
+ * Layout (Issue #352 — 5-tab expansion):
+ *   Dashboard now has 5 tabs: The Howl · The Hunt · Active · Valhalla · All.
+ *   Closed cards are now included in the card set passed to Dashboard.
+ *   Tab selection can be overridden via ?tab= URL param.
+ *
+ * Note: useSearchParams() requires a <Suspense> boundary in Next.js 15.
+ * DashboardPageContent uses useSearchParams and is wrapped in Suspense below.
  *
  * See Dashboard.tsx for tab layout spec.
  */
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
@@ -30,8 +37,11 @@ import { SignInNudge } from "@/components/layout/SignInNudge";
 import { initializeHousehold, getCards, saveCard, migrateIfNeeded } from "@/lib/storage";
 import type { Card } from "@/lib/types";
 
-export default function DashboardPage() {
+// ─── Inner component (uses useSearchParams — must be wrapped in Suspense) ─────
+
+function DashboardPageContent() {
   const { householdId, status } = useAuth();
+  const searchParams = useSearchParams();
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(false);
@@ -53,6 +63,7 @@ export default function DashboardPage() {
 
     migrateIfNeeded();
     initializeHousehold(householdId);
+    // getCards() now returns ALL non-deleted cards including closed (Issue #352)
     const loaded = getCards(householdId);
     setCards(loaded);
     setIsLoading(false);
@@ -95,7 +106,7 @@ export default function DashboardPage() {
       saveCard(card);
     }
 
-    const refreshed = getCards(householdId);
+    const refreshed = getCards(householdId); // includes closed cards for Valhalla tab
     setCards(refreshed);
     // Do NOT close the wizard here -- ImportWizard shows the success step
     // and auto-closes itself after 1.5s via its own useEffect.
@@ -106,6 +117,9 @@ export default function DashboardPage() {
 
   // Whether we have at least one card (drives CTA visibility rules)
   const hasCards = loaded && cards.length > 0;
+
+  // Read ?tab= URL param to pass as initialTab to Dashboard
+  const initialTab = searchParams?.get("tab") ?? undefined;
 
   return (
     <div className="px-6 py-6">
@@ -155,7 +169,7 @@ export default function DashboardPage() {
           Hidden entirely for authenticated users. */}
       <SignInNudge hasCards={hasCards} />
 
-      {/* Dashboard — tabbed card layout (The Howl tab + Active tab) */}
+      {/* Dashboard — 5-tab card layout (Howl · Hunt · Active · Valhalla · All) */}
       {!loaded ? (
         /* Only show skeleton if loading takes > 500ms to prevent flash */
         showSkeleton ? (
@@ -166,7 +180,7 @@ export default function DashboardPage() {
           <CardSkeletonGrid count={6} />
         ) : null
       ) : (
-        <Dashboard cards={cards} />
+        <Dashboard cards={cards} initialTab={initialTab} />
       )}
 
       {/* Import Wizard modal */}
@@ -177,5 +191,15 @@ export default function DashboardPage() {
         existingCards={cards}
       />
     </div>
+  );
+}
+
+// ─── Page export — wraps content in Suspense for useSearchParams ───────────────
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardPageContent />
+    </Suspense>
   );
 }

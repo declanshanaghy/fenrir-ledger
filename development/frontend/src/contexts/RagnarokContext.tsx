@@ -9,8 +9,9 @@
  * "promo_expiring". This triggers a persistent visual overlay across the
  * entire app, a changed document title, and intensified easter egg animations.
  *
- * Exception: The /valhalla route is always peaceful — ragnarokActive is
- * forced to false there regardless of card count.
+ * Note (Issue #352): The /valhalla route was removed — it now redirects to
+ * /?tab=valhalla (a dashboard tab). Previously Ragnarök was suppressed on
+ * /valhalla; that exception is no longer needed.
  *
  * Recomputes on:
  * - Initial auth resolution (status transitions away from "loading")
@@ -27,7 +28,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getAllCardsGlobal } from "@/lib/storage";
 
@@ -50,16 +50,9 @@ interface RagnarokProviderProps {
 
 export function RagnarokProvider({ children }: RagnarokProviderProps) {
   const { householdId, status } = useAuth();
-  const pathname = usePathname();
   const [ragnarokActive, setRagnarokActive] = useState(false);
 
   const computeRagnarok = useCallback(() => {
-    // Valhalla is always peaceful — no Ragnarök there.
-    if (pathname === "/valhalla") {
-      setRagnarokActive(false);
-      return;
-    }
-
     // Wait for auth to resolve before reading storage.
     if (status === "loading" || !householdId) {
       setRagnarokActive(false);
@@ -72,7 +65,7 @@ export function RagnarokProvider({ children }: RagnarokProviderProps) {
     ).length;
 
     setRagnarokActive(urgentCount >= 5);
-  }, [householdId, pathname, status]);
+  }, [householdId, status]);
 
   // Recompute whenever auth state or route changes.
   useEffect(() => {
