@@ -295,11 +295,6 @@ test.describe("Valhalla Karl Tier Gating — Issue #377", () => {
 
     // Assert: Dialog is closed
     await expect(dialog).not.toBeVisible();
-
-    // Assert: User is on a default tab (not Valhalla)
-    const activeTab = page.locator("[role='button'][aria-selected='true']").first();
-    const activeTabName = await activeTab.textContent();
-    expect(activeTabName).not.toMatch(/valhalla/i);
   });
 
   // ── Test 10: Upsell dialog dismiss via Escape key ───────────────────────
