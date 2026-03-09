@@ -5,11 +5,16 @@
 # Full output: quality/reports/<name>-output.txt
 #
 # Usage:
-#   bash quality/scripts/verify.sh                    # full suite
+#   bash quality/scripts/verify.sh                    # full suite (all 3 steps)
 #   bash quality/scripts/verify.sh <slug>             # single test suite
 #   bash quality/scripts/verify.sh <slug1> <slug2>    # multiple test suites
 #   bash quality/scripts/verify.sh --tests-only       # skip tsc+build, full suite
 #   bash quality/scripts/verify.sh --tests-only <slug> # skip tsc+build, single suite
+#   bash quality/scripts/verify.sh --fail-fast         # stop on first test failure
+#   bash quality/scripts/verify.sh -x <slug>           # fail-fast shorthand
+#   bash quality/scripts/verify.sh --step tsc          # run ONLY tsc
+#   bash quality/scripts/verify.sh --step build        # run ONLY next build
+#   bash quality/scripts/verify.sh --step test [slugs] # run ONLY playwright tests
 #
 # <slug> is a directory name under quality/test-suites/ (e.g. "dashboard", "card-lifecycle")
 # Exit: 0 = all checks passed, 1 = one or more checks failed
@@ -23,14 +28,32 @@ mkdir -p "$REPORTS_DIR"
 
 # Parse flags
 TESTS_ONLY=false
+FAIL_FAST=false
+STEP=""
 TEST_PATHS=()
 for arg in "$@"; do
   if [ "$arg" = "--tests-only" ]; then
     TESTS_ONLY=true
+  elif [ "$arg" = "--fail-fast" ] || [ "$arg" = "-x" ]; then
+    FAIL_FAST=true
+  elif [ "$arg" = "--step" ]; then
+    STEP="__next__"  # sentinel: next arg is the step name
+  elif [ "$STEP" = "__next__" ]; then
+    STEP="$arg"
   else
     TEST_PATHS+=("$REPO_ROOT/quality/test-suites/$arg/")
   fi
 done
+
+# Validate --step
+if [ "$STEP" = "__next__" ]; then
+  echo "ERROR: --step requires a value: tsc, build, or test"
+  exit 1
+fi
+if [ -n "$STEP" ] && [ "$STEP" != "tsc" ] && [ "$STEP" != "build" ] && [ "$STEP" != "test" ]; then
+  echo "ERROR: --step must be one of: tsc, build, test (got '$STEP')"
+  exit 1
+fi
 
 FAILS=0
 SPINNER_PID=""
@@ -49,11 +72,9 @@ stop_progress() {
   printf " "
 }
 
-echo "=== Fenrir Verify ==="
-
-if [ "$TESTS_ONLY" = false ]; then
-  # ─── 1. TypeScript ──────────────────────────────────────────────────────────
-  printf "[1/3] tsc --noEmit "
+# ─── Step: tsc ─────────────────────────────────────────────────────────────────
+run_tsc() {
+  printf "[tsc] tsc --noEmit "
   start_progress
   if cd "$FRONTEND_DIR" && npx tsc --noEmit > "$REPORTS_DIR/tsc-output.txt" 2>&1; then
     stop_progress
@@ -66,9 +87,11 @@ if [ "$TESTS_ONLY" = false ]; then
     echo "TSC ERRORS:"
     cat "$REPORTS_DIR/tsc-output.txt"
   fi
+}
 
-  # ─── 2. Next.js build ──────────────────────────────────────────────────────
-  printf "[2/3] next build "
+# ─── Step: build ───────────────────────────────────────────────────────────────
+run_build() {
+  printf "[build] next build "
   start_progress
   if cd "$FRONTEND_DIR" && npx next build > "$REPORTS_DIR/build-output.txt" 2>&1; then
     stop_progress
@@ -82,10 +105,12 @@ if [ "$TESTS_ONLY" = false ]; then
     echo "BUILD ERRORS (last 30 lines):"
     tail -30 "$REPORTS_DIR/build-output.txt"
   fi
-else
-  # --tests-only: skip tsc, but ensure a build exists for `npm start`
+}
+
+# ─── Step: build (ensure only — for --tests-only) ─────────────────────────────
+ensure_build() {
   if [ ! -d "$FRONTEND_DIR/.next" ]; then
-    printf "[--tests-only] no .next build found, building "
+    printf "[build] no .next found, building "
     start_progress
     if cd "$FRONTEND_DIR" && npx next build > "$REPORTS_DIR/build-output.txt" 2>&1; then
       stop_progress
@@ -101,68 +126,94 @@ else
   else
     echo "(skipping tsc + build — --tests-only)"
   fi
-fi
+}
 
-# ─── 3. Playwright ────────────────────────────────────────────────────────────
-if [ ${#TEST_PATHS[@]} -gt 0 ]; then
-  echo "[3/3] playwright (${#TEST_PATHS[@]} suite(s))"
-else
-  echo "[3/3] playwright (full suite)"
-fi
-cd "$FRONTEND_DIR"
-
-# line reporter → stdout (live progress), sed strips long path prefix
-# json reporter → report file (machine-readable)
-# Full unfiltered output saved to file; compact version shown on screen
-PLAYWRIGHT_JSON_OUTPUT_FILE="$REPORTS_DIR/playwright-report.json" \
-  npx playwright test \
-    ${TEST_PATHS[@]+"${TEST_PATHS[@]}"} \
-    --reporter=line,json \
-    2>&1 | tee "$REPORTS_DIR/playwright-output.txt" \
-         | sed 's|\.\.\/\.\.\/quality\/test-suites\/||g; s| \[chromium\] ||g'
-PW_EXIT=${PIPESTATUS[0]}
-
-if [ $PW_EXIT -eq 0 ]; then
-  TOTAL=$(jq '.stats.expected // 0' "$REPORTS_DIR/playwright-report.json" 2>/dev/null || echo "?")
-  echo "PASS ($TOTAL/$TOTAL)"
-else
-  ((FAILS++))
-  TOTAL=$(jq '(.stats.expected // 0)' "$REPORTS_DIR/playwright-report.json" 2>/dev/null || echo "?")
-  FAIL_COUNT=$(jq '(.stats.unexpected // 0)' "$REPORTS_DIR/playwright-report.json" 2>/dev/null || echo "?")
-  if [[ "$TOTAL" =~ ^[0-9]+$ ]] && [[ "$FAIL_COUNT" =~ ^[0-9]+$ ]]; then
-    PASS_COUNT=$((TOTAL - FAIL_COUNT))
+# ─── Step: test ────────────────────────────────────────────────────────────────
+run_test() {
+  if [ ${#TEST_PATHS[@]} -gt 0 ]; then
+    echo "[test] playwright (${#TEST_PATHS[@]} suite(s))"
   else
-    PASS_COUNT="?"
+    echo "[test] playwright (full suite)"
   fi
-  echo "FAIL ($PASS_COUNT/$TOTAL, $FAIL_COUNT failed)"
-  echo ""
-  echo "FAILED TESTS:"
-  # Try nested suites structure first (standard Playwright JSON format)
-  PARSED=$(jq -r '
-    .. | objects |
-    select(.ok == false and .title? and .file?) |
-    "  \u2717 \(.file):\(.line // "?") — \(.title)"
-  ' "$REPORTS_DIR/playwright-report.json" 2>/dev/null | head -20)
+  cd "$FRONTEND_DIR"
 
-  if [ -z "$PARSED" ]; then
-    # Fallback: look for unexpected results with location
+  FAIL_FAST_FLAG=""
+  if [ "$FAIL_FAST" = true ]; then
+    FAIL_FAST_FLAG="--max-failures=1"
+  fi
+
+  PLAYWRIGHT_JSON_OUTPUT_FILE="$REPORTS_DIR/playwright-report.json" \
+    npx playwright test \
+      ${TEST_PATHS[@]+"${TEST_PATHS[@]}"} \
+      $FAIL_FAST_FLAG \
+      --reporter=line,json \
+      2>&1 | tee "$REPORTS_DIR/playwright-output.txt" \
+           | sed 's|\.\.\/\.\.\/quality\/test-suites\/||g; s| \[chromium\] ||g'
+  PW_EXIT=${PIPESTATUS[0]}
+
+  if [ $PW_EXIT -eq 0 ]; then
+    TOTAL=$(jq '.stats.expected // 0' "$REPORTS_DIR/playwright-report.json" 2>/dev/null || echo "?")
+    echo "PASS ($TOTAL/$TOTAL)"
+  else
+    ((FAILS++))
+    TOTAL=$(jq '(.stats.expected // 0)' "$REPORTS_DIR/playwright-report.json" 2>/dev/null || echo "?")
+    FAIL_COUNT=$(jq '(.stats.unexpected // 0)' "$REPORTS_DIR/playwright-report.json" 2>/dev/null || echo "?")
+    if [[ "$TOTAL" =~ ^[0-9]+$ ]] && [[ "$FAIL_COUNT" =~ ^[0-9]+$ ]]; then
+      PASS_COUNT=$((TOTAL - FAIL_COUNT))
+    else
+      PASS_COUNT="?"
+    fi
+    echo "FAIL ($PASS_COUNT/$TOTAL, $FAIL_COUNT failed)"
+    echo ""
+    echo "FAILED TESTS:"
+    # Try nested suites structure first (standard Playwright JSON format)
     PARSED=$(jq -r '
       .. | objects |
-      select(.status == "unexpected" and .location?) |
-      "  \u2717 \(.location.file):\(.location.line // "?") — \(.title // "(unknown)")"
+      select(.ok == false and .title? and .file?) |
+      "  \u2717 \(.file):\(.line // "?") — \(.title)"
     ' "$REPORTS_DIR/playwright-report.json" 2>/dev/null | head -20)
-  fi
 
-  if [ -n "$PARSED" ]; then
-    echo "$PARSED"
+    if [ -z "$PARSED" ]; then
+      # Fallback: look for unexpected results with location
+      PARSED=$(jq -r '
+        .. | objects |
+        select(.status == "unexpected" and .location?) |
+        "  \u2717 \(.location.file):\(.location.line // "?") — \(.title // "(unknown)")"
+      ' "$REPORTS_DIR/playwright-report.json" 2>/dev/null | head -20)
+    fi
+
+    if [ -n "$PARSED" ]; then
+      echo "$PARSED"
+    else
+      echo "  (could not parse failures — see full output below)"
+      tail -20 "$REPORTS_DIR/playwright-output.txt"
+    fi
+
+    echo ""
+    echo "Full report: $REPORTS_DIR/playwright-report.json"
+    echo "Full output: $REPORTS_DIR/playwright-output.txt"
+  fi
+}
+
+# ─── Dispatch ──────────────────────────────────────────────────────────────────
+echo "=== Fenrir Verify ==="
+
+if [ -n "$STEP" ]; then
+  # Single-step mode
+  case "$STEP" in
+    tsc)   run_tsc ;;
+    build) run_build ;;
+    test)  ensure_build; run_test ;;
+  esac
+else
+  # Full suite
+  if [ "$TESTS_ONLY" = false ]; then
+    run_tsc
+    run_build
   else
-    echo "  (could not parse failures — see full output below)"
-    tail -20 "$REPORTS_DIR/playwright-output.txt"
+    ensure_build
   fi
-
-  echo ""
-  echo "Full report: $REPORTS_DIR/playwright-report.json"
-  echo "Full output: $REPORTS_DIR/playwright-output.txt"
+  run_test
 fi
 
 # ─── Summary ──────────────────────────────────────────────────────────────────
