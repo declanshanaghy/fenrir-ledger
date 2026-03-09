@@ -15,7 +15,8 @@ import { test, expect } from "@playwright/test";
 
 // ── Test Configuration ────────────────────────────────────────────────────────
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+// Use baseURL from Playwright context when available, fallback to env vars
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "";
 
 /**
  * List of all chronicle slugs to validate.
@@ -42,18 +43,18 @@ const CHRONICLE_SLUGS = [
 
 test.describe("Issue #407: Chronicles Render Styled Content", () => {
   test("chronicle index page loads", async ({ page }) => {
-    await page.goto(`${BASE_URL}/chronicles`);
+    await page.goto("/chronicles");
     await expect(page).toHaveTitle(/Chronicles/i);
   });
 
   CHRONICLE_SLUGS.forEach((slug) => {
     test(`${slug}: page loads without 404`, async ({ page }) => {
-      const response = await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      const response = await page.goto(`/chronicles/${slug}`);
       expect(response?.status()).toBe(200);
     });
 
     test(`${slug}: renders styled HTML, not raw tags`, async ({ page }) => {
-      await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      await page.goto(`/chronicles/${slug}`);
 
       // Acceptance Criterion: No raw HTML tags visible as plain text
       // Check that common HTML tags are NOT rendered as text content
@@ -74,7 +75,7 @@ test.describe("Issue #407: Chronicles Render Styled Content", () => {
     });
 
     test(`${slug}: chronicle.css styles applied`, async ({ page }) => {
-      await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      await page.goto(`/chronicles/${slug}`);
 
       // Acceptance Criterion: Chronicle CSS applies correctly
       // Look for elements with chronicle-specific classes
@@ -102,7 +103,7 @@ test.describe("Issue #407: Chronicles Render Styled Content", () => {
     test(`${slug}: session header renders with runes and title`, async ({
       page,
     }) => {
-      await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      await page.goto(`/chronicles/${slug}`);
 
       const headerRunes = page.locator(".header-runes");
       const sessionTitle = page.locator(".session-title");
@@ -120,7 +121,7 @@ test.describe("Issue #407: Chronicles Render Styled Content", () => {
     test(`${slug}: content sections render without escaped HTML`, async ({
       page,
     }) => {
-      await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      await page.goto(`/chronicles/${slug}`);
 
       // Look for common chronicle content elements
       const entries = page.locator(".entry");
@@ -160,7 +161,7 @@ test.describe("Issue #407: Chronicles Render Styled Content", () => {
         }
       });
 
-      await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      await page.goto(`/chronicles/${slug}`);
 
       // Check page loads without XSS errors
       expect(xssDetected).toBe(false);
@@ -173,7 +174,7 @@ test.describe("Issue #407: Chronicles Render Styled Content", () => {
     test(`${slug}: user messages render with role badges`, async ({
       page,
     }) => {
-      await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      await page.goto(`/chronicles/${slug}`);
 
       const userMsgs = page.locator(".user-msg");
       const msgCount = await userMsgs.count();
@@ -199,7 +200,7 @@ test.describe("Issue #407: Chronicles Render Styled Content", () => {
     test(`${slug}: work cards render with styled content`, async ({
       page,
     }) => {
-      await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      await page.goto(`/chronicles/${slug}`);
 
       const workCards = page.locator(".work-card");
       const cardCount = await workCards.count();
@@ -223,7 +224,7 @@ test.describe("Issue #407: Chronicles Render Styled Content", () => {
     test(`${slug}: breadcrumb navigation renders correctly`, async ({
       page,
     }) => {
-      await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      await page.goto(`/chronicles/${slug}`);
 
       // Check breadcrumb is visible and navigable
       const breadcrumb = page.locator('nav[aria-label="Breadcrumb"]');
@@ -237,7 +238,7 @@ test.describe("Issue #407: Chronicles Render Styled Content", () => {
     });
 
     test(`${slug}: prev/next navigation renders`, async ({ page }) => {
-      await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      await page.goto(`/chronicles/${slug}`);
 
       const nav = page.locator('nav[aria-label="Chronicle navigation"]');
       await expect(nav).toBeVisible();
@@ -250,7 +251,7 @@ test.describe("Issue #407: Chronicles Render Styled Content", () => {
     test(`${slug}: stat cards render with visible values`, async ({
       page,
     }) => {
-      await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      await page.goto(`/chronicles/${slug}`);
 
       const statCards = page.locator(".stat-card");
       const cardCount = await statCards.count();
@@ -271,13 +272,13 @@ test.describe("Issue #407: Chronicles Render Styled Content", () => {
 
   test("all chronicles load without errors", async ({ page }) => {
     for (const slug of CHRONICLE_SLUGS) {
-      const response = await page.goto(`${BASE_URL}/chronicles/${slug}`);
+      const response = await page.goto(`/chronicles/${slug}`);
       expect(response?.status()).toBe(200);
     }
   });
 
   test("chronicle CSS custom variables are defined", async ({ page }) => {
-    await page.goto(`${BASE_URL}/chronicles/${CHRONICLE_SLUGS[0]}`);
+    await page.goto(`/chronicles/${CHRONICLE_SLUGS[0]}`);
 
     const chroniclePage = page.locator(".chronicle-page");
 
@@ -300,7 +301,7 @@ test.describe("Issue #407: Chronicles Render Styled Content", () => {
     page,
   }) => {
     // Load any chronicle with indented HTML
-    await page.goto(`${BASE_URL}/chronicles/${CHRONICLE_SLUGS[0]}`);
+    await page.goto(`/chronicles/${CHRONICLE_SLUGS[0]}`);
 
     // The fix should ensure indented HTML renders as styled markup,
     // not as code/monospace blocks
