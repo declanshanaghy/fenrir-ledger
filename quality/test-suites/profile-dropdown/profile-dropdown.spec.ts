@@ -78,31 +78,21 @@ async function seedAuthSession(page) {
 test.describe("Profile Dropdown — Desktop (1280px)", () => {
   test.beforeEach(async ({ page }) => {
     page.setViewportSize({ width: 1280, height: 720 });
-    // Navigate first to establish browser context
-    await page.goto("/ledger", { waitUntil: "networkidle" });
-    // Then clear storage and seed auth session
+    // Navigate to "/" first to establish browser context
+    await page.goto("/", { waitUntil: "networkidle" });
+    // Clear storage and seed auth session
     await clearAllStorage(page);
     await seedAuthSession(page);
-    // Reload to pick up the mocked session
-    await page.reload({ waitUntil: "networkidle" });
+    // Navigate to /ledger
+    await page.goto("/ledger", { waitUntil: "networkidle" });
   });
 
   test("TC-PD01: Dropdown opens when avatar button is clicked", async ({
     page,
   }) => {
     // Given: user is signed in (session mocked)
-    // Debug: Check what's in localStorage
-    const authSession = await page.evaluate(() => localStorage.getItem("fenrir:auth"));
-    console.log("Auth session in localStorage:", authSession ? "EXISTS" : "MISSING");
-
-    // Check page title
-    console.log("Page title:", await page.title());
-
     // When: avatar button in top-right is clicked
     const avatarButton = page.locator("header button[aria-controls='user-menu']");
-    const count = await avatarButton.count();
-    console.log("Avatar button count:", count);
-
     await expect(avatarButton).toBeVisible();
     await avatarButton.click();
 
@@ -360,13 +350,13 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
 test.describe("Profile Dropdown — Mobile (375px)", () => {
   test.beforeEach(async ({ page }) => {
     page.setViewportSize({ width: 375, height: 667 });
-    // Navigate first to establish browser context
-    await page.goto("/ledger", { waitUntil: "networkidle" });
-    // Then clear storage and seed auth session
+    // Navigate to "/" first to establish browser context
+    await page.goto("/", { waitUntil: "networkidle" });
+    // Clear storage and seed auth session
     await clearAllStorage(page);
     await seedAuthSession(page);
-    // Reload to pick up the mocked session
-    await page.reload({ waitUntil: "networkidle" });
+    // Navigate to /ledger
+    await page.goto("/ledger", { waitUntil: "networkidle" });
   });
 
   test("TC-PD-M01: Dropdown opens on mobile", async ({ page }) => {
@@ -498,13 +488,13 @@ test.describe("Profile Dropdown — Mobile (375px)", () => {
 test.describe("Profile Dropdown — Accessibility", () => {
   test.beforeEach(async ({ page }) => {
     page.setViewportSize({ width: 1280, height: 720 });
-    // Navigate first to establish browser context
-    await page.goto("/ledger", { waitUntil: "networkidle" });
-    // Then clear storage and seed auth session
+    // Navigate to "/" first to establish browser context
+    await page.goto("/", { waitUntil: "networkidle" });
+    // Clear storage and seed auth session
     await clearAllStorage(page);
     await seedAuthSession(page);
-    // Reload to pick up the mocked session
-    await page.reload({ waitUntil: "networkidle" });
+    // Navigate to /ledger
+    await page.goto("/ledger", { waitUntil: "networkidle" });
   });
 
   test("TC-PD-A01: Dropdown has proper ARIA roles and labels", async ({
