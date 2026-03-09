@@ -170,15 +170,14 @@ test.describe("Profile Dropdown Header", () => {
     const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
     await expect(profileHeader).toBeVisible();
 
-    // Avatar div should have border and rounded-full
-    const avatarDiv = profileHeader.locator("div").filter({ hasClass: /rounded-full/ });
-    await expect(avatarDiv).toBeVisible();
-    await expect(avatarDiv).toHaveClass(/border/);
-    await expect(avatarDiv).toHaveClass(/rounded-full/);
-
     // Should contain rune (since picture is null)
     const rune = profileHeader.locator("span").filter({ hasText: "ᛟ" });
     await expect(rune).toBeVisible();
+
+    // Avatar container should have expected classes
+    const avatarContainer = rune.locator("..");
+    await expect(avatarContainer).toHaveClass(/rounded-full/);
+    await expect(avatarContainer).toHaveClass(/border/);
   });
 
   test("Mobile responsive - works at 375px viewport", async ({ browser }) => {
