@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 /**
  * TopBar — full-width sticky application header.
  *
@@ -328,7 +330,7 @@ export function TopBar() {
       <header className="h-14 shrink-0 border-b border-border bg-background/90 backdrop-blur-sm flex items-center justify-between px-4 z-50">
 
         {/* Logo — click to visit the marketing home */}
-        <a
+        <Link
           href="/"
           className="flex flex-col leading-tight group text-left"
           aria-label="Fenrir Ledger — home"
@@ -339,7 +341,7 @@ export function TopBar() {
           <span className="font-body text-muted-foreground text-sm italic">
             Break free. Harvest every reward.
           </span>
-        </a>
+        </Link>
 
         {/* User cluster — conditionally renders stale nudge, anonymous avatar, or signed-in state */}
         <div className="relative flex items-center" ref={panelRef}>
