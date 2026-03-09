@@ -296,7 +296,7 @@ function ComparisonTableSection() {
               {[
                 { name: "Valhalla — closed-card archive with full history", thrall: false, karl: true },
                 { name: "Cloud Sync — real-time sync across all signed-in devices", thrall: false, karl: true },
-                { name: "Smart Import — AI-powered extraction from spreadsheets (CSV/XLSX)", thrall: false, karl: true },
+                { name: "Smart Import — automatic extraction from spreadsheets (CSV/XLSX)", thrall: false, karl: true },
                 { name: "Data Export — download your ledger as CSV or JSON", thrall: false, karl: true },
               ].map(({ name, thrall, karl }) => (
                 <tr key={name} className="border-b border-border/50 hover:bg-muted/20 transition-colors">

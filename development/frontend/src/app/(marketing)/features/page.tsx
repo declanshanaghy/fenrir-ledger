@@ -15,7 +15,7 @@
  *     05. Valhalla (Card Archive)
  *     06. Cloud Sync
  *     07. Multi-Household
- *     08. Smart Import (AI-Powered)
+ *     08. Smart Import
  *     09. Data Export
  *
  * Wireframe: ux/wireframes/marketing-site/features.html
@@ -192,15 +192,15 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "smart-import",
     rune: "ᛗ",
-    eyebrow: "Feature 08 · Smart Import (AI-Powered)",
+    eyebrow: "Feature 08 · Smart Import",
     title: "The Rune-Reader",
     benefit:
-      "Drop in your existing spreadsheet. Fenrir's AI extracts card names, dates, and fee amounts automatically — no reformatting required.",
+      "Drop in your existing spreadsheet. Fenrir extracts card names, dates, and fee amounts automatically — no reformatting required.",
     description:
-      "If you've been tracking cards in a spreadsheet, moving to Fenrir shouldn't mean re-entering everything by hand. Smart Import uses AI to read your spreadsheet's structure — whatever columns you used — and maps each row to a Fenrir card record. It handles messy, inconsistent formatting and asks you to confirm before saving.",
+      "If you've been tracking cards in a spreadsheet, moving to Fenrir shouldn't mean re-entering everything by hand. Smart Import reads your spreadsheet's structure — whatever columns you used — and maps each row to a Fenrir card record. It handles messy, inconsistent formatting and asks you to confirm before saving.",
     details: [
       "Accepts CSV, XLSX, and Google Sheets exports",
-      "AI identifies card name, issuer, fee date, open date, bonus fields",
+      "Identifies card name, issuer, fee date, open date, bonus fields",
       "Handles non-standard column names and partial data",
       "Preview step: review all mapped cards before importing",
       "Unrecognized fields flagged for manual review",
