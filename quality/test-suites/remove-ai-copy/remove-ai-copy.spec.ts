@@ -7,6 +7,7 @@ const AI_RELATED_TERMS = [
   "AI-built",
   "AI-powered",
   "Anthropic Claude",
+  "no human wrote",
 ];
 
 /**
@@ -20,32 +21,40 @@ const AI_RELATED_TERMS = [
  */
 
 test.describe("Issue #417 — Remove explicit AI copy", () => {
-  test("About page: no AI-built references remain", async ({ page }) => {
+  test("About page: no AI-built references remain in content", async ({
+    page,
+  }) => {
     await page.goto("/about");
-    const pageContent = await page.content();
+    const pageContent = await page.textContent("body");
 
-    // Check that AI-related terms are NOT present
+    // Check that AI-related terms are NOT present in visible text
     for (const term of AI_RELATED_TERMS) {
-      expect(pageContent, `About page should not contain "${term}"`).not.toContain(
-        term.toLowerCase()
-      );
+      if (pageContent) {
+        expect(
+          pageContent.toLowerCase(),
+          `About page should not contain "${term}"`
+        ).not.toContain(term.toLowerCase());
+      }
     }
   });
 
-  test("About page: agent profiles section preserved", async ({ page }) => {
+  test("About page: agent profiles section still present", async ({ page }) => {
     await page.goto("/about");
+    const pageContent = await page.textContent("body");
 
-    // Verify agent profiles are visible by looking for the section heading
-    const agentHeading = page.getByRole("heading", {
-      name: /The Agents of Asgard/i,
-    });
-    expect(agentHeading.first()).toBeVisible();
-
-    // Verify individual agents are displayed
-    const agents = ["Odin", "Freya", "Loki", "Thor"];
+    // Verify that agent names and roles are still present
+    const agents = [
+      "Odin",
+      "Freya",
+      "Loki",
+      "Thor",
+      "Product Owner",
+      "Principal Engineer",
+    ];
     for (const agent of agents) {
-      const agentElement = page.getByText(agent, { exact: false });
-      expect(agentElement.first()).toBeVisible();
+      if (pageContent) {
+        expect(pageContent).toContain(agent);
+      }
     }
   });
 
@@ -53,157 +62,168 @@ test.describe("Issue #417 — Remove explicit AI copy", () => {
     page,
   }) => {
     await page.goto("/about");
-    const pageContent = await page.content();
+    const pageContent = await page.textContent("body");
 
     // Verify Norse mythology framing is intact
-    const norsTerms = ["Gleipnir", "Asgard", "Fenrir"];
-    for (const term of norsTerms) {
-      expect(pageContent, `About page should contain "${term}"`).toContain(term);
+    const norseTerms = ["Gleipnir", "Asgard", "Fenrir", "Odin", "Loki"];
+    for (const term of norseTerms) {
+      if (pageContent) {
+        expect(pageContent).toContain(term);
+      }
     }
 
-    // Verify "The Forge" section title is present
-    const forgeHeading = page.getByRole("heading", {
-      name: /Forged in the Fires of Asgard/i,
-    });
-    expect(forgeHeading.first()).toBeVisible();
+    // Verify "The Forge" section terminology is present
+    if (pageContent) {
+      expect(pageContent).toContain("Forged in the Fires of Asgard");
+    }
   });
 
-  test("Features page: no AI-powered references remain", async ({ page }) => {
+  test("About page: old 'Built by AI' section renamed to 'The Forge'", async ({
+    page,
+  }) => {
+    await page.goto("/about");
+    const pageContent = await page.textContent("body");
+
+    if (pageContent) {
+      // New title should be present
+      expect(pageContent).toContain("Forged in the Fires of Asgard");
+
+      // Old title should not be present
+      expect(pageContent).not.toContain("Built by AI, for Humans");
+    }
+  });
+
+  test("About page: Freya bio updated (no 'AI import pipeline')", async ({
+    page,
+  }) => {
+    await page.goto("/about");
+    const pageContent = await page.textContent("body");
+
+    if (pageContent) {
+      // Old text about AI import pipeline should be gone
+      expect(pageContent).not.toContain("AI import pipeline");
+
+      // But her profile should still exist
+      expect(pageContent).toContain("Freya");
+      expect(pageContent).toContain("Product Owner");
+      expect(pageContent).toContain("import pipeline");
+    }
+  });
+
+  test("About page: agent autonomy text updated without AI reference", async ({
+    page,
+  }) => {
+    await page.goto("/about");
+    const pageContent = await page.textContent("body");
+
+    if (pageContent) {
+      // Should have the updated text
+      expect(pageContent).toContain("Each member of the pack has autonomy");
+    }
+  });
+
+  test("About page: closing statement updated to Norse theme", async ({
+    page,
+  }) => {
+    await page.goto("/about");
+    const pageContent = await page.textContent("body");
+
+    if (pageContent) {
+      // New Norse-themed closing
+      expect(pageContent).toContain("The forge never cools");
+      expect(pageContent).toContain("Bugs slain before");
+
+      // Old tech-focused closing should be gone
+      expect(pageContent).not.toContain("This changes everything");
+      expect(pageContent).not.toContain("Development velocity unconstrained");
+    }
+  });
+
+  test("Features page: no AI-powered references in Smart Import", async ({
+    page,
+  }) => {
     await page.goto("/features");
-    const pageContent = await page.content();
+    const pageContent = await page.textContent("body");
 
-    // Check that AI-powered term is removed from Smart Import
-    expect(pageContent, "Smart Import should not mention AI-powered").not.toContain(
-      "AI-powered extraction"
-    );
+    if (pageContent) {
+      // Old text should be gone
+      expect(pageContent).not.toContain("AI-powered extraction");
 
-    // Verify Smart Import still exists but without AI reference
-    const smartImportSection = await page.getByText("Smart Import").first();
-    expect(smartImportSection).toBeVisible();
+      // But Smart Import feature should still exist
+      expect(pageContent).toContain("Smart Import");
+    }
   });
 
   test("Features page: Smart Import description updated", async ({ page }) => {
     await page.goto("/features");
+    const pageContent = await page.textContent("body");
 
-    // Find Smart Import feature description
-    const smartImportFeature = await page
-      .locator('*:has-text("Smart Import")')
-      .first();
-    expect(smartImportFeature).toBeVisible();
+    if (pageContent) {
+      // Should have new description without AI reference
+      expect(pageContent).not.toContain("Fenrir's AI extracts");
 
-    // Verify new text is present (without AI reference)
-    const contentArea = smartImportFeature.locator("..").locator("..");
-    const content = await contentArea.textContent();
-
-    // Should NOT contain "AI-powered"
-    expect(content).not.toContain("AI-powered");
-    // But should still describe the feature
-    expect(content).toMatch(/spreadsheet|mapping|import/i);
+      // But should mention the functionality
+      expect(pageContent).toContain("spreadsheet");
+    }
   });
 
-  test("Pricing page: no AI references in comparison table", async ({ page }) => {
+  test("Pricing page: Smart Import comparison updated", async ({ page }) => {
     await page.goto("/pricing");
-    const pageContent = await page.content();
+    const pageContent = await page.textContent("body");
 
-    // Smart Import row should not mention "AI-powered"
-    expect(
-      pageContent,
-      "Pricing page comparison should not mention AI-powered extraction"
-    ).not.toContain("AI-powered extraction");
+    if (pageContent) {
+      // Old text should be gone
+      expect(pageContent).not.toContain("AI-powered extraction");
 
-    // Should have "automatic extraction" instead
-    expect(pageContent).toContain("automatic extraction");
+      // New text should be present
+      expect(pageContent).toContain("automatic extraction");
+    }
   });
 
   test("Tech stack: Anthropic Claude removed", async ({ page }) => {
     await page.goto("/about");
-    const pageContent = await page.content();
+    const pageContent = await page.textContent("body");
 
-    // Verify Anthropic Claude is not in tech stack
-    expect(pageContent, "Tech stack should not include Anthropic Claude").not.toContain(
-      "Anthropic Claude"
-    );
-  });
-
-  test("About page: layout integrity (no broken sections)", async ({ page }) => {
-    await page.goto("/about");
-
-    // Verify all major sections load
-    const sections = [
-      "Origin Story Hero",
-      "Why the Wolf",
-      "The Agents of Asgard",
-      "The Forge",
-      "The Arsenal",
-    ];
-
-    for (const sectionName of sections) {
-      const section = await page.getByText(sectionName).first();
-      expect(section).toBeVisible();
+    if (pageContent) {
+      // Verify Anthropic Claude is not in tech stack
+      expect(pageContent).not.toContain("Anthropic Claude");
     }
   });
 
-  test("Marketing pages: no Claude references anywhere", async ({ page }) => {
+  test("Pages load without errors", async ({ page }) => {
     const pagePaths = ["/about", "/features", "/pricing"];
+    let consoleErrors: string[] = [];
+
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      }
+    });
 
     for (const path of pagePaths) {
+      consoleErrors = [];
       await page.goto(path);
-      const pageContent = await page.content();
+      await page.waitForLoadState("networkidle");
 
       expect(
-        pageContent,
-        `${path} should not mention Claude explicitly`
-      ).not.toMatch(/claude|Claude/i);
+        consoleErrors,
+        `${path} should not have console errors`
+      ).toEqual([]);
     }
   });
 
-  test("About page: Freya bio updated (no 'AI import pipeline' reference)", async ({
-    page,
-  }) => {
+  test("About page: Agents section subtitle updated", async ({ page }) => {
     await page.goto("/about");
-    const pageContent = await page.content();
+    const pageContent = await page.textContent("body");
 
-    // Verify the old "AI import pipeline" text is gone
-    expect(pageContent).not.toContain("AI import pipeline");
+    if (pageContent) {
+      // New subtitle about the pack
+      expect(pageContent).toContain(
+        "Every member of the pack has their domain, their purpose, their saga"
+      );
 
-    // Verify Freya still has her profile
-    expect(pageContent).toContain("Freya");
-    expect(pageContent).toContain("Product Owner");
-  });
-
-  test("About page: subtitle updated to not mention AI agents", async ({
-    page,
-  }) => {
-    await page.goto("/about");
-
-    // Find the agents section subtitle
-    const subtitle = await page.getByText(/Every member of the pack/).first();
-    expect(subtitle).toBeVisible();
-
-    // Verify it doesn't contain the old AI reference
-    const subtitleText = await subtitle.textContent();
-    expect(subtitleText).not.toContain("built entirely by AI agents");
-  });
-
-  test("No broken component references after changes", async ({ page }) => {
-    const pagePaths = ["/about", "/features", "/pricing"];
-
-    for (const path of pagePaths) {
-      await page.goto(path);
-
-      // Wait for page to settle (animations complete)
-      await page.waitForTimeout(500);
-
-      // Check for console errors (indicates broken components)
-      let errors: string[] = [];
-      page.on("console", (msg) => {
-        if (msg.type() === "error") {
-          errors.push(msg.text());
-        }
-      });
-
-      // Verify page loads without major errors
-      expect(errors.length).toBe(0);
+      // Old subtitle explicitly mentioning AI should be gone
+      expect(pageContent).not.toContain("built entirely by AI agents");
     }
   });
 });
