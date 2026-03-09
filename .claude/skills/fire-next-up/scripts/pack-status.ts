@@ -101,11 +101,13 @@ async function fetchBoardAndComments(): Promise<{
     state: string;
   }>;
 }> {
-  const query = `
-    query($owner: String!, $number: Int!) {
+  // Paginated query — board may exceed 100 items
+  const itemsQuery = `
+    query($owner: String!, $number: Int!, $cursor: String) {
       user(login: $owner) {
         projectV2(number: $number) {
-          items(first: 100) {
+          items(first: 100, after: $cursor) {
+            pageInfo { hasNextPage endCursor }
             nodes {
               fieldValueByName(name: "Status") {
                 ... on ProjectV2ItemFieldSingleSelectValue {
@@ -129,7 +131,25 @@ async function fetchBoardAndComments(): Promise<{
           }
         }
       }
-      repository(owner: $owner, name: "${REPO}") {
+    }
+  `;
+
+  // Fetch all project items with pagination
+  let allProjectItems: any[] = [];
+  let cursor: string | null = null;
+  let hasNextPage = true;
+  while (hasNextPage) {
+    const result = await graphql(itemsQuery, { owner: OWNER, number: PROJECT_NUMBER, cursor });
+    const connection = result.data.user.projectV2.items;
+    allProjectItems.push(...connection.nodes);
+    hasNextPage = connection.pageInfo.hasNextPage;
+    cursor = connection.pageInfo.endCursor;
+  }
+
+  // Separate query for PRs (no pagination needed — 50 open PRs is unlikely)
+  const prQuery = `
+    query($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
         pullRequests(states: OPEN, first: 50, orderBy: {field: UPDATED_AT, direction: DESC}) {
           nodes {
             number
@@ -141,10 +161,9 @@ async function fetchBoardAndComments(): Promise<{
       }
     }
   `;
+  const prResult = await graphql(prQuery, { owner: OWNER, repo: REPO });
 
-  const result = await graphql(query, { owner: OWNER, number: PROJECT_NUMBER });
-
-  const projectItems = result.data.user.projectV2.items.nodes;
+  const projectItems = allProjectItems;
   const items: BoardItem[] = [];
   const issueComments: Record<number, string[]> = {};
 
@@ -167,7 +186,7 @@ async function fetchBoardAndComments(): Promise<{
     }
   }
 
-  const prs = (result.data.repository.pullRequests.nodes ?? []).map(
+  const prs = (prResult.data.repository.pullRequests.nodes ?? []).map(
     (pr: any) => ({
       number: pr.number,
       title: pr.title,
@@ -397,12 +416,13 @@ async function moveIssue(issueNum: number, status: string) {
     process.exit(1);
   }
 
-  // Find item ID via GraphQL
+  // Find item ID via paginated GraphQL
   const findQuery = `
-    query($owner: String!, $number: Int!) {
+    query($owner: String!, $number: Int!, $cursor: String) {
       user(login: $owner) {
         projectV2(number: $number) {
-          items(first: 100) {
+          items(first: 100, after: $cursor) {
+            pageInfo { hasNextPage endCursor }
             nodes {
               id
               content { ... on Issue { number } }
@@ -412,13 +432,22 @@ async function moveIssue(issueNum: number, status: string) {
       }
     }
   `;
-  const findResult = await graphql(findQuery, {
-    owner: OWNER,
-    number: PROJECT_NUMBER,
-  });
-  const node = findResult.data.user.projectV2.items.nodes.find(
-    (n: any) => n.content?.number === issueNum
-  );
+  let node: any = null;
+  let findCursor: string | null = null;
+  let findHasNext = true;
+  while (findHasNext && !node) {
+    const findResult = await graphql(findQuery, {
+      owner: OWNER,
+      number: PROJECT_NUMBER,
+      cursor: findCursor,
+    });
+    const connection = findResult.data.user.projectV2.items;
+    node = connection.nodes.find(
+      (n: any) => n.content?.number === issueNum
+    );
+    findHasNext = connection.pageInfo.hasNextPage;
+    findCursor = connection.pageInfo.endCursor;
+  }
   if (!node) {
     console.error(`Issue #${issueNum} not found on project board`);
     process.exit(1);

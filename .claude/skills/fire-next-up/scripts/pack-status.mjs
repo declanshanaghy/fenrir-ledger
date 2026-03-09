@@ -47,11 +47,12 @@ async function restGet(path) {
   return res.json();
 }
 async function fetchBoardAndComments() {
-  const query = `
-    query($owner: String!, $number: Int!) {
+  const itemsQuery = `
+    query($owner: String!, $number: Int!, $cursor: String) {
       user(login: $owner) {
         projectV2(number: $number) {
-          items(first: 100) {
+          items(first: 100, after: $cursor) {
+            pageInfo { hasNextPage endCursor }
             nodes {
               fieldValueByName(name: "Status") {
                 ... on ProjectV2ItemFieldSingleSelectValue {
@@ -75,7 +76,21 @@ async function fetchBoardAndComments() {
           }
         }
       }
-      repository(owner: $owner, name: "${REPO}") {
+    }
+  `;
+  let allProjectItems = [];
+  let cursor = null;
+  let hasNextPage = true;
+  while (hasNextPage) {
+    const result = await graphql(itemsQuery, { owner: OWNER, number: PROJECT_NUMBER, cursor });
+    const connection = result.data.user.projectV2.items;
+    allProjectItems.push(...connection.nodes);
+    hasNextPage = connection.pageInfo.hasNextPage;
+    cursor = connection.pageInfo.endCursor;
+  }
+  const prQuery = `
+    query($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
         pullRequests(states: OPEN, first: 50, orderBy: {field: UPDATED_AT, direction: DESC}) {
           nodes {
             number
@@ -87,8 +102,8 @@ async function fetchBoardAndComments() {
       }
     }
   `;
-  const result = await graphql(query, { owner: OWNER, number: PROJECT_NUMBER });
-  const projectItems = result.data.user.projectV2.items.nodes;
+  const prResult = await graphql(prQuery, { owner: OWNER, repo: REPO });
+  const projectItems = allProjectItems;
   const items = [];
   const issueComments = {};
   for (const item of projectItems) {
@@ -107,7 +122,7 @@ async function fetchBoardAndComments() {
       );
     }
   }
-  const prs = (result.data.repository.pullRequests.nodes ?? []).map(
+  const prs = (prResult.data.repository.pullRequests.nodes ?? []).map(
     (pr) => ({
       number: pr.number,
       title: pr.title,
@@ -298,10 +313,11 @@ async function moveIssue(issueNum, status) {
     process.exit(1);
   }
   const findQuery = `
-    query($owner: String!, $number: Int!) {
+    query($owner: String!, $number: Int!, $cursor: String) {
       user(login: $owner) {
         projectV2(number: $number) {
-          items(first: 100) {
+          items(first: 100, after: $cursor) {
+            pageInfo { hasNextPage endCursor }
             nodes {
               id
               content { ... on Issue { number } }
@@ -311,13 +327,22 @@ async function moveIssue(issueNum, status) {
       }
     }
   `;
-  const findResult = await graphql(findQuery, {
-    owner: OWNER,
-    number: PROJECT_NUMBER
-  });
-  const node = findResult.data.user.projectV2.items.nodes.find(
-    (n) => n.content?.number === issueNum
-  );
+  let node = null;
+  let findCursor = null;
+  let findHasNext = true;
+  while (findHasNext && !node) {
+    const findResult = await graphql(findQuery, {
+      owner: OWNER,
+      number: PROJECT_NUMBER,
+      cursor: findCursor
+    });
+    const connection = findResult.data.user.projectV2.items;
+    node = connection.nodes.find(
+      (n) => n.content?.number === issueNum
+    );
+    findHasNext = connection.pageInfo.hasNextPage;
+    findCursor = connection.pageInfo.endCursor;
+  }
   if (!node) {
     console.error(`Issue #${issueNum} not found on project board`);
     process.exit(1);
