@@ -27,13 +27,6 @@ const GEMINI_ENDPOINT =
 
 const REQUEST_TIMEOUT_MS = 60_000;
 
-const THEME_PREFIX =
-  "Dark Nordic war-room aesthetic, void-black (#07070d) background, " +
-  "ice-blue and antique gold (#c9920a) accents, Elder Futhark rune details, " +
-  "Fenrir wolf motif. The image MUST have a fully transparent PNG background " +
-  "with no white or colored background. Isolated subject on alpha-transparent " +
-  "canvas.";
-
 const PRESETS: Record<string, string> = {
   "fenrir-logo":
     "A fierce Norse wolf head in a circular medallion frame with runic " +
@@ -230,8 +223,7 @@ async function main() {
     process.exit(1);
   }
 
-  const basePrompt = args.preset ? PRESETS[args.preset] : args.prompt!;
-  const prompt = `${THEME_PREFIX} ${basePrompt}`;
+  const prompt = args.preset ? PRESETS[args.preset] : args.prompt!;
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   const baseOutput = args.output ?? `generated-${timestamp}.png`;
