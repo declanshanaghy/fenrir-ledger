@@ -83,7 +83,24 @@ if [ "$TESTS_ONLY" = false ]; then
     tail -30 "$REPORTS_DIR/build-output.txt"
   fi
 else
-  echo "(skipping tsc + build — --tests-only)"
+  # --tests-only: skip tsc, but ensure a build exists for `npm start`
+  if [ ! -d "$FRONTEND_DIR/.next" ]; then
+    printf "[--tests-only] no .next build found, building "
+    start_progress
+    if cd "$FRONTEND_DIR" && npx next build > "$REPORTS_DIR/build-output.txt" 2>&1; then
+      stop_progress
+      echo "OK"
+    else
+      stop_progress
+      echo "FAIL"
+      ((FAILS++))
+      echo ""
+      echo "BUILD ERRORS (last 30 lines):"
+      tail -30 "$REPORTS_DIR/build-output.txt"
+    fi
+  else
+    echo "(skipping tsc + build — --tests-only)"
+  fi
 fi
 
 # ─── 3. Playwright ────────────────────────────────────────────────────────────
