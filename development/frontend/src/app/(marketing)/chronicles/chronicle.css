@@ -1,29 +1,27 @@
 /* chronicle.css — Scoped styles for Fenrir Ledger session chronicle blog entries */
 /* All rules scoped under .chronicle-page to avoid conflicts with marketing layout */
+/* Theme-aware: uses Tailwind/CSS custom properties that switch with light/dark */
 
 .chronicle-page {
-  --void:        #07070d;
-  --forge:       #0f1018;
-  --chain:       #13151f;
-  --rune-border: #1e2235;
-  --iron-border: #2a2d45;
-  --gold-dim:    #8a6a00;
-  --gold:        #c9920a;
-  --gold-bright: #f0b429;
-  --teal:        #0a8c6e;
-  --amber:       #f59e0b;
-  --fire:        #c94a0a;
-  --violet:      #a78bfa;
-  --text:        #e8e4d4;
-  --muted:       #8a8578;
-  --subtle:      #3d3d52;
+  /* ── Chronicle-specific semantic tokens ── */
+  /* These map to the global theme system from globals.css */
+  --c-bg:           hsl(var(--background));
+  --c-bg-card:      hsl(var(--card));
+  --c-fg:           hsl(var(--foreground));
+  --c-fg-muted:     hsl(var(--muted-foreground));
+  --c-border:       hsl(var(--border));
+  --c-gold:         hsl(var(--primary));
+  --c-gold-bright:  hsl(var(--primary));
 
-  font-family: 'Source Serif 4', serif;
+  /* Status colors — theme-aware */
+  --c-fire:         hsl(var(--destructive));
+  --c-teal:         hsl(163 83% 29%);
+  --c-violet:       #a78bfa;
+  --c-amber:        #f59e0b;
+
+  font-family: var(--font-source-serif), 'Source Serif 4', serif;
   font-size: 16px;
-  color: var(--text);
-  background-color: var(--void);
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -5%, rgba(201,146,10,0.09) 0%, transparent 65%);
+  color: var(--c-fg);
   min-height: 60vh;
   line-height: 1.7;
   max-width: 880px;
@@ -39,33 +37,38 @@
   }
 }
 
+@media (max-width: 375px) {
+  .chronicle-page {
+    padding: 0 16px 48px;
+  }
+}
+
 /* ── Header ── */
 .chronicle-page .session-header {
   text-align: center;
-  padding: 48px 0 40px;
-  border-bottom: 1px solid var(--rune-border);
+  padding: 48px 0 32px;
+  border-bottom: 1px solid var(--c-border);
 }
 .chronicle-page .header-runes {
   display: block;
   font-size: 22px;
   letter-spacing: 0.5em;
-  color: var(--gold);
+  color: var(--c-gold);
   opacity: 0.55;
   margin-bottom: 20px;
 }
 .chronicle-page .session-title {
-  font-family: 'Cinzel Decorative', serif;
+  font-family: var(--font-cinzel-decorative), 'Cinzel Decorative', serif;
   font-size: clamp(1.4rem, 4vw, 2.2rem);
   font-weight: 700;
-  color: var(--gold-bright);
-  text-shadow: 0 0 48px rgba(201,146,10,0.35);
+  color: var(--c-fg);
   line-height: 1.15;
   margin-bottom: 10px;
 }
 .chronicle-page .session-subtitle {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--c-fg-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 28px;
@@ -75,27 +78,27 @@
   justify-content: center;
   flex-wrap: wrap;
   gap: 8px 28px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.72rem;
-  color: var(--subtle);
+  color: var(--c-fg-muted);
 }
-.chronicle-page .session-meta .val { color: var(--gold); }
+.chronicle-page .session-meta .val { color: var(--c-gold); }
 
 /* ── TOC ── */
 .chronicle-page .toc {
   margin: 40px 0 0;
   padding: 20px 24px;
-  background: var(--forge);
-  border: 1px solid var(--rune-border);
-  border-left: 3px solid var(--gold-dim);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-gold);
 }
 .chronicle-page .toc-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: var(--muted);
+  color: var(--c-fg-muted);
   margin-bottom: 14px;
 }
 .chronicle-page .toc-list {
@@ -107,17 +110,17 @@
   gap: 6px 24px;
 }
 .chronicle-page .toc-list li a {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--c-fg-muted);
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.chronicle-page .toc-list li a:hover { color: var(--gold-bright); }
-.chronicle-page .toc-rune { color: var(--gold); opacity: 0.6; font-size: 0.9rem; }
-.chronicle-page .toc-num { color: var(--subtle); font-size: 0.65rem; }
+.chronicle-page .toc-list li a:hover { color: var(--c-gold); }
+.chronicle-page .toc-rune { color: var(--c-gold); opacity: 0.6; font-size: 0.9rem; }
+.chronicle-page .toc-num { color: var(--c-fg-muted); font-size: 0.65rem; }
 
 /* ── Timeline ── */
 .chronicle-page .timeline {
@@ -135,8 +138,8 @@
   bottom: 60px;
   width: 1px;
   background: linear-gradient(to bottom,
-    var(--gold) 0%,
-    var(--iron-border) 60%,
+    var(--c-gold) 0%,
+    var(--c-border) 60%,
     transparent 100%);
 }
 
@@ -147,8 +150,8 @@
   width: 48px;
   height: 48px;
   flex-shrink: 0;
-  background: var(--forge);
-  border: 1px solid var(--iron-border);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -157,33 +160,33 @@
   z-index: 1;
   cursor: default;
 }
-.chronicle-page .entry-rune:hover { border-color: var(--gold); }
+.chronicle-page .entry-rune:hover { border-color: var(--c-gold); }
 
 .chronicle-page .entry-body { flex: 1; min-width: 0; }
 
 .chronicle-page .act-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.62rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: var(--subtle);
+  color: var(--c-fg-muted);
   margin-bottom: 4px;
 }
 .chronicle-page .entry-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
   font-size: 1.05rem;
   font-weight: 600;
-  color: var(--gold-bright);
+  color: var(--c-fg);
   margin-bottom: 16px;
   line-height: 1.3;
 }
 
 /* ── User message ── */
 .chronicle-page .user-msg {
-  background: var(--chain);
-  border: 1px solid var(--iron-border);
-  border-left: 3px solid var(--gold);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-gold);
   padding: 14px 18px;
   margin-bottom: 14px;
 }
@@ -194,7 +197,7 @@
   margin-bottom: 10px;
 }
 .chronicle-page .role-badge {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.63rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -202,34 +205,34 @@
   padding: 2px 9px;
   border: 1px solid;
 }
-.chronicle-page .badge-fireman { color: var(--amber);  border-color: #f59e0b55; background: rgba(245,158,11,0.07); }
-.chronicle-page .badge-luna    { color: var(--violet); border-color: #a78bfa55; background: rgba(167,139,250,0.07); }
-.chronicle-page .badge-system  { color: var(--fire);   border-color: #c94a0a55; background: rgba(201,74,10,0.07); }
-.chronicle-page .badge-odin    { color: var(--gold);   border-color: #c9920a55; background: rgba(201,146,10,0.07); }
+.chronicle-page .badge-fireman { color: var(--c-amber);  border-color: rgba(245,158,11,0.33); background: rgba(245,158,11,0.07); }
+.chronicle-page .badge-luna    { color: var(--c-violet); border-color: rgba(167,139,250,0.33); background: rgba(167,139,250,0.07); }
+.chronicle-page .badge-system  { color: var(--c-fire);   border-color: hsl(var(--destructive) / 0.33); background: hsl(var(--destructive) / 0.07); }
+.chronicle-page .badge-odin    { color: var(--c-gold);   border-color: hsl(var(--primary) / 0.33); background: hsl(var(--primary) / 0.07); }
 
 .chronicle-page .msg-text {
   font-size: 0.9rem;
-  color: var(--text);
+  color: var(--c-fg);
   white-space: pre-wrap;
   line-height: 1.65;
 }
 
 /* ── Work card ── */
 .chronicle-page .work-card {
-  background: var(--forge);
-  border: 1px solid var(--rune-border);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
   padding: 18px 20px;
 }
 .chronicle-page .work-body {
   font-size: 0.9rem;
-  color: var(--text);
+  color: var(--c-fg);
   line-height: 1.7;
   margin-bottom: 14px;
 }
 .chronicle-page .work-body p { margin-bottom: 8px; }
 .chronicle-page .work-body p:last-child { margin-bottom: 0; }
-.chronicle-page .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; color: var(--muted); }
-.chronicle-page .hl   { color: var(--gold-bright); font-weight: 600; }
+.chronicle-page .mono { font-family: var(--font-mono), 'JetBrains Mono', monospace; font-size: 0.82em; color: var(--c-fg-muted); }
+.chronicle-page .hl   { color: var(--c-gold); font-weight: 600; }
 
 /* ── Change list ── */
 .chronicle-page .changes {
@@ -241,37 +244,50 @@
   gap: 5px;
 }
 .chronicle-page .changes li {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--c-fg-muted);
   display: flex;
   gap: 10px;
   align-items: baseline;
 }
-.chronicle-page .changes li::before { content: '\2192'; color: var(--gold); flex-shrink: 0; }
-.chronicle-page .old { text-decoration: line-through; color: var(--subtle); }
-.chronicle-page .new { color: var(--gold-bright); }
+.chronicle-page .changes li::before { content: '\2192'; color: var(--c-gold); flex-shrink: 0; }
+.chronicle-page .old { text-decoration: line-through; opacity: 0.5; }
+.chronicle-page .new { color: var(--c-gold); }
 
-/* ── Code block ── */
+/* ── Code block — theme-aware ── */
 .chronicle-page .code-block {
-  background: #050508;
-  border: 1px solid var(--rune-border);
-  border-left: 2px solid var(--gold-dim);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-gold);
   padding: 14px 16px;
   margin: 14px 0;
   overflow-x: auto;
 }
+
+/* Dark theme: slightly deeper background for code blocks */
+:root:is(.dark) .chronicle-page .code-block {
+  background: hsl(28 15% 5%);
+}
+
 .chronicle-page .code-block pre {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.77rem;
   line-height: 1.65;
-  color: var(--text);
+  color: var(--c-fg);
   white-space: pre;
   margin: 0;
 }
-.chronicle-page .ca { color: #6ee7b7; }
-.chronicle-page .cr { color: #fca5a5; opacity: 0.5; }
-.chronicle-page .cc { color: var(--subtle); }
+
+/* Code syntax colors — light theme */
+:root:not(.dark) .chronicle-page .ca { color: #166534; }
+:root:not(.dark) .chronicle-page .cr { color: #991b1b; opacity: 0.6; }
+:root:not(.dark) .chronicle-page .cc { color: #6b7280; }
+
+/* Code syntax colors — dark theme */
+:root:is(.dark) .chronicle-page .ca { color: #6ee7b7; }
+:root:is(.dark) .chronicle-page .cr { color: #fca5a5; opacity: 0.5; }
+:root:is(.dark) .chronicle-page .cc { color: hsl(var(--muted-foreground)); }
 
 /* ── File chips ── */
 .chronicle-page .file-chips {
@@ -279,11 +295,11 @@
   flex-wrap: wrap;
   gap: 7px;
   padding-top: 14px;
-  border-top: 1px solid var(--rune-border);
+  border-top: 1px solid var(--c-border);
   margin-top: 16px;
 }
 .chronicle-page .chip {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.68rem;
   padding: 3px 10px;
   border: 1px solid;
@@ -291,31 +307,31 @@
   align-items: center;
   gap: 5px;
 }
-.chronicle-page .chip-mod  { color: var(--gold);   border-color: var(--gold-dim);    background: rgba(201,146,10,0.06); }
-.chronicle-page .chip-new  { color: var(--teal);   border-color: rgba(10,140,110,.4); background: rgba(10,140,110,0.06); }
-.chronicle-page .chip-mem  { color: var(--violet); border-color: rgba(167,139,250,.4);background: rgba(167,139,250,0.06); }
+.chronicle-page .chip-mod  { color: var(--c-gold);   border-color: hsl(var(--primary) / 0.4);    background: hsl(var(--primary) / 0.06); }
+.chronicle-page .chip-new  { color: var(--c-teal);   border-color: rgba(10,140,110,.4); background: rgba(10,140,110,0.06); }
+.chronicle-page .chip-mem  { color: var(--c-violet); border-color: rgba(167,139,250,.4);background: rgba(167,139,250,0.06); }
 
 /* ── Bug callout ── */
 .chronicle-page .bug-box {
-  background: rgba(201,74,10,0.07);
-  border: 1px solid rgba(201,74,10,0.35);
-  border-left: 3px solid var(--fire);
+  background: hsl(var(--destructive) / 0.07);
+  border: 1px solid hsl(var(--destructive) / 0.35);
+  border-left: 3px solid var(--c-fire);
   padding: 13px 16px;
   margin-bottom: 16px;
 }
 .chronicle-page .bug-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.63rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--fire);
+  color: var(--c-fire);
   margin-bottom: 7px;
 }
 .chronicle-page .bug-text {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.77rem;
-  color: #fca5a5;
+  color: var(--c-fire);
   line-height: 1.55;
 }
 
@@ -323,22 +339,22 @@
 .chronicle-page .norm-box {
   background: rgba(10,140,110,0.06);
   border: 1px solid rgba(10,140,110,0.3);
-  border-left: 3px solid var(--teal);
+  border-left: 3px solid var(--c-teal);
   padding: 14px 18px;
   margin: 14px 0;
 }
 .chronicle-page .norm-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.63rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--teal);
+  color: var(--c-teal);
   margin-bottom: 10px;
 }
 .chronicle-page .norm-body {
   font-size: 0.875rem;
-  color: var(--text);
+  color: var(--c-fg);
   line-height: 1.6;
 }
 .chronicle-page .norm-steps {
@@ -350,14 +366,14 @@
   gap: 5px;
 }
 .chronicle-page .norm-steps li {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--c-fg-muted);
   display: flex;
   gap: 10px;
 }
 .chronicle-page .norm-steps li .step-num {
-  color: var(--teal);
+  color: var(--c-teal);
   flex-shrink: 0;
   width: 20px;
   font-weight: 600;
@@ -374,24 +390,24 @@
   .chronicle-page .pack-grid { grid-template-columns: 1fr; }
 }
 .chronicle-page .pack-card {
-  background: var(--chain);
-  border: 1px solid var(--iron-border);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
   padding: 13px 15px;
 }
 .chronicle-page .pack-name {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--gold-bright);
+  color: var(--c-gold);
   margin-bottom: 5px;
 }
 .chronicle-page .pack-voice {
-  font-family: 'Source Serif 4', serif;
+  font-family: var(--font-source-serif), 'Source Serif 4', serif;
   font-size: 0.82rem;
   font-style: italic;
-  color: var(--muted);
+  color: var(--c-fg-muted);
   line-height: 1.5;
 }
 
@@ -407,11 +423,11 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--rune-border);
+  background: var(--c-border);
 }
 .chronicle-page .rune-hr span {
   font-size: 16px;
-  color: var(--gold);
+  color: var(--c-gold);
   opacity: 0.3;
   letter-spacing: 0.4em;
 }
@@ -424,57 +440,57 @@
   margin: 40px 0;
 }
 .chronicle-page .stat-card {
-  background: var(--forge);
-  border: 1px solid var(--rune-border);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
   padding: 16px;
   text-align: center;
 }
 .chronicle-page .stat-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: var(--muted);
+  color: var(--c-fg-muted);
   margin-bottom: 8px;
 }
 .chronicle-page .stat-val {
-  font-family: 'Cinzel Decorative', serif;
+  font-family: var(--font-cinzel-decorative), 'Cinzel Decorative', serif;
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--gold-bright);
+  color: var(--c-gold);
 }
-.chronicle-page .stat-teal { color: var(--teal); }
-.chronicle-page .stat-fire { color: var(--fire); }
+.chronicle-page .stat-teal { color: var(--c-teal); }
+.chronicle-page .stat-fire { color: var(--c-fire); }
 
 /* ── Footer ── */
 .chronicle-page .session-footer {
   margin-top: 72px;
   padding-top: 40px;
-  border-top: 1px solid var(--rune-border);
+  border-top: 1px solid var(--c-border);
   text-align: center;
 }
 .chronicle-page .footer-cipher {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 1.1rem;
   letter-spacing: 0.5em;
-  color: var(--gold);
+  color: var(--c-gold);
   opacity: 0.35;
   margin-bottom: 14px;
 }
 .chronicle-page .footer-text {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
   font-size: 0.68rem;
-  color: var(--subtle);
+  color: var(--c-fg-muted);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   line-height: 2;
 }
-.chronicle-page .footer-text .hl { color: var(--gold-dim); }
+.chronicle-page .footer-text .hl { color: var(--c-gold); }
 .chronicle-page .footer-sub {
-  font-family: 'Source Serif 4', serif;
+  font-family: var(--font-source-serif), 'Source Serif 4', serif;
   font-size: 0.82rem;
   font-style: italic;
-  color: var(--muted);
+  color: var(--c-fg-muted);
   margin-top: 8px;
 }
 
@@ -483,15 +499,15 @@
   text-align: center;
   font-style: italic;
   font-size: 0.82rem;
-  color: var(--muted);
+  color: var(--c-fg-muted);
   margin-top: 16px;
   line-height: 1.6;
 }
 .chronicle-page .update-banner strong {
-  color: var(--fire);
+  color: var(--c-fire);
 }
 .chronicle-page .update-banner a {
-  color: #5b9ec9;
+  color: var(--c-gold);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -503,52 +519,57 @@
   font-weight: 300;
   font-style: italic;
   font-size: 0.95rem;
-  color: var(--text);
+  color: var(--c-fg);
   line-height: 1.8;
-  border-left: 2px solid var(--gold-dim);
+  border-left: 2px solid var(--c-gold);
   padding-left: 24px;
   text-align: left;
 }
 
 /* ── Field Report: Grievance card ── */
 .chronicle-page .grievance-card {
-  background: var(--forge);
-  border: 1px solid var(--rune-border);
-  border-left: 3px solid var(--fire);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-fire);
   border-radius: var(--radius);
   padding: 40px 36px;
   margin-bottom: 32px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
 }
+
+/* Light theme: subtle red tint background */
+:root:not(.dark) .chronicle-page .grievance-card {
+  background: hsl(0 60% 97%);
+}
+
 @media (max-width: 480px) {
   .chronicle-page .grievance-card { padding: 24px 18px; }
 }
 .chronicle-page .grievance-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.68rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--fire);
+  color: var(--c-fire);
   margin-bottom: 8px;
   display: block;
 }
 .chronicle-page .grievance-card h2 {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
   font-weight: 700;
   font-size: clamp(20px, 3vw, 26px);
-  color: var(--text);
+  color: var(--c-fg);
   letter-spacing: 0.06em;
   margin: 0 0 8px;
 }
 .chronicle-page .grievance-summary {
   font-style: italic;
   font-size: 0.95rem;
-  color: var(--gold);
+  color: var(--c-fire);
   margin: 0 0 16px;
   line-height: 1.6;
 }
 .chronicle-page .grievance-body {
-  color: var(--text);
+  color: var(--c-fg);
   font-size: 0.9rem;
   line-height: 1.75;
   margin: 0 0 16px;
@@ -556,45 +577,45 @@
 .chronicle-page .grievance-closer {
   font-style: italic;
   font-size: 0.88rem;
-  color: var(--text);
+  color: var(--c-fg);
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid var(--rune-border);
+  border-top: 1px solid var(--c-border);
 }
 
 /* ── Field Report: Want/Have labels ── */
 .chronicle-page .label-want {
   display: block;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.68rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   margin-bottom: 12px;
-  color: var(--teal);
+  color: var(--c-teal);
 }
 .chronicle-page .label-instead {
   display: block;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.68rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   margin-bottom: 12px;
-  color: var(--fire);
+  color: var(--c-fire);
 }
 
 /* ── Field Report: Hunt list table ── */
 .chronicle-page .hunt-section {
   padding: 48px 0;
-  background: var(--forge);
+  background: var(--c-bg-card);
   margin: 0 -28px;
   padding-left: 28px;
   padding-right: 28px;
 }
 .chronicle-page .hunt-section h2 {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
   font-weight: 700;
   font-size: 1.3rem;
-  color: var(--text);
+  color: var(--c-fg);
   text-align: center;
   letter-spacing: 0.06em;
   margin: 0 0 32px;
@@ -609,22 +630,22 @@
   font-size: 0.82rem;
 }
 .chronicle-page .hunt-table th {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
   font-weight: 600;
   font-size: 0.7rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--c-gold);
   text-align: left;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--gold-dim);
+  border-bottom: 2px solid var(--c-gold);
 }
 .chronicle-page .hunt-table td {
-  font-family: 'Source Serif 4', serif;
+  font-family: var(--font-source-serif), 'Source Serif 4', serif;
   font-size: 0.88rem;
-  color: var(--text);
+  color: var(--c-fg);
   padding: 14px 16px;
-  border-bottom: 1px solid var(--rune-border);
+  border-bottom: 1px solid var(--c-border);
   vertical-align: top;
 }
 
@@ -633,10 +654,10 @@
   padding: 48px 0;
 }
 .chronicle-page .why-section h2 {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
   font-weight: 700;
   font-size: 1.3rem;
-  color: var(--text);
+  color: var(--c-fg);
   text-align: center;
   letter-spacing: 0.06em;
   margin: 0 0 12px;
@@ -645,7 +666,7 @@
   text-align: center;
   font-style: italic;
   font-size: 0.85rem;
-  color: var(--text);
+  color: var(--c-fg);
   margin: 0 0 32px;
 }
 
@@ -660,7 +681,7 @@
   font-weight: 300;
   font-style: italic;
   font-size: 0.95rem;
-  color: var(--text);
+  color: var(--c-fg);
   line-height: 1.8;
 }
 .chronicle-page .closing .closing-small {
@@ -670,15 +691,15 @@
   display: block;
   margin-top: 12px;
   font-style: normal;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 0.7rem;
-  color: var(--subtle);
+  color: var(--c-fg-muted);
   letter-spacing: 0.15em;
 }
 .chronicle-page .closing .closing-runes {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
   font-size: 1rem;
-  color: var(--subtle);
+  color: var(--c-fg-muted);
   letter-spacing: 0.5em;
   margin-top: 32px;
 }
@@ -688,4 +709,25 @@
   .chronicle-page .entry { gap: 14px; }
   .chronicle-page .entry-rune { width: 36px; height: 36px; font-size: 16px; }
   .chronicle-page .timeline::before { left: 17px; }
+}
+
+/* ── Responsive: hunt section on mobile ── */
+@media (max-width: 768px) {
+  .chronicle-page .hunt-section {
+    margin: 0 -16px;
+    padding: 32px 16px;
+  }
+  .chronicle-page .hunt-table {
+    font-size: 0.75rem;
+  }
+  .chronicle-page .grievance-card {
+    padding: 24px 18px;
+  }
+}
+
+@media (max-width: 375px) {
+  .chronicle-page .hunt-section {
+    margin: 0 -16px;
+    padding: 24px 16px;
+  }
 }
