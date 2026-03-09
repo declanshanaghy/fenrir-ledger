@@ -29,7 +29,8 @@ import { Settings, ChevronRight } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { useTheme } from "next-themes";
+import { ThemeToggle, cycleTheme } from "@/components/layout/ThemeToggle";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
 import { buildSignInUrl } from "@/lib/auth/sign-in-url";
 
@@ -290,6 +291,7 @@ export function TopBar() {
   const { data: session, status, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
   const [panelOpen, setPanelOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const avatarTriggerRef = useRef<HTMLButtonElement>(null);
@@ -441,11 +443,17 @@ export function TopBar() {
                 </div>
               </div>
 
-              {/* Theme row — rotary icon toggle */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              {/* Theme row — click anywhere to cycle dark → light → system */}
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => setTheme(cycleTheme(theme))}
+                className="flex items-center justify-between px-4 py-3 border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer w-full text-left"
+                style={{ minHeight: 44 }}
+              >
                 <span className="text-sm text-muted-foreground font-body">Theme</span>
-                <ThemeToggle variant="icon" />
-              </div>
+                <ThemeToggle variant="dropdown-icon" />
+              </button>
 
               {/* Settings link */}
               <button
