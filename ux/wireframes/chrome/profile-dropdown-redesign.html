@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — Profile Dropdown Redesign — #434</title>
+  <style>
+    /* === Reset / Base === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: monospace;
+      font-size: 13px;
+      background: #f5f5f5;
+      color: #111;
+      padding: 24px 16px 64px;
+      min-width: 375px;
+    }
+
+    h1 { font-size: 16px; margin-bottom: 4px; }
+    h2 { font-size: 13px; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #bbb; padding-bottom: 4px; }
+    p.meta { font-size: 11px; color: #555; margin-bottom: 24px; }
+
+    .section { margin-bottom: 40px; }
+
+    /* === Annotation helpers === */
+    .label {
+      font-size: 10px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .note {
+      font-size: 11px;
+      color: #666;
+      border-left: 3px solid #aaa;
+      padding-left: 8px;
+      margin-top: 6px;
+    }
+    .note.new  { border-color: #333; color: #222; font-weight: bold; }
+    .note.del  { border-color: #999; color: #999; text-decoration: line-through; }
+
+    /* === Topbar shell === */
+    .topbar {
+      height: 48px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-bottom-width: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: relative;
+      max-width: 640px;
+    }
+
+    .topbar-left  { display: flex; align-items: center; gap: 6px; }
+    .topbar-right { display: flex; align-items: center; gap: 4px; }
+
+    .logo { font-weight: bold; font-size: 14px; letter-spacing: 0.1em; }
+    .back-link { font-size: 12px; color: #666; }
+
+    /* === Icon placeholder === */
+    .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border: 1px solid #555;
+      font-size: 10px;
+      flex-shrink: 0;
+      border-radius: 1px;
+    }
+
+    /* === Avatar === */
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid #aaa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      background: #eee;
+      cursor: pointer;
+    }
+    .avatar.gold { border: 1px dashed #888; }
+
+    .avatar-lg {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px dashed #888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      background: #eee;
+      flex-shrink: 0;
+    }
+
+    /* === Dropdown panel === */
+    .dropdown {
+      border: 2px solid #333;
+      background: #fff;
+      width: 256px;
+      border-radius: 2px;
+      overflow: hidden;
+      font-size: 13px;
+    }
+
+    /* User info header */
+    .dropdown-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-info { display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+    .user-name  { font-weight: bold; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-email { font-size: 11px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-tag   { font-size: 11px; color: #888; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Menu item — consistent pattern: icon (LEFT) + label */
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      height: 44px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+      text-decoration: none;
+      color: #333;
+    }
+
+    .menu-item:last-child { border-bottom: none; }
+    .menu-item:hover { background: #f0f0f0; }
+
+    .menu-item .item-label { font-size: 13px; }
+
+    /* === BEFORE: old layout annotation === */
+    .dropdown.before { border-color: #999; opacity: 0.75; }
+
+    .old-menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 44px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+      color: #333;
+    }
+    .old-menu-item:last-child { border-bottom: none; }
+    .old-menu-item .left  { display: flex; align-items: center; gap: 8px; }
+    .old-menu-item .right { display: flex; align-items: center; gap: 4px; color: #888; }
+
+    /* === Layout comparison === */
+    .compare {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .compare-col { display: flex; flex-direction: column; gap: 8px; }
+    .compare-col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+
+    /* === Mobile simulation === */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .mobile-topbar {
+      height: 48px;
+      background: #fff;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+    }
+
+    .mobile-dropdown {
+      /* On mobile, dropdown is full-width below the topbar */
+      width: 100%;
+      border-top: none;
+      border-radius: 0;
+    }
+
+    /* === Annotations overlay === */
+    .ann {
+      position: absolute;
+      font-size: 10px;
+      color: #000;
+      background: #fffbcc;
+      border: 1px solid #ccc;
+      padding: 2px 5px;
+      pointer-events: none;
+    }
+
+    .arrow-note {
+      font-size: 11px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    /* === States indicator === */
+    .badge {
+      font-size: 9px;
+      background: #333;
+      color: #fff;
+      padding: 1px 5px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .separator { height: 1px; background: #ccc; margin: 2px 0; }
+    .spacer { height: 24px; }
+
+    /* Responsive: ensure 375px minimum */
+    @media (max-width: 500px) {
+      .compare { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Wireframe — Profile Dropdown Redesign</h1>
+<p class="meta">Issue #434 · Branch: fix/issue-434-profile-dropdown-redesign · Luna UX</p>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 1: BEFORE vs AFTER COMPARISON
+     ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>1. Before vs After — Dropdown Layout</h2>
+
+  <div class="compare">
+
+    <!-- BEFORE -->
+    <div class="compare-col">
+      <div class="compare-col-label">BEFORE <span class="badge">current</span></div>
+
+      <div class="dropdown before">
+        <!-- Header -->
+        <div class="dropdown-header">
+          <div class="avatar-lg">ᛟ</div>
+          <div class="user-info">
+            <span class="user-name">User Name</span>
+            <span class="user-email">user@example.com</span>
+            <span class="user-tag">The wolf is named.</span>
+          </div>
+        </div>
+
+        <!-- Theme: label left, icons right — INCONSISTENT -->
+        <div class="old-menu-item">
+          <div class="left">
+            <span class="item-label">Theme</span>
+          </div>
+          <div class="right">
+            <div class="icon">☀</div>
+            <div class="icon">●</div>
+            <div class="icon">☾</div>
+          </div>
+        </div>
+
+        <!-- Settings: icon+label left, chevron right — MIXED -->
+        <div class="old-menu-item">
+          <div class="left">
+            <div class="icon">⚙</div>
+            <span class="item-label">Settings</span>
+          </div>
+          <div class="right">
+            <div class="icon">›</div>
+          </div>
+        </div>
+
+        <!-- Sign out: text only, no icon — MISSING ICON -->
+        <div class="old-menu-item">
+          <div class="left">
+            <span class="item-label">Sign out</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="note del">Theme: label left, toggle icons right</div>
+      <div class="note del">Settings: gear left, chevron right</div>
+      <div class="note del">Sign out: no icon</div>
+    </div>
+
+    <!-- AFTER -->
+    <div class="compare-col">
+      <div class="compare-col-label">AFTER <span class="badge">redesign</span></div>
+
+      <div class="dropdown">
+        <!-- Header — unchanged structure, non-interactive -->
+        <div class="dropdown-header">
+          <div class="avatar-lg">ᛟ</div>
+          <div class="user-info">
+            <span class="user-name">User Name</span>
+            <span class="user-email">user@example.com</span>
+            <span class="user-tag">The wolf is named.</span>
+          </div>
+        </div>
+
+        <!-- Theme: single rotary icon LEFT + label — CONSISTENT -->
+        <div class="menu-item">
+          <div class="icon">☀</div>
+          <span class="item-label">Theme</span>
+        </div>
+
+        <!-- Settings: gear icon LEFT + label — CONSISTENT -->
+        <div class="menu-item">
+          <div class="icon">⚙</div>
+          <span class="item-label">Settings</span>
+        </div>
+
+        <!-- Sign out: door icon LEFT + label — CONSISTENT -->
+        <div class="menu-item">
+          <div class="icon">→</div>
+          <span class="item-label">Sign out</span>
+        </div>
+      </div>
+
+      <div class="note new">Every row: icon LEFT + label. No right-side icons.</div>
+      <div class="note new">Theme: single rotary icon (cycles light → dark → system)</div>
+      <div class="note new">Sign out: LogOut icon added</div>
+      <div class="note new">Settings: chevron removed</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 2: DESKTOP — TOPBAR WITH DROPDOWN OPEN
+     ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>2. Desktop Context — Topbar + Dropdown Open (≥ 769px)</h2>
+  <div class="label">Desktop viewport — 640px simulation</div>
+
+  <!-- Topbar -->
+  <div class="topbar" style="max-width:640px; position:relative;">
+    <div class="topbar-left">
+      <span style="font-size:16px;">ᛟ</span>
+      <span class="logo">FENRIR LEDGER</span>
+    </div>
+    <div style="display:flex;align-items:center;">
+      <span class="back-link">← Back to site</span>
+    </div>
+    <div class="topbar-right">
+      <!-- No standalone ThemeToggle in topbar when signed in — it moves inside dropdown -->
+      <div class="avatar gold">ᛟ</div>
+      <!-- DROPDOWN anchors to right edge of avatar -->
+    </div>
+  </div>
+
+  <!-- Dropdown positioned below-right of avatar, as it appears in the DOM -->
+  <div style="display:flex;justify-content:flex-end;max-width:640px;">
+    <div style="position:relative;">
+      <!-- mt-2 offset from topbar bottom (8px) -->
+      <div style="height:8px;"></div>
+      <div class="dropdown">
+        <div class="dropdown-header">
+          <div class="avatar-lg">ᛟ</div>
+          <div class="user-info">
+            <span class="user-name">User Name</span>
+            <span class="user-email">user@example.com</span>
+            <span class="user-tag">The wolf is named.</span>
+          </div>
+        </div>
+        <div class="menu-item" tabindex="0">
+          <div class="icon">☀</div>
+          <span class="item-label">Theme</span>
+        </div>
+        <div class="menu-item" tabindex="0">
+          <div class="icon">⚙</div>
+          <span class="item-label">Settings</span>
+        </div>
+        <div class="menu-item" tabindex="0">
+          <div class="icon">→</div>
+          <span class="item-label">Sign out</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="note">Dropdown right-aligns to avatar trigger. Width: 256px (w-64).</div>
+  <div class="note">Theme toggle in topbar (ThemeToggle variant="icon") is REMOVED when signed in — theme control lives inside dropdown only.</div>
+  <div class="note">Shadow: shadow-lg. Background: bg-background/95 backdrop-blur-sm.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 3: MOBILE — TOPBAR WITH DROPDOWN OPEN (375px)
+     ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>3. Mobile Context — Topbar + Dropdown Open (375px)</h2>
+  <div class="label">375px minimum viewport simulation</div>
+
+  <div class="mobile-frame">
+    <!-- Mobile topbar -->
+    <div class="mobile-topbar">
+      <div class="topbar-left">
+        <span style="font-size:14px;">ᛟ</span>
+        <span class="logo" style="font-size:12px;">FL</span>
+      </div>
+      <div class="topbar-right">
+        <!-- Back icon: mobile only -->
+        <div class="icon">←</div>
+        <!-- No standalone ThemeToggle when signed in -->
+        <!-- Avatar trigger -->
+        <div class="avatar gold" style="margin-left:4px;">ᛟ</div>
+      </div>
+    </div>
+
+    <!-- On mobile: dropdown is full-width, attached below topbar -->
+    <div class="dropdown mobile-dropdown" style="border:none;border-top:2px solid #333;width:100%;">
+      <div class="dropdown-header">
+        <div class="avatar-lg">ᛟ</div>
+        <div class="user-info">
+          <span class="user-name">User Name</span>
+          <span class="user-email">user@example.com</span>
+          <span class="user-tag">The wolf is named.</span>
+        </div>
+      </div>
+      <div class="menu-item" tabindex="0">
+        <div class="icon">☀</div>
+        <span class="item-label">Theme</span>
+      </div>
+      <div class="menu-item" tabindex="0">
+        <div class="icon">⚙</div>
+        <span class="item-label">Settings</span>
+      </div>
+      <div class="menu-item" tabindex="0">
+        <div class="icon">→</div>
+        <span class="item-label">Sign out</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="note">On mobile (≤ 768px), dropdown width = 256px (same), right-aligned to viewport edge.</div>
+  <div class="note">Min touch target per row: 44px height. Already handled by existing style={{ minHeight: 44 }}.</div>
+  <div class="note">No horizontal scroll at 375px — dropdown (256px) fits within 375px minus padding (16px each side = 343px usable).</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 4: THEME ROW — STATE VARIANTS
+     ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>4. Theme Row — Rotary Icon States</h2>
+  <div class="label">Single icon cycles through three states on click</div>
+
+  <div class="compare" style="gap:16px;">
+
+    <div class="compare-col">
+      <div class="compare-col-label">Light <span class="badge">state 1</span></div>
+      <div class="dropdown" style="width:256px;">
+        <div class="menu-item">
+          <div class="icon">☀</div>
+          <span class="item-label">Theme</span>
+        </div>
+      </div>
+      <div class="note">Icon: Sun (lucide: Sun)</div>
+    </div>
+
+    <div class="compare-col">
+      <div class="compare-col-label">Dark <span class="badge">state 2</span></div>
+      <div class="dropdown" style="width:256px;">
+        <div class="menu-item">
+          <div class="icon">☾</div>
+          <span class="item-label">Theme</span>
+        </div>
+      </div>
+      <div class="note">Icon: Moon (lucide: Moon)</div>
+    </div>
+
+    <div class="compare-col">
+      <div class="compare-col-label">System <span class="badge">state 3</span></div>
+      <div class="dropdown" style="width:256px;">
+        <div class="menu-item">
+          <div class="icon">◑</div>
+          <span class="item-label">Theme</span>
+        </div>
+      </div>
+      <div class="note">Icon: Monitor (lucide: Monitor)</div>
+    </div>
+
+  </div>
+
+  <div class="spacer"></div>
+  <div class="arrow-note">Click cycle: Light ☀ → Dark ☾ → System ◑ → Light ☀ …</div>
+  <div class="note">Icon updates immediately on click (optimistic UI). No label change — always reads "Theme".</div>
+  <div class="note">Reuses existing ThemeToggle variant="icon" component. Wrap in the menu-item layout pattern.</div>
+  <div class="note">ARIA: aria-label="Toggle theme, current: Light" (or Dark/System). Updates on click.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 5: SETTINGS ROW — ACTIVE STATE
+     ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>5. Settings Row — Active vs Default State</h2>
+
+  <div class="compare" style="gap:16px;">
+
+    <div class="compare-col">
+      <div class="compare-col-label">Default</div>
+      <div class="dropdown" style="width:256px;">
+        <div class="menu-item">
+          <div class="icon">⚙</div>
+          <span class="item-label" style="color:#555;">Settings</span>
+        </div>
+      </div>
+      <div class="note">color: text-muted-foreground</div>
+    </div>
+
+    <div class="compare-col">
+      <div class="compare-col-label">Active (on /ledger/settings)</div>
+      <div class="dropdown" style="width:256px;">
+        <div class="menu-item" style="background:#f8f5e6;">
+          <div class="icon" style="border-color:#aa8800; color:#aa8800;">⚙</div>
+          <span class="item-label" style="color:#aa8800; font-weight:bold;">Settings</span>
+        </div>
+      </div>
+      <div class="note">color: text-gold (existing isSettingsActive class)</div>
+    </div>
+
+  </div>
+
+  <div class="note">No chevron (ChevronRight removed). Active state logic unchanged — isSettingsActive = pathname === "/ledger/settings".</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 6: SIGN OUT ROW
+     ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>6. Sign Out Row — Before vs After</h2>
+
+  <div class="compare" style="gap:16px;">
+    <div class="compare-col">
+      <div class="compare-col-label">BEFORE</div>
+      <div class="dropdown before" style="width:256px;">
+        <div class="old-menu-item">
+          <div class="left">
+            <span class="item-label">Sign out</span>
+          </div>
+        </div>
+      </div>
+      <div class="note del">No icon — breaks pattern</div>
+    </div>
+
+    <div class="compare-col">
+      <div class="compare-col-label">AFTER</div>
+      <div class="dropdown" style="width:256px;">
+        <div class="menu-item">
+          <div class="icon">→|</div>
+          <span class="item-label">Sign out</span>
+        </div>
+      </div>
+      <div class="note new">LogOut icon (lucide: LogOut) added. Consistent pattern.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 7: FULL DROPDOWN — ANATOMY / SPACING SPEC
+     ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>7. Full Dropdown — Anatomy &amp; Spacing</h2>
+
+  <div style="position:relative;display:inline-block;">
+    <div class="dropdown" style="width:256px;">
+
+      <!-- Header zone -->
+      <div class="dropdown-header" style="position:relative;">
+        <div class="avatar-lg">ᛟ</div>
+        <div class="user-info">
+          <span class="user-name">User Name</span>
+          <span class="user-email">user@example.com</span>
+          <span class="user-tag">The wolf is named.</span>
+        </div>
+      </div>
+
+      <!-- Action rows -->
+      <div class="menu-item" style="position:relative;">
+        <div class="icon">☀</div>
+        <span class="item-label">Theme</span>
+      </div>
+      <div class="menu-item" style="position:relative;">
+        <div class="icon">⚙</div>
+        <span class="item-label">Settings</span>
+      </div>
+      <div class="menu-item" style="position:relative;">
+        <div class="icon">→|</div>
+        <span class="item-label">Sign out</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="label">Spacing spec</div>
+  <table style="border-collapse:collapse;font-size:11px;width:100%;max-width:480px;margin-top:4px;">
+    <tr>
+      <th style="text-align:left;padding:3px 8px;border:1px solid #ccc;background:#eee;">Zone</th>
+      <th style="text-align:left;padding:3px 8px;border:1px solid #ccc;background:#eee;">Height</th>
+      <th style="text-align:left;padding:3px 8px;border:1px solid #ccc;background:#eee;">Padding</th>
+      <th style="text-align:left;padding:3px 8px;border:1px solid #ccc;background:#eee;">Notes</th>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Header (user info)</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">auto (~64px)</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">px-4 py-3</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Non-interactive, aria-hidden</td>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Theme row</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">44px min</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">px-4 py-3</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Interactive, role=menuitem</td>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Settings row</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">44px min</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">px-4 py-3</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Interactive, role=menuitem</td>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Sign out row</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">44px min</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">px-4 py-3</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Interactive, role=menuitem</td>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Icon</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">16px</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">—</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">h-4 w-4 (16px), gap-2 (8px) between icon and label</td>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Dropdown width</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">—</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">w-64 (256px)</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Unchanged from current</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 8: ROW LAYOUT PATTERN (SCHEMATIC)
+     ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>8. Consistent Row Layout Pattern</h2>
+  <div class="label">All action rows follow this exact pattern</div>
+
+  <div style="border:2px solid #333;max-width:480px;padding:16px;font-size:12px;line-height:1.8;">
+    <pre style="font-family:monospace;font-size:12px;">
+┌─────────────────────────────────────────────────────┐
+│  px-4                                          px-4  │
+│  ┌────┐  ┌──────────────────────────────────────┐   │
+│  │icon│  │ label text                           │   │ ← 44px min height
+│  │16px│  │ font-body, text-muted-foreground      │   │   py-3 (12px top+bottom)
+│  └────┘  └──────────────────────────────────────┘   │
+│    ↑         ↑                                       │
+│   gap-2 (8px)                                        │
+└─────────────────────────────────────────────────────┘
+
+flex items-center gap-2 px-4 py-3 (min-height 44px)
+icon: h-4 w-4, flex-shrink: 0
+NO right-side elements (no chevrons, no secondary icons)
+    </pre>
+  </div>
+
+  <div class="note new">This pattern is applied identically to: Theme row, Settings row, Sign out row.</div>
+  <div class="note">Theme row: the &lt;ThemeToggle variant="icon" /&gt; component renders the icon. Wrap it in the flex row — the toggle's own icon IS the left icon.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 9: ACCESSIBILITY CHECKLIST
+     ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>9. Accessibility Requirements</h2>
+  <table style="border-collapse:collapse;font-size:11px;width:100%;max-width:520px;">
+    <tr>
+      <th style="text-align:left;padding:3px 8px;border:1px solid #ccc;background:#eee;">Requirement</th>
+      <th style="text-align:left;padding:3px 8px;border:1px solid #ccc;background:#eee;">Implementation</th>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Min touch target 44×44px</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">style={{ minHeight: 44 }} on each menu-item button</td>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Icon-only elements have text alternative</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Theme icon: aria-label="Toggle theme, current: [Light|Dark|System]"</td>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Keyboard navigation</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Esc closes dropdown, Tab moves focus, Enter/Space activates</td>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">ARIA roles</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Container: role=menu. Rows: role=menuitem. Header: aria-hidden=true.</td>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Focus management</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">On open: focus first menuitem (Theme). On close: return focus to trigger.</td>
+    </tr>
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ccc;">Decorative icons</td>
+      <td style="padding:3px 8px;border:1px solid #ccc;">All lucide icons: aria-hidden=true (they accompany visible text labels)</td>
+    </tr>
+  </table>
+</div>
+
+<div style="font-size:10px;color:#888;margin-top:32px;">
+  Luna UX — Wireframe · Issue #434 · Structure only, no theme styling
+</div>
+
+</body>
+</html>
