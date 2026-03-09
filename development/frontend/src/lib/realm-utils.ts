@@ -95,6 +95,13 @@ export function getRealmLabel(
         rune: "ᚾ",
         colorClass: "text-realm-niflheim",
       };
+    case "graduated":
+      return {
+        label: "In Valhalla",
+        sublabel: "Minimum spend met — bonus earned",
+        rune: "ᛏ",
+        colorClass: "text-realm-hel",
+      };
   }
 }
 
@@ -124,5 +131,7 @@ export function getRealmDescription(status: CardStatus): string {
       return "Alfheim — bonus window open, earning rewards";
     case "overdue":
       return "Niflheim — annual fee past due";
+    case "graduated":
+      return "Valhalla — minimum spend met, bonus earned";
   }
 }

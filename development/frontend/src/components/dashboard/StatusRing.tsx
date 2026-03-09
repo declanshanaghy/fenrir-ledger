@@ -71,7 +71,7 @@ const COLOR_NIFLHEIM = "hsl(var(--realm-niflheim))";
  * @returns Hex color string.
  */
 function getRingColor(status: CardStatus, daysRemaining: number): string {
-  if (status === "closed") return COLOR_STONE;
+  if (status === "closed" || status === "graduated") return COLOR_STONE;
   if (status === "bonus_open") return COLOR_ALFHEIM;
   if (status === "overdue") return COLOR_NIFLHEIM;
   if (daysRemaining <= 0) return COLOR_RAGNAROK;

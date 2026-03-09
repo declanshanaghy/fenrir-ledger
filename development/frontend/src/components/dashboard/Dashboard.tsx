@@ -8,7 +8,7 @@
  *
  * Five tabs (left to right):
  *   "all"      — every card regardless of status.
- *   "valhalla" — closed/retired cards (status === "closed").
+ *   "valhalla" — closed/retired/graduated cards (status === "closed" or "graduated").
  *   "active"   — cards in good standing (status === "active" only).
  *                Default tab when The Howl is empty.
  *   "hunt"     — cards actively earning sign-up bonuses (bonus_open).
@@ -75,7 +75,7 @@ function isActiveCard(card: Card): boolean {
 
 /** Returns true if this card belongs in The Valhalla tab. */
 function isValhallaCard(card: Card): boolean {
-  return card.status === "closed";
+  return card.status === "closed" || card.status === "graduated";
 }
 
 // ─── Loki Mode helpers ────────────────────────────────────────────────────────
@@ -535,9 +535,9 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
     }
   }
 
-  // Non-closed cards only pass to EmptyState check (closed cards are shown in Valhalla tab)
-  const nonClosedCards = cards.filter((c) => c.status !== "closed");
-  if (nonClosedCards.length === 0 && valhallaCards.length === 0) {
+  // Non-Valhalla cards only pass to EmptyState check (closed/graduated cards are shown in Valhalla tab)
+  const nonValhallaCards = cards.filter((c) => !isValhallaCard(c));
+  if (nonValhallaCards.length === 0 && valhallaCards.length === 0) {
     return <EmptyState />;
   }
 

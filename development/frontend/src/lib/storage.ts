@@ -333,15 +333,16 @@ export function getCards(householdId: string): Card[] {
 }
 
 /**
- * Reads all closed (status === "closed") cards for a given household.
+ * Reads all Valhalla cards (closed or graduated) for a given household.
  * Excludes soft-deleted cards — a deleted card is gone forever; a closed
- * card is honored in Valhalla.
+ * or graduated card is honored in Valhalla.
  *
  * Cards are sorted by closedAt descending (most recently closed first).
- * Falls back to updatedAt for cards that predate the closedAt field.
+ * Falls back to updatedAt for cards that predate the closedAt field or
+ * graduated cards that were never explicitly closed.
  *
  * @param householdId - The household to filter by
- * @returns Array of closed Card objects for the household, sorted by closedAt desc
+ * @returns Array of Valhalla Card objects for the household, sorted by closedAt/updatedAt desc
  */
 export function getClosedCards(householdId: string): Card[] {
   const all = getAllCards(householdId);
@@ -350,7 +351,7 @@ export function getClosedCards(householdId: string): Card[] {
       (c) =>
         c.householdId === householdId &&
         !c.deletedAt &&
-        c.status === "closed"
+        (c.status === "closed" || c.status === "graduated")
     )
     .sort((a, b) => {
       const aDate = a.closedAt ?? a.updatedAt;
@@ -439,8 +440,15 @@ export function deleteCard(householdId: string, id: string): void {
  *
  * @param householdId - The household that owns the card (used for scope check)
  * @param cardId - The card ID to close
+ * @param options - Optional settings:
+ *   - markBonusMet: if true, sets signUpBonus.met = true before closing
+ *     (used when the user confirms minimum spend was met during close flow)
  */
-export function closeCard(householdId: string, cardId: string): void {
+export function closeCard(
+  householdId: string,
+  cardId: string,
+  options?: { markBonusMet?: boolean }
+): void {
   const all = getAllCards(householdId);
   const index = all.findIndex(
     (c) => c.id === cardId && c.householdId === householdId
@@ -453,11 +461,18 @@ export function closeCard(householdId: string, cardId: string): void {
 
   const now = new Date().toISOString();
   const updated = [...all];
-  updated[index] = {
+  const closedCard: Card = {
     ...card,
     status: "closed",
     closedAt: now,
     updatedAt: now,
   };
+
+  // Optionally mark sign-up bonus as met during close flow
+  if (options?.markBonusMet && closedCard.signUpBonus) {
+    closedCard.signUpBonus = { ...closedCard.signUpBonus, met: true };
+  }
+
+  updated[index] = closedCard;
   setAllCards(householdId, updated);
 }

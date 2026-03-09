@@ -30,7 +30,7 @@ export interface SignUpBonus {
   met: boolean;
 }
 
-export type CardStatus = "active" | "fee_approaching" | "promo_expiring" | "closed" | "bonus_open" | "overdue";
+export type CardStatus = "active" | "fee_approaching" | "promo_expiring" | "closed" | "bonus_open" | "overdue" | "graduated";
 
 export interface Card {
   id: string;
@@ -299,4 +299,38 @@ export async function getCards(page: Page, householdId: string): Promise<Card[]>
     return data ? JSON.parse(data) : [];
   }, storageKey);
   return cards as Card[];
+}
+
+/**
+ * Seeds an entitlement (subscription status) into localStorage for feature gate testing.
+ * Writes to `fenrir:entitlement` with the given tier and activation status.
+ *
+ * Use for testing feature-gated UI like Valhalla (requires "karl" tier).
+ *
+ * @param page - Playwright Page
+ * @param tier - Subscription tier ("free", "thrall", "karl")
+ * @param isActive - Whether the subscription is currently active
+ */
+export async function seedEntitlement(
+  page: Page,
+  tier: "free" | "thrall" | "karl" = "karl",
+  isActive: boolean = true
+): Promise<void> {
+  const entitlementCacheKey = "fenrir:entitlement";
+  const entitlementData = {
+    tier,
+    isActive,
+    isLinked: isActive,
+    platform: "stripe",
+    stripeStatus: isActive ? "active" : "inactive",
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  };
+
+  await page.evaluate(
+    ({ key, value }: { key: string; value: string }) => {
+      localStorage.setItem(key, value);
+    },
+    { key: entitlementCacheKey, value: JSON.stringify(entitlementData) }
+  );
 }
