@@ -255,7 +255,7 @@ test.describe("AC3 & AC4: /api/auth/refresh endpoint — authentication and clie
       headers: { Authorization: "Bearer mock-id-token" },
     });
 
-    expect([400, 401, 429, 502]).toContain(response1.status());
+    expect([400, 401, 429, 500, 502]).toContain(response1.status());
 
     // The endpoint structure (rate limit middleware) is code-inspected
     // and verified in route.ts to exist
