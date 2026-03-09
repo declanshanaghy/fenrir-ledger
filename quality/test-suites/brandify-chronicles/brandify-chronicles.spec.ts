@@ -15,7 +15,7 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
   // ── AC 1: /chronicles index page loads ────────────────────────────────────
 
   test("AC 1a: /chronicles index page loads successfully", async ({ page }) => {
-    await page.goto("http://localhost:3000/chronicles");
+    await page.goto("/chronicles");
 
     // Verify page title or heading
     const heading = page.locator("h1, h2");
@@ -30,7 +30,7 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
   });
 
   test("AC 1b: /chronicles index shows chronicle cards in grid layout", async ({ page }) => {
-    await page.goto("http://localhost:3000/chronicles");
+    await page.goto("/chronicles");
 
     // Look for typical index structure: cards, list items, or articles
     const articles = page.locator("article, [role='article'], .card, .chronicle");
@@ -41,7 +41,7 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
   });
 
   test("AC 1c: /chronicles index displays excerpt text", async ({ page }) => {
-    await page.goto("http://localhost:3000/chronicles");
+    await page.goto("/chronicles");
 
     const articles = page.locator("article, [role='article'], .card, .chronicle");
 
@@ -54,7 +54,7 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
   });
 
   test("AC 1d: /chronicles index displays dates sorted (newest first)", async ({ page }) => {
-    await page.goto("http://localhost:3000/chronicles");
+    await page.goto("/chronicles");
 
     // Extract dates from chronicle cards
     const dates = await page.locator("[data-date], time, .date")
@@ -78,7 +78,7 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
 
   test("AC 2a: /chronicles/{slug} detail page loads and renders MDX content", async ({ page }) => {
     // First, find an available chronicle from the index
-    await page.goto("http://localhost:3000/chronicles");
+    await page.goto("/chronicles");
 
     // Get first chronicle link
     const firstLink = page.locator("a[href*='/chronicles/']").first();
@@ -86,7 +86,7 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
 
     if (href && href.includes("/chronicles/")) {
       // Navigate to detail page
-      await page.goto(`http://localhost:3000${href}`);
+      await page.goto(href);
 
       // Verify detail page loads
       expect(page.url()).toContain("/chronicles/");
@@ -98,13 +98,13 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
   });
 
   test("AC 2b: /chronicles/{slug} displays title, date, and rune in metadata", async ({ page }) => {
-    await page.goto("http://localhost:3000/chronicles");
+    await page.goto("/chronicles");
 
     const firstLink = page.locator("a[href*='/chronicles/']").first();
     const href = await firstLink.getAttribute("href").catch(() => "");
 
     if (href && href.includes("/chronicles/")) {
-      await page.goto(`http://localhost:3000${href}`);
+      await page.goto(href);
 
       // Look for typical metadata elements
       const title = page.locator("h1, h2, [data-title]");
@@ -120,13 +120,13 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
   });
 
   test("AC 2c: /chronicles/{slug} MDX renders with proper styling", async ({ page }) => {
-    await page.goto("http://localhost:3000/chronicles");
+    await page.goto("/chronicles");
 
     const firstLink = page.locator("a[href*='/chronicles/']").first();
     const href = await firstLink.getAttribute("href").catch(() => "");
 
     if (href && href.includes("/chronicles/")) {
-      await page.goto(`http://localhost:3000${href}`);
+      await page.goto(href);
 
       // Check for chronicle-page styling context
       const chroniclePage = page.locator(".chronicle-page, [role='main']");
@@ -158,7 +158,7 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
      * - /chronicles page component uses getAllChronicles()
      */
 
-    await page.goto("http://localhost:3000/chronicles");
+    await page.goto("/chronicles");
 
     // If we get here without 404, the page is working
     expect(page.url()).toContain("/chronicles");
@@ -181,7 +181,7 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
      * We verify that /chronicles is the canonical location now.
      */
 
-    await page.goto("http://localhost:3000/chronicles");
+    await page.goto("/chronicles");
 
     // /chronicles is the canonical location
     expect(page.url()).toContain("/chronicles");
@@ -189,7 +189,7 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
   });
 
   test("AC 4b: Chronicles list is not broken by old sessions/ references", async ({ page }) => {
-    await page.goto("http://localhost:3000/chronicles");
+    await page.goto("/chronicles");
 
     // Page should load and render without errors
     const content = await page.content();
@@ -287,7 +287,7 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
   // ── AC 6: Navigation and slug handling ──────────────────────────────────
 
   test("AC 6a: /chronicles navigation link is present in site header/footer", async ({ page }) => {
-    await page.goto("http://localhost:3000/");
+    await page.goto("/");
 
     // Look for navigation that links to /chronicles
     const chroniclesLink = page.locator("a[href*='/chronicles']");
@@ -300,7 +300,7 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
   });
 
   test("AC 6b: Chronicle slug URLs are kebab-case and unique", async ({ page }) => {
-    await page.goto("http://localhost:3000/chronicles");
+    await page.goto("/chronicles");
 
     // Collect all chronicle links
     const links = page.locator("a[href*='/chronicles/']");
