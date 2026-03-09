@@ -31,6 +31,7 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 | `--status` | Full status dashboard. Do NOT dispatch anything. |
 | `--batch N` | Pull top N **unblocked** items from "Up Next", start chains in parallel. Max 5. |
 | `--local` | Force local worktree execution instead of Depot. |
+| `--skip-tests` | Skip `verify.sh --step test` in agent prompt. tsc+build still required. Use with `--resume` after repeated test failures. Handoff gets "⚠️ Tests skipped by Odin" marker. |
 | `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
 | *(no flag)* | Default: pick the top item and start the agent chain via Depot. |
 

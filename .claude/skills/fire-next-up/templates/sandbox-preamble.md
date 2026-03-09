@@ -34,6 +34,14 @@ At the end, run each verify step as its own Bash tool call:
   bash quality/scripts/verify.sh --step test -x
 On failure: fix, commit+push, re-run that step. Repeat until green.
 
+VERIFY BUDGET (3-STRIKE RULE):
+If you fail the SAME verify step 3 times (3 fix attempts, still failing):
+  1. Commit+push your current state: git add -A && git commit -m 'wip: verify incomplete — Ref #<NUMBER>' && git push origin <BRANCH>
+  2. Stop trying to fix that step. Proceed to PR/handoff.
+  3. In the handoff comment, add: "⚠️ VERIFY INCOMPLETE: <step> failed after 3 attempts. Failures: <summary>"
+  4. tsc and build are NEVER skippable — only test can be abandoned after 3 strikes.
+This prevents burning the entire session on pre-existing or intractable test failures.
+
 STRICT SCOPE (UNBREAKABLE):
 Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,
 declare things "done", or add commentary beyond your handoff step.
