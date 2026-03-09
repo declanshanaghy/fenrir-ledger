@@ -45,6 +45,7 @@ async function setThrallEntitlement(page: Page) {
 
 /**
  * Helper: Set Karl (paid) entitlement in localStorage
+ * Note: The EntitlementContext checks both tier="karl" AND active=true AND userId!=null for feature access
  */
 async function setKarlEntitlement(page: Page) {
   await page.goto(`${BASE_URL}/`, { waitUntil: "networkidle" });
@@ -53,7 +54,7 @@ async function setKarlEntitlement(page: Page) {
       tier: "karl",
       active: true,
       platform: "stripe",
-      userId: "test-karl",
+      userId: "test-cust-12345678", // Must have userId (non-empty) to be considered "linked"
       linkedAt: Date.now(),
       checkedAt: Date.now(),
     };
