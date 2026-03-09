@@ -1,10 +1,10 @@
 #!/usr/bin/env -S npx tsx
 /**
- * generate-chronicle.ts — Generate a session chronicle HTML from JSON input
+ * generate-chronicle.ts — Generate a session chronicle MDX from JSON input
  *
- * Usage: echo '{"title":"...","acts":[...]}' | npx tsx generate-chronicle.ts > sessions/NAME.html
+ * Usage: echo '{"title":"...","acts":[...]}' | npx tsx generate-chronicle.ts > content/blog/NAME.mdx
  *
- * Or: npx tsx generate-chronicle.ts --input acts.json --output sessions/NAME.html
+ * Or: npx tsx generate-chronicle.ts --input acts.json --output content/blog/NAME.mdx
  *
  * Input JSON schema:
  * {
@@ -12,6 +12,8 @@
  *   "date": "2026-03-07",
  *   "runes": "ᛏ ᚢ ᚢ ᛚ",
  *   "primary_rune": "ᛏ",
+ *   "slug": "session-name",
+ *   "excerpt": "One-sentence summary for the blog index.",
  *   "acts": [
  *     {
  *       "title": "Act Title",
@@ -32,8 +34,6 @@
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
   'XI', 'XII', 'XIII', 'XIV', 'XV'];
 
-const FONTS_URL = "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap";
-
 interface Act {
   title: string;
   rune: string;
@@ -52,6 +52,8 @@ interface SessionData {
   date: string;
   runes: string;
   primary_rune: string;
+  slug: string;
+  excerpt: string;
   acts: Act[];
 }
 
@@ -137,55 +139,46 @@ function generate(data: SessionData): string {
   const toc = data.acts.map(generateTocEntry).join('\n');
   const acts = data.acts.map(generateAct).join('\n');
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${data.primary_rune} Session Chronicle: ${esc(data.title)} &middot; Fenrir Ledger</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="${FONTS_URL}" rel="stylesheet">
-  <link rel="stylesheet" href="/sessions/chronicle.css">
-</head>
-<body>
-<div class="page">
+  return `---
+title: "${data.title.replace(/"/g, '\\"')}"
+date: "${data.date}"
+rune: "${data.primary_rune}"
+excerpt: "${data.excerpt.replace(/"/g, '\\"')}"
+slug: "${data.slug}"
+---
 
-  <nav class="back-nav" aria-label="Return to archive">
-    <a href="/sessions/" class="back-link">&larr; &#5999; Session Archive</a>
-  </nav>
+<div class="chronicle-page">
 
-  <header class="session-header">
-    <span class="header-runes">${data.runes}</span>
-    <h1 class="session-title">${esc(data.title)}</h1>
-    <p class="session-subtitle">Session Chronicle &middot; Fenrir Ledger</p>
-    <div class="session-meta">
-      <span>DATE <span class="val">${data.date}</span></span>
-      <span>ACTS <span class="val">${data.acts.length}</span></span>
-      <span>FILES CHANGED <span class="val">${totalFiles}</span></span>
-    </div>
-  </header>
-
-  <nav class="toc">
-    <div class="toc-title">Chronicle of Acts</div>
-    <ul class="toc-list">
-${toc}
-    </ul>
-  </nav>
-
-  <div class="timeline">
-${acts}
+<header class="session-header">
+  <span class="header-runes" aria-hidden="true">${data.runes}</span>
+  <h1 class="session-title">${esc(data.title)}</h1>
+  <p class="session-subtitle">Session Chronicle &middot; Fenrir Ledger</p>
+  <div class="session-meta">
+      <span>Date <span class="val">${data.date}</span></span>
+      <span>Session <span class="val">${data.slug}</span></span>
+      <span>Acts <span class="val">${data.acts.length}</span></span>
+      <span>Files changed <span class="val">${totalFiles}</span></span>
   </div>
+</header>
 
-  <footer class="session-footer">
-    <div class="footer-cipher">${data.runes}</div>
-    <div class="footer-text">${esc(data.title)} &middot; Fenrir Ledger Session Chronicle</div>
-    <p class="footer-sub">The wolf remembers everything.</p>
-  </footer>
+<nav class="toc">
+  <div class="toc-title">Chronicle of Acts</div>
+  <ul class="toc-list">
+${toc}
+  </ul>
+</nav>
+
+<div class="timeline">
+${acts}
+</div>
+
+<footer class="session-footer">
+  <div class="footer-cipher">${data.runes}</div>
+  <div class="footer-text">${esc(data.title)} &middot; Fenrir Ledger Session Chronicle</div>
+  <p class="footer-sub">The wolf remembers everything.</p>
+</footer>
 
 </div>
-</body>
-</html>
 `;
 }
 
@@ -211,11 +204,11 @@ if (inputPath) {
 }
 
 const data: SessionData = JSON.parse(jsonStr);
-const html = generate(data);
+const mdx = generate(data);
 
 if (outputPath) {
-  writeFileSync(outputPath, html);
+  writeFileSync(outputPath, mdx);
   console.log(`Generated ${outputPath} (${data.acts.length} acts, ${countFiles(data)} files)`);
 } else {
-  process.stdout.write(html);
+  process.stdout.write(mdx);
 }

@@ -1,11 +1,11 @@
 ---
 name: brandify-session
-description: Use this skill when the user says "brandify-session", "brandify session", "save session as HTML", or provides a session name to archive. Exports the current Claude Code session to a Fenrir-styled HTML chronicle and updates the sessions index.
+description: Use this skill when the user says "brandify-session", "brandify session", "save session as MDX", or provides a session name to archive. Exports the current Claude Code session to a Fenrir-styled MDX chronicle and writes it to content/blog/.
 ---
 
 # Brandify Session — Session Chronicle Generator
 
-Exports the current session to a styled HTML chronicle using the Fenrir Ledger visual system. CSS is shared via `sessions/chronicle.css` (served by Vercel). HTML is generated from JSON by a pre-compiled script.
+Exports the current session to a styled MDX chronicle using the Fenrir Ledger visual system. Styling is provided by `chronicle.css` scoped to `.chronicle-page`. MDX is generated from JSON by a pre-compiled script and written to `content/blog/`.
 
 ---
 
@@ -38,6 +38,8 @@ Write a JSON file to `tmp/sessions/{{NAME}}.json` with this schema:
   "date": "2026-03-07",
   "runes": "ᛏ ᚢ ᚢ ᛚ",
   "primary_rune": "ᛏ",
+  "slug": "{{NAME}}",
+  "excerpt": "One-sentence summary for the blog index.",
   "acts": [
     {
       "title": "Act Title (5 words max)",
@@ -61,61 +63,48 @@ Write a JSON file to `tmp/sessions/{{NAME}}.json` with this schema:
 
 ---
 
-## Step 4 — Generate `sessions/{{NAME}}.html`
+## Step 4 — Generate `content/blog/{{NAME}}.mdx`
+
+Determine REPO_ROOT via: `git worktree list --porcelain | head -1 | sed 's/worktree //'`
 
 Run the pre-compiled generator script:
 
 ```bash
-SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/brandify-session/scripts"
+REPO_ROOT="$(git worktree list --porcelain | head -1 | sed 's/worktree //')"
+SCRIPT_DIR="$REPO_ROOT/.claude/skills/brandify-session/scripts"
+BLOG_DIR="$REPO_ROOT/development/frontend/content/blog"
 node "$SCRIPT_DIR/generate-chronicle.mjs" \
   --input tmp/sessions/{{NAME}}.json \
-  --output sessions/{{NAME}}.html
+  --output "$BLOG_DIR/{{NAME}}.mdx"
 ```
 
-The script links to `sessions/chronicle.css` — **do NOT inline CSS**.
+The script generates a complete MDX file with frontmatter (`title`, `date`, `rune`, `excerpt`, `slug`) and chronicle body styled via `.chronicle-page` classes from `chronicle.css`.
 
 **Fallback:** `npx tsx generate-chronicle.ts` (if `.mjs` is stale)
 **After editing `generate-chronicle.ts`:** run `scripts/build.sh` to rebuild
 
 ---
 
-## Step 5 — Update `sessions/index.html`
+## Step 5 — Verify & Report
 
-If `sessions/index.html` does not exist, read `templates/index-skeleton.md` and create it.
+Confirm `content/blog/{{NAME}}.mdx` exists and is non-empty.
+The blog index at `/blog` is auto-generated from the MDX files — no manual index update needed.
 
-Insert a new session card inside `<div id="sessions">`, **before** existing entries (newest first):
-
-```html
-<a class="session-card" href="/sessions/{{NAME}}.html">
-  <span class="card-rune">{{PRIMARY_RUNE}}</span>
-  <p class="card-title">{{SESSION_TITLE}}</p>
-  <p class="card-meta">{{DATE}} &middot; {{TOTAL_ACTS}} acts &middot; {{TOTAL_FILES}} files</p>
-  <p class="card-excerpt">{{ONE_SENTENCE_SUMMARY}}</p>
-  <span class="card-arrow">&rarr;</span>
-</a>
-```
+Report: MDX path, act count, files documented, `/blog` URL where it will appear.
 
 ---
 
-## Step 6 — Verify & Report
+## Step 6 — Commit, Push & PR
 
-Confirm `sessions/{{NAME}}.html` and `sessions/index.html` exist and are non-empty.
-
-Report: chronicle path, act count, files documented, index updated.
-
----
-
-## Step 7 — Commit, Push & PR
-
-Create a branch, commit the generated files, and open a PR:
+Create a branch, commit the generated file, and open a PR:
 
 ```bash
 git checkout -b chore/session-{{NAME}}
-git add sessions/{{NAME}}.html sessions/index.html
+git add development/frontend/content/blog/{{NAME}}.mdx
 git commit -m "chore: add session chronicle — {{NAME}}"
 git push -u origin chore/session-{{NAME}}
 gh pr create --title "chore: session chronicle — {{NAME}}" \
-  --body "Adds brandified session chronicle for **{{NAME}}**."
+  --body "Adds brandified session chronicle for **{{NAME}}** to the blog at \`/blog/{{NAME}}\`."
 ```
 
 Report the PR URL to the user. Do NOT merge — Odin decides when to merge.

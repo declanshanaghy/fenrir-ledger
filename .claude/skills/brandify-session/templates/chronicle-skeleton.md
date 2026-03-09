@@ -1,15 +1,19 @@
-# Chronicle HTML Skeleton
+# Chronicle MDX Skeleton
 
-**IMPORTANT:** Do NOT generate HTML manually. Use the generator script instead:
+**IMPORTANT:** Do NOT generate MDX manually. Use the generator script instead:
 
 ```bash
-SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/brandify-session/scripts"
+REPO_ROOT="$(git worktree list --porcelain | head -1 | sed 's/worktree //')"
+SCRIPT_DIR="$REPO_ROOT/.claude/skills/brandify-session/scripts"
+BLOG_DIR="$REPO_ROOT/development/frontend/content/blog"
 node "$SCRIPT_DIR/generate-chronicle.mjs" \
   --input tmp/sessions/{{NAME}}.json \
-  --output sessions/{{NAME}}.html
+  --output "$BLOG_DIR/{{NAME}}.mdx"
 ```
 
-The script generates a complete HTML file that links to `sessions/chronicle.css` for shared styles.
+The script generates a complete MDX file with:
+- Frontmatter: `title`, `date`, `rune`, `excerpt`, `slug`
+- Chronicle body inside `<div class="chronicle-page">` — styled via `chronicle.css`
 
 ## Component Rules
 

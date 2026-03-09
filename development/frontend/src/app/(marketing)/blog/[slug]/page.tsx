@@ -1,8 +1,8 @@
 /**
  * Blog Entry — /blog/[slug]
  *
- * Renders individual session chronicle. HTML body content is rendered via
- * dangerouslySetInnerHTML (safe for internal content authored by us).
+ * Renders individual session chronicle natively from MDX via next-mdx-remote/rsc.
+ * No dangerouslySetInnerHTML — MDX compiles to React components at build time.
  * - Breadcrumb: Home > Blog > [Session Title]
  * - Chronicle styling via chronicle.css scoped to .chronicle-page
  * - Previous / Next navigation between entries (sorted newest-first)
@@ -14,6 +14,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MDXRemote } from "next-mdx-remote/rsc";
 import {
   getAllChronicles,
   getAllChroniclesSlugs,
@@ -107,9 +108,8 @@ export default async function BlogEntryPage({
         </ol>
       </nav>
 
-      {/* ── Chronicle content — HTML rendered from MDX body ── */}
-      {/* eslint-disable-next-line react/no-danger */}
-      <div dangerouslySetInnerHTML={{ __html: entry.content }} />
+      {/* ── Chronicle content — native MDX rendering ── */}
+      <MDXRemote source={entry.content} />
 
       {/* ── Prev / Next navigation ── */}
       <nav
