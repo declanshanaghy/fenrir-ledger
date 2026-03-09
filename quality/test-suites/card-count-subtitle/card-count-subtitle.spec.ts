@@ -1,79 +1,79 @@
+/**
+ * Card Count Subtitle Removal Test Suite — Issue #450
+ * Authored by Loki, QA Tester of the Pack
+ *
+ * Tests the removal of the redundant card count subtitle from the dashboard.
+ * The tab bar already displays counts per category, so the summary header
+ * showing total card count and "N needs attention" is now removed.
+ *
+ * Acceptance Criteria:
+ * - Card count subtitle removed from dashboard
+ * - Tab bar still shows counts per category
+ * - No visual regression or layout shifts
+ * - Empty state (0 cards) works correctly
+ */
+
 import { test, expect } from "@playwright/test";
-import { seedCards } from "../../support/seed-cards";
-import { createUser } from "../../support/create-user";
-import { signIn } from "../../support/sign-in";
+import {
+  clearAllStorage,
+  seedHousehold,
+  seedCards,
+  ANONYMOUS_HOUSEHOLD_ID,
+} from "../helpers/test-fixtures";
+import { FEW_CARDS, EMPTY_CARDS } from "../helpers/seed-data";
 
 test.describe("Card count subtitle removal (#450)", () => {
   test.beforeEach(async ({ page }) => {
-    // Create a test user and sign in
-    const user = await createUser();
-    await signIn(page, user);
+    await page.goto("/");
+    await clearAllStorage(page);
+    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   });
 
-  test("should NOT display card count subtitle on dashboard", async ({
+  test("TC-450-01: should NOT display card count subtitle on dashboard with cards", async ({
     page,
   }) => {
     // Seed some cards
-    await seedCards(5);
-
-    // Navigate to dashboard
-    await page.goto("/ledger");
-    await page.waitForLoadState("networkidle");
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
 
     // Check that the card count subtitle is NOT visible
     // The old subtitle had text like "5 cards" or "N cards"
-    const cardCountPattern = /^\d+\s+cards?$/;
-    const subtitleElements = await page.locator("div.text-muted-foreground")
-      .all();
-
-    for (const element of subtitleElements) {
-      const text = await element.textContent();
-      expect(text).not.toMatch(cardCountPattern);
-    }
+    const subtitle = page.locator("text=/^\\d+\\s+cards?$/");
+    await expect(subtitle).not.toBeVisible();
 
     // Verify no "needs attention" subtitle either
-    const needsAttentionText = await page
-      .locator('text=/need.*attention/')
-      .count();
-    expect(needsAttentionText).toBe(0);
+    const needsAttention = page.locator("text=/need.*attention/");
+    await expect(needsAttention).not.toBeVisible();
   });
 
-  test("should still display card counts in tab bar", async ({ page }) => {
-    // Seed cards in different states
-    await seedCards(3); // Defaults to "active" status
+  test("TC-450-02: should still display card counts in tab bar", async ({
+    page,
+  }) => {
+    // Seed cards
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
 
-    // Navigate to dashboard
-    await page.goto("/ledger");
-    await page.waitForLoadState("networkidle");
+    // Verify tab bar shows count badges (e.g., "All (5)" in the button)
+    const tabButtons = page.locator('button[role="tab"]');
+    const tabTexts = await tabButtons.allTextContents();
 
-    // Verify tab bar shows count badges
-    // The "All" tab should show a count
-    const allTabCount = await page
-      .locator('button[role="tab"]')
-      .filter({ hasText: /All/ })
-      .locator("text=/\\d+/")
-      .count();
-
-    expect(allTabCount).toBeGreaterThan(0);
+    // At least one tab should have a numeric count
+    const hasCount = tabTexts.some((text) => /\d+/.test(text));
+    expect(hasCount).toBe(true);
   });
 
-  test("should handle empty state correctly (0 cards)", async ({ page }) => {
-    // Create user with no cards (don't seed any)
-
-    // Navigate to dashboard
-    await page.goto("/ledger");
-    await page.waitForLoadState("networkidle");
+  test("TC-450-03: should handle empty state correctly (0 cards)", async ({
+    page,
+  }) => {
+    // Seed with no cards
+    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, EMPTY_CARDS);
+    await page.reload({ waitUntil: "networkidle" });
 
     // Verify no card count subtitle appears even in empty state
-    const cardCountPattern = /^\d+\s+cards?$/;
-    const subtitleElements = await page.locator("div.text-muted-foreground")
-      .all();
+    const subtitle = page.locator("text=/^\\d+\\s+cards?$/");
+    await expect(subtitle).not.toBeVisible();
 
-    for (const element of subtitleElements) {
-      const text = await element.textContent();
-      if (text) {
-        expect(text).not.toMatch(cardCountPattern);
-      }
-    }
+    const needsAttention = page.locator("text=/need.*attention/");
+    await expect(needsAttention).not.toBeVisible();
   });
 });
