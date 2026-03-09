@@ -24,7 +24,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Settings, ChevronRight } from "lucide-react";
+import { Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
@@ -207,10 +207,14 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
           </span>
         </div>
       </div>
-      {/* Theme row — rotary icon toggle */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+      {/* Theme row — rotary icon left + label */}
+      <div
+        role="menuitem"
+        className="flex items-center gap-2 px-4 py-3 border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer"
+        style={{ minHeight: 44 }}
+      >
+        <ThemeToggle variant="dropdown-icon" />
         <span className="text-sm text-muted-foreground font-body">Theme</span>
-        <ThemeToggle variant="icon" />
       </div>
       {/* Settings link */}
       <button
@@ -221,16 +225,13 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
           router.push("/ledger/settings");
         }}
         className={[
-          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center justify-between border-b border-border",
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border",
           isSettingsActive ? "text-gold" : "text-muted-foreground hover:text-foreground",
         ].join(" ")}
         style={{ minHeight: 44 }}
       >
-        <span className="flex items-center gap-2">
-          <Settings className="h-4 w-4" />
-          Settings
-        </span>
-        <ChevronRight className="h-4 w-4 opacity-50" />
+        <Settings className="h-4 w-4 shrink-0" aria-hidden="true" />
+        Settings
       </button>
       {/* Sign out */}
       <button
@@ -240,9 +241,10 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
           onClose();
           onSignOut();
         }}
-        className="px-4 py-3 text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 text-left transition-colors font-body"
+        className="px-4 py-3 text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2"
         style={{ minHeight: 44 }}
       >
+        <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
         Sign out
       </button>
     </div>
@@ -369,8 +371,8 @@ export function LedgerTopBar() {
       {/* RIGHT: Controls cluster */}
       <div className="relative flex items-center gap-0.5" ref={panelRef}>
 
-        {/* Theme toggle (icon variant) */}
-        <ThemeToggle variant="icon" />
+        {/* Theme toggle (icon variant) — hidden when signed in, theme lives in dropdown */}
+        {!isAuthenticated && <ThemeToggle variant="icon" />}
 
         {/* Stale auth nudge */}
         {!isAuthenticated && showStaleNudge && (
