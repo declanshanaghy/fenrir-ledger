@@ -9,9 +9,9 @@
  *   Thrall (Free):
  *     01. Annual Fee Tracking
  *     02. Sign-Up Bonus Tracking
- *     03. Velocity Management
- *     04. The Howl
+ *     03. The Howl
  *   Karl ($3.99/mo):
+ *     04. Velocity Management
  *     05. Valhalla (Card Archive)
  *     06. Cloud Sync
  *     07. Multi-Household
@@ -90,29 +90,9 @@ const THRALL_FEATURES: FeatureDetail[] = [
     reverse: true,
   },
   {
-    id: "velocity-management",
-    rune: "ᚹ",
-    eyebrow: "Feature 03 · Velocity Management",
-    title: "The Issuer's Rules",
-    benefit:
-      "Know exactly where you stand against Chase 5/24, Citi 1/8, and other issuer-specific application limits.",
-    description:
-      "Every major issuer has application velocity rules — limits on how many cards you can open in a rolling window. Violate them and your application is denied. Fenrir tracks your open-date history against each issuer's known rules so you always know if you're eligible before you apply.",
-    details: [
-      "Chase 5/24: tracks cards opened in last 24 months",
-      "Citi 1/8 and 2/65: tracks application windows",
-      "American Express once-per-lifetime bonus tracking",
-      "Issuer-specific rule summaries with plain-English explanations",
-      "Shows current count and remaining slots per issuer",
-    ],
-    atmospheric: "Know the rules of the hall before you enter it.",
-    tier: "thrall",
-    reverse: false,
-  },
-  {
     id: "the-howl",
     rune: "ᛉ",
-    eyebrow: "Feature 04 · The Howl",
+    eyebrow: "Feature 03 · The Howl",
     title: "Urgent Cards Dashboard",
     benefit:
       "A single view of everything that needs attention right now — no searching, no missing deadlines.",
@@ -127,11 +107,31 @@ const THRALL_FEATURES: FeatureDetail[] = [
     ],
     atmospheric: "The wolf does not howl when everything is calm.",
     tier: "thrall",
-    reverse: true,
+    reverse: false,
   },
 ];
 
 const KARL_FEATURES: FeatureDetail[] = [
+  {
+    id: "velocity-management",
+    rune: "ᚹ",
+    eyebrow: "Feature 04 · Velocity Management",
+    title: "The Issuer's Rules",
+    benefit:
+      "Know exactly where you stand against Chase 5/24, Citi 1/8, and other issuer-specific application limits.",
+    description:
+      "Every major issuer has application velocity rules — limits on how many cards you can open in a rolling window. Violate them and your application is denied. Fenrir tracks your open-date history against each issuer's known rules so you always know if you're eligible before you apply.",
+    details: [
+      "Chase 5/24: tracks cards opened in last 24 months",
+      "Citi 1/8 and 2/65: tracks application windows",
+      "American Express once-per-lifetime bonus tracking",
+      "Issuer-specific rule summaries with plain-English explanations",
+      "Shows current count and remaining slots per issuer",
+    ],
+    atmospheric: "Know the rules of the hall before you enter it.",
+    tier: "karl",
+    reverse: false,
+  },
   {
     id: "valhalla",
     rune: "ᛏ",
@@ -149,7 +149,7 @@ const KARL_FEATURES: FeatureDetail[] = [
     ],
     atmospheric: "The hall of the honored dead. Only Karl may enter.",
     tier: "karl",
-    reverse: false,
+    reverse: true,
   },
   {
     id: "cloud-sync",

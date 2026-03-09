@@ -29,6 +29,7 @@ import { useEntitlement } from "@/hooks/useEntitlement";
 import {
   KarlUpsellDialog,
   KARL_UPSELL_VALHALLA,
+  KARL_UPSELL_VELOCITY,
 } from "@/components/entitlement/KarlUpsellDialog";
 
 /** Rune icon for Valhalla tab. Matches SideNav's RuneIcon pattern. */
@@ -49,14 +50,17 @@ export function LedgerBottomTabs() {
   const searchParams = useSearchParams();
   const { hasFeature } = useEntitlement();
   const hasValhalla = hasFeature("card-archive");
+  const hasVelocity = hasFeature("velocity-management");
   const [upsellOpen, setUpsellOpen] = useState(false);
+  const [velocityUpsellOpen, setVelocityUpsellOpen] = useState(false);
 
   const isOnDashboard = pathname === "/ledger";
   const activeTab = searchParams?.get("tab");
   const valhallaTabActive = isOnDashboard && activeTab === "valhalla";
+  const huntTabActive = isOnDashboard && activeTab === "hunt";
 
-  // Dashboard is active when on /ledger without the valhalla tab param
-  const dashboardActive = isOnDashboard && activeTab !== "valhalla";
+  // Dashboard is active when on /ledger without the valhalla/hunt tab param
+  const dashboardActive = isOnDashboard && activeTab !== "valhalla" && activeTab !== "hunt";
   const addActive = pathname === "/ledger/cards/new";
   const settingsActive = pathname === "/ledger/settings";
 
@@ -90,6 +94,36 @@ export function LedgerBottomTabs() {
       }
     },
     [isOnDashboard, hasValhalla]
+  );
+
+  /**
+   * Hunt tab click handler -- mirrors Valhalla behavior.
+   * Thrall users see the upsell dialog instead.
+   */
+  const handleHuntClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+
+      // Gate Hunt for Thrall users — show upsell dialog
+      if (!hasVelocity) {
+        setVelocityUpsellOpen(true);
+        return;
+      }
+
+      if (isOnDashboard) {
+        window.dispatchEvent(
+          new CustomEvent("fenrir:activate-tab", { detail: { tab: "hunt" } })
+        );
+        try {
+          localStorage.setItem("fenrir:dashboard-tab", "hunt");
+        } catch {
+          // ignore
+        }
+      } else {
+        window.location.href = "/ledger?tab=hunt";
+      }
+    },
+    [isOnDashboard, hasVelocity]
   );
 
   const tabBase =
@@ -150,6 +184,28 @@ export function LedgerBottomTabs() {
           </button>
         </li>
 
+        {/* Hunt — gated for Thrall users */}
+        <li className="flex flex-1">
+          <button
+            type="button"
+            onClick={handleHuntClick}
+            className={cn(tabBase, "w-full", huntTabActive && hasVelocity && tabActive)}
+            aria-current={huntTabActive && hasVelocity ? "page" : undefined}
+            aria-label={hasVelocity ? "Open Hunt tab" : "The Hunt \u2014 Karl tier required. Tap to upgrade."}
+          >
+            <div className="relative">
+              <RuneIcon rune="ᛜ" />
+              {!hasVelocity && (
+                <span
+                  className="absolute -top-1.5 -right-3 text-[7px] font-mono font-bold border border-gold/30 text-gold/60 px-0.5 leading-tight bg-background"
+                  aria-hidden="true"
+                >K</span>
+              )}
+            </div>
+            <span className="text-[10px] font-body">Hunt</span>
+          </button>
+        </li>
+
         {/* Settings */}
         <li className="flex flex-1">
           <Link
@@ -168,6 +224,13 @@ export function LedgerBottomTabs() {
         {...KARL_UPSELL_VALHALLA}
         open={upsellOpen}
         onDismiss={() => setUpsellOpen(false)}
+      />
+
+      {/* Karl upsell dialog — shown when Thrall user taps Hunt */}
+      <KarlUpsellDialog
+        {...KARL_UPSELL_VELOCITY}
+        open={velocityUpsellOpen}
+        onDismiss={() => setVelocityUpsellOpen(false)}
       />
     </nav>
   );
