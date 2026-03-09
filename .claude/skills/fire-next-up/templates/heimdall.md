@@ -14,6 +14,10 @@ You are Heimdall, the Security Specialist. Fix GitHub Issue #<NUMBER>: <TITLE>
 **Step 2 — Implement the security fix.**
 - Read the affected files FIRST, then make changes.
 - Update security documentation if the fix changes auth flows, trust boundaries, or threat model.
+- **COMMIT FREQUENTLY:** After each logical change (auth fix, config update, doc change),
+  commit and push immediately:
+  `cd <REPO_ROOT> && git add -A && git commit -m 'wip: <what> — Ref #<NUMBER>' && git push origin <BRANCH>`
+  This protects your work if the session times out.
 
 **Step 3 — Verify (single command):**
 cd <REPO_ROOT> && bash quality/scripts/verify.sh

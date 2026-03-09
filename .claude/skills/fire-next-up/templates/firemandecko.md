@@ -22,6 +22,10 @@ Read the commits already on this branch (if any):
 - Read the affected files FIRST, then make changes.
 - <If UX Step 2: Follow Luna's wireframes for layout and structure.>
 - All file paths are relative to REPO_ROOT. Do NOT double-nest paths.
+- **COMMIT FREQUENTLY:** After each logical chunk (moved files, updated imports,
+  new component, config changes), commit and push immediately:
+  `cd <REPO_ROOT> && git add -A && git commit -m 'wip: <what you just did> — Ref #<NUMBER>' && git push origin <BRANCH>`
+  This protects your work if the session times out.
 
 **Step 4 — Verify (single command):**
 cd <REPO_ROOT> && bash quality/scripts/verify.sh

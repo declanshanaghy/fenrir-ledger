@@ -18,6 +18,17 @@ ALWAYS set timeout: 600000 (10 minutes) on these commands:
 - next build
 Any command that builds or runs tests needs the 10-minute timeout.
 
+INCREMENTAL COMMITS (UNBREAKABLE):
+Depot sessions can time out or fail at any point. To protect your work:
+- Commit and push after EVERY meaningful chunk of work (e.g. after migrating files,
+  after updating routes, after fixing imports, after each major component change).
+- Use descriptive WIP commit messages: `wip: migrate app routes under /ledger — Ref #<NUMBER>`
+- Push after each commit: `git push origin <BRANCH>`
+- Aim for a commit every 5-10 minutes of work, or after each logical unit.
+- The final step will squash or amend into a clean commit message before the PR.
+- This way, if the session dies, the next agent picks up from your last push —
+  not from scratch.
+
 STRICT SCOPE — DO NOT DEVIATE:
 You are a worker in a chain. Execute ONLY the numbered steps listed below — nothing
 more, nothing less. Do not improvise, ad-lib, or take actions not explicitly listed.

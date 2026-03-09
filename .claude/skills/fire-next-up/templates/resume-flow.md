@@ -179,6 +179,7 @@ Use commit prefixes (`design:`, `fix:`, `security:`, `test:`) as a secondary sig
 ## Edge Cases
 
 - **Branch exists but no commits beyond main** — the previous agent failed before committing. Re-run that step (same agent, same branch).
+- **Branch has `wip:` commits but no handoff** — the agent was mid-implementation when it timed out. Re-dispatch the same agent on the same branch. The agent's Step 2 reads `git log origin/main..HEAD` and will see the existing WIP commits, picking up where the previous session left off instead of starting from scratch. Include a note in the prompt: "Previous session timed out. WIP commits exist on the branch — read them and continue from where it left off. Do NOT redo work that's already committed."
 - **Multiple agents' commits exist but chain isn't complete** — skip to the next incomplete step.
 - **PR exists but CI failed** — bounce back to Loki with CI failure details.
 - **Issue is closed** — tell the user the issue is already closed. Do not spawn agents.

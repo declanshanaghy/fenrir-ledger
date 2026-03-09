@@ -19,6 +19,10 @@ Use the previous agent's handoff comment to understand what was built, how to ve
 **Step 3 — Write and run NEW tests only:**
 - Write new Playwright tests in `quality/test-suites/<feature-slug>/` covering the acceptance criteria.
 - Use the previous agent's "How to verify" and "Edge cases" sections to guide your test design.
+- **COMMIT FREQUENTLY:** After writing each test file or fixing a batch of tests,
+  commit and push immediately:
+  `cd <REPO_ROOT> && git add -A && git commit -m 'wip: tests for <what> — Ref #<NUMBER>' && git push origin <BRANCH>`
+  This protects your work if the session times out.
 - First run — build + your suite only (needed on fresh sandboxes):
   `cd <REPO_ROOT> && bash quality/scripts/verify.sh <feature-slug>`
 - Subsequent runs — skip build for fast iteration:
