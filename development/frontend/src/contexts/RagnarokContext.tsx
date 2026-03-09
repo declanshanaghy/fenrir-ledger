@@ -9,8 +9,8 @@
  * "promo_expiring". This triggers a persistent visual overlay across the
  * entire app, a changed document title, and intensified easter egg animations.
  *
- * Note (Issue #352): The /valhalla route was removed — it now redirects to
- * /?tab=valhalla (a dashboard tab). Previously Ragnarök was suppressed on
+ * Note (Issue #352): The /ledger/valhalla route was removed — it now redirects to
+ * /ledger?tab=valhalla (a dashboard tab). Previously Ragnarök was suppressed on
  * /valhalla; that exception is no longer needed.
  *
  * Recomputes on:

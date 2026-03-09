@@ -8,10 +8,10 @@
  *
  * Active route is highlighted with a gold left border.
  *
- * Issue #352: The "Valhalla" sidebar link no longer navigates to /valhalla.
+ * Issue #352: The "Valhalla" sidebar link no longer navigates to /ledger/valhalla.
  * Instead, it dispatches a `fenrir:activate-tab` custom event (if already on
- * the dashboard) or navigates to /?tab=valhalla (from any other route).
- * The /valhalla route is removed. Both "Cards" and "Valhalla" sidebar items
+ * the dashboard) or navigates to /ledger?tab=valhalla (from any other route).
+ * The /ledger/valhalla route is removed. Both "Cards" and "Valhalla" sidebar items
  * show the active state simultaneously when the Valhalla dashboard tab is open.
  */
 
@@ -48,7 +48,7 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
   const searchParams = useSearchParams();
 
   // Whether the Valhalla dashboard tab is currently active
-  const isOnDashboard = pathname === "/";
+  const isOnDashboard = pathname === "/ledger";
   const activeTab = searchParams?.get("tab");
   const valhallaTabActive = isOnDashboard && activeTab === "valhalla";
 
@@ -75,7 +75,7 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
         }
       } else {
         // Navigate to dashboard with tab query param
-        window.location.href = "/?tab=valhalla";
+        window.location.href = "/ledger?tab=valhalla";
       }
     },
     [isOnDashboard]
@@ -94,13 +94,13 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
 
         {/* Cards — main dashboard link */}
         <Link
-          href="/"
+          href="/ledger"
           title={collapsed ? "Cards" : undefined}
           className={cn(
             "flex items-center gap-3 rounded-sm px-2.5 py-2 text-base",
             "transition-[transform,filter,background-color,color,border-color] duration-150 ease-out",
             "active:scale-[0.98] active:brightness-90",
-            pathname === "/"
+            pathname === "/ledger"
               ? "bg-primary/10 text-gold border-l-2 border-gold"
               : "text-muted-foreground hover:bg-secondary hover:text-foreground hover:brightness-110 border-l-2 border-transparent"
           )}
@@ -132,13 +132,13 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
 
         {/* Settings */}
         <Link
-          href="/settings"
+          href="/ledger/settings"
           title={collapsed ? "Settings" : undefined}
           className={cn(
             "flex items-center gap-3 rounded-sm px-2.5 py-2 text-base",
             "transition-[transform,filter,background-color,color,border-color] duration-150 ease-out",
             "active:scale-[0.98] active:brightness-90",
-            pathname === "/settings"
+            pathname === "/ledger/settings"
               ? "bg-primary/10 text-gold border-l-2 border-gold"
               : "text-muted-foreground hover:bg-secondary hover:text-foreground hover:brightness-110 border-l-2 border-transparent"
           )}

@@ -60,7 +60,7 @@ export function EmptyState() {
       </AuthGate>
 
       <Link
-        href="/cards/new"
+        href="/ledger/cards/new"
         className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-10 px-6 mt-3"
       >
         Add Card

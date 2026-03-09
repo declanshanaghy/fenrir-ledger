@@ -246,14 +246,14 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
   const subscribeStripe = useCallback(async () => {
     if (!isAuthenticated) {
       // Redirect to sign-in, then back to settings to auto-start checkout
-      window.location.href = "/sign-in?returnTo=" + encodeURIComponent("/settings?stripe=checkout");
+      window.location.href = "/ledger/sign-in?returnTo=" + encodeURIComponent("/ledger/settings?stripe=checkout");
       return;
     }
 
     const token = await ensureFreshToken();
     if (!token) {
       // Token expired mid-session — redirect to sign-in
-      window.location.href = "/sign-in?returnTo=" + encodeURIComponent("/settings?stripe=checkout");
+      window.location.href = "/ledger/sign-in?returnTo=" + encodeURIComponent("/ledger/settings?stripe=checkout");
       return;
     }
 

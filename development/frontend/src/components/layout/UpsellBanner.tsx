@@ -123,7 +123,7 @@ export function UpsellBanner() {
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => router.push("/sign-in")}
+            onClick={() => router.push("/ledger/sign-in")}
             className={[
               "px-3 py-1.5 text-sm font-heading tracking-wide",
               "border border-gold/50 text-gold",
@@ -161,7 +161,7 @@ export function UpsellBanner() {
 
         <button
           type="button"
-          onClick={() => router.push("/sign-in")}
+          onClick={() => router.push("/ledger/sign-in")}
           className={[
             "self-start px-3 py-1.5 text-sm font-heading tracking-wide",
             "border border-gold/50 text-gold",

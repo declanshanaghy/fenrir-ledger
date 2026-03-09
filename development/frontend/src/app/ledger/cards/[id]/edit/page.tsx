@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * Edit Card Page — /cards/[id]/edit
+ * Edit Card Page — /ledger/cards/[id]/edit
  *
  * Anonymous-first: accessible without a signed-in session.
  * Loads the card by ID from localStorage using the householdId from AuthContext
  * (works for both anonymous and authenticated users).
- * Redirects to / if the card is not found.
+ * Redirects to /ledger if the card is not found.
  *
  * See ADR-006 for the anonymous-first auth model.
  */
@@ -34,7 +34,7 @@ export default function EditCardPage() {
 
     if (!householdId) {
       // No householdId available — redirect to root as a safety fallback
-      router.replace("/");
+      router.replace("/ledger");
       return;
     }
 
@@ -43,7 +43,7 @@ export default function EditCardPage() {
 
     const found = getCardById(householdId, params.id);
     if (!found) {
-      router.replace("/");
+      router.replace("/ledger");
       return;
     }
 
