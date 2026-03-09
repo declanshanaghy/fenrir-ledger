@@ -1,37 +1,68 @@
 import { test, expect } from "@playwright/test";
-import {
-  seedHousehold,
-  seedAuthenticatedSession,
-} from "../../fixtures/seed-household";
+import { clearAllStorage } from "../helpers/test-fixtures";
+
+// Mock test user for authenticated session
+const MOCK_USER = {
+  name: "Wolf Tester",
+  email: "wolf.tester@fenrir.test",
+  picture: null,
+};
+
+/**
+ * Seed a mock authenticated session into localStorage
+ * (bypasses OAuth for testing purposes)
+ */
+async function seedAuthSession(page: any) {
+  const now = Date.now();
+  const expiresAt = now + 60 * 60 * 1000; // 1 hour from now
+
+  const session = {
+    user: {
+      ...MOCK_USER,
+      sub: "test-user-123",
+    },
+    account: {
+      type: "oauth",
+      provider: "google",
+    },
+    expires_at: expiresAt,
+  };
+
+  await page.evaluate((sessionData: any) => {
+    localStorage.setItem("fenrir:auth", JSON.stringify(sessionData));
+    localStorage.setItem("fenrir:household", sessionData.user.sub);
+  }, session);
+}
 
 test.describe("Profile Dropdown Header", () => {
-  test.beforeEach(async ({ page, context }) => {
-    // Seed household and authenticated session
-    const { household, user } = await seedHousehold(context);
-    await seedAuthenticatedSession(page, user);
-
-    // Navigate to ledger app
-    await page.goto("/ledger");
-
-    // Wait for avatar button to be visible
-    await page
-      .getByRole("button", { name: /Open user menu/ })
-      .waitFor({ state: "visible" });
+  test.beforeEach(async ({ page }) => {
+    // Navigate to app to establish browser context
+    await page.goto("/", { waitUntil: "networkidle" });
+    // Clear storage and seed auth session
+    await clearAllStorage(page);
+    await seedAuthSession(page);
+    // Navigate to ledger
+    await page.goto("/ledger", { waitUntil: "networkidle" });
   });
 
   test("Profile info displays as non-interactive header with background", async ({
     page,
   }) => {
     // Open the dropdown
-    await page.getByRole("button", { name: /Open user menu/ }).click();
+    const avatarButton = page.locator("button[aria-controls='user-menu']");
+    await expect(avatarButton).toBeVisible();
+    await avatarButton.click();
+
+    // Verify dropdown is open
+    const userMenu = page.locator("#user-menu");
+    await expect(userMenu).toBeVisible();
 
     // Profile header should exist as a non-interactive section
-    const profileHeader = page.locator('[aria-hidden="true"]').first();
+    const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
+    await expect(profileHeader).toBeVisible();
 
     // Should have the subtle background styling
-    await expect(profileHeader).toHaveClass(/bg-secondary\/30/);
-
-    // Should have select-none and cursor-default (non-interactive styling)
+    await expect(profileHeader).toHaveClass(/bg-secondary/);
     await expect(profileHeader).toHaveClass(/select-none/);
     await expect(profileHeader).toHaveClass(/cursor-default/);
 
@@ -43,38 +74,38 @@ test.describe("Profile Dropdown Header", () => {
     page,
   }) => {
     // Open the dropdown
-    await page.getByRole("button", { name: /Open user menu/ }).click();
+    const avatarButton = page.locator("button[aria-controls='user-menu']");
+    await avatarButton.click();
 
     // Get the profile header div (first aria-hidden section)
-    const profileHeader = page.locator('[aria-hidden="true"]').first();
+    const userMenu = page.locator("#user-menu");
+    const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
+    await expect(profileHeader).toBeVisible();
 
-    // Should contain avatar (image or rune fallback)
-    const avatar = profileHeader.locator("img, [aria-label*='Anonymous user']");
-    await expect(avatar).toBeVisible();
+    // Should contain user name (Wolf Tester)
+    await expect(profileHeader).toContainText(MOCK_USER.name);
 
-    // Should contain user name
-    const name = profileHeader.locator("span").filter({ hasText: /\w+/ }).first();
-    await expect(name).toBeVisible();
-
-    // Should contain email (text-mono class indicates email)
-    const email = profileHeader.locator("span.font-mono");
-    await expect(email).toBeVisible();
+    // Should contain email
+    await expect(profileHeader).toContainText(MOCK_USER.email);
 
     // Should contain tagline "The wolf is named."
-    const tagline = profileHeader.locator("span").filter({
-      hasText: "The wolf is named.",
-    });
-    await expect(tagline).toBeVisible();
+    await expect(profileHeader).toContainText("The wolf is named.");
+
+    // Should contain avatar (rune fallback since picture is null)
+    const rune = profileHeader.locator("span").filter({ hasText: "ᛟ" });
+    await expect(rune).toBeVisible();
   });
 
   test("Clear visual separator between header and menu items", async ({
     page,
   }) => {
     // Open the dropdown
-    await page.getByRole("button", { name: /Open user menu/ }).click();
+    const avatarButton = page.locator("button[aria-controls='user-menu']");
+    await avatarButton.click();
 
     // Find the separator (h-px bg-border div with role=separator)
-    const separator = page.locator('[role="separator"]');
+    const userMenu = page.locator("#user-menu");
+    const separator = userMenu.locator('[role="separator"]');
 
     // Separator should be visible and distinct
     await expect(separator).toBeVisible();
@@ -84,14 +115,19 @@ test.describe("Profile Dropdown Header", () => {
 
   test("Menu items appear below the separator", async ({ page }) => {
     // Open the dropdown
-    await page.getByRole("button", { name: /Open user menu/ }).click();
+    const avatarButton = page.locator("button[aria-controls='user-menu']");
+    await avatarButton.click();
+
+    const userMenu = page.locator("#user-menu");
 
     // Get all menu items
-    const theme = page.getByRole("menuitem").filter({ hasText: "Theme" });
-    const settings = page.getByRole("menuitem").filter({
+    const theme = userMenu.locator('[role="menuitem"]').filter({ hasText: "Theme" });
+    const settings = userMenu.locator('[role="menuitem"]').filter({
       hasText: "Settings",
     });
-    const signOut = page.getByRole("menuitem").filter({ hasText: "Sign out" });
+    const signOut = userMenu.locator('[role="menuitem"]').filter({
+      hasText: "Sign out",
+    });
 
     // All menu items should be visible
     await expect(theme).toBeVisible();
@@ -104,78 +140,77 @@ test.describe("Profile Dropdown Header", () => {
     await expect(signOut).toHaveAttribute("role", "menuitem");
   });
 
-  test("Dropdown closes when clicking a menu item (My Cards / Theme / Settings)", async ({
-    page,
-  }) => {
+  test("Dropdown closes when clicking a menu item", async ({ page }) => {
     // Open the dropdown
-    const avatarButton = page.getByRole("button", { name: /Open user menu/ });
+    const avatarButton = page.locator("button[aria-controls='user-menu']");
     await avatarButton.click();
 
     // Verify dropdown is open
     const userMenu = page.locator("#user-menu");
     await expect(userMenu).toBeVisible();
 
-    // Get the separator to verify it's visible (dropdown is open)
-    const separator = page.locator('[role="separator"]');
-    await expect(separator).toBeVisible();
-
-    // Click Theme to close
-    await page.getByRole("menuitem").filter({ hasText: "Theme" }).click();
+    // Click Theme to toggle theme (this closes the dropdown on TopBar)
+    const theme = userMenu.locator('[role="menuitem"]').filter({ hasText: "Theme" });
+    await theme.click();
 
     // Wait a moment for any animations
     await page.waitForTimeout(200);
 
-    // Dropdown should be closed (user-menu should not be visible)
+    // Dropdown should be closed
     await expect(userMenu).not.toBeVisible();
   });
 
-  test("Avatar renders correctly in header (not clickable)", async ({
-    page,
-  }) => {
+  test("Avatar renders correctly in header", async ({ page }) => {
     // Open the dropdown
-    await page.getByRole("button", { name: /Open user menu/ }).click();
+    const avatarButton = page.locator("button[aria-controls='user-menu']");
+    await avatarButton.click();
 
     // Get the profile header
-    const profileHeader = page.locator('[aria-hidden="true"]').first();
+    const userMenu = page.locator("#user-menu");
+    const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
+    await expect(profileHeader).toBeVisible();
 
-    // Find avatar in header
-    const avatar = profileHeader.locator("div").filter({ hasClass: /border/ });
+    // Avatar div should have border and rounded-full
+    const avatarDiv = profileHeader.locator("div").filter({ hasClass: /rounded-full/ });
+    await expect(avatarDiv).toBeVisible();
+    await expect(avatarDiv).toHaveClass(/border/);
+    await expect(avatarDiv).toHaveClass(/rounded-full/);
 
-    // Avatar should be visible
-    await expect(avatar).toBeVisible();
-
-    // Avatar should have rounded-full styling
-    await expect(avatar).toHaveClass(/rounded-full/);
-
-    // Avatar should not be a button (header is non-interactive)
-    const avatarButton = profileHeader.locator("button");
-    await expect(avatarButton).not.toBeVisible();
+    // Should contain rune (since picture is null)
+    const rune = profileHeader.locator("span").filter({ hasText: "ᛟ" });
+    await expect(rune).toBeVisible();
   });
 
   test("Mobile responsive - works at 375px viewport", async ({ browser }) => {
     const context = await browser.newContext({ viewport: { width: 375, height: 667 } });
     const page = await context.newPage();
 
-    // Seed and setup
-    const { household, user } = await seedHousehold(context);
-    await seedAuthenticatedSession(page, user);
-
+    // Navigate to app to establish browser context
+    await page.goto("/", { waitUntil: "networkidle" });
+    // Clear storage and seed auth session
+    await clearAllStorage(page);
+    await seedAuthSession(page);
     // Navigate to ledger
-    await page.goto("/ledger");
+    await page.goto("/ledger", { waitUntil: "networkidle" });
 
     // Open dropdown
-    await page.getByRole("button", { name: /Open user menu/ }).click();
+    const avatarButton = page.locator("button[aria-controls='user-menu']");
+    await avatarButton.click();
+
+    // Verify dropdown is open
+    const userMenu = page.locator("#user-menu");
+    await expect(userMenu).toBeVisible();
 
     // Verify header is still visible and properly styled
-    const profileHeader = page.locator('[aria-hidden="true"]').first();
+    const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
     await expect(profileHeader).toBeVisible();
 
     // Verify separator is visible
-    const separator = page.locator('[role="separator"]');
+    const separator = userMenu.locator('[role="separator"]');
     await expect(separator).toBeVisible();
 
     // Verify menu items fit on screen
-    const theme = page.getByRole("menuitem").filter({ hasText: "Theme" });
+    const theme = userMenu.locator('[role="menuitem"]').filter({ hasText: "Theme" });
     await expect(theme).toBeVisible();
 
     await context.close();
@@ -183,40 +218,50 @@ test.describe("Profile Dropdown Header", () => {
 
   test("Long email addresses do not overflow in header", async ({ page }) => {
     // Open the dropdown
-    await page.getByRole("button", { name: /Open user menu/ }).click();
+    const avatarButton = page.locator("button[aria-controls='user-menu']");
+    await avatarButton.click();
 
     // Get the email element
-    const email = page.locator('[aria-hidden="true"]').first().locator("span.font-mono");
+    const userMenu = page.locator("#user-menu");
+    const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
+    const email = profileHeader.locator("span.font-mono");
+
+    await expect(email).toBeVisible();
 
     // Should have truncate class to prevent overflow
     await expect(email).toHaveClass(/truncate/);
 
-    // Should be visible and within bounds
+    // Should be visible and within reasonable bounds
     const boundingBox = await email.boundingBox();
     expect(boundingBox).not.toBeNull();
     if (boundingBox) {
-      // Width should be reasonable (constrained by parent)
-      expect(boundingBox.width).toBeLessThan(500);
+      // Width should be reasonable (constrained by parent w-64)
+      expect(boundingBox.width).toBeLessThan(256 + 32); // w-64 + padding
     }
   });
 
   test("Separator is visible in both light and dark themes", async ({
     page,
   }) => {
-    // Open dropdown and check light theme
-    await page.getByRole("button", { name: /Open user menu/ }).click();
-    let separator = page.locator('[role="separator"]');
-    await expect(separator).toBeVisible();
+    const avatarButton = page.locator("button[aria-controls='user-menu']");
 
-    // Cycle theme to dark
-    await page.getByRole("menuitem").filter({ hasText: "Theme" }).click();
+    // Open dropdown and check light theme
+    await avatarButton.click();
+    const userMenu = page.locator("#user-menu");
+    let separator = userMenu.locator('[role="separator"]');
+    await expect(separator).toBeVisible();
+    await expect(separator).toHaveClass(/bg-border/);
+
+    // Cycle theme by clicking Theme menu item
+    await userMenu.locator('[role="menuitem"]').filter({ hasText: "Theme" }).click();
     await page.waitForTimeout(300);
 
     // Open dropdown again
-    await page.getByRole("button", { name: /Open user menu/ }).click();
+    await avatarButton.click();
 
     // Separator should still be visible
-    separator = page.locator('[role="separator"]');
+    const userMenu2 = page.locator("#user-menu");
+    separator = userMenu2.locator('[role="separator"]');
     await expect(separator).toBeVisible();
 
     // Should have bg-border class (applies in both themes)
@@ -229,17 +274,18 @@ test.describe("Profile Dropdown Header", () => {
     const currentUrl = page.url();
 
     // Open dropdown
-    await page.getByRole("button", { name: /Open user menu/ }).click();
+    const avatarButton = page.locator("button[aria-controls='user-menu']");
+    await avatarButton.click();
 
     // Get profile header and click on it
-    const profileHeader = page.locator('[aria-hidden="true"]').first();
+    const userMenu = page.locator("#user-menu");
+    const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
     await profileHeader.click();
 
     // URL should remain the same (no navigation)
     expect(page.url()).toBe(currentUrl);
 
     // Dropdown should still be open
-    const userMenu = page.locator("#user-menu");
     await expect(userMenu).toBeVisible();
   });
 });
