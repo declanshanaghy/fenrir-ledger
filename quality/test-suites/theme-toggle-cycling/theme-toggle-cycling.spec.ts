@@ -200,13 +200,16 @@ test.describe("Theme Toggle — DOM Structure & Semantics", () => {
     await page.goto("/", { waitUntil: "networkidle" });
 
     const themeButton = page.locator("button[aria-label*='Theme']").first();
-    const svg = themeButton.locator("svg");
+    await expect(themeButton).toBeVisible();
 
+    const svg = themeButton.locator("svg");
     await expect(svg).toBeVisible();
   });
 
   test("theme toggle cycles via cycleTheme() logic", async ({ page }) => {
     // This test verifies the cycleTheme() function is correctly imported and callable
+    await page.goto("/", { waitUntil: "networkidle" });
+
     const hasCycleTheme = await page.evaluate(() => {
       // Check if the component handles clicks without error
       const button = document.querySelector(
