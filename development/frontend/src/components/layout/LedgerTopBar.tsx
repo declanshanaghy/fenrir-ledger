@@ -25,8 +25,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { ArrowLeft, Settings, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
@@ -182,6 +182,10 @@ interface ProfileDropdownProps {
 }
 
 function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const isSettingsActive = pathname === "/ledger/settings";
+
   return (
     <div
       id="user-menu"
@@ -194,6 +198,7 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
         "flex flex-col",
       ].join(" ")}
     >
+      {/* Profile header — informational, not interactive */}
       <div className="px-4 py-3 border-b border-border flex items-center gap-3" aria-hidden="true">
         <Avatar picture={user.picture ?? undefined} name={user.name ?? undefined} size={40} goldRing />
         <div className="flex flex-col min-w-0">
@@ -204,10 +209,32 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
           </span>
         </div>
       </div>
+      {/* Theme row — rotary icon toggle */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <span className="text-sm text-muted-foreground font-body">Theme</span>
-        <ThemeToggle />
+        <ThemeToggle variant="icon" />
       </div>
+      {/* Settings link */}
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => {
+          onClose();
+          router.push("/ledger/settings");
+        }}
+        className={[
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center justify-between border-b border-border",
+          isSettingsActive ? "text-gold" : "text-muted-foreground hover:text-foreground",
+        ].join(" ")}
+        style={{ minHeight: 44 }}
+      >
+        <span className="flex items-center gap-2">
+          <Settings className="h-4 w-4" />
+          Settings
+        </span>
+        <ChevronRight className="h-4 w-4 opacity-50" />
+      </button>
+      {/* Sign out */}
       <button
         type="button"
         role="menuitem"

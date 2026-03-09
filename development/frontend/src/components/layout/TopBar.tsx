@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Settings, ChevronRight } from "lucide-react";
 
 /**
  * TopBar — full-width sticky application header.
@@ -240,10 +241,10 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
         is already here — signing in just keeps it safe.
       </p>
 
-      {/* Theme toggle */}
+      {/* Theme toggle — rotary icon variant */}
       <div className="flex items-center justify-between pt-1">
         <span className="text-sm text-muted-foreground font-body">Theme</span>
-        <ThemeToggle />
+        <ThemeToggle variant="icon" />
       </div>
 
       {/* CTAs */}
@@ -287,6 +288,8 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
 
 export function TopBar() {
   const { data: session, status, signOut } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const [panelOpen, setPanelOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const avatarTriggerRef = useRef<HTMLButtonElement>(null);
@@ -438,11 +441,32 @@ export function TopBar() {
                 </div>
               </div>
 
-              {/* Theme section */}
+              {/* Theme row — rotary icon toggle */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <span className="text-sm text-muted-foreground font-body">Theme</span>
-                <ThemeToggle />
+                <ThemeToggle variant="icon" />
               </div>
+
+              {/* Settings link */}
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setPanelOpen(false);
+                  router.push("/ledger/settings");
+                }}
+                className={[
+                  "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center justify-between border-b border-border",
+                  pathname === "/ledger/settings" ? "text-gold" : "text-muted-foreground hover:text-foreground",
+                ].join(" ")}
+                style={{ minHeight: 44 }}
+              >
+                <span className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </span>
+                <ChevronRight className="h-4 w-4 opacity-50" />
+              </button>
 
               {/* Sign Out — returns user to dashboard in anonymous state */}
               <button

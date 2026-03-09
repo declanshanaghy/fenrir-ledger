@@ -3,19 +3,18 @@
 /**
  * AppShell — the persistent application frame.
  *
- * Renders the TopBar, collapsible SideNav, and the main content slot.
- * Collapse state is persisted to localStorage so it survives navigation.
+ * Renders the TopBar and the main content slot.
+ * Issue #403: Sidebar removed entirely. Content takes full viewport width.
  *
  * Layout grid:
  *   Row 1: TopBar (full width)
- *   Row 2: SideNav (left) + main content + Footer (right)
+ *   Row 2: main content + Footer
  */
 
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { ReactNode } from "react";
 import { TopBar } from "./TopBar";
-import { SideNav } from "./SideNav";
 import { SyncIndicator } from "./SyncIndicator";
 import { KonamiHowl } from "./KonamiHowl";
 import { ForgeMasterEgg } from "./ForgeMasterEgg";
@@ -29,29 +28,18 @@ import {
 } from "@/components/cards/GleipnirMountainRoots";
 import { useRagnarok } from "@/contexts/RagnarokContext";
 
-const STORAGE_KEY = "fenrir:sidenav-collapsed";
-
 interface AppShellProps {
   children: ReactNode;
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const { open: rootsOpen, trigger: triggerRoots, dismiss: dismissRoots } = useGleipnirFragment3();
+  const { open: rootsOpen, dismiss: dismissRoots } = useGleipnirFragment3();
   const { ragnarokActive } = useRagnarok();
 
   // Read persisted state after mount to avoid SSR mismatch.
-  // On narrow viewports (< 768px) default to collapsed so the main content
-  // area gets usable width — the user can still expand manually.
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "true") {
-      setCollapsed(true);
-    } else if (stored === null && window.innerWidth < 768) {
-      setCollapsed(true);
-    }
     setMounted(true);
   }, []);
 
@@ -69,21 +57,12 @@ export function AppShell({ children }: AppShellProps) {
     };
   }, [ragnarokActive]);
 
-  function handleToggle() {
-    const next = !collapsed;
-    setCollapsed(next);
-    localStorage.setItem(STORAGE_KEY, String(next));
-    // Easter egg #3 — The Roots of a Mountain: first sidebar collapse
-    if (next) triggerRoots();
-  }
-
   // Suppress layout until client state is known to avoid flash
   if (!mounted) {
     return (
       <div className="flex flex-col h-screen bg-background">
         <div className="h-14 shrink-0 border-b border-border" />
         <div className="flex flex-1 overflow-hidden">
-          <div className="w-56 shrink-0 border-r border-border" />
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
       </div>
@@ -95,10 +74,6 @@ export function AppShell({ children }: AppShellProps) {
       <TopBar />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* SideNav uses useSearchParams — wrap in Suspense per Next.js requirement */}
-        <Suspense fallback={<div className={collapsed ? "w-14 shrink-0 border-r border-border" : "w-56 shrink-0 border-r border-border"} />}>
-          <SideNav collapsed={collapsed} onToggle={handleToggle} />
-        </Suspense>
         {/* Main content + footer in a scrollable column */}
         <div className="flex flex-col flex-1 overflow-auto">
           <main className="flex-1">{children}</main>
@@ -113,7 +88,7 @@ export function AppShell({ children }: AppShellProps) {
       <ForgeMasterEgg />
       {/* Easter egg #10 — Heilung Krigsgaldr (Ctrl+Shift+L) */}
       <HeilungModal />
-      {/* Easter egg #3 — The Roots of a Mountain (first sidebar collapse, one-time) */}
+      {/* Easter egg #3 — The Roots of a Mountain */}
       <GleipnirMountainRoots open={rootsOpen} onClose={dismissRoots} />
       {/* Easter egg #11 — Ragnarök Threshold Mode (≥5 urgent cards) */}
       {ragnarokActive && (
