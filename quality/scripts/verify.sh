@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # verify.sh — Fenrir Ledger lean verification wrapper
 # Runs tsc, next build, and Playwright in sequence.
-# Stdout: condensed one-line result per check (< 10 lines on full pass).
-# Full output: quality/reports/<name>-output.txt
+# Output: tsc errors stream live, build is quiet (summary only), tests stream live.
 #
 # Usage:
 #   bash quality/scripts/verify.sh                    # full suite (all 3 steps)
@@ -56,49 +55,27 @@ if [ -n "$STEP" ] && [ "$STEP" != "tsc" ] && [ "$STEP" != "build" ] && [ "$STEP"
 fi
 
 FAILS=0
-SPINNER_PID=""
-
-# Print a dot every 5s so agents/humans know we're alive
-start_progress() {
-  while true; do sleep 5; printf "."; done &
-  SPINNER_PID=$!
-}
-stop_progress() {
-  if [ -n "$SPINNER_PID" ]; then
-    kill "$SPINNER_PID" 2>/dev/null
-    wait "$SPINNER_PID" 2>/dev/null
-    SPINNER_PID=""
-  fi
-  printf " "
-}
 
 # ─── Step: tsc ─────────────────────────────────────────────────────────────────
+# tsc output is already minimal — only errors. Stream live.
 run_tsc() {
-  printf "[tsc] tsc --noEmit "
-  start_progress
-  if cd "$FRONTEND_DIR" && npx tsc --noEmit > "$REPORTS_DIR/tsc-output.txt" 2>&1; then
-    stop_progress
+  echo "[tsc] tsc --noEmit"
+  if cd "$FRONTEND_DIR" && npx --silent tsc --noEmit --pretty; then
     echo "PASS"
   else
-    stop_progress
     echo "FAIL"
     ((FAILS++))
-    echo ""
-    echo "TSC ERRORS:"
-    cat "$REPORTS_DIR/tsc-output.txt"
   fi
 }
 
 # ─── Step: build ───────────────────────────────────────────────────────────────
+# next build is noisy. Capture to file, show only summary or errors.
 run_build() {
-  printf "[build] next build "
-  start_progress
-  if cd "$FRONTEND_DIR" && npx next build > "$REPORTS_DIR/build-output.txt" 2>&1; then
-    stop_progress
-    ROUTES=$(grep -cE "├|└|─" "$REPORTS_DIR/build-output.txt" 2>/dev/null || echo "?")
+  echo "[build] next build"
+  if cd "$FRONTEND_DIR" && npx --silent next build --no-lint > "$REPORTS_DIR/build-output.txt" 2>&1; then
+    ROUTES=$(grep -cE "├|└" "$REPORTS_DIR/build-output.txt" 2>/dev/null || echo "?")
     echo "PASS ($ROUTES routes)"
   else
-    stop_progress
     echo "FAIL"
     ((FAILS++))
     echo ""
@@ -110,13 +87,10 @@ run_build() {
 # ─── Step: build (ensure only — for --tests-only) ─────────────────────────────
 ensure_build() {
   if [ ! -d "$FRONTEND_DIR/.next" ]; then
-    printf "[build] no .next found, building "
-    start_progress
-    if cd "$FRONTEND_DIR" && npx next build > "$REPORTS_DIR/build-output.txt" 2>&1; then
-      stop_progress
+    echo "[build] no .next found, building"
+    if cd "$FRONTEND_DIR" && npx --silent next build --no-lint > "$REPORTS_DIR/build-output.txt" 2>&1; then
       echo "OK"
     else
-      stop_progress
       echo "FAIL"
       ((FAILS++))
       echo ""
@@ -129,6 +103,7 @@ ensure_build() {
 }
 
 # ─── Step: test ────────────────────────────────────────────────────────────────
+# Playwright line reporter streams live — compact one-line-per-test output.
 run_test() {
   if [ ${#TEST_PATHS[@]} -gt 0 ]; then
     echo "[test] playwright (${#TEST_PATHS[@]} suite(s))"
@@ -146,10 +121,8 @@ run_test() {
     npx playwright test \
       ${TEST_PATHS[@]+"${TEST_PATHS[@]}"} \
       $FAIL_FAST_FLAG \
-      --reporter=line,json \
-      2>&1 | tee "$REPORTS_DIR/playwright-output.txt" \
-           | sed 's|\.\.\/\.\.\/quality\/test-suites\/||g; s| \[chromium\] ||g'
-  PW_EXIT=${PIPESTATUS[0]}
+      --reporter=line,json
+  PW_EXIT=$?
 
   if [ $PW_EXIT -eq 0 ]; then
     TOTAL=$(jq '.stats.expected // 0' "$REPORTS_DIR/playwright-report.json" 2>/dev/null || echo "?")
@@ -166,32 +139,11 @@ run_test() {
     echo "FAIL ($PASS_COUNT/$TOTAL, $FAIL_COUNT failed)"
     echo ""
     echo "FAILED TESTS:"
-    # Try nested suites structure first (standard Playwright JSON format)
-    PARSED=$(jq -r '
+    jq -r '
       .. | objects |
       select(.ok == false and .title? and .file?) |
       "  \u2717 \(.file):\(.line // "?") — \(.title)"
-    ' "$REPORTS_DIR/playwright-report.json" 2>/dev/null | head -20)
-
-    if [ -z "$PARSED" ]; then
-      # Fallback: look for unexpected results with location
-      PARSED=$(jq -r '
-        .. | objects |
-        select(.status == "unexpected" and .location?) |
-        "  \u2717 \(.location.file):\(.location.line // "?") — \(.title // "(unknown)")"
-      ' "$REPORTS_DIR/playwright-report.json" 2>/dev/null | head -20)
-    fi
-
-    if [ -n "$PARSED" ]; then
-      echo "$PARSED"
-    else
-      echo "  (could not parse failures — see full output below)"
-      tail -20 "$REPORTS_DIR/playwright-output.txt"
-    fi
-
-    echo ""
-    echo "Full report: $REPORTS_DIR/playwright-report.json"
-    echo "Full output: $REPORTS_DIR/playwright-output.txt"
+    ' "$REPORTS_DIR/playwright-report.json" 2>/dev/null | head -20
   fi
 }
 
