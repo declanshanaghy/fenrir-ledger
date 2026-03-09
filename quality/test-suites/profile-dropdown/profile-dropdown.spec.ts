@@ -38,19 +38,36 @@ const MOCK_USER = {
 /**
  * Seed a mock authenticated session into localStorage
  * (bypasses OAuth for testing purposes)
+ *
+ * Note: Auth session is stored as "fenrir:auth" per AuthContext.tsx.
+ * This must be called via page.evaluate() AFTER page.goto() to set
+ * localStorage in the browser context properly.
  */
 async function seedAuthSession(page) {
+  const now = new Date();
+  const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+
   const session = {
-    user: MOCK_USER,
+    user: {
+      ...MOCK_USER,
+      sub: "test-user-123", // Google user ID
+      aud: "test-audience",
+      iss: "https://accounts.google.com",
+      iat: Math.floor(now.getTime() / 1000),
+      exp: Math.floor(oneHourFromNow.getTime() / 1000),
+    },
     account: {
       type: "oauth",
       provider: "google",
     },
-    createdAt: new Date().toISOString(),
+    refresh_token: "test-refresh-token",
   };
-  // Store session in localStorage
-  await page.addInitScript((sessionData) => {
-    localStorage.setItem("fenrir:auth-session", JSON.stringify(sessionData));
+
+  // Store session in localStorage via page.evaluate (browser context)
+  await page.evaluate((sessionData) => {
+    localStorage.setItem("fenrir:auth", JSON.stringify(sessionData));
+    // Also set the household ID to the user's sub
+    localStorage.setItem("fenrir:household", sessionData.user.sub);
   }, session);
 }
 
@@ -61,9 +78,13 @@ async function seedAuthSession(page) {
 test.describe("Profile Dropdown — Desktop (1280px)", () => {
   test.beforeEach(async ({ page }) => {
     page.setViewportSize({ width: 1280, height: 720 });
-    await seedAuthSession(page);
-    await clearAllStorage(page);
+    // Navigate first to establish browser context
     await page.goto("/ledger", { waitUntil: "networkidle" });
+    // Then clear storage and seed auth session
+    await clearAllStorage(page);
+    await seedAuthSession(page);
+    // Reload to pick up the mocked session
+    await page.reload({ waitUntil: "networkidle" });
   });
 
   test("TC-PD01: Dropdown opens when avatar button is clicked", async ({
@@ -329,9 +350,13 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
 test.describe("Profile Dropdown — Mobile (375px)", () => {
   test.beforeEach(async ({ page }) => {
     page.setViewportSize({ width: 375, height: 667 });
-    await seedAuthSession(page);
-    await clearAllStorage(page);
+    // Navigate first to establish browser context
     await page.goto("/ledger", { waitUntil: "networkidle" });
+    // Then clear storage and seed auth session
+    await clearAllStorage(page);
+    await seedAuthSession(page);
+    // Reload to pick up the mocked session
+    await page.reload({ waitUntil: "networkidle" });
   });
 
   test("TC-PD-M01: Dropdown opens on mobile", async ({ page }) => {
@@ -463,9 +488,13 @@ test.describe("Profile Dropdown — Mobile (375px)", () => {
 test.describe("Profile Dropdown — Accessibility", () => {
   test.beforeEach(async ({ page }) => {
     page.setViewportSize({ width: 1280, height: 720 });
-    await seedAuthSession(page);
-    await clearAllStorage(page);
+    // Navigate first to establish browser context
     await page.goto("/ledger", { waitUntil: "networkidle" });
+    // Then clear storage and seed auth session
+    await clearAllStorage(page);
+    await seedAuthSession(page);
+    // Reload to pick up the mocked session
+    await page.reload({ waitUntil: "networkidle" });
   });
 
   test("TC-PD-A01: Dropdown has proper ARIA roles and labels", async ({
