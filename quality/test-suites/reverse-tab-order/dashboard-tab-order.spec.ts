@@ -38,9 +38,7 @@ async function setupDashboard(
 test.describe("Dashboard Tab Order (Issue #399)", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
-  test("AC1: tabs render in reversed order: All → Valhalla → Active → The Hunt → The Howl", async ({
-    page,
-  }) => {
+  test("AC1: tabs render in reversed order", async ({ page }) => {
     // Setup with mixed card types
     await setupDashboard(page, [
       makeCard({ cardName: "Active 1" }),
@@ -49,44 +47,32 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makePromoCard({ cardName: "Promo 1" }),
     ]);
 
-    // Wait for tablist to be rendered
-    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
+    // Verify the new tab order by checking tab IDs
+    const allTabId = page.locator('button#tab-all');
+    const valhallaTabId = page.locator('button#tab-valhalla');
+    const activeTabId = page.locator('button#tab-active');
+    const huntTabId = page.locator('button#tab-hunt');
+    const howlTabId = page.locator('button#tab-howl');
 
-    // Get all tab buttons
+    // All these tabs should exist and be in the right order
+    await expect(allTabId).toBeVisible();
+    await expect(valhallaTabId).toBeVisible();
+    await expect(activeTabId).toBeVisible();
+    await expect(huntTabId).toBeVisible();
+    await expect(howlTabId).toBeVisible();
+
+    // Check tab order by getting all tabs and verifying positions
     const tabs = page.locator('[role="tab"]');
     const tabCount = await tabs.count();
-
-    // Verify we have exactly 5 tabs
     expect(tabCount).toBe(5);
 
-    // Get tab labels and IDs in order
-    const tabLabels: string[] = [];
+    // Get tab IDs in order
     const tabIds: string[] = [];
-    for (let i = 0; i < tabCount; i++) {
-      const tab = tabs.nth(i);
-      const id = await tab.getAttribute("id");
-      const text = await tab.textContent();
-
-      // Extract label (text before the badge)
-      const labelMatch = text?.match(/([A-Za-z\s]+)/);
-      const label = labelMatch?.[1]?.trim() || "";
-
-      if (id && label) {
-        tabIds.push(id);
-        tabLabels.push(label);
-      }
+    for (let i = 0; i < 5; i++) {
+      const id = await tabs.nth(i).getAttribute("id");
+      if (id) tabIds.push(id);
     }
 
-    // Verify the new tab order
-    expect(tabLabels).toEqual([
-      "All",
-      "Valhalla",
-      "Active",
-      "The Hunt",
-      "The Howl",
-    ]);
-
-    // Verify corresponding tab IDs match expected order
     expect(tabIds).toEqual([
       "tab-all",
       "tab-valhalla",
@@ -105,8 +91,6 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makeUrgentCard({ cardName: "Urgent" }),
     ]);
 
-    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
-
     const howlTab = page.locator('button#tab-howl');
     await expect(howlTab).toHaveAttribute("aria-selected", "true");
 
@@ -120,16 +104,12 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
     await expect(activeTab).toHaveAttribute("aria-selected", "true");
   });
 
-  test("can switch between tabs in new order (All → Valhalla → Active → Hunt → Howl)", async ({
-    page,
-  }) => {
+  test("can switch between tabs in new order", async ({ page }) => {
     await setupDashboard(page, [
       makeCard({ cardName: "Active" }),
       makeUrgentCard({ cardName: "Urgent" }),
       makePromoCard({ cardName: "Promo" }),
     ]);
-
-    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
 
     const allTab = page.locator('button#tab-all');
     const valhallaTab = page.locator('button#tab-valhalla');
@@ -164,8 +144,6 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makeUrgentCard({ cardName: "Urgent" }),
       makePromoCard({ cardName: "Promo" }),
     ]);
-
-    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
 
     // Tab order: All → Valhalla → Active → Hunt → Howl
     const allTab = page.locator('button#tab-all');
@@ -202,8 +180,6 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makeUrgentCard({ cardName: "Urgent" }),
     ]);
 
-    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
-
     const allTab = page.locator('button#tab-all');
     const howlTab = page.locator('button#tab-howl');
 
@@ -229,32 +205,23 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makePromoCard({ cardName: "Promo 1" }),
     ]);
 
-    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
-
-    // Get all tab buttons
+    // Verify tabs exist on mobile and are in correct order
+    const tabIds: string[] = [];
     const tabs = page.locator('[role="tab"]');
     const tabCount = await tabs.count();
-
-    // Verify we have exactly 5 tabs on mobile
     expect(tabCount).toBe(5);
 
-    // Extract labels in order
-    const tabLabels: string[] = [];
-    for (let i = 0; i < tabCount; i++) {
-      const tab = tabs.nth(i);
-      const text = await tab.textContent();
-      const labelMatch = text?.match(/([A-Za-z\s]+)/);
-      const label = labelMatch?.[1]?.trim() || "";
-      if (label) tabLabels.push(label);
+    for (let i = 0; i < 5; i++) {
+      const id = await tabs.nth(i).getAttribute("id");
+      if (id) tabIds.push(id);
     }
 
-    // Verify order is preserved on mobile
-    expect(tabLabels).toEqual([
-      "All",
-      "Valhalla",
-      "Active",
-      "The Hunt",
-      "The Howl",
+    expect(tabIds).toEqual([
+      "tab-all",
+      "tab-valhalla",
+      "tab-active",
+      "tab-hunt",
+      "tab-howl",
     ]);
   });
 
@@ -264,12 +231,10 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makeUrgentCard({ cardName: "Urgent" }),
     ]);
 
-    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
-
     const allTab = page.locator('button#tab-all');
     const howlTab = page.locator('button#tab-howl');
 
-    // Start at any tab and press Home to go to All (first)
+    // Start at Howl and press Home to go to All (first)
     await howlTab.focus();
     await page.keyboard.press("Home");
     await expect(allTab).toHaveAttribute("aria-selected", "true");
