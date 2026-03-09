@@ -217,9 +217,10 @@ test.describe("Valhalla Auto-Graduate — Status Computation", () => {
     // Navigate to Valhalla to verify card is there (which proves status is correct)
     await clickTab(page, "tab-valhalla");
 
-    const cardTile = page.locator('[data-testid="card-tile"]').first();
+    const tabPanel = page.locator('[role="tabpanel"][aria-labelledby="tab-valhalla"]');
+    const cardTile = tabPanel.locator('[data-testid="card-tile"]').first();
     const cardText = cardTile.locator("h3");
-    await expect(cardText).toBeVisible();
+    await expect(cardText).toContainText(graduatedCard.cardName);
   });
 });
 
@@ -249,9 +250,10 @@ test.describe("Valhalla Auto-Graduate — Toggle Met State", () => {
 
     // Verify card is in Valhalla initially
     await clickTab(page, "tab-valhalla");
-    let cardTile = page.locator('[data-testid="card-tile"]').first();
+    let tabPanel = page.locator('[role="tabpanel"][aria-labelledby="tab-valhalla"]');
+    let cardTile = tabPanel.locator('[data-testid="card-tile"]').first();
     let cardText = cardTile.locator("h3");
-    await expect(cardText).toBeVisible();
+    await expect(cardText).toContainText(graduatedCard.cardName);
 
     // Click on card to edit
     await cardTile.click();
@@ -276,9 +278,10 @@ test.describe("Valhalla Auto-Graduate — Toggle Met State", () => {
 
     // Card should now appear in Active tab
     await clickTab(page, "tab-active");
-    cardTile = page.locator('[data-testid="card-tile"]').first();
+    tabPanel = page.locator('[role="tabpanel"][aria-labelledby="tab-active"]');
+    cardTile = tabPanel.locator('[data-testid="card-tile"]').first();
     cardText = cardTile.locator("h3");
-    await expect(cardText).toBeVisible();
+    await expect(cardText).toContainText(graduatedCard.cardName);
 
     // Card should NOT appear in Valhalla anymore
     await clickTab(page, "tab-valhalla");
