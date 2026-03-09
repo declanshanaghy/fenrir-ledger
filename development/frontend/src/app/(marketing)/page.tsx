@@ -16,6 +16,7 @@
  */
 
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 export const dynamic = "force-static";
@@ -37,21 +38,16 @@ function HeroSection() {
       <div className="max-w-[1100px] mx-auto px-6 py-16 sm:py-24">
         <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-10 items-start">
 
-          {/* Wolf icon placeholder */}
+          {/* Fenrir wolf logo */}
           <div className="flex justify-center sm:justify-start">
-            <div
-              className={[
-                "flex items-center justify-center",
-                "w-[120px] h-[120px] sm:w-[160px] sm:h-[160px]",
-                "border-2 border-border rounded-lg",
-                "text-4xl sm:text-5xl text-primary",
-                "dark:shadow-[0_0_32px_rgba(91,158,201,0.2)]",
-              ].join(" ")}
-              aria-label="Fenrir wolf icon"
-              role="img"
-            >
-              ᚠ
-            </div>
+            <Image
+              src="/images/fenrir-logo.png"
+              alt="Fenrir Ledger wolf logo"
+              width={160}
+              height={160}
+              className="w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] rounded-lg dark:drop-shadow-[0_0_32px_rgba(91,158,201,0.2)]"
+              priority
+            />
           </div>
 
           {/* Hero content */}
