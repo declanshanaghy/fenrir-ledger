@@ -19,9 +19,10 @@ Use the previous agent's handoff comment to understand what was built, how to ve
 **Step 3 — Write and run NEW tests only:**
 - Write new Playwright tests in `quality/test-suites/<feature-slug>/` covering the acceptance criteria.
 - Use the previous agent's "How to verify" and "Edge cases" sections to guide your test design.
-- Run ONLY your new tests first:
+- First run — build + your suite only (needed on fresh sandboxes):
+  `cd <REPO_ROOT> && bash quality/scripts/verify.sh <feature-slug>`
+- Subsequent runs — skip build for fast iteration:
   `cd <REPO_ROOT> && bash quality/scripts/verify.sh --tests-only <feature-slug>`
-  This skips tsc/build and runs only your suite — fast iteration loop.
 - Fix your tests until they pass. Do NOT proceed until your new tests are green.
 
 **Step 3b — Full verify (only after new tests pass):**
