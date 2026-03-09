@@ -119,7 +119,6 @@ function TierCardsSection() {
               {[
                 "Annual fee tracking with 60-day warnings",
                 "Sign-up bonus & minimum spend tracking",
-                "Velocity management (Chase 5/24, Citi 1/8, etc.)",
                 "The Howl — preview with blurred teaser",
                 "Single User",
                 "Google sign-in",
@@ -127,6 +126,28 @@ function TierCardsSection() {
                 <li key={feat} className="flex items-start gap-3">
                   <CheckIcon included />
                   <span className="font-body text-sm text-foreground">{feat}</span>
+                </li>
+              ))}
+              {/* Karl features shown as excluded */}
+              {[
+                "Velocity management (Chase 5/24, Citi 1/8, etc.)",
+                "Card archive (Valhalla)",
+                "The Howl — full proactive alerts & Ragnarök",
+                "Cloud Sync (multi-device)",
+                "Multi-Household management",
+                "Smart Import (AI-Powered)",
+                "Data Export (CSV / JSON)",
+              ].map((feat) => (
+                <li key={feat} className="flex items-start gap-3">
+                  <span
+                    className="shrink-0 font-mono text-sm text-muted-foreground/30"
+                    aria-label="Not included"
+                  >
+                    ✗
+                  </span>
+                  <span className="font-body text-sm text-muted-foreground/40 line-through decoration-solid">
+                    {feat}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -180,6 +201,7 @@ function TierCardsSection() {
             </p>
             <ul className="flex flex-col gap-3" aria-label="Karl tier premium features">
               {[
+                { name: "Velocity", desc: "Chase 5/24, Citi 1/8, Amex once-per-lifetime tracking" },
                 { name: "Valhalla", desc: "full closed-card archive with history" },
                 { name: "The Howl", desc: "full proactive fee alerts, deadline warnings & Ragnarök" },
                 { name: "Cloud Sync", desc: "real-time sync across all devices" },
@@ -263,7 +285,6 @@ function ComparisonTableSection() {
               {[
                 "Annual fee tracking with 60-day advance warning",
                 "Sign-up bonus & minimum spend deadline tracking",
-                "Velocity management (Chase 5/24, Citi 1/8, Amex OPLB, etc.)",
                 "Google Sign-In authentication",
               ].map((feat) => (
                 <tr key={feat} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
@@ -294,6 +315,7 @@ function ComparisonTableSection() {
                 </td>
               </tr>
               {[
+                { name: "Velocity management (Chase 5/24, Citi 1/8, Amex OPLB, etc.)", thrall: false, karl: true },
                 { name: "Valhalla — closed-card archive with full history", thrall: false, karl: true },
                 { name: "Cloud Sync — real-time sync across all signed-in devices", thrall: false, karl: true },
                 { name: "Smart Import — automatic extraction from spreadsheets (CSV/XLSX)", thrall: false, karl: true },
