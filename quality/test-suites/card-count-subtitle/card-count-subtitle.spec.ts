@@ -53,19 +53,23 @@ test.describe("Card count subtitle removal (#450)", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
     await page.reload({ waitUntil: "networkidle" });
 
-    // Wait for the main dashboard content to load
-    await page.waitForLoadState("domcontentloaded");
+    // Verify tab bar exists and is visible
+    const tabBar = page.locator('[role="tablist"]');
+    await expect(tabBar).toBeVisible();
 
-    // Give React time to render the dashboard
-    await page.waitForTimeout(1000);
+    // Verify we have tabs with content (the tab buttons should exist)
+    const tabs = page.locator('[role="tab"]');
+    const tabCount = await tabs.count();
 
-    // Verify tab bar shows count badges via aria-label on the span elements
-    // TabBadge renders as <span aria-label="N cards">3</span>
-    const countBadges = page.locator('span[aria-label*="card"]');
-    const badgeCount = await countBadges.count();
+    // Should have multiple tabs (ALL, VALHALLA, ACTIVE, HOWL, HUNT, etc.)
+    expect(tabCount).toBeGreaterThanOrEqual(3);
 
-    // Should have at least one count badge visible
-    expect(badgeCount).toBeGreaterThan(0);
+    // Verify the ALL tab contains count information
+    const allTab = tabs.first();
+    const allTabText = await allTab.innerText();
+
+    // The tab should contain a number (the count)
+    expect(/\d+/.test(allTabText)).toBe(true);
   });
 
   test("TC-450-03: should handle empty state correctly (0 cards)", async ({
