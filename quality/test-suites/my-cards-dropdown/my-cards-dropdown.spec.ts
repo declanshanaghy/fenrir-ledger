@@ -24,6 +24,27 @@ import {
 } from "../helpers/test-fixtures";
 
 // ════════════════════════════════════════════════════════════════════════════
+// Auth Helper
+// ════════════════════════════════════════════════════════════════════════════
+
+async function seedFakeAuth(page: any, householdId: string): Promise<void> {
+  await page.evaluate((hId: string) => {
+    const fakeSession = {
+      access_token: "fake-access-token",
+      id_token: "fake-id-token",
+      expires_at: Date.now() + 3_600_000,
+      user: {
+        sub: hId,
+        email: "test@example.com",
+        name: "Test User",
+        picture: "",
+      },
+    };
+    localStorage.setItem("fenrir:auth", JSON.stringify(fakeSession));
+  }, householdId);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // Setup
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -31,18 +52,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/ledger");
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-  // Mock authenticated user session
-  await page.evaluate(() => {
-    const mockSession = {
-      user: {
-        name: "Test User",
-        email: "test@example.com",
-        picture: "https://example.com/avatar.jpg",
-      },
-      status: "authenticated",
-    };
-    localStorage.setItem("fenrir:auth-session", JSON.stringify(mockSession));
-  });
+  await seedFakeAuth(page, ANONYMOUS_HOUSEHOLD_ID);
   await page.reload({ waitUntil: "networkidle" });
 });
 
@@ -55,8 +65,9 @@ test.describe("Profile Dropdown — My Cards Entry Visibility", () => {
     page,
   }) => {
     // Spec: avatar button toggles dropdown
+    // Button with aria-controls="user-menu" is the avatar trigger
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
     await expect(avatarButton).toBeVisible();
 
@@ -75,14 +86,14 @@ test.describe("Profile Dropdown — My Cards Entry Visibility", () => {
   test("My Cards entry is visible in profile dropdown", async ({ page }) => {
     // Spec: My Cards button exists and is visible in dropdown
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
     await avatarButton.click();
 
     // My Cards button should be visible
     const myCardsButton = page.locator(
-      'button[role="menuitem"]:has-text("My Cards")'
-    );
+      'button[role="menuitem"] >> text=My Cards'
+    ).first();
     await expect(myCardsButton).toBeVisible();
   });
 
@@ -91,7 +102,7 @@ test.describe("Profile Dropdown — My Cards Entry Visibility", () => {
   }) => {
     // Spec: My Cards positioned above Theme (top-level nav items first)
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
     await avatarButton.click();
 
@@ -120,13 +131,13 @@ test.describe("Profile Dropdown — My Cards Entry Visibility", () => {
   test("My Cards button has icon and text", async ({ page }) => {
     // Spec: button contains LayoutGrid icon + "My Cards" text
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
     await avatarButton.click();
 
     const myCardsButton = page.locator(
-      'button[role="menuitem"]:has-text("My Cards")'
-    );
+      'button[role="menuitem"] >> text=My Cards'
+    ).first();
     await expect(myCardsButton).toBeVisible();
 
     // Should contain "My Cards" text
@@ -143,13 +154,13 @@ test.describe("Profile Dropdown — My Cards Entry Visibility", () => {
     test.use({ viewport: { width: 375, height: 667 } });
 
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
     await avatarButton.click();
 
     const myCardsButton = page.locator(
-      'button[role="menuitem"]:has-text("My Cards")'
-    );
+      'button[role="menuitem"] >> text=My Cards'
+    ).first();
 
     const box = await myCardsButton.boundingBox();
     expect(box?.height).toBeGreaterThanOrEqual(44);
@@ -165,13 +176,13 @@ test.describe("Profile Dropdown — My Cards Navigation", () => {
   test("clicking My Cards navigates to /ledger", async ({ page }) => {
     // Spec: onClick -> router.push("/ledger")
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
     await avatarButton.click();
 
     const myCardsButton = page.locator(
-      'button[role="menuitem"]:has-text("My Cards")'
-    );
+      'button[role="menuitem"] >> text=My Cards'
+    ).first();
 
     // Click and wait for navigation
     await myCardsButton.click();
@@ -184,7 +195,7 @@ test.describe("Profile Dropdown — My Cards Navigation", () => {
   test("clicking My Cards closes the dropdown", async ({ page }) => {
     // Spec: onClick calls onClose()
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
     await avatarButton.click();
 
@@ -192,8 +203,8 @@ test.describe("Profile Dropdown — My Cards Navigation", () => {
     await expect(dropdown).toBeVisible();
 
     const myCardsButton = page.locator(
-      'button[role="menuitem"]:has-text("My Cards")'
-    );
+      'button[role="menuitem"] >> text=My Cards'
+    ).first();
     await myCardsButton.click();
 
     // Dropdown should be hidden after navigation
@@ -204,17 +215,19 @@ test.describe("Profile Dropdown — My Cards Navigation", () => {
 
   test("navigating to /ledger from Settings works", async ({ page }) => {
     // Edge case: verify navigation works from other routes
+    // First seed auth for the new page
     await page.goto("/ledger/settings");
-    await page.waitForLoadState("networkidle");
+    await seedFakeAuth(page, ANONYMOUS_HOUSEHOLD_ID);
+    await page.reload({ waitUntil: "networkidle" });
 
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
     await avatarButton.click();
 
     const myCardsButton = page.locator(
-      'button[role="menuitem"]:has-text("My Cards")'
-    );
+      'button[role="menuitem"] >> text=My Cards'
+    ).first();
     await myCardsButton.click();
 
     await page.waitForURL(/\/ledger$/);
@@ -233,13 +246,13 @@ test.describe("Profile Dropdown — My Cards Active State", () => {
     // Already at /ledger from beforeEach
     // Spec: isMyCardsActive = pathname === "/ledger" → gold text + gold dot
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
     await avatarButton.click();
 
     const myCardsButton = page.locator(
-      'button[role="menuitem"]:has-text("My Cards")'
-    );
+      'button[role="menuitem"] >> text=My Cards'
+    ).first();
 
     // Should have text-gold class (active state)
     const classList = await myCardsButton.getAttribute("class");
@@ -263,13 +276,13 @@ test.describe("Profile Dropdown — My Cards Active State", () => {
     await page.waitForLoadState("networkidle");
 
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
     await avatarButton.click();
 
     const myCardsButton = page.locator(
-      'button[role="menuitem"]:has-text("My Cards")'
-    );
+      'button[role="menuitem"] >> text=My Cards'
+    ).first();
 
     // Should show muted state, not gold
     const classList = await myCardsButton.getAttribute("class");
@@ -291,19 +304,19 @@ test.describe("Profile Dropdown — My Cards Active State", () => {
     // Spec: active state updates when route changes
 
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
 
     // At /ledger, My Cards should be active
     await avatarButton.click();
     let myCardsButton = page.locator(
-      'button[role="menuitem"]:has-text("My Cards")'
-    );
+      'button[role="menuitem"] >> text=My Cards'
+    ).first();
     let classList = await myCardsButton.getAttribute("class");
     expect(classList).toContain("text-gold");
 
     // Navigate to Settings
-    await page.click('button[role="menuitem"]:has-text("Settings")');
+    await page.click('button[role="menuitem"] >> text=Settings');
     await page.waitForURL(/\/ledger\/settings/);
 
     // Reopen dropdown, My Cards should now be inactive
@@ -325,7 +338,7 @@ test.describe("Profile Dropdown — My Cards Keyboard Navigation", () => {
   test("My Cards can be focused via Tab key", async ({ page }) => {
     // Spec: button is focusable and interactive
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
 
     // Focus avatar button
@@ -333,8 +346,8 @@ test.describe("Profile Dropdown — My Cards Keyboard Navigation", () => {
     await page.keyboard.press("Enter");
 
     const myCardsButton = page.locator(
-      'button[role="menuitem"]:has-text("My Cards")'
-    );
+      'button[role="menuitem"] >> text=My Cards'
+    ).first();
 
     // Tab to My Cards button
     await page.keyboard.press("Tab");
@@ -351,14 +364,14 @@ test.describe("Profile Dropdown — My Cards Keyboard Navigation", () => {
   }) => {
     // Spec: Enter key activates navigation
     const avatarButton = page.locator(
-      'button[aria-label*="Open user menu"]'
+      'button[aria-controls="user-menu"]'
     );
     await avatarButton.focus();
     await page.keyboard.press("Enter");
 
     const myCardsButton = page.locator(
-      'button[role="menuitem"]:has-text("My Cards")'
-    );
+      'button[role="menuitem"] >> text=My Cards'
+    ).first();
     await myCardsButton.focus();
 
     // Press Enter
