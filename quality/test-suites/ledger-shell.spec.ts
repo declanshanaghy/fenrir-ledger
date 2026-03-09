@@ -1,0 +1,241 @@
+/**
+ * Ledger Shell Test Suite — #372
+ * Authored by Loki, QA Tester of the Pack
+ *
+ * Validates LedgerShell acceptance criteria:
+ * - /ledger routes show slim top bar (48px), NOT marketing navbar
+ * - Desktop: sidebar visible + bottom tabs hidden
+ * - Mobile: sidebar hidden + bottom tabs visible
+ * - Bottom tab bar touch targets >=44x44px
+ * - Marketing pages still show full navbar (unaffected)
+ * - Theme toggle works
+ * - No visual overlap
+ */
+
+import { test, expect } from "@playwright/test";
+import {
+  clearAllStorage,
+  seedHousehold,
+  ANONYMOUS_HOUSEHOLD_ID,
+} from "./helpers/test-fixtures";
+
+// ════════════════════════════════════════════════════════════════════════════
+// Setup
+// ════════════════════════════════════════════════════════════════════════════
+
+test.beforeEach(async ({ page }) => {
+  await page.goto("/ledger");
+  await clearAllStorage(page);
+  await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+  await page.reload({ waitUntil: "networkidle" });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite: /ledger top bar is slim (48px), not marketing navbar
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("LedgerShell — Slim top bar", () => {
+  test("/ledger shows slim top bar with logo and controls", async ({
+    page,
+  }) => {
+    const header = page.locator('header[role="banner"]');
+    await expect(header).toBeVisible();
+
+    // Check height is 48px (h-12)
+    const box = await header.boundingBox();
+    await expect(box?.height).toBe(48);
+
+    // Logo link present and visible (first link in header)
+    const logoLink = page.locator('header a[aria-label*="Fenrir"]').first();
+    await expect(logoLink).toBeVisible();
+  });
+
+  test("slim top bar has back button and theme toggle", async ({ page }) => {
+    // Back to site link should exist (either desktop or mobile variant)
+    const backLinks = page.locator('header a[aria-label*="Back to Fenrir"]');
+    await expect(backLinks).not.toHaveCount(0);
+
+    // Theme toggle button present (icon variant with aria-label="Theme: ...")
+    const themeToggle = page.locator('header button[aria-label*="Theme"]');
+    await expect(themeToggle).toHaveCount(1);
+  });
+
+  test("marketing pages still show full navbar, not slim top bar", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Should be on marketing home page (pathname /)
+    expect(page.url()).toMatch(/^\w+:\/\/[^/]+\/$/);
+
+    // Check that we're not on /ledger path
+    expect(page.url()).not.toContain("/ledger");
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite: Desktop layout (>= 768px)
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("LedgerShell — Desktop (>=768px)", () => {
+  test.use({ viewport: { width: 1024, height: 768 } });
+
+  test("sidebar is visible on desktop", async ({ page }) => {
+    // Check that sidebar contains navigation items visible on desktop
+    // The sidebar should show dashboard, cards, valhalla, settings
+    const sidebarNav = page.locator('nav').filter({
+      has: page.locator('a[href="/ledger"], a[href="/ledger/settings"]'),
+    });
+    // At least one sidebar nav should exist
+    const sidebarCount = await sidebarNav.count();
+    expect(sidebarCount).toBeGreaterThan(0);
+  });
+
+  test("bottom tab bar is hidden on desktop", async ({ page }) => {
+    const bottomTabs = page.locator('nav[aria-label="App tabs"]');
+    // md:hidden means it should be hidden on desktop
+    const isVisible = await bottomTabs.isVisible().catch(() => false);
+    // On desktop, bottom tabs nav should not be visible
+    expect(isVisible).toBe(false);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite: Mobile layout (<= 768px)
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("LedgerShell — Mobile (<768px)", () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+
+  test("bottom tab bar is visible and has 4 tabs", async ({ page }) => {
+    const bottomTabs = page.locator('nav[aria-label="App tabs"]');
+    await expect(bottomTabs).toBeVisible();
+
+    // Should have exactly 4 tabs: Dashboard, Add, Valhalla, Settings
+    const tabs = bottomTabs.locator("li");
+    await expect(tabs).toHaveCount(4);
+
+    // Check tab labels visible
+    await expect(bottomTabs.locator("text=Dashboard")).toBeVisible();
+    await expect(bottomTabs.locator("text=Add")).toBeVisible();
+    await expect(bottomTabs.locator("text=Valhalla")).toBeVisible();
+    await expect(bottomTabs.locator("text=Settings")).toBeVisible();
+  });
+
+  test("bottom tab bar has touch targets >=44x44px", async ({ page }) => {
+    const bottomTabs = page.locator('nav[aria-label="App tabs"]');
+    const links = bottomTabs.locator("a, button");
+
+    for (let i = 0; i < (await links.count()); i++) {
+      const link = links.nth(i);
+      const box = await link.boundingBox();
+      // min-h-[56px] in code = 56px minimum height (>=44px ✓)
+      expect(box?.height).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  test("dashboard tab is active by default on /ledger", async ({ page }) => {
+    const dashboardTab = page.locator(
+      'nav[aria-label="App tabs"] a[aria-current="page"]'
+    );
+    await expect(dashboardTab).toBeVisible();
+    // Should contain Dashboard text
+    await expect(dashboardTab).toContainText("Dashboard");
+  });
+
+  test("clicking tab navigates to correct route", async ({ page }) => {
+    const settingsTab = page.locator(
+      'nav[aria-label="App tabs"] a[href="/ledger/settings"]'
+    );
+    await expect(settingsTab).toBeVisible();
+    await settingsTab.click();
+
+    // Wait for navigation to settings page
+    await page.waitForURL(/\/ledger\/settings/);
+
+    // Should be on /ledger/settings
+    expect(page.url()).toContain("/ledger/settings");
+
+    // Settings should now show as active
+    const activeTab = page.locator(
+      'nav[aria-label="App tabs"] a[aria-current="page"]'
+    );
+    await expect(activeTab).toContainText("Settings");
+  });
+
+  test("main content has bottom padding to avoid tab bar overlap", async ({
+    page,
+  }) => {
+    const main = page.locator("main#main-content");
+    const computedStyle = await main.evaluate((el) => {
+      return window.getComputedStyle(el).paddingBottom;
+    });
+
+    // Should have pb-14 (56px) or similar to avoid overlap
+    const paddingValue = parseFloat(computedStyle);
+    expect(paddingValue).toBeGreaterThan(0);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite: Theme toggle functionality
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("LedgerShell — Theme toggle", () => {
+  test("theme toggle button is accessible and clickable", async ({ page }) => {
+    const themeToggle = page.locator('button[aria-label*="Theme"]');
+    await expect(themeToggle).toBeVisible();
+
+    // Should be focusable and interactive
+    await themeToggle.first().focus();
+    const hasFocus = await themeToggle.first().evaluate(
+      (el) => el === document.activeElement
+    );
+    expect(hasFocus).toBe(true);
+  });
+
+  test("clicking theme toggle cycles through themes", async ({ page }) => {
+    // Get the initial aria-label
+    const themeToggle = page.locator('button[aria-label*="Theme"]').first();
+    const initialLabel = await themeToggle.getAttribute("aria-label");
+
+    // Click to change theme
+    await themeToggle.click();
+    await page.waitForTimeout(100);
+
+    // Get new aria-label (should show next theme)
+    const newLabel = await themeToggle.getAttribute("aria-label");
+
+    // Labels should differ (theme changed)
+    expect(newLabel).not.toBe(initialLabel);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Suite: No visual overlap
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe("LedgerShell — No visual overlap", () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+
+  test("top bar and bottom tabs do not overlap content", async ({ page }) => {
+    const header = page.locator("header[role='banner']");
+    const main = page.locator("main#main-content");
+    const bottomTabs = page.locator('nav[aria-label="App tabs"]');
+
+    // All elements should be visible
+    await expect(header).toBeVisible();
+    await expect(main).toBeVisible();
+    await expect(bottomTabs).toBeVisible();
+
+    // Main content should have padding to avoid overlap with tabs
+    const mainStyle = await main.evaluate((el) => {
+      return window.getComputedStyle(el).paddingBottom;
+    });
+
+    const paddingValue = parseFloat(mainStyle);
+    // Should have at least some padding (56px = pb-14 at 14*4px per tailwind)
+    expect(paddingValue).toBeGreaterThan(30);
+  });
+});

@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: LedgerShell — Slim Top Bar + Mobile Bottom Tab Bar (Issue #372)</title>
+  <style>
+    /* ============================================================
+       WIREFRAME RULES — structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in theme-system.md.
+       Permitted: display flex/grid, border: 1px solid,
+       width/height, padding/margin, font-size, font-weight.
+       ============================================================ */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* ── Page chrome (wireframe doc wrapper) ──────────────────── */
+    .page { display: flex; flex-direction: column; gap: 64px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 16px; }
+    .scenario-label {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.08em; border-bottom: 1px solid; padding-bottom: 6px;
+    }
+
+    /* ── Annotation helpers ───────────────────────────────────── */
+    .note {
+      font-size: 11px; font-style: italic; opacity: 0.65;
+    }
+    .note-block {
+      font-size: 11px; font-style: italic; opacity: 0.65;
+      border: 1px dashed; padding: 10px 14px; margin-top: 8px;
+      line-height: 1.6;
+    }
+    .annot-row {
+      display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start;
+    }
+    .annot-col { display: flex; flex-direction: column; gap: 8px; min-width: 200px; }
+    .col-label {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 4px;
+    }
+
+    /* ── Redline dimension callout ────────────────────────────── */
+    .dim {
+      font-size: 10px; font-weight: bold; border: 1px solid;
+      padding: 2px 5px; display: inline-block; white-space: nowrap;
+    }
+
+    /* ============================================================
+       LEDGER SHELL — the new app shell that wraps /ledger/* routes.
+       Replaces the existing AppShell for all routes under /ledger/.
+       Marketing pages ( / /features /pricing /blog /about )
+       continue to use the marketing layout unaffected.
+       ============================================================ */
+
+    /*
+     * Desktop grid (> 768px):
+     *   row 1 (auto):  SlimTopBar — spans full width, sticky, 48px
+     *   row 2 (1fr):   Sidebar 220px | Content
+     *
+     * Mobile grid (≤ 768px):
+     *   row 1 (auto):  SlimTopBar — 48px
+     *   row 2 (1fr):   Content (full width — no sidebar)
+     *   [fixed]:       BottomTabBar — 56px, position: fixed bottom 0
+     *                  Content area gets padding-bottom: 56px to prevent overlap.
+     *
+     * NO marketing navbar. NO marketing footer. App is full-viewport.
+     */
+    .ledger-shell {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── Slim Top Bar (48px) ──────────────────────────────────────────────
+     *
+     * Intentionally shorter than the marketing navbar (64px) and the
+     * previous AppShell TopBar (56px).
+     *
+     * Left:   Fenrir logo mark → links to /
+     * Center: "Back to site" → links to /  (contextual escape hatch)
+     * Right:  Theme toggle icon button + User avatar button
+     *
+     * Grid placement: spans both columns, sticky z-index 100.
+     *
+     * Implementation:
+     *   - <header role="banner">
+     *   - height: 48px (h-12 in Tailwind)
+     *   - sticky top-0 z-100
+     *   - border-b border-border
+     *   - bg-background (no blur needed — app is full-viewport)
+     */
+    .slim-topbar {
+      grid-column: 1 / 3;
+      grid-row: 1;
+      height: 48px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    /* Left zone: Logo mark only (not the full wordmark with subtitle) */
+    .topbar-left {
+      display: flex;
+      align-items: center;
+    }
+    /*
+     * Logo link — text only in wireframe, will be icon + wordmark in implementation.
+     * Navigates to / (marketing home), not /ledger.
+     * "The wolf escapes to the world."
+     * min touch target: 44×44px via padding.
+     */
+    .topbar-logo-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      padding: 10px 4px;
+      min-height: 44px;
+    }
+    .topbar-logo-rune {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .topbar-logo-text {
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    /* Mobile: show rune only, hide full wordmark */
+    .topbar-logo-text-full { /* shown on desktop */ }
+    .topbar-logo-text-short { display: none; /* shown on mobile */ }
+
+    /* Center zone: "Back to site" link */
+    /*
+     * Contextual escape hatch: lets signed-in users navigate back to the
+     * marketing site without losing context.
+     * Link target: / (marketing home)
+     * Font: smaller than body, muted — secondary navigation, not primary.
+     * Hidden on mobile (icon buttons in right zone serve as compressed nav).
+     * Implementation: <a href="/" className="hidden md:flex ...">
+     */
+    .topbar-center {
+      display: flex;
+      align-items: center;
+    }
+    .topbar-back-link {
+      font-size: 12px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 8px;
+      min-height: 44px;
+    }
+    .topbar-back-arrow { font-size: 10px; }
+
+    /* Right zone: Theme toggle + Avatar */
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /*
+     * Theme toggle icon button
+     * Desktop: circular icon button (32px visual, 44px touch target via padding)
+     * Mobile: same — present in right zone of slim top bar
+     * Implementation:
+     *   aria-label="Toggle theme" (updates to "Switch to dark mode" / "Switch to light mode")
+     *   Icon: sun (☀) in dark mode, moon (☾) in light mode
+     */
+    .topbar-theme-btn {
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: none; cursor: pointer;
+      font-size: 14px;
+    }
+    /* Inner visual target */
+    .topbar-theme-icon {
+      width: 28px; height: 28px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+
+    /*
+     * User avatar button
+     * Anonymous: ᛟ rune avatar (dashed border) — click opens upsell panel
+     * Signed-in:  Google photo (or ᛟ fallback) + gold ring border
+     *
+     * See: topbar.html for full anonymous/signed-in avatar spec.
+     * Touch target: min 44×44px via padding.
+     */
+    .topbar-avatar-btn {
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: none; cursor: pointer;
+    }
+    .topbar-avatar {
+      width: 28px; height: 28px;
+      border: 1px solid; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; overflow: hidden; flex-shrink: 0;
+    }
+    .topbar-avatar-anon { border: 1px dashed; }
+
+    /* ── Sidebar (desktop only, ≥ 769px) ──────────────────────────────────
+     *
+     * 220px fixed width. Sticky (fills the full content height).
+     * Contains: section label + nav items + Settings item at bottom.
+     *
+     * Desktop: grid-column: 1, grid-row: 2.
+     * Mobile: hidden (display: none below 768px). Navigation provided by
+     *         the bottom tab bar instead.
+     *
+     * Nav items:
+     *   1. Dashboard   → /ledger
+     *   2. Add Card    → /ledger/add  (the "Forge a Chain" action)
+     *   3. Valhalla    → /ledger/valhalla
+     *   4. Settings    → /ledger/settings
+     *
+     * Active item is visually distinguished (gold accent in implementation).
+     * Implementation: <aside role="navigation" aria-label="App navigation">
+     */
+    .ledger-sidebar {
+      grid-column: 1;
+      grid-row: 2;
+      width: 220px;
+      border-right: 1px solid;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 0;
+      position: sticky;
+      top: 48px; /* below the slim top bar */
+      height: calc(100vh - 48px);
+      overflow-y: auto;
+    }
+    .sidebar-section-label {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0 16px 8px;
+      opacity: 0.5;
+    }
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      text-decoration: none;
+      min-height: 44px;
+      border-left: 3px solid transparent;
+    }
+    .sidebar-nav-item.active {
+      border-left: 3px solid; /* gold in implementation */
+      font-weight: bold;
+    }
+    .sidebar-nav-icon {
+      width: 18px; height: 18px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; flex-shrink: 0;
+    }
+    /* Settings pinned to sidebar bottom */
+    .sidebar-nav-bottom {
+      margin-top: auto;
+      border-top: 1px solid;
+      padding-top: 8px;
+    }
+
+    /* ── Content Area ──────────────────────────────────────────────────────
+     *
+     * Desktop: grid-column: 2, grid-row: 2.
+     * Mobile: grid-column: 1, grid-row: 2 (full width — sidebar hidden).
+     *         padding-bottom: 56px to avoid overlap with fixed bottom tab bar.
+     *
+     * The content area owns its own scroll context (overflow-y: auto).
+     * The slim top bar and sidebar are sticky/fixed — content scrolls independently.
+     */
+    .ledger-content {
+      grid-column: 2;
+      grid-row: 2;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    /* Content placeholder for wireframe illustration */
+    .content-placeholder {
+      border: 1px dashed;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      opacity: 0.5;
+    }
+
+    /* ── Bottom Tab Bar (mobile only, ≤ 768px) ────────────────────────────
+     *
+     * Replaces the sidebar entirely on mobile.
+     * Fixed to bottom of viewport, full width, 56px tall.
+     * z-index: 100 (same layer as header — it's chrome, not content).
+     *
+     * Contains 4 tabs (equally spaced):
+     *   1. Dashboard   → /ledger       icon: grid/cards
+     *   2. Add         → /ledger/add   icon: plus/forge (the action)
+     *   3. Valhalla    → /ledger/valhalla icon: tombstone/rune
+     *   4. Settings    → /ledger/settings icon: gear/rune
+     *
+     * Each tab:
+     *   - Touch target: exactly 25% of viewport width × 56px
+     *   - Icon: 24px centered above label
+     *   - Label: 10px below icon
+     *   - Active state: icon + label receive accent color (gold in implementation)
+     *   - Icon border: 1px solid for wireframe placeholder
+     *
+     * Implementation:
+     *   <nav role="navigation" aria-label="App tabs"
+     *        className="fixed bottom-0 left-0 right-0 h-14 border-t ...">
+     *   <ul role="tablist"> or just <ul> with <a> links
+     *   Each tab: <li><a href="..."> (not <button> — these are route links)
+     *   aria-current="page" on active tab
+     *
+     * Safe area inset: padding-bottom: env(safe-area-inset-bottom)
+     * to handle iPhone home indicator area.
+     */
+    .bottom-tab-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 56px;
+      border-top: 1px solid;
+      display: flex;
+      z-index: 100;
+    }
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-decoration: none;
+      min-height: 56px; /* ≥ 44px touch target — 56px is the bar height */
+      padding: 6px 4px;
+      /* Touch width: ~25% of 375px = ~94px — well above 44px minimum */
+    }
+    .tab-item.active { font-weight: bold; }
+    .tab-icon {
+      width: 24px; height: 24px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+    }
+    .tab-label { font-size: 10px; }
+
+    /* ── Desktop frame (wireframe illustration) ─────────────────── */
+    .desktop-frame {
+      border: 2px solid;
+      width: 100%;
+      max-width: 900px;
+      overflow: hidden;
+    }
+
+    /* ── Mobile frame (wireframe illustration) ──────────────────── */
+    .mobile-frame {
+      width: 375px;
+      min-height: 667px;
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Simulate mobile ledger shell inside mobile frame */
+    .mobile-ledger-shell {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .mobile-slim-topbar {
+      height: 48px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      flex-shrink: 0;
+    }
+    .mobile-topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .mobile-topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .mobile-topbar-logo-rune {
+      font-size: 18px; font-weight: bold;
+    }
+    .mobile-topbar-logo-short {
+      font-size: 11px; font-weight: bold; letter-spacing: 0.08em;
+    }
+    .mobile-topbar-icon-btn {
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: none; cursor: pointer;
+    }
+    .mobile-topbar-icon {
+      width: 26px; height: 26px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+    }
+    .mobile-topbar-avatar {
+      width: 26px; height: 26px;
+      border: 1px dashed; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+    }
+    .mobile-content {
+      flex: 1;
+      padding: 16px;
+      padding-bottom: calc(56px + 16px); /* room for tab bar */
+    }
+    .mobile-content-placeholder {
+      border: 1px dashed;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      opacity: 0.5;
+    }
+    /* Mobile bottom tab bar — pinned inside the frame (relative within .mobile-frame) */
+    .mobile-bottom-tab-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 56px;
+      border-top: 1px solid;
+      display: flex;
+      background: white; /* white in wireframe for clarity */
+    }
+    .mobile-tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-decoration: none;
+      padding: 6px 2px;
+    }
+    .mobile-tab-item.active { font-weight: bold; }
+    .mobile-tab-icon {
+      width: 24px; height: 24px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+    }
+    .mobile-tab-label { font-size: 10px; }
+
+    /* ── Comparison table ───────────────────────────────────────── */
+    table { border-collapse: collapse; font-size: 12px; width: 100%; }
+    th, td { border: 1px solid; padding: 6px 10px; text-align: left; }
+    th { font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       DOCUMENT HEADER
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <h1 style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">
+      LedgerShell — Slim Top Bar + Mobile Bottom Tab Bar
+    </h1>
+    <p class="note">
+      Wireframe for Issue #372 · <code>ux/wireframes/chrome/ledger-shell.html</code>
+      · Structural layout only — no theme styling
+    </p>
+    <div class="note-block">
+      <strong>Purpose:</strong> A new layout shell for all <code>/ledger/*</code> routes that replaces the
+      existing AppShell. The marketing site ( <code>/</code>, <code>/features</code>, <code>/pricing</code>,
+      <code>/blog</code>, <code>/about</code> ) is unaffected and retains its full marketing navbar and footer.<br/><br/>
+      <strong>Key differences from the old AppShell:</strong><br/>
+      • Slim top bar: <code>48px</code> instead of <code>56px</code> — removes "Credit Card Tracker" subtitle, condenses brand mark<br/>
+      • Sidebar: <code>220px</code> (was <code>272px</code>) — fits the condensed app zone feel<br/>
+      • Mobile: sidebar <em>replaced</em> by fixed bottom tab bar — no hamburger, no overlay<br/>
+      • Center slot: "← Back to site" link — contextual escape hatch to <code>/</code><br/>
+      • No marketing footer inside <code>/ledger/*</code> — full-viewport app experience<br/>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 1 — Desktop Shell: Dashboard active (≥ 769px)
+       Shows: slim top bar + sidebar + content area
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 — Desktop ≥ 769px · Dashboard active · Anonymous user</div>
+
+    <div class="desktop-frame">
+      <div class="ledger-shell">
+
+        <!-- ── Slim Top Bar ──────────────────────────────────────── -->
+        <!--
+          Left:    ᛟ FENRIR LEDGER logo → /
+          Center:  ← Back to site → /
+          Right:   Theme toggle + ᛟ rune avatar (anonymous)
+        -->
+        <header class="slim-topbar" role="banner">
+
+          <!-- LEFT: Logo link to / -->
+          <div class="topbar-left">
+            <a class="topbar-logo-link" href="/" aria-label="Fenrir Ledger — go to home">
+              <span class="topbar-logo-rune" aria-hidden="true">ᛟ</span>
+              <span class="topbar-logo-text topbar-logo-text-full">FENRIR LEDGER</span>
+            </a>
+          </div>
+
+          <!-- CENTER: Back to site -->
+          <div class="topbar-center">
+            <!--
+              Contextual breadcrumb-style link. Shows on desktop (≥ 769px).
+              Hidden on mobile — replaced by icon button in right zone.
+              aria-label communicates destination clearly.
+            -->
+            <a class="topbar-back-link" href="/" aria-label="Back to Fenrir Ledger site">
+              <span class="topbar-back-arrow" aria-hidden="true">←</span>
+              Back to site
+            </a>
+          </div>
+
+          <!-- RIGHT: Controls cluster -->
+          <div class="topbar-right">
+
+            <!-- Theme toggle -->
+            <!--
+              aria-label: "Switch to dark mode" / "Switch to light mode" (dynamic)
+              Icon: ☀ when dark mode active, ☾ when light mode active
+              Touch target: 44×44px (btn wraps the visual icon)
+            -->
+            <button
+              class="topbar-theme-btn"
+              type="button"
+              aria-label="Switch to dark mode"
+            >
+              <span class="topbar-theme-icon" aria-hidden="true">☀/☾</span>
+            </button>
+
+            <!-- User avatar (anonymous state shown here) -->
+            <!--
+              See: topbar.html for full avatar spec.
+              Anonymous: ᛟ rune avatar, dashed border (no gold ring — wolf unnamed)
+              Signed-in: profile photo (or ᛟ fallback), solid gold ring border
+              Touch target: 44×44px
+            -->
+            <button
+              class="topbar-avatar-btn"
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="Sign in to sync your data"
+            >
+              <div class="topbar-avatar topbar-avatar-anon" aria-label="Anonymous user">
+                <span aria-hidden="true">ᛟ</span>
+              </div>
+            </button>
+
+          </div>
+        </header>
+
+        <!-- ── Sidebar (desktop only) ──────────────────────────────── -->
+        <aside class="ledger-sidebar" role="navigation" aria-label="App navigation">
+          <div class="sidebar-section-label">Navigation</div>
+          <nav class="sidebar-nav">
+            <a class="sidebar-nav-item active" href="/ledger" aria-current="page">
+              <span class="sidebar-nav-icon" aria-hidden="true">▦</span>
+              Dashboard
+            </a>
+            <a class="sidebar-nav-item" href="/ledger/add">
+              <span class="sidebar-nav-icon" aria-hidden="true">+</span>
+              Add Card
+            </a>
+            <a class="sidebar-nav-item" href="/ledger/valhalla">
+              <span class="sidebar-nav-icon" aria-hidden="true">ᛏ</span>
+              Valhalla
+            </a>
+            <!-- Settings pinned to bottom -->
+            <div class="sidebar-nav-bottom">
+              <a class="sidebar-nav-item" href="/ledger/settings">
+                <span class="sidebar-nav-icon" aria-hidden="true">⚙</span>
+                Settings
+              </a>
+            </div>
+          </nav>
+        </aside>
+
+        <!-- ── Content area ─────────────────────────────────────────── -->
+        <main class="ledger-content" id="main-content">
+          <div class="content-placeholder">
+            [Dashboard content — card grid, summary bar, etc.]
+          </div>
+        </main>
+
+      </div><!-- /.ledger-shell -->
+    </div><!-- /.desktop-frame -->
+
+    <div class="note-block">
+      <strong>Dimension callouts:</strong>
+      Slim top bar: <span class="dim">48px</span> (h-12).
+      Sidebar: <span class="dim">220px</span>.
+      Sidebar sticky top: <span class="dim">top: 48px</span> (matches slim top bar height).<br/>
+      <strong>Sticky behavior:</strong> Top bar sticks to top (z-100). Sidebar sticks below top bar (top: 48px), fills remaining viewport height.<br/>
+      <strong>No marketing nav:</strong> The marketing <code>&lt;nav&gt;</code> (64px, hamburger, nav links) is NOT present inside <code>/ledger</code> routes.<br/>
+      <strong>"Back to site" link:</strong> Shown desktop only. Gives app users a clear path to the marketing site without using browser back button.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 2 — Desktop Shell: Signed-in user
+       Same layout, different avatar state (reference only)
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 — Desktop ≥ 769px · Valhalla active · Signed-in user</div>
+
+    <div class="desktop-frame">
+      <div class="ledger-shell">
+
+        <header class="slim-topbar" role="banner">
+          <div class="topbar-left">
+            <a class="topbar-logo-link" href="/" aria-label="Fenrir Ledger — go to home">
+              <span class="topbar-logo-rune" aria-hidden="true">ᛟ</span>
+              <span class="topbar-logo-text topbar-logo-text-full">FENRIR LEDGER</span>
+            </a>
+          </div>
+          <div class="topbar-center">
+            <a class="topbar-back-link" href="/" aria-label="Back to Fenrir Ledger site">
+              <span class="topbar-back-arrow" aria-hidden="true">←</span>
+              Back to site
+            </a>
+          </div>
+          <div class="topbar-right">
+            <button class="topbar-theme-btn" type="button" aria-label="Switch to dark mode">
+              <span class="topbar-theme-icon" aria-hidden="true">☀/☾</span>
+            </button>
+            <!-- Signed-in avatar — solid border (gold ring in implementation) -->
+            <button
+              class="topbar-avatar-btn"
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="Open user menu"
+            >
+              <!--
+                Signed-in avatar: Google profile photo, or ᛟ rune if no photo URL.
+                Solid border = gold ring border-gold/40 (wolf is named).
+                See topbar.html for full signed-in dropdown spec.
+              -->
+              <div class="topbar-avatar" aria-label="Profile avatar">
+                <img
+                  src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Crect width='28' height='28' fill='%23ccc'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='8' fill='%23555'%3EPic%3C/text%3E%3C/svg%3E"
+                  alt="User's profile photo"
+                />
+              </div>
+            </button>
+          </div>
+        </header>
+
+        <aside class="ledger-sidebar" role="navigation" aria-label="App navigation">
+          <div class="sidebar-section-label">Navigation</div>
+          <nav class="sidebar-nav">
+            <a class="sidebar-nav-item" href="/ledger">
+              <span class="sidebar-nav-icon" aria-hidden="true">▦</span>
+              Dashboard
+            </a>
+            <a class="sidebar-nav-item" href="/ledger/add">
+              <span class="sidebar-nav-icon" aria-hidden="true">+</span>
+              Add Card
+            </a>
+            <!-- Valhalla active -->
+            <a class="sidebar-nav-item active" href="/ledger/valhalla" aria-current="page">
+              <span class="sidebar-nav-icon" aria-hidden="true">ᛏ</span>
+              Valhalla
+            </a>
+            <div class="sidebar-nav-bottom">
+              <a class="sidebar-nav-item" href="/ledger/settings">
+                <span class="sidebar-nav-icon" aria-hidden="true">⚙</span>
+                Settings
+              </a>
+            </div>
+          </nav>
+        </aside>
+
+        <main class="ledger-content" id="main-content-2">
+          <div class="content-placeholder">
+            [Valhalla content — tombstone cards, filter bar]
+          </div>
+        </main>
+
+      </div><!-- /.ledger-shell -->
+    </div><!-- /.desktop-frame -->
+
+    <div class="note-block">
+      Active nav item gets the left border accent (3px, gold in implementation) + bold label.<br/>
+      Avatar: solid border variant = signed-in state (see topbar.html for full dropdown spec).<br/>
+      Theme toggle behavior is identical for both auth states — it's a standalone stateless button.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 3 — Mobile Shell: Dashboard active (≤ 768px)
+       Shows: slim top bar (icon mode) + content + bottom tab bar
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 — Mobile 375px · Dashboard active · Anonymous user</div>
+
+    <div class="annot-row">
+      <div class="annot-col">
+        <div class="col-label">375px frame</div>
+        <div class="mobile-frame">
+          <div class="mobile-ledger-shell">
+
+            <!-- Slim top bar — mobile variant -->
+            <!--
+              Left:  ᛟ + "FL" short (not full wordmark — viewport limited)
+              Right: back icon + theme toggle + avatar
+              No center "Back to site" text — replaces with icon button in right cluster
+            -->
+            <header class="mobile-slim-topbar" role="banner">
+              <div class="mobile-topbar-left">
+                <!-- Rune + short wordmark only on mobile -->
+                <a href="/" aria-label="Fenrir Ledger — go to home" style="display:flex;align-items:center;gap:4px;text-decoration:none;padding:10px 0;min-height:44px;">
+                  <span class="mobile-topbar-logo-rune" aria-hidden="true">ᛟ</span>
+                  <span class="mobile-topbar-logo-short">FL</span>
+                </a>
+              </div>
+              <div class="mobile-topbar-right">
+                <!--
+                  Back icon (← →/) — replaces the "Back to site" text link on mobile
+                  aria-label: "Back to Fenrir Ledger site"
+                  Links to /
+                -->
+                <a
+                  href="/"
+                  class="mobile-topbar-icon-btn"
+                  aria-label="Back to Fenrir Ledger site"
+                  style="text-decoration:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;"
+                >
+                  <span class="mobile-topbar-icon" aria-hidden="true">←/</span>
+                </a>
+                <!-- Theme toggle -->
+                <button class="mobile-topbar-icon-btn" type="button" aria-label="Switch to dark mode">
+                  <span class="mobile-topbar-icon" aria-hidden="true">☀</span>
+                </button>
+                <!-- Avatar (anonymous) -->
+                <button
+                  class="mobile-topbar-icon-btn"
+                  type="button"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                  aria-label="Sign in to sync your data"
+                >
+                  <div class="mobile-topbar-avatar" aria-label="Anonymous user">
+                    <span aria-hidden="true">ᛟ</span>
+                  </div>
+                </button>
+              </div>
+            </header>
+
+            <!-- Content (full width, no sidebar) -->
+            <main class="mobile-content" id="main-content-mobile">
+              <div class="mobile-content-placeholder">
+                [Dashboard content]<br/><small>Full width on mobile</small>
+              </div>
+            </main>
+
+          </div><!-- /.mobile-ledger-shell -->
+
+          <!-- Bottom tab bar — fixed inside frame -->
+          <!--
+            4 tabs: Dashboard · Add · Valhalla · Settings
+            Each tab: icon (24px) + label (10px)
+            Touch target: min 56px tall × 25% viewport width
+            Active tab highlighted (gold in implementation)
+          -->
+          <nav class="mobile-bottom-tab-bar" role="navigation" aria-label="App tabs">
+            <!-- Dashboard (active) -->
+            <a class="mobile-tab-item active" href="/ledger" aria-current="page">
+              <span class="mobile-tab-icon" aria-hidden="true">▦</span>
+              <span class="mobile-tab-label">Dashboard</span>
+            </a>
+            <!-- Add Card -->
+            <a class="mobile-tab-item" href="/ledger/add">
+              <span class="mobile-tab-icon" aria-hidden="true">+</span>
+              <span class="mobile-tab-label">Add</span>
+            </a>
+            <!-- Valhalla -->
+            <a class="mobile-tab-item" href="/ledger/valhalla">
+              <span class="mobile-tab-icon" aria-hidden="true">ᛏ</span>
+              <span class="mobile-tab-label">Valhalla</span>
+            </a>
+            <!-- Settings -->
+            <a class="mobile-tab-item" href="/ledger/settings">
+              <span class="mobile-tab-icon" aria-hidden="true">⚙</span>
+              <span class="mobile-tab-label">Settings</span>
+            </a>
+          </nav>
+
+        </div><!-- /.mobile-frame -->
+      </div><!-- /.annot-col -->
+
+      <div class="annot-col" style="max-width: 380px;">
+        <div class="col-label">Mobile layout notes</div>
+        <ul class="note" style="line-height:1.8; list-style: disc; padding-left: 16px;">
+          <li><strong>No sidebar on mobile.</strong> Sidebar is <code>display: none</code> below 768px.</li>
+          <li><strong>Bottom tab bar:</strong> <span class="dim">56px</span> tall, fixed, 4 tabs.</li>
+          <li><strong>Content padding-bottom:</strong> <span class="dim">56px</span> to prevent tab bar overlap.</li>
+          <li><strong>Touch targets:</strong> Each tab is 56px tall × ~94px wide (375px ÷ 4). Both exceed the 44×44px minimum.</li>
+          <li><strong>Logo shortened:</strong> <code>ᛟ FL</code> (rune + initials) instead of full wordmark. Saves horizontal space for icon buttons.</li>
+          <li><strong>"Back to site" becomes icon:</strong> Text link replaced by <code>←/</code> icon button in right cluster.</li>
+          <li><strong>Safe area inset:</strong> Tab bar adds <code>padding-bottom: env(safe-area-inset-bottom)</code> for iPhone home indicator.</li>
+          <li><strong>Active tab:</strong> Icon + label receive accent color (<code>text-gold</code> in implementation). Other tabs: muted.</li>
+        </ul>
+      </div>
+    </div><!-- /.annot-row -->
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 4 — Mobile Shell: Add Card active
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 4 — Mobile 375px · Add Card active</div>
+
+    <div class="annot-row">
+      <div class="annot-col">
+        <div class="col-label">375px frame</div>
+        <div class="mobile-frame" style="min-height: 480px;">
+          <div class="mobile-ledger-shell">
+            <header class="mobile-slim-topbar" role="banner">
+              <div class="mobile-topbar-left">
+                <a href="/" aria-label="Fenrir Ledger — go to home" style="display:flex;align-items:center;gap:4px;text-decoration:none;padding:10px 0;min-height:44px;">
+                  <span class="mobile-topbar-logo-rune" aria-hidden="true">ᛟ</span>
+                  <span class="mobile-topbar-logo-short">FL</span>
+                </a>
+              </div>
+              <div class="mobile-topbar-right">
+                <a href="/" class="mobile-topbar-icon-btn" aria-label="Back to Fenrir Ledger site" style="text-decoration:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">
+                  <span class="mobile-topbar-icon" aria-hidden="true">←/</span>
+                </a>
+                <button class="mobile-topbar-icon-btn" type="button" aria-label="Switch to dark mode">
+                  <span class="mobile-topbar-icon" aria-hidden="true">☀</span>
+                </button>
+                <button class="mobile-topbar-icon-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Sign in to sync your data">
+                  <div class="mobile-topbar-avatar" aria-label="Anonymous user"><span aria-hidden="true">ᛟ</span></div>
+                </button>
+              </div>
+            </header>
+            <main class="mobile-content" id="main-content-add">
+              <div class="mobile-content-placeholder">
+                [Add Card form — Forge a Chain]<br/><small>Full width on mobile</small>
+              </div>
+            </main>
+          </div>
+          <nav class="mobile-bottom-tab-bar" role="navigation" aria-label="App tabs">
+            <a class="mobile-tab-item" href="/ledger">
+              <span class="mobile-tab-icon" aria-hidden="true">▦</span>
+              <span class="mobile-tab-label">Dashboard</span>
+            </a>
+            <!-- Add tab active -->
+            <a class="mobile-tab-item active" href="/ledger/add" aria-current="page">
+              <span class="mobile-tab-icon" aria-hidden="true">+</span>
+              <span class="mobile-tab-label">Add</span>
+            </a>
+            <a class="mobile-tab-item" href="/ledger/valhalla">
+              <span class="mobile-tab-icon" aria-hidden="true">ᛏ</span>
+              <span class="mobile-tab-label">Valhalla</span>
+            </a>
+            <a class="mobile-tab-item" href="/ledger/settings">
+              <span class="mobile-tab-icon" aria-hidden="true">⚙</span>
+              <span class="mobile-tab-label">Settings</span>
+            </a>
+          </nav>
+        </div><!-- /.mobile-frame -->
+      </div>
+
+      <div class="annot-col" style="max-width: 380px;">
+        <div class="col-label">Add tab notes</div>
+        <p class="note" style="line-height:1.8;">
+          The "Add" tab navigates to <code>/ledger/add</code> (the "Forge a Chain" form). This is the
+          same form as before — just accessible directly from the tab bar without needing
+          to navigate to the dashboard first. The tab icon is <code>+</code> to signal a primary action.
+          If the Add Card form is a full-page route, the tab bar persists (always visible). If it is
+          a modal/sheet triggered from within <code>/ledger</code>, consider whether the "Add" tab should
+          instead deep-link to the same route with a query param (e.g., <code>/ledger?action=add</code>)
+          — engineering decision.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 5 — Shell zone comparison: Marketing vs Ledger
+       Side-by-side to emphasize the distinct zones
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 5 — Zone comparison: Marketing shell vs. Ledger shell</div>
+
+    <div class="annot-row" style="align-items: flex-start; gap: 48px;">
+
+      <!-- Marketing shell column -->
+      <div class="annot-col" style="flex: 1; min-width: 280px;">
+        <div class="col-label">Marketing shell (<code>/</code>, <code>/features</code>, etc.)</div>
+        <!-- Marketing nav (64px) -->
+        <div style="border: 1px solid; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
+          <span style="font-size: 12px; font-weight: bold;">ᛟ FENRIR LEDGER</span>
+          <span style="font-size: 11px; opacity: 0.6;">Features · Pricing · Blog · About</span>
+          <span style="font-size: 11px; border: 1px solid; padding: 4px 8px;">Open the Ledger →</span>
+        </div>
+        <!-- Marketing content placeholder -->
+        <div style="border: 1px dashed; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 11px; opacity: 0.5;">
+          [Marketing page content]
+        </div>
+        <!-- Marketing footer -->
+        <div style="border-top: 1px solid; padding: 12px 16px; font-size: 11px; opacity: 0.6;">
+          Footer: links · credits · legal
+        </div>
+        <p class="note" style="margin-top: 4px;">
+          Nav: 64px · Has full marketing nav + footer · /ledger CTA in nav
+        </p>
+      </div>
+
+      <!-- Ledger shell column -->
+      <div class="annot-col" style="flex: 1; min-width: 280px;">
+        <div class="col-label">Ledger shell (<code>/ledger</code>, <code>/ledger/add</code>, etc.)</div>
+        <!-- Ledger slim top bar (48px) -->
+        <div style="border: 1px solid; height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px;">
+          <span style="font-size: 12px; font-weight: bold;">ᛟ FENRIR LEDGER</span>
+          <span style="font-size: 11px; opacity: 0.6;">← Back to site</span>
+          <span style="font-size: 11px;">☀/☾ · ᛟ</span>
+        </div>
+        <!-- Ledger content + sidebar -->
+        <div style="display: flex; border: 1px solid; border-top: none; height: 120px;">
+          <div style="width: 80px; border-right: 1px solid; padding: 8px; font-size: 10px; opacity: 0.6;">
+            Sidebar<br/>220px
+          </div>
+          <div style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 11px; opacity: 0.5;">
+            [App content — full viewport]
+          </div>
+        </div>
+        <!-- No footer -->
+        <p class="note" style="margin-top: 4px;">
+          Nav: 48px slim · No marketing footer · Sidebar nav · Full-viewport app
+        </p>
+      </div>
+
+    </div>
+
+    <div class="note-block">
+      <strong>Routing boundary:</strong> The zone split maps to Next.js route groups:<br/>
+      • <code>(marketing)</code> route group → marketing layout (full navbar + footer)<br/>
+      • <code>(app)</code> route group wrapping <code>/ledger</code> → <code>LedgerShell</code> layout (slim top bar, sidebar, no footer)<br/>
+      This is already partially in place from Issue #371 (route restructure). Issue #372 replaces the
+      <code>AppShell</code> inside the <code>(app)</code> group with this new <code>LedgerShell</code>.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 6 — Slim Top Bar anatomy (desktop + mobile breakdowns)
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 6 — Slim Top Bar anatomy</div>
+
+    <div class="annot-row">
+
+      <!-- Desktop top bar breakdown -->
+      <div class="annot-col" style="flex: 1; min-width: 320px;">
+        <div class="col-label">Desktop top bar (≥ 769px)</div>
+
+        <div style="border: 2px solid; height: 48px; display: flex; align-items: center; position: relative;">
+
+          <!-- Zone markers (approximate) -->
+          <!-- Left zone: Logo -->
+          <div style="flex: 0 0 auto; height: 100%; border-right: 1px dashed; display: flex; align-items: center; padding: 0 12px; gap: 6px;">
+            <span style="font-size: 16px;">ᛟ</span>
+            <span style="font-size: 11px; font-weight: bold; letter-spacing: 0.08em;">FENRIR LEDGER</span>
+          </div>
+          <!-- Center zone: Back to site -->
+          <div style="flex: 1; height: 100%; border-right: 1px dashed; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px;">
+            <span style="opacity: 0.6;">←</span>
+            <span style="opacity: 0.6;">Back to site</span>
+          </div>
+          <!-- Right zone: Controls -->
+          <div style="flex: 0 0 auto; display: flex; align-items: center; gap: 0; padding: 0 4px;">
+            <!-- Theme toggle 44×44 touch zone -->
+            <div style="width: 44px; height: 44px; border: 1px dashed; display: flex; align-items: center; justify-content: center; font-size: 10px;">
+              <div style="width: 28px; height: 28px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 10px;">☀/☾</div>
+            </div>
+            <!-- Avatar 44×44 touch zone -->
+            <div style="width: 44px; height: 44px; border: 1px dashed; display: flex; align-items: center; justify-content: center; font-size: 10px;">
+              <div style="width: 28px; height: 28px; border: 1px dashed; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px;">ᛟ</div>
+            </div>
+          </div>
+
+        </div>
+
+        <p class="note" style="margin-top: 6px; line-height: 1.6;">
+          Left: Logo link (→ <code>/</code>)<br/>
+          Center: "← Back to site" text link (→ <code>/</code>)<br/>
+          Right: Theme toggle <span class="dim">44×44px</span> + Avatar <span class="dim">44×44px</span><br/>
+          Total bar height: <span class="dim">48px</span>
+        </p>
+      </div>
+
+      <!-- Mobile top bar breakdown -->
+      <div class="annot-col" style="min-width: 280px;">
+        <div class="col-label">Mobile top bar (≤ 768px, 375px shown)</div>
+
+        <div style="width: 375px; border: 2px solid; height: 48px; display: flex; align-items: center;">
+
+          <!-- Left zone: Rune + initials only -->
+          <div style="flex: 0 0 auto; height: 100%; border-right: 1px dashed; display: flex; align-items: center; padding: 0 12px; gap: 4px;">
+            <span style="font-size: 16px;">ᛟ</span>
+            <span style="font-size: 11px; font-weight: bold;">FL</span>
+          </div>
+          <!-- Right cluster: 3 icon buttons -->
+          <div style="margin-left: auto; display: flex; align-items: center;">
+            <!-- Back icon 44×44 -->
+            <div style="width: 44px; height: 44px; border: 1px dashed; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 26px; height: 26px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 9px;">←/</div>
+            </div>
+            <!-- Theme icon 44×44 -->
+            <div style="width: 44px; height: 44px; border: 1px dashed; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 26px; height: 26px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 9px;">☀</div>
+            </div>
+            <!-- Avatar 44×44 -->
+            <div style="width: 44px; height: 44px; border: 1px dashed; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 26px; height: 26px; border: 1px dashed; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px;">ᛟ</div>
+            </div>
+          </div>
+
+        </div>
+
+        <p class="note" style="margin-top: 6px; line-height: 1.6;">
+          Left: <code>ᛟ FL</code> (rune + initials, not full wordmark)<br/>
+          Right: Back icon <span class="dim">44×44px</span> + Theme <span class="dim">44×44px</span> + Avatar <span class="dim">44×44px</span><br/>
+          No "Back to site" text (replaced by back icon)<br/>
+          Total bar height: <span class="dim">48px</span> · 375px wide
+        </p>
+      </div>
+
+    </div><!-- /.annot-row -->
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 7 — Bottom Tab Bar anatomy (mobile)
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 7 — Bottom Tab Bar anatomy (mobile ≤ 768px)</div>
+
+    <div class="annot-row">
+      <div class="annot-col" style="flex: 1; min-width: 375px; max-width: 500px;">
+        <div class="col-label">Tab bar at 375px · Dashboard active</div>
+
+        <!-- Full-width bar at 375px -->
+        <div style="width: 375px; height: 56px; border: 2px solid; display: flex;">
+          <!-- Tab 1: Dashboard (active) -->
+          <div style="flex: 1; border-right: 1px dashed; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px; font-weight: bold;">
+            <div style="width: 24px; height: 24px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 10px;">▦</div>
+            <span style="font-size: 10px; font-weight: bold;">Dashboard</span>
+          </div>
+          <!-- Tab 2: Add -->
+          <div style="flex: 1; border-right: 1px dashed; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px;">
+            <div style="width: 24px; height: 24px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 10px;">+</div>
+            <span style="font-size: 10px;">Add</span>
+          </div>
+          <!-- Tab 3: Valhalla -->
+          <div style="flex: 1; border-right: 1px dashed; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px;">
+            <div style="width: 24px; height: 24px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 10px;">ᛏ</div>
+            <span style="font-size: 10px;">Valhalla</span>
+          </div>
+          <!-- Tab 4: Settings -->
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px;">
+            <div style="width: 24px; height: 24px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 10px;">⚙</div>
+            <span style="font-size: 10px;">Settings</span>
+          </div>
+        </div>
+
+        <!-- Touch target annotation row -->
+        <div style="width: 375px; height: 20px; border: 1px dashed; display: flex; font-size: 9px;">
+          <div style="flex: 1; border-right: 1px dashed; display: flex; align-items: center; justify-content: center; opacity: 0.6;">~94px</div>
+          <div style="flex: 1; border-right: 1px dashed; display: flex; align-items: center; justify-content: center; opacity: 0.6;">~94px</div>
+          <div style="flex: 1; border-right: 1px dashed; display: flex; align-items: center; justify-content: center; opacity: 0.6;">~94px</div>
+          <div style="flex: 1; display: flex; align-items: center; justify-content: center; opacity: 0.6;">~94px</div>
+        </div>
+        <p class="note" style="font-size: 9px;">Touch target widths (375px ÷ 4 = ~94px each)</p>
+
+      </div>
+
+      <div class="annot-col" style="max-width: 380px;">
+        <div class="col-label">Tab bar spec</div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Tab</th>
+              <th>Route</th>
+              <th>Icon</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>Dashboard</td>
+              <td><code>/ledger</code></td>
+              <td>Cards grid glyph (▦)</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Add</td>
+              <td><code>/ledger/add</code></td>
+              <td>Plus (+) — primary action</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Valhalla</td>
+              <td><code>/ledger/valhalla</code></td>
+              <td>ᛏ Tiwaz rune</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>Settings</td>
+              <td><code>/ledger/settings</code></td>
+              <td>⚙ gear</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note-block" style="margin-top: 12px;">
+          <strong>Touch targets:</strong> 56px tall × ~94px wide — both exceed 44×44px.<br/>
+          <strong>Bar height:</strong> <span class="dim">56px</span> (matches tab bar convention for thumb reach).<br/>
+          <strong>Position:</strong> <code>fixed; bottom: 0; left: 0; right: 0</code>. z-index: 100.<br/>
+          <strong>Safe area:</strong> <code>padding-bottom: env(safe-area-inset-bottom)</code>.<br/>
+          <strong>Content offset:</strong> <code>padding-bottom: 56px</code> on <code>&lt;main&gt;</code>.<br/>
+          <strong>Active state:</strong> <code>aria-current="page"</code> on active tab link. Gold accent in implementation.<br/>
+          <strong>Semantics:</strong> <code>&lt;nav aria-label="App tabs"&gt;</code> wrapping <code>&lt;a&gt;</code> links (not buttons — these are route changes).
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 8 — Responsive switch: how shell changes at breakpoint
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 8 — Responsive breakpoint behavior</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Viewport</th>
+          <th>Slim Top Bar</th>
+          <th>Sidebar</th>
+          <th>Bottom Tab Bar</th>
+          <th>Content width</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>≥ 769px</strong> (desktop)</td>
+          <td>Logo + "← Back to site" text + theme toggle + avatar</td>
+          <td>Visible · 220px · sticky top: 48px</td>
+          <td><code>display: none</code></td>
+          <td><code>calc(100vw − 220px)</code></td>
+        </tr>
+        <tr>
+          <td><strong>≤ 768px</strong> (mobile)</td>
+          <td>ᛟ FL logo + back icon + theme icon + avatar icon</td>
+          <td><code>display: none</code></td>
+          <td>Visible · 56px · fixed bottom</td>
+          <td><code>100vw</code></td>
+        </tr>
+        <tr>
+          <td><strong>375px</strong> (min supported)</td>
+          <td>Same as ≤ 768px — 3 icon buttons fit comfortably</td>
+          <td><code>display: none</code></td>
+          <td>4 tabs × ~94px each</td>
+          <td><code>375px</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note-block">
+      <strong>Breakpoint:</strong> <code>768px</code> is the single toggle point. Below it: mobile mode (bottom tabs).
+      Above it: desktop mode (sidebar). This matches the existing breakpoint convention in the codebase.<br/>
+      <strong>No intermediate "tablet" mode:</strong> At 768–1024px, the sidebar is visible and the bottom tab bar is hidden.
+      The sidebar at 220px leaves ~500–800px for content — sufficient for the card grid at 2-column layout.<br/>
+      <strong>CSS implementation:</strong>
+      <code>.ledger-sidebar { display: none; }</code> /
+      <code>.bottom-tab-bar { display: none; }</code>
+      with <code>@media (min-width: 769px)</code> / <code>@media (max-width: 768px)</code> toggles.
+      Or use Tailwind: <code>hidden md:flex</code> / <code>flex md:hidden</code>.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ACCESSIBILITY SUMMARY
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Accessibility Requirements (WCAG 2.1 AA)</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Element</th>
+          <th>Requirement</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Slim top bar</td>
+          <td><code>&lt;header role="banner"&gt;</code>. Skip-nav link: <code>&lt;a href="#main-content" className="sr-only focus:not-sr-only"&gt;Skip to main content&lt;/a&gt;</code> as first child.</td>
+        </tr>
+        <tr>
+          <td>Logo link</td>
+          <td><code>aria-label="Fenrir Ledger — go to home"</code>. ᛟ rune: <code>aria-hidden="true"</code>.</td>
+        </tr>
+        <tr>
+          <td>"Back to site" link (desktop)</td>
+          <td><code>aria-label="Back to Fenrir Ledger site"</code>. Arrow: <code>aria-hidden="true"</code>.</td>
+        </tr>
+        <tr>
+          <td>Back icon button (mobile)</td>
+          <td><code>aria-label="Back to Fenrir Ledger site"</code>. Touch target ≥ 44×44px.</td>
+        </tr>
+        <tr>
+          <td>Theme toggle button</td>
+          <td><code>aria-label="Switch to dark mode"</code> or <code>"Switch to light mode"</code> — updates dynamically. Icon: <code>aria-hidden="true"</code>.</td>
+        </tr>
+        <tr>
+          <td>Avatar button (anonymous)</td>
+          <td><code>aria-label="Sign in to sync your data"</code>. <code>aria-haspopup="true"</code>. <code>aria-expanded</code> reflects panel state. Touch target ≥ 44×44px.</td>
+        </tr>
+        <tr>
+          <td>Avatar button (signed-in)</td>
+          <td><code>aria-label="Open user menu"</code>. <code>aria-haspopup="true"</code>. <code>aria-expanded</code>. Touch target ≥ 44×44px.</td>
+        </tr>
+        <tr>
+          <td>Sidebar</td>
+          <td><code>&lt;aside role="navigation" aria-label="App navigation"&gt;</code>. Active item: <code>aria-current="page"</code>. Each nav item min 44px tall.</td>
+        </tr>
+        <tr>
+          <td>Main content</td>
+          <td><code>&lt;main id="main-content"&gt;</code> — skip-nav target. Landmark: <code>role="main"</code> implicit on <code>&lt;main&gt;</code>.</td>
+        </tr>
+        <tr>
+          <td>Bottom tab bar</td>
+          <td><code>&lt;nav role="navigation" aria-label="App tabs"&gt;</code>. Active tab: <code>aria-current="page"</code>. Each tab ≥ 44×44px touch target. Tab icons: <code>aria-hidden="true"</code> (label is visible text).</td>
+        </tr>
+        <tr>
+          <td>All touch targets</td>
+          <td>Minimum 44×44px. Tab bar: 56px tall × ~94px wide. Top bar icon buttons: 44×44px. Sidebar items: 44px tall.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       INTERACTION SPEC
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Interaction Spec — LedgerShell</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size: 12px; line-height: 1.8;">
+
+      <strong>Theme toggle</strong><br/>
+      Clicking the theme toggle icon button cycles between light ↔ dark mode. It uses the same
+      <code>ThemeToggle</code> component as the marketing site — no behavioral difference. The visual
+      icon renders inline (no label text visible). The component is stateless from the shell's
+      perspective — theme state lives in <code>ThemeProvider</code>.<br/><br/>
+
+      <strong>Avatar / user dropdown</strong><br/>
+      Identical to the existing <code>TopBar</code> avatar behavior (see <code>topbar.html</code> for
+      full spec). The only change is the visual size: avatar is <code>28px</code> visual (down from
+      <code>32px</code>) to match the slimmer bar. Touch target remains 44×44px. Anonymous state shows
+      the upsell prompt panel. Signed-in state shows the user dropdown with Sign Out.<br/><br/>
+
+      <strong>"Back to site" (desktop)</strong><br/>
+      Standard <code>&lt;a href="/"&gt;</code> link — browser navigation. No custom JS needed.
+      On mobile this becomes the back icon button. Both navigate to <code>/</code>.<br/><br/>
+
+      <strong>Sidebar active state (desktop)</strong><br/>
+      The sidebar nav item matching <code>pathname</code> receives <code>aria-current="page"</code>
+      and the active CSS class (left border accent + bold). This is driven by the router's
+      current pathname — no JS state needed beyond what <code>usePathname()</code> provides.
+      On route change, the active item updates automatically.<br/><br/>
+
+      <strong>Bottom tab bar active state (mobile)</strong><br/>
+      Same mechanism: <code>usePathname()</code> comparison. Active tab receives
+      <code>aria-current="page"</code> + accent styling. No animation between tabs — instant
+      route transition is sufficient. If a tab route is the same as the current route, tapping
+      it is a no-op (or optionally scrolls to top).<br/><br/>
+
+      <strong>Shell persistence across /ledger/* routes</strong><br/>
+      The <code>LedgerShell</code> is the layout component for the <code>(app)</code> route group in
+      Next.js. It renders once and its children (the page-level content) swap on navigation. The
+      top bar, sidebar, and bottom tab bar never unmount between <code>/ledger/*</code> routes.
+      Navigating from <code>/ledger</code> to <code>/ledger/valhalla</code>: only the <code>main</code>
+      content area re-renders.<br/><br/>
+
+      <strong>Scroll behavior</strong><br/>
+      The top bar is <code>position: sticky; top: 0</code>. The sidebar is <code>position: sticky;
+      top: 48px; height: calc(100vh - 48px)</code>. The <code>&lt;main&gt;</code> content area scrolls
+      independently (<code>overflow-y: auto</code>). The bottom tab bar is
+      <code>position: fixed; bottom: 0</code> — unaffected by content scroll.<br/><br/>
+
+      <strong>No marketing footer</strong><br/>
+      The <code>LedgerShell</code> does not render the marketing footer. The app is full-viewport —
+      the bottom of the content area is the bottom of the page (or the fixed bottom tab bar on
+      mobile). Any app-specific footer content (copyright in Settings, etc.) is inlined into the
+      page content, not the shell.
+
+    </div>
+  </section>
+
+
+  <!-- footer -->
+  <p class="note" style="text-align: center; padding-bottom: 32px;">
+    Wireframe — ledger-shell.html · Fenrir Ledger · Issue #372 · No theme styling applied
+  </p>
+
+</div><!-- /.page -->
+
+</body>
+</html>
