@@ -14,319 +14,319 @@ slug: "vercel-wrangling"
   <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
   <div className="session-meta">
 
-      <span>DATE <span class="val">2026-02-26</span></span>
-      <span>ACTS <span class="val">XI</span></span>
-      <span>FILES CHANGED <span class="val">5</span></span>
-      <span>MODEL <span class="val">Claude Sonnet 4.6</span></span>
+      <span>DATE <span className="val">2026-02-26</span></span>
+      <span>ACTS <span className="val">XI</span></span>
+      <span>FILES CHANGED <span className="val">5</span></span>
+      <span>MODEL <span className="val">Claude Sonnet 4.6</span></span>
       </div>
 </header>
 
 ──────────────────────────────────────────────────── -->
-  <div class="timeline">
+  <div className="timeline">
 
     
-    <section class="entry" id="act-1">
-      <div class="entry-rune" title="The Sentry Inscription">ᛏ</div>
-      <div class="entry-body">
-        <p class="act-label">Act I · Backlog</p>
-        <h2 class="entry-title">The Sentry Inscription</h2>
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-fireman">FiremanDecko</span></div>
-          <p class="msg-text">Add a backlog item to integrate https://docs.sentry.io/</p>
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="The Sentry Inscription">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Backlog</p>
+        <h2 className="entry-title">The Sentry Inscription</h2>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-fireman">FiremanDecko</span></div>
+          <p className="msg-text">Add a backlog item to integrate https://docs.sentry.io/</p>
         </div>
-        <div class="work-card">
-          <div class="work-body">
-            <p>A single line was added to the <span class="hl">## Future</span> section of <span class="mono">product-brief.md</span> — Sentry for error monitoring and performance tracing, with the docs URL preserved for the engineer who picks it up.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>A single line was added to the <span className="hl">## Future</span> section of <span className="mono">product-brief.md</span> — Sentry for error monitoring and performance tracing, with the docs URL preserved for the engineer who picks it up.</p>
             <p>No sprint assignment, no urgency. Just the wolf marking the trail.</p>
           </div>
-          <div class="file-chips">
-            <span class="chip chip-mod">◈ product-brief.md</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ product-brief.md</span>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
+    <div className="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
 
     
-    <section class="entry" id="act-2">
-      <div class="entry-rune" title="The Root Path Mystery">ᚦ</div>
-      <div class="entry-body">
-        <p class="act-label">Act II · Debug</p>
-        <h2 class="entry-title">The Root Path Mystery</h2>
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-fireman">FiremanDecko</span></div>
-          <p class="msg-text">There's a 404 error locally
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="The Root Path Mystery">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Debug</p>
+        <h2 className="entry-title">The Root Path Mystery</h2>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-fireman">FiremanDecko</span></div>
+          <p className="msg-text">There's a 404 error locally
 
 fetch("http://192.168.1.179:9653/", { "method": "GET" });</p>
         </div>
-        <div class="work-card">
-          <div class="work-body">
-            <p>Playwright navigated to the local dev server. The root <span class="mono">/</span> returned a 404 — but oddly, the AppShell was still rendering around it. A prior session had added <span class="mono">basePath: '/app'</span> to <span class="mono">next.config.ts</span>, and a <span class="mono">public/index.html</span> placeholder was supposed to redirect to <span class="mono">/app</span>.</p>
-            <p>The bug: with <span class="hl">basePath</span> set, Next.js serves <span class="mono">public/</span> files under the basePath prefix in dev mode. So <span class="mono">public/index.html</span> was landing at <span class="mono">/app/index.html</span> — not at <span class="mono">/</span>. The placeholder was silently useless.</p>
-            <p>The fix: Next.js <span class="hl">middleware</span> runs entirely outside the basePath context. A middleware redirecting <span class="mono">/</span> → <span class="mono">/app</span> when <span class="mono">NODE_ENV !== 'production'</span> solves it cleanly. In production, the middleware is a no-op — Vercel's CDN serves the marketing site at <span class="mono">/</span> directly.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Playwright navigated to the local dev server. The root <span className="mono">/</span> returned a 404 — but oddly, the AppShell was still rendering around it. A prior session had added <span className="mono">basePath: '/app'</span> to <span className="mono">next.config.ts</span>, and a <span className="mono">public/index.html</span> placeholder was supposed to redirect to <span className="mono">/app</span>.</p>
+            <p>The bug: with <span className="hl">basePath</span> set, Next.js serves <span className="mono">public/</span> files under the basePath prefix in dev mode. So <span className="mono">public/index.html</span> was landing at <span className="mono">/app/index.html</span> — not at <span className="mono">/</span>. The placeholder was silently useless.</p>
+            <p>The fix: Next.js <span className="hl">middleware</span> runs entirely outside the basePath context. A middleware redirecting <span className="mono">/</span> → <span className="mono">/app</span> when <span className="mono">NODE_ENV !== 'production'</span> solves it cleanly. In production, the middleware is a no-op — Vercel's CDN serves the marketing site at <span className="mono">/</span> directly.</p>
           </div>
-          <div class="bug-box">
-            <p class="bug-label">🐺 Root Cause Found</p>
-            <p class="bug-text">Next.js basePath prefix applies to public/ files in dev mode.
+          <div className="bug-box">
+            <p className="bug-label">🐺 Root Cause Found</p>
+            <p className="bug-text">Next.js basePath prefix applies to public/ files in dev mode.
 public/index.html was served at /app/index.html, not /.
 Middleware is the correct intercept point — it runs before basePath routing.</p>
           </div>
-          <div class="code-block"><pre><span class="cc">// development/frontend/src/middleware.ts</span>
+          <div className="code-block"><pre><span className="cc">// development/frontend/src/middleware.ts</span>
 export function middleware(request: NextRequest) {
   if (
-    process.env.NODE_ENV !== <span class="ca">"production"</span> &&
-    request.nextUrl.pathname === <span class="ca">"/"</span>
+    process.env.NODE_ENV !== <span className="ca">"production"</span> &&
+    request.nextUrl.pathname === <span className="ca">"/"</span>
   ) {
-    return NextResponse.redirect(new URL(<span class="ca">"/app"</span>, request.url));
+    return NextResponse.redirect(new URL(<span className="ca">"/app"</span>, request.url));
   }
 }
-export const config = { matcher: [<span class="ca">"/"</span>] };</pre></div>
-          <div class="file-chips">
-            <span class="chip chip-new">✦ development/frontend/src/middleware.ts</span>
-            <span class="chip chip-mod">◈ product-brief.md</span>
+export const config = { matcher: [<span className="ca">"/"</span>] };</pre></div>
+          <div className="file-chips">
+            <span className="chip chip-new">✦ development/frontend/src/middleware.ts</span>
+            <span className="chip chip-mod">◈ product-brief.md</span>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
+    <div className="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
 
     
-    <section class="entry" id="act-3">
-      <div class="entry-rune" title="The Chain Unforged">ᚺ</div>
-      <div class="entry-body">
-        <p class="act-label">Act III · Revert</p>
-        <h2 class="entry-title">The Chain Unforged</h2>
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-fireman">FiremanDecko</span></div>
-          <p class="msg-text">Revert back to this commit: 8f4b5db698fcb31ba927364b293800446257a4eb</p>
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="The Chain Unforged">ᚺ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Revert</p>
+        <h2 className="entry-title">The Chain Unforged</h2>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-fireman">FiremanDecko</span></div>
+          <p className="msg-text">Revert back to this commit: 8f4b5db698fcb31ba927364b293800446257a4eb</p>
         </div>
-        <div class="work-card">
-          <div class="work-body">
-            <p>Three commits were cut from the chain: the middleware fix, the placeholder, and the original <span class="mono">basePath: '/app'</span> deployment approach. The forge showed all three commits already on <span class="mono">origin/main</span> — so the revert required a force push.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Three commits were cut from the chain: the middleware fix, the placeholder, and the original <span className="mono">basePath: '/app'</span> deployment approach. The forge showed all three commits already on <span className="mono">origin/main</span> — so the revert required a force push.</p>
             <p>The wolf confirmed before striking. The user said: <em>yes go ahead.</em> The commits were undone.</p>
           </div>
-          <div class="code-block"><pre>git reset --hard 8f4b5db698fcb31ba927364b293800446257a4eb
+          <div className="code-block"><pre>git reset --hard 8f4b5db698fcb31ba927364b293800446257a4eb
 git push --force origin main
-<span class="cc"># + 56cdc65...8f4b5db main -> main (forced update)</span></pre></div>
+<span className="cc"># + 56cdc65...8f4b5db main -> main (forced update)</span></pre></div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
+    <div className="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
 
     
-    <section class="entry" id="act-4">
-      <div class="entry-rune" title="Static Site Relocated">ᛞ</div>
-      <div class="entry-body">
-        <p class="act-label">Act IV · Deployment</p>
-        <h2 class="entry-title">Static Site Relocated to /static</h2>
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-fireman">FiremanDecko</span></div>
-          <p class="msg-text">Update the vercel deployment so that the static site is served from /static</p>
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="Static Site Relocated">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Deployment</p>
+        <h2 className="entry-title">Static Site Relocated to /static</h2>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-fireman">FiremanDecko</span></div>
+          <p className="msg-text">Update the vercel deployment so that the static site is served from /static</p>
         </div>
-        <div class="work-card">
-          <div class="work-body">
-            <p>With the revert complete, <span class="mono">next.config.ts</span> had no basePath — the Next.js app owned <span class="mono">/</span>. The new plan: copy <span class="mono">static/</span> into <span class="mono">development/frontend/public/static/</span> before build so Next.js serves it verbatim at <span class="mono">/static/*</span>. Clean, no restructuring needed.</p>
-            <p>The CI step was added to <span class="mono">vercel.yml</span>. The <span class="mono">APP_URL</span> in the marketing site already pointed to the full Vercel URL — no change needed there.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>With the revert complete, <span className="mono">next.config.ts</span> had no basePath — the Next.js app owned <span className="mono">/</span>. The new plan: copy <span className="mono">static/</span> into <span className="mono">development/frontend/public/static/</span> before build so Next.js serves it verbatim at <span className="mono">/static/*</span>. Clean, no restructuring needed.</p>
+            <p>The CI step was added to <span className="mono">vercel.yml</span>. The <span className="mono">APP_URL</span> in the marketing site already pointed to the full Vercel URL — no change needed there.</p>
           </div>
-          <div class="code-block"><pre><span class="ca">- name: Copy static site into Next.js public/static/</span>
+          <div className="code-block"><pre><span className="ca">- name: Copy static site into Next.js public/static/</span>
   run: |
     mkdir -p development/frontend/public/static
     cp -r static/. development/frontend/public/static/</pre></div>
-          <div class="file-chips">
-            <span class="chip chip-mod">◈ .github/workflows/vercel.yml</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ .github/workflows/vercel.yml</span>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
+    <div className="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
 
     
-    <section class="entry" id="act-5">
-      <div class="entry-rune" title="The Broken Images">ᚦ</div>
-      <div class="entry-body">
-        <p class="act-label">Act V · Bug Fix</p>
-        <h2 class="entry-title">The Broken Images</h2>
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-fireman">FiremanDecko</span></div>
-          <p class="msg-text">Inspect https://fenrir-ledger.vercel.app/static — none of the images are working</p>
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="The Broken Images">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Bug Fix</p>
+        <h2 className="entry-title">The Broken Images</h2>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-fireman">FiremanDecko</span></div>
+          <p className="msg-text">Inspect https://fenrir-ledger.vercel.app/static — none of the images are working</p>
         </div>
-        <div class="work-card">
-          <div class="work-body">
-            <p>Playwright navigated to the production URL. The network log showed <span class="mono">/icon.png</span> and <span class="mono">/favicon.ico</span> both returning <span class="hl">404</span>. The HTML used relative paths — <span class="mono">src="icon.png"</span> — which browsers resolve relative to the document's base URL.</p>
-            <p>The culprit: the page was served at <span class="mono">/static</span> <em>without a trailing slash</em>. Without the slash, browsers treat <span class="mono">/static</span> as a file, not a directory, and resolve relative paths from <span class="mono">/</span> — so <span class="mono">icon.png</span> became <span class="mono">/icon.png</span> rather than <span class="mono">/static/icon.png</span>.</p>
-            <p>Fix: three asset references updated to explicit root-relative paths with the <span class="hl">/static/</span> prefix.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Playwright navigated to the production URL. The network log showed <span className="mono">/icon.png</span> and <span className="mono">/favicon.ico</span> both returning <span className="hl">404</span>. The HTML used relative paths — <span className="mono">src="icon.png"</span> — which browsers resolve relative to the document's base URL.</p>
+            <p>The culprit: the page was served at <span className="mono">/static</span> <em>without a trailing slash</em>. Without the slash, browsers treat <span className="mono">/static</span> as a file, not a directory, and resolve relative paths from <span className="mono">/</span> — so <span className="mono">icon.png</span> became <span className="mono">/icon.png</span> rather than <span className="mono">/static/icon.png</span>.</p>
+            <p>Fix: three asset references updated to explicit root-relative paths with the <span className="hl">/static/</span> prefix.</p>
           </div>
-          <div class="bug-box">
-            <p class="bug-label">🐺 Bug Fixed</p>
-            <p class="bug-text">Relative paths (icon.png, favicon.ico) resolve from / when page is served without trailing slash.
+          <div className="bug-box">
+            <p className="bug-label">🐺 Bug Fixed</p>
+            <p className="bug-text">Relative paths (icon.png, favicon.ico) resolve from / when page is served without trailing slash.
 Fixed: src="icon.png" → src="/static/icon.png" (×2) and href="favicon.ico" → href="/static/favicon.ico"</p>
           </div>
-          <div class="file-chips">
-            <span class="chip chip-mod">◈ static/index.html</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ static/index.html</span>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
+    <div className="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
 
     
-    <section class="entry" id="act-6">
-      <div class="entry-rune" title="Sessions Take Root">ᚾ</div>
-      <div class="entry-body">
-        <p class="act-label">Act VI · New Feature</p>
-        <h2 class="entry-title">Sessions Take Root on Vercel</h2>
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-fireman">FiremanDecko</span></div>
-          <p class="msg-text">Add a link to the session logs in the footer. Ensure the session logs are deployed to vercel too at /sessions</p>
+    <section className="entry" id="act-6">
+      <div className="entry-rune" title="Sessions Take Root">ᚾ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VI · New Feature</p>
+        <h2 className="entry-title">Sessions Take Root on Vercel</h2>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-fireman">FiremanDecko</span></div>
+          <p className="msg-text">Add a link to the session logs in the footer. Ensure the session logs are deployed to vercel too at /sessions</p>
         </div>
-        <div class="work-card">
-          <div class="work-body">
-            <p>Two changes in one strike. The footer of <span class="mono">static/index.html</span> already had the <span class="mono">.step-log-link</span> CSS class defined — used it to slot in <span class="mono">ᛏ Session Chronicles →</span> between the rule and the copyright line.</p>
-            <p>The Vercel workflow was extended with a second <span class="mono">cp</span> — mirroring <span class="mono">sessions/</span> into <span class="mono">public/sessions/</span> before build, so the archive lands at <span class="mono">/sessions/*</span> on the same deployment.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Two changes in one strike. The footer of <span className="mono">static/index.html</span> already had the <span className="mono">.step-log-link</span> CSS class defined — used it to slot in <span className="mono">ᛏ Session Chronicles →</span> between the rule and the copyright line.</p>
+            <p>The Vercel workflow was extended with a second <span className="mono">cp</span> — mirroring <span className="mono">sessions/</span> into <span className="mono">public/sessions/</span> before build, so the archive lands at <span className="mono">/sessions/*</span> on the same deployment.</p>
           </div>
-          <div class="code-block"><pre><span class="ca">mkdir -p development/frontend/public/sessions</span>
-<span class="ca">cp -r sessions/. development/frontend/public/sessions/</span></pre></div>
-          <div class="file-chips">
-            <span class="chip chip-mod">◈ static/index.html</span>
-            <span class="chip chip-mod">◈ .github/workflows/vercel.yml</span>
+          <div className="code-block"><pre><span className="ca">mkdir -p development/frontend/public/sessions</span>
+<span className="ca">cp -r sessions/. development/frontend/public/sessions/</span></pre></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ static/index.html</span>
+            <span className="chip chip-mod">◈ .github/workflows/vercel.yml</span>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
+    <div className="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
 
     
-    <section class="entry" id="act-7">
-      <div class="entry-rune" title="The Forge Badge">ᛟ</div>
-      <div class="entry-body">
-        <p class="act-label">Act VII · Identity</p>
-        <h2 class="entry-title">The Forge Badge</h2>
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-fireman">FiremanDecko</span></div>
-          <p class="msg-text">Add this status badge to the README
+    <section className="entry" id="act-7">
+      <div className="entry-rune" title="The Forge Badge">ᛟ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VII · Identity</p>
+        <h2 className="entry-title">The Forge Badge</h2>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-fireman">FiremanDecko</span></div>
+          <p className="msg-text">Add this status badge to the README
 
 [![Deploy to Vercel](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel.yml/badge.svg)](https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel.yml)</p>
         </div>
-        <div class="work-card">
-          <div class="work-body">
-            <p>The Vercel deployment badge was placed at the top of <span class="mono">README.md</span>, directly below the title — a live signal visible to all who enter the repository. Green when the wolf holds the line. Red when the forge has cooled.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>The Vercel deployment badge was placed at the top of <span className="mono">README.md</span>, directly below the title — a live signal visible to all who enter the repository. Green when the wolf holds the line. Red when the forge has cooled.</p>
           </div>
-          <div class="file-chips">
-            <span class="chip chip-mod">◈ README.md</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ README.md</span>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
+    <div className="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
 
     
-    <section class="entry" id="act-8">
-      <div class="entry-rune" title="Three Links Carved">ᛒ</div>
-      <div class="entry-body">
-        <p class="act-label">Act VIII · Design</p>
-        <h2 class="entry-title">Three Links Carved</h2>
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-fireman">FiremanDecko</span></div>
-          <p class="msg-text">Update the README.md links to the vercel deployment
+    <section className="entry" id="act-8">
+      <div className="entry-rune" title="Three Links Carved">ᛒ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VIII · Design</p>
+        <h2 className="entry-title">Three Links Carved</h2>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-fireman">FiremanDecko</span></div>
+          <p className="msg-text">Update the README.md links to the vercel deployment
 ᛟ Enter the Ledger →  |  ᚱ Visit the Marketing Site →
 
 Each link on one line.
 Add a link to the session log with it's rune</p>
         </div>
-        <div class="work-card">
-          <div class="work-body">
-            <p>The old single-line pipe-separated link was replaced with three distinct heading links — one per line. The marketing site URL was updated from the old GitHub Pages address to <span class="mono">/static</span> on Vercel. A third link was added for <span class="hl">ᛏ Session Chronicles</span> pointing to <span class="mono">/sessions</span>.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>The old single-line pipe-separated link was replaced with three distinct heading links — one per line. The marketing site URL was updated from the old GitHub Pages address to <span className="mono">/static</span> on Vercel. A third link was added for <span className="hl">ᛏ Session Chronicles</span> pointing to <span className="mono">/sessions</span>.</p>
           </div>
-          <div class="file-chips">
-            <span class="chip chip-mod">◈ README.md</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ README.md</span>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
+    <div className="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
 
     
-    <section class="entry" id="act-9">
-      <div class="entry-rune" title="The Wolf Speaks">ᛟ</div>
-      <div class="entry-body">
-        <p class="act-label">Act IX · Voice</p>
-        <h2 class="entry-title">The Wolf Speaks</h2>
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-fireman">FiremanDecko</span></div>
-          <p class="msg-text">Add some prose around the links in the voice of the wolf</p>
+    <section className="entry" id="act-9">
+      <div className="entry-rune" title="The Wolf Speaks">ᛟ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IX · Voice</p>
+        <h2 className="entry-title">The Wolf Speaks</h2>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-fireman">FiremanDecko</span></div>
+          <p className="msg-text">Add some prose around the links in the voice of the wolf</p>
         </div>
-        <div class="work-card">
-          <div class="work-body">
+        <div className="work-card">
+          <div className="work-body">
             <p>Three lines of wolf-voice prose were woven between the links — unhurried, knowing, each one naming the purpose of the path it guards.</p>
           </div>
-          <div class="code-block"><pre><span class="cc">// Before the Ledger link:</span>
-<span class="ca">*The wolf does not wait. Step into the forge and name your chains before they name you.*</span>
+          <div className="code-block"><pre><span className="cc">// Before the Ledger link:</span>
+<span className="ca">*The wolf does not wait. Step into the forge and name your chains before they name you.*</span>
 
-<span class="cc">// Before the Marketing Site link:</span>
-<span class="ca">*Read the runes. Know what was built, why it was built, and what hunts next.*</span>
+<span className="cc">// Before the Marketing Site link:</span>
+<span className="ca">*Read the runes. Know what was built, why it was built, and what hunts next.*</span>
 
-<span class="cc">// Before the Session Chronicles link:</span>
-<span class="ca">*Every session forged in fire, recorded in runes. The wolf remembers what the gods tried to bury.*</span></pre></div>
-          <div class="file-chips">
-            <span class="chip chip-mod">◈ README.md</span>
+<span className="cc">// Before the Session Chronicles link:</span>
+<span className="ca">*Every session forged in fire, recorded in runes. The wolf remembers what the gods tried to bury.*</span></pre></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ README.md</span>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
+    <div className="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
 
     
-    <section class="entry" id="act-10">
-      <div class="entry-rune" title="The Three-Card Hall">ᛒ</div>
-      <div class="entry-body">
-        <p class="act-label">Act X · Layout</p>
-        <h2 class="entry-title">The Three-Card Hall</h2>
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-fireman">FiremanDecko</span></div>
-          <p class="msg-text">Make those links in a single row of 3 cards in the markdown. Three boxes on one row with links and prose and runes</p>
+    <section className="entry" id="act-10">
+      <div className="entry-rune" title="The Three-Card Hall">ᛒ</div>
+      <div className="entry-body">
+        <p className="act-label">Act X · Layout</p>
+        <h2 className="entry-title">The Three-Card Hall</h2>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-fireman">FiremanDecko</span></div>
+          <p className="msg-text">Make those links in a single row of 3 cards in the markdown. Three boxes on one row with links and prose and runes</p>
         </div>
-        <div class="work-card">
-          <div class="work-body">
-            <p>Standard Markdown has no multi-column layout. The solution: an HTML <span class="mono">&lt;table&gt;</span> with three <span class="mono">&lt;td&gt;</span> cells, each centred and set to <span class="mono">width="33%"</span>. GitHub's Markdown renderer honours HTML tables in full.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Standard Markdown has no multi-column layout. The solution: an HTML <span className="mono">&lt;table&gt;</span> with three <span className="mono">&lt;td&gt;</span> cells, each centred and set to <span className="mono">width="33%"</span>. GitHub's Markdown renderer honours HTML tables in full.</p>
             <p>Each card holds the rune large at the top as a heading, a bold link, and the italic wolf prose beneath. The three gates now stand side by side in the README.</p>
           </div>
-          <div class="file-chips">
-            <span class="chip chip-mod">◈ README.md</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ README.md</span>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
+    <div className="rune-hr"><span>ᛞ ᚦ ᛟ</span></div>
 
     
-    <section class="entry" id="act-11">
-      <div class="entry-rune" title="Gates Opened Wide">ᚺ</div>
-      <div class="entry-body">
-        <p class="act-label">Act XI · Quick Fix</p>
-        <h2 class="entry-title">Gates Opened Wide</h2>
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-fireman">FiremanDecko</span></div>
-          <p class="msg-text">Make those links open in a new tab</p>
+    <section className="entry" id="act-11">
+      <div className="entry-rune" title="Gates Opened Wide">ᚺ</div>
+      <div className="entry-body">
+        <p className="act-label">Act XI · Quick Fix</p>
+        <h2 className="entry-title">Gates Opened Wide</h2>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-fireman">FiremanDecko</span></div>
+          <p className="msg-text">Make those links open in a new tab</p>
         </div>
-        <div class="work-card">
-          <div class="work-body">
-            <p>Standard Markdown link syntax — <span class="mono">[text](url)</span> — has no mechanism for <span class="mono">target="_blank"</span>. Since the links were already inside an HTML table, converting them to raw <span class="mono">&lt;a&gt;</span> tags with <span class="mono">target="_blank" rel="noopener"</span> was the natural move. The gates now open onto new ground without pulling the wolf away from the scroll.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Standard Markdown link syntax — <span className="mono">[text](url)</span> — has no mechanism for <span className="mono">target="_blank"</span>. Since the links were already inside an HTML table, converting them to raw <span className="mono">&lt;a&gt;</span> tags with <span className="mono">target="_blank" rel="noopener"</span> was the natural move. The gates now open onto new ground without pulling the wolf away from the scroll.</p>
           </div>
-          <div class="code-block"><pre><span class="ca">&lt;a href="https://fenrir-ledger.vercel.app" target="_blank" rel="noopener"&gt;</span>
+          <div className="code-block"><pre><span className="ca">&lt;a href="https://fenrir-ledger.vercel.app" target="_blank" rel="noopener"&gt;</span>
   Enter the Ledger →
-<span class="ca">&lt;/a&gt;</span></pre></div>
-          <div class="file-chips">
-            <span class="chip chip-mod">◈ README.md</span>
+<span className="ca">&lt;/a&gt;</span></pre></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ README.md</span>
           </div>
         </div>
       </div>
@@ -334,10 +334,10 @@ Add a link to the session log with it's rune</p>
 
   </div>
 
-<footer class="session-footer">
-    <p class="footer-cipher">ᛞ ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ ᛊ</p>
-    <p class="footer-text">Vercel Wrangling &amp; the README Forge · Fenrir Ledger Session Chronicle</p>
-    <p class="footer-sub">The wolf remembers everything.</p>
+<footer className="session-footer">
+    <p className="footer-cipher">ᛞ ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ ᛊ</p>
+    <p className="footer-text">Vercel Wrangling & the README Forge · Fenrir Ledger Session Chronicle</p>
+    <p className="footer-sub">The wolf remembers everything.</p>
   </footer>
 
 </div>

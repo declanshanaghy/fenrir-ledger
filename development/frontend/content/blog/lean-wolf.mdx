@@ -14,49 +14,49 @@ slug: "lean-wolf"
   <p className="session-subtitle">Context Diet & Template Extraction — The Shedding</p>
   <div className="session-meta">
 
-      <span>Date <span class="val">2026-03-06</span></span>
-      <span>Session <span class="val">lean-wolf</span></span>
-      <span>Acts <span class="val">V</span></span>
-      <span>Files changed <span class="val">9</span></span>
+      <span>Date <span className="val">2026-03-06</span></span>
+      <span>Session <span className="val">lean-wolf</span></span>
+      <span>Acts <span className="val">V</span></span>
+      <span>Files changed <span className="val">9</span></span>
       </div>
 </header>
 
-<div class="timeline">
+<div className="timeline">
 
     
     
     
-    <section class="entry" id="act-1">
-      <div class="entry-rune" title="ᛃ Jera &mdash; journeys, cycles, patrol">ᛃ</div>
-      <div class="entry-body">
-        <p class="act-label">Act I &middot; The Pack Patrol</p>
-        <h2 class="entry-title">Fire-Next-Up &mdash; Board Scan &amp; Orphan Check</h2>
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="ᛃ Jera — journeys, cycles, patrol">ᛃ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · The Pack Patrol</p>
+        <h2 className="entry-title">Fire-Next-Up — Board Scan & Orphan Check</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">Odin</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
           </div>
-          <p class="msg-text">/fire-next-up</p>
+          <p className="msg-text">/fire-next-up</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>The orchestrator ran its pre-flight patrol: worktree health check (clean), orphan PR scan, and project board query. Found <span class="hl">3 open PRs</span> (#220, #222, #223) all awaiting Loki QA &mdash; active chains, not stale. Identified <span class="hl">6 items</span> in "Up Next" with 3 bugs, 2 enhancements, and 1 unlabeled feature.</p>
-            <p>Priority selection began &mdash; fetching labels for all 6 candidates &mdash; when Odin interrupted with a different question.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>The orchestrator ran its pre-flight patrol: worktree health check (clean), orphan PR scan, and project board query. Found <span className="hl">3 open PRs</span> (#220, #222, #223) all awaiting Loki QA — active chains, not stale. Identified <span className="hl">6 items</span> in "Up Next" with 3 bugs, 2 enhancements, and 1 unlabeled feature.</p>
+            <p>Priority selection began — fetching labels for all 6 candidates — when Odin interrupted with a different question.</p>
           </div>
 
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-label">Open PRs</div>
-              <div class="stat-val stat-gold">3</div>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-label">Open PRs</div>
+              <div className="stat-val stat-gold">3</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-label">Awaiting Loki</div>
-              <div class="stat-val stat-fire">3</div>
+            <div className="stat-card">
+              <div className="stat-label">Awaiting Loki</div>
+              <div className="stat-val stat-fire">3</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-label">Up Next</div>
-              <div class="stat-val stat-teal">6</div>
+            <div className="stat-card">
+              <div className="stat-label">Up Next</div>
+              <div className="stat-val stat-teal">6</div>
             </div>
           </div>
         </div>
@@ -66,32 +66,32 @@ slug: "lean-wolf"
     
     
     
-    <section class="entry" id="act-2">
-      <div class="entry-rune" title="ᛇ Eihwaz &mdash; complexity, deep systems">ᛇ</div>
-      <div class="entry-body">
-        <p class="act-label">Act II &middot; The Weight Reckoning</p>
-        <h2 class="entry-title">Context Audit &mdash; What Fattens the Wolf?</h2>
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="ᛇ Eihwaz — complexity, deep systems">ᛇ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · The Weight Reckoning</p>
+        <h2 className="entry-title">Context Audit — What Fattens the Wolf?</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">Odin</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
           </div>
-          <p class="msg-text">Which files get loaded in every session that are taking up the most context?</p>
+          <p className="msg-text">Which files get loaded in every session that are taking up the most context?</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Measured every file that loads into Claude Code's context window. The verdict was damning: <span class="mono">fire-next-up/SKILL.md</span> alone consumed <span class="hl">55 KB</span> (1,352 lines) &mdash; 82% of all loaded skill context. It contained 5 full agent prompt templates, each repeating the same 18-line sandbox preamble verbatim.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Measured every file that loads into Claude Code's context window. The verdict was damning: <span className="mono">fire-next-up/SKILL.md</span> alone consumed <span className="hl">55 KB</span> (1,352 lines) — 82% of all loaded skill context. It contained 5 full agent prompt templates, each repeating the same 18-line sandbox preamble verbatim.</p>
             <p>Ranked all 13 skill files by size. The top offender was clear.</p>
           </div>
 
-          <div class="code-block">
-            <pre><span class="cc">// Context budget per invocation of /fire-next-up</span>
-<span class="ca">SKILL.md        55 KB   1,352 lines   ← the wolf is fat</span>
-<span class="ca">MEMORY.md        9 KB     121 lines</span>
-<span class="ca">CLAUDE.md        3 KB      71 lines</span>
-<span class="cc">// ─────────────────────────────────────────────</span>
-<span class="ca">Total           67 KB   loaded before a single tool call</span></pre>
+          <div className="code-block">
+            <pre><span className="cc">// Context budget per invocation of /fire-next-up</span>
+<span className="ca">SKILL.md        55 KB   1,352 lines   ← the wolf is fat</span>
+<span className="ca">MEMORY.md        9 KB     121 lines</span>
+<span className="ca">CLAUDE.md        3 KB      71 lines</span>
+<span className="cc">// ─────────────────────────────────────────────</span>
+<span className="ca">Total           67 KB   loaded before a single tool call</span></pre>
           </div>
         </div>
       </div>
@@ -100,37 +100,37 @@ slug: "lean-wolf"
     
     
     
-    <section class="entry" id="act-3">
-      <div class="entry-rune" title="ᛈ Perthro &mdash; parsing, analysis">ᛈ</div>
-      <div class="entry-body">
-        <p class="act-label">Act III &middot; Eight Bones to Break</p>
-        <h2 class="entry-title">Extraction Analysis &mdash; Identifying the Candidates</h2>
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="ᛈ Perthro — parsing, analysis">ᛈ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Eight Bones to Break</p>
+        <h2 className="entry-title">Extraction Analysis — Identifying the Candidates</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">Odin</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
           </div>
-          <p class="msg-text">Refactor /fire-next-up...extract common patterns to templates that only get read on demand. how many candidates are there?</p>
+          <p className="msg-text">Refactor /fire-next-up...extract common patterns to templates that only get read on demand. how many candidates are there?</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Dissected the monolithic SKILL.md and identified <span class="hl">8 extraction candidates</span> &mdash; blocks that were either repeated verbatim across templates or only needed conditionally (specific flag, specific agent type).</p>
-            <p>The sandbox preamble alone was duplicated 5 times. The resume flow (215 lines) was only needed for <span class="mono">--resume</span>. Agent prompts were only needed when spawning that specific agent.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Dissected the monolithic SKILL.md and identified <span className="hl">8 extraction candidates</span> — blocks that were either repeated verbatim across templates or only needed conditionally (specific flag, specific agent type).</p>
+            <p>The sandbox preamble alone was duplicated 5 times. The resume flow (215 lines) was only needed for <span className="mono">--resume</span>. Agent prompts were only needed when spawning that specific agent.</p>
           </div>
 
-          <div class="code-block">
-            <pre><span class="cc">// Extraction candidates</span>
-<span class="ca">#1  Sandbox Preamble       5x verbatim     ~4.5 KB  (dedup)</span>
-<span class="ca">#2  Luna template          ux chains only   ~3.5 KB</span>
-<span class="ca">#3  FiremanDecko template  bug/enh/ux       ~4.4 KB</span>
-<span class="ca">#4  Heimdall template      security only    ~3.7 KB</span>
-<span class="ca">#5  Loki template          every chain      ~5.6 KB</span>
-<span class="ca">#6  Loki Bounce-Back       resume + CI fail ~4.5 KB</span>
-<span class="ca">#7  Report templates       step 8 only      ~3.0 KB</span>
-<span class="ca">#8  Resume Flow            --resume only   ~10.5 KB</span>
-<span class="cc">// ──────────────────────────────────────────────────</span>
-<span class="ca">    Total extractable:                      ~38 KB</span></pre>
+          <div className="code-block">
+            <pre><span className="cc">// Extraction candidates</span>
+<span className="ca">#1  Sandbox Preamble       5x verbatim     ~4.5 KB  (dedup)</span>
+<span className="ca">#2  Luna template          ux chains only   ~3.5 KB</span>
+<span className="ca">#3  FiremanDecko template  bug/enh/ux       ~4.4 KB</span>
+<span className="ca">#4  Heimdall template      security only    ~3.7 KB</span>
+<span className="ca">#5  Loki template          every chain      ~5.6 KB</span>
+<span className="ca">#6  Loki Bounce-Back       resume + CI fail ~4.5 KB</span>
+<span className="ca">#7  Report templates       step 8 only      ~3.0 KB</span>
+<span className="ca">#8  Resume Flow            --resume only   ~10.5 KB</span>
+<span className="cc">// ──────────────────────────────────────────────────</span>
+<span className="ca">    Total extractable:                      ~38 KB</span></pre>
           </div>
         </div>
       </div>
@@ -139,57 +139,57 @@ slug: "lean-wolf"
     
     
     
-    <section class="entry" id="act-4">
-      <div class="entry-rune" title="ᚢ Uruz &mdash; strength, refactoring">ᚢ</div>
-      <div class="entry-body">
-        <p class="act-label">Act IV &middot; The Shedding</p>
-        <h2 class="entry-title">Template Extraction &mdash; 55 KB to 10.7 KB</h2>
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="ᚢ Uruz — strength, refactoring">ᚢ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · The Shedding</p>
+        <h2 className="entry-title">Template Extraction — 55 KB to 10.7 KB</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">Odin</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
           </div>
-          <p class="msg-text">fuckin do it</p>
+          <p className="msg-text">fuckin do it</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Created 8 template files under <span class="mono">templates/</span> in parallel, then rewrote <span class="mono">SKILL.md</span> to reference them on demand. The sandbox preamble was extracted once and composed into prompts via <span class="mono">{{SANDBOX_PREAMBLE}}</span> placeholder. Each agent template is now read only when the orchestrator spawns that specific agent.</p>
-            <p>The always-loaded SKILL.md dropped from <span class="hl">1,352 lines (55 KB)</span> to <span class="hl">316 lines (10.7 KB)</span> &mdash; a 77% reduction in context consumed per invocation.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Created 8 template files under <span className="mono">templates/</span> in parallel, then rewrote <span className="mono">SKILL.md</span> to reference them on demand. The sandbox preamble was extracted once and composed into prompts via <span className="mono">{{SANDBOX_PREAMBLE}}</span> placeholder. Each agent template is now read only when the orchestrator spawns that specific agent.</p>
+            <p>The always-loaded SKILL.md dropped from <span className="hl">1,352 lines (55 KB)</span> to <span className="hl">316 lines (10.7 KB)</span> — a 77% reduction in context consumed per invocation.</p>
           </div>
 
-          <ul class="changes">
-            <li><span class="old">1,352 lines / 55 KB always loaded</span> <span class="new">316 lines / 10.7 KB always loaded</span></li>
-            <li><span class="old">5x duplicated sandbox preamble</span> <span class="new">1x shared in sandbox-preamble.md</span></li>
-            <li><span class="old">All prompts inline</span> <span class="new">8 on-demand template files</span></li>
-            <li><span class="old">Resume flow always loaded</span> <span class="new">Only read on --resume</span></li>
+          <ul className="changes">
+            <li><span className="old">1,352 lines / 55 KB always loaded</span> <span className="new">316 lines / 10.7 KB always loaded</span></li>
+            <li><span className="old">5x duplicated sandbox preamble</span> <span className="new">1x shared in sandbox-preamble.md</span></li>
+            <li><span className="old">All prompts inline</span> <span className="new">8 on-demand template files</span></li>
+            <li><span className="old">Resume flow always loaded</span> <span className="new">Only read on --resume</span></li>
           </ul>
 
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-label">Before</div>
-              <div class="stat-val stat-fire">55 KB</div>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-label">Before</div>
+              <div className="stat-val stat-fire">55 KB</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-label">After</div>
-              <div class="stat-val stat-teal">10.7 KB</div>
+            <div className="stat-card">
+              <div className="stat-label">After</div>
+              <div className="stat-val stat-teal">10.7 KB</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-label">Reduction</div>
-              <div class="stat-val stat-gold">77%</div>
+            <div className="stat-card">
+              <div className="stat-label">Reduction</div>
+              <div className="stat-val stat-gold">77%</div>
             </div>
           </div>
 
-          <div class="file-chips">
-            <span class="chip chip-mod">&#9998; .claude/skills/fire-next-up/SKILL.md</span>
-            <span class="chip chip-new">&#10022; templates/sandbox-preamble.md</span>
-            <span class="chip chip-new">&#10022; templates/luna.md</span>
-            <span class="chip chip-new">&#10022; templates/firemandecko.md</span>
-            <span class="chip chip-new">&#10022; templates/heimdall.md</span>
-            <span class="chip chip-new">&#10022; templates/loki.md</span>
-            <span class="chip chip-new">&#10022; templates/loki-bounce-back.md</span>
-            <span class="chip chip-new">&#10022; templates/reports.md</span>
-            <span class="chip chip-new">&#10022; templates/resume-flow.md</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">✎ .claude/skills/fire-next-up/SKILL.md</span>
+            <span className="chip chip-new">✦ templates/sandbox-preamble.md</span>
+            <span className="chip chip-new">✦ templates/luna.md</span>
+            <span className="chip chip-new">✦ templates/firemandecko.md</span>
+            <span className="chip chip-new">✦ templates/heimdall.md</span>
+            <span className="chip chip-new">✦ templates/loki.md</span>
+            <span className="chip chip-new">✦ templates/loki-bounce-back.md</span>
+            <span className="chip chip-new">✦ templates/reports.md</span>
+            <span className="chip chip-new">✦ templates/resume-flow.md</span>
           </div>
         </div>
       </div>
@@ -198,36 +198,36 @@ slug: "lean-wolf"
     
     
     
-    <section class="entry" id="act-5">
-      <div class="entry-rune" title="ᛞ Dagaz &mdash; delivery, completion">ᛞ</div>
-      <div class="entry-body">
-        <p class="act-label">Act V &middot; The Branch &amp; Seal</p>
-        <h2 class="entry-title">Commit, Push &amp; PR #225</h2>
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="ᛞ Dagaz — delivery, completion">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · The Branch & Seal</p>
+        <h2 className="entry-title">Commit, Push & PR #225</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">Odin</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
           </div>
-          <p class="msg-text">yup</p>
+          <p className="msg-text">yup</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Branched from main as <span class="mono">chore/extract-fire-next-up-templates</span>, committed 9 files (721 insertions, 1,163 deletions), pushed, and opened <span class="hl">PR #225</span>. The diff tells the whole story: the monolith shattered into composable shards.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Branched from main as <span className="mono">chore/extract-fire-next-up-templates</span>, committed 9 files (721 insertions, 1,163 deletions), pushed, and opened <span className="hl">PR #225</span>. The diff tells the whole story: the monolith shattered into composable shards.</p>
           </div>
 
-          <div class="code-block">
-            <pre><span class="cc">$ git diff --stat</span>
-<span class="cr"> .claude/skills/fire-next-up/SKILL.md          | 1290 ++++----</span>
-<span class="ca"> templates/sandbox-preamble.md                 |   30 +</span>
-<span class="ca"> templates/luna.md                              |   53 +</span>
-<span class="ca"> templates/firemandecko.md                      |   71 +</span>
-<span class="ca"> templates/heimdall.md                          |   58 +</span>
-<span class="ca"> templates/loki.md                              |   98 +</span>
-<span class="ca"> templates/loki-bounce-back.md                  |   80 +</span>
-<span class="ca"> templates/reports.md                           |   70 +</span>
-<span class="ca"> templates/resume-flow.md                       |  134 +</span>
-<span class="cc"> 9 files changed, 721 insertions(+), 1163 deletions(-)</span></pre>
+          <div className="code-block">
+            <pre><span className="cc">$ git diff --stat</span>
+<span className="cr"> .claude/skills/fire-next-up/SKILL.md          | 1290 ++++----</span>
+<span className="ca"> templates/sandbox-preamble.md                 |   30 +</span>
+<span className="ca"> templates/luna.md                              |   53 +</span>
+<span className="ca"> templates/firemandecko.md                      |   71 +</span>
+<span className="ca"> templates/heimdall.md                          |   58 +</span>
+<span className="ca"> templates/loki.md                              |   98 +</span>
+<span className="ca"> templates/loki-bounce-back.md                  |   80 +</span>
+<span className="ca"> templates/reports.md                           |   70 +</span>
+<span className="ca"> templates/resume-flow.md                       |  134 +</span>
+<span className="cc"> 9 files changed, 721 insertions(+), 1163 deletions(-)</span></pre>
           </div>
         </div>
       </div>
@@ -238,43 +238,43 @@ slug: "lean-wolf"
   
   <div style="margin-top:64px; padding:24px; background:var(--forge); border:1px solid var(--rune-border);">
     <div style="font-family:'Cinzel',serif; font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.18em; color:var(--muted); margin-bottom:16px;">Session Ledger</div>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Files created</div>
-        <div class="stat-val stat-teal">8</div>
+    <div className="stats-grid">
+      <div className="stat-card">
+        <div className="stat-label">Files created</div>
+        <div className="stat-val stat-teal">8</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Files modified</div>
-        <div class="stat-val stat-gold">1</div>
+      <div className="stat-card">
+        <div className="stat-label">Files modified</div>
+        <div className="stat-val stat-gold">1</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Lines removed</div>
-        <div class="stat-val stat-fire">1,163</div>
+      <div className="stat-card">
+        <div className="stat-label">Lines removed</div>
+        <div className="stat-val stat-fire">1,163</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Context saved</div>
-        <div class="stat-val stat-teal">77%</div>
+      <div className="stat-card">
+        <div className="stat-label">Context saved</div>
+        <div className="stat-val stat-teal">77%</div>
       </div>
     </div>
   </div>
 
   
-  <footer class="session-footer">
-    <div class="footer-cipher" aria-hidden="true">ᛏ ᚢ ᛈ ᚠ ᛁ ᚱ</div>
-    <div class="footer-text">
-      The Lean Wolf &middot; Fenrir Ledger Session Chronicle
+  <footer className="session-footer">
+    <div className="footer-cipher" aria-hidden="true">ᛏ ᚢ ᛈ ᚠ ᛁ ᚱ</div>
+    <div className="footer-text">
+      The Lean Wolf · Fenrir Ledger Session Chronicle
     </div>
-    <p class="footer-sub">The wolf shed its winter coat. Now it runs faster.</p>
+    <p className="footer-sub">The wolf shed its winter coat. Now it runs faster.</p>
   </footer>
 
 </div>
 
-<footer class="session-footer">
-    <div class="footer-cipher" aria-hidden="true">ᛏ ᚢ ᛈ ᚠ ᛁ ᚱ</div>
-    <div class="footer-text">
-      The Lean Wolf &middot; Fenrir Ledger Session Chronicle
+<footer className="session-footer">
+    <div className="footer-cipher" aria-hidden="true">ᛏ ᚢ ᛈ ᚠ ᛁ ᚱ</div>
+    <div className="footer-text">
+      The Lean Wolf · Fenrir Ledger Session Chronicle
     </div>
-    <p class="footer-sub">The wolf shed its winter coat. Now it runs faster.</p>
+    <p className="footer-sub">The wolf shed its winter coat. Now it runs faster.</p>
   </footer>
 
 </div>

@@ -14,37 +14,37 @@ slug: "brain-slug"
   <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
   <div className="session-meta">
 
-      <span>DATE <span class="val">2026-03-06</span></span>
-      <span>ACTS <span class="val">III</span></span>
-      <span>FILES CHANGED <span class="val">4</span></span>
+      <span>DATE <span className="val">2026-03-06</span></span>
+      <span>ACTS <span className="val">III</span></span>
+      <span>FILES CHANGED <span className="val">4</span></span>
       </div>
 </header>
 
-<div class="timeline">
+<div className="timeline">
 
     
     
     
-    <div class="entry" id="act-1">
-      <div class="entry-rune" title="ᛏ Tiwaz — tooling, removal">ᛏ</div>
-      <div class="entry-body">
-        <div class="act-label">Act I &middot; The Skill Severed</div>
-        <h2 class="entry-title">Delete the /depot-logs Skill</h2>
+    <div className="entry" id="act-1">
+      <div className="entry-rune" title="ᛏ Tiwaz — tooling, removal">ᛏ</div>
+      <div className="entry-body">
+        <div className="act-label">Act I · The Skill Severed</div>
+        <h2 className="entry-title">Delete the /depot-logs Skill</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">FiremanDecko</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
           </div>
-          <div class="msg-text">delete skill /depot-logs</div>
+          <div className="msg-text">delete skill /depot-logs</div>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Located the skill at <span class="mono">.claude/skills/depot-logs/SKILL.md</span> and removed the entire directory with <span class="mono">rm -rf</span>. One clean cut &mdash; the skill is gone.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Located the skill at <span className="mono">.claude/skills/depot-logs/SKILL.md</span> and removed the entire directory with <span className="mono">rm -rf</span>. One clean cut — the skill is gone.</p>
           </div>
 
-          <div class="file-chips">
-            <span class="chip chip-del">&times; .claude/skills/depot-logs/</span>
+          <div className="file-chips">
+            <span className="chip chip-del">× .claude/skills/depot-logs/</span>
           </div>
         </div>
       </div>
@@ -53,34 +53,34 @@ slug: "brain-slug"
     
     
     
-    <div class="entry" id="act-2">
-      <div class="entry-rune" title="ᛁ Isa — integration, unwiring">ᛁ</div>
-      <div class="entry-body">
-        <div class="act-label">Act II &middot; The Chain Unlinked</div>
-        <h2 class="entry-title">Purge /depot-logs from fire-next-up</h2>
+    <div className="entry" id="act-2">
+      <div className="entry-rune" title="ᛁ Isa — integration, unwiring">ᛁ</div>
+      <div className="entry-body">
+        <div className="act-label">Act II · The Chain Unlinked</div>
+        <h2 className="entry-title">Purge /depot-logs from fire-next-up</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">FiremanDecko</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
           </div>
-          <div class="msg-text">unhook it from /fire-next-up completely</div>
+          <div className="msg-text">unhook it from /fire-next-up completely</div>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Grepped the fire-next-up skill and found <span class="hl">4 references</span> to <span class="mono">/depot-logs</span> scattered across the SKILL.md &mdash; in the Mermaid sequence diagram, the &ldquo;After Spawning&rdquo; section, the spawn instructions, and the chain completion notes. All four surgically removed.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Grepped the fire-next-up skill and found <span className="hl">4 references</span> to <span className="mono">/depot-logs</span> scattered across the SKILL.md — in the Mermaid sequence diagram, the “After Spawning” section, the spawn instructions, and the chain completion notes. All four surgically removed.</p>
           </div>
 
-          <ul class="changes">
-            <li><span class="old">/depot-logs or /fire-next-up --resume</span> <span class="new">/fire-next-up --resume</span></li>
-            <li><span class="old">/depot-logs &lt;session-id&gt; &mdash; view transcript</span> <span class="new">removed</span></li>
-            <li><span class="old">/depot-logs &lt;session-id&gt; --critique</span> <span class="new">removed</span></li>
-            <li><span class="old">check with /depot-logs and continue</span> <span class="new">continue the chain with --resume</span></li>
-            <li><span class="old">inspect with /depot-logs</span> <span class="new">inspect via the Depot dashboard</span></li>
+          <ul className="changes">
+            <li><span className="old">/depot-logs or /fire-next-up --resume</span> <span className="new">/fire-next-up --resume</span></li>
+            <li><span className="old">/depot-logs &lt;session-id&gt; — view transcript</span> <span className="new">removed</span></li>
+            <li><span className="old">/depot-logs &lt;session-id&gt; --critique</span> <span className="new">removed</span></li>
+            <li><span className="old">check with /depot-logs and continue</span> <span className="new">continue the chain with --resume</span></li>
+            <li><span className="old">inspect with /depot-logs</span> <span className="new">inspect via the Depot dashboard</span></li>
           </ul>
 
-          <div class="file-chips">
-            <span class="chip chip-mod">&diamond; .claude/skills/fire-next-up/SKILL.md</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">◇ .claude/skills/fire-next-up/SKILL.md</span>
           </div>
         </div>
       </div>
@@ -89,28 +89,28 @@ slug: "brain-slug"
     
     
     
-    <div class="entry" id="act-3">
-      <div class="entry-rune" title="ᚦ Thurisaz — clearing, problem solving">ᚦ</div>
-      <div class="entry-body">
-        <div class="act-label">Act III &middot; The Last Tendrils</div>
-        <h2 class="entry-title">Purge the Backing Script &amp; Memory</h2>
+    <div className="entry" id="act-3">
+      <div className="entry-rune" title="ᚦ Thurisaz — clearing, problem solving">ᚦ</div>
+      <div className="entry-body">
+        <div className="act-label">Act III · The Last Tendrils</div>
+        <h2 className="entry-title">Purge the Backing Script & Memory</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">FiremanDecko</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
           </div>
-          <div class="msg-text">ya delete it all</div>
+          <div className="msg-text">ya delete it all</div>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Removed <span class="mono">depot-session-log.sh</span> &mdash; the backing script that powered the now-dead skill. Then cleaned the <span class="mono">/depot-logs</span> reference from MEMORY.md so future sessions won&rsquo;t hallucinate a skill that no longer exists.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Removed <span className="mono">depot-session-log.sh</span> — the backing script that powered the now-dead skill. Then cleaned the <span className="mono">/depot-logs</span> reference from MEMORY.md so future sessions won’t hallucinate a skill that no longer exists.</p>
             <p>Odin wished he could delete memories that easily. The wolf sympathises.</p>
           </div>
 
-          <div class="file-chips">
-            <span class="chip chip-del">&times; .claude/scripts/depot-session-log.sh</span>
-            <span class="chip chip-mem">&diams; memory/MEMORY.md</span>
+          <div className="file-chips">
+            <span className="chip chip-del">× .claude/scripts/depot-session-log.sh</span>
+            <span className="chip chip-mem">♦ memory/MEMORY.md</span>
           </div>
         </div>
       </div>
@@ -119,18 +119,18 @@ slug: "brain-slug"
   </div>
 
   
-  <footer class="session-footer">
-    <p class="footer-cipher" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</p>
-    <p class="footer-text">The Brain Slug Extraction &middot; Fenrir Ledger Session Chronicle</p>
-    <p class="footer-sub">The wolf remembers everything.</p>
+  <footer className="session-footer">
+    <p className="footer-cipher" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</p>
+    <p className="footer-text">The Brain Slug Extraction · Fenrir Ledger Session Chronicle</p>
+    <p className="footer-sub">The wolf remembers everything.</p>
   </footer>
 
 </div>
 
-<footer class="session-footer">
-    <p class="footer-cipher" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</p>
-    <p class="footer-text">The Brain Slug Extraction &middot; Fenrir Ledger Session Chronicle</p>
-    <p class="footer-sub">The wolf remembers everything.</p>
+<footer className="session-footer">
+    <p className="footer-cipher" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</p>
+    <p className="footer-text">The Brain Slug Extraction · Fenrir Ledger Session Chronicle</p>
+    <p className="footer-sub">The wolf remembers everything.</p>
   </footer>
 
 </div>

@@ -10,53 +10,53 @@ slug: "wireframes-modals"
 
 <header className="session-header">
   <span className="header-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</span>
-  <h1 className="session-title">Wireframes &amp; Modals — The Forging Record</h1>
+  <h1 className="session-title">Wireframes & Modals — The Forging Record</h1>
   <p className="session-subtitle">Wireframes & Modals — The Forging Record</p>
   <div className="session-meta">
 
-      <div>Date <span class="val">2026-02-25</span>  </div>
+      <div>Date <span className="val">2026-02-25</span>  </div>
 </header>
 
-<div class="timeline">
+<div className="timeline">
 
     
     
     
-    <div class="entry" id="act1">
-      <div class="entry-rune" title="ᚲ Kenaz — fire, forge, craft">ᚲ</div>
-      <div class="entry-body">
-        <div class="act-label">Act I · The Form Forging</div>
-        <h2 class="entry-title">CardForm Layout — Fieldsets &amp; Side-by-Side Sections</h2>
+    <div className="entry" id="act1">
+      <div className="entry-rune" title="ᚲ Kenaz — fire, forge, craft">ᚲ</div>
+      <div className="entry-body">
+        <div className="act-label">Act I · The Form Forging</div>
+        <h2 className="entry-title">CardForm Layout — Fieldsets & Side-by-Side Sections</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">🔥 FiremanDecko</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">🔥 FiremanDecko</span>
           </div>
-          <div class="msg-text">Update the Add Card page in the app to match the add card wireframe EXACTLY.
+          <div className="msg-text">Update the Add Card page in the app to match the add card wireframe EXACTLY.
 Currently the sections are not contained within their own box.
 Annual fee and Signup Bonus should be side by side.</div>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Restructured <span class="mono">CardForm.tsx</span> — every <span class="hl">&lt;section&gt; + &lt;h2&gt;</span> replaced with <span class="hl">&lt;fieldset&gt; + &lt;legend&gt;</span>, giving each section a visible bordered box that matches the wireframe's <span class="mono">fieldset { border: 1px solid }</span> pattern.</p>
-            <p>Annual Fee and Sign-up Bonus wrapped in a <span class="mono">grid grid-cols-1 md:grid-cols-2 gap-4</span> container. Card Details and Notes remain full width.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Restructured <span className="mono">CardForm.tsx</span> — every <span className="hl">&lt;section&gt; + &lt;h2&gt;</span> replaced with <span className="hl">&lt;fieldset&gt; + &lt;legend&gt;</span>, giving each section a visible bordered box that matches the wireframe's <span className="mono">fieldset { border: 1px solid }</span> pattern.</p>
+            <p>Annual Fee and Sign-up Bonus wrapped in a <span className="mono">grid grid-cols-1 md:grid-cols-2 gap-4</span> container. Card Details and Notes remain full width.</p>
           </div>
 
-          <ul class="changes">
-            <li><span class="old">section + h2 (×4)</span> <span class="new">fieldset + legend (×4)</span></li>
-            <li><span class="old">vertical stack only</span> <span class="new">2-col grid: Annual Fee | Sign-up Bonus</span></li>
-            <li><span class="old">"Card Name *"</span> <span class="new">"Card name *"</span></li>
-            <li><span class="old">"Open Date *"</span> <span class="new">"Date opened *"</span></li>
-            <li><span class="old">"Credit Limit ($)"</span> <span class="new">"Credit limit"</span></li>
-            <li><span class="old">"Annual Fee Amount ($)"</span> <span class="new">"Annual fee"</span></li>
-            <li><span class="old">"Next Fee Due Date"</span> <span class="new">"Annual fee date"</span></li>
-            <li><span class="old">"Spend Deadline"</span> <span class="new">"Bonus deadline"</span></li>
-            <li><span class="old">"Card Status"</span> <span class="new">"Card status"</span></li>
+          <ul className="changes">
+            <li><span className="old">section + h2 (×4)</span> <span className="new">fieldset + legend (×4)</span></li>
+            <li><span className="old">vertical stack only</span> <span className="new">2-col grid: Annual Fee | Sign-up Bonus</span></li>
+            <li><span className="old">"Card Name *"</span> <span className="new">"Card name *"</span></li>
+            <li><span className="old">"Open Date *"</span> <span className="new">"Date opened *"</span></li>
+            <li><span className="old">"Credit Limit ($)"</span> <span className="new">"Credit limit"</span></li>
+            <li><span className="old">"Annual Fee Amount ($)"</span> <span className="new">"Annual fee"</span></li>
+            <li><span className="old">"Next Fee Due Date"</span> <span className="new">"Annual fee date"</span></li>
+            <li><span className="old">"Spend Deadline"</span> <span className="new">"Bonus deadline"</span></li>
+            <li><span className="old">"Card Status"</span> <span className="new">"Card status"</span></li>
           </ul>
 
-          <div class="file-chips">
-            <span class="chip chip-mod">✎ development/frontend/src/components/cards/CardForm.tsx</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">✎ development/frontend/src/components/cards/CardForm.tsx</span>
           </div>
         </div>
       </div>
@@ -65,48 +65,48 @@ Annual fee and Signup Bonus should be side by side.</div>
     
     
     
-    <div class="entry" id="act2">
-      <div class="entry-rune" title="ᚠ Fehu — wealth, credit limits">ᚠ</div>
-      <div class="entry-body">
-        <div class="act-label">Act II · The Limit Reckoning</div>
-        <h2 class="entry-title">Credit Limit — Tiered Dropdown with "Not Set" Entry</h2>
+    <div className="entry" id="act2">
+      <div className="entry-rune" title="ᚠ Fehu — wealth, credit limits">ᚠ</div>
+      <div className="entry-body">
+        <div className="act-label">Act II · The Limit Reckoning</div>
+        <h2 className="entry-title">Credit Limit — Tiered Dropdown with "Not Set" Entry</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">🔥 FiremanDecko</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">🔥 FiremanDecko</span>
           </div>
-          <div class="msg-text">Make Credit Limit selectable in these increments:
+          <div className="msg-text">Make Credit Limit selectable in these increments:
 $1,000 up to $10,000 in $1,000 increments
 $10,000 up to $100,000 in $5,000 increments
 
 [NOT SET] as first entry. [NOT SET] should represent 0.</div>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Replaced <span class="mono">Input type="number"</span> with a <span class="hl">Select</span>. Options generated programmatically — no duplicate at the $10,000 tier boundary. 29 total options including the sentinel entry.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Replaced <span className="mono">Input type="number"</span> with a <span className="hl">Select</span>. Options generated programmatically — no duplicate at the $10,000 tier boundary. 29 total options including the sentinel entry.</p>
           </div>
 
-          <div class="code-block">
-            <pre><span class="cc">// Sentinel: Not set → stores $0 (0 cents)</span>
-<span class="ca">&lt;SelectItem value="0"&gt;Not set&lt;/SelectItem&gt;</span>
+          <div className="code-block">
+            <pre><span className="cc">// Sentinel: Not set → stores $0 (0 cents)</span>
+<span className="ca">&lt;SelectItem value="0"&gt;Not set&lt;/SelectItem&gt;</span>
 
-<span class="cc">// Tier 1: $1,000 → $10,000 (10 options)</span>
-<span class="ca">Array.from({ length: 10 }, (_, i) => (i + 1) * 1000)</span>
+<span className="cc">// Tier 1: $1,000 → $10,000 (10 options)</span>
+<span className="ca">Array.from({ length: 10 }, (_, i) => (i + 1) * 1000)</span>
 
-<span class="cc">// Tier 2: $15,000 → $100,000 (18 options)</span>
-<span class="ca">Array.from({ length: 18 }, (_, i) => 15000 + i * 5000)</span>
+<span className="cc">// Tier 2: $15,000 → $100,000 (18 options)</span>
+<span className="ca">Array.from({ length: 18 }, (_, i) => 15000 + i * 5000)</span>
 
-<span class="cc">// Display: ${v.toLocaleString()}  →  "$15,000", "$100,000"</span></pre>
+<span className="cc">// Display: ${v.toLocaleString()}  →  "$15,000", "$100,000"</span></pre>
           </div>
 
-          <ul class="changes">
-            <li><span class="old">Input type="number", free text</span> <span class="new">Select, 29 options</span></li>
-            <li><span class="new">value="0" for "Not set" — dollarsToCents("0") → 0 cents ✓</span></li>
+          <ul className="changes">
+            <li><span className="old">Input type="number", free text</span> <span className="new">Select, 29 options</span></li>
+            <li><span className="new">value="0" for "Not set" — dollarsToCents("0") → 0 cents ✓</span></li>
           </ul>
 
-          <div class="file-chips">
-            <span class="chip chip-mod">✎ development/frontend/src/components/cards/CardForm.tsx</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">✎ development/frontend/src/components/cards/CardForm.tsx</span>
           </div>
         </div>
       </div>
@@ -115,41 +115,41 @@ $10,000 up to $100,000 in $5,000 increments
     
     
     
-    <div class="entry" id="act3">
-      <div class="entry-rune" title="ᚺ Hagalaz — hail, disruption, bug">ᚺ</div>
-      <div class="entry-body">
-        <div class="act-label">Act III · The UUID Fracture</div>
-        <h2 class="entry-title">crypto.randomUUID — Non-Secure Context Fallback</h2>
+    <div className="entry" id="act3">
+      <div className="entry-rune" title="ᚺ Hagalaz — hail, disruption, bug">ᚺ</div>
+      <div className="entry-body">
+        <div className="act-label">Act III · The UUID Fracture</div>
+        <h2 className="entry-title">crypto.randomUUID — Non-Secure Context Fallback</h2>
 
-        <div class="bug-box">
-          <div class="bug-label">⚡ Runtime Error — Reported by Loki 🐍</div>
-          <div class="bug-text">CardForm.tsx:206 Failed to save card: TypeError: crypto.randomUUID is not a function
+        <div className="bug-box">
+          <div className="bug-label">⚡ Runtime Error — Reported by Loki 🐍</div>
+          <div className="bug-text">CardForm.tsx:206 Failed to save card: TypeError: crypto.randomUUID is not a function
     at onSubmit (CardForm.tsx:174:41)</div>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p><span class="mono">crypto.randomUUID()</span> is restricted to secure contexts (HTTPS / localhost). Dev servers accessed over a LAN IP — common on local network builds — silently lack it.</p>
-            <p>Added <span class="hl">generateId()</span> to <span class="mono">card-utils.ts</span>: uses <span class="mono">randomUUID</span> when available, falls back to <span class="mono">getRandomValues</span> which is unrestricted and produces a valid UUID v4.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p><span className="mono">crypto.randomUUID()</span> is restricted to secure contexts (HTTPS / localhost). Dev servers accessed over a LAN IP — common on local network builds — silently lack it.</p>
+            <p>Added <span className="hl">generateId()</span> to <span className="mono">card-utils.ts</span>: uses <span className="mono">randomUUID</span> when available, falls back to <span className="mono">getRandomValues</span> which is unrestricted and produces a valid UUID v4.</p>
           </div>
 
-          <div class="code-block">
-            <pre><span class="ca">export function generateId(): string {</span>
-<span class="ca">  if (typeof crypto.randomUUID === "function") {</span>
-<span class="ca">    return crypto.randomUUID();           // secure context</span>
-<span class="ca">  }</span>
-<span class="cc">  // Fallback — works over HTTP / LAN IP</span>
-<span class="ca">  const bytes = crypto.getRandomValues(new Uint8Array(16));</span>
-<span class="ca">  bytes[6] = (bytes[6]! &amp; 0x0f) | 0x40;  // version 4</span>
-<span class="ca">  bytes[8] = (bytes[8]! &amp; 0x3f) | 0x80;  // variant bits</span>
-<span class="ca">  const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, "0"));</span>
-<span class="ca">  return `${hex.slice(0,4).join("")}-...-${hex.slice(10).join("")}`;</span>
-<span class="ca">}</span></pre>
+          <div className="code-block">
+            <pre><span className="ca">export function generateId(): string {</span>
+<span className="ca">  if (typeof crypto.randomUUID === "function") {</span>
+<span className="ca">    return crypto.randomUUID();           // secure context</span>
+<span className="ca">  }</span>
+<span className="cc">  // Fallback — works over HTTP / LAN IP</span>
+<span className="ca">  const bytes = crypto.getRandomValues(new Uint8Array(16));</span>
+<span className="ca">  bytes[6] = (bytes[6]! & 0x0f) | 0x40;  // version 4</span>
+<span className="ca">  bytes[8] = (bytes[8]! & 0x3f) | 0x80;  // variant bits</span>
+<span className="ca">  const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, "0"));</span>
+<span className="ca">  return `${hex.slice(0,4).join("")}-...-${hex.slice(10).join("")}`;</span>
+<span className="ca">}</span></pre>
           </div>
 
-          <div class="file-chips">
-            <span class="chip chip-new">✦ generateId() added to development/frontend/src/lib/card-utils.ts</span>
-            <span class="chip chip-mod">✎ development/frontend/src/components/cards/CardForm.tsx</span>
+          <div className="file-chips">
+            <span className="chip chip-new">✦ generateId() added to development/frontend/src/lib/card-utils.ts</span>
+            <span className="chip chip-mod">✎ development/frontend/src/components/cards/CardForm.tsx</span>
           </div>
         </div>
       </div>
@@ -158,62 +158,62 @@ $10,000 up to $100,000 in $5,000 increments
     
     
     
-    <div class="entry" id="act4">
-      <div class="entry-rune" title="ᛉ Algiz — protection, law, norm">ᛉ</div>
-      <div class="entry-body">
-        <div class="act-label">Act IV · The Scroll Pact</div>
-        <h2 class="entry-title">Validation — Scroll to First Error on Submit</h2>
+    <div className="entry" id="act4">
+      <div className="entry-rune" title="ᛉ Algiz — protection, law, norm">ᛉ</div>
+      <div className="entry-body">
+        <div className="act-label">Act IV · The Scroll Pact</div>
+        <h2 className="entry-title">Validation — Scroll to First Error on Submit</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">🔥 FiremanDecko</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">🔥 FiremanDecko</span>
           </div>
-          <div class="msg-text">Ensure that the page scrolls to any element that fails validation when the save button is clicked. Save this as a team standard pattern / team norm.</div>
+          <div className="msg-text">Ensure that the page scrolls to any element that fails validation when the save button is clicked. Save this as a team standard pattern / team norm.</div>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Added <span class="mono">scrollToFirstError</span> as the second argument to <span class="mono">handleSubmit</span>. Candidates are sorted by <span class="mono">compareDocumentPosition</span> — DOM order, not schema insertion order — so the scroll always targets the error that appears <em>first on screen</em>.</p>
-            <p>Set <span class="mono">shouldFocusError: false</span> in <span class="mono">useForm</span> to prevent react-hook-form's built-in focus from fighting the manual scroll.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Added <span className="mono">scrollToFirstError</span> as the second argument to <span className="mono">handleSubmit</span>. Candidates are sorted by <span className="mono">compareDocumentPosition</span> — DOM order, not schema insertion order — so the scroll always targets the error that appears <em>first on screen</em>.</p>
+            <p>Set <span className="mono">shouldFocusError: false</span> in <span className="mono">useForm</span> to prevent react-hook-form's built-in focus from fighting the manual scroll.</p>
           </div>
 
-          <div class="code-block">
-            <pre><span class="cc">// useForm — disable built-in focus</span>
-<span class="ca">shouldFocusError: false,</span>
+          <div className="code-block">
+            <pre><span className="cc">// useForm — disable built-in focus</span>
+<span className="ca">shouldFocusError: false,</span>
 
-<span class="cc">// Scroll handler — passed as handleSubmit second arg</span>
-<span class="ca">const scrollToFirstError = (errs: Record&lt;string, unknown&gt;) => {</span>
-<span class="ca">  const elements = Object.keys(errs)</span>
-<span class="ca">    .map(key => document.getElementById(key))</span>
-<span class="ca">    .filter((el): el is HTMLElement => el !== null)</span>
-<span class="ca">    .sort((a, b) =></span>
-<span class="ca">      a.compareDocumentPosition(b) &amp; Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1</span>
-<span class="ca">    );</span>
-<span class="ca">  if (elements.length > 0) {</span>
-<span class="ca">    elements[0]!.scrollIntoView({ behavior: "smooth", block: "center" });</span>
-<span class="ca">    elements[0]!.focus();</span>
-<span class="ca">  }</span>
-<span class="ca">};</span>
+<span className="cc">// Scroll handler — passed as handleSubmit second arg</span>
+<span className="ca">const scrollToFirstError = (errs: Record&lt;string, unknown&gt;) => {</span>
+<span className="ca">  const elements = Object.keys(errs)</span>
+<span className="ca">    .map(key => document.getElementById(key))</span>
+<span className="ca">    .filter((el): el is HTMLElement => el !== null)</span>
+<span className="ca">    .sort((a, b) =></span>
+<span className="ca">      a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1</span>
+<span className="ca">    );</span>
+<span className="ca">  if (elements.length > 0) {</span>
+<span className="ca">    elements[0]!.scrollIntoView({ behavior: "smooth", block: "center" });</span>
+<span className="ca">    elements[0]!.focus();</span>
+<span className="ca">  }</span>
+<span className="ca">};</span>
 
-<span class="cc">// Form tag</span>
-<span class="ca">&lt;form onSubmit={handleSubmit(onSubmit, scrollToFirstError)}&gt;</span></pre>
+<span className="cc">// Form tag</span>
+<span className="ca">&lt;form onSubmit={handleSubmit(onSubmit, scrollToFirstError)}&gt;</span></pre>
           </div>
 
-          <div class="norm-box">
-            <div class="norm-label">⚖ Team Norm — Codified &amp; Saved to memory/team-norms.md</div>
-            <div class="norm-body">Every form component in Fenrir Ledger must follow this pattern:</div>
-            <ul class="norm-steps">
-              <li><span class="step-num">1.</span> Give each field an <span class="mono">id</span> matching its react-hook-form field name</li>
-              <li><span class="step-num">2.</span> Set <span class="mono">shouldFocusError: false</span> in <span class="mono">useForm</span></li>
-              <li><span class="step-num">3.</span> Pass <span class="mono">scrollToFirstError</span> as the second arg to <span class="mono">handleSubmit</span></li>
-              <li><span class="step-num">4.</span> Sort by <span class="mono">compareDocumentPosition</span> — DOM order, not schema order</li>
+          <div className="norm-box">
+            <div className="norm-label">⚖ Team Norm — Codified & Saved to memory/team-norms.md</div>
+            <div className="norm-body">Every form component in Fenrir Ledger must follow this pattern:</div>
+            <ul className="norm-steps">
+              <li><span className="step-num">1.</span> Give each field an <span className="mono">id</span> matching its react-hook-form field name</li>
+              <li><span className="step-num">2.</span> Set <span className="mono">shouldFocusError: false</span> in <span className="mono">useForm</span></li>
+              <li><span className="step-num">3.</span> Pass <span className="mono">scrollToFirstError</span> as the second arg to <span className="mono">handleSubmit</span></li>
+              <li><span className="step-num">4.</span> Sort by <span className="mono">compareDocumentPosition</span> — DOM order, not schema order</li>
             </ul>
           </div>
 
-          <div class="file-chips">
-            <span class="chip chip-mod">✎ development/frontend/src/components/cards/CardForm.tsx</span>
-            <span class="chip chip-new">✦ memory/team-norms.md</span>
-            <span class="chip chip-mem">◈ memory/MEMORY.md updated</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">✎ development/frontend/src/components/cards/CardForm.tsx</span>
+            <span className="chip chip-new">✦ memory/team-norms.md</span>
+            <span className="chip chip-mem">◈ memory/MEMORY.md updated</span>
           </div>
         </div>
       </div>
@@ -222,17 +222,17 @@ $10,000 up to $100,000 in $5,000 increments
     
     
     
-    <div class="entry" id="act5">
-      <div class="entry-rune" title="ᛗ Mannaz — the self, the pack">ᛗ</div>
-      <div class="entry-body">
-        <div class="act-label">Act V · Luna's Vision</div>
-        <h2 class="entry-title">About Modal — Wolf Logo, The Pack &amp; Seven Impossible Things</h2>
+    <div className="entry" id="act5">
+      <div className="entry-rune" title="ᛗ Mannaz — the self, the pack">ᛗ</div>
+      <div className="entry-body">
+        <div className="act-label">Act V · Luna's Vision</div>
+        <h2 className="entry-title">About Modal — Wolf Logo, The Pack & Seven Impossible Things</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-luna">🌙 Luna</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-luna">🌙 Luna</span>
           </div>
-          <div class="msg-text">Create a wireframe for an About modal. A 2 column dialog.
+          <div className="msg-text">Create a wireframe for an About modal. A 2 column dialog.
 
 LEFT: Wolf logo from the static marketing site on the left side.
 
@@ -242,85 +242,85 @@ Bullet list of 7 Mythical ingredients used to construct the app.
 One of the ingredients is "Beard of a Woman"</div>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Created <span class="mono">design/wireframes/about-modal.html</span>. Two-column dialog: <span class="hl">200px fixed left column</span> (wolf logo from <span class="mono">/static/icon.png</span> + wordmark + tagline) and <span class="hl">flexible right column</span> (team snippets + hairline separator + 7 ingredients). Right column is scrollable to support future content growth.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Created <span className="mono">design/wireframes/about-modal.html</span>. Two-column dialog: <span className="hl">200px fixed left column</span> (wolf logo from <span className="mono">/static/icon.png</span> + wordmark + tagline) and <span className="hl">flexible right column</span> (team snippets + hairline separator + 7 ingredients). Right column is scrollable to support future content growth.</p>
           </div>
 
           
           <div style="margin:14px 0 0;">
-            <div class="ing-header" style="border:1px solid var(--iron-border); border-bottom:1px solid var(--iron-border);">
+            <div className="ing-header" style="border:1px solid var(--iron-border); border-bottom:1px solid var(--iron-border);">
               The Pack — Declarations from the Wolf 🐺
             </div>
-            <div class="pack-grid" style="margin-top:0; border:1px solid var(--iron-border); border-top:none; padding:10px;">
-              <div class="pack-card">
-                <div class="pack-name">👑 Freya — Product Owner</div>
-                <div class="pack-voice">"She decides what the wolf hunts next."</div>
+            <div className="pack-grid" style="margin-top:0; border:1px solid var(--iron-border); border-top:none; padding:10px;">
+              <div className="pack-card">
+                <div className="pack-name">👑 Freya — Product Owner</div>
+                <div className="pack-voice">"She decides what the wolf hunts next."</div>
               </div>
-              <div class="pack-card">
-                <div class="pack-name">🌙 Luna — UX Designer</div>
-                <div class="pack-voice">"She shapes the shadows where the wolf walks."</div>
+              <div className="pack-card">
+                <div className="pack-name">🌙 Luna — UX Designer</div>
+                <div className="pack-voice">"She shapes the shadows where the wolf walks."</div>
               </div>
-              <div class="pack-card">
-                <div class="pack-name">🔥 FiremanDecko — Engineer</div>
-                <div class="pack-voice">"He forged the chain. Then taught the wolf to wear it willingly."</div>
+              <div className="pack-card">
+                <div className="pack-name">🔥 FiremanDecko — Engineer</div>
+                <div className="pack-voice">"He forged the chain. Then taught the wolf to wear it willingly."</div>
               </div>
-              <div class="pack-card">
-                <div class="pack-name">🐍 Loki — QA</div>
-                <div class="pack-voice">"He tests every lock. He is, after all, the reason locks exist."</div>
+              <div className="pack-card">
+                <div className="pack-name">🐍 Loki — QA</div>
+                <div className="pack-voice">"He tests every lock. He is, after all, the reason locks exist."</div>
               </div>
             </div>
           </div>
 
           
-          <div class="ing-box">
-            <div class="ing-header">Bound by Seven Impossible Things — ᚷᛚᛖᛁᛈᚾᛁᚱ</div>
-            <ul class="ing-list">
-              <li class="ing-row">
-                <span class="ing-n">I</span>
-                <span class="ing-t">The sound of a cat's footstep</span>
-                <span class="ing-o">Norse myth · Gleipnir</span>
+          <div className="ing-box">
+            <div className="ing-header">Bound by Seven Impossible Things — ᚷᛚᛖᛁᛈᚾᛁᚱ</div>
+            <ul className="ing-list">
+              <li className="ing-row">
+                <span className="ing-n">I</span>
+                <span className="ing-t">The sound of a cat's footstep</span>
+                <span className="ing-o">Norse myth · Gleipnir</span>
               </li>
-              <li class="ing-row ing-highlight">
-                <span class="ing-n">II</span>
-                <span class="ing-t">The beard of a woman ✦</span>
-                <span class="ing-o">Norse myth · Gleipnir</span>
+              <li className="ing-row ing-highlight">
+                <span className="ing-n">II</span>
+                <span className="ing-t">The beard of a woman ✦</span>
+                <span className="ing-o">Norse myth · Gleipnir</span>
               </li>
-              <li class="ing-row">
-                <span class="ing-n">III</span>
-                <span class="ing-t">The roots of a mountain</span>
-                <span class="ing-o">Norse myth · Gleipnir</span>
+              <li className="ing-row">
+                <span className="ing-n">III</span>
+                <span className="ing-t">The roots of a mountain</span>
+                <span className="ing-o">Norse myth · Gleipnir</span>
               </li>
-              <li class="ing-row">
-                <span class="ing-n">IV</span>
-                <span class="ing-t">The sinews of a bear</span>
-                <span class="ing-o">Norse myth · Gleipnir</span>
+              <li className="ing-row">
+                <span className="ing-n">IV</span>
+                <span className="ing-t">The sinews of a bear</span>
+                <span className="ing-o">Norse myth · Gleipnir</span>
               </li>
-              <li class="ing-row">
-                <span class="ing-n">V</span>
-                <span class="ing-t">The breath of a fish</span>
-                <span class="ing-o">Norse myth · Gleipnir</span>
+              <li className="ing-row">
+                <span className="ing-n">V</span>
+                <span className="ing-t">The breath of a fish</span>
+                <span className="ing-o">Norse myth · Gleipnir</span>
               </li>
-              <li class="ing-row">
-                <span class="ing-n">VI</span>
-                <span class="ing-t">The spittle of a bird ◈</span>
-                <span class="ing-o" title="Also: Gleipnir Hunt fragment #6 in Valhalla empty state">Norse myth · Gleipnir</span>
+              <li className="ing-row">
+                <span className="ing-n">VI</span>
+                <span className="ing-t">The spittle of a bird ◈</span>
+                <span className="ing-o" title="Also: Gleipnir Hunt fragment #6 in Valhalla empty state">Norse myth · Gleipnir</span>
               </li>
-              <li class="ing-row ing-original">
-                <span class="ing-n">VII</span>
-                <span class="ing-t">The first debt willingly forgiven</span>
-                <span class="ing-o">App-original</span>
+              <li className="ing-row ing-original">
+                <span className="ing-n">VII</span>
+                <span className="ing-t">The first debt willingly forgiven</span>
+                <span className="ing-o">App-original</span>
               </li>
             </ul>
           </div>
 
           <div style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--subtle);margin-top:6px;line-height:1.8;">
-            ✦ User-specified ingredient &nbsp;·&nbsp; ◈ Also Gleipnir Hunt fragment #6 (Valhalla empty state easter egg) &nbsp;·&nbsp; <span style="color:var(--amber);">VII</span> app-original
+            ✦ User-specified ingredient  ·  ◈ Also Gleipnir Hunt fragment #6 (Valhalla empty state easter egg)  ·  <span style="color:var(--amber);">VII</span> app-original
           </div>
 
-          <div class="file-chips">
-            <span class="chip chip-new">✦ design/wireframes/about-modal.html</span>
-            <span class="chip chip-mod">✎ design/wireframes.md (index entry added)</span>
+          <div className="file-chips">
+            <span className="chip chip-new">✦ design/wireframes/about-modal.html</span>
+            <span className="chip chip-mod">✎ design/wireframes.md (index entry added)</span>
           </div>
         </div>
       </div>
@@ -329,34 +329,34 @@ One of the ingredients is "Beard of a Woman"</div>
     
     
     
-    <div class="entry" id="act6">
-      <div class="entry-rune" title="ᛏ Tiwaz — justice, victory, completed">ᛏ</div>
-      <div class="entry-body">
-        <div class="act-label">Act VI · The Chronicle</div>
-        <h2 class="entry-title">wireframes.md — About Modal Design Spec Added</h2>
+    <div className="entry" id="act6">
+      <div className="entry-rune" title="ᛏ Tiwaz — justice, victory, completed">ᛏ</div>
+      <div className="entry-body">
+        <div className="act-label">Act VI · The Chronicle</div>
+        <h2 className="entry-title">wireframes.md — About Modal Design Spec Added</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">🔥 FiremanDecko</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">🔥 FiremanDecko</span>
           </div>
-          <div class="msg-text">Update the wireframe MD with information about this</div>
+          <div className="msg-text">Update the wireframe MD with information about this</div>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Added a complete <span class="hl">About Modal</span> section to <span class="mono">design/wireframes.md</span> — consistent in depth and format with the Easter Egg Modal section it follows.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Added a complete <span className="hl">About Modal</span> section to <span className="mono">design/wireframes.md</span> — consistent in depth and format with the Easter Egg Modal section it follows.</p>
           </div>
 
-          <ul class="changes">
-            <li><span class="new">ASCII structure diagram of the 2-column layout</span></li>
-            <li><span class="new">Key layout decisions: column widths, scrollability, divider pattern</span></li>
-            <li><span class="new">Ingredients table with origin attribution for all 7</span></li>
-            <li><span class="new">Note: ingredient VI doubles as Gleipnir Hunt fragment #6 easter egg</span></li>
-            <li><span class="new">Z-index (200), accessibility (role, aria-labelledby), mobile behavior</span></li>
+          <ul className="changes">
+            <li><span className="new">ASCII structure diagram of the 2-column layout</span></li>
+            <li><span className="new">Key layout decisions: column widths, scrollability, divider pattern</span></li>
+            <li><span className="new">Ingredients table with origin attribution for all 7</span></li>
+            <li><span className="new">Note: ingredient VI doubles as Gleipnir Hunt fragment #6 easter egg</span></li>
+            <li><span className="new">Z-index (200), accessibility (role, aria-labelledby), mobile behavior</span></li>
           </ul>
 
-          <div class="file-chips">
-            <span class="chip chip-mod">✎ design/wireframes.md</span>
+          <div className="file-chips">
+            <span className="chip chip-mod">✎ design/wireframes.md</span>
           </div>
         </div>
       </div>
@@ -388,20 +388,20 @@ One of the ingredients is "Beard of a Woman"</div>
   </div>
 
   
-  <footer class="session-footer">
-    <div class="footer-cipher" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
-    <div class="footer-text">
-      Forged by <span class="hl">FiremanDecko</span> · Guarded by <span class="hl">Freya</span> · Shaped by <span class="hl">Luna</span> · Tested by <span class="hl">Loki</span><br>
+  <footer className="session-footer">
+    <div className="footer-cipher" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
+    <div className="footer-text">
+      Forged by <span className="hl">FiremanDecko</span> · Guarded by <span className="hl">Freya</span> · Shaped by <span className="hl">Luna</span> · Tested by <span className="hl">Loki</span><br />
       Bound by Seven Impossible Things · Watched by the Wolf · © Fenrir Ledger 2026
     </div>
   </footer>
 
 </div>
 
-<footer class="session-footer">
-    <div class="footer-cipher" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
-    <div class="footer-text">
-      Forged by <span class="hl">FiremanDecko</span> · Guarded by <span class="hl">Freya</span> · Shaped by <span class="hl">Luna</span> · Tested by <span class="hl">Loki</span><br>
+<footer className="session-footer">
+    <div className="footer-cipher" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
+    <div className="footer-text">
+      Forged by <span className="hl">FiremanDecko</span> · Guarded by <span className="hl">Freya</span> · Shaped by <span className="hl">Luna</span> · Tested by <span className="hl">Loki</span><br />
       Bound by Seven Impossible Things · Watched by the Wolf · © Fenrir Ledger 2026
     </div>
   </footer>

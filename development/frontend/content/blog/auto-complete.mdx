@@ -14,101 +14,101 @@ slug: "auto-complete"
   <p className="session-subtitle">An Autonomous Sentinel Guards the Forge</p>
   <div className="session-meta">
 
-      <span>date <span class="val">2026-03-07</span></span>
-      <span>acts <span class="val">III</span></span>
-      <span>iterations <span class="val">30+</span></span>
-      <span>files changed <span class="val">0</span></span>
+      <span>date <span className="val">2026-03-07</span></span>
+      <span>acts <span className="val">III</span></span>
+      <span>iterations <span className="val">30+</span></span>
+      <span>files changed <span className="val">0</span></span>
       </div>
 </header>
 
-<div class="chronicle-timeline">
+<div className="chronicle-timeline">
 
     
-    <div class="entry" id="act-1">
-      <div class="entry-rune">ᛁ</div>
-      <div class="entry-body">
-        <p class="act-label">Act I</p>
-        <h2 class="entry-title">The Sentinel Awakens</h2>
+    <div className="entry" id="act-1">
+      <div className="entry-rune">ᛁ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I</p>
+        <h2 className="entry-title">The Sentinel Awakens</h2>
 
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-cron">CRON</span> Automated dispatch</div>
-          <p class="msg-text">/fire-next-up --resume</p>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-cron">CRON</span> Automated dispatch</div>
+          <p className="msg-text">/fire-next-up --resume</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>The session begins as a continuation of a prior autonomous run. Odin had set up a <span class="hl">cron job (da329c24)</span> to fire <span class="mono">/fire-next-up --resume</span> every 5 minutes, then walked away.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>The session begins as a continuation of a prior autonomous run. Odin had set up a <span className="hl">cron job (da329c24)</span> to fire <span className="mono">/fire-next-up --resume</span> every 5 minutes, then walked away.</p>
             <p>The orchestrator's mission: monitor all in-progress Depot agent chains, dispatch Loki when FiremanDecko completes, merge PRs when Loki passes, and move issues to Done.</p>
-            <p>In the prior session, <span class="hl">four PRs were successfully merged</span> and moved to Done:</p>
+            <p>In the prior session, <span className="hl">four PRs were successfully merged</span> and moved to Done:</p>
           </div>
 
-          <div class="stats-grid">
-            <div class="stat-card">
-              <p class="stat-num">#131</p>
-              <p class="stat-label">Merged</p>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <p className="stat-num">#131</p>
+              <p className="stat-label">Merged</p>
             </div>
-            <div class="stat-card">
-              <p class="stat-num">#176</p>
-              <p class="stat-label">Merged</p>
+            <div className="stat-card">
+              <p className="stat-num">#176</p>
+              <p className="stat-label">Merged</p>
             </div>
-            <div class="stat-card">
-              <p class="stat-num">#280</p>
-              <p class="stat-label">Merged</p>
+            <div className="stat-card">
+              <p className="stat-num">#280</p>
+              <p className="stat-label">Merged</p>
             </div>
-            <div class="stat-card">
-              <p class="stat-num">#156</p>
-              <p class="stat-label">Merged</p>
+            <div className="stat-card">
+              <p className="stat-num">#156</p>
+              <p className="stat-label">Merged</p>
             </div>
           </div>
 
-          <div class="work-body">
-            <p>But one PR remained &mdash; <span class="hl">PR #259</span> (Issue #189: Wizard Step 2) &mdash; which had received a <span class="mono">Loki FAIL</span> verdict due to real implementation gaps.</p>
+          <div className="work-body">
+            <p>But one PR remained — <span className="hl">PR #259</span> (Issue #189: Wizard Step 2) — which had received a <span className="mono">Loki FAIL</span> verdict due to real implementation gaps.</p>
           </div>
         </div>
       </div>
     </div>
 
     
-    <div class="entry" id="act-2">
-      <div class="entry-rune">ᛁ</div>
-      <div class="entry-body">
-        <p class="act-label">Act II</p>
-        <h2 class="entry-title">The Long Watch</h2>
+    <div className="entry" id="act-2">
+      <div className="entry-rune">ᛁ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II</p>
+        <h2 className="entry-title">The Long Watch</h2>
 
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-cron">CRON</span> 30+ automated iterations</div>
-          <p class="msg-text"><span class="pulse-dot"></span>/fire-next-up --resume  &times; 30+</p>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-cron">CRON</span> 30+ automated iterations</div>
+          <p className="msg-text"><span className="pulse-dot"></span>/fire-next-up --resume  × 30+</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
+        <div className="work-card">
+          <div className="work-body">
             <p>For over two hours, the sentinel held its post. Every five minutes, the cron fired. Every five minutes, the orchestrator checked:</p>
           </div>
 
-          <div class="code-block">
+          <div className="code-block">
 <pre>gh pr list --state open --json number --jq '.[].number'
 <span style="color: var(--gold);">&gt;</span> 259
 
 <span style="color: var(--subtle);">// Every iteration, the same answer:</span>
-No change. Steady state &mdash;
+No change. Steady state —
 PR #259 (#189) blocked, FAIL verdict,
 awaiting fixes on #269-271. Loop continues.</pre>
           </div>
 
-          <div class="work-body">
-            <p>Thirty times the wolf sniffed the wind. Thirty times it found the same frozen landscape. <span class="hl">Isa</span> &mdash; the rune of ice, of stillness, of patience.</p>
+          <div className="work-body">
+            <p>Thirty times the wolf sniffed the wind. Thirty times it found the same frozen landscape. <span className="hl">Isa</span> — the rune of ice, of stillness, of patience.</p>
           </div>
 
-          <div class="blocked-box">
-            <p class="label">Blocked &mdash; PR #259 (Issue #189)</p>
-            <div class="work-body" style="margin-bottom:0;">
+          <div className="blocked-box">
+            <p className="label">Blocked — PR #259 (Issue #189)</p>
+            <div className="work-body" style="margin-bottom:0;">
               <p>Loki identified three implementation gaps in the Wizard Step 2 PR:</p>
-              <ul class="changes">
-                <li><span class="mono">#269</span> &mdash; Back button missing from wizard</li>
-                <li><span class="mono">#270</span> &mdash; Credit Limit select not implemented</li>
-                <li><span class="mono">#271</span> &mdash; Fields missing from Step 2 form</li>
+              <ul className="changes">
+                <li><span className="mono">#269</span> — Back button missing from wizard</li>
+                <li><span className="mono">#270</span> — Credit Limit select not implemented</li>
+                <li><span className="mono">#271</span> — Fields missing from Step 2 form</li>
               </ul>
-              <p style="margin-top:8px;">These sub-issues sit in <span class="hl">Up Next</span>, waiting for FiremanDecko to forge the fixes.</p>
+              <p style="margin-top:8px;">These sub-issues sit in <span className="hl">Up Next</span>, waiting for FiremanDecko to forge the fixes.</p>
             </div>
           </div>
         </div>
@@ -116,65 +116,65 @@ awaiting fixes on #269-271. Loop continues.</pre>
     </div>
 
     
-    <div class="entry" id="act-3">
-      <div class="entry-rune">ᛞ</div>
-      <div class="entry-body">
-        <p class="act-label">Act III</p>
-        <h2 class="entry-title">The Wolf Rests</h2>
+    <div className="entry" id="act-3">
+      <div className="entry-rune">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III</p>
+        <h2 className="entry-title">The Wolf Rests</h2>
 
-        <div class="user-msg">
-          <div class="msg-role"><span class="role-badge badge-odin">ODIN</span> Returns to the forge</div>
-          <p class="msg-text">stop</p>
+        <div className="user-msg">
+          <div className="msg-role"><span className="role-badge badge-odin">ODIN</span> Returns to the forge</div>
+          <p className="msg-text">stop</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Odin returns and calls the sentinel home. Two cron jobs are cancelled &mdash; <span class="mono">da329c24</span> and <span class="mono">edf582b8</span> &mdash; and the tireless loop finally rests.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Odin returns and calls the sentinel home. Two cron jobs are cancelled — <span className="mono">da329c24</span> and <span className="mono">edf582b8</span> — and the tireless loop finally rests.</p>
           </div>
 
-          <div class="code-block">
+          <div className="code-block">
 <pre>CronList
-  edf582b8 &mdash; Every 5 minutes (recurring)
-  da329c24 &mdash; Every 5 minutes (recurring)
+  edf582b8 — Every 5 minutes (recurring)
+  da329c24 — Every 5 minutes (recurring)
 
 CronDelete(da329c24)
   Cancelled.</pre>
           </div>
 
-          <div class="work-body">
+          <div className="work-body">
             <p>The final status report:</p>
           </div>
 
-          <div class="stats-grid">
-            <div class="stat-card">
-              <p class="stat-num">4</p>
-              <p class="stat-label">PRs Merged</p>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <p className="stat-num">4</p>
+              <p className="stat-label">PRs Merged</p>
             </div>
-            <div class="stat-card">
-              <p class="stat-num">30+</p>
-              <p class="stat-label">Watch Cycles</p>
+            <div className="stat-card">
+              <p className="stat-num">30+</p>
+              <p className="stat-label">Watch Cycles</p>
             </div>
-            <div class="stat-card">
-              <p class="stat-num">1</p>
-              <p class="stat-label">PR Blocked</p>
+            <div className="stat-card">
+              <p className="stat-num">1</p>
+              <p className="stat-label">PR Blocked</p>
             </div>
-            <div class="stat-card">
-              <p class="stat-num">9</p>
-              <p class="stat-label">Up Next</p>
+            <div className="stat-card">
+              <p className="stat-num">9</p>
+              <p className="stat-label">Up Next</p>
             </div>
           </div>
 
-          <div class="work-body">
-            <p>The recommendation stands: dispatch <span class="mono">--batch 3</span> to send FiremanDecko after issues #269, #270, and #271. Once those land, close the stale PR #259 and re-run the #189 chain fresh.</p>
+          <div className="work-body">
+            <p>The recommendation stands: dispatch <span className="mono">--batch 3</span> to send FiremanDecko after issues #269, #270, and #271. Once those land, close the stale PR #259 and re-run the #189 chain fresh.</p>
             <p>The ice will break. But not today.</p>
           </div>
         </div>
       </div>
     </div>
 
-<footer class="session-footer">
-    <p class="footer-cipher">ᛁ ᛁ ᛁ ᛁ ᛁ ᛁ</p>
-    <p class="footer-text">Fenrir Ledger &middot; Session Chronicle &middot; The wolf watches, even when nothing moves.</p>
+<footer className="session-footer">
+    <p className="footer-cipher">ᛁ ᛁ ᛁ ᛁ ᛁ ᛁ</p>
+    <p className="footer-text">Fenrir Ledger · Session Chronicle · The wolf watches, even when nothing moves.</p>
   </footer>
 
 </div>

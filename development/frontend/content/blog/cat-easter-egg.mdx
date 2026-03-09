@@ -14,104 +14,104 @@ slug: "cat-easter-egg"
   <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
   <div className="session-meta">
 
-      <div>Date <span class="val">2026-02-26</span>  </div>
+      <div>Date <span className="val">2026-02-26</span>  </div>
 </header>
 
 ──────────────────────────────────────────────────── -->
-  <div class="timeline">
+  <div className="timeline">
 
     
-    <section class="entry" id="act1">
-      <div class="entry-rune" title="The Paw Print Is Forged">ᚲ</div>
-      <div class="entry-body">
-        <p class="act-label">Act I · Easter Egg</p>
-        <h2 class="entry-title">The Paw Print Is Forged 🐾</h2>
+    <section className="entry" id="act1">
+      <div className="entry-rune" title="The Paw Print Is Forged">ᚲ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Easter Egg</p>
+        <h2 className="entry-title">The Paw Print Is Forged 🐾</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-system">Session Restore</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-system">Session Restore</span>
           </div>
-          <p class="msg-text">Conversation compacted. Resuming from prior session — gleipnir-1.svg was already written. GleipnirWomansBeard.tsx, AboutModal.tsx, and gleipnir-2.svg were in prior context. Egg 1's TSX component still needed writing.</p>
+          <p className="msg-text">Conversation compacted. Resuming from prior session — gleipnir-1.svg was already written. GleipnirWomansBeard.tsx, AboutModal.tsx, and gleipnir-2.svg were in prior context. Egg 1's TSX component still needed writing.</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Picking up mid-flight from the previous session, FiremanDecko completed Gleipnir Fragment 1 by writing <span class="hl">GleipnirCatFootfall.tsx</span> — the modal component and hook that fires when the silence is broken. The SVG artifact (<span class="mono">gleipnir-1.svg</span>, 4.5 KB) was already in place; the TSX completes the pair.</p>
-            <p>The component follows the same fade-in/fade-out howl pattern as Fragment 2: <span class="mono">useGleipnirFragment1()</span> constructs <span class="mono">new Audio()</span> inside the user-gesture handler, fades to <span class="mono">0.25</span> volume over 500 ms, and fades out on dismiss over 600 ms — all without touching the Web Audio API.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Picking up mid-flight from the previous session, FiremanDecko completed Gleipnir Fragment 1 by writing <span className="hl">GleipnirCatFootfall.tsx</span> — the modal component and hook that fires when the silence is broken. The SVG artifact (<span className="mono">gleipnir-1.svg</span>, 4.5 KB) was already in place; the TSX completes the pair.</p>
+            <p>The component follows the same fade-in/fade-out howl pattern as Fragment 2: <span className="mono">useGleipnirFragment1()</span> constructs <span className="mono">new Audio()</span> inside the user-gesture handler, fades to <span className="mono">0.25</span> volume over 500 ms, and fades out on dismiss over 600 ms — all without touching the Web Audio API.</p>
           </div>
 
-          <div class="code-block">
-            <pre><span class="cc">// Fragment counter reads actual localStorage state — not hardcoded</span>
-<span class="ca">const count = Array.from({ length: TOTAL_FRAGMENTS }, (_, i) =></span>
-<span class="ca">  localStorage.getItem(`egg:gleipnir-${i + 1}`)</span>
-<span class="ca">).filter(Boolean).length;</span>
-<span class="ca">setFound(count);</span></pre>
+          <div className="code-block">
+            <pre><span className="cc">// Fragment counter reads actual localStorage state — not hardcoded</span>
+<span className="ca">const count = Array.from({ length: TOTAL_FRAGMENTS }, (_, i) =></span>
+<span className="ca">  localStorage.getItem(`egg:gleipnir-${i + 1}`)</span>
+<span className="ca">).filter(Boolean).length;</span>
+<span className="ca">setFound(count);</span></pre>
           </div>
 
-          <div class="file-chips">
-            <span class="chip chip-new">✦ src/components/cards/GleipnirCatFootfall.tsx</span>
+          <div className="file-chips">
+            <span className="chip chip-new">✦ src/components/cards/GleipnirCatFootfall.tsx</span>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᚲ ᛊ ᛁ</span></div>
+    <div className="rune-hr"><span>ᚲ ᛊ ᛁ</span></div>
 
     
-    <section class="entry" id="act2">
-      <div class="entry-rune" title="The Hunt for the Indicator">ᚹ</div>
-      <div class="entry-body">
-        <p class="act-label">Act II · Investigation</p>
-        <h2 class="entry-title">The Hunt for the Indicator</h2>
+    <section className="entry" id="act2">
+      <div className="entry-rune" title="The Hunt for the Indicator">ᚹ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Investigation</p>
+        <h2 className="entry-title">The Hunt for the Indicator</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">FiremanDecko</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
           </div>
-          <p class="msg-text">Inspec the main page and find the silent background sync indicator</p>
+          <p className="msg-text">Inspec the main page and find the silent background sync indicator</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>The wolf searched every corner of the rendered app: <span class="mono">page.tsx</span>, <span class="mono">Dashboard.tsx</span>, <span class="mono">TopBar.tsx</span>, <span class="mono">AppShell.tsx</span>, <span class="mono">SideNav.tsx</span>. Nothing. The silent background sync indicator described in <span class="mono">design/easter-eggs.md</span> as a "tooltip on the silent background sync indicator (bottom-right corner)" does not exist in the codebase — it was a planned element that had never been built.</p>
-            <p>The easter-eggs design doc places Gleipnir Fragment 1's trigger there. The indicator must be created before the egg can be wired. The proposal: a tiny dim dot, fixed bottom-right, pulsing gold when syncing. <span class="mono">cursor-default</span> — no affordance. A tooltip reveals the fragment text on hover. A click triggers the egg.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>The wolf searched every corner of the rendered app: <span className="mono">page.tsx</span>, <span className="mono">Dashboard.tsx</span>, <span className="mono">TopBar.tsx</span>, <span className="mono">AppShell.tsx</span>, <span className="mono">SideNav.tsx</span>. Nothing. The silent background sync indicator described in <span className="mono">design/easter-eggs.md</span> as a "tooltip on the silent background sync indicator (bottom-right corner)" does not exist in the codebase — it was a planned element that had never been built.</p>
+            <p>The easter-eggs design doc places Gleipnir Fragment 1's trigger there. The indicator must be created before the egg can be wired. The proposal: a tiny dim dot, fixed bottom-right, pulsing gold when syncing. <span className="mono">cursor-default</span> — no affordance. A tooltip reveals the fragment text on hover. A click triggers the egg.</p>
           </div>
 
-          <div class="norm-box">
-            <p class="norm-label">Design Decision</p>
-            <p class="norm-body">Click (not hover) triggers the egg — browser autoplay policy requires <span class="mono">new Audio().play()</span> to be called inside a direct user-gesture handler. Same pattern as the Women's Beard button in the About modal.</p>
+          <div className="norm-box">
+            <p className="norm-label">Design Decision</p>
+            <p className="norm-body">Click (not hover) triggers the egg — browser autoplay policy requires <span className="mono">new Audio().play()</span> to be called inside a direct user-gesture handler. Same pattern as the Women's Beard button in the About modal.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᚦ ᚱ ᛁ</span></div>
+    <div className="rune-hr"><span>ᚦ ᚱ ᛁ</span></div>
 
     
-    <section class="entry" id="act3">
-      <div class="entry-rune" title="The False Sign Unmasked">ᚦ</div>
-      <div class="entry-body">
-        <p class="act-label">Act III · Investigation</p>
-        <h2 class="entry-title">The False Sign Unmasked</h2>
+    <section className="entry" id="act3">
+      <div className="entry-rune" title="The False Sign Unmasked">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Investigation</p>
+        <h2 className="entry-title">The False Sign Unmasked</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">FiremanDecko</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
           </div>
-          <p class="msg-text">What is this element in the page? &lt;div role="status" class="nextjs-toast nextjs-static-indicator-toast-wrapper"&gt;...Static route...&lt;/div&gt;</p>
+          <p className="msg-text">What is this element in the page? &lt;div role="status" className="nextjs-toast nextjs-static-indicator-toast-wrapper"&gt;...Static route...&lt;/div&gt;</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>The element is Next.js's built-in <span class="hl">Static Route Indicator</span> — a dev-mode overlay injected automatically by the framework showing whether the current route is statically or dynamically rendered. The lightning bolt is the Next.js logo. It appears only during <span class="mono">next dev</span> and is stripped in production builds.</p>
-            <p>FiremanDecko also corrected the wolf's assumption: this indicator appears bottom-<span class="hl">left</span>, not bottom-right. The bottom-right corner is clear. The real sync indicator can live there in production with no conflict.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>The element is Next.js's built-in <span className="hl">Static Route Indicator</span> — a dev-mode overlay injected automatically by the framework showing whether the current route is statically or dynamically rendered. The lightning bolt is the Next.js logo. It appears only during <span className="mono">next dev</span> and is stripped in production builds.</p>
+            <p>FiremanDecko also corrected the wolf's assumption: this indicator appears bottom-<span className="hl">left</span>, not bottom-right. The bottom-right corner is clear. The real sync indicator can live there in production with no conflict.</p>
           </div>
 
-          <div class="code-block">
-            <pre><span class="cc">// Disable Next.js dev indicator in next.config.ts if needed:</span>
+          <div className="code-block">
+            <pre><span className="cc">// Disable Next.js dev indicator in next.config.ts if needed:</span>
 const nextConfig = {
   devIndicators: {
-<span class="ca">    appIsrStatus: false,  // hides the Static/Dynamic indicator</span>
+<span className="ca">    appIsrStatus: false,  // hides the Static/Dynamic indicator</span>
   },
 };</pre>
           </div>
@@ -119,56 +119,56 @@ const nextConfig = {
       </div>
     </section>
 
-    <div class="rune-hr"><span>ᚾ ᛊ ᛜ</span></div>
+    <div className="rune-hr"><span>ᚾ ᛊ ᛜ</span></div>
 
     
-    <section class="entry" id="act4">
-      <div class="entry-rune" title="The Silent Pulse Is Born">ᚾ</div>
-      <div class="entry-body">
-        <p class="act-label">Act IV · New Feature</p>
-        <h2 class="entry-title">The Silent Pulse Is Born 🔊</h2>
+    <section className="entry" id="act4">
+      <div className="entry-rune" title="The Silent Pulse Is Born">ᚾ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · New Feature</p>
+        <h2 className="entry-title">The Silent Pulse Is Born 🔊</h2>
 
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">FiremanDecko</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
           </div>
-          <p class="msg-text">FYI the nextJS Static Route Indicator is on the bottom left. Yes fire up FiremanDecko to build the silent background sync indicator. FAke some syncing activity so we can see how it animates. Define the interaction for the easter egg integration first. Any qustions?
+          <p className="msg-text">FYI the nextJS Static Route Indicator is on the bottom left. Yes fire up FiremanDecko to build the silent background sync indicator. FAke some syncing activity so we can see how it animates. Define the interaction for the easter egg integration first. Any qustions?
 
 — [After the spec was presented] —
 
 fuckin do it ya mad yoke</p>
         </div>
 
-        <div class="work-card">
-          <div class="work-body">
-            <p>Three files touched in one pass. <span class="hl">SyncIndicator.tsx</span> is the new component — a fixed bottom-right dot that idles as near-invisible iron (<span class="mono">#2a2d45</span>) and pulses gold (<span class="mono">#c9920a</span>) with a <span class="mono">animate-ping</span> ring when syncing. A CSS group-hover tooltip (no Radix dep needed) floats above the dot on hover, revealing the fragment text in gold mono: <em>The sound of a cat's footfall</em>. Clicking the dot — <span class="mono">cursor-default</span>, no visible affordance — fires <span class="mono">useGleipnirFragment1()</span> if not yet discovered.</p>
-            <p>Sync pulses are real <em>and</em> fake. <span class="mono">storage.ts</span> now dispatches a <span class="mono">fenrir:sync</span> CustomEvent after every <span class="mono">setAllCards()</span> write. <span class="mono">SyncIndicator</span> listens for it — so saving or deleting a card triggers a genuine pulse. A <span class="mono">setInterval</span> at 45-second intervals provides the ambient fake cadence, and an immediate pulse fires on mount so the animation is visible from the first page load.</p>
+        <div className="work-card">
+          <div className="work-body">
+            <p>Three files touched in one pass. <span className="hl">SyncIndicator.tsx</span> is the new component — a fixed bottom-right dot that idles as near-invisible iron (<span className="mono">#2a2d45</span>) and pulses gold (<span className="mono">#c9920a</span>) with a <span className="mono">animate-ping</span> ring when syncing. A CSS group-hover tooltip (no Radix dep needed) floats above the dot on hover, revealing the fragment text in gold mono: <em>The sound of a cat's footfall</em>. Clicking the dot — <span className="mono">cursor-default</span>, no visible affordance — fires <span className="mono">useGleipnirFragment1()</span> if not yet discovered.</p>
+            <p>Sync pulses are real <em>and</em> fake. <span className="mono">storage.ts</span> now dispatches a <span className="mono">fenrir:sync</span> CustomEvent after every <span className="mono">setAllCards()</span> write. <span className="mono">SyncIndicator</span> listens for it — so saving or deleting a card triggers a genuine pulse. A <span className="mono">setInterval</span> at 45-second intervals provides the ambient fake cadence, and an immediate pulse fires on mount so the animation is visible from the first page load.</p>
           </div>
 
-          <div class="code-block">
-            <pre><span class="cc">// storage.ts — real sync event on every card write</span>
+          <div className="code-block">
+            <pre><span className="cc">// storage.ts — real sync event on every card write</span>
 localStorage.setItem(STORAGE_KEYS.CARDS, JSON.stringify(cards));
-<span class="ca">window.dispatchEvent(new CustomEvent("fenrir:sync"));</span>
+<span className="ca">window.dispatchEvent(new CustomEvent("fenrir:sync"));</span>
 
-<span class="cc">// SyncIndicator.tsx — listens for real + fires fake cadence</span>
-<span class="ca">useEffect(() => {</span>
-<span class="ca">  pulse(); // immediate on mount</span>
-<span class="ca">  const id = setInterval(pulse, 45_000);</span>
-<span class="ca">  window.addEventListener("fenrir:sync", pulse);</span>
-<span class="ca">  return () => { clearInterval(id); window.removeEventListener("fenrir:sync", pulse); };</span>
-<span class="ca">}, [pulse]);</span></pre>
+<span className="cc">// SyncIndicator.tsx — listens for real + fires fake cadence</span>
+<span className="ca">useEffect(() => {</span>
+<span className="ca">  pulse(); // immediate on mount</span>
+<span className="ca">  const id = setInterval(pulse, 45_000);</span>
+<span className="ca">  window.addEventListener("fenrir:sync", pulse);</span>
+<span className="ca">  return () => { clearInterval(id); window.removeEventListener("fenrir:sync", pulse); };</span>
+<span className="ca">}, [pulse]);</span></pre>
           </div>
 
-          <ul class="changes">
-            <li>Dot idle colour <span class="old">#1e2235 (rune-border)</span> → <span class="new">#2a2d45 (iron-border) — slightly more visible</span></li>
-            <li>Tooltip: CSS group-hover <span class="new">no Radix @radix-ui/react-tooltip dep required</span></li>
-            <li>Audio: triggered inside <span class="mono">onClick</span> handler <span class="new">browser autoplay policy satisfied</span></li>
+          <ul className="changes">
+            <li>Dot idle colour <span className="old">#1e2235 (rune-border)</span> → <span className="new">#2a2d45 (iron-border) — slightly more visible</span></li>
+            <li>Tooltip: CSS group-hover <span className="new">no Radix @radix-ui/react-tooltip dep required</span></li>
+            <li>Audio: triggered inside <span className="mono">onClick</span> handler <span className="new">browser autoplay policy satisfied</span></li>
           </ul>
 
-          <div class="file-chips">
-            <span class="chip chip-new">✦ src/components/layout/SyncIndicator.tsx</span>
-            <span class="chip chip-mod">◈ src/lib/storage.ts</span>
-            <span class="chip chip-mod">◈ src/components/layout/AppShell.tsx</span>
+          <div className="file-chips">
+            <span className="chip chip-new">✦ src/components/layout/SyncIndicator.tsx</span>
+            <span className="chip chip-mod">◈ src/lib/storage.ts</span>
+            <span className="chip chip-mod">◈ src/components/layout/AppShell.tsx</span>
           </div>
         </div>
       </div>
@@ -176,11 +176,11 @@ localStorage.setItem(STORAGE_KEYS.CARDS, JSON.stringify(cards));
 
   </div>
 
-<footer class="session-footer">
-    <p class="footer-cipher">ᚲ ᛊ ᚾ ᛁ ᚠ ᛖ ᚾ ᚱ</p>
-    <p class="footer-text">
-      Cat's Footfall &amp; The Silent Sync · Fenrir Ledger Session Chronicle ·
-      <span class="hl">The wolf heard nothing. That was the point.</span>
+<footer className="session-footer">
+    <p className="footer-cipher">ᚲ ᛊ ᚾ ᛁ ᚠ ᛖ ᚾ ᚱ</p>
+    <p className="footer-text">
+      Cat's Footfall & The Silent Sync · Fenrir Ledger Session Chronicle ·
+      <span className="hl">The wolf heard nothing. That was the point.</span>
     </p>
   </footer>
 
