@@ -27,7 +27,7 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 |------|--------|
 | `--peek` | Show the prioritized Up Next queue — do NOT spawn anything. |
 | `--resume #N` | Resume an interrupted chain for issue #N. Read `templates/resume-flow.md`. |
-| `--resume` | (no issue number) Full dashboard: scan ALL in-progress chains, **auto-advance ready ones** (dispatch next agents, merge PASS+CI green PRs, move completed to Done), and report status. |
+| `--resume` | (no issue number) Full dashboard: scan ALL in-progress chains, **auto-advance ready ones** (dispatch next agents, merge PASS+CI green PRs, move completed to Done), and report status. **If no chains need advancing**, fall through to default dispatch: pick top Up Next item and present for refinement (always refine, even if `skip-refinement` is in body). |
 | `--batch N` | Pull top N **unblocked** items from "Up Next", start chains in parallel. Max 5. |
 | `--local` | Force local worktree execution instead of Depot. |
 | `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
