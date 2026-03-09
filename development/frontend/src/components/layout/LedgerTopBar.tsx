@@ -24,6 +24,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -321,7 +322,7 @@ export function LedgerTopBar() {
 
       {/* LEFT: Logo link -> / */}
       <div className="flex items-center">
-        <a
+        <Link
           href="/"
           className="flex items-center gap-1.5 text-left min-h-[44px] px-1"
           aria-label="Fenrir Ledger — go to home"
@@ -337,33 +338,33 @@ export function LedgerTopBar() {
           <span className="md:hidden font-display text-gold tracking-widest uppercase text-xs font-bold">
             FL
           </span>
-        </a>
+        </Link>
       </div>
 
       {/* CENTER: "Back to site" -- desktop only */}
       <div className="hidden md:flex items-center">
-        <a
+        <Link
           href="/"
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] px-2"
           aria-label="Back to Fenrir Ledger site"
         >
           <span aria-hidden="true" className="text-xs">←</span>
           <span className="font-body">Back to site</span>
-        </a>
+        </Link>
       </div>
 
       {/* RIGHT: Controls cluster */}
       <div className="relative flex items-center gap-0.5" ref={panelRef}>
 
         {/* Back icon -- mobile only */}
-        <a
+        <Link
           href="/"
           className="md:hidden flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
           style={{ minWidth: 44, minHeight: 44 }}
           aria-label="Back to Fenrir Ledger site"
         >
           <ArrowLeft className="h-4 w-4" />
-        </a>
+        </Link>
 
         {/* Theme toggle (icon variant) */}
         <ThemeToggle variant="icon" />

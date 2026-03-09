@@ -1,7 +1,7 @@
 /**
  * Features Page — /features
  *
- * Showcases all 8 real-value features of Fenrir Ledger in an alternating
+ * Showcases all 9 real-value features of Fenrir Ledger in an alternating
  * 2-column layout. Thrall (free) features first, Karl (paid) features after
  * a tier divider. Norse voice throughout.
  *
@@ -12,10 +12,11 @@
  *     03. Velocity Management
  *     04. The Howl
  *   Karl ($3.99/mo):
- *     05. Cloud Sync
- *     06. Multi-Household
- *     07. Smart Import (AI-Powered)
- *     08. Data Export
+ *     05. Valhalla (Card Archive)
+ *     06. Cloud Sync
+ *     07. Multi-Household
+ *     08. Smart Import (AI-Powered)
+ *     09. Data Export
  *
  * Wireframe: ux/wireframes/marketing-site/features.html
  * export const dynamic = 'force-static' — no server data fetching.
@@ -29,7 +30,7 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Features — Fenrir Ledger",
   description:
-    "Every tool Fenrir Ledger uses to close the gap between what issuers promise and what you remember to claim. 8 real features. No easter eggs.",
+    "Every tool Fenrir Ledger uses to close the gap between what issuers promise and what you remember to claim. 9 real features. No easter eggs.",
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -132,9 +133,28 @@ const THRALL_FEATURES: FeatureDetail[] = [
 
 const KARL_FEATURES: FeatureDetail[] = [
   {
+    id: "valhalla",
+    rune: "ᛏ",
+    eyebrow: "Feature 05 · Valhalla",
+    title: "Hall of the Honored Dead",
+    benefit:
+      "See every card you've closed — anniversary dates, total rewards extracted, annual fees avoided, and how long each chain held you.",
+    description:
+      "When you close a card, it doesn't disappear. Valhalla stores every closed card with its complete history: when you opened it, when you closed it, what bonuses it earned, and what fees it charged. It's the archive of every battle you've fought — and the evidence of what you've won.",
+    details: [
+      "Full archive of every closed card with complete metadata",
+      "Historical annual fee data and dates",
+      "Sign-up bonus earned vs. spent tracking",
+      "Lifetime value summary per card",
+    ],
+    atmospheric: "The hall of the honored dead. Only Karl may enter.",
+    tier: "karl",
+    reverse: false,
+  },
+  {
     id: "cloud-sync",
     rune: "ᚲ",
-    eyebrow: "Feature 05 · Cloud Sync",
+    eyebrow: "Feature 06 · Cloud Sync",
     title: "Your Ledger Follows You",
     benefit:
       "Add a card on mobile. See it on desktop. Your data syncs across every device via your Google account — no manual export, no sync button.",
@@ -153,7 +173,7 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "multi-household",
     rune: "ᛟ",
-    eyebrow: "Feature 06 · Multi-Household",
+    eyebrow: "Feature 07 · Multi-Household",
     title: "One Wolf, Many Dens",
     benefit:
       "Manage cards across multiple households under a single account. Your cards, your partner's cards, separate ledgers, one login.",
@@ -172,7 +192,7 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "smart-import",
     rune: "ᛗ",
-    eyebrow: "Feature 07 · Smart Import (AI-Powered)",
+    eyebrow: "Feature 08 · Smart Import (AI-Powered)",
     title: "The Rune-Reader",
     benefit:
       "Drop in your existing spreadsheet. Fenrir's AI extracts card names, dates, and fee amounts automatically — no reformatting required.",
@@ -192,7 +212,7 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "data-export",
     rune: "ᛞ",
-    eyebrow: "Feature 08 · Data Export",
+    eyebrow: "Feature 09 · Data Export",
     title: "Your Data, Your Terms",
     benefit:
       "Export everything Fenrir knows about your cards — as CSV or JSON — whenever you want, with no lock-in.",

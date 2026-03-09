@@ -1,0 +1,249 @@
+"use client";
+
+/**
+ * KarlUpsellDialog — Common Karl Tier Upsell Dialog
+ *
+ * Shared dialog used by ALL Karl-gated features:
+ *   - Valhalla (#377): card archive/graveyard view
+ *   - Howl (#398): Howl alert panel (priority alerts)
+ *   - Velocity (#378): spending velocity analytics
+ *   - Any future Karl feature uses the same dialog
+ *
+ * Layout:
+ *   Desktop: centered dialog (max-width 460px)
+ *   Mobile (≤ 640px): bottom-sheet (full-width, anchored to bottom)
+ *
+ * Flow:
+ *   Authenticated user → POST /api/stripe/checkout → redirect to Stripe
+ *   Anonymous user → redirect to sign-in with returnTo for checkout
+ *
+ * Dismiss behavior:
+ *   "Not now" / ✕ / Escape / backdrop click → closes dialog, no permanent flag.
+ *
+ * Wireframe: ux/wireframes/stripe-direct/karl-upsell-dialog.html
+ * Interaction spec: ux/karl-upsell-interaction-spec.md
+ * Issues: #377, #378, #398
+ *
+ * @module entitlement/KarlUpsellDialog
+ */
+
+import { useState, useCallback } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useEntitlement } from "@/hooks/useEntitlement";
+import { cn } from "@/lib/utils";
+
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
+
+export interface KarlUpsellDialogProps {
+  /** Rune glyph or icon character (e.g. "ᛏ" for Valhalla, "ᚲ" for Howl) */
+  featureIcon: string;
+  /** Plain feature name (e.g. "Valhalla") */
+  featureName: string;
+  /** Voice 2 atmospheric one-liner (e.g. "Hall of the Honored Dead") */
+  featureTagline: string;
+  /** Voice 1 functional description of what the user is missing */
+  featureTeaser: string;
+  /** Whether the dialog is open */
+  open: boolean;
+  /** Callback when the dialog is dismissed (X, "Not now", Escape, backdrop) */
+  onDismiss: () => void;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+/**
+ * Common Karl tier upsell dialog. Accepts feature-specific props so the same
+ * component can be reused by Valhalla, Howl, Velocity, and any future Karl feature.
+ *
+ * The dialog triggers Stripe Checkout directly — no intermediate /pricing page.
+ */
+export function KarlUpsellDialog({
+  featureIcon,
+  featureName,
+  featureTagline,
+  featureTeaser,
+  open,
+  onDismiss,
+}: KarlUpsellDialogProps) {
+  const { subscribeStripe } = useEntitlement();
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const handleSubscribe = useCallback(async () => {
+    setIsSubscribing(true);
+    try {
+      await subscribeStripe();
+    } catch {
+      setIsSubscribing(false);
+    }
+  }, [subscribeStripe]);
+
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onDismiss()}>
+      <DialogContent
+        className={cn(
+          "w-[92vw] max-w-[460px] max-h-[90vh] overflow-y-auto",
+          "border-2 border-gold/40 bg-background p-0 gap-0",
+          // Desktop: centered dialog
+          "sm:top-[50%] sm:translate-y-[-50%] sm:translate-x-[-50%] sm:left-[50%] sm:rounded-lg",
+          // Mobile: bottom-sheet
+          "top-auto bottom-0 translate-y-0 left-[50%] rounded-t-lg rounded-b-none",
+        )}
+        style={{ zIndex: 210 }}
+      >
+        {/* ── Header — static: tier name + price ─────────────────────── */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+          <div>
+            <span className="block font-mono text-[10px] tracking-[0.1em] uppercase font-bold text-muted-foreground">
+              Karl Tier Feature
+            </span>
+            <span className="block font-mono text-[9px] tracking-[0.06em] text-muted-foreground/70 mt-0.5">
+              KARL &middot; $3.99/month
+            </span>
+          </div>
+          {/* Close button is provided by DialogContent's built-in X */}
+        </div>
+
+        {/* ── Feature hero — prop-driven ──────────────────────────────── */}
+        <div className="flex flex-col items-center gap-2.5 px-5 pt-6 pb-5 border-b border-border">
+          {/* Feature icon with lock badge */}
+          <div
+            className="relative w-[56px] h-[56px] sm:w-[72px] sm:h-[72px] border border-dashed border-border flex items-center justify-center"
+            aria-hidden="true"
+          >
+            <span
+              className="text-2xl sm:text-[32px] text-primary leading-none select-none"
+              style={{ fontFamily: "serif" }}
+            >
+              {featureIcon}
+            </span>
+            {/* Lock badge */}
+            <span
+              className="absolute -bottom-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 border border-border bg-background flex items-center justify-center text-[8px] sm:text-[10px] rounded-sm"
+              aria-hidden="true"
+            >
+              &#128274;
+            </span>
+          </div>
+
+          {/* Feature name */}
+          <DialogTitle className="font-display text-xl sm:text-[20px] font-bold text-center uppercase tracking-wide text-foreground">
+            {featureName}
+          </DialogTitle>
+
+          {/* Feature tagline — Voice 2 atmospheric, hidden from mobile for space */}
+          <p
+            className="hidden sm:block text-[11px] italic text-muted-foreground/80 text-center font-body"
+            aria-hidden="true"
+          >
+            {featureTagline}
+          </p>
+        </div>
+
+        {/* ── Body ───────────────────────────────────────────────────── */}
+        <div className="px-5 py-5 flex flex-col gap-4">
+
+          {/* Feature teaser — what user is missing (Voice 1) */}
+          <div className="border border-dashed border-border p-3 sm:p-3.5">
+            <strong className="block text-[11px] font-mono uppercase tracking-[0.06em] text-muted-foreground mb-1">
+              What you&apos;re missing
+            </strong>
+            <DialogDescription className="text-xs sm:text-[12px] text-foreground/90 leading-relaxed font-body">
+              {featureTeaser}
+            </DialogDescription>
+          </div>
+
+          {/* Karl tier row — static: badge + copy + price */}
+          <div className="flex items-center gap-2.5 border border-border px-3 py-2.5">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] border border-gold text-gold px-1.5 py-0.5 shrink-0">
+              Karl
+            </span>
+            <span className="text-xs sm:text-[12px] text-muted-foreground font-body flex-1">
+              Unlock all premium features
+            </span>
+            <span className="text-[13px] font-bold text-foreground whitespace-nowrap">
+              $3.99/mo
+            </span>
+          </div>
+
+          {/* Subscribe CTA — direct to Stripe Checkout */}
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={handleSubscribe}
+              disabled={isSubscribing}
+              isLoading={isSubscribing}
+              loadingText="Redirecting..."
+              className="w-full min-h-[44px] sm:min-h-[48px] text-[14px] sm:text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-primary hover:brightness-110 border-2 border-gold"
+            >
+              Upgrade to Karl &mdash; $3.99/month
+            </Button>
+            <p className="text-[11px] text-center text-muted-foreground font-body">
+              Billed monthly. Cancel anytime.
+            </p>
+          </div>
+
+        </div>
+
+        {/* ── Footer — "Not now" dismiss ─────────────────────────────── */}
+        <div className="border-t border-border px-5 py-3 flex justify-center">
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="text-[12px] text-muted-foreground border border-border px-4 py-2 cursor-pointer font-body hover:text-foreground hover:border-foreground/30 transition-colors min-h-[44px] inline-flex items-center"
+          >
+            Not now
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pre-configured feature props for each Karl-gated feature
+// ---------------------------------------------------------------------------
+
+/**
+ * Props for the Valhalla variant of KarlUpsellDialog.
+ * Usage: <KarlUpsellDialog {...KARL_UPSELL_VALHALLA} open={...} onDismiss={...} />
+ */
+export const KARL_UPSELL_VALHALLA = {
+  featureIcon: "\u16CF", // ᛏ Tiwaz rune
+  featureName: "Valhalla",
+  featureTagline: "Hall of the Honored Dead",
+  featureTeaser:
+    "See every card you've closed \u2014 anniversary dates, total rewards extracted, annual fees avoided, and how long each chain held you.",
+} as const;
+
+/**
+ * Props for the Howl variant of KarlUpsellDialog (#398).
+ * Usage: <KarlUpsellDialog {...KARL_UPSELL_HOWL} open={...} onDismiss={...} />
+ */
+export const KARL_UPSELL_HOWL = {
+  featureIcon: "\u16B2", // ᚲ Kenaz rune
+  featureName: "The Howl",
+  featureTagline: "The Wolf Cries Before the Chain Breaks",
+  featureTeaser:
+    "Get notified before fees strike. Howl surfaces your most urgent deadlines and lets you act in one tap \u2014 before it costs you.",
+} as const;
+
+/**
+ * Props for the Velocity variant of KarlUpsellDialog (#378).
+ * Usage: <KarlUpsellDialog {...KARL_UPSELL_VELOCITY} open={...} onDismiss={...} />
+ */
+export const KARL_UPSELL_VELOCITY = {
+  featureIcon: "\u16CA", // ᛊ Sowilo rune
+  featureName: "Velocity",
+  featureTagline: "How Fast Does Your Plunder Flow?",
+  featureTeaser:
+    "Track your spend rate against welcome bonus targets to make sure you hit every threshold before the deadline.",
+} as const;

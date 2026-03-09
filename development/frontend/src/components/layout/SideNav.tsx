@@ -15,11 +15,16 @@
  * show the active state simultaneously when the Valhalla dashboard tab is open.
  */
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { CreditCard, PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEntitlement } from "@/hooks/useEntitlement";
+import {
+  KarlUpsellDialog,
+  KARL_UPSELL_VALHALLA,
+} from "@/components/entitlement/KarlUpsellDialog";
 
 interface SideNavProps {
   collapsed: boolean;
@@ -46,6 +51,9 @@ function RuneIcon({ rune }: { rune: string }) {
 export function SideNav({ collapsed, onToggle }: SideNavProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { hasFeature } = useEntitlement();
+  const hasValhalla = hasFeature("card-archive");
+  const [upsellOpen, setUpsellOpen] = useState(false);
 
   // Whether the Valhalla dashboard tab is currently active
   const isOnDashboard = pathname === "/ledger";
@@ -61,6 +69,12 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
     (e: React.MouseEvent | React.KeyboardEvent) => {
       if ("key" in e && e.key !== "Enter" && e.key !== " ") return;
       e.preventDefault();
+
+      // Gate Valhalla for Thrall users — show upsell dialog
+      if (!hasValhalla) {
+        setUpsellOpen(true);
+        return;
+      }
 
       if (isOnDashboard) {
         // Dispatch event — Dashboard.tsx listens and activates the tab
@@ -78,7 +92,7 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
         window.location.href = "/ledger?tab=valhalla";
       }
     },
-    [isOnDashboard]
+    [isOnDashboard, hasValhalla]
   );
 
   return (
@@ -111,23 +125,31 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
 
         {/* Valhalla — activates dashboard Valhalla tab (not a separate route) */}
         {/* Shows active state both when on /valhalla tab AND when sidebar Valhalla is active */}
+        {/* Thrall users see a lock icon; clicking opens KarlUpsellDialog */}
         <button
           type="button"
-          title={collapsed ? "Valhalla" : undefined}
-          aria-label="Open Valhalla tab"
+          title={collapsed ? (hasValhalla ? "Valhalla" : "Valhalla (Karl tier)") : undefined}
+          aria-label={hasValhalla ? "Open Valhalla tab" : "Valhalla \u2014 Karl tier required. Click to upgrade."}
           onClick={handleValhallaClick}
           onKeyDown={handleValhallaClick}
           className={cn(
             "flex items-center gap-3 rounded-sm px-2.5 py-2 text-base w-full text-left",
             "transition-[transform,filter,background-color,color,border-color] duration-150 ease-out",
             "active:scale-[0.98] active:brightness-90",
-            valhallaTabActive
+            valhallaTabActive && hasValhalla
               ? "bg-primary/10 text-gold border-l-2 border-gold"
               : "text-muted-foreground hover:bg-secondary hover:text-foreground hover:brightness-110 border-l-2 border-transparent"
           )}
         >
           <RuneIcon rune="↑" />
-          {!collapsed && <span className="font-body truncate">Valhalla</span>}
+          {!collapsed && (
+            <span className="font-body truncate flex items-center gap-1.5">
+              Valhalla
+              {!hasValhalla && (
+                <span className="text-[10px]" aria-hidden="true">&#128274;</span>
+              )}
+            </span>
+          )}
         </button>
 
         {/* Settings */}
@@ -173,6 +195,13 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
           )}
         </button>
       </div>
+
+      {/* Karl upsell dialog — shown when Thrall user clicks Valhalla */}
+      <KarlUpsellDialog
+        {...KARL_UPSELL_VALHALLA}
+        open={upsellOpen}
+        onDismiss={() => setUpsellOpen(false)}
+      />
     </aside>
   );
 }

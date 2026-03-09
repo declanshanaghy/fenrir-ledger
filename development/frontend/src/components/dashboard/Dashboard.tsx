@@ -40,6 +40,10 @@ import { cn } from "@/lib/utils";
 import { useRagnarok } from "@/contexts/RagnarokContext";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { HowlTeaserState } from "./HowlTeaserState";
+import {
+  KarlUpsellDialog,
+  KARL_UPSELL_VALHALLA,
+} from "@/components/entitlement/KarlUpsellDialog";
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 
@@ -366,6 +370,8 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
   const { ragnarokActive } = useRagnarok();
   const { hasFeature } = useEntitlement();
   const isHowlUnlocked = hasFeature("howl-panel");
+  const hasValhalla = hasFeature("card-archive");
+  const [upsellOpen, setUpsellOpen] = useState(false);
 
   // ── Derive 5-bucket splits ─────────────────────────────────────────────────
   const howlCards = cards.filter(isHowlCard);
@@ -377,8 +383,13 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
   // ── Initial tab: prop (URL param) > localStorage > default logic ───────────
   function getInitialTab(): DashboardTab {
     // 1. Prop (from URL ?tab= param) takes highest priority
+    //    But Valhalla is gated for Thrall users — fall through to default
     if (initialTab && VALID_TABS.has(initialTab)) {
-      return initialTab as DashboardTab;
+      if (initialTab === "valhalla" && !hasValhalla) {
+        // Thrall user navigated to ?tab=valhalla — show dialog on mount, use default tab
+      } else {
+        return initialTab as DashboardTab;
+      }
     }
 
     // 2. Restore from localStorage
@@ -399,18 +410,32 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
 
   const [activeTab, setActiveTab] = useState<DashboardTab>(getInitialTab);
 
+  // ── Auto-open upsell if Thrall user arrived via ?tab=valhalla ──────────────
+  useEffect(() => {
+    if (initialTab === "valhalla" && !hasValhalla) {
+      setUpsellOpen(true);
+    }
+    // Only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── Listen for external tab activation (e.g. sidebar Valhalla link) ────────
   useEffect(() => {
     function handleActivateTab(e: Event) {
       const event = e as CustomEvent<{ tab: string }>;
       const tab = event.detail?.tab;
       if (tab && VALID_TABS.has(tab)) {
+        // Gate Valhalla tab for Thrall users — show upsell dialog instead
+        if (tab === "valhalla" && !hasValhalla) {
+          setUpsellOpen(true);
+          return;
+        }
         setActiveTab(tab as DashboardTab);
       }
     }
     window.addEventListener("fenrir:activate-tab", handleActivateTab);
     return () => window.removeEventListener("fenrir:activate-tab", handleActivateTab);
-  }, []);
+  }, [hasValhalla]);
 
   // ── Persist tab selection to localStorage ─────────────────────────────────
   useEffect(() => {
@@ -549,6 +574,8 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         {TAB_CONFIG.map((tab, index) => {
           const isActive = activeTab === tab.id;
           const isHowlTab = tab.id === "howl";
+          const isValhallaTab = tab.id === "valhalla";
+          const isGatedValhalla = isValhallaTab && !hasValhalla;
           const count = tabCounts[tab.id];
           // Howl tab for Thrall: show lock + KARL badge, no count badge
           const isHowlLocked = isHowlTab && !isHowlUnlocked;
@@ -560,10 +587,21 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
               role="tab"
               id={tab.buttonId}
               aria-selected={isActive}
-              aria-controls={tab.panelId}
-              aria-label={isHowlLocked ? "The Howl \u2014 Karl tier feature" : undefined}
+              aria-controls={isGatedValhalla ? undefined : tab.panelId}
+              aria-label={
+                isHowlLocked ? "The Howl \u2014 Karl tier feature"
+                : isGatedValhalla ? "Valhalla \u2014 Karl tier required. Click to upgrade."
+                : undefined
+              }
               tabIndex={isActive ? 0 : -1}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                // Gate Valhalla for Thrall users — show upsell dialog instead
+                if (isGatedValhalla) {
+                  setUpsellOpen(true);
+                  return;
+                }
+                setActiveTab(tab.id);
+              }}
               onKeyDown={(e) => handleTabKeyDown(e, index)}
               className={cn(
                 "flex items-center gap-2 px-4 py-3 text-sm font-heading uppercase tracking-wide",
@@ -596,7 +634,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
                 {tab.rune}
               </span>
               {isHowlTab && !isHowlLocked && ragnarokActive ? "Ragnarök Approaches" : tab.label}
-              {/* Thrall: lock icon + KARL badge instead of count badge */}
+              {/* Thrall: lock icon + KARL badge for Howl; lock for Valhalla */}
               {isHowlLocked ? (
                 <>
                   <span className="text-xs opacity-70" aria-hidden="true">
@@ -609,6 +647,8 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
                     KARL
                   </span>
                 </>
+              ) : isGatedValhalla ? (
+                <span className="text-[10px] ml-0.5" aria-hidden="true">&#128274;</span>
               ) : (
                 <TabBadge count={count} isHowl={isHowlTab} />
               )}
@@ -750,6 +790,13 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
           />
         )}
       </div>
+
+      {/* Karl upsell dialog — shown when Thrall user clicks Valhalla tab */}
+      <KarlUpsellDialog
+        {...KARL_UPSELL_VALHALLA}
+        open={upsellOpen}
+        onDismiss={() => setUpsellOpen(false)}
+      />
     </div>
   );
 }
