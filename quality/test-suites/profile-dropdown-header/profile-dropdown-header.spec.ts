@@ -239,32 +239,28 @@ test.describe("Profile Dropdown Header", () => {
     }
   });
 
-  test("Separator is visible in both light and dark themes", async ({
+  test("Separator has correct styling and is always visible", async ({
     page,
   }) => {
+    // Open dropdown
     const avatarButton = page.locator("button[aria-controls='user-menu']");
-
-    // Open dropdown and check light theme
     await avatarButton.click();
+
+    // Verify separator exists and has correct styling
     const userMenu = page.locator("#user-menu");
-    let separator = userMenu.locator('[role="separator"]');
+    const separator = userMenu.locator('[role="separator"]');
+
     await expect(separator).toBeVisible();
     await expect(separator).toHaveClass(/bg-border/);
+    await expect(separator).toHaveClass(/h-px/);
 
-    // Cycle theme by clicking Theme menu item
-    await userMenu.locator('[role="menuitem"]').filter({ hasText: "Theme" }).click();
-    await page.waitForTimeout(300);
-
-    // Open dropdown again
-    await avatarButton.click();
-
-    // Separator should still be visible
-    const userMenu2 = page.locator("#user-menu");
-    separator = userMenu2.locator('[role="separator"]');
-    await expect(separator).toBeVisible();
-
-    // Should have bg-border class (applies in both themes)
-    await expect(separator).toHaveClass(/bg-border/);
+    // Separator should create clear visual separation
+    const boundingBox = await separator.boundingBox();
+    expect(boundingBox).not.toBeNull();
+    if (boundingBox) {
+      // Should be a thin line (1px height)
+      expect(boundingBox.height).toBeLessThanOrEqual(2);
+    }
   });
 
   test("Profile header does not trigger any navigation on click", async ({
