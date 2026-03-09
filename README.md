@@ -173,16 +173,70 @@ graph LR
 
 ---
 
-## ᚱ Key Documentation ᚢᚾᛖᛋ
+## ᚱ Sacred Scrolls of the Pack ᚱ
 
-| ᚱᚢᚾᛖ | Domain | Sacred Scrolls |
-|------|--------|----------------|
-| ᚠ | **Product** *(Freya speaks)* | [Product Brief](product-brief.md) — *The vision I have laid before the pack* · [Design Brief](product/product-design-brief.md) — *My counsel to the forge-master* · [Backlog](product/backlog/README.md) — *The hunts I have ordered by urgency* |
-| ᛚ | **UX** *(Luna shapes)* | [Theme System](ux/theme-system.md) — *The runes of color and shadow I have woven* · [Wireframes](ux/wireframes.md) — *Bones of every screen, drawn before steel is poured* · [Interactions](ux/interactions.md) — *How the wolf moves when touched* |
-| ᛞ | **Architecture** *(FiremanDecko engineers)* | [System Design](architecture/system-design.md) — *The load-bearing bones of this hall* · [ADRs](architecture/adrs/) — *Every decision forged in fire, never undone lightly* · [Pipeline](architecture/pipeline.md) — *The channel through which all work flows* · [Remote Builders (ADR-007)](architecture/adrs/ADR-007-remote-builder-platforms.md) — *Why Depot carries our iron* |
-| ᚺ | **Security** *(Heimdall watches)* | [Security Index](security/README.md) — *I see all nine worlds; nothing passes unwatched* · [Google API Review](security/reports/2026-03-02-google-api-integration.md) — *The reckoning of keys and scopes I have audited* |
-| ᛏ | **Quality** *(Loki tests)* | [Test Suites](quality/test-suites/) — *Every trap I have laid to catch the careless* · [Quality Report](quality/quality-report.md) — *My verdict on what stands and what crumbles* · [Test Plan](quality/test-plan.md) — *The chaos I have scheduled, in order* |
-| ᛟ | **Operations** *(the pack's shared craft)* | [Git Convention](.claude/skills/git-commit/SKILL.md) — *How all wolves mark their kills* · [Mermaid Guide](ux/ux-assets/mermaid-style-guide.md) — *Runes for rendering diagrams* · [Depot Setup](.claude/scripts/depot-setup.sh) — *Lighting the forge from cold iron* · [Fire Next Up](.claude/skills/fire-next-up/SKILL.md) — *The rite of passing the flame* |
+*Herein lie the runes of our craft — etched by each wolf in their own hand, bound together by a single thread of purpose. Read well, wanderer, for these paths were not laid lightly.*
+
+---
+
+### ᚠ Product — *Freya speaks from the high seat*
+
+> *"I have walked the threads of fate and returned with the shape of what must be built. These scrolls carry the pack's purpose — read them before you lift hammer or pen."*
+
+- [Product Brief](product-brief.md) — The vision I have laid before the pack, the reason the wolf hunts
+- [Design Brief](product/product-design-brief.md) — My counsel to the forge-master, where strategy becomes structure
+- [Backlog](designs/product/backlog/) — The hunts I have ordered by urgency, each weighted on the scales of Jera ᛃ
+
+---
+
+### ᛚ UX — *Luna shapes the bones of worlds*
+
+> *"Before a single rune of code is carved, I draw the bones. Every screen is a ritual space — every interaction, a step in the dance between wolf and wanderer."*
+
+- [Theme System](ux/theme-system.md) — The runes of color and shadow I have woven into the wolf's skin
+- [Wireframes](ux/wireframes.md) — Bones of every screen, drawn before steel is poured
+- [Interactions](ux/interactions.md) — How the wolf moves when touched, precise as tides beneath Mani's gaze
+
+---
+
+### ᛞ Architecture — *FiremanDecko speaks from the forge*
+
+> *"What I build, I build to endure Ragnarok. Every beam is load-tested, every joint fire-hardened. Read these blueprints — they are the skeleton on which all iron hangs."*
+
+- [System Design](architecture/system-design.md) — The load-bearing bones of this hall, forged to outlast the age
+- [ADRs](architecture/adrs/) — Every decision struck in fire, recorded so none may undo them lightly
+- [Pipeline](architecture/pipeline.md) — The channel through which all work flows, from raw ore to tempered steel
+- [Remote Builders (ADR-007)](architecture/adrs/ADR-007-remote-builder-platforms.md) — Why Depot carries our iron across the Bifrost
+
+---
+
+### ᛉ Security — *Heimdall watches from the Bifrost*
+
+> *"I stand where the trusted world ends and the wild begins. Nothing crosses this bridge unexamined — no key unmasked, no token unchecked, no route unguarded."*
+
+- [Security Index](security/README.md) — My vigil across all nine worlds; nothing passes unwatched
+- [Google API Review](security/reports/2026-03-02-google-api-integration.md) — The reckoning of keys and scopes I have audited beneath Sowilo's light ᛊ
+
+---
+
+### ᛏ Quality — *Loki tests the chains*
+
+> *"Do not tell me it works. I will find where it doesn't. Every assumption is a trap I walk into on purpose — and if the iron cracks, better it cracks in my hands than in the wild."*
+
+- [Test Suites](quality/test-suites/) — Every trap I have laid to catch the careless and the overconfident
+- [Quality Report](quality/quality-report.md) — My verdict on what stands and what crumbles to ash
+- [Test Plan](quality/test-plan.md) — The chaos I have scheduled, methodical as the tides of Laguz ᛚ
+
+---
+
+### ᛟ Operations — *the pack's shared craft, bound by Othala*
+
+> *"These rites belong to no single wolf — they are the heritage of the pack, the customs that keep us running as one."*
+
+- [Git Convention](.claude/skills/git-commit/SKILL.md) — How all wolves mark their kills, signed with Kenaz ᚲ
+- [Mermaid Guide](ux/ux-assets/mermaid-style-guide.md) — Runes for rendering diagrams, clear as Dagaz ᛞ
+- [Depot Setup](.claude/scripts/depot-setup.sh) — Lighting the forge from cold iron, the first spark of Fehu ᚠ
+- [Fire Next Up](.claude/skills/fire-next-up/SKILL.md) — The rite of passing the flame from one wolf to the next
 
 ---
 
