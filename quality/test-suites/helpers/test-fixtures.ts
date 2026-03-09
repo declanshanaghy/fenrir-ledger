@@ -30,7 +30,7 @@ export interface SignUpBonus {
   met: boolean;
 }
 
-export type CardStatus = "active" | "fee_approaching" | "promo_expiring" | "closed" | "bonus_open" | "overdue";
+export type CardStatus = "active" | "fee_approaching" | "promo_expiring" | "closed" | "bonus_open" | "overdue" | "graduated";
 
 export interface Card {
   id: string;
