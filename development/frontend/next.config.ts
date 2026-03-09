@@ -1,3 +1,4 @@
+// Next.js configuration for Fenrir Ledger
 import type { NextConfig } from "next";
 
 /**
