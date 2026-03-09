@@ -35,8 +35,9 @@ interface ThemeToggleProps {
    * Layout variant.
    * - "inline": segmented button group for dropdown menus (default)
    * - "icon": single cycling icon button for compact spaces
+   * - "dropdown-icon": bare cycling icon for embedding inside a menu row
    */
-  variant?: "inline" | "icon";
+  variant?: "inline" | "icon" | "dropdown-icon";
 }
 
 export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
@@ -58,11 +59,41 @@ export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
         />
       );
     }
+    if (variant === "dropdown-icon") {
+      return (
+        <div
+          className="h-4 w-4 rounded-sm bg-secondary/30 shrink-0"
+          aria-hidden="true"
+        />
+      );
+    }
     return (
       <div
         className="h-[36px] w-[132px] rounded-sm bg-secondary/30"
         aria-hidden="true"
       />
+    );
+  }
+
+  // Dropdown-icon variant: bare icon for embedding inside a menu row
+  if (variant === "dropdown-icon") {
+    const current = THEME_OPTIONS.find((o) => o.value === theme) ?? THEME_OPTIONS[2];
+    const nextIndex = (THEME_OPTIONS.indexOf(current) + 1) % THEME_OPTIONS.length;
+    const next = THEME_OPTIONS[nextIndex] ?? THEME_OPTIONS[0];
+
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setTheme(next.value);
+        }}
+        className="shrink-0 text-muted-foreground hover:text-gold transition-colors"
+        aria-label={`Toggle theme, current: ${current.label}`}
+        title={`Theme: ${current.label}`}
+      >
+        <current.Icon className="h-4 w-4" aria-hidden="true" />
+      </button>
     );
   }
 
