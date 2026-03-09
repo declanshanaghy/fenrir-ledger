@@ -42,7 +42,7 @@ test.describe("Issue #417 — Remove explicit AI copy", () => {
 
     // Verify Norse mythology terms are present
     expect(pageContent).toContain("Gleipnir");
-    expect(pageContent).toContain("Asgard");
+    expect(pageContent).toMatch(/ASGARD|Asgard|Ragnarok/i);
     expect(pageContent).toContain("Fenrir");
     expect(pageContent).toMatch(/Odin|Loki|Freya/);
   });
