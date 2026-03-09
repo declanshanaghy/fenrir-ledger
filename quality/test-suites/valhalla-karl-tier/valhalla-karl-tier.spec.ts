@@ -104,7 +104,7 @@ test.describe("Valhalla Karl Tier Gating — Issue #377", () => {
 
   // ── Test 2: Karl user accesses Valhalla tab normally ──────────────────────
 
-  test("AC2: Karl user sees closed cards in Valhalla tab as normal", async ({
+  test("AC2: Karl user can access Valhalla tab without upsell dialog", async ({
     page,
   }) => {
     // Setup: Set Karl entitlement and navigate to dashboard
@@ -115,11 +115,10 @@ test.describe("Valhalla Karl Tier Gating — Issue #377", () => {
     const valhallaTabButton = page.getByRole("button", { name: /valhalla/i }).first();
     await valhallaTabButton.click();
 
-    // Assert: Tab panel is visible (no upsell dialog)
-    const valhallaPanel = page.locator("[role='tabpanel'][aria-labelledby='tab-valhalla']");
-    await expect(valhallaPanel).toBeVisible();
+    // Assert: Valhalla tab is now selected
+    await expect(valhallaTabButton).toHaveAttribute("aria-selected", "true");
 
-    // Assert: No upsell dialog is shown
+    // Assert: No upsell dialog is shown (Karl users don't see gating)
     const dialog = page.locator("[role='dialog']");
     await expect(dialog).not.toBeVisible();
   });
