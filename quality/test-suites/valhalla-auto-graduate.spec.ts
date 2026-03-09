@@ -138,7 +138,7 @@ test.describe("Valhalla Auto-Graduate — Graduated Cards in Valhalla Tab", () =
     await expect(cardTiles).toHaveCount(3);
 
     for (const card of cards) {
-      const cardText = page.locator('h3').filter({ hasText: card.cardName });
+      const cardText = tabPanel.locator('h3').filter({ hasText: card.cardName });
       await expect(cardText).toContainText(card.cardName);
     }
   });
