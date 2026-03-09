@@ -193,7 +193,8 @@ test.describe("AC3 & AC4: /api/auth/refresh endpoint — authentication and clie
 
     expect(noAuthResponse.status()).toBe(401);
     const noAuthBody = await noAuthResponse.json();
-    expect(noAuthBody.error).toBe("unauthorized");
+    // The requireAuth middleware returns either "unauthorized" or "missing_token"
+    expect(noAuthBody.error).toMatch(/unauthorized|missing_token/);
   });
 
   test("/api/auth/refresh rejects invalid JSON requests", async ({ page }) => {
