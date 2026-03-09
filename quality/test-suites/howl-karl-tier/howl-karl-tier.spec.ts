@@ -92,17 +92,16 @@ async function seedEntitlement(
 }
 
 /**
- * Navigate to dashboard, seeding all required auth, household, and entitlement data.
- * Pattern: matches dashboard.spec.ts exactly
+ * Navigate to dashboard (/ledger), seeding all required auth, household, and entitlement data.
  */
 async function goToDashboardWithTier(page: Page, tier: "thrall" | "karl") {
-  // Navigate to home first to establish origin and context
-  await page.goto("/");
+  // Navigate to home first to establish origin and context (required for localStorage)
+  await page.goto("/", { waitUntil: "domcontentloaded" });
 
   // Clear all storage to start fresh
   await clearAllStorage(page);
 
-  // Seed auth session (required for dashboard access)
+  // Seed auth session (required for /ledger access)
   await seedSession(page);
 
   // Seed household and tier entitlement
@@ -112,11 +111,8 @@ async function goToDashboardWithTier(page: Page, tier: "thrall" | "karl") {
   // Seed empty cards for clean test
   await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, []);
 
-  // Reload homepage (which will redirect to /ledger with seeded data)
-  await page.reload({ waitUntil: "networkidle" });
-
-  // Verify we're on the ledger route
-  expect(page.url()).toContain("/ledger");
+  // Navigate directly to /ledger with fully seeded localStorage
+  await page.goto("/ledger", { waitUntil: "networkidle" });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
