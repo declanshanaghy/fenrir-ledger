@@ -182,13 +182,11 @@ test.describe("Valhalla Auto-Graduate — Graduated Cards Excluded from Active",
     const cardTiles = tabPanel.locator('[data-testid="card-tile"]');
     await expect(cardTiles).toHaveCount(1);
 
-    const activeCardText = page.locator("h3").filter({ hasText: activeCard.cardName });
+    const activeCardText = tabPanel.locator("h3").filter({ hasText: activeCard.cardName });
     await expect(activeCardText).toBeVisible();
 
-    // Graduated card text should NOT appear
-    const graduatedCardText = page.locator("h3").filter({ hasText: graduatedCard.cardName });
-    const isVisible = await graduatedCardText.isVisible().catch(() => false);
-    expect(isVisible).toBe(false);
+    // Graduated card should NOT appear at all in Active tab (not even in the DOM)
+    expect(await cardTiles.count()).toBe(1);
   });
 });
 
