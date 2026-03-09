@@ -87,12 +87,18 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 **Budget:** 3-5 tests per feature. >10 requires justification. Small fix = 1-3 tests.
 One strong assertion beats five weak ones. Never pad count.
 
+**Static/content-only changes (MDX, copy, CSS, images, docs) — ZERO Playwright tests.**
+If the PR only changes static content (MDX files, markdown, CSS classes, copy text, images),
+do NOT write Playwright tests. Instead: verify via `tsc` + `build` only. In your verdict,
+note "Static content change — build verification only, no Playwright tests needed."
+This rule overrides all other test guidance when the change is purely static.
+
 **Test behavior, not implementation:**
 ONLY test what THIS PR implements. If issue says "add X" but code doesn't, that's FAIL — not a test for X.
 Assertions derive from acceptance criteria, not from what the code currently does.
 
 **What to test:** Interactive workflows, auth flows, data persistence, form validation, error handling.
-**What NOT to test:** Static pages, CSS appearance, exact text copy, DOM structure, removed features, source files (no readFileSync).
+**What NOT to test:** Static pages, static content (MDX/markdown), CSS appearance, exact text copy, DOM structure, removed features, source files (no readFileSync).
 
 **Locators — semantic only:**
 ```typescript
