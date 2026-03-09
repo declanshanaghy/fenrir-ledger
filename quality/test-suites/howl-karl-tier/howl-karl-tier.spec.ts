@@ -30,6 +30,39 @@ import {
 // Test Utilities
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Auth session key from src/lib/auth/session.ts */
+const AUTH_SESSION_KEY = "auth:session";
+
+/**
+ * Seed an authenticated Google session into localStorage.
+ * Required for accessing dashboard routes.
+ */
+async function seedSession(page: Page) {
+  const now = Date.now();
+  const session = {
+    user: {
+      sub: "test-user-" + now,
+      email: "test@fenrir-ledger.dev",
+      name: "Test User",
+      picture: "https://example.com/photo.jpg",
+    },
+    access_token: "ya29.test_token_" + now,
+    id_token: "test_id_token",
+    refresh_token: "test_refresh_token",
+    expires_at: now + 3600000, // Valid for 1 hour
+  };
+
+  await page.evaluate(
+    ({ key, value }) => {
+      localStorage.setItem(key, value);
+    },
+    {
+      key: AUTH_SESSION_KEY,
+      value: JSON.stringify(session),
+    }
+  );
+}
+
 /**
  * Seed entitlement for a given tier.
  * localStorage key: fenrir_ledger:{householdId}:entitlement
@@ -59,18 +92,24 @@ async function seedEntitlement(
 }
 
 /**
- * Navigate to dashboard, seeding household and entitlement first.
- * Follows pattern from dashboard-5-tabs.spec.ts
+ * Navigate to dashboard, seeding all required auth, household, and entitlement data.
  */
 async function goToDashboardWithTier(page: Page, tier: "thrall" | "karl") {
   // Navigate to home first to establish origin
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
-  // Clear and seed
+  // Clear all storage to start fresh
   await clearAllStorage(page);
+
+  // Seed auth session (required for /dashboard access)
+  await seedSession(page);
+
+  // Seed household and tier entitlement
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await seedEntitlement(page, ANONYMOUS_HOUSEHOLD_ID, tier);
-  await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, []); // Empty cards for clean test
+
+  // Seed empty cards for clean test
+  await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, []);
 
   // Navigate to dashboard and wait for full load
   await page.goto("/dashboard", { waitUntil: "networkidle" });
