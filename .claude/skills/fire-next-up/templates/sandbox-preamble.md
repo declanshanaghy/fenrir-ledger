@@ -8,8 +8,8 @@ SANDBOX RULES:
 - Use absolute paths. The setup script prints REPO_ROOT — use it everywhere.
 - Set timeout: 600000 (10 min) on: npm ci, verify.sh, playwright test, next build.
 
-**Step 1 — Setup:**
-bash <REPO_ROOT>/.claude/scripts/sandbox-setup.sh <BRANCH>
+**Step 1 — Setup (MUST run first, before anything else):**
+REPO_ROOT=$(git rev-parse --show-toplevel) && bash "$REPO_ROOT/.claude/scripts/sandbox-setup.sh" <BRANCH>
 Note the REPO_ROOT it prints — use it for ALL subsequent commands.
 
 TODO TRACKING (UNBREAKABLE):
