@@ -5,7 +5,11 @@
  * Sorted by date descending (newest first).
  * Uses marketing layout (navbar + footer).
  *
- * Ref: GitHub Issue #373, #429
+ * Layout: Card grid — 3 columns desktop, 2 tablet, 1 mobile.
+ * Typography: Cinzel headings, Source Serif body, JetBrains Mono meta.
+ * Theme-aware via Tailwind tokens (light/dark).
+ *
+ * Ref: GitHub Issue #373, #429, #465
  */
 
 import type { Metadata } from "next";
@@ -38,45 +42,45 @@ export default function ChroniclesIndexPage() {
   const chronicles = getAllChronicles();
 
   return (
-    <section className="max-w-[1100px] mx-auto px-6 py-16">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="font-display text-3xl md:text-4xl font-bold tracking-wide text-foreground mb-3">
+    <section className="max-w-[1200px] mx-auto px-6 py-16">
+      {/* Header — centered, marketing typography */}
+      <header className="text-center pb-12 mb-12 border-b border-border">
+        <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-wide text-foreground mb-4">
           Prose Edda
         </h1>
-        <p className="font-body text-muted-foreground text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-          These are not blog posts. These are the sagas of the forge.
-          Each session carved into the record, as the skalds once carved runes into stone.
-          The wolf does not explain — it declares. Read, and know what was built.
+        <p className="font-body text-muted-foreground text-sm md:text-base max-w-[700px] mx-auto leading-relaxed">
+          The sagas of the forge. Each session carved into the record,
+          as the skalds once carved runes into stone.
+          Technical chronicles from the development of Fenrir Ledger.
         </p>
-      </div>
+      </header>
 
-      {/* Card grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Card grid — 3 desktop, 2 tablet, 1 mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {chronicles.map((entry) => (
           <Link
             key={entry.slug}
             href={`/chronicles/${entry.slug}`}
-            className="group block border border-border rounded-sm bg-card hover:border-primary/50 transition-colors p-6"
+            className="group block border border-border rounded-sm bg-card hover:border-primary/50 transition-colors p-6 flex flex-col gap-4"
           >
-            {/* Rune + date */}
-            <div className="flex items-center justify-between mb-3">
+            {/* Rune + date header */}
+            <div className="flex items-center justify-between">
               <span
-                className="text-2xl text-primary opacity-60 group-hover:opacity-100 transition-opacity"
+                className="text-[28px] text-primary opacity-60 group-hover:opacity-100 transition-opacity"
                 aria-hidden="true"
               >
                 {entry.rune}
               </span>
               <time
                 dateTime={entry.date}
-                className="font-mono text-[0.65rem] text-muted-foreground tracking-wide"
+                className="font-mono text-[0.65rem] text-muted-foreground tracking-wide uppercase"
               >
                 {formatDate(entry.date)}
               </time>
             </div>
 
             {/* Title */}
-            <h2 className="font-heading text-base font-semibold text-foreground group-hover:text-primary transition-colors leading-snug mb-2">
+            <h2 className="font-heading text-lg font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
               {entry.title}
             </h2>
 
@@ -86,6 +90,7 @@ export default function ChroniclesIndexPage() {
                 {entry.excerpt}
               </p>
             )}
+
           </Link>
         ))}
       </div>

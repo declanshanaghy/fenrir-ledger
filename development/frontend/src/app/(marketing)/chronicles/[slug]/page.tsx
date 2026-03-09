@@ -3,11 +3,16 @@
  *
  * Renders individual session chronicle natively from MDX via next-mdx-remote/rsc.
  * No dangerouslySetInnerHTML — MDX compiles to React components at build time.
- * - Chronicle styling via chronicle.css scoped to .chronicle-page
- * - Previous / Next navigation between entries (sorted newest-first)
- * - Static generation via generateStaticParams
  *
- * Ref: GitHub Issue #373, #427
+ * Layout (per Luna wireframe):
+ *   1. Compact header (title, meta, subtitle — no hero)
+ *   2. Prev/Next navigation (moved to top, between header and content)
+ *   3. MDX content (chronicle.css scoped to .chronicle-page)
+ *   4. Back to index link
+ *
+ * Theme-aware via Tailwind tokens (light/dark).
+ *
+ * Ref: GitHub Issue #373, #427, #465
  */
 
 import type { Metadata } from "next";
@@ -94,21 +99,32 @@ export default async function ChronicleDetailPage({
 
   return (
     <>
-      {/* ── Chronicle content — native MDX rendering ── */}
-      {/* format:'md' compiles HTML+markdown to React components at build time.
-          dedentHtml strips leading whitespace so indented HTML isn't treated
-          as markdown code blocks.  Ref: Issue #407 */}
-      <MDXRemote
-        source={dedentHtml(entry.content)}
-        options={{ mdxOptions: { format: "md", rehypePlugins: [rehypeRaw] } }}
-      />
+      {/* ── Compact Header (no hero, dev blog feel) ── */}
+      <header className="text-center py-12 border-b border-border">
+        <div className="max-w-[880px] mx-auto px-7">
+          <div className="flex justify-center items-center gap-4 mb-5 font-mono text-xs text-muted-foreground tracking-wider uppercase">
+            <span className="text-primary" aria-hidden="true">{entry.rune}</span>
+            <span>{entry.title.match(/Session \d+/)?.[0] ?? ""}</span>
+            <span aria-hidden="true">·</span>
+            <time dateTime={entry.date}>{formatDate(entry.date)}</time>
+          </div>
+          <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-foreground leading-tight mb-3">
+            {entry.title.replace(/^Session \d+:\s*/, "")}
+          </h1>
+          {entry.excerpt && (
+            <p className="font-body text-sm text-muted-foreground italic">
+              {entry.excerpt}
+            </p>
+          )}
+        </div>
+      </header>
 
-      {/* ── Prev / Next navigation ── */}
+      {/* ── Prev / Next navigation (top, between header and content) ── */}
       <nav
-        className="max-w-[880px] mx-auto px-6 pt-10 pb-16 border-t border-border mt-4"
+        className="max-w-[880px] mx-auto px-7 py-6 border-b border-border"
         aria-label="Chronicle navigation"
       >
-        <div className="flex justify-between gap-6 flex-wrap">
+        <div className="flex justify-between items-center gap-6">
           {/* Prev = older entry */}
           {prevEntry ? (
             <Link
@@ -118,7 +134,7 @@ export default async function ChronicleDetailPage({
               <span className="font-mono text-[0.6rem] text-muted-foreground tracking-widest uppercase">
                 ← Previous
               </span>
-              <span className="font-heading text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
+              <span className="font-heading text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug truncate">
                 {prevEntry.title}
               </span>
               <span className="font-mono text-[0.6rem] text-muted-foreground/50">
@@ -131,7 +147,7 @@ export default async function ChronicleDetailPage({
 
           {/* Rune center divider */}
           <div
-            className="self-center font-mono text-primary/30 text-lg"
+            className="self-center font-mono text-primary/30 text-lg hidden sm:block"
             aria-hidden="true"
           >
             ᛟ
@@ -146,7 +162,7 @@ export default async function ChronicleDetailPage({
               <span className="font-mono text-[0.6rem] text-muted-foreground tracking-widest uppercase">
                 Next →
               </span>
-              <span className="font-heading text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
+              <span className="font-heading text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug truncate">
                 {nextEntry.title}
               </span>
               <span className="font-mono text-[0.6rem] text-muted-foreground/50">
@@ -157,17 +173,26 @@ export default async function ChronicleDetailPage({
             <div className="flex-1" />
           )}
         </div>
-
-        {/* Back to index */}
-        <div className="mt-8 text-center">
-          <Link
-            href="/chronicles"
-            className="font-mono text-[0.65rem] text-muted-foreground hover:text-primary transition-colors tracking-widest uppercase"
-          >
-            ↑ All Sagas
-          </Link>
-        </div>
       </nav>
+
+      {/* ── Chronicle content — native MDX rendering ── */}
+      {/* format:'md' compiles HTML+markdown to React components at build time.
+          dedentHtml strips leading whitespace so indented HTML isn't treated
+          as markdown code blocks.  Ref: Issue #407 */}
+      <MDXRemote
+        source={dedentHtml(entry.content)}
+        options={{ mdxOptions: { format: "md", rehypePlugins: [rehypeRaw] } }}
+      />
+
+      {/* ── Back to index ── */}
+      <div className="max-w-[880px] mx-auto px-7 py-10 border-t border-border mt-4 text-center">
+        <Link
+          href="/chronicles"
+          className="font-mono text-[0.65rem] text-muted-foreground hover:text-primary transition-colors tracking-widest uppercase"
+        >
+          ↑ Back to All Sagas
+        </Link>
+      </div>
     </>
   );
 }
