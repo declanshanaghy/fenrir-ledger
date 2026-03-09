@@ -28,11 +28,15 @@ async function setupDashboard(
   page: Parameters<typeof clearAllStorage>[0],
   cards: Parameters<typeof seedCards>[2]
 ) {
-  await page.goto("/");
+  // Navigate to root first
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
+  // Reload to trigger dashboard mount and tab rendering
   await page.reload({ waitUntil: "networkidle" });
+  // Wait for tablist to be available
+  await page.waitForSelector('[role="tablist"]', { timeout: 10000 });
 }
 
 test.describe("Dashboard Tab Order (Issue #399)", () => {
