@@ -15,6 +15,7 @@ var STATUS_OPTIONS = {
 var GH_API = "https://api.github.com";
 var GH_GQL = "https://api.github.com/graphql";
 var TOKEN = execSync("gh auth token", { encoding: "utf-8" }).trim();
+var EXCLUDED_LABELS = ["marketing"];
 var HEADERS = {
   Authorization: `bearer ${TOKEN}`,
   "Content-Type": "application/json",
@@ -260,7 +261,9 @@ function analyzeChain(item, comments, prs) {
 async function statusDashboard() {
   const { items, issueComments, pullRequests } = await fetchBoardAndComments();
   const inProgress = items.filter((i) => i.status === "In Progress");
-  const upNext = items.filter((i) => i.status === "Up Next");
+  const upNext = items.filter(
+    (i) => i.status === "Up Next" && !i.labels.some((l) => EXCLUDED_LABELS.includes(l))
+  );
   const chains = inProgress.map(
     (item) => analyzeChain(item, issueComments[item.num] ?? [], pullRequests)
   );
@@ -508,7 +511,9 @@ async function resumeDetect(issueNum) {
 }
 async function peek() {
   const { items } = await fetchBoardAndComments();
-  const upNext = items.filter((i) => i.status === "Up Next");
+  const upNext = items.filter(
+    (i) => i.status === "Up Next" && !i.labels.some((l) => EXCLUDED_LABELS.includes(l))
+  );
   const priorityOrder = {
     critical: 0,
     high: 1,

@@ -26,6 +26,9 @@ const GH_GQL = "https://api.github.com/graphql";
 // Get token once at startup (only execSync we keep)
 const TOKEN = execSync("gh auth token", { encoding: "utf-8" }).trim();
 
+// Labels to exclude from the Up Next queue (these issues are manually managed)
+const EXCLUDED_LABELS = ["marketing"];
+
 const HEADERS = {
   Authorization: `bearer ${TOKEN}`,
   "Content-Type": "application/json",
@@ -350,7 +353,11 @@ async function statusDashboard() {
   const { items, issueComments, pullRequests } = await fetchBoardAndComments();
 
   const inProgress = items.filter((i) => i.status === "In Progress");
-  const upNext = items.filter((i) => i.status === "Up Next");
+  const upNext = items.filter(
+    (i) =>
+      i.status === "Up Next" &&
+      !i.labels.some((l) => EXCLUDED_LABELS.includes(l))
+  );
 
   const chains: ChainStatus[] = inProgress.map((item) =>
     analyzeChain(item, issueComments[item.num] ?? [], pullRequests)
@@ -639,7 +646,11 @@ async function resumeDetect(issueNum: number) {
 
 async function peek() {
   const { items } = await fetchBoardAndComments();
-  const upNext = items.filter((i) => i.status === "Up Next");
+  const upNext = items.filter(
+    (i) =>
+      i.status === "Up Next" &&
+      !i.labels.some((l) => EXCLUDED_LABELS.includes(l))
+  );
 
   const priorityOrder: Record<string, number> = {
     critical: 0,
