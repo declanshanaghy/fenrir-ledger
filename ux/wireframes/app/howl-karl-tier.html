@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Howl Panel — Karl Tier Gating — Issue #398</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md.
+       Permitted: display flex/grid, border, width/height, padding/margin, font-size, font-weight, opacity (placeholders only) */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 24px; }
+
+    h1 { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+    h2 { font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin: 40px 0 12px; border-bottom: 1px solid; padding-bottom: 8px; }
+    h3 { font-size: 13px; font-weight: bold; margin-bottom: 8px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    p { margin-bottom: 8px; }
+    .section { margin-bottom: 64px; }
+    .variant-group { display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start; }
+
+    /* ── Document header ──────────────────────────────────────────── */
+    .doc-header { border-bottom: 2px solid; padding-bottom: 16px; margin-bottom: 32px; }
+    .doc-header h1 { font-size: 20px; }
+    .doc-meta { font-size: 12px; margin-top: 6px; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       APP SHELL (desktop 960px)
+    ═══════════════════════════════════════════════════════════════ */
+    .app-shell {
+      display: grid;
+      grid-template-columns: 272px 1fr;
+      grid-template-rows: auto auto 1fr auto;
+      min-height: 640px;
+      border: 1px solid;
+      width: 960px;
+    }
+
+    /* ── TopBar ──────────────────────────────────────────────────── */
+    .topbar {
+      grid-column: 1 / 3;
+      grid-row: 1;
+      height: 56px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+    .topbar-brand { display: flex; flex-direction: column; gap: 1px; }
+    .topbar-brand .brand-name { font-size: 15px; font-weight: bold; }
+    .topbar-brand .brand-sub { font-size: 10px; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .topbar-avatar { width: 36px; height: 36px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+    .tier-badge {
+      font-size: 10px;
+      font-weight: bold;
+      border: 1px solid;
+      padding: 2px 7px;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────────────────── */
+    .sidebar {
+      grid-column: 1;
+      grid-row: 3;
+      border-right: 1px solid;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-logo { padding: 16px; border-bottom: 1px solid; }
+    .sidebar-logo .logo-rune { font-size: 22px; }
+    .sidebar-logo .logo-name { font-size: 13px; font-weight: bold; }
+    .sidebar-logo .logo-sub { font-size: 10px; }
+    .sidebar-nav { flex: 1; padding: 8px 0; }
+    .nav-item { padding: 10px 16px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .nav-item.active { font-weight: bold; border-left: 3px solid; }
+    .nav-item:not(.active) { border-left: 3px solid transparent; }
+    .sidebar-footer { padding: 12px 16px; border-top: 1px solid; }
+
+    /* ── Content area ────────────────────────────────────────────── */
+    .content {
+      grid-column: 2;
+      grid-row: 3;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Content header ─────────────────────────────────────────── */
+    .content-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .content-header h1 { font-size: 16px; font-weight: bold; }
+    .content-header .summary-text { font-size: 12px; }
+    .btn-primary { border: 1px solid; padding: 6px 14px; font-size: 13px; font-weight: bold; background: none; cursor: pointer; }
+
+    /* ── Tab bar ─────────────────────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid;
+      padding: 0 20px;
+    }
+    .tab {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 3px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .tab.active { border-bottom: 3px solid; }
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      border: 1px solid;
+      padding: 1px 6px;
+      min-width: 20px;
+    }
+    /* Karl-gated tab indicator */
+    .tab-lock-icon {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+    .tab-karl-badge {
+      font-size: 9px;
+      font-weight: bold;
+      border: 1px solid;
+      padding: 1px 5px;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Tab panel ────────────────────────────────────────────────── */
+    .tab-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+    /* ── Teaser area — blurred sample alerts (Thrall) ──────────────
+     * The .teaser-list sits BEHIND the .upsell-overlay.
+     * Implementation: CSS filter: blur(6px) + pointer-events: none on .teaser-list
+     * The blur + overlay together constitute the "blurred teaser" pattern.
+     * Real user data is NEVER used — these are hardcoded fake sample alerts.
+    ─────────────────────────────────────────────────────────────── */
+    .teaser-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .teaser-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 20px;
+      /* Implementation: filter: blur(6px); pointer-events: none; user-select: none; */
+      opacity: 0.55; /* represents blurred + dimmed state */
+    }
+
+    /* Sample alert card (fake data, blurred) */
+    .sample-alert-card {
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+    }
+    .sample-alert-urgency {
+      padding: 5px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      border-bottom: 1px solid;
+    }
+    .urgency-dot {
+      width: 8px;
+      height: 8px;
+      border: 2px solid;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .sample-alert-header {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid;
+    }
+    .status-ring {
+      width: 36px;
+      height: 36px;
+      border: 2px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .sample-card-identity { flex: 1; }
+    .sample-card-issuer { font-size: 12px; font-weight: bold; }
+    .sample-card-name { font-size: 11px; }
+    .sample-alert-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; }
+    .sample-alert-deadline { font-size: 12px; }
+    .sample-alert-amount { font-size: 13px; font-weight: bold; }
+    .sample-alert-actions { display: flex; gap: 8px; padding: 8px 14px; border-top: 1px solid; }
+    .sample-alert-actions button { flex: 1; border: 1px solid; padding: 4px; font-size: 11px; background: none; cursor: pointer; }
+
+    /* ── Upsell overlay (sits above blurred teaser) ──────────────────
+     * Implementation: position: absolute; inset: 0; z-index: 20;
+     * backdrop: semi-transparent (rgba equivalent via opacity on bg)
+     * The overlay is always rendered in DOM when tier = Thrall,
+     * regardless of whether the tab is currently active.
+    ─────────────────────────────────────────────────────────────── */
+    .upsell-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Implementation: background: rgba(theme-bg, 0.82); backdrop-filter: blur(2px) */
+      border: 1px dashed; /* wireframe only — shows overlay bounds */
+    }
+    .upsell-card {
+      border: 2px solid;
+      max-width: 380px;
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .upsell-icon {
+      width: 56px;
+      height: 56px;
+      border: 2px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .upsell-heading { font-size: 20px; font-weight: bold; }
+    .upsell-body { font-size: 13px; max-width: 300px; line-height: 1.5; }
+    .upsell-feature-list { list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 12px; width: 100%; text-align: left; padding: 0 8px; }
+    .upsell-feature-list li { display: flex; align-items: flex-start; gap: 8px; }
+    .feature-check { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+    .upsell-cta { border: 2px solid; padding: 10px 28px; font-size: 14px; font-weight: bold; background: none; cursor: pointer; width: 100%; }
+    .upsell-dismiss-note { font-size: 11px; }
+
+    /* ── Karl full Howl panel ────────────────────────────────────── */
+    .howl-panel-full { flex: 1; display: flex; flex-direction: column; padding: 0; }
+    .howl-panel-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .howl-panel-header h2 { font-size: 14px; font-weight: bold; margin: 0; border: none; padding: 0; text-transform: uppercase; letter-spacing: 0.08em; }
+    .howl-alert-list { display: flex; flex-direction: column; gap: 12px; padding: 20px; overflow-y: auto; }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    .footer {
+      grid-column: 2;
+      grid-row: 4;
+      border-top: 1px solid;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TAB BAR ANATOMY — THRALL vs KARL states
+    ═══════════════════════════════════════════════════════════════ */
+    .tab-anatomy-group {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    .tab-anatomy-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 8px;
+    }
+    .tab-anatomy-bar {
+      border: 1px solid;
+      display: flex;
+      padding: 0 16px;
+      max-width: 700px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       MOBILE SHELL (375px)
+    ═══════════════════════════════════════════════════════════════ */
+    .mobile-shell {
+      width: 375px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      min-height: 700px;
+    }
+    .mobile-topbar {
+      height: 56px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+    .mobile-topbar-brand { font-size: 14px; font-weight: bold; }
+    .mobile-topbar-right { display: flex; align-items: center; gap: 10px; }
+    .icon-btn { width: 36px; height: 36px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 14px; background: none; cursor: pointer; }
+    .mobile-tab-bar {
+      display: flex;
+      border-bottom: 1px solid;
+      padding: 0 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .mobile-tab-bar::-webkit-scrollbar { display: none; }
+    .mobile-tab {
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: bold;
+      border: none;
+      background: none;
+      border-bottom: 3px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .mobile-tab.active { border-bottom: 3px solid; }
+    .mobile-content { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    .mobile-content-header { padding: 12px 16px; border-bottom: 1px solid; display: flex; align-items: center; justify-content: space-between; }
+    .mobile-teaser-container { flex: 1; position: relative; overflow: hidden; }
+    .mobile-teaser-list { display: flex; flex-direction: column; gap: 10px; padding: 16px; opacity: 0.55; }
+    .mobile-upsell-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px dashed;
+    }
+    .mobile-upsell-card {
+      border: 2px solid;
+      width: calc(100% - 32px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .mobile-upsell-icon { width: 44px; height: 44px; border: 2px solid; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .mobile-upsell-heading { font-size: 17px; font-weight: bold; }
+    .mobile-upsell-body { font-size: 12px; line-height: 1.5; }
+    .mobile-upsell-cta { border: 2px solid; padding: 10px 20px; font-size: 14px; font-weight: bold; background: none; cursor: pointer; width: 100%; }
+    .mobile-upsell-note { font-size: 11px; }
+
+    /* ── Ragnarok gate note ──────────────────────────────────────── */
+    .ragnarok-gate-box {
+      border: 1px solid;
+      padding: 16px 20px;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ragnarok-gate-box h3 { font-size: 13px; font-weight: bold; }
+    .ragnarok-gate-box p { font-size: 12px; margin: 0; }
+    .ragnarok-row { display: flex; gap: 12px; align-items: flex-start; }
+    .ragnarok-tier-col { flex: 1; border: 1px solid; padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; }
+    .ragnarok-tier-col h4 { font-size: 12px; font-weight: bold; }
+    .ragnarok-tier-col p { font-size: 11px; margin: 0; }
+
+    /* ── Interaction spec ────────────────────────────────────────── */
+    .spec-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+    .spec-table th { text-align: left; border-bottom: 2px solid; padding: 6px 10px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+    .spec-table td { border-bottom: 1px solid; padding: 6px 10px; vertical-align: top; }
+    .spec-table tr:last-child td { border-bottom: none; }
+    .spec-code { font-family: monospace; font-size: 11px; border: 1px solid; padding: 1px 4px; }
+  </style>
+</head>
+<body>
+
+<div class="doc-header">
+  <h1>Wireframe: Howl Panel — Karl Tier Gating</h1>
+  <div class="doc-meta">Issue #398 · ux/wireframes/app/howl-karl-tier.html · Sprint 7</div>
+  <p class="note" style="margin-top:8px;">Structure only. No colors, no theme styling. See theme-system.md for visual treatment.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCENARIO 1 — THRALL: "The Howl" tab (blurred teaser + overlay)
+═══════════════════════════════════════════════════════════════ -->
+<h2>Scenario 1 — Desktop: Thrall user clicks "The Howl" tab</h2>
+<p class="note">Tab is visible and clickable. Clicking reveals blurred fake alerts behind an upsell overlay. No real user data shown.</p>
+
+<div class="section">
+  <div class="app-shell">
+
+    <!-- TopBar -->
+    <div class="topbar">
+      <div class="topbar-brand">
+        <span class="brand-name">ᛟ FENRIR LEDGER</span>
+        <span class="brand-sub">Credit Card Tracker</span>
+      </div>
+      <div class="topbar-right">
+        <div class="tier-badge">THRALL</div>
+        <div class="topbar-avatar">ᛟ</div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-rune">ᛟ</div>
+        <div class="logo-name">FENRIR LEDGER</div>
+        <div class="logo-sub">Credit Card Tracker</div>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-item active">ᚦ Cards</div>
+        <div class="nav-item">ᛏ Valhalla</div>
+        <div class="nav-item">⚙ Settings</div>
+      </div>
+      <div class="sidebar-footer">
+        <button>‹ Collapse</button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="content-header">
+        <div>
+          <h1>THE LEDGER OF FATES</h1>
+          <span class="summary-text">6 cards · 3 need attention</span>
+        </div>
+        <button class="btn-primary">+ ADD CARD</button>
+      </div>
+
+      <!-- Tab bar — Howl tab active, lock icon indicates Karl feature -->
+      <div class="tab-bar">
+        <button class="tab">ᚦ Active Cards</button>
+        <button class="tab active">
+          ᚲ The Howl
+          <span class="tab-lock-icon">🔒</span>
+          <span class="tab-karl-badge">KARL</span>
+        </button>
+        <button class="tab">ᛏ Valhalla</button>
+      </div>
+
+      <!-- Tab panel: Thrall teaser state -->
+      <div class="tab-panel">
+        <div class="teaser-container">
+
+          <!-- Blurred fake sample alerts (behind overlay) -->
+          <div class="teaser-list" aria-hidden="true" role="presentation">
+
+            <!-- Sample alert 1: Fee due soon (fake) -->
+            <div class="sample-alert-card">
+              <div class="sample-alert-urgency">
+                <div class="urgency-dot"></div>
+                ANNUAL FEE · 7 DAYS REMAINING
+              </div>
+              <div class="sample-alert-header">
+                <div class="status-ring">ᚦ</div>
+                <div class="sample-card-identity">
+                  <div class="sample-card-issuer">CHASE SAPPHIRE</div>
+                  <div class="sample-card-name">Preferred Reserve</div>
+                </div>
+              </div>
+              <div class="sample-alert-body">
+                <div class="sample-alert-amount">$95 annual fee due Mar 15</div>
+                <div class="sample-alert-deadline">Sköll's bite: 7 days</div>
+              </div>
+              <div class="sample-alert-actions">
+                <button>View Record</button>
+                <button>Break the Chain</button>
+              </div>
+            </div>
+
+            <!-- Sample alert 2: Promo period expiring (fake) -->
+            <div class="sample-alert-card">
+              <div class="sample-alert-urgency">
+                <div class="urgency-dot"></div>
+                PROMO EXPIRING · 14 DAYS REMAINING
+              </div>
+              <div class="sample-alert-header">
+                <div class="status-ring">ᚷ</div>
+                <div class="sample-card-identity">
+                  <div class="sample-card-issuer">AMEX GOLD</div>
+                  <div class="sample-card-name">Spend $4,000 by Apr 1</div>
+                </div>
+              </div>
+              <div class="sample-alert-body">
+                <div class="sample-alert-amount">$2,100 remaining to unlock 75,000 pts</div>
+                <div class="sample-alert-deadline">Welcome Mead deadline: Apr 1</div>
+              </div>
+              <div class="sample-alert-actions">
+                <button>View Record</button>
+                <button>Mark Claimed</button>
+              </div>
+            </div>
+
+            <!-- Sample alert 3: Low urgency fee (fake) -->
+            <div class="sample-alert-card">
+              <div class="sample-alert-urgency">
+                <div class="urgency-dot"></div>
+                ANNUAL FEE · 30 DAYS REMAINING
+              </div>
+              <div class="sample-alert-header">
+                <div class="status-ring">ᚹ</div>
+                <div class="sample-card-identity">
+                  <div class="sample-card-issuer">CAPITAL ONE</div>
+                  <div class="sample-card-name">Venture X Rewards</div>
+                </div>
+              </div>
+              <div class="sample-alert-body">
+                <div class="sample-alert-amount">$395 annual fee due Apr 2</div>
+                <div class="sample-alert-deadline">The Norns have spoken: 30 days</div>
+              </div>
+              <div class="sample-alert-actions">
+                <button>View Record</button>
+                <button>Break the Chain</button>
+              </div>
+            </div>
+
+          </div>
+          <!-- /teaser-list -->
+
+          <!-- Upsell overlay — sits above blurred teaser -->
+          <div class="upsell-overlay" role="dialog" aria-modal="false" aria-label="Unlock The Howl — Karl tier feature">
+            <div class="upsell-card">
+
+              <div class="upsell-icon" aria-hidden="true">🐺</div>
+
+              <div class="upsell-heading">Unlock The Howl</div>
+
+              <div class="upsell-body">
+                Proactive fee alerts and promo deadline warnings — the wolf watches your chains
+                so you never miss a critical date.
+              </div>
+
+              <ul class="upsell-feature-list" aria-label="Karl tier Howl features">
+                <li><span class="feature-check">✓</span> Upcoming fee alerts with urgency ranking</li>
+                <li><span class="feature-check">✓</span> Welcome bonus deadline countdowns</li>
+                <li><span class="feature-check">✓</span> Ragnarök alert when ≥5 urgent cards pile up</li>
+                <li><span class="feature-check">✓</span> Proactive notifications before you lose value</li>
+              </ul>
+
+              <button class="upsell-cta">Upgrade to Karl — $3.99/month</button>
+
+              <div class="upsell-dismiss-note">
+                <a href="/pricing">See all Karl features →</a>
+              </div>
+
+            </div>
+          </div>
+          <!-- /upsell-overlay -->
+
+        </div>
+        <!-- /teaser-container -->
+      </div>
+      <!-- /tab-panel -->
+
+    </div>
+    <!-- /content -->
+
+    <div class="footer">
+      <span>ᛟ Fenrir Ledger</span>
+      <span>© 2026</span>
+    </div>
+
+  </div>
+  <!-- /app-shell -->
+  <p class="note" style="margin-top:12px;">
+    Note: Dashed border on overlay is wireframe artifact showing overlay bounds. Implementation uses semi-transparent background.
+    .teaser-list has pointer-events: none; filter: blur(6px); user-select: none.
+    Fake data only — no real card data is ever passed to this component.
+  </p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCENARIO 2 — KARL: "The Howl" tab (full panel, no overlay)
+═══════════════════════════════════════════════════════════════ -->
+<h2>Scenario 2 — Desktop: Karl user views "The Howl" tab (full panel)</h2>
+<p class="note">Karl users see the full Howl panel unchanged. No lock icon, no KARL badge on the tab — it's a first-class feature.</p>
+
+<div class="section">
+  <div class="app-shell">
+
+    <div class="topbar">
+      <div class="topbar-brand">
+        <span class="brand-name">ᛟ FENRIR LEDGER</span>
+        <span class="brand-sub">Credit Card Tracker</span>
+      </div>
+      <div class="topbar-right">
+        <div class="tier-badge">KARL</div>
+        <div class="topbar-avatar">👤</div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-rune">ᛟ</div>
+        <div class="logo-name">FENRIR LEDGER</div>
+        <div class="logo-sub">Credit Card Tracker</div>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-item active">ᚦ Cards</div>
+        <div class="nav-item">ᛏ Valhalla</div>
+        <div class="nav-item">⚙ Settings</div>
+      </div>
+      <div class="sidebar-footer"><button>‹ Collapse</button></div>
+    </div>
+
+    <div class="content">
+      <div class="content-header">
+        <div>
+          <h1>THE LEDGER OF FATES</h1>
+          <span class="summary-text">6 cards · 3 need attention</span>
+        </div>
+        <button class="btn-primary">+ ADD CARD</button>
+      </div>
+
+      <!-- Tab bar — Karl: no lock icon, no KARL badge on Howl tab -->
+      <div class="tab-bar">
+        <button class="tab">ᚦ Active Cards</button>
+        <button class="tab active">
+          ᚲ The Howl
+          <span class="tab-badge howl">3</span>
+        </button>
+        <button class="tab">ᛏ Valhalla</button>
+      </div>
+
+      <!-- Full Howl panel for Karl -->
+      <div class="tab-panel">
+        <div class="howl-panel-full">
+          <div class="howl-panel-header">
+            <h2>ᚲ THE HOWL — 3 alerts</h2>
+            <span class="note">Sorted by urgency</span>
+          </div>
+          <div class="howl-alert-list">
+
+            <div class="sample-alert-card">
+              <div class="sample-alert-urgency">
+                <div class="urgency-dot"></div>
+                ANNUAL FEE · 7 DAYS
+              </div>
+              <div class="sample-alert-header">
+                <div class="status-ring">ᚦ</div>
+                <div class="sample-card-identity">
+                  <div class="sample-card-issuer">CHASE SAPPHIRE</div>
+                  <div class="sample-card-name">Preferred Reserve</div>
+                </div>
+              </div>
+              <div class="sample-alert-body">
+                <div class="sample-alert-amount">$95 annual fee due Mar 15</div>
+              </div>
+              <div class="sample-alert-actions">
+                <button>View Record</button>
+                <button>Break the Chain</button>
+              </div>
+            </div>
+
+            <div class="sample-alert-card">
+              <div class="sample-alert-urgency">
+                <div class="urgency-dot"></div>
+                PROMO EXPIRING · 14 DAYS
+              </div>
+              <div class="sample-alert-header">
+                <div class="status-ring">ᚷ</div>
+                <div class="sample-card-identity">
+                  <div class="sample-card-issuer">AMEX GOLD</div>
+                  <div class="sample-card-name">Spend $4,000 by Apr 1</div>
+                </div>
+              </div>
+              <div class="sample-alert-body">
+                <div class="sample-alert-amount">$2,100 remaining → 75,000 pts</div>
+              </div>
+              <div class="sample-alert-actions">
+                <button>View Record</button>
+                <button>Mark Claimed</button>
+              </div>
+            </div>
+
+            <div class="sample-alert-card">
+              <div class="sample-alert-urgency">
+                <div class="urgency-dot"></div>
+                ANNUAL FEE · 30 DAYS
+              </div>
+              <div class="sample-alert-header">
+                <div class="status-ring">ᚹ</div>
+                <div class="sample-card-identity">
+                  <div class="sample-card-issuer">CAPITAL ONE</div>
+                  <div class="sample-card-name">Venture X Rewards</div>
+                </div>
+              </div>
+              <div class="sample-alert-body">
+                <div class="sample-alert-amount">$395 annual fee due Apr 2</div>
+              </div>
+              <div class="sample-alert-actions">
+                <button>View Record</button>
+                <button>Break the Chain</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>ᛟ Fenrir Ledger</span>
+      <span>© 2026</span>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCENARIO 3 — TAB BAR ANATOMY: Thrall vs Karl states
+═══════════════════════════════════════════════════════════════ -->
+<h2>Scenario 3 — Tab Bar Anatomy: Thrall vs Karl</h2>
+<p class="note">Comparison of the tab bar in both tier states. The Howl tab is always visible in both states.</p>
+
+<div class="section">
+  <div class="tab-anatomy-group">
+
+    <!-- Thrall tab bar state -->
+    <div>
+      <div class="tab-anatomy-label">Thrall State — Howl tab shows lock + KARL badge</div>
+      <div class="tab-anatomy-bar">
+        <button class="tab active">ᚦ Active Cards</button>
+        <button class="tab">
+          ᚲ The Howl
+          <span class="tab-lock-icon">🔒</span>
+          <span class="tab-karl-badge">KARL</span>
+        </button>
+        <button class="tab">ᛏ Valhalla</button>
+      </div>
+      <p class="note" style="margin-top:8px;">Lock icon (🔒) + "KARL" badge communicate the feature gate without hiding the tab. Clicking the tab still works — it shows the teaser overlay.</p>
+    </div>
+
+    <!-- Thrall tab bar — Howl tab active -->
+    <div>
+      <div class="tab-anatomy-label">Thrall State — Howl tab selected (showing teaser)</div>
+      <div class="tab-anatomy-bar">
+        <button class="tab">ᚦ Active Cards</button>
+        <button class="tab active">
+          ᚲ The Howl
+          <span class="tab-lock-icon">🔒</span>
+          <span class="tab-karl-badge">KARL</span>
+        </button>
+        <button class="tab">ᛏ Valhalla</button>
+      </div>
+      <p class="note" style="margin-top:8px;">Active underline shows even on the locked tab — the tab panel just shows the teaser state.</p>
+    </div>
+
+    <!-- Karl tab bar state -->
+    <div>
+      <div class="tab-anatomy-label">Karl State — Howl tab is a first-class feature (no lock)</div>
+      <div class="tab-anatomy-bar">
+        <button class="tab active">ᚦ Active Cards</button>
+        <button class="tab">
+          ᚲ The Howl
+          <span class="tab-badge howl">3</span>
+        </button>
+        <button class="tab">ᛏ Valhalla</button>
+      </div>
+      <p class="note" style="margin-top:8px;">Karl sees only the urgency badge count — no lock icon, no KARL badge. The feature is unlocked; no indication of tier gating needed.</p>
+    </div>
+
+    <!-- Karl tab bar — Howl active -->
+    <div>
+      <div class="tab-anatomy-label">Karl State — Howl tab active</div>
+      <div class="tab-anatomy-bar">
+        <button class="tab">ᚦ Active Cards</button>
+        <button class="tab active">
+          ᚲ The Howl
+          <span class="tab-badge howl">3</span>
+        </button>
+        <button class="tab">ᛏ Valhalla</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCENARIO 4 — MOBILE 375px: Thrall teaser state
+═══════════════════════════════════════════════════════════════ -->
+<h2>Scenario 4 — Mobile 375px: Thrall user — "The Howl" teaser</h2>
+<p class="note">Same blurred teaser + upsell overlay pattern adapted for narrow viewport. Overlay card fills near-full width.</p>
+
+<div class="section">
+  <div class="variant-group">
+
+    <!-- Mobile: Thrall — Active Cards tab -->
+    <div>
+      <div class="label">Thrall — Active tab selected</div>
+      <div class="mobile-shell">
+        <div class="mobile-topbar">
+          <div class="mobile-topbar-brand">ᛟ FENRIR LEDGER</div>
+          <div class="mobile-topbar-right">
+            <div class="tier-badge">THRALL</div>
+            <button class="icon-btn">ᛟ</button>
+          </div>
+        </div>
+        <div class="mobile-tab-bar">
+          <button class="mobile-tab active">ᚦ Active</button>
+          <button class="mobile-tab">
+            ᚲ Howl
+            <span class="tab-lock-icon">🔒</span>
+          </button>
+          <button class="mobile-tab">ᛏ Valhalla</button>
+        </div>
+        <div class="mobile-content">
+          <div class="mobile-content-header">
+            <span style="font-size:13px; font-weight:bold;">Active Cards (6)</span>
+            <button class="btn-primary" style="font-size:11px; padding:4px 10px;">+ ADD</button>
+          </div>
+          <div style="padding:16px; flex:1;">
+            <div class="note">Card grid renders here (1-col mobile layout)</div>
+            <div style="border:1px solid; padding:12px; margin-top:8px;">Card tile 1</div>
+            <div style="border:1px solid; padding:12px; margin-top:8px;">Card tile 2</div>
+          </div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px;">Lock icon on "Howl" tab in mobile tab bar — abbreviated label "Howl" to save space.</p>
+    </div>
+
+    <!-- Mobile: Thrall — Howl tab clicked, teaser shown -->
+    <div>
+      <div class="label">Thrall — Howl tab selected (teaser + overlay)</div>
+      <div class="mobile-shell">
+        <div class="mobile-topbar">
+          <div class="mobile-topbar-brand">ᛟ FENRIR LEDGER</div>
+          <div class="mobile-topbar-right">
+            <div class="tier-badge">THRALL</div>
+            <button class="icon-btn">ᛟ</button>
+          </div>
+        </div>
+        <div class="mobile-tab-bar">
+          <button class="mobile-tab">ᚦ Active</button>
+          <button class="mobile-tab active">
+            ᚲ Howl
+            <span class="tab-lock-icon">🔒</span>
+          </button>
+          <button class="mobile-tab">ᛏ Valhalla</button>
+        </div>
+        <div class="mobile-content">
+          <div class="mobile-teaser-container">
+
+            <!-- Blurred fake alerts -->
+            <div class="mobile-teaser-list" aria-hidden="true" role="presentation">
+              <div class="sample-alert-card">
+                <div class="sample-alert-urgency"><div class="urgency-dot"></div>ANNUAL FEE · 7 DAYS</div>
+                <div class="sample-alert-header">
+                  <div class="status-ring" style="width:30px;height:30px;font-size:11px;">ᚦ</div>
+                  <div class="sample-card-identity">
+                    <div class="sample-card-issuer" style="font-size:11px;">CHASE SAPPHIRE</div>
+                    <div class="sample-card-name" style="font-size:10px;">Preferred Reserve</div>
+                  </div>
+                </div>
+                <div class="sample-alert-body"><div class="sample-alert-amount" style="font-size:12px;">$95 fee due Mar 15</div></div>
+              </div>
+              <div class="sample-alert-card">
+                <div class="sample-alert-urgency"><div class="urgency-dot"></div>PROMO · 14 DAYS</div>
+                <div class="sample-alert-header">
+                  <div class="status-ring" style="width:30px;height:30px;font-size:11px;">ᚷ</div>
+                  <div class="sample-card-identity">
+                    <div class="sample-card-issuer" style="font-size:11px;">AMEX GOLD</div>
+                    <div class="sample-card-name" style="font-size:10px;">Welcome bonus expires</div>
+                  </div>
+                </div>
+                <div class="sample-alert-body"><div class="sample-alert-amount" style="font-size:12px;">$2,100 left → 75k pts</div></div>
+              </div>
+            </div>
+
+            <!-- Mobile upsell overlay -->
+            <div class="mobile-upsell-overlay" role="dialog" aria-modal="false" aria-label="Unlock The Howl">
+              <div class="mobile-upsell-card">
+                <div class="mobile-upsell-icon" aria-hidden="true">🐺</div>
+                <div class="mobile-upsell-heading">Unlock The Howl</div>
+                <div class="mobile-upsell-body">
+                  Proactive fee alerts and promo deadline warnings — never miss a critical date.
+                </div>
+                <button class="mobile-upsell-cta">Upgrade to Karl — $3.99/mo</button>
+                <div class="mobile-upsell-note"><a href="/pricing">See all Karl features →</a></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px;">Overlay card fills width minus 32px padding. Feature list omitted on mobile to save vertical space — body copy covers the value prop.</p>
+    </div>
+
+    <!-- Mobile: Karl — Howl tab full -->
+    <div>
+      <div class="label">Karl — Howl tab (full, no overlay)</div>
+      <div class="mobile-shell">
+        <div class="mobile-topbar">
+          <div class="mobile-topbar-brand">ᛟ FENRIR LEDGER</div>
+          <div class="mobile-topbar-right">
+            <div class="tier-badge">KARL</div>
+            <button class="icon-btn">👤</button>
+          </div>
+        </div>
+        <div class="mobile-tab-bar">
+          <button class="mobile-tab">ᚦ Active</button>
+          <button class="mobile-tab active">
+            ᚲ Howl
+            <span class="tab-badge" style="font-size:10px; border:1px solid; padding:1px 5px; font-weight:bold;">3</span>
+          </button>
+          <button class="mobile-tab">ᛏ Valhalla</button>
+        </div>
+        <div class="mobile-content">
+          <div style="padding:12px 16px; border-bottom:1px solid; font-size:12px; font-weight:bold;">ᚲ THE HOWL — 3 alerts</div>
+          <div style="display:flex; flex-direction:column; gap:10px; padding:16px; overflow-y:auto;">
+            <div class="sample-alert-card">
+              <div class="sample-alert-urgency"><div class="urgency-dot"></div>ANNUAL FEE · 7 DAYS</div>
+              <div class="sample-alert-header">
+                <div class="status-ring" style="width:30px;height:30px;font-size:11px;">ᚦ</div>
+                <div class="sample-card-identity">
+                  <div class="sample-card-issuer" style="font-size:11px;">CHASE SAPPHIRE</div>
+                  <div class="sample-card-name" style="font-size:10px;">$95 fee due Mar 15</div>
+                </div>
+              </div>
+              <div class="sample-alert-actions"><button>View</button><button>Break Chain</button></div>
+            </div>
+            <div class="sample-alert-card">
+              <div class="sample-alert-urgency"><div class="urgency-dot"></div>PROMO · 14 DAYS</div>
+              <div class="sample-alert-header">
+                <div class="status-ring" style="width:30px;height:30px;font-size:11px;">ᚷ</div>
+                <div class="sample-card-identity">
+                  <div class="sample-card-issuer" style="font-size:11px;">AMEX GOLD</div>
+                  <div class="sample-card-name" style="font-size:10px;">$2,100 left → 75k pts</div>
+                </div>
+              </div>
+              <div class="sample-alert-actions"><button>View</button><button>Mark Claimed</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCENARIO 5 — Ragnarök gate (Thrall vs Karl)
+═══════════════════════════════════════════════════════════════ -->
+<h2>Scenario 5 — Ragnarök Overlay Gate</h2>
+<p class="note">Ragnarök fires at ≥5 urgent cards. Thrall users never see it. Karl users trigger it normally.</p>
+
+<div class="section">
+  <div class="ragnarok-gate-box">
+    <h3>ᚱ Ragnarök Threshold — Tier Gating</h3>
+    <p>The Ragnarök overlay is part of the Howl system. Its trigger condition checks tier before firing:</p>
+    <div class="ragnarok-row" style="margin-top:12px;">
+      <div class="ragnarok-tier-col">
+        <h4>Thrall</h4>
+        <p>Ragnarök never triggers, regardless of how many urgent cards exist.</p>
+        <p style="margin-top:6px;"><span class="spec-code">tier !== 'karl'</span> → skip Ragnarök check entirely.</p>
+        <p style="margin-top:6px;">No indication shown to Thrall users that this threshold exists — it's a Karl discovery.</p>
+      </div>
+      <div class="ragnarok-tier-col">
+        <h4>Karl</h4>
+        <p>Ragnarök fires normally when urgentCount ≥ 5.</p>
+        <p style="margin-top:6px;"><span class="spec-code">tier === 'karl' &amp;&amp; urgentCount &gt;= 5</span> → trigger overlay.</p>
+        <p style="margin-top:6px;">Full Ragnarök experience unchanged from existing implementation.</p>
+      </div>
+    </div>
+    <p class="note" style="margin-top:12px;">Implementation: gate the urgentCount check in RagnarokContext behind tier check. See wireframes/notifications/ragnarok-threshold.html for overlay design.</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     INTERACTION SPEC
+═══════════════════════════════════════════════════════════════ -->
+<h2>Interaction Spec — Blur/Overlay Behavior</h2>
+
+<div class="section">
+  <table class="spec-table">
+    <thead>
+      <tr>
+        <th>Trigger</th>
+        <th>Thrall Behavior</th>
+        <th>Karl Behavior</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Page load / dashboard mount</td>
+        <td>Tier checked. <span class="spec-code">HowlPanel</span> renders in "teaser" mode. Fake sample alert data hardcoded in component — real user data never fetched for teaser.</td>
+        <td>Tier checked. Full <span class="spec-code">HowlPanel</span> renders. Real alert data fetched normally.</td>
+      </tr>
+      <tr>
+        <td>User clicks "The Howl" tab</td>
+        <td>Tab becomes active. Tab panel shows <span class="spec-code">.teaser-list</span> (blurred fake alerts) + <span class="spec-code">.upsell-overlay</span> rendered on top. No real data ever shown.</td>
+        <td>Tab becomes active. Full Howl alert list renders.</td>
+      </tr>
+      <tr>
+        <td>Blur technique</td>
+        <td><span class="spec-code">filter: blur(6px)</span> on <span class="spec-code">.teaser-list</span>. <span class="spec-code">pointer-events: none; user-select: none</span> so content is not interactive or selectable.</td>
+        <td>N/A</td>
+      </tr>
+      <tr>
+        <td>Overlay</td>
+        <td><span class="spec-code">position: absolute; inset: 0; z-index: 20</span> on <span class="spec-code">.upsell-overlay</span>. Semi-transparent background (<span class="spec-code">rgba(bg, 0.82)</span>). Overlay is always mounted when tier=Thrall + Howl tab active.</td>
+        <td>N/A</td>
+      </tr>
+      <tr>
+        <td>Overlay dismiss</td>
+        <td>No dismiss. User must upgrade or navigate away (click another tab). The overlay is not a modal — no backdrop click to close, no X button.</td>
+        <td>N/A</td>
+      </tr>
+      <tr>
+        <td>"Upgrade to Karl" CTA</td>
+        <td>Navigates to <span class="spec-code">/pricing</span>. Same tab, no new window.</td>
+        <td>N/A</td>
+      </tr>
+      <tr>
+        <td>"See all Karl features →" link</td>
+        <td>Navigates to <span class="spec-code">/pricing</span>. Secondary low-emphasis link below CTA.</td>
+        <td>N/A</td>
+      </tr>
+      <tr>
+        <td>Urgency count badge on Howl tab</td>
+        <td>Badge hidden (no count shown for Thrall — real alert data not fetched).</td>
+        <td>Badge shows count of current alerts. Pulses when urgentCount ≥ 1.</td>
+      </tr>
+      <tr>
+        <td>Lock icon + KARL badge on tab</td>
+        <td>🔒 + "KARL" badge visible on the Howl tab. Both removed when user upgrades to Karl.</td>
+        <td>Neither shown. Tab renders like any other first-class tab.</td>
+      </tr>
+      <tr>
+        <td>Ragnarök threshold (≥5 urgent)</td>
+        <td>RagnarokContext checks <span class="spec-code">tier !== 'karl'</span> first. If Thrall: skip urgentCount evaluation entirely. No overlay fires.</td>
+        <td>Full Ragnarök behavior: checks urgentCount ≥ 5 → fires overlay.</td>
+      </tr>
+      <tr>
+        <td>Keyboard / accessibility</td>
+        <td>Howl tab is focusable and activatable via keyboard. When teaser is shown, overlay has <span class="spec-code">role="dialog"</span>. Blurred list has <span class="spec-code">aria-hidden="true"</span>. Focus trapped within overlay card when overlay is visible. CTA and link are keyboard-accessible.</td>
+        <td>Standard tab panel focus behavior.</td>
+      </tr>
+      <tr>
+        <td>Tier upgrade (Thrall → Karl)</td>
+        <td>After successful Stripe subscription, tier context updates. Howl tab re-renders in Karl mode: lock icon removed, KARL badge removed, teaser + overlay replaced by full panel. No page reload required if context is reactive.</td>
+        <td>Already Karl.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:24px;">Fake Sample Alert Content — Rules</h3>
+  <p class="note">The teaser must feel real enough to show the value of The Howl, but must use 100% hardcoded fake data.</p>
+  <table class="spec-table">
+    <thead>
+      <tr><th>Rule</th><th>Detail</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>No real user data</td>
+        <td>Teaser component receives no props from the user's card store. Fake issuer names and amounts are hardcoded strings in the component.</td>
+      </tr>
+      <tr>
+        <td>Representative variety</td>
+        <td>Show 2–3 fake alerts: at least one fee alert (annual fee) and one promo alert (welcome bonus). Different urgency levels (7 days, 14 days, 30 days).</td>
+      </tr>
+      <tr>
+        <td>Real card brands OK</td>
+        <td>Using real issuer names (Chase, Amex, Capital One) is fine — these are generic examples, not user data.</td>
+      </tr>
+      <tr>
+        <td>No accessibility exposure</td>
+        <td><span class="spec-code">aria-hidden="true"</span> on teaser list. Screen readers only see the overlay's dialog content.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ACCESSIBILITY SPEC
+═══════════════════════════════════════════════════════════════ -->
+<h2>Accessibility Requirements</h2>
+<div class="section">
+  <table class="spec-table">
+    <thead>
+      <tr><th>Element</th><th>ARIA / Keyboard requirement</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Howl tab (Thrall)</td>
+        <td><span class="spec-code">role="tab"</span>, <span class="spec-code">aria-selected="true/false"</span>. Add <span class="spec-code">aria-label="The Howl — Karl tier feature"</span> to communicate gate to screen readers. The lock icon is decorative: <span class="spec-code">aria-hidden="true"</span>.</td>
+      </tr>
+      <tr>
+        <td>Teaser list</td>
+        <td><span class="spec-code">aria-hidden="true"</span> on entire <span class="spec-code">.teaser-list</span> container. <span class="spec-code">role="presentation"</span>. Content must not be reachable via Tab key (<span class="spec-code">pointer-events: none</span> not sufficient alone — add <span class="spec-code">tabindex="-1"</span> to all interactive elements within).</td>
+      </tr>
+      <tr>
+        <td>Upsell overlay</td>
+        <td><span class="spec-code">role="dialog"</span> (not modal — does not trap focus like a true modal; user can still Tab to other tabs). <span class="spec-code">aria-label="Unlock The Howl"</span>. CTA button has descriptive label. "See all Karl features" link has visible text.</td>
+      </tr>
+      <tr>
+        <td>Upgrade CTA</td>
+        <td>Minimum touch target 44×44px on mobile. Full-width button satisfies this on 375px viewport.</td>
+      </tr>
+      <tr>
+        <td>KARL badge</td>
+        <td>Decorative text badge, <span class="spec-code">aria-hidden="true"</span> (the tab's aria-label covers the semantic meaning).</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     COMPONENT SUGGESTIONS (for FiremanDecko)
+═══════════════════════════════════════════════════════════════ -->
+<h2>Component Notes — For Engineering Handoff</h2>
+<div class="section">
+  <table class="spec-table">
+    <thead>
+      <tr><th>Component</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="spec-code">HowlPanel</span></td>
+        <td>Add <span class="spec-code">tier: 'thrall' | 'karl'</span> prop (or read from TierContext). When tier=Thrall: render <span class="spec-code">&lt;HowlTeaserState /&gt;</span> instead of alert list.</td>
+      </tr>
+      <tr>
+        <td><span class="spec-code">HowlTeaserState</span></td>
+        <td>New component. Renders hardcoded fake alerts (blurred) + <span class="spec-code">HowlUpsellOverlay</span> on top. No data fetching. Self-contained.</td>
+      </tr>
+      <tr>
+        <td><span class="spec-code">HowlUpsellOverlay</span></td>
+        <td>New component. Absolute-positioned over the teaser. Renders: wolf icon + heading + body copy + feature list + CTA → /pricing. Reuse <span class="spec-code">SealedRuneModal</span> visual pattern for consistency.</td>
+      </tr>
+      <tr>
+        <td><span class="spec-code">RagnarokContext</span></td>
+        <td>Add tier check at top of urgentCount evaluation: <span class="spec-code">if (tier !== 'karl') return</span>. Do not count urgentCards for Thrall users.</td>
+      </tr>
+      <tr>
+        <td>Tab (Howl)</td>
+        <td>Conditionally render lock icon + KARL badge when tier=Thrall. Remove urgency badge count for Thrall (no count to show).</td>
+      </tr>
+      <tr>
+        <td>Pricing page</td>
+        <td>Ensure Howl Panel is listed in Karl feature column. No wireframe needed — text-only feature list update.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>
