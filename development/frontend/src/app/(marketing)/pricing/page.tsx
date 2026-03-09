@@ -121,7 +121,6 @@ function TierCardsSection() {
                 "Sign-up bonus & minimum spend tracking",
                 "Velocity management (Chase 5/24, Citi 1/8, etc.)",
                 "The Howl — preview with blurred teaser",
-                "Card archive (Valhalla)",
                 "Single household",
                 "Google sign-in",
               ].map((feat) => (
@@ -132,6 +131,7 @@ function TierCardsSection() {
               ))}
               {/* Karl features shown as excluded */}
               {[
+                "Card archive (Valhalla)",
                 "The Howl — full proactive alerts & Ragnarök",
                 "Cloud Sync (multi-device)",
                 "Multi-Household management",
@@ -201,6 +201,7 @@ function TierCardsSection() {
             </p>
             <ul className="flex flex-col gap-3" aria-label="Karl tier premium features">
               {[
+                { name: "Valhalla", desc: "full closed-card archive with history" },
                 { name: "The Howl", desc: "full proactive fee alerts, deadline warnings & Ragnarök" },
                 { name: "Cloud Sync", desc: "real-time sync across all devices" },
                 { name: "Multi-Household", desc: "manage multiple household ledgers" },
@@ -284,7 +285,6 @@ function ComparisonTableSection() {
                 "Annual fee tracking with 60-day advance warning",
                 "Sign-up bonus & minimum spend deadline tracking",
                 "Velocity management (Chase 5/24, Citi 1/8, Amex OPLB, etc.)",
-                "Card archive — Valhalla (closed cards with full history)",
                 "Google Sign-In authentication",
               ].map((feat) => (
                 <tr key={feat} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
@@ -315,6 +315,7 @@ function ComparisonTableSection() {
                 </td>
               </tr>
               {[
+                { name: "Valhalla — closed-card archive with full history", thrall: false, karl: true },
                 { name: "Cloud Sync — real-time sync across all signed-in devices", thrall: false, karl: true },
                 { name: "Smart Import — AI-powered extraction from spreadsheets (CSV/XLSX)", thrall: false, karl: true },
                 { name: "Data Export — download your ledger as CSV or JSON", thrall: false, karl: true },

@@ -1,12 +1,12 @@
 /**
- * /ledger/valhalla — Removed in Issue #352.
+ * /ledger/valhalla — Removed in Issue #377.
  *
- * The standalone Valhalla route has been replaced by the Valhalla tab on the
- * main dashboard. Visiting /ledger/valhalla redirects to /ledger?tab=valhalla.
+ * Valhalla is now a Karl-gated tab on the main dashboard. The standalone
+ * route no longer exists. Visiting /ledger/valhalla returns a 404.
  */
 
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 export default function ValhallaPage() {
-  redirect("/ledger?tab=valhalla");
+  notFound();
 }

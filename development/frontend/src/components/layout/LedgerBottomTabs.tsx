@@ -20,11 +20,16 @@
  * Issue: #372
  */
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { LayoutGrid, Plus, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEntitlement } from "@/hooks/useEntitlement";
+import {
+  KarlUpsellDialog,
+  KARL_UPSELL_VALHALLA,
+} from "@/components/entitlement/KarlUpsellDialog";
 
 /** Rune icon for Valhalla tab. Matches SideNav's RuneIcon pattern. */
 function RuneIcon({ rune, className }: { rune: string; className?: string }) {
@@ -42,6 +47,9 @@ function RuneIcon({ rune, className }: { rune: string; className?: string }) {
 export function LedgerBottomTabs() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { hasFeature } = useEntitlement();
+  const hasValhalla = hasFeature("card-archive");
+  const [upsellOpen, setUpsellOpen] = useState(false);
 
   const isOnDashboard = pathname === "/ledger";
   const activeTab = searchParams?.get("tab");
@@ -56,10 +64,18 @@ export function LedgerBottomTabs() {
    * Valhalla tab click handler -- mirrors SideNav behavior.
    * If already on dashboard: dispatch custom event to switch tab.
    * Otherwise: navigate to /ledger?tab=valhalla.
+   * Thrall users see the upsell dialog instead.
    */
   const handleValhallaClick = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
+
+      // Gate Valhalla for Thrall users — show upsell dialog
+      if (!hasValhalla) {
+        setUpsellOpen(true);
+        return;
+      }
+
       if (isOnDashboard) {
         window.dispatchEvent(
           new CustomEvent("fenrir:activate-tab", { detail: { tab: "valhalla" } })
@@ -73,7 +89,7 @@ export function LedgerBottomTabs() {
         window.location.href = "/ledger?tab=valhalla";
       }
     },
-    [isOnDashboard]
+    [isOnDashboard, hasValhalla]
   );
 
   const tabBase =
@@ -112,16 +128,24 @@ export function LedgerBottomTabs() {
           </Link>
         </li>
 
-        {/* Valhalla */}
+        {/* Valhalla — gated for Thrall users */}
         <li className="flex flex-1">
           <button
             type="button"
             onClick={handleValhallaClick}
-            className={cn(tabBase, "w-full", valhallaTabActive && tabActive)}
-            aria-current={valhallaTabActive ? "page" : undefined}
-            aria-label="Open Valhalla tab"
+            className={cn(tabBase, "w-full", valhallaTabActive && hasValhalla && tabActive)}
+            aria-current={valhallaTabActive && hasValhalla ? "page" : undefined}
+            aria-label={hasValhalla ? "Open Valhalla tab" : "Valhalla \u2014 Karl tier required. Tap to upgrade."}
           >
-            <RuneIcon rune="↑" />
+            <div className="relative">
+              <RuneIcon rune="↑" />
+              {!hasValhalla && (
+                <span
+                  className="absolute -top-1 -right-2.5 text-[7px]"
+                  aria-hidden="true"
+                >&#128274;</span>
+              )}
+            </div>
             <span className="text-[10px] font-body">Valhalla</span>
           </button>
         </li>
@@ -138,6 +162,13 @@ export function LedgerBottomTabs() {
           </Link>
         </li>
       </ul>
+
+      {/* Karl upsell dialog — shown when Thrall user taps Valhalla */}
+      <KarlUpsellDialog
+        {...KARL_UPSELL_VALHALLA}
+        open={upsellOpen}
+        onDismiss={() => setUpsellOpen(false)}
+      />
     </nav>
   );
 }

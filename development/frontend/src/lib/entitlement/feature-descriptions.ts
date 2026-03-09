@@ -76,4 +76,11 @@ export const FEATURE_DESCRIPTIONS: Record<PremiumFeature, FeatureDescription> = 
     expiredAtmospheric:
       "The wolf still watches. Return and heed his warning once more.",
   },
+  "card-archive": {
+    description:
+      "See every card you've closed — anniversary dates, total rewards extracted, annual fees avoided, and how long each chain held you.",
+    atmospheric: "The hall of the honored dead. Only Karl may enter.",
+    expiredAtmospheric:
+      "The gates of Valhalla remain open to those who return.",
+  },
 };
