@@ -17,7 +17,7 @@ import {
   clearAllStorage,
   seedHousehold,
   ANONYMOUS_HOUSEHOLD_ID,
-} from "../helpers/test-fixtures";
+} from "./helpers/test-fixtures";
 
 // ════════════════════════════════════════════════════════════════════════════
 // Setup
