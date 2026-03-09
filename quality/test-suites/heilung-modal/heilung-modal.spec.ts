@@ -33,7 +33,8 @@ const GOLD = "rgb(201, 146, 10)";
 
 test.describe("Heilung Modal — Opening & Closing", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "load" });
+    // Navigate to /ledger (app with AppShell) not "/" (marketing page)
+    await page.goto("/ledger", { waitUntil: "load" });
     await clearAllStorage(page);
   });
 
@@ -152,7 +153,7 @@ test.describe("Heilung Modal — Opening & Closing", () => {
 
 test.describe("Heilung Modal — Content & Structure", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "load" });
+    await page.goto("/ledger", { waitUntil: "load" });
     await clearAllStorage(page);
     // Open the modal
     await page.keyboard.press("Control+Shift+L");
@@ -307,7 +308,7 @@ test.describe("Heilung Modal — Content & Structure", () => {
 
 test.describe("Heilung Modal — Behavior & Form Field Skip", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "load" });
+    await page.goto("/ledger", { waitUntil: "load" });
     await clearAllStorage(page);
   });
 
@@ -356,7 +357,7 @@ test.describe("Heilung Modal — Behavior & Form Field Skip", () => {
 
 test.describe("Heilung Modal — Responsive Layout", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "load" });
+    await page.goto("/ledger", { waitUntil: "load" });
     await clearAllStorage(page);
     // Open modal
     await page.keyboard.press("Control+Shift+L");
@@ -440,7 +441,7 @@ test.describe("Heilung Modal — Responsive Layout", () => {
 
 test.describe("Heilung Modal — Aspect Ratio", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "load" });
+    await page.goto("/ledger", { waitUntil: "load" });
     await clearAllStorage(page);
     // Open the modal
     await page.keyboard.press("Control+Shift+L");
@@ -500,8 +501,8 @@ test.describe("Heilung Modal — CSP & Content Blocking", () => {
    * Note: This test monitors console output for CSP violations.
    */
   test("no CSP blocked content errors appear in console", async ({ page }) => {
-    // Navigate to home and open the Heilung modal
-    await page.goto("/", { waitUntil: "load" });
+    // Navigate to /ledger (app with AppShell) and open the Heilung modal
+    await page.goto("/ledger", { waitUntil: "load" });
     await clearAllStorage(page);
 
     // Capture console messages
