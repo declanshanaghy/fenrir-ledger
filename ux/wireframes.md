@@ -16,6 +16,8 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Story | File | Description |
 |-------|------|-------------|
 | #398 — Howl Panel Karl Tier | [wireframes/app/howl-karl-tier.html](wireframes/app/howl-karl-tier.html) | Howl Panel gated behind Karl ($3.99/mo): 5 scenarios — Thrall desktop teaser (blurred fake alerts + upsell overlay), Karl desktop full panel, tab bar anatomy (Thrall lock icon + KARL badge vs Karl urgency badge), mobile 375px Thrall teaser, mobile Karl full panel; Ragnarök gate spec; full interaction spec; accessibility requirements; component handoff notes |
+| #377 — Valhalla Karl Tier + Common Upsell Dialog | [wireframes/stripe-direct/karl-upsell-dialog.html](wireframes/stripe-direct/karl-upsell-dialog.html) | **Common KarlUpsellDialog** shared across all Karl-gated features (#377 Valhalla, #378 Velocity, #398 Howl): 5 scenarios — desktop Valhalla variant, desktop Howl variant (reusability demo), mobile 375px bottom-sheet, props contract table per feature, anatomy annotation; interaction spec: [karl-upsell-interaction-spec.md](karl-upsell-interaction-spec.md) |
+| #377 — Valhalla Tab Gated State | [wireframes/app/valhalla-karl-gated.html](wireframes/app/valhalla-karl-gated.html) | Valhalla tab gating in the dashboard: 5 scenarios — desktop tab bar Thrall state (lock indicator), desktop dialog triggered over content, desktop Karl unlocked state, mobile 375px (bottom nav + content tab bar with lock), mobile dialog open as bottom-sheet; behavior table Thrall vs Karl |
 
 ---
 
@@ -56,6 +58,7 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Dashboard — Tabs Redesign | [wireframes/app/dashboard-tabs.html](wireframes/app/dashboard-tabs.html) | Tabbed layout (Issue #279): The Howl tab + Active tab replacing grid + side panel; 6 scenarios; interaction spec |
 | Howl Panel — Karl Tier Gating | [wireframes/app/howl-karl-tier.html](wireframes/app/howl-karl-tier.html) | Karl-tier gating for The Howl (Issue #398): Thrall blurred teaser + upsell overlay, Karl full panel, tab bar anatomy, mobile 375px, Ragnarök gate, interaction + accessibility spec |
 | Valhalla — Hall of the Honored Dead | [wireframes/app/valhalla.html](wireframes/app/valhalla.html) | Tombstone cards, filter bar, empty state |
+| Valhalla — Karl Tier Gated State | [wireframes/app/valhalla-karl-gated.html](wireframes/app/valhalla-karl-gated.html) | Valhalla tab gating (#377): Thrall tab bar with lock indicator, dialog trigger, Karl unlocked state, mobile bottom nav + content tabs, behavior table Thrall vs Karl |
 | **chrome** | | |
 | LedgerShell — Slim Top Bar + Mobile Bottom Tab Bar | [wireframes/chrome/ledger-shell.html](wireframes/chrome/ledger-shell.html) | New `/ledger/*` layout shell (Issue #372): slim 48px top bar, 220px desktop sidebar, 56px mobile bottom tab bar (4 tabs); 8 scenarios; interaction spec; accessibility table; responsive breakpoint table |
 | TopBar — Anonymous + Signed-In States | [wireframes/chrome/topbar.html](wireframes/chrome/topbar.html) | Global sticky header: 7 scenarios covering anonymous ᛟ rune avatar + upsell prompt, signed-in Google avatar + dropdown, and the avatar transition animation (anonymous-first model, Sprint 3.2) |
@@ -89,6 +92,7 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | SealedRuneModal — Stripe CTA | [wireframes/stripe-direct/sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html) | Premium feature paywall modal with Stripe Checkout redirect, anonymous + authenticated flows |
 | Upsell Banner — Stripe Variant | [wireframes/stripe-direct/upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html) | Dashboard upgrade banner for Thrall users, Stripe Checkout CTA, dismiss lifecycle |
 | Anonymous Checkout Email Form | [wireframes/stripe-direct/anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html) | Email collection modal for anonymous Stripe subscribers, validation states, loading, mobile |
+| **Common Karl Upsell Dialog** | [wireframes/stripe-direct/karl-upsell-dialog.html](wireframes/stripe-direct/karl-upsell-dialog.html) | Shared KarlUpsellDialog for all Karl-gated features (#377, #378, #398): prop-driven feature icon/name/tagline/teaser, lock badge overlay, $3.99/mo price row, direct Stripe CTA; desktop + mobile bottom-sheet; props table per feature; anatomy annotation; interaction spec |
 | **marketing** | | |
 | Marketing Site | [wireframes/marketing/marketing-site.html](wireframes/marketing/marketing-site.html) | 5-section static page: nav, hero, problems, features, steps, footer (updated: legal links in footer) |
 | Static Site Footer | [wireframes/marketing/static-site-footer.html](wireframes/marketing/static-site-footer.html) | Dedicated footer spec: brand, quote, runes, CTA, session link, legal row (Privacy Policy + Terms of Service), team credits; easter egg triggers preserved |
