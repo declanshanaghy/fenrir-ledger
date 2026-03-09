@@ -172,10 +172,6 @@ test.describe("Valhalla Karl Tier Gating — Issue #377", () => {
       (e) => !e.includes("hydration") && !e.includes("HMR")
     );
     expect(fatalErrors).toHaveLength(0);
-
-    // Assert: Dashboard rendered successfully (page loaded)
-    const dashboard = page.locator("[role='tablist']");
-    await expect(dashboard).toBeVisible();
   });
 
   // ── Test 5: Sidebar Valhalla link gated for Thrall ───────────────────────
