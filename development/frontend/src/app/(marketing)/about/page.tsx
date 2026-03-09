@@ -10,7 +10,7 @@
  *   1. Origin Story Hero — mythic opening, Gleipnir metaphor
  *   2. Why the Wolf — two-column founding myth detail
  *   3. The Pack — 5 agent profile cards + future placeholder
- *   4. Built by AI — agent chain visualization
+ *   4. The Forge — agent chain visualization
  *   5. The Arsenal — technology stack
  *
  * Uses Framer Motion for scroll-triggered stagger animations.
@@ -64,7 +64,7 @@ const AGENTS: readonly AgentProfile[] = [
     slug: "freya",
     role: "Product Owner",
     rune: RUNE.fehu,
-    bio: "Guardian of the product vision. She shapes what Fenrir becomes, channeling user needs into features. Powers the AI import pipeline that reads your credit card data and transforms chaos into clarity.",
+    bio: "Guardian of the product vision. She shapes what Fenrir becomes, channeling user needs into features. Powers the import pipeline that reads your credit card data and transforms chaos into clarity.",
     hoverEffect: "glow",
   },
   {
@@ -114,7 +114,6 @@ const TECH_STACK = [
   { name: "Next.js 15", abbr: "N" },
   { name: "TypeScript", abbr: "TS" },
   { name: "Vercel", abbr: "V" },
-  { name: "Anthropic Claude", abbr: "C" },
   { name: "Tailwind CSS", abbr: "TW" },
 ] as const;
 
@@ -510,7 +509,7 @@ function ThePackSection(): React.ReactElement {
         <SectionHeading
           label={RUNE.tiwaz}
           title="The Agents of Asgard"
-          subtitle="Fenrir Ledger is built entirely by AI agents, each with their domain, their purpose, their saga."
+          subtitle="Every member of the pack has their domain, their purpose, their saga."
         />
 
         <motion.div
@@ -551,16 +550,16 @@ function ThePackSection(): React.ReactElement {
   );
 }
 
-// ── Section: Built by AI ──────────────────────────────────────────────────────
+// ── Section: The Forge ───────────────────────────────────────────────────────
 
-function BuiltByAiSection(): React.ReactElement {
+function TheForgeSection(): React.ReactElement {
   return (
-    <AnimatedSection label="Built by AI" className="border-b border-border">
+    <AnimatedSection label="The Forge" className="border-b border-border">
       <div className="max-w-[1100px] mx-auto px-6 py-14 sm:py-20">
         <SectionHeading
           label={RUNE.hagalaz}
-          title="Built by AI, for Humans"
-          subtitle="Fenrir Ledger is the first credit card tracker built entirely by AI agents. No human wrote this code. Odin orchestrates the agents, but they do the work."
+          title="Forged in the Fires of Asgard"
+          subtitle="From vision to validation, every feature passes through the forge. Odin orchestrates. The pack delivers."
         />
 
         {/* Chain visualization */}
@@ -619,7 +618,7 @@ function BuiltByAiSection(): React.ReactElement {
           variants={FADE_UP}
           className="text-center font-body text-sm text-muted-foreground leading-relaxed mt-8 max-w-2xl mx-auto"
         >
-          Each agent has autonomy within their domain. They collaborate through
+          Each member of the pack has autonomy within their domain. They collaborate through
           shared artifacts: design docs, wireframes, code. The result is
           software with the consistency of a singular vision but the expertise
           of specialists.
@@ -629,10 +628,10 @@ function BuiltByAiSection(): React.ReactElement {
           variants={FADE_UP}
           className="text-center font-body text-base mt-6"
         >
-          <strong className="text-foreground">This changes everything.</strong>{" "}
+          <strong className="text-foreground">The forge never cools.</strong>{" "}
           <span className="text-muted-foreground">
-            Development velocity unconstrained by human limits. Features shipped
-            at the speed of thought. Bugs fixed before coffee gets cold.
+            Features shipped at the speed of thought. Bugs slain before
+            they draw first blood.
           </span>
         </motion.p>
       </div>
@@ -748,7 +747,7 @@ export default function AboutPage(): React.ReactElement {
       <OriginHeroSection />
       <WhyTheWolfSection />
       <ThePackSection />
-      <BuiltByAiSection />
+      <TheForgeSection />
       <TechStackSection />
       <FinalCtaSection />
     </>
