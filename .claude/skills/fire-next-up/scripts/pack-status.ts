@@ -2,7 +2,7 @@
 /**
  * pack-status.ts — Full pack status dashboard via GraphQL
  *
- * Usage: npx tsx pack-status.ts [--status] [--chain-status <N>] [--move <N> <up-next|in-progress|done>]
+ * Usage: npx tsx pack-status.ts [--status] [--chain-status <N>] [--move <N> <up-next|in-progress|on-hold|done>]
  *
  * Uses native fetch + GitHub GraphQL API directly (no child process spawning).
  * Auth token obtained from `gh auth token` once at startup.
@@ -15,9 +15,10 @@ const PROJECT_NUMBER = 1;
 const PROJECT_ID = "PVT_kwHOAAW5PM4BQ7LP";
 const FIELD_ID = "PVTSSF_lAHOAAW5PM4BQ7LPzg-54RA";
 const STATUS_OPTIONS: Record<string, string> = {
-  "up-next": "6e492bcc",
-  "in-progress": "1d9139d4",
-  done: "c5fe053a",
+  "up-next": "9e642425",
+  "in-progress": "46217103",
+  "on-hold": "15f834b7",
+  done: "2cda5d40",
 };
 
 const GH_API = "https://api.github.com";
@@ -419,7 +420,7 @@ async function chainStatus(issueNum: number) {
 async function moveIssue(issueNum: number, status: string) {
   const optionId = STATUS_OPTIONS[status];
   if (!optionId) {
-    console.error(`Invalid status: ${status} (use up-next, in-progress, done)`);
+    console.error(`Invalid status: ${status} (use up-next, in-progress, on-hold, done)`);
     process.exit(1);
   }
 
