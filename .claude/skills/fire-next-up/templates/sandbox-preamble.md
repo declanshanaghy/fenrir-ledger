@@ -27,20 +27,13 @@ After every logical chunk of implementation work (~5-10 min or 1-3 files changed
 Do NOT batch all changes into one commit at the end. Sessions can die at any time —
 uncommitted work is lost work.
 
-FULL VERIFY — SEPARATE STEPS (UNBREAKABLE):
-At the end, run each verify step as its own Bash tool call:
+VERIFY — tsc + build ONLY (UNBREAKABLE):
+Agents run tsc and build. The FULL test suite runs via CI on every PR push.
+Do NOT run `verify.sh --step test` for the full suite — CI is the authority.
+Loki runs only his NEW feature tests, not the full suite.
   bash quality/scripts/verify.sh --step tsc
   bash quality/scripts/verify.sh --step build
-  bash quality/scripts/verify.sh --step test -x
 On failure: fix, commit+push, re-run that step. Repeat until green.
-
-VERIFY BUDGET (3-STRIKE RULE):
-If you fail the SAME verify step 3 times (3 fix attempts, still failing):
-  1. Commit+push your current state: git add -A && git commit -m 'wip: verify incomplete — Ref #<NUMBER>' && git push origin <BRANCH>
-  2. Stop trying to fix that step. Proceed to PR/handoff.
-  3. In the handoff comment, add: "⚠️ VERIFY INCOMPLETE: <step> failed after 3 attempts. Failures: <summary>"
-  4. tsc and build are NEVER skippable — only test can be abandoned after 3 strikes.
-This prevents burning the entire session on pre-existing or intractable test failures.
 
 STRICT SCOPE (UNBREAKABLE):
 Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,

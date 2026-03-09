@@ -1,0 +1,472 @@
+---
+title: "Breaking the Gleipnir"
+date: "2026-02-26"
+rune: "ᚲ"
+excerpt: "A session chronicle of Breaking the Gleipnir."
+slug: "breaking-the-gleipnir"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᚲ ᚱ ᛚ ᚢ ᛒ ᛊ ᚾ ᚠ</span>
+  <h1 className="session-title">Breaking the Gleipnir</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+
+      <div>Date <span className="val">2026-02-26</span>  </div>
+</header>
+
+──────────────────────────────────────────────────── -->
+  <div className="timeline">
+
+    
+    <section className="entry" id="act1">
+      <div className="entry-rune" title="Statusline Reforged">ᚢ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Tooling</p>
+        <h2 className="entry-title">Statusline Reforged</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">Simplify the output from ~/.claude/statusline-command.sh with the following changes — use basename(CWD) to shorten the path being shown, remove the time, align model followed by context usage on the extreme right.
+
+[Then, after sharing an image:]
+
+Make it like this image</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Two passes over <span className="mono">~/.claude/statusline-command.sh</span>. The first stripped the time, reduced the CWD to a basename, and right-aligned model and context percentage using <span className="mono">tput cols</span> padding. The second matched a shared screenshot: a two-line layout with <span className="hl">[Model] 📁 dirname | 🌿 branch</span> on line one and a gold/dim context progress bar, cost, and elapsed time on line two.</p>
+            <p>The progress bar uses <span className="mono">█</span> for filled slots and <span className="mono">░</span> for empty — ten characters wide, constructed with <span className="mono">printf '%*s' | tr</span>. Cost is printed as <span className="mono">$0.08</span> in yellow. Elapsed time reads from <span className="mono">.cost.total_duration_ms</span>.</p>
+          </div>
+
+          <div className="code-block">
+            <pre><span className="cc"># Line 1: [Model] 📁 dirname | 🌿 branch[!?]</span>
+<span className="ca">line1="${cyan}[${model}]${reset} 📁 ${dir}"</span>
+<span className="ca">if [ -n "$git_branch" ]; then</span>
+<span className="ca">  line1="${line1} | 🌿 ${git_branch}${git_dirty}${git_untracked}"</span>
+<span className="ca">fi</span>
+
+<span className="cc"># Line 2: ████░░░░░░ 42% | $0.08 | ⏱ 7m 3s</span>
+<span className="ca">line2="${green}${bar_filled}${dim}${bar_empty}${reset} ${used_pct}% | ${yellow}${cost_fmt}${reset} | ⏱ ${mins}m ${secs}s"</span></pre>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ ~/.claude/statusline-command.sh</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div className="rune-hr"><span>ᚲ ᛊ ᛁ</span></div>
+
+    
+    <section className="entry" id="act2">
+      <div className="entry-rune" title="The Shared Modal Shell">ᚲ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Architecture</p>
+        <h2 className="entry-title">The Shared Modal Shell</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">fenrir-howl.mp3 didn't trigger when the forgemaster easter egg dialog was shown. Update the dialog to ensure the sound always plays. Also ensure that the dialog is re-used for every easter egg. Not re-implemented for every easter egg.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>FiremanDecko created <span className="hl">EasterEggModal.tsx</span> — the single shared modal shell for all easter eggs. It accepts <span className="mono">image</span>, <span className="mono">audioSrc</span>, <span className="mono">title</span>, <span className="mono">description</span>, and <span className="mono">children</span> props. Audio plays automatically on open (the triggering keypress satisfies browser autoplay gesture policy) and pauses on close. The Dialog structure, the gold header with runic eyebrow, the two-column layout, the dismiss button — all live here once.</p>
+            <p>ForgeMasterEgg.tsx was stripped of its own dialog boilerplate and now renders through <span className="mono">&lt;EasterEggModal audioSrc="/sounds/fenrir-howl.mp3" ...&gt;</span>. Going forward every new easter egg renders the same shell — no dialog reimplementation required.</p>
+          </div>
+
+          <div className="code-block">
+            <pre><span className="cc">// EasterEggModal.tsx — all eggs use this shell</span>
+<span className="ca">export function EasterEggModal({</span>
+<span className="ca">  open, onClose, title, description,</span>
+<span className="ca">  image, audioSrc, children,</span>
+<span className="ca">}: EasterEggModalProps) {</span>
+<span className="ca">  // plays on open, pauses on close — inside user gesture</span>
+<span className="ca">  useEffect(() => {</span>
+<span className="ca">    if (open && audioSrc) { /* fade in */ }</span>
+<span className="ca">    else { /* fade out */ }</span>
+<span className="ca">  }, [open, audioSrc]);</span>
+  ...
+}</pre>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ src/components/easter-eggs/EasterEggModal.tsx</span>
+            <span className="chip chip-mod">◈ src/components/layout/ForgeMasterEgg.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div className="rune-hr"><span>ᚠ ᛖ ᚾ</span></div>
+
+    
+    <section className="entry" id="act3">
+      <div className="entry-rune" title="The Skill Is Rewritten">ᚠ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Documentation</p>
+        <h2 className="entry-title">The Skill Is Rewritten</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">Update the easter-egg-modal SKILL to reflect this new approach to reuse a Component</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>The <span className="mono">easter-egg-modal</span> skill was significantly trimmed. Its Step 4 template previously scaffolded a full <span className="mono">Dialog/DialogContent/Button</span> structure with inline audio fade logic — 168 lines of repeated boilerplate. All of that is gone. The new template renders only <span className="mono">&lt;EasterEggModal&gt;</span> with its four props and a fragment-count footer as children.</p>
+            <p>The hook template lost its <span className="mono">howlRef</span>, <span className="mono">fadeIn</span>, and <span className="mono">fadeOut</span> helpers — audio is now EasterEggModal's responsibility. A new props reference table documents every prop the shared shell accepts. The "do not re-implement the modal structure" rule is stated explicitly at the top of Step 4.</p>
+          </div>
+
+          <ul className="changes">
+            <li>Step 4 template <span className="old">168-line Dialog scaffold</span> → <span className="new">EasterEggModal wrapper, ~30 lines</span></li>
+            <li>Hook template <span className="old">fadeIn/fadeOut/howlRef</span> → <span className="new">open state + localStorage gate only</span></li>
+            <li><span className="new">Added EasterEggModal props table to skill reference</span></li>
+          </ul>
+
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ .claude/skills/easter-egg-modal/SKILL.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div className="rune-hr"><span>ᚱ ᛟ ᛏ</span></div>
+
+    
+    <section className="entry" id="act4">
+      <div className="entry-rune" title="Roots of a Mountain">ᚱ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Easter Egg</p>
+        <h2 className="entry-title">Roots of a Mountain</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">/easter-egg-modal 3
+
+We need a trigger for the Roots of a mountain easter-egg - do it the first time the user collapses the sidebar.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>The skill generated <span className="hl">gleipnir-3.svg</span> — an inverted mountain silhouette with apex at <span className="mono">(512, 820)</span> and a full branching root system radiating from four foothill nodes. Opacity fades from <span className="mono">0.70</span> at the trunk to <span className="mono">0.15</span> at the finest tips. A gold glow node marks the apex convergence. The ᚱ rune watermarks the bottom-left.</p>
+            <p>The component <span className="hl">GleipnirMountainRoots.tsx</span> wraps <span className="mono">EasterEggModal</span> with the fragment counter in children. The trigger was wired into <span className="mono">AppShell.handleToggle</span>: when <span className="mono">next === true</span> (collapsing, not expanding), <span className="mono">triggerRoots()</span> fires. The hook's localStorage gate (<span className="mono">egg:gleipnir-3</span>) ensures it fires exactly once per user, regardless of how many subsequent collapses occur.</p>
+          </div>
+
+          <div className="code-block">
+            <pre><span className="cc">// AppShell.tsx — first sidebar collapse fires the egg</span>
+<span className="ca">function handleToggle() {</span>
+<span className="ca">  const next = !collapsed;</span>
+<span className="ca">  setCollapsed(next);</span>
+<span className="ca">  localStorage.setItem(STORAGE_KEY, String(next));</span>
+<span className="ca">  // Easter egg #3 — The Roots of a Mountain: first sidebar collapse</span>
+<span className="ca">  if (next) triggerRoots();</span>
+<span className="ca">}</span></pre>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ development/frontend/public/easter-eggs/gleipnir-3.svg</span>
+            <span className="chip chip-new">✦ src/components/cards/GleipnirMountainRoots.tsx</span>
+            <span className="chip chip-mod">◈ src/components/layout/AppShell.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div className="rune-hr"><span>ᚢ ᛊ ᛚ</span></div>
+
+    
+    <section className="entry" id="act5">
+      <div className="entry-rune" title="Three More Fragments">ᚢ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Easter Eggs</p>
+        <h2 className="entry-title">Three More Fragments</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">/easter-egg-modal 4
+
+/easter-egg-modal 6
+
+/easter-egg-modal 5</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Three Gleipnir fragments generated in a single session. <span className="hl">Fragment 4 — The Sinews of a Bear</span> (<span className="mono">gleipnir-4.svg</span>): a diagonal crosshatch of curved gold and iron sinew strands across the full canvas; a bright gold convergence knot with a Gaussian glow at the centre; four heavier anchor strands radiating to each corner. Rune: ᚢ. Trigger: TBD.</p>
+            <p><span className="hl">Fragment 5 — The Breath of a Fish</span> (<span className="mono">gleipnir-5.svg</span>): eleven gold stroke-only bubbles rising in a gentle S-curve from the base to the apex, opacity fading from <span className="mono">0.85</span> at the largest to <span className="mono">0.12</span> at the smallest. Dim iron water-surface ellipse at the base. Rune: ᛚ. Trigger: <span className="mono">onMouseEnter</span> on the footer <span className="mono">©</span> symbol.</p>
+            <p><span className="hl">Fragment 6 — The Spittle of a Bird</span> (<span className="mono">gleipnir-6.svg</span>): a gold beak silhouette pointing right, tip at <span className="mono">(560, 512)</span>; thirteen droplets sprayed at −30° to +30° fading from opacity <span className="mono">0.85</span> near the beak to <span className="mono">0.20</span> at the outer edge; faint radial guide lines from tip to each droplet. Rune: ᛊ. Trigger: TBD.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ development/frontend/public/easter-eggs/gleipnir-4.svg</span>
+            <span className="chip chip-new">✦ src/components/cards/GleipnirBearSinews.tsx</span>
+            <span className="chip chip-new">✦ development/frontend/public/easter-eggs/gleipnir-5.svg</span>
+            <span className="chip chip-new">✦ src/components/cards/GleipnirFishBreath.tsx</span>
+            <span className="chip chip-new">✦ development/frontend/public/easter-eggs/gleipnir-6.svg</span>
+            <span className="chip chip-new">✦ src/components/cards/GleipnirBirdSpittle.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div className="rune-hr"><span>ᛟ ᚱ ᛞ</span></div>
+
+    
+    <section className="entry" id="act6">
+      <div className="entry-rune" title="The Lore Is Corrected">ᛟ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VI · Design</p>
+        <h2 className="entry-title">The Lore Is Corrected</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">Update the Location for "Sinews of a bear" to "TBD - more UI elements need to be finished"
+Update the Location for "Spittle of a bird" to TBD
+
+Update the Location for "Roots of a mountain" to "First time collapse of the Sidebar Menu"
+
+Update the Location for "Spittle of a bird" to "TBD — more UI elements need to be finished"</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Four location entries updated across both the design doc and the skill's placement table. Fragment 3's location was set to its exact implementation truth: <em>First time collapse of the Sidebar Menu</em>. Fragments 4 and 6 acknowledged honest incompleteness — more UI surface is needed before a home can be chosen.</p>
+            <p>All three files were kept in sync: <span className="mono">design/easter-eggs.md</span>, <span className="mono">.claude/skills/easter-egg-modal/SKILL.md</span>, and the inline comment in <span className="mono">GleipnirMountainRoots.tsx</span>. The wolf does not like inconsistent records.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ design/easter-eggs.md</span>
+            <span className="chip chip-mod">◈ .claude/skills/easter-egg-modal/SKILL.md</span>
+            <span className="chip chip-mod">◈ src/components/cards/GleipnirMountainRoots.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div className="rune-hr"><span>ᚠ ᛁ ᚱ</span></div>
+
+    
+    <section className="entry" id="act7">
+      <div className="entry-rune" title="The Wolf's Mark">ᚠ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VII · Bugfix</p>
+        <h2 className="entry-title">The Wolf's Mark</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">Failed to load resource: the server responded with a status of 404 (Not Found) — fetch("http://localhost:9653/favicon.ico"…)</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>No favicon existed. In Next.js App Router, placing <span className="mono">icon.svg</span> in <span className="mono">app/</span> causes the framework to inject a <span className="mono">&lt;link rel="icon"&gt;</span> tag automatically — modern browsers stop requesting <span className="mono">/favicon.ico</span>, ending the 404 entirely.</p>
+            <p>The icon is a gold <span className="hl">ᚠ Fehu rune</span> on a void-black rounded square: a vertical stave from y=4 to y=28 at x=12, two right-branching diagonal strokes. Fehu is the first rune of FENRIR — fitting as the app's permanent mark. Stroke width 2.5 on the stave, 2 on the branches, all in <span className="mono">#c9920a</span>.</p>
+          </div>
+
+          <div className="norm-box">
+            <p className="norm-label">Decision</p>
+            <p className="norm-body">SVG favicon over ICO — SVG scales perfectly at any size, matches the dark Nordic design system, and lets Next.js handle injection automatically without a build step.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ src/app/icon.svg</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div className="rune-hr"><span>ᛁ ᛊ ᚾ</span></div>
+
+    
+    <section className="entry" id="act8">
+      <div className="entry-rune" title="The Footer Is Forged">ᛁ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VIII · Feature</p>
+        <h2 className="entry-title">The Footer Is Forged</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-luna">Luna</span>
+          </div>
+          <p className="msg-text">Luna: generate a wireframe for the Footer. Then hand off to FiremanDecko to implement.
+
+[After first implementation:]
+
+The footer is too Tall. It must be only 2 lines tall in small font size so it's unobtrusive.
+Remove the link to the About dialog. Remove the separator line at the bottom.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Luna specified the wireframe, FiremanDecko built it, Luna reviewed and demanded a compact revision, FiremanDecko complied. The final footer is <span className="hl">two lines tall at 11px</span> — barely a whisper at the bottom of the page. It is a flex row: copyright symbol on the left (the hover trigger for Fragment 5), project name centred, GitHub link on the right.</p>
+            <p>Both easter egg triggers survived the cut: the Loki 7-click counter and the <span className="mono">©</span> hover for <em>The Breath of a Fish</em>. What was removed: the three-column grid, the About dialog link, the top separator line, and the excessive <span className="mono">py-6</span> padding (reduced to <span className="mono">py-1.5</span>).</p>
+          </div>
+
+          <ul className="changes">
+            <li>Layout <span className="old">three-column grid</span> → <span className="new">single flex row</span></li>
+            <li>About dialog link <span className="old">present</span> → <span className="new">removed</span></li>
+            <li>Top separator <span className="old">present</span> → <span className="new">removed</span></li>
+            <li>Padding <span className="old">py-6</span> → <span className="new">py-1.5</span></li>
+            <li>Font size <span className="old">standard</span> → <span className="new">11px / text-[11px]</span></li>
+          </ul>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ src/components/layout/Footer.tsx</span>
+            <span className="chip chip-mod">◈ src/components/layout/AppShell.tsx</span>
+            <span className="chip chip-mod">◈ design/wireframes.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div className="rune-hr"><span>ᛊ ᚲ ᚾ</span></div>
+
+    
+    <section className="entry" id="act9">
+      <div className="entry-rune" title="Transparent Backgrounds">ᛊ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IX · Bugfix</p>
+        <h2 className="entry-title">Transparent Backgrounds</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">Update the Easter Egg shared modal so that the SVG is displayed with a dark background to match the dialog or a transparent background. If the SVGs need to be edited, adjust them then update the easter-egg-modal skill to specify that the SVG must have a transparent background.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>The mismatch was visible: SVGs had <span className="mono">fill="#07070d"</span> background rects while the modal's image column is <span className="mono">bg-[#13151f]</span> (chain) — a darker slab against a slightly lighter surround. The fix was simpler than custom-matching colours: strip the background rect from all six SVGs and the inline anvil in <span className="mono">ForgeMasterEgg.tsx</span>, and let the modal's own column colour show through.</p>
+            <p>SVGs 1 and 2 had the comment <em>Background void</em>; SVGs 3, 4, 5, 6 had <em>Background</em>. The anvil in <span className="mono">ForgeMasterEgg.tsx</span> had the comment <em>Background — void black</em>. Intentional <span className="mono">#07070d</span> fills on design elements — hardie/pritchel holes, rune engravings — were left untouched. The skill's background rule was rewritten to explicitly ban background rects and explain the reason.</p>
+          </div>
+
+          <div className="code-block">
+            <pre><span className="cc"></span>
+<span className="cr">&lt;rect width="1024" height="1024" fill="#07070d"/&gt;</span>
+
+<span className="cc"></span></pre>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-mod">◈ development/frontend/public/easter-eggs/gleipnir-1.svg</span>
+            <span className="chip chip-mod">◈ development/frontend/public/easter-eggs/gleipnir-2.svg</span>
+            <span className="chip chip-mod">◈ development/frontend/public/easter-eggs/gleipnir-3.svg</span>
+            <span className="chip chip-mod">◈ development/frontend/public/easter-eggs/gleipnir-4.svg</span>
+            <span className="chip chip-mod">◈ development/frontend/public/easter-eggs/gleipnir-5.svg</span>
+            <span className="chip chip-mod">◈ development/frontend/public/easter-eggs/gleipnir-6.svg</span>
+            <span className="chip chip-mod">◈ src/components/layout/ForgeMasterEgg.tsx</span>
+            <span className="chip chip-mod">◈ .claude/skills/easter-egg-modal/SKILL.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div className="rune-hr"><span>ᚲ ᛞ ᛁ</span></div>
+
+    
+    <section className="entry" id="act10">
+      <div className="entry-rune" title="The Forgemaster Extracted">ᚲ</div>
+      <div className="entry-body">
+        <p className="act-label">Act X · Refactor</p>
+        <h2 className="entry-title">The Forgemaster Extracted</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">Update the easter egg skill to accept an easter egg name OR an easter egg number. Update ForgeMasterEgg.tsx so it references its SVG file rather than having it inline.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>The 200-line <span className="mono">ForgeAnvilArtifact</span> function was excised from <span className="mono">ForgeMasterEgg.tsx</span> entirely. Its JSX — with React-style attribute names like <span className="mono">strokeWidth</span> and <span className="mono">stopColor</span> — was converted to standard SVG attributes and written to <span className="mono">public/easter-eggs/forgemaster.svg</span>. The component now renders a simple <span className="mono">&lt;img src="/easter-eggs/forgemaster.svg"&gt;</span> in the image prop. No background rect.</p>
+            <p>The skill was updated so engineers may invoke it with either a number (<span className="mono">3</span>) or a name keyword (<span className="mono">"mountain"</span>, <span className="mono">"fish"</span>, <span className="mono">"bear sinews"</span>). The lookup table gained a <em>Name keywords</em> column. Four examples show both input styles. Ambiguous input requests clarification before proceeding.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ development/frontend/public/easter-eggs/forgemaster.svg</span>
+            <span className="chip chip-mod">◈ src/components/layout/ForgeMasterEgg.tsx</span>
+            <span className="chip chip-mod">◈ .claude/skills/easter-egg-modal/SKILL.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div className="rune-hr"><span>ᛚ ᛟ ᚲ</span></div>
+
+    
+    <section className="entry" id="act11">
+      <div className="entry-rune" title="Loki Hunts the Eggs">ᛚ</div>
+      <div className="entry-body">
+        <p className="act-label">Act XI · Testing</p>
+        <h2 className="entry-title">Loki Hunts the Eggs</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-loki">Loki</span>
+          </div>
+          <p className="msg-text">Loki: update the playwright tests to hunt for the easter eggs. ensure you have strict assertions on these things.
+How the easter egg is triggered. Does it match the behaviour described in easter-eggs.md
+Easter egg display: correct SVG file? correct DESC text? correct number of easter eggs found?
+Evaluate what makes sense to assert on beyond this to ensure the tests are not too brittle. e.g: EXACT text match for DESC shouldn't be necessary, mainly ensure that the first 30 or so characters matches.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Loki delivered <span className="hl">test-easter-eggs.spec.ts</span> — 22 test cases across 8 suites in the <span className="mono">quality/scripts/</span> directory. Each implemented egg is tested against three dimensions: trigger mechanism matches the spec in <span className="mono">design/easter-eggs.md</span>, modal surfaces the correct SVG filename, and the fragment counter resolves to a valid <span className="mono">/\d+ of 6/</span> pattern.</p>
+            <p>The assertion strategy is calibrated for maintainability: exact matches for modal titles, SVG <span className="mono">src</span> filenames, and the dismiss button text <em>"So it is written"</em>; partial (~30 character) matches for visible description copy; regex for fragment counts. Audio playback, CSS animation state, and exact fragment numbers are intentionally omitted — these would make the suite brittle without adding confidence. One-time gate behaviour is verified: each egg is triggered once, dismissed, then retriggered — modal must not reopen.</p>
+          </div>
+
+          <div className="norm-box">
+            <p className="norm-label">Assertion Strategy</p>
+            <p className="norm-body">
+              Exact: modal titles, SVG src filenames, button text "So it is written".<br />
+              Partial (~30 chars): visible eyebrow and description text.<br />
+              Regex: <span className="mono">/\d+ of 6/</span> for fragment count lines.<br />
+              Skipped: audio playback, CSS animation state, exact fragment numbers.
+            </p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ quality/scripts/test-easter-eggs.spec.ts</span>
+            <span className="chip chip-mod">◈ quality/test-plan.md</span>
+            <span className="chip chip-mod">◈ quality/test-cases.md</span>
+            <span className="chip chip-mod">◈ quality/EASTER-EGGS-AUDIT.md</span>
+            <span className="chip chip-mod">◈ quality/README.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+<footer className="session-footer">
+    <p className="footer-cipher">ᚲ ᚱ ᛚ ᚢ ᛒ ᛊ ᚾ</p>
+    <p className="footer-text">
+      Breaking the Gleipnir · Fenrir Ledger Session Chronicle ·
+      <span className="hl">Six impossible things. All of them now named. Most of them woven.</span>
+    </p>
+  </footer>
+
+</div>

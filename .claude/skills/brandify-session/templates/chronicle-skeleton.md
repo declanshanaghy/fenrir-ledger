@@ -1,15 +1,20 @@
-# Chronicle HTML Skeleton
+# Chronicle MDX Skeleton
 
-**IMPORTANT:** Do NOT generate HTML manually. Use the generator script instead:
+**IMPORTANT:** Do NOT generate MDX manually. Use the generator script instead:
 
 ```bash
-SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/brandify-session/scripts"
+REPO_ROOT="$(git worktree list --porcelain | head -1 | sed 's/worktree //')"
+SCRIPT_DIR="$REPO_ROOT/.claude/skills/brandify-session/scripts"
+BLOG_DIR="$REPO_ROOT/development/frontend/content/blog"
 node "$SCRIPT_DIR/generate-chronicle.mjs" \
   --input tmp/sessions/{{NAME}}.json \
-  --output sessions/{{NAME}}.html
+  --output "$BLOG_DIR/{{NAME}}.mdx"
 ```
 
-The script generates a complete HTML file that links to `sessions/chronicle.css` for shared styles.
+The script generates a complete MDX file with:
+- Frontmatter: `title`, `date`, `rune`, `excerpt`, `slug`
+- Chronicle body inside `<div className="chronicle-page">` — styled via `chronicle.css`
+- All attributes use JSX-compatible `className` (not `class`)
 
 ## Component Rules
 
@@ -19,4 +24,5 @@ The script generates a complete HTML file that links to `sessions/chronicle.css`
 - Session title: title-cased, evocative, not mechanical
 - Code syntax highlighting: `.ca` (add/green), `.cr` (remove/red), `.cc` (comment/subtle)
 - Voice: ancient, unhurried, knowing — rune inscriptions, not UI copy
-- `work_summary` field supports inline HTML: use `<span class="hl">` for highlights, `<span class="mono">` for code refs
+- `work_summary` field supports inline JSX: use `<span className="hl">` for highlights, `<span className="mono">` for code refs
+- Use unicode characters directly (·, —, ×) instead of HTML entities (&middot;, &mdash;, &times;)

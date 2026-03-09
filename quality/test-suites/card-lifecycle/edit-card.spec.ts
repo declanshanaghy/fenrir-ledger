@@ -94,7 +94,8 @@ test.describe("Edit Card — Save Changes", () => {
 
     await page.waitForURL("**/", { timeout: 5000 });
 
-    await expect(page.locator(`text=${newName}`)).toBeVisible();
+    // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
+    await expect(page.locator(`text=${newName}`).first()).toBeVisible();
   });
 });
 
@@ -120,7 +121,8 @@ test.describe("Edit Card — Cancel Without Saving", () => {
 
     await page.waitForURL("**/", { timeout: 5000 });
 
-    await expect(page.locator("text=Do Not Change Me")).toBeVisible();
+    // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
+    await expect(page.locator("text=Do Not Change Me").first()).toBeVisible();
   });
 
   test("unsaved edits do not persist after cancel", async ({ page }) => {

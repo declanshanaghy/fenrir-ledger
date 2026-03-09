@@ -43,17 +43,18 @@ test.describe("SideNav — Nav links", () => {
     await expect(cardsLink).toContainText("Cards");
   });
 
-  test("Valhalla nav link exists with href='/valhalla'", async ({ page }) => {
-    const valhallaLink = page.locator('nav a[href="/valhalla"]').first();
-    await expect(valhallaLink).toBeVisible();
-    await expect(valhallaLink).toContainText("Valhalla");
+  test("Valhalla button exists in sidebar", async ({ page }) => {
+    const valhallaBtn = page.locator('nav button[aria-label="Open Valhalla tab"]').first();
+    await expect(valhallaBtn).toBeVisible();
+    await expect(valhallaBtn).toContainText("Valhalla");
   });
 
-  test("clicking Valhalla link navigates to /valhalla", async ({ page }) => {
-    const valhallaLink = page.locator('nav a[href="/valhalla"]').first();
-    await valhallaLink.click();
-    await page.waitForURL("**/valhalla**");
-    expect(page.url()).toContain("/valhalla");
+  test("clicking Valhalla button activates Valhalla tab", async ({ page }) => {
+    const valhallaBtn = page.locator('nav button[aria-label="Open Valhalla tab"]').first();
+    await valhallaBtn.click();
+    // Valhalla tab should now be selected on the dashboard
+    const valhallaTab = page.locator('button#tab-valhalla');
+    await expect(valhallaTab).toHaveAttribute("aria-selected", "true");
   });
 });
 

@@ -15,12 +15,9 @@ Then create your todo list via TodoWrite. Every todo below is required:
   - Read handoff context
   - Write Playwright tests for acceptance criteria
   - Commit+push tests
-  - Run feature tests (build + test)
+  - Build (fresh sandbox needs it)
+  - Run NEW feature tests only
   - Fix failing tests (repeat until green)
-  - Full verify: tsc
-  - Full verify: build
-  - Full verify: test (all)
-  - Fix pre-existing failures (if any)
   - Rebase + final push
   - Update PR to Fixes
   - Post QA verdict comment
@@ -39,20 +36,16 @@ Then create your todo list via TodoWrite. Every todo below is required:
   `cd <REPO_ROOT> && bash quality/scripts/verify.sh --step test -x <feature-slug>`
 - Fix tests until they pass. Commit+push after each fix. Update todos.
 - Do NOT proceed until your new tests are green.
+- Do NOT run the full test suite — CI handles that on every PR push.
+  Only run YOUR new feature tests: `--step test -x <feature-slug>`
 
-**Step 3b — Full verify (only after new tests pass, each = separate todo):**
-Run each as a SEPARATE Bash tool call:
+**Step 3b — tsc check:**
   `cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc`
-  `cd <REPO_ROOT> && bash quality/scripts/verify.sh --step build`
-  `cd <REPO_ROOT> && bash quality/scripts/verify.sh --step test -x`
-Pre-existing failures: fix surgically (minimum change — wrong locator, missing await).
-Do NOT rewrite unrelated tests or add tests beyond feature scope.
-After each fix: commit+push, re-run `--step test -x`. Update todos. Repeat until all pass.
-Do NOT skip this step. Do NOT verdict PASS if any check is failing.
+On failure: fix, commit+push, re-run.
 
 **Step 3c — Rebase:**
   cd <REPO_ROOT> && git fetch origin && git rebase origin/main
-If conflicts: resolve, re-run verify steps.
+If conflicts: resolve, re-run feature tests.
 
 **Step 3d — Clean up:**
   cd <REPO_ROOT> && rm -rf quality/reports/
@@ -77,14 +70,14 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 **Verdict:** PASS / FAIL
 
 **Tests written:** <N> in \`quality/test-suites/<slug>/\`
-**Tests passing:** <N>/<N> | **Full suite:** <N>/<N>
+**New tests passing:** <N>/<N>
 
 **Validated:**
 - <AC-1 result>
 - <AC-2 result>
 
-**Build:** verify.sh PASS.
-<If PASS: Ready for merge — awaiting orchestrator.>
+**Build:** tsc + build PASS. New feature tests PASS. Full suite deferred to CI.
+<If PASS: Ready for merge — awaiting orchestrator + CI green.>
 <If FAIL: Blocked — see failures above.>"
 
 ---

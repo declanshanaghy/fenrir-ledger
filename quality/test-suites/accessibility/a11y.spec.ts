@@ -95,18 +95,21 @@ test.describe("Heading Hierarchy", () => {
     await expect(h1).toContainText("The Ledger of Fates");
   });
 
-  test("TC-A06: Valhalla page has h1 with 'Valhalla'", async ({ page }) => {
-    // Spec (valhalla/page.tsx): the Valhalla route renders an h1 containing
-    // the word "Valhalla". Per WCAG 2.4.6 (AA), each page must have an
-    // identifying heading.
-    await page.goto("/valhalla");
+  test("TC-A06: Valhalla route redirects to dashboard with accessible heading", async ({ page }) => {
+    // Spec (valhalla/page.tsx): the /valhalla route now redirects to /?tab=valhalla
+    // (the standalone Valhalla page was merged into the dashboard in Issue #352).
+    // Per WCAG 2.4.6 (AA), the page must have a descriptive h1 — provided by the
+    // dashboard h1 "The Ledger of Fates". The Valhalla content is accessible via
+    // the tabbed dashboard interface.
+    await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.goto("/valhalla");
+    await page.waitForURL(/\//);
 
     const h1 = page.locator("h1").first();
     await expect(h1).toBeVisible();
-    await expect(h1).toContainText("Valhalla");
+    await expect(h1).toContainText("The Ledger of Fates");
   });
 
   test("TC-A07: add card page has a heading", async ({ page }) => {

@@ -1,0 +1,266 @@
+---
+title: "The Super Wolf — Pack Coordination"
+date: "2026-03-01"
+rune: "ᚠ"
+excerpt: "A session chronicle of The Super Wolf — Pack Coordination."
+slug: "super-wolf"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</span>
+  <h1 className="session-title">The Super Wolf — Pack Coordination</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+
+      <span>DATE <span className="val">2026-03-01</span></span>
+      <span>ACTS <span className="val">IX</span></span>
+      <span>FILES CHANGED <span className="val">14</span></span>
+      </div>
+</header>
+
+<div className="chronicle-timeline">
+
+    
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="ᚷ Gebo — data, planning">ᚷ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Backlog</p>
+        <h2 className="entry-title">IDP Backlog Entry</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">ADd to backlog: setup a different IDP from google that'll make it easier for testing. Suggest IDP based on target audience.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Created backlog item on branch <span className="mono">docs/backlog-idp-testing</span> after analyzing target audience from product brief. Recommended Clerk as IDP — matches credit card churners (mainstream consumers, privacy-conscious, mobile-first). GitHub as initial social provider for dev testing, with path to add Google/Apple later.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ designs/product/backlog/idp-testing-alternative.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="ᚠ Fehu — foundations">ᚠ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Infrastructure</p>
+        <h2 className="entry-title">Dual-Port Worktree Foundation</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">[Phase 0: Build dual-port worktree infrastructure before launching teams]</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Created <span className="hl">backend-server.sh</span> — parallel script to dev-server.sh. Frontend runs on 9653+offset, backend on 9753+offset (port = frontend + 100). Every worktree gets isolated frontend and backend servers with independent log files and environment overrides.</p>
+            <p>Updated all worktree docs to reflect dual-port model. Committed to <span className="mono">feat/dual-port-worktrees</span> branch and opened PR #26.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ .claude/scripts/backend-server.sh</span>
+            <span className="chip chip-mod">◈ .claude/commands/create_worktree_prompt.md</span>
+            <span className="chip chip-mod">◈ .claude/commands/dev-server.md</span>
+            <span className="chip chip-mod">◈ .claude/commands/list_worktrees_prompt.md</span>
+            <span className="chip chip-mod">◈ .claude/skills/worktree-manager-skill/REFERENCE.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="ᛜ Ingwaz — connections, coordination">ᛜ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Coordination</p>
+        <h2 className="entry-title">Parallel Pack Launch</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">[Launch 3 teams in parallel: Team A (IDP/Clerk), Team B (Backend/WS), Team C (Luna wireframes)]</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Spawned 3 agents in isolated worktrees simultaneously — FiremanDecko for Clerk investigation, FiremanDecko for backend/WebSocket architecture, Luna for multi-IDP wireframes. All three worked in parallel with no cross-contamination.</p>
+            <p>Provided GitHub OAuth setup instructions while teams ran in background: Clerk dashboard → Social Connections → GitHub, copy client ID/secret from GitHub OAuth app settings.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="ᚹ Wunjo — UI, design">ᚹ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Design</p>
+        <h2 className="entry-title">Luna's Multi-IDP Wireframes</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-luna">Luna</span>
+          </div>
+          <p className="msg-text">[Team C completed first]</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Luna delivered <span className="hl">multi-idp-sign-in.html</span> (4 scenarios: desktop/mobile × 1-button/4-button variants) and <span className="hl">multi-idp-interaction-spec.md</span> with full state machine diagrams. Modal dialog, not a page — vertical button stack scales from 1 to 4+ providers. Bottom-anchored on mobile, no close button (one exit: "Continue without signing in"), backdrop click disabled.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ designs/ux-design/wireframes/multi-idp-sign-in.html</span>
+            <span className="chip chip-new">✦ designs/ux-design/multi-idp-interaction-spec.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="ᚺ Hagalaz — systems, backend">ᚺ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Investigation</p>
+        <h2 className="entry-title">Backend WebSocket Investigation</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">[Team B completed]</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>FiremanDecko produced ADR evaluating 5 backend options — recommended <span className="hl">Hono + ws dedicated server on Fly.io</span>. API route audit: POST /api/auth/token (~200ms) stays in Next.js, POST /api/sheets/import (5-30s+) migrates to backend with WebSocket progress streaming. 4-phase rollout plan with file-by-file change list and Mermaid diagrams.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ designs/architecture/adr-backend-server.md</span>
+            <span className="chip chip-new">✦ designs/architecture/backend-implementation-plan.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-6">
+      <div className="entry-rune" title="ᛁ Isa — integrations">ᛁ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VI · Architecture</p>
+        <h2 className="entry-title">Clerk Auth Architecture</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">[Team A completed — PR #27 opened]</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>FiremanDecko delivered <span className="hl">ADR-007</span> — Clerk as auth platform, GitHub initial provider. 5-phase implementation plan: clerkMiddleware() replaces no-op middleware (all routes stay public, no auth gates), householdId contract unchanged (anonymous UUID from localStorage or Clerk user.id when signed in), FenrirSession type removed. Playwright testing via @clerk/testing — Testing Tokens bypass OAuth in CI entirely.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ designs/architecture/adr-clerk-auth.md</span>
+            <span className="chip chip-new">✦ designs/architecture/clerk-implementation-plan.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-7">
+      <div className="entry-rune" title="ᛉ Algiz — validation, guards">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VII · Validation</p>
+        <h2 className="entry-title">Loki's Validation — Both Teams</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">[Launched 2 Loki agents in parallel to validate Team A and Team B outputs]</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Loki QA for Team A (Clerk): <span className="hl">APPROVED WITH NOTES</span> (10/10 checks PASS). 3 non-blocking notes: JSDoc still references "Google sub claim", document Clerk Testing Token lifetime, product brief update deferred correctly.</p>
+            <p>Loki QA for Team B (Backend/WS): <span className="hl">APPROVED</span> (8/8 checks PASS). 3 minor notes: SSE prototype vs evaluation acceptable, cost estimate excludes egress, Anthropic streaming deferred intentionally.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ designs/architecture/clerk-auth-qa-report.md</span>
+            <span className="chip chip-new">✦ designs/architecture/backend-ws-qa-report.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-8">
+      <div className="entry-rune" title="ᛞ Dagaz — deployment, delivery">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VIII · Delivery</p>
+        <h2 className="entry-title">The Great Merge</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">Merge the PR for Phase 0 — Dual-port infra</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Merged PR #26 (dual-port worktree infra — already merged by user). Merged PR #27 (Clerk ADR + implementation plan). Merged PR #25 (backlog items for IDP + Backend/WS). Cleaned up stale worktree branch (backend docs were already on main via PR #26).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-9">
+      <div className="entry-rune" title="ᛏ Tiwaz — completion, victory">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IX · Completion</p>
+        <h2 className="entry-title">Final Luna Wireframe PR</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">FiremanDecko</span>
+          </div>
+          <p className="msg-text">create a PR on the wireframe branch, sync up to master then merge it</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Rebased Luna's worktree branch onto latest main (clean rebase — 1 commit on top). Created PR #28: "design: multi-IDP sign-in dialog wireframe and interaction spec". Merged immediately. All 4 PRs now on main — the pack's work is complete.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ PR #28 merged</span>
+          </div>
+        </div>
+
+<footer className="session-footer">
+    <p className="footer-cipher">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</p>
+    <p className="footer-text">The Super Wolf — Pack Coordination · Fenrir Ledger Session Chronicle</p>
+    <p className="footer-sub">Three agents hunted in parallel. Four PRs merged. The wolf remembers the coordination.</p>
+  </footer>
+
+</div>

@@ -16,7 +16,6 @@ Then create your todo list via TodoWrite. Every todo below is required:
   - Update security docs (if auth/trust boundary changes)
   - Full verify: tsc
   - Full verify: build
-  - Full verify: test
   - Rebase + final push
   - Create PR
   - Post handoff comment
@@ -35,13 +34,11 @@ Then create your todo list via TodoWrite. Every todo below is required:
   3. If tsc fails: fix, commit+push, re-run tsc.
   4. Update your todos.
 
-**Step 4 — Full verify (each step = separate Bash tool call + separate todo):**
+**Step 4 — Full verify: tsc + build (each = separate Bash tool call + separate todo):**
   cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc
   cd <REPO_ROOT> && bash quality/scripts/verify.sh --step build
-  cd <REPO_ROOT> && bash quality/scripts/verify.sh --step test -x
 On failure: fix, commit+push, re-run that step. Repeat until green.
-**3-strike rule:** If test fails 3 times after fixes, commit what you have and proceed
-to handoff with "⚠️ VERIFY INCOMPLETE" note. tsc+build are never skippable.
+Do NOT run tests — the full test suite runs via CI on PR push.
 Update each verify todo as you complete it.
 
 **Step 5 — Rebase + final push:**
@@ -66,5 +63,5 @@ gh issue comment <NUMBER> --body "## Heimdall → Loki Handoff
 - <Vulnerability and fix summary>
 - <What to test: input validation, auth checks, error handling>
 
-**Build:** verify.sh PASS. Ready for QA."
+**Build:** tsc + build PASS. Ready for QA."
 ```

@@ -131,7 +131,7 @@ test.describe("Delete Card — Confirm Action", () => {
 
     await page.waitForURL("**/", { timeout: 5000 });
 
-    await expect(page.locator("text=Keep This One")).toBeVisible();
+    await expect(page.locator("text=Keep This One").first()).toBeVisible();
     const body = await page.locator("body").innerText();
     expect(body).not.toContain("Delete This One");
   });

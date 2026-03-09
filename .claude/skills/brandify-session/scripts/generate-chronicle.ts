@@ -1,10 +1,10 @@
 #!/usr/bin/env -S npx tsx
 /**
- * generate-chronicle.ts — Generate a session chronicle HTML from JSON input
+ * generate-chronicle.ts — Generate a session chronicle MDX from JSON input
  *
- * Usage: echo '{"title":"...","acts":[...]}' | npx tsx generate-chronicle.ts > sessions/NAME.html
+ * Usage: echo '{"title":"...","acts":[...]}' | npx tsx generate-chronicle.ts > content/blog/NAME.mdx
  *
- * Or: npx tsx generate-chronicle.ts --input acts.json --output sessions/NAME.html
+ * Or: npx tsx generate-chronicle.ts --input acts.json --output content/blog/NAME.mdx
  *
  * Input JSON schema:
  * {
@@ -12,13 +12,15 @@
  *   "date": "2026-03-07",
  *   "runes": "ᛏ ᚢ ᚢ ᛚ",
  *   "primary_rune": "ᛏ",
+ *   "slug": "session-name",
+ *   "excerpt": "One-sentence summary for the blog index.",
  *   "acts": [
  *     {
  *       "title": "Act Title",
  *       "rune": "ᛏ",
  *       "category": "Refactoring",
  *       "user_msg": "the user's message",
- *       "work_summary": "<p>HTML paragraph(s) for the work summary</p>",
+ *       "work_summary": "<p>JSX paragraph(s) for the work summary (use className, not class)</p>",
  *       "code_snippet": "optional code block content (HTML-escaped)",
  *       "bug_fix": "optional bug description",
  *       "files_new": ["new-file.ts"],
@@ -31,8 +33,6 @@
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
   'XI', 'XII', 'XIII', 'XIV', 'XV'];
-
-const FONTS_URL = "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap";
 
 interface Act {
   title: string;
@@ -52,6 +52,8 @@ interface SessionData {
   date: string;
   runes: string;
   primary_rune: string;
+  slug: string;
+  excerpt: string;
   acts: Act[];
 }
 
@@ -66,51 +68,51 @@ function generateAct(act: Act, index: number): string {
   let userBlock = '';
   if (act.user_msg) {
     userBlock = `
-        <div class="user-msg">
-          <div class="msg-role">
-            <span class="role-badge badge-fireman">Odin</span>
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
           </div>
-          <p class="msg-text">${esc(act.user_msg)}</p>
+          <p className="msg-text">${esc(act.user_msg)}</p>
         </div>`;
   }
 
   let codeBlock = '';
   if (act.code_snippet) {
     codeBlock = `
-          <div class="code-block"><pre>${act.code_snippet}</pre></div>`;
+          <div className="code-block"><pre>${act.code_snippet}</pre></div>`;
   }
 
   let bugBlock = '';
   if (act.bug_fix) {
     bugBlock = `
-          <div class="bug-box">
-            <p class="bug-label">Bug Fixed</p>
-            <p class="bug-text">${esc(act.bug_fix)}</p>
+          <div className="bug-box">
+            <p className="bug-label">Bug Fixed</p>
+            <p className="bug-text">${esc(act.bug_fix)}</p>
           </div>`;
   }
 
   const chips: string[] = [];
-  for (const f of act.files_new ?? []) chips.push(`<span class="chip chip-new">${esc(f)}</span>`);
-  for (const f of act.files_mod ?? []) chips.push(`<span class="chip chip-mod">${esc(f)}</span>`);
-  for (const f of act.files_mem ?? []) chips.push(`<span class="chip chip-mem">${esc(f)}</span>`);
+  for (const f of act.files_new ?? []) chips.push(`<span className="chip chip-new">${esc(f)}</span>`);
+  for (const f of act.files_mod ?? []) chips.push(`<span className="chip chip-mod">${esc(f)}</span>`);
+  for (const f of act.files_mem ?? []) chips.push(`<span className="chip chip-mem">${esc(f)}</span>`);
 
   let chipsBlock = '';
   if (chips.length > 0) {
     chipsBlock = `
-          <div class="file-chips">
+          <div className="file-chips">
             ${chips.join('\n            ')}
           </div>`;
   }
 
   return `
-    <section class="entry" id="act-${num}">
-      <div class="entry-rune" title="${esc(act.title)}">${act.rune}</div>
-      <div class="entry-body">
-        <p class="act-label">Act ${roman} &middot; ${esc(act.category)}</p>
-        <h2 class="entry-title">${esc(act.title)}</h2>
+    <section className="entry" id="act-${num}">
+      <div className="entry-rune" title="${esc(act.title)}">${act.rune}</div>
+      <div className="entry-body">
+        <p className="act-label">Act ${roman} · ${esc(act.category)}</p>
+        <h2 className="entry-title">${esc(act.title)}</h2>
 ${userBlock}
-        <div class="work-card">
-          <div class="work-body">${act.work_summary}</div>${codeBlock}${bugBlock}${chipsBlock}
+        <div className="work-card">
+          <div className="work-body">${act.work_summary}</div>${codeBlock}${bugBlock}${chipsBlock}
         </div>
       </div>
     </section>`;
@@ -119,7 +121,7 @@ ${userBlock}
 function generateTocEntry(act: Act, index: number): string {
   const num = index + 1;
   const roman = ROMAN[index] ?? String(num);
-  return `      <li><a href="#act-${num}"><span class="toc-rune">${act.rune}</span> <span class="toc-num">${roman}</span> ${esc(act.title)}</a></li>`;
+  return `      <li><a href="#act-${num}"><span className="toc-rune">${act.rune}</span> <span className="toc-num">${roman}</span> ${esc(act.title)}</a></li>`;
 }
 
 function countFiles(data: SessionData): number {
@@ -137,55 +139,46 @@ function generate(data: SessionData): string {
   const toc = data.acts.map(generateTocEntry).join('\n');
   const acts = data.acts.map(generateAct).join('\n');
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${data.primary_rune} Session Chronicle: ${esc(data.title)} &middot; Fenrir Ledger</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="${FONTS_URL}" rel="stylesheet">
-  <link rel="stylesheet" href="/sessions/chronicle.css">
-</head>
-<body>
-<div class="page">
+  return `---
+title: "${data.title.replace(/"/g, '\\"')}"
+date: "${data.date}"
+rune: "${data.primary_rune}"
+excerpt: "${data.excerpt.replace(/"/g, '\\"')}"
+slug: "${data.slug}"
+---
 
-  <nav class="back-nav" aria-label="Return to archive">
-    <a href="/sessions/" class="back-link">&larr; &#5999; Session Archive</a>
-  </nav>
+<div className="chronicle-page">
 
-  <header class="session-header">
-    <span class="header-runes">${data.runes}</span>
-    <h1 class="session-title">${esc(data.title)}</h1>
-    <p class="session-subtitle">Session Chronicle &middot; Fenrir Ledger</p>
-    <div class="session-meta">
-      <span>DATE <span class="val">${data.date}</span></span>
-      <span>ACTS <span class="val">${data.acts.length}</span></span>
-      <span>FILES CHANGED <span class="val">${totalFiles}</span></span>
-    </div>
-  </header>
-
-  <nav class="toc">
-    <div class="toc-title">Chronicle of Acts</div>
-    <ul class="toc-list">
-${toc}
-    </ul>
-  </nav>
-
-  <div class="timeline">
-${acts}
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">${data.runes}</span>
+  <h1 className="session-title">${esc(data.title)}</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">${data.date}</span></span>
+      <span>Session <span className="val">${data.slug}</span></span>
+      <span>Acts <span className="val">${data.acts.length}</span></span>
+      <span>Files changed <span className="val">${totalFiles}</span></span>
   </div>
+</header>
 
-  <footer class="session-footer">
-    <div class="footer-cipher">${data.runes}</div>
-    <div class="footer-text">${esc(data.title)} &middot; Fenrir Ledger Session Chronicle</div>
-    <p class="footer-sub">The wolf remembers everything.</p>
-  </footer>
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
+${toc}
+  </ul>
+</nav>
+
+<div className="timeline">
+${acts}
+</div>
+
+<footer className="session-footer">
+  <div className="footer-cipher">${data.runes}</div>
+  <div className="footer-text">${esc(data.title)} · Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
+</footer>
 
 </div>
-</body>
-</html>
 `;
 }
 
@@ -211,11 +204,11 @@ if (inputPath) {
 }
 
 const data: SessionData = JSON.parse(jsonStr);
-const html = generate(data);
+const mdx = generate(data);
 
 if (outputPath) {
-  writeFileSync(outputPath, html);
+  writeFileSync(outputPath, mdx);
   console.log(`Generated ${outputPath} (${data.acts.length} acts, ${countFiles(data)} files)`);
 } else {
-  process.stdout.write(html);
+  process.stdout.write(mdx);
 }

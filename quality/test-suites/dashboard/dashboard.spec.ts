@@ -106,9 +106,9 @@ test.describe("Dashboard — Card Grid", () => {
 
     // Spec: CardTile.tsx renders <CardTitle>{card.cardName}</CardTitle>
     // FEW_CARDS = [Sapphire Preferred, Platinum, Venture Rewards]
-    await expect(page.getByText("Sapphire Preferred")).toBeVisible();
-    await expect(page.getByText("Platinum")).toBeVisible();
-    await expect(page.getByText("Venture Rewards")).toBeVisible();
+    await expect(page.getByText("Sapphire Preferred").first()).toBeVisible();
+    await expect(page.getByText("Platinum").first()).toBeVisible();
+    await expect(page.getByText("Venture Rewards").first()).toBeVisible();
   });
 
   test("renders exactly 3 card tiles for FEW_CARDS", async ({ page }) => {
@@ -117,8 +117,9 @@ test.describe("Dashboard — Card Grid", () => {
     await page.reload({ waitUntil: "networkidle" });
 
     // Each CardTile is wrapped in a Link to /cards/{id}/edit
-    // There are 3 FEW_CARDS, each with a unique ID, so 3 edit links
-    const editLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
+    // Cards appear in "All" tab + status tab; scope to the "All" tabpanel
+    const allPanel = page.locator('[aria-labelledby="tab-all"]');
+    const editLinks = allPanel.locator('a[href*="/cards/"][href*="/edit"]');
     await expect(editLinks).toHaveCount(3);
   });
 
@@ -133,7 +134,9 @@ test.describe("Dashboard — Card Grid", () => {
     const emptyHeading = page.locator('h2:has-text("Gleipnir")');
     await expect(emptyHeading).toHaveCount(0);
 
-    const editLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
+    // Scope to "All" tab to avoid 5-tab duplication
+    const allPanel = page.locator('[aria-labelledby="tab-all"]');
+    const editLinks = allPanel.locator('a[href*="/cards/"][href*="/edit"]');
     await expect(editLinks).toHaveCount(10);
   });
 });
@@ -218,7 +221,9 @@ test.describe("Dashboard — Status Badges", () => {
 
     // Spec: STATUS_LABELS.active = "Active" (constants.ts, authoritative)
     // StatusBadge renders <Badge>{label}</Badge> where label = STATUS_LABELS[status]
-    const activeBadges = page.locator('[aria-label="Card status: Active"]');
+    // Scope to "All" tab to avoid 5-tab duplication
+    const allPanel = page.locator('[aria-labelledby="tab-all"]');
+    const activeBadges = allPanel.locator('[aria-label="Card status: Active"]');
     const count = await activeBadges.count();
     // All 3 FEW_CARDS are active
     expect(count).toBe(3);
@@ -230,7 +235,9 @@ test.describe("Dashboard — Status Badges", () => {
     await page.reload({ waitUntil: "networkidle" });
 
     // Spec: STATUS_LABELS.fee_approaching = "Fee Due Soon" (constants.ts)
-    const feeBadges = page.locator('[aria-label="Card status: Fee Due Soon"]');
+    // Scope to "All" tab to avoid 5-tab duplication
+    const allPanel = page.locator('[aria-labelledby="tab-all"]');
+    const feeBadges = allPanel.locator('[aria-label="Card status: Fee Due Soon"]');
     const count = await feeBadges.count();
     // URGENT_CARDS has 3 fee_approaching cards
     expect(count).toBe(3);
@@ -242,7 +249,9 @@ test.describe("Dashboard — Status Badges", () => {
     await page.reload({ waitUntil: "networkidle" });
 
     // Spec: STATUS_LABELS.promo_expiring = "Promo Expiring" (constants.ts)
-    const promoBadges = page.locator('[aria-label="Card status: Promo Expiring"]');
+    // Scope to "All" tab to avoid 5-tab duplication
+    const allPanel = page.locator('[aria-labelledby="tab-all"]');
+    const promoBadges = allPanel.locator('[aria-label="Card status: Promo Expiring"]');
     const count = await promoBadges.count();
     // URGENT_CARDS has 2 promo_expiring cards
     expect(count).toBe(2);
@@ -262,8 +271,11 @@ test.describe("Dashboard — Card Tile Links", () => {
 
     // Spec: CardTile.tsx wraps content in <Link href={`/cards/${card.id}/edit`}>
     // Each FEW_CARDS entry has a unique ID — verify the link pattern exists
+    // Click "All" tab first since default tab is Howl or Active
+    await page.locator('#tab-all').click();
+    const allPanel = page.locator('[aria-labelledby="tab-all"]');
     for (const card of FEW_CARDS) {
-      const tileLink = page.locator(`a[href="/cards/${card.id}/edit"]`);
+      const tileLink = allPanel.locator(`a[href="/cards/${card.id}/edit"]`);
       await expect(tileLink).toBeVisible();
     }
   });
@@ -276,7 +288,7 @@ test.describe("Dashboard — Card Tile Links", () => {
     await page.reload({ waitUntil: "networkidle" });
 
     const firstCard = FEW_CARDS[0]!;
-    const tileLink = page.locator(`a[href="/cards/${firstCard.id}/edit"]`);
+    const tileLink = page.locator(`a[href="/cards/${firstCard.id}/edit"]`).first();
     await tileLink.click();
 
     // After click, URL must be the edit page for that specific card

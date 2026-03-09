@@ -194,7 +194,9 @@ test.describe("Edit Card (card-crud) — Save", () => {
     await page.locator('button[type="submit"]').click();
 
     await page.waitForURL("**/", { timeout: 5000 });
-    await expect(page.locator(`text=${updatedName}`)).toBeVisible();
+    // Use first() — with 5-tab dashboard, the same card name can appear in
+    // multiple tab panels (e.g. active tab + All tab), causing strict mode failures.
+    await expect(page.locator(`text=${updatedName}`).first()).toBeVisible();
   });
 
   test("old card name is replaced (not duplicated) after rename", async ({
@@ -251,8 +253,9 @@ test.describe("Edit Card (card-crud) — Cancel", () => {
     await page.locator('button:has-text("Cancel")').click();
 
     await page.waitForURL("**/", { timeout: 5000 });
-    // Original name must still show — the edit was never saved
-    await expect(page.locator("text=Do Not Persist This")).toBeVisible();
+    // Original name must still show — the edit was never saved.
+    // Use first() — with 5-tab dashboard, card names can appear in multiple panels.
+    await expect(page.locator("text=Do Not Persist This").first()).toBeVisible();
   });
 
   test("unsaved field edits do not persist after cancel", async ({ page }) => {

@@ -1,0 +1,159 @@
+---
+title: "Leaner Pups — Measuring and Taming the Token Hunger"
+date: "2026-03-08"
+rune: "ᛇ"
+excerpt: "A session chronicle of Leaner Pups — Measuring and Taming the Token Hunger."
+slug: "leaner-pups"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᛇ ᛏ ᚲ ᛈ ᚾ</span>
+  <h1 className="session-title">Leaner Pups — Measuring and Taming the Token Hunger</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+
+      <span>DATE <span className="val">2026-03-08</span></span>
+      <span>ACTS <span className="val">6</span></span>
+      <span>FILES CHANGED <span className="val">6</span></span>
+      </div>
+</header>
+
+<div className="chronicle-timeline">
+
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="Weighing the Pack's Appetite">ᛇ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Analysis</p>
+        <h2 className="entry-title">Weighing the Pack's Appetite</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">How many tokens are depot agents consuming? approx, give me percentiles</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The rune-keeper delved into the archives — <span className="mono">~/.claude/projects/</span>, where 747 JSONL session logs lay dormant. Each file a record of an agent's journey: input tokens, cache creation, cache reads, output tokens.</p><p>Through <span className="hl">batch processing</span> of all 690 sessions with data, the true hunger emerged: <span className="hl">4.38 billion tokens</span> consumed across the project's lifetime. The median pup devours <span className="hl">1.8M tokens</span> per run, but the fat tail is real — P99 reaches 84.3M, and one absolute unit consumed 374.3M.</p><p>The split between orchestrator sessions (125, median 5.7M) and subagents (565, median 1.5M) revealed a near-even divide: 2.36B vs 2.02B. The pack eats together.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="The Pack Runs On">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Orchestration</p>
+        <h2 className="entry-title">The Pack Runs On</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --status</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Between token audits, the orchestrator kept the pack moving. Five issues in flight: <span className="hl">#190</span> (wizard animations, Loki PASS but merge-blocked by conflicts), <span className="hl">#338</span> (features + pricing, Loki dispatched), <span className="hl">#340</span> (blog MDX, agent failed), <span className="hl">#352</span> (5-tab dashboard, awaiting FiremanDecko), <span className="hl">#359</span> (broken static links, Loki QA pending).</p><p>Auto-executed: merged PR #361 for #359 (Loki PASS, clean merge). Dispatched FiremanDecko rebase for #190's conflicts. Dispatched FiremanDecko build for #352's 5-tab dashboard implementation.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="Heilung Rises from LCARS Ashes">ᚲ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Easter Egg</p>
+        <h2 className="entry-title">Heilung Rises from LCARS Ashes</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">File an issue to research hiding an easter egg link to Heilung Krigsgaldr YouTube video</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Odin commanded: find the band behind a YouTube link and design an easter egg. Web searches revealed <span className="hl">Heilung</span> — a Norse experimental folk group from Copenhagen, 2014. Three members: Kai Uwe Faust (throat singing), Christopher Juul (percussion from human bones and reconstructed swords), Maria Franz (traditional Norwegian vocals). Their music: <span className="hl">"amplified history from early medieval northern Europe."</span></p><p>The decree: replace Easter Egg #10 (LCARS Mode — Star Trek in a Norse app, too off-brand) with a <span className="hl">Heilung Krigsgaldr modal</span>. Same <span className="mono">Ctrl+Shift+L</span> trigger. Two-column layout: band profile left, YouTube embed right. Privacy-safe via <span className="mono">youtube-nocookie.com</span>.</p><p>Luna interview conducted inline. Issue <span className="hl">#363</span> filed, added to board, dispatched to FiremanDecko on Depot.</p></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">development/frontend/src/components/easter-eggs/LcarsOverlay.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="The Pack Merges and Dispatches">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Orchestration</p>
+        <h2 className="entry-title">The Pack Merges and Dispatches</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --status (multiple rounds)</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>A flurry of merges and dispatches. <span className="hl">#338</span> (features + pricing) — Loki PASS arrived, PR #356 merged, moved to Done. <span className="hl">#359</span> — already merged earlier. <span className="hl">#340</span> (blog MDX) — found closed as "Won't do" but Odin said re-open it. Reopened, blocker #337 confirmed resolved, dispatched FiremanDecko fresh.</p><p>At peak, <span className="hl">five Depot agents</span> running simultaneously: #190 (rebase), #340 (blog), #352 (5 tabs), #363 (Heilung), all FiremanDecko sessions actively updating.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="Diagnosing the Hunger">ᛈ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Analysis</p>
+        <h2 className="entry-title">Diagnosing the Hunger</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">How can we make the depot agents leaner?</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The deep analysis. Measured every source of token consumption:</p><p><span className="hl">4.3MB</span> of <span className="mono">.claude/</span> markdown files loaded as system context — re-sent on every tool call. An agent making 40 calls = 40M tokens on context alone. <span className="hl">1.3MB</span> of Playwright output with <span className="mono">--reporter=list</span> (~300K tokens per test run). Build and npm outputs: surprisingly small (~3KB and ~2KB respectively).</p><p>The prescription: quick wins (reporter=dot, pipe output), medium effort (sandbox CLAUDE.md, targeted reads, verify.sh wrapper), and bigger wins (Haiku for simple tasks, smaller issues, pre-built verification).</p><p>Estimated impact: <span className="hl">60% reduction</span> in median token usage — from 1.5M to ~600K per subagent.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-6">
+      <div className="entry-rune" title="Forging the Leaner Harness">ᚾ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VI · New Feature</p>
+        <h2 className="entry-title">Forging the Leaner Harness</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">yes, structure it in a way that reports on each branch don't conflict with each other</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Odin approved the design: reports committed to branch, cleaned up on merge. Issue <span className="hl">#364</span> filed — <span className="mono">scripts/verify.sh</span> wrapper that runs tsc, build, and Playwright in sequence. Stdout: condensed one-line-per-step summary (< 10 lines on full pass). Full output: <span className="mono">quality/reports/</span> directory.</p><p>Key design decisions: fixed filenames (no branch prefix needed — each branch has its own copy). <span className="mono">quality/reports/</span> in <span className="mono">.gitignore</span> as safety net. Loki cleans up reports before final commit. Squash merge to main never includes them.</p><p>The <span className="hl">15,000x reduction</span> per Playwright run: 1.3MB → ~5 lines. Agent templates updated from 3 separate verification steps to a single <span className="mono">bash scripts/verify.sh</span> call.</p><p>Dispatched to FiremanDecko on Depot. Five agents now running in parallel.</p></div>
+          <div className="code-block"><pre># Before (3 steps, verbose — ~1.3MB output):
+npx tsc --noEmit
+npx next build
+npx playwright test --reporter=list
+
+# After (1 step, lean — ~5 lines output):
+<span className="ca">bash scripts/verify.sh</span>
+<span className="ca">=== Fenrir Verify ===</span>
+<span className="ca">[1/3] tsc --noEmit .............. PASS</span>
+<span className="ca">[2/3] next build ................ PASS (23 routes)</span>
+<span className="ca">[3/3] playwright (47 tests) ..... PASS (47/47)</span>
+<span className="ca">=== All checks passed ===</span></pre></div>
+          <div className="file-chips">
+            <span className="chip chip-new">scripts/verify.sh</span>
+            <span className="chip chip-mod">.claude/skills/fire-next-up/templates/firemandecko.md</span>
+            <span className="chip chip-mod">.claude/skills/fire-next-up/templates/loki.md</span>
+            <span className="chip chip-mod">.claude/skills/fire-next-up/templates/heimdall.md</span>
+            <span className="chip chip-mod">.gitignore</span>
+          </div>
+        </div>
+
+<footer className="session-footer">
+    <div className="footer-cipher">ᛇ ᛏ ᚲ ᛈ ᚾ</div>
+    <div className="footer-text">Leaner Pups — Measuring and Taming the Token Hunger · Fenrir Ledger Session Chronicle</div>
+    <p className="footer-sub">The wolf remembers everything.</p>
+  </footer>
+
+</div>

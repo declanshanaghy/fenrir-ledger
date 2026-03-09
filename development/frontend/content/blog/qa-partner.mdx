@@ -1,0 +1,386 @@
+---
+title: "The Quality Hunt"
+date: "2026-03-06"
+rune: "ᚠ"
+excerpt: "A session chronicle of The Quality Hunt."
+slug: "qa-partner"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ ᛊ</span>
+  <h1 className="session-title">The Quality Hunt</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+
+      <span>DATE <span className="val">2026-03-06</span></span>
+      <span>ACTS <span className="val">VIII</span></span>
+      <span>FILES CHANGED <span className="val">14</span></span>
+      </div>
+</header>
+
+──────────────────────────────────────────────── -->
+  <div className="timeline">
+
+    
+    
+    
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="Thurisaz — problem-solving, fixing bugs">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Bug Fix</p>
+        <h2 className="entry-title">The Cancel-at Mending</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-odin">Odin</span>
+          </div>
+          <p className="msg-text">Whats the url on vercel for that db can i view the data there?</p>
+        </div>
+
+        <div className="bug-box">
+          <p className="bug-label">Bug Fixed</p>
+          <p className="bug-text">Stripe portal cancellations set cancel_at (a timestamp) instead of cancel_at_period_end (a boolean). The membership route backfill only checked the boolean, so cancellation state never appeared on the frontend Settings page.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Aligned all three Stripe subscription handlers to check both <span className="mono">cancel_at_period_end</span> and <span className="mono">cancel_at !== null</span>. When <span className="mono">cancel_at</span> is present, it takes priority as the <span className="hl">currentPeriodEnd</span> date — this is the actual cancellation timestamp the portal writes.</p>
+            <p>Three locations made consistent: <span className="mono">webhook.ts</span> buildEntitlementFromSubscription, <span className="mono">webhook/route.ts</span> handleSubscriptionUpdated, and <span className="mono">membership/route.ts</span> backfill path.</p>
+          </div>
+
+          <div className="code-block">
+            <pre><span className="cc">// Before: only checked the boolean</span>
+<span className="cr">cancelAtPeriodEnd = sub.cancel_at_period_end;</span>
+
+<span className="cc">// After: portal uses cancel_at timestamp</span>
+<span className="ca">cancelAtPeriodEnd = sub.cancel_at_period_end || sub.cancel_at !== null;</span>
+<span className="ca">currentPeriodEnd = sub.cancel_at</span>
+<span className="ca">  ? new Date(sub.cancel_at * 1000).toISOString()</span>
+<span className="ca">  : sub.items.data[0]</span>
+<span className="ca">    ? new Date(sub.items.data[0].current_period_end * 1000).toISOString()</span>
+<span className="ca">    : new Date().toISOString();</span></pre>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-mod">✎ src/app/api/stripe/membership/route.ts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    
+    
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="Thurisaz — problem-solving, fixing bugs">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Bug Fix</p>
+        <h2 className="entry-title">The Protocol Correction</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-odin">Odin</span>
+          </div>
+          <p className="msg-text">hmmm stripe redirect on checkout choked now. why did it try to go to https://localhost:9653 TLS isn't up locally</p>
+        </div>
+
+        <div className="bug-box">
+          <p className="bug-label">Bug Fixed</p>
+          <p className="bug-text">vercel dev sets VERCEL_URL but runs plain HTTP. The checkout and portal routes blindly prefixed https://, breaking Stripe redirects when developing locally.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Added a <span className="mono">VERCEL_ENV</span> check to both checkout and portal routes. When <span className="mono">VERCEL_ENV === "development"</span> (local <span className="mono">vercel dev</span>), the base URL uses <span className="hl">http://</span>. Preview and Production deployments continue using <span className="hl">https://</span>.</p>
+          </div>
+
+          <div className="code-block">
+            <pre><span className="ca">const baseUrl = process.env.APP_BASE_URL</span>
+<span className="ca">  ?? (process.env.VERCEL_URL</span>
+<span className="ca">    ? (process.env.VERCEL_ENV === "development"</span>
+<span className="ca">      ? `http://${process.env.VERCEL_URL}`</span>
+<span className="ca">      : `https://${process.env.VERCEL_URL}`)</span>
+<span className="ca">    : "http://localhost:9653");</span></pre>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-mod">✎ src/app/api/stripe/checkout/route.ts</span>
+            <span className="chip chip-mod">✎ src/app/api/stripe/portal/route.ts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    
+    
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="Tiwaz — tooling, meta-work">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Issue Filing</p>
+        <h2 className="entry-title">The Issue Harvest</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-odin">Odin</span>
+          </div>
+          <p className="msg-text">We need bigger fonts. file a bug to do a UX update. Stripe platform is so much easier to read. We need to keep our style but bigger size by default.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Odin walked through the live app, identifying UX issues and feature requests as they appeared. Each observation was immediately filed as a GitHub Issue with screenshots, reproduction steps, and acceptance criteria. Eight issues filed in rapid succession, covering readability, button feedback, layout, and visual design.</p>
+          </div>
+
+          <table className="issue-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td className="issue-num">#149</td><td>Increase base font sizes for readability</td><td className="issue-type">UX</td></tr>
+              <tr><td className="issue-num">#150</td><td>Add hover/click feedback to buttons</td><td className="issue-type">UX</td></tr>
+              <tr><td className="issue-num">#151</td><td>Redesign Settings page layout</td><td className="issue-type">UX</td></tr>
+              <tr><td className="issue-num">#152</td><td>Howl panel vertical alignment with card grid</td><td className="issue-type">UX</td></tr>
+              <tr><td className="issue-num">#153</td><td>Assign runes to issuers + bank logos</td><td className="issue-type">UX</td></tr>
+              <tr><td className="issue-num">#154</td><td>Howl panel overlaps user menu</td><td className="issue-type">Bug</td></tr>
+              <tr><td className="issue-num">#155</td><td>Stripe test coverage gaps</td><td className="issue-type">Test</td></tr>
+              <tr><td className="issue-num">#156</td><td>Logged-out empty state overbusy</td><td className="issue-type">UX</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    
+    
+    
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="Jera — journeys, multi-step processes">ᛃ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Triage</p>
+        <h2 className="entry-title">The Triage Walk</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-odin">Odin</span>
+          </div>
+          <p className="msg-text">Lets walk through them 1 by 1 and determine which are still applicable</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Walked through every on-disk bug: 6 Stripe security findings, 9 Google API security findings, 3 import QA defects, and 7 Sprint 3 gap items. Each was checked against current code to determine if still applicable.</p>
+            <p>Of ~25 items examined: <span className="hl">10 already fixed</span>, <span className="hl">3 not applicable</span>, <span className="hl">7 won't-do</span> (accepted design decisions), and <span className="hl">5 filed as new issues</span>.</p>
+          </div>
+
+          <table className="issue-table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Items</th>
+                <th>Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Stripe SEV-001</td><td>Secrets in worktree .env.local</td><td className="triage-skip">Stale — worktree deleted, never in git</td></tr>
+              <tr><td>Stripe SEV-002</td><td>Origin header in redirects</td><td className="triage-fixed">Fixed this session</td></tr>
+              <tr><td>Stripe SEV-003</td><td>CSP missing Stripe domains</td><td className="triage-fixed">Already fixed</td></tr>
+              <tr><td>Stripe SEV-004–006</td><td>Rate limiter, dedup, anon checkout</td><td className="triage-skip">Won't do / not applicable</td></tr>
+              <tr><td>Google SEV-001–003</td><td>Open redirect, headers, rate limiting</td><td className="triage-fixed">All fixed</td></tr>
+              <tr><td>Google SEV-005</td><td>LLM prompt injection via CSV</td><td className="triage-filed">Filed as #157</td></tr>
+              <tr><td>Google SEV-004,006–009</td><td>Picker key, Drive token, error fwd, etc.</td><td className="triage-skip">Design decisions / fixed / skip</td></tr>
+              <tr><td>Import DEF-001–003</td><td>Success step, aria-labels, CSV msg</td><td className="triage-fixed">All fixed</td></tr>
+              <tr><td>Sprint 3 gaps</td><td>4 remaining gaps</td><td className="triage-filed">Filed as #158–#161</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    
+    
+    
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="Algiz — protection, validation">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Process</p>
+        <h2 className="entry-title">The Template Pact</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-odin">Odin</span>
+          </div>
+          <p className="msg-text">ok now lets develop a template for issues being filed in GH and update everyone's instructions to use it when needed.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Analyzed existing issues to extract common patterns, then created a unified GitHub Issue template. Title format: <span className="hl">[Type] [Priority]: Short description</span>. Types: Bug, Feature, UX, Security, Test. Priorities: P1-Critical through P4-Low.</p>
+            <p>Template includes structured sections: Problem, Screenshots, Expected Behavior, Affected Code, Reproduction Steps, Acceptance Criteria, and Notes.</p>
+          </div>
+
+          <div className="code-block">
+            <pre><span className="cc"># Title format</span>
+<span className="ca">[Bug] [P1]: Howl panel overlaps top-right user menu</span>
+<span className="ca">[Feature] [P3]: Add financial sort options to Valhalla</span>
+<span className="ca">[UX] [P2]: Increase base font sizes for readability</span>
+<span className="ca">[Security] [P2]: LLM prompt injection via CSV content</span>
+<span className="ca">[Test] [P2]: Stripe cancellation state coverage gaps</span></pre>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-new">✦ .github/ISSUE_TEMPLATE/issue.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    
+    
+    <section className="entry" id="act-6">
+      <div className="entry-rune" title="Tiwaz — tooling, meta-work">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VI · Tooling</p>
+        <h2 className="entry-title">The Label Forge</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-odin">Odin</span>
+          </div>
+          <p className="msg-text">How can we change how things are filed so that i can use severity and type filters?</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Created the <span className="hl">Fenrir Ledger Triage</span> GitHub Projects board. Added all 22 open issues. Created structured labels for filtering: <span className="mono">type:bug</span>, <span className="mono">type:ux</span>, <span className="mono">type:feature</span>, <span className="mono">type:security</span>, <span className="mono">type:test</span> for types, and <span className="mono">P1-critical</span> through <span className="mono">P4-low</span> for priorities.</p>
+            <p>Spawned 4 subagents in parallel to reformat all 21 existing issue titles to the <span className="mono">[Type] [Priority]:</span> convention and apply correct labels. All 22 issues updated.</p>
+          </div>
+
+          <table className="issue-table">
+            <thead>
+              <tr>
+                <th>Priority</th>
+                <th>Count</th>
+                <th>Issues</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>P2-high</td><td>6</td><td className="issue-num">#146, #147, #148, #154, #155, #157</td></tr>
+              <tr><td>P3-medium</td><td>10</td><td className="issue-num">#126, #131, #145, #149, #150, #151, #153, #156, #158, #160, #161</td></tr>
+              <tr><td>P4-low</td><td>6</td><td className="issue-num">#132, #133, #152, #159, #162</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    
+    
+    
+    <section className="entry" id="act-7">
+      <div className="entry-rune" title="Ingwaz — hooks, connections, bindings">ᛜ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VII · Agent Binding</p>
+        <h2 className="entry-title">The Agent Binding</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-odin">Odin</span>
+          </div>
+          <p className="msg-text">File them as feature requests in GH. Update the team norms to file all issues in GH from now on. Ensure Loki and FiremanDecko have this in their prompts.</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Updated three agent/config files with the new issue tracking workflow. <span className="hl">Loki</span> now files GitHub Issues for every defect found during QA, includes the full template, and hands off to FiremanDecko with the issue URL. <span className="hl">FiremanDecko</span> references issue numbers in branches and PRs, uses <span className="mono">Fixes #N</span> for auto-close on merge.</p>
+            <p>Both agents instructed to add every new issue to the project board: <span className="mono">gh project item-add 1 --owner declanshanaghy --url &lt;issue-url&gt;</span>.</p>
+          </div>
+
+          <div className="norm-box">
+            <p className="norm-label">Team Norm — GitHub-First Issue Tracking</p>
+            <p className="norm-body">All defects, bugs, features, and security issues MUST be tracked as GitHub Issues. On-disk QA verdicts and security reports are supplementary documentation, not the source of truth. A defect without a GitHub Issue is an untracked defect. Untracked defects get lost.</p>
+          </div>
+
+          <div className="file-chips">
+            <span className="chip chip-mod">✎ .claude/agents/loki.md</span>
+            <span className="chip chip-mod">✎ .claude/agents/fireman-decko.md</span>
+            <span className="chip chip-mem">♢ memory/team-norms.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    
+    
+    <section className="entry" id="act-8">
+      <div className="entry-rune" title="Dagaz — delivery, deployment">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VIII · Delivery</p>
+        <h2 className="entry-title">The Push & the Hunt</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-odin">Odin</span>
+          </div>
+          <p className="msg-text">ok lets commit everything</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Two clean commits on <span className="mono">fix/stripe-subscription-state</span>: the first for Stripe bug fixes (cancel_at handling + protocol fix), the second for process improvements (consolidated dev scripts, issue template, agent prompt updates). Pushed and created <span className="hl">PR #163</span>.</p>
+            <p>Playwright tests failing on CI — Loki spawned in the background to investigate and fix.</p>
+          </div>
+
+          <ul className="changes">
+            <li><span className="new">d5700b1 — fix: handle Stripe cancel_at for portal cancellations and fix local dev redirect</span></li>
+            <li><span className="new">b7a84af — chore: consolidate dev scripts, add issue template, update agent prompts</span></li>
+          </ul>
+
+          <div className="file-chips">
+            <span className="chip chip-mod">✎ 6 files (Stripe fixes)</span>
+            <span className="chip chip-mod">✎ 7 files (process/tooling)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  
+  <div style="margin-top:64px; padding:24px; background:var(--forge); border:1px solid var(--rune-border);">
+    <div style="font-family:'Cinzel',serif; font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.18em; color:var(--muted); margin-bottom:16px;">Session Ledger</div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px;">
+      <div style="background:var(--chain); border:1px solid var(--iron-border); padding:12px 14px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Bugs fixed</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:1.2rem; color:var(--fire);">2</div>
+      </div>
+      <div style="background:var(--chain); border:1px solid var(--iron-border); padding:12px 14px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Issues filed</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:1.2rem; color:var(--gold-bright);">14</div>
+      </div>
+      <div style="background:var(--chain); border:1px solid var(--iron-border); padding:12px 14px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Items triaged</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:1.2rem; color:var(--teal);">25</div>
+      </div>
+      <div style="background:var(--chain); border:1px solid var(--iron-border); padding:12px 14px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Team norms added</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:1.2rem; color:var(--violet);">1</div>
+      </div>
+    </div>
+  </div>
+
+<footer className="session-footer">
+    <p className="footer-cipher">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ ᛊ</p>
+    <p className="footer-text">The Quality Hunt · Fenrir Ledger Session Chronicle</p>
+    <p className="footer-sub">The wolf learns to track its prey properly.</p>
+  </footer>
+
+</div>

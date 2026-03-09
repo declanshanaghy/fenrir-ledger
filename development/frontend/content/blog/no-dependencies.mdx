@@ -1,0 +1,162 @@
+---
+title: "No Dependencies"
+date: "2026-03-07"
+rune: "ᝯ"
+excerpt: "A session chronicle of No Dependencies."
+slug: "no-dependencies"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᝯ ᚅ ᚅ ᛇ</span>
+  <h1 className="session-title">No Dependencies</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+
+      <span>DATE <span className="val">2026-03-07</span></span>
+      <span>ACTS <span className="val">5</span></span>
+      <span>FILES CHANGED <span className="val">3</span></span>
+      </div>
+</header>
+
+<div className="chronicle-timeline">
+
+    
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="Sever the Shell">ᝯ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Refactoring</p>
+        <h2 className="entry-title">Sever the Shell</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Hmm seems like we should just use the GH GQL SDK in pack-status.ts rather than shelling out to get more speeeeeeeed</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Replaced all <span className="mono">execSync('gh api graphql ...')</span> and <span className="mono">execSync('gh ...')</span> calls with native Node 20 <span className="hl">fetch</span> + GitHub GraphQL/REST APIs. Auth token obtained once at startup via <span className="mono">gh auth token</span> — the only remaining child process spawn. Zero new dependencies.</p>
+          </div>
+          <div className="code-block"><pre><span className="ca">const GH_GQL = "https://api.github.com/graphql";</span>
+<span className="ca">const TOKEN = execSync("gh auth token", { encoding: "utf-8" }).trim();</span>
+
+<span className="ca">async function graphql(query, variables = {}) {</span>
+<span className="ca">  const res = await fetch(GH_GQL, {</span>
+<span className="ca">    method: "POST",</span>
+<span className="ca">    headers: { Authorization: `bearer ${TOKEN}` },</span>
+<span className="ca">    body: JSON.stringify({ query, variables }),</span>
+<span className="ca">  });</span>
+<span className="ca">  return res.json();</span>
+<span className="ca">}</span></pre></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">pack-status.ts</span>
+            <span className="chip chip-mod">pack-status.mjs</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="Concurrent Fetches">ᚅ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Performance</p>
+        <h2 className="entry-title">Concurrent Fetches</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">do it now</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>The <span className="mono">--resume-detect</span> path previously made 3 sequential <span className="mono">execSync</span> calls: board fetch, issue view, branch list. Refactored to fire all three via <span className="hl">Promise.all</span> — the network round-trips now overlap. Also replaced <span className="mono">gh project item-edit</span> CLI in <span className="mono">moveIssue</span> with a direct GraphQL <span className="mono">updateProjectV2ItemFieldValue</span> mutation.</p>
+          </div>
+          <div className="code-block"><pre><span className="ca">const [boardData, issueJSON, refsData] = await Promise.all([</span>
+<span className="ca">  fetchBoardAndComments(),</span>
+<span className="ca">  restGet(`/repos/${OWNER}/${REPO}/issues/${issueNum}`),</span>
+<span className="ca">  restGet(`/.../matching-refs/heads/fix/issue-${issueNum}`)</span>
+<span className="ca">    .catch(() =&gt; []),</span>
+<span className="ca">]);</span></pre></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">pack-status.ts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="Benchmark the Beast">ᚅ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Validation</p>
+        <h2 className="entry-title">Benchmark the Beast</h2>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Rebuilt <span className="mono">pack-status.mjs</span> via esbuild (15KB, 10ms build). Ran all five subcommands to verify correctness, then benchmarked three consecutive <span className="mono">--status</span> runs. Results: <span className="hl">~1.5–1.7s</span> consistent. The <span className="mono">--move</span> command clocked <span className="hl">1.05s</span> — the GraphQL mutation is faster than the CLI wrapper it replaced. Network latency is now the sole bottleneck; no further process-level optimization possible.</p>
+          </div>
+          <div className="file-chips">
+            <span className="chip chip-mod">pack-status.mjs</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="Hunt, Kill, Return">ᚅ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Delivery</p>
+        <h2 className="entry-title">Hunt, Kill, Return</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">HKR</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Committed, pushed, created <span className="hl">PR #294</span>, merged via squash, deleted branch, returned to main. The wolf runs leaner now — native fetch, no child processes, zero dependencies added.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="Condense the Runes">ᛇ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Optimization</p>
+        <h2 className="entry-title">Condense the Runes</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">After that's done, what can be condensed out of SKILL.md to make it even more blazing but still 100% reliable?</p>
+        </div>
+
+        <div className="work-card">
+          <div className="work-body">
+            <p>Analyzed the 396-line SKILL.md for redundancies with <span className="mono">pack-status.mjs</span>. Removed 7 sections now handled by the script: orphan PR check, board query, project board constants, chain position detection, Step 4 chain determination, dependency checking, and duplicate model tables (2 → 1). Result: <span className="hl">396 → 237 lines</span>, a 40% reduction. Every orchestration behavior preserved. Merged as <span className="hl">PR #295</span>.</p>
+          </div>
+          <div className="file-chips">
+            <span className="chip chip-mod">SKILL.md</span>
+          </div>
+        </div>
+
+<footer className="session-footer">
+    <div className="footer-cipher">ᝯ ᚅ ᚅ ᛇ</div>
+    <div className="footer-text">No Dependencies · Fenrir Ledger Session Chronicle</div>
+    <p className="footer-sub">The wolf remembers everything.</p>
+  </footer>
+
+</div>
