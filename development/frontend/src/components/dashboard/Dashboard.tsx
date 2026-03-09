@@ -7,13 +7,13 @@
  * Issue #352 — Expand to 5 tabs: The Howl · The Hunt · Active · Valhalla · All
  *
  * Five tabs (left to right):
- *   "howl"     — cards needing attention (fee_approaching, promo_expiring, overdue).
- *                Default tab when it has cards. Cards display an urgency bar at top.
- *   "hunt"     — cards actively earning sign-up bonuses (bonus_open).
+ *   "all"      — every card regardless of status.
+ *   "valhalla" — closed/retired cards (status === "closed").
  *   "active"   — cards in good standing (status === "active" only).
  *                Default tab when The Howl is empty.
- *   "valhalla" — closed/retired cards (status === "closed").
- *   "all"      — every card regardless of status.
+ *   "hunt"     — cards actively earning sign-up bonuses (bonus_open).
+ *   "howl"     — cards needing attention (fee_approaching, promo_expiring, overdue).
+ *                Default tab when it has cards. Cards display an urgency bar at top.
  *
  * Each card appears in exactly one status tab AND in the All tab.
  * Tab badges show live count per tab.
@@ -313,25 +313,11 @@ function AllEmptyState() {
 /** Ordered tab definitions matching wireframe left-to-right order */
 const TAB_CONFIG = [
   {
-    id: "howl" as DashboardTab,
-    label: "The Howl",
-    rune: "ᚲ",
-    panelId: "panel-howl",
-    buttonId: "tab-howl",
-  },
-  {
-    id: "hunt" as DashboardTab,
-    label: "The Hunt",
-    rune: "ᛜ",
-    panelId: "panel-hunt",
-    buttonId: "tab-hunt",
-  },
-  {
-    id: "active" as DashboardTab,
-    label: "Active",
-    rune: "ᛉ",
-    panelId: "panel-active",
-    buttonId: "tab-active",
+    id: "all" as DashboardTab,
+    label: "All",
+    rune: "ᛟ",
+    panelId: "panel-all",
+    buttonId: "tab-all",
   },
   {
     id: "valhalla" as DashboardTab,
@@ -341,11 +327,25 @@ const TAB_CONFIG = [
     buttonId: "tab-valhalla",
   },
   {
-    id: "all" as DashboardTab,
-    label: "All",
-    rune: "ᛟ",
-    panelId: "panel-all",
-    buttonId: "tab-all",
+    id: "active" as DashboardTab,
+    label: "Active",
+    rune: "ᛉ",
+    panelId: "panel-active",
+    buttonId: "tab-active",
+  },
+  {
+    id: "hunt" as DashboardTab,
+    label: "The Hunt",
+    rune: "ᛜ",
+    panelId: "panel-hunt",
+    buttonId: "tab-hunt",
+  },
+  {
+    id: "howl" as DashboardTab,
+    label: "The Howl",
+    rune: "ᚲ",
+    panelId: "panel-howl",
+    buttonId: "tab-howl",
   },
 ] as const;
 
