@@ -105,6 +105,8 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makeUrgentCard({ cardName: "Urgent" }),
     ]);
 
+    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
+
     const howlTab = page.locator('button#tab-howl');
     await expect(howlTab).toHaveAttribute("aria-selected", "true");
 
@@ -126,6 +128,8 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makeUrgentCard({ cardName: "Urgent" }),
       makePromoCard({ cardName: "Promo" }),
     ]);
+
+    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
 
     const allTab = page.locator('button#tab-all');
     const valhallaTab = page.locator('button#tab-valhalla');
@@ -160,6 +164,8 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makeUrgentCard({ cardName: "Urgent" }),
       makePromoCard({ cardName: "Promo" }),
     ]);
+
+    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
 
     // Tab order: All → Valhalla → Active → Hunt → Howl
     const allTab = page.locator('button#tab-all');
@@ -196,6 +202,8 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makeUrgentCard({ cardName: "Urgent" }),
     ]);
 
+    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
+
     const allTab = page.locator('button#tab-all');
     const howlTab = page.locator('button#tab-howl');
 
@@ -220,6 +228,8 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makeUrgentCard({ cardName: "Urgent 1" }),
       makePromoCard({ cardName: "Promo 1" }),
     ]);
+
+    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
 
     // Get all tab buttons
     const tabs = page.locator('[role="tab"]');
@@ -253,6 +263,8 @@ test.describe("Dashboard Tab Order (Issue #399)", () => {
       makeCard({ cardName: "Active" }),
       makeUrgentCard({ cardName: "Urgent" }),
     ]);
+
+    await page.waitForSelector('[role="tablist"]', { timeout: 15000 });
 
     const allTab = page.locator('button#tab-all');
     const howlTab = page.locator('button#tab-howl');
