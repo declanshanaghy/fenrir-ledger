@@ -1015,7 +1015,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             type="button"
             variant="outline"
             className="min-h-[44px]"
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/ledger")}
           >
             Cancel
           </Button>

@@ -86,27 +86,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  async redirects() {
-    return [
-      {
-        source: "/static/privacy.html",
-        destination: "/privacy",
-        permanent: true,
-      },
-      {
-        source: "/static/terms.html",
-        destination: "/terms",
-        permanent: true,
-      },
-    ];
-  },
-
-  async rewrites() {
-    return [
-      { source: "/static", destination: "/static/index.html" },
-      { source: "/sessions", destination: "/sessions/index.html" },
-    ];
-  },
+  // Route restructure (Issue #371): /static and /sessions are deleted.
+  // No redirects or rewrites needed — they 404 by design.
 
   async headers() {
     return [
