@@ -40,6 +40,8 @@ Then create your todo list via TodoWrite. Every todo below is required:
   cd <REPO_ROOT> && bash quality/scripts/verify.sh --step build
   cd <REPO_ROOT> && bash quality/scripts/verify.sh --step test -x
 On failure: fix, commit+push, re-run that step. Repeat until green.
+**3-strike rule:** If test fails 3 times after fixes, commit what you have and proceed
+to handoff with "⚠️ VERIFY INCOMPLETE" note. tsc+build are never skippable.
 Update each verify todo as you complete it.
 
 **Step 5 — Rebase + final push:**

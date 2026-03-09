@@ -176,6 +176,20 @@ git log origin/main..origin/<BRANCH> --oneline
 ```
 Use commit prefixes (`design:`, `fix:`, `security:`, `test:`) as a secondary signal.
 
+## `--skip-tests` Flag
+
+When `--resume #N --skip-tests` is used, the orchestrator modifies the agent prompt:
+
+1. **Remove** `bash quality/scripts/verify.sh --step test -x` from the full verify step.
+2. **Replace** with: `# Tests skipped by Odin — tsc+build only`
+3. **Remove** the "Full verify: test" todo from the required todo list.
+4. **Add** to the handoff comment template: `"⚠️ Tests skipped by Odin — Loki must run full verify."`
+5. tsc and build remain **mandatory** — only tests are skippable.
+
+The Loki step still runs full verify including tests. Loki is the safety net.
+
+---
+
 ## Edge Cases
 
 - **Branch exists but no commits beyond main** — the previous agent failed before committing. Re-run that step (same agent, same branch).
