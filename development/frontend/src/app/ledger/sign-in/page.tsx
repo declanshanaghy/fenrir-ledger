@@ -1,13 +1,13 @@
 "use client";
 
 /**
- * Sign-In Page — /sign-in
+ * Sign-In Page — /ledger/sign-in
  *
  * Anonymous-first: this page is a voluntary upgrade destination, NOT a gate.
  * Users arrive here by clicking "Sign in to sync" in the upsell banner or
  * avatar prompt. They may leave via "Continue without signing in".
  *
- * If the user already has a valid session, redirect to / immediately.
+ * If the user already has a valid session, redirect to /ledger immediately.
  *
  * Two variants based on existing local card count:
  *   Variant A (no cards): generic sync benefits messaging.
@@ -52,7 +52,7 @@ function SignInContent() {
     // If there's already a valid session, redirect to dashboard immediately.
     if (isSessionValid()) {
       setAlreadyAuthed(true);
-      router.replace("/");
+      router.replace("/ledger");
       return;
     }
 
@@ -72,8 +72,8 @@ function SignInContent() {
     const state = generateState();
 
     // Persist PKCE transient values in sessionStorage (survives the redirect).
-    // callbackUrl: use returnTo query param if present, otherwise "/" (dashboard).
-    const returnTo = searchParams.get("returnTo") ?? "/";
+    // callbackUrl: use returnTo query param if present, otherwise "/ledger" (dashboard).
+    const returnTo = searchParams.get("returnTo") ?? "/ledger";
     sessionStorage.setItem(
       PKCE_SESSION_KEY,
       JSON.stringify({ verifier, state, callbackUrl: returnTo })
@@ -86,7 +86,7 @@ function SignInContent() {
       return;
     }
 
-    const redirectUri = `${window.location.origin}/auth/callback`;
+    const redirectUri = `${window.location.origin}/ledger/auth/callback`;
 
     const params = new URLSearchParams({
       client_id: clientId,
@@ -231,7 +231,7 @@ function SignInContent() {
               This is a first-class exit path, not an afterthought. */}
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/ledger")}
             className={[
               "w-full px-4 py-3",
               "border border-border rounded-sm",
