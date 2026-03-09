@@ -134,7 +134,7 @@ function TierCardsSection() {
                 "Card archive (Valhalla)",
                 "The Howl — full proactive alerts & Ragnarök",
                 "Cloud Sync (multi-device)",
-                "Multi-Household management",
+                "Whole-Household management",
                 "Smart Import (AI-Powered)",
                 "Data Export (CSV / JSON)",
               ].map((feat) => (
@@ -205,7 +205,7 @@ function TierCardsSection() {
                 { name: "Valhalla", desc: "full closed-card archive with history" },
                 { name: "The Howl", desc: "full proactive fee alerts, deadline warnings & Ragnarök" },
                 { name: "Cloud Sync", desc: "real-time sync across all devices" },
-                { name: "Multi-Household", desc: "manage multiple household ledgers" },
+                { name: "Whole-Household", desc: "manage your ledger with others" },
                 { name: "Smart Import", desc: "AI extracts card data from spreadsheets" },
                 { name: "Data Export", desc: "CSV and JSON export, anytime" },
                 { name: "All current and future Karl-tier features", desc: null },
@@ -339,7 +339,7 @@ function ComparisonTableSection() {
               </tr>
               {[
                 { name: "Single User", thrall: true, karl: true },
-                { name: "Multi-Household — create and manage multiple household ledgers", thrall: false, karl: true },
+                { name: "Whole-Household — create and manage your ledger with others", thrall: false, karl: true },
               ].map(({ name, thrall, karl }) => (
                 <tr key={name} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                   <td className="py-2.5 px-4 text-foreground">{name}</td>
