@@ -134,7 +134,9 @@ test.describe("Dashboard — Card Grid", () => {
     const emptyHeading = page.locator('h2:has-text("Gleipnir")');
     await expect(emptyHeading).toHaveCount(0);
 
-    const editLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
+    // Scope to "All" tab to avoid 5-tab duplication
+    const allPanel = page.locator('[aria-labelledby="tab-all"]');
+    const editLinks = allPanel.locator('a[href*="/cards/"][href*="/edit"]');
     await expect(editLinks).toHaveCount(10);
   });
 });
