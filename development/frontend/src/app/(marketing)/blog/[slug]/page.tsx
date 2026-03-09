@@ -109,7 +109,11 @@ export default async function BlogEntryPage({
       </nav>
 
       {/* ── Chronicle content — native MDX rendering ── */}
-      <MDXRemote source={entry.content} />
+      {/* format:'md' allows HTML mixed content (<pre> with nested elements) */}
+      <MDXRemote
+        source={entry.content}
+        options={{ mdxOptions: { format: "md" } }}
+      />
 
       {/* ── Prev / Next navigation ── */}
       <nav
