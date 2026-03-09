@@ -3,12 +3,11 @@
  *
  * Renders individual session chronicle natively from MDX via next-mdx-remote/rsc.
  * No dangerouslySetInnerHTML — MDX compiles to React components at build time.
- * - Breadcrumb: Home > Chronicles > [Session Title]
  * - Chronicle styling via chronicle.css scoped to .chronicle-page
  * - Previous / Next navigation between entries (sorted newest-first)
  * - Static generation via generateStaticParams
  *
- * Ref: GitHub Issue #373
+ * Ref: GitHub Issue #373, #427
  */
 
 import type { Metadata } from "next";
@@ -95,37 +94,6 @@ export default async function ChronicleDetailPage({
 
   return (
     <>
-      {/* ── Breadcrumb ── */}
-      <nav
-        className="max-w-[880px] mx-auto px-6 pt-6 pb-2"
-        aria-label="Breadcrumb"
-      >
-        <ol className="flex items-center gap-2 font-mono text-[0.65rem] text-muted-foreground tracking-wide uppercase flex-wrap">
-          <li>
-            <Link href="/" className="hover:text-primary transition-colors">
-              Home
-            </Link>
-          </li>
-          <li aria-hidden="true" className="opacity-40">
-            /
-          </li>
-          <li>
-            <Link href="/chronicles" className="hover:text-primary transition-colors">
-              Chronicles
-            </Link>
-          </li>
-          <li aria-hidden="true" className="opacity-40">
-            /
-          </li>
-          <li
-            className="text-foreground opacity-70 truncate max-w-[200px] sm:max-w-none"
-            aria-current="page"
-          >
-            {entry.title}
-          </li>
-        </ol>
-      </nav>
-
       {/* ── Chronicle content — native MDX rendering ── */}
       {/* format:'md' compiles HTML+markdown to React components at build time.
           dedentHtml strips leading whitespace so indented HTML isn't treated
