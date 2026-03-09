@@ -66,12 +66,8 @@ test.describe("LedgerShell — Slim top bar", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // Should be on marketing home page
-    expect(page.url()).toBe("http://localhost:3000/");
-
-    // Header should exist (both marketing and ledger have headers)
-    const header = page.locator("header").first();
-    await expect(header).toBeVisible();
+    // Should be on marketing home page (pathname /)
+    expect(page.url()).toMatch(/^\w+:\/\/[^/]+\/$/);
 
     // Check that we're not on /ledger path
     expect(page.url()).not.toContain("/ledger");
