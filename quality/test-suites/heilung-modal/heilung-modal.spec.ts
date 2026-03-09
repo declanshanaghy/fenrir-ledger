@@ -385,8 +385,9 @@ test.describe("Heilung Modal — Responsive Layout", () => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
 
-    // Reload to ensure mobile layout
-    await page.reload({ waitUntil: "load" });
+    // Reload with better wait states to ensure mobile layout and event listeners
+    await page.reload({ waitUntil: "networkidle" });
+    await page.waitForLoadState("domcontentloaded");
     await page.keyboard.press("Control+Shift+L");
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
     await expect(modal).toBeVisible({ timeout: 5000 });
