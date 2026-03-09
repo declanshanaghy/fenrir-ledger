@@ -24,9 +24,10 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import { Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { ThemeToggle, cycleTheme } from "@/components/layout/ThemeToggle";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -182,6 +183,7 @@ interface ProfileDropdownProps {
 function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
   const isSettingsActive = pathname === "/ledger/settings";
 
   return (
@@ -207,15 +209,17 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
           </span>
         </div>
       </div>
-      {/* Theme row — rotary icon left + label */}
-      <div
+      {/* Theme row — click anywhere to cycle dark → light → system */}
+      <button
+        type="button"
         role="menuitem"
-        className="flex items-center gap-2 px-4 py-3 border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer"
+        onClick={() => setTheme(cycleTheme(theme))}
+        className="flex items-center gap-2 px-4 py-3 border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer w-full text-left"
         style={{ minHeight: 44 }}
       >
         <ThemeToggle variant="dropdown-icon" />
         <span className="text-sm text-muted-foreground font-body">Theme</span>
-      </div>
+      </button>
       {/* Settings link */}
       <button
         type="button"

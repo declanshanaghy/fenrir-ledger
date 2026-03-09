@@ -24,11 +24,18 @@ import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
 
-const THEME_OPTIONS = [
+export const THEME_OPTIONS = [
   { value: "light", label: "Light", Icon: Sun },
   { value: "dark", label: "Dark", Icon: Moon },
   { value: "system", label: "System", Icon: Monitor },
 ] as const;
+
+/** Cycle to the next theme: dark → light → system → dark */
+export function cycleTheme(currentTheme: string | undefined): string {
+  const current = THEME_OPTIONS.find((o) => o.value === currentTheme) ?? THEME_OPTIONS[2];
+  const nextIndex = (THEME_OPTIONS.indexOf(current) + 1) % THEME_OPTIONS.length;
+  return (THEME_OPTIONS[nextIndex] ?? THEME_OPTIONS[0]).value;
+}
 
 interface ThemeToggleProps {
   /**
@@ -75,25 +82,18 @@ export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
     );
   }
 
-  // Dropdown-icon variant: bare icon for embedding inside a menu row
+  // Dropdown-icon variant: display-only icon for embedding inside a clickable menu row.
+  // The parent row handles the click — this just renders the current theme icon.
   if (variant === "dropdown-icon") {
     const current = THEME_OPTIONS.find((o) => o.value === theme) ?? THEME_OPTIONS[2];
-    const nextIndex = (THEME_OPTIONS.indexOf(current) + 1) % THEME_OPTIONS.length;
-    const next = THEME_OPTIONS[nextIndex] ?? THEME_OPTIONS[0];
 
     return (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setTheme(next.value);
-        }}
-        className="shrink-0 text-muted-foreground hover:text-gold transition-colors"
-        aria-label={`Toggle theme, current: ${current.label}`}
-        title={`Theme: ${current.label}`}
+      <span
+        className="shrink-0 text-muted-foreground"
+        aria-hidden="true"
       >
-        <current.Icon className="h-4 w-4" aria-hidden="true" />
-      </button>
+        <current.Icon className="h-4 w-4" />
+      </span>
     );
   }
 
