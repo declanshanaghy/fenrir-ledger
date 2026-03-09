@@ -124,7 +124,7 @@ test.describe("Velocity Management Karl Tier Gating — Issue #378", () => {
     page.on("pageerror", (err) => errors.push(err.message));
 
     // Action: Click The Hunt tab
-    const huntTabButton = page.locator("button:has-text(/the hunt/i)").first();
+    const huntTabButton = page.locator("button").filter({ hasText: /the hunt/i }).first();
 
     // Assert: The Hunt tab button exists and is clickable
     await expect(huntTabButton).toBeVisible();
