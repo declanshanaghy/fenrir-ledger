@@ -19,7 +19,7 @@ import { SideNav } from "./SideNav";
 import { SyncIndicator } from "./SyncIndicator";
 import { KonamiHowl } from "./KonamiHowl";
 import { ForgeMasterEgg } from "./ForgeMasterEgg";
-import { LcarsOverlay } from "@/components/easter-eggs/LcarsOverlay";
+import { HeilungModal } from "@/components/easter-eggs/HeilungModal";
 import { Toaster } from "sonner";
 import { Footer } from "./Footer";
 
@@ -108,8 +108,8 @@ export function AppShell({ children }: AppShellProps) {
       <KonamiHowl />
       {/* Easter egg #9 — The Forgemaster's Signature (`?` key, one-time) */}
       <ForgeMasterEgg />
-      {/* Easter egg #10 — LCARS Mode (Ctrl+Shift+L) */}
-      <LcarsOverlay />
+      {/* Easter egg #10 — Heilung Krigsgaldr (Ctrl+Shift+L) */}
+      <HeilungModal />
       {/* Easter egg #3 — The Roots of a Mountain (first sidebar collapse, one-time) */}
       <GleipnirMountainRoots open={rootsOpen} onClose={dismissRoots} />
       {/* Easter egg #11 — Ragnarök Threshold Mode (≥5 urgent cards) */}
