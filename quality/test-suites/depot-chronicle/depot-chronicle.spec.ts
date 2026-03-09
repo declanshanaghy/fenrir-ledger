@@ -25,7 +25,7 @@ const CHRONICLE_SLUG = "depot-integration-issues";
 test.describe("Issue #453: Depot Chronicle Restoration", () => {
   test("chronicle index page loads", async ({ page }) => {
     await page.goto("/chronicles");
-    await expect(page).toHaveTitle(/Chronicles/i);
+    await expect(page).toHaveTitle(/Prose Edda/i);
   });
 
   test("depot-integration-issues: page loads without 404", async ({ page }) => {
