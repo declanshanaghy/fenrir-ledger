@@ -12,6 +12,7 @@ UX design artifacts for Fenrir Ledger.
 ## Wireframes
 
 - [Light Theme Stone prototype](wireframes/light-theme-stone.html)
+- [Profile Dropdown — My Cards Nav Entry](wireframes/profile-dropdown-my-cards.html) — Issue #441: adds "My Cards" link to `/ledger` in ProfileDropdown, with active state and interaction spec
 
 ## Import Workflow v2 (Sprint 6)
 
