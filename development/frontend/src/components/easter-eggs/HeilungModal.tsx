@@ -190,18 +190,49 @@ export function HeilungModal() {
                 </a>
               </div>
 
-              {/* RIGHT COLUMN — YouTube Video (shown on top on mobile) */}
+              {/* RIGHT COLUMN — YouTube Thumbnail (shown on top on mobile) */}
               <div className="p-4 md:p-6 order-1 md:order-2 flex flex-col justify-center">
-                <div className="w-full aspect-video rounded-lg overflow-hidden">
-                  <iframe
-                    src="https://www.youtube-nocookie.com/embed/QRg_8NNPTD8?rel=0"
-                    title="Heilung - Krigsgaldr LIFA"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full"
-                    style={{ border: "none", borderRadius: "0.5rem" }}
+                <a
+                  href="https://www.youtube.com/watch?v=QRg_8NNPTD8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative block w-full aspect-video rounded-lg overflow-hidden"
+                  aria-label="Watch Heilung — Krigsgaldr LIFA on YouTube"
+                >
+                  {/* Thumbnail */}
+                  <img
+                    src="https://img.youtube.com/vi/QRg_8NNPTD8/maxresdefault.jpg"
+                    alt="Heilung — Krigsgaldr LIFA"
+                    className="w-full h-full object-cover"
                   />
-                </div>
+                  {/* Play button overlay */}
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="64"
+                      height="64"
+                      viewBox="0 0 64 64"
+                      fill="none"
+                      aria-hidden="true"
+                      className="drop-shadow-lg transition-transform group-hover:scale-110"
+                    >
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="30"
+                        fill="rgba(7, 7, 13, 0.7)"
+                        stroke="rgba(201, 146, 10, 0.6)"
+                        strokeWidth="2"
+                        className="transition-colors group-hover:stroke-[#c9920a] group-hover:fill-[rgba(7,7,13,0.85)]"
+                      />
+                      <polygon
+                        points="25,18 25,46 48,32"
+                        fill="rgba(201, 146, 10, 0.6)"
+                        className="transition-colors group-hover:fill-[#c9920a]"
+                      />
+                    </svg>
+                  </span>
+                </a>
               </div>
             </div>
           </motion.div>

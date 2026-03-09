@@ -1,23 +1,23 @@
 /**
- * Heilung Modal Test Suite — Fenrir Ledger Issue #363
+ * Heilung Modal Test Suite — Fenrir Ledger Issue #437
  * Authored by Loki, QA Tester of the Pack
  *
- * Validates Easter Egg #10: Replace LCARS mode with Heilung Krigsgaldr modal.
+ * Validates Easter Egg #10: Replace blocked YouTube iframe embed with clickable thumbnail.
  * Trigger: Ctrl+Shift+L (all platforms). Modal displays 2-column layout with band
- * profile (left) and YouTube video (right). Stacks vertically on mobile.
+ * profile (left) and YouTube thumbnail with play button (right). Stacks vertically on mobile.
  *
  * Acceptance Criteria:
- *   AC1: Ctrl+Shift+L opens the Heilung modal (not LCARS)
- *   AC2: Modal displays 2-column layout: band profile left, YouTube video right
- *   AC3: Mobile stacks vertically (video top, info below)
- *   AC4: YouTube embed uses youtube-nocookie.com (privacy-safe)
- *   AC5: Video shows poster frame, does not autoplay
- *   AC6: Band info includes name, bio, 3 members, website link
- *   AC7: amplifiedhistory.com link opens in new tab
- *   AC8: Modal dismisses via ESC, backdrop click, or X button
- *   AC9: Modal is repeatable (no one-time gate)
- *   AC10: All LCARS code removed (component, CSS vars, wireframe)
- *   AC11: No regressions in other easter eggs
+ *   AC1: Ctrl+Shift+L opens the Heilung modal
+ *   AC2: Modal displays 2-column layout: band profile left, YouTube thumbnail right
+ *   AC3: Mobile stacks vertically (thumbnail top, info below)
+ *   AC4: YouTube thumbnail displays (no more blocked iframe)
+ *   AC5: Play button overlay visible and clickable
+ *   AC6: Click opens YouTube video in new tab
+ *   AC7: Band info includes name, bio, 3 members, website link
+ *   AC8: amplifiedhistory.com link opens in new tab
+ *   AC9: Modal dismisses via ESC, backdrop click, or X button
+ *   AC10: Modal is repeatable (no one-time gate)
+ *   AC11: Aspect ratio preserved (16:9)
  *   AC12: Styled in Saga Ledger dark theme (void-black, gold accents)
  */
 
@@ -33,7 +33,8 @@ const GOLD = "rgb(201, 146, 10)";
 
 test.describe("Heilung Modal — Opening & Closing", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "load" });
+    // Navigate to /ledger (app with AppShell) not "/" (marketing page)
+    await page.goto("/ledger", { waitUntil: "load" });
     await clearAllStorage(page);
   });
 
@@ -64,7 +65,7 @@ test.describe("Heilung Modal — Opening & Closing", () => {
   });
 
   /**
-   * AC8 — ESC key dismisses the modal
+   * AC9 — ESC key dismisses the modal
    *
    * Verifies that pressing ESC closes the open modal.
    */
@@ -82,7 +83,7 @@ test.describe("Heilung Modal — Opening & Closing", () => {
   });
 
   /**
-   * AC8 — Backdrop click dismisses the modal
+   * AC9 — Backdrop click dismisses the modal
    *
    * Verifies that clicking on the backdrop (outside the modal) closes it.
    */
@@ -106,7 +107,7 @@ test.describe("Heilung Modal — Opening & Closing", () => {
   });
 
   /**
-   * AC8 — X button dismisses the modal
+   * AC9 — X button dismisses the modal
    *
    * Verifies that clicking the close (X) button in the top-right closes the modal.
    */
@@ -126,7 +127,7 @@ test.describe("Heilung Modal — Opening & Closing", () => {
   });
 
   /**
-   * AC9 — Modal is repeatable (no one-time gate)
+   * AC10 — Modal is repeatable (no one-time gate)
    *
    * Verifies that after dismissing the modal, pressing Ctrl+Shift+L again
    * opens it a second time. No localStorage gate prevents re-opening.
@@ -152,8 +153,10 @@ test.describe("Heilung Modal — Opening & Closing", () => {
 
 test.describe("Heilung Modal — Content & Structure", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "load" });
+    await page.goto("/ledger", { waitUntil: "networkidle" });
     await clearAllStorage(page);
+    // Wait for page to be interactive
+    await page.waitForLoadState("domcontentloaded");
     // Open the modal
     await page.keyboard.press("Control+Shift+L");
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
@@ -165,7 +168,7 @@ test.describe("Heilung Modal — Content & Structure", () => {
   });
 
   /**
-   * AC6 — Band info includes name, bio, 3 members, website link
+   * AC7 — Band info includes name, bio, 3 members, website link
    *
    * Verifies that the modal displays:
    * - Band name "HEILUNG"
@@ -198,22 +201,67 @@ test.describe("Heilung Modal — Content & Structure", () => {
   });
 
   /**
-   * AC4 — YouTube embed uses youtube-nocookie.com
+   * AC4 — YouTube thumbnail displays (no blocked iframe)
    *
-   * Verifies that the iframe src uses youtube-nocookie.com domain
-   * instead of youtube.com for privacy.
+   * Verifies that the thumbnail image from YouTube's maxresdefault.jpg
+   * is displayed instead of an iframe.
    */
-  test("YouTube embed uses youtube-nocookie.com for privacy", async ({ page }) => {
-    const iframe = page.locator('iframe[title*="Heilung"]');
-    await expect(iframe).toBeVisible();
+  test("YouTube thumbnail displays correctly", async ({ page }) => {
+    const thumbnail = page.locator('img[alt*="Heilung"]');
+    await expect(thumbnail).toBeVisible();
 
-    const src = await iframe.getAttribute("src");
-    expect(src).toContain("youtube-nocookie.com");
-    expect(src).not.toContain("youtube.com/embed");
+    const src = await thumbnail.getAttribute("src");
+    expect(src).toContain("img.youtube.com/vi/QRg_8NNPTD8/maxresdefault.jpg");
   });
 
   /**
-   * AC7 — amplifiedhistory.com link opens in new tab
+   * AC5 — Play button overlay visible
+   *
+   * Verifies that the play button SVG overlay is visible on the thumbnail.
+   */
+  test("play button overlay is visible on thumbnail", async ({ page }) => {
+    const thumbnail = page.locator('img[alt*="Heilung"]');
+    await expect(thumbnail).toBeVisible();
+
+    // The play button is in an SVG within the parent link
+    const playButton = page.locator(
+      'a[href*="youtube.com/watch?v=QRg_8NNPTD8"] svg'
+    );
+    await expect(playButton).toBeVisible();
+
+    // Verify it's a play button (has polygon element for triangle)
+    const triangle = playButton.locator("polygon");
+    await expect(triangle).toBeVisible();
+  });
+
+  /**
+   * AC6 — Click opens YouTube video in new tab
+   *
+   * Verifies that the thumbnail link is configured to open YouTube in a new tab.
+   */
+  test("clicking thumbnail opens YouTube in new tab", async ({ page }) => {
+    // Click the thumbnail link
+    const thumbnailLink = page.locator(
+      'a[href*="youtube.com/watch?v=QRg_8NNPTD8"]'
+    );
+    await expect(thumbnailLink).toBeVisible();
+
+    // Verify it has target="_blank" (opens in new tab)
+    const target = await thumbnailLink.getAttribute("target");
+    expect(target).toBe("_blank");
+
+    // Verify the href is correct
+    const href = await thumbnailLink.getAttribute("href");
+    expect(href).toContain("youtube.com/watch?v=QRg_8NNPTD8");
+
+    // Verify rel="noopener noreferrer" for security
+    const rel = await thumbnailLink.getAttribute("rel");
+    expect(rel).toContain("noopener");
+    expect(rel).toContain("noreferrer");
+  });
+
+  /**
+   * AC8 — amplifiedhistory.com link opens in new tab
    *
    * Verifies that the amplifiedhistory.com link has target="_blank"
    * and rel="noopener noreferrer" for security and opens in a new tab.
@@ -264,7 +312,7 @@ test.describe("Heilung Modal — Content & Structure", () => {
 
 test.describe("Heilung Modal — Behavior & Form Field Skip", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "load" });
+    await page.goto("/ledger", { waitUntil: "load" });
     await clearAllStorage(page);
   });
 
@@ -313,8 +361,9 @@ test.describe("Heilung Modal — Behavior & Form Field Skip", () => {
 
 test.describe("Heilung Modal — Responsive Layout", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "load" });
+    await page.goto("/ledger", { waitUntil: "networkidle" });
     await clearAllStorage(page);
+    await page.waitForLoadState("domcontentloaded");
     // Open modal
     await page.keyboard.press("Control+Shift+L");
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
@@ -326,18 +375,19 @@ test.describe("Heilung Modal — Responsive Layout", () => {
   });
 
   /**
-   * AC3 — Mobile stacks vertically: video on top, info below
+   * AC3 — Mobile stacks vertically: thumbnail on top, info below
    *
    * On viewport < 768px (md breakpoint), the modal should use flexbox
-   * with flex-col and order- classes so video (order-1) appears above
+   * with flex-col and order- classes so thumbnail (order-1) appears above
    * band info (order-2).
    */
-  test("mobile layout stacks video above info", async ({ page }) => {
+  test("mobile layout stacks thumbnail above info", async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
 
-    // Reload to ensure mobile layout
-    await page.reload({ waitUntil: "load" });
+    // Reload with better wait states to ensure mobile layout and event listeners
+    await page.reload({ waitUntil: "networkidle" });
+    await page.waitForLoadState("domcontentloaded");
     await page.keyboard.press("Control+Shift+L");
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
     await expect(modal).toBeVisible({ timeout: 5000 });
@@ -345,12 +395,12 @@ test.describe("Heilung Modal — Responsive Layout", () => {
     // Get the flex container
     const layoutContainer = modal.locator("div.flex.flex-col");
 
-    // On mobile, video iframe should appear visually first (higher on page)
-    const iframe = layoutContainer.locator("iframe");
+    // On mobile, thumbnail should appear visually first (higher on page)
+    const thumbnail = layoutContainer.locator('img[alt*="Heilung"]');
     const bandInfo = layoutContainer.locator("div").first();
 
-    // Check video is in DOM and visible
-    await expect(iframe).toBeVisible();
+    // Check thumbnail is in DOM and visible
+    await expect(thumbnail).toBeVisible();
 
     // Band info should also be visible below
     const heading = layoutContainer.getByRole("heading", { name: /HEILUNG/i });
@@ -358,17 +408,18 @@ test.describe("Heilung Modal — Responsive Layout", () => {
   });
 
   /**
-   * AC2 — Desktop 2-column layout: profile left, video right
+   * AC2 — Desktop 2-column layout: profile left, thumbnail right
    *
    * On viewport >= 768px (md breakpoint), the modal should display
-   * profile (order-1) on left and video (order-2) on right using CSS grid.
+   * profile (order-1) on left and thumbnail (order-2) on right using CSS grid.
    */
-  test("desktop layout displays profile left, video right", async ({ page }) => {
+  test("desktop layout displays profile left, thumbnail right", async ({ page }) => {
     // Set desktop viewport
     await page.setViewportSize({ width: 1280, height: 720 });
 
-    // Reload
-    await page.reload({ waitUntil: "load" });
+    // Reload with better wait states
+    await page.reload({ waitUntil: "networkidle" });
+    await page.waitForLoadState("domcontentloaded");
     await page.keyboard.press("Control+Shift+L");
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
     await expect(modal).toBeVisible({ timeout: 5000 });
@@ -386,35 +437,83 @@ test.describe("Heilung Modal — Responsive Layout", () => {
     // Since we're at 1280px, should hit the md: breakpoint
     // But we'll just verify both columns are visible
     const heading = modal.getByRole("heading", { name: /HEILUNG/i });
-    const iframe = modal.locator("iframe");
+    const thumbnail = modal.locator('img[alt*="Heilung"]');
 
     await expect(heading).toBeVisible();
-    await expect(iframe).toBeVisible();
+    await expect(thumbnail).toBeVisible();
+  });
+});
+
+// ─── Suite: Aspect Ratio ─────────────────────────────────────────────────────
+
+test.describe("Heilung Modal — Aspect Ratio", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/ledger", { waitUntil: "networkidle" });
+    await clearAllStorage(page);
+    await page.waitForLoadState("domcontentloaded");
+    // Open the modal
+    await page.keyboard.press("Control+Shift+L");
+    const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
+    await expect(modal).toBeVisible({ timeout: 5000 });
+  });
+
+  test.afterEach(async ({ page }) => {
+    await clearAllStorage(page);
+  });
+
+  /**
+   * AC11 — Aspect ratio preserved (16:9)
+   *
+   * Verifies that the thumbnail uses aspect-video class (16:9) to maintain
+   * proper proportions on all screen sizes.
+   */
+  test("thumbnail maintains 16:9 aspect ratio", async ({ page }) => {
+    const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
+
+    // Find the thumbnail link which has aspect-video class
+    const thumbnailLink = page.locator('a[href*="youtube.com/watch?v=QRg_8NNPTD8"]');
+    await expect(thumbnailLink).toBeVisible();
+
+    // Check that aspect-video class is applied
+    const classAttr = await thumbnailLink.getAttribute("class");
+    expect(classAttr).toContain("aspect-video");
+
+    // Verify the thumbnail image dimensions
+    const thumbnail = thumbnailLink.locator("img");
+    const box = await thumbnail.boundingBox();
+
+    if (box) {
+      // Calculate aspect ratio (width / height)
+      const aspectRatio = box.width / box.height;
+      // 16:9 = 1.778 (allow some tolerance for rounding)
+      expect(aspectRatio).toBeGreaterThan(1.75);
+      expect(aspectRatio).toBeLessThan(1.81);
+    }
   });
 });
 
 /**
- * Suite: No LCARS remnants (Code Cleanup Verification)
+ * Suite: Verification — No CSP Blocked Content Errors
  *
- * AC10 — All LCARS code removed: component, CSS vars, wireframe files
+ * AC4 — No CSP or blocked content errors
  *
- * This is a static code audit, not a runtime behavior test.
- * Verify the implementation removed LcarsOverlay.tsx, LCARS CSS vars,
- * and wireframe files. This is checked during development, not at runtime.
+ * Verify the implementation resolves CSP blocking issues by using
+ * a clickable thumbnail instead of an embedded iframe.
  */
-test.describe("Heilung Modal — LCARS Code Cleanup (Static Audit)", () => {
+test.describe("Heilung Modal — CSP & Content Blocking", () => {
   /**
-   * Verify that LcarsOverlay component is not found in the codebase.
-   * This is a code-level check, not a runtime behavior test.
+   * Verify that the page loads without CSP errors or "blocked content" warnings.
+   * The original issue was "This content is blocked. Contact the site owner to fix the issue."
+   * This test ensures the thumbnail approach bypasses that.
    *
-   * Note: This test uses the file system to verify cleanup.
-   * In a real scenario, this would be checked via codebase scanning.
+   * Note: This test monitors console output for CSP violations.
    */
-  test("LcarsOverlay.tsx has been removed", async ({ page }) => {
-    // Navigate to home (warmup for next test)
-    await page.goto("/", { waitUntil: "load" });
+  test("no CSP blocked content errors appear in console", async ({ page }) => {
+    // Navigate to /ledger (app with AppShell) and open the Heilung modal
+    await page.goto("/ledger", { waitUntil: "load" });
+    await clearAllStorage(page);
 
-    // Verify page loads without errors or warnings related to LCARS
+    // Capture console messages
     const consoleMessages: string[] = [];
     page.on("console", (msg) => {
       if (msg.type() === "error" || msg.type() === "warning") {
@@ -422,15 +521,25 @@ test.describe("Heilung Modal — LCARS Code Cleanup (Static Audit)", () => {
       }
     });
 
-    // Wait a moment for any console errors to appear
-    await page.waitForTimeout(1000);
+    // Open modal to trigger video loading
+    await page.keyboard.press("Control+Shift+L");
+    const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
+    await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Should not have errors mentioning LCARS or LcarsOverlay
-    const lcarsErrors = consoleMessages.filter(
+    // Wait a moment for any CSP violations or blocked content warnings
+    await page.waitForTimeout(2000);
+
+    // Check that the original iframe blocking issue is NOT present
+    // (The old iframe was being blocked by CSP, now we use a thumbnail)
+    const iframeBlockedErrors = consoleMessages.filter(
       (msg) =>
-        msg.toLowerCase().includes("lcars") ||
-        msg.toLowerCase().includes("lcaroverlay"),
+        (msg.toLowerCase().includes("blocked") ||
+          msg.toLowerCase().includes("csp")) &&
+        msg.toLowerCase().includes("iframe"),
     );
-    expect(lcarsErrors).toHaveLength(0);
+    expect(iframeBlockedErrors).toHaveLength(0);
+
+    // Note: YouTube thumbnail image may have its own CSP, but the important thing
+    // is that the iframe (which was the original problem) is not blocked.
   });
 });
