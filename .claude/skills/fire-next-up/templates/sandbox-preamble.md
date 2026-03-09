@@ -12,16 +12,27 @@ SANDBOX RULES:
 bash <REPO_ROOT>/.claude/scripts/sandbox-setup.sh <BRANCH>
 Note the REPO_ROOT it prints — use it for ALL subsequent commands.
 
-VERIFY — SEPARATE STEPS (UNBREAKABLE):
-Never run verify.sh as one call. Each step = its own Bash tool call:
+TODO TRACKING (UNBREAKABLE):
+Use TodoWrite to plan and track ALL work. Create todos at the START of the session
+covering every numbered step. Update each todo to in_progress when you start it and
+completed when done. This is your progress ledger — if the session dies, the todo
+state shows exactly where you stopped.
+
+INCREMENTAL COMMIT + VERIFY LOOP (UNBREAKABLE):
+After every logical chunk of implementation work (~5-10 min or 1-3 files changed):
+  1. git add -A && git commit -m 'wip: <what> — Ref #<NUMBER>' && git push origin <BRANCH>
+  2. bash quality/scripts/verify.sh --step tsc
+  3. If tsc fails: fix immediately, commit+push, re-run tsc.
+  4. Update your todo progress.
+Do NOT batch all changes into one commit at the end. Sessions can die at any time —
+uncommitted work is lost work.
+
+FULL VERIFY — SEPARATE STEPS (UNBREAKABLE):
+At the end, run each verify step as its own Bash tool call:
   bash quality/scripts/verify.sh --step tsc
   bash quality/scripts/verify.sh --step build
   bash quality/scripts/verify.sh --step test -x
 On failure: fix, commit+push, re-run that step. Repeat until green.
-
-INCREMENTAL COMMITS (UNBREAKABLE):
-Sessions can die at any time. Commit+push after every logical chunk (5-10 min).
-  git add -A && git commit -m 'wip: <what> — Ref #<NUMBER>' && git push origin <BRANCH>
 
 STRICT SCOPE (UNBREAKABLE):
 Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,
