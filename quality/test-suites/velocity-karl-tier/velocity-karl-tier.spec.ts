@@ -131,10 +131,10 @@ test.describe("Velocity Management Karl Tier Gating — Issue #378", () => {
     // Wait a moment for any potential dialog to appear
     await page.waitForTimeout(500);
 
-    // Assert: The Hunt tab is now active
-    const huntTab = page.getByRole("tab", { name: /the hunt/i }).first();
-    const isActive = await huntTab.evaluate((el) => el.getAttribute("aria-selected") === "true");
-    expect(isActive).toBe(true);
+    // Assert: The Hunt tab is now active (check aria-selected attribute)
+    const huntTab = page.getByRole("button", { name: /the hunt/i }).first();
+    const isActive = await huntTab.getAttribute("aria-selected");
+    expect(isActive).toBe("true");
   });
 
   // ── Test 3: /ledger/hunt route is not accessible for Thrall ──────────────
