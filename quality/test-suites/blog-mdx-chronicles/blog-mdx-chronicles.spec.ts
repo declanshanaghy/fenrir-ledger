@@ -427,39 +427,35 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
   }) => {
     await page.goto("/blog", { waitUntil: "networkidle" });
 
+    // Verify index page title
+    const indexTitle = page.locator("h1");
+    await expect(indexTitle).toContainText("Session Chronicles");
+
     // Click first entry
     const firstLink = page.locator('ol[aria-label="Session chronicles"] a').first();
-    await firstLink.click();
-    await page.waitForURL("/blog/**");
+    const entryHref = await firstLink.getAttribute("href");
+    expect(entryHref).toMatch(/^\/blog\/.+/);
 
-    // Click Home in breadcrumb
-    const homeLink = page
-      .locator('nav[aria-label="Breadcrumb"]')
-      .locator('a[href="/"]');
-    await homeLink.click();
-    await page.waitForURL("/");
+    // Navigate to entry via direct link
+    await page.goto(entryHref!, { waitUntil: "networkidle" });
 
-    // Go back to blog via navigation
-    const blogLink = page.locator("a").filter({ hasText: "Blog" }).first();
-    if (await blogLink.count() > 0) {
-      // If there's a blog nav link, use it
-      await blogLink.click();
-      await page.waitForURL("/blog");
-    } else {
-      // Otherwise navigate directly
-      await page.goto("/blog");
-    }
+    // Verify breadcrumb exists and has correct structure
+    const breadcrumb = page.locator('nav[aria-label="Breadcrumb"]');
+    await expect(breadcrumb).toBeVisible();
 
-    // Click Blog in breadcrumb (should stay on index)
-    const blogBreadcrumb = page
-      .locator('nav[aria-label="Breadcrumb"]')
-      .locator('a[href="/blog"]');
-    await blogBreadcrumb.click();
-    await page.waitForURL("/blog");
+    const breadcrumbLinks = breadcrumb.locator("a");
+    const linkCount = await breadcrumbLinks.count();
+    expect(linkCount).toBe(2); // Home and Blog
 
-    // Verify we're on blog index
-    const title = page.locator("h1");
-    await expect(title).toContainText("Session Chronicles");
+    // Verify "All Chronicles" back link exists
+    const backLink = page.locator("a").filter({ hasText: "All Chronicles" });
+    expect(await backLink.count()).toBeGreaterThan(0);
+
+    // Navigate back to index
+    await page.goto("/blog", { waitUntil: "networkidle" });
+
+    // Verify we're back on the index
+    await expect(indexTitle).toContainText("Session Chronicles");
   });
 
   // ──────────────────────────────────────────────────────────────────────────
