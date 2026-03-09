@@ -1,6 +1,6 @@
 ---
 name: fire-next-up
-description: "Pull the next 'Up Next' item from the GitHub Project board and run the full agent chain (design → build → validate) via Depot remote sandboxes (default) or local worktrees (--local). Use when the user says 'fire next up', 'pull next item', 'work on next issue', or wants to dispatch work from the project board. Supports --peek flag to show the queue without dispatching, --resume #N to continue a chain that was interrupted, and --status for a full dashboard of everything in flight."
+description: "Pull the next 'Up Next' item from the GitHub Project board and run the full agent chain (design → build → validate) via Depot remote sandboxes (default) or local worktrees (--local). Use when the user says 'fire next up', 'pull next item', 'work on next issue', or wants to dispatch work from the project board. Supports --peek flag to show the queue without dispatching, and --resume to scan all in-flight chains, auto-advance ready ones, and report status."
 ---
 
 # Fire Next Up — Pull, Dispatch, and Chain Agents
@@ -27,8 +27,7 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 |------|--------|
 | `--peek` | Show the prioritized Up Next queue — do NOT spawn anything. |
 | `--resume #N` | Resume an interrupted chain for issue #N. Read `templates/resume-flow.md`. |
-| `--resume` | (no issue number) Scan ALL in-progress chains and report status. |
-| `--status` | Full status dashboard. Do NOT dispatch anything. |
+| `--resume` | (no issue number) Full dashboard: scan ALL in-progress chains, **auto-advance ready ones** (dispatch next agents, merge PASS+CI green PRs, move completed to Done), and report status. |
 | `--batch N` | Pull top N **unblocked** items from "Up Next", start chains in parallel. Max 5. |
 | `--local` | Force local worktree execution instead of Depot. |
 | `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
@@ -56,7 +55,7 @@ node "$SCRIPT_DIR/pack-status.mjs" <subcommand>
 **Fallback:** `npx tsx pack-status.ts` (if `.mjs` is stale)
 **After editing `pack-status.ts`:** run `scripts/build.sh` to rebuild the `.mjs`
 
-### Status Dashboard Output Format
+### Dashboard Output Format
 
 Render `--status` JSON as this markdown:
 
@@ -89,6 +88,23 @@ gh pr merge 286 --squash --delete-branch   # #269 Loki PASS — merge it
 /fire-next-up --resume #168                # Research review needed
 ```
 
+### Auto-Advance Rules (`--resume` without #N)
+
+When `--resume` finds actions that are clearly ready, execute them immediately:
+
+| Condition | Auto-Action |
+|-----------|-------------|
+| Luna done (handoff exists) | Dispatch FiremanDecko on same branch |
+| FiremanDecko/Heimdall done (handoff exists) | Dispatch Loki on same branch |
+| Loki PASS + CI green + PR open | Merge PR, move to Done |
+| Loki PASS + no open PR (already merged) | Move to Done |
+| Completed chain still in "In Progress" | Move to Done |
+| Research handoff + PR merged + issue open | Present research review to Odin |
+
+**Only pause for Odin's approval on:** merges (confirm first), ambiguous situations, or FAIL verdicts.
+
+Report what was auto-executed in the dashboard output.
+
 ---
 
 ## Research Review Flow
@@ -97,7 +113,7 @@ When `--resume` detects a completed research chain (handoff comment exists, PR m
 
 ### Detection
 
-The `--status` dashboard and `resumeDetect()` identify research issues where:
+The dashboard and `resumeDetect()` identify research issues where:
 - Has a `## Freya Handoff` or `## FiremanDecko Handoff` comment (without `→ Loki`)
 - PR is merged (check via `gh pr list --state merged --head <branch>`)
 - Issue is still open
