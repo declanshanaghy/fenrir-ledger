@@ -93,10 +93,11 @@ async function seedEntitlement(
 
 /**
  * Navigate to dashboard, seeding all required auth, household, and entitlement data.
+ * Pattern: goto("/") → clearAllStorage → seedSession → seedHousehold → seedEntitlement → seedCards → reload
  */
 async function goToDashboardWithTier(page: Page, tier: "thrall" | "karl") {
-  // Navigate to home first to establish origin
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  // Navigate to home first to establish origin and context
+  await page.goto("/");
 
   // Clear all storage to start fresh
   await clearAllStorage(page);
@@ -111,8 +112,8 @@ async function goToDashboardWithTier(page: Page, tier: "thrall" | "karl") {
   // Seed empty cards for clean test
   await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, []);
 
-  // Navigate to dashboard and wait for full load
-  await page.goto("/dashboard", { waitUntil: "networkidle" });
+  // Reload to trigger Next.js to load dashboard with seeded data
+  await page.reload({ waitUntil: "networkidle" });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
