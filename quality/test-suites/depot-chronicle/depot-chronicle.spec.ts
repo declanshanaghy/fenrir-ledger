@@ -356,18 +356,20 @@ test.describe("Issue #453: Depot Chronicle Restoration", () => {
   }) => {
     await page.goto("/chronicles");
 
-    // Find all chronicle entries
-    const entries = page.locator("a").filter({
-      has: page.locator(`text="Depot Integration"`),
-    });
+    // Get the page text and verify the chronicle is listed
+    const pageText = await page.innerText("body");
 
-    const count = await entries.count();
+    // Check that "Depot Integration" appears on the index
+    expect(pageText).toContain("Depot Integration");
+
+    // Find the link to this chronicle specifically
+    const depotLink = page.locator(
+      `a[href="/chronicles/${CHRONICLE_SLUG}"]`
+    );
+    const count = await depotLink.count();
+
+    // At least one link should exist
     expect(count).toBeGreaterThanOrEqual(1);
-
-    // At least one should link to our chronicle
-    const depotEntry = entries.first();
-    const href = await depotEntry.getAttribute("href");
-    expect(href).toContain(CHRONICLE_SLUG);
   });
 
   test("all content preserved: grievances + table + architecture + epigraph + closing", async ({
