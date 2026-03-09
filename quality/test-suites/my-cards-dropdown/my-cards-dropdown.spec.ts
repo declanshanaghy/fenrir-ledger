@@ -151,7 +151,8 @@ test.describe("Profile Dropdown — My Cards Entry Visibility", () => {
   test("My Cards button meets touch target minimum (44x44px) on mobile", async ({
     page,
   }) => {
-    test.use({ viewport: { width: 375, height: 667 } });
+    // Set mobile viewport
+    await page.setViewportSize({ width: 375, height: 667 });
 
     const avatarButton = page.locator(
       'button[aria-controls="user-menu"]'
@@ -394,15 +395,15 @@ test.describe("Profile Dropdown — My Cards Responsive", () => {
     test("My Cards works correctly on desktop", async ({ page }) => {
       // Spec: Works on mobile and desktop
       const avatarButton = page.locator(
-        'button[aria-label*="Open user menu"]'
+        'button[aria-controls="user-menu"]'
       );
       await expect(avatarButton).toBeVisible();
 
       await avatarButton.click();
 
       const myCardsButton = page.locator(
-        'button[role="menuitem"]:has-text("My Cards")'
-      );
+        'button[role="menuitem"] >> text=My Cards'
+      ).first();
       await expect(myCardsButton).toBeVisible();
 
       // Click and navigate
@@ -418,15 +419,15 @@ test.describe("Profile Dropdown — My Cards Responsive", () => {
     test("My Cards works correctly on mobile", async ({ page }) => {
       // Spec: Works on mobile and desktop
       const avatarButton = page.locator(
-        'button[aria-label*="Open user menu"]'
+        'button[aria-controls="user-menu"]'
       );
       await expect(avatarButton).toBeVisible();
 
       await avatarButton.click();
 
       const myCardsButton = page.locator(
-        'button[role="menuitem"]:has-text("My Cards")'
-      );
+        'button[role="menuitem"] >> text=My Cards'
+      ).first();
       await expect(myCardsButton).toBeVisible();
 
       // Click and navigate
@@ -440,7 +441,7 @@ test.describe("Profile Dropdown — My Cards Responsive", () => {
     }) => {
       // Spec: dropdown should be contained within viewport
       const avatarButton = page.locator(
-        'button[aria-label*="Open user menu"]'
+        'button[aria-controls="user-menu"]'
       );
       await avatarButton.click();
 
