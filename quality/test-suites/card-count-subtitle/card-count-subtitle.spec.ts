@@ -53,13 +53,13 @@ test.describe("Card count subtitle removal (#450)", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
     await page.reload({ waitUntil: "networkidle" });
 
-    // Verify tab bar shows count badges (e.g., "All (5)" in the button)
-    const tabButtons = page.locator('button[role="tab"]');
-    const tabTexts = await tabButtons.allTextContents();
+    // Verify tab bar shows count badges via aria-label on the span elements
+    // TabBadge renders as <span aria-label="N cards">3</span>
+    const countBadges = page.locator('span[aria-label*="card"]');
+    const badgeCount = await countBadges.count();
 
-    // At least one tab should have a numeric count
-    const hasCount = tabTexts.some((text) => /\d+/.test(text));
-    expect(hasCount).toBe(true);
+    // Should have at least one count badge visible
+    expect(badgeCount).toBeGreaterThan(0);
   });
 
   test("TC-450-03: should handle empty state correctly (0 cards)", async ({
