@@ -117,8 +117,9 @@ test.describe("Dashboard — Card Grid", () => {
     await page.reload({ waitUntil: "networkidle" });
 
     // Each CardTile is wrapped in a Link to /cards/{id}/edit
-    // There are 3 FEW_CARDS, each with a unique ID, so 3 edit links
-    const editLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
+    // Cards appear in "All" tab + status tab; scope to first visible tabpanel
+    const firstPanel = page.locator('[role="tabpanel"]').first();
+    const editLinks = firstPanel.locator('a[href*="/cards/"][href*="/edit"]');
     await expect(editLinks).toHaveCount(3);
   });
 
