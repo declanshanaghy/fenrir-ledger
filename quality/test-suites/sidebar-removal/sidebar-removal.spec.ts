@@ -317,13 +317,21 @@ test.describe("Issue #403 — Sidebar Removal & Profile Dropdown", () => {
 
     const header = page.locator("header");
 
-    // Should have logo/home link
-    const homeLink = header.locator("a[aria-label*='Fenrir']");
+    // Should have logo/home link (specifically the "Fenrir Ledger" wordmark)
+    const homeLink = page.getByRole("link", {
+      name: /Fenrir Ledger/i,
+    });
     await expect(homeLink).toBeVisible();
 
     // Desktop: should have back link
-    const backLink = header.locator("a[aria-label*='Back to site']");
-    await expect(backLink).toBeVisible();
+    const backLink = page.getByRole("link", {
+      name: /Back to Fenrir Ledger site/i,
+    });
+    // On desktop, back link should show as "Back to site" text (visible desktop version)
+    const desktopBackLink = page.locator(
+      "header .hidden.md\\:flex a[aria-label*='Back to site']"
+    );
+    await expect(desktopBackLink).toBeVisible();
 
     // Should have theme toggle
     const themeToggle = header.locator(
@@ -348,17 +356,15 @@ test.describe("Issue #403 — Sidebar Removal & Profile Dropdown", () => {
 
     const header = page.locator("header");
 
-    // Should have compact logo (FL)
-    const logo = header.locator("span:has-text('FL')");
-    await expect(logo).toBeVisible();
+    // Should have compact logo (FL text visible on mobile)
+    const compactLogo = page.locator("header span.md\\:hidden:has-text('FL')");
+    await expect(compactLogo).toBeVisible();
 
     // Should have back icon (mobile only)
-    const backIcon = header
-      .locator("a[aria-label*='Back to site']")
-      .filter({ has: page.locator("svg") });
-    // Mobile: back icon visible
-    const backVisible = await backIcon.isVisible();
-    expect(backVisible).toBeTruthy();
+    const mobileBackIcon = page.locator(
+      "header a.md\\:hidden[aria-label*='Back to site']"
+    );
+    await expect(mobileBackIcon).toBeVisible();
 
     // Should have theme toggle
     const themeToggle = header.locator(
