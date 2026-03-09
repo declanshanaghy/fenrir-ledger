@@ -122,7 +122,7 @@ test.describe("Issue #453: Depot Chronicle Restoration", () => {
 
     expect(pageText).toContain("UPDATE");
     expect(pageText).toContain("90-line bash skill");
-    expect(pageText).toContain("brain-slug");
+    expect(pageText).toContain("uninstalled it");
   });
 
   test("depot-integration-issues: main epigraph (blockquote) renders", async ({
