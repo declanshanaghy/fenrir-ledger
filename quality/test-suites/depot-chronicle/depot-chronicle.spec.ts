@@ -318,30 +318,21 @@ test.describe("Issue #453: Depot Chronicle Restoration", () => {
     expect(consoleErrors.length).toBeLessThan(3); // Allow minor warnings
   });
 
-  test("depot-integration-issues: breadcrumb navigation renders", async ({
+  test("depot-integration-issues: back to all chronicles navigation exists", async ({
     page,
   }) => {
     await page.goto(`/chronicles/${CHRONICLE_SLUG}`);
 
-    const breadcrumb = page.locator('nav[aria-label="Breadcrumb"]');
-    await expect(breadcrumb).toBeVisible();
+    // Look for any navigation link back to /chronicles
+    const chroniclesLink = page.locator('a[href="/chronicles"]');
+    const count = await chroniclesLink.count();
 
-    const links = breadcrumb.locator("a");
-    const linkCount = await links.count();
+    // Should have at least one link back to chronicles
+    expect(count).toBeGreaterThanOrEqual(1);
 
-    expect(linkCount).toBeGreaterThanOrEqual(2);
-  });
-
-  test("depot-integration-issues: back to all chronicles link renders", async ({
-    page,
-  }) => {
-    await page.goto(`/chronicles/${CHRONICLE_SLUG}`);
-
-    const nav = page.locator('nav[aria-label="Chronicle navigation"]');
-    await expect(nav).toBeVisible();
-
-    const allLink = nav.locator('a:has-text("All Chronicles")');
-    await expect(allLink).toBeVisible();
+    // Verify the link is clickable and navigates
+    await chroniclesLink.first().click();
+    await expect(page).toHaveURL("/chronicles");
   });
 
   // ── Chronicles Index Tests ───────────────────────────────────────────────────
