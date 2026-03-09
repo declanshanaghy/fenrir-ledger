@@ -69,4 +69,11 @@ export const FEATURE_DESCRIPTIONS: Record<PremiumFeature, FeatureDescription> = 
     expiredAtmospheric:
       "Your finery awaits in the hall. Return and wear it once more.",
   },
+  "howl-panel": {
+    description:
+      "Proactive fee alerts and promo deadline warnings — the wolf watches your chains so you never miss a critical date.",
+    atmospheric: "The wolf who listens hears the chain before it breaks.",
+    expiredAtmospheric:
+      "The wolf still watches. Return and heed his warning once more.",
+  },
 };

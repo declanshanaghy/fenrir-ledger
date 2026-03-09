@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Sprint 7 Wireframes
+
+| Story | File | Description |
+|-------|------|-------------|
+| #398 — Howl Panel Karl Tier | [wireframes/app/howl-karl-tier.html](wireframes/app/howl-karl-tier.html) | Howl Panel gated behind Karl ($3.99/mo): 5 scenarios — Thrall desktop teaser (blurred fake alerts + upsell overlay), Karl desktop full panel, tab bar anatomy (Thrall lock icon + KARL badge vs Karl urgency badge), mobile 375px Thrall teaser, mobile Karl full panel; Ragnarök gate spec; full interaction spec; accessibility requirements; component handoff notes |
+
+---
+
 ## Sprint 6 Wireframes
 
 | Story | File | Description |
@@ -46,6 +54,7 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | **app** | | |
 | Dashboard — The Ledger of Fates | [wireframes/app/dashboard.html](wireframes/app/dashboard.html) | TopBar (row 1) + sidebar shell + card grid + summary bar + footer |
 | Dashboard — Tabs Redesign | [wireframes/app/dashboard-tabs.html](wireframes/app/dashboard-tabs.html) | Tabbed layout (Issue #279): The Howl tab + Active tab replacing grid + side panel; 6 scenarios; interaction spec |
+| Howl Panel — Karl Tier Gating | [wireframes/app/howl-karl-tier.html](wireframes/app/howl-karl-tier.html) | Karl-tier gating for The Howl (Issue #398): Thrall blurred teaser + upsell overlay, Karl full panel, tab bar anatomy, mobile 375px, Ragnarök gate, interaction + accessibility spec |
 | Valhalla — Hall of the Honored Dead | [wireframes/app/valhalla.html](wireframes/app/valhalla.html) | Tombstone cards, filter bar, empty state |
 | **chrome** | | |
 | LedgerShell — Slim Top Bar + Mobile Bottom Tab Bar | [wireframes/chrome/ledger-shell.html](wireframes/chrome/ledger-shell.html) | New `/ledger/*` layout shell (Issue #372): slim 48px top bar, 220px desktop sidebar, 56px mobile bottom tab bar (4 tabs); 8 scenarios; interaction spec; accessibility table; responsive breakpoint table |
