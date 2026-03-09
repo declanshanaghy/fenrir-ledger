@@ -45,8 +45,8 @@ test.describe("LedgerShell — Slim top bar", () => {
     const box = await header.boundingBox();
     await expect(box?.height).toBe(48);
 
-    // Logo link present and visible
-    const logoLink = page.locator('header a[aria-label*="Fenrir"]');
+    // Logo link present and visible (first link in header)
+    const logoLink = page.locator('header a[aria-label*="Fenrir"]').first();
     await expect(logoLink).toBeVisible();
   });
 
