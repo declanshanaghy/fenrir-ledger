@@ -84,12 +84,26 @@ test.describe("Issue #403 — Sidebar Removal & Profile Dropdown", () => {
 
     expect(count).toBe(3);
 
-    // Verify tab labels
-    const tabTexts = await tabs.allTextContents();
-    expect(tabTexts).toContain("Dashboard");
-    expect(tabTexts).toContain("Add");
-    expect(tabTexts).toContain("Valhalla");
-    expect(tabTexts).not.toContain("Settings");
+    // Verify tab labels (check for specific elements)
+    const dashboardLabel = page
+      .locator("nav[aria-label='App tabs']")
+      .locator("span:has-text('Dashboard')");
+    const addLabel = page
+      .locator("nav[aria-label='App tabs']")
+      .locator("span:has-text('Add')");
+    const valhallaLabel = page
+      .locator("nav[aria-label='App tabs']")
+      .locator("span:has-text('Valhalla')");
+
+    await expect(dashboardLabel).toBeVisible();
+    await expect(addLabel).toBeVisible();
+    await expect(valhallaLabel).toBeVisible();
+
+    // Settings should not be a tab
+    const settingsLabel = page
+      .locator("nav[aria-label='App tabs']")
+      .locator("span:has-text('Settings')");
+    await expect(settingsLabel).not.toBeVisible();
   });
 
   // ────────────────────────────────────────────────────────────────
