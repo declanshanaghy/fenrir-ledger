@@ -76,9 +76,12 @@ test.describe("Valhalla Auto-Graduate — Graduated Cards in Valhalla Tab", () =
     await clickTab(page, "tab-valhalla");
 
     // Card should appear in Valhalla
-    const cardTile = page.locator('[data-testid="card-tile"]').first();
-    const cardText = cardTile.locator('text=' + graduatedCard.cardName);
-    await expect(cardText).toBeVisible();
+    const cardTiles = page.locator('[data-testid="card-tile"]');
+    await expect(cardTiles).toHaveCount(1);
+
+    const cardTile = cardTiles.first();
+    const cardText = cardTile.locator('h3'); // Card name is in an h3
+    await expect(cardText).toContainText(graduatedCard.cardName);
   });
 
   test("multiple cards with met bonus all appear in Valhalla", async ({
@@ -133,8 +136,8 @@ test.describe("Valhalla Auto-Graduate — Graduated Cards in Valhalla Tab", () =
     await expect(cardTiles).toHaveCount(3);
 
     for (const card of cards) {
-      const cardText = page.locator(`text=${card.cardName}`);
-      await expect(cardText).toBeVisible();
+      const cardText = page.locator('h3').filter({ hasText: card.cardName });
+      await expect(cardText).toContainText(card.cardName);
     }
   });
 });
@@ -176,11 +179,11 @@ test.describe("Valhalla Auto-Graduate — Graduated Cards Excluded from Active",
     const cardTiles = page.locator('[data-testid="card-tile"]');
     await expect(cardTiles).toHaveCount(1);
 
-    const activeCardText = page.locator(`text=${activeCard.cardName}`);
+    const activeCardText = page.locator("h3").filter({ hasText: activeCard.cardName });
     await expect(activeCardText).toBeVisible();
 
     // Graduated card text should NOT appear
-    const graduatedCardText = page.locator(`text=${graduatedCard.cardName}`);
+    const graduatedCardText = page.locator("h3").filter({ hasText: graduatedCard.cardName });
     const isVisible = await graduatedCardText.isVisible().catch(() => false);
     expect(isVisible).toBe(false);
   });
@@ -214,7 +217,7 @@ test.describe("Valhalla Auto-Graduate — Status Computation", () => {
     await clickTab(page, "tab-valhalla");
 
     const cardTile = page.locator('[data-testid="card-tile"]').first();
-    const cardText = cardTile.locator(`text=${graduatedCard.cardName}`);
+    const cardText = cardTile.locator("h3");
     await expect(cardText).toBeVisible();
   });
 });
@@ -246,7 +249,7 @@ test.describe("Valhalla Auto-Graduate — Toggle Met State", () => {
     // Verify card is in Valhalla initially
     await clickTab(page, "tab-valhalla");
     let cardTile = page.locator('[data-testid="card-tile"]').first();
-    let cardText = cardTile.locator(`text=${graduatedCard.cardName}`);
+    let cardText = cardTile.locator("h3");
     await expect(cardText).toBeVisible();
 
     // Click on card to edit
@@ -273,7 +276,7 @@ test.describe("Valhalla Auto-Graduate — Toggle Met State", () => {
     // Card should now appear in Active tab
     await clickTab(page, "tab-active");
     cardTile = page.locator('[data-testid="card-tile"]').first();
-    cardText = cardTile.locator(`text=${graduatedCard.cardName}`);
+    cardText = cardTile.locator("h3");
     await expect(cardText).toBeVisible();
 
     // Card should NOT appear in Valhalla anymore
@@ -372,7 +375,7 @@ test.describe("Valhalla Auto-Graduate — Close Card Prompt", () => {
 
     await clickTab(page, "tab-valhalla");
     const valhallaTile = page.locator('[data-testid="card-tile"]').first();
-    const valhallaTileText = valhallaTile.locator(`text=${unmetCard.cardName}`);
+    const valhallaTileText = valhallaTile.locator("h3");
     await expect(valhallaTileText).toBeVisible();
   });
 
@@ -417,7 +420,7 @@ test.describe("Valhalla Auto-Graduate — Close Card Prompt", () => {
 
     await clickTab(page, "tab-valhalla");
     const valhallaTile = page.locator('[data-testid="card-tile"]').first();
-    const valhallaTileText = valhallaTile.locator(`text=${unmetCard.cardName}`);
+    const valhallaTileText = valhallaTile.locator("h3");
     await expect(valhallaTileText).toBeVisible();
   });
 });
@@ -442,7 +445,7 @@ test.describe("Valhalla Auto-Graduate — Edge Cases", () => {
 
     // Card should appear in Active tab
     await clickTab(page, "tab-active");
-    const activeCardText = page.locator(`text=${noBonus.cardName}`);
+    const activeCardText = page.locator("h3").filter({ hasText: noBonus.cardName });
     await expect(activeCardText).toBeVisible();
 
     // Card should NOT appear in Valhalla
@@ -472,7 +475,7 @@ test.describe("Valhalla Auto-Graduate — Edge Cases", () => {
     await clickTab(page, "tab-valhalla");
 
     // Card should appear in Valhalla
-    const cardText = page.locator(`text=${closedGraduated.cardName}`);
+    const cardText = page.locator("h3").filter({ hasText: closedGraduated.cardName });
     await expect(cardText).toBeVisible();
   });
 });
