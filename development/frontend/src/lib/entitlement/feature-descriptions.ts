@@ -83,4 +83,11 @@ export const FEATURE_DESCRIPTIONS: Record<PremiumFeature, FeatureDescription> = 
     expiredAtmospheric:
       "The gates of Valhalla remain open to those who return.",
   },
+  "velocity-management": {
+    description:
+      "Track your application velocity against Chase 5/24, Citi 1/8, and Amex once-per-lifetime rules — know exactly where you stand before you apply.",
+    atmospheric: "Know the rules of the hall before you enter it.",
+    expiredAtmospheric:
+      "The issuer's rules have not changed. Return and reclaim your edge.",
+  },
 };
