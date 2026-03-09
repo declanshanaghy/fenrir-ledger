@@ -20,7 +20,7 @@ If none provided, derive one from the session's primary topic (max 4 words).
 
 ## Step 2 — Locate the Session Export
 
-Check for the file at `tmp/sessions/{{NAME}}.txt`, then `sessions/{{NAME}}.txt`, then `tmp/{{NAME}}.txt`.
+Check for the file at `tmp/sessions/{{NAME}}.txt`, then `tmp/{{NAME}}.txt`.
 
 If not found: tell the user to run `/export tmp/sessions/{{NAME}}.txt` first.
 
