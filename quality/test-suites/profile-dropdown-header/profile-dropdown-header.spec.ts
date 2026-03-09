@@ -220,10 +220,10 @@ test.describe("Profile Dropdown Header", () => {
     const avatarButton = page.locator("button[aria-controls='user-menu']");
     await avatarButton.click();
 
-    // Get the email element
+    // Get the email element (font-mono but not the rune, has muted-foreground color)
     const userMenu = page.locator("#user-menu");
     const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
-    const email = profileHeader.locator("span.font-mono");
+    const email = profileHeader.locator("span.text-muted-foreground.font-mono");
 
     await expect(email).toBeVisible();
 
