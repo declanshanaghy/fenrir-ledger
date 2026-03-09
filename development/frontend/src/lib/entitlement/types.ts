@@ -65,7 +65,8 @@ export type PremiumFeature =
   | "data-export"
   | "extended-history"
   | "cosmetic-perks"
-  | "howl-panel";
+  | "howl-panel"
+  | "card-archive";
 
 /**
  * Feature metadata: display name and the minimum tier required.
@@ -89,6 +90,7 @@ export const PREMIUM_FEATURES: Record<PremiumFeature, FeatureDefinition> = {
   "extended-history": { name: "Extended History", tier: "karl" },
   "cosmetic-perks": { name: "Cosmetic Perks", tier: "karl" },
   "howl-panel": { name: "The Howl", tier: "karl" },
+  "card-archive": { name: "Valhalla", tier: "karl" },
 };
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Common Karl Upsell Dialog — #377 / #378 / #398</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md.
+       Permitted: display flex/grid, border, width/height, padding/margin, font-size, font-weight */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* -- Page layout -------------------------------------------------------- */
+    .page { display: flex; flex-direction: column; gap: 56px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* =====================================================================
+       COMPONENT: KarlUpsellDialog
+       =====================================================================
+       Shared dialog used by ALL Karl-gated features:
+         - Valhalla (#377): card archive/graveyard view
+         - Howl (#398): Howl alert panel (priority alerts)
+         - Velocity (#378): spending velocity analytics
+         - Any future Karl feature uses the same dialog
+
+       Props (implementation contract):
+         featureIcon    — rune glyph or SVG icon (e.g. "ᛏ" for Valhalla)
+         featureName    — plain name (e.g. "Valhalla")
+         featureTagline — atmospheric one-liner (Voice 2, e.g. "Hall of the Honored Dead")
+         featureDesc    — 1-2 sentence functional description (Voice 1)
+         featureTeaser  — 1-sentence teaser of what user is missing (Voice 1)
+         onSubscribe    — callback → triggers Stripe purchase flow
+         onDismiss      — callback → closes dialog, no penalty
+
+       The dialog:
+         - Renders over a semi-transparent backdrop (z-index: 210)
+         - Trap focus inside dialog while open
+         - Dismiss via: X button / "Not now" / Escape / backdrop click
+         - Subscribe CTA: direct to Stripe Checkout
+           * Authenticated user → POST /api/stripe/checkout-session → redirect
+           * Anonymous user → open AnonymousCheckoutModal first (email collection)
+    ===================================================================== */
+
+    /* -- Modal backdrop + shell --------------------------------------------- */
+    .modal-backdrop {
+      border: 1px solid;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 460px;
+    }
+    .modal-shell {
+      border: 1px solid;
+      max-width: 460px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* -- Modal header ------------------------------------------------------- */
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid;
+    }
+    .modal-eyebrow {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: bold;
+    }
+    .modal-eyebrow-sub {
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      font-weight: normal;
+      display: block;
+      margin-top: 2px;
+    }
+    .btn-close {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    /* -- Feature hero area -------------------------------------------------- */
+    /*
+     * Top section: feature icon + name + tagline
+     * This creates the "what you're missing" visual.
+     */
+    .feature-hero {
+      padding: 24px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid;
+    }
+    .feature-icon-wrap {
+      width: 72px;
+      height: 72px;
+      border: 1px dashed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      position: relative;
+    }
+    /*
+     * Lock badge: overlaid on the feature icon to signal it's gated.
+     * Small "🔒" or lock SVG at bottom-right corner of the icon square.
+     */
+    .lock-badge {
+      position: absolute;
+      bottom: -6px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      background: none; /* theme will fill */
+    }
+    .feature-name {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      /* Voice 2 — Cinzel in implementation */
+    }
+    .feature-tagline {
+      font-size: 11px;
+      font-style: italic;
+      text-align: center;
+      /* Voice 2 atmospheric, aria-hidden="true" */
+    }
+
+    /* -- Feature teaser ---------------------------------------------------- */
+    /*
+     * Shows user WHAT they are missing — 1-2 sentences.
+     * Voice 1 (plain English), NOT atmospheric.
+     */
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .feature-teaser-box {
+      border: 1px dashed;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .feature-teaser-box strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* -- Karl tier badge ---------------------------------------------------- */
+    .karl-tier-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid;
+    }
+    .karl-badge {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border: 1px solid;
+      padding: 2px 6px;
+      white-space: nowrap;
+    }
+    .karl-desc {
+      font-size: 12px;
+      flex: 1;
+    }
+    .karl-price {
+      font-size: 13px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    /* -- CTA area ----------------------------------------------------------- */
+    .modal-cta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .btn-subscribe {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      font-family: inherit;
+      background: none;
+      min-height: 44px;
+    }
+    .cta-caption {
+      font-size: 11px;
+      text-align: center;
+    }
+
+    /* -- Modal footer ------------------------------------------------------- */
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid;
+      display: flex;
+      justify-content: center;
+    }
+    .btn-not-now {
+      padding: 8px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+      background: none;
+      min-height: 44px;
+    }
+
+    /* -- Props table ------------------------------------------------------- */
+    table {
+      border-collapse: collapse;
+      font-size: 12px;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid;
+      padding: 6px 10px;
+      text-align: left;
+    }
+    th { font-weight: bold; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* -- Mobile frame ------------------------------------------------------- */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+    }
+    .mobile-modal-backdrop {
+      padding: 16px;
+      display: flex;
+      align-items: flex-end; /* bottom-sheet feel on mobile */
+      justify-content: center;
+      min-height: 420px;
+    }
+    .mobile-modal-shell {
+      border: 1px solid;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* -- Utilities ---------------------------------------------------------- */
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note-block {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.65;
+      border: 1px dashed;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+    .scenario-row {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .scenario-col { display: flex; flex-direction: column; gap: 8px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+
+    /* compact spacing for mobile body */
+    .mobile-feature-hero {
+      padding: 18px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid;
+    }
+    .mobile-feature-icon-wrap {
+      width: 56px;
+      height: 56px;
+      border: 1px dashed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      position: relative;
+    }
+    .mobile-lock-badge {
+      position: absolute;
+      bottom: -5px;
+      right: -5px;
+      width: 16px;
+      height: 16px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+
+  <!-- =====================================================================
+       DESIGN DECISION — KarlUpsellDialog component
+       =====================================================================
+       PRIMARY DELIVERABLE for #377, #378, #398.
+
+       This dialog is the SINGLE shared paywall component for all Karl features.
+       It must:
+         1. Accept feature metadata as props (icon, name, tagline, teaser, desc)
+         2. Show the feature icon with a lock overlay — makes it visually clear
+            which specific feature is gated
+         3. Show a 1-2 sentence teaser of what the user is missing — concrete value
+         4. Prominently display price ($3.99/mo) alongside CTA
+         5. Trigger Stripe Checkout directly (no intermediate /pricing page)
+         6. Support both authenticated + anonymous flows
+         7. Have a no-penalty dismiss path ("Not now")
+
+       Layout: centered dialog on desktop, bottom-aligned on mobile
+       (bottom-sheet convention improves one-thumb reachability).
+  ===================================================================== -->
+
+
+  <!-- =====================================================================
+       SCENARIO 1 — Desktop: Valhalla variant
+       Shows the dialog with Valhalla-specific content injected via props
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 — Desktop — KarlUpsellDialog (Valhalla props)</div>
+
+    <div class="modal-backdrop">
+
+      <div class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="karl-heading-1">
+
+        <!-- Header -->
+        <div class="modal-header">
+          <div>
+            <span class="modal-eyebrow">Karl Tier Feature</span>
+            <span class="modal-eyebrow-sub">KARL · $3.99/month</span>
+          </div>
+          <button class="btn-close" type="button" aria-label="Close dialog">✕</button>
+        </div>
+
+        <!-- Feature hero — prop: featureIcon, featureName, featureTagline -->
+        <div class="feature-hero">
+          <div class="feature-icon-wrap" aria-hidden="true">
+            <!--
+              featureIcon prop — rendered as rune glyph or SVG.
+              Valhalla → "ᛏ" (Tiwaz rune / tombstone)
+              Howl     → "ᚲ" (Kenaz / flame)
+              Velocity → "ᛊ" (Sowilo / sun/speed)
+            -->
+            <span>ᛏ</span>
+            <span class="lock-badge" aria-hidden="true">🔒</span>
+          </div>
+
+          <!-- featureName prop -->
+          <h1 class="feature-name" id="karl-heading-1">Valhalla</h1>
+
+          <!-- featureTagline prop — Voice 2 atmospheric, aria-hidden -->
+          <p class="feature-tagline" aria-hidden="true">
+            Hall of the Honored Dead
+          </p>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+
+          <!-- Feature teaser — what user is missing (Voice 1, prop: featureTeaser) -->
+          <div class="feature-teaser-box">
+            <strong>What you're missing</strong>
+            <!--
+              featureTeaser prop — feature-specific 1-2 sentences.
+              Valhalla: "See every card you've closed — anniversary dates, total rewards
+              extracted, annual fees avoided, and how long each chain held you."
+              Howl: "Get notified before fees strike. Howl surfaces your most urgent
+              deadlines and lets you act in one tap."
+              Velocity: "Track your spend rate against welcome bonus targets to make
+              sure you hit every threshold before the deadline."
+            -->
+            See every card you've closed — anniversary dates, total rewards extracted,
+            annual fees avoided, and how long each chain held you.
+          </div>
+
+          <!-- Karl tier row — tier badge + short copy + price -->
+          <div class="karl-tier-row">
+            <span class="karl-badge">Karl</span>
+            <span class="karl-desc">Unlock all premium features</span>
+            <span class="karl-price">$3.99/mo</span>
+          </div>
+
+          <!-- CTA -->
+          <div class="modal-cta">
+            <!--
+              Subscribe CTA:
+              - Authenticated user → POST /api/stripe/checkout-session → redirect to Stripe
+              - Anonymous user → open AnonymousCheckoutModal (email collection) first
+              - success_url returns user to the feature they tried to access
+              - No intermediate /pricing page — direct to checkout
+            -->
+            <button class="btn-subscribe" type="button">
+              Upgrade to Karl — $3.99/month
+            </button>
+            <p class="cta-caption">
+              Billed monthly. Cancel anytime.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <!--
+            "Not now" — closes dialog, NO permanent flag.
+            Dialog will reappear next time user clicks the same locked feature.
+            Do NOT set localStorage flag. Do NOT route away.
+          -->
+          <button class="btn-not-now" type="button">Not now</button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      <strong>Valhalla props injected:</strong>
+      featureIcon="ᛏ" · featureName="Valhalla" · featureTagline="Hall of the Honored Dead"<br/>
+      featureTeaser = "See every card you've closed…"<br/>
+      Lock badge overlaid on icon corner → makes it immediately clear the feature is gated.<br/>
+      Karl tier row: badge + copy + price in one scannable row.<br/>
+      CTA: "Upgrade to Karl — $3.99/month" (direct to Stripe, NOT /pricing).
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 2 — Desktop: Howl variant (shows reusability)
+       Same component, different props — demonstrates the shared pattern
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 — Desktop — KarlUpsellDialog (Howl props, #398)</div>
+
+    <div class="modal-backdrop">
+
+      <div class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="karl-heading-2">
+
+        <div class="modal-header">
+          <div>
+            <span class="modal-eyebrow">Karl Tier Feature</span>
+            <span class="modal-eyebrow-sub">KARL · $3.99/month</span>
+          </div>
+          <button class="btn-close" type="button" aria-label="Close dialog">✕</button>
+        </div>
+
+        <div class="feature-hero">
+          <div class="feature-icon-wrap" aria-hidden="true">
+            <!-- featureIcon: "ᚲ" Kenaz rune — fire/Howl -->
+            <span>ᚲ</span>
+            <span class="lock-badge" aria-hidden="true">🔒</span>
+          </div>
+          <h1 class="feature-name" id="karl-heading-2">The Howl</h1>
+          <p class="feature-tagline" aria-hidden="true">
+            The Wolf Cries Before the Chain Breaks
+          </p>
+        </div>
+
+        <div class="modal-body">
+
+          <div class="feature-teaser-box">
+            <strong>What you're missing</strong>
+            <!--
+              featureTeaser for Howl:
+            -->
+            Get notified before fees strike. Howl surfaces your most urgent
+            deadlines and lets you act in one tap — before it costs you.
+          </div>
+
+          <div class="karl-tier-row">
+            <span class="karl-badge">Karl</span>
+            <span class="karl-desc">Unlock all premium features</span>
+            <span class="karl-price">$3.99/mo</span>
+          </div>
+
+          <div class="modal-cta">
+            <button class="btn-subscribe" type="button">
+              Upgrade to Karl — $3.99/month
+            </button>
+            <p class="cta-caption">
+              Billed monthly. Cancel anytime.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-not-now" type="button">Not now</button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      <strong>Howl props injected (#398):</strong>
+      featureIcon="ᚲ" · featureName="The Howl" · featureTagline="The Wolf Cries Before the Chain Breaks"<br/>
+      Only the props change — the layout, structure, and Stripe flow are identical.<br/>
+      The same component handles Howl (#398) and Velocity (#378) with different prop values.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 3 — Mobile 375px: Valhalla variant
+       Bottom-sheet positioning on mobile for one-thumb reach
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 — Mobile 375px — KarlUpsellDialog (bottom-anchored)</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">375px frame</div>
+        <div class="mobile-frame">
+          <!--
+            Mobile layout: dialog anchored to bottom of screen.
+            This follows the bottom-sheet convention used throughout the app
+            (auth modals, Howl panel on mobile).
+            Backdrop fills full screen above the sheet.
+          -->
+          <div class="mobile-modal-backdrop">
+
+            <div class="mobile-modal-shell"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="karl-heading-m">
+
+              <!-- Header — compact -->
+              <div class="modal-header" style="padding: 12px 16px;">
+                <div>
+                  <span class="modal-eyebrow" style="font-size: 9px;">Karl Tier Feature</span>
+                  <span class="modal-eyebrow-sub" style="font-size: 8px;">KARL · $3.99/month</span>
+                </div>
+                <button class="btn-close" type="button" aria-label="Close dialog" style="font-size: 14px;">✕</button>
+              </div>
+
+              <!-- Feature hero — icon + name (tagline omitted on mobile to save space) -->
+              <div class="mobile-feature-hero">
+                <div class="mobile-feature-icon-wrap" aria-hidden="true">
+                  <span>ᛏ</span>
+                  <span class="mobile-lock-badge" aria-hidden="true">🔒</span>
+                </div>
+                <h1 class="feature-name" id="karl-heading-m" style="font-size: 17px;">Valhalla</h1>
+                <!--
+                  featureTagline HIDDEN on mobile — saves vertical space.
+                  Screen reader still gets the heading for context.
+                -->
+              </div>
+
+              <!-- Body — compact -->
+              <div class="modal-body" style="padding: 16px; gap: 12px;">
+
+                <div class="feature-teaser-box" style="font-size: 11px; padding: 10px 12px;">
+                  <strong>What you're missing</strong>
+                  See every card you've closed — rewards extracted, fees avoided,
+                  and how long each chain held you.
+                </div>
+
+                <!-- Karl price row — compact inline -->
+                <div class="karl-tier-row" style="padding: 8px 12px;">
+                  <span class="karl-badge" style="font-size: 9px; padding: 2px 5px;">Karl</span>
+                  <span class="karl-desc" style="font-size: 11px;">All premium features</span>
+                  <span class="karl-price" style="font-size: 12px;">$3.99/mo</span>
+                </div>
+
+                <!-- CTA -->
+                <div class="modal-cta">
+                  <button class="btn-subscribe" type="button"
+                          style="font-size: 15px; padding: 14px 16px; font-weight: bold;">
+                    Upgrade to Karl — $3.99/month
+                  </button>
+                  <!--
+                    On mobile, font-size: 16px minimum on inputs to prevent iOS zoom.
+                    Button text is display element, not input — 15px is safe here.
+                  -->
+                  <p class="cta-caption" style="font-size: 10px;">
+                    Billed monthly. Cancel anytime.
+                  </p>
+                </div>
+
+              </div>
+
+              <!-- Footer -->
+              <div class="modal-footer" style="padding: 12px 16px;">
+                <button class="btn-not-now" type="button" style="font-size: 11px; min-height: 44px; padding: 8px 24px;">
+                  Not now
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="scenario-col" style="max-width: 340px;">
+        <div class="col-label">Mobile rules</div>
+        <ul style="font-size: 11px; font-style: italic; opacity: 0.65; padding-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+          <li>Dialog anchored to bottom of screen (flex align-items: flex-end).</li>
+          <li>Width: 100% of frame — full-bleed bottom sheet, not a floating card.</li>
+          <li>featureTagline hidden on mobile — saves critical vertical space.</li>
+          <li>Icon shrinks from 72px → 56px. Lock badge shrinks proportionally.</li>
+          <li>All buttons maintain 44px min touch target.</li>
+          <li>CTA remains full-width — easiest tap target on small screen.</li>
+          <li>"Not now" remains visible below CTA — no hidden dismiss path on mobile.</li>
+          <li>Backdrop click above sheet still dismisses (same as desktop).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 4 — Props contract table
+       Documents what each Karl feature passes into the dialog
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 4 — Props Contract: KarlUpsellDialog per Feature</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Issue</th>
+          <th>featureIcon</th>
+          <th>featureName</th>
+          <th>featureTagline (Voice 2)</th>
+          <th>featureTeaser (Voice 1)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>#377 Valhalla</td>
+          <td>ᛏ (Tiwaz rune)</td>
+          <td>Valhalla</td>
+          <td>Hall of the Honored Dead</td>
+          <td>See every card you've closed — anniversary dates, total rewards extracted, annual fees avoided, and how long each chain held you.</td>
+        </tr>
+        <tr>
+          <td>#398 Howl</td>
+          <td>ᚲ (Kenaz rune)</td>
+          <td>The Howl</td>
+          <td>The Wolf Cries Before the Chain Breaks</td>
+          <td>Get notified before fees strike. Howl surfaces your most urgent deadlines and lets you act in one tap — before it costs you.</td>
+        </tr>
+        <tr>
+          <td>#378 Velocity</td>
+          <td>ᛊ (Sowilo rune)</td>
+          <td>Velocity</td>
+          <td>How Fast Does Your Plunder Flow?</td>
+          <td>Track your spend rate against welcome bonus targets to make sure you hit every threshold before the deadline.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="note-block">
+      All three features use the same KarlUpsellDialog component. Only props differ.<br/>
+      The onSubscribe callback is the same for all: POST /api/stripe/checkout-session → redirect to Stripe Checkout.<br/>
+      success_url should return the user to the page/feature they were trying to access.<br/>
+      The "KARL · $3.99/month" tier line in the header is always static (it doesn't vary by feature).
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 5 — Anatomy annotation
+       Labels every content zone and its source (prop, static, or dynamic)
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 5 — Component Anatomy (Annotated)</div>
+
+    <div class="modal-backdrop" style="min-height: 520px;">
+      <div class="modal-shell" style="max-width: 460px; width: 100%;">
+
+        <!-- ZONE A: Modal header -->
+        <div class="modal-header" style="position: relative;">
+          <div>
+            <span class="modal-eyebrow">
+              Karl Tier Feature
+              <!-- STATIC — always "Karl Tier Feature" regardless of which feature -->
+            </span>
+            <span class="modal-eyebrow-sub">
+              KARL · $3.99/month
+              <!-- STATIC — price is fixed for Karl tier -->
+            </span>
+          </div>
+          <button class="btn-close" type="button" aria-label="Close dialog">✕</button>
+          <!-- ZONE A annotation -->
+          <span style="position: absolute; right: -180px; top: 12px; font-size: 10px; font-style: italic; width: 160px; border: 1px dashed; padding: 4px 6px;">
+            A: Static header — tier name + price
+          </span>
+        </div>
+
+        <!-- ZONE B: Feature hero -->
+        <div class="feature-hero" style="position: relative;">
+          <div class="feature-icon-wrap" aria-hidden="true">
+            <span>ᛏ</span>
+            <span class="lock-badge" aria-hidden="true">🔒</span>
+          </div>
+          <!-- ZONE B annotation -->
+          <span style="position: absolute; right: -180px; top: 12px; font-size: 10px; font-style: italic; width: 160px; border: 1px dashed; padding: 4px 6px;">
+            B: prop: featureIcon<br/>Lock badge = always static overlay
+          </span>
+          <h1 class="feature-name">Valhalla</h1>
+          <!-- featureName prop annotation -->
+          <p class="feature-tagline" aria-hidden="true">Hall of the Honored Dead</p>
+          <!-- featureTagline prop annotation -->
+          <span style="position: absolute; right: -180px; bottom: 12px; font-size: 10px; font-style: italic; width: 160px; border: 1px dashed; padding: 4px 6px;">
+            C: prop: featureName<br/>prop: featureTagline (aria-hidden)
+          </span>
+        </div>
+
+        <!-- ZONE D: Body -->
+        <div class="modal-body" style="position: relative;">
+          <div class="feature-teaser-box">
+            <strong>What you're missing</strong>
+            See every card you've closed — rewards extracted, fees avoided, and how long each chain held you.
+          </div>
+          <span style="position: absolute; right: -180px; top: 20px; font-size: 10px; font-style: italic; width: 160px; border: 1px dashed; padding: 4px 6px;">
+            D: prop: featureTeaser<br/>(Voice 1, plain English)
+          </span>
+
+          <div class="karl-tier-row">
+            <span class="karl-badge">Karl</span>
+            <span class="karl-desc">Unlock all premium features</span>
+            <span class="karl-price">$3.99/mo</span>
+          </div>
+          <span style="position: absolute; right: -180px; top: 110px; font-size: 10px; font-style: italic; width: 160px; border: 1px dashed; padding: 4px 6px;">
+            E: Static — tier badge + copy + price
+          </span>
+
+          <div class="modal-cta">
+            <button class="btn-subscribe" type="button">
+              Upgrade to Karl — $3.99/month
+            </button>
+            <p class="cta-caption">Billed monthly. Cancel anytime.</p>
+          </div>
+          <span style="position: absolute; right: -180px; bottom: 16px; font-size: 10px; font-style: italic; width: 160px; border: 1px dashed; padding: 4px 6px;">
+            F: Static CTA<br/>Stripe Checkout direct<br/>prop: onSubscribe callback
+          </span>
+        </div>
+
+        <!-- ZONE G: Footer -->
+        <div class="modal-footer" style="position: relative;">
+          <button class="btn-not-now" type="button">Not now</button>
+          <span style="position: absolute; right: -180px; top: 8px; font-size: 10px; font-style: italic; width: 160px; border: 1px dashed; padding: 4px 6px;">
+            G: Static dismiss<br/>No permanent flag<br/>prop: onDismiss callback
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+    <p class="note-block">
+      Zones A, E, F, G are STATIC — identical across all Karl features.<br/>
+      Zones B, C, D are PROP-DRIVEN — each feature injects its own content.<br/>
+      The component never needs feature-specific conditional logic in its body.
+    </p>
+  </section>
+
+
+  <p class="note" style="text-align: center; padding-bottom: 24px;">
+    Wireframe — karl-upsell-dialog.html — Fenrir Ledger — Common Karl Upsell Dialog — No theme styling applied
+  </p>
+
+</div>
+
+</body>
+</html>
