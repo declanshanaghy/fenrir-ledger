@@ -68,7 +68,7 @@ test.describe("Auth returnTo — Query Param Validation", () => {
 
     // Verify returnTo param is in the URL
     await expect(page).toHaveURL(
-      /\/ledger\/sign-in\?returnTo=%2Fledger%2Fsettings/
+      /\/ledger\/sign-in\?returnTo=\/ledger\/settings/
     );
   });
 
@@ -83,7 +83,7 @@ test.describe("Auth returnTo — Query Param Validation", () => {
 
     // Verify returnTo param is in the URL
     await expect(page).toHaveURL(
-      /\/ledger\/sign-in\?returnTo=%2Fledger%2Fvalhalla/
+      /\/ledger\/sign-in\?returnTo=\/ledger\/valhalla/
     );
   });
 
@@ -109,7 +109,7 @@ test.describe("Auth returnTo — Query Param Validation", () => {
 
     // The evil.com param should be in the URL (not sanitized at route level)
     // but validateReturnTo will reject it when OAuth completes
-    await expect(page).toHaveURL(/returnTo=https%3A%2F%2Fevil\.com/);
+    await expect(page).toHaveURL(/returnTo=https:\/\/evil\.com/);
   });
 
   test("protocol-relative URLs in returnTo are rejected", async ({ page }) => {
