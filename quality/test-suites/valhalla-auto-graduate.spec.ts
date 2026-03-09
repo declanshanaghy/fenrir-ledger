@@ -75,8 +75,9 @@ test.describe("Valhalla Auto-Graduate — Graduated Cards in Valhalla Tab", () =
     // Navigate to Valhalla tab using tab-valhalla ID
     await clickTab(page, "tab-valhalla");
 
-    // Card should appear in Valhalla
-    const cardTiles = page.locator('[data-testid="card-tile"]');
+    // Card should appear in Valhalla (within the active tab panel)
+    const tabPanel = page.locator('[role="tabpanel"][aria-labelledby="tab-valhalla"]');
+    const cardTiles = tabPanel.locator('[data-testid="card-tile"]');
     await expect(cardTiles).toHaveCount(1);
 
     const cardTile = cardTiles.first();
@@ -131,8 +132,9 @@ test.describe("Valhalla Auto-Graduate — Graduated Cards in Valhalla Tab", () =
     // Navigate to Valhalla tab
     await clickTab(page, "tab-valhalla");
 
-    // All 3 cards should appear in Valhalla
-    const cardTiles = page.locator('[data-testid="card-tile"]');
+    // All 3 cards should appear in Valhalla (within the active tab panel)
+    const tabPanel = page.locator('[role="tabpanel"][aria-labelledby="tab-valhalla"]');
+    const cardTiles = tabPanel.locator('[data-testid="card-tile"]');
     await expect(cardTiles).toHaveCount(3);
 
     for (const card of cards) {
@@ -175,8 +177,9 @@ test.describe("Valhalla Auto-Graduate — Graduated Cards Excluded from Active",
     // Navigate to Active tab
     await clickTab(page, "tab-active");
 
-    // Only active card should appear
-    const cardTiles = page.locator('[data-testid="card-tile"]');
+    // Only active card should appear (within the active tab panel)
+    const tabPanel = page.locator('[role="tabpanel"][aria-labelledby="tab-active"]');
+    const cardTiles = tabPanel.locator('[data-testid="card-tile"]');
     await expect(cardTiles).toHaveCount(1);
 
     const activeCardText = page.locator("h3").filter({ hasText: activeCard.cardName });
@@ -281,7 +284,7 @@ test.describe("Valhalla Auto-Graduate — Toggle Met State", () => {
 
     // Card should NOT appear in Valhalla anymore
     await clickTab(page, "tab-valhalla");
-    const valhallaTiles = page.locator('[data-testid="card-tile"]');
+    const valhallaTiles = page.locator('[role="tabpanel"][aria-labelledby="tab-valhalla"]').locator('[data-testid="card-tile"]');
     await expect(valhallaTiles).toHaveCount(0);
   });
 });
@@ -450,7 +453,7 @@ test.describe("Valhalla Auto-Graduate — Edge Cases", () => {
 
     // Card should NOT appear in Valhalla
     await clickTab(page, "tab-valhalla");
-    const valhallaTiles = page.locator('[data-testid="card-tile"]');
+    const valhallaTiles = page.locator('[role="tabpanel"][aria-labelledby="tab-valhalla"]').locator('[data-testid="card-tile"]');
     await expect(valhallaTiles).toHaveCount(0);
   });
 
