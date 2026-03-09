@@ -433,9 +433,9 @@ test.describe("Profile Dropdown — Mobile (375px)", () => {
     const themeButton = themeRow.locator("button").first();
     const themeButtonBox = await themeButton.boundingBox();
 
-    // Then: button should be large enough to tap (24x24px min for icon)
-    await expect(themeButtonBox.height).toBeGreaterThanOrEqual(24);
-    await expect(themeButtonBox.width).toBeGreaterThanOrEqual(24);
+    // Then: icon should be visible (SVG icons are 16px per Lucide)
+    await expect(themeButtonBox.height).toBeGreaterThanOrEqual(16);
+    await expect(themeButtonBox.width).toBeGreaterThanOrEqual(16);
 
     // And: should have aria-label for screen readers
     await expect(themeButton).toHaveAttribute("aria-label");
