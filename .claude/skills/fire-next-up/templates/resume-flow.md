@@ -45,6 +45,7 @@ When a chain is interrupted (session ended, agent failed, context lost), use `--
    - `FiremanDecko → Loki Handoff` or `Heimdall → Loki Handoff` exists but no verdict → spawn Loki.
    - `Loki QA Verdict` exists → check CI status (see Step 5b below).
    - `Freya Handoff` or `FiremanDecko Handoff` (without `→ Loki`) on a research issue → **Research Review** (see Step 5c below).
+   - **Odin design note exists after a handoff** → **Refinement** (see Step 5d below).
 
 5b. **If Loki QA Verdict exists — check CI before declaring complete:**
 
@@ -72,6 +73,39 @@ When a chain is interrupted (session ended, agent failed, context lost), use `--
    4. Execute Odin's decision (plan it / shelve it / drop it).
 
    Do NOT spawn any agents — the orchestrator handles this step directly.
+
+5d. **If Odin posted a design note after a handoff — Refinement:**
+
+   Sometimes an agent completes its step (handoff exists, PR open) but Odin posts
+   additional requirements, corrections, or design notes as issue comments AFTER the
+   handoff. This triggers a refinement pass — re-dispatch the SAME agent to address
+   Odin's notes on the same branch.
+
+   **Detection:** A comment exists AFTER the last handoff that is NOT another agent
+   handoff and NOT a Loki verdict. Typically starts with "## Odin Design Note" or
+   contains directives like "must", "should", "update", "change", "wrong".
+
+   **Action:**
+   1. Read Odin's comment(s) to understand the refinement requirements.
+   2. Re-dispatch the same agent that posted the handoff, on the same branch.
+   3. Use `--branch "main"` in the Depot command — `sandbox-setup.sh` handles checkout.
+   4. The prompt should:
+      - Reference the issue number and existing PR
+      - Quote or summarize Odin's design notes as the primary task
+      - Tell the agent to read the issue comments for full context
+      - Tell the agent this is a refinement, not a fresh implementation
+      - Use the agent's standard template structure (setup → read → implement → verify → push → handoff)
+   5. The handoff comment should be titled `## <Agent> → Loki Handoff (Refined)` to
+      distinguish from the original.
+
+   **Report:**
+   ```
+   **Resuming #<N>**: <title>
+   **Chain:** <full chain>
+   **Completed:** Step <X> (<Agent>) — but Odin posted refinement notes
+   **Action:** Re-dispatching <Agent> for refinement pass
+   **Odin's notes:** <1-2 line summary of what needs to change>
+   ```
 
 ---
 
