@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Sprint 6 Wireframes
+
+| Story | File | Description |
+|-------|------|-------------|
+| #372 — LedgerShell Layout | [wireframes/chrome/ledger-shell.html](wireframes/chrome/ledger-shell.html) | New layout shell for `/ledger/*` routes: slim top bar (48px) + desktop sidebar (220px) + mobile bottom tab bar (56px, 4 tabs); 8 scenarios covering desktop/mobile states, zone comparison vs marketing shell, top bar anatomy, tab bar anatomy, responsive breakpoint table, accessibility requirements, and interaction spec |
+
+---
+
 ## Sprint 5 Wireframes
 
 | Story | File | Description |
@@ -40,6 +48,7 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Dashboard — Tabs Redesign | [wireframes/app/dashboard-tabs.html](wireframes/app/dashboard-tabs.html) | Tabbed layout (Issue #279): The Howl tab + Active tab replacing grid + side panel; 6 scenarios; interaction spec |
 | Valhalla — Hall of the Honored Dead | [wireframes/app/valhalla.html](wireframes/app/valhalla.html) | Tombstone cards, filter bar, empty state |
 | **chrome** | | |
+| LedgerShell — Slim Top Bar + Mobile Bottom Tab Bar | [wireframes/chrome/ledger-shell.html](wireframes/chrome/ledger-shell.html) | New `/ledger/*` layout shell (Issue #372): slim 48px top bar, 220px desktop sidebar, 56px mobile bottom tab bar (4 tabs); 8 scenarios; interaction spec; accessibility table; responsive breakpoint table |
 | TopBar — Anonymous + Signed-In States | [wireframes/chrome/topbar.html](wireframes/chrome/topbar.html) | Global sticky header: 7 scenarios covering anonymous ᛟ rune avatar + upsell prompt, signed-in Google avatar + dropdown, and the avatar transition animation (anonymous-first model, Sprint 3.2) |
 | The Howl Panel | [wireframes/chrome/howl-panel.html](wireframes/chrome/howl-panel.html) | Alert sidebar: active and empty variants |
 | App Footer | [wireframes/chrome/footer.html](wireframes/chrome/footer.html) | Three-column footer: brand wordmark + tagline, nav links (About), team credits + © copyright; Easter Egg #5 (© hover → "Breath of a Fish") and Easter Egg #3 (Loki 7-click) both anchored here |
