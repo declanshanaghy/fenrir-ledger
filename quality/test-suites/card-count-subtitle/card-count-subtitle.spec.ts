@@ -53,9 +53,17 @@ test.describe("Card count subtitle removal (#450)", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
     await page.reload({ waitUntil: "networkidle" });
 
+    // Wait for the tab bar to be rendered with counts
+    // The tab bar should have role="tablist" and contains multiple tab buttons
+    await page.waitForSelector('[role="tablist"]', { timeout: 5000 });
+
     // Verify tab bar shows count badges via aria-label on the span elements
     // TabBadge renders as <span aria-label="N cards">3</span>
     const countBadges = page.locator('span[aria-label*="card"]');
+
+    // Wait for count badges to appear
+    await page.waitForSelector('span[aria-label*="card"]', { timeout: 5000 });
+
     const badgeCount = await countBadges.count();
 
     // Should have at least one count badge visible
