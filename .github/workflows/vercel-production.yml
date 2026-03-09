@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'development/frontend/**'
+      - '.github/workflows/vercel-production.yml'
   workflow_dispatch:
 
 env:
