@@ -6,7 +6,7 @@
  * Settings section for managing the Stripe subscription.
  * Renders three states:
  *   1. Thrall (unsubscribed): value proposition + subscribe CTA
- *   2. Karl (active): subscription details + manage/cancel buttons
+ *   2. Karl (active): subscription details + manage button
  *   3. Canceled: access-until date + resubscribe CTA
  *
  * This component is rendered for both anonymous and authenticated users:
@@ -86,7 +86,6 @@ export function StripeSettings() {
 
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [isManaging, setIsManaging] = useState(false);
-  const [isCancelingAction, setIsCancelingAction] = useState(false);
 
   // Determine state
   const isStripeLinked = isLinked && platform === "stripe";
@@ -99,7 +98,7 @@ export function StripeSettings() {
   const isThrall = !isKarlActive && !isCanceling && !isCanceled;
 
   // Any button in this group loading? Disables siblings.
-  const isAnyLoading = isSubscribing || isManaging || isCancelingAction;
+  const isAnyLoading = isSubscribing || isManaging;
 
   // Format the current period end date
   const formattedPeriodEnd = currentPeriodEnd
@@ -144,29 +143,6 @@ export function StripeSettings() {
     } catch {
       toast.error("Something went wrong. Try again.");
       setIsManaging(false);
-    } finally {
-      clearTimeout(timeout);
-    }
-  }, [openPortal]);
-
-  /**
-   * Handle cancel click -- routes to Stripe Portal cancel flow.
-   * Shows loading state with timeout for error recovery.
-   */
-  const handleCancel = useCallback(async () => {
-    setIsCancelingAction(true);
-    const timeout = setTimeout(() => {
-      setIsCancelingAction(false);
-      toast.error("Something went wrong. Try again.");
-    }, PORTAL_TIMEOUT_MS);
-
-    try {
-      await openPortal();
-      // Portal opens in new tab -- revert loading state after brief delay
-      setTimeout(() => setIsCancelingAction(false), 500);
-    } catch {
-      toast.error("Something went wrong. Try again.");
-      setIsCancelingAction(false);
     } finally {
       clearTimeout(timeout);
     }
@@ -307,17 +283,6 @@ export function StripeSettings() {
                 className="min-h-[44px] w-full sm:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
               >
                 Manage Subscription
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isAnyLoading}
-                isLoading={isCancelingAction}
-                loadingText="Redirecting..."
-                className="min-h-[44px] w-full sm:w-auto font-heading text-[13px]"
-                aria-label="Cancel subscription"
-              >
-                Cancel
               </Button>
             </div>
           </>
