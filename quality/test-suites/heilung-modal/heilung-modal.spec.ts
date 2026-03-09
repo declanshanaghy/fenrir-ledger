@@ -153,8 +153,10 @@ test.describe("Heilung Modal — Opening & Closing", () => {
 
 test.describe("Heilung Modal — Content & Structure", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/ledger", { waitUntil: "load" });
+    await page.goto("/ledger", { waitUntil: "networkidle" });
     await clearAllStorage(page);
+    // Wait for page to be interactive
+    await page.waitForLoadState("domcontentloaded");
     // Open the modal
     await page.keyboard.press("Control+Shift+L");
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
@@ -359,8 +361,9 @@ test.describe("Heilung Modal — Behavior & Form Field Skip", () => {
 
 test.describe("Heilung Modal — Responsive Layout", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/ledger", { waitUntil: "load" });
+    await page.goto("/ledger", { waitUntil: "networkidle" });
     await clearAllStorage(page);
+    await page.waitForLoadState("domcontentloaded");
     // Open modal
     await page.keyboard.press("Control+Shift+L");
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
@@ -443,8 +446,9 @@ test.describe("Heilung Modal — Responsive Layout", () => {
 
 test.describe("Heilung Modal — Aspect Ratio", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/ledger", { waitUntil: "load" });
+    await page.goto("/ledger", { waitUntil: "networkidle" });
     await clearAllStorage(page);
+    await page.waitForLoadState("domcontentloaded");
     // Open the modal
     await page.keyboard.press("Control+Shift+L");
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
