@@ -4,16 +4,21 @@
  * Dashboard — the main card portfolio view.
  *
  * Issue #279 — Redesign: tabbed layout replacing grid + HowlPanel side panel.
+ * Issue #352 — Expand to 5 tabs: The Howl · The Hunt · Active · Valhalla · All
  *
- * Two tabs:
- *   "howl"   — cards needing attention (fee_approaching, promo_expiring, overdue).
- *              Default tab when it has cards. Cards display an urgency bar at top.
- *   "active" — cards in good standing (all non-Howl statuses).
- *              Default tab when The Howl is empty.
+ * Five tabs (left to right):
+ *   "howl"     — cards needing attention (fee_approaching, promo_expiring, overdue).
+ *                Default tab when it has cards. Cards display an urgency bar at top.
+ *   "hunt"     — cards actively earning sign-up bonuses (bonus_open).
+ *   "active"   — cards in good standing (status === "active" only).
+ *                Default tab when The Howl is empty.
+ *   "valhalla" — closed/retired cards (status === "closed").
+ *   "all"      — every card regardless of status.
  *
- * Each card appears in exactly one tab — no duplication.
+ * Each card appears in exactly one status tab AND in the All tab.
  * Tab badges show live count per tab.
- * Tab selection is client-side useState only (no URL params, no persistence).
+ * Tab selection is persisted in localStorage (key: fenrir:dashboard-tab).
+ * URL param ?tab=<id> overrides localStorage on mount.
  *
  * Loki Mode (Easter Egg #3):
  *   Listens for the "fenrir:loki-mode" CustomEvent dispatched by Footer.tsx.
@@ -36,7 +41,12 @@ import { useRagnarok } from "@/contexts/RagnarokContext";
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 
-type DashboardTab = "howl" | "active";
+type DashboardTab = "howl" | "hunt" | "active" | "valhalla" | "all";
+
+const VALID_TABS = new Set<string>(["howl", "hunt", "active", "valhalla", "all"]);
+
+/** localStorage key for tab persistence */
+const TAB_STORAGE_KEY = "fenrir:dashboard-tab";
 
 /** Statuses that belong to The Howl tab. */
 const HOWL_STATUSES = new Set<string>(["fee_approaching", "promo_expiring", "overdue"]);
@@ -44,6 +54,21 @@ const HOWL_STATUSES = new Set<string>(["fee_approaching", "promo_expiring", "ove
 /** Returns true if this card belongs in The Howl tab. */
 function isHowlCard(card: Card): boolean {
   return HOWL_STATUSES.has(card.status);
+}
+
+/** Returns true if this card belongs in The Hunt tab. */
+function isHuntCard(card: Card): boolean {
+  return card.status === "bonus_open";
+}
+
+/** Returns true if this card belongs in The Active tab. */
+function isActiveCard(card: Card): boolean {
+  return card.status === "active";
+}
+
+/** Returns true if this card belongs in The Valhalla tab. */
+function isValhallaCard(card: Card): boolean {
+  return card.status === "closed";
 }
 
 // ─── Loki Mode helpers ────────────────────────────────────────────────────────
@@ -94,6 +119,7 @@ function UrgencyBar({ card }: UrgencyBarProps) {
       : "bg-[hsl(var(--realm-hati))]";       // approaching
 
   // Pulse animation only for overdue (days <= 0)
+  // Disabled via @media prefers-reduced-motion in globals.css
   const pulseClass = days <= 0 ? "animate-muspel-pulse" : "";
 
   // Status label
@@ -149,7 +175,7 @@ interface HowlCardProps {
 
 /**
  * HowlCard — renders a CardTile with an urgency bar above it.
- * Used in The Howl tab only.
+ * Used in The Howl tab and the All tab (for howl-status cards).
  */
 function HowlCard({ card, lokiLabel }: HowlCardProps) {
   return (
@@ -206,6 +232,24 @@ function HowlEmptyState() {
   );
 }
 
+function HuntEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
+      <span
+        aria-hidden="true"
+        className="text-5xl text-muted-foreground/40 select-none"
+        style={{ fontFamily: "serif" }}
+      >
+        ᛜ
+      </span>
+      <p className="text-base font-heading text-foreground">No bounties to claim.</p>
+      <p className="text-sm text-muted-foreground max-w-xs">
+        Add a card with a sign-up bonus to begin the hunt.
+      </p>
+    </div>
+  );
+}
+
 function ActiveEmptyState() {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
@@ -228,24 +272,150 @@ function ActiveEmptyState() {
   );
 }
 
+function ValhallaEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
+      <span
+        aria-hidden="true"
+        className="text-5xl text-muted-foreground/40 select-none"
+        style={{ fontFamily: "serif" }}
+      >
+        ↑
+      </span>
+      <p className="text-base font-heading text-foreground">Valhalla is quiet.</p>
+      <p className="text-sm text-muted-foreground max-w-xs">
+        No cards have been retired yet.
+      </p>
+    </div>
+  );
+}
+
+function AllEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
+      <span
+        aria-hidden="true"
+        className="text-5xl text-muted-foreground/40 select-none"
+        style={{ fontFamily: "serif" }}
+      >
+        ᛟ
+      </span>
+      <p className="text-base font-heading text-foreground">The ledger is empty.</p>
+      <p className="text-sm text-muted-foreground max-w-xs">
+        Add your first card to begin.
+      </p>
+    </div>
+  );
+}
+
+// ─── Tab config ───────────────────────────────────────────────────────────────
+
+/** Ordered tab definitions matching wireframe left-to-right order */
+const TAB_CONFIG = [
+  {
+    id: "howl" as DashboardTab,
+    label: "The Howl",
+    rune: "ᚲ",
+    panelId: "panel-howl",
+    buttonId: "tab-howl",
+  },
+  {
+    id: "hunt" as DashboardTab,
+    label: "The Hunt",
+    rune: "ᛜ",
+    panelId: "panel-hunt",
+    buttonId: "tab-hunt",
+  },
+  {
+    id: "active" as DashboardTab,
+    label: "Active",
+    rune: "ᛉ",
+    panelId: "panel-active",
+    buttonId: "tab-active",
+  },
+  {
+    id: "valhalla" as DashboardTab,
+    label: "Valhalla",
+    rune: "↑",
+    panelId: "panel-valhalla",
+    buttonId: "tab-valhalla",
+  },
+  {
+    id: "all" as DashboardTab,
+    label: "All",
+    rune: "ᛟ",
+    panelId: "panel-all",
+    buttonId: "tab-all",
+  },
+] as const;
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface DashboardProps {
   cards: Card[];
+  /**
+   * Optional tab to activate on first render.
+   * Takes priority over localStorage. Set by page.tsx from URL ?tab= param.
+   */
+  initialTab?: string | undefined;
 }
 
-export function Dashboard({ cards }: DashboardProps) {
+export function Dashboard({ cards, initialTab }: DashboardProps) {
   const { ragnarokActive } = useRagnarok();
 
-  // ── Derive howl / active splits ────────────────────────────────────────────
+  // ── Derive 5-bucket splits ─────────────────────────────────────────────────
   const howlCards = cards.filter(isHowlCard);
-  const activeCards = cards.filter((c) => !isHowlCard(c));
+  const huntCards = cards.filter(isHuntCard);
+  const activeCards = cards.filter(isActiveCard);
+  const valhallaCards = cards.filter(isValhallaCard);
+  // "All" includes every card (including closed)
 
-  // ── Default tab: Howl if it has cards, else Active ─────────────────────────
-  // Initialised once on mount. Mid-session tab switches are preserved.
-  const [activeTab, setActiveTab] = useState<DashboardTab>(() =>
-    howlCards.length > 0 ? "howl" : "active"
-  );
+  // ── Initial tab: prop (URL param) > localStorage > default logic ───────────
+  function getInitialTab(): DashboardTab {
+    // 1. Prop (from URL ?tab= param) takes highest priority
+    if (initialTab && VALID_TABS.has(initialTab)) {
+      return initialTab as DashboardTab;
+    }
+
+    // 2. Restore from localStorage
+    try {
+      const stored = typeof window !== "undefined"
+        ? localStorage.getItem(TAB_STORAGE_KEY)
+        : null;
+      if (stored && VALID_TABS.has(stored)) {
+        return stored as DashboardTab;
+      }
+    } catch {
+      // localStorage unavailable (e.g. private mode lockdown) — ignore
+    }
+
+    // 3. Default: Howl if it has cards, else Active
+    return howlCards.length > 0 ? "howl" : "active";
+  }
+
+  const [activeTab, setActiveTab] = useState<DashboardTab>(getInitialTab);
+
+  // ── Listen for external tab activation (e.g. sidebar Valhalla link) ────────
+  useEffect(() => {
+    function handleActivateTab(e: Event) {
+      const event = e as CustomEvent<{ tab: string }>;
+      const tab = event.detail?.tab;
+      if (tab && VALID_TABS.has(tab)) {
+        setActiveTab(tab as DashboardTab);
+      }
+    }
+    window.addEventListener("fenrir:activate-tab", handleActivateTab);
+    return () => window.removeEventListener("fenrir:activate-tab", handleActivateTab);
+  }, []);
+
+  // ── Persist tab selection to localStorage ─────────────────────────────────
+  useEffect(() => {
+    try {
+      localStorage.setItem(TAB_STORAGE_KEY, activeTab);
+    } catch {
+      // Ignore write errors (e.g. storage full)
+    }
+  }, [activeTab]);
 
   // Track previous howl count for the raven-shake animation on the tab badge
   const prevHowlCountRef = useRef(howlCards.length);
@@ -293,28 +463,61 @@ export function Dashboard({ cards }: DashboardProps) {
   const needsAttention = howlCards;
 
   // ── Keyboard navigation for tab bar (ARIA tabs pattern) ────────────────────
-  function handleTabKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, tab: DashboardTab) {
+  // Arrow keys navigate between tabs (wrapping). Home/End jump to first/last.
+  function handleTabKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, tabIndex: number) {
+    const tabCount = TAB_CONFIG.length;
+    let nextIndex: number | null = null;
+
     if (e.key === "ArrowRight") {
       e.preventDefault();
-      setActiveTab(tab === "howl" ? "active" : "howl");
+      nextIndex = (tabIndex + 1) % tabCount;
     } else if (e.key === "ArrowLeft") {
       e.preventDefault();
-      setActiveTab(tab === "active" ? "howl" : "active");
+      nextIndex = (tabIndex - 1 + tabCount) % tabCount;
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      e.preventDefault();
+      nextIndex = tabCount - 1;
+    }
+
+    if (nextIndex !== null) {
+      const nextTab = TAB_CONFIG[nextIndex];
+      if (nextTab) {
+        setActiveTab(nextTab.id);
+        // Move focus to the newly activated tab button
+        const el = document.getElementById(nextTab.buttonId);
+        el?.focus();
+      }
     }
   }
 
-  if (cards.length === 0) {
+  // Non-closed cards only pass to EmptyState check (closed cards are shown in Valhalla tab)
+  const nonClosedCards = cards.filter((c) => c.status !== "closed");
+  if (nonClosedCards.length === 0 && valhallaCards.length === 0) {
     return <EmptyState />;
   }
 
-  // In Loki mode: shuffle all cards, then re-split into howl / active by status.
+  // In Loki mode: shuffle all cards, then re-split into tabs by status.
   const displayCards = lokiActive ? lokiOrder : cards;
   const displayHowlCards = displayCards.filter(isHowlCard);
-  const displayActiveCards = displayCards.filter((c) => !isHowlCard(c));
+  const displayHuntCards = displayCards.filter(isHuntCard);
+  const displayActiveCards = displayCards.filter(isActiveCard);
+  const displayValhallaCards = displayCards.filter(isValhallaCard);
+
+  // Per-tab badge counts (from non-Loki buckets for consistency)
+  const tabCounts: Record<DashboardTab, number> = {
+    howl: howlCards.length,
+    hunt: huntCards.length,
+    active: activeCards.length,
+    valhalla: valhallaCards.length,
+    all: cards.length,
+  };
 
   return (
     <div>
-      {/* Summary header */}
+      {/* Summary header — total portfolio count including closed */}
       <div className="flex items-center gap-6 mb-4 text-base text-muted-foreground">
         <span>
           <span className="text-foreground font-semibold text-xl">
@@ -332,79 +535,64 @@ export function Dashboard({ cards }: DashboardProps) {
         )}
       </div>
 
-      {/* ── Tab bar ──────────────────────────────────────────────────────────── */}
+      {/* ── Tab bar — 5 tabs ──────────────────────────────────────────────────── */}
       <div
         role="tablist"
         aria-label="Card dashboard tabs"
-        className="flex border-b border-border mb-0 overflow-x-auto scrollbar-hide -webkit-overflow-scrolling-touch"
+        className="flex border-b border-border mb-0 overflow-x-auto -webkit-overflow-scrolling-touch"
         style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
       >
-        {/* The Howl tab */}
-        <button
-          type="button"
-          role="tab"
-          id="tab-howl"
-          aria-selected={activeTab === "howl"}
-          aria-controls="panel-howl"
-          onClick={() => setActiveTab("howl")}
-          onKeyDown={(e) => handleTabKeyDown(e, "howl")}
-          className={cn(
-            "flex items-center gap-2 px-4 py-3 text-sm font-heading uppercase tracking-wide",
-            "border-b-[3px] transition-colors whitespace-nowrap shrink-0",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            activeTab === "howl"
-              ? ragnarokActive
-                ? "border-[hsl(var(--realm-ragnarok-dark))] text-[hsl(var(--realm-ragnarok-dark))]"
-                : "border-[hsl(var(--realm-muspel))] text-[hsl(var(--realm-muspel))]"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {/* ᚲ Kenaz rune — pulses when Howl has cards */}
-          <span
-            aria-hidden="true"
-            className={cn(
-              "text-base leading-none select-none",
-              howlCards.length > 0 && !ragnarokActive
-                ? "animate-muspel-pulse text-[hsl(var(--realm-muspel))]"
-                : ragnarokActive
-                ? "animate-muspel-pulse text-[hsl(var(--realm-ragnarok-dark))]"
-                : "",
-              howlBadgeShake ? "raven-icon--warning" : ""
-            )}
-            onAnimationEnd={() => setHowlBadgeShake(false)}
-            style={{ fontFamily: "serif" }}
-          >
-            ᚲ
-          </span>
-          {ragnarokActive ? "Ragnarök Approaches" : "The Howl"}
-          <TabBadge
-            count={howlCards.length}
-            isHowl={true}
-          />
-        </button>
+        {TAB_CONFIG.map((tab, index) => {
+          const isActive = activeTab === tab.id;
+          const isHowlTab = tab.id === "howl";
+          const count = tabCounts[tab.id];
 
-        {/* Active tab */}
-        <button
-          type="button"
-          role="tab"
-          id="tab-active"
-          aria-selected={activeTab === "active"}
-          aria-controls="panel-active"
-          onClick={() => setActiveTab("active")}
-          onKeyDown={(e) => handleTabKeyDown(e, "active")}
-          className={cn(
-            "flex items-center gap-2 px-4 py-3 text-sm font-heading uppercase tracking-wide",
-            "border-b-[3px] transition-colors whitespace-nowrap shrink-0",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            activeTab === "active"
-              ? "border-gold text-gold"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <span aria-hidden="true" style={{ fontFamily: "serif" }}>ᛉ</span>
-          Active
-          <TabBadge count={activeCards.length} />
-        </button>
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              id={tab.buttonId}
+              aria-selected={isActive}
+              aria-controls={tab.panelId}
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => setActiveTab(tab.id)}
+              onKeyDown={(e) => handleTabKeyDown(e, index)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-3 text-sm font-heading uppercase tracking-wide",
+                "border-b-[3px] transition-colors whitespace-nowrap shrink-0 min-h-[44px]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                isActive
+                  ? isHowlTab
+                    ? ragnarokActive
+                      ? "border-[hsl(var(--realm-ragnarok-dark))] text-[hsl(var(--realm-ragnarok-dark))]"
+                      : "border-[hsl(var(--realm-muspel))] text-[hsl(var(--realm-muspel))]"
+                    : "border-gold text-gold"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {/* Rune icon */}
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "text-base leading-none select-none",
+                  isHowlTab && howlCards.length > 0 && !ragnarokActive
+                    ? "animate-muspel-pulse text-[hsl(var(--realm-muspel))]"
+                    : isHowlTab && ragnarokActive
+                    ? "animate-muspel-pulse text-[hsl(var(--realm-ragnarok-dark))]"
+                    : "",
+                  isHowlTab && howlBadgeShake ? "raven-icon--warning" : ""
+                )}
+                onAnimationEnd={isHowlTab ? () => setHowlBadgeShake(false) : undefined}
+                style={{ fontFamily: "serif" }}
+              >
+                {tab.rune}
+              </span>
+              {isHowlTab && ragnarokActive ? "Ragnarök Approaches" : tab.label}
+              <TabBadge count={count} isHowl={isHowlTab} />
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Tab panels ───────────────────────────────────────────────────────── */}
@@ -414,6 +602,7 @@ export function Dashboard({ cards }: DashboardProps) {
         role="tabpanel"
         id="panel-howl"
         aria-labelledby="tab-howl"
+        tabIndex={0}
         hidden={activeTab !== "howl"}
         className="pt-5"
       >
@@ -432,11 +621,36 @@ export function Dashboard({ cards }: DashboardProps) {
         )}
       </div>
 
+      {/* The Hunt panel */}
+      <div
+        role="tabpanel"
+        id="panel-hunt"
+        aria-labelledby="tab-hunt"
+        tabIndex={0}
+        hidden={activeTab !== "hunt"}
+        className="pt-5"
+      >
+        {displayHuntCards.length === 0 ? (
+          <HuntEmptyState />
+        ) : (
+          <AnimatedCardGrid
+            cards={displayHuntCards}
+            renderCard={(card) => (
+              <CardTile
+                card={card}
+                lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
+              />
+            )}
+          />
+        )}
+      </div>
+
       {/* Active panel */}
       <div
         role="tabpanel"
         id="panel-active"
         aria-labelledby="tab-active"
+        tabIndex={0}
         hidden={activeTab !== "active"}
         className="pt-5"
       >
@@ -451,6 +665,64 @@ export function Dashboard({ cards }: DashboardProps) {
                 lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
               />
             )}
+          />
+        )}
+      </div>
+
+      {/* Valhalla panel — closed cards */}
+      <div
+        role="tabpanel"
+        id="panel-valhalla"
+        aria-labelledby="tab-valhalla"
+        tabIndex={0}
+        hidden={activeTab !== "valhalla"}
+        className="pt-5"
+      >
+        {displayValhallaCards.length === 0 ? (
+          <ValhallaEmptyState />
+        ) : (
+          <AnimatedCardGrid
+            cards={displayValhallaCards}
+            renderCard={(card) => (
+              <CardTile
+                card={card}
+                lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
+              />
+            )}
+          />
+        )}
+      </div>
+
+      {/* All panel — every card regardless of status */}
+      <div
+        role="tabpanel"
+        id="panel-all"
+        aria-labelledby="tab-all"
+        tabIndex={0}
+        hidden={activeTab !== "all"}
+        className="pt-5"
+      >
+        {displayCards.length === 0 ? (
+          <AllEmptyState />
+        ) : (
+          <AnimatedCardGrid
+            cards={displayCards}
+            renderCard={(card) => {
+              if (isHowlCard(card)) {
+                return (
+                  <HowlCard
+                    card={card}
+                    lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
+                  />
+                );
+              }
+              return (
+                <CardTile
+                  card={card}
+                  lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
+                />
+              );
+            }}
           />
         )}
       </div>

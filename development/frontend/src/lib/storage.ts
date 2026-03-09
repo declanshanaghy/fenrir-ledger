@@ -308,14 +308,15 @@ export function getAllCardsGlobal(householdId: string): Card[] {
 }
 
 /**
- * Reads all active (non-deleted, non-closed) cards for a given household,
- * sorted by most recently updated. Excludes cards with status === "closed"
- * so they do not appear on the main dashboard.
+ * Reads all active (non-deleted) cards for a given household, sorted by most
+ * recently updated. Includes closed cards so the Valhalla dashboard tab can
+ * display them alongside active cards.
  *
- * Closed cards are visible via getClosedCards() and the /valhalla route.
+ * Previously excluded cards with status === "closed"; that filter was removed
+ * in Issue #352 to support the 5-tab dashboard (Valhalla tab shows closed cards).
  *
  * @param householdId - The household to filter by
- * @returns Array of active, non-closed Card objects for the household
+ * @returns Array of non-deleted Card objects for the household (all statuses)
  */
 export function getCards(householdId: string): Card[] {
   const all = getAllCards(householdId);
@@ -323,8 +324,7 @@ export function getCards(householdId: string): Card[] {
     .filter(
       (c) =>
         c.householdId === householdId &&
-        !c.deletedAt &&
-        c.status !== "closed"
+        !c.deletedAt
     )
     .sort(
       (a, b) =>

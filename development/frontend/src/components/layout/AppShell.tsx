@@ -11,7 +11,7 @@
  *   Row 2: SideNav (left) + main content + Footer (right)
  */
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import type { ReactNode } from "react";
 import { TopBar } from "./TopBar";
@@ -95,7 +95,10 @@ export function AppShell({ children }: AppShellProps) {
       <TopBar />
 
       <div className="flex flex-1 overflow-hidden">
-        <SideNav collapsed={collapsed} onToggle={handleToggle} />
+        {/* SideNav uses useSearchParams — wrap in Suspense per Next.js requirement */}
+        <Suspense fallback={<div className={collapsed ? "w-14 shrink-0 border-r border-border" : "w-56 shrink-0 border-r border-border"} />}>
+          <SideNav collapsed={collapsed} onToggle={handleToggle} />
+        </Suspense>
         {/* Main content + footer in a scrollable column */}
         <div className="flex flex-col flex-1 overflow-auto">
           <main className="flex-1">{children}</main>
