@@ -263,19 +263,16 @@ test.describe("Velocity Management Karl Tier Gating — Issue #378", () => {
 
     // Check for key elements from common upsell dialog
     // - Header: "Karl Tier Feature" or similar
-    await expect(dialog.locator("text=/karl|premium/i")).toBeVisible();
+    await expect(dialog.locator("text=/karl|premium/i").first()).toBeVisible();
 
     // - Feature name or description
-    await expect(dialog.locator("text=/hunt|velocity|application/i")).toBeVisible();
+    await expect(dialog.locator("text=/hunt|velocity|application/i").first()).toBeVisible();
 
     // - Upgrade button
-    await expect(
-      dialog.getByRole("button", { name: /Upgrade|upgrade/i })
-    ).toBeVisible();
+    const upgradeBtn = dialog.getByRole("button", { name: /Upgrade|upgrade/i }).first();
+    await expect(upgradeBtn).toBeVisible();
 
-    // - Dismiss button (Not now or similar)
-    const dismissBtn = dialog.getByRole("button", { name: /Not now|cancel|close/i });
-    // Not all implementations have "Not now", so we don't require it here
+    // - Dismiss button (Not now or similar) — optional
   });
 
   // ── Test 8: Upsell dialog dismiss via "Not now" button ─────────────────
