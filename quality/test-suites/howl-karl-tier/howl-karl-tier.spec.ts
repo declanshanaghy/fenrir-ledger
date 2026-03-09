@@ -60,14 +60,19 @@ async function seedEntitlement(
 
 /**
  * Navigate to dashboard, seeding household and entitlement first.
+ * Follows pattern from dashboard-5-tabs.spec.ts
  */
 async function goToDashboardWithTier(page: Page, tier: "thrall" | "karl") {
-  // Navigate first to establish origin, then seed data
+  // Navigate to home first to establish origin
   await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  // Clear and seed
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await seedEntitlement(page, ANONYMOUS_HOUSEHOLD_ID, tier);
   await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, []); // Empty cards for clean test
+
+  // Navigate to dashboard and wait for full load
   await page.goto("/dashboard", { waitUntil: "networkidle" });
 }
 
