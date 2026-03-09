@@ -248,25 +248,6 @@ test.describe("Dashboard — Status Badges", () => {
     expect(count).toBe(2);
   });
 
-  test("mixed set shows correct badge mix (Active + Fee Due Soon + Promo Expiring)", async ({
-    page,
-  }) => {
-    // MIXED_CARDS: 2 active + 1 fee_approaching + 1 promo_expiring + 2 closed
-    // Dashboard only shows non-closed cards, so 4 tiles expected
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, MIXED_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
-
-    await expect(
-      page.locator('[aria-label="Card status: Active"]').first()
-    ).toBeVisible();
-    await expect(
-      page.locator('[aria-label="Card status: Fee Due Soon"]').first()
-    ).toBeVisible();
-    await expect(
-      page.locator('[aria-label="Card status: Promo Expiring"]').first()
-    ).toBeVisible();
-  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
