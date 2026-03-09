@@ -15,6 +15,7 @@ The script generates a complete MDX file with:
 - Frontmatter: `title`, `date`, `rune`, `excerpt`, `slug`
 - Chronicle body inside `<div className="chronicle-page">` — styled via `chronicle.css`
 - All attributes use JSX-compatible `className` (not `class`)
+- Output is consumed by `/chronicles` (index) and `/chronicles/{slug}` (detail) pages
 
 ## Component Rules
 
