@@ -44,23 +44,19 @@ const MOCK_USER = {
  * localStorage in the browser context properly.
  */
 async function seedAuthSession(page) {
-  const now = new Date();
-  const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+  const now = Date.now();
+  const expiresAt = now + 60 * 60 * 1000; // 1 hour from now
 
   const session = {
     user: {
       ...MOCK_USER,
       sub: "test-user-123", // Google user ID
-      aud: "test-audience",
-      iss: "https://accounts.google.com",
-      iat: Math.floor(now.getTime() / 1000),
-      exp: Math.floor(oneHourFromNow.getTime() / 1000),
     },
     account: {
       type: "oauth",
       provider: "google",
     },
-    refresh_token: "test-refresh-token",
+    expires_at: expiresAt, // milliseconds since epoch - required for isSessionValid()
   };
 
   // Store session in localStorage via page.evaluate (browser context)
