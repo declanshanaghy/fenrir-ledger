@@ -181,11 +181,13 @@ test.describe("Issue #375: Brandify Session for Chronicles", () => {
      * We verify that /chronicles is the canonical location now.
      */
 
-    await page.goto("/chronicles");
+    const response = await page.goto("/chronicles");
 
     // /chronicles is the canonical location
     expect(page.url()).toContain("/chronicles");
-    expect(page.status()).toBeLessThan(500);
+    if (response) {
+      expect(response.status()).toBeLessThan(500);
+    }
   });
 
   test("AC 4b: Chronicles list is not broken by old sessions/ references", async ({ page }) => {
