@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — Sidebar Removal + Dropdown Settings + Rotary Theme Toggle — Issue #403</title>
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; line-height: 1.5; padding: 32px 24px; max-width: 1200px; margin: 0 auto; }
+
+    /* ── Wireframe primitives — structure only, no color ── */
+    .wf-border   { border: 1px solid; }
+    .wf-dashed   { border: 1px dashed; }
+    .wf-fill     { background: #f0f0f0; }
+    .wf-fill-md  { background: #e0e0e0; }
+    .wf-fill-dk  { background: #d0d0d0; }
+    .wf-label    { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; }
+    .wf-note     { font-size: 11px; font-style: italic; opacity: 0.7; }
+    .wf-divider  { border-top: 1px solid; margin: 4px 0; }
+
+    /* ── Page structure ── */
+    h1  { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+    h2  { font-size: 16px; font-weight: bold; margin-top: 40px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid; }
+    h3  { font-size: 13px; font-weight: bold; margin-top: 24px; margin-bottom: 8px; }
+    p   { margin-bottom: 8px; }
+
+    .meta { font-size: 12px; opacity: 0.65; margin-bottom: 32px; }
+
+    .scenario-grid {
+      display: grid;
+      gap: 32px;
+    }
+    .scenario-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    .scenario-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+    }
+
+    .scenario { }
+    .scenario-label { font-size: 11px; font-weight: bold; text-transform: uppercase; opacity: 0.55; margin-bottom: 6px; letter-spacing: 0.06em; }
+    .scenario-title { font-size: 14px; font-weight: bold; margin-bottom: 12px; }
+
+    /* ── Frame containers ── */
+    .frame-desktop {
+      width: 100%;
+      height: 520px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+    .frame-mobile {
+      width: 375px;
+      height: 668px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      margin: 0 auto;
+    }
+
+    /* ── Chrome components ── */
+    .top-bar {
+      height: 48px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .top-bar-logo { font-size: 11px; font-weight: bold; letter-spacing: 0.1em; }
+    .top-bar-center { font-size: 11px; opacity: 0.6; }
+    .top-bar-right { display: flex; align-items: center; gap: 4px; }
+
+    /* Icon button */
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    .icon-btn-sm {
+      width: 32px;
+      height: 32px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .avatar-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border: 1px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+    .avatar-lg {
+      width: 40px;
+      height: 40px;
+      border: 1px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    /* ── Sidebar (BEFORE — for comparison only) ── */
+    .sidebar-before {
+      width: 56px;
+      border-right: 1px solid;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-before-wide {
+      width: 220px;
+      border-right: 1px solid;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    /* ── Content area ── */
+    .content-area {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    .main-content {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: auto;
+    }
+    .main-content-fullwidth {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* content placeholders */
+    .content-block {
+      height: 48px;
+      background: #f0f0f0;
+      border: 1px dashed;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 11px;
+      opacity: 0.8;
+    }
+    .content-card-row {
+      display: flex;
+      gap: 8px;
+    }
+    .content-card {
+      flex: 1;
+      height: 80px;
+      border: 1px dashed;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+    .content-card-wide {
+      height: 80px;
+      border: 1px dashed;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      width: 100%;
+    }
+
+    /* ── Bottom tab bar (mobile) ── */
+    .bottom-tabs {
+      height: 56px;
+      border-top: 1px solid;
+      display: flex;
+      flex-shrink: 0;
+    }
+    .bottom-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-size: 9px;
+      border-right: 1px solid;
+    }
+    .bottom-tab:last-child { border-right: none; }
+    .bottom-tab-icon { width: 20px; height: 20px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+    .bottom-tab.active { font-weight: bold; }
+
+    /* ── Profile dropdown ── */
+    .dropdown-panel {
+      position: absolute;
+      right: 0;
+      top: 52px;
+      width: 256px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      background: white;
+    }
+    .dropdown-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .dropdown-header-info { display: flex; flex-direction: column; min-width: 0; }
+    .dropdown-header-name { font-size: 13px; font-weight: bold; }
+    .dropdown-header-email { font-size: 11px; opacity: 0.65; }
+    .dropdown-header-flavor { font-size: 11px; font-style: italic; opacity: 0.5; }
+
+    .dropdown-row {
+      padding: 10px 16px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 44px;
+    }
+    .dropdown-row-label { font-size: 12px; opacity: 0.7; }
+    .dropdown-action {
+      padding: 12px 16px;
+      font-size: 13px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* ── Rotary theme toggle ── */
+    .rotary-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .rotary-btn-sm {
+      width: 36px;
+      height: 36px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    /* old segmented toggle (for comparison) */
+    .segmented-toggle {
+      display: flex;
+      border: 1px solid;
+      overflow: hidden;
+    }
+    .seg-btn {
+      width: 44px;
+      height: 36px;
+      border-right: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+    .seg-btn:last-child { border-right: none; }
+    .seg-btn.active { background: #e0e0e0; font-weight: bold; }
+
+    /* ── Sidebar nav item (for reference scenario) ── */
+    .sidenav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      border-left: 2px solid transparent;
+    }
+    .sidenav-item.active { border-left-color: currentColor; font-weight: bold; }
+    .sidenav-icon { width: 16px; height: 16px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 8px; flex-shrink: 0; }
+
+    /* ── Annotation callouts ── */
+    .annotation {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+    .ann-num {
+      width: 18px;
+      height: 18px;
+      border: 1px solid;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .ann-text { font-size: 12px; }
+
+    /* ── Cycle diagram ── */
+    .cycle-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 0;
+    }
+    .cycle-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .cycle-arrow { font-size: 18px; opacity: 0.5; }
+    .cycle-label { font-size: 10px; text-align: center; }
+
+    /* ── Spec table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
+    th { text-align: left; padding: 6px 8px; border-bottom: 2px solid; font-size: 11px; text-transform: uppercase; }
+    td { padding: 6px 8px; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Diff highlight ── */
+    .removed { text-decoration: line-through; opacity: 0.5; }
+    .added   { font-weight: bold; }
+
+    /* ── Layout comparison bar ── */
+    .compare-bar {
+      display: flex;
+      gap: 16px;
+      margin: 12px 0;
+    }
+    .compare-side { flex: 1; border: 1px solid; padding: 10px; }
+    .compare-title { font-size: 11px; font-weight: bold; margin-bottom: 6px; text-transform: uppercase; opacity: 0.65; }
+
+    /* ── Width annotation overlay ── */
+    .width-label {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      font-size: 9px;
+      font-weight: bold;
+      opacity: 0.5;
+    }
+
+    /* responsive */
+    @media (max-width: 700px) {
+      .scenario-grid-2, .scenario-grid-3 { grid-template-columns: 1fr; }
+      .frame-mobile { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Issue #403 — Sidebar Removal, Dropdown Settings &amp; Rotary Theme Toggle</h1>
+<p class="meta">
+  Designer: Luna &nbsp;|&nbsp; Date: 2026-03-09 &nbsp;|&nbsp; Branch: fix/issue-403-remove-sidebar-dropdown<br>
+  Wireframe file: <code>ux/wireframes/chrome/sidebar-removal-dropdown-settings.html</code><br>
+  Structure only — no color, no custom fonts, no shadows.<br>
+  Interaction spec: <code>ux/wireframes/chrome/sidebar-removal-interaction-spec.md</code>
+</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Section 1 — Dashboard Layout: Sidebar REMOVED</h2>
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<p>The sidebar is entirely removed from both desktop and mobile. Content takes full width of the viewport minus the top bar. No sidebar toggle / hamburger button anywhere.</p>
+
+<div class="scenario-grid-2">
+
+  <!-- SCENARIO 1A: Desktop BEFORE (for comparison) -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 1A — BEFORE (reference only)</div>
+    <div class="scenario-title">Desktop: Current layout with sidebar</div>
+    <div class="frame-desktop">
+      <!-- Top bar -->
+      <div class="top-bar">
+        <div class="top-bar-logo">ᛟ FENRIR LEDGER</div>
+        <div class="top-bar-center">← Back to site</div>
+        <div class="top-bar-right">
+          <div class="icon-btn wf-fill" title="Theme toggle (icon variant)">☀</div>
+          <div class="avatar-btn"><div class="avatar">ᛟ</div></div>
+        </div>
+      </div>
+      <!-- Body -->
+      <div class="content-area">
+        <!-- Sidebar (220px, collapsible) -->
+        <div class="sidebar-before-wide">
+          <nav style="padding: 8px 6px; display:flex; flex-direction:column; gap:2px;">
+            <div class="sidenav-item active">
+              <div class="sidenav-icon">▤</div>
+              <span>Cards</span>
+            </div>
+            <div class="sidenav-item">
+              <div class="sidenav-icon">↑</div>
+              <span>Valhalla</span>
+            </div>
+            <div class="sidenav-item">
+              <div class="sidenav-icon">⚙</div>
+              <span class="removed">Settings</span>
+            </div>
+          </nav>
+          <div style="padding: 6px; border-top: 1px solid; margin-top: auto;">
+            <div style="display:flex; align-items:center; gap:6px; padding:6px 4px; font-size:11px;">
+              <div class="sidenav-icon">⟨</div>
+              <span>Collapse</span>
+            </div>
+          </div>
+        </div>
+        <!-- Content: constrained by sidebar -->
+        <div class="main-content">
+          <div class="width-label">~calc(100% - 220px)</div>
+          <div class="content-block">Dashboard tabs bar (Cards | Valhalla | The Howl)</div>
+          <div class="content-card-row">
+            <div class="content-card">Card</div>
+            <div class="content-card">Card</div>
+            <div class="content-card">Card</div>
+          </div>
+          <div class="content-card-row">
+            <div class="content-card">Card</div>
+            <div class="content-card">Card</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="wf-note" style="margin-top:6px;">Current: sidebar occupies 56–220px. Content width is reduced accordingly.</p>
+  </div>
+
+  <!-- SCENARIO 1B: Desktop AFTER -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 1B — AFTER</div>
+    <div class="scenario-title">Desktop: No sidebar — full-width content</div>
+    <div class="frame-desktop">
+      <!-- Top bar: unchanged -->
+      <div class="top-bar">
+        <div class="top-bar-logo">ᛟ FENRIR LEDGER</div>
+        <div class="top-bar-center">← Back to site</div>
+        <div class="top-bar-right">
+          <div class="icon-btn" title="Rotary theme toggle — see Section 3">☀</div>
+          <div class="avatar-btn"><div class="avatar">ᛟ</div></div>
+        </div>
+      </div>
+      <!-- Body: NO sidebar -->
+      <div class="content-area">
+        <div class="main-content-fullwidth">
+          <div class="width-label" style="font-weight:bold; opacity:0.8;">100% width</div>
+          <div class="content-block">Dashboard tabs bar (Cards | Valhalla | The Howl)</div>
+          <div class="content-card-row">
+            <div class="content-card">Card</div>
+            <div class="content-card">Card</div>
+            <div class="content-card">Card</div>
+            <div class="content-card">Card</div>
+          </div>
+          <div class="content-card-row">
+            <div class="content-card">Card</div>
+            <div class="content-card">Card</div>
+            <div class="content-card">Card</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="wf-note" style="margin-top:6px;">After: sidebar removed entirely. Content spans full viewport width. No hamburger/collapse button.</p>
+  </div>
+
+</div><!-- end scenario-grid-2 -->
+
+<!-- Mobile: Before vs After -->
+<h3>Mobile Views: Before vs After</h3>
+<div class="scenario-grid-2">
+
+  <!-- SCENARIO 1C: Mobile BEFORE -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 1C — BEFORE (reference only)</div>
+    <div class="scenario-title">Mobile 375px: Current layout</div>
+    <div class="frame-mobile">
+      <!-- Top bar -->
+      <div class="top-bar">
+        <div class="top-bar-logo" style="font-size:10px;">ᛟ FL</div>
+        <div class="top-bar-right">
+          <div class="icon-btn" style="width:44px;height:44px;font-size:10px;">←</div>
+          <div class="icon-btn" style="width:44px;height:44px;font-size:10px;">☀</div>
+          <div class="avatar-btn"><div class="avatar">ᛟ</div></div>
+        </div>
+      </div>
+      <!-- Content (no sidebar on mobile currently) -->
+      <div class="content-area" style="position:relative;">
+        <div class="main-content-fullwidth">
+          <div class="content-block" style="font-size:10px;">Dashboard tabs bar</div>
+          <div class="content-card-row">
+            <div class="content-card">Card</div>
+            <div class="content-card">Card</div>
+          </div>
+          <div class="content-card-wide">Card</div>
+        </div>
+      </div>
+      <!-- Bottom tab bar: BEFORE (4 tabs incl. Settings) -->
+      <div class="bottom-tabs">
+        <div class="bottom-tab active">
+          <div class="bottom-tab-icon">▤</div>
+          <span>Dashboard</span>
+        </div>
+        <div class="bottom-tab">
+          <div class="bottom-tab-icon">+</div>
+          <span>Add</span>
+        </div>
+        <div class="bottom-tab">
+          <div class="bottom-tab-icon">↑</div>
+          <span>Valhalla</span>
+        </div>
+        <div class="bottom-tab" style="border-right:none;">
+          <div class="bottom-tab-icon">⚙</div>
+          <span class="removed">Settings</span>
+        </div>
+      </div>
+    </div>
+    <p class="wf-note" style="margin-top:6px;">Current: 4 bottom tabs including Settings.</p>
+  </div>
+
+  <!-- SCENARIO 1D: Mobile AFTER -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 1D — AFTER</div>
+    <div class="scenario-title">Mobile 375px: Settings removed from bottom tabs</div>
+    <div class="frame-mobile">
+      <!-- Top bar: unchanged -->
+      <div class="top-bar">
+        <div class="top-bar-logo" style="font-size:10px;">ᛟ FL</div>
+        <div class="top-bar-right">
+          <div class="icon-btn" style="width:44px;height:44px;font-size:10px;">←</div>
+          <div class="icon-btn" style="width:44px;height:44px;font-size:10px;">☀</div>
+          <div class="avatar-btn"><div class="avatar">ᛟ</div></div>
+        </div>
+      </div>
+      <!-- Content: unchanged on mobile -->
+      <div class="content-area">
+        <div class="main-content-fullwidth">
+          <div class="content-block" style="font-size:10px;">Dashboard tabs bar</div>
+          <div class="content-card-row">
+            <div class="content-card">Card</div>
+            <div class="content-card">Card</div>
+          </div>
+          <div class="content-card-wide">Card</div>
+        </div>
+      </div>
+      <!-- Bottom tab bar: AFTER (3 tabs, Settings removed) -->
+      <div class="bottom-tabs">
+        <div class="bottom-tab active">
+          <div class="bottom-tab-icon">▤</div>
+          <span>Dashboard</span>
+        </div>
+        <div class="bottom-tab">
+          <div class="bottom-tab-icon">+</div>
+          <span>Add</span>
+        </div>
+        <div class="bottom-tab" style="border-right:none;">
+          <div class="bottom-tab-icon">↑</div>
+          <span>Valhalla</span>
+        </div>
+      </div>
+    </div>
+    <p class="wf-note" style="margin-top:6px;">After: 3 bottom tabs (Settings removed — accessed via profile dropdown in top bar instead). Each tab grows to fill the now-wider slot.</p>
+  </div>
+
+</div><!-- end scenario-grid-2 mobile -->
+
+<!-- Layout change summary table -->
+<h3>Layout Change Summary</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Before</th>
+      <th>After</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Desktop sidebar</td>
+      <td>220px (collapsible to 56px) — visible md+</td>
+      <td><strong>Removed entirely</strong></td>
+    </tr>
+    <tr>
+      <td>Sidebar toggle / hamburger</td>
+      <td>PanelLeftClose / PanelLeftOpen button inside sidebar</td>
+      <td><strong>Removed entirely</strong></td>
+    </tr>
+    <tr>
+      <td>Desktop content width</td>
+      <td>calc(100vw - 56px) to calc(100vw - 220px)</td>
+      <td><strong>100% viewport width</strong></td>
+    </tr>
+    <tr>
+      <td>Mobile bottom tabs</td>
+      <td>4 tabs: Dashboard | Add | Valhalla | Settings</td>
+      <td><strong>3 tabs: Dashboard | Add | Valhalla</strong></td>
+    </tr>
+    <tr>
+      <td>Desktop sidebar nav: Settings link</td>
+      <td>Visible in sidebar</td>
+      <td><strong>Removed (moved to profile dropdown)</strong></td>
+    </tr>
+    <tr>
+      <td>Desktop sidebar nav: Cards link</td>
+      <td>Visible in sidebar</td>
+      <td><strong>Removed (tabs handle navigation)</strong></td>
+    </tr>
+    <tr>
+      <td>Desktop sidebar nav: Valhalla link</td>
+      <td>Visible in sidebar</td>
+      <td><strong>Removed (tabs handle navigation)</strong></td>
+    </tr>
+    <tr>
+      <td>LedgerShell collapsed state / localStorage</td>
+      <td>fenrir:sidenav-collapsed stored</td>
+      <td><strong>State removed (no sidebar to collapse)</strong></td>
+    </tr>
+    <tr>
+      <td>SideNav component</td>
+      <td>development/frontend/src/components/layout/SideNav.tsx</td>
+      <td><strong>Delete file + all imports</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Section 2 — Profile Dropdown: Settings + Rotary Theme Toggle</h2>
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<p>The profile dropdown gains a <strong>Settings</strong> link (between theme toggle row and Sign Out). The three-button segmented theme picker is replaced with a single rotary icon button matching the marketing site pattern.</p>
+
+<div class="scenario-grid-2">
+
+  <!-- SCENARIO 2A: Desktop signed-in dropdown — BEFORE -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 2A — BEFORE (reference only)</div>
+    <div class="scenario-title">Desktop: Current profile dropdown (signed-in)</div>
+
+    <div style="position:relative; height: 320px; border: 1px dashed; padding: 8px;">
+      <!-- Simulated top-bar context -->
+      <div style="display:flex; justify-content:flex-end; align-items:center; gap:4px; padding: 4px 8px; border-bottom: 1px solid; margin-bottom: 4px;">
+        <div class="icon-btn">☀</div>
+        <div class="avatar-btn"><div class="avatar wf-fill-md" style="border-style:dashed;">👤</div></div>
+      </div>
+
+      <div class="dropdown-panel" style="position:static; margin: 0 auto; width: 256px;">
+        <!-- Profile header -->
+        <div class="dropdown-header">
+          <div class="avatar-lg wf-fill-md">👤</div>
+          <div class="dropdown-header-info">
+            <span class="dropdown-header-name">Sigrid Eriksen</span>
+            <span class="dropdown-header-email">sigrid@example.com</span>
+            <span class="dropdown-header-flavor">The wolf is named.</span>
+          </div>
+        </div>
+
+        <!-- Theme row: OLD segmented 3-button picker -->
+        <div class="dropdown-row">
+          <span class="dropdown-row-label">Theme</span>
+          <div class="segmented-toggle">
+            <div class="seg-btn active">☀</div>
+            <div class="seg-btn">🌙</div>
+            <div class="seg-btn">⊙</div>
+          </div>
+        </div>
+
+        <!-- Sign out -->
+        <div class="dropdown-action">Sign out</div>
+      </div>
+    </div>
+    <p class="wf-note" style="margin-top:6px;">Current: segmented 3-button toggle (132px wide), no Settings link.</p>
+  </div>
+
+  <!-- SCENARIO 2B: Desktop signed-in dropdown — AFTER -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 2B — AFTER</div>
+    <div class="scenario-title">Desktop: Updated profile dropdown (signed-in)</div>
+
+    <div style="position:relative; height: 360px; border: 1px dashed; padding: 8px;">
+      <!-- Simulated top-bar context -->
+      <div style="display:flex; justify-content:flex-end; align-items:center; gap:4px; padding: 4px 8px; border-bottom: 1px solid; margin-bottom: 4px;">
+        <div class="icon-btn" title="Rotary toggle — in top bar (removed from here per theme-in-dropdown only pattern)">☀</div>
+        <div class="avatar-btn"><div class="avatar wf-fill-md" style="border-style:dashed;">👤</div></div>
+      </div>
+
+      <div class="dropdown-panel" style="position:static; margin: 0 auto; width: 256px;">
+        <!-- Profile header — unchanged -->
+        <div class="dropdown-header">
+          <div class="avatar-lg wf-fill-md">👤</div>
+          <div class="dropdown-header-info">
+            <span class="dropdown-header-name">Sigrid Eriksen</span>
+            <span class="dropdown-header-email">sigrid@example.com</span>
+            <span class="dropdown-header-flavor">The wolf is named.</span>
+          </div>
+        </div>
+
+        <!-- Theme row: NEW single rotary button -->
+        <div class="dropdown-row">
+          <span class="dropdown-row-label">Theme</span>
+          <div class="rotary-btn-sm" title="Rotary theme toggle — click cycles light→dark→system">☀</div>
+        </div>
+
+        <!-- Settings — NEW -->
+        <div class="dropdown-row" style="border-bottom:1px solid;">
+          <span style="font-size:13px;">Settings</span>
+          <span style="font-size:12px; opacity:0.5;">→</span>
+        </div>
+
+        <!-- Sign out -->
+        <div class="dropdown-action">Sign out</div>
+      </div>
+    </div>
+    <p class="wf-note" style="margin-top:6px;"><strong>After:</strong> rotary single-button toggle (44×36px) + Settings link above Sign out.</p>
+  </div>
+
+</div><!-- end scenario-grid-2 dropdown desktop -->
+
+<!-- Mobile dropdown -->
+<h3>Mobile Profile Dropdown</h3>
+<div class="scenario-grid-2">
+
+  <!-- SCENARIO 2C: Mobile anon upsell panel - AFTER -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 2C — AFTER</div>
+    <div class="scenario-title">Mobile 375px: Anonymous upsell panel</div>
+    <p class="wf-note">Anon panel: no Settings link needed (user not signed in). Rotary toggle replaces segmented toggle here too.</p>
+
+    <div class="frame-mobile">
+      <div class="top-bar">
+        <div class="top-bar-logo" style="font-size:10px;">ᛟ FL</div>
+        <div class="top-bar-right">
+          <div class="icon-btn" style="width:44px;height:44px;font-size:10px;">←</div>
+          <div class="icon-btn" style="width:44px;height:44px;font-size:10px;">☀</div>
+          <div class="avatar-btn"><div class="avatar">ᛟ</div></div>
+        </div>
+      </div>
+      <!-- Anon upsell panel overlay -->
+      <div style="position:absolute; right:8px; top:56px; width:260px; border:1px solid; padding:16px; display:flex; flex-direction:column; gap:12px; background:white; z-index:10;">
+        <p style="font-size:12px; font-style:italic; opacity:0.7;">The wolf runs unnamed. Your chains are stored here alone.</p>
+        <p style="font-size:12px;">Sign in to back up your cards and access them from any device.</p>
+        <!-- Rotary toggle row in anon panel -->
+        <div style="display:flex; align-items:center; justify-content:space-between; padding-top:4px;">
+          <span style="font-size:12px; opacity:0.7;">Theme</span>
+          <div class="rotary-btn-sm">☀</div>
+        </div>
+        <!-- CTAs -->
+        <div style="display:flex; flex-direction:column; gap:8px; padding-top:4px;">
+          <div class="content-block" style="height:44px; justify-content:center;">Sign in to Google</div>
+          <div style="height:36px; display:flex; align-items:center; justify-content:center; font-size:12px; opacity:0.6;">Not now</div>
+        </div>
+      </div>
+      <!-- Rest of content behind overlay -->
+      <div class="content-area" style="opacity:0.3;">
+        <div class="main-content-fullwidth">
+          <div class="content-block" style="font-size:10px;">Dashboard tabs bar</div>
+        </div>
+      </div>
+      <div class="bottom-tabs" style="opacity:0.3;">
+        <div class="bottom-tab active"><div class="bottom-tab-icon">▤</div><span>Dashboard</span></div>
+        <div class="bottom-tab"><div class="bottom-tab-icon">+</div><span>Add</span></div>
+        <div class="bottom-tab" style="border-right:none;"><div class="bottom-tab-icon">↑</div><span>Valhalla</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENARIO 2D: Mobile signed-in dropdown - AFTER -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 2D — AFTER</div>
+    <div class="scenario-title">Mobile 375px: Signed-in profile dropdown</div>
+
+    <div class="frame-mobile">
+      <div class="top-bar">
+        <div class="top-bar-logo" style="font-size:10px;">ᛟ FL</div>
+        <div class="top-bar-right">
+          <div class="icon-btn" style="width:44px;height:44px;font-size:10px;">←</div>
+          <div class="icon-btn" style="width:44px;height:44px;font-size:10px;">☀</div>
+          <div class="avatar-btn"><div class="avatar wf-fill-md" style="border-style:dashed;">👤</div></div>
+        </div>
+      </div>
+      <!-- Profile dropdown on mobile fills edge-to-edge or to screen width -->
+      <div style="position:absolute; right:0; top:48px; width:256px; border:1px solid; display:flex; flex-direction:column; background:white; z-index:10;">
+        <div class="dropdown-header" style="padding:12px 14px;">
+          <div class="avatar-lg wf-fill-md" style="width:36px;height:36px;font-size:12px;">👤</div>
+          <div class="dropdown-header-info">
+            <span class="dropdown-header-name" style="font-size:12px;">Sigrid Eriksen</span>
+            <span class="dropdown-header-email" style="font-size:10px;">sigrid@example.com</span>
+            <span class="dropdown-header-flavor" style="font-size:10px;">The wolf is named.</span>
+          </div>
+        </div>
+        <!-- Theme row -->
+        <div class="dropdown-row">
+          <span class="dropdown-row-label">Theme</span>
+          <div class="rotary-btn-sm">☀</div>
+        </div>
+        <!-- Settings -->
+        <div class="dropdown-row" style="border-bottom:1px solid;">
+          <span style="font-size:13px;">Settings</span>
+          <span style="font-size:12px; opacity:0.5;">→</span>
+        </div>
+        <!-- Sign out -->
+        <div class="dropdown-action">Sign out</div>
+      </div>
+      <!-- Content behind -->
+      <div class="content-area" style="opacity:0.25;">
+        <div class="main-content-fullwidth">
+          <div class="content-block" style="font-size:10px;">Dashboard content</div>
+        </div>
+      </div>
+      <div class="bottom-tabs" style="opacity:0.25;">
+        <div class="bottom-tab active"><div class="bottom-tab-icon">▤</div><span>Dashboard</span></div>
+        <div class="bottom-tab"><div class="bottom-tab-icon">+</div><span>Add</span></div>
+        <div class="bottom-tab" style="border-right:none;"><div class="bottom-tab-icon">↑</div><span>Valhalla</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end mobile dropdown grid -->
+
+<!-- Dropdown anatomy table -->
+<h3>Dropdown Menu Anatomy — Item Order</h3>
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Element</th>
+      <th>Type</th>
+      <th>Behavior</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>—</td>
+      <td>Profile header (avatar + name + email + "The wolf is named.")</td>
+      <td>Informational section, aria-hidden</td>
+      <td>Not interactive</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Theme row: label "Theme" + rotary toggle button</td>
+      <td>Row with embedded button</td>
+      <td>Click toggle icon → cycles light→dark→system. Row itself not clickable.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Settings</td>
+      <td>Link (role="menuitem"), navigates to /ledger/settings</td>
+      <td>Click → navigate to /ledger/settings, close dropdown</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Sign out</td>
+      <td>Button (role="menuitem")</td>
+      <td>Click → sign out, close dropdown, navigate to /ledger (anonymous)</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Section 3 — Rotary Theme Toggle: States + Cycle</h2>
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<p>
+  The segmented 3-button theme picker is replaced with a single rotary icon button everywhere in the ledger app.
+  This matches the pattern already in use on the marketing site (<code>MarketingNavbar.tsx → NavThemeToggle</code>)
+  and the existing <code>ThemeToggle variant="icon"</code> already implemented in <code>ThemeToggle.tsx</code>.
+</p>
+
+<h3>Toggle Cycle Order</h3>
+
+<div class="cycle-row">
+  <div class="cycle-state">
+    <div class="rotary-btn">☀</div>
+    <div class="cycle-label"><strong>light</strong><br>Sun icon<br>aria: "Theme: Light.<br>Click to switch<br>to Dark."</div>
+  </div>
+  <div class="cycle-arrow">→</div>
+  <div class="cycle-state">
+    <div class="rotary-btn">🌙</div>
+    <div class="cycle-label"><strong>dark</strong><br>Moon icon<br>aria: "Theme: Dark.<br>Click to switch<br>to System."</div>
+  </div>
+  <div class="cycle-arrow">→</div>
+  <div class="cycle-state">
+    <div class="rotary-btn">⊙</div>
+    <div class="cycle-label"><strong>system</strong><br>Monitor icon<br>aria: "Theme: System.<br>Click to switch<br>to Light."</div>
+  </div>
+  <div class="cycle-arrow">→ (wraps)</div>
+  <div class="cycle-state">
+    <div class="rotary-btn">☀</div>
+    <div class="cycle-label"><strong>light</strong><br>(repeats)</div>
+  </div>
+</div>
+
+<!-- Scenario 3: Three placement contexts -->
+<h3>Toggle Placement Contexts</h3>
+<div class="scenario-grid-3">
+
+  <!-- Context A: Top bar (icon) -->
+  <div class="scenario">
+    <div class="scenario-label">Context A</div>
+    <div class="scenario-title">In top bar (existing — unchanged)</div>
+    <div style="padding:12px; border:1px solid; display:flex; flex-direction:column; gap:12px;">
+      <p class="wf-note">ThemeToggle variant="icon" — 44×44px. Already in LedgerTopBar. <strong>No change needed.</strong></p>
+      <div style="display:flex; align-items:center; gap:8px; padding:4px; border:1px dashed;">
+        <span class="wf-note">top-bar-right:</span>
+        <div class="icon-btn">☀</div>
+        <div class="avatar-btn"><div class="avatar">ᛟ</div></div>
+      </div>
+      <div class="annotation">
+        <div class="ann-num">1</div>
+        <span class="ann-text">44×44px min touch target. Shows current theme icon. Click advances to next theme.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context B: Profile dropdown (was 132px segmented → now 36px rotary) -->
+  <div class="scenario">
+    <div class="scenario-label">Context B</div>
+    <div class="scenario-title">In profile dropdown (CHANGED)</div>
+    <div style="padding:12px; border:1px solid; display:flex; flex-direction:column; gap:12px;">
+      <div class="compare-bar" style="margin:0;">
+        <div class="compare-side">
+          <div class="compare-title">Before</div>
+          <div class="segmented-toggle">
+            <div class="seg-btn active">☀</div>
+            <div class="seg-btn">🌙</div>
+            <div class="seg-btn">⊙</div>
+          </div>
+          <p class="wf-note" style="margin-top:4px;">3 buttons × 44px = 132px wide. Takes up full row.</p>
+        </div>
+        <div class="compare-side">
+          <div class="compare-title">After</div>
+          <div class="rotary-btn-sm">☀</div>
+          <p class="wf-note" style="margin-top:4px;">Single rotary button, 36×36px in the row's right slot.</p>
+        </div>
+      </div>
+      <div class="annotation">
+        <div class="ann-num">2</div>
+        <span class="ann-text">Use <code>ThemeToggle variant="icon"</code> (already exists). The dropdown row layout: label left, toggle right — same structure, different toggle component.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context C: Anonymous upsell panel -->
+  <div class="scenario">
+    <div class="scenario-label">Context C</div>
+    <div class="scenario-title">In anonymous upsell panel (CHANGED)</div>
+    <div style="padding:12px; border:1px solid; display:flex; flex-direction:column; gap:12px;">
+      <p class="wf-note">TopBar.tsx UpsellPromptPanel also renders a ThemeToggle. Change it to variant="icon" to match.</p>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding: 6px 0; border-top: 1px solid; border-bottom: 1px solid;">
+        <span style="font-size:12px; opacity:0.7;">Theme</span>
+        <div class="rotary-btn-sm">☀</div>
+      </div>
+      <div class="annotation">
+        <div class="ann-num">3</div>
+        <span class="ann-text">Both authenticated ProfileDropdown and anonymous UpsellPromptPanel use the same rotary pattern for consistency.</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end scenario-grid-3 -->
+
+<h3>Toggle State Matrix</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Current theme</th>
+      <th>Icon shown</th>
+      <th>aria-label</th>
+      <th>On click → new theme</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>light</td>
+      <td>Sun ☀</td>
+      <td>"Theme: Light. Click to switch to Dark."</td>
+      <td>dark</td>
+    </tr>
+    <tr>
+      <td>dark</td>
+      <td>Moon 🌙</td>
+      <td>"Theme: Dark. Click to switch to System."</td>
+      <td>system</td>
+    </tr>
+    <tr>
+      <td>system</td>
+      <td>Monitor ⊙</td>
+      <td>"Theme: System. Click to switch to Light."</td>
+      <td>light</td>
+    </tr>
+    <tr>
+      <td>undefined / null</td>
+      <td>Monitor ⊙ (fallback = system)</td>
+      <td>"Theme: System. Click to switch to Light."</td>
+      <td>light</td>
+    </tr>
+  </tbody>
+</table>
+
+<p class="wf-note">
+  Note: The <code>variant="icon"</code> path in <code>ThemeToggle.tsx</code> already implements exactly this behavior.
+  The only change needed in ThemeToggle.tsx: <strong>remove the segmented inline variant from ProfileDropdown and UpsellPromptPanel</strong> by switching to <code>variant="icon"</code>.
+</p>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Section 4 — Accessibility &amp; Touch Target Requirements</h2>
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<table>
+  <thead>
+    <tr>
+      <th>Element</th>
+      <th>Min touch target</th>
+      <th>aria requirements</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Rotary theme toggle (top bar)</td>
+      <td>44×44px</td>
+      <td>aria-label="Theme: {current}. Click to switch to {next}." title="{current}"</td>
+    </tr>
+    <tr>
+      <td>Rotary theme toggle (dropdown row)</td>
+      <td>36×36px (acceptable in dropdown context)</td>
+      <td>Same aria-label pattern as top-bar toggle</td>
+    </tr>
+    <tr>
+      <td>Settings link in dropdown</td>
+      <td>44px tall row</td>
+      <td>role="menuitem". Navigates to /ledger/settings on click.</td>
+    </tr>
+    <tr>
+      <td>Bottom tab bar tabs (3 tabs after)</td>
+      <td>56px tall × ~33% viewport width ≈ min 44×44px</td>
+      <td>aria-current="page" on active tab</td>
+    </tr>
+    <tr>
+      <td>Profile dropdown</td>
+      <td>N/A (container)</td>
+      <td>role="menu" aria-label="User menu". Close on Escape + outside click.</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Section 5 — Full Desktop with Dropdown Open</h2>
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div class="scenario">
+  <div class="scenario-label">Scenario 5 — AFTER: Full desktop view with dropdown open</div>
+  <div class="scenario-title">Desktop 1280px+: No sidebar, dropdown showing Settings + rotary toggle</div>
+  <div class="frame-desktop" style="height:540px;">
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="top-bar-logo">ᛟ FENRIR LEDGER</div>
+      <div class="top-bar-center">← Back to site</div>
+      <div class="top-bar-right" style="position:relative;">
+        <!-- Theme toggle in top bar -->
+        <div class="icon-btn" title="Rotary theme toggle in top bar">☀</div>
+        <!-- Avatar trigger -->
+        <div class="avatar-btn">
+          <div class="avatar wf-fill-md" style="border-style:dashed;">👤</div>
+        </div>
+
+        <!-- Dropdown panel open -->
+        <div class="dropdown-panel">
+          <!-- Profile header -->
+          <div class="dropdown-header">
+            <div class="avatar-lg wf-fill-md">👤</div>
+            <div class="dropdown-header-info">
+              <span class="dropdown-header-name">Sigrid Eriksen</span>
+              <span class="dropdown-header-email">sigrid@example.com</span>
+              <span class="dropdown-header-flavor">The wolf is named.</span>
+            </div>
+          </div>
+          <!-- ① Theme (rotary) -->
+          <div class="dropdown-row">
+            <span class="dropdown-row-label">Theme</span>
+            <div class="rotary-btn-sm" title="Click to cycle: light→dark→system">☀</div>
+          </div>
+          <!-- ② Settings (NEW) -->
+          <div class="dropdown-row" style="border-bottom:1px solid;">
+            <span style="font-size:13px;">Settings</span>
+            <span style="font-size:12px; opacity:0.5;">→</span>
+          </div>
+          <!-- ③ Sign out -->
+          <div class="dropdown-action">Sign out</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body: full-width, no sidebar -->
+    <div class="content-area">
+      <div class="main-content-fullwidth" style="opacity:0.5;">
+        <div class="content-block">Dashboard tabs bar (Cards | Valhalla | The Howl)</div>
+        <div class="content-card-row">
+          <div class="content-card">Card</div>
+          <div class="content-card">Card</div>
+          <div class="content-card">Card</div>
+          <div class="content-card">Card</div>
+        </div>
+        <div class="content-card-row">
+          <div class="content-card">Card</div>
+          <div class="content-card">Card</div>
+          <div class="content-card">Card</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:10px; display:flex; flex-direction:column; gap:4px;">
+    <div class="annotation">
+      <div class="ann-num">1</div>
+      <span class="ann-text">No sidebar — content takes full width.</span>
+    </div>
+    <div class="annotation">
+      <div class="ann-num">2</div>
+      <span class="ann-text">Rotary theme toggle in top bar (existing, variant="icon").</span>
+    </div>
+    <div class="annotation">
+      <div class="ann-num">3</div>
+      <span class="ann-text">Dropdown: Theme (rotary) → Settings (link to /ledger/settings) → Sign out.</span>
+    </div>
+    <div class="annotation">
+      <div class="ann-num">4</div>
+      <span class="ann-text">Dropdown closes on click outside or Escape key (existing behavior).</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<h2>Section 6 — Implementation Notes for Engineer</h2>
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<h3>Files to delete</h3>
+<table>
+  <thead>
+    <tr><th>File</th><th>Reason</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>development/frontend/src/components/layout/SideNav.tsx</code></td>
+      <td>Entire sidebar component — no longer needed</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Files to edit</h3>
+<table>
+  <thead>
+    <tr><th>File</th><th>Change</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>LedgerShell.tsx</code></td>
+      <td>Remove SideNav import, remove SideNav JSX, remove collapsed state + localStorage logic, remove hidden md:flex sidebar wrapper div</td>
+    </tr>
+    <tr>
+      <td><code>LedgerBottomTabs.tsx</code></td>
+      <td>Remove Settings tab (4th tab). Remaining: Dashboard | Add | Valhalla (3 tabs, each grows to ~33% width)</td>
+    </tr>
+    <tr>
+      <td><code>LedgerTopBar.tsx → ProfileDropdown</code></td>
+      <td>1. Replace ThemeToggle (inline/default) with ThemeToggle variant="icon" in the theme row. 2. Add Settings link (role="menuitem", href="/ledger/settings", closes dropdown on click) between theme row and Sign Out button.</td>
+    </tr>
+    <tr>
+      <td><code>TopBar.tsx → UpsellPromptPanel</code></td>
+      <td>Replace ThemeToggle (inline) with ThemeToggle variant="icon" for consistency</td>
+    </tr>
+    <tr>
+      <td><code>TopBar.tsx → signed-in dropdown</code></td>
+      <td>Replace ThemeToggle (inline) with ThemeToggle variant="icon" + add Settings link menuitem</td>
+    </tr>
+    <tr>
+      <td><code>AppShell.tsx</code></td>
+      <td>If AppShell is still used: same sidebar removal as LedgerShell. Verify if AppShell is still in use after #403 (may be deprecated by LedgerShell).</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>No changes needed</h3>
+<table>
+  <thead>
+    <tr><th>File</th><th>Reason</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ThemeToggle.tsx</code></td>
+      <td>variant="icon" already implemented and working. No changes to the component itself.</td>
+    </tr>
+    <tr>
+      <td><code>/ledger/settings route</code></td>
+      <td>Route still functions — just accessed via dropdown now, not sidebar</td>
+    </tr>
+    <tr>
+      <td><code>LedgerTopBar.tsx → top bar ThemeToggle</code></td>
+      <td>Already uses variant="icon". No change.</td>
+    </tr>
+    <tr>
+      <td>Marketing site theme toggle</td>
+      <td>MarketingNavbar already uses the rotary pattern. Reference only.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Accessibility checklist</h3>
+<ul style="font-size:12px; padding-left: 20px; display:flex; flex-direction:column; gap:4px;">
+  <li>Settings link in dropdown: role="menuitem", closes dropdown on click, focus returns to avatar button after navigation</li>
+  <li>Rotary toggle: aria-label updates dynamically to reflect current + next theme</li>
+  <li>Bottom tab bar: 3 tabs now each min ~125px wide × 56px tall (well above 44×44px minimum)</li>
+  <li>No hamburger removed from anywhere (sidebar never had a hamburger on mobile — bottom tabs replaced it)</li>
+  <li>Keyboard: dropdown closes on Escape, focus returns to trigger button (existing behavior — preserve)</li>
+</ul>
+
+</body>
+</html>

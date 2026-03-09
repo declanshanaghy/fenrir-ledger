@@ -1,31 +1,22 @@
 "use client";
 
 /**
- * LedgerShell -- the new app shell for /ledger/* routes.
- *
- * Replaces AppShell with a distinct app zone that separates
- * the ledger app from the marketing site.
+ * LedgerShell -- the app shell for /ledger/* routes.
  *
  * Layout:
- *   Desktop (>= 769px): LedgerTopBar (48px) + SideNav (220px) + Content
+ *   Desktop (>= 769px): LedgerTopBar (48px) + Full-width Content
  *   Mobile  (<= 768px): LedgerTopBar (48px) + Content + LedgerBottomTabs (56px fixed)
  *
- * Key differences from AppShell:
- *   - Slim top bar (48px vs 56px)
- *   - Sidebar 220px (was 272px/w-56 collapsible)
- *   - No marketing footer inside /ledger/* routes
- *   - Mobile: bottom tab bar instead of hamburger overlay
- *   - "Back to site" contextual link in top bar
+ * Issue #403: Sidebar removed entirely. Content takes full viewport width.
  *
- * See: ux/wireframes/chrome/ledger-shell.html
- * Issue: #372
+ * See: ux/wireframes/chrome/sidebar-removal-dropdown-settings.html
+ * Issue: #403, #372
  */
 
 import { Suspense, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { LedgerTopBar } from "./LedgerTopBar";
 import { LedgerBottomTabs } from "./LedgerBottomTabs";
-import { SideNav } from "./SideNav";
 import { SyncIndicator } from "./SyncIndicator";
 import { KonamiHowl } from "./KonamiHowl";
 import { ForgeMasterEgg } from "./ForgeMasterEgg";
@@ -38,29 +29,17 @@ import {
 } from "@/components/cards/GleipnirMountainRoots";
 import { useRagnarok } from "@/contexts/RagnarokContext";
 
-const STORAGE_KEY = "fenrir:sidenav-collapsed";
-
 interface LedgerShellProps {
   children: ReactNode;
 }
 
 export function LedgerShell({ children }: LedgerShellProps) {
-  const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const { open: rootsOpen, trigger: triggerRoots, dismiss: dismissRoots } = useGleipnirFragment3();
+  const { open: rootsOpen, dismiss: dismissRoots } = useGleipnirFragment3();
   const { ragnarokActive } = useRagnarok();
 
-  // Read persisted sidebar state after mount.
-  // On narrow viewports (< 768px) the sidebar is hidden entirely by CSS,
-  // so collapsed state only affects desktop.
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "true") {
-      setCollapsed(true);
-    } else if (stored === null && window.innerWidth < 768) {
-      setCollapsed(true);
-    }
     setMounted(true);
   }, []);
 
@@ -76,13 +55,6 @@ export function LedgerShell({ children }: LedgerShellProps) {
     };
   }, [ragnarokActive]);
 
-  function handleToggle() {
-    const next = !collapsed;
-    setCollapsed(next);
-    localStorage.setItem(STORAGE_KEY, String(next));
-    if (next) triggerRoots();
-  }
-
   // SSR placeholder to prevent layout flash
   if (!mounted) {
     return (
@@ -90,8 +62,6 @@ export function LedgerShell({ children }: LedgerShellProps) {
         {/* Slim top bar placeholder */}
         <div className="h-12 shrink-0 border-b border-border" />
         <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar placeholder -- hidden on mobile via CSS */}
-          <div className="hidden md:block w-[220px] shrink-0 border-r border-border" />
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
       </div>
@@ -103,25 +73,8 @@ export function LedgerShell({ children }: LedgerShellProps) {
       {/* Slim top bar: 48px, sticky top-0 */}
       <LedgerTopBar />
 
-      {/* Sidebar + Content area */}
+      {/* Full-width content area — no sidebar */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar: desktop only (hidden md:flex) */}
-        <div className="hidden md:flex">
-          <Suspense
-            fallback={
-              <div
-                className={
-                  collapsed
-                    ? "w-14 shrink-0 border-r border-border"
-                    : "w-[220px] shrink-0 border-r border-border"
-                }
-              />
-            }
-          >
-            <SideNav collapsed={collapsed} onToggle={handleToggle} />
-          </Suspense>
-        </div>
-
         {/* Main content -- no footer in ledger shell */}
         <main
           id="main-content"

@@ -3,27 +3,27 @@
 /**
  * LedgerBottomTabs -- mobile bottom tab bar for /ledger/* routes.
  *
- * Visible only on mobile (<= 768px). Replaces the sidebar on small viewports.
- * Fixed to bottom, full width, 56px tall + safe-area-inset-bottom.
+ * Visible only on mobile (<= 768px). Fixed to bottom, full width,
+ * 56px tall + safe-area-inset-bottom.
  * z-index: 100 (same chrome layer as the slim top bar).
  *
- * Tabs:
+ * Tabs (3):
  *   1. Dashboard  -> /ledger         icon: LayoutGrid
  *   2. Add        -> /ledger/cards/new  icon: Plus
  *   3. Valhalla   -> /ledger (dispatches tab event or navigates with ?tab=valhalla)
- *   4. Settings   -> /ledger/settings icon: Settings
  *
- * Touch targets: 56px tall x ~25% viewport width (well above 44x44px minimum).
+ * Issue #403: Settings tab removed — Settings is now accessed via profile dropdown.
+ * Touch targets: 56px tall x ~33% viewport width (well above 44x44px minimum).
  * Active tab: aria-current="page" + gold accent.
  *
- * See: ux/wireframes/chrome/ledger-shell.html (Scenario 7)
- * Issue: #372
+ * See: ux/wireframes/chrome/sidebar-removal-dropdown-settings.html
+ * Issue: #403, #372
  */
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutGrid, Plus, Settings } from "lucide-react";
+import { LayoutGrid, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import {
@@ -62,7 +62,6 @@ export function LedgerBottomTabs() {
   // Dashboard is active when on /ledger without the valhalla/hunt tab param
   const dashboardActive = isOnDashboard && activeTab !== "valhalla" && activeTab !== "hunt";
   const addActive = pathname === "/ledger/cards/new";
-  const settingsActive = pathname === "/ledger/settings";
 
   /**
    * Valhalla tab click handler -- mirrors SideNav behavior.
@@ -204,18 +203,6 @@ export function LedgerBottomTabs() {
             </div>
             <span className="text-[10px] font-body">Hunt</span>
           </button>
-        </li>
-
-        {/* Settings */}
-        <li className="flex flex-1">
-          <Link
-            href="/ledger/settings"
-            className={cn(tabBase, settingsActive && tabActive)}
-            aria-current={settingsActive ? "page" : undefined}
-          >
-            <Settings className="h-5 w-5" aria-hidden="true" />
-            <span className="text-[10px] font-body">Settings</span>
-          </Link>
         </li>
       </ul>
 
