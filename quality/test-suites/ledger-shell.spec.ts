@@ -150,7 +150,9 @@ test.describe("LedgerShell — Mobile (<768px)", () => {
     );
     await expect(settingsTab).toBeVisible();
     await settingsTab.click();
-    await page.waitForLoadState("networkidle");
+
+    // Wait for navigation to settings page
+    await page.waitForURL(/\/ledger\/settings/);
 
     // Should be on /ledger/settings
     expect(page.url()).toContain("/ledger/settings");
