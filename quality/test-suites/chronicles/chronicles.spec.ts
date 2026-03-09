@@ -71,12 +71,13 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     const response = await page.goto(href || "/chronicles", { waitUntil: "networkidle" });
     expect(response?.status()).toBe(200);
 
-    // Verify breadcrumb navigation exists - look for link to /chronicles
-    const chroniclesLink = page.locator("a[href='/chronicles']");
+    // Verify breadcrumb navigation exists - look for link to /chronicles in breadcrumb
+    const breadcrumbNav = page.locator("nav").first();
+    const chroniclesLink = breadcrumbNav.locator("a[href='/chronicles']");
     await expect(chroniclesLink).toBeVisible();
 
     // Verify home link in breadcrumb
-    const homeLink = page.locator("a[href='/']");
+    const homeLink = breadcrumbNav.locator("a[href='/']");
     await expect(homeLink).toBeVisible();
 
     // Verify chronicle content is rendered
