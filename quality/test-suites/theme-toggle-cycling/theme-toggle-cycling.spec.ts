@@ -232,6 +232,8 @@ test.describe("Theme Toggle — Implementation Spec", () => {
   }) => {
     // Verify cycleTheme function logic exists in the codebase
     // (This is a reference test to confirm the helper is available)
+    await page.goto("/", { waitUntil: "networkidle" });
+
     const hasCycleFunction = await page.evaluate(() => {
       // Next.js app should have ThemeToggle component loaded
       // We verify by checking if clicking the button doesn't throw
