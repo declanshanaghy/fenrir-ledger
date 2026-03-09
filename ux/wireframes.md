@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Sprint 8 Wireframes
+
+| Story | File | Description |
+|-------|------|-------------|
+| #403 — Sidebar Removal + Dropdown Settings + Rotary Theme Toggle | [wireframes/chrome/sidebar-removal-dropdown-settings.html](wireframes/chrome/sidebar-removal-dropdown-settings.html) | Remove sidebar entirely (desktop + mobile), move Settings into profile dropdown, replace 3-button theme picker with rotary single-click toggle: 6 scenarios — desktop before/after (full-width content), mobile before/after (3 bottom tabs, Settings removed), profile dropdown anatomy (rotary toggle → Settings → Sign Out), rotary toggle cycle diagram + state matrix, full-desktop-with-dropdown-open; implementation notes table; interaction spec: [chrome/sidebar-removal-interaction-spec.md](wireframes/chrome/sidebar-removal-interaction-spec.md) |
+
+---
+
 ## Sprint 7 Wireframes
 
 | Story | File | Description |
