@@ -64,7 +64,8 @@ export type PremiumFeature =
   | "advanced-analytics"
   | "data-export"
   | "extended-history"
-  | "cosmetic-perks";
+  | "cosmetic-perks"
+  | "howl-panel";
 
 /**
  * Feature metadata: display name and the minimum tier required.
@@ -87,6 +88,7 @@ export const PREMIUM_FEATURES: Record<PremiumFeature, FeatureDefinition> = {
   "data-export": { name: "Data Export", tier: "karl" },
   "extended-history": { name: "Extended History", tier: "karl" },
   "cosmetic-perks": { name: "Cosmetic Perks", tier: "karl" },
+  "howl-panel": { name: "The Howl", tier: "karl" },
 };
 
 // ---------------------------------------------------------------------------

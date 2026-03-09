@@ -120,7 +120,7 @@ function TierCardsSection() {
                 "Annual fee tracking with 60-day warnings",
                 "Sign-up bonus & minimum spend tracking",
                 "Velocity management (Chase 5/24, Citi 1/8, etc.)",
-                "The Howl — urgent cards dashboard",
+                "The Howl — preview with blurred teaser",
                 "Card archive (Valhalla)",
                 "Single household",
                 "Google sign-in",
@@ -132,6 +132,7 @@ function TierCardsSection() {
               ))}
               {/* Karl features shown as excluded */}
               {[
+                "The Howl — full proactive alerts & Ragnarök",
                 "Cloud Sync (multi-device)",
                 "Multi-Household management",
                 "Smart Import (AI-Powered)",
@@ -200,6 +201,7 @@ function TierCardsSection() {
             </p>
             <ul className="flex flex-col gap-3" aria-label="Karl tier premium features">
               {[
+                { name: "The Howl", desc: "full proactive fee alerts, deadline warnings & Ragnarök" },
                 { name: "Cloud Sync", desc: "real-time sync across all devices" },
                 { name: "Multi-Household", desc: "manage multiple household ledgers" },
                 { name: "Smart Import", desc: "AI extracts card data from spreadsheets" },
@@ -282,7 +284,6 @@ function ComparisonTableSection() {
                 "Annual fee tracking with 60-day advance warning",
                 "Sign-up bonus & minimum spend deadline tracking",
                 "Velocity management (Chase 5/24, Citi 1/8, Amex OPLB, etc.)",
-                "The Howl — urgent cards dashboard (fee + promo alerts)",
                 "Card archive — Valhalla (closed cards with full history)",
                 "Google Sign-In authentication",
               ].map((feat) => (
@@ -292,6 +293,17 @@ function ComparisonTableSection() {
                   <td className="py-2.5 px-4 text-center"><CheckIcon included /></td>
                 </tr>
               ))}
+              {/* The Howl — split between tiers */}
+              <tr className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                <td className="py-2.5 px-4 text-foreground">The Howl — blurred preview (teaser)</td>
+                <td className="py-2.5 px-4 text-center"><CheckIcon included /></td>
+                <td className="py-2.5 px-4 text-center"><CheckIcon included /></td>
+              </tr>
+              <tr className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                <td className="py-2.5 px-4 text-foreground">The Howl — full proactive alerts &amp; Ragnarök threshold</td>
+                <td className="py-2.5 px-4 text-center"><CheckIcon included={false} /></td>
+                <td className="py-2.5 px-4 text-center"><CheckIcon included /></td>
+              </tr>
 
               {/* Data & Devices */}
               <tr>

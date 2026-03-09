@@ -29,6 +29,7 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useEntitlementContext } from "@/contexts/EntitlementContext";
 import { getAllCardsGlobal } from "@/lib/storage";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -50,9 +51,17 @@ interface RagnarokProviderProps {
 
 export function RagnarokProvider({ children }: RagnarokProviderProps) {
   const { householdId, status } = useAuth();
+  const { tier } = useEntitlementContext();
   const [ragnarokActive, setRagnarokActive] = useState(false);
 
   const computeRagnarok = useCallback(() => {
+    // Ragnarök is a Karl-tier feature. Thrall users never trigger it.
+    // Issue #398: gate the urgentCount check behind tier.
+    if (tier !== "karl") {
+      setRagnarokActive(false);
+      return;
+    }
+
     // Wait for auth to resolve before reading storage.
     if (status === "loading" || !householdId) {
       setRagnarokActive(false);
@@ -65,7 +74,7 @@ export function RagnarokProvider({ children }: RagnarokProviderProps) {
     ).length;
 
     setRagnarokActive(urgentCount >= 5);
-  }, [householdId, status]);
+  }, [householdId, status, tier]);
 
   // Recompute whenever auth state or route changes.
   useEffect(() => {

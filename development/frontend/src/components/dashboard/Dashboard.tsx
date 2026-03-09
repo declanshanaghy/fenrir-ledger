@@ -38,6 +38,8 @@ import { LOKI_REALM_NAMES } from "@/components/layout/Footer";
 import { daysUntil } from "@/lib/card-utils";
 import { cn } from "@/lib/utils";
 import { useRagnarok } from "@/contexts/RagnarokContext";
+import { useEntitlement } from "@/hooks/useEntitlement";
+import { HowlTeaserState } from "./HowlTeaserState";
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 
@@ -362,6 +364,8 @@ interface DashboardProps {
 
 export function Dashboard({ cards, initialTab }: DashboardProps) {
   const { ragnarokActive } = useRagnarok();
+  const { hasFeature } = useEntitlement();
+  const isHowlUnlocked = hasFeature("howl-panel");
 
   // ── Derive 5-bucket splits ─────────────────────────────────────────────────
   const howlCards = cards.filter(isHowlCard);
@@ -546,6 +550,8 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
           const isActive = activeTab === tab.id;
           const isHowlTab = tab.id === "howl";
           const count = tabCounts[tab.id];
+          // Howl tab for Thrall: show lock + KARL badge, no count badge
+          const isHowlLocked = isHowlTab && !isHowlUnlocked;
 
           return (
             <button
@@ -555,6 +561,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
               id={tab.buttonId}
               aria-selected={isActive}
               aria-controls={tab.panelId}
+              aria-label={isHowlLocked ? "The Howl \u2014 Karl tier feature" : undefined}
               tabIndex={isActive ? 0 : -1}
               onClick={() => setActiveTab(tab.id)}
               onKeyDown={(e) => handleTabKeyDown(e, index)}
@@ -563,7 +570,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
                 "border-b-[3px] transition-colors whitespace-nowrap shrink-0 min-h-[44px]",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 isActive
-                  ? isHowlTab
+                  ? isHowlTab && !isHowlLocked
                     ? ragnarokActive
                       ? "border-[hsl(var(--realm-ragnarok-dark))] text-[hsl(var(--realm-ragnarok-dark))]"
                       : "border-[hsl(var(--realm-muspel))] text-[hsl(var(--realm-muspel))]"
@@ -576,20 +583,35 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
                 aria-hidden="true"
                 className={cn(
                   "text-base leading-none select-none",
-                  isHowlTab && howlCards.length > 0 && !ragnarokActive
+                  isHowlTab && !isHowlLocked && howlCards.length > 0 && !ragnarokActive
                     ? "animate-muspel-pulse text-[hsl(var(--realm-muspel))]"
-                    : isHowlTab && ragnarokActive
+                    : isHowlTab && !isHowlLocked && ragnarokActive
                     ? "animate-muspel-pulse text-[hsl(var(--realm-ragnarok-dark))]"
                     : "",
-                  isHowlTab && howlBadgeShake ? "raven-icon--warning" : ""
+                  isHowlTab && !isHowlLocked && howlBadgeShake ? "raven-icon--warning" : ""
                 )}
-                onAnimationEnd={isHowlTab ? () => setHowlBadgeShake(false) : undefined}
+                onAnimationEnd={isHowlTab && !isHowlLocked ? () => setHowlBadgeShake(false) : undefined}
                 style={{ fontFamily: "serif" }}
               >
                 {tab.rune}
               </span>
-              {isHowlTab && ragnarokActive ? "Ragnarök Approaches" : tab.label}
-              <TabBadge count={count} isHowl={isHowlTab} />
+              {isHowlTab && !isHowlLocked && ragnarokActive ? "Ragnarök Approaches" : tab.label}
+              {/* Thrall: lock icon + KARL badge instead of count badge */}
+              {isHowlLocked ? (
+                <>
+                  <span className="text-xs opacity-70" aria-hidden="true">
+                    {"\uD83D\uDD12"}
+                  </span>
+                  <span
+                    className="text-[9px] font-mono font-bold border border-gold/20 px-1.5 py-0.5 uppercase tracking-wide text-gold/60"
+                    aria-hidden="true"
+                  >
+                    KARL
+                  </span>
+                </>
+              ) : (
+                <TabBadge count={count} isHowl={isHowlTab} />
+              )}
             </button>
           );
         })}
@@ -604,9 +626,11 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         aria-labelledby="tab-howl"
         tabIndex={0}
         hidden={activeTab !== "howl"}
-        className="pt-5"
+        className={isHowlUnlocked ? "pt-5" : ""}
       >
-        {displayHowlCards.length === 0 ? (
+        {!isHowlUnlocked ? (
+          <HowlTeaserState />
+        ) : displayHowlCards.length === 0 ? (
           <HowlEmptyState />
         ) : (
           <AnimatedCardGrid
