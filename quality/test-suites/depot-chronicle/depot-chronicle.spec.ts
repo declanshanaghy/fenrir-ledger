@@ -422,9 +422,11 @@ test.describe("Issue #453: Depot Chronicle Restoration", () => {
     const metaDescription = await page.locator(
       'meta[name="description"]'
     );
-    // The excerpt should appear in meta or in the page
-    const pageText = await page.innerText("body");
-    expect(pageText).toContain("Depot Integration");
+    const descContent = await metaDescription.getAttribute("content");
+
+    // The excerpt should mention feature requests and Depot integration
+    expect(descContent).toContain("Depot");
+    expect(descContent || "").toContain("feature requests");
   });
 
   // ── Rune Rendering Tests ───────────────────────────────────────────────────────
