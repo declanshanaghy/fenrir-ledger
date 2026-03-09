@@ -24,10 +24,11 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
+import { buildSignInUrl } from "@/lib/auth/sign-in-url";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -128,6 +129,7 @@ interface SignInNudgeProps {
  */
 function CompactSignInNudge({ onDismiss }: SignInNudgeProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   function handleDismiss() {
     clearEntitlementCache();
@@ -149,7 +151,7 @@ function CompactSignInNudge({ onDismiss }: SignInNudgeProps) {
       {/* Sign In button */}
       <button
         type="button"
-        onClick={() => router.push("/ledger/sign-in")}
+        onClick={() => router.push(buildSignInUrl(pathname))}
         className={[
           "px-3 py-1 text-xs font-heading tracking-wide",
           "border border-gold/50 text-gold",
@@ -192,6 +194,7 @@ interface UpsellPromptProps {
  */
 function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const signInButtonRef = useRef<HTMLButtonElement>(null);
 
   // Focus "Sign in to Google" button on open — per WCAG focus management.
@@ -248,7 +251,7 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
           type="button"
           onClick={() => {
             onClose();
-            router.push("/ledger/sign-in");
+            router.push(buildSignInUrl(pathname));
           }}
           className={[
             "w-full px-4 py-2.5 text-base font-heading tracking-wide",

@@ -26,8 +26,9 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { buildSignInUrl } from "@/lib/auth/sign-in-url";
 
 /** localStorage key for the permanent dismiss flag */
 const DISMISS_KEY = "fenrir:upsell_dismissed";
@@ -49,6 +50,7 @@ function isDismissed(): boolean {
 export function UpsellBanner() {
   const { status } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const bannerRef = useRef<HTMLDivElement>(null);
 
   // Start with dismissed=true to avoid flash on SSR hydration.
@@ -123,7 +125,7 @@ export function UpsellBanner() {
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => router.push("/ledger/sign-in")}
+            onClick={() => router.push(buildSignInUrl(pathname))}
             className={[
               "px-3 py-1.5 text-sm font-heading tracking-wide",
               "border border-gold/50 text-gold",
@@ -161,7 +163,7 @@ export function UpsellBanner() {
 
         <button
           type="button"
-          onClick={() => router.push("/ledger/sign-in")}
+          onClick={() => router.push(buildSignInUrl(pathname))}
           className={[
             "self-start px-3 py-1.5 text-sm font-heading tracking-wide",
             "border border-gold/50 text-gold",

@@ -21,8 +21,9 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { buildSignInUrl } from "@/lib/auth/sign-in-url";
 
 /** localStorage key for the permanent dismiss flag */
 const DISMISS_KEY = "fenrir:upsell_dismissed";
@@ -44,6 +45,7 @@ interface SignInNudgeProps {
 export function SignInNudge({ hasCards }: SignInNudgeProps) {
   const { status } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const bannerRef = useRef<HTMLDivElement>(null);
 
   // Start dismissed=true to avoid SSR flash; resolve on mount.
@@ -66,7 +68,7 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
       <p className="text-center text-sm text-muted-foreground/70 font-body mt-2 mb-4">
         <button
           type="button"
-          onClick={() => router.push("/ledger/sign-in")}
+          onClick={() => router.push(buildSignInUrl(pathname))}
           className="underline underline-offset-2 decoration-muted-foreground/40 hover:text-muted-foreground transition-colors"
         >
           Sign in to sync your data
@@ -127,7 +129,7 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => router.push("/ledger/sign-in")}
+            onClick={() => router.push(buildSignInUrl(pathname))}
             className={[
               "px-3 py-1.5 text-sm font-heading tracking-wide",
               "border border-gold/50 text-gold",
@@ -160,7 +162,7 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
 
         <button
           type="button"
-          onClick={() => router.push("/ledger/sign-in")}
+          onClick={() => router.push(buildSignInUrl(pathname))}
           className={[
             "self-start px-3 py-1.5 text-sm font-heading tracking-wide",
             "border border-gold/50 text-gold",

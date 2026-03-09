@@ -25,9 +25,10 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
+import { buildSignInUrl } from "@/lib/auth/sign-in-url";
 
 /** sessionStorage key -- nudge dismissed for this tab session only. */
 const NUDGE_DISMISSED_KEY = "fenrir:stale-auth-nudge-dismissed";
@@ -58,6 +59,7 @@ function hasStaleEntitlementCache(): boolean {
 export function StaleAuthNudge(): React.ReactElement | null {
   const { status } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const bannerRef = useRef<HTMLDivElement>(null);
 
   // Start hidden to avoid SSR flash. Re-evaluate after mount.
@@ -131,7 +133,7 @@ export function StaleAuthNudge(): React.ReactElement | null {
   }
 
   function handleSignIn(): void {
-    router.push("/ledger/sign-in");
+    router.push(buildSignInUrl(pathname));
   }
 
   return (
