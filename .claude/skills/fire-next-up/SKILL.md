@@ -221,6 +221,10 @@ depot claude \
 
 Session ID: `issue-<NUMBER>-step<N>-<agent-name>-<UUID8>` where UUID8 = `uuidgen | cut -c1-8 | tr 'A-Z' 'a-z'`.
 
+**CRITICAL: Always use `--branch "main"`** — even for resume/refinement dispatches on existing
+branches. The `sandbox-setup.sh` script handles branch checkout. Passing a feature branch
+directly can cause path mismatches in the sandbox (the repo root may differ).
+
 After spawning: move issue to **In Progress** via `--move`. **Do NOT poll, wait, or block.**
 
 #### Local Mode (`--local`)
