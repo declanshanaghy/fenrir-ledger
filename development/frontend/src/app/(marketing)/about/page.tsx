@@ -242,9 +242,9 @@ function AgentPortrait({
     <Image
       src={`/images/team/${agent.slug}-${variant}.png`}
       alt={`${agent.name} \u2014 ${agent.role}`}
-      width={400}
-      height={280}
-      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      width={512}
+      height={512}
+      className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
       onError={handleError}
       unoptimized
     />
@@ -279,7 +279,7 @@ function AgentCard({ agent }: { agent: AgentProfile }): React.ReactElement {
                  hover:-translate-y-2 hover:shadow-gold-md hover:border-primary/40"
     >
       {/* Portrait */}
-      <div className="relative w-full h-[260px] sm:h-[280px] border-b border-border overflow-hidden bg-muted/50">
+      <div className="relative w-full aspect-square border-b border-border overflow-hidden bg-muted/50">
         <AgentPortrait agent={agent} />
         <HoverOverlay effect={agent.hoverEffect} />
         <span
@@ -526,7 +526,7 @@ function ThePackSection(): React.ReactElement {
             className="flex flex-col border border-dashed border-border/40 overflow-hidden
                        bg-card/30 opacity-30"
           >
-            <div className="w-full h-[260px] sm:h-[280px] border-b border-border/30 flex items-center justify-center bg-muted/20">
+            <div className="w-full aspect-square border-b border-border/30 flex items-center justify-center bg-muted/20">
               <span className="text-6xl opacity-30 font-heading text-muted-foreground">
                 ?
               </span>
