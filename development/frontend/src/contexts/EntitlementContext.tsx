@@ -272,8 +272,11 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
         throw new Error((err as { error_description?: string }).error_description ?? "Checkout failed");
       }
 
-      const data = (await response.json()) as { url: string };
-      if (data.url) {
+      const data = (await response.json()) as { url?: string; revived?: boolean };
+      if (data.revived) {
+        // Subscription was revived (un-canceled) — redirect to success page
+        window.location.href = "/ledger/settings?stripe=success";
+      } else if (data.url) {
         window.location.href = data.url;
       }
     } catch (err) {

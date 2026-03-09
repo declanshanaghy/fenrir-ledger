@@ -6,8 +6,10 @@
  *
  * Flow:
  *   1. Verify Google id_token from Authorization header
- *   2. Create Stripe Checkout Session with metadata.googleSub + customer_email
- *   3. Return the session URL for redirect
+ *   2. Check for existing Stripe subscription via KV entitlement
+ *   3. If canceling (cancel_at_period_end) → revive instead of new checkout
+ *   4. If canceled/terminal → clean up, then create new checkout with existing customer
+ *   5. If no prior subscription → create fresh checkout session
  *
  * Anonymous users are redirected to /sign-in by the frontend before reaching
  * this endpoint. The checkout session always includes googleSub metadata so
@@ -21,6 +23,8 @@ import { requireAuth } from "@/lib/auth/require-auth";
 import { stripe } from "@/lib/stripe/api";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
+import { getStripeEntitlement, setStripeEntitlement } from "@/lib/kv/entitlement-store";
+import { buildEntitlementFromSubscription } from "@/lib/stripe/webhook";
 import type { StripeCheckoutResponse } from "@/lib/stripe/types";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -77,6 +81,143 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           : `https://${process.env.VERCEL_URL}`)
         : "http://localhost:9653");
 
+    // -----------------------------------------------------------------------
+    // Pre-checkout: check for existing subscription to prevent duplicates
+    // -----------------------------------------------------------------------
+    const entitlement = await getStripeEntitlement(googleSub);
+    let existingCustomerId: string | undefined;
+
+    if (entitlement?.stripeSubscriptionId && entitlement?.stripeCustomerId) {
+      log.debug("POST /api/stripe/checkout: found existing entitlement", {
+        googleSub,
+        stripeCustomerId: entitlement.stripeCustomerId,
+        stripeSubscriptionId: entitlement.stripeSubscriptionId,
+        stripeStatus: entitlement.stripeStatus,
+        cancelAtPeriodEnd: entitlement.cancelAtPeriodEnd,
+      });
+
+      // Always remember the existing customer ID to reuse later if needed
+      existingCustomerId = entitlement.stripeCustomerId;
+
+      try {
+        const subscription = await stripe.subscriptions.retrieve(
+          entitlement.stripeSubscriptionId,
+        );
+
+        log.debug("POST /api/stripe/checkout: retrieved Stripe subscription", {
+          subscriptionId: subscription.id,
+          status: subscription.status,
+          cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        });
+
+        // Case 1: Active subscription with scheduled cancel → revive it
+        if (
+          subscription.status === "active" &&
+          subscription.cancel_at_period_end
+        ) {
+          log.debug("POST /api/stripe/checkout: reviving cancel_at_period_end subscription", {
+            subscriptionId: subscription.id,
+            googleSub,
+          });
+
+          const revived = await stripe.subscriptions.update(subscription.id, {
+            cancel_at_period_end: false,
+          });
+
+          // Update KV entitlement to reflect revived state
+          const updatedEntitlement = buildEntitlementFromSubscription(
+            revived,
+            entitlement.stripeCustomerId,
+          );
+          updatedEntitlement.linkedAt = entitlement.linkedAt;
+          await setStripeEntitlement(googleSub, updatedEntitlement);
+
+          log.debug("POST /api/stripe/checkout: subscription revived successfully", {
+            subscriptionId: subscription.id,
+            googleSub,
+            newStatus: revived.status,
+            cancelAtPeriodEnd: revived.cancel_at_period_end,
+          });
+
+          const response: StripeCheckoutResponse = {
+            revived: true,
+            message: "Your subscription has been reactivated.",
+          };
+          return NextResponse.json(response);
+        }
+
+        // Case 2: Still fully active (not canceling) → already subscribed
+        if (
+          (subscription.status === "active" || subscription.status === "trialing") &&
+          !subscription.cancel_at_period_end
+        ) {
+          log.debug("POST /api/stripe/checkout: user already has active subscription", {
+            subscriptionId: subscription.id,
+            status: subscription.status,
+            googleSub,
+          });
+          return NextResponse.json(
+            {
+              error: "already_subscribed",
+              error_description: "You already have an active Karl subscription.",
+            },
+            { status: 409 },
+          );
+        }
+
+        // Case 3: Canceled, past_due, unpaid, or other terminal state → clean up
+        // For canceled subs, Stripe has already terminated them — no need to cancel again.
+        // For past_due/unpaid, cancel them so the user can start fresh.
+        if (subscription.status === "past_due" || subscription.status === "unpaid") {
+          log.debug("POST /api/stripe/checkout: canceling stale subscription before new checkout", {
+            subscriptionId: subscription.id,
+            status: subscription.status,
+            googleSub,
+          });
+          await stripe.subscriptions.cancel(subscription.id);
+        }
+
+        log.debug("POST /api/stripe/checkout: existing subscription is terminal, proceeding to new checkout", {
+          subscriptionId: subscription.id,
+          status: subscription.status,
+          googleSub,
+        });
+      } catch (stripeErr) {
+        // Subscription may no longer exist in Stripe (e.g. deleted) — proceed with new checkout
+        const errMsg = stripeErr instanceof Error ? stripeErr.message : String(stripeErr);
+        log.debug("POST /api/stripe/checkout: could not retrieve existing subscription, proceeding to new checkout", {
+          subscriptionId: entitlement.stripeSubscriptionId,
+          error: errMsg,
+          googleSub,
+        });
+      }
+    } else if (entitlement?.stripeCustomerId) {
+      // Entitlement exists with customer ID but no subscription — reuse customer
+      existingCustomerId = entitlement.stripeCustomerId;
+      log.debug("POST /api/stripe/checkout: found existing customer ID without subscription", {
+        stripeCustomerId: existingCustomerId,
+        googleSub,
+      });
+    } else {
+      log.debug("POST /api/stripe/checkout: no existing entitlement, creating fresh checkout", {
+        googleSub,
+      });
+    }
+
+    // -----------------------------------------------------------------------
+    // Create new checkout session — reuse existing customer ID when available
+    // -----------------------------------------------------------------------
+    const customerParam: { customer: string } | { customer_email: string } =
+      existingCustomerId
+        ? { customer: existingCustomerId }
+        : { customer_email: customerEmail };
+
+    log.debug("POST /api/stripe/checkout: creating checkout session", {
+      googleSub,
+      reusingCustomer: !!existingCustomerId,
+      ...(existingCustomerId ? { stripeCustomerId: existingCustomerId } : {}),
+    });
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
@@ -86,7 +227,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           quantity: 1,
         },
       ],
-      customer_email: customerEmail,
+      ...customerParam,
       success_url: `${baseUrl}/settings?stripe=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/settings?stripe=cancel`,
       metadata: { googleSub },
@@ -110,6 +251,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       status: 200,
       sessionId: session.id,
       googleSub,
+      reusingCustomer: !!existingCustomerId,
     });
     return NextResponse.json(response);
   } catch (err) {

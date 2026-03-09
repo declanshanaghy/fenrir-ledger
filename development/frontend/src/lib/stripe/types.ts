@@ -104,8 +104,12 @@ export interface StripeMembershipResponse {
 
 /** Response from POST /api/stripe/checkout */
 export interface StripeCheckoutResponse {
-  /** Stripe Checkout Session URL to redirect the user to */
-  url: string;
+  /** Stripe Checkout Session URL to redirect the user to (absent when revived) */
+  url?: string;
+  /** Whether an existing canceling subscription was revived instead of creating a new one */
+  revived?: boolean;
+  /** Human-readable message for the revive/cleanup action taken */
+  message?: string;
 }
 
 /** Response from POST /api/stripe/portal */
