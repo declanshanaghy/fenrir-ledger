@@ -8,9 +8,10 @@ var PROJECT_NUMBER = 1;
 var PROJECT_ID = "PVT_kwHOAAW5PM4BQ7LP";
 var FIELD_ID = "PVTSSF_lAHOAAW5PM4BQ7LPzg-54RA";
 var STATUS_OPTIONS = {
-  "up-next": "6e492bcc",
-  "in-progress": "1d9139d4",
-  done: "c5fe053a"
+  "up-next": "9e642425",
+  "in-progress": "46217103",
+  "on-hold": "15f834b7",
+  done: "2cda5d40"
 };
 var GH_API = "https://api.github.com";
 var GH_GQL = "https://api.github.com/graphql";
@@ -312,7 +313,7 @@ async function chainStatus(issueNum) {
 async function moveIssue(issueNum, status) {
   const optionId = STATUS_OPTIONS[status];
   if (!optionId) {
-    console.error(`Invalid status: ${status} (use up-next, in-progress, done)`);
+    console.error(`Invalid status: ${status} (use up-next, in-progress, on-hold, done)`);
     process.exit(1);
   }
   const findQuery = `
