@@ -140,7 +140,7 @@ test.describe("Profile Dropdown Header", () => {
     await expect(signOut).toHaveAttribute("role", "menuitem");
   });
 
-  test("Dropdown closes when clicking a menu item", async ({ page }) => {
+  test("Dropdown closes when clicking a navigation menu item", async ({ page }) => {
     // Open the dropdown
     const avatarButton = page.locator("button[aria-controls='user-menu']");
     await avatarButton.click();
@@ -149,12 +149,12 @@ test.describe("Profile Dropdown Header", () => {
     const userMenu = page.locator("#user-menu");
     await expect(userMenu).toBeVisible();
 
-    // Click Theme to toggle theme (this closes the dropdown on TopBar)
-    const theme = userMenu.locator('[role="menuitem"]').filter({ hasText: "Theme" });
-    await theme.click();
+    // Click Settings (which calls onClose)
+    const settings = userMenu.locator('[role="menuitem"]').filter({ hasText: "Settings" });
+    await settings.click();
 
-    // Wait a moment for any animations
-    await page.waitForTimeout(200);
+    // Wait a moment for navigation/animations
+    await page.waitForTimeout(300);
 
     // Dropdown should be closed
     await expect(userMenu).not.toBeVisible();
