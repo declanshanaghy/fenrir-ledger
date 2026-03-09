@@ -99,7 +99,8 @@ test.describe("Add Card — Successful Creation", () => {
 
     await page.waitForURL("**/", { timeout: 5000 });
 
-    await expect(page.locator(`text=${uniqueName}`)).toBeVisible();
+    // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
+    await expect(page.locator(`text=${uniqueName}`).first()).toBeVisible();
   });
 });
 

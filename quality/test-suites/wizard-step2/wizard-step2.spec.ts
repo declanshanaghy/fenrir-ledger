@@ -133,7 +133,8 @@ test.describe("Wizard Step 2 — Save Card", () => {
 
     await page.locator('button[type="submit"]').click();
     await page.waitForURL("**/", { timeout: 5000 });
-    await expect(page.locator(`text=${cardName}`)).toBeVisible();
+    // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
+    await expect(page.locator(`text=${cardName}`).first()).toBeVisible();
   });
 
   test("Cancel from Step 2 returns to dashboard without saving", async ({ page }) => {

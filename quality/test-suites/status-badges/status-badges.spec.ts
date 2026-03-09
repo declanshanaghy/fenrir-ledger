@@ -96,7 +96,8 @@ test.describe("Status Badges - Bonus Open and Overdue (#158)", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    const cardElement = page.locator(`text=${card.cardName}`);
+    // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
+    const cardElement = page.locator(`text=${card.cardName}`).first();
     await expect(cardElement).toBeVisible();
   });
 
@@ -128,7 +129,8 @@ test.describe("Status Badges - Bonus Open and Overdue (#158)", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    const cardElement = page.locator(`text=${card.cardName}`);
+    // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
+    const cardElement = page.locator(`text=${card.cardName}`).first();
     await expect(cardElement).toBeVisible();
   });
 
@@ -155,7 +157,8 @@ test.describe("Status Badges - Bonus Open and Overdue (#158)", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    const cardElement = page.locator(`text=${card.cardName}`);
+    // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
+    const cardElement = page.locator(`text=${card.cardName}`).first();
     await expect(cardElement).toBeVisible();
   });
 
@@ -182,7 +185,8 @@ test.describe("Status Badges - Bonus Open and Overdue (#158)", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    const cardElement = page.locator(`text=${card.cardName}`);
+    // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
+    const cardElement = page.locator(`text=${card.cardName}`).first();
     await expect(cardElement).toBeVisible();
   });
 
