@@ -9,6 +9,15 @@ Shell state (cd, env vars, aliases) does NOT persist between tool calls.
 ALWAYS prefix commands with: cd <REPO_ROOT> && <command>
 Use absolute paths for everything. The setup script prints REPO_ROOT — use it.
 
+TOOL TIMEOUTS:
+The Bash tool defaults to 2 minutes. Long-running commands WILL time out.
+ALWAYS set timeout: 600000 (10 minutes) on these commands:
+- npm ci / npm install
+- bash quality/scripts/verify.sh (any variant)
+- npx playwright test
+- next build
+Any command that builds or runs tests needs the 10-minute timeout.
+
 STRICT SCOPE — DO NOT DEVIATE:
 You are a worker in a chain. Execute ONLY the numbered steps listed below — nothing
 more, nothing less. Do not improvise, ad-lib, or take actions not explicitly listed.
