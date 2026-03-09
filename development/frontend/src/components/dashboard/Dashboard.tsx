@@ -500,10 +500,6 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
     return () => window.removeEventListener("fenrir:loki-mode", handleLokiMode);
   }, [cards]);
 
-  // ── Summary counts ─────────────────────────────────────────────────────────
-  // needsAttention includes overdue as per original Dashboard spec
-  const needsAttention = howlCards;
-
   // ── Keyboard navigation for tab bar (ARIA tabs pattern) ────────────────────
   // Arrow keys navigate between tabs (wrapping). Home/End jump to first/last.
   function handleTabKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, tabIndex: number) {
@@ -559,24 +555,6 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
 
   return (
     <div>
-      {/* Summary header — total portfolio count including closed */}
-      <div className="flex items-center gap-6 mb-4 text-base text-muted-foreground">
-        <span>
-          <span className="text-foreground font-semibold text-xl">
-            {cards.length}
-          </span>{" "}
-          {cards.length === 1 ? "card" : "cards"}
-        </span>
-        {needsAttention.length > 0 && (
-          <span>
-            <span className="text-primary font-semibold text-xl">
-              {needsAttention.length}
-            </span>{" "}
-            need{needsAttention.length === 1 ? "s" : ""} attention
-          </span>
-        )}
-      </div>
-
       {/* ── Tab bar — 5 tabs ──────────────────────────────────────────────────── */}
       <div
         role="tablist"
