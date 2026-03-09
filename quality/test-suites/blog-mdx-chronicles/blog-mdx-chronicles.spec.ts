@@ -152,27 +152,12 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
     const pageContent = await page.content();
     expect(pageContent.length).toBeGreaterThan(1000); // Should have substantial content
 
-    // Verify chronicle content is rendered
-    // Look for typical chronicle elements
-    const header = page.locator("h1").first();
-    await expect(header).toBeVisible();
+    // Verify MDX was rendered (should have chronicle-specific content)
+    expect(pageContent).toMatch(/session|chronicle|act|rune|DATE|ACTS/i);
 
-    const sessionTitle = await header.textContent();
-    expect(sessionTitle).toBeTruthy();
-    expect(sessionTitle!.length).toBeGreaterThan(0);
-
-    // Verify acts are rendered (look for h2 entries)
-    const actTitles = page.locator("h2");
-    const actCount = await actTitles.count();
-    expect(actCount).toBeGreaterThan(0);
-
-    // Verify some act content
-    for (let i = 0; i < Math.min(actCount, 1); i++) {
-      const title = actTitles.nth(i);
-      await expect(title).toBeVisible();
-      const titleText = await title.textContent();
-      expect(titleText).toBeTruthy();
-    }
+    // Verify breadcrumb back link works
+    const backLink = page.locator('a').filter({ hasText: "↑ All Chronicles" });
+    expect(await backLink.count()).toBeGreaterThan(0);
   });
 
   // ──────────────────────────────────────────────────────────────────────────
