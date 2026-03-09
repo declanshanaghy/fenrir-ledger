@@ -271,7 +271,8 @@ test.describe("Dashboard — Card Tile Links", () => {
 
     // Spec: CardTile.tsx wraps content in <Link href={`/cards/${card.id}/edit`}>
     // Each FEW_CARDS entry has a unique ID — verify the link pattern exists
-    // Scope to "All" tab to avoid 5-tab duplication
+    // Click "All" tab first since default tab is Howl or Active
+    await page.locator('#tab-all').click();
     const allPanel = page.locator('[aria-labelledby="tab-all"]');
     for (const card of FEW_CARDS) {
       const tileLink = allPanel.locator(`a[href="/cards/${card.id}/edit"]`);

@@ -130,12 +130,13 @@ test.describe("Dashboard Tabs QA — Issue #279", () => {
         makeUrgentCard({ cardName: "Urgent" }),
       ]);
 
+      // Tab order: Howl → Hunt → Active → Valhalla → All
       const howlTab = page.locator('button#tab-howl');
-      const activeTab = page.locator('button#tab-active');
+      const huntTab = page.locator('button#tab-hunt');
 
       await howlTab.focus();
       await page.keyboard.press("ArrowRight");
-      await expect(activeTab).toHaveAttribute("aria-selected", "true");
+      await expect(huntTab).toHaveAttribute("aria-selected", "true");
     });
   });
 
