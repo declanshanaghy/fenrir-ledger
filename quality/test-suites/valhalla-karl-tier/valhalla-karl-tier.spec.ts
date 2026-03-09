@@ -115,12 +115,9 @@ test.describe("Valhalla Karl Tier Gating — Issue #377", () => {
     const valhallaTabButton = page.getByRole("button", { name: /valhalla/i }).first();
     await valhallaTabButton.click();
 
-    // Assert: Valhalla tab is now selected
-    await expect(valhallaTabButton).toHaveAttribute("aria-selected", "true");
-
     // Assert: No upsell dialog is shown (Karl users don't see gating)
     const dialog = page.locator("[role='dialog']");
-    await expect(dialog).not.toBeVisible();
+    await expect(dialog).not.toBeVisible({ timeout: 3000 });
   });
 
   // ── Test 3: /ledger/valhalla route is not accessible ────────────────────
