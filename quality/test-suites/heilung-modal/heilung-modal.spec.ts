@@ -235,25 +235,27 @@ test.describe("Heilung Modal — Content & Structure", () => {
   /**
    * AC6 — Click opens YouTube video in new tab
    *
-   * Verifies that clicking the thumbnail opens YouTube in a new tab.
+   * Verifies that the thumbnail link is configured to open YouTube in a new tab.
    */
-  test("clicking thumbnail opens YouTube in new tab", async ({ page, context }) => {
-    // Listen for new page (new tab)
-    const newPagePromise = context.waitForEvent("page");
-
+  test("clicking thumbnail opens YouTube in new tab", async ({ page }) => {
     // Click the thumbnail link
     const thumbnailLink = page.locator(
       'a[href*="youtube.com/watch?v=QRg_8NNPTD8"]'
     );
     await expect(thumbnailLink).toBeVisible();
 
-    // Verify it has target="_blank"
+    // Verify it has target="_blank" (opens in new tab)
     const target = await thumbnailLink.getAttribute("target");
     expect(target).toBe("_blank");
 
     // Verify the href is correct
     const href = await thumbnailLink.getAttribute("href");
     expect(href).toContain("youtube.com/watch?v=QRg_8NNPTD8");
+
+    // Verify rel="noopener noreferrer" for security
+    const rel = await thumbnailLink.getAttribute("rel");
+    expect(rel).toContain("noopener");
+    expect(rel).toContain("noreferrer");
   });
 
   /**
