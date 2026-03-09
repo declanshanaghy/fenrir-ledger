@@ -116,7 +116,8 @@ test.describe("Valhalla Karl Tier Gating — Issue #377", () => {
     await valhallaTabButton.click();
 
     // Assert: Tab panel is visible (no upsell dialog)
-    await expect(page.locator("[id*='panel-valhalla']")).toBeVisible();
+    const valhallaPanel = page.locator("[role='tabpanel'][aria-labelledby='tab-valhalla']");
+    await expect(valhallaPanel).toBeVisible();
 
     // Assert: No upsell dialog is shown
     const dialog = page.locator("[role='dialog']");
