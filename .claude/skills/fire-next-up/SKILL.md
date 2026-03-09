@@ -189,7 +189,7 @@ Max 50 chars. The orchestrator does NOT create the branch — the agent does ins
 | Agent | Remote (Depot) | Local (`--local`) |
 |-------|----------------|-------------------|
 | Luna | `claude-sonnet-4-6` | `sonnet` |
-| FiremanDecko | `claude-sonnet-4-6` | `sonnet` |
+| FiremanDecko | `claude-opus-4-6` | `opus` |
 | Freya | `claude-sonnet-4-6` | `sonnet` |
 | Loki | `claude-haiku-4-5-20251001` | `haiku` |
 | Heimdall | `claude-haiku-4-5-20251001` | `haiku` |
