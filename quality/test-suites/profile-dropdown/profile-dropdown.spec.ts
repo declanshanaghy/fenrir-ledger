@@ -91,8 +91,18 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
     page,
   }) => {
     // Given: user is signed in (session mocked)
+    // Debug: Check what's in localStorage
+    const authSession = await page.evaluate(() => localStorage.getItem("fenrir:auth"));
+    console.log("Auth session in localStorage:", authSession ? "EXISTS" : "MISSING");
+
+    // Check page title
+    console.log("Page title:", await page.title());
+
     // When: avatar button in top-right is clicked
     const avatarButton = page.locator("header button[aria-controls='user-menu']");
+    const count = await avatarButton.count();
+    console.log("Avatar button count:", count);
+
     await expect(avatarButton).toBeVisible();
     await avatarButton.click();
 
