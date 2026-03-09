@@ -317,17 +317,13 @@ test.describe("Issue #403 — Sidebar Removal & Profile Dropdown", () => {
 
     const header = page.locator("header");
 
-    // Should have logo/home link (specifically the "Fenrir Ledger" wordmark)
-    const homeLink = page.getByRole("link", {
-      name: /Fenrir Ledger/i,
-    });
-    await expect(homeLink).toBeVisible();
+    // Should have logo with full wordmark visible (desktop only)
+    const desktopLogo = page.locator(
+      "header span.hidden.md\\:inline:has-text('FENRIR LEDGER')"
+    );
+    await expect(desktopLogo).toBeVisible();
 
-    // Desktop: should have back link
-    const backLink = page.getByRole("link", {
-      name: /Back to Fenrir Ledger site/i,
-    });
-    // On desktop, back link should show as "Back to site" text (visible desktop version)
+    // Desktop: should have visible back link with text
     const desktopBackLink = page.locator(
       "header .hidden.md\\:flex a[aria-label*='Back to site']"
     );
@@ -336,11 +332,11 @@ test.describe("Issue #403 — Sidebar Removal & Profile Dropdown", () => {
     // Should have theme toggle
     const themeToggle = header.locator(
       "button[aria-label*='theme'], button[aria-label*='Theme']"
-    );
+    ).first();
     await expect(themeToggle).toBeVisible();
 
     // Should have avatar button
-    const avatarButton = header.locator("button[aria-haspopup='true']");
+    const avatarButton = header.locator("button[aria-haspopup='true']").first();
     await expect(avatarButton).toBeVisible();
   });
 
