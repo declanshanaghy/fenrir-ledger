@@ -63,6 +63,7 @@ export const STATUS_LABELS: Record<string, string> = {
   closed: "Closed",
   bonus_open: "Bonus Open",
   overdue: "Overdue",
+  graduated: "Graduated",
 };
 
 /**
@@ -77,4 +78,5 @@ export const STATUS_TOOLTIPS: Record<CardStatus, string> = {
   closed: getRealmDescription("closed"),
   bonus_open: getRealmDescription("bonus_open"),
   overdue: getRealmDescription("overdue"),
+  graduated: getRealmDescription("graduated"),
 };

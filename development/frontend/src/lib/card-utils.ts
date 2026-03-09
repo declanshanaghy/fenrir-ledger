@@ -104,11 +104,12 @@ export function daysUntil(isoDate: string, today?: Date): number {
  *
  * Status priority (highest to lowest):
  * 1. "closed" — if explicitly set
- * 2. "overdue" — annual fee date is in the past
- * 3. "fee_approaching" — annual fee within FEE_APPROACHING_DAYS days
- * 4. "promo_expiring" — sign-up bonus deadline within PROMO_EXPIRING_DAYS days
- * 5. "bonus_open" — in bonus window, not yet met
- * 6. "active" — otherwise
+ * 2. "graduated" — sign-up bonus minimum spend met (auto-graduates to Valhalla)
+ * 3. "overdue" — annual fee date is in the past
+ * 4. "fee_approaching" — annual fee within FEE_APPROACHING_DAYS days
+ * 5. "promo_expiring" — sign-up bonus deadline within PROMO_EXPIRING_DAYS days
+ * 6. "bonus_open" — in bonus window, not yet met
+ * 7. "active" — otherwise
  *
  * @param card - The card to evaluate
  * @param today - Reference date for calculation (defaults to current date)
@@ -117,6 +118,11 @@ export function daysUntil(isoDate: string, today?: Date): number {
 export function computeCardStatus(card: Card, today?: Date): CardStatus {
   if (card.status === "closed" || (card.closedAt && card.closedAt !== "")) {
     return "closed";
+  }
+
+  // Auto-graduate: sign-up bonus minimum spend met → card ascends to Valhalla
+  if (card.signUpBonus?.met) {
+    return "graduated";
   }
 
   // Check overdue - annual fee was due but not addressed

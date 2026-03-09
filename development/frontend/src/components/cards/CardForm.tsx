@@ -89,7 +89,7 @@ const cardFormSchema = z
     bonusSpendRequirement: z.string().optional().default(""),
     bonusDeadline: z.string().optional().default(""),
     bonusMet: z.boolean().default(false),
-    status: z.enum(["active", "fee_approaching", "promo_expiring", "closed", "bonus_open", "overdue"]).optional(),
+    status: z.enum(["active", "fee_approaching", "promo_expiring", "closed", "bonus_open", "overdue", "graduated"]).optional(),
     notes: z.string().optional().default(""),
   });
 
@@ -347,10 +347,12 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
    * Closes the card — marks it status: "closed" with a closedAt timestamp.
    * The card moves to Valhalla and disappears from the active dashboard.
    * The record is preserved; it is NOT deleted.
+   *
+   * @param markBonusMet - if true, sets signUpBonus.met = true before closing
    */
-  const handleClose = () => {
+  const handleClose = (markBonusMet?: boolean) => {
     if (!initialValues?.id) return;
-    closeCard(householdId, initialValues.id);
+    closeCard(householdId, initialValues.id, markBonusMet ? { markBonusMet: true } : undefined);
     router.push("/ledger");
   };
 
@@ -922,24 +924,60 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
                 </Button>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Close this card?</DialogTitle>
-                  <DialogDescription>
-                    <strong>{initialValues?.cardName}</strong> will be moved to
-                    Closed Cards. Its record and rewards will be preserved.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setCloseDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button variant="default" onClick={handleClose}>
-                    Close Card
-                  </Button>
-                </DialogFooter>
+                {/* If card has an unmet sign-up bonus, prompt about minimum spend */}
+                {initialValues?.signUpBonus && !initialValues.signUpBonus.met ? (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle>Has the minimum spend been met?</DialogTitle>
+                      <DialogDescription>
+                        <strong>{initialValues?.cardName}</strong> has a sign-up bonus
+                        that hasn&apos;t been marked as met. Has the minimum spend
+                        requirement been met?
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex flex-col gap-2 sm:flex-row">
+                      <Button
+                        variant="outline"
+                        onClick={() => setCloseDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="default"
+                        onClick={() => handleClose(false)}
+                      >
+                        No, close card
+                      </Button>
+                      <Button
+                        variant="default"
+                        onClick={() => handleClose(true)}
+                      >
+                        Yes, mark as met
+                      </Button>
+                    </DialogFooter>
+                  </>
+                ) : (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle>Close this card?</DialogTitle>
+                      <DialogDescription>
+                        <strong>{initialValues?.cardName}</strong> will be moved to
+                        Valhalla. Its record and rewards will be preserved.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setCloseDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button variant="default" onClick={() => handleClose()}>
+                        Close Card
+                      </Button>
+                    </DialogFooter>
+                  </>
+                )}
               </DialogContent>
             </Dialog>
 

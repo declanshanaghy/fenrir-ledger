@@ -12,7 +12,7 @@ export type BonusType = "points" | "miles" | "cashback";
  * Card status — derived from dates but stored for display performance.
  * See card-utils.ts computeCardStatus() for derivation logic.
  */
-export type CardStatus = "active" | "fee_approaching" | "promo_expiring" | "closed" | "bonus_open" | "overdue";
+export type CardStatus = "active" | "fee_approaching" | "promo_expiring" | "closed" | "bonus_open" | "overdue" | "graduated";
 
 /**
  * Sign-up bonus details for a credit card.

@@ -31,6 +31,8 @@ const badgeVariants = cva(
           "border-transparent bg-realm-alfheim/20 text-realm-alfheim border-realm-alfheim/25",
         overdue:
           "border-transparent bg-realm-niflheim/20 text-realm-niflheim border-realm-niflheim/30 animate-muspel-pulse",
+        graduated:
+          "border-transparent bg-realm-hel/10 text-realm-hel border-realm-hel/20",
       },
     },
     defaultVariants: {
