@@ -15,6 +15,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
+import rehypeRaw from "rehype-raw";
 import {
   getAllChronicles,
   getAllChroniclesSlugs,
@@ -56,6 +57,23 @@ function formatDate(iso: string): string {
     day: "numeric",
     timeZone: "UTC",
   });
+}
+
+/**
+ * Strip leading whitespace from each line of MDX/HTML content.
+ *
+ * Markdown treats lines indented by 4+ spaces as code blocks, which causes
+ * indented HTML in chronicle MDX files to render as escaped text instead of
+ * styled markup. Dedenting prevents this while preserving content inside
+ * inline <pre> blocks (which sit on single lines in our chronicles).
+ *
+ * Ref: GitHub Issue #407
+ */
+function dedentHtml(source: string): string {
+  return source
+    .split("\n")
+    .map((line) => line.trimStart())
+    .join("\n");
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -110,10 +128,11 @@ export default async function ChronicleDetailPage({
 
       {/* ── Chronicle content — native MDX rendering ── */}
       {/* format:'md' compiles HTML+markdown to React components at build time.
-          All MDX files use JSX-compatible className attributes. */}
+          dedentHtml strips leading whitespace so indented HTML isn't treated
+          as markdown code blocks.  Ref: Issue #407 */}
       <MDXRemote
-        source={entry.content}
-        options={{ mdxOptions: { format: "md" } }}
+        source={dedentHtml(entry.content)}
+        options={{ mdxOptions: { format: "md", rehypePlugins: [rehypeRaw] } }}
       />
 
       {/* ── Prev / Next navigation ── */}
