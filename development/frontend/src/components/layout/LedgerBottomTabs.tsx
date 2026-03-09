@@ -141,9 +141,9 @@ export function LedgerBottomTabs() {
               <RuneIcon rune="↑" />
               {!hasValhalla && (
                 <span
-                  className="absolute -top-1 -right-2.5 text-[7px]"
+                  className="absolute -top-1.5 -right-3 text-[7px] font-mono font-bold border border-gold/30 text-gold/60 px-0.5 leading-tight bg-background"
                   aria-hidden="true"
-                >&#128274;</span>
+                >K</span>
               )}
             </div>
             <span className="text-[10px] font-body">Valhalla</span>

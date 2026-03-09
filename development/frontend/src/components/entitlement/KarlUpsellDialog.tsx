@@ -9,21 +9,20 @@
  *   - Velocity (#378): spending velocity analytics
  *   - Any future Karl feature uses the same dialog
  *
- * Props contract (per wireframe karl-upsell-dialog.html):
- *   featureIcon    — rune glyph (e.g. "ᛏ" for Valhalla)
- *   featureName    — plain name (e.g. "Valhalla")
- *   featureTagline — atmospheric one-liner (Voice 2)
- *   featureTeaser  — 1-2 sentence description of what user is missing (Voice 1)
- *   onSubscribe    — callback -> triggers Stripe purchase flow
- *   onDismiss      — callback -> closes dialog, no penalty
- *
  * Layout:
- *   - Desktop: centered dialog
- *   - Mobile: bottom-anchored sheet (align-items: flex-end)
- *   - Dismiss via: X button / "Not now" / Escape / backdrop click
+ *   Desktop: centered dialog (max-width 460px)
+ *   Mobile (≤ 640px): bottom-sheet (full-width, anchored to bottom)
+ *
+ * Flow:
+ *   Authenticated user → POST /api/stripe/checkout → redirect to Stripe
+ *   Anonymous user → redirect to sign-in with returnTo for checkout
+ *
+ * Dismiss behavior:
+ *   "Not now" / ✕ / Escape / backdrop click → closes dialog, no permanent flag.
  *
  * Wireframe: ux/wireframes/stripe-direct/karl-upsell-dialog.html
- * Issue: #377, #378, #398
+ * Interaction spec: ux/karl-upsell-interaction-spec.md
+ * Issues: #377, #378, #398
  *
  * @module entitlement/KarlUpsellDialog
  */
@@ -37,6 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useEntitlement } from "@/hooks/useEntitlement";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -90,7 +90,15 @@ export function KarlUpsellDialog({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onDismiss()}>
       <DialogContent
-        className="w-[92vw] max-w-[460px] max-h-[90vh] overflow-y-auto border-2 border-gold/40 bg-background p-0 gap-0 sm:top-[50%] sm:translate-y-[-50%] top-auto bottom-0 sm:bottom-auto translate-y-0 sm:rounded-lg rounded-t-lg rounded-b-none sm:translate-x-[-50%] left-[50%]"
+        className={cn(
+          "w-[92vw] max-w-[460px] max-h-[90vh] overflow-y-auto",
+          "border-2 border-gold/40 bg-background p-0 gap-0",
+          // Desktop: centered dialog
+          "sm:top-[50%] sm:translate-y-[-50%] sm:translate-x-[-50%] sm:left-[50%] sm:rounded-lg",
+          // Mobile: bottom-sheet
+          "top-auto bottom-0 translate-y-0 left-[50%] rounded-t-lg rounded-b-none",
+        )}
+        style={{ zIndex: 210 }}
       >
         {/* ── Header — static: tier name + price ─────────────────────── */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-border">
@@ -109,18 +117,18 @@ export function KarlUpsellDialog({
         <div className="flex flex-col items-center gap-2.5 px-5 pt-6 pb-5 border-b border-border">
           {/* Feature icon with lock badge */}
           <div
-            className="relative w-[72px] h-[72px] sm:w-[72px] sm:h-[72px] w-[56px] h-[56px] border border-dashed border-border flex items-center justify-center"
+            className="relative w-[56px] h-[56px] sm:w-[72px] sm:h-[72px] border border-dashed border-border flex items-center justify-center"
             aria-hidden="true"
           >
             <span
-              className="text-3xl sm:text-[32px] text-primary leading-none select-none"
+              className="text-2xl sm:text-[32px] text-primary leading-none select-none"
               style={{ fontFamily: "serif" }}
             >
               {featureIcon}
             </span>
             {/* Lock badge */}
             <span
-              className="absolute -bottom-1.5 -right-1.5 w-5 h-5 sm:w-5 sm:h-5 w-4 h-4 border border-border bg-background flex items-center justify-center text-[10px] sm:text-[10px] text-[8px]"
+              className="absolute -bottom-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 border border-border bg-background flex items-center justify-center text-[8px] sm:text-[10px] rounded-sm"
               aria-hidden="true"
             >
               &#128274;
@@ -156,7 +164,7 @@ export function KarlUpsellDialog({
 
           {/* Karl tier row — static: badge + copy + price */}
           <div className="flex items-center gap-2.5 border border-border px-3 py-2.5">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] border border-border px-1.5 py-0.5 shrink-0 text-primary">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] border border-gold text-gold px-1.5 py-0.5 shrink-0">
               Karl
             </span>
             <span className="text-xs sm:text-[12px] text-muted-foreground font-body flex-1">
@@ -174,7 +182,7 @@ export function KarlUpsellDialog({
               disabled={isSubscribing}
               isLoading={isSubscribing}
               loadingText="Redirecting..."
-              className="w-full min-h-[48px] text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-primary hover:brightness-110 border-2 border-gold"
+              className="w-full min-h-[44px] sm:min-h-[48px] text-[14px] sm:text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-primary hover:brightness-110 border-2 border-gold"
             >
               Upgrade to Karl &mdash; $3.99/month
             </Button>
@@ -190,7 +198,7 @@ export function KarlUpsellDialog({
           <button
             type="button"
             onClick={onDismiss}
-            className="text-[12px] text-muted-foreground border border-border px-4 py-2 cursor-pointer font-body hover:text-foreground hover:bg-muted transition-colors min-h-[44px] inline-flex items-center"
+            className="text-[12px] text-muted-foreground border border-border px-4 py-2 cursor-pointer font-body hover:text-foreground hover:border-foreground/30 transition-colors min-h-[44px] inline-flex items-center"
           >
             Not now
           </button>
