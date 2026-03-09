@@ -1,11 +1,11 @@
 /**
- * Chronicles Index — /chronicles
+ * Prose Edda Index — /chronicles
  *
- * Lists all session chronicles in a responsive card grid.
+ * The sagas of the forge. Each session carved into the record.
  * Sorted by date descending (newest first).
  * Uses marketing layout (navbar + footer).
  *
- * Ref: GitHub Issue #373
+ * Ref: GitHub Issue #373, #429
  */
 
 import type { Metadata } from "next";
@@ -15,9 +15,9 @@ import { getAllChronicles } from "@/lib/chronicles";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Chronicles · Fenrir Ledger",
+  title: "Prose Edda · Fenrir Ledger",
   description:
-    "Session chronicles from the Fenrir Ledger forge — behind-the-scenes narratives of each development session.",
+    "The sagas of the Fenrir Ledger forge — each session carved into the record, as the skalds once carved runes into stone.",
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -42,11 +42,12 @@ export default function ChroniclesIndexPage() {
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="font-display text-3xl md:text-4xl font-bold tracking-wide text-foreground mb-3">
-          Chronicles
+          Prose Edda
         </h1>
-        <p className="font-body text-muted-foreground text-sm md:text-base max-w-xl mx-auto">
-          Behind-the-scenes narratives from each development session in the
-          Fenrir Ledger forge.
+        <p className="font-body text-muted-foreground text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+          These are not blog posts. These are the sagas of the forge.
+          Each session carved into the record, as the skalds once carved runes into stone.
+          The wolf does not explain — it declares. Read, and know what was built.
         </p>
       </div>
 

@@ -25,7 +25,7 @@ const FOOTER_COLUMNS = [
   {
     heading: "Resources",
     links: [
-      { href: "/chronicles", label: "Chronicles" },
+      { href: "/chronicles", label: "Prose Edda" },
       { href: "/about", label: "About" },
     ],
   },
