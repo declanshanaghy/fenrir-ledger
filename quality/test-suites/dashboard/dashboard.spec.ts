@@ -106,9 +106,9 @@ test.describe("Dashboard — Card Grid", () => {
 
     // Spec: CardTile.tsx renders <CardTitle>{card.cardName}</CardTitle>
     // FEW_CARDS = [Sapphire Preferred, Platinum, Venture Rewards]
-    await expect(page.getByText("Sapphire Preferred")).toBeVisible();
-    await expect(page.getByText("Platinum")).toBeVisible();
-    await expect(page.getByText("Venture Rewards")).toBeVisible();
+    await expect(page.getByText("Sapphire Preferred").first()).toBeVisible();
+    await expect(page.getByText("Platinum").first()).toBeVisible();
+    await expect(page.getByText("Venture Rewards").first()).toBeVisible();
   });
 
   test("renders exactly 3 card tiles for FEW_CARDS", async ({ page }) => {
