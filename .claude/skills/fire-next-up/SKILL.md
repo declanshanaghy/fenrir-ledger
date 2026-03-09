@@ -101,9 +101,10 @@ When `--resume` finds actions that are clearly ready, execute them immediately:
 | Completed chain still in "In Progress" | Move to Done |
 | Research handoff + PR merged + issue open | Present research review to Odin |
 
-**Only pause for Odin's approval on:** merges (confirm first), ambiguous situations, or FAIL verdicts.
+**Only pause for Odin's approval on:** ambiguous situations or FAIL verdicts.
 
-Report what was auto-executed in the dashboard output.
+**Do NOT pause for:** merges, Loki dispatches, board moves, or any other obvious action.
+Execute all clear-cut actions immediately and report what was done in the dashboard output.
 
 ---
 
