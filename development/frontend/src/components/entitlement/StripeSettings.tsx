@@ -118,7 +118,9 @@ export function StripeSettings() {
     setIsSubscribing(true);
     try {
       await subscribeStripe();
-      // If successful, user is redirected -- loading persists until navigation
+      // For redirects (new checkout), loading persists until navigation.
+      // For revives (inline toast), reset loading since we stay on page.
+      setIsSubscribing(false);
     } catch {
       toast.error("Could not start checkout. Please try again.");
       setIsSubscribing(false);

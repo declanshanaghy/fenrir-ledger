@@ -26,6 +26,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import {
@@ -272,10 +273,12 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
         throw new Error((err as { error_description?: string }).error_description ?? "Checkout failed");
       }
 
-      const data = (await response.json()) as { url?: string; revived?: boolean };
+      const data = (await response.json()) as { url?: string; revived?: boolean; message?: string };
       if (data.revived) {
-        // Subscription was revived (un-canceled) — redirect to success page
-        window.location.href = "/ledger/settings?stripe=success";
+        // Subscription was revived (un-canceled) — show toast + refresh state inline
+        console.debug("[Fenrir] Subscription revived — refreshing entitlement");
+        toast.success(data.message ?? "Your subscription has been reactivated.");
+        await refreshEntitlement();
       } else if (data.url) {
         window.location.href = data.url;
       }
@@ -286,7 +289,7 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
       );
       throw err;
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshEntitlement]);
 
   // -- Stripe: Open Customer Portal ------------------------------------------
 
