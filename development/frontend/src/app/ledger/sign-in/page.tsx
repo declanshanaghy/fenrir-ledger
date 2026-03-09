@@ -33,6 +33,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/auth/pkce";
 import { isSessionValid } from "@/lib/auth/session";
+import { validateReturnTo } from "@/lib/auth/sign-in-url";
 import { getAnonHouseholdId } from "@/lib/auth/household";
 import { getCards } from "@/lib/storage";
 
@@ -72,8 +73,9 @@ function SignInContent() {
     const state = generateState();
 
     // Persist PKCE transient values in sessionStorage (survives the redirect).
-    // callbackUrl: use returnTo query param if present, otherwise "/ledger" (dashboard).
-    const returnTo = searchParams.get("returnTo") ?? "/ledger";
+    // callbackUrl: validated returnTo query param, or "/ledger" (dashboard) if
+    // missing/invalid. validateReturnTo prevents open-redirect attacks.
+    const returnTo = validateReturnTo(searchParams.get("returnTo"));
     sessionStorage.setItem(
       PKCE_SESSION_KEY,
       JSON.stringify({ verifier, state, callbackUrl: returnTo })

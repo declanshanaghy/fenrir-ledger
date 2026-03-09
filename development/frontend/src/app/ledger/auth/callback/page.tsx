@@ -23,6 +23,7 @@
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { setSession } from "@/lib/auth/session";
+import { validateReturnTo } from "@/lib/auth/sign-in-url";
 import type { FenrirSession } from "@/lib/types";
 
 /** sessionStorage key written by /sign-in */
@@ -56,23 +57,6 @@ function decodeIdToken(idToken: string): IdTokenClaims {
   const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
   const decoded = atob(padded);
   return JSON.parse(decoded) as IdTokenClaims;
-}
-
-// ── Callback URL validation ──────────────────────────────────────────────────
-
-/**
- * Validates that a callback URL is safe to redirect to.
- * Prevents open-redirect attacks by ensuring the URL's origin matches the
- * current page's origin. Relative paths (e.g. "/dashboard") are always safe.
- */
-function isSafeCallbackUrl(url: string): boolean {
-  if (!url || url === "/") return true;
-  try {
-    const parsed = new URL(url, window.location.origin);
-    return parsed.origin === window.location.origin;
-  } catch {
-    return false;
-  }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -227,10 +211,9 @@ function AuthCallbackContent() {
         // until redirect completes to avoid rapid visual transitions.
         // The success state would only flash briefly before redirect anyway.
 
-        // Redirect to the original destination (with origin validation).
-        const destination = isSafeCallbackUrl(pkceData.callbackUrl)
-          ? pkceData.callbackUrl
-          : "/ledger";
+        // Redirect to the original destination (with security validation).
+        // validateReturnTo ensures relative paths only — no open redirects.
+        const destination = validateReturnTo(pkceData.callbackUrl);
 
         // Use replace instead of href to prevent back button issues
         window.location.replace(destination);
