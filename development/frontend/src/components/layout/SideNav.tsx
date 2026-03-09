@@ -24,6 +24,7 @@ import { useEntitlement } from "@/hooks/useEntitlement";
 import {
   KarlUpsellDialog,
   KARL_UPSELL_VALHALLA,
+  KARL_UPSELL_VELOCITY,
 } from "@/components/entitlement/KarlUpsellDialog";
 
 interface SideNavProps {
@@ -53,12 +54,15 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
   const searchParams = useSearchParams();
   const { hasFeature } = useEntitlement();
   const hasValhalla = hasFeature("card-archive");
+  const hasVelocity = hasFeature("velocity-management");
   const [upsellOpen, setUpsellOpen] = useState(false);
+  const [velocityUpsellOpen, setVelocityUpsellOpen] = useState(false);
 
-  // Whether the Valhalla dashboard tab is currently active
+  // Whether the Valhalla / Hunt dashboard tabs are currently active
   const isOnDashboard = pathname === "/ledger";
   const activeTab = searchParams?.get("tab");
   const valhallaTabActive = isOnDashboard && activeTab === "valhalla";
+  const huntTabActive = isOnDashboard && activeTab === "hunt";
 
   /**
    * Handle Valhalla sidebar link click.
@@ -93,6 +97,37 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
       }
     },
     [isOnDashboard, hasValhalla]
+  );
+
+  /**
+   * Handle Hunt sidebar link click.
+   * Same pattern as Valhalla — gate for Thrall, dispatch event or navigate.
+   */
+  const handleHuntClick = useCallback(
+    (e: React.MouseEvent | React.KeyboardEvent) => {
+      if ("key" in e && e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+
+      // Gate Hunt for Thrall users — show upsell dialog
+      if (!hasVelocity) {
+        setVelocityUpsellOpen(true);
+        return;
+      }
+
+      if (isOnDashboard) {
+        window.dispatchEvent(
+          new CustomEvent("fenrir:activate-tab", { detail: { tab: "hunt" } })
+        );
+        try {
+          localStorage.setItem("fenrir:dashboard-tab", "hunt");
+        } catch {
+          // ignore
+        }
+      } else {
+        window.location.href = "/ledger?tab=hunt";
+      }
+    },
+    [isOnDashboard, hasVelocity]
   );
 
   return (
@@ -152,6 +187,34 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
           )}
         </button>
 
+        {/* Hunt — activates dashboard Hunt tab (velocity management) */}
+        {/* Thrall users see a lock icon; clicking opens KarlUpsellDialog */}
+        <button
+          type="button"
+          title={collapsed ? (hasVelocity ? "The Hunt" : "The Hunt (Karl tier)") : undefined}
+          aria-label={hasVelocity ? "Open Hunt tab" : "The Hunt \u2014 Karl tier required. Click to upgrade."}
+          onClick={handleHuntClick}
+          onKeyDown={handleHuntClick}
+          className={cn(
+            "flex items-center gap-3 rounded-sm px-2.5 py-2 text-base w-full text-left",
+            "transition-[transform,filter,background-color,color,border-color] duration-150 ease-out",
+            "active:scale-[0.98] active:brightness-90",
+            huntTabActive && hasVelocity
+              ? "bg-primary/10 text-gold border-l-2 border-gold"
+              : "text-muted-foreground hover:bg-secondary hover:text-foreground hover:brightness-110 border-l-2 border-transparent"
+          )}
+        >
+          <RuneIcon rune="ᛜ" />
+          {!collapsed && (
+            <span className="font-body truncate flex items-center gap-1.5">
+              The Hunt
+              {!hasVelocity && (
+                <span className="text-[10px]" aria-hidden="true">&#128274;</span>
+              )}
+            </span>
+          )}
+        </button>
+
         {/* Settings */}
         <Link
           href="/ledger/settings"
@@ -201,6 +264,13 @@ export function SideNav({ collapsed, onToggle }: SideNavProps) {
         {...KARL_UPSELL_VALHALLA}
         open={upsellOpen}
         onDismiss={() => setUpsellOpen(false)}
+      />
+
+      {/* Karl upsell dialog — shown when Thrall user clicks Hunt */}
+      <KarlUpsellDialog
+        {...KARL_UPSELL_VELOCITY}
+        open={velocityUpsellOpen}
+        onDismiss={() => setVelocityUpsellOpen(false)}
       />
     </aside>
   );
