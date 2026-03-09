@@ -235,8 +235,8 @@ test.describe("AC2: Upsell overlay links and content validation", () => {
     // Should have "Unlock The Howl" heading
     expect(teaserFile).toContain("Unlock The Howl");
 
-    // Should mention Ragnarök in feature list
-    expect(teaserFile).toContain("Ragnarök");
+    // Should mention Ragnarök in feature list (may have Unicode escape)
+    expect(teaserFile).toMatch(/Ragnar[a-z\u00f6\\u]/i);
   });
 
   test("Upsell CTA button has correct copy and styling", async ({ page }) => {
