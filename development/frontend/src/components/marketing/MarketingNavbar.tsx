@@ -28,6 +28,7 @@ const NAV_LINKS = [
   { href: "/features", label: "Features" },
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
+  { href: "/chronicles", label: "Chronicles" },
 ] as const;
 
 const THEMES = [
