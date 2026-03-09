@@ -19,19 +19,18 @@ slug: "depot-integration-issues"
 </div>
 </header>
 
-<div style={{textAlign:'center',fontStyle:'italic',fontSize:'0.82rem',color:'#8a8578',marginTop:'16px',lineHeight:'1.6'}}>
-<strong style={{color:'#c94a0a'}}>UPDATE:</strong> We wrote a 90-line bash skill to work around Grievance I.
-Then we <a href="/chronicles/brain-slug" style={{color:'#5b9ec9',textDecoration:'underline',textUnderlineOffset:'3px'}}>uninstalled it</a> —
+<div className="update-banner">
+<strong>UPDATE:</strong> We wrote a 90-line bash skill to work around Grievance I.
+Then we <a href="/chronicles/brain-slug">uninstalled it</a> —
 turns out the best workaround for a missing feature is deleting the workaround and accepting the void.
 </div>
 
 <div className="rune-hr"><span>ᚠ ᛖ ᚾ</span></div>
 
-<div style={{padding:'40px 0',textAlign:'center'}}>
-<blockquote style={{margin:'0 auto',maxWidth:'760px',fontWeight:300,fontStyle:'italic',fontSize:'0.95rem',color:'#e8e4d4',lineHeight:1.8,borderLeft:'2px solid #8a6a00',paddingLeft:'24px',textAlign:'left'}}>
+<div className="epigraph">
 The wolf does not howl without cause.
 
-We built an autonomous agent orchestration system on top of <code style={{fontFamily:"'JetBrains Mono', monospace",fontSize:'0.85em',color:'#5b9ec9'}}>depot claude</code>.
+We built an autonomous agent orchestration system on top of <code>depot claude</code>.
 Multiple agents — engineers, testers, designers — each running in their own sandbox,
 each handing off to the next via git commits and GitHub issue comments.
 The architecture is sound. The wolf runs.
@@ -52,21 +51,18 @@ worth writing.
 
 What follows are the thorns we pulled from our paws. We offer them not as complaints,
 but as prey laid at your door — problems worth hunting, before the wolf moves on.
-</blockquote>
 </div>
 
 <div className="rune-hr"><span>ᚠ ᛖ ᚾ</span></div>
 
-<div style={{padding:'24px 0 64px'}}>
+<div className="grievance-card">
+<span className="grievance-label">Grievance I</span>
+<h2>No Simple Way to Retrieve a Session Log</h2>
+<p className="grievance-summary">There is no <code>depot claude session-log &lt;id&gt;</code> command.</p>
+<p className="grievance-body">To get the transcript of what an agent did in a sandbox, we must: search <code>~/.claude/projects/&lt;hash&gt;/</code> for JSONL files, filter by file size (Depot sessions are small; local conversations are large), grep inside each file for the session ID or branch name, and if not found locally, run <code>depot claude --wait --resume &lt;id&gt;</code> to trigger a download, then parse the JSONL with <code>jq</code>.</p>
+<p className="grievance-body">We wrote a 90-line bash script to automate this. It should be one command.</p>
 
-<div style={{background:'#0f1018',border:'1px solid #1e2235',borderLeft:'3px solid #c94a0a',borderRadius:'3px',padding:'40px 36px',marginBottom:'32px',boxShadow:'0 4px 24px rgba(0,0,0,0.4)'}}>
-<span style={{fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.3em',textTransform:'uppercase',color:'#c94a0a',marginBottom:'8px',display:'block'}}>Grievance I</span>
-<h2 style={{fontFamily:"'Cinzel', serif",fontWeight:700,fontSize:'clamp(20px, 3vw, 26px)',color:'#e8e4d4',letterSpacing:'0.06em',margin:'0 0 8px'}}>No Simple Way to Retrieve a Session Log</h2>
-<p style={{fontStyle:'italic',fontSize:'0.95rem',color:'#c9920a',margin:'0 0 16px',lineHeight:1.6}}>There is no <code>depot claude session-log &lt;id&gt;</code> command.</p>
-<p style={{color:'#e8e4d4',fontSize:'0.9rem',lineHeight:1.75,margin:'0 0 16px'}}>To get the transcript of what an agent did in a sandbox, we must: search <code>~/.claude/projects/&lt;hash&gt;/</code> for JSONL files, filter by file size (Depot sessions are small; local conversations are large), grep inside each file for the session ID or branch name, and if not found locally, run <code>depot claude --wait --resume &lt;id&gt;</code> to trigger a download, then parse the JSONL with <code>jq</code>.</p>
-<p style={{color:'#e8e4d4',fontSize:'0.9rem',lineHeight:1.75,margin:'0 0 16px'}}>We wrote a 90-line bash script to automate this. It should be one command.</p>
-
-<span style={{display:'block',fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:'12px',color:'#0a8c6e'}}>What we want</span>
+<span className="label-want">What we want</span>
 <div className="code-block">
 <pre>{`# Get the full session transcript
 depot claude session-log <session-id>
@@ -78,7 +74,7 @@ depot claude session-log <session-id> --format jsonl
 depot claude session-log <session-id> --format text`}</pre>
 </div>
 
-<span style={{display:'block',fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:'12px',color:'#c94a0a'}}>What we have to do instead</span>
+<span className="label-instead">What we have to do instead</span>
 <div className="code-block">
 <pre>{`# Our actual script — this is what "get a log" looks like today
 JSONL_FILE=$(find ~/.claude/projects/ -name "*.jsonl" -size -500k \\
@@ -93,17 +89,17 @@ fi
 cat "$JSONL_FILE" | jq -r '...' # 40 more lines of jq incantations`}</pre>
 </div>
 
-<p style={{fontStyle:'italic',fontSize:'0.88rem',color:'#e8e4d4',marginTop:'20px',paddingTop:'16px',borderTop:'1px solid #1e2235'}}>The wolf should not need to dig through filesystem internals to see what its pack did.</p>
+<p className="grievance-closer">The wolf should not need to dig through filesystem internals to see what its pack did.</p>
 </div>
 
-<div style={{background:'#0f1018',border:'1px solid #1e2235',borderLeft:'3px solid #c94a0a',borderRadius:'3px',padding:'40px 36px',marginBottom:'32px',boxShadow:'0 4px 24px rgba(0,0,0,0.4)'}}>
-<span style={{fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.3em',textTransform:'uppercase',color:'#c94a0a',marginBottom:'8px',display:'block'}}>Grievance II</span>
-<h2 style={{fontFamily:"'Cinzel', serif",fontWeight:700,fontSize:'clamp(20px, 3vw, 26px)',color:'#e8e4d4',letterSpacing:'0.06em',margin:'0 0 8px'}}>CLI Defaults to Pager — Hostile to Automation</h2>
-<p style={{fontStyle:'italic',fontSize:'0.95rem',color:'#c9920a',margin:'0 0 16px',lineHeight:1.6}}><code>depot claude list-sessions</code> opens an interactive pager by default. This is death for automation.</p>
-<p style={{color:'#e8e4d4',fontSize:'0.9rem',lineHeight:1.75,margin:'0 0 16px'}}>Every script that calls <code>list-sessions</code> must pass <code>--output json</code> to avoid hanging on a pager that will never receive a keypress. There is no environment variable (<code>DEPOT_PAGER</code>, <code>DEPOT_NO_PAGER</code>, <code>NO_PAGER</code>) to disable this globally.</p>
-<p style={{color:'#e8e4d4',fontSize:'0.9rem',lineHeight:1.75,margin:'0 0 16px'}}>Even with <code>--output json</code>, the command prefixes a pagination token line before the JSON array, requiring an additional <code>sed -n '/^\[/,$ p'</code> to extract valid JSON. The pagination token should not be mixed into the JSON output — put it in stderr, a header, or a separate <code>--next-token</code> flag.</p>
+<div className="grievance-card">
+<span className="grievance-label">Grievance II</span>
+<h2>CLI Defaults to Pager — Hostile to Automation</h2>
+<p className="grievance-summary"><code>depot claude list-sessions</code> opens an interactive pager by default. This is death for automation.</p>
+<p className="grievance-body">Every script that calls <code>list-sessions</code> must pass <code>--output json</code> to avoid hanging on a pager that will never receive a keypress. There is no environment variable (<code>DEPOT_PAGER</code>, <code>DEPOT_NO_PAGER</code>, <code>NO_PAGER</code>) to disable this globally.</p>
+<p className="grievance-body">Even with <code>--output json</code>, the command prefixes a pagination token line before the JSON array, requiring an additional <code>sed -n '/^\[/,$ p'</code> to extract valid JSON. The pagination token should not be mixed into the JSON output — put it in stderr, a header, or a separate <code>--next-token</code> flag.</p>
 
-<span style={{display:'block',fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:'12px',color:'#0a8c6e'}}>What we want</span>
+<span className="label-want">What we want</span>
 <div className="code-block">
 <pre>{`# Environment variable to disable pager globally
 export DEPOT_PAGER=off
@@ -112,24 +108,24 @@ export DEPOT_PAGER=off
 depot claude list-sessions | jq '.[0].id'   # should just work`}</pre>
 </div>
 
-<span style={{display:'block',fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:'12px',color:'#c94a0a'}}>What we have to do instead</span>
+<span className="label-instead">What we have to do instead</span>
 <div className="code-block">
 <pre>{`depot claude list-sessions --output json 2>/dev/null \\
   | sed -n '/^\\[/,$ p' \\
   | jq '.[0].id'`}</pre>
 </div>
 
-<p style={{fontStyle:'italic',fontSize:'0.88rem',color:'#e8e4d4',marginTop:'20px',paddingTop:'16px',borderTop:'1px solid #1e2235'}}>The wolf does not wait for permission to read its own rune log.</p>
+<p className="grievance-closer">The wolf does not wait for permission to read its own rune log.</p>
 </div>
 
-<div style={{background:'#0f1018',border:'1px solid #1e2235',borderLeft:'3px solid #c94a0a',borderRadius:'3px',padding:'40px 36px',marginBottom:'32px',boxShadow:'0 4px 24px rgba(0,0,0,0.4)'}}>
-<span style={{fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.3em',textTransform:'uppercase',color:'#c94a0a',marginBottom:'8px',display:'block'}}>Grievance III</span>
-<h2 style={{fontFamily:"'Cinzel', serif",fontWeight:700,fontSize:'clamp(20px, 3vw, 26px)',color:'#e8e4d4',letterSpacing:'0.06em',margin:'0 0 8px'}}>Sessions Are Resumable — But We Want One-Shot</h2>
-<p style={{fontStyle:'italic',fontSize:'0.95rem',color:'#c9920a',margin:'0 0 16px',lineHeight:1.6}}>The session model assumes you'll come back. We never do.</p>
-<p style={{color:'#e8e4d4',fontSize:'0.9rem',lineHeight:1.75,margin:'0 0 16px'}}>The <code>depot claude</code> session model is built around resumption — start a session, leave, come back, resume. This is useful for interactive work. But our use case is <strong>fire-and-forget agent dispatch</strong>: launch an agent with a prompt, it does its work, it's done. We never resume it. We just want to know when it finishes.</p>
-<p style={{color:'#e8e4d4',fontSize:'0.9rem',lineHeight:1.75,margin:'0 0 16px'}}>The <code>--wait</code> flag blocks until completion, which helps. But there's no lightweight way to check "is this session done yet?" without either running <code>--wait --resume</code> (blocks and downloads the full session) or listing all sessions and filtering (paginated, pager-hostile — see Grievance II).</p>
+<div className="grievance-card">
+<span className="grievance-label">Grievance III</span>
+<h2>Sessions Are Resumable — But We Want One-Shot</h2>
+<p className="grievance-summary">The session model assumes you'll come back. We never do.</p>
+<p className="grievance-body">The <code>depot claude</code> session model is built around resumption — start a session, leave, come back, resume. This is useful for interactive work. But our use case is <strong>fire-and-forget agent dispatch</strong>: launch an agent with a prompt, it does its work, it's done. We never resume it. We just want to know when it finishes.</p>
+<p className="grievance-body">The <code>--wait</code> flag blocks until completion, which helps. But there's no lightweight way to check "is this session done yet?" without either running <code>--wait --resume</code> (blocks and downloads the full session) or listing all sessions and filtering (paginated, pager-hostile — see Grievance II).</p>
 
-<span style={{display:'block',fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:'12px',color:'#0a8c6e'}}>What we want</span>
+<span className="label-want">What we want</span>
 <div className="code-block">
 <pre>{`# Simple status check — returns immediately
 depot claude session-status <session-id>
@@ -140,7 +136,7 @@ depot claude session-status <session-id> --quiet
 # Exit 0 = completed, Exit 1 = running, Exit 2 = failed`}</pre>
 </div>
 
-<span style={{display:'block',fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:'12px',color:'#c94a0a'}}>What we have to do instead</span>
+<span className="label-instead">What we have to do instead</span>
 <div className="code-block">
 <pre>{`# Option A: Block forever
 depot claude --wait --resume "$SESSION_ID" --org "$ORG_ID"
@@ -155,17 +151,17 @@ while true; do
 done`}</pre>
 </div>
 
-<p style={{fontStyle:'italic',fontSize:'0.88rem',color:'#e8e4d4',marginTop:'20px',paddingTop:'16px',borderTop:'1px solid #1e2235'}}>The wolf needs to watch all its pups at once, not sit beside each one until it sleeps.</p>
+<p className="grievance-closer">The wolf needs to watch all its pups at once, not sit beside each one until it sleeps.</p>
 </div>
 
-<div style={{background:'#0f1018',border:'1px solid #1e2235',borderLeft:'3px solid #c94a0a',borderRadius:'3px',padding:'40px 36px',marginBottom:'32px',boxShadow:'0 4px 24px rgba(0,0,0,0.4)'}}>
-<span style={{fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.3em',textTransform:'uppercase',color:'#c94a0a',marginBottom:'8px',display:'block'}}>Grievance IV</span>
-<h2 style={{fontFamily:"'Cinzel', serif",fontWeight:700,fontSize:'clamp(20px, 3vw, 26px)',color:'#e8e4d4',letterSpacing:'0.06em',margin:'0 0 8px'}}>No Backchannel for Session Completion</h2>
-<p style={{fontStyle:'italic',fontSize:'0.95rem',color:'#c9920a',margin:'0 0 16px',lineHeight:1.6}}>When an agent finishes, nothing happens on our end. No webhook. No callback. No event.</p>
-<p style={{color:'#e8e4d4',fontSize:'0.9rem',lineHeight:1.75,margin:'0 0 16px'}}>Our current architecture is "fire-and-forget, then the human checks manually." This works, but it means the human is the event loop. The wolf is leashed to the handler's schedule.</p>
-<p style={{color:'#e8e4d4',fontSize:'0.9rem',lineHeight:1.75,margin:'0 0 16px'}}>Our best workaround is to run <code>depot claude --wait --resume</code> as a background process and rely on our CLI framework's task notification system. But this means holding an open process per session, which doesn't scale to 5+ parallel agent chains.</p>
+<div className="grievance-card">
+<span className="grievance-label">Grievance IV</span>
+<h2>No Backchannel for Session Completion</h2>
+<p className="grievance-summary">When an agent finishes, nothing happens on our end. No webhook. No callback. No event.</p>
+<p className="grievance-body">Our current architecture is "fire-and-forget, then the human checks manually." This works, but it means the human is the event loop. The wolf is leashed to the handler's schedule.</p>
+<p className="grievance-body">Our best workaround is to run <code>depot claude --wait --resume</code> as a background process and rely on our CLI framework's task notification system. But this means holding an open process per session, which doesn't scale to 5+ parallel agent chains.</p>
 
-<span style={{display:'block',fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:'12px',color:'#0a8c6e'}}>What we want — webhooks</span>
+<span className="label-want">What we want — webhooks</span>
 <div className="code-block">
 <pre>{`# Register a webhook for session lifecycle events
 depot claude webhooks add \\
@@ -185,7 +181,7 @@ depot claude webhooks add \\
 }`}</pre>
 </div>
 
-<span style={{display:'block',fontFamily:"'JetBrains Mono', monospace",fontSize:'0.68rem',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:'12px',color:'#0a8c6e'}}>Or even simpler — per-session callback</span>
+<span className="label-want">Or even simpler — per-session callback</span>
 <div className="code-block">
 <pre>{`depot claude \\
   --session-id "issue-199-step2-loki" \\
@@ -193,55 +189,53 @@ depot claude webhooks add \\
   -p "..."`}</pre>
 </div>
 
-<p style={{fontStyle:'italic',fontSize:'0.88rem',color:'#e8e4d4',marginTop:'20px',paddingTop:'16px',borderTop:'1px solid #1e2235'}}>The wolf pack hunts in parallel. When one brings down its quarry, the others must know — without stopping to look over their shoulders.</p>
+<p className="grievance-closer">The wolf pack hunts in parallel. When one brings down its quarry, the others must know — without stopping to look over their shoulders.</p>
 </div>
 
-</div>
-
-<div style={{padding:'48px 0',background:'#0f1018',margin:'0 -28px',padding:'48px 28px'}}>
-<h2 style={{fontFamily:"'Cinzel', serif",fontWeight:700,fontSize:'1.3rem',color:'#e8e4d4',textAlign:'center',letterSpacing:'0.06em',margin:'0 0 32px'}}>The Hunt List</h2>
+<div className="hunt-section">
+<h2>The Hunt List</h2>
 <div className="rune-hr"><span>ᚠ ᛖ ᚾ</span></div>
-<div style={{overflowX:'auto',marginTop:'24px'}}>
-<table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.82rem'}}>
+<div className="hunt-table-wrap">
+<table className="hunt-table">
 <thead>
 <tr>
-<th style={{fontFamily:"'Cinzel', serif",fontWeight:600,fontSize:'0.7rem',letterSpacing:'0.15em',textTransform:'uppercase',color:'#c9920a',textAlign:'left',padding:'12px 16px',borderBottom:'1px solid #8a6a00'}}>Proposed Command</th>
-<th style={{fontFamily:"'Cinzel', serif",fontWeight:600,fontSize:'0.7rem',letterSpacing:'0.15em',textTransform:'uppercase',color:'#c9920a',textAlign:'left',padding:'12px 16px',borderBottom:'1px solid #8a6a00'}}>Purpose</th>
-<th style={{fontFamily:"'Cinzel', serif",fontWeight:600,fontSize:'0.7rem',letterSpacing:'0.15em',textTransform:'uppercase',color:'#c9920a',textAlign:'left',padding:'12px 16px',borderBottom:'1px solid #8a6a00'}}>Today's Workaround</th>
+<th>Proposed Command</th>
+<th>Purpose</th>
+<th>Today's Workaround</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}><code>session-log &lt;id&gt;</code></td>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}>Get session transcript</td>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}>90-line bash script searching filesystem + jq</td>
+<td><code>session-log &lt;id&gt;</code></td>
+<td>Get session transcript</td>
+<td>90-line bash script searching filesystem + jq</td>
 </tr>
 <tr>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}><code>session-status &lt;id&gt;</code></td>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}>Check if session is done</td>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}><code>--wait --resume</code> (blocking) or poll <code>list-sessions</code></td>
+<td><code>session-status &lt;id&gt;</code></td>
+<td>Check if session is done</td>
+<td><code>--wait --resume</code> (blocking) or poll <code>list-sessions</code></td>
 </tr>
 <tr>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}><code>webhooks add</code></td>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}>Event-driven completion notification</td>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}>Human-in-the-loop or background <code>--wait</code> per session</td>
+<td><code>webhooks add</code></td>
+<td>Event-driven completion notification</td>
+<td>Human-in-the-loop or background <code>--wait</code> per session</td>
 </tr>
 <tr>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}><code>DEPOT_PAGER=off</code></td>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}>Disable interactive pager globally</td>
-<td style={{fontFamily:"'Source Serif 4', serif",fontSize:'0.88rem',color:'#e8e4d4',padding:'14px 16px',borderBottom:'1px solid #1e2235',verticalAlign:'top'}}><code>--output json</code> on every invocation + <code>sed</code> to strip tokens</td>
+<td><code>DEPOT_PAGER=off</code></td>
+<td>Disable interactive pager globally</td>
+<td><code>--output json</code> on every invocation + <code>sed</code> to strip tokens</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 
-<div style={{padding:'48px 0'}}>
-<h2 style={{fontFamily:"'Cinzel', serif",fontWeight:700,fontSize:'1.3rem',color:'#e8e4d4',textAlign:'center',letterSpacing:'0.06em',margin:'0 0 12px'}}>Why This Matters</h2>
-<p style={{textAlign:'center',fontStyle:'italic',fontSize:'0.85rem',color:'#e8e4d4',margin:'0 0 32px'}}>Our multi-agent architecture — and why the wolf needs these tools.</p>
+<div className="why-section">
+<h2>Why This Matters</h2>
+<p>Our multi-agent architecture — and why the wolf needs these tools.</p>
 <div className="rune-hr"><span>ᚠ ᛖ ᚾ</span></div>
 
-<div className="code-block" style={{marginTop:'24px'}}>
+<div className="code-block">
 <pre>{`Orchestrator (local)
   |
   |-- spawn FiremanDecko (Depot session) --> git push --> handoff comment
@@ -258,9 +252,9 @@ With session-status or webhooks, the orchestrator runs autonomously.`}</pre>
 </div>
 </div>
 
-<div style={{padding:'64px 0',textAlign:'center'}}>
+<div className="closing">
 <div className="rune-hr"><span>ᚠ ᛖ ᚾ</span></div>
-<blockquote style={{margin:'24px auto 0',maxWidth:'700px',fontWeight:300,fontStyle:'italic',fontSize:'0.95rem',color:'#e8e4d4',lineHeight:1.8}}>
+<blockquote>
 We chose Depot because the sandboxes are clean, the Claude integration is native,
 and the fire-and-forget model fits our architecture. The foundation is strong.
 These are the refinements that would let us — and every team building agent
@@ -271,12 +265,12 @@ scaffolding outweighs the platform. That's when the wolf slips its chain
 and finds open ground.
 </blockquote>
 <div className="rune-hr"><span>ᚠ ᛖ ᚾ</span></div>
-<blockquote style={{fontSize:'0.88rem',margin:'24px auto 0',maxWidth:'700px',fontWeight:300,fontStyle:'italic',color:'#e8e4d4',lineHeight:1.8}}>
+<blockquote className="closing-small">
 The wolf is patient. But the wolf is also hungry.
 And a hungry wolf does not stay leashed for long.
 </blockquote>
-<p style={{display:'block',marginTop:'12px',fontStyle:'normal',fontFamily:"'JetBrains Mono', monospace",fontSize:'0.7rem',color:'#3d3d52',letterSpacing:'0.15em'}}>— Fenrir Ledger Engineering</p>
-<p style={{fontFamily:"'JetBrains Mono', monospace",fontSize:'1rem',color:'#3d3d52',letterSpacing:'0.5em',marginTop:'32px'}} aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</p>
+<p className="sign-off">— Fenrir Ledger Engineering</p>
+<p className="closing-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</p>
 </div>
 
 <footer className="session-footer">
