@@ -203,20 +203,19 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
     const themeRow = userMenu.locator('[role="menuitem"]').nth(0);
     const themeButton = themeRow.locator("button").first();
 
-    // Get initial icon
-    const initialIcon = await themeButton.locator("svg").evaluateHandle((el) =>
-      el.className.baseVal
+    // Theme toggle should have aria-label indicating current theme
+    await expect(themeButton).toHaveAttribute(
+      "aria-label",
+      /toggle theme|Theme:/i
     );
 
     // Click to cycle
     await themeButton.click();
     await page.waitForTimeout(100); // Wait for state update
 
-    // Theme toggle should cycle, verify it has an aria-label indicating theme
-    await expect(themeButton).toHaveAttribute(
-      /aria-label/,
-      /toggle theme|Theme/i
-    );
+    // Aria-label should still be present (may show different theme)
+    const newLabel = await themeButton.getAttribute("aria-label");
+    await expect(newLabel).toMatch(/toggle theme|Theme:/i);
   });
 
   test("TC-PD05: Settings button navigates to /ledger/settings", async ({
@@ -427,12 +426,12 @@ test.describe("Profile Dropdown — Mobile (375px)", () => {
     const themeButton = themeRow.locator("button").first();
     const themeButtonBox = await themeButton.boundingBox();
 
-    // Then: button should be large enough to tap (44x44px min)
+    // Then: button should be large enough to tap (24x24px min for icon)
     await expect(themeButtonBox.height).toBeGreaterThanOrEqual(24);
     await expect(themeButtonBox.width).toBeGreaterThanOrEqual(24);
 
     // And: should have aria-label for screen readers
-    await expect(themeButton).toHaveAttribute(/aria-label/);
+    await expect(themeButton).toHaveAttribute("aria-label");
   });
 
   test("TC-PD-M05: Settings and Sign out are accessible on mobile", async ({
@@ -522,9 +521,9 @@ test.describe("Profile Dropdown — Accessibility", () => {
     const themeRow = userMenu.locator('[role="menuitem"]').nth(0);
     const themeButton = themeRow.locator("button").first();
 
-    // Then: should have aria-label describing current and next theme
+    // Then: should have aria-label describing current theme
     await expect(themeButton).toHaveAttribute(
-      /aria-label/,
+      "aria-label",
       /toggle theme|Theme:/i
     );
   });
@@ -552,8 +551,8 @@ test.describe("Profile Dropdown — Accessibility", () => {
 
     // Then: should have aria-label indicating it opens user menu
     await expect(avatarButton).toHaveAttribute(
-      /aria-label/,
-      /user menu|sign in/i
+      "aria-label",
+      /user menu|signed in/i
     );
   });
 });
