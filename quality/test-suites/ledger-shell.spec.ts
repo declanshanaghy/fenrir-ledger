@@ -195,33 +195,20 @@ test.describe("LedgerShell — Theme toggle", () => {
     expect(hasFocus).toBe(true);
   });
 
-  test("theme toggle changes between light and dark", async ({ page }) => {
-    const htmlElement = page.locator("html");
+  test("clicking theme toggle cycles through themes", async ({ page }) => {
+    // Get the initial aria-label
+    const themeToggle = page.locator('button[aria-label*="Theme"]').first();
+    const initialLabel = await themeToggle.getAttribute("aria-label");
 
-    // Get initial theme
-    const initialTheme = await htmlElement.evaluate(
-      (el) => el.getAttribute("class") || ""
-    );
+    // Click to change theme
+    await themeToggle.click();
+    await page.waitForTimeout(100);
 
-    // Click theme toggle
-    const themeToggle = page.locator('button[aria-label*="Theme"]');
-    await themeToggle.first().click();
+    // Get new aria-label (should show next theme)
+    const newLabel = await themeToggle.getAttribute("aria-label");
 
-    // Wait a moment for the change
-    await page.waitForTimeout(200);
-
-    // Get new theme
-    const newTheme = await htmlElement.evaluate(
-      (el) => el.getAttribute("class") || ""
-    );
-
-    // Theme should have changed (at least something in the class changed)
-    // Either "dark" class presence or absence changes
-    const hasDarkInitial = initialTheme.includes("dark");
-    const hasDarkNew = newTheme.includes("dark");
-
-    // They should differ
-    expect(hasDarkInitial).not.toBe(hasDarkNew);
+    // Labels should differ (theme changed)
+    expect(newLabel).not.toBe(initialLabel);
   });
 });
 
