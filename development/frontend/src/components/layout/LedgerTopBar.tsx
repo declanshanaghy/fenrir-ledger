@@ -199,8 +199,11 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
         "flex flex-col",
       ].join(" ")}
     >
-      {/* Profile header — informational, not interactive */}
-      <div className="px-4 py-3 border-b border-border flex items-center gap-3" aria-hidden="true">
+      {/* Profile header — non-interactive label, visually distinct from menu items */}
+      <div
+        className="px-4 py-3 bg-secondary/30 flex items-center gap-3 select-none cursor-default"
+        aria-hidden="true"
+      >
         <Avatar picture={user.picture ?? undefined} name={user.name ?? undefined} size={40} goldRing />
         <div className="flex flex-col min-w-0">
           <span className="text-base font-heading text-foreground truncate">{user.name}</span>
@@ -210,6 +213,8 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
           </span>
         </div>
       </div>
+      {/* Separator between profile header and menu items */}
+      <div className="h-px bg-border" role="separator" aria-hidden="true" />
       {/* My Cards link */}
       <button
         type="button"
