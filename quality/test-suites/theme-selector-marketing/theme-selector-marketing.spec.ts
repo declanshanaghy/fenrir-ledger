@@ -40,23 +40,26 @@ async function getHtmlClasses(
 }
 
 /**
- * Get the theme toggle element from desktop nav (icon variant)
+ * Get the theme toggle button from desktop nav (icon variant)
+ * The icon variant is a single cycling button with aria-label containing "Theme"
  */
 async function getDesktopThemeToggle(
   page: import("@playwright/test").Page
 ) {
-  // Desktop theme toggle is in the md:flex container
-  const desktopNav = page.locator(".hidden.md\\:flex").last();
-  return desktopNav.getByRole("radiogroup", { name: /theme/i });
+  // Desktop theme toggle is a cycling icon button in the right nav area
+  return page.getByRole("button", { name: /theme/i }).first();
 }
 
 /**
  * Get the theme toggle element from mobile overlay
+ * The mobile overlay uses the inline radiogroup variant
  */
 async function getMobileThemeToggle(
   page: import("@playwright/test").Page
 ) {
-  return page.getByRole("radiogroup", { name: /theme/i });
+  // In the mobile overlay, theme toggle is a radiogroup
+  const overlay = page.locator('[role="dialog"]');
+  return overlay.getByRole("radiogroup", { name: /theme/i });
 }
 
 /**
@@ -89,13 +92,9 @@ for (const { path, name } of MARKETING_PAGES) {
     await page.waitForLoadState("networkidle");
 
     // Verify toggle is rendered in desktop nav
+    // Desktop uses the icon variant (single cycling button)
     const toggle = await getDesktopThemeToggle(page);
     await expect(toggle).toBeVisible();
-
-    // Verify it has radio buttons
-    const options = toggle.getByRole("radio");
-    const count = await options.count();
-    expect(count).toBeGreaterThan(0);
   });
 }
 
@@ -141,10 +140,10 @@ test("Theme selector switches from light to dark (desktop)", async ({ page }) =>
   let classes = await getHtmlClasses(page);
   expect(classes).not.toContain(DARK_CLASS);
 
-  // Click dark option
+  // Click toggle button (icon variant cycles through themes)
+  // From light, clicking should cycle to dark
   const toggle = await getDesktopThemeToggle(page);
-  const darkOption = toggle.getByRole("radio", { name: /dark/i });
-  await darkOption.click();
+  await toggle.click();
 
   // Verify .dark class applied
   classes = await getHtmlClasses(page);
@@ -169,10 +168,9 @@ test("Theme selector switches from dark to light (desktop)", async ({ page }) =>
   let classes = await getHtmlClasses(page);
   expect(classes).toContain(DARK_CLASS);
 
-  // Click light option
+  // Click toggle button (icon variant cycles: dark → light)
   const toggle = await getDesktopThemeToggle(page);
-  const lightOption = toggle.getByRole("radio", { name: /light/i });
-  await lightOption.click();
+  await toggle.click();
 
   // Verify .dark class removed
   classes = await getHtmlClasses(page);
@@ -193,13 +191,16 @@ test("Theme selector switches from dark to light (desktop)", async ({ page }) =>
 test("Theme persists when navigating from home to features to pricing", async ({
   page,
 }) => {
+  await page.addInitScript((key) => {
+    localStorage.setItem(key, "light");
+  }, THEME_STORAGE_KEY);
+
   await page.goto("/");
   await page.waitForLoadState("networkidle");
 
-  // Set theme to dark
+  // Set theme to dark by clicking toggle
   let toggle = await getDesktopThemeToggle(page);
-  let darkOption = toggle.getByRole("radio", { name: /dark/i });
-  await darkOption.click();
+  await toggle.click();
 
   let classes = await getHtmlClasses(page);
   expect(classes).toContain(DARK_CLASS);
@@ -280,6 +281,7 @@ test("Mobile overlay theme toggle switches theme", async ({ page }) => {
   await openMobileNav(page);
 
   const toggle = await getMobileThemeToggle(page);
+  // Mobile overlay uses radiogroup variant, so we can select the dark radio
   const darkOption = toggle.getByRole("radio", { name: /dark/i });
   await darkOption.click();
 
@@ -311,8 +313,9 @@ test("Mobile theme toggle accessible across navigation", async ({ page }) => {
   await expect(toggle).toBeVisible();
   await closeMobileNav(page);
 
-  // Navigate to features
-  await page.click("text=Features");
+  // Navigate to features via the nav link
+  const featuresLink = page.getByRole("link", { name: "Features" }).first();
+  await featuresLink.click();
   await page.waitForLoadState("networkidle");
 
   await openMobileNav(page);
@@ -320,8 +323,9 @@ test("Mobile theme toggle accessible across navigation", async ({ page }) => {
   await expect(toggle).toBeVisible();
   await closeMobileNav(page);
 
-  // Navigate to pricing
-  await page.click("text=Pricing");
+  // Navigate to pricing via the nav link
+  const pricingLink = page.getByRole("link", { name: "Pricing" }).first();
+  await pricingLink.click();
   await page.waitForLoadState("networkidle");
 
   await openMobileNav(page);
