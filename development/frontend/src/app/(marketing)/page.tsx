@@ -38,14 +38,22 @@ function HeroSection() {
       <div className="max-w-[1100px] mx-auto px-6 py-16 sm:py-24">
         <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-10 items-center">
 
-          {/* Fenrir wolf logo */}
+          {/* Fenrir wolf logo — themed dark/light variants */}
           <div className="flex justify-center sm:justify-start">
             <Image
-              src="/images/fenrir-logo.png"
+              src="/images/fenrir-logo-dark.png"
               alt="Fenrir Ledger wolf logo"
-              width={1536}
+              width={1024}
               height={1024}
-              className="max-w-[200px] sm:max-w-[280px] h-auto rounded-lg dark:drop-shadow-[0_0_32px_rgba(91,158,201,0.2)]"
+              className="hidden dark:block max-w-[200px] sm:max-w-[280px] h-auto rounded-lg drop-shadow-[0_0_32px_rgba(91,158,201,0.2)]"
+              priority
+            />
+            <Image
+              src="/images/fenrir-logo-light.png"
+              alt="Fenrir Ledger wolf logo"
+              width={1024}
+              height={1024}
+              className="block dark:hidden max-w-[200px] sm:max-w-[280px] h-auto rounded-lg"
               priority
             />
           </div>

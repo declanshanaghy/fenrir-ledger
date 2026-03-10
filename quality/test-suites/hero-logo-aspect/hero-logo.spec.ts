@@ -5,8 +5,9 @@ test.describe('Hero Logo Aspect Ratio', () => {
     await page.goto('/', { waitUntil: 'networkidle' });
   });
 
-  test('displays logo with natural 3:2 aspect ratio (not squashed)', async ({ page }) => {
-    const logoImg = page.locator('img[alt*="Fenrir"][alt*="logo"]');
+  test('displays logo with natural 1:1 aspect ratio (not squashed)', async ({ page }) => {
+    // In light mode, the light variant is visible
+    const logoImg = page.locator('img[alt*="Fenrir"][alt*="logo"]').last();
 
     // Verify element exists
     await expect(logoImg).toBeVisible();
@@ -18,14 +19,15 @@ test.describe('Hero Logo Aspect Ratio', () => {
     if (box) {
       const aspectRatio = box.width / box.height;
 
-      // 3:2 aspect ratio = 1.5
+      // 1:1 aspect ratio = 1.0
       // Allow small tolerance for rounding
-      expect(aspectRatio).toBeCloseTo(1.5, 0.1);
+      expect(aspectRatio).toBeCloseTo(1.0, 0.1);
     }
   });
 
   test('logo sizing matches responsive breakpoints', async ({ page }) => {
-    const logoImg = page.locator('img[alt*="Fenrir"][alt*="logo"]');
+    // In light mode (default), the light variant is visible
+    const logoImg = page.locator('img[alt*="Fenrir"][alt*="logo"]').last();
 
     await expect(logoImg).toBeVisible();
 
@@ -42,7 +44,7 @@ test.describe('Hero Logo Aspect Ratio', () => {
 
   test('logo is vertically centered with hero text in light theme', async ({ page }) => {
     const heroSection = page.locator('section[aria-label="Hero"]');
-    const logoImg = page.locator('img[alt*="Fenrir"][alt*="logo"]');
+    const logoImg = page.locator('img[alt*="Fenrir"][alt*="logo"]').last();
     const heroHeading = page.locator('h1', { hasText: 'Fenrir Ledger' });
 
     await expect(heroSection).toBeVisible();
@@ -91,19 +93,25 @@ test.describe('Hero Logo Aspect Ratio', () => {
   });
 
   test('logo image has correct source and dimensions', async ({ page }) => {
-    const logoImg = page.locator('img[alt*="Fenrir"][alt*="logo"]');
+    const logoImgs = page.locator('img[alt*="Fenrir"][alt*="logo"]');
 
-    const src = await logoImg.getAttribute('src');
-    expect(src).toContain('fenrir-logo.png');
+    // Two themed variants: dark and light
+    await expect(logoImgs).toHaveCount(2);
 
-    const width = await logoImg.getAttribute('width');
-    const height = await logoImg.getAttribute('height');
+    const darkImg = logoImgs.nth(0);
+    const lightImg = logoImgs.nth(1);
 
-    expect(width).toBe('1536');
-    expect(height).toBe('1024');
+    const darkSrc = await darkImg.getAttribute('src');
+    const lightSrc = await lightImg.getAttribute('src');
+    expect(darkSrc).toContain('fenrir-logo-dark.png');
+    expect(lightSrc).toContain('fenrir-logo-light.png');
 
-    // Verify 3:2 ratio in source dimensions
-    const sourceRatio = parseInt(width!) / parseInt(height!);
-    expect(sourceRatio).toBeCloseTo(1.5, 0.01);
+    // Both images are 1024x1024 (1:1 ratio)
+    for (const img of [darkImg, lightImg]) {
+      const width = await img.getAttribute('width');
+      const height = await img.getAttribute('height');
+      expect(width).toBe('1024');
+      expect(height).toBe('1024');
+    }
   });
 });

@@ -28,10 +28,19 @@ test("Hero section displays Fenrir wolf logo image with correct alt text", async
   const hero = page.locator(HERO_SECTION);
   await expect(hero).toBeVisible();
 
-  const logo = hero.locator("img");
-  await expect(logo).toBeVisible();
-  await expect(logo).toHaveAttribute("alt", LOGO_ALT);
-  await expect(logo).toHaveAttribute("src", /fenrir-logo\.png/);
+  // Two themed variants: dark and light
+  const logos = hero.locator("img");
+  await expect(logos).toHaveCount(2);
+
+  // In light mode (default), light variant is visible
+  const visibleLogo = logos.last();
+  await expect(visibleLogo).toBeVisible();
+  await expect(visibleLogo).toHaveAttribute("alt", LOGO_ALT);
+  await expect(visibleLogo).toHaveAttribute("src", /fenrir-logo-light\.png/);
+
+  // Dark variant exists but is hidden
+  const darkLogo = logos.first();
+  await expect(darkLogo).toHaveAttribute("src", /fenrir-logo-dark\.png/);
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -45,7 +54,7 @@ test("Hero logo scales to 120px width on mobile viewport", async ({ page }) => {
   await page.waitForLoadState("networkidle");
 
   const hero = page.locator(HERO_SECTION);
-  const logo = hero.locator("img");
+  const logo = hero.locator("img").last();
   await expect(logo).toBeVisible();
 
   const width = await logo.evaluate(
@@ -65,7 +74,7 @@ test("Hero logo scales to 160px width on desktop viewport", async ({ page }) => 
   await page.waitForLoadState("networkidle");
 
   const hero = page.locator(HERO_SECTION);
-  const logo = hero.locator("img");
+  const logo = hero.locator("img").last();
   await expect(logo).toBeVisible();
 
   const width = await logo.evaluate(
