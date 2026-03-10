@@ -1,0 +1,142 @@
+---
+title: "Lockdown — Heimdall Hunts the Bifrost"
+date: "2026-03-09"
+rune: "ᛉ"
+excerpt: "When Vercel rate limits blocked production, we fixed the pipeline, then unleashed Heimdall for a full black-box penetration test across four parallel Depot sandboxes."
+slug: "lockdown"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᛞ ᛉ ᛏ ᚺ</span>
+  <h1 className="session-title">Lockdown — Heimdall Hunts the Bifrost</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">2026-03-09</span></span>
+      <span>Session <span className="val">lockdown</span></span>
+      <span>Acts <span className="val">5</span></span>
+      <span>Files changed <span className="val">5</span></span>
+  </div>
+</header>
+
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
+      <li><a href="#act-1"><span className="toc-rune">ᛞ</span> <span className="toc-num">I</span> The Gates Hold Fast</a></li>
+      <li><a href="#act-2"><span className="toc-rune">ᛉ</span> <span className="toc-num">II</span> Heimdall Draws the Plan</a></li>
+      <li><a href="#act-3"><span className="toc-rune">ᛉ</span> <span className="toc-num">III</span> Odin Sets the Terms</a></li>
+      <li><a href="#act-4"><span className="toc-rune">ᛉ</span> <span className="toc-num">IV</span> Four Wolves Unleashed</a></li>
+      <li><a href="#act-5"><span className="toc-rune">ᚺ</span> <span className="toc-num">V</span> The Redundant Gate Falls</a></li>
+  </ul>
+</nav>
+
+<div className="timeline">
+
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="The Gates Hold Fast">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Deployment</p>
+        <h2 className="entry-title">The Gates Hold Fast</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Vercel production deploy is still failing from GH. try again here locally.</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The Vercel production deploy had fallen to a rate-limit wall — <span className="mono">api-upload-free</span> capped at 5,000 file uploads. The build passed cleanly; the fault lay in the delivery path. The CLI uploads each output file individually, and the free tier simply ran dry.</p><p>Added <span className="hl">--archive=tgz</span> to both <span className="mono">vercel-production.yml</span> and <span className="mono">vercel-preview.yml</span>, bundling hundreds of file uploads into a single tarball. The account-wide cooldown (~3 hours) still held, but future deploys would never hit the cap again.</p></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">.github/workflows/vercel-production.yml</span>
+            <span className="chip chip-mod">.github/workflows/vercel-preview.yml</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="Heimdall Draws the Plan">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Security</p>
+        <h2 className="entry-title">Heimdall Draws the Plan</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">we need an external pen test plan for https://fenrir-ledger.vercel.app</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Heimdall was summoned to draft a full external penetration test plan. He surveyed the attack surface — <span className="hl">7 API routes</span>, OAuth PKCE, Stripe payment flows, the LLM import pipeline, localStorage token storage, and MDX rendering with <span className="mono">rehype-raw</span>.</p><p>The plan mapped <span className="hl">10 test categories</span> against OWASP Top 10, identified 4 high-confidence risk hypotheses (refresh token in localStorage, non-distributed rate limiter, session_id entitlement migration, rehype-raw injection), and flagged 7 pre-existing issues from prior reviews. Estimated effort: 14–22 person-days for gray-box, 8–12 for minimum viable.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="Odin Sets the Terms">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Security</p>
+        <h2 className="entry-title">Odin Sets the Terms</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Heimdall-led, Timeline we're doing it now, Stripe test mode only, Black-box testing, Budget range $0</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Odin's decree was swift: Heimdall-led, zero budget, black-box, starting immediately. No GCP Console, no Vercel dashboard — pure external testing with free tools only. Stripe test mode. Source maps only if publicly served.</p><p>Freya interviewed Odin via <span className="mono">/plan-w-team</span> to refine scope. The 8 test areas were consolidated into <span className="hl">5 GitHub issues</span>: recon + infra (#470), auth + API authz (#471), injection + SSRF (#472), client-side + payment (#473), and a final report (#474) blocked by all four.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="Four Wolves Unleashed">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Security</p>
+        <h2 className="entry-title">Four Wolves Unleashed</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --batch 4</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Four Heimdall agents were dispatched to Depot sandboxes in parallel — each running <span className="mono">claude-haiku-4-5</span> against the live production site at <span className="mono">fenrir-ledger.vercel.app</span>.</p><p>Each sandbox received a tailored prompt: recon and header analysis, OAuth and JWT manipulation, SSRF and LLM prompt injection probing, and client-side XSS with Stripe webhook forgery. All four confirmed launch and began their hunt. Fire-and-forget — <span className="hl">--resume</span> to check progress later.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="The Redundant Gate Falls">ᚺ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Quick Fix</p>
+        <h2 className="entry-title">The Redundant Gate Falls</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">just do it now, then HKR</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>A recurring error — <span className="mono">Issue not found on project board</span> — had been dismissed as cosmetic. Odin decreed: investigate and fix. The root cause: <span className="mono">gh project item-add</span> was redundant because a GitHub Action already auto-adds issues to the board. The two raced, causing the error.</p><p>Removed the redundant <span className="mono">gh project item-add</span> call from both <span className="mono">plan-w-team.md</span> and <span className="mono">issue-template.md</span>. HKR: branch, commit, PR <span className="hl">#477</span>, merge, back on main. Clean.</p></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">.claude/commands/plan-w-team.md</span>
+            <span className="chip chip-mod">quality/issue-template.md</span>
+            <span className="chip chip-mem">memory/MEMORY.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+</div>
+
+<footer className="session-footer">
+  <div className="footer-cipher">ᛞ ᛉ ᛏ ᚺ</div>
+  <div className="footer-text">Lockdown — Heimdall Hunts the Bifrost · Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
+</footer>
+
+</div>
