@@ -130,6 +130,7 @@ function TierCardsSection() {
               ))}
               {/* Karl features shown as excluded */}
               {[
+                "Smart Import (AI-Powered)",
                 "Annual fee tracking with 60-day warnings",
                 "Sign-up bonus & minimum spend tracking",
                 "The Howl — proactive alerts & Ragnarök",
@@ -137,7 +138,6 @@ function TierCardsSection() {
                 "Card archive (Valhalla)",
                 "Cloud Sync (multi-device)",
                 "Whole-Household management",
-                "Smart Import (AI-Powered)",
                 "Data Export (CSV / JSON)",
               ].map((feat) => (
                 <li key={feat} className="flex items-start gap-3">
@@ -203,6 +203,7 @@ function TierCardsSection() {
             </p>
             <ul className="flex flex-col gap-3" aria-label="Karl tier premium features">
               {[
+                { name: "Smart Import", desc: "AI extracts card data from spreadsheets" },
                 { name: "Annual Fee Tracking", desc: "60-day advance warnings before every fee date" },
                 { name: "Sign-Up Bonus Tracking", desc: "minimum spend deadlines and threshold monitoring" },
                 { name: "The Howl", desc: "full proactive fee alerts, deadline warnings & Ragnarök" },
@@ -210,7 +211,6 @@ function TierCardsSection() {
                 { name: "Valhalla", desc: "full closed-card archive with history" },
                 { name: "Cloud Sync", desc: "real-time sync across all devices" },
                 { name: "Whole-Household", desc: "manage your ledger with others" },
-                { name: "Smart Import", desc: "AI extracts card data from spreadsheets" },
                 { name: "Data Export", desc: "CSV and JSON export, anytime" },
                 { name: "All current and future Karl-tier features", desc: null },
                 { name: "Support the project — keeps Fenrir independent", desc: null },
@@ -330,10 +330,10 @@ function ComparisonTableSection() {
                 </td>
               </tr>
               {[
+                { name: "Smart Import — automatic extraction from spreadsheets (CSV/XLSX)", thrall: false, karl: true },
                 { name: "Velocity management (Chase 5/24, Citi 1/8, Amex OPLB, etc.)", thrall: false, karl: true },
                 { name: "Valhalla — closed-card archive with full history", thrall: false, karl: true },
                 { name: "Cloud Sync — real-time sync across all signed-in devices", thrall: false, karl: true },
-                { name: "Smart Import — automatic extraction from spreadsheets (CSV/XLSX)", thrall: false, karl: true },
                 { name: "Data Export — download your ledger as CSV or JSON", thrall: false, karl: true },
               ].map(({ name, thrall, karl }) => (
                 <tr key={name} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
