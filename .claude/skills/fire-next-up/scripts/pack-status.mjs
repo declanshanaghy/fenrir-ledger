@@ -134,6 +134,35 @@ async function fetchBoardAndComments() {
   );
   return { items, issueComments, pullRequests: prs };
 }
+async function fetchCIStatus(prs) {
+  const ciMap = {};
+  await Promise.all(
+    prs.map(async (pr) => {
+      try {
+        const data = await restGet(
+          `/repos/${OWNER}/${REPO}/commits/${pr.headRefName}/check-runs`
+        );
+        const runs = data.check_runs ?? [];
+        if (runs.length === 0) {
+          ciMap[pr.number] = "pending";
+          return;
+        }
+        const hasFail = runs.some((r) => r.conclusion === "failure");
+        const allComplete = runs.every((r) => r.status === "completed");
+        if (hasFail) {
+          ciMap[pr.number] = "fail";
+        } else if (allComplete) {
+          ciMap[pr.number] = "pass";
+        } else {
+          ciMap[pr.number] = "pending";
+        }
+      } catch {
+        ciMap[pr.number] = "unknown";
+      }
+    })
+  );
+  return ciMap;
+}
 function detectType(labels) {
   if (labels.includes("bug")) return "bug";
   if (labels.includes("security")) return "security";
@@ -163,13 +192,14 @@ function chainForType(type) {
       return "unknown";
   }
 }
-function analyzeChain(item, comments, prs) {
+function analyzeChain(item, comments, prs, ciMap) {
   const type = detectType(item.labels);
   const priority = detectPriority(item.labels);
   const chain = chainForType(type);
   const matchingPR = prs.find(
     (pr) => pr.headRefName.includes(`issue-${item.num}`)
   );
+  const ci = matchingPR && ciMap ? ciMap[matchingPR.number] ?? null : null;
   const hasLokiPass = comments.some(
     (c) => c.includes("## Loki QA Verdict") && /Verdict.*PASS/.test(c)
   );
@@ -206,7 +236,7 @@ function analyzeChain(item, comments, prs) {
       pr: matchingPR?.number ?? null,
       branch: matchingPR?.headRefName ?? "",
       verdict: null,
-      ci: null,
+      ci,
       next_action,
       command
     };
@@ -254,19 +284,20 @@ function analyzeChain(item, comments, prs) {
     pr: matchingPR?.number ?? null,
     branch: matchingPR?.headRefName ?? "",
     verdict,
-    ci: null,
+    ci,
     next_action,
     command
   };
 }
 async function statusDashboard() {
   const { items, issueComments, pullRequests } = await fetchBoardAndComments();
+  const ciMap = await fetchCIStatus(pullRequests);
   const inProgress = items.filter((i) => i.status === "In Progress");
   const upNext = items.filter(
     (i) => i.status === "Up Next" && !i.labels.some((l) => EXCLUDED_LABELS.includes(l))
   );
   const chains = inProgress.map(
-    (item) => analyzeChain(item, issueComments[item.num] ?? [], pullRequests)
+    (item) => analyzeChain(item, issueComments[item.num] ?? [], pullRequests, ciMap)
   );
   const result = {
     in_flight: chains,

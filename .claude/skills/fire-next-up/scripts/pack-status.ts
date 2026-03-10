@@ -202,6 +202,42 @@ async function fetchBoardAndComments(): Promise<{
   return { items, issueComments, pullRequests: prs };
 }
 
+// --- CI Check Status ---
+
+async function fetchCIStatus(
+  prs: Array<{ number: number; headRefName: string }>
+): Promise<Record<number, string>> {
+  // Returns a map of PR number → "pass" | "fail" | "pending"
+  const ciMap: Record<number, string> = {};
+  await Promise.all(
+    prs.map(async (pr) => {
+      try {
+        const data = await restGet(
+          `/repos/${OWNER}/${REPO}/commits/${pr.headRefName}/check-runs`
+        );
+        const runs: Array<{ status: string; conclusion: string | null }> =
+          data.check_runs ?? [];
+        if (runs.length === 0) {
+          ciMap[pr.number] = "pending";
+          return;
+        }
+        const hasFail = runs.some((r) => r.conclusion === "failure");
+        const allComplete = runs.every((r) => r.status === "completed");
+        if (hasFail) {
+          ciMap[pr.number] = "fail";
+        } else if (allComplete) {
+          ciMap[pr.number] = "pass";
+        } else {
+          ciMap[pr.number] = "pending";
+        }
+      } catch {
+        ciMap[pr.number] = "unknown";
+      }
+    })
+  );
+  return ciMap;
+}
+
 // --- Chain Status Detection ---
 
 function detectType(labels: string[]): string {
@@ -239,7 +275,8 @@ function chainForType(type: string): string {
 function analyzeChain(
   item: BoardItem,
   comments: string[],
-  prs: Array<{ number: number; headRefName: string }>
+  prs: Array<{ number: number; headRefName: string }>,
+  ciMap?: Record<number, string>
 ): ChainStatus {
   const type = detectType(item.labels);
   const priority = detectPriority(item.labels);
@@ -248,6 +285,7 @@ function analyzeChain(
   const matchingPR = prs.find((pr) =>
     pr.headRefName.includes(`issue-${item.num}`)
   );
+  const ci = matchingPR && ciMap ? (ciMap[matchingPR.number] ?? null) : null;
 
   const hasLokiPass = comments.some(
     (c) => c.includes("## Loki QA Verdict") && /Verdict.*PASS/.test(c)
@@ -292,7 +330,7 @@ function analyzeChain(
       pr: matchingPR?.number ?? null,
       branch: matchingPR?.headRefName ?? "",
       verdict: null,
-      ci: null,
+      ci,
       next_action,
       command,
     };
@@ -342,7 +380,7 @@ function analyzeChain(
     pr: matchingPR?.number ?? null,
     branch: matchingPR?.headRefName ?? "",
     verdict,
-    ci: null,
+    ci,
     next_action,
     command,
   };
@@ -352,6 +390,7 @@ function analyzeChain(
 
 async function statusDashboard() {
   const { items, issueComments, pullRequests } = await fetchBoardAndComments();
+  const ciMap = await fetchCIStatus(pullRequests);
 
   const inProgress = items.filter((i) => i.status === "In Progress");
   const upNext = items.filter(
@@ -361,7 +400,7 @@ async function statusDashboard() {
   );
 
   const chains: ChainStatus[] = inProgress.map((item) =>
-    analyzeChain(item, issueComments[item.num] ?? [], pullRequests)
+    analyzeChain(item, issueComments[item.num] ?? [], pullRequests, ciMap)
   );
 
   const result = {
