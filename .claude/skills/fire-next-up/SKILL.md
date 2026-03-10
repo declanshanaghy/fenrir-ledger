@@ -274,4 +274,4 @@ git worktree prune
 - Each agent handles its own commits and pushes.
 - For `test` issues, Loki is both first and final agent.
 - Board transitions: dispatched → **In Progress**, Loki PASS + merged → **Done**.
-- **All agent spawning goes through `/dispatch`.** Never call `depot claude create` directly.
+- **All agent spawning goes through `/dispatch`.** Never call `depot claude` directly.
