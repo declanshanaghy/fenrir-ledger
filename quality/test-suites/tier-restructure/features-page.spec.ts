@@ -46,7 +46,7 @@ test.describe("Features Page — Tier Restructure (#523)", () => {
 
       // Verify key details are present
       const details = await section.locator("li").allTextContents();
-      expect(details.join(" ")).toContain("card name");
+      expect(details.join(" ")).toContain("Add cards with name");
       expect(details.join(" ")).toContain("issuer");
       expect(details.join(" ")).toContain("open date");
     });
