@@ -95,6 +95,24 @@ function stripInlineHeader(source: string): string {
   );
 }
 
+/**
+ * Strip ALL `<footer className="session-footer">…</footer>` blocks from MDX content.
+ *
+ * The page layout handles its own footer/back-link, so inline footers in MDX
+ * either duplicate (when inside .chronicle-page) or render as unstyled text
+ * (when outside .chronicle-page where CSS scoping doesn't apply).
+ *
+ * Uses the global flag to catch files with duplicate footer blocks.
+ *
+ * Ref: GitHub Issue #486
+ */
+function stripInlineFooter(source: string): string {
+  return source.replace(
+    /<footer\s+className="session-footer">[\s\S]*?<\/footer>/g,
+    "",
+  );
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function ChronicleDetailPage({
@@ -195,7 +213,7 @@ export default async function ChronicleDetailPage({
           dedentHtml strips leading whitespace so indented HTML isn't treated
           as markdown code blocks.  Ref: Issue #407 */}
       <MDXRemote
-        source={stripInlineHeader(dedentHtml(entry.content))}
+        source={stripInlineFooter(stripInlineHeader(dedentHtml(entry.content)))}
         options={{ mdxOptions: { format: "md", rehypePlugins: [rehypeRaw] } }}
       />
 
