@@ -728,13 +728,19 @@ body.konami-shake-mobile {
  * Loki = glitch distortion, Heimdall = golden glow (shared with Freya).
  */
 
-/* Freya / Heimdall — warm golden glow */
+/* Freya / Heimdall — warm golden glow with pulse */
 .about-hover-glow {
   background: radial-gradient(
     ellipse at center,
     rgba(212, 165, 32, 0.25) 0%,
     transparent 70%
   );
+  animation: about-glow-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes about-glow-pulse {
+  0%   { opacity: 0.6; }
+  100% { opacity: 1; }
 }
 
 /* Luna — horizontal shimmer sweep */
@@ -790,6 +796,27 @@ body.konami-shake-mobile {
   33%  { transform: translateX(-2px); }
   66%  { transform: translateX(2px); }
   100% { transform: translateX(0); }
+}
+
+/* About page — reduced motion: disable all hover animations */
+@media (prefers-reduced-motion: reduce) {
+  .about-hover-glow,
+  .about-hover-shimmer,
+  .about-hover-fire,
+  .about-hover-glitch {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* About page — touch devices: rely on tap rather than hover for overlay */
+@media (hover: none) {
+  .about-hover-glow,
+  .about-hover-shimmer,
+  .about-hover-fire,
+  .about-hover-glitch {
+    animation: none;
+  }
 }
 
 /* About page — runic background pattern */
