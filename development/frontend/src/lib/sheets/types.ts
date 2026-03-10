@@ -7,7 +7,8 @@ export type SheetImportErrorCode =
   | "NO_CARDS_FOUND"
   | "PARSE_ERROR"
   | "ANTHROPIC_ERROR"
-  | "FETCH_ERROR";
+  | "FETCH_ERROR"
+  | "RATE_LIMITED";
 
 export interface SheetImportError {
   code: SheetImportErrorCode;

@@ -4,6 +4,7 @@ import { importFromSheet } from "@/lib/sheets/import-pipeline";
 import { importFromCsv } from "@/lib/sheets/csv-import-pipeline";
 import { importFromFile } from "@/lib/sheets/file-import-pipeline";
 import { requireAuth } from "@/lib/auth/require-auth";
+import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import type { FileFormat } from "@/components/sheets/CsvUpload";
 
@@ -25,6 +26,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     log.debug("POST /api/sheets/import returning", { status: 401, reason: "auth failed" });
     return auth.response;
   }
+
+  // Apply per-user rate limiting: 5 uploads per hour (GHSA-4r6h, GHSA-5pgg)
+  const rateLimitKey = `sheets:import:${auth.user.sub}`;
+  const { success, remaining } = rateLimit(rateLimitKey, {
+    limit: 5,
+    windowMs: 3_600_000, // 1 hour
+  });
+
+  if (!success) {
+    log.debug("POST /api/sheets/import returning", { status: 429, reason: "rate limit exceeded" });
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED" as const, message: "You have exceeded the maximum number of uploads per hour. Please try again later." } satisfies SheetImportError },
+      { status: 429 }
+    );
+  }
+
+  log.debug("POST /api/sheets/import rate limit check passed", { remaining });
 
   let url: string | undefined;
   let csv: string | undefined;
