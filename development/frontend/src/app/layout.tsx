@@ -106,7 +106,7 @@ export default async function RootLayout({
           defaultTheme="system"
           enableSystem
           storageKey="fenrir-theme"
-          nonce={nonce}
+          {...(nonce ? { nonce } : {})}
         >
           {/* AuthProvider — anonymous-first. No redirects. Resolves householdId for all users. */}
           <AuthProvider>
