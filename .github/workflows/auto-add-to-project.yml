@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Add issue to Fenrir Ledger Triage project
-        uses: actions/add-to-project@v1
-        with:
-          project-url: https://github.com/users/declanshanaghy/projects/1
-          github-token: ${{ secrets.PROJECT_TOKEN }}
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          gh project item-add 1 \
+            --owner declanshanaghy \
+            --url "${{ github.event.issue.html_url }}"
