@@ -79,7 +79,7 @@ const AGENTS: readonly AgentProfile[] = [
     slug: "fireman-decko",
     role: "Principal Engineer",
     rune: RUNE.tiwaz,
-    bio: "The forge-master who transforms design into reality. Every component, every API, every line of TypeScript flows from his keyboard. He builds with the precision of dwarven smiths and the power of Mjolnir.",
+    bio: "The forge-master who transforms design into reality. Every component, every API, every line of code flows from his keyboard. He builds with the precision of dwarven smiths and the power of Mjolnir.",
     hoverEffect: "fire",
   },
   {

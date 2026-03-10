@@ -12,7 +12,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "noEmit": true,
     "esModuleInterop": true,
     "incremental": true,
@@ -26,42 +26,30 @@
         "./src/*"
       ]
     },
-
     // ── Strict mode bundle ────────────────────────────────────────────────
     // Enables: strictNullChecks, strictFunctionTypes, strictBindCallApply,
     //          strictPropertyInitialization, noImplicitAny, noImplicitThis,
     //          alwaysStrict, useUnknownInCatchVariables
     "strict": true,
-
     // ── Additional strictness (not included in "strict") ─────────────────
-
     // Array/index access returns T | undefined — catches out-of-bounds bugs
     "noUncheckedIndexedAccess": true,
-
     // All code paths in non-void functions must return a value
     "noImplicitReturns": true,
-
     // switch-case must always break, return, or throw — no accidental fallthrough
     "noFallthroughCasesInSwitch": true,
-
     // Warn on declared-but-unused local variables
     "noUnusedLocals": true,
-
     // Warn on declared-but-unused function parameters
     "noUnusedParameters": true,
-
     // Must use `override` keyword when overriding class methods
     "noImplicitOverride": true,
-
     // Distinguishes { a?: string } from { a: string | undefined }
     "exactOptionalPropertyTypes": true,
-
     // File import casing must match the filesystem exactly
     "forceConsistentCasingInFileNames": true,
-
     // Flag unreachable code as an error
     "allowUnreachableCode": false,
-
     // Flag unused labels as an error
     "allowUnusedLabels": false
   },
@@ -69,7 +57,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

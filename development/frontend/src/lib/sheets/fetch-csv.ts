@@ -2,10 +2,12 @@
  * Fetch CSV data from a Google Sheets export URL.
  *
  * Ported from development/backend/src/lib/sheets/fetch-csv.ts
+ * Includes SSRF prevention via redirect validation.
  */
 
 import { CSV_TRUNCATION_LIMIT } from "./prompt";
 import { log } from "@/lib/logger";
+import { secureFetch } from "./url-validation";
 
 export interface FetchCsvResult {
   csv: string;
@@ -27,6 +29,8 @@ export class FetchCsvError extends Error {
 /**
  * Fetches CSV from a Google Sheets export URL.
  *
+ * Uses secure fetch with redirect validation to prevent SSRF attacks.
+ *
  * @param csvUrl - The full CSV export URL (from buildCsvExportUrl)
  * @returns The CSV text and optional truncation warning
  * @throws {FetchCsvError} With structured code on failure
@@ -34,7 +38,17 @@ export class FetchCsvError extends Error {
 export async function fetchCsv(csvUrl: string): Promise<FetchCsvResult> {
   log.debug("fetchCsv called", { csvUrl });
 
-  const response = await fetch(csvUrl, { redirect: "follow" });
+  let response: Response;
+  try {
+    response = await secureFetch(csvUrl, { maxRedirects: 1 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    log.warn("fetchCsv: secure fetch failed", { error: message });
+    throw new FetchCsvError(
+      "FETCH_ERROR",
+      `Failed to fetch spreadsheet: ${message}`,
+    );
+  }
 
   if (response.status === 403 || response.status === 404) {
     log.debug("fetchCsv throwing", { code: "SHEET_NOT_PUBLIC", status: response.status });

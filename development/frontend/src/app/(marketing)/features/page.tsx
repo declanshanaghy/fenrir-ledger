@@ -177,7 +177,7 @@ const KARL_FEATURES: FeatureDetail[] = [
       "Cloud Sync stores your card data in Fenrir's servers, tied to your Google identity. Every change — new card, updated fee date, earned bonus — propagates instantly across all your signed-in devices. The ledger is always current.",
     details: [
       "Real-time sync across all devices signed into your Google account",
-      "Data stored securely in Fenrir's cloud (Vercel KV)",
+      "Data stored securely in Fenrir's cloud",
       "No manual export / import required between devices",
       "Offline changes sync on reconnect",
     ],
@@ -191,9 +191,9 @@ const KARL_FEATURES: FeatureDetail[] = [
     id: "multi-household",
     rune: "ᛟ",
     eyebrow: "Feature 07 · Multi-Household",
-    title: "One Wolf, Many Dens",
+    title: "Many Wolves, One Den",
     benefit:
-      "Manage cards across multiple households under a single account. Your cards, your partner's cards, separate ledgers, one login.",
+      "Manage cards across an entire household, with many accounts. Your cards, your partner's cards, all one ledger, separate logins.",
     description:
       "Serious churners often manage cards for multiple people — a partner, a spouse, a household that pools points. Multi-Household lets you create named household groups and assign cards to each one. Deadlines, bonuses, and velocity rules track per-household, not just per-person.",
     details: [
