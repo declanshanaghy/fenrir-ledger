@@ -457,8 +457,32 @@ async function moveIssue(issueNum: number, status: string) {
     findCursor = connection.pageInfo.endCursor;
   }
   if (!node) {
-    console.error(`Issue #${issueNum} not found on project board`);
-    process.exit(1);
+    // Auto-add the issue to the board, then find it
+    const addMutation = `
+      mutation($projectId: ID!, $contentId: ID!) {
+        addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+          item { id }
+        }
+      }
+    `;
+    // Get the issue's node ID
+    const issueIdResult = await graphql(
+      `query($owner: String!, $repo: String!, $num: Int!) {
+        repository(owner: $owner, name: $repo) { issue(number: $num) { id } }
+      }`,
+      { owner: OWNER, repo: REPO, num: issueNum }
+    );
+    const contentId = issueIdResult.data.repository?.issue?.id;
+    if (!contentId) {
+      console.error(`Issue #${issueNum} not found in repository`);
+      process.exit(1);
+    }
+    const addResult = await graphql(addMutation, {
+      projectId: PROJECT_ID,
+      contentId,
+    });
+    node = { id: addResult.data.addProjectV2ItemById.item.id };
+    console.log(`Auto-added #${issueNum} to project board`);
   }
 
   // Mutate via GraphQL (replaces `gh project item-edit`)
