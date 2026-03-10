@@ -1,0 +1,238 @@
+---
+name: dispatch
+description: "Dispatch agents to Depot remote sandboxes or local worktrees for GitHub issues. Use when the user says 'dispatch', 'spawn agent', 'send to Depot', or when /fire-next-up needs to spawn an agent. Supports parallel dispatch, agent selection, branch override, and prompt customization."
+---
+
+# Dispatch — Spawn Agents for GitHub Issues
+
+Composes a prompt from templates and spawns the agent via Depot (default) or local worktree. No intermediate files.
+
+## Speed Rules (UNBREAKABLE)
+
+**Minimize tool calls.** Target: 2 calls per dispatch. No narration between calls.
+
+1. **No separate path-resolution call.** Use the known repo root directly.
+2. **No separate issue fetch if caller already has the data.** When `/fire-next-up` or `--resume` invokes `/dispatch`, the issue title, body, and labels are already in context — use them directly.
+3. **No separate DEPOT_ORG_ID check.** Source `.env` inline in the spawn command. Let `depot` fail if it's missing.
+4. **No separate UUID call.** Generate inline: `$(uuidgen | cut -c1-8 | tr A-Z a-z)` inside the session title.
+5. **Sandbox preamble is embedded below** — never Read `sandbox-preamble.md`.
+6. **Reuse agent templates from context.** If the same agent template was already read earlier in the session, do NOT read it again.
+7. **No intermediate temp files.** Pass the composed prompt directly to `depot claude create` via heredoc.
+8. **No step-by-step narration.** Only output the final dispatch report.
+9. **Board move runs parallel with spawn** (or skip if already In Progress).
+
+**Ideal flow (2 tool calls per dispatch):**
+```
+Call 1: Read <agent>.md           (skip if already in context)
+Call 2: source .env && depot claude create ... -p "$(cat <<'PROMPT' ... PROMPT)"
+```
+
+If issue data + agent template are already in context, that's **1 tool call** (just the spawn).
+
+## Arguments
+
+| Arg/Flag | Required | Description |
+|----------|----------|-------------|
+| `#N [#M ...]` | Yes | Issue number(s) |
+| `--agent <name>` | No | `firemandecko`, `luna`, `loki`, `heimdall`, `freya`. Inferred from labels if omitted. |
+| `--step <N>` | No | Chain step (default: 1). For resume dispatches. |
+| `--branch <name>` | No | Existing branch. If omitted, built from issue. |
+| `--template <name>` | No | Override template (e.g., `loki-bounce-back`). |
+| `--local` | No | Local worktree instead of Depot. |
+| `--parallel` | No | Dispatch multiple issues simultaneously. |
+| `--prompt-extra <text>` | No | Extra context injected after issue body. |
+| `--dry-run` | No | Show composed prompt without spawning. |
+| `--skip-board-move` | No | Don't move to In Progress. |
+
+---
+
+## Agent Model Mapping
+
+| Agent | Remote (Depot) | Local (`--local`) |
+|-------|----------------|-------------------|
+| Luna | `claude-sonnet-4-6` | `sonnet` |
+| FiremanDecko | `claude-opus-4-6` | `opus` |
+| Freya | `claude-sonnet-4-6` | `sonnet` |
+| Loki | `claude-haiku-4-5-20251001` | `haiku` |
+| Heimdall | `claude-haiku-4-5-20251001` | `haiku` |
+
+## Agent Inference (when `--agent` omitted)
+
+| Label | Step 1 | Step 2 | Step 3 |
+|-------|--------|--------|--------|
+| `bug` | firemandecko | loki | -- |
+| `enhancement` | firemandecko | loki | -- |
+| `ux` | luna | firemandecko | loki |
+| `security` | heimdall | loki | -- |
+| `research` | freya or firemandecko | -- | -- |
+
+If agent cannot be inferred, error and tell user to use `--agent`.
+
+## Agent Prompt Templates
+
+Templates live in `/fire-next-up/templates/` (shared, not duplicated):
+
+| Agent | Template |
+|-------|----------|
+| Luna | `templates/luna.md` |
+| FiremanDecko | `templates/firemandecko.md` |
+| Heimdall | `templates/heimdall.md` |
+| Loki | `templates/loki.md` |
+| Loki (CI bounce-back) | `templates/loki-bounce-back.md` |
+
+All templates use `{{SANDBOX_PREAMBLE}}` — replace with the embedded preamble below.
+
+## Sandbox Preamble (embedded — do NOT read from file)
+
+Substitute into `{{SANDBOX_PREAMBLE}}` in every agent prompt, replacing `<BRANCH>` and `<NUMBER>`:
+
+```
+SANDBOX RULES:
+- Each Bash tool call = fresh shell. ALWAYS prefix: cd <REPO_ROOT> && <command>
+- Use absolute paths. The setup script prints REPO_ROOT — use it everywhere.
+- Set timeout: 600000 (10 min) on: npm ci, verify.sh, playwright test, next build.
+
+**Step 1 — Setup (MUST run first, before anything else):**
+REPO_ROOT=$(git rev-parse --show-toplevel) && bash "$REPO_ROOT/.claude/scripts/sandbox-setup.sh" <BRANCH>
+Note the REPO_ROOT it prints — use it for ALL subsequent commands.
+
+TODO TRACKING (UNBREAKABLE):
+Use TodoWrite to plan and track ALL work. Create todos at the START of the session
+covering every numbered step. Update each todo to in_progress when you start it and
+completed when done. This is your progress ledger — if the session dies, the todo
+state shows exactly where you stopped.
+
+INCREMENTAL COMMIT + VERIFY LOOP (UNBREAKABLE):
+After every logical chunk of implementation work (~5-10 min or 1-3 files changed):
+  1. git add -A && git commit -m 'wip: <what> — Ref #<NUMBER>' && git push origin <BRANCH>
+  2. bash quality/scripts/verify.sh --step tsc
+  3. If tsc fails: fix immediately, commit+push, re-run tsc.
+  4. Update your todo progress.
+Do NOT batch all changes into one commit at the end. Sessions can die at any time —
+uncommitted work is lost work.
+
+VERIFY — tsc + build ONLY (UNBREAKABLE):
+Agents run tsc and build. The FULL test suite runs via CI on every PR push.
+Do NOT run `verify.sh --step test` for the full suite — CI is the authority.
+Loki runs only his NEW feature tests, not the full suite.
+  bash quality/scripts/verify.sh --step tsc
+  bash quality/scripts/verify.sh --step build
+On failure: fix, commit+push, re-run that step. Repeat until green.
+
+STRICT SCOPE (UNBREAKABLE):
+Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,
+declare things "done", or add commentary beyond your handoff step.
+If something is ambiguous, comment on the issue asking for clarification — don't guess.
+```
+
+---
+
+## Workflow
+
+### Phase 1 — Gather (skip what you already have)
+
+**Only fetch the issue if its title/body/labels are NOT already in context.**
+**Only Read the agent template if it was NOT already read earlier in this session.**
+
+Read the agent template (if needed):
+- `TEMPLATE_DIR/<agent-or-override>.md`
+
+Where `TEMPLATE_DIR` = `<repo-root>/.claude/skills/fire-next-up/templates`.
+
+### Phase 2 — Compose + Spawn (single Bash call per issue)
+
+Determine agent (from `--agent` or inference table), branch (from `--branch` or `fix/issue-<N>-<kebab>`, max 50 chars), and model (from mapping table).
+
+Substitute variables in the template:
+- `{{SANDBOX_PREAMBLE}}` → content of `sandbox-preamble.md`
+- `<NUMBER>` → issue number
+- `<TITLE>` → issue title
+- `<BRANCH>` → branch name
+- `<FULL ISSUE BODY>` → full issue body text
+
+If `--prompt-extra`, append after the issue body:
+```
+---
+## Additional Context (from orchestrator)
+<prompt-extra content>
+```
+
+**If `--dry-run`:** Display the composed prompt and stop. No spawn.
+
+#### Remote (default) — pass prompt via heredoc, no temp file
+
+```bash
+source <repo-root>/.env && depot claude create \
+  --org "$DEPOT_ORG_ID" \
+  --title "issue-<N>-step<S>-<agent>-$(uuidgen | cut -c1-8 | tr A-Z a-z)" \
+  --repository "https://github.com/declanshanaghy/fenrir-ledger" \
+  --branch "main" \
+  --model "<MODEL>" \
+  --dangerously-skip-permissions \
+  -p "$(cat <<'PROMPT'
+<composed prompt content here>
+PROMPT
+)"
+```
+
+**CRITICAL: Always `--branch "main"`** — `sandbox-setup.sh` handles branch checkout.
+
+**Key:** Use a `<<'PROMPT'` heredoc (single-quoted delimiter) to avoid all shell expansion issues. The `$(cat ...)` wrapping passes the heredoc content as a single string argument to `-p`.
+
+#### Local (`--local`)
+
+Launch via Agent tool with `isolation: "worktree"`, `run_in_background: true`, using the composed prompt as the agent task.
+
+### Phase 3 — Board Move (if needed)
+
+Skip if `--skip-board-move` or already In Progress. Otherwise:
+
+```bash
+node "<repo-root>/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N> in-progress
+```
+
+**Do NOT move if spawn failed.**
+
+### Output — Dispatch Report (only output)
+
+```
+**Dispatched #<N>**: <TITLE>
+**Agent:** <AgentName> (Step <S>) | **Model:** <MODEL> | **Mode:** Depot/Local
+**Branch:** `<BRANCH>` | **Session:** `<SESSION_ID>` — <link>
+```
+
+One line per issue for parallel dispatches. No step-by-step narration.
+
+---
+
+## Parallel Dispatch (`--parallel`)
+
+1. Phase 1 for all issues (template reads are shared — read once, reuse).
+2. Phase 2 (spawn) for all issues in parallel Bash calls.
+3. Phase 3 (board moves) batched.
+4. Single summary table output.
+
+---
+
+## Error Handling
+
+| Condition | Behavior |
+|-----------|----------|
+| Issue not found | **Error**, exit |
+| Issue closed | **Warning**, exit (unless `--force`) |
+| Unknown agent name | **Error** with valid list |
+| Cannot infer agent | **Error**: use `--agent` |
+| Template missing | **Error** |
+| `DEPOT_ORG_ID` unset (remote) | **Error**, do NOT fall back to local |
+| `depot claude create` fails | **Error**, do NOT move board |
+| Board move fails | **Warning** (non-fatal) |
+
+---
+
+## Rules
+
+- All agent spawning goes through `/dispatch`. Never call `depot claude create` directly.
+- Templates are read from `fire-next-up/templates/` — no duplication.
+- Always use `--branch "main"` for Depot.
+- Depot is fire-and-forget: spawn and report, do NOT poll or wait.
+- The orchestrator coordinates — never do an agent's work yourself.
