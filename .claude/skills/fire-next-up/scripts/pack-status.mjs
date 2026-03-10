@@ -1,6 +1,6 @@
 #!/usr/bin/env -S npx tsx
 
-// pack-status.ts
+// .claude/skills/fire-next-up/scripts/pack-status.ts
 import { execSync } from "child_process";
 var OWNER = "declanshanaghy";
 var REPO = "fenrir-ledger";
@@ -348,8 +348,30 @@ async function moveIssue(issueNum, status) {
     findCursor = connection.pageInfo.endCursor;
   }
   if (!node) {
-    console.error(`Issue #${issueNum} not found on project board`);
-    process.exit(1);
+    const addMutation = `
+      mutation($projectId: ID!, $contentId: ID!) {
+        addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+          item { id }
+        }
+      }
+    `;
+    const issueIdResult = await graphql(
+      `query($owner: String!, $repo: String!, $num: Int!) {
+        repository(owner: $owner, name: $repo) { issue(number: $num) { id } }
+      }`,
+      { owner: OWNER, repo: REPO, num: issueNum }
+    );
+    const contentId = issueIdResult.data.repository?.issue?.id;
+    if (!contentId) {
+      console.error(`Issue #${issueNum} not found in repository`);
+      process.exit(1);
+    }
+    const addResult = await graphql(addMutation, {
+      projectId: PROJECT_ID,
+      contentId
+    });
+    node = { id: addResult.data.addProjectV2ItemById.item.id };
+    console.log(`Auto-added #${issueNum} to project board`);
   }
   const mutation = `
     mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
