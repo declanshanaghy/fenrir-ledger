@@ -18,6 +18,7 @@ This directory contains all security documentation for the Fenrir Ledger project
 
 | Date | Scope | Risk Summary | Status | Path |
 |------|-------|-------------|--------|------|
+| 2026-03-10 | **Comprehensive External Pen Test** — Consolidated from 4 parallel audits (#470–473) | **1C / 1H / 3M / 3L / 5I** | **[Active] CRITICAL Next.js CVEs require immediate patching; HIGH SheetJS unpatched — see issues** | [reports/2026-03-09-external-pentest.md](reports/2026-03-09-external-pentest.md) |
 | 2026-03-02 | Google API Integration | 0C / 3H / 3M / 3L / 3I | Active — findings partially open | [reports/2026-03-02-google-api-integration.md](reports/2026-03-02-google-api-integration.md) |
 | 2026-03-04 | Stripe Direct Integration | 0C / 0H / 0M / 3L / 3I | Active — CRITICAL/MEDIUM resolved | [reports/2026-03-04-stripe-direct-integration.md](reports/2026-03-04-stripe-direct-integration.md) |
 | 2026-03-05 | LLM Prompt Injection Remediation (#157) | 0C / 0H / 0M / 0L / 2I | Active | [reports/2026-03-05-llm-prompt-injection-remediation.md](reports/2026-03-05-llm-prompt-injection-remediation.md) |
@@ -66,6 +67,21 @@ None to date.
 ## Open Findings Tracker
 
 The following findings from active reports remain open. Assign to FiremanDecko for remediation.
+
+### Critical (2026-03-10 External Pen Test)
+
+| ID | Report | Severity | Title | Status | Issue |
+|----|--------|----------|-------|--------|-------|
+| **CRITICAL-001** | **2026-03-09-external-pentest** | **CRITICAL** | **Next.js Multiple Critical CVEs (GHSA-3h52, GHSA-g5qg, GHSA-xv57, GHSA-4342, GHSA-9g9p, GHSA-f82v)** | **[URGENT] File issues immediately** | #475 |
+| **HIGH-001** | **2026-03-09-external-pentest** | **HIGH** | **SheetJS Unpatched Prototype Pollution & ReDoS (GHSA-4r6h, GHSA-5pgg)** | **[URGENT] File issues immediately** | #476 |
+| MEDIUM-001 | 2026-03-09-external-pentest | MEDIUM | CSP allows unsafe-inline scripts/styles | Open | #477 |
+| MEDIUM-002 | 2026-03-09-external-pentest | MEDIUM | CSV fetch follows redirects without validation (SSRF) | Open | #478 |
+| MEDIUM-003 | 2026-03-09-external-pentest | MEDIUM | CSV sanitization regex bypass via Unicode | Open | #479 |
+| LOW-001 | 2026-03-09-external-pentest | LOW | Minimatch ReDoS in ESLint deps | Open | #480 |
+| LOW-002 | 2026-03-09-external-pentest | LOW | Stripe event deduplication missing | Open | #481 |
+| LOW-003 | 2026-03-09-external-pentest | LOW | CSV truncation size disclosure | Open | #482 |
+
+### Previous Findings (Older Reports)
 
 | ID | Report | Severity | Title | Status |
 |----|--------|----------|-------|--------|
