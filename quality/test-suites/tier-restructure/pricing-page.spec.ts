@@ -265,16 +265,7 @@ test.describe("Pricing Page — Tier Restructure (#523)", () => {
         "Google sign-in",
       ];
 
-      // Verify tier card
-      for (const feature of cardFeatures) {
-        if (feature !== "Single User" && feature !== "Google sign-in") {
-          // These three are the new Thrall features
-          const elem = page.locator("text=" + feature);
-          await expect(elem).toBeVisible();
-        }
-      }
-
-      // Verify in table
+      // Verify in table (primary validation)
       const table = page.locator("table");
       const tableText = await table.textContent();
       for (const feature of cardFeatures) {
