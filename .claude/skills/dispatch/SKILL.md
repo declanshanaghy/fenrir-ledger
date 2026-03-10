@@ -17,14 +17,14 @@ Composes a prompt from templates and spawns the agent via Depot (default) or loc
 4. **No separate UUID call.** Generate inline: `$(uuidgen | cut -c1-8 | tr A-Z a-z)` inside the session title.
 5. **Sandbox preamble is embedded below** — never Read `sandbox-preamble.md`.
 6. **Reuse agent templates from context.** If the same agent template was already read earlier in the session, do NOT read it again.
-7. **No intermediate temp files.** Pass the composed prompt directly to `depot claude create` via heredoc.
+7. **No intermediate temp files.** Pass the composed prompt directly to `depot claude` via heredoc.
 8. **No step-by-step narration.** Only output the final dispatch report.
 9. **Board move runs parallel with spawn** (or skip if already In Progress).
 
 **Ideal flow (2 tool calls per dispatch):**
 ```
 Call 1: Read <agent>.md           (skip if already in context)
-Call 2: source .env && depot claude create ... -p "$(cat <<'PROMPT' ... PROMPT)"
+Call 2: source .env && depot claude ... -p "$(cat <<'PROMPT' ... PROMPT)"
 ```
 
 If issue data + agent template are already in context, that's **1 tool call** (just the spawn).
@@ -162,7 +162,7 @@ If `--prompt-extra`, append after the issue body:
 #### Remote (default) — pass prompt via heredoc, no temp file
 
 ```bash
-source <repo-root>/.env && depot claude create \
+source <repo-root>/.env && depot claude \
   --org "$DEPOT_ORG_ID" \
   --session-id "issue-<N>-step<S>-<agent>-$(uuidgen | cut -c1-8 | tr A-Z a-z)" \
   --repository "https://github.com/declanshanaghy/fenrir-ledger" \
@@ -224,14 +224,14 @@ One line per issue for parallel dispatches. No step-by-step narration.
 | Cannot infer agent | **Error**: use `--agent` |
 | Template missing | **Error** |
 | `DEPOT_ORG_ID` unset (remote) | **Error**, do NOT fall back to local |
-| `depot claude create` fails | **Error**, do NOT move board |
+| `depot claude` fails | **Error**, do NOT move board |
 | Board move fails | **Warning** (non-fatal) |
 
 ---
 
 ## Rules
 
-- All agent spawning goes through `/dispatch`. Never call `depot claude create` directly.
+- All agent spawning goes through `/dispatch`. Never call `depot claude` directly.
 - Templates are read from `fire-next-up/templates/` — no duplication.
 - Always use `--branch "main"` for Depot.
 - Depot is fire-and-forget: spawn and report, do NOT poll or wait.
