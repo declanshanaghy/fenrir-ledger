@@ -44,8 +44,11 @@ const INJECTION_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
  *
  * This is a defense-in-depth measure. The primary injection barrier is the
  * XML structural delimiter wrapping (see buildExtractionPrompt). This function
- * adds a second layer by stripping recognizable injection patterns that could
- * attempt to escape or override the structural boundaries.
+ * adds a second layer by:
+ * 1. Normalizing Unicode to NFC form (canonical composition)
+ * 2. Removing zero-width and invisible characters that could bypass filters
+ * 3. Stripping recognizable injection patterns that could attempt to escape
+ *    or override the structural boundaries
  *
  * Does NOT alter legitimate CSV data: card names, dollar amounts, dates,
  * issuer names, and notes are unaffected by these filters.
@@ -54,7 +57,26 @@ const INJECTION_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
  * @returns Sanitized CSV text safe for interpolation into the user message
  */
 export function sanitizeCsvForPrompt(csv: string): string {
-  let sanitized = csv;
+  // Step 1: Normalize Unicode to NFC (Canonical Decomposition followed by Canonical Composition).
+  // This converts homograph attacks using lookalike characters (e.g., Cyrillic А vs Latin A)
+  // into their canonical forms, allowing regex patterns to match them.
+  let sanitized = csv.normalize('NFC');
+
+  // Step 2: Remove zero-width and invisible characters that could bypass whitespace patterns.
+  // These characters are rarely legitimate in CSV data and create attack surface for injection.
+  // Zero-width space (U+200B): used to split keywords like "IGNORE​PREVIOUS"
+  // Zero-width non-joiner (U+200C): can hide text between visible characters
+  // Zero-width joiner (U+200D): used in complex scripts but rare in English CSV
+  // Zero-width no-break space / BOM (U+FEFF): byte-order mark can cause parsing issues
+  sanitized = sanitized
+    .replace(/\u200b/g, '') // Zero-width space
+    .replace(/\u200c/g, '') // Zero-width non-joiner
+    .replace(/\u200d/g, '') // Zero-width joiner
+    .replace(/\ufeff/g, ''); // Zero-width no-break space
+
+  // Step 3: Apply regex-based injection pattern filtering.
+  // Now that Unicode is normalized and invisible characters are removed,
+  // these patterns will catch attempts that previously bypassed the filters.
   for (const { pattern, replacement } of INJECTION_PATTERNS) {
     sanitized = sanitized.replace(pattern, replacement);
   }
