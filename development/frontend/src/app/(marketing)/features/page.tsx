@@ -23,6 +23,7 @@
  */
 
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 export const dynamic = "force-static";
@@ -46,6 +47,10 @@ interface FeatureDetail {
   atmospheric: string;
   tier: "thrall" | "karl";
   reverse?: boolean;
+  /** Base filename for images in /images/features/ (e.g. "skoll" → skoll-dark.png, skoll-light.png) */
+  image: string;
+  /** Wikipedia URL for the Norse character */
+  wikiUrl: string;
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -69,6 +74,8 @@ const THRALL_FEATURES: FeatureDetail[] = [
     atmospheric: "Sköll chases the sun. He has never caught it — but he never stops.",
     tier: "thrall",
     reverse: false,
+    image: "skoll",
+    wikiUrl: "https://en.wikipedia.org/wiki/Sk%C3%B6ll",
   },
   {
     id: "signup-bonus-tracking",
@@ -88,6 +95,8 @@ const THRALL_FEATURES: FeatureDetail[] = [
     atmospheric: "Hati runs after the moon. The moon has no place to hide.",
     tier: "thrall",
     reverse: true,
+    image: "hati",
+    wikiUrl: "https://en.wikipedia.org/wiki/Hati_Hr%C3%B3%C3%B0vitnisson",
   },
   {
     id: "the-howl",
@@ -108,6 +117,8 @@ const THRALL_FEATURES: FeatureDetail[] = [
     atmospheric: "The wolf does not howl when everything is calm.",
     tier: "thrall",
     reverse: false,
+    image: "garmr",
+    wikiUrl: "https://en.wikipedia.org/wiki/Garmr",
   },
 ];
 
@@ -131,6 +142,8 @@ const KARL_FEATURES: FeatureDetail[] = [
     atmospheric: "Know the rules of the hall before you enter it.",
     tier: "karl",
     reverse: false,
+    image: "norns",
+    wikiUrl: "https://en.wikipedia.org/wiki/Norns",
   },
   {
     id: "valhalla",
@@ -150,6 +163,8 @@ const KARL_FEATURES: FeatureDetail[] = [
     atmospheric: "The hall of the honored dead. Only Karl may enter.",
     tier: "karl",
     reverse: true,
+    image: "valhalla",
+    wikiUrl: "https://en.wikipedia.org/wiki/Valhalla",
   },
   {
     id: "cloud-sync",
@@ -169,6 +184,8 @@ const KARL_FEATURES: FeatureDetail[] = [
     atmospheric: "The wolf who roams far keeps his saga close.",
     tier: "karl",
     reverse: false,
+    image: "huginn-muninn",
+    wikiUrl: "https://en.wikipedia.org/wiki/Huginn_and_Muninn",
   },
   {
     id: "multi-household",
@@ -188,6 +205,8 @@ const KARL_FEATURES: FeatureDetail[] = [
     atmospheric: "One wolf may guard many dens.",
     tier: "karl",
     reverse: true,
+    image: "fenrir",
+    wikiUrl: "https://en.wikipedia.org/wiki/Fenrir",
   },
   {
     id: "smart-import",
@@ -208,6 +227,8 @@ const KARL_FEATURES: FeatureDetail[] = [
     atmospheric: "The runes reveal what the untrained eye cannot see.",
     tier: "karl",
     reverse: false,
+    image: "mimir",
+    wikiUrl: "https://en.wikipedia.org/wiki/M%C3%ADmir",
   },
   {
     id: "data-export",
@@ -227,6 +248,8 @@ const KARL_FEATURES: FeatureDetail[] = [
     atmospheric: "Carry the runes beyond these walls.",
     tier: "karl",
     reverse: true,
+    image: "tyr",
+    wikiUrl: "https://en.wikipedia.org/wiki/T%C3%BDr",
   },
 ];
 
@@ -259,20 +282,54 @@ function TierBadge({ tier }: { tier: "thrall" | "karl" }) {
   );
 }
 
-function FeatureVisualPlaceholder({ feature }: { feature: FeatureDetail }) {
+/**
+ * ThemedFeatureImage — renders both dark and light variants of a feature image,
+ * toggling visibility via CSS `hidden dark:block` / `block dark:hidden` so the
+ * correct image shows per the current theme without any client-side JS.
+ *
+ * Includes a mystical hover animation: gold glow pulse + subtle scale + rune shimmer.
+ */
+function ThemedFeatureImage({ feature }: { feature: FeatureDetail }) {
+  const altText = `${feature.title} — ${feature.eyebrow}`;
   return (
-    <div
-      className={[
-        "border border-border bg-card",
-        "min-h-[280px] flex flex-col items-center justify-center gap-3",
-        "p-8 text-center",
-      ].join(" ")}
-      aria-hidden="true"
-    >
-      <span className="text-5xl text-primary leading-none">{feature.rune}</span>
-      <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-2">
-        {feature.title}
-      </span>
+    <div className="group relative overflow-hidden rounded-sm border border-border bg-card">
+      {/* Rune shimmer overlay on hover */}
+      <div
+        className={[
+          "pointer-events-none absolute inset-0 z-10",
+          "opacity-0 group-hover:opacity-100",
+          "bg-gradient-to-r from-transparent via-primary/10 to-transparent",
+          "translate-x-[-100%] group-hover:translate-x-[100%]",
+          "transition-all duration-1000 ease-in-out",
+        ].join(" ")}
+        aria-hidden="true"
+      />
+      {/* Dark-mode image */}
+      <Image
+        src={`/images/features/${feature.image}-dark.png`}
+        alt={altText}
+        width={800}
+        height={600}
+        className={[
+          "hidden dark:block w-full h-auto object-cover",
+          "transition-all duration-500 ease-out",
+          "group-hover:scale-[1.03]",
+          "group-hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]",
+        ].join(" ")}
+      />
+      {/* Light-mode image */}
+      <Image
+        src={`/images/features/${feature.image}-light.png`}
+        alt={altText}
+        width={800}
+        height={600}
+        className={[
+          "block dark:hidden w-full h-auto object-cover",
+          "transition-all duration-500 ease-out",
+          "group-hover:scale-[1.03]",
+          "group-hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]",
+        ].join(" ")}
+      />
     </div>
   );
 }
@@ -290,7 +347,14 @@ function FeatureSection({ feature }: { feature: FeatureDetail }) {
         {feature.eyebrow}
       </p>
       <h2 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wide text-foreground leading-tight">
-        {feature.title}
+        <a
+          href={feature.wikiUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline decoration-primary/40 underline-offset-4 hover:decoration-primary transition-colors"
+        >
+          {feature.title}
+        </a>
       </h2>
       <p className="font-body text-base italic font-semibold text-foreground/90 leading-relaxed">
         {feature.benefit}
@@ -320,7 +384,7 @@ function FeatureSection({ feature }: { feature: FeatureDetail }) {
     </div>
   );
 
-  const visual = <FeatureVisualPlaceholder feature={feature} />;
+  const visual = <ThemedFeatureImage feature={feature} />;
 
   return (
     <section
