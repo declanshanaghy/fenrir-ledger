@@ -38,11 +38,20 @@ test.describe("Pricing Page — Tier Restructure (#523)", () => {
     test("Thrall card should show annual fee tracking and bonus tracking as strikethrough/excluded", async ({
       page,
     }) => {
-      const strikethroughText = await page
-        .locator("line-through")
-        .allTextContents();
+      // Find Thrall card and check for strikethrough text (those are Karl-only features)
+      const thrallCard = page.locator("h2").filter({ hasText: /^Thrall$/ });
+      const cardSection = thrallCard.locator("..").locator("..");
 
-      const strikeContent = strikethroughText.join(" ");
+      // Strikethrough elements contain the excluded features
+      const strikethroughSpans = cardSection
+        .locator("span")
+        .filter({ has: cardSection.locator(".line-through") });
+
+      const strikeContent = await cardSection
+        .locator(".line-through")
+        .allTextContents()
+        .then((items) => items.join(" "));
+
       expect(strikeContent).toContain("Annual fee tracking");
       expect(strikeContent).toContain("Sign-up bonus");
     });
