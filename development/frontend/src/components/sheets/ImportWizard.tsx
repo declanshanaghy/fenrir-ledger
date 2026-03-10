@@ -57,6 +57,7 @@ const ERROR_MESSAGES: Record<SheetImportErrorCode, string> = {
   PARSE_ERROR: "The card data couldn't be parsed correctly.",
   ANTHROPIC_ERROR: "Our card extraction service is temporarily unavailable.",
   FETCH_ERROR: "Couldn't reach the import service. Check your connection and try again.",
+  RATE_LIMITED: "You've exceeded the maximum uploads per hour. Please try again later.",
 };
 
 /** Format cents as a dollar amount string */
