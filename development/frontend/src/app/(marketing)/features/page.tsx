@@ -7,16 +7,19 @@
  *
  * Features:
  *   Thrall (Free):
- *     01. Annual Fee Tracking
- *     02. Sign-Up Bonus Tracking
- *     03. The Howl
+ *     01. Add Your Cards
+ *     02. The Dashboard
+ *     03. Card Notes
  *   Karl ($3.99/mo):
- *     04. Velocity Management
- *     05. Valhalla (Card Archive)
- *     06. Cloud Sync
- *     07. Multi-Household
- *     08. Smart Import
- *     09. Data Export
+ *     04. Annual Fee Tracking (Sköll)
+ *     05. Sign-Up Bonus Tracking (Hati)
+ *     06. The Howl
+ *     07. Velocity Management
+ *     08. Valhalla (Card Archive)
+ *     09. Cloud Sync
+ *     10. Multi-Household
+ *     11. Smart Import
+ *     12. Data Export
  *
  * Wireframe: ux/wireframes/marketing-site/features.html
  * export const dynamic = 'force-static' — no server data fetching.
@@ -57,9 +60,75 @@ interface FeatureDetail {
 
 const THRALL_FEATURES: FeatureDetail[] = [
   {
+    id: "add-your-cards",
+    rune: "ᚠ",
+    eyebrow: "Feature 01 · Add Your Cards",
+    title: "The Foundation of the Ledger",
+    benefit:
+      "Enter every card you carry — name, issuer, open date, fee date, bonus details. This is where your ledger begins.",
+    description:
+      "Fenrir starts with a simple truth: you need to record the cards you hold. Add Your Cards gives you a clean, structured form to enter every credit card in your wallet — one by one, with the details that matter. Card name, issuer, date opened, annual fee date, sign-up bonus amount and deadline. No spreadsheet required. No imports. Just you and the ledger.",
+    details: [
+      "Add cards with name, issuer, open date, and fee anniversary",
+      "Record annual fee amount and sign-up bonus details",
+      "Set minimum spend thresholds and bonus deadlines",
+      "Edit or remove cards anytime",
+    ],
+    atmospheric: "Every saga begins with a single rune carved into stone.",
+    tier: "thrall",
+    reverse: false,
+    image: "fenrir",
+    wikiUrl: "https://en.wikipedia.org/wiki/Fenrir",
+  },
+  {
+    id: "the-dashboard",
+    rune: "ᚱ",
+    eyebrow: "Feature 02 · The Dashboard",
+    title: "All Your Cards at a Glance",
+    benefit:
+      "See every active card in one place — with status badges, sortable columns, and quick filters. No hunting. No guessing.",
+    description:
+      "The Dashboard is where your ledger comes alive. Every card you've added appears in a clean, scannable list with status indicators: approaching fee dates, active bonus windows, spend progress. Sort by issuer, fee date, or status. Filter by what needs attention. It's your command center — without the clutter.",
+    details: [
+      "All active cards displayed in a sortable list",
+      "Status badges for fee approaching, bonus active, and spend progress",
+      "Quick filters by issuer, status, or date range",
+      "Responsive layout — works on mobile and desktop",
+    ],
+    atmospheric: "The ravens see all. From above, nothing is hidden.",
+    tier: "thrall",
+    reverse: true,
+    image: "huginn-muninn",
+    wikiUrl: "https://en.wikipedia.org/wiki/Huginn_and_Muninn",
+  },
+  {
+    id: "card-notes",
+    rune: "ᛗ",
+    eyebrow: "Feature 03 · Card Notes",
+    title: "The Memory of Mimir",
+    benefit:
+      "Add free-text notes to any card. Track perks, retention offers, product change history, and anything else you need to remember.",
+    description:
+      "Every card carries a story beyond its dates and fees. Card Notes lets you attach free-text notes to any card in your ledger — retention offers you negotiated, perks you discovered, product changes you're considering, or reminders for your next annual fee call. Your memory, your rules.",
+    details: [
+      "Add unlimited free-text notes to any card",
+      "Track retention offers, perks, and product change history",
+      "Notes persist across sessions and devices (with Cloud Sync)",
+      "Searchable notes for quick reference",
+    ],
+    atmospheric: "Mimir's well holds the memory of all things. Drink, and remember.",
+    tier: "thrall",
+    reverse: false,
+    image: "mimir",
+    wikiUrl: "https://en.wikipedia.org/wiki/M%C3%ADmir",
+  },
+];
+
+const KARL_FEATURES: FeatureDetail[] = [
+  {
     id: "annual-fee-tracking",
     rune: "ᛊ",
-    eyebrow: "Feature 01 · Annual Fee Tracking",
+    eyebrow: "Feature 04 · Annual Fee Tracking",
     title: "Sköll Watches the Fee",
     benefit:
       "Know your annual fee date 60 days before it hits. Never get charged for a card you meant to cancel.",
@@ -72,7 +141,7 @@ const THRALL_FEATURES: FeatureDetail[] = [
       "Tracks whether fee has been offset by credits or bonuses",
     ],
     atmospheric: "Sköll chases the sun. He has never caught it — but he never stops.",
-    tier: "thrall",
+    tier: "karl",
     reverse: false,
     image: "skoll",
     wikiUrl: "https://en.wikipedia.org/wiki/Sk%C3%B6ll",
@@ -80,7 +149,7 @@ const THRALL_FEATURES: FeatureDetail[] = [
   {
     id: "signup-bonus-tracking",
     rune: "ᚺ",
-    eyebrow: "Feature 02 · Sign-Up Bonus Tracking",
+    eyebrow: "Feature 05 · Sign-Up Bonus Tracking",
     title: "Hati Watches the Deadline",
     benefit:
       "Track every minimum spend requirement. Never let a sign-up bonus expire because you lost track of the window.",
@@ -93,7 +162,7 @@ const THRALL_FEATURES: FeatureDetail[] = [
       "Marks bonus as earned once threshold is met",
     ],
     atmospheric: "Hati runs after the moon. The moon has no place to hide.",
-    tier: "thrall",
+    tier: "karl",
     reverse: true,
     image: "hati",
     wikiUrl: "https://en.wikipedia.org/wiki/Hati_Hr%C3%B3%C3%B0vitnisson",
@@ -101,7 +170,7 @@ const THRALL_FEATURES: FeatureDetail[] = [
   {
     id: "the-howl",
     rune: "ᛉ",
-    eyebrow: "Feature 03 · The Howl",
+    eyebrow: "Feature 06 · The Howl",
     title: "Urgent Cards Dashboard",
     benefit:
       "A single view of everything that needs attention right now — no searching, no missing deadlines.",
@@ -115,18 +184,15 @@ const THRALL_FEATURES: FeatureDetail[] = [
       "Accessible from dashboard and as collapsible side panel",
     ],
     atmospheric: "The wolf does not howl when everything is calm.",
-    tier: "thrall",
+    tier: "karl",
     reverse: false,
     image: "garmr",
     wikiUrl: "https://en.wikipedia.org/wiki/Garmr",
   },
-];
-
-const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "velocity-management",
     rune: "ᚹ",
-    eyebrow: "Feature 04 · Velocity Management",
+    eyebrow: "Feature 07 · Velocity Management",
     title: "The Issuer's Rules",
     benefit:
       "Know exactly where you stand against Chase 5/24, Citi 1/8, and other issuer-specific application limits.",
@@ -148,7 +214,7 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "valhalla",
     rune: "ᛏ",
-    eyebrow: "Feature 05 · Valhalla",
+    eyebrow: "Feature 08 · Valhalla",
     title: "Hall of the Honored Dead",
     benefit:
       "See every card you've closed — anniversary dates, total rewards extracted, annual fees avoided, and how long each chain held you.",
@@ -169,7 +235,7 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "cloud-sync",
     rune: "ᚲ",
-    eyebrow: "Feature 06 · Cloud Sync",
+    eyebrow: "Feature 09 · Cloud Sync",
     title: "Your Ledger Follows You",
     benefit:
       "Add a card on mobile. See it on desktop. Your data syncs across every device via your Google account — no manual export, no sync button.",
@@ -190,7 +256,7 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "multi-household",
     rune: "ᛟ",
-    eyebrow: "Feature 07 · Multi-Household",
+    eyebrow: "Feature 10 · Multi-Household",
     title: "Many Wolves, One Den",
     benefit:
       "Manage cards across an entire household, with many accounts. Your cards, your partner's cards, all one ledger, separate logins.",
@@ -211,7 +277,7 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "smart-import",
     rune: "ᛗ",
-    eyebrow: "Feature 08 · Smart Import",
+    eyebrow: "Feature 11 · Smart Import",
     title: "The Rune-Reader",
     benefit:
       "Drop in your existing spreadsheet. Fenrir extracts card names, dates, and fee amounts automatically — no reformatting required.",
@@ -233,7 +299,7 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "data-export",
     rune: "ᛞ",
-    eyebrow: "Feature 09 · Data Export",
+    eyebrow: "Feature 12 · Data Export",
     title: "Your Data, Your Terms",
     benefit:
       "Export everything Fenrir knows about your cards — as CSV or JSON — whenever you want, with no lock-in.",
