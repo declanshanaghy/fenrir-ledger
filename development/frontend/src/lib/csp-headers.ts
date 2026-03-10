@@ -5,6 +5,20 @@
  */
 
 /**
+ * Google Picker inline-script SHA-256 hashes.
+ *
+ * The Google Picker API (apis.google.com) injects inline <script> tags that
+ * do not carry our CSP nonce.  Rather than falling back to 'unsafe-inline'
+ * for all scripts, we allowlist the specific hashes observed in the console
+ * (see Issue #527).  If Google changes the inline payload, the hash will
+ * fail-closed and we update it here.
+ */
+const GOOGLE_PICKER_SCRIPT_HASHES = [
+  // Google Picker bootstrap inline script
+  "'sha256-rty9vSWIkY+k7t72CZmyhd8qbxQ4FpRSyO4E/iy3xcI='",
+];
+
+/**
  * Build CSP directives with optional nonce
  *
  * Must allow:
@@ -13,6 +27,7 @@
  * - Anthropic / OpenAI for LLM extraction (connect-src)
  * - Nonce-based CSP for scripts/styles (replaces unsafe-inline)
  * - data: URIs for fonts (some Google Fonts use data: encoding)
+ * - Google Picker inline scripts via SHA-256 hash allowlist (Issue #527)
  */
 export function buildCspDirectives(nonce?: string): string[] {
   const scriptSrcNonce = nonce ? `'nonce-${nonce}'` : "'unsafe-inline'";
@@ -20,14 +35,26 @@ export function buildCspDirectives(nonce?: string): string[] {
     // Default: only same-origin
     "default-src 'self'",
 
-    // Scripts: self + Google APIs + Stripe.js + Vercel analytics/live + nonce (or unsafe-inline fallback)
+    // Scripts: self + nonce + Google Picker inline-script hashes + Google APIs + Stripe.js + Vercel
     // In development, Next.js HMR / React Fast Refresh requires 'unsafe-eval'.
-    `script-src 'self' ${scriptSrcNonce}${process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""} https://accounts.google.com https://apis.google.com https://js.stripe.com https://va.vercel-scripts.com https://vercel.live`,
+    // Google Picker inline script hashes are allowlisted for Issue #527.
+    [
+      "script-src 'self'",
+      scriptSrcNonce,
+      ...(process.env.NODE_ENV !== "production" ? ["'unsafe-eval'"] : []),
+      ...GOOGLE_PICKER_SCRIPT_HASHES,
+      "https://accounts.google.com",
+      "https://apis.google.com",
+      "https://js.stripe.com",
+      "https://va.vercel-scripts.com",
+      "https://vercel.live",
+    ].join(" "),
 
-    // Styles: self + unsafe-inline + Google Fonts
-    // unsafe-inline is required for style attributes (React, next-themes, Framer Motion).
-    // CSP nonces only work on <style> tags, not style="" attributes — no practical alternative.
-    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com`,
+    // Styles: self + unsafe-inline + Google Fonts + Google Accounts + Google APIs
+    // unsafe-inline is required for style attributes (React, next-themes, Framer Motion,
+    // Google Picker, and Vercel feedback widget). CSP nonces only work on <style> tags,
+    // not style="" attributes — no practical alternative.
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://apis.google.com`,
 
     // Images: self + Google profile pictures + YouTube thumbnails + data: URIs
     "img-src 'self' https://lh3.googleusercontent.com https://img.youtube.com data:",
@@ -42,6 +69,7 @@ export function buildCspDirectives(nonce?: string): string[] {
       "https://oauth2.googleapis.com",
       "https://www.googleapis.com",
       "https://sheets.googleapis.com",
+      "https://content.googleapis.com",
       "https://docs.google.com",
       "https://apis.google.com",
       "https://api.stripe.com",
