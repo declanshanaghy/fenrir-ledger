@@ -117,9 +117,9 @@ function TierCardsSection() {
             </p>
             <ul className="flex flex-col gap-3" aria-label="Thrall tier features">
               {[
-                "Annual fee tracking with 60-day warnings",
-                "Sign-up bonus & minimum spend tracking",
-                "The Howl — preview with blurred teaser",
+                "Add Your Cards — manual card entry with all key details",
+                "The Dashboard — all active cards at a glance",
+                "Card Notes — free-text notes on any card",
                 "Single User",
                 "Google sign-in",
               ].map((feat) => (
@@ -130,9 +130,11 @@ function TierCardsSection() {
               ))}
               {/* Karl features shown as excluded */}
               {[
+                "Annual fee tracking with 60-day warnings",
+                "Sign-up bonus & minimum spend tracking",
+                "The Howl — proactive alerts & Ragnarök",
                 "Velocity management (Chase 5/24, Citi 1/8, etc.)",
                 "Card archive (Valhalla)",
-                "The Howl — full proactive alerts & Ragnarök",
                 "Cloud Sync (multi-device)",
                 "Whole-Household management",
                 "Smart Import (AI-Powered)",
@@ -201,9 +203,11 @@ function TierCardsSection() {
             </p>
             <ul className="flex flex-col gap-3" aria-label="Karl tier premium features">
               {[
+                { name: "Annual Fee Tracking", desc: "60-day advance warnings before every fee date" },
+                { name: "Sign-Up Bonus Tracking", desc: "minimum spend deadlines and threshold monitoring" },
+                { name: "The Howl", desc: "full proactive fee alerts, deadline warnings & Ragnarök" },
                 { name: "Velocity", desc: "Chase 5/24, Citi 1/8, Amex once-per-lifetime tracking" },
                 { name: "Valhalla", desc: "full closed-card archive with history" },
-                { name: "The Howl", desc: "full proactive fee alerts, deadline warnings & Ragnarök" },
                 { name: "Cloud Sync", desc: "real-time sync across all devices" },
                 { name: "Whole-Household", desc: "manage your ledger with others" },
                 { name: "Smart Import", desc: "AI extracts card data from spreadsheets" },
@@ -273,18 +277,19 @@ function ComparisonTableSection() {
               </tr>
             </thead>
             <tbody>
-              {/* Core Tracking */}
+              {/* Free Foundations */}
               <tr>
                 <td
                   colSpan={3}
                   className="bg-muted/50 py-2 px-4 font-mono text-[10px] tracking-[0.2em] uppercase text-muted-foreground border-t border-border"
                 >
-                  Core Tracking
+                  Free Foundations
                 </td>
               </tr>
               {[
-                "Annual fee tracking with 60-day advance warning",
-                "Sign-up bonus & minimum spend deadline tracking",
+                "Add Your Cards — manual card entry with all key details",
+                "The Dashboard — all active cards at a glance",
+                "Card Notes — free-text notes on any card",
                 "Google Sign-In authentication",
               ].map((feat) => (
                 <tr key={feat} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
@@ -293,17 +298,27 @@ function ComparisonTableSection() {
                   <td className="py-2.5 px-4 text-center"><CheckIcon included /></td>
                 </tr>
               ))}
-              {/* The Howl — split between tiers */}
-              <tr className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                <td className="py-2.5 px-4 text-foreground">The Howl — blurred preview (teaser)</td>
-                <td className="py-2.5 px-4 text-center"><CheckIcon included /></td>
-                <td className="py-2.5 px-4 text-center"><CheckIcon included /></td>
+
+              {/* Tracking & Alerts */}
+              <tr>
+                <td
+                  colSpan={3}
+                  className="bg-muted/50 py-2 px-4 font-mono text-[10px] tracking-[0.2em] uppercase text-muted-foreground border-t border-border"
+                >
+                  Tracking &amp; Alerts
+                </td>
               </tr>
-              <tr className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                <td className="py-2.5 px-4 text-foreground">The Howl — full proactive alerts &amp; Ragnarök threshold</td>
-                <td className="py-2.5 px-4 text-center"><CheckIcon included={false} /></td>
-                <td className="py-2.5 px-4 text-center"><CheckIcon included /></td>
-              </tr>
+              {[
+                { name: "Annual fee tracking with 60-day advance warning", thrall: false, karl: true },
+                { name: "Sign-up bonus & minimum spend deadline tracking", thrall: false, karl: true },
+                { name: "The Howl — proactive fee alerts, deadline warnings & Ragnarök", thrall: false, karl: true },
+              ].map(({ name, thrall, karl }) => (
+                <tr key={name} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                  <td className="py-2.5 px-4 text-foreground">{name}</td>
+                  <td className="py-2.5 px-4 text-center"><CheckIcon included={thrall} /></td>
+                  <td className="py-2.5 px-4 text-center"><CheckIcon included={karl} /></td>
+                </tr>
+              ))}
 
               {/* Data & Devices */}
               <tr>
