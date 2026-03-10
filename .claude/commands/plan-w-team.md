@@ -138,10 +138,7 @@ gh issue create \
 EOF
 )"
 
-# Add to project board
-gh project item-add 1 --owner declanshanaghy --url <issue-url>
-
-# MANDATORY: Set status to "Up Next" (otherwise it lands in "No Status")
+# Set status to "Up Next" (auto-add action handles board addition)
 SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
 node "$SCRIPT_DIR/pack-status.mjs" --move <issue-number> up-next
 ```
