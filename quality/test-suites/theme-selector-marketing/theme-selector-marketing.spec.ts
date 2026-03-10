@@ -67,8 +67,10 @@ async function getMobileThemeToggle(
  * Open mobile nav overlay
  */
 async function openMobileNav(page: import("@playwright/test").Page) {
-  const hamburger = page.getByRole("button", { name: /open navigation/i });
-  await hamburger.click();
+  // Find the hamburger button (hidden on md:, so only visible on mobile)
+  // It's the button with aria-label "Open navigation menu"
+  const hamburger = page.locator('button[aria-label="Open navigation menu"]');
+  await hamburger.click({ timeout: 5000 });
   await page.waitForSelector('[role="dialog"]', { state: "visible" });
 }
 
