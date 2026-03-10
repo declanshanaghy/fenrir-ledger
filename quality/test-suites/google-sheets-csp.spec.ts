@@ -23,8 +23,8 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Google Sheets Import — CSP Headers (#527)", () => {
   test("CSP headers include Google Picker configuration", async ({ page }) => {
-    // Navigate to a page that includes CSP headers
-    const response = await page.goto("/ledger/import");
+    // Navigate to the ledger page which loads the ImportWizard modal
+    const response = await page.goto("/ledger");
 
     // Verify the page loaded successfully
     expect(response?.status()).toBeLessThan(400);
@@ -41,7 +41,7 @@ test.describe("Google Sheets Import — CSP Headers (#527)", () => {
   });
 
   test("CSP script-src includes Google Picker script hash", async ({ page }) => {
-    const response = await page.goto("/ledger/import");
+    const response = await page.goto("/ledger");
     const cspHeader = response?.headers()["content-security-policy"];
 
     // The SHA-256 hash for the Google Picker bootstrap inline script
@@ -55,7 +55,7 @@ test.describe("Google Sheets Import — CSP Headers (#527)", () => {
   });
 
   test("CSP style-src includes https://apis.google.com", async ({ page }) => {
-    const response = await page.goto("/ledger/import");
+    const response = await page.goto("/ledger");
     const cspHeader = response?.headers()["content-security-policy"];
 
     // Extract the style-src directive
@@ -66,7 +66,7 @@ test.describe("Google Sheets Import — CSP Headers (#527)", () => {
   });
 
   test("CSP connect-src includes https://content.googleapis.com", async ({ page }) => {
-    const response = await page.goto("/ledger/import");
+    const response = await page.goto("/ledger");
     const cspHeader = response?.headers()["content-security-policy"];
 
     // Extract the connect-src directive
@@ -77,7 +77,7 @@ test.describe("Google Sheets Import — CSP Headers (#527)", () => {
   });
 
   test("CSP allows Google APIs endpoints", async ({ page }) => {
-    const response = await page.goto("/ledger/import");
+    const response = await page.goto("/ledger");
     const cspHeader = response?.headers()["content-security-policy"];
 
     // Verify multiple Google API endpoints required for Sheets import
@@ -90,7 +90,7 @@ test.describe("Google Sheets Import — CSP Headers (#527)", () => {
   });
 
   test("CSP frame-src allows Google Picker and OAuth", async ({ page }) => {
-    const response = await page.goto("/ledger/import");
+    const response = await page.goto("/ledger");
     const cspHeader = response?.headers()["content-security-policy"];
 
     // Extract the frame-src directive
@@ -103,7 +103,7 @@ test.describe("Google Sheets Import — CSP Headers (#527)", () => {
     expect(frameSrcDirective).toContain("https://drive.google.com");
   });
 
-  test("No CSP violations in console when import page loads", async ({ page }) => {
+  test("No CSP violations in console when ledger page loads", async ({ page }) => {
     const consoleMessages: string[] = [];
 
     // Capture all console messages
@@ -113,8 +113,8 @@ test.describe("Google Sheets Import — CSP Headers (#527)", () => {
       }
     });
 
-    // Navigate to the import page
-    await page.goto("/ledger/import");
+    // Navigate to the ledger page
+    await page.goto("/ledger");
 
     // Wait a bit for any CSP violations to be logged
     await page.waitForTimeout(1000);
@@ -126,12 +126,12 @@ test.describe("Google Sheets Import — CSP Headers (#527)", () => {
       msg.toLowerCase().includes("blocked by")
     );
 
-    // There should be no CSP violations on the import page itself
+    // There should be no CSP violations on the ledger page itself
     // (The Picker API script is loaded dynamically and handled separately)
     expect(cspViolations.length).toBe(0);
   });
 
-  test("Import page renders without CSP-related errors", async ({ page }) => {
+  test("Ledger page renders without CSP-related errors", async ({ page }) => {
     let pageLoadError = false;
 
     // Capture any errors
@@ -139,16 +139,14 @@ test.describe("Google Sheets Import — CSP Headers (#527)", () => {
       pageLoadError = true;
     });
 
-    const response = await page.goto("/ledger/import");
+    const response = await page.goto("/ledger");
 
     // Page should load successfully
     expect(response?.status()).toBeLessThan(400);
     expect(pageLoadError).toBe(false);
 
-    // The import page should be visible
-    const importContainer = page.locator("[data-testid='import-wizard']");
-    // Try to find any import-related content if the testid doesn't exist
-    const importSection = page.locator("text=/import|import/i").first();
-    expect(importSection).toBeDefined();
+    // The ledger page should be visible with either dashboard or sign-in content
+    const pageContent = page.locator("body");
+    await expect(pageContent).toBeVisible();
   });
 });
