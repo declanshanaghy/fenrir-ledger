@@ -164,7 +164,7 @@ If `--prompt-extra`, append after the issue body:
 ```bash
 source <repo-root>/.env && depot claude create \
   --org "$DEPOT_ORG_ID" \
-  --title "issue-<N>-step<S>-<agent>-$(uuidgen | cut -c1-8 | tr A-Z a-z)" \
+  --session-id "issue-<N>-step<S>-<agent>-$(uuidgen | cut -c1-8 | tr A-Z a-z)" \
   --repository "https://github.com/declanshanaghy/fenrir-ledger" \
   --branch "main" \
   --model "<MODEL>" \
