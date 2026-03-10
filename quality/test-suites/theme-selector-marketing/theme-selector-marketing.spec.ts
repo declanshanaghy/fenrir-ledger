@@ -41,14 +41,14 @@ async function getHtmlClasses(
 
 /**
  * Get the theme toggle button from desktop nav (icon variant)
- * The icon variant is a single cycling button with aria-label starting with "Theme:"
+ * The icon variant is a single cycling button with title attribute starting with "Theme:"
  */
 async function getDesktopThemeToggle(
   page: import("@playwright/test").Page
 ) {
-  // Desktop theme toggle is a cycling icon button in the right nav area
-  // Aria-label format: "Theme: {current.label}. Click to switch to {next.label}."
-  return page.getByRole("button", { name: /^Theme:/ });
+  // Desktop theme toggle is in the hidden md:flex container
+  // Use CSS selector to find button with title containing "Theme"
+  return page.locator('button[title^="Theme:"]').first();
 }
 
 /**
