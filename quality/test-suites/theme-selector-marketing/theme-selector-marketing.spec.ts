@@ -89,6 +89,9 @@ for (const { path, name } of MARKETING_PAGES) {
   test(`Theme toggle visible on initial load of ${name} (${path}) — desktop`, async ({
     page,
   }) => {
+    // Ensure desktop viewport (md breakpoint is 768px, Tailwind uses min-width)
+    await page.setViewportSize({ width: 1024, height: 768 });
+
     await page.goto(path);
     await page.waitForLoadState("networkidle");
 
@@ -133,6 +136,8 @@ for (const { path, name } of MARKETING_PAGES) {
 // ════════════════════════════════════════════════════════════════════════════
 
 test("Theme selector switches from light to dark (desktop)", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+
   await page.addInitScript((key) => {
     localStorage.setItem(key, "light");
   }, THEME_STORAGE_KEY);
@@ -161,6 +166,8 @@ test("Theme selector switches from light to dark (desktop)", async ({ page }) =>
 });
 
 test("Theme selector switches from dark to light (desktop)", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+
   await page.addInitScript((key) => {
     localStorage.setItem(key, "dark");
   }, THEME_STORAGE_KEY);
@@ -195,6 +202,8 @@ test("Theme selector switches from dark to light (desktop)", async ({ page }) =>
 test("Theme persists when navigating from home to features to pricing", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+
   await page.addInitScript((key) => {
     localStorage.setItem(key, "light");
   }, THEME_STORAGE_KEY);
@@ -239,6 +248,8 @@ test("Theme persists when navigating from home to features to pricing", async ({
 test("Hard refresh on /features shows theme toggle immediately", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+
   await page.goto("/features");
   await page.waitForLoadState("networkidle");
 
@@ -252,6 +263,8 @@ test("Hard refresh on /features shows theme toggle immediately", async ({
 test("Hard refresh on /pricing shows theme toggle immediately", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+
   await page.goto("/pricing");
   await page.waitForLoadState("networkidle");
 
