@@ -70,6 +70,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
+    // Parse optional returnPath from request body (defaults to /ledger/settings)
+    let returnPath = "/ledger/settings";
+    try {
+      const body = await request.json() as { returnPath?: string };
+      if (body.returnPath && typeof body.returnPath === "string" && body.returnPath.startsWith("/")) {
+        returnPath = body.returnPath;
+      }
+    } catch {
+      // No body or invalid JSON — use default
+    }
+
     // SEV-002 fix: never use Origin header for redirect URLs
     // vercel dev sets VERCEL_URL but runs plain HTTP — only use https for deployed environments
     const baseUrl = process.env.APP_BASE_URL
@@ -81,7 +92,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: entitlement.stripeCustomerId,
-      return_url: `${baseUrl}/settings?stripe=portal_return`,
+      return_url: `${baseUrl}${returnPath}${returnPath.includes("?") ? "&" : "?"}stripe=portal_return`,
     });
 
     const response: StripePortalResponse = { url: session.url };

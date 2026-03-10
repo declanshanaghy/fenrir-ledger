@@ -97,17 +97,39 @@ describe('Checkout URL construction', () => {
     process.env.APP_BASE_URL = 'https://example.com';
 
     const baseUrl = getBaseUrl();
-    const successUrl = `${baseUrl}/settings?stripe=success&session_id={CHECKOUT_SESSION_ID}`;
+    const returnPath = '/ledger/settings';
+    const successUrl = `${baseUrl}${returnPath}${returnPath.includes("?") ? "&" : "?"}stripe=success&session_id={CHECKOUT_SESSION_ID}`;
 
-    expect(successUrl).toBe('https://example.com/settings?stripe=success&session_id={CHECKOUT_SESSION_ID}');
+    expect(successUrl).toBe('https://example.com/ledger/settings?stripe=success&session_id={CHECKOUT_SESSION_ID}');
   });
 
   it('should construct correct cancel URL', () => {
     process.env.APP_BASE_URL = 'https://example.com';
 
     const baseUrl = getBaseUrl();
-    const cancelUrl = `${baseUrl}/settings?stripe=cancel`;
+    const returnPath = '/ledger/settings';
+    const cancelUrl = `${baseUrl}${returnPath}${returnPath.includes("?") ? "&" : "?"}stripe=cancel`;
 
-    expect(cancelUrl).toBe('https://example.com/settings?stripe=cancel');
+    expect(cancelUrl).toBe('https://example.com/ledger/settings?stripe=cancel');
+  });
+
+  it('should construct correct success URL with custom return path', () => {
+    process.env.APP_BASE_URL = 'https://example.com';
+
+    const baseUrl = getBaseUrl();
+    const returnPath = '/ledger';
+    const successUrl = `${baseUrl}${returnPath}${returnPath.includes("?") ? "&" : "?"}stripe=success&session_id={CHECKOUT_SESSION_ID}`;
+
+    expect(successUrl).toBe('https://example.com/ledger?stripe=success&session_id={CHECKOUT_SESSION_ID}');
+  });
+
+  it('should construct correct cancel URL with custom return path', () => {
+    process.env.APP_BASE_URL = 'https://example.com';
+
+    const baseUrl = getBaseUrl();
+    const returnPath = '/ledger';
+    const cancelUrl = `${baseUrl}${returnPath}${returnPath.includes("?") ? "&" : "?"}stripe=cancel`;
+
+    expect(cancelUrl).toBe('https://example.com/ledger?stripe=cancel');
   });
 });
