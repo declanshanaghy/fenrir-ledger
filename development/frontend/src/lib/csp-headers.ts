@@ -16,8 +16,6 @@
  */
 export function buildCspDirectives(nonce?: string): string[] {
   const scriptSrcNonce = nonce ? `'nonce-${nonce}'` : "'unsafe-inline'";
-  const styleSrcNonce = nonce ? `'nonce-${nonce}'` : "'unsafe-inline'";
-
   return [
     // Default: only same-origin
     "default-src 'self'",
@@ -26,8 +24,10 @@ export function buildCspDirectives(nonce?: string): string[] {
     // In development, Next.js HMR / React Fast Refresh requires 'unsafe-eval'.
     `script-src 'self' ${scriptSrcNonce}${process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""} https://accounts.google.com https://apis.google.com https://js.stripe.com https://va.vercel-scripts.com https://vercel.live`,
 
-    // Styles: self + nonce (or unsafe-inline fallback) + Google Fonts
-    `style-src 'self' ${styleSrcNonce} https://fonts.googleapis.com https://accounts.google.com`,
+    // Styles: self + unsafe-inline + Google Fonts
+    // unsafe-inline is required for style attributes (React, next-themes, Framer Motion).
+    // CSP nonces only work on <style> tags, not style="" attributes — no practical alternative.
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com`,
 
     // Images: self + Google profile pictures + YouTube thumbnails + data: URIs
     "img-src 'self' https://lh3.googleusercontent.com https://img.youtube.com data:",

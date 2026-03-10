@@ -52,19 +52,13 @@ test.describe("CSP — Nonce Header Present", () => {
     expect(hasNonce || hasUnsafeInline).toBeTruthy();
   });
 
-  test("should have nonce value in style-src directive", async ({ page }) => {
+  test("should have unsafe-inline in style-src directive", async ({ page }) => {
     const response = await page.goto(BASE_URL);
     const headers = response?.headers() || {};
     const cspHeader = headers["content-security-policy"] || "";
 
-    // Verify style-src directive exists
-    expect(cspHeader).toMatch(/style-src\s+/);
-
-    // Verify nonce is present or unsafe-inline fallback (dev mode)
-    const hasNonce = cspHeader.match(/style-src[^;]*'nonce-[a-zA-Z0-9+/=]+'/);
-    const hasUnsafeInline = cspHeader.includes("'unsafe-inline'");
-
-    expect(hasNonce || hasUnsafeInline).toBeTruthy();
+    // style-src uses unsafe-inline (nonces don't work on style="" attributes)
+    expect(cspHeader).toMatch(/style-src[^;]*'unsafe-inline'/);
   });
 
   test("should generate unique nonce per request", async ({ page }) => {
