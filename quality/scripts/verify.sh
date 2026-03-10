@@ -72,7 +72,7 @@ run_tsc() {
 # next build is noisy. Capture to file, show only summary or errors.
 run_build() {
   echo "[build] next build"
-  if cd "$FRONTEND_DIR" && npx --silent next build --no-lint > "$REPORTS_DIR/build-output.txt" 2>&1; then
+  if cd "$FRONTEND_DIR" && npx --silent next build > "$REPORTS_DIR/build-output.txt" 2>&1; then
     ROUTES=$(grep -cE "├|└" "$REPORTS_DIR/build-output.txt" 2>/dev/null || echo "?")
     echo "PASS ($ROUTES routes)"
   else
@@ -88,7 +88,7 @@ run_build() {
 ensure_build() {
   if [ ! -d "$FRONTEND_DIR/.next" ]; then
     echo "[build] no .next found, building"
-    if cd "$FRONTEND_DIR" && npx --silent next build --no-lint > "$REPORTS_DIR/build-output.txt" 2>&1; then
+    if cd "$FRONTEND_DIR" && npx --silent next build > "$REPORTS_DIR/build-output.txt" 2>&1; then
       echo "OK"
     else
       echo "FAIL"
