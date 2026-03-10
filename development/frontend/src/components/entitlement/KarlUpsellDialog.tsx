@@ -104,8 +104,8 @@ export function KarlUpsellDialog({
           "md:max-w-[680px]",
           /* Single-column mobile default, wider on desktop */
           "max-w-[460px]",
-          /* Desktop: centered dialog */
-          "sm:top-[50%] sm:translate-y-[-50%] sm:translate-x-[-50%] sm:left-[50%] sm:rounded-lg",
+          /* Desktop: centered dialog — sm:bottom-auto resets mobile bottom-sheet anchor */
+          "sm:top-[50%] sm:bottom-auto sm:translate-y-[-50%] sm:translate-x-[-50%] sm:left-[50%] sm:rounded-lg",
           /* Mobile: bottom-sheet */
           "top-auto bottom-0 translate-y-0 left-[50%] rounded-t-lg rounded-b-none",
         )}
