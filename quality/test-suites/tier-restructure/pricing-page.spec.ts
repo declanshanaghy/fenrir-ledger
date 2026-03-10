@@ -262,7 +262,7 @@ test.describe("Pricing Page — Tier Restructure (#523)", () => {
         "The Dashboard",
         "Card Notes",
         "Single User",
-        "Google sign-in",
+        "Google Sign-In",
       ];
 
       // Verify in table (primary validation)
