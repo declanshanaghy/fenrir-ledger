@@ -24,7 +24,9 @@ test.describe("Pricing Page — Tier Restructure (#523)", () => {
       const includedFeatures = cardSection
         .locator("li")
         .filter({ has: page.locator("text=✓") });
-      const includedText = await includedFeatures.allTextContents();
+      const includedText = await includedFeatures.allTextContents().then((items) =>
+        items.join(" ")
+      );
 
       expect(includedText).toContain("Add Your Cards");
       expect(includedText).toContain("The Dashboard");
