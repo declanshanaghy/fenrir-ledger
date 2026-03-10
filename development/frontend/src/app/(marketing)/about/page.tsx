@@ -265,9 +265,10 @@ function AgentCard({ agent }: { agent: AgentProfile }): React.ReactElement {
   return (
     <motion.div
       variants={CARD_VARIANT}
+      whileHover={{ y: -8, scale: 1.02, transition: { type: "spring", stiffness: 300, damping: 20 } }}
       className="group relative flex flex-col border border-border overflow-hidden
-                 bg-card transition-all duration-300
-                 hover:-translate-y-2 hover:shadow-gold-md hover:border-primary/40"
+                 bg-card transition-[box-shadow,border-color] duration-300
+                 hover:shadow-gold-md hover:border-primary/40"
     >
       {/* Portrait */}
       <div className="relative w-full aspect-square border-b border-border overflow-hidden bg-muted/50">
