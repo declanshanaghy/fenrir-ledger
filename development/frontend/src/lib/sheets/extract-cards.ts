@@ -124,6 +124,33 @@ export async function extractCardsFromCsv(csv: string): Promise<SheetImportRespo
 }
 
 /**
+ * Sanitize CSV text to prevent prototype pollution and ReDoS attacks.
+ *
+ * Strips potentially malicious patterns that could be exploited by downstream
+ * JSON parsing or object construction (GHSA-4r6h-8v6p-xvw6, GHSA-5pgg-2g8v-p4x9).
+ *
+ * @param csv - Raw CSV text from SheetJS
+ * @returns Sanitized CSV text
+ */
+function sanitizeSheetsCsvForSecurity(csv: string): string {
+  let sanitized = csv;
+
+  // Remove __proto__, constructor, prototype patterns that could pollute Object.prototype
+  // These patterns are rarely legitimate in financial data
+  sanitized = sanitized.replace(/__proto__/gi, "_proto_");
+  sanitized = sanitized.replace(/constructor\s*:/gi, "constructor_");
+  sanitized = sanitized.replace(/prototype\s*:/gi, "prototype_");
+
+  // Limit repetition to prevent ReDoS on regex backtracking (e.g., (x+x+)+y)
+  // Replace sequences of 50+ identical characters with a truncated version
+  // This is safe for credit card data (longest legitimate value is ~50 chars)
+  sanitized = sanitized.replace(/(.)\1{49,}/g, (match) => match.substring(0, 50));
+
+  log.debug("sanitizeSheetsCsvForSecurity", { originalLength: csv.length, sanitizedLength: sanitized.length });
+  return sanitized;
+}
+
+/**
  * Extract card data from a binary XLS/XLSX file via SheetJS + LLM.
  *
  * Converts all visible sheets to CSV (merged with newlines), then
@@ -180,6 +207,10 @@ export async function extractCardsFromFile(
     }
 
     csvText = sheetCsvParts.join("\n\n");
+
+    // Sanitize CSV to prevent prototype pollution and ReDoS (GHSA-4r6h, GHSA-5pgg)
+    csvText = sanitizeSheetsCsvForSecurity(csvText);
+
     log.debug("extractCardsFromFile converted to CSV", { csvLength: csvText.length, sheetCount: sheetCsvParts.length });
   } catch (err) {
     log.error("extractCardsFromFile: SheetJS parsing failed", err);
