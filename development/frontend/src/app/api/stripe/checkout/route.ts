@@ -119,20 +119,28 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           subscriptionId: subscription.id,
           status: subscription.status,
           cancelAtPeriodEnd: subscription.cancel_at_period_end,
+          cancelAt: subscription.cancel_at,
         });
 
         // Case 1: Active subscription with scheduled cancel → revive it
-        if (
-          subscription.status === "active" &&
-          subscription.cancel_at_period_end
-        ) {
-          log.debug("POST /api/stripe/checkout: reviving cancel_at_period_end subscription", {
+        // Check both cancel_at_period_end AND cancel_at (Stripe portal may
+        // set cancel_at without cancel_at_period_end — matches the logic in
+        // buildEntitlementFromSubscription that sets KV cancelAtPeriodEnd).
+        const isScheduledToCancel =
+          subscription.cancel_at_period_end || subscription.cancel_at !== null;
+
+        if (subscription.status === "active" && isScheduledToCancel) {
+          log.debug("POST /api/stripe/checkout: reviving scheduled-cancel subscription", {
             subscriptionId: subscription.id,
             googleSub,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            cancelAt: subscription.cancel_at,
           });
 
           const revived = await stripe.subscriptions.update(subscription.id, {
             cancel_at_period_end: false,
+            // Clear any specific cancel_at date set via the Stripe portal
+            cancel_at: "",
           });
 
           // Update KV entitlement to reflect revived state
@@ -160,8 +168,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         // Case 2: Still fully active (not canceling) → already subscribed
         if (
           (subscription.status === "active" || subscription.status === "trialing") &&
-          !subscription.cancel_at_period_end
+          !isScheduledToCancel
         ) {
+          // Safety net: if KV thought the sub was cancelling but Stripe disagrees,
+          // re-sync KV to Stripe truth so the UI stops showing "CANCELLING".
+          if (entitlement.cancelAtPeriodEnd) {
+            log.debug("POST /api/stripe/checkout: KV stale — cancelAtPeriodEnd mismatch, re-syncing", {
+              subscriptionId: subscription.id,
+              kvCancelAtPeriodEnd: entitlement.cancelAtPeriodEnd,
+              stripeCancelAtPeriodEnd: subscription.cancel_at_period_end,
+              stripeCancelAt: subscription.cancel_at,
+              googleSub,
+            });
+            const synced = buildEntitlementFromSubscription(
+              subscription,
+              entitlement.stripeCustomerId,
+            );
+            synced.linkedAt = entitlement.linkedAt;
+            await setStripeEntitlement(googleSub, synced);
+          }
+
           log.debug("POST /api/stripe/checkout: user already has active subscription", {
             subscriptionId: subscription.id,
             status: subscription.status,
