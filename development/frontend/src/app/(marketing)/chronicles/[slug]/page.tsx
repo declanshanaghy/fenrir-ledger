@@ -80,6 +80,21 @@ function dedentHtml(source: string): string {
     .join("\n");
 }
 
+/**
+ * Strip the `<header class="session-header">…</header>` block from MDX content.
+ *
+ * The page component already renders a compact header from frontmatter, so the
+ * inline header in the MDX body creates a duplicate. This regex removes it.
+ *
+ * Ref: GitHub Issue #469 follow-up
+ */
+function stripInlineHeader(source: string): string {
+  return source.replace(
+    /<header\s+className="session-header">[\s\S]*?<\/header>/,
+    "",
+  );
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function ChronicleDetailPage({
@@ -180,7 +195,7 @@ export default async function ChronicleDetailPage({
           dedentHtml strips leading whitespace so indented HTML isn't treated
           as markdown code blocks.  Ref: Issue #407 */}
       <MDXRemote
-        source={dedentHtml(entry.content)}
+        source={stripInlineHeader(dedentHtml(entry.content))}
         options={{ mdxOptions: { format: "md", rehypePlugins: [rehypeRaw] } }}
       />
 
