@@ -21,8 +21,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
-import { Sun, Moon, Monitor } from "lucide-react";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/features", label: "Features" },
@@ -31,64 +30,10 @@ const NAV_LINKS = [
   { href: "/chronicles", label: "Prose Edda" },
 ] as const;
 
-const THEMES = [
-  { value: "light", Icon: Sun, label: "Light" },
-  { value: "dark", Icon: Moon, label: "Dark" },
-  { value: "system", Icon: Monitor, label: "System" },
-] as const;
-
-// ── Compact theme toggle for navbar (cycling icon button) ─────────────────────
-
-function NavThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    // Placeholder to avoid layout shift during SSR
-    return (
-      <div
-        className="rounded-sm border border-border bg-secondary/30"
-        style={{ minWidth: 40, minHeight: 40 }}
-        aria-hidden="true"
-      />
-    );
-  }
-
-  const current = THEMES.find((t) => t.value === theme) ?? THEMES[2];
-  const nextIndex = (THEMES.indexOf(current) + 1) % THEMES.length;
-  const next = THEMES[nextIndex] ?? THEMES[0];
-
-  return (
-    <button
-      type="button"
-      onClick={() => setTheme(next.value)}
-      className={[
-        "flex items-center justify-center rounded-sm border border-border",
-        "text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors",
-      ].join(" ")}
-      style={{ minWidth: 40, minHeight: 40 }}
-      aria-label={`Theme: ${current.label}. Switch to ${next.label}.`}
-      title={`Theme: ${current.label}`}
-    >
-      <current.Icon className="h-4 w-4" />
-    </button>
-  );
-}
-
 // ── MarketingNavbar ────────────────────────────────────────────────────────────
 
 export function MarketingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Prevent body scroll when overlay is open
   useEffect(() => {
@@ -112,12 +57,6 @@ export function MarketingNavbar() {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [mobileOpen]);
-
-  const current = mounted
-    ? (THEMES.find((t) => t.value === theme) ?? THEMES[2])
-    : THEMES[2];
-  const nextIndex = (THEMES.indexOf(current) + 1) % THEMES.length;
-  const next = THEMES[nextIndex] ?? THEMES[0];
 
   return (
     <>
@@ -159,7 +98,7 @@ export function MarketingNavbar() {
 
           {/* Desktop right: theme toggle + CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <NavThemeToggle />
+            <ThemeToggle variant="icon" />
             <Link
               href="/ledger"
               className={[
@@ -268,20 +207,7 @@ export function MarketingNavbar() {
             </Link>
             <div className="flex items-center justify-center gap-3">
               <span className="text-sm text-muted-foreground font-body">Theme:</span>
-              {mounted && (
-                <button
-                  type="button"
-                  onClick={() => setTheme(next.value)}
-                  className={[
-                    "flex items-center justify-center rounded-sm border border-border",
-                    "text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors",
-                  ].join(" ")}
-                  style={{ minWidth: 40, minHeight: 40 }}
-                  aria-label={`Theme: ${current.label}. Switch to ${next.label}.`}
-                >
-                  <current.Icon className="h-4 w-4" />
-                </button>
-              )}
+              <ThemeToggle variant="icon" />
             </div>
           </div>
         </div>
