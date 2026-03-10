@@ -67,8 +67,9 @@ export interface EntitlementContextValue {
   /** Re-verifies entitlement status via the server API. Optional sessionId for migration. */
   refreshEntitlement: (sessionId?: string) => Promise<void>;
 
-  /** Creates a Stripe Checkout session and redirects to Stripe's hosted checkout. */
-  subscribeStripe: () => Promise<void>;
+  /** Creates a Stripe Checkout session and redirects to Stripe's hosted checkout.
+   *  @param returnPath - Optional path to redirect back to after checkout (defaults to current page) */
+  subscribeStripe: (returnPath?: string) => Promise<void>;
   /** Opens the Stripe Customer Portal for subscription management. */
   openPortal: () => Promise<void>;
   /** Unlinks Stripe: cancels subscription and clears entitlement. */
@@ -242,18 +243,23 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
    * Creates a Stripe Checkout session and redirects the user.
    * Requires authentication — if not signed in, redirects to /sign-in first
    * with a returnTo that will auto-start checkout after sign-in.
+   *
+   * @param returnPath - Path to redirect back to after checkout (defaults to current page pathname)
    */
-  const subscribeStripe = useCallback(async () => {
+  const subscribeStripe = useCallback(async (returnPath?: string) => {
+    // Use the provided returnPath, or fall back to current page pathname
+    const effectiveReturnPath = returnPath ?? (typeof window !== "undefined" ? window.location.pathname : "/ledger/settings");
+
     if (!isAuthenticated) {
-      // Redirect to sign-in, then back to settings to auto-start checkout
-      window.location.href = "/ledger/sign-in?returnTo=" + encodeURIComponent("/ledger/settings?stripe=checkout");
+      // Redirect to sign-in, then back to the originating page to auto-start checkout
+      window.location.href = "/ledger/sign-in?returnTo=" + encodeURIComponent(effectiveReturnPath + "?stripe=checkout");
       return;
     }
 
     const token = await ensureFreshToken();
     if (!token) {
       // Token expired mid-session — redirect to sign-in
-      window.location.href = "/ledger/sign-in?returnTo=" + encodeURIComponent("/ledger/settings?stripe=checkout");
+      window.location.href = "/ledger/sign-in?returnTo=" + encodeURIComponent(effectiveReturnPath + "?stripe=checkout");
       return;
     }
 
@@ -264,7 +270,7 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ returnPath: effectiveReturnPath }),
       });
 
       if (!response.ok) {
@@ -274,8 +280,8 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
 
       const data = (await response.json()) as { url?: string; revived?: boolean };
       if (data.revived) {
-        // Subscription was revived (un-canceled) — redirect to success page
-        window.location.href = "/ledger/settings?stripe=success";
+        // Subscription was revived (un-canceled) — redirect to originating page with success flag
+        window.location.href = effectiveReturnPath + "?stripe=success";
       } else if (data.url) {
         window.location.href = data.url;
       }
@@ -297,6 +303,9 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
       return;
     }
 
+    // Pass current page path so portal return redirects back here
+    const returnPath = typeof window !== "undefined" ? window.location.pathname : "/ledger/settings";
+
     try {
       const response = await fetch("/api/stripe/portal", {
         method: "POST",
@@ -304,6 +313,7 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ returnPath }),
       });
 
       if (!response.ok) {
