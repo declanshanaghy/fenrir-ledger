@@ -11,7 +11,6 @@
  *   2. Why the Wolf — two-column founding myth detail
  *   3. The Pack — 5 agent profile cards + future placeholder
  *   4. The Forge — agent chain visualization
- *   5. The Arsenal — technology stack
  *
  * Uses Framer Motion for scroll-triggered stagger animations.
  * Agent portraits load from /images/team/{slug}-{dark|light}.png when
@@ -107,14 +106,6 @@ const CHAIN_NODES = [
   { rune: RUNE.laguz, label: "Luna Designs", desc: "Wireframes & interactions" },
   { rune: RUNE.tiwaz, label: "FiremanDecko Builds", desc: "Code & implementation" },
   { rune: RUNE.laguz, label: "Loki Validates", desc: "Testing & QA" },
-] as const;
-
-/** Technology stack items. */
-const TECH_STACK = [
-  { name: "Next.js 15", abbr: "N" },
-  { name: "TypeScript", abbr: "TS" },
-  { name: "Vercel", abbr: "V" },
-  { name: "Tailwind CSS", abbr: "TW" },
 ] as const;
 
 // ── Animation variants ────────────────────────────────────────────────────────
@@ -639,58 +630,6 @@ function TheForgeSection(): React.ReactElement {
   );
 }
 
-// ── Section: Technology Stack ─────────────────────────────────────────────────
-
-function TechStackSection(): React.ReactElement {
-  return (
-    <AnimatedSection label="Technology stack" className="border-b border-border bg-card">
-      <div className="max-w-[1100px] mx-auto px-6 py-14 sm:py-20">
-        <SectionHeading
-          label={RUNE.tiwaz}
-          title="Forged with Modern Steel"
-        />
-
-        <motion.div
-          variants={STAGGER}
-          className="flex flex-wrap justify-center gap-8 sm:gap-12"
-        >
-          {TECH_STACK.map((tech) => (
-            <motion.div
-              key={tech.name}
-              variants={FADE_UP}
-              className="flex flex-col items-center gap-3 group"
-            >
-              <div
-                className="w-14 h-14 border border-border flex items-center justify-center
-                           font-mono text-sm font-semibold text-primary
-                           transition-all duration-300
-                           group-hover:border-primary group-hover:shadow-gold-sm"
-              >
-                {tech.abbr}
-              </div>
-              <span className="font-heading text-xs font-semibold text-foreground/80 text-center">
-                {tech.name}
-              </span>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        <motion.p variants={FADE_UP} className="text-center mt-10">
-          <a
-            href="https://github.com/declanshanaghy/fenrir-ledger"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-body text-sm text-primary hover:text-primary/80 underline underline-offset-4
-                       transition-colors duration-200"
-          >
-            Open Source (source available) {"\u2192"}
-          </a>
-        </motion.p>
-      </div>
-    </AnimatedSection>
-  );
-}
-
 // ── Section: Final CTA ────────────────────────────────────────────────────────
 
 function FinalCtaSection(): React.ReactElement {
@@ -748,7 +687,6 @@ export default function AboutPage(): React.ReactElement {
       <WhyTheWolfSection />
       <ThePackSection />
       <TheForgeSection />
-      <TechStackSection />
       <FinalCtaSection />
     </>
   );
