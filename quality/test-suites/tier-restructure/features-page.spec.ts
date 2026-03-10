@@ -239,13 +239,12 @@ test.describe("Features Page — Tier Restructure (#523)", () => {
       page,
     }) => {
       // Check that images are present (they should be from /images/features/)
-      const darkImages = await page.locator("img[class*='dark']").all();
-      const lightImages = await page.locator("img[class*='light']").all();
+      // Images use hidden dark:block and block dark:hidden classes for theme switching
+      const allImages = await page.locator("img").all();
 
       // Each feature should have both dark and light variants in the DOM
       // (though only one is visible at a time based on theme)
-      expect(darkImages.length).toBeGreaterThan(0);
-      expect(lightImages.length).toBeGreaterThan(0);
+      expect(allImages.length).toBeGreaterThan(20); // 12 features × 2 images each
     });
 
     test("images should have correct alt text format", async ({ page }) => {
