@@ -6,19 +6,19 @@
  * a tier divider. Norse voice throughout.
  *
  * Features:
- *   Thrall (Free):
+ *   Thrall (Free) — The Lone Wolf:
  *     01. Add Your Cards
  *     02. The Dashboard
  *     03. Card Notes
  *   Karl ($3.99/mo):
- *     04. Annual Fee Tracking (Sköll)
- *     05. Sign-Up Bonus Tracking (Hati)
- *     06. The Howl
- *     07. Velocity Management
- *     08. Valhalla (Card Archive)
- *     09. Cloud Sync
- *     10. Multi-Household
- *     11. Smart Import
+ *     04. Smart Import (The Rune-Reader)
+ *     05. Annual Fee Tracking (Sköll)
+ *     06. Sign-Up Bonus Tracking (Hati)
+ *     07. The Howl
+ *     08. Velocity Management
+ *     09. Valhalla (Card Archive)
+ *     10. Cloud Sync
+ *     11. Multi-Household
  *     12. Data Export
  *
  * Wireframe: ux/wireframes/marketing-site/features.html
@@ -126,9 +126,31 @@ const THRALL_FEATURES: FeatureDetail[] = [
 
 const KARL_FEATURES: FeatureDetail[] = [
   {
+    id: "smart-import",
+    rune: "ᛗ",
+    eyebrow: "Feature 04 · Smart Import",
+    title: "The Rune-Reader",
+    benefit:
+      "Drop in your existing spreadsheet. Fenrir extracts card names, dates, and fee amounts automatically — no reformatting required.",
+    description:
+      "If you've been tracking cards in a spreadsheet, moving to Fenrir shouldn't mean re-entering everything by hand. Smart Import reads your spreadsheet's structure — whatever columns you used — and maps each row to a Fenrir card record. It handles messy, inconsistent formatting and asks you to confirm before saving.",
+    details: [
+      "Accepts CSV, XLSX, and Google Sheets exports",
+      "Identifies card name, issuer, fee date, open date, bonus fields",
+      "Handles non-standard column names and partial data",
+      "Preview step: review all mapped cards before importing",
+      "Unrecognized fields flagged for manual review",
+    ],
+    atmospheric: "The runes reveal what the untrained eye cannot see.",
+    tier: "karl",
+    reverse: false,
+    image: "mimir",
+    wikiUrl: "https://en.wikipedia.org/wiki/M%C3%ADmir",
+  },
+  {
     id: "annual-fee-tracking",
     rune: "ᛊ",
-    eyebrow: "Feature 04 · Annual Fee Tracking",
+    eyebrow: "Feature 05 · Annual Fee Tracking",
     title: "Sköll Watches the Fee",
     benefit:
       "Know your annual fee date 60 days before it hits. Never get charged for a card you meant to cancel.",
@@ -142,14 +164,14 @@ const KARL_FEATURES: FeatureDetail[] = [
     ],
     atmospheric: "Sköll chases the sun. He has never caught it — but he never stops.",
     tier: "karl",
-    reverse: false,
+    reverse: true,
     image: "skoll",
     wikiUrl: "https://en.wikipedia.org/wiki/Sk%C3%B6ll",
   },
   {
     id: "signup-bonus-tracking",
     rune: "ᚺ",
-    eyebrow: "Feature 05 · Sign-Up Bonus Tracking",
+    eyebrow: "Feature 06 · Sign-Up Bonus Tracking",
     title: "Hati Watches the Deadline",
     benefit:
       "Track every minimum spend requirement. Never let a sign-up bonus expire because you lost track of the window.",
@@ -163,14 +185,14 @@ const KARL_FEATURES: FeatureDetail[] = [
     ],
     atmospheric: "Hati runs after the moon. The moon has no place to hide.",
     tier: "karl",
-    reverse: true,
+    reverse: false,
     image: "hati",
     wikiUrl: "https://en.wikipedia.org/wiki/Hati_Hr%C3%B3%C3%B0vitnisson",
   },
   {
     id: "the-howl",
     rune: "ᛉ",
-    eyebrow: "Feature 06 · The Howl",
+    eyebrow: "Feature 07 · The Howl",
     title: "Urgent Cards Dashboard",
     benefit:
       "A single view of everything that needs attention right now — no searching, no missing deadlines.",
@@ -185,14 +207,14 @@ const KARL_FEATURES: FeatureDetail[] = [
     ],
     atmospheric: "The wolf does not howl when everything is calm.",
     tier: "karl",
-    reverse: false,
+    reverse: true,
     image: "garmr",
     wikiUrl: "https://en.wikipedia.org/wiki/Garmr",
   },
   {
     id: "velocity-management",
     rune: "ᚹ",
-    eyebrow: "Feature 07 · Velocity Management",
+    eyebrow: "Feature 08 · Velocity Management",
     title: "The Issuer's Rules",
     benefit:
       "Know exactly where you stand against Chase 5/24, Citi 1/8, and other issuer-specific application limits.",
@@ -214,7 +236,7 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "valhalla",
     rune: "ᛏ",
-    eyebrow: "Feature 08 · Valhalla",
+    eyebrow: "Feature 09 · Valhalla",
     title: "Hall of the Honored Dead",
     benefit:
       "See every card you've closed — anniversary dates, total rewards extracted, annual fees avoided, and how long each chain held you.",
@@ -235,7 +257,7 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "cloud-sync",
     rune: "ᚲ",
-    eyebrow: "Feature 09 · Cloud Sync",
+    eyebrow: "Feature 10 · Cloud Sync",
     title: "Your Ledger Follows You",
     benefit:
       "Add a card on mobile. See it on desktop. Your data syncs across every device via your Google account — no manual export, no sync button.",
@@ -256,7 +278,7 @@ const KARL_FEATURES: FeatureDetail[] = [
   {
     id: "multi-household",
     rune: "ᛟ",
-    eyebrow: "Feature 10 · Multi-Household",
+    eyebrow: "Feature 11 · Multi-Household",
     title: "Many Wolves, One Den",
     benefit:
       "Manage cards across an entire household, with many accounts. Your cards, your partner's cards, all one ledger, separate logins.",
@@ -275,28 +297,6 @@ const KARL_FEATURES: FeatureDetail[] = [
     wikiUrl: "https://en.wikipedia.org/wiki/Fenrir",
   },
   {
-    id: "smart-import",
-    rune: "ᛗ",
-    eyebrow: "Feature 11 · Smart Import",
-    title: "The Rune-Reader",
-    benefit:
-      "Drop in your existing spreadsheet. Fenrir extracts card names, dates, and fee amounts automatically — no reformatting required.",
-    description:
-      "If you've been tracking cards in a spreadsheet, moving to Fenrir shouldn't mean re-entering everything by hand. Smart Import reads your spreadsheet's structure — whatever columns you used — and maps each row to a Fenrir card record. It handles messy, inconsistent formatting and asks you to confirm before saving.",
-    details: [
-      "Accepts CSV, XLSX, and Google Sheets exports",
-      "Identifies card name, issuer, fee date, open date, bonus fields",
-      "Handles non-standard column names and partial data",
-      "Preview step: review all mapped cards before importing",
-      "Unrecognized fields flagged for manual review",
-    ],
-    atmospheric: "The runes reveal what the untrained eye cannot see.",
-    tier: "karl",
-    reverse: false,
-    image: "mimir",
-    wikiUrl: "https://en.wikipedia.org/wiki/M%C3%ADmir",
-  },
-  {
     id: "data-export",
     rune: "ᛞ",
     eyebrow: "Feature 12 · Data Export",
@@ -313,7 +313,7 @@ const KARL_FEATURES: FeatureDetail[] = [
     ],
     atmospheric: "Carry the runes beyond these walls.",
     tier: "karl",
-    reverse: true,
+    reverse: false,
     image: "tyr",
     wikiUrl: "https://en.wikipedia.org/wiki/T%C3%BDr",
   },
@@ -538,17 +538,46 @@ function ThrallSectionHeading() {
     <section aria-label="Thrall features heading" className="border-b border-border bg-muted/30">
       <div className="max-w-[1100px] mx-auto px-6 py-12">
         <p className="font-mono text-[11px] tracking-[0.3em] text-primary uppercase mb-3">
-          ᛏ · Free for All
+          ᛏ · The Lone Wolf
         </p>
         <h2 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wide text-foreground mb-3">
-          What Every Thrall Commands
+          One Device, One Wolf
         </h2>
-        <p className="font-body text-base text-muted-foreground max-w-xl leading-relaxed">
-          No payment required. These are the core tools — available the moment
-          you sign in with your Google account.
+        <p className="font-body text-base text-muted-foreground max-w-xl leading-relaxed mb-4">
+          Your ledger lives on this device, no account needed. Start tracking immediately
+          — no sign-up, no email, no Google. Unlimited cards, forever free.
         </p>
+        <ul className="flex flex-col sm:flex-row flex-wrap gap-x-6 gap-y-2" aria-label="Lone Wolf benefits">
+          {[
+            "One device, one wolf — your ledger, your device",
+            "No sign-up required — start tracking immediately",
+            "Unlimited cards — track as many as you want, forever free",
+            "Privacy-first — data stays on your device, never touches a server",
+          ].map((point) => (
+            <li
+              key={point}
+              className="flex items-start gap-2 font-body text-sm text-muted-foreground"
+            >
+              <span className="shrink-0 font-mono text-[10px] text-primary mt-0.5" aria-hidden="true">ᚢ</span>
+              {point}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
+  );
+}
+
+function UpgradeHook() {
+  return (
+    <div className="border-y border-border bg-muted/30">
+      <div className="max-w-[1100px] mx-auto px-6 py-10 text-center">
+        <blockquote className="font-body text-base sm:text-lg italic text-foreground/80 max-w-2xl mx-auto leading-relaxed">
+          Outgrowing one device? Karl syncs everywhere, imports your spreadsheet,
+          and tracks the rules the issuers don&apos;t want you to know.
+        </blockquote>
+      </div>
+    </div>
   );
 }
 
@@ -634,6 +663,7 @@ export default function FeaturesPage() {
       {THRALL_FEATURES.map((feature) => (
         <FeatureSection key={feature.id} feature={feature} />
       ))}
+      <UpgradeHook />
       <TierDivider />
       {KARL_FEATURES.map((feature) => (
         <FeatureSection key={feature.id} feature={feature} />
