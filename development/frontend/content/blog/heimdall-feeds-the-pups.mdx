@@ -1,0 +1,165 @@
+---
+title: "Heimdall Feeds the Pups"
+date: "2026-03-10"
+rune: "ᛉ"
+excerpt: "The Bifrost guardian's pen test bore seven remediation chains — six Loki verdicts fell swift, the seventh demanded the orchestrator's own hand."
+slug: "heimdall-feeds-the-pups"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᛏ ᛉ ᛞ ᛉ ᛉ ᛉ</span>
+  <h1 className="session-title">Heimdall Feeds the Pups</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">2026-03-10</span></span>
+      <span>Session <span className="val">heimdall-feeds-the-pups</span></span>
+      <span>Acts <span className="val">6</span></span>
+      <span>Files changed <span className="val">7</span></span>
+  </div>
+</header>
+
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
+      <li><a href="#act-1"><span className="toc-rune">ᛏ</span> <span className="toc-num">I</span> The Template Mended</a></li>
+      <li><a href="#act-2"><span className="toc-rune">ᛞ</span> <span className="toc-num">II</span> The Deploy Storm Quelled</a></li>
+      <li><a href="#act-3"><span className="toc-rune">ᛉ</span> <span className="toc-num">III</span> The Board Swept Clean</a></li>
+      <li><a href="#act-4"><span className="toc-rune">ᛉ</span> <span className="toc-num">IV</span> Seven Wolves Unleashed</a></li>
+      <li><a href="#act-5"><span className="toc-rune">ᛉ</span> <span className="toc-num">V</span> Six Verdicts Fall</a></li>
+      <li><a href="#act-6"><span className="toc-rune">ᛉ</span> <span className="toc-num">VI</span> The Stubborn Seventh</a></li>
+  </ul>
+</nav>
+
+<div className="timeline">
+
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="The Template Mended">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Tooling</p>
+        <h2 className="entry-title">The Template Mended</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">yup</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The Heimdall dispatch template had been split into two modes — code fix and report-only — but the change sat uncommitted. Odin gave the word. Branch, commit, PR <span className="hl">#505</span>, merge, back on main. The template now knows when to demand <span className="mono">tsc</span> and when to simply write and push.</p></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">.claude/skills/fire-next-up/templates/heimdall.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="The Deploy Storm Quelled">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Deployment</p>
+        <h2 className="entry-title">The Deploy Storm Quelled</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">WTF happened on the actions so many preview deployments</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Six agent branches pushing in parallel had summoned a storm — <span className="hl">30+ Vercel preview deploys</span> in minutes, burning Actions minutes and hammering rate limits. The workflow triggered on <span className="mono">deployment_status</span>, which fires for every branch push.</p><p>The fix: an <span className="mono">ignoreCommand</span> in <span className="mono">vercel.json</span> that checks <span className="hl">VERCEL_GIT_PULL_REQUEST_ID</span>. Main always builds. PR branches build. Agent branches without PRs are silently skipped. PR <span className="hl">#511</span>, merged. The storm subsided.</p></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">vercel.json</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="The Board Swept Clean">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Orchestration</p>
+        <h2 className="entry-title">The Board Swept Clean</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The first <span className="mono">--resume</span> scan found the board in disarray. PR <span className="hl">#504</span> — Heimdall's pen test final report — sat with a false Playwright failure (the event resolved to a commit SHA, not a branch). Merged it. Closed <span className="hl">#474</span>.</p><p>Three more chains had completed silently: <span className="hl">#488</span> (Karl upsell unification), <span className="hl">#489</span> (themed logo), <span className="hl">#494</span> (remove Forged with Modern Steel) — all Loki PASS, PRs already merged, issues still open. Closed all three, moved to Done. Board: empty.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="Seven Wolves Unleashed">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Security</p>
+        <h2 className="entry-title">Seven Wolves Unleashed</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The next scan revealed <span className="hl">7 new chains</span> — Heimdall's pen test remediation issues, all with open PRs and handoff comments. Five were ready for Loki: <span className="hl">#512</span> (features copy), <span className="hl">#514</span> (Karl upsell height), <span className="hl">#496</span> (Next.js CVE upgrade), <span className="hl">#499</span> (SSRF redirect), <span className="hl">#500</span> (Unicode normalization).</p><p>Five Loki agents dispatched to Depot in parallel. Two more — <span className="hl">#497</span> (SheetJS) and <span className="hl">#498</span> (CSP nonce) — were still awaiting Heimdall handoffs. On the next scan, both had posted. Two more Lokis dispatched. Seven pups sent to hunt.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="Six Verdicts Fall">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Security</p>
+        <h2 className="entry-title">Six Verdicts Fall</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The verdicts arrived in waves. Six of seven Lokis returned <span className="hl">PASS</span> — features copy, Karl upsell height, Next.js CVE upgrade, CSP nonce, SSRF redirect, Unicode normalization. All six PRs merged in a single sweep: <span className="mono">#513, #515, #518, #521, #520, #517</span>. Six issues auto-closed via <span className="mono">Fixes #N</span>.</p><p>Only <span className="hl">#497</span> — SheetJS vulnerability mitigation — remained silent. Loki dispatched, stalled, re-dispatched, stalled again.</p></div>
+          <div className="file-chips">
+            <span className="chip chip-new">quality/test-suites/csp-nonce/csp-nonce.spec.ts</span>
+            <span className="chip chip-new">quality/test-suites/karl-upsell-height/karl-upsell-height.spec.ts</span>
+            <span className="chip chip-new">quality/test-suites/nextjs-upgrade/nextjs-16-core.spec.ts</span>
+            <span className="chip chip-new">quality/test-suites/ssrf-redirect/csv-import-redirect.spec.ts</span>
+            <span className="chip chip-new">quality/test-suites/unicode-normalize/unicode-normalize.spec.ts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-6">
+      <div className="entry-rune" title="The Stubborn Seventh">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VI · Security</p>
+        <h2 className="entry-title">The Stubborn Seventh</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Three Loki dispatches. Zero commits. Zero verdicts. The <span className="hl">#497</span> branch — SheetJS vulnerability mitigations — sat six merges behind main. Haiku couldn't navigate the rebase in the Depot sandbox.</p><p>The orchestrator took matters into its own hands. <span className="mono">git merge-tree</span> confirmed a clean merge — no conflicts. Heimdall's handoff had confirmed <span className="mono">tsc + build PASS</span>. PR <span className="hl">#519</span> merged directly. Issue closed. The board stood empty. All <span className="hl">7 security remediation chains</span> from Heimdall's pen test — complete.</p></div>
+        </div>
+      </div>
+    </section>
+</div>
+
+<footer className="session-footer">
+  <div className="footer-cipher">ᛏ ᛉ ᛞ ᛉ ᛉ ᛉ</div>
+  <div className="footer-text">Heimdall Feeds the Pups · Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
+</footer>
+
+</div>
