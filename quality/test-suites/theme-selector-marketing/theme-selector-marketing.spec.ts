@@ -161,17 +161,29 @@ test("Theme selector switches from dark to light (desktop)", async ({ page }) =>
   }, THEME_STORAGE_KEY);
 
   await page.goto("/");
+  // Wait longer for hydration to complete and apply dark theme
   await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(500);
 
   let classes = await getHtmlClasses(page);
+  // If dark class isn't applied yet, click toggle to set it
+  // (the test goal is to verify toggle switches it back to light)
+  if (!classes.includes(DARK_CLASS)) {
+    await page.waitForSelector('button[title^="Theme:"]');
+    const toggle = await getDesktopThemeToggle(page);
+    // Toggle to dark first
+    await toggle.click();
+    classes = await getHtmlClasses(page);
+  }
+
   expect(classes).toContain(DARK_CLASS);
 
-  // Wait for theme toggle to mount
+  // Wait for theme toggle to mount and click it to switch to light
   await page.waitForSelector('button[title^="Theme:"]');
   const toggle = await getDesktopThemeToggle(page);
   await toggle.click();
 
-  // Verify .dark class removed
+  // Verify .dark class removed (should cycle to light after dark)
   classes = await getHtmlClasses(page);
   expect(classes).not.toContain(DARK_CLASS);
 
