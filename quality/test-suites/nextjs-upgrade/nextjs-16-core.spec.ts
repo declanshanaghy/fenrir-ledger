@@ -24,6 +24,8 @@ import { clearAllStorage } from "../helpers/test-fixtures";
 // ─── Shared setup ─────────────────────────────────────────────────────────────
 
 test.beforeEach(async ({ page }) => {
+  // Navigate to app first to ensure localStorage is accessible in same origin
+  await page.goto("/", { waitUntil: "networkidle" }).catch(() => null);
   await clearAllStorage(page);
 });
 
