@@ -14,13 +14,32 @@
  *  - The guard verifies the Google id_token JWT against Google's JWKS public keys.
  *  - /api/auth/token is exempt (token exchange endpoint -- no token exists yet).
  *
+ * CSP Nonce:
+ *  - Generate a unique nonce per request for Content Security Policy.
+ *  - Inject nonce into request headers for use in layout/scripts.
+ *  - Build CSP header with nonce and inject into response.
+ *
  * See ADR-005 for the auth architecture. See ADR-008 for API route auth.
  */
 
 import { NextResponse } from "next/server";
+import { generateNonce } from "@/lib/csp-nonce";
+import { buildSecurityHeaders } from "@/lib/csp-headers";
 
-export function middleware(/* req: NextRequest */) {
-  return NextResponse.next();
+export function middleware() {
+  const nonce = generateNonce();
+
+  // Clone response and inject nonce into headers for layout/scripts to read
+  const response = NextResponse.next();
+  response.headers.set("x-nonce-csp", nonce);
+
+  // Build security headers with nonce and inject into response
+  const securityHeaders = buildSecurityHeaders(nonce);
+  securityHeaders.forEach((header) => {
+    response.headers.set(header.key, header.value);
+  });
+
+  return response;
 }
 
 /**

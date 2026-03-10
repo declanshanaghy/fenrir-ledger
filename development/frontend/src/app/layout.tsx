@@ -30,6 +30,7 @@ import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { EntitlementProvider } from "@/contexts/EntitlementContext";
 import { RagnarokProvider } from "@/contexts/RagnarokContext";
+import { getNonce } from "@/lib/use-nonce";
 import "./globals.css";
 
 // ── Fonts ────────────────────────────────────────────────────────────────────
@@ -81,11 +82,13 @@ export const metadata: Metadata = {
 
 // ── Layout ────────────────────────────────────────────────────────────────────
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = await getNonce();
+
   return (
     <html
       lang="en"
@@ -124,8 +127,13 @@ export default function RootLayout({
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID}`}
               strategy="afterInteractive"
+              nonce={nonce}
             />
-            <Script id="ga4-init" strategy="afterInteractive">
+            <Script
+              id="ga4-init"
+              strategy="afterInteractive"
+              nonce={nonce}
+            >
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
