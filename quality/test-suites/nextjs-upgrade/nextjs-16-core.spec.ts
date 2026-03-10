@@ -79,7 +79,7 @@ test.describe("Next.js 16 — Sign-In Page", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/sign-in", { waitUntil: "networkidle" });
+    await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
 
     const fatal = errors.filter(
       (e) => !e.includes("hydration") && !e.includes("HMR")
@@ -88,18 +88,18 @@ test.describe("Next.js 16 — Sign-In Page", () => {
   });
 
   test("sign-in page returns HTTP 200", async ({ page }) => {
-    const response = await page.goto("/sign-in", { waitUntil: "networkidle" });
+    const response = await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
     expect(response?.status()).toBe(200);
   });
 
   test("sign-in heading is visible", async ({ page }) => {
-    await page.goto("/sign-in", { waitUntil: "networkidle" });
+    await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
     const heading = page.locator("h1");
     await expect(heading).toBeVisible();
   });
 
   test("sign-in buttons are clickable", async ({ page }) => {
-    await page.goto("/sign-in", { waitUntil: "networkidle" });
+    await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
     // At minimum, look for any button on the sign-in page
     const buttons = page.locator("button");
     const count = await buttons.count();
@@ -220,7 +220,7 @@ test.describe("Next.js 16 — Responsive Design", () => {
 
   test("sign-in page is responsive at 375px", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/sign-in", { waitUntil: "networkidle" });
+    await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
 
     const heading = page.locator("h1");
     await expect(heading).toBeVisible();
