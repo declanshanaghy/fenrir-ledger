@@ -8,7 +8,7 @@
   </tr>
   <tr>
     <td colspan="4">
-      <a href="https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/vercel-production.yml"><img src="https://img.shields.io/github/actions/workflow/status/declanshanaghy/fenrir-ledger/vercel-production.yml?branch=main&style=for-the-badge&label=Production&logo=vercel&logoColor=white&labelColor=07070d" alt="Production Deploy"></a>
+      <a href="https://fenrir-ledger.vercel.app"><img src="https://img.shields.io/badge/Production-Live-c9920a?style=for-the-badge&logo=vercel&logoColor=white&labelColor=07070d" alt="Production"></a>
     </td>
   </tr>
   <tr>
@@ -30,21 +30,21 @@
 <table><tr>
 <td align="center" width="33%">
 
-**<a href="https://fenrir-ledger.vercel.app" target="_blank" rel="noopener">Enter the Ledger</a>**
+ᚠ **<a href="https://fenrir-ledger.vercel.app/ledger" target="_blank" rel="noopener">Enter the Ledger</a>** ᚠ
 
 *Name your chains before they name you.*
 
 </td>
 <td align="center" width="33%">
 
-**<a href="https://fenrir-ledger.vercel.app/static" target="_blank" rel="noopener">Marketing Site</a>**
+ᚱ **<a href="https://fenrir-ledger.vercel.app" target="_blank" rel="noopener">Marketing Site</a>** ᚱ
 
 *Read the runes. Know what hunts next.*
 
 </td>
 <td align="center" width="33%">
 
-**<a href="https://fenrir-ledger.vercel.app/sessions" target="_blank" rel="noopener">Session Chronicles</a>**
+ᛟ **<a href="https://fenrir-ledger.vercel.app/chronicles" target="_blank" rel="noopener">Session Chronicles</a>** ᛟ
 
 *Every session forged in fire, recorded in runes.*
 
@@ -59,18 +59,6 @@ Track every credit card in your portfolio. Every annual fee deadline, promo expi
 
 ---
 
-## Quick Start
-
-```bash
-git clone https://github.com/declanshanaghy/fenrir-ledger.git
-cd fenrir-ledger
-./development/scripts/setup-local.sh
-.claude/scripts/services.sh start
-# Open http://localhost:9653
-```
-
----
-
 ## The Pack
 
 *Six wolves, one purpose. Each forged in a different fire, each bound by the same chain — to build the ledger that [Fenrir](https://en.wikipedia.org/wiki/Fenrir) never could break.*
@@ -80,7 +68,7 @@ cd fenrir-ledger
 <table>
 <tr>
 <td width="80" align="center" valign="top">
-<img src=".claude/agents/odin-dark.png" width="64" alt="Odin" onerror="this.style.display='none'"><br><sub>ᚨ</sub>
+<sub>ᚨ</sub>
 </td>
 <td valign="top">
 
@@ -92,7 +80,7 @@ cd fenrir-ledger
 </tr>
 <tr>
 <td width="80" align="center" valign="top">
-<img src=".claude/agents/freya-dark.png" width="64" alt="Freya" onerror="this.style.display='none'"><br><sub>ᚠ</sub>
+<sub>ᚠ</sub>
 </td>
 <td valign="top">
 
@@ -104,7 +92,7 @@ cd fenrir-ledger
 </tr>
 <tr>
 <td width="80" align="center" valign="top">
-<img src=".claude/agents/luna-dark.png" width="64" alt="Luna" onerror="this.style.display='none'"><br><sub>ᛚ</sub>
+<sub>ᛚ</sub>
 </td>
 <td valign="top">
 
@@ -116,7 +104,7 @@ Before steel is poured, [Luna](https://en.wikipedia.org/wiki/M%C3%A1ni) draws th
 </tr>
 <tr>
 <td width="80" align="center" valign="top">
-<img src=".claude/agents/fireman-decko-dark.png" width="64" alt="FiremanDecko" onerror="this.style.display='none'"><br><sub>ᛞ</sub>
+<sub>ᛞ</sub>
 </td>
 <td valign="top">
 
@@ -128,7 +116,7 @@ FiremanDecko receives the brief and turns vision into iron. He architects the sy
 </tr>
 <tr>
 <td width="80" align="center" valign="top">
-<img src=".claude/agents/loki-dark.png" width="64" alt="Loki" onerror="this.style.display='none'"><br><sub>ᛏ</sub>
+<sub>ᛏ</sub>
 </td>
 <td valign="top">
 
