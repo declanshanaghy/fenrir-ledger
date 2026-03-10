@@ -191,68 +191,42 @@ Odin — does this look right? Any adjustments before I fire it off?
 
 When Odin requests: adopt agent persona locally, ask 4-6 questions, post summary comment on issue. Return to remote execution.
 
-### Step 3 — Build Branch Name
+### Step 3 — Dispatch via /dispatch
 
+After refinement, delegate all spawning to `/dispatch`:
+
+**Fresh dispatch:**
 ```
-fix/issue-<NUMBER>-<kebab-description>
-```
-
-Max 50 chars. The orchestrator does NOT create the branch — the agent does inside the sandbox.
-
-### Step 4 — Spawn Agent
-
-#### Agent Model Mapping
-
-| Agent | Remote (Depot) | Local (`--local`) |
-|-------|----------------|-------------------|
-| Luna | `claude-sonnet-4-6` | `sonnet` |
-| FiremanDecko | `claude-opus-4-6` | `opus` |
-| Freya | `claude-sonnet-4-6` | `sonnet` |
-| Loki | `claude-haiku-4-5-20251001` | `haiku` |
-| Heimdall | `claude-haiku-4-5-20251001` | `haiku` |
-
-#### Agent Prompt Templates (read on demand)
-
-| Agent | Template |
-|-------|----------|
-| Luna | `templates/luna.md` |
-| FiremanDecko | `templates/firemandecko.md` |
-| Heimdall | `templates/heimdall.md` |
-| Loki | `templates/loki.md` |
-| Loki (CI bounce-back) | `templates/loki-bounce-back.md` |
-
-All templates use `{{SANDBOX_PREAMBLE}}` — replace with content from `templates/sandbox-preamble.md`.
-
-#### Remote Mode (Default — Depot)
-
-```bash
-depot claude \
-  --org "$DEPOT_ORG_ID" \
-  --session-id "issue-<NUMBER>-step<N>-<agent-name>-<UUID8>" \
-  --repository "https://github.com/declanshanaghy/fenrir-ledger" \
-  --branch "main" \
-  --model "<MODEL FROM TABLE>" \
-  --dangerously-skip-permissions \
-  -p "<AGENT PROMPT>"
+/dispatch #<NUMBER> --agent <agent> --step 1
 ```
 
-Session ID: `issue-<NUMBER>-step<N>-<agent-name>-<UUID8>` where UUID8 = `uuidgen | cut -c1-8 | tr 'A-Z' 'a-z'`.
+**Chain continuation (resume):**
+```
+/dispatch #<NUMBER> --agent <next-agent> --step <N> --branch <existing-branch>
+```
 
-**CRITICAL: Always use `--branch "main"`** — even for resume/refinement dispatches on existing
-branches. The `sandbox-setup.sh` script handles branch checkout. Passing a feature branch
-directly can cause path mismatches in the sandbox (the repo root may differ).
+**Batch dispatch:**
+```
+/dispatch #N1 #N2 #N3 --parallel
+```
 
-After spawning: move issue to **In Progress** via `--move`. **Do NOT poll, wait, or block.**
+**Refinement re-dispatch:**
+```
+/dispatch #<NUMBER> --agent <same-agent> --step <N> --branch <branch> --prompt-extra "<Odin's notes>"
+```
 
-#### Local Mode (`--local`)
+**CI bounce-back:**
+```
+/dispatch #<NUMBER> --agent loki --step <N> --branch <branch> --template loki-bounce-back --prompt-extra "<CI failure details>"
+```
 
-Launch via Agent tool with `isolation: worktree`, `run_in_background: true`.
+**Local execution:**
+Add `--local` to any of the above.
 
-#### Mode Selection
-
-- No `--local` → check `DEPOT_ORG_ID` in `.env` → Depot
-- `--local` → local worktree
-- Depot auth fails without `--local` → **ERROR**, do NOT fall back silently
+**Dry run (preview prompt without spawning):**
+```
+/dispatch #<NUMBER> --agent <agent> --dry-run
+```
 
 ---
 
@@ -300,3 +274,4 @@ git worktree prune
 - Each agent handles its own commits and pushes.
 - For `test` issues, Loki is both first and final agent.
 - Board transitions: dispatched → **In Progress**, Loki PASS + merged → **Done**.
+- **All agent spawning goes through `/dispatch`.** Never call `depot claude create` directly.

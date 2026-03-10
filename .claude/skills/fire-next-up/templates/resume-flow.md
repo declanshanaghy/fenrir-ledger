@@ -87,15 +87,11 @@ When a chain is interrupted (session ended, agent failed, context lost), use `--
 
    **Action:**
    1. Read Odin's comment(s) to understand the refinement requirements.
-   2. Re-dispatch the same agent that posted the handoff, on the same branch.
-   3. Use `--branch "main"` in the Depot command — `sandbox-setup.sh` handles checkout.
-   4. The prompt should:
-      - Reference the issue number and existing PR
-      - Quote or summarize Odin's design notes as the primary task
-      - Tell the agent to read the issue comments for full context
-      - Tell the agent this is a refinement, not a fresh implementation
-      - Use the agent's standard template structure (setup → read → implement → verify → push → handoff)
-   5. The handoff comment should be titled `## <Agent> → Loki Handoff (Refined)` to
+   2. Re-dispatch the same agent via `/dispatch`:
+      ```
+      /dispatch #<N> --agent <same-agent> --step <S> --branch <BRANCH> --prompt-extra "<Odin's refinement notes>"
+      ```
+   3. The handoff comment should be titled `## <Agent> → Loki Handoff (Refined)` to
       distinguish from the original.
 
    **Report:**
@@ -149,7 +145,10 @@ The orchestrator must:
    - The expected vs actual values from each assertion
    - Any context about what changed
    - Whether the fix should be in the test or in the code
-4. **Spawn a new Loki session** on the same branch with the bounce-back prompt.
+4. **Spawn a new Loki session** via `/dispatch`:
+   ```
+   /dispatch #<N> --agent loki --step <S> --branch <BRANCH> --template loki-bounce-back --prompt-extra "<CI failure details>"
+   ```
 5. Report a **step transition** showing the bounce-back.
 
 ## Resume Execution
@@ -164,7 +163,7 @@ Once the next agent is identified:
    **Resuming at:** Step <X>/<Total> — spawning <NextAgentName>
    ```
 
-2. Spawn the next agent using the appropriate template from `templates/`, on the **existing branch**.
+2. Spawn the next agent via `/dispatch #<N> --agent <next-agent> --step <S> --branch <BRANCH>`.
 
 3. Continue normal chain execution.
 
