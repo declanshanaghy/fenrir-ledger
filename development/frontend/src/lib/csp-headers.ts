@@ -59,8 +59,8 @@ export function buildCspDirectives(nonce?: string): string[] {
     // Images: self + Google profile pictures + YouTube thumbnails + data: URIs
     "img-src 'self' https://lh3.googleusercontent.com https://img.youtube.com data:",
 
-    // Fonts: self + Google Fonts CDN + data: URIs
-    "font-src 'self' https://fonts.gstatic.com data:",
+    // Fonts: self + Google Fonts CDN + Vercel Live toolbar fonts + data: URIs
+    "font-src 'self' https://fonts.gstatic.com https://vercel.live data:",
 
     // Connections: self + Google APIs + Stripe + Anthropic + OpenAI + Vercel analytics/live
     [
