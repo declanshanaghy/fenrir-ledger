@@ -2,11 +2,11 @@
  * Theme Toggle Cycling Test Suite — Fenrir Ledger
  * Authored by Loki, QA Tester of the Pack
  *
- * Tests Issue #440: Theme toggle in profile dropdown cycles through themes
- * (dark → light → system → dark).
+ * Tests Issue #440: Theme toggle in profile dropdown toggles dark ↔ light.
+ * Updated for #556: system option removed, simplified to two-state toggle.
  *
  * Acceptance Criteria:
- *   - [ ] Clicking Theme cycles through dark → light → system
+ *   - [ ] Clicking Theme toggles between dark ↔ light
  *   - [ ] Current theme state is visually indicated (icon change)
  *   - [ ] Works on both marketing TopBar and ledger LedgerTopBar dropdowns
  *
@@ -19,7 +19,7 @@
  * Spec references:
  *   - LedgerTopBar.tsx lines 213-222: theme row with cycleTheme() handler
  *   - TopBar.tsx lines 450: cycleTheme() in marketing dropdown
- *   - ThemeToggle.tsx lines 34-37: cycleTheme() helper (dark → light → system → dark)
+ *   - ThemeToggle.tsx lines 34-37: cycleTheme() helper (dark ↔ light toggle)
  *   - ThemeToggle.tsx lines 101-119: icon variant for cycling button
  */
 
@@ -227,7 +227,7 @@ test.describe("Theme Toggle — DOM Structure & Semantics", () => {
 // ════════════════════════════════════════════════════════════════════════════
 
 test.describe("Theme Toggle — Implementation Spec", () => {
-  test("cycleTheme helper is correctly implemented (dark→light→system→dark)", async ({
+  test("cycleTheme helper is correctly implemented (dark↔light toggle)", async ({
     page,
   }) => {
     // Verify cycleTheme function logic exists in the codebase

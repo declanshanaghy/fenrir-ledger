@@ -3,9 +3,10 @@
  * Authored by Loki, QA Tester of the Pack
  *
  * Slimmed to interactive behavior only:
- *   - Toggle switches theme (dark/light/system)
+ *   - Toggle switches theme (dark/light)
  *   - Preference persists in localStorage
  *   - Correct class applied to html element
+ *   - First load defaults to OS preference, then pins explicit choice (Ref #556)
  *
  * Removed: file existence checks, hex color audits, dark: prefix scans,
  * parchment lightness assertions, ARIA attribute checks, design doc validation.
@@ -92,32 +93,24 @@ test("Clicking the Light option removes .dark class from <html> immediately", as
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// TC-TH-005: Clicking "System" follows OS preference
+// TC-TH-005: No "System" option in toggle (Ref #556)
 // ════════════════════════════════════════════════════════════════════════════
 
-test("Clicking System follows OS dark preference (dark OS -> .dark class)", async ({
+test("No System option exists in the theme toggle — only Dark and Light", async ({
   page,
 }) => {
-  await page.emulateMedia({ colorScheme: "dark" });
-
-  await page.addInitScript((key) => {
-    localStorage.setItem(key, "light");
-  }, THEME_STORAGE_KEY);
-
   await page.goto("/");
   await page.waitForLoadState("networkidle");
-
-  let classes = await getHtmlClasses(page);
-  expect(classes).not.toContain(DARK_CLASS);
 
   await openAnonPanel(page);
 
   const toggle = page.getByRole(TOGGLE_ROLE, { name: TOGGLE_ARIA_LABEL });
-  const systemOption = toggle.getByRole("radio", { name: /system/i });
-  await systemOption.click();
+  const radios = toggle.getByRole("radio");
+  await expect(radios).toHaveCount(2);
 
-  classes = await getHtmlClasses(page);
-  expect(classes).toContain(DARK_CLASS);
+  await expect(toggle.getByRole("radio", { name: /light/i })).toBeVisible();
+  await expect(toggle.getByRole("radio", { name: /dark/i })).toBeVisible();
+  await expect(toggle.getByRole("radio", { name: /system/i })).toHaveCount(0);
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -149,23 +142,24 @@ test("Dark theme persists after page reload via localStorage key fenrir-theme", 
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// TC-TH-006: Default is "System" on fresh visit
+// TC-TH-006: First load detects OS preference and pins it (Ref #556)
 // ════════════════════════════════════════════════════════════════════════════
 
-test("Default is System on fresh visit — no fenrir-theme in localStorage", async ({
+test("First load detects OS dark preference and pins to dark", async ({
   page,
 }) => {
-  await page.emulateMedia({ colorScheme: "light" });
+  await page.emulateMedia({ colorScheme: "dark" });
 
   await page.goto("/");
   await page.waitForLoadState("networkidle");
 
+  // ThemeToggle effect should resolve "system" → "dark" and persist it
+  // Allow a moment for the effect to fire
+  await page.waitForTimeout(500);
+
   const stored = await page.evaluate((key) => localStorage.getItem(key), THEME_STORAGE_KEY);
-  expect(stored).toBeNull();
+  expect(stored).toBe("dark");
 
-  await openAnonPanel(page);
-
-  const toggle = page.getByRole(TOGGLE_ROLE, { name: TOGGLE_ARIA_LABEL });
-  const systemOption = toggle.getByRole("radio", { name: /system/i });
-  await expect(systemOption).toHaveAttribute("aria-checked", "true");
+  const classes = await getHtmlClasses(page);
+  expect(classes).toContain(DARK_CLASS);
 });
