@@ -346,7 +346,11 @@ test.describe("Issue #551 — Consolidate designs/ into root-level canonical dir
         const relativePath = path.relative(REPO_ROOT, resolvedPath);
 
         // Check if the referenced file/directory exists
-        expect(fileExists(resolvedPath) || dirExists(resolvedPath)).toBe(
+        const pathExists = fileExists(resolvedPath) || dirExists(resolvedPath);
+        if (!pathExists) {
+          console.log(`[BROKEN LINK] ${readmeFile} → ${linkPath} (resolved: ${relativePath})`);
+        }
+        expect(pathExists).toBe(
           true,
           `${readmeFile} references ${linkPath}, but resolved path ${relativePath} does not exist`
         );
