@@ -32,10 +32,12 @@ async function getHtmlClasses(
   return cls.split(/\s+/).filter(Boolean);
 }
 
-async function openAnonPanel(page: import("@playwright/test").Page) {
-  const avatarBtn = page.locator('[aria-controls="anon-upsell-panel"]');
-  await avatarBtn.click();
-  await page.waitForSelector('[role="dialog"]', { state: "visible" });
+async function openProfileMenu(page: import("@playwright/test").Page) {
+  // Open the profile dropdown by clicking the avatar/menu button
+  const menuBtn = page.locator("button").filter({ has: page.locator("svg") }).nth(0);
+  await menuBtn.click();
+  // Wait for the menu to appear
+  await page.waitForSelector('[role="menuitem"]', { state: "visible", timeout: 5000 });
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -55,7 +57,7 @@ test("Clicking the Dark option applies .dark class to <html> immediately", async
   let classes = await getHtmlClasses(page);
   expect(classes).not.toContain(DARK_CLASS);
 
-  await openAnonPanel(page);
+  await openProfileMenu(page);
 
   const toggle = page.getByRole(TOGGLE_ROLE, { name: TOGGLE_ARIA_LABEL });
   const darkOption = toggle.getByRole("radio", { name: /dark/i });
@@ -82,7 +84,7 @@ test("Clicking the Light option removes .dark class from <html> immediately", as
   let classes = await getHtmlClasses(page);
   expect(classes).toContain(DARK_CLASS);
 
-  await openAnonPanel(page);
+  await openProfileMenu(page);
 
   const toggle = page.getByRole(TOGGLE_ROLE, { name: TOGGLE_ARIA_LABEL });
   const lightOption = toggle.getByRole("radio", { name: /light/i });
@@ -102,7 +104,7 @@ test("No System option exists in the theme toggle — only Dark and Light", asyn
   await page.goto("/");
   await page.waitForLoadState("networkidle");
 
-  await openAnonPanel(page);
+  await openProfileMenu(page);
 
   const toggle = page.getByRole(TOGGLE_ROLE, { name: TOGGLE_ARIA_LABEL });
   const radios = toggle.getByRole("radio");
@@ -123,7 +125,7 @@ test("Dark theme persists after page reload via localStorage key fenrir-theme", 
   await page.goto("/");
   await page.waitForLoadState("networkidle");
 
-  await openAnonPanel(page);
+  await openProfileMenu(page);
 
   const toggle = page.getByRole(TOGGLE_ROLE, { name: TOGGLE_ARIA_LABEL });
   const darkOption = toggle.getByRole("radio", { name: /dark/i });
