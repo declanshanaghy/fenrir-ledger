@@ -564,8 +564,8 @@ function TheForgeSection(): React.ReactElement {
               key={node.label}
               variants={CHAIN_NODE_VARIANT}
               className="relative flex-1 flex flex-col items-center gap-3 p-5
-                         border border-border bg-card
-                         transition-colors duration-300 hover:bg-accent/30"
+                         border border-border bg-card card-interactive
+                         hover:bg-card-hover"
             >
               <div
                 className="w-14 h-14 border-2 border-primary/30 flex items-center justify-center

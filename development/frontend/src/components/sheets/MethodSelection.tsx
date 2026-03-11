@@ -223,7 +223,7 @@ export function MethodSelection({ onSelectMethod, pickerApiKey = null }: MethodS
               "focus:outline-none focus:ring-2 focus:ring-gold/50",
               method.disabled
                 ? "border-border bg-card/50 opacity-50 cursor-not-allowed"
-                : "border-border bg-card hover:border-gold/40 hover:bg-gold/5",
+                : "border-border bg-card hover:border-gold/40 hover:bg-card-hover",
             ].join(" ")}
           >
             {method.disabledLabel && (

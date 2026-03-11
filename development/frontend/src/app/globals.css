@@ -51,6 +51,12 @@
     --ring:                 38  80% 28%;    /* dark burnt gold focus ring */
     --radius:               0.25rem;        /* sharp, angular — not pill */
 
+    /* ── Card Hover (Issue #298) ──────────────────────────── */
+    /* Opaque equivalents of semi-transparent hover overlays.
+     * Avoids white flash from transitioning opaque → transparent colors.
+     * Computed: gold @ 5% over card white #ffffff ≈ #fefcf6 */
+    --card-hover:           40 50% 98%;     /* #fefcf6 — opaque gold/5-on-white */
+
     /* ── Charts (thunder palette for white backgrounds) ───────── */
     --chart-1:              38  80% 28%;    /* dark burnt gold */
     --chart-2:              163 70% 22%;    /* deep forest green */
@@ -136,6 +142,9 @@
   --border:               22  8%  20%;    /* #3a3530 — stone seam */
   --input:                20  7%  27%;    /* #4a4540 */
   --ring:                 42  75% 48%;    /* gold focus ring */
+
+  /* ── Card Hover (Issue #298) ──────────────────────────── */
+  --card-hover:           30 18% 11%;     /* #211d17 — opaque gold/5-on-forge */
 
   /* ── Charts (Norse palette) ─────────────────────────────── */
   --chart-1:              42  75% 48%;    /* gold */
@@ -259,16 +268,22 @@
  * Background changes are applied instantly (no interpolation = no flash).
  * Use this class INSTEAD of `transition-colors` on any card/tile element
  * that has a bg-card resting state with a hover bg change.
+ *
+ * The !important on transition-property is intentional: it must override
+ * any Tailwind transition utility that might be composed on the same element
+ * (e.g. transition-colors, transition-all). Without it, a higher-specificity
+ * or later-in-source utility can re-add background-color to the transition
+ * list, reintroducing the flash.
  */
 .card-interactive {
-  transition-property: border-color, box-shadow;
+  transition-property: border-color, box-shadow !important;
   transition-duration: 150ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card-interactive {
-    transition: none;
+    transition: none !important;
   }
 }
 
