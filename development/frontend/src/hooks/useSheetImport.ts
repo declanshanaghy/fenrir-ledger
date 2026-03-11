@@ -93,6 +93,16 @@ export function useSheetImport(): UseSheetImportReturn {
         return;
       }
 
+      // Handle 402 Payment Required — Karl tier needed (#559)
+      if (response.status === 402) {
+        setErrorCode("SUBSCRIPTION_REQUIRED");
+        setErrorMessage(
+          "Upgrade to Karl to access Import."
+        );
+        setStep("error");
+        return;
+      }
+
       if (response.status === 403 && !response.headers.get("content-type")?.includes("application/json")) {
         setErrorCode("FETCH_ERROR");
         setErrorMessage("Access denied. Please sign in again.");

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
+import { requireKarl } from "@/lib/auth/require-karl";
 import { log } from "@/lib/logger";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -9,6 +10,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!auth.ok) {
     log.debug("GET /api/config/picker returning", { status: 401, reason: "auth failed" });
     return auth.response;
+  }
+
+  // Verify caller has Karl tier subscription (#559)
+  const karl = await requireKarl(auth.user);
+  if (!karl.ok) {
+    log.debug("GET /api/config/picker returning", { status: 402, reason: "karl tier required" });
+    return karl.response;
   }
 
   const pickerApiKey = process.env.GOOGLE_PICKER_API_KEY;

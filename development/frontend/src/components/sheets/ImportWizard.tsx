@@ -58,6 +58,7 @@ const ERROR_MESSAGES: Record<SheetImportErrorCode, string> = {
   ANTHROPIC_ERROR: "Our card extraction service is temporarily unavailable.",
   FETCH_ERROR: "Couldn't reach the import service. Check your connection and try again.",
   RATE_LIMITED: "You've exceeded the maximum uploads per hour. Please try again later.",
+  SUBSCRIPTION_REQUIRED: "Import requires a Karl subscription. Upgrade to unlock this feature.",
 };
 
 /** Format cents as a dollar amount string */

@@ -90,4 +90,11 @@ export const FEATURE_DESCRIPTIONS: Record<PremiumFeature, FeatureDescription> = 
     expiredAtmospheric:
       "The issuer's rules have not changed. Return and reclaim your edge.",
   },
+  "import": {
+    description:
+      "Import cards from Google Sheets, CSV, or Excel files — your history flows into Fenrir with one click.",
+    atmospheric: "The runes inscribed afar shall be read here.",
+    expiredAtmospheric:
+      "The tablets await your return, Karl. Reclaim your scribes.",
+  },
 };
