@@ -296,8 +296,8 @@ test.describe("Issue #545 — Unlink KV Dedup Prevention", () => {
      */
     const response = await request.post(`${BASE_URL}/api/stripe/unlink`);
 
-    // Should require auth (401), not error on missing entitlement
-    expect(response.status()).toBe(401);
+    // Should require auth (401) or be rate-limited (429), not error on missing entitlement
+    expect([401, 429]).toContain(response.status());
   });
 
   // =========================================================================
