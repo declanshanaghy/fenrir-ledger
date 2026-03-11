@@ -105,6 +105,7 @@ export default async function RootLayout({
           attribute="class"
           defaultTheme="system"
           enableSystem
+          themes={["light", "dark"]}
           storageKey="fenrir-theme"
           {...(nonce ? { nonce } : {})}
         >

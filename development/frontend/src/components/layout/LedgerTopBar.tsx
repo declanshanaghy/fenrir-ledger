@@ -221,7 +221,7 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
           />
         )}
       </button>
-      {/* Theme row — click anywhere to cycle dark → light → system */}
+      {/* Theme row — click anywhere to toggle dark ↔ light */}
       <button
         type="button"
         role="menuitem"
