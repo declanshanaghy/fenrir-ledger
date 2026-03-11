@@ -117,10 +117,12 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
       // Import to verify the constant
       // This tests the KarlUpsellDialog.tsx constant
       const fs = require("fs");
-      const componentContent = fs.readFileSync(
-        "./development/frontend/src/components/entitlement/KarlUpsellDialog.tsx",
-        "utf-8"
+      const path = require("path");
+      const componentPath = path.resolve(
+        __dirname,
+        "../../../../development/frontend/src/components/entitlement/KarlUpsellDialog.tsx"
       );
+      const componentContent = fs.readFileSync(componentPath, "utf-8");
 
       // Verify the KARL_UPSELL_HOWL constant has featureImage: "garmr"
       expect(componentContent).toContain('featureImage: "garmr"');
@@ -153,10 +155,12 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
 
     test("KarlUpsellDialog Velocity variant uses norns featureImage prop", async () => {
       const fs = require("fs");
-      const componentContent = fs.readFileSync(
-        "./development/frontend/src/components/entitlement/KarlUpsellDialog.tsx",
-        "utf-8"
+      const path = require("path");
+      const componentPath = path.resolve(
+        __dirname,
+        "../../../../development/frontend/src/components/entitlement/KarlUpsellDialog.tsx"
       );
+      const componentContent = fs.readFileSync(componentPath, "utf-8");
 
       // Verify the KARL_UPSELL_VELOCITY constant has featureImage: "norns"
       expect(componentContent).toContain('featureImage: "norns"');
@@ -188,10 +192,12 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
 
     test("KarlUpsellDialog Import variant uses mimir featureImage prop", async () => {
       const fs = require("fs");
-      const componentContent = fs.readFileSync(
-        "./development/frontend/src/components/entitlement/KarlUpsellDialog.tsx",
-        "utf-8"
+      const path = require("path");
+      const componentPath = path.resolve(
+        __dirname,
+        "../../../../development/frontend/src/components/entitlement/KarlUpsellDialog.tsx"
       );
+      const componentContent = fs.readFileSync(componentPath, "utf-8");
 
       // Verify the KARL_UPSELL_IMPORT constant has featureImage: "mimir"
       expect(componentContent).toContain('featureImage: "mimir"');
@@ -209,15 +215,19 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
       page,
     }) => {
       const fs = require("fs");
+      const path = require("path");
 
-      const featuresPageContent = fs.readFileSync(
-        "./development/frontend/src/app/(marketing)/features/page.tsx",
-        "utf-8"
+      const featuresPagePath = path.resolve(
+        __dirname,
+        "../../../../development/frontend/src/app/(marketing)/features/page.tsx"
       );
-      const upsellDialogContent = fs.readFileSync(
-        "./development/frontend/src/components/entitlement/KarlUpsellDialog.tsx",
-        "utf-8"
+      const upsellDialogPath = path.resolve(
+        __dirname,
+        "../../../../development/frontend/src/components/entitlement/KarlUpsellDialog.tsx"
       );
+
+      const featuresPageContent = fs.readFileSync(featuresPagePath, "utf-8");
+      const upsellDialogContent = fs.readFileSync(upsellDialogPath, "utf-8");
 
       // Both should import ThemedFeatureImage
       expect(featuresPageContent).toContain(
@@ -234,10 +244,12 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
       page,
     }) => {
       const fs = require("fs");
-      const componentContent = fs.readFileSync(
-        "./development/frontend/src/components/shared/ThemedFeatureImage.tsx",
-        "utf-8"
+      const path = require("path");
+      const componentPath = path.resolve(
+        __dirname,
+        "../../../../development/frontend/src/components/shared/ThemedFeatureImage.tsx"
       );
+      const componentContent = fs.readFileSync(componentPath, "utf-8");
 
       // Verify component structure:
       // - Hidden dark:block for dark image
@@ -258,10 +270,12 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
       page,
     }) => {
       const fs = require("fs");
-      const upsellDialogContent = fs.readFileSync(
-        "./development/frontend/src/components/entitlement/KarlUpsellDialog.tsx",
-        "utf-8"
+      const path = require("path");
+      const upsellDialogPath = path.resolve(
+        __dirname,
+        "../../../../development/frontend/src/components/entitlement/KarlUpsellDialog.tsx"
       );
+      const upsellDialogContent = fs.readFileSync(upsellDialogPath, "utf-8");
 
       // In the dialog, ThemedFeatureImage should be called with:
       // shimmer={false}
@@ -323,10 +337,12 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
       page,
     }) => {
       const fs = require("fs");
-      const upsellDialogContent = fs.readFileSync(
-        "./development/frontend/src/components/entitlement/KarlUpsellDialog.tsx",
-        "utf-8"
+      const path = require("path");
+      const upsellDialogPath = path.resolve(
+        __dirname,
+        "../../../../development/frontend/src/components/entitlement/KarlUpsellDialog.tsx"
       );
+      const upsellDialogContent = fs.readFileSync(upsellDialogPath, "utf-8");
 
       // Dialog should have gold accents (border-gold, text-gold, bg-gold)
       expect(upsellDialogContent).toContain("gold");
@@ -338,16 +354,21 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
 
     test("shared component prevents asset duplication", async () => {
       const fs = require("fs");
+      const path = require("path");
 
       // Verify only ONE ThemedFeatureImage component exists
-      const componentPath =
-        "./development/frontend/src/components/shared/ThemedFeatureImage.tsx";
+      const componentPath = path.resolve(
+        __dirname,
+        "../../../../development/frontend/src/components/shared/ThemedFeatureImage.tsx"
+      );
       const exists = fs.existsSync(componentPath);
       expect(exists).toBe(true);
 
       // Verify no duplicate image components exist
-      const componentDir =
-        "./development/frontend/src/components/entitlement";
+      const componentDir = path.resolve(
+        __dirname,
+        "../../../../development/frontend/src/components/entitlement"
+      );
       const entitlementFiles = fs.readdirSync(componentDir);
       const imageComponentFiles = entitlementFiles.filter((f: string) =>
         /image|artwork|visual|img/i.test(f)
@@ -365,7 +386,10 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
       const fs = require("fs");
       const path = require("path");
 
-      const featureImagesDir = "./development/frontend/public/images/features";
+      const featureImagesDir = path.resolve(
+        __dirname,
+        "../../../../development/frontend/public/images/features"
+      );
 
       // Check that required image variants exist
       const requiredImages = [
