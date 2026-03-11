@@ -175,12 +175,11 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
 // ── Signed-in profile dropdown ──────────────────────────────────────────
 
 interface ProfileDropdownProps {
-  user: { name?: string | null; email?: string | null; picture?: string | null };
   onClose: () => void;
   onSignOut: () => void;
 }
 
-function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
+function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
@@ -199,21 +198,6 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
         "flex flex-col",
       ].join(" ")}
     >
-      {/* Profile row — non-interactive label, same feel as other menu items */}
-      <div
-        className="px-4 py-[10px] flex items-center justify-between gap-2 border-b border-border select-none cursor-default"
-        style={{ minHeight: 44 }}
-        aria-hidden="true"
-      >
-        <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
-          <span className="text-base font-heading text-foreground truncate">{user.name}</span>
-          <span className="text-sm text-muted-foreground font-mono truncate">{user.email}</span>
-          <span className="text-sm text-muted-foreground/60 italic font-body truncate">
-            The wolf is named.
-          </span>
-        </div>
-        <Avatar picture={user.picture ?? undefined} name={user.name ?? undefined} size={40} goldRing />
-      </div>
       {/* My Cards link */}
       <button
         type="button"
@@ -428,19 +412,28 @@ export function LedgerTopBar() {
           </button>
         )}
 
-        {/* Signed-in avatar */}
+        {/* Signed-in identity cluster: name + email + avatar */}
         {isAuthenticated && user && (
           <button
             ref={avatarTriggerRef}
             type="button"
             onClick={() => setPanelOpen((prev) => !prev)}
-            className="flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+            className="flex items-center gap-2 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 cursor-pointer"
             aria-label={`Open user menu, signed in as ${user.email}`}
             aria-expanded={panelOpen}
             aria-haspopup="true"
             aria-controls="user-menu"
-            style={{ minWidth: 44, minHeight: 44 }}
+            style={{ minHeight: 44 }}
           >
+            {/* Name + email — hidden on mobile, visible sm+ */}
+            <div className="hidden sm:flex flex-col items-end min-w-0">
+              <span className="text-sm font-heading text-foreground truncate max-w-[160px]">
+                {user.name}
+              </span>
+              <span className="text-xs text-muted-foreground font-mono truncate max-w-[160px]">
+                {user.email}
+              </span>
+            </div>
             <Avatar picture={user.picture} name={user.name} size={28} goldRing />
           </button>
         )}
@@ -457,7 +450,6 @@ export function LedgerTopBar() {
         {/* Signed-in dropdown */}
         {isAuthenticated && user && panelOpen && (
           <ProfileDropdown
-            user={user}
             onClose={() => setPanelOpen(false)}
             onSignOut={signOut}
           />
