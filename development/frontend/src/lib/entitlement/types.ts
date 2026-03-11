@@ -67,7 +67,8 @@ export type PremiumFeature =
   | "cosmetic-perks"
   | "howl-panel"
   | "card-archive"
-  | "velocity-management";
+  | "velocity-management"
+  | "import";
 
 /**
  * Feature metadata: display name and the minimum tier required.
@@ -93,6 +94,7 @@ export const PREMIUM_FEATURES: Record<PremiumFeature, FeatureDefinition> = {
   "howl-panel": { name: "The Howl", tier: "karl" },
   "card-archive": { name: "Valhalla", tier: "karl" },
   "velocity-management": { name: "Velocity", tier: "karl" },
+  "import": { name: "Import", tier: "karl" },
 };
 
 // ---------------------------------------------------------------------------
