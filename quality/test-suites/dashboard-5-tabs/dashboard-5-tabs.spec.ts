@@ -157,10 +157,10 @@ test.describe("Dashboard 5-Tabs QA — Issue #352", () => {
   });
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Test 3: /valhalla route redirects to dashboard with ?tab=valhalla
+  // Test 3: /ledger/valhalla route redirects to dashboard with ?tab=valhalla
   // ──────────────────────────────────────────────────────────────────────────
 
-  test("TC-3: /valhalla route redirects to dashboard with Valhalla tab selected", async ({
+  test("TC-3: /ledger/valhalla route redirects to dashboard with Valhalla tab selected", async ({
     page,
   }) => {
     // Setup: Add a closed card so Valhalla tab has content
@@ -170,11 +170,11 @@ test.describe("Dashboard 5-Tabs QA — Issue #352", () => {
     ];
     await setupDashboard(page, testCards);
 
-    // Navigate to the old /valhalla route
-    await page.goto("/valhalla", { waitUntil: "networkidle" });
+    // Navigate to the deprecated /ledger/valhalla route (should redirect)
+    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
 
     // Should redirect to the dashboard with ?tab=valhalla in URL
-    expect(page.url()).toContain("/?tab=valhalla");
+    expect(page.url()).toContain("/ledger?tab=valhalla");
 
     // Valhalla tab should be selected
     const valhallaTab = page.locator('button#tab-valhalla');

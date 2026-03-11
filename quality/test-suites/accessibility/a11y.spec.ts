@@ -104,7 +104,7 @@ test.describe("Heading Hierarchy", () => {
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.goto("/valhalla");
+    await page.goto("/ledger?tab=valhalla");
     await page.waitForURL(/\//);
 
     const h1 = page.locator("h1").first();

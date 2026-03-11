@@ -8,5 +8,5 @@
 import { redirect } from "next/navigation";
 
 export default function ValhallaPage() {
-  redirect("/ledger");
+  redirect("/ledger?tab=valhalla");
 }
