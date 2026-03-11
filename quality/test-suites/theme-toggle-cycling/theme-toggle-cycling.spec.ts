@@ -197,15 +197,23 @@ test.describe("Theme Toggle — DOM Structure & Semantics", () => {
     expect(hasTypeButton).toBeGreaterThan(0);
   });
 
-  test("page contains interactive elements with SVG icons", async ({
-    page,
-  }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
+  test("page renders without errors on initial load", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (err) => {
+      if (
+        !err.message.includes("hydration") &&
+        !err.message.includes("HMR") &&
+        !err.message.includes("ResizeObserver") &&
+        !err.message.includes("localStorage") &&
+        !err.message.includes("Connection closed")
+      ) {
+        errors.push(err.message);
+      }
+    });
 
-    // Verify page has SVG icons (used in buttons)
-    const svgs = page.locator("svg");
-    const svgCount = await svgs.count();
-    expect(svgCount).toBeGreaterThan(0);
+    const response = await page.goto("/");
+    expect(response?.status()).toBeLessThan(400);
+    expect(errors).toHaveLength(0);
   });
 
   test("theme toggle component is rendered in the page", async ({ page }) => {
