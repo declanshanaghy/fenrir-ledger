@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Sprint 10 Wireframes
+
+| Story | File | Description |
+|-------|------|-------------|
+| #560 — Upsell Dialog Artwork Alignment | [wireframes/stripe-direct/karl-upsell-dialog-artwork.html](wireframes/stripe-direct/karl-upsell-dialog-artwork.html) | Align KarlUpsellDialog images with /features page artwork: 7 scenarios — before/after comparison (Valhalla), desktop Howl variant (garmr), desktop Smart Import variant (mimir, Ref #559), mobile 375px bottom-sheet (single column, full-bleed image), complete featureImage prop mapping table for all 9 Karl features, ThemedFeatureImage anatomy + sizing notes, props diff table (featureImage new required prop) |
+
+---
+
 ## Sprint 9 Wireframes
 
 | Story | File | Description |
@@ -108,6 +116,7 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Upsell Banner — Stripe Variant | [wireframes/stripe-direct/upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html) | Dashboard upgrade banner for Thrall users, Stripe Checkout CTA, dismiss lifecycle |
 | Anonymous Checkout Email Form | [wireframes/stripe-direct/anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html) | Email collection modal for anonymous Stripe subscribers, validation states, loading, mobile |
 | **Common Karl Upsell Dialog** | [wireframes/stripe-direct/karl-upsell-dialog.html](wireframes/stripe-direct/karl-upsell-dialog.html) | Shared KarlUpsellDialog for all Karl-gated features (#377, #378, #398): prop-driven feature icon/name/tagline/teaser, lock badge overlay, $3.99/mo price row, direct Stripe CTA; desktop + mobile bottom-sheet; props table per feature; anatomy annotation; interaction spec |
+| **Karl Upsell Dialog — Artwork Alignment** | [wireframes/stripe-direct/karl-upsell-dialog-artwork.html](wireframes/stripe-direct/karl-upsell-dialog-artwork.html) | Updated KarlUpsellDialog with featureImage prop — matches /features page artwork (#560): before/after Valhalla comparison, Howl + Smart Import variants, mobile 375px bottom-sheet, full featureImage mapping table (all 9 Karl features), ThemedFeatureImage anatomy, props diff |
 | **marketing** | | |
 | Marketing Site | [wireframes/marketing/marketing-site.html](wireframes/marketing/marketing-site.html) | 5-section static page: nav, hero, problems, features, steps, footer (updated: legal links in footer) |
 | Static Site Footer | [wireframes/marketing/static-site-footer.html](wireframes/marketing/static-site-footer.html) | Dedicated footer spec: brand, quote, runes, CTA, session link, legal row (Privacy Policy + Terms of Service), team credits; easter egg triggers preserved |

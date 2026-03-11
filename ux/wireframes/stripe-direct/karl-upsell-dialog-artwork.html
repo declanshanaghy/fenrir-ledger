@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Upsell Dialog Artwork Alignment — #560</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md.
+       Permitted: display flex/grid, border, width/height, padding/margin, font-size, font-weight */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* -- Page layout -------------------------------------------------------- */
+    .page { display: flex; flex-direction: column; gap: 64px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+    .scenario-note {
+      font-size: 11px;
+      line-height: 1.6;
+      font-style: italic;
+      margin-bottom: 8px;
+    }
+
+    /* -- Annotation callouts ------------------------------------------------ */
+    .annotation {
+      border: 1px dashed;
+      padding: 8px 12px;
+      font-size: 11px;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+    .annotation strong { font-size: 11px; display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* -- Props delta table -------------------------------------------------- */
+    table { border-collapse: collapse; font-size: 12px; width: 100%; }
+    th, td { border: 1px solid; padding: 6px 10px; text-align: left; vertical-align: top; }
+    th { font-weight: bold; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* =====================================================================
+       COMPONENT: KarlUpsellDialog (updated — adds featureImage prop)
+       =====================================================================
+       Change from existing dialog (#377 / #398):
+         The left column now renders a ThemedFeatureImage block (same
+         component used on /features page) ABOVE the rune icon + text stack.
+
+       New prop:
+         featureImage   — base image filename (e.g. "valhalla", "garmr")
+                          maps to /images/features/{name}-dark.png
+                                 /images/features/{name}-light.png
+                          Same filenames used by /features page — no new assets.
+
+       Existing props unchanged:
+         featureIcon, featureName, featureTagline, featureTeaser,
+         featureBenefits, open, onDismiss
+
+       Feature → image mapping (from /features page data):
+         Valhalla           → valhalla
+         The Howl           → garmr
+         Smart Import       → mimir
+         Annual Fee (Sköll) → skoll
+         Sign-Up Bonus (Hati) → hati
+         Velocity           → norns
+         Cloud Sync         → huginn-muninn
+         Multi-Household    → fenrir
+         Data Export        → tyr
+    ===================================================================== */
+
+    /* -- Modal backdrop + shell --------------------------------------------- */
+    .modal-backdrop {
+      border: 1px solid;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 520px;
+    }
+    .modal-shell {
+      border: 2px solid;
+      max-width: 680px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* -- Modal header ------------------------------------------------------- */
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid;
+    }
+    .modal-eyebrow {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: bold;
+    }
+    .modal-eyebrow-sub {
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      font-weight: normal;
+      display: block;
+      margin-top: 2px;
+    }
+    .btn-close {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      border: 1px solid;
+    }
+
+    /* -- Two-column body ---------------------------------------------------- */
+    /*
+     * Desktop (≥ md / 680px dialog width):
+     *   Left column (50%) — image + icon + name + tagline + teaser
+     *   Right column (50%) — benefits checklist + Karl tier row + CTA
+     *
+     * Mobile (< 540px):
+     *   Single column, stacked; image appears at top of left-column content
+     */
+    .modal-body-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .modal-col-left {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid;
+    }
+    .modal-col-right {
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 16px;
+    }
+
+    /* -- NEW: Feature image slot -------------------------------------------- */
+    /*
+     * ThemedFeatureImage — same component as /features page.
+     * Renders dark + light variants; CSS handles theme switching (hidden dark:block).
+     * Image fills full left-column width, 16:9 or similar ratio.
+     * Border-bottom separates image from icon+text hero section below.
+     */
+    .feature-image-slot {
+      width: 100%;
+      border-bottom: 1px solid;
+      overflow: hidden;
+      /* Structural placeholder — theme will add actual <img> tags */
+    }
+    .feature-image-placeholder {
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 aspect ratio */
+      border: 1px dashed;
+      position: relative;
+    }
+    .feature-image-placeholder-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 10px;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .feature-image-placeholder-label strong {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* -- Feature hero section ----------------------------------------------- */
+    /*
+     * Below the image: icon + name + tagline + teaser
+     */
+    .feature-hero {
+      padding: 16px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .feature-icon-wrap {
+      width: 56px;
+      height: 56px;
+      border: 1px dashed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .lock-badge {
+      position: absolute;
+      bottom: -6px;
+      right: -6px;
+      width: 18px;
+      height: 18px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+    }
+    .feature-name {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .feature-tagline {
+      font-size: 11px;
+      font-style: italic;
+      text-align: center;
+    }
+    .feature-teaser-box {
+      border: 1px dashed;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.6;
+      width: 100%;
+    }
+    .feature-teaser-box strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* -- Benefits checklist ------------------------------------------------- */
+    .benefits-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+    .benefits-list li {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .check-icon {
+      flex-shrink: 0;
+      font-size: 12px;
+      margin-top: 1px;
+    }
+
+    /* -- Karl tier row ------------------------------------------------------ */
+    .karl-tier-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid;
+    }
+    .karl-badge {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border: 1px solid;
+      padding: 2px 6px;
+      white-space: nowrap;
+    }
+    .karl-desc { font-size: 12px; flex: 1; }
+    .karl-price { font-size: 13px; font-weight: bold; white-space: nowrap; }
+
+    /* -- CTA area ----------------------------------------------------------- */
+    .modal-cta { display: flex; flex-direction: column; gap: 8px; }
+    .btn-subscribe {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      font-family: inherit;
+      background: none;
+      min-height: 48px;
+    }
+    .cta-caption { font-size: 11px; text-align: center; }
+
+    /* -- Modal footer ------------------------------------------------------- */
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid;
+      display: flex;
+      justify-content: center;
+    }
+    .btn-not-now {
+      padding: 8px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+      background: none;
+      min-height: 44px;
+    }
+
+    /* -- Mobile frame ------------------------------------------------------- */
+    .mobile-frame { width: 375px; border: 2px solid; }
+    .mobile-modal-backdrop {
+      padding: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      min-height: 480px;
+      border: 1px solid;
+    }
+    /* Mobile: single column, image full width at top */
+    .mobile-modal-shell {
+      border: 2px solid;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-modal-body {
+      display: flex;
+      flex-direction: column;
+    }
+    /* Mobile image slot — same ThemedFeatureImage, full width */
+    .mobile-feature-image-slot {
+      width: 100%;
+      border-bottom: 1px solid;
+    }
+    .mobile-feature-image-placeholder {
+      width: 100%;
+      padding-bottom: 50%;
+      position: relative;
+      border: 1px dashed;
+    }
+    .mobile-feature-image-placeholder-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 9px;
+      text-align: center;
+    }
+    .mobile-feature-hero {
+      padding: 12px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid;
+    }
+    .mobile-modal-right {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* -- Anatomy annotation layout ------------------------------------------ */
+    .anatomy-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+    .anatomy-col { display: flex; flex-direction: column; gap: 12px; }
+    .anatomy-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid; padding-bottom: 4px; }
+
+    /* -- Comparison layout -------------------------------------------------- */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    .compare-col { display: flex; flex-direction: column; gap: 12px; }
+    .compare-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; padding-bottom: 6px; border-bottom: 1px solid; }
+
+    /* -- Old dialog (no image) — for before/after comparison ---------------- */
+    .old-modal-shell {
+      border: 1px solid;
+      max-width: 460px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .old-feature-hero {
+      padding: 24px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid;
+    }
+    .old-modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* -- Image mapping reference table -------------------------------------- */
+    .ref-table td:nth-child(2) { font-family: monospace; font-size: 11px; }
+    .ref-table td:nth-child(3) { font-family: monospace; font-size: 11px; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- =======================================================================
+       SCENARIO 1 — Before / After: Current dialog (no image) vs Updated (with image)
+       ======================================================================= -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 1 — Before / After: Valhalla Upsell Dialog</div>
+    <div class="scenario-note">
+      Left: Current dialog — rune icon only, no artwork. Right: Updated dialog — same artwork as /features Valhalla section
+      (valhalla-dark.png / valhalla-light.png) fills left column above icon + text.
+    </div>
+
+    <div class="compare-grid">
+
+      <!-- BEFORE -->
+      <div class="compare-col">
+        <div class="compare-label">Before — Current (no image)</div>
+        <div style="border: 1px solid; padding: 24px; display: flex; align-items: center; justify-content: center;">
+          <div class="old-modal-shell">
+            <div class="modal-header">
+              <div>
+                <span class="modal-eyebrow">Karl Tier Feature</span>
+                <span class="modal-eyebrow-sub">KARL · $3.99/month</span>
+              </div>
+              <button class="btn-close" aria-label="Close">✕</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr;">
+              <div style="border-right: 1px solid;">
+                <div class="old-feature-hero">
+                  <div class="feature-icon-wrap">
+                    <span style="font-size: 28px;">ᛏ</span>
+                    <span class="lock-badge">🔒</span>
+                  </div>
+                  <div class="feature-name">Valhalla</div>
+                  <div class="feature-tagline">Hall of the Honored Dead</div>
+                  <div class="feature-teaser-box">
+                    <strong>What you're missing</strong>
+                    See every card you've closed — anniversary dates, total rewards extracted, annual fees avoided.
+                  </div>
+                </div>
+              </div>
+              <div class="old-modal-body">
+                <ul class="benefits-list">
+                  <li><span class="check-icon">✓</span><span>Full archive of closed and graduated cards</span></li>
+                  <li><span class="check-icon">✓</span><span>Anniversary dates and tenure tracking</span></li>
+                  <li><span class="check-icon">✓</span><span>Total rewards extracted per card</span></li>
+                  <li><span class="check-icon">✓</span><span>Annual fees avoided over time</span></li>
+                </ul>
+                <div class="karl-tier-row">
+                  <span class="karl-badge">Karl</span>
+                  <span class="karl-desc">Unlock all premium features</span>
+                  <span class="karl-price">$3.99/mo</span>
+                </div>
+                <div class="modal-cta">
+                  <button class="btn-subscribe">Upgrade to Karl — $3.99/month</button>
+                  <p class="cta-caption">Billed monthly. Cancel anytime.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn-not-now">Not now</button>
+            </div>
+          </div>
+        </div>
+        <div class="annotation">
+          <strong>Problem</strong>
+          No artwork in dialog. User sees different visual language than the /features marketing page.
+          Rune icon alone does not connect to the valhalla.png artwork shown on /features.
+        </div>
+      </div>
+
+      <!-- AFTER -->
+      <div class="compare-col">
+        <div class="compare-label">After — Updated (image from /features)</div>
+        <div style="border: 1px solid; padding: 24px; display: flex; align-items: center; justify-content: center;">
+          <div class="modal-shell">
+            <div class="modal-header">
+              <div>
+                <span class="modal-eyebrow">Karl Tier Feature</span>
+                <span class="modal-eyebrow-sub">KARL · $3.99/month</span>
+              </div>
+              <button class="btn-close" aria-label="Close">✕</button>
+            </div>
+
+            <div class="modal-body-grid">
+              <div class="modal-col-left">
+                <!-- NEW: Feature image slot -->
+                <div class="feature-image-slot">
+                  <div class="feature-image-placeholder">
+                    <div class="feature-image-placeholder-label">
+                      <strong>ThemedFeatureImage</strong>
+                      <span>/images/features/</span>
+                      <span>valhalla-dark.png</span>
+                      <span>valhalla-light.png</span>
+                      <span style="margin-top: 4px; font-style: italic;">same as /features page</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="feature-hero">
+                  <div class="feature-icon-wrap">
+                    <span style="font-size: 24px;">ᛏ</span>
+                    <span class="lock-badge">🔒</span>
+                  </div>
+                  <div class="feature-name">Valhalla</div>
+                  <div class="feature-tagline">Hall of the Honored Dead</div>
+                  <div class="feature-teaser-box">
+                    <strong>What you're missing</strong>
+                    See every card you've closed — anniversary dates, total rewards extracted, annual fees avoided.
+                  </div>
+                </div>
+              </div>
+              <div class="modal-col-right">
+                <ul class="benefits-list">
+                  <li><span class="check-icon">✓</span><span>Full archive of closed and graduated cards</span></li>
+                  <li><span class="check-icon">✓</span><span>Anniversary dates and tenure tracking</span></li>
+                  <li><span class="check-icon">✓</span><span>Total rewards extracted per card</span></li>
+                  <li><span class="check-icon">✓</span><span>Annual fees avoided over time</span></li>
+                </ul>
+                <div class="karl-tier-row">
+                  <span class="karl-badge">Karl</span>
+                  <span class="karl-desc">Unlock all premium features</span>
+                  <span class="karl-price">$3.99/mo</span>
+                </div>
+                <div class="modal-cta">
+                  <button class="btn-subscribe">Upgrade to Karl — $3.99/month</button>
+                  <p class="cta-caption">Billed monthly. Cancel anytime.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn-not-now">Not now</button>
+            </div>
+          </div>
+        </div>
+        <div class="annotation">
+          <strong>Solution</strong>
+          ThemedFeatureImage fills the top of the left column. Same image source as /features page —
+          no new assets. featureImage="valhalla" prop routes to valhalla-dark.png / valhalla-light.png.
+          Continuous visual journey: marketing → upsell dialog.
+        </div>
+      </div>
+
+    </div><!-- /compare-grid -->
+  </div><!-- /scenario 1 -->
+
+
+  <!-- =======================================================================
+       SCENARIO 2 — Desktop: The Howl upsell dialog (featureImage="garmr")
+       ======================================================================= -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 2 — Desktop: The Howl Upsell Dialog (garmr artwork)</div>
+    <div class="scenario-note">
+      The Howl maps to "garmr" on /features (Feature 07 — "Urgent Cards Dashboard").
+      Dialog is identical in structure to Valhalla variant; only the prop values change.
+    </div>
+
+    <div style="border: 1px solid; padding: 24px; display: flex; align-items: center; justify-content: center;">
+      <div class="modal-shell">
+        <div class="modal-header">
+          <div>
+            <span class="modal-eyebrow">Karl Tier Feature</span>
+            <span class="modal-eyebrow-sub">KARL · $3.99/month</span>
+          </div>
+          <button class="btn-close" aria-label="Close">✕</button>
+        </div>
+
+        <div class="modal-body-grid">
+          <div class="modal-col-left">
+            <div class="feature-image-slot">
+              <div class="feature-image-placeholder">
+                <div class="feature-image-placeholder-label">
+                  <strong>ThemedFeatureImage</strong>
+                  <span>/images/features/</span>
+                  <span>garmr-dark.png</span>
+                  <span>garmr-light.png</span>
+                  <span style="margin-top: 4px; font-style: italic;">featureImage="garmr"</span>
+                </div>
+              </div>
+            </div>
+            <div class="feature-hero">
+              <div class="feature-icon-wrap">
+                <span style="font-size: 24px;">ᛉ</span>
+                <span class="lock-badge">🔒</span>
+              </div>
+              <div class="feature-name">The Howl</div>
+              <div class="feature-tagline">The Wolf Cries Before the Chain Breaks</div>
+              <div class="feature-teaser-box">
+                <strong>What you're missing</strong>
+                Get notified before fees strike. Howl surfaces your most urgent deadlines and lets you act in one tap — before it costs you.
+              </div>
+            </div>
+          </div>
+          <div class="modal-col-right">
+            <ul class="benefits-list">
+              <li><span class="check-icon">✓</span><span>Upcoming fee alerts with urgency ranking</span></li>
+              <li><span class="check-icon">✓</span><span>Welcome bonus deadline countdowns</span></li>
+              <li><span class="check-icon">✓</span><span>Ragnarök alert when ≥5 urgent cards pile up</span></li>
+              <li><span class="check-icon">✓</span><span>Proactive notifications before you lose value</span></li>
+            </ul>
+            <div class="karl-tier-row">
+              <span class="karl-badge">Karl</span>
+              <span class="karl-desc">Unlock all premium features</span>
+              <span class="karl-price">$3.99/mo</span>
+            </div>
+            <div class="modal-cta">
+              <button class="btn-subscribe">Upgrade to Karl — $3.99/month</button>
+              <p class="cta-caption">Billed monthly. Cancel anytime.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-not-now">Not now</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /scenario 2 -->
+
+
+  <!-- =======================================================================
+       SCENARIO 3 — Desktop: Smart Import upsell dialog (featureImage="mimir")
+       Issue #559 — import upsell also gets matching artwork
+       ======================================================================= -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 3 — Desktop: Smart Import Upsell Dialog (mimir artwork) — Ref #559</div>
+    <div class="scenario-note">
+      Smart Import maps to "mimir" on /features (Feature 04 — "The Rune-Reader").
+      The import upsell (Issue #559) uses the same featureImage="mimir" artwork.
+    </div>
+
+    <div style="border: 1px solid; padding: 24px; display: flex; align-items: center; justify-content: center;">
+      <div class="modal-shell">
+        <div class="modal-header">
+          <div>
+            <span class="modal-eyebrow">Karl Tier Feature</span>
+            <span class="modal-eyebrow-sub">KARL · $3.99/month</span>
+          </div>
+          <button class="btn-close" aria-label="Close">✕</button>
+        </div>
+
+        <div class="modal-body-grid">
+          <div class="modal-col-left">
+            <div class="feature-image-slot">
+              <div class="feature-image-placeholder">
+                <div class="feature-image-placeholder-label">
+                  <strong>ThemedFeatureImage</strong>
+                  <span>/images/features/</span>
+                  <span>mimir-dark.png</span>
+                  <span>mimir-light.png</span>
+                  <span style="margin-top: 4px; font-style: italic;">featureImage="mimir"</span>
+                </div>
+              </div>
+            </div>
+            <div class="feature-hero">
+              <div class="feature-icon-wrap">
+                <span style="font-size: 24px;">ᛗ</span>
+                <span class="lock-badge">🔒</span>
+              </div>
+              <div class="feature-name">Smart Import</div>
+              <div class="feature-tagline">The Rune-Reader</div>
+              <div class="feature-teaser-box">
+                <strong>What you're missing</strong>
+                Drop in your existing spreadsheet. Fenrir extracts card names, dates, and fee amounts automatically — no reformatting required.
+              </div>
+            </div>
+          </div>
+          <div class="modal-col-right">
+            <ul class="benefits-list">
+              <li><span class="check-icon">✓</span><span>Accepts CSV, XLSX, and Google Sheets exports</span></li>
+              <li><span class="check-icon">✓</span><span>Identifies card name, issuer, fee date, open date, bonus fields</span></li>
+              <li><span class="check-icon">✓</span><span>Handles non-standard column names and partial data</span></li>
+              <li><span class="check-icon">✓</span><span>Preview step: review all mapped cards before importing</span></li>
+            </ul>
+            <div class="karl-tier-row">
+              <span class="karl-badge">Karl</span>
+              <span class="karl-desc">Unlock all premium features</span>
+              <span class="karl-price">$3.99/mo</span>
+            </div>
+            <div class="modal-cta">
+              <button class="btn-subscribe">Upgrade to Karl — $3.99/month</button>
+              <p class="cta-caption">Billed monthly. Cancel anytime.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-not-now">Not now</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /scenario 3 -->
+
+
+  <!-- =======================================================================
+       SCENARIO 4 — Mobile 375px: Valhalla upsell (bottom-sheet, single column)
+       ======================================================================= -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 4 — Mobile 375px: Valhalla Bottom-Sheet (single column)</div>
+    <div class="scenario-note">
+      On mobile the dialog becomes a bottom-sheet. Two columns collapse to one.
+      The feature image sits at the very top of the sheet — full bleed width, ~50% height ratio.
+      Icon + text hero below, then right-column content continues below.
+      Max-height: 90vh with overflow-y: scroll.
+    </div>
+
+    <div class="mobile-frame">
+      <div class="mobile-modal-backdrop">
+        <div class="mobile-modal-shell">
+          <div class="modal-header">
+            <div>
+              <span class="modal-eyebrow">Karl Tier Feature</span>
+              <span class="modal-eyebrow-sub">KARL · $3.99/month</span>
+            </div>
+            <button class="btn-close" style="min-width: 36px; min-height: 36px;" aria-label="Close">✕</button>
+          </div>
+
+          <div class="mobile-modal-body">
+            <!-- Image: full width at top -->
+            <div class="mobile-feature-image-slot">
+              <div class="mobile-feature-image-placeholder">
+                <div class="mobile-feature-image-placeholder-label">
+                  <strong>ThemedFeatureImage</strong>
+                  <span>valhalla-dark.png / valhalla-light.png</span>
+                  <span style="font-style: italic;">full bleed, ~50% aspect</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Icon + name + tagline + teaser (was left column on desktop) -->
+            <div class="mobile-feature-hero">
+              <div style="width: 48px; height: 48px; border: 1px dashed; display: flex; align-items: center; justify-content: center; font-size: 22px; position: relative;">
+                <span>ᛏ</span>
+                <span style="position: absolute; bottom: -5px; right: -5px; width: 16px; height: 16px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 8px;">🔒</span>
+              </div>
+              <div style="font-size: 17px; font-weight: bold; text-align: center;">Valhalla</div>
+              <div style="font-size: 11px; font-style: italic; text-align: center;">Hall of the Honored Dead</div>
+              <div style="border: 1px dashed; padding: 8px 10px; font-size: 11px; line-height: 1.6; width: 100%;">
+                <strong style="display: block; margin-bottom: 3px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;">What you're missing</strong>
+                See every card you've closed — anniversary dates, total rewards extracted, annual fees avoided.
+              </div>
+            </div>
+
+            <!-- Benefits + CTA (was right column on desktop) -->
+            <div class="mobile-modal-right">
+              <ul class="benefits-list">
+                <li><span class="check-icon">✓</span><span>Full archive of closed and graduated cards</span></li>
+                <li><span class="check-icon">✓</span><span>Anniversary dates and tenure tracking</span></li>
+                <li><span class="check-icon">✓</span><span>Total rewards extracted per card</span></li>
+                <li><span class="check-icon">✓</span><span>Annual fees avoided over time</span></li>
+              </ul>
+              <div class="karl-tier-row">
+                <span class="karl-badge">Karl</span>
+                <span class="karl-desc">Unlock all premium features</span>
+                <span class="karl-price">$3.99/mo</span>
+              </div>
+              <div class="modal-cta">
+                <button class="btn-subscribe" style="min-height: 44px; font-size: 13px;">Upgrade to Karl — $3.99/month</button>
+                <p class="cta-caption">Billed monthly. Cancel anytime.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-not-now">Not now</button>
+          </div>
+        </div><!-- /mobile-modal-shell -->
+      </div><!-- /mobile-modal-backdrop -->
+    </div><!-- /mobile-frame -->
+
+    <div class="annotation">
+      <strong>Mobile layout notes</strong>
+      Image is full-bleed (no horizontal padding). Aspect ratio ~50% (2:1) keeps image visible without
+      dominating the sheet. Image uses identical CSS theme-switching (hidden dark:block / block dark:hidden)
+      as desktop and /features page. Scroll target: entire sheet scrolls, not inner columns.
+    </div>
+  </div><!-- /scenario 4 -->
+
+
+  <!-- =======================================================================
+       SCENARIO 5 — Props contract: featureImage mapping table
+       ======================================================================= -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 5 — Props Contract: featureImage Mapping (all Karl features)</div>
+    <div class="scenario-note">
+      Complete mapping of every Karl-gated feature to its featureImage value and the corresponding
+      /images/features/ filenames. No new assets required — all files already exist.
+    </div>
+
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>featureImage prop value</th>
+          <th>Dark asset</th>
+          <th>Light asset</th>
+          <th>Norse title (from /features)</th>
+          <th>Upsell dialog constant</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Valhalla</td>
+          <td>"valhalla"</td>
+          <td>valhalla-dark.png</td>
+          <td>valhalla-light.png</td>
+          <td>Hall of the Honored Dead</td>
+          <td>KARL_UPSELL_VALHALLA</td>
+        </tr>
+        <tr>
+          <td>The Howl</td>
+          <td>"garmr"</td>
+          <td>garmr-dark.png</td>
+          <td>garmr-light.png</td>
+          <td>Urgent Cards Dashboard</td>
+          <td>KARL_UPSELL_HOWL</td>
+        </tr>
+        <tr>
+          <td>Smart Import</td>
+          <td>"mimir"</td>
+          <td>mimir-dark.png</td>
+          <td>mimir-light.png</td>
+          <td>The Rune-Reader</td>
+          <td>KARL_UPSELL_IMPORT (new — #559)</td>
+        </tr>
+        <tr>
+          <td>Annual Fee (Sköll)</td>
+          <td>"skoll"</td>
+          <td>skoll-dark.png</td>
+          <td>skoll-light.png</td>
+          <td>Sköll Watches the Fee</td>
+          <td>KARL_UPSELL_ANNUAL_FEE (new if needed)</td>
+        </tr>
+        <tr>
+          <td>Sign-Up Bonus (Hati)</td>
+          <td>"hati"</td>
+          <td>hati-dark.png</td>
+          <td>hati-light.png</td>
+          <td>Hati Watches the Deadline</td>
+          <td>KARL_UPSELL_SIGNUP_BONUS (new if needed)</td>
+        </tr>
+        <tr>
+          <td>Velocity Management</td>
+          <td>"norns"</td>
+          <td>norns-dark.png</td>
+          <td>norns-light.png</td>
+          <td>The Issuer's Rules</td>
+          <td>KARL_UPSELL_VELOCITY (update existing)</td>
+        </tr>
+        <tr>
+          <td>Cloud Sync</td>
+          <td>"huginn-muninn"</td>
+          <td>huginn-muninn-dark.png</td>
+          <td>huginn-muninn-light.png</td>
+          <td>Your Ledger Follows You</td>
+          <td>KARL_UPSELL_CLOUD_SYNC (new if needed)</td>
+        </tr>
+        <tr>
+          <td>Multi-Household</td>
+          <td>"fenrir"</td>
+          <td>fenrir-dark.png</td>
+          <td>fenrir-light.png</td>
+          <td>Many Wolves, One Den</td>
+          <td>KARL_UPSELL_MULTI_HOUSEHOLD (new if needed)</td>
+        </tr>
+        <tr>
+          <td>Data Export</td>
+          <td>"tyr"</td>
+          <td>tyr-dark.png</td>
+          <td>tyr-light.png</td>
+          <td>Your Data, Your Terms</td>
+          <td>KARL_UPSELL_DATA_EXPORT (new if needed)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="annotation">
+      <strong>Important: no new image assets needed</strong>
+      All 9 image pairs already exist in /images/features/. The featureImage prop simply routes
+      KarlUpsellDialog to the right pair. ThemedFeatureImage component from /features page
+      should be extracted into a shared component or its logic duplicated inline in the dialog.
+    </div>
+  </div><!-- /scenario 5 -->
+
+
+  <!-- =======================================================================
+       SCENARIO 6 — ThemedFeatureImage anatomy in dialog context
+       ======================================================================= -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 6 — ThemedFeatureImage Component Anatomy in Dialog</div>
+    <div class="scenario-note">
+      The ThemedFeatureImage block inside the dialog left column.
+      Shows how dark/light variants are declared and the hover shimmer overlay structure.
+    </div>
+
+    <div class="anatomy-grid">
+
+      <div class="anatomy-col">
+        <div class="anatomy-label">Component tree (left column, top section)</div>
+        <div style="border: 1px solid; padding: 16px; font-family: monospace; font-size: 11px; line-height: 2;">
+          &lt;div class="feature-image-slot"&gt; ← border-bottom: 1px solid<br>
+          &nbsp;&nbsp;&lt;div class="group relative overflow-hidden"&gt;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&lt;div aria-hidden shimmer-overlay /&gt; ← gold shimmer on hover (same as /features)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&lt;Image<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;src="/images/features/{featureImage}-dark.png"<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;className="hidden dark:block"<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;width={600} height={400}<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;/&gt;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&lt;Image<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;src="/images/features/{featureImage}-light.png"<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;className="block dark:hidden"<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;width={600} height={400}<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;/&gt;<br>
+          &nbsp;&nbsp;&lt;/div&gt;<br>
+          &lt;/div&gt;
+        </div>
+      </div>
+
+      <div class="anatomy-col">
+        <div class="anatomy-label">Sizing notes</div>
+        <table>
+          <thead>
+            <tr><th>Context</th><th>Image width</th><th>Aspect ratio</th><th>Next/Image size hint</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Desktop dialog left col</td><td>50% of 680px = 340px</td><td>4:3 (natural)</td><td>width=600 height=450</td></tr>
+            <tr><td>Mobile bottom-sheet</td><td>100% of 375px = 375px</td><td>2:1 (cropped)</td><td>width=750 height=375 (object-cover)</td></tr>
+          </tbody>
+        </table>
+        <div class="annotation">
+          <strong>object-fit: cover</strong>
+          Image uses object-cover so it fills the slot regardless of intrinsic dimensions.
+          No distortion if image is taller on some variants.
+        </div>
+        <div class="annotation">
+          <strong>Hover shimmer — optional on dialog</strong>
+          The gold shimmer hover overlay from /features may be omitted in the dialog context
+          (dialog is not a hover-browsing context). Engineer's call. Structure is provided
+          for consistency; CSS transition may be set to none.
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /scenario 6 -->
+
+
+  <!-- =======================================================================
+       SCENARIO 7 — Implementation reference: KarlUpsellDialogProps diff
+       ======================================================================= -->
+  <div class="scenario">
+    <div class="scenario-label">Scenario 7 — Implementation Reference: Props Diff for KarlUpsellDialogProps</div>
+    <div class="scenario-note">
+      Only one new prop is added. All existing props remain unchanged.
+      The constant objects (KARL_UPSELL_VALHALLA, KARL_UPSELL_HOWL, KARL_UPSELL_VELOCITY)
+      each receive one new key: featureImage.
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Prop</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>featureIcon</td>
+          <td>string</td>
+          <td>Existing — unchanged</td>
+          <td>Rune glyph (e.g. "ᛏ")</td>
+        </tr>
+        <tr>
+          <td>featureName</td>
+          <td>string</td>
+          <td>Existing — unchanged</td>
+          <td>Plain feature name</td>
+        </tr>
+        <tr>
+          <td>featureTagline</td>
+          <td>string</td>
+          <td>Existing — unchanged</td>
+          <td>Atmospheric one-liner (Voice 2)</td>
+        </tr>
+        <tr>
+          <td>featureTeaser</td>
+          <td>string</td>
+          <td>Existing — unchanged</td>
+          <td>What user is missing (Voice 1)</td>
+        </tr>
+        <tr>
+          <td>featureBenefits</td>
+          <td>readonly string[]</td>
+          <td>Existing — unchanged</td>
+          <td>Checklist in right column</td>
+        </tr>
+        <tr>
+          <td><strong>featureImage</strong></td>
+          <td><strong>string</strong></td>
+          <td><strong>NEW — required</strong></td>
+          <td>Base filename for /images/features/ (e.g. "valhalla", "garmr"). Used to construct dark/light image paths. Must match an existing file pair in public/images/features/.</td>
+        </tr>
+        <tr>
+          <td>open</td>
+          <td>boolean</td>
+          <td>Existing — unchanged</td>
+          <td>Dialog open state</td>
+        </tr>
+        <tr>
+          <td>onDismiss</td>
+          <td>() => void</td>
+          <td>Existing — unchanged</td>
+          <td>Dismiss callback</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="annotation">
+      <strong>Constant objects to update</strong>
+      KARL_UPSELL_VALHALLA → add featureImage: "valhalla"<br>
+      KARL_UPSELL_HOWL → add featureImage: "garmr"<br>
+      KARL_UPSELL_VELOCITY → add featureImage: "norns"<br>
+      Plus any new constants required by #559 (Smart Import → "mimir")
+    </div>
+
+    <div class="annotation">
+      <strong>Shared ThemedFeatureImage component</strong>
+      Option A: Extract ThemedFeatureImage from features/page.tsx into a shared component
+      (e.g. components/ui/ThemedFeatureImage.tsx) and import it in both /features and KarlUpsellDialog.<br>
+      Option B: Inline the img tag pattern directly in KarlUpsellDialog (simpler, minor duplication).<br>
+      Recommendation: Option A — avoids drift between /features artwork rendering and dialog rendering.
+    </div>
+  </div><!-- /scenario 7 -->
+
+</div><!-- /page -->
+</body>
+</html>
