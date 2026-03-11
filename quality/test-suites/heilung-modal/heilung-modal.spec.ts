@@ -355,10 +355,6 @@ test.describe("Heilung Modal — Responsive Layout", () => {
     await page.goto("/ledger", { waitUntil: "networkidle" });
     await clearAllStorage(page);
     await page.waitForLoadState("domcontentloaded");
-    // Open modal
-    await page.keyboard.press("Control+Shift+L");
-    const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
-    await expect(modal).toBeVisible({ timeout: 5000 });
   });
 
   test.afterEach(async ({ page }) => {
@@ -366,13 +362,13 @@ test.describe("Heilung Modal — Responsive Layout", () => {
   });
 
   /**
-   * AC3 — Mobile stacks vertically: thumbnail on top, info below
+   * AC3 — Mobile stacks vertically: iframe on top, info below
    *
    * On viewport < 768px (md breakpoint), the modal should use flexbox
-   * with flex-col and order- classes so thumbnail (order-1) appears above
+   * with flex-col and order- classes so iframe (order-1) appears above
    * band info (order-2).
    */
-  test("mobile layout stacks thumbnail above info", async ({ page }) => {
+  test("mobile layout displays video and info", async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
 
@@ -383,28 +379,22 @@ test.describe("Heilung Modal — Responsive Layout", () => {
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Get the flex container
-    const layoutContainer = modal.locator("div.flex.flex-col");
+    // Check iframe is visible
+    const iframe = modal.locator('iframe[title*="Heilung"]');
+    await expect(iframe).toBeVisible();
 
-    // On mobile, thumbnail should appear visually first (higher on page)
-    const thumbnail = layoutContainer.locator('img[alt*="Heilung"]');
-    const bandInfo = layoutContainer.locator("div").first();
-
-    // Check thumbnail is in DOM and visible
-    await expect(thumbnail).toBeVisible();
-
-    // Band info should also be visible below
-    const heading = layoutContainer.getByRole("heading", { name: /HEILUNG/i });
+    // Band info should also be visible
+    const heading = modal.getByRole("heading", { name: /HEILUNG/i });
     await expect(heading).toBeVisible();
   });
 
   /**
-   * AC2 — Desktop 2-column layout: profile left, thumbnail right
+   * AC2 — Desktop 2-column layout: profile left, video right
    *
    * On viewport >= 768px (md breakpoint), the modal should display
-   * profile (order-1) on left and thumbnail (order-2) on right using CSS grid.
+   * profile (order-1) on left and video iframe (order-2) on right using CSS grid.
    */
-  test("desktop layout displays profile left, thumbnail right", async ({ page }) => {
+  test("desktop layout displays profile left, video right", async ({ page }) => {
     // Set desktop viewport
     await page.setViewportSize({ width: 1280, height: 720 });
 
@@ -416,22 +406,12 @@ test.describe("Heilung Modal — Responsive Layout", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // On desktop, should use md:grid md:grid-cols-2
-    const layoutContainer = modal.locator("div.md\\:grid");
-
-    // Check grid is applied
-    const gridLayout = await layoutContainer.evaluate((el) => {
-      const computed = window.getComputedStyle(el);
-      return computed.display;
-    });
-
-    // Either 'flex' (mobile) or 'grid' (desktop) depending on actual rendering
-    // Since we're at 1280px, should hit the md: breakpoint
-    // But we'll just verify both columns are visible
+    // Verify both columns are visible
     const heading = modal.getByRole("heading", { name: /HEILUNG/i });
-    const thumbnail = modal.locator('img[alt*="Heilung"]');
+    const iframe = modal.locator('iframe[title*="Heilung"]');
 
     await expect(heading).toBeVisible();
-    await expect(thumbnail).toBeVisible();
+    await expect(iframe).toBeVisible();
   });
 });
 
@@ -455,23 +435,23 @@ test.describe("Heilung Modal — Aspect Ratio", () => {
   /**
    * AC11 — Aspect ratio preserved (16:9)
    *
-   * Verifies that the thumbnail uses aspect-video class (16:9) to maintain
+   * Verifies that the iframe container uses aspect-video class (16:9) to maintain
    * proper proportions on all screen sizes.
    */
-  test("thumbnail maintains 16:9 aspect ratio", async ({ page }) => {
+  test("video iframe maintains 16:9 aspect ratio", async ({ page }) => {
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
 
-    // Find the thumbnail link which has aspect-video class
-    const thumbnailLink = page.locator('a[href*="youtube.com/watch?v=QRg_8NNPTD8"]');
-    await expect(thumbnailLink).toBeVisible();
+    // Find the iframe container which has aspect-video class
+    const iframeContainer = modal.locator("div.aspect-video");
+    await expect(iframeContainer).toBeVisible();
 
     // Check that aspect-video class is applied
-    const classAttr = await thumbnailLink.getAttribute("class");
+    const classAttr = await iframeContainer.getAttribute("class");
     expect(classAttr).toContain("aspect-video");
 
-    // Verify the thumbnail image dimensions
-    const thumbnail = thumbnailLink.locator("img");
-    const box = await thumbnail.boundingBox();
+    // Verify the iframe dimensions
+    const iframe = iframeContainer.locator("iframe");
+    const box = await iframe.boundingBox();
 
     if (box) {
       // Calculate aspect ratio (width / height)
