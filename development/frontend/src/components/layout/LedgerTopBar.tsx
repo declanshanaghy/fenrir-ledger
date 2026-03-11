@@ -199,22 +199,21 @@ function ProfileDropdown({ user, onClose, onSignOut }: ProfileDropdownProps) {
         "flex flex-col",
       ].join(" ")}
     >
-      {/* Profile header — non-interactive label, visually distinct from menu items */}
+      {/* Profile row — non-interactive label, same feel as other menu items */}
       <div
-        className="px-4 py-3 bg-secondary/30 flex items-center gap-3 select-none cursor-default"
+        className="px-4 py-[10px] flex items-center justify-between gap-2 border-b border-border select-none cursor-default"
+        style={{ minHeight: 44 }}
         aria-hidden="true"
       >
-        <Avatar picture={user.picture ?? undefined} name={user.name ?? undefined} size={40} goldRing />
-        <div className="flex flex-col min-w-0">
+        <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
           <span className="text-base font-heading text-foreground truncate">{user.name}</span>
           <span className="text-sm text-muted-foreground font-mono truncate">{user.email}</span>
           <span className="text-sm text-muted-foreground/60 italic font-body truncate">
             The wolf is named.
           </span>
         </div>
+        <Avatar picture={user.picture ?? undefined} name={user.name ?? undefined} size={40} goldRing />
       </div>
-      {/* Separator between profile header and menu items */}
-      <div className="h-px bg-border" role="separator" aria-hidden="true" />
       {/* My Cards link */}
       <button
         type="button"

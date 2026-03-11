@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Sprint 9 Wireframes
+
+| Story | File | Description |
+|-------|------|-------------|
+| #528 — Profile Dropdown Avatar Right | [wireframes/chrome/profile-dropdown-avatar-right.html](wireframes/chrome/profile-dropdown-avatar-right.html) | Move avatar from left to right inside the profile block and make the block feel like the first menu item (no visual disconnect): 7 sections — before/after dropdown anatomy side-by-side, desktop dropdown open in context, mobile 375px dropdown open in context, profile row anatomy with measurement annotations, implementation reference table (diff of CSS/props changes), interaction spec (focus management, keyboard nav, long text edge cases), accessibility checklist |
+
+---
+
 ## Sprint 8 Wireframes
 
 | Story | File | Description |
