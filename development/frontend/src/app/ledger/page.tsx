@@ -23,15 +23,17 @@
  * See Dashboard.tsx for tab layout spec.
  */
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useEntitlement } from "@/hooks/useEntitlement";
 import Link from "next/link";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { CardSkeletonGrid } from "@/components/dashboard/CardSkeletonGrid";
 import { ImportWizard } from "@/components/sheets/ImportWizard";
 import { AuthGate } from "@/components/shared/AuthGate";
+import { KarlUpsellDialog, KARL_UPSELL_IMPORT } from "@/components/entitlement/KarlUpsellDialog";
 import { UpsellBanner } from "@/components/entitlement/UpsellBanner";
 import { SignInNudge } from "@/components/layout/SignInNudge";
 import { initializeHousehold, getCards, saveCard, migrateIfNeeded } from "@/lib/storage";
@@ -41,12 +43,16 @@ import type { Card } from "@/lib/types";
 
 function DashboardPageContent() {
   const { householdId, status } = useAuth();
+  const { hasFeature } = useEntitlement();
+  const canImport = hasFeature("import");
   const searchParams = useSearchParams();
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(false);
   // Import wizard visibility
   const [importWizardOpen, setImportWizardOpen] = useState(false);
+  // Import upsell dialog visibility (#559)
+  const [importUpsellOpen, setImportUpsellOpen] = useState(false);
 
   useEffect(() => {
     // Wait for auth state to resolve before reading localStorage
@@ -83,14 +89,23 @@ function DashboardPageContent() {
     }
   }, [householdId, status, isLoading]);
 
+  /** Open import wizard if Karl, otherwise show upsell (#559). */
+  const handleImportClick = useCallback(() => {
+    if (canImport) {
+      setImportWizardOpen(true);
+    } else {
+      setImportUpsellOpen(true);
+    }
+  }, [canImport]);
+
   // Listen for custom event from EmptyState's "Import from Google Sheets" button
   useEffect(() => {
     function handleOpenWizard() {
-      setImportWizardOpen(true);
+      handleImportClick();
     }
     window.addEventListener("fenrir:open-import-wizard", handleOpenWizard);
     return () => window.removeEventListener("fenrir:open-import-wizard", handleOpenWizard);
-  }, []);
+  }, [handleImportClick]);
 
   const loaded = !isLoading && status !== "loading";
 
@@ -131,15 +146,23 @@ function DashboardPageContent() {
         </h1>
 
         <div className="flex items-center gap-2">
-          {/* Import button — shown in toolbar only when cards exist and user is signed in */}
+          {/* Import button — visible for all signed-in users; Thrall sees upsell (#559) */}
           {hasCards && (
             <AuthGate>
               <button
                 type="button"
-                onClick={() => setImportWizardOpen(true)}
-                className="inline-flex items-center justify-center rounded-sm text-base font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-9 px-4 py-2"
+                onClick={handleImportClick}
+                className="relative inline-flex items-center justify-center rounded-sm text-base font-heading tracking-wide ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-9 px-4 py-2"
               >
                 Import
+                {!canImport && (
+                  <span
+                    className="absolute -top-1.5 -right-3 text-[7px] font-mono font-bold border border-gold/30 text-gold/60 px-0.5 leading-tight bg-background"
+                    aria-hidden="true"
+                  >
+                    K
+                  </span>
+                )}
               </button>
             </AuthGate>
           )}
@@ -189,6 +212,13 @@ function DashboardPageContent() {
         onClose={() => setImportWizardOpen(false)}
         onConfirmImport={handleConfirmImport}
         existingCards={cards}
+      />
+
+      {/* Karl upsell dialog for import — Thrall users see this (#559) */}
+      <KarlUpsellDialog
+        {...KARL_UPSELL_IMPORT}
+        open={importUpsellOpen}
+        onDismiss={() => setImportUpsellOpen(false)}
       />
     </div>
   );

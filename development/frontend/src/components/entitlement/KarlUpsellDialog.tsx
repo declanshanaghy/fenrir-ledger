@@ -296,3 +296,21 @@ export const KARL_UPSELL_VELOCITY = {
     "Alerts when you fall behind target pace",
   ] as const,
 } as const;
+
+/**
+ * Props for the Import variant of KarlUpsellDialog (#559).
+ * Usage: <KarlUpsellDialog {...KARL_UPSELL_IMPORT} open={...} onDismiss={...} />
+ */
+export const KARL_UPSELL_IMPORT = {
+  featureIcon: "\u16DA", // ᛚ Laguz rune (flow, water — data flowing in)
+  featureName: "Import",
+  featureTagline: "The Runes Inscribed Afar Shall Be Read Here",
+  featureTeaser:
+    "Import cards from Google Sheets, CSV, or Excel files \u2014 your history flows into Fenrir with one click.",
+  featureBenefits: [
+    "Import from Google Sheets URLs",
+    "Browse your Google Drive with Picker",
+    "Upload CSV and Excel files",
+    "Automatic deduplication of existing cards",
+  ] as const,
+} as const;
