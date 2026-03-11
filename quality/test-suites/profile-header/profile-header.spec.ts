@@ -12,27 +12,24 @@ import { test, expect } from "@playwright/test";
  */
 
 test.describe("Profile Header — Issue #550", () => {
-  // Base URL for ledger authenticated tests
-  const LEDGER_BASE = "http://localhost:3000/ledger";
-
   test.beforeEach(async ({ page, context }) => {
     // Set up authenticated session via local storage
     // This simulates a signed-in user without going through full OAuth
     await context.addInitScript(() => {
       const mockSession = {
+        access_token: "mock-token",
+        id_token: "mock-id-token",
+        refresh_token: "mock-refresh-token",
+        expires_at: Date.now() + 24 * 60 * 60 * 1000,
         user: {
-          id: "test-user-123",
+          sub: "test-user-123",
           name: "Test User",
           email: "test@example.com",
           picture: "https://example.com/avatar.jpg",
         },
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       };
-      localStorage.setItem("auth-session", JSON.stringify(mockSession));
+      localStorage.setItem("fenrir:auth", JSON.stringify(mockSession));
     });
-
-    // Navigate to ledger
-    await page.goto(LEDGER_BASE);
   });
 
   // ── AC1: Name and email visible in header when signed in ─────────────────
@@ -44,7 +41,7 @@ test.describe("Profile Header — Issue #550", () => {
     await page.setViewportSize({ width: 1024, height: 768 });
 
     // Navigate to ledger
-    await page.goto(LEDGER_BASE);
+    await page.goto("/ledger");
 
     // Name and email should be visible in the header
     const nameDisplay = page.locator('div:has-text("Test User")').first();
@@ -71,7 +68,7 @@ test.describe("Profile Header — Issue #550", () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // Navigate to ledger
-    await page.goto(LEDGER_BASE);
+    await page.goto("/ledger");
 
     // Name and email should NOT be visible
     const nameDisplay = page.locator('div:has-text("Test User")').first();
@@ -99,7 +96,7 @@ test.describe("Profile Header — Issue #550", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
-    await page.goto(LEDGER_BASE);
+    await page.goto("/ledger");
 
     // Click avatar/menu button to open dropdown
     const avatarButton = page.locator("button[aria-label*='user menu']").first();
@@ -135,7 +132,7 @@ test.describe("Profile Header — Issue #550", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
-    await page.goto(LEDGER_BASE);
+    await page.goto("/ledger");
 
     // Click avatar to open dropdown
     const avatarButton = page.locator("button[aria-label*='user menu']").first();
@@ -167,7 +164,7 @@ test.describe("Profile Header — Issue #550", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
-    await page.goto(LEDGER_BASE);
+    await page.goto("/ledger");
 
     const avatarButton = page.locator("button[aria-label*='user menu']").first();
     const dropdown = page.locator("#user-menu");
@@ -194,7 +191,7 @@ test.describe("Profile Header — Issue #550", () => {
     // Set narrow mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
 
-    await page.goto(LEDGER_BASE);
+    await page.goto("/ledger");
 
     // Header should still be visible and functional
     const header = page.locator("header").first();
@@ -222,7 +219,7 @@ test.describe("Profile Header — Issue #550", () => {
 
   test("AC5: Avatar button has proper ARIA attributes", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
-    await page.goto(LEDGER_BASE);
+    await page.goto("/ledger");
 
     const avatarButton = page.locator("button[aria-label*='user menu']").first();
 
@@ -238,7 +235,7 @@ test.describe("Profile Header — Issue #550", () => {
 
   test("Dropdown closes on outside click", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
-    await page.goto(LEDGER_BASE);
+    await page.goto("/ledger");
 
     // Open dropdown
     const avatarButton = page.locator("button[aria-label*='user menu']").first();
@@ -256,7 +253,7 @@ test.describe("Profile Header — Issue #550", () => {
 
   test("Menu items navigate correctly", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
-    await page.goto(LEDGER_BASE);
+    await page.goto("/ledger");
 
     // Open dropdown
     const avatarButton = page.locator("button[aria-label*='user menu']").first();
