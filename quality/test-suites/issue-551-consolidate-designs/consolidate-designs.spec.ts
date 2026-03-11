@@ -12,12 +12,7 @@ import * as path from "path";
  * tests verify file system state, path references, and configuration correctness.
  */
 
-const REPO_ROOT = path.resolve(__dirname, "../../../..");
-
-// Debug: log REPO_ROOT and verify it's correct
-console.log("[DEBUG] REPO_ROOT:", REPO_ROOT);
-console.log("[DEBUG] __dirname:", __dirname);
-console.log("[DEBUG] product exists:", require("fs").existsSync(path.join(REPO_ROOT, "product")));
+const REPO_ROOT = path.resolve(__dirname, "../../..");
 
 function fileExists(filePath: string): boolean {
   try {
