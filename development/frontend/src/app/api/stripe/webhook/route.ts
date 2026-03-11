@@ -21,6 +21,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
+import { kv } from "@vercel/kv";
 import { stripe } from "@/lib/stripe/api";
 import { verifyWebhookSignature, buildEntitlementFromSubscription, mapStripeStatusToTier } from "@/lib/stripe/webhook";
 import {
@@ -33,6 +34,9 @@ import {
   extractStripeCustomerIdFromReverseIndex,
 } from "@/lib/kv/entitlement-store";
 import { log } from "@/lib/logger";
+
+/** 24 hours in seconds - TTL for processed webhook events deduplication cache */
+const WEBHOOK_EVENT_DEDUP_TTL_SECONDS = 24 * 60 * 60;
 
 /** Valid webhook event types we process. */
 const HANDLED_EVENTS = new Set<string>([
@@ -300,6 +304,35 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // --- Check for duplicate event (deduplication cache) ---
+  const deduplicationKey = `stripe-event-processed:${event.id}`;
+  try {
+    const alreadyProcessed = await kv.get(deduplicationKey);
+    if (alreadyProcessed) {
+      log.info("Stripe webhook event already processed (duplicate detected)", {
+        eventId: event.id,
+        eventType: event.type,
+      });
+      log.debug("POST /api/stripe/webhook returning", {
+        status: 200,
+        reason: "already_processed",
+        eventId: event.id,
+      });
+      return NextResponse.json({
+        status: "already_processed",
+        eventId: event.id,
+        reason: "Stripe webhook event already processed",
+      });
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error("Failed to check deduplication cache", {
+      eventId: event.id,
+      error: message,
+    });
+    // Continue processing if dedup cache fails, don't fail the entire webhook
+  }
+
   // --- Check if this is an event type we handle ---
   if (!HANDLED_EVENTS.has(event.type)) {
     log.debug("POST /api/stripe/webhook returning", {
@@ -315,19 +348,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     eventId: event.id,
   });
 
+  let response: NextResponse;
   try {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        return await handleCheckoutCompleted(session);
+        response = await handleCheckoutCompleted(session);
+        break;
       }
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
-        return await handleSubscriptionUpdated(subscription);
+        response = await handleSubscriptionUpdated(subscription);
+        break;
       }
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        return await handleSubscriptionDeleted(subscription);
+        response = await handleSubscriptionDeleted(subscription);
+        break;
       }
       case "billing_portal.session.created": {
         // No-op acknowledgment — portal sessions are informational only
@@ -337,15 +374,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           eventType: "billing_portal.session.created",
           reason: "portal session acknowledged (no-op)",
         });
-        return NextResponse.json({
+        response = NextResponse.json({
           status: "acknowledged",
           eventType: "billing_portal.session.created",
           reason: "portal session acknowledged (no-op)",
         });
+        break;
       }
       default: {
         log.debug("POST /api/stripe/webhook returning", { status: 200, reason: "unexpected event" });
-        return NextResponse.json({ status: "ignored" });
+        response = NextResponse.json({ status: "ignored" });
       }
     }
   } catch (err) {
@@ -361,4 +399,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       { status: 500 },
     );
   }
+
+  // --- Mark event as processed in deduplication cache (with 24h TTL) ---
+  try {
+    await kv.set(deduplicationKey, true, { ex: WEBHOOK_EVENT_DEDUP_TTL_SECONDS });
+    log.debug("Stripe webhook event marked as processed", {
+      eventId: event.id,
+      eventType: event.type,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.warn("Failed to mark event as processed in dedup cache", {
+      eventId: event.id,
+      error: message,
+    });
+    // Don't fail the webhook response if dedup cache write fails; the event was processed
+  }
+
+  return response;
 }
