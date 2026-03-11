@@ -13,11 +13,15 @@
  * Mobile: flex flex-col — video on top, info below
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+/** YouTube video ID for Heilung — Krigsgaldr LIFA */
+const HEILUNG_VIDEO_ID = "QRg_8NNPTD8";
 
 export function HeilungModal() {
   const [visible, setVisible] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const dismiss = useCallback(() => setVisible(false), []);
 
@@ -190,49 +194,19 @@ export function HeilungModal() {
                 </a>
               </div>
 
-              {/* RIGHT COLUMN — YouTube Thumbnail (shown on top on mobile) */}
+              {/* RIGHT COLUMN — Embedded YouTube Video (shown on top on mobile) */}
               <div className="p-4 md:p-6 order-1 md:order-2 flex flex-col justify-center">
-                <a
-                  href="https://www.youtube.com/watch?v=QRg_8NNPTD8"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative block w-full aspect-video rounded-lg overflow-hidden"
-                  aria-label="Watch Heilung — Krigsgaldr LIFA on YouTube"
-                >
-                  {/* Thumbnail */}
-                  <img
-                    src="https://img.youtube.com/vi/QRg_8NNPTD8/maxresdefault.jpg"
-                    alt="Heilung — Krigsgaldr LIFA"
-                    className="w-full h-full object-cover"
+                <div className="w-full aspect-video rounded-lg overflow-hidden">
+                  <iframe
+                    ref={iframeRef}
+                    src={`https://www.youtube.com/embed/${HEILUNG_VIDEO_ID}?autoplay=1&rel=0`}
+                    title="Heilung — Krigsgaldr LIFA"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    className="w-full h-full"
+                    style={{ border: "none" }}
                   />
-                  {/* Play button overlay */}
-                  <span className="absolute inset-0 flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="64"
-                      height="64"
-                      viewBox="0 0 64 64"
-                      fill="none"
-                      aria-hidden="true"
-                      className="drop-shadow-lg transition-transform group-hover:scale-110"
-                    >
-                      <circle
-                        cx="32"
-                        cy="32"
-                        r="30"
-                        fill="rgba(7, 7, 13, 0.7)"
-                        stroke="rgba(201, 146, 10, 0.6)"
-                        strokeWidth="2"
-                        className="transition-colors group-hover:stroke-[#c9920a] group-hover:fill-[rgba(7,7,13,0.85)]"
-                      />
-                      <polygon
-                        points="25,18 25,46 48,32"
-                        fill="rgba(201, 146, 10, 0.6)"
-                        className="transition-colors group-hover:fill-[#c9920a]"
-                      />
-                    </svg>
-                  </span>
-                </a>
+                </div>
               </div>
             </div>
           </motion.div>
