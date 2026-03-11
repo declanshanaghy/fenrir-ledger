@@ -660,11 +660,28 @@ test.describe("AC8: Comprehensive Audit — All Karl-gated features verified", (
     // Should export useEntitlement hook
     expect(hookFile).toContain("export function useEntitlement");
 
-    // Should implement hasFeature method
-    expect(hookFile).toContain("hasFeature");
+    // Should provide access to hasFeature via context
+    // The actual hasFeature implementation is in EntitlementContext
+    expect(hookFile).toContain("useEntitlementContext");
+  });
+
+  test("EntitlementContext provides hasFeature('import') implementation", async ({
+    page,
+  }) => {
+    // Code verification: EntitlementContext implements hasFeature
+    const contextFile = require("fs").readFileSync(
+      "/workspace/development/frontend/src/contexts/EntitlementContext.tsx",
+      "utf8"
+    );
+
+    // Should have hasFeature method
+    expect(contextFile).toContain("hasFeature");
 
     // Should check PREMIUM_FEATURES record
-    expect(hookFile).toContain("PREMIUM_FEATURES");
+    expect(contextFile).toContain("PREMIUM_FEATURES");
+
+    // Should support "import" feature
+    expect(contextFile).toContain('"import"');
   });
 
   test("Dashboard uses hasFeature('import') to gate Import button", async ({
