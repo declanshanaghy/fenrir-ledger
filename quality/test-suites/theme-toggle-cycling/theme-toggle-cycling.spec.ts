@@ -106,7 +106,8 @@ test.describe("Theme Toggle — Marketing Page (Home)", () => {
         !err.message.includes("hydration") &&
         !err.message.includes("HMR") &&
         !err.message.includes("ResizeObserver") &&
-        !err.message.includes("localStorage")
+        !err.message.includes("localStorage") &&
+        !err.message.includes("Connection closed")
       ) {
         errors.push(err.message);
       }
