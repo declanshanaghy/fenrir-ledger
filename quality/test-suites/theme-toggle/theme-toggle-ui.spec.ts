@@ -37,8 +37,9 @@ async function getHtmlClasses(
 }
 
 async function findThemeToggleButton(page: import("@playwright/test").Page) {
-  // Find the theme toggle button by aria-label containing "Theme"
-  return page.locator("button[aria-label*='Theme']").first();
+  // Find the theme toggle button by aria-label
+  // Icon variant: "Theme: Light. Click to switch to Dark." or "Theme: Dark. Click to switch to Light."
+  return page.locator("button[aria-label*='Theme:']").first();
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -122,7 +123,7 @@ test("No System option exists in the theme toggle — only Dark and Light", asyn
   expect(hasSystemOption).toBe(false);
 
   // Verify the button exists and is clickable
-  const themeButton = page.locator("button[aria-label*='Theme']").first();
+  const themeButton = page.locator("button[aria-label*='Theme:']").first();
   await expect(themeButton).toBeVisible();
 });
 
