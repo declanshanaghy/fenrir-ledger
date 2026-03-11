@@ -203,7 +203,10 @@ test.describe("AC1-AC4: Frontend Import Button Gating & Upsell Dialog", () => {
     // Button should be visible (not conditionally hidden for Thrall)
     // The AC says "Import button stays visible for Thrall users"
     expect(pageFile).toContain("hasCards &&"); // Button shown when has cards
-    expect(pageFile).not.toContain("{!canImport && ("); // K badge shown for Thrall
+
+    // K badge should be shown conditionally for Thrall users (!canImport)
+    expect(pageFile).toContain("{!canImport && ("); // K badge shown for Thrall
+    expect(pageFile).toContain("K"); // Badge text
   });
 
   test("AC2: handleImportClick logic routes Thrall to upsell dialog", async ({
