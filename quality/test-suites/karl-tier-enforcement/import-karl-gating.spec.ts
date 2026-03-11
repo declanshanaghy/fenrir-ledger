@@ -680,8 +680,15 @@ test.describe("AC8: Comprehensive Audit — All Karl-gated features verified", (
     // Should check PREMIUM_FEATURES record
     expect(contextFile).toContain("PREMIUM_FEATURES");
 
-    // Should support "import" feature
-    expect(contextFile).toContain('"import"');
+    // Import feature is defined in types.ts PREMIUM_FEATURES
+    const typesFile = require("fs").readFileSync(
+      "/workspace/development/frontend/src/lib/entitlement/types.ts",
+      "utf8"
+    );
+
+    // Should support "import" feature in PREMIUM_FEATURES
+    expect(typesFile).toContain('"import"');
+    expect(typesFile).toContain("PREMIUM_FEATURES");
   });
 
   test("Dashboard uses hasFeature('import') to gate Import button", async ({
