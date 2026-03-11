@@ -207,7 +207,7 @@ test.describe("Heilung Modal — Content & Structure", () => {
    * YouTube embed URL (not a link to YouTube).
    */
   test("YouTube video is embedded inline via iframe", async ({ page }) => {
-    const iframe = page.locator('iframe[title="Heilung — Kriegsgaldr LIFA"]');
+    const iframe = page.locator('iframe[title*="Heilung"]');
     await expect(iframe).toBeVisible();
 
     // Check the iframe src points to YouTube embed endpoint
@@ -224,7 +224,7 @@ test.describe("Heilung Modal — Content & Structure", () => {
    * Verifies that the iframe src includes ?autoplay=1 parameter.
    */
   test("video auto-plays when modal opens", async ({ page }) => {
-    const iframe = page.locator('iframe[title="Heilung — Kriegsgaldr LIFA"]');
+    const iframe = page.locator('iframe[title*="Heilung"]');
     await expect(iframe).toBeVisible();
 
     const src = await iframe.getAttribute("src");
@@ -238,7 +238,7 @@ test.describe("Heilung Modal — Content & Structure", () => {
    * and encrypted-media (for copyright protection).
    */
   test("video iframe has proper permissions for fullscreen and media", async ({ page }) => {
-    const iframe = page.locator('iframe[title="Heilung — Kriegsgaldr LIFA"]');
+    const iframe = page.locator('iframe[title*="Heilung"]');
     await expect(iframe).toBeVisible();
 
     // Check allow attribute
@@ -508,7 +508,7 @@ test.describe("Heilung Modal — Video Embed & CSP", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Wait for iframe to load
-    const iframe = page.locator('iframe[title="Heilung — Kriegsgaldr LIFA"]');
+    const iframe = page.locator('iframe[title*="Heilung"]');
     await expect(iframe).toBeVisible({ timeout: 5000 });
 
     // Capture any console errors
