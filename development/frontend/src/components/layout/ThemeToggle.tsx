@@ -1,17 +1,19 @@
 "use client";
 
 /**
- * ThemeToggle -- three-way theme switcher: Light / Dark / System.
+ * ThemeToggle -- two-state dark ↔ light toggle.
  *
  * Uses `useTheme()` from `next-themes` to read and set the active theme.
- * Renders as a segmented button group with Sun, Moon, and Monitor icons.
+ * Renders as a toggle button switching between Sun and Moon icons.
+ *
+ * First load: defaults to system preference via `prefers-color-scheme`.
+ * After that, persists the user's explicit choice in localStorage.
  *
  * SSR-safe: renders a placeholder until the component is mounted to avoid
  * hydration mismatches (next-themes resolves the theme client-side).
  *
  * Accessibility:
- *   - `role="radiogroup"` with `aria-label="Theme"`
- *   - Each option is `role="radio"` with `aria-checked`
+ *   - `role="switch"` with `aria-checked` for the toggle variant
  *   - Touch-friendly: min 44x44px tap targets
  *
  * Styling:
@@ -22,19 +24,16 @@
 
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { Sun, Moon, Monitor } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 
 export const THEME_OPTIONS = [
   { value: "light", label: "Light", Icon: Sun },
   { value: "dark", label: "Dark", Icon: Moon },
-  { value: "system", label: "System", Icon: Monitor },
 ] as const;
 
-/** Cycle to the next theme: dark → light → system → dark */
+/** Toggle between dark and light themes */
 export function cycleTheme(currentTheme: string | undefined): string {
-  const current = THEME_OPTIONS.find((o) => o.value === currentTheme) ?? THEME_OPTIONS[2];
-  const nextIndex = (THEME_OPTIONS.indexOf(current) + 1) % THEME_OPTIONS.length;
-  return (THEME_OPTIONS[nextIndex] ?? THEME_OPTIONS[0]).value;
+  return currentTheme === "dark" ? "light" : "dark";
 }
 
 interface ThemeToggleProps {
@@ -48,13 +47,22 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   // SSR guard: avoid hydration mismatch by rendering placeholder until mounted.
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // On first load, if theme is "system", resolve it to an explicit "dark" or "light"
+  // based on the OS preference. This pins the choice and persists it to localStorage,
+  // so the theme never re-evaluates on OS changes (Ref #556).
+  useEffect(() => {
+    if (mounted && theme === "system" && resolvedTheme) {
+      setTheme(resolvedTheme);
+    }
+  }, [mounted, theme, resolvedTheme, setTheme]);
 
   if (!mounted) {
     // Placeholder with same dimensions to prevent layout shift.
@@ -76,49 +84,49 @@ export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
     }
     return (
       <div
-        className="h-[36px] w-[132px] rounded-sm bg-secondary/30"
+        className="h-[36px] w-[88px] rounded-sm bg-secondary/30"
         aria-hidden="true"
       />
     );
   }
 
+  // Resolve effective theme: use resolvedTheme to handle the brief "system" → explicit transition
+  const isDark = (resolvedTheme ?? theme) === "dark";
+  const CurrentIcon = isDark ? Moon : Sun;
+  const currentLabel = isDark ? "Dark" : "Light";
+  const nextLabel = isDark ? "Light" : "Dark";
+
   // Dropdown-icon variant: display-only icon for embedding inside a clickable menu row.
   // The parent row handles the click — this just renders the current theme icon.
   if (variant === "dropdown-icon") {
-    const current = THEME_OPTIONS.find((o) => o.value === theme) ?? THEME_OPTIONS[2];
-
     return (
       <span
         className="shrink-0 text-muted-foreground"
         aria-hidden="true"
       >
-        <current.Icon className="h-4 w-4" />
+        <CurrentIcon className="h-4 w-4" />
       </span>
     );
   }
 
-  // Icon variant: single cycling button
+  // Icon variant: single toggle button
   if (variant === "icon") {
-    const current = THEME_OPTIONS.find((o) => o.value === theme) ?? THEME_OPTIONS[2];
-    const nextIndex = (THEME_OPTIONS.indexOf(current) + 1) % THEME_OPTIONS.length;
-    const next = THEME_OPTIONS[nextIndex] ?? THEME_OPTIONS[0];
-
     return (
       <button
         type="button"
-        onClick={() => setTheme(next.value)}
+        onClick={() => setTheme(cycleTheme(theme))}
         className="flex items-center justify-center rounded-sm border border-border
                    text-muted-foreground hover:text-gold transition-colors"
         style={{ minWidth: 44, minHeight: 44 }}
-        aria-label={`Theme: ${current.label}. Click to switch to ${next.label}.`}
-        title={`Theme: ${current.label}`}
+        aria-label={`Theme: ${currentLabel}. Click to switch to ${nextLabel}.`}
+        title={`Theme: ${currentLabel}`}
       >
-        <current.Icon className="h-4 w-4" />
+        <CurrentIcon className="h-4 w-4" />
       </button>
     );
   }
 
-  // Inline variant: segmented button group
+  // Inline variant: two-button toggle
   return (
     <div
       role="radiogroup"
@@ -126,7 +134,7 @@ export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
       className="inline-flex items-center rounded-sm border border-border overflow-hidden"
     >
       {THEME_OPTIONS.map(({ value, label, Icon }) => {
-        const isActive = theme === value;
+        const isActive = (resolvedTheme ?? theme) === value;
         return (
           <button
             key={value}

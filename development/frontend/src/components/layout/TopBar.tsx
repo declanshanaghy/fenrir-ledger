@@ -448,7 +448,7 @@ export function TopBar() {
               {/* Separator between profile header and menu items */}
               <div className="h-px bg-border" role="separator" aria-hidden="true" />
 
-              {/* Theme row — click anywhere to cycle dark → light → system */}
+              {/* Theme row — click anywhere to toggle dark ↔ light */}
               <button
                 type="button"
                 role="menuitem"
