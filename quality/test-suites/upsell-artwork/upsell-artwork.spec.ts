@@ -49,9 +49,12 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
         const darkImage = page.locator('img[src*="valhalla-dark.png"]');
         const lightImage = page.locator('img[src*="valhalla-light.png"]');
 
-        // Both dark and light variants should be present
-        await expect(darkImage).toBeDefined();
-        await expect(lightImage).toBeDefined();
+        // Both dark and light variants should be present (check src attribute exists)
+        const darkSrc = await darkImage.getAttribute("src");
+        const lightSrc = await lightImage.getAttribute("src");
+
+        expect(darkSrc).toBeTruthy();
+        expect(lightSrc).toBeTruthy();
 
         // Verify alt text references Valhalla
         await expect(darkImage).toHaveAttribute(
@@ -70,6 +73,8 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
       await expect(valhallaSection).toBeVisible();
 
       // Check that it uses valhalla-dark/light.png
+      // Note: Images have CSS classes "hidden dark:block" and "block dark:hidden"
+      // so we check src attribute instead of visibility
       const featuresDarkImage = valhallaSection.locator(
         'img[src*="valhalla-dark.png"]'
       );
@@ -77,8 +82,9 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
         'img[src*="valhalla-light.png"]'
       );
 
-      await expect(featuresDarkImage).toBeVisible();
-      await expect(featuresLightImage).toBeVisible();
+      // Both should exist in DOM (check count > 0)
+      expect(await featuresDarkImage.count()).toBeGreaterThan(0);
+      expect(await featuresLightImage.count()).toBeGreaterThan(0);
 
       // Both paths should reference the same base filename "valhalla"
       const darkSrc = await featuresDarkImage.getAttribute("src");
@@ -99,12 +105,12 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
       const howlSection = page.locator('[id="the-howl"]');
       await expect(howlSection).toBeVisible();
 
-      // Verify /features uses garmr artwork
+      // Verify /features uses garmr artwork (check existence, not visibility due to CSS classes)
       const darkImage = howlSection.locator('img[src*="garmr-dark.png"]');
       const lightImage = howlSection.locator('img[src*="garmr-light.png"]');
 
-      await expect(darkImage).toBeVisible();
-      await expect(lightImage).toBeVisible();
+      expect(await darkImage.count()).toBeGreaterThan(0);
+      expect(await lightImage.count()).toBeGreaterThan(0);
     });
 
     test("KarlUpsellDialog Howl variant uses garmr featureImage prop", async () => {
@@ -137,12 +143,12 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
       const velocitySection = page.locator('[id="velocity-management"]');
       await expect(velocitySection).toBeVisible();
 
-      // Verify /features uses norns artwork
+      // Verify /features uses norns artwork (check existence, not visibility)
       const darkImage = velocitySection.locator('img[src*="norns-dark.png"]');
       const lightImage = velocitySection.locator('img[src*="norns-light.png"]');
 
-      await expect(darkImage).toBeVisible();
-      await expect(lightImage).toBeVisible();
+      expect(await darkImage.count()).toBeGreaterThan(0);
+      expect(await lightImage.count()).toBeGreaterThan(0);
     });
 
     test("KarlUpsellDialog Velocity variant uses norns featureImage prop", async () => {
@@ -172,12 +178,12 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
       const importSection = page.locator('[id="smart-import"]');
       await expect(importSection).toBeVisible();
 
-      // Verify /features uses mimir artwork
+      // Verify /features uses mimir artwork (check existence, not visibility)
       const darkImage = importSection.locator('img[src*="mimir-dark.png"]');
       const lightImage = importSection.locator('img[src*="mimir-light.png"]');
 
-      await expect(darkImage).toBeVisible();
-      await expect(lightImage).toBeVisible();
+      expect(await darkImage.count()).toBeGreaterThan(0);
+      expect(await lightImage.count()).toBeGreaterThan(0);
     });
 
     test("KarlUpsellDialog Import variant uses mimir featureImage prop", async () => {
@@ -270,46 +276,40 @@ test.describe("Upsell Artwork Alignment — Issue #560", () => {
   });
 
   test.describe("Theme consistency", () => {
-    test("images render correctly in dark mode", async ({ page }) => {
-      // Set dark theme
-      await page.evaluate(() => {
-        document.documentElement.classList.add("dark");
-      });
-
+    test("dark images have correct CSS classes for dark mode visibility", async ({
+      page,
+    }) => {
       await page.goto("/features", { waitUntil: "networkidle" });
 
-      // Check that dark images are visible (not hidden)
+      // Check that dark images exist
       const darkImages = page.locator("img[src*='-dark.png']");
       const darkImageCount = await darkImages.count();
 
       expect(darkImageCount).toBeGreaterThan(0);
 
       // Verify they have the hidden dark:block class structure
-      // (dark:block makes them visible in dark mode)
+      // (hidden by default, visible in dark mode via dark:block)
       for (let i = 0; i < Math.min(darkImageCount, 3); i++) {
         const img = darkImages.nth(i);
         const classList = await img.getAttribute("class");
-        // Should contain "dark:block" meaning visible in dark mode
+        // Should contain "hidden dark:block" or similar pattern
         expect(classList).toContain("dark:block");
       }
     });
 
-    test("images render correctly in light mode", async ({ page }) => {
-      // Remove dark theme
-      await page.evaluate(() => {
-        document.documentElement.classList.remove("dark");
-      });
-
+    test("light images have correct CSS classes for light mode visibility", async ({
+      page,
+    }) => {
       await page.goto("/features", { waitUntil: "networkidle" });
 
-      // Check that light images are visible
+      // Check that light images exist
       const lightImages = page.locator("img[src*='-light.png']");
       const lightImageCount = await lightImages.count();
 
       expect(lightImageCount).toBeGreaterThan(0);
 
       // Verify they have the block dark:hidden class structure
-      // (block makes them visible, dark:hidden hides in dark mode)
+      // (visible by default, hidden in dark mode via dark:hidden)
       for (let i = 0; i < Math.min(lightImageCount, 3); i++) {
         const img = lightImages.nth(i);
         const classList = await img.getAttribute("class");
