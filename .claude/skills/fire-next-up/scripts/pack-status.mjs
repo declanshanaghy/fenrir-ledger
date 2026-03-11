@@ -1,6 +1,7 @@
-#!/usr/bin/env -S npx tsx
+#!/usr/bin/env node
 
-// .claude/skills/fire-next-up/scripts/pack-status.ts
+// .claude/skills/fire-next-up/scripts/pack-status.mjs
+// Full pack status dashboard via GraphQL — ES module script (no TypeScript needed)
 import { execSync } from "child_process";
 var OWNER = "declanshanaghy";
 var REPO = "fenrir-ledger";
@@ -619,7 +620,7 @@ switch (cmd) {
     break;
   default:
     console.error(
-      "Usage: pack-status.ts [--status] [--chain-status N] [--resume-detect N] [--peek] [--move N <status>]"
+      "Usage: pack-status.mjs [--status] [--chain-status N] [--resume-detect N] [--peek] [--move N <status>]"
     );
     process.exit(1);
 }

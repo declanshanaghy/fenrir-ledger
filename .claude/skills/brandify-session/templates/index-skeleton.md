@@ -18,7 +18,7 @@ by date (newest first).
 
 ## Adding a new chronicle
 
-Simply write the MDX file to `content/blog/{{NAME}}.mdx` using `generate-chronicle.ts`.
+Simply write the MDX file to `content/blog/{{NAME}}.mdx` using `generate-chronicle.mjs`.
 The index and detail pages will pick it up automatically on the next build.
 
 The chronicle will be available at `/chronicles/{{NAME}}`.

@@ -1,6 +1,7 @@
-#!/usr/bin/env -S npx tsx
+#!/usr/bin/env node
 
-// .claude/skills/brandify-session/scripts/generate-chronicle.ts
+// .claude/skills/brandify-session/scripts/generate-chronicle.mjs
+// Generate a session chronicle MDX from JSON input — ES module script (no TypeScript needed)
 import { readFileSync, writeFileSync } from "fs";
 var ROMAN = [
   "I",
