@@ -104,7 +104,7 @@ test.describe("Auth Callback — Google Error Param", () => {
     page,
   }) => {
     // Spec: auth/callback/page.tsx — errorParam → `Google returned: ${errorParam}`
-    await page.goto("/auth/callback?error=access_denied", {
+    await page.goto("/ledger/auth/callback?error=access_denied", {
       waitUntil: "networkidle",
     });
 
@@ -115,7 +115,7 @@ test.describe("Auth Callback — Google Error Param", () => {
 
   test("shows error heading when Google returns an error", async ({ page }) => {
     // Spec: auth/callback/page.tsx — error state renders destructive heading
-    await page.goto("/auth/callback?error=access_denied", {
+    await page.goto("/ledger/auth/callback?error=access_denied", {
       waitUntil: "networkidle",
     });
 
@@ -150,7 +150,7 @@ test.describe("Auth Callback — PKCE Session Data Missing", () => {
     //       if (!raw) → "PKCE session data missing. Please try signing in again."
     // Note: callback page has a 100ms delay to prevent race conditions with React StrictMode
     // Navigate with valid-looking code + state but no PKCE session data
-    await page.goto("/auth/callback?code=fake_code&state=fake_state", {
+    await page.goto("/ledger/auth/callback?code=fake_code&state=fake_state", {
       waitUntil: "networkidle",
     });
 
@@ -166,7 +166,7 @@ test.describe("Auth Callback — PKCE Session Data Missing", () => {
   }) => {
     // Spec: error state always renders the sign-in recovery link
     // Note: callback page has a 100ms delay to prevent race conditions with React StrictMode
-    await page.goto("/auth/callback?code=fake_code&state=fake_state", {
+    await page.goto("/ledger/auth/callback?code=fake_code&state=fake_state", {
       waitUntil: "networkidle",
     });
 
@@ -200,7 +200,7 @@ test.describe("Auth Callback — CSRF State Mismatch", () => {
     });
 
     // Navigate with a DIFFERENT state in the URL — triggers CSRF check
-    await page.goto("/auth/callback?code=fake_code&state=different-state-xyz", {
+    await page.goto("/ledger/auth/callback?code=fake_code&state=different-state-xyz", {
       waitUntil: "networkidle",
     });
 
@@ -269,7 +269,7 @@ test.describe("Auth Callback — Corrupt PKCE Data", () => {
       sessionStorage.setItem("fenrir:pkce", "this-is-not-valid-json{{{{");
     });
 
-    await page.goto("/auth/callback?code=fake_code&state=any-state", {
+    await page.goto("/ledger/auth/callback?code=fake_code&state=any-state", {
       waitUntil: "networkidle",
     });
 
