@@ -275,7 +275,20 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        throw new Error((err as { error_description?: string }).error_description ?? "Checkout failed");
+        const typed = err as { error?: string; error_description?: string };
+
+        // 409 "already_subscribed" — user already has an active subscription.
+        // Refresh entitlement state and redirect as success instead of throwing.
+        if (response.status === 409 && typed.error === "already_subscribed") {
+          await refreshEntitlement();
+          window.location.href =
+            effectiveReturnPath +
+            (effectiveReturnPath.includes("?") ? "&" : "?") +
+            "stripe=success";
+          return;
+        }
+
+        throw new Error(typed.error_description ?? "Checkout failed");
       }
 
       const data = (await response.json()) as { url?: string; revived?: boolean };
@@ -292,7 +305,7 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
       );
       throw err;
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshEntitlement]);
 
   // -- Stripe: Open Customer Portal ------------------------------------------
 
