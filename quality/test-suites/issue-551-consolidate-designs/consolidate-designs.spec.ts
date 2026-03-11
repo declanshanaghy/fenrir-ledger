@@ -14,6 +14,11 @@ import * as path from "path";
 
 const REPO_ROOT = path.resolve(__dirname, "../../../..");
 
+// Debug: log REPO_ROOT and verify it's correct
+console.log("[DEBUG] REPO_ROOT:", REPO_ROOT);
+console.log("[DEBUG] __dirname:", __dirname);
+console.log("[DEBUG] product exists:", require("fs").existsSync(path.join(REPO_ROOT, "product")));
+
 function fileExists(filePath: string): boolean {
   try {
     return fs.existsSync(filePath);
