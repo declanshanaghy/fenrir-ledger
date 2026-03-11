@@ -10,7 +10,8 @@
  *   1. Authenticate the user via Google id_token (requireAuth)
  *   2. Look up the Stripe entitlement in KV
  *   3. Cancel the subscription via Stripe API (if still active)
- *   4. Delete the entitlement record from Vercel KV
+ *   4. Write a canceled-state entitlement to KV preserving stripeCustomerId
+ *      (prevents duplicate Stripe customers on re-subscribe — Ref #545)
  *   5. Return success (idempotent — returns success even if no record existed)
  *
  * @see ADR-010 for the Stripe Direct integration decision
@@ -21,7 +22,7 @@ import { requireAuth } from "@/lib/auth/require-auth";
 import { stripe } from "@/lib/stripe/api";
 import {
   getStripeEntitlement,
-  deleteStripeEntitlement,
+  setStripeEntitlement,
 } from "@/lib/kv/entitlement-store";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
@@ -78,8 +79,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Delete the entitlement from KV (idempotent)
-    await deleteStripeEntitlement(googleSub);
+    // Preserve the customer ID in KV so re-subscribe reuses the same
+    // Stripe customer instead of creating a duplicate (Ref #545).
+    // Write a canceled-state entitlement instead of deleting the record.
+    if (existing?.stripeCustomerId) {
+      await setStripeEntitlement(googleSub, {
+        tier: "thrall",
+        active: false,
+        stripeCustomerId: existing.stripeCustomerId,
+        stripeSubscriptionId: existing.stripeSubscriptionId,
+        stripeStatus: "canceled",
+        cancelAtPeriodEnd: false,
+        currentPeriodEnd: existing.currentPeriodEnd ?? new Date().toISOString(),
+        linkedAt: existing.linkedAt ?? new Date().toISOString(),
+        checkedAt: new Date().toISOString(),
+      });
+
+      log.debug("POST /api/stripe/unlink: wrote canceled entitlement preserving customer ID", {
+        googleSub,
+        stripeCustomerId: existing.stripeCustomerId,
+      });
+    }
 
     log.debug("POST /api/stripe/unlink returning", {
       status: 200,
