@@ -80,8 +80,8 @@ export function buildCspDirectives(nonce?: string): string[] {
       "https://vercel.live",
     ].join(" "),
 
-    // Frames: Google Picker, OAuth consent, Stripe.js, and Vercel toolbar
-    "frame-src https://accounts.google.com https://docs.google.com https://drive.google.com https://js.stripe.com https://hooks.stripe.com https://vercel.live",
+    // Frames: Google Picker, OAuth consent, Stripe.js, Vercel toolbar, and YouTube embed (Heilung easter egg)
+    "frame-src https://accounts.google.com https://docs.google.com https://drive.google.com https://js.stripe.com https://hooks.stripe.com https://vercel.live https://www.youtube.com",
 
     // Form actions: self only
     "form-action 'self'",

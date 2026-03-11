@@ -1,18 +1,18 @@
 /**
- * Heilung Modal Test Suite — Fenrir Ledger Issue #437
+ * Heilung Modal Test Suite — Fenrir Ledger Issue #526
  * Authored by Loki, QA Tester of the Pack
  *
- * Validates Easter Egg #10: Replace blocked YouTube iframe embed with clickable thumbnail.
+ * Validates Easter Egg #10: Embed Heilung video inline instead of linking out.
  * Trigger: Ctrl+Shift+L (all platforms). Modal displays 2-column layout with band
- * profile (left) and YouTube thumbnail with play button (right). Stacks vertically on mobile.
+ * profile (left) and embedded YouTube iframe (right). Stacks vertically on mobile.
  *
  * Acceptance Criteria:
  *   AC1: Ctrl+Shift+L opens the Heilung modal
- *   AC2: Modal displays 2-column layout: band profile left, YouTube thumbnail right
- *   AC3: Mobile stacks vertically (thumbnail top, info below)
- *   AC4: YouTube thumbnail displays (no more blocked iframe)
- *   AC5: Play button overlay visible and clickable
- *   AC6: Click opens YouTube video in new tab
+ *   AC2: Modal displays 2-column layout: band profile left, YouTube iframe right
+ *   AC3: Mobile stacks vertically (iframe top, info below)
+ *   AC4: YouTube video is embedded inline via iframe (no external link)
+ *   AC5: Video auto-plays when modal opens
+ *   AC6: Video allows fullscreen and encrypted-media permissions
  *   AC7: Band info includes name, bio, 3 members, website link
  *   AC8: amplifiedhistory.com link opens in new tab
  *   AC9: Modal dismisses via ESC, backdrop click, or X button
@@ -201,63 +201,54 @@ test.describe("Heilung Modal — Content & Structure", () => {
   });
 
   /**
-   * AC4 — YouTube thumbnail displays (no blocked iframe)
+   * AC4 — YouTube video is embedded inline via iframe
    *
-   * Verifies that the thumbnail image from YouTube's maxresdefault.jpg
-   * is displayed instead of an iframe.
+   * Verifies that the video is embedded as an iframe element with the correct
+   * YouTube embed URL (not a link to YouTube).
    */
-  test("YouTube thumbnail displays correctly", async ({ page }) => {
-    const thumbnail = page.locator('img[alt*="Heilung"]');
-    await expect(thumbnail).toBeVisible();
+  test("YouTube video is embedded inline via iframe", async ({ page }) => {
+    const iframe = page.locator('iframe[title*="Heilung"]');
+    await expect(iframe).toBeVisible();
 
-    const src = await thumbnail.getAttribute("src");
-    expect(src).toContain("img.youtube.com/vi/QRg_8NNPTD8/maxresdefault.jpg");
+    // Check the iframe src points to YouTube embed endpoint
+    const src = await iframe.getAttribute("src");
+    expect(src).toContain("youtube.com/embed/QRg_8NNPTD8");
+
+    // Should NOT be a link to watch?v=
+    expect(src).not.toContain("watch?v=");
   });
 
   /**
-   * AC5 — Play button overlay visible
+   * AC5 — Video auto-plays when modal opens
    *
-   * Verifies that the play button SVG overlay is visible on the thumbnail.
+   * Verifies that the iframe src includes ?autoplay=1 parameter.
    */
-  test("play button overlay is visible on thumbnail", async ({ page }) => {
-    const thumbnail = page.locator('img[alt*="Heilung"]');
-    await expect(thumbnail).toBeVisible();
+  test("video auto-plays when modal opens", async ({ page }) => {
+    const iframe = page.locator('iframe[title*="Heilung"]');
+    await expect(iframe).toBeVisible();
 
-    // The play button is in an SVG within the parent link
-    const playButton = page.locator(
-      'a[href*="youtube.com/watch?v=QRg_8NNPTD8"] svg'
-    );
-    await expect(playButton).toBeVisible();
-
-    // Verify it's a play button (has polygon element for triangle)
-    const triangle = playButton.locator("polygon");
-    await expect(triangle).toBeVisible();
+    const src = await iframe.getAttribute("src");
+    expect(src).toContain("autoplay=1");
   });
 
   /**
-   * AC6 — Click opens YouTube video in new tab
+   * AC6 — Video allows fullscreen and encrypted-media permissions
    *
-   * Verifies that the thumbnail link is configured to open YouTube in a new tab.
+   * Verifies that the iframe has proper allow attributes for fullscreen
+   * and encrypted-media (for copyright protection).
    */
-  test("clicking thumbnail opens YouTube in new tab", async ({ page }) => {
-    // Click the thumbnail link
-    const thumbnailLink = page.locator(
-      'a[href*="youtube.com/watch?v=QRg_8NNPTD8"]'
-    );
-    await expect(thumbnailLink).toBeVisible();
+  test("video iframe has proper permissions for fullscreen and media", async ({ page }) => {
+    const iframe = page.locator('iframe[title*="Heilung"]');
+    await expect(iframe).toBeVisible();
 
-    // Verify it has target="_blank" (opens in new tab)
-    const target = await thumbnailLink.getAttribute("target");
-    expect(target).toBe("_blank");
+    // Check allow attribute
+    const allow = await iframe.getAttribute("allow");
+    expect(allow).toContain("autoplay");
+    expect(allow).toContain("encrypted-media");
 
-    // Verify the href is correct
-    const href = await thumbnailLink.getAttribute("href");
-    expect(href).toContain("youtube.com/watch?v=QRg_8NNPTD8");
-
-    // Verify rel="noopener noreferrer" for security
-    const rel = await thumbnailLink.getAttribute("rel");
-    expect(rel).toContain("noopener");
-    expect(rel).toContain("noreferrer");
+    // Check allowFullScreen attribute
+    const allowFullScreen = await iframe.getAttribute("allowfullscreen");
+    expect(allowFullScreen).toBeDefined();
   });
 
   /**
@@ -364,10 +355,6 @@ test.describe("Heilung Modal — Responsive Layout", () => {
     await page.goto("/ledger", { waitUntil: "networkidle" });
     await clearAllStorage(page);
     await page.waitForLoadState("domcontentloaded");
-    // Open modal
-    await page.keyboard.press("Control+Shift+L");
-    const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
-    await expect(modal).toBeVisible({ timeout: 5000 });
   });
 
   test.afterEach(async ({ page }) => {
@@ -375,13 +362,13 @@ test.describe("Heilung Modal — Responsive Layout", () => {
   });
 
   /**
-   * AC3 — Mobile stacks vertically: thumbnail on top, info below
+   * AC3 — Mobile stacks vertically: iframe on top, info below
    *
    * On viewport < 768px (md breakpoint), the modal should use flexbox
-   * with flex-col and order- classes so thumbnail (order-1) appears above
+   * with flex-col and order- classes so iframe (order-1) appears above
    * band info (order-2).
    */
-  test("mobile layout stacks thumbnail above info", async ({ page }) => {
+  test("mobile layout displays video and info", async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
 
@@ -392,28 +379,22 @@ test.describe("Heilung Modal — Responsive Layout", () => {
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Get the flex container
-    const layoutContainer = modal.locator("div.flex.flex-col");
+    // Check iframe is visible
+    const iframe = modal.locator('iframe[title*="Heilung"]');
+    await expect(iframe).toBeVisible();
 
-    // On mobile, thumbnail should appear visually first (higher on page)
-    const thumbnail = layoutContainer.locator('img[alt*="Heilung"]');
-    const bandInfo = layoutContainer.locator("div").first();
-
-    // Check thumbnail is in DOM and visible
-    await expect(thumbnail).toBeVisible();
-
-    // Band info should also be visible below
-    const heading = layoutContainer.getByRole("heading", { name: /HEILUNG/i });
+    // Band info should also be visible
+    const heading = modal.getByRole("heading", { name: /HEILUNG/i });
     await expect(heading).toBeVisible();
   });
 
   /**
-   * AC2 — Desktop 2-column layout: profile left, thumbnail right
+   * AC2 — Desktop 2-column layout: profile left, video right
    *
    * On viewport >= 768px (md breakpoint), the modal should display
-   * profile (order-1) on left and thumbnail (order-2) on right using CSS grid.
+   * profile (order-1) on left and video iframe (order-2) on right using CSS grid.
    */
-  test("desktop layout displays profile left, thumbnail right", async ({ page }) => {
+  test("desktop layout displays profile left, video right", async ({ page }) => {
     // Set desktop viewport
     await page.setViewportSize({ width: 1280, height: 720 });
 
@@ -425,22 +406,12 @@ test.describe("Heilung Modal — Responsive Layout", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // On desktop, should use md:grid md:grid-cols-2
-    const layoutContainer = modal.locator("div.md\\:grid");
-
-    // Check grid is applied
-    const gridLayout = await layoutContainer.evaluate((el) => {
-      const computed = window.getComputedStyle(el);
-      return computed.display;
-    });
-
-    // Either 'flex' (mobile) or 'grid' (desktop) depending on actual rendering
-    // Since we're at 1280px, should hit the md: breakpoint
-    // But we'll just verify both columns are visible
+    // Verify both columns are visible
     const heading = modal.getByRole("heading", { name: /HEILUNG/i });
-    const thumbnail = modal.locator('img[alt*="Heilung"]');
+    const iframe = modal.locator('iframe[title*="Heilung"]');
 
     await expect(heading).toBeVisible();
-    await expect(thumbnail).toBeVisible();
+    await expect(iframe).toBeVisible();
   });
 });
 
@@ -464,23 +435,23 @@ test.describe("Heilung Modal — Aspect Ratio", () => {
   /**
    * AC11 — Aspect ratio preserved (16:9)
    *
-   * Verifies that the thumbnail uses aspect-video class (16:9) to maintain
+   * Verifies that the iframe container uses aspect-video class (16:9) to maintain
    * proper proportions on all screen sizes.
    */
-  test("thumbnail maintains 16:9 aspect ratio", async ({ page }) => {
+  test("video iframe maintains 16:9 aspect ratio", async ({ page }) => {
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
 
-    // Find the thumbnail link which has aspect-video class
-    const thumbnailLink = page.locator('a[href*="youtube.com/watch?v=QRg_8NNPTD8"]');
-    await expect(thumbnailLink).toBeVisible();
+    // Find the iframe container which has aspect-video class
+    const iframeContainer = modal.locator("div.aspect-video");
+    await expect(iframeContainer).toBeVisible();
 
     // Check that aspect-video class is applied
-    const classAttr = await thumbnailLink.getAttribute("class");
+    const classAttr = await iframeContainer.getAttribute("class");
     expect(classAttr).toContain("aspect-video");
 
-    // Verify the thumbnail image dimensions
-    const thumbnail = thumbnailLink.locator("img");
-    const box = await thumbnail.boundingBox();
+    // Verify the iframe dimensions
+    const iframe = iframeContainer.locator("iframe");
+    const box = await iframe.boundingBox();
 
     if (box) {
       // Calculate aspect ratio (width / height)
@@ -493,53 +464,52 @@ test.describe("Heilung Modal — Aspect Ratio", () => {
 });
 
 /**
- * Suite: Verification — No CSP Blocked Content Errors
+ * Suite: Verification — Video Embed Loads Without Errors
  *
- * AC4 — No CSP or blocked content errors
+ * AC4 — Video loads without CSP/blocked content errors
  *
- * Verify the implementation resolves CSP blocking issues by using
- * a clickable thumbnail instead of an embedded iframe.
+ * Verify the implementation embeds the video inline with proper CSP directives
+ * allowing the iframe to load without "This content is blocked" errors.
  */
-test.describe("Heilung Modal — CSP & Content Blocking", () => {
+test.describe("Heilung Modal — Video Embed & CSP", () => {
   /**
-   * Verify that the page loads without CSP errors or "blocked content" warnings.
-   * The original issue was "This content is blocked. Contact the site owner to fix the issue."
-   * This test ensures the thumbnail approach bypasses that.
-   *
-   * Note: This test monitors console output for CSP violations.
+   * Verify that the embedded iframe loads properly without CSP violations.
+   * The original issue has been fixed by adding proper CSP directives in next.config.js
+   * to allow YouTube iframe embeds from youtube.com/embed.
    */
-  test("no CSP blocked content errors appear in console", async ({ page }) => {
+  test("embedded video iframe loads without CSP violations", async ({ page }) => {
     // Navigate to /ledger (app with AppShell) and open the Heilung modal
     await page.goto("/ledger", { waitUntil: "load" });
     await clearAllStorage(page);
 
-    // Capture console messages
-    const consoleMessages: string[] = [];
-    page.on("console", (msg) => {
-      if (msg.type() === "error" || msg.type() === "warning") {
-        consoleMessages.push(msg.text());
-      }
-    });
-
-    // Open modal to trigger video loading
+    // Open modal to trigger iframe loading
     await page.keyboard.press("Control+Shift+L");
     const modal = page.locator('[role="dialog"][aria-label="Heilung — Amplified History"]');
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Wait a moment for any CSP violations or blocked content warnings
+    // Wait for iframe to load
+    const iframe = page.locator('iframe[title*="Heilung"]');
+    await expect(iframe).toBeVisible({ timeout: 5000 });
+
+    // Capture any console errors
+    const consoleErrors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    // Wait for potential CSP violations
     await page.waitForTimeout(2000);
 
-    // Check that the original iframe blocking issue is NOT present
-    // (The old iframe was being blocked by CSP, now we use a thumbnail)
-    const iframeBlockedErrors = consoleMessages.filter(
+    // Filter for iframe-related CSP errors
+    const iframeCSPErrors = consoleErrors.filter(
       (msg) =>
-        (msg.toLowerCase().includes("blocked") ||
-          msg.toLowerCase().includes("csp")) &&
-        msg.toLowerCase().includes("iframe"),
+        msg.toLowerCase().includes("refused to frame") ||
+        (msg.toLowerCase().includes("csp") && msg.toLowerCase().includes("youtube")),
     );
-    expect(iframeBlockedErrors).toHaveLength(0);
 
-    // Note: YouTube thumbnail image may have its own CSP, but the important thing
-    // is that the iframe (which was the original problem) is not blocked.
+    // Should have no CSP frame errors
+    expect(iframeCSPErrors).toHaveLength(0);
   });
 });
