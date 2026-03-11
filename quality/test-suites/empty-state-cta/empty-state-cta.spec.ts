@@ -41,7 +41,7 @@ test.describe("AC-1 & AC-4 — Single primary CTA (no duplicate Add Card)", () =
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
     // Count all /cards/new links — must be exactly 1 (EmptyState only, no header dupe).
-    const addCardLinks = page.locator('a[href="/cards/new"]');
+    const addCardLinks = page.locator('a[href="/ledger/cards/new"]');
     await expect(addCardLinks).toHaveCount(1);
   });
 
@@ -60,7 +60,7 @@ test.describe("AC-1 & AC-4 — Single primary CTA (no duplicate Add Card)", () =
     await expect(emptyState).toBeVisible();
 
     // Add Card link lives inside the EmptyState.
-    const emptyStateAddCard = emptyState.locator('a[href="/cards/new"]');
+    const emptyStateAddCard = emptyState.locator('a[href="/ledger/cards/new"]');
     await expect(emptyStateAddCard).toBeVisible();
     await expect(emptyStateAddCard).toContainText("Add Card");
   });
@@ -78,7 +78,7 @@ test.describe("AC-1 & AC-4 — Single primary CTA (no duplicate Add Card)", () =
     await page.waitForSelector('text=/\\d+ card/', { timeout: 10000 });
 
     // The header Add Card link must now be visible.
-    const headerAddCard = page.locator('a[href="/cards/new"]');
+    const headerAddCard = page.locator('a[href="/ledger/cards/new"]');
     await expect(headerAddCard).toBeVisible();
   });
 });
@@ -166,7 +166,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
 
     // Navigation to /sign-in must happen.
     await page.waitForURL(/\/sign-in/, { timeout: 10000 });
-    expect(page.url()).toContain("/sign-in");
+    expect(page.url()).toContain("/ledger/sign-in");
   });
 
   test("subtle nudge is wrapped in a muted-foreground paragraph (not a gold CTA)", async ({
@@ -220,7 +220,7 @@ test.describe("Edge cases", () => {
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
-    const addCardLinks = page.locator('a[href="/cards/new"]');
+    const addCardLinks = page.locator('a[href="/ledger/cards/new"]');
     await expect(addCardLinks).toHaveCount(1);
 
     const addCardLink = addCardLinks.first();
@@ -266,7 +266,7 @@ test.describe("Edge cases", () => {
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
     // Exactly one /cards/new link (EmptyState only).
-    const addCardLinks = page.locator('a[href="/cards/new"]');
+    const addCardLinks = page.locator('a[href="/ledger/cards/new"]');
     await expect(addCardLinks).toHaveCount(1);
 
     // Gold-bordered "Sign in to sync" button from the full banner must not be visible.

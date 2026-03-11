@@ -175,7 +175,7 @@ test.describe("Edit Card (card-crud) — Save", () => {
     await page.locator('button[type="submit"]').click();
 
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/");
+    expect(page.url()).not.toContain("/ledger/cards/");
   });
 
   test("updated card name persists and appears on dashboard", async ({
@@ -290,12 +290,12 @@ test.describe("Edit Card (card-crud) — Edge Cases", () => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto("/cards/totally-nonexistent-card-id-xyz/edit", {
+    await page.goto("/ledger/cards/totally-nonexistent-card-id-xyz/edit", {
       waitUntil: "networkidle",
     });
 
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/");
+    expect(page.url()).not.toContain("/ledger/cards/");
   });
 
   test("edit form is responsive at 375px viewport", async ({ page }) => {

@@ -87,7 +87,7 @@ test.describe("Delete Card — Confirm Action", () => {
     await confirmBtn.click();
 
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/");
+    expect(page.url()).not.toContain("/ledger/cards/");
   });
 
   test("deleted card no longer appears on dashboard", async ({ page }) => {

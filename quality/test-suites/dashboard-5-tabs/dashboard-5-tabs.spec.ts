@@ -171,7 +171,7 @@ test.describe("Dashboard 5-Tabs QA — Issue #352", () => {
     await setupDashboard(page, testCards);
 
     // Navigate to the old /valhalla route
-    await page.goto("/valhalla", { waitUntil: "networkidle" });
+    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
 
     // Should redirect to the dashboard with ?tab=valhalla in URL
     expect(page.url()).toContain("/?tab=valhalla");

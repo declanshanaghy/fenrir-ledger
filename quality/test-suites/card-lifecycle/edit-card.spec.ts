@@ -47,12 +47,12 @@ test.describe("Edit Card — Pre-populated Fields", () => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto("/cards/nonexistent-id-that-does-not-exist/edit", {
+    await page.goto("/ledger/cards/nonexistent-id-that-does-not-exist/edit", {
       waitUntil: "networkidle",
     });
 
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/");
+    expect(page.url()).not.toContain("/ledger/cards/");
   });
 });
 
@@ -75,7 +75,7 @@ test.describe("Edit Card — Save Changes", () => {
     await page.locator('button[type="submit"]').click();
 
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/");
+    expect(page.url()).not.toContain("/ledger/cards/");
   });
 
   test("updated card name is visible on dashboard after save", async ({

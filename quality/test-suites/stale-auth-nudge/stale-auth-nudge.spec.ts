@@ -205,6 +205,6 @@ test.describe("AC-4: Sign-in navigation", () => {
     await getDesktopSignInBtn(page).click();
     await page.waitForURL("**/sign-in**", { timeout: 5000 });
 
-    expect(page.url()).toContain("/sign-in");
+    expect(page.url()).toContain("/ledger/sign-in");
   });
 });

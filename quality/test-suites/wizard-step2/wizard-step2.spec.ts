@@ -21,7 +21,7 @@ import {
 async function goToNewCard(page: import("@playwright/test").Page) {
   await page.goto("/", { waitUntil: "networkidle" });
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-  await page.goto("/cards/new", { waitUntil: "domcontentloaded" });
+  await page.goto("/ledger/cards/new", { waitUntil: "domcontentloaded" });
   await page.locator("#cardName").waitFor({ state: "visible", timeout: 15000 });
 }
 
@@ -75,7 +75,7 @@ test.describe("Wizard Step 2 — Validation", () => {
     await page.locator('button:has-text("Cancel")').click();
 
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/");
+    expect(page.url()).not.toContain("/ledger/cards/");
     const bodyText = await page.locator("body").innerText();
     expect(bodyText).not.toContain("Should Not Be Saved");
   });
@@ -115,7 +115,7 @@ test.describe("Wizard Step 2 — Save Card", () => {
 
     await page.locator('button[type="submit"]').click();
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/");
+    expect(page.url()).not.toContain("/ledger/cards/");
   });
 
   test("Save Card from Step 2 persists card to dashboard", async ({ page }) => {
@@ -141,7 +141,7 @@ test.describe("Wizard Step 2 — Save Card", () => {
     await goToStep2(page);
     await page.locator('button:has-text("Cancel")').click();
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/");
+    expect(page.url()).not.toContain("/ledger/cards/");
   });
 });
 
