@@ -38,10 +38,10 @@ async function getHtmlClasses(
 
 async function openUpsellPanel(page: import("@playwright/test").Page) {
   // Click the avatar button to open the upsell panel
-  const avatarBtn = page.locator("button[aria-label*='Sign in to sync']").first();
+  const avatarBtn = page.locator("button[aria-label='Sign in to sync your data']");
   await avatarBtn.click();
   // Wait for panel to appear
-  await page.waitForSelector("[id*='anon-upsell']", { state: "visible", timeout: 5000 });
+  await page.waitForSelector("[id='anon-upsell-panel']", { state: "visible", timeout: 5000 });
 }
 
 async function findThemeToggleButton(page: import("@playwright/test").Page) {
