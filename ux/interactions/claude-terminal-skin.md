@@ -2,7 +2,7 @@
 
 **Owner**: Luna (UX Designer)
 **Status**: Design Complete — Not Yet Implemented
-**Product Brief**: [`designs/product/backlog/claude-terminal-skin.md`](../../product/backlog/claude-terminal-skin.md)
+**Product Brief**: GitHub Issues (historical backlog item)
 **Target**: Claude Code CLI customization surfaces (statusline, splash, theme palette)
 
 ---
