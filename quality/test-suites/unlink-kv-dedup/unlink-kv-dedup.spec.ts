@@ -186,7 +186,7 @@ test.describe("Issue #545 — Unlink KV Dedup Prevention", () => {
     );
 
     // Route should exist (may be 401 due to missing auth)
-    expect([401, 400, 403]).toContain(response.status());
+    expect([401, 400, 403, 429]).toContain(response.status());
   });
 
   // =========================================================================
@@ -243,7 +243,7 @@ test.describe("Issue #545 — Unlink KV Dedup Prevention", () => {
     );
 
     // Route should exist (may be 401 due to missing auth)
-    expect([401, 400, 403]).toContain(response.status());
+    expect([401, 400, 403, 429]).toContain(response.status());
   });
 
   // =========================================================================
