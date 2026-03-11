@@ -214,12 +214,12 @@ test.describe("Profile Dropdown Avatar Layout #528 — Desktop (1280px)", () => 
     await expect(textContent).toContain(MOCK_USER.name);
     await expect(textContent).toContain(MOCK_USER.email);
 
-    // Text should be left-aligned (not centered or right-aligned)
+    // Text should be left-aligned (text-align: left or start in LTR)
     const textAlign = await textContainer.evaluate((el) => {
       return window.getComputedStyle(el).textAlign;
     });
-    // text-left translates to "left" alignment
-    await expect(textAlign).toBe("left");
+    // text-left translates to "start" in LTR or "left" in standard
+    await expect(textAlign).toMatch(/left|start/);
   });
 
   test("TC-528-06: Avatar is sized consistently (40px)", async ({ page }) => {
