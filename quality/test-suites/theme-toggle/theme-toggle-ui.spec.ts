@@ -36,6 +36,14 @@ async function getHtmlClasses(
   return cls.split(/\s+/).filter(Boolean);
 }
 
+async function openUpsellPanel(page: import("@playwright/test").Page) {
+  // Click the avatar button to open the upsell panel
+  const avatarBtn = page.locator("button[aria-label*='Sign in to sync']").first();
+  await avatarBtn.click();
+  // Wait for panel to appear
+  await page.waitForSelector("[id*='anon-upsell']", { state: "visible", timeout: 5000 });
+}
+
 async function findThemeToggleButton(page: import("@playwright/test").Page) {
   // Find the theme toggle button by aria-label
   // Icon variant: "Theme: Light. Click to switch to Dark." or "Theme: Dark. Click to switch to Light."
@@ -59,6 +67,9 @@ test("Clicking theme toggle button cycles to dark and applies .dark class to <ht
 
   let classes = await getHtmlClasses(page);
   expect(classes).not.toContain(DARK_CLASS);
+
+  // Open the upsell panel which contains the theme toggle
+  await openUpsellPanel(page);
 
   // Click the theme toggle button
   const themeButton = await findThemeToggleButton(page);
@@ -91,6 +102,9 @@ test("Clicking theme toggle button cycles to light and removes .dark class from 
   let classes = await getHtmlClasses(page);
   expect(classes).toContain(DARK_CLASS);
 
+  // Open the upsell panel which contains the theme toggle
+  await openUpsellPanel(page);
+
   // Click the theme toggle button
   const themeButton = await findThemeToggleButton(page);
   await expect(themeButton).toBeVisible();
@@ -111,19 +125,18 @@ test("Clicking theme toggle button cycles to light and removes .dark class from 
 test("No System option exists in the theme toggle — only Dark and Light", async ({
   page,
 }) => {
-  // The marketing page has an icon button toggle, so we check the source
-  // to verify THEME_OPTIONS only contains dark and light
-  const hasSystemOption = await page.evaluate(() => {
-    // Check if any element mentions "system" theme option
-    const bodyText = document.body.innerText.toLowerCase();
-    return bodyText.includes("system") && bodyText.includes("theme");
-  });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
 
-  // Should not have system option mentioned in the UI
-  expect(hasSystemOption).toBe(false);
+  // Open the upsell panel to see the theme toggle
+  await openUpsellPanel(page);
 
-  // Verify the button exists and is clickable
-  const themeButton = page.locator("button[aria-label*='Theme:']").first();
+  // Check that "system" option is not present in the UI
+  const systemRadio = page.getByRole("radio", { name: /system/i });
+  await expect(systemRadio).toHaveCount(0);
+
+  // Verify the toggle button exists and is visible
+  const themeButton = await findThemeToggleButton(page);
   await expect(themeButton).toBeVisible();
 });
 
@@ -142,7 +155,8 @@ test("Dark theme persists after page reload via localStorage key fenrir-theme", 
   await page.goto("/");
   await page.waitForLoadState("networkidle");
 
-  // Click theme toggle to switch to dark
+  // Open panel and click theme toggle to switch to dark
+  await openUpsellPanel(page);
   const themeButton = await findThemeToggleButton(page);
   await themeButton.click();
   await page.waitForTimeout(200);
