@@ -203,12 +203,10 @@ test.describe("Profile Dropdown Header", () => {
     const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
     await expect(profileHeader).toBeVisible();
 
-    // Verify separator is visible
-    const separator = userMenu.locator('[role="separator"]');
-    await expect(separator).toBeVisible();
-
-    // Verify menu items fit on screen
+    // Verify menu items are visible
+    const myCards = userMenu.locator('[role="menuitem"]').filter({ hasText: "My Cards" });
     const theme = userMenu.locator('[role="menuitem"]').filter({ hasText: "Theme" });
+    await expect(myCards).toBeVisible();
     await expect(theme).toBeVisible();
 
     await context.close();
@@ -245,20 +243,22 @@ test.describe("Profile Dropdown Header", () => {
     const avatarButton = page.locator("button[aria-controls='user-menu']");
     await avatarButton.click();
 
-    // Verify separator exists and has correct styling
+    // Verify profile header has border-b for visual separation
     const userMenu = page.locator("#user-menu");
-    const separator = userMenu.locator('[role="separator"]');
+    const profileHeader = userMenu.locator('div[aria-hidden="true"]').first();
 
-    await expect(separator).toBeVisible();
-    await expect(separator).toHaveClass(/bg-border/);
-    await expect(separator).toHaveClass(/h-px/);
+    await expect(profileHeader).toBeVisible();
+    await expect(profileHeader).toHaveClass(/border-b/);
+    await expect(profileHeader).toHaveClass(/border-border/);
 
-    // Separator should create clear visual separation
-    const boundingBox = await separator.boundingBox();
+    // Profile header should have adequate height (min 44px) and width
+    const boundingBox = await profileHeader.boundingBox();
     expect(boundingBox).not.toBeNull();
     if (boundingBox) {
-      // Should be a thin line (1px height)
-      expect(boundingBox.height).toBeLessThanOrEqual(2);
+      // Should be at least 44px high (touch target)
+      expect(boundingBox.height).toBeGreaterThanOrEqual(44);
+      // Should span full dropdown width
+      expect(boundingBox.width).toBeGreaterThan(200);
     }
   });
 
