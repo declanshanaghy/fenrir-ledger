@@ -102,14 +102,14 @@ test.describe("Profile Dropdown Header", () => {
     const avatarButton = page.locator("button[aria-controls='user-menu']");
     await avatarButton.click();
 
-    // Find the separator (h-px bg-border div with role=separator)
+    // Find the profile header which has border-b for visual separation
     const userMenu = page.locator("#user-menu");
-    const separator = userMenu.locator('[role="separator"]');
+    const profileHeader = userMenu.locator('div[aria-hidden="true"]').first();
 
-    // Separator should be visible and distinct
-    await expect(separator).toBeVisible();
-    await expect(separator).toHaveClass(/bg-border/);
-    await expect(separator).toHaveClass(/h-px/);
+    // Profile header should have border-b for separation
+    await expect(profileHeader).toBeVisible();
+    await expect(profileHeader).toHaveClass(/border-b/);
+    await expect(profileHeader).toHaveClass(/border-border/);
   });
 
   test("Menu items appear below the separator", async ({ page }) => {
