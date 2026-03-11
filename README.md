@@ -173,7 +173,7 @@ graph LR
 
 - [Product Brief](product-brief.md) — The vision I have laid before the pack, the reason the wolf hunts
 - [Design Brief](product/product-design-brief.md) — My counsel to the forge-master, where strategy becomes structure
-- [Backlog](designs/product/backlog/) — The hunts I have ordered by urgency, each weighted on the scales of Jera ᛃ
+- [Backlog](https://github.com/declanshanaghy/fenrir-ledger/issues) — The hunts I have ordered by urgency, tracked as GitHub Issues ᛃ
 
 ---
 

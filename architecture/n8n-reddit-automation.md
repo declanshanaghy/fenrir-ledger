@@ -9,10 +9,8 @@
 > ends at "draft ready for human review."
 
 **Related documents** (build on, don't duplicate):
-- `designs/product/backlog/marketing-campaign-plan.md` — 12-week Reddit strategy, 30 draft comments
-- `designs/product/backlog/reddit-content-templates.md` — 4 template types with tone guidance
-- `designs/product/backlog/subreddit-profiles.md` — Subreddit rules, jargon, and culture guides
-- `designs/product/backlog/reddit-success-metrics.md` — KPIs and phase gates
+- Reddit strategy and engagement playbook: `product/target-market/README.md`
+- Historical backlog items now tracked as GitHub Issues
 
 ---
 

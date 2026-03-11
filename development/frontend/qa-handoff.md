@@ -18,7 +18,7 @@ environment variables, plus guards on all 7 Patreon API routes.
 | `src/app/api/patreon/unlink/route.ts` | Modified | Added `isPatreon()` guard at top of POST handler |
 | `src/app/api/patreon/webhook/route.ts` | Modified | Added `isPatreon()` guard at top of POST handler |
 | `.env.example` | Modified | Added `SUBSCRIPTION_PLATFORM=patreon` with documentation |
-| `designs/architecture/adr-feature-flags.md` | Created | ADR documenting the decision |
+| `architecture/adrs/ADR-011-feature-flags.md` | Created | ADR documenting the decision |
 
 ## How to test
 
