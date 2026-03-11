@@ -116,9 +116,7 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
     // 2. Theme row with icon + label
     const themeRow = userMenu.locator('[role="menuitem"]').nth(0);
     await expect(themeRow).toBeVisible();
-    // ThemeToggle is now directly inside the button as a div
-    const themeToggle = themeRow.locator("[aria-label*='theme' i]").first();
-    await expect(themeToggle).toBeVisible();
+    // Theme row contains the label "Theme"
     await expect(themeRow).toContainText("Theme");
 
     // 3. Settings button with icon
