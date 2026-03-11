@@ -239,10 +239,10 @@ test.describe("Auth Session Persistence", () => {
     await seedSession(page, VALID_SESSION_WITH_REFRESH);
 
     // WHEN the user navigates to a protected page
-    await page.goto("/dashboard");
+    await page.goto("/ledger");
 
-    // THEN they remain on the dashboard (no redirect to /sign-in)
-    expect(page.url()).toContain("/dashboard");
+    // THEN they remain on the dashboard (no redirect to /ledger/sign-in)
+    expect(page.url()).toContain("/ledger");
 
     // AND the session is still stored
     const stored = await getStoredSession(page);
@@ -268,7 +268,7 @@ test.describe("Auth Session Persistence", () => {
       if (await signOutButton.isVisible().catch(() => false)) {
         await signOutButton.click();
         // Wait for sign-out to complete
-        await page.waitForURL("/sign-in", { timeout: 5000 }).catch(() => {});
+        await page.waitForURL("/ledger/sign-in", { timeout: 5000 }).catch(() => {});
       }
     } else {
       // If menu isn't available, manually clear the session
@@ -447,7 +447,7 @@ test.describe("Auth Session Persistence", () => {
     const originalSession = await getStoredSession(page);
 
     // WHEN the user navigates to different routes
-    const routes = ["/dashboard", "/settings", "/"];
+    const routes = ["/ledger", "/ledger/settings", "/"];
     for (const route of routes) {
       await page.goto(route);
 

@@ -27,7 +27,7 @@ test.describe("Sign-in State Transitions", () => {
     });
     await page.context().clearCookies();
 
-    await page.goto(`${SERVER_URL}/sign-in`);
+    await page.goto(`${SERVER_URL}/ledger/sign-in`);
     await page.waitForLoadState("networkidle");
 
     const signInButton = page.getByRole("button", {
@@ -51,7 +51,7 @@ test.describe("Sign-in State Transitions", () => {
       );
     });
 
-    const mockCallbackUrl = `${SERVER_URL}/auth/callback?code=test_code&state=test_state`;
+    const mockCallbackUrl = `${SERVER_URL}/ledger/auth/callback?code=test_code&state=test_state`;
     await page.goto(mockCallbackUrl).catch(() => {});
 
     const successMessage = page.getByText(/the wolf is named/i);

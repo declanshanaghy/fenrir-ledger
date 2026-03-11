@@ -53,7 +53,7 @@ test.describe("Auth Callback — Missing Params", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/auth/callback", { waitUntil: "networkidle" });
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     const fatal = errors.filter(
       (e) => !e.includes("hydration") && !e.includes("HMR")
@@ -65,7 +65,7 @@ test.describe("Auth Callback — Missing Params", () => {
     page,
   }) => {
     // Spec: auth/callback/page.tsx — !code || !stateParam → "Missing code or state in callback URL."
-    await page.goto("/auth/callback", { waitUntil: "networkidle" });
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     await expect(
       page.locator("text=Missing code or state in callback URL.")
@@ -76,7 +76,7 @@ test.describe("Auth Callback — Missing Params", () => {
     page,
   }) => {
     // Spec: auth/callback/page.tsx — error state renders destructive heading "The Bifrost trembled"
-    await page.goto("/auth/callback", { waitUntil: "networkidle" });
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     // The heading uses the Norse name with ö — match either variant for robustness
     const heading = page.locator("text=The Bifr");
@@ -87,11 +87,11 @@ test.describe("Auth Callback — Missing Params", () => {
     page,
   }) => {
     // Spec: auth/callback/page.tsx — error state renders <a href="/sign-in">Return to the gate</a>
-    await page.goto("/auth/callback", { waitUntil: "networkidle" });
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     const link = page.locator("a:has-text('Return to the gate')");
     await expect(link).toBeVisible({ timeout: 5000 });
-    await expect(link).toHaveAttribute("href", "/sign-in");
+    await expect(link).toHaveAttribute("href", "/ledger/sign-in");
   });
 });
 
@@ -287,7 +287,7 @@ test.describe("Auth Callback — Responsive (375px)", () => {
   test("error state is readable at 375px viewport", async ({ page }) => {
     // Spec: team norms — minimum 375px. Callback error card uses max-w-xs.
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/auth/callback", { waitUntil: "networkidle" });
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     // Error message must not overflow — it uses max-w-xs
     const errorMsg = page.locator("text=Missing code or state in callback URL.");
