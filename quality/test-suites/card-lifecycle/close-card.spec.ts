@@ -89,7 +89,7 @@ test.describe("Close Card — Confirm Action", () => {
     await confirmBtn.click();
 
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/");
+    expect(page.url()).not.toContain("/ledger/cards/");
   });
 
   test("closed card no longer appears in active dashboard grid", async ({

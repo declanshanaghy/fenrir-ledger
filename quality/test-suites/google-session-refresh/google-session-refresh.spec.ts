@@ -432,7 +432,7 @@ test.describe("AC6: Session Persistence Across Page Refresh", () => {
 
     // Should not redirect to /sign-in
     expect(page.url()).toContain("/ledger");
-    expect(page.url()).not.toContain("/sign-in");
+    expect(page.url()).not.toContain("/ledger/sign-in");
   });
 });
 

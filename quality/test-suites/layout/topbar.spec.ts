@@ -38,7 +38,7 @@ test.describe("TopBar — Logo link", () => {
   test("header contains a link with href='/static' that opens in a new tab", async ({
     page,
   }) => {
-    const logoLink = page.locator('header a[href="/static"]').first();
+    const logoLink = page.locator('header a[href="/"]').first();
     await expect(logoLink).toBeAttached();
     await expect(logoLink).toHaveAttribute("target", "_blank");
   });

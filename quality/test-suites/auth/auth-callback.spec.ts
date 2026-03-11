@@ -13,7 +13,7 @@
  *   - auth/callback/page.tsx: PKCE session missing → setErrorMessage("PKCE session data missing...")
  *   - auth/callback/page.tsx: CSRF mismatch → setErrorMessage("State mismatch — possible CSRF attack...")
  *   - auth/callback/page.tsx: error state → h-class "The Bifrost trembled" (destructive)
- *   - auth/callback/page.tsx: error state → link "Return to the gate" href="/sign-in"
+ *   - auth/callback/page.tsx: error state → link "Return to the gate" href="/ledger/sign-in"
  *   - auth/callback/page.tsx: exchanging state → "Binding the oath..."
  *   - auth/callback/page.tsx: page wraps content in Suspense fallback "Binding the oath..."
  *   - ADR-005: PKCE flow — /auth/callback is the redirect_uri for the OAuth round-trip
@@ -53,7 +53,7 @@ test.describe("Auth Callback — Missing Params", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/auth/callback", { waitUntil: "networkidle" });
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     const fatal = errors.filter(
       (e) => !e.includes("hydration") && !e.includes("HMR")
@@ -65,7 +65,7 @@ test.describe("Auth Callback — Missing Params", () => {
     page,
   }) => {
     // Spec: auth/callback/page.tsx — !code || !stateParam → "Missing code or state in callback URL."
-    await page.goto("/auth/callback", { waitUntil: "networkidle" });
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     await expect(
       page.locator("text=Missing code or state in callback URL.")
@@ -76,7 +76,7 @@ test.describe("Auth Callback — Missing Params", () => {
     page,
   }) => {
     // Spec: auth/callback/page.tsx — error state renders destructive heading "The Bifrost trembled"
-    await page.goto("/auth/callback", { waitUntil: "networkidle" });
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     // The heading uses the Norse name with ö — match either variant for robustness
     const heading = page.locator("text=The Bifr");
@@ -86,12 +86,12 @@ test.describe("Auth Callback — Missing Params", () => {
   test("'Return to the gate' link is visible and points to /sign-in", async ({
     page,
   }) => {
-    // Spec: auth/callback/page.tsx — error state renders <a href="/sign-in">Return to the gate</a>
-    await page.goto("/auth/callback", { waitUntil: "networkidle" });
+    // Spec: auth/callback/page.tsx — error state renders <a href="/ledger/sign-in">Return to the gate</a>
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     const link = page.locator("a:has-text('Return to the gate')");
     await expect(link).toBeVisible({ timeout: 5000 });
-    await expect(link).toHaveAttribute("href", "/sign-in");
+    await expect(link).toHaveAttribute("href", "/ledger/sign-in");
   });
 });
 
@@ -104,7 +104,7 @@ test.describe("Auth Callback — Google Error Param", () => {
     page,
   }) => {
     // Spec: auth/callback/page.tsx — errorParam → `Google returned: ${errorParam}`
-    await page.goto("/auth/callback?error=access_denied", {
+    await page.goto("/ledger/auth/callback?error=access_denied", {
       waitUntil: "networkidle",
     });
 
@@ -115,7 +115,7 @@ test.describe("Auth Callback — Google Error Param", () => {
 
   test("shows error heading when Google returns an error", async ({ page }) => {
     // Spec: auth/callback/page.tsx — error state renders destructive heading
-    await page.goto("/auth/callback?error=access_denied", {
+    await page.goto("/ledger/auth/callback?error=access_denied", {
       waitUntil: "networkidle",
     });
 
@@ -150,7 +150,7 @@ test.describe("Auth Callback — PKCE Session Data Missing", () => {
     //       if (!raw) → "PKCE session data missing. Please try signing in again."
     // Note: callback page has a 100ms delay to prevent race conditions with React StrictMode
     // Navigate with valid-looking code + state but no PKCE session data
-    await page.goto("/auth/callback?code=fake_code&state=fake_state", {
+    await page.goto("/ledger/auth/callback?code=fake_code&state=fake_state", {
       waitUntil: "networkidle",
     });
 
@@ -166,7 +166,7 @@ test.describe("Auth Callback — PKCE Session Data Missing", () => {
   }) => {
     // Spec: error state always renders the sign-in recovery link
     // Note: callback page has a 100ms delay to prevent race conditions with React StrictMode
-    await page.goto("/auth/callback?code=fake_code&state=fake_state", {
+    await page.goto("/ledger/auth/callback?code=fake_code&state=fake_state", {
       waitUntil: "networkidle",
     });
 
@@ -200,7 +200,7 @@ test.describe("Auth Callback — CSRF State Mismatch", () => {
     });
 
     // Navigate with a DIFFERENT state in the URL — triggers CSRF check
-    await page.goto("/auth/callback?code=fake_code&state=different-state-xyz", {
+    await page.goto("/ledger/auth/callback?code=fake_code&state=different-state-xyz", {
       waitUntil: "networkidle",
     });
 
@@ -269,7 +269,7 @@ test.describe("Auth Callback — Corrupt PKCE Data", () => {
       sessionStorage.setItem("fenrir:pkce", "this-is-not-valid-json{{{{");
     });
 
-    await page.goto("/auth/callback?code=fake_code&state=any-state", {
+    await page.goto("/ledger/auth/callback?code=fake_code&state=any-state", {
       waitUntil: "networkidle",
     });
 
@@ -287,7 +287,7 @@ test.describe("Auth Callback — Responsive (375px)", () => {
   test("error state is readable at 375px viewport", async ({ page }) => {
     // Spec: team norms — minimum 375px. Callback error card uses max-w-xs.
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/auth/callback", { waitUntil: "networkidle" });
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     // Error message must not overflow — it uses max-w-xs
     const errorMsg = page.locator("text=Missing code or state in callback URL.");

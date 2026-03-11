@@ -123,7 +123,7 @@ test.describe("Next.js 16 — Client-Side Navigation", () => {
     if (await signInLink.isVisible({ timeout: 1000 }).catch(() => false)) {
       await signInLink.click();
       await page.waitForURL("**/sign-in", { timeout: 5000 });
-      expect(page.url()).toContain("/sign-in");
+      expect(page.url()).toContain("/ledger/sign-in");
       expect(page.url()).not.toEqual(initialUrl);
     }
   });

@@ -22,7 +22,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-  await page.goto("/cards/new", { waitUntil: "networkidle" });
+  await page.goto("/ledger/cards/new", { waitUntil: "networkidle" });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -64,7 +64,7 @@ test.describe("Add Card — Validation Errors", () => {
     await submitBtn.click();
 
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/new");
+    expect(page.url()).not.toContain("/ledger/cards/new");
   });
 });
 
@@ -83,7 +83,7 @@ test.describe("Add Card — Successful Creation", () => {
     await page.locator('button[type="submit"]').click();
 
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/new");
+    expect(page.url()).not.toContain("/ledger/cards/new");
   });
 
   test("new card appears on dashboard after creation", async ({ page }) => {
@@ -115,6 +115,6 @@ test.describe("Add Card — Cancel Navigation", () => {
     await cancelBtn.click();
 
     await page.waitForURL("**/", { timeout: 5000 });
-    expect(page.url()).not.toContain("/cards/new");
+    expect(page.url()).not.toContain("/ledger/cards/new");
   });
 });

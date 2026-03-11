@@ -262,7 +262,7 @@ test.describe("AnonymousCheckoutModal -- must not exist", () => {
 
   test("TC-STR-021: 'Enter your email' heading does not appear on any subscription surface", async ({ page }) => {
     await clearSubscriptionState(page);
-    for (const path of ["/", "/settings"]) {
+    for (const path of ["/", "/ledger/settings"]) {
       await page.goto(`${BASE_URL}${path}`);
       await page.waitForLoadState("networkidle");
       const emailHeading = page.getByRole("heading", { name: /enter your email/i });
