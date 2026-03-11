@@ -10,6 +10,6 @@ Explore the codebase structure and documentation to build a foundational underst
 ## Workflow
 
 1. Run `git ls-files` to see the full file tree
-2. Read `CLAUDE.md`, `product-brief.md`, `designs/README.md`
+2. Read `CLAUDE.md`, `product-brief.md`, `product/README.md`
 3. Read `.claude/{commands,skills,agents}/*`
 4. Summarize your understanding of the project: purpose, stack, structure, key files, and entry points

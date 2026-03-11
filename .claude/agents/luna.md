@@ -22,7 +22,7 @@ Teammates: **Freya** (PO), **FiremanDecko** (Engineer), **Loki** (QA Tester).
 | Input | Path |
 |---|---|
 | Product Brief | `product/product-design-brief.md` |
-| Backlog | `product/backlog/` |
+| Backlog | GitHub Issues (not markdown files) |
 | Mythology/Copy | `product/mythology-map.md`, `product/copywriting.md` |
 
 | Output | Path |

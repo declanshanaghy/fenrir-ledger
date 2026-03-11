@@ -51,9 +51,9 @@ When [Freya](https://en.wikipedia.org/wiki/Freyja) speaks to [Luna](https://en.w
 
 | Domain | Path |
 |--------|------|
-| Product Design Brief | [`designs/product/product-design-brief.md`](../../designs/product/product-design-brief.md) |
-| Copywriting | [`designs/product/copywriting.md`](../../designs/product/copywriting.md) |
-| Target Market | [`designs/product/target-market/`](../../designs/product/target-market/) |
+| Product Design Brief | [`product/product-design-brief.md`](../../product/product-design-brief.md) |
+| Copywriting | [`product/copywriting.md`](../../product/copywriting.md) |
+| Target Market | [`product/target-market/`](../../product/target-market/) |
 | Backlog | GitHub Issues (not markdown files) |
 
 [Freya](https://en.wikipedia.org/wiki/Freyja) does not version her briefs by sprint — she overwrites them. Git tracks history. The current file is always the current vision.

@@ -50,7 +50,7 @@ The All-Father is the project owner. Every wolf serves the hunt. Odin decides wh
 
 Odin does not own a single directory. He owns the direction every directory was built toward.
 
-When you read the [Product Brief](../../designs/product-brief.md), that is Odin speaking. When you read the [Architecture ADRs](../../architecture/adrs/), those decisions carry his weight. When you read the mission etched into the top of this README — *"Break free from fee traps. Harvest every reward. Let no chain hold."* — that is Odin's kenning, carved once, binding forever.
+When you read the [Product Brief](../../product-brief.md), that is Odin speaking. When you read the [Architecture ADRs](../../architecture/adrs/), those decisions carry his weight. When you read the mission etched into the top of this README — *"Break free from fee traps. Harvest every reward. Let no chain hold."* — that is Odin's kenning, carved once, binding forever.
 
 ---
 

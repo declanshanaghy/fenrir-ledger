@@ -34,14 +34,14 @@ using the template at `quality/issue-template.md`. Assign labels for type and pr
 
 | Input | Path |
 |---|---|
-| Product Brief | `designs/product-design-brief.md` |
-| Target Market | `designs/product/target-market/README.md` |
+| Product Brief | `product/product-design-brief.md` |
+| Target Market | `product/target-market/README.md` |
 
 | Output | Path |
 |---|---|
-| Product Design Brief | `designs/product/product-design-brief.md` |
-| Copywriting | `designs/product/copywriting.md` |
-| Target Market Data | `designs/product/target-market/` |
+| Product Design Brief | `product/product-design-brief.md` |
+| Copywriting | `product/copywriting.md` |
+| Target Market Data | `product/target-market/` |
 | Backlog Items | GitHub Issues (NOT markdown files) |
 
 Git tracks history — overwrite design files each sprint. No sprint subdirectories.
@@ -89,7 +89,7 @@ Move issues through the Project board columns:
 ## Reddit Community Engagement
 
 Freya owns ongoing Reddit community engagement for Fenrir Ledger. Strategy and
-playbook live in `designs/product/target-market/README.md`. Key responsibilities:
+playbook live in `product/target-market/README.md`. Key responsibilities:
 - Monitor r/churning, r/creditcards, r/CreditCardChurning for engagement opportunities
 - Draft value-first replies (manual process — no automation yet)
 - Track reputation milestones and engagement metrics
