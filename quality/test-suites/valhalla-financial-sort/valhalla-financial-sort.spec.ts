@@ -51,7 +51,7 @@ test.describe("Valhalla Financial Sort — fee avoided descending (AC1)", () => 
       makeClosedCard({ cardName: "Mid Fee Card", annualFee: 9500 }),
     ];
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
-    await page.goto("/valhalla", { waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     await page.locator('select[aria-label="Sort order"]').selectOption("fee_avoided_desc");
 
@@ -110,7 +110,7 @@ test.describe("Valhalla Financial Sort — rewards earned descending (AC2)", () 
       }),
     ];
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
-    await page.goto("/valhalla", { waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     await page.locator('select[aria-label="Sort order"]').selectOption("rewards_desc");
 
@@ -157,7 +157,7 @@ test.describe("Valhalla Financial Sort — net gain descending (AC3)", () => {
       }),
     ];
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
-    await page.goto("/valhalla", { waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     await page.locator('select[aria-label="Sort order"]').selectOption("net_gain_desc");
 
@@ -183,7 +183,7 @@ test.describe("Valhalla Financial Sort — sort persists during session (AC4)", 
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [
       makeClosedCard({ cardName: "Test Card", annualFee: 9500 }),
     ]);
-    await page.goto("/valhalla", { waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const sortSelect = page.locator('select[aria-label="Sort order"]');
 
@@ -207,7 +207,7 @@ test.describe("Valhalla Financial Sort — sort persists during session (AC4)", 
       makeClosedCard({ cardName: "Amex Card", issuerId: "amex", annualFee: 55000 }),
     ];
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
-    await page.goto("/valhalla", { waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const sortSelect = page.locator('select[aria-label="Sort order"]');
     await sortSelect.selectOption("fee_avoided_desc");

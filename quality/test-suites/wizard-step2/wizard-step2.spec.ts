@@ -21,7 +21,7 @@ import {
 async function goToNewCard(page: import("@playwright/test").Page) {
   await page.goto("/", { waitUntil: "networkidle" });
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-  await page.goto("/cards/new", { waitUntil: "domcontentloaded" });
+  await page.goto("/ledger/cards/new", { waitUntil: "domcontentloaded" });
   await page.locator("#cardName").waitFor({ state: "visible", timeout: 15000 });
 }
 

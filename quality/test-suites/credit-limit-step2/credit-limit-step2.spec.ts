@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-  await page.goto("/cards/new", { waitUntil: "networkidle" });
+  await page.goto("/ledger/cards/new", { waitUntil: "networkidle" });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
