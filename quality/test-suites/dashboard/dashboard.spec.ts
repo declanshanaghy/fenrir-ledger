@@ -10,7 +10,7 @@
  * Spec references:
  *   - EmptyState.tsx: heading "Before Gleipnir was forged" + "Add Card" link
  *   - Dashboard.tsx:  summary header "{N} cards" / "{N} need attention"
- *   - CardTile.tsx:   Link href="/cards/{id}/edit", cardName, issuerName
+ *   - CardTile.tsx:   Link href="/ledger/cards/{id}/edit", cardName, issuerName
  *   - StatusBadge.tsx: STATUS_LABELS = { active: "Active", fee_approaching: "Fee Due Soon", … }
  *   - constants.ts:   STATUS_LABELS record (authoritative badge text source)
  *
@@ -72,8 +72,8 @@ test.describe("Dashboard — Empty State", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, EMPTY_CARDS);
     await page.reload({ waitUntil: "networkidle" });
 
-    // Spec: EmptyState.tsx renders <Link href="/cards/new">Add Card</Link>
-    const addCardLink = page.locator('a[href="/cards/new"]').first();
+    // Spec: EmptyState.tsx renders <Link href="/ledger/cards/new">Add Card</Link>
+    const addCardLink = page.locator('a[href="/ledger/cards/new"]').first();
     await expect(addCardLink).toBeVisible();
     await expect(addCardLink).toContainText("Add Card");
   });
@@ -275,7 +275,7 @@ test.describe("Dashboard — Card Tile Links", () => {
     await page.locator('#tab-all').click();
     const allPanel = page.locator('[aria-labelledby="tab-all"]');
     for (const card of FEW_CARDS) {
-      const tileLink = allPanel.locator(`a[href="/cards/${card.id}/edit"]`);
+      const tileLink = allPanel.locator(`a[href="/ledger/cards/${card.id}/edit"]`);
       await expect(tileLink).toBeVisible();
     }
   });
@@ -288,7 +288,7 @@ test.describe("Dashboard — Card Tile Links", () => {
     await page.reload({ waitUntil: "networkidle" });
 
     const firstCard = FEW_CARDS[0]!;
-    const tileLink = page.locator(`a[href="/cards/${firstCard.id}/edit"]`).first();
+    const tileLink = page.locator(`a[href="/ledger/cards/${firstCard.id}/edit"]`).first();
     await tileLink.click();
 
     // After click, URL must be the edit page for that specific card
@@ -301,8 +301,8 @@ test.describe("Dashboard — Card Tile Links", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
     await page.reload({ waitUntil: "networkidle" });
 
-    // Spec: page.tsx renders <Link href="/cards/new">Add Card</Link> in the header
-    const addCardBtn = page.locator('a[href="/cards/new"]').first();
+    // Spec: page.tsx renders <Link href="/ledger/cards/new">Add Card</Link> in the header
+    const addCardBtn = page.locator('a[href="/ledger/cards/new"]').first();
     await expect(addCardBtn).toBeVisible();
     await addCardBtn.click();
 

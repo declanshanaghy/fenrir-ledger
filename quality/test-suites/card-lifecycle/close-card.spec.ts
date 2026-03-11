@@ -37,7 +37,7 @@ test.describe("Close Card — Confirmation Dialog", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator('button:has-text("Close Card")').first().click();
 
@@ -52,7 +52,7 @@ test.describe("Close Card — Confirmation Dialog", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator('button:has-text("Close Card")').first().click();
     await expect(page.locator("text=Close this card?")).toBeVisible();
@@ -78,7 +78,7 @@ test.describe("Close Card — Confirm Action", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator('button:has-text("Close Card")').first().click();
     await expect(page.locator("text=Close this card?")).toBeVisible();
@@ -100,7 +100,7 @@ test.describe("Close Card — Confirm Action", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator('button:has-text("Close Card")').first().click();
     await expect(page.locator("text=Close this card?")).toBeVisible();

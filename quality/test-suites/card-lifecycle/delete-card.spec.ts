@@ -37,7 +37,7 @@ test.describe("Delete Card — Confirmation Dialog", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator('button:has-text("Delete card")').first().click();
 
@@ -50,7 +50,7 @@ test.describe("Delete Card — Confirmation Dialog", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();
@@ -76,7 +76,7 @@ test.describe("Delete Card — Confirm Action", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();
@@ -96,7 +96,7 @@ test.describe("Delete Card — Confirm Action", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();
@@ -119,7 +119,7 @@ test.describe("Delete Card — Confirm Action", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [cardToDelete, cardToKeep]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${cardToDelete.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${cardToDelete.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();

@@ -115,7 +115,7 @@ test.describe("Heading Hierarchy", () => {
   test("TC-A07: add card page has a heading", async ({ page }) => {
     // Spec (cards/new/page.tsx): the new card page renders an h1 "Forge a New Chain".
     // Per WCAG 2.4.6 (AA), a descriptive heading must be present.
-    await page.goto("/cards/new");
+    await page.goto("/ledger/cards/new");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "networkidle" });
@@ -139,7 +139,7 @@ test.describe("Form Accessibility", () => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "networkidle" });
     // Navigate to the add card form
-    await page.goto("/cards/new");
+    await page.goto("/ledger/cards/new");
     // Wait for the form to appear (gated behind auth status resolution)
     await page.waitForSelector("form", { timeout: 5000 });
   });
@@ -274,7 +274,7 @@ test.describe("Keyboard Navigation", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
     await page.reload({ waitUntil: "networkidle" });
 
-    // Find a card tile link — each card wraps in <Link href="/cards/{id}/edit">
+    // Find a card tile link — each card wraps in <Link href="/ledger/cards/{id}/edit">
     const cardLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
     await expect(cardLinks.first()).toBeAttached();
 

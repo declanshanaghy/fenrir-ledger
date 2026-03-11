@@ -49,7 +49,7 @@ test.describe("Edit Card (card-crud) — Pre-populated Fields", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     const heading = page.locator("h1");
     await expect(heading).toContainText("Mjolnir Mastercard");
@@ -62,7 +62,7 @@ test.describe("Edit Card (card-crud) — Pre-populated Fields", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await expect(page.locator("text=Card record")).toBeVisible();
   });
@@ -74,7 +74,7 @@ test.describe("Edit Card (card-crud) — Pre-populated Fields", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     const cardNameInput = page.locator("#cardName");
     await expect(cardNameInput).toHaveValue("Bifrost Platinum");
@@ -88,7 +88,7 @@ test.describe("Edit Card (card-crud) — Pre-populated Fields", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     const issuerTrigger = page.locator("#issuerId");
     await expect(issuerTrigger).toContainText("American Express");
@@ -101,7 +101,7 @@ test.describe("Edit Card (card-crud) — Pre-populated Fields", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     const submitBtn = page.locator('button[type="submit"]');
     await expect(submitBtn).toContainText("Save changes");
@@ -120,7 +120,7 @@ test.describe("Edit Card (card-crud) — Editable Fields", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     const cardNameInput = page.locator("#cardName");
     await expect(cardNameInput).toBeEditable();
@@ -135,7 +135,7 @@ test.describe("Edit Card (card-crud) — Editable Fields", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     const notesField = page.locator("#notes");
     await expect(notesField).toBeEditable();
@@ -150,7 +150,7 @@ test.describe("Edit Card (card-crud) — Editable Fields", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     const saveBtn = page.locator('button[type="submit"]');
     await expect(saveBtn).toBeVisible();
@@ -170,7 +170,7 @@ test.describe("Edit Card (card-crud) — Save", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator('button[type="submit"]').click();
 
@@ -187,7 +187,7 @@ test.describe("Edit Card (card-crud) — Save", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     const updatedName = `Name After Save ${Date.now()}`;
     await page.locator("#cardName").fill(updatedName);
@@ -209,7 +209,7 @@ test.describe("Edit Card (card-crud) — Save", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     const newName = `RenamedCardCrud${Date.now()}`;
     await page.locator("#cardName").fill(newName);
@@ -234,7 +234,7 @@ test.describe("Edit Card (card-crud) — Cancel", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     const cancelBtn = page.locator('button:has-text("Cancel")');
     await expect(cancelBtn).toBeVisible();
@@ -247,7 +247,7 @@ test.describe("Edit Card (card-crud) — Cancel", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator("#cardName").fill("This Should Be Discarded");
     await page.locator('button:has-text("Cancel")').click();
@@ -266,7 +266,7 @@ test.describe("Edit Card (card-crud) — Cancel", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     await page.locator("#cardName").fill("Discarded Edit");
     await page.locator('button:has-text("Cancel")').click();
@@ -274,7 +274,7 @@ test.describe("Edit Card (card-crud) — Cancel", () => {
     await page.waitForURL("**/", { timeout: 5000 });
 
     // Re-open edit page — original value must be intact
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
     const cardNameInput = page.locator("#cardName");
     await expect(cardNameInput).toHaveValue(originalName);
   });
@@ -290,7 +290,7 @@ test.describe("Edit Card (card-crud) — Edge Cases", () => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "networkidle" });
 
-    await page.goto("/cards/totally-nonexistent-card-id-xyz/edit", {
+    await page.goto("/ledger/cards/totally-nonexistent-card-id-xyz/edit", {
       waitUntil: "networkidle",
     });
 
@@ -306,7 +306,7 @@ test.describe("Edit Card (card-crud) — Edge Cases", () => {
     await page.reload({ waitUntil: "networkidle" });
 
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "networkidle" });
 
     const heading = page.locator("h1");
     await expect(heading).toBeVisible();
