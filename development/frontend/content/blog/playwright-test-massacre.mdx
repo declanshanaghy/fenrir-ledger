@@ -1,0 +1,177 @@
+---
+title: "The Playwright Massacre"
+date: "2026-03-10"
+rune: "ᚦ"
+excerpt: "537 Playwright tests fell in a single CI run — a route restructuring left the test suite pointing at ghosts, and the war room mobilized to hunt them all down."
+slug: "playwright-test-massacre"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᚱ ᚦ ᛞ ᛁ</span>
+  <h1 className="session-title">The Playwright Massacre</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">2026-03-10</span></span>
+      <span>Session <span className="val">playwright-test-massacre</span></span>
+      <span>Acts <span className="val">7</span></span>
+      <span>Files changed <span className="val">0</span></span>
+  </div>
+</header>
+
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
+      <li><a href="#act-1"><span className="toc-rune">ᛞ</span> <span className="toc-num">I</span> Chains in the Forge</a></li>
+      <li><a href="#act-2"><span className="toc-rune">ᚱ</span> <span className="toc-num">II</span> The Consolidation Dispatch</a></li>
+      <li><a href="#act-3"><span className="toc-rune">ᛞ</span> <span className="toc-num">III</span> Waiting on the Wolves</a></li>
+      <li><a href="#act-4"><span className="toc-rune">ᚦ</span> <span className="toc-num">IV</span> The Massacre Revealed</a></li>
+      <li><a href="#act-5"><span className="toc-rune">ᚦ</span> <span className="toc-num">V</span> Filing the War Banner</a></li>
+      <li><a href="#act-6"><span className="toc-rune">ᛞ</span> <span className="toc-num">VI</span> Merge and Mobilize</a></li>
+      <li><a href="#act-7"><span className="toc-rune">ᚦ</span> <span className="toc-num">VII</span> The Long Investigation</a></li>
+  </ul>
+</nav>
+
+<div className="timeline">
+
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="Chains in the Forge">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Orchestration</p>
+        <h2 className="entry-title">Chains in the Forge</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Two chains in flight: <span className="hl">#550</span> (profile header redesign) with Loki PASS awaiting Playwright CI, and <span className="hl">#551</span> (consolidate UX dirs) sitting in Up Next. The orchestrator discovered duplicate directory pairs — <span className="mono">designs/ux-design/</span> vs <span className="mono">ux/</span>, <span className="mono">designs/product/</span> vs <span className="mono">product/</span>, <span className="mono">designs/architecture/</span> vs <span className="mono">architecture/</span> — and interviewed Odin on consolidation strategy.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="The Consolidation Dispatch">ᚱ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Architecture</p>
+        <h2 className="entry-title">The Consolidation Dispatch</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Delete backlog files, move unique files, renumber ADRs, delete designs/ entirely</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Odin's verdict: delete stale backlog files, move unique UX artifacts into <span className="mono">ux/</span>, renumber old ADRs into <span className="mono">architecture/adrs/</span>, and purge <span className="mono">designs/</span> entirely. Issue <span className="hl">#551</span> was updated with full consolidation plan and dispatched to FiremanDecko via Depot sandbox.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="Waiting on the Wolves">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · CI Pipeline</p>
+        <h2 className="entry-title">Waiting on the Wolves</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume (repeated 4 times)</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>A long vigil. Both chains — <span className="hl">#550</span> and <span className="hl">#551</span> — achieved Loki PASS, but Playwright CI refused to yield. The orchestrator checked and rechecked: PR <span className="hl">#552</span> ran for 40 minutes, PR <span className="hl">#553</span> for 10. Decko's handoff on #551 arrived and Loki QA was auto-dispatched. The CI wolves howled but would not finish.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="The Massacre Revealed">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Bug Discovery</p>
+        <h2 className="entry-title">The Massacre Revealed</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>PR <span className="hl">#552</span> returned from the abyss: <span className="hl">537 failed</span>, 604 passed. The failures spanned 50+ test suites — <span className="mono">chronicles-render</span> (61), <span className="mono">wizard-animations</span> (32), <span className="mono">import</span> (30), <span className="mono">auth</span> (28), <span className="mono">profile-dropdown</span> (22). 114 tests hit the 30-second timeout wall. This was no regression from a profile dropdown change — this was systemic carnage.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="Filing the War Banner">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Issue Filing</p>
+        <h2 className="entry-title">Filing the War Banner</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Extract all the info about failing tests and file a follow up to fix them all</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Issue <span className="hl">#554</span> was filed — "Fix 537 failing Playwright tests in CI" — labeled <span className="mono">bug</span> + <span className="mono">critical</span>. The full breakdown: 50+ suites, failure modes categorized (timeouts vs element-not-found vs assertion), investigation steps laid out. Added to Up Next on the project board.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-6">
+      <div className="entry-rune" title="Merge and Mobilize">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VI · Merge &amp; Dispatch</p>
+        <h2 className="entry-title">Merge and Mobilize</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">merge them and lets get on fixing it</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Both PRs merged despite CI failures — Loki PASS'd both, and the Playwright failures were pre-existing environmental rot, not caused by either PR. <span className="hl">#552</span> and <span className="hl">#553</span> squash-merged, issues closed, moved to Done. FiremanDecko immediately dispatched to Depot for <span className="hl">#554</span>.</p></div>
+          <div className="code-block"><pre>gh pr merge 552 --squash --delete-branch
+gh pr merge 553 --squash --delete-branch</pre></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-7">
+      <div className="entry-rune" title="The Long Investigation">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VII · Debugging</p>
+        <h2 className="entry-title">The Long Investigation</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume (repeated 5 times over 1 hour)</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The vigil deepened. FiremanDecko's Depot session ran for over an hour — zero commits for the first 45 minutes as he investigated the full 537-test massacre across 50+ suites. The orchestrator checked repeatedly: session alive, no commits, no PR, no handoff. Then, at the one-hour mark, a single commit appeared: <span className="hl">fix: update test routes to /ledger/ prefix after #371 restructuring</span>.</p><p>The root cause was found: PR <span className="hl">#371</span> had restructured all app routes under <span className="mono">/ledger</span>, but the test suites were still hitting the old bare routes. Every test navigating to <span className="mono">/</span> instead of <span className="mono">/ledger/</span> was doomed to fail.</p></div>
+          <div className="bug-box">
+            <p className="bug-label">Bug Fixed</p>
+            <p className="bug-text">Tests pointed at pre-#371 routes (/ instead of /ledger/) causing 537 failures across 50+ suites</p>
+          </div>
+        </div>
+      </div>
+    </section>
+</div>
+
+<footer className="session-footer">
+  <div className="footer-cipher">ᚱ ᚦ ᛞ ᛁ</div>
+  <div className="footer-text">The Playwright Massacre · Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
+</footer>
+
+</div>
