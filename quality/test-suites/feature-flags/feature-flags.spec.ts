@@ -35,7 +35,7 @@ async function clearEntitlementState(page: Page): Promise<void> {
 test.describe("Settings page structure", () => {
   test("TC-FF-101: /settings page loads with HTTP 200", async ({ page }) => {
     await clearEntitlementState(page);
-    const response = await page.goto(`${BASE_URL}/settings`, {
+    const response = await page.goto(`${BASE_URL}/ledger/settings`, {
       waitUntil: "networkidle",
     });
     expect(response?.status()).toBe(200);
@@ -43,7 +43,7 @@ test.describe("Settings page structure", () => {
 
   test("TC-FF-102: Settings page renders the page heading", async ({ page }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/ledger/settings`, { waitUntil: "networkidle" });
     const heading = page.getByRole("heading", { level: 1, name: /Settings/i });
     await expect(heading).toBeVisible();
   });
@@ -52,7 +52,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/ledger/settings`, { waitUntil: "networkidle" });
     const stripeSection = page.locator('[role="region"][aria-label="Subscription"]');
     await expect(stripeSection).toBeVisible();
   });
@@ -61,7 +61,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/ledger/settings`, { waitUntil: "networkidle" });
     // SubscriptionGate renders a locked upsell card (aria-label ends with "(locked)")
     // instead of children for Thrall users
     const cloudSyncLocked = page.locator('[aria-label="Cloud Sync (locked)"]');
@@ -72,7 +72,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/ledger/settings`, { waitUntil: "networkidle" });
     // All three SubscriptionGate instances render locked upsell cards with
     // aria-label="<Feature Name> (locked)" when the user is a Thrall
     const cloudSyncLocked = page.locator('[aria-label="Cloud Sync (locked)"]');
@@ -87,7 +87,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/ledger/settings`, { waitUntil: "networkidle" });
     // Locked upsell cards render an "Unlock with Karl" CTA button
     const unlockButtons = page.getByRole("button", { name: /unlock with karl/i });
     const count = await unlockButtons.count();
@@ -98,7 +98,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/ledger/settings`, { waitUntil: "networkidle" });
     // The actual feature sections (Cloud Sync, Multi-Household, Data Export)
     // Soft gate: children are always rendered alongside the upsell card
     const cloudSync = page.locator('[aria-label="Cloud Sync"]');
@@ -111,7 +111,7 @@ test.describe("Settings page structure", () => {
 
   test("TC-FF-108: Settings page header tagline is visible", async ({ page }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/ledger/settings`, { waitUntil: "networkidle" });
     const tagline = page.getByText("Forge your preferences. Shape the ledger to your will.");
     await expect(tagline).toBeVisible();
   });
@@ -120,7 +120,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/ledger/settings`, { waitUntil: "networkidle" });
     // "Coming soon to Karl supporters" is inside gated children -- Thrall users
     // Soft gate: children always render, so "Coming soon" text is visible
     const comingSoonText = page.getByText("Coming soon to Karl supporters.");
@@ -140,7 +140,7 @@ test.describe("Settings page structure", () => {
   }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/ledger/settings`, { waitUntil: "networkidle" });
     const heading = page.getByRole("heading", { level: 1, name: /Settings/i });
     await expect(heading).toBeVisible();
     const stripeSection = page.locator('[role="region"][aria-label="Subscription"]');
@@ -151,7 +151,7 @@ test.describe("Settings page structure", () => {
     await clearEntitlementState(page);
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/ledger/settings`, { waitUntil: "networkidle" });
     await page.waitForTimeout(500);
     expect(
       errors.filter((e) => !e.includes("hydration") && !e.includes("Warning:")),

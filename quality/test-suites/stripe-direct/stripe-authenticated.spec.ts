@@ -90,7 +90,7 @@ test.describe("Authenticated Stripe UI States", () => {
     });
 
     // Navigate to settings page (addInitScript will run before hydration)
-    await page.goto(`${BASE_URL}/settings`);
+    await page.goto(`${BASE_URL}/ledger/settings`);
     await page.waitForLoadState("networkidle");
 
     // Wait for the badge to appear (with longer timeout since API mock should respond)
@@ -130,7 +130,7 @@ test.describe("Authenticated Stripe UI States", () => {
     });
 
     // Navigate to settings page (addInitScript will run before hydration)
-    await page.goto(`${BASE_URL}/settings`);
+    await page.goto(`${BASE_URL}/ledger/settings`);
     await page.waitForLoadState("networkidle");
 
     // Check for CANCELING badge
@@ -166,7 +166,7 @@ test.describe("Authenticated Stripe UI States", () => {
     });
 
     // Navigate to settings page (addInitScript will run before hydration)
-    await page.goto(`${BASE_URL}/settings`);
+    await page.goto(`${BASE_URL}/ledger/settings`);
     await page.waitForLoadState("networkidle");
 
     // Check for CANCELED badge (not THRALL - the canceled state shows CANCELED badge)
@@ -223,7 +223,7 @@ test.describe("Authenticated Stripe UI States", () => {
 
     // Navigate to settings with session_id param (simulating Stripe redirect)
     // addInitScript will run before hydration
-    await page.goto(`${BASE_URL}/settings?stripe=success&session_id=${sessionId}`);
+    await page.goto(`${BASE_URL}/ledger/settings?stripe=success&session_id=${sessionId}`);
     await page.waitForLoadState("networkidle");
 
     // Check that Karl state is shown after migration
@@ -249,7 +249,7 @@ test.describe("Anonymous Stripe Flow", () => {
     });
 
     // Navigate to settings as anonymous
-    await page.goto(`${BASE_URL}/settings`);
+    await page.goto(`${BASE_URL}/ledger/settings`);
     await page.waitForLoadState("networkidle");
 
     // Try to trigger a locked feature (varies by implementation)

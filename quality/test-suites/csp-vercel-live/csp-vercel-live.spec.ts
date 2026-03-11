@@ -26,7 +26,7 @@ import { test, expect } from "@playwright/test";
 // ─── Test Configuration ──────────────────────────────────────────────────────
 // Base URL for testing
 const BASE_URL = "/";
-const SETTINGS_URL = "/app/settings";
+const SETTINGS_URL = "/ledger/settings";
 
 // ════════════════════════════════════════════════════════════════════════════
 // Suite 1 — CSP Directive Validation for Vercel Live

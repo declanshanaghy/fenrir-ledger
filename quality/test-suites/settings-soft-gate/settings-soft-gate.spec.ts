@@ -19,7 +19,7 @@ import { test, expect, type Page } from "@playwright/test";
 // ---------------------------------------------------------------------------
 
 const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9653";
-const SETTINGS_URL = `${BASE_URL}/settings`;
+const SETTINGS_URL = `${BASE_URL}/ledger/settings`;
 
 const CLOUD_SYNC_LABEL = "Cloud Sync";
 const MULTI_HOUSEHOLD_LABEL = "Multi-Household";

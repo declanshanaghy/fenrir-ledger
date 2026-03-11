@@ -33,7 +33,7 @@ test.describe("Issue #460 — Stripe Dedup Pre-Checkout Logic", () => {
 
   test("TC-DEDUP-01: Settings page loads and displays tier information", async ({ page }) => {
     // Navigate to settings page
-    await page.goto(`${BASE_URL}/settings`);
+    await page.goto(`${BASE_URL}/ledger/settings`);
 
     // Wait for page to load
     await page.waitForLoadState("networkidle");
@@ -74,7 +74,7 @@ test.describe("Issue #460 — Stripe Dedup Pre-Checkout Logic", () => {
 
   test("TC-DEDUP-03: Membership API provides subscription status", async ({ page }) => {
     // Navigate to settings
-    await page.goto(`${BASE_URL}/settings`);
+    await page.goto(`${BASE_URL}/ledger/settings`);
     await page.waitForLoadState("networkidle");
 
     // Try to fetch membership info (will use existing session or return empty)
@@ -112,7 +112,7 @@ test.describe("Issue #460 — Stripe Dedup Pre-Checkout Logic", () => {
     });
 
     // Navigate to settings
-    await page.goto(`${BASE_URL}/settings`);
+    await page.goto(`${BASE_URL}/ledger/settings`);
     await page.waitForLoadState("networkidle");
 
     // Wait for any API calls to complete
@@ -138,7 +138,7 @@ test.describe("Issue #460 — Stripe Dedup Pre-Checkout Logic", () => {
     // The actual build is verified by the tsc step in the verify script
 
     // Navigate to a page that exercises the modified code
-    await page.goto(`${BASE_URL}/settings`);
+    await page.goto(`${BASE_URL}/ledger/settings`);
 
     // Check for any JS errors in the console
     let jsError: string | null = null;
@@ -181,7 +181,7 @@ test.describe("Issue #460 — Stripe Dedup Pre-Checkout Logic", () => {
     });
 
     // Navigate to settings to trigger any potential checkout calls
-    await page.goto(`${BASE_URL}/settings`);
+    await page.goto(`${BASE_URL}/ledger/settings`);
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
 
@@ -210,7 +210,7 @@ test.describe("Issue #460 — Stripe Dedup Pre-Checkout Logic", () => {
     // - Cleanup (canceled/past_due)
 
     // Navigate to settings
-    await page.goto(`${BASE_URL}/settings`);
+    await page.goto(`${BASE_URL}/ledger/settings`);
     await page.waitForLoadState("networkidle");
 
     // Check that the page renders without errors
@@ -244,7 +244,7 @@ test.describe("Issue #460 — Stripe Dedup Pre-Checkout Logic", () => {
     });
 
     // Navigate to settings page
-    await page.goto(`${BASE_URL}/settings`);
+    await page.goto(`${BASE_URL}/ledger/settings`);
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
 

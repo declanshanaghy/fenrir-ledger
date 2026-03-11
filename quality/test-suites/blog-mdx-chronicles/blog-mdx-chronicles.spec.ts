@@ -33,7 +33,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
     page,
   }) => {
     // Navigate to blog index
-    const response = await page.goto("/blog", { waitUntil: "networkidle" });
+    const response = await page.goto("/chronicles", { waitUntil: "networkidle" });
     expect(response?.status()).toBe(200);
 
     // Verify page title and header
@@ -85,7 +85,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
   test("TC-2: Chronicles are sorted newest-first with correct sequential numbering", async ({
     page,
   }) => {
-    await page.goto("/blog", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "networkidle" });
 
     // Get all entries
     const entries = page.locator('ol[aria-label="Session chronicles"] li');
@@ -111,7 +111,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
     page,
   }) => {
     // First, go to index to get a valid slug
-    await page.goto("/blog", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "networkidle" });
 
     // Click first chronicle link
     const firstLink = page.locator('ol[aria-label="Session chronicles"] a').first();
@@ -136,7 +136,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
 
     const blogLink = breadcrumbLinks.nth(1);
     await expect(blogLink).toContainText("Blog");
-    await expect(blogLink).toHaveAttribute("href", "/blog");
+    await expect(blogLink).toHaveAttribute("href", "/chronicles");
 
     // Verify current page in breadcrumb
     const currentPage = breadcrumb.locator('[aria-current="page"]');
@@ -168,7 +168,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
     page,
   }) => {
     // Go to first chronicle
-    await page.goto("/blog", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "networkidle" });
     const firstLink = page.locator('ol[aria-label="Session chronicles"] a').first();
     const firstHref = await firstLink.getAttribute("href");
     await page.goto(firstHref!, { waitUntil: "networkidle" });
@@ -209,7 +209,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
     // Verify "Back to All Chronicles" link
     const backLink = navBar.locator("a").filter({ hasText: "↑ All Chronicles" });
     await expect(backLink).toBeVisible();
-    await expect(backLink).toHaveAttribute("href", "/blog");
+    await expect(backLink).toHaveAttribute("href", "/chronicles");
   });
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -219,7 +219,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
   test("TC-5: Chronicle styling preserved with runic decorations and Norse voice", async ({
     page,
   }) => {
-    await page.goto("/blog", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "networkidle" });
 
     // Navigate to first chronicle
     const firstLink = page.locator('ol[aria-label="Session chronicles"] a').first();
@@ -254,7 +254,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // Test blog index
-    await page.goto("/blog", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "networkidle" });
 
     // Verify header is visible and readable
     const title = page.locator("h1");
@@ -291,7 +291,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
   test("TC-7: Blog pages support light and dark theme switching", async ({
     page,
   }) => {
-    await page.goto("/blog", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "networkidle" });
 
     // Check if theme toggle exists (typically in header)
     const themeButton = page.locator('button[aria-label*="theme" i], button[aria-label*="dark" i], button[aria-label*="light" i]').first();
@@ -337,7 +337,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
     // 2. Entry pages load instantly (no dynamic computation)
 
     const startTime = Date.now();
-    await page.goto("/blog", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "networkidle" });
     const indexLoadTime = Date.now() - startTime;
 
     // Static pages should load quickly
@@ -390,7 +390,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
     page,
   }) => {
     // Navigate to a few entries and verify they have proper metadata
-    await page.goto("/blog", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "networkidle" });
 
     const entries = page.locator('ol[aria-label="Session chronicles"] a');
     const count = await entries.count();
@@ -414,7 +414,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
       expect(pageContent).toMatch(/[ᚠᛖᚾᚱᛁᛏᚢᛈᚦᛉᚡᚲᚳᚴᛗᚹ]/); // Rune symbol
 
       // Back to index for next iteration
-      await page.goto("/blog", { waitUntil: "networkidle" });
+      await page.goto("/chronicles", { waitUntil: "networkidle" });
     }
   });
 
@@ -425,7 +425,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
   test("TC-11: Blog navigation links (Home, Blog, Previous, Next) are functional", async ({
     page,
   }) => {
-    await page.goto("/blog", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "networkidle" });
 
     // Verify index page title
     const indexTitle = page.locator("h1");
@@ -452,7 +452,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
     expect(await backLink.count()).toBeGreaterThan(0);
 
     // Navigate back to index
-    await page.goto("/blog", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "networkidle" });
 
     // Verify we're back on the index
     await expect(indexTitle).toContainText("Session Chronicles");
@@ -465,7 +465,7 @@ test.describe("Blog MDX Chronicles QA — Issue #340", () => {
   test("TC-12: Blog index shows at least one chronicle entry", async ({
     page,
   }) => {
-    await page.goto("/blog", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "networkidle" });
 
     const entries = page.locator('ol[aria-label="Session chronicles"] li');
     const count = await entries.count();
