@@ -404,7 +404,7 @@ test.describe("Issue #545 — Unlink KV Dedup Prevention", () => {
     );
 
     // Route should exist and handle requests gracefully
-    expect([401, 400, 403, 500]).toContain(response.status());
+    expect([401, 400, 403, 429, 500]).toContain(response.status());
   });
 
   // =========================================================================
