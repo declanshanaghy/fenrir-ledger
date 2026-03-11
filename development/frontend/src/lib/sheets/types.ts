@@ -8,7 +8,8 @@ export type SheetImportErrorCode =
   | "PARSE_ERROR"
   | "ANTHROPIC_ERROR"
   | "FETCH_ERROR"
-  | "RATE_LIMITED";
+  | "RATE_LIMITED"
+  | "SUBSCRIPTION_REQUIRED";
 
 export interface SheetImportError {
   code: SheetImportErrorCode;
