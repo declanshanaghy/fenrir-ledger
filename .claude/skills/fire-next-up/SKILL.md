@@ -37,7 +37,7 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 
 ## Pack Status Script
 
-All data queries go through the pre-compiled script. **Do not use `gh project item-list` or manual GraphQL.**
+All data queries go through the pack-status script. **Do not use `gh project item-list` or manual GraphQL.**
 
 ```bash
 SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
@@ -52,8 +52,7 @@ node "$SCRIPT_DIR/pack-status.mjs" <subcommand>
 | `--resume-detect N` | Chain position + next agent + completed steps JSON |
 | `--move N <up-next\|in-progress\|done>` | Moves issue on project board |
 
-**Fallback:** `npx tsx pack-status.ts` (if `.mjs` is stale)
-**After editing `pack-status.ts`:** run `scripts/build.sh` to rebuild the `.mjs`
+`pack-status.mjs` is the sole source file — edit it directly. No build step needed.
 
 ### Dashboard Output Format
 
