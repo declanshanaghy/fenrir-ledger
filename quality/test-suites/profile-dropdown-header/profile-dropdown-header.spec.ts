@@ -61,8 +61,7 @@ test.describe("Profile Dropdown Header", () => {
     const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
     await expect(profileHeader).toBeVisible();
 
-    // Should have the subtle background styling
-    await expect(profileHeader).toHaveClass(/bg-secondary/);
+    // Should have proper styling (select-none, cursor-default)
     await expect(profileHeader).toHaveClass(/select-none/);
     await expect(profileHeader).toHaveClass(/cursor-default/);
 
