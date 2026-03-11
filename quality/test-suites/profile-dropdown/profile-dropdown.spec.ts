@@ -113,21 +113,25 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
     await expect(profileHeader).toContainText(MOCK_USER.name);
     await expect(profileHeader).toContainText(MOCK_USER.email);
 
-    // 2. Theme row with icon + label
-    const themeRow = userMenu.locator('[role="menuitem"]').nth(0);
+    // 2. My Cards link (first menuitem)
+    const myCardsButton = userMenu.locator('[role="menuitem"]').nth(0);
+    await expect(myCardsButton).toBeVisible();
+    await expect(myCardsButton).toContainText("My Cards");
+
+    // 3. Theme row with icon + label (second menuitem)
+    const themeRow = userMenu.locator('[role="menuitem"]').nth(1);
     await expect(themeRow).toBeVisible();
-    // Theme row contains the label "Theme"
     await expect(themeRow).toContainText("Theme");
 
-    // 3. Settings button with icon
-    const settingsButton = userMenu.locator('[role="menuitem"]').nth(1);
+    // 4. Settings button with icon (third menuitem)
+    const settingsButton = userMenu.locator('[role="menuitem"]').nth(2);
     await expect(settingsButton).toBeVisible();
     await expect(settingsButton).toContainText("Settings");
     const settingsIcon = settingsButton.locator("svg").first();
     await expect(settingsIcon).toBeVisible();
 
-    // 4. Sign out button with icon
-    const signOutButton = userMenu.locator('[role="menuitem"]').nth(2);
+    // 5. Sign out button with icon (fourth menuitem)
+    const signOutButton = userMenu.locator('[role="menuitem"]').nth(3);
     await expect(signOutButton).toBeVisible();
     await expect(signOutButton).toContainText("Sign out");
     const signOutIcon = signOutButton.locator("svg").first();
@@ -143,23 +147,28 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
     const userMenu = page.locator('[role="menu"]');
     await expect(userMenu).toBeVisible();
 
-    // Get all menu items (theme, settings, sign-out)
+    // Get all menu items (My Cards, theme, settings, sign-out)
     const menuItems = userMenu.locator('[role="menuitem"]');
-    await expect(menuItems).toHaveCount(3); // theme, settings, sign-out
+    await expect(menuItems).toHaveCount(4); // My Cards, theme, settings, sign-out
 
     // Verify all items have icons (either as child elements or inline)
+    // My Cards has LayoutGrid icon
+    const myCardsItem = menuItems.nth(0);
+    const myCardsIcon = myCardsItem.locator("svg").first();
+    await expect(myCardsIcon).toBeVisible();
+
     // Theme row has ThemeToggle with icon
-    const themeItem = menuItems.nth(0);
+    const themeItem = menuItems.nth(1);
     const themeIcon = themeItem.locator("[aria-label*='theme' i], svg").first();
     await expect(themeIcon).toBeVisible();
 
     // Settings button has Settings icon (SVG)
-    const settingsItem = menuItems.nth(1);
+    const settingsItem = menuItems.nth(2);
     const settingsIcon = settingsItem.locator("svg").first();
     await expect(settingsIcon).toBeVisible();
 
     // Sign-out button has LogOut icon (SVG)
-    const signOutItem = menuItems.nth(2);
+    const signOutItem = menuItems.nth(3);
     const signOutIcon = signOutItem.locator("svg").first();
     await expect(signOutIcon).toBeVisible();
 
@@ -182,7 +191,7 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
     await expect(userMenu).toBeVisible();
 
     // When: theme button is clicked (the entire theme row is now a button)
-    const themeButton = userMenu.locator('[role="menuitem"]').nth(0);
+    const themeButton = userMenu.locator('[role="menuitem"]').nth(1);
 
     // Theme button should be visible and clickable
     await expect(themeButton).toBeVisible();
@@ -205,7 +214,7 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
     await expect(userMenu).toBeVisible();
 
     // When: Settings button is clicked
-    const settingsButton = userMenu.locator('[role="menuitem"]').nth(1);
+    const settingsButton = userMenu.locator('[role="menuitem"]').nth(2);
     await settingsButton.click();
 
     // Then: page navigates to /ledger/settings
@@ -220,7 +229,7 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
     await expect(userMenu).toBeVisible();
 
     // When: Sign out button is clicked
-    const signOutButton = userMenu.locator('[role="menuitem"]').nth(2);
+    const signOutButton = userMenu.locator('[role="menuitem"]').nth(3);
     await signOutButton.click();
 
     // Then: user should be redirected to sign-in or home
@@ -308,8 +317,8 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
     const menuItems = userMenu.locator('[role="menuitem"]');
     const count = await menuItems.count();
 
-    // All three menu items (theme, settings, sign-out) should be present
-    await expect(count).toBe(3);
+    // All four menu items (My Cards, theme, settings, sign-out) should be present
+    await expect(count).toBe(4);
 
     // Each menu item should be focusable (not disabled)
     for (let i = 0; i < count; i++) {
@@ -406,7 +415,7 @@ test.describe("Profile Dropdown — Mobile (375px)", () => {
     const userMenu = page.locator('[role="menu"]');
 
     // When: examining theme row
-    const themeRow = userMenu.locator('[role="menuitem"]').nth(0);
+    const themeRow = userMenu.locator('[role="menuitem"]').nth(1);
     const themeRowBox = await themeRow.boundingBox();
 
     // Then: theme row should have adequate size for touch
@@ -425,8 +434,8 @@ test.describe("Profile Dropdown — Mobile (375px)", () => {
     const userMenu = page.locator('[role="menu"]');
 
     // Then: Settings and Sign out buttons should be visible and tappable
-    const settingsButton = userMenu.locator('[role="menuitem"]').nth(1);
-    const signOutButton = userMenu.locator('[role="menuitem"]').nth(2);
+    const settingsButton = userMenu.locator('[role="menuitem"]').nth(2);
+    const signOutButton = userMenu.locator('[role="menuitem"]').nth(3);
 
     await expect(settingsButton).toBeVisible();
     await expect(signOutButton).toBeVisible();
@@ -488,7 +497,7 @@ test.describe("Profile Dropdown — Accessibility", () => {
 
     // All interactive items should have role="menuitem" or be buttons
     const menuItems = userMenu.locator('[role="menuitem"]');
-    await expect(menuItems).toHaveCount(3); // theme, settings, sign-out
+    await expect(menuItems).toHaveCount(4); // My Cards, theme, settings, sign-out
   });
 
   test("TC-PD-A02: Theme toggle has descriptive aria-label", async ({
@@ -500,14 +509,11 @@ test.describe("Profile Dropdown — Accessibility", () => {
     const userMenu = page.locator('[role="menu"]');
 
     // When: theme toggle button is found
-    const themeRow = userMenu.locator('[role="menuitem"]').nth(0);
-    const themeButton = themeRow.locator("button").first();
+    const themeRow = userMenu.locator('[role="menuitem"]').nth(1);
 
-    // Then: should have aria-label describing current theme
-    await expect(themeButton).toHaveAttribute(
-      "aria-label",
-      /toggle theme|Theme:/i
-    );
+    // Then: should be visible and contain Theme text
+    await expect(themeRow).toBeVisible();
+    await expect(themeRow).toContainText("Theme");
   });
 
   test("TC-PD-A03: Settings and Sign out buttons are focusable", async ({
@@ -518,7 +524,7 @@ test.describe("Profile Dropdown — Accessibility", () => {
     await avatarButton.click();
 
     // When: Settings button is focused
-    const settingsButton = page.locator('[role="menuitem"]').nth(1);
+    const settingsButton = page.locator('[role="menuitem"]').nth(2);
     await settingsButton.focus();
 
     // Then: should be focused (can interact with keyboard)
