@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — Profile Dropdown Avatar Right — Issue #528</title>
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; line-height: 1.5; padding: 32px 24px; max-width: 1200px; margin: 0 auto; }
+
+    /* ── Wireframe primitives — structure only, no color ── */
+    .wf-border   { border: 1px solid; }
+    .wf-dashed   { border: 1px dashed; }
+    .wf-fill     { background: #f0f0f0; }
+    .wf-fill-md  { background: #e0e0e0; }
+    .wf-fill-dk  { background: #d0d0d0; }
+    .wf-label    { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; }
+    .wf-note     { font-size: 11px; font-style: italic; opacity: 0.7; }
+    .wf-divider  { border-top: 1px solid; margin: 4px 0; }
+
+    /* ── Page structure ── */
+    h1  { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+    h2  { font-size: 16px; font-weight: bold; margin-top: 40px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid; }
+    h3  { font-size: 13px; font-weight: bold; margin-top: 24px; margin-bottom: 8px; }
+    p   { margin-bottom: 8px; }
+
+    .meta { font-size: 12px; opacity: 0.65; margin-bottom: 32px; }
+
+    .scenario-grid   { display: grid; gap: 40px; }
+    .scenario-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+
+    .scenario-label { font-size: 11px; font-weight: bold; text-transform: uppercase; opacity: 0.55; margin-bottom: 6px; letter-spacing: 0.06em; }
+    .scenario-title { font-size: 14px; font-weight: bold; margin-bottom: 12px; }
+
+    /* ── Frame containers ── */
+    .frame-desktop {
+      width: 100%;
+      height: 560px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+      position: relative;
+    }
+    .frame-mobile {
+      width: 375px;
+      height: 668px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+      position: relative;
+      margin: 0 auto;
+    }
+
+    /* ── Top bar ── */
+    .top-bar {
+      height: 48px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .top-bar-logo { font-size: 11px; font-weight: bold; letter-spacing: 0.1em; }
+    .top-bar-right { display: flex; align-items: center; gap: 4px; }
+
+    /* ── Avatar button ── */
+    .avatar-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border: 1px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .avatar-lg {
+      width: 40px;
+      height: 40px;
+      border: 1px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    /* ── Content area ── */
+    .content-area { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .content-block { height: 48px; background: #f0f0f0; border: 1px dashed; display: flex; align-items: center; padding: 0 12px; font-size: 11px; opacity: 0.8; }
+    .content-card-row { display: flex; gap: 8px; }
+    .content-card { flex: 1; height: 80px; border: 1px dashed; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       CURRENT (BEFORE) dropdown — avatar on the LEFT
+       ───────────────────────────────────────────────────────────────── */
+    .dropdown-before {
+      position: absolute;
+      right: 0;
+      top: 52px;
+      width: 256px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      background: white;
+    }
+    /* Profile header: visually distinct from menu items (heavier fill, extra padding) */
+    .dropdown-before-header {
+      padding: 12px 16px;
+      background: #e8e8e8;                /* secondary/30 equivalent — visual separation */
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: 12px;                          /* avatar LEFT, text RIGHT */
+    }
+    .dropdown-before-info { display: flex; flex-direction: column; min-width: 0; flex: 1; overflow: hidden; }
+    .dropdown-before-name   { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dropdown-before-email  { font-size: 11px; opacity: 0.65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dropdown-before-flavor { font-size: 11px; font-style: italic; opacity: 0.5; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       NEW (AFTER) dropdown — avatar on the RIGHT, first menu item feel
+       ───────────────────────────────────────────────────────────────── */
+    .dropdown-after {
+      position: absolute;
+      right: 0;
+      top: 52px;
+      width: 256px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      background: white;
+    }
+    /* Profile row: same height/padding as other menu items — NO extra background, NO big separator */
+    .dropdown-after-profile {
+      padding: 10px 16px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;    /* text LEFT ← → avatar RIGHT */
+      min-height: 44px;
+      gap: 8px;
+    }
+    .dropdown-after-info { display: flex; flex-direction: column; min-width: 0; flex: 1; overflow: hidden; }
+    .dropdown-after-name   { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dropdown-after-email  { font-size: 11px; opacity: 0.65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dropdown-after-flavor { font-size: 11px; font-style: italic; opacity: 0.5; }
+
+    /* ── Shared menu item row ── */
+    .dropdown-row {
+      padding: 10px 16px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      font-size: 13px;
+      opacity: 0.8;
+    }
+    .dropdown-row:last-child { border-bottom: none; }
+    .row-icon { width: 16px; height: 16px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
+    .row-label { flex: 1; font-size: 13px; }
+    .row-active-dot { width: 6px; height: 6px; border: 1px solid; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Annotation arrows / notes ── */
+    .annotation {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.65;
+      margin-top: 4px;
+    }
+    .callout-box {
+      border: 1px dashed;
+      padding: 8px 12px;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+
+    /* ── Anatomy table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+    th { text-align: left; padding: 6px 8px; border-bottom: 2px solid; font-weight: bold; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; }
+    td { padding: 6px 8px; border-bottom: 1px solid; vertical-align: top; }
+    td:first-child { font-weight: bold; white-space: nowrap; }
+
+    /* ── Spacing annotation ruler ── */
+    .ruler-h {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      opacity: 0.6;
+    }
+    .ruler-line { flex: 1; border-top: 1px dashed; }
+  </style>
+</head>
+<body>
+
+  <h1>Profile Dropdown — Avatar Right (#528)</h1>
+  <p class="meta">
+    Issue #528 · Luna UX · 2026-03-11<br>
+    Scope: Move avatar from left to right inside the profile block; make the profile block feel like the first menu item (no visual disconnect).
+  </p>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SECTION 1: Before / After — Desktop dropdown anatomy
+       ══════════════════════════════════════════════════════════════════ -->
+  <h2>1. Before / After — Desktop Dropdown Anatomy</h2>
+  <p>Side-by-side comparison of the profile block. The frame is the 256 px dropdown panel only — not the full page.</p>
+
+  <div class="scenario-grid-2">
+
+    <!-- BEFORE -->
+    <div>
+      <div class="scenario-label">Before (current)</div>
+      <div class="scenario-title">Avatar LEFT — Visually separate header</div>
+
+      <div style="width:256px; border:1px solid; display:flex; flex-direction:column;">
+        <!-- Current profile header: avatar left, heavier background, visually disconnected -->
+        <div class="dropdown-before-header">
+          <div class="avatar-lg" aria-label="Avatar (left side)">ᛟ</div>
+          <div class="dropdown-before-info">
+            <span class="dropdown-before-name">Sigrid Wolfborn</span>
+            <span class="dropdown-before-email">sigrid@example.com</span>
+            <span class="dropdown-before-flavor">The wolf is named.</span>
+          </div>
+        </div>
+        <!-- Explicit divider — emphasises visual separation -->
+        <div style="height:1px; background:#ccc;"></div>
+        <div class="dropdown-row">
+          <div class="row-icon">⊞</div>
+          <span class="row-label">My Cards</span>
+          <div class="row-active-dot"></div>
+        </div>
+        <div class="dropdown-row">
+          <div class="row-icon">◑</div>
+          <span class="row-label">Theme</span>
+        </div>
+        <div class="dropdown-row">
+          <div class="row-icon">⚙</div>
+          <span class="row-label">Settings</span>
+        </div>
+        <div class="dropdown-row" style="border-bottom:none;">
+          <div class="row-icon">↩</div>
+          <span class="row-label">Sign out</span>
+        </div>
+      </div>
+
+      <div class="callout-box" style="width:256px; margin-top:8px;">
+        <strong>Problems:</strong><br>
+        • Avatar anchored to the left — same side as menu icons, creates visual noise<br>
+        • Heavier fill + extra top padding reads as a "banner header", not a menu item<br>
+        • Explicit divider after the profile block emphasises the disconnect
+      </div>
+    </div>
+
+    <!-- AFTER -->
+    <div>
+      <div class="scenario-label">After (desired)</div>
+      <div class="scenario-title">Avatar RIGHT — Profile block is first menu item</div>
+
+      <div style="width:256px; border:1px solid; display:flex; flex-direction:column;">
+        <!-- New profile row: text left, avatar right, same height as other rows, no heavier fill -->
+        <div class="dropdown-after-profile">
+          <div class="dropdown-after-info">
+            <span class="dropdown-after-name">Sigrid Wolfborn</span>
+            <span class="dropdown-after-email">sigrid@example.com</span>
+            <span class="dropdown-after-flavor">The wolf is named.</span>
+          </div>
+          <div class="avatar-lg" aria-label="Avatar (right side)">ᛟ</div>
+        </div>
+        <!-- No explicit divider between profile row and first action item — the border-bottom of the row is sufficient -->
+        <div class="dropdown-row">
+          <div class="row-icon">⊞</div>
+          <span class="row-label">My Cards</span>
+          <div class="row-active-dot"></div>
+        </div>
+        <div class="dropdown-row">
+          <div class="row-icon">◑</div>
+          <span class="row-label">Theme</span>
+        </div>
+        <div class="dropdown-row">
+          <div class="row-icon">⚙</div>
+          <span class="row-label">Settings</span>
+        </div>
+        <div class="dropdown-row" style="border-bottom:none;">
+          <div class="row-icon">↩</div>
+          <span class="row-label">Sign out</span>
+        </div>
+      </div>
+
+      <div class="callout-box" style="width:256px; margin-top:8px;">
+        <strong>Changes:</strong><br>
+        • Avatar moves to the right — visually distinct from action icons on the left<br>
+        • Same padding / min-height as other rows — profile block is the first menu item<br>
+        • No heavier background fill — no visual disconnect<br>
+        • No explicit separator div — the row's border-bottom is the only separator
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SECTION 2: Desktop — Full dropdown open in context
+       ══════════════════════════════════════════════════════════════════ -->
+  <h2>2. Desktop — Full Dropdown Open in Context</h2>
+  <p>Dropdown shown open over the dashboard at 1024 px+ width. Avatar trigger is in the top-right corner.</p>
+
+  <div class="frame-desktop">
+    <!-- Top bar -->
+    <div class="top-bar">
+      <span class="top-bar-logo">ᛟ FENRIR LEDGER</span>
+      <div class="top-bar-right">
+        <!-- Avatar trigger (signed-in) -->
+        <div class="avatar-btn" title="Open user menu [aria-expanded=true]">
+          <div class="avatar" style="border-style: solid; border-width: 2px;" aria-label="User avatar — click to open/close menu">ᛟ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page content (blurred below open dropdown) -->
+    <div class="content-area" style="opacity:0.35;">
+      <div class="content-block">My Cards tab bar</div>
+      <div class="content-card-row">
+        <div class="content-card">Card 1</div>
+        <div class="content-card">Card 2</div>
+        <div class="content-card">Card 3</div>
+      </div>
+    </div>
+
+    <!-- Dropdown — anchored to right:0, top:52px relative to top-bar right cluster -->
+    <div class="dropdown-after" style="top:52px; right:16px;">
+      <div class="dropdown-after-profile">
+        <div class="dropdown-after-info">
+          <span class="dropdown-after-name">Sigrid Wolfborn</span>
+          <span class="dropdown-after-email">sigrid@example.com</span>
+          <span class="dropdown-after-flavor">The wolf is named.</span>
+        </div>
+        <div class="avatar-lg">ᛟ</div>
+      </div>
+      <div class="dropdown-row">
+        <div class="row-icon">⊞</div>
+        <span class="row-label">My Cards</span>
+        <div class="row-active-dot"></div>
+      </div>
+      <div class="dropdown-row">
+        <div class="row-icon">◑</div>
+        <span class="row-label">Theme</span>
+      </div>
+      <div class="dropdown-row">
+        <div class="row-icon">⚙</div>
+        <span class="row-label">Settings</span>
+      </div>
+      <div class="dropdown-row" style="border-bottom:none;">
+        <div class="row-icon">↩</div>
+        <span class="row-label">Sign out</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="annotation" style="margin-top:8px;">
+    * Dropdown is 256 px wide, anchored right:0 relative to the controls cluster · z-index: 50 · shadow: lg · backdrop: background/95 + blur-sm
+  </p>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SECTION 3: Mobile 375 px — Dropdown open in context
+       ══════════════════════════════════════════════════════════════════ -->
+  <h2>3. Mobile 375 px — Dropdown Open in Context</h2>
+  <p>At 375 px the dropdown occupies almost the full viewport width. Avatar trigger remains top-right. Text truncates with ellipsis.</p>
+
+  <div style="display:flex; justify-content:center;">
+    <div class="frame-mobile" style="position:relative;">
+      <!-- Top bar -->
+      <div class="top-bar">
+        <span class="top-bar-logo" style="font-size:10px; letter-spacing:0.2em;">ᛟ FL</span>
+        <div class="top-bar-right">
+          <div class="avatar-btn">
+            <div class="avatar" style="border-style: solid; border-width: 2px;">ᛟ</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page content -->
+      <div class="content-area" style="opacity:0.3;">
+        <div class="content-block">My Cards tab bar</div>
+        <div class="content-card-row">
+          <div class="content-card">Card 1</div>
+          <div class="content-card">Card 2</div>
+        </div>
+      </div>
+
+      <!-- Dropdown — 100% width minus 16px margin each side on mobile -->
+      <div style="position:absolute; right:8px; top:52px; width:calc(375px - 16px); border:1px solid; display:flex; flex-direction:column; z-index:10; background:white;">
+        <div class="dropdown-after-profile">
+          <div class="dropdown-after-info">
+            <!-- Long name/email truncates gracefully -->
+            <span class="dropdown-after-name">Sigrid Wolfborn-Kettilsson</span>
+            <span class="dropdown-after-email">sigrid.wolfborn@longdomain.example.com</span>
+            <span class="dropdown-after-flavor">The wolf is named.</span>
+          </div>
+          <div class="avatar-lg">ᛟ</div>
+        </div>
+        <div class="dropdown-row">
+          <div class="row-icon">⊞</div>
+          <span class="row-label">My Cards</span>
+          <div class="row-active-dot"></div>
+        </div>
+        <div class="dropdown-row">
+          <div class="row-icon">◑</div>
+          <span class="row-label">Theme</span>
+        </div>
+        <div class="dropdown-row">
+          <div class="row-icon">⚙</div>
+          <span class="row-label">Settings</span>
+        </div>
+        <div class="dropdown-row" style="border-bottom:none;">
+          <div class="row-icon">↩</div>
+          <span class="row-label">Sign out</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="annotation" style="margin-top:8px; text-align:center;">
+    Mobile: dropdown width = viewport − 16 px · Long name/email truncates (text-overflow: ellipsis) · min-height: 44 px per row maintained
+  </p>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SECTION 4: Profile Row Anatomy
+       ══════════════════════════════════════════════════════════════════ -->
+  <h2>4. Profile Row Anatomy</h2>
+  <p>Detailed measurement annotation for the new profile row layout.</p>
+
+  <div style="max-width:600px;">
+
+    <!-- Annotated profile row -->
+    <div style="border:1px solid; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; min-height:44px; gap:8px; position:relative;">
+      <!-- Left: text stack -->
+      <div style="display:flex; flex-direction:column; min-width:0; flex:1;">
+        <span style="font-size:13px; font-weight:bold;">Sigrid Wolfborn</span>
+        <span style="font-size:11px; opacity:0.65;">sigrid@example.com</span>
+        <span style="font-size:11px; font-style:italic; opacity:0.5;">The wolf is named.</span>
+      </div>
+      <!-- Right: avatar -->
+      <div class="avatar-lg">ᛟ</div>
+    </div>
+
+    <!-- Ruler annotations -->
+    <div style="display:flex; font-size:10px; opacity:0.6; margin-top:4px; justify-content:space-between;">
+      <span>← 16 px padding</span>
+      <span style="text-align:center;">Text column (flex:1, overflow:hidden)</span>
+      <span>8 px gap · 40 px avatar · 16 px →</span>
+    </div>
+    <div style="font-size:10px; opacity:0.6; margin-top:2px;">
+      Row height: min-height 44 px (same as all other rows) · border-bottom: 1px solid
+    </div>
+
+    <div class="callout-box" style="margin-top:16px;">
+      <strong>Layout rules:</strong><br>
+      • <code>display: flex; justify-content: space-between; align-items: center; gap: 8px</code><br>
+      • Text column: <code>flex: 1; min-width: 0; overflow: hidden</code> (enables truncation)<br>
+      • Each text span: <code>white-space: nowrap; overflow: hidden; text-overflow: ellipsis</code><br>
+      • Avatar: <code>flex-shrink: 0</code> (never squishes)<br>
+      • Row padding: <code>padding: 10px 16px</code> — identical to other rows<br>
+      • No background-color override — inherits dropdown background<br>
+      • <code>aria-hidden="true"</code> on the profile row (decorative identity label, not interactive)
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SECTION 5: Implementation Reference Table
+       ══════════════════════════════════════════════════════════════════ -->
+  <h2>5. Implementation Reference</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Property</th>
+        <th>Before (current)</th>
+        <th>After (desired)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Avatar position</td>
+        <td>Left of text (<code>gap: 12px; avatar first</code>)</td>
+        <td>Right of text (<code>justify-content: space-between; avatar last</code>)</td>
+      </tr>
+      <tr>
+        <td>Avatar size</td>
+        <td>40 px (large)</td>
+        <td>40 px (large) — unchanged</td>
+      </tr>
+      <tr>
+        <td>Row background</td>
+        <td><code>bg-secondary/30</code> (heavier fill = visual separation)</td>
+        <td>None (inherits dropdown bg — same as other rows)</td>
+      </tr>
+      <tr>
+        <td>Row padding</td>
+        <td><code>px-4 py-3</code> (extra vertical padding = visually taller)</td>
+        <td><code>px-4 py-[10px]</code> — matches other rows exactly</td>
+      </tr>
+      <tr>
+        <td>Separator after profile block</td>
+        <td>Explicit <code>&lt;div class="h-px bg-border"&gt;</code> separator</td>
+        <td>Removed — row's own <code>border-bottom</code> is sufficient</td>
+      </tr>
+      <tr>
+        <td>aria-hidden on profile block</td>
+        <td><code>aria-hidden="true"</code> (correct — decorative)</td>
+        <td><code>aria-hidden="true"</code> — unchanged</td>
+      </tr>
+      <tr>
+        <td>cursor</td>
+        <td><code>cursor-default</code> (non-interactive)</td>
+        <td><code>cursor-default select-none</code> — unchanged</td>
+      </tr>
+      <tr>
+        <td>Text truncation</td>
+        <td>Present (<code>truncate</code>)</td>
+        <td>Present — unchanged, required with avatar on right</td>
+      </tr>
+      <tr>
+        <td>Min-height</td>
+        <td>No explicit min-height on header</td>
+        <td><code>min-height: 44px</code> — matches all action rows</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SECTION 6: Interaction Spec
+       ══════════════════════════════════════════════════════════════════ -->
+  <h2>6. Interaction Spec</h2>
+
+  <h3>Trigger</h3>
+  <p>No change to the avatar trigger button in the TopBar. Clicking/tapping the 28 px avatar button (44 px touch target) opens/closes the dropdown. <code>aria-expanded</code> toggles accordingly.</p>
+
+  <h3>Profile Row Behaviour</h3>
+  <ul style="margin-left:16px; margin-bottom:8px;">
+    <li>The profile row is <strong>non-interactive</strong> — it is a visual identity label, not a button or link.</li>
+    <li><code>aria-hidden="true"</code> on the row means screen readers skip it; user identity is already announced via the trigger button's <code>aria-label</code>.</li>
+    <li>No hover state, no focus state, no keyboard action.</li>
+  </ul>
+
+  <h3>Focus Management</h3>
+  <p>No change from current behaviour:</p>
+  <ul style="margin-left:16px; margin-bottom:8px;">
+    <li>When the dropdown opens, focus does not move to the profile row (it is <code>aria-hidden</code>).</li>
+    <li>The first focusable element inside the dropdown is "My Cards".</li>
+    <li>Escape closes the dropdown and returns focus to the avatar trigger.</li>
+    <li>Tab / Shift-Tab cycles through menu items only.</li>
+  </ul>
+
+  <h3>Long Text Edge Cases</h3>
+  <ul style="margin-left:16px; margin-bottom:8px;">
+    <li>Name, email, and tagline each truncate independently with <code>text-overflow: ellipsis</code>.</li>
+    <li>The avatar <strong>never shrinks</strong> (<code>flex-shrink: 0</code>) — text column absorbs all overflow.</li>
+    <li>At 375 px, the dropdown is 343 px wide (375 − 32 px margins). The text column has ~287 px available (343 − 8 gap − 40 avatar − 32 padding). This is sufficient for typical name/email lengths.</li>
+  </ul>
+
+  <h3>Keyboard Navigation</h3>
+  <table>
+    <thead>
+      <tr><th>Key</th><th>Behaviour</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Enter / Space on avatar trigger</td><td>Open dropdown, focus first menu item (My Cards)</td></tr>
+      <tr><td>Tab</td><td>Move to next menu item</td></tr>
+      <tr><td>Shift+Tab</td><td>Move to previous menu item</td></tr>
+      <tr><td>Escape</td><td>Close dropdown, return focus to avatar trigger</td></tr>
+      <tr><td>Click outside</td><td>Close dropdown</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SECTION 7: Accessibility Checklist
+       ══════════════════════════════════════════════════════════════════ -->
+  <h2>7. Accessibility Checklist</h2>
+
+  <table>
+    <thead>
+      <tr><th>Criterion</th><th>Requirement</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Touch target</td><td>Avatar trigger button ≥ 44 × 44 px — unchanged</td></tr>
+      <tr><td>Profile row aria</td><td><code>aria-hidden="true"</code> — identity already in trigger label</td></tr>
+      <tr><td>Menu role</td><td><code>role="menu"</code> on dropdown, <code>role="menuitem"</code> on each action row — unchanged</td></tr>
+      <tr><td>Focus ring</td><td>Visible focus ring on each <code>role="menuitem"</code> — unchanged</td></tr>
+      <tr><td>Contrast</td><td>Name text: foreground on background — engineer maps from theme tokens, not this wireframe</td></tr>
+      <tr><td>Text truncation</td><td><code>title</code> attribute on name/email spans so pointer users can see full value on hover — implementation decision</td></tr>
+      <tr><td>Reduced motion</td><td>No animation is specified for the profile row change — no concern here</td></tr>
+    </tbody>
+  </table>
+
+</body>
+</html>
