@@ -4,6 +4,7 @@ import { importFromSheet } from "@/lib/sheets/import-pipeline";
 import { importFromCsv } from "@/lib/sheets/csv-import-pipeline";
 import { importFromFile } from "@/lib/sheets/file-import-pipeline";
 import { requireAuth } from "@/lib/auth/require-auth";
+import { requireKarl } from "@/lib/auth/require-karl";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import type { FileFormat } from "@/components/sheets/CsvUpload";
@@ -25,6 +26,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!auth.ok) {
     log.debug("POST /api/sheets/import returning", { status: 401, reason: "auth failed" });
     return auth.response;
+  }
+
+  // Verify caller has Karl tier subscription (#559)
+  const karl = await requireKarl(auth.user);
+  if (!karl.ok) {
+    log.debug("POST /api/sheets/import returning", { status: 402, reason: "karl tier required" });
+    return karl.response;
   }
 
   // Apply per-user rate limiting: 5 uploads per hour (GHSA-4r6h, GHSA-5pgg)
