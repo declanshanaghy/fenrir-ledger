@@ -98,7 +98,6 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Easter Egg Modal | [wireframes/easter-eggs/easter-egg-modal.html](wireframes/easter-eggs/easter-egg-modal.html) | Reusable discovery dialog triggered by any easter egg — see [easter-egg-modal.md](easter-egg-modal.md) |
 | Konami Code — The Howl (Easter Egg #2) | [wireframes/easter-eggs/konami-howl.html](wireframes/easter-eggs/konami-howl.html) | Easter Egg #2: wolf silhouette overlay, FENRIR AWAKENS band, Ragnarok pulse variant, z-index layer map |
 | Loki Mode (Easter Egg #3) | [wireframes/easter-eggs/loki-mode.html](wireframes/easter-eggs/loki-mode.html) | Side-by-side normal vs active states, scrambled card grid, random realm badges, toast, timer, footer trigger |
-| LCARS Mode (Easter Egg #6) | [wireframes/easter-eggs/lcars-mode.html](wireframes/easter-eggs/lcars-mode.html) | LCARS overlay on dashboard header: elbow blocks + 4 data lines, z:9653, 5s auto-dismiss |
 | Gleipnir Hunt Complete | [wireframes/easter-eggs/gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) | Fragment 4 (7th card save) + Fragment 6 (15s Valhalla idle) triggers, Gleipnir reward entry, DEF-001 fix |
 | **accessibility** | | |
 | Accessibility + UX Polish | [wireframes/accessibility/accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) | Focus ring spec, skip-nav, ARIA landmarks, heading hierarchy, touch target audit, mobile layouts, reduced-motion |

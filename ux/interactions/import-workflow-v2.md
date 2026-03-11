@@ -1,6 +1,6 @@
 # Interaction Spec: Import Workflow v2 — Three Paths to the Forge
 
-**Product brief**: [`designs/product/backlog/import-workflow-v2.md`](../../product/backlog/import-workflow-v2.md)
+**Product brief**: GitHub Issues (historical backlog item)
 
 ---
 

@@ -155,21 +155,16 @@ product/
 ├── product-design-brief.md    # Freya's product brief (Luna reads, does not edit)
 ├── copywriting.md             # Norse copy, kennings, empty states
 ├── mythology-map.md           # Nine Realms -> CardStatus mapping
-└── backlog/                   # Backlog cards for future work
+└── target-market/             # Target market research and Reddit strategy
 
 architecture/
 ├── pipeline.md                # This file -- team Kanban workflow
 ├── system-design.md           # Component architecture, data flow, dependencies
 ├── implementation-brief.md    # Integration plan (Saga Ledger design system)
-└── adrs/                      # Architecture Decision Records (ADR-001 through ADR-006)
-
-designs/architecture/          # Post-Sprint 5 ADRs and implementation plans
-├── adr-api-auth.md            # ADR-008: API route auth (Accepted)
-├── adr-010-stripe-direct.md   # ADR-010: Stripe Direct integration (Accepted)
-├── adr-clerk-auth.md          # ADR-007: Clerk auth (Proposed, deferred)
-├── adr-feature-flags.md       # Feature flags (Superseded)
-├── adr-backend-server.md      # Backend server (Superseded)
-├── adr-openapi-spec.md        # OpenAPI spec (Superseded)
+├── adrs/                      # Architecture Decision Records (ADR-001 through ADR-011)
+├── clerk-implementation-plan.md  # Clerk auth implementation plan (deferred)
+├── clerk-auth-qa-report.md    # QA report: Clerk auth architecture
+├── n8n-reddit-automation.md   # n8n Reddit automation research
 └── route-ownership.md         # Route placement reference
 
 development/

@@ -53,7 +53,7 @@ criteria pass.
 - **File:** `development/frontend/src/components/sheets/MethodSelection.tsx`
   (lines 190-224)
 - **Expected (from interaction spec
-  `designs/ux-design/interactions/import-workflow-v2.md` line 100):**
+  `ux/interactions/import-workflow-v2.md` line 100):**
   `Each card: role="option", tabindex="0", aria-label with full description.`
 - **Actual:** The `role="option"` divs have `role`, `tabIndex`,
   `aria-selected`, and `aria-disabled`, but **no `aria-label`**. Screen
@@ -71,7 +71,7 @@ criteria pass.
 - **File:** `development/frontend/src/components/sheets/CsvUpload.tsx`
   (lines 53-58)
 - **Expected (from interaction spec
-  `designs/ux-design/interactions/import-workflow-v2.md`):**
+  `ux/interactions/import-workflow-v2.md`):**
   - `.xlsx` / `.xls` files: "Excel files are not supported directly. Please
     export as CSV from Excel first (File > Save As > CSV UTF-8)."
   - `.numbers` files: "Numbers files are not supported directly. Please export

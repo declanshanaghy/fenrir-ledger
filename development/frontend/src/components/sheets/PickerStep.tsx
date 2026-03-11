@@ -8,7 +8,7 @@
  *   2. picker    — Google Picker is loading/open
  *   3. fetching  — spreadsheet content is being fetched via Sheets API
  *
- * Follows the interaction spec at designs/ux-design/interactions/import-workflow-v2.md (Step 2B).
+ * Follows the interaction spec at ux/interactions/import-workflow-v2.md (Step 2B).
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
