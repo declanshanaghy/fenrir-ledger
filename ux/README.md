@@ -24,24 +24,27 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [interactions.md](interactions.md) -- Animation philosophy, saga-enter stagger, status ring, Howl panel, easter egg keyframes
 - [easter-eggs.md](easter-eggs.md) -- All hidden references: Gleipnir Hunt, Konami Howl, Loki Mode, console ASCII, and more
 - [easter-egg-modal.md](easter-egg-modal.md) -- Shared modal template for all easter egg discovery moments
-- [handoff-to-fireman-anon-auth.md](handoff-to-fireman-anon-auth.md) -- FiremanDecko handoff: anonymous-first auth model, householdId, new UI states
 - [multi-idp-interaction-spec.md](multi-idp-interaction-spec.md) -- Interaction spec: multi-IDP sign-in dialog (planned Clerk integration)
 - [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) -- Mermaid diagram conventions for all pack members
 
-### Wireframes (26 HTML5 documents)
+### Wireframes (47 HTML5 documents — audited 2026-03-12)
 
 | Category | Files |
 |----------|-------|
-| app | [dashboard.html](wireframes/app/dashboard.html), [valhalla.html](wireframes/app/valhalla.html) |
-| chrome | [topbar.html](wireframes/chrome/topbar.html), [howl-panel.html](wireframes/chrome/howl-panel.html), [footer.html](wireframes/chrome/footer.html), [button-feedback-states.html](wireframes/chrome/button-feedback-states.html) |
+| app | [dashboard-tabs.html](wireframes/app/dashboard-tabs.html), [howl-karl-tier.html](wireframes/app/howl-karl-tier.html), [valhalla.html](wireframes/app/valhalla.html), [valhalla-karl-gated.html](wireframes/app/valhalla-karl-gated.html) |
+| chrome | [sidebar-removal-dropdown-settings.html](wireframes/chrome/sidebar-removal-dropdown-settings.html), [topbar.html](wireframes/chrome/topbar.html), [profile-dropdown-avatar-right.html](wireframes/chrome/profile-dropdown-avatar-right.html), [profile-dropdown-redesign.html](wireframes/chrome/profile-dropdown-redesign.html), [howl-panel.html](wireframes/chrome/howl-panel.html), [footer.html](wireframes/chrome/footer.html), [button-feedback-states.html](wireframes/chrome/button-feedback-states.html), [dashboard-tab-headers.html](wireframes/chrome/dashboard-tab-headers.html) |
 | cards | [add-card.html](wireframes/cards/add-card.html), [wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) |
 | auth | [sign-in.html](wireframes/auth/sign-in.html), [multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html), [migration-prompt.html](wireframes/auth/migration-prompt.html), [upsell-banner.html](wireframes/auth/upsell-banner.html) |
 | notifications | [ragnarok-threshold.html](wireframes/notifications/ragnarok-threshold.html), [card-count-milestones.html](wireframes/notifications/card-count-milestones.html) |
 | modals | [about-modal.html](wireframes/modals/about-modal.html) |
 | easter-eggs | [easter-egg-modal.html](wireframes/easter-eggs/easter-egg-modal.html), [konami-howl.html](wireframes/easter-eggs/konami-howl.html), [loki-mode.html](wireframes/easter-eggs/loki-mode.html), [gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) |
-| accessibility | [accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) |
-| stripe-direct | [stripe-settings.html](wireframes/stripe-direct/stripe-settings.html), [sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html), [upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html), [anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html) |
-| marketing | [marketing-site.html](wireframes/marketing/marketing-site.html), [static-site-footer.html](wireframes/marketing/static-site-footer.html) |
+| accessibility | [accessibility-polish.html](wireframes/accessibility/accessibility-polish.html), [font-size-scale.html](wireframes/accessibility/font-size-scale.html) |
+| stripe-direct | [stripe-settings.html](wireframes/stripe-direct/stripe-settings.html), [sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html), [upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html), [anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html), [karl-upsell-dialog.html](wireframes/stripe-direct/karl-upsell-dialog.html), [karl-upsell-dialog-artwork.html](wireframes/stripe-direct/karl-upsell-dialog-artwork.html) |
+| marketing | [static-site-footer.html](wireframes/marketing/static-site-footer.html) |
+| marketing-site | [layout-shell.html](wireframes/marketing-site/layout-shell.html), [home-page.html](wireframes/marketing-site/home-page.html), [features.html](wireframes/marketing-site/features.html), [pricing.html](wireframes/marketing-site/pricing.html), [about.html](wireframes/marketing-site/about.html), [about-mobile.html](wireframes/marketing-site/about-mobile.html), [theme-variants.html](wireframes/marketing-site/theme-variants.html) |
+| chronicles | [chronicle-index.html](wireframes/chronicles/chronicle-index.html), [chronicle-article.html](wireframes/chronicles/chronicle-article.html), [chronicle-field-report.html](wireframes/chronicles/chronicle-field-report.html), [theme-variants.html](wireframes/chronicles/theme-variants.html) |
+| import | [import-method-selection.html](wireframes/import/import-method-selection.html), [csv-upload.html](wireframes/import/csv-upload.html), [safety-banner.html](wireframes/import/safety-banner.html) |
+| wizard-animations | [step-indicator.html](wireframes/wizard-animations/step-indicator.html), [step-transitions.html](wireframes/wizard-animations/step-transitions.html), [mobile-layout.html](wireframes/wizard-animations/mobile-layout.html) |
 
 ### Cross-Domain References
 
@@ -97,11 +100,14 @@ All sprints (1--5) shipped. The Saga Ledger design system is fully implemented. 
 | Artifact | Status |
 |----------|--------|
 | Theme system (colors, fonts, tokens) | Implemented |
-| All 27 wireframes | Implemented |
+| 47 wireframes (audited 2026-03-12) | Implemented (Multi-IDP Clerk: Planned) |
 | All 11 easter eggs | Implemented |
-| Stripe Direct integration (4 wireframes) | Implemented |
+| Stripe Direct integration | Implemented |
 | Anonymous-first auth model | Implemented |
 | Multi-IDP Clerk integration | Planned (not yet implemented) |
+| Light theme (Stone/Marble + Lightning Norse) | Implemented |
+| Chronicles (Prose Edda) | Implemented |
+| Import wizard | Implemented |
 
 ---
 

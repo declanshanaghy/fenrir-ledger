@@ -53,11 +53,9 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
-## Sprint 6 Wireframes
+## Sprint 8 (continued) — Sprint 6 History
 
-| Story | File | Description |
-|-------|------|-------------|
-| #372 — LedgerShell Layout | [wireframes/chrome/ledger-shell.html](wireframes/chrome/ledger-shell.html) | New layout shell for `/ledger/*` routes: slim top bar (48px) + desktop sidebar (220px) + mobile bottom tab bar (56px, 4 tabs); 8 scenarios covering desktop/mobile states, zone comparison vs marketing shell, top bar anatomy, tab bar anatomy, responsive breakpoint table, accessibility requirements, and interaction spec |
+> Sprint 6 introduced the LedgerShell with a slim 48px top bar and 220px desktop sidebar (wireframe `ledger-shell.html`). Sprint 8 (#403) subsequently removed the sidebar entirely — the current canonical shell spec is `wireframes/chrome/sidebar-removal-dropdown-settings.html`.
 
 ---
 
@@ -86,24 +84,25 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | View | File | Description |
 |------|------|-------------|
 | **app** | | |
-| Dashboard — The Ledger of Fates | [wireframes/app/dashboard.html](wireframes/app/dashboard.html) | TopBar (row 1) + sidebar shell + card grid + summary bar + footer |
 | Dashboard — Tabs Redesign | [wireframes/app/dashboard-tabs.html](wireframes/app/dashboard-tabs.html) | Tabbed layout (Issue #279): The Howl tab + Active tab replacing grid + side panel; 6 scenarios; interaction spec |
 | Howl Panel — Karl Tier Gating | [wireframes/app/howl-karl-tier.html](wireframes/app/howl-karl-tier.html) | Karl-tier gating for The Howl (Issue #398): Thrall blurred teaser + upsell overlay, Karl full panel, tab bar anatomy, mobile 375px, Ragnarök gate, interaction + accessibility spec |
 | Valhalla — Hall of the Honored Dead | [wireframes/app/valhalla.html](wireframes/app/valhalla.html) | Tombstone cards, filter bar, empty state |
 | Valhalla — Karl Tier Gated State | [wireframes/app/valhalla-karl-gated.html](wireframes/app/valhalla-karl-gated.html) | Valhalla tab gating (#377): Thrall tab bar with lock indicator, dialog trigger, Karl unlocked state, mobile bottom nav + content tabs, behavior table Thrall vs Karl |
 | **chrome** | | |
-| LedgerShell — Slim Top Bar + Mobile Bottom Tab Bar | [wireframes/chrome/ledger-shell.html](wireframes/chrome/ledger-shell.html) | New `/ledger/*` layout shell (Issue #372): slim 48px top bar, 220px desktop sidebar, 56px mobile bottom tab bar (4 tabs); 8 scenarios; interaction spec; accessibility table; responsive breakpoint table |
+| LedgerShell — No Sidebar, Slim TopBar + Bottom Tabs | [wireframes/chrome/sidebar-removal-dropdown-settings.html](wireframes/chrome/sidebar-removal-dropdown-settings.html) | Sidebar removed (#403): full-width content, Settings moved to profile dropdown, rotary theme toggle; 6 scenarios desktop/mobile; interaction spec |
 | TopBar — Anonymous + Signed-In States | [wireframes/chrome/topbar.html](wireframes/chrome/topbar.html) | Global sticky header: 7 scenarios covering anonymous ᛟ rune avatar + upsell prompt, signed-in Google avatar + dropdown, and the avatar transition animation (anonymous-first model, Sprint 3.2) |
+| Profile Dropdown — Avatar Right Redesign | [wireframes/chrome/profile-dropdown-avatar-right.html](wireframes/chrome/profile-dropdown-avatar-right.html) | Avatar moved right in profile block (#528): before/after anatomy, desktop + mobile context, measurement annotations, interaction spec, a11y checklist |
+| Profile Dropdown — Interaction Spec | [wireframes/chrome/profile-dropdown-interaction-spec.md](wireframes/chrome/profile-dropdown-interaction-spec.md) | Interaction spec for profile dropdown: focus management, keyboard nav, long text edge cases |
 | The Howl Panel | [wireframes/chrome/howl-panel.html](wireframes/chrome/howl-panel.html) | Alert sidebar: active and empty variants |
 | App Footer | [wireframes/chrome/footer.html](wireframes/chrome/footer.html) | Three-column footer: brand wordmark + tagline, nav links (About), team credits + © copyright; Easter Egg #5 (© hover → "Breath of a Fish") and Easter Egg #3 (Loki 7-click) both anchored here |
 | Dashboard Tab Headers, Tooltips, Empty States | [wireframes/chrome/dashboard-tab-headers.html](wireframes/chrome/dashboard-tab-headers.html) | Dismissable tab headers + summary sub-headers, runic empty states, status label tooltips; 11 scenarios, 3 component specs (TabHeader, TabSummary, StatusTooltip), localStorage keys, a11y; interaction spec: [dashboard-tab-headers-interaction-spec.md](wireframes/chrome/dashboard-tab-headers-interaction-spec.md) |
-| Button Feedback States | [wireframes/chrome/button-feedback-states.html](wireframes/chrome/button-feedback-states.html) | All button variants (primary/secondary/destructive) across 5 states: default, hover, active, loading, disabled; spinner placement; sidebar nav hover; mobile layout; error recovery; a11y spec (Issue #150) |
+| Button Feedback States | [wireframes/chrome/button-feedback-states.html](wireframes/chrome/button-feedback-states.html) | All button variants (primary/secondary/destructive) across 5 states: default, hover, active, loading, disabled; spinner placement; mobile layout; error recovery; a11y spec (Issue #150) |
 | **cards** | | |
 | Add / Edit Card — Forge a Chain | [wireframes/cards/add-card.html](wireframes/cards/add-card.html) | Multi-section form: identity, fee, welcome bonus, notes |
 | Wolf's Hunger Meter + About Modal | [wireframes/cards/wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) | Hunger meter in About modal + ForgeMasterEgg, 4 display variants, shared WolfHungerMeter component spec |
 | **auth** | | |
 | Sign In — Optional Cloud Sync | [wireframes/auth/sign-in.html](wireframes/auth/sign-in.html) | Dedicated /sign-in page (not gated — optional upgrade); no-data and has-data variants; desktop + mobile; "Continue without signing in" is a first-class prominent CTA |
-| Multi-IDP Sign-In Dialog (Clerk) | [wireframes/auth/multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html) | Modal dialog supporting 1–4+ providers; Phase 1 (GitHub) + Phase 2 (Google, Apple, Magic Link); desktop centered + mobile bottom-anchored; "Continue without signing in" is the sole, prominent dismiss |
+| Multi-IDP Sign-In Dialog (Clerk — Planned) | [wireframes/auth/multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html) | Planned: modal dialog supporting 1–4+ providers via Clerk; desktop centered + mobile bottom-anchored; "Continue without signing in" sole prominent dismiss. Current prod uses Google PKCE (ADR-005). |
 | Migration Prompt — Anonymous to Signed-In | [wireframes/auth/migration-prompt.html](wireframes/auth/migration-prompt.html) | Post-OAuth modal dialog: Import N cards vs. Start fresh; reassurance copy; desktop + mobile stacked choices; state flow diagram |
 | Cloud Sync Upsell Banner | [wireframes/auth/upsell-banner.html](wireframes/auth/upsell-banner.html) | Dismissible banner below TopBar on the dashboard: visible/dismissed/signed-in variants, desktop + mobile; dismiss lifecycle and localStorage flag spec |
 | **notifications** | | |
@@ -124,11 +123,31 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | SealedRuneModal — Stripe CTA | [wireframes/stripe-direct/sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html) | Premium feature paywall modal with Stripe Checkout redirect, anonymous + authenticated flows |
 | Upsell Banner — Stripe Variant | [wireframes/stripe-direct/upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html) | Dashboard upgrade banner for Thrall users, Stripe Checkout CTA, dismiss lifecycle |
 | Anonymous Checkout Email Form | [wireframes/stripe-direct/anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html) | Email collection modal for anonymous Stripe subscribers, validation states, loading, mobile |
-| **Common Karl Upsell Dialog** | [wireframes/stripe-direct/karl-upsell-dialog.html](wireframes/stripe-direct/karl-upsell-dialog.html) | Shared KarlUpsellDialog for all Karl-gated features (#377, #378, #398): prop-driven feature icon/name/tagline/teaser, lock badge overlay, $3.99/mo price row, direct Stripe CTA; desktop + mobile bottom-sheet; props table per feature; anatomy annotation; interaction spec |
-| **Karl Upsell Dialog — Artwork Alignment** | [wireframes/stripe-direct/karl-upsell-dialog-artwork.html](wireframes/stripe-direct/karl-upsell-dialog-artwork.html) | Updated KarlUpsellDialog with featureImage prop — matches /features page artwork (#560): before/after Valhalla comparison, Howl + Smart Import variants, mobile 375px bottom-sheet, full featureImage mapping table (all 9 Karl features), ThemedFeatureImage anatomy, props diff |
+| Common Karl Upsell Dialog | [wireframes/stripe-direct/karl-upsell-dialog.html](wireframes/stripe-direct/karl-upsell-dialog.html) | Shared KarlUpsellDialog for all Karl-gated features (#377, #378, #398): prop-driven feature icon/name/tagline/teaser, lock badge overlay, $3.99/mo price row, direct Stripe CTA; desktop + mobile bottom-sheet; props table per feature; anatomy annotation; interaction spec |
+| Karl Upsell Dialog — Artwork Alignment | [wireframes/stripe-direct/karl-upsell-dialog-artwork.html](wireframes/stripe-direct/karl-upsell-dialog-artwork.html) | Updated KarlUpsellDialog with featureImage prop — matches /features page artwork (#560): before/after Valhalla comparison, Howl + Smart Import variants, mobile 375px bottom-sheet, full featureImage mapping table (all 9 Karl features), ThemedFeatureImage anatomy, props diff |
 | **marketing** | | |
-| Marketing Site | [wireframes/marketing/marketing-site.html](wireframes/marketing/marketing-site.html) | 5-section static page: nav, hero, problems, features, steps, footer (updated: legal links in footer) |
 | Static Site Footer | [wireframes/marketing/static-site-footer.html](wireframes/marketing/static-site-footer.html) | Dedicated footer spec: brand, quote, runes, CTA, session link, legal row (Privacy Policy + Terms of Service), team credits; easter egg triggers preserved |
+| **marketing-site** | | |
+| Marketing Site — Layout Shell | [wireframes/marketing-site/layout-shell.html](wireframes/marketing-site/layout-shell.html) | Full marketing site shell: nav + hero + sections + footer |
+| Home Page | [wireframes/marketing-site/home-page.html](wireframes/marketing-site/home-page.html) | Hero, CHAINS problems, FEATURES grid, STEPS flow |
+| Features Page | [wireframes/marketing-site/features.html](wireframes/marketing-site/features.html) | All 9 Karl features with artwork slots |
+| Pricing Page | [wireframes/marketing-site/pricing.html](wireframes/marketing-site/pricing.html) | Tier comparison, FAQ accordion |
+| About Page | [wireframes/marketing-site/about.html](wireframes/marketing-site/about.html) | About page: team pack, mythology |
+| About Page — Mobile | [wireframes/marketing-site/about-mobile.html](wireframes/marketing-site/about-mobile.html) | Mobile 375px variant of About page |
+| Theme Variants | [wireframes/marketing-site/theme-variants.html](wireframes/marketing-site/theme-variants.html) | Dark/light theme rendering side-by-side |
+| **chronicles** | | |
+| Chronicle Index | [wireframes/chronicles/chronicle-index.html](wireframes/chronicles/chronicle-index.html) | Prose Edda listing page: article grid, nav, empty state |
+| Chronicle Article | [wireframes/chronicles/chronicle-article.html](wireframes/chronicles/chronicle-article.html) | Article detail layout: header, body, footer |
+| Chronicle Field Report | [wireframes/chronicles/chronicle-field-report.html](wireframes/chronicles/chronicle-field-report.html) | Field report article variant |
+| Theme Variants | [wireframes/chronicles/theme-variants.html](wireframes/chronicles/theme-variants.html) | Dark/light chronicle theme side-by-side |
+| **import** | | |
+| Method Selection (Step 1) | [wireframes/import/import-method-selection.html](wireframes/import/import-method-selection.html) | Three import paths: CSV, Google Sheets, Share URL |
+| CSV Upload (Step 2C) | [wireframes/import/csv-upload.html](wireframes/import/csv-upload.html) | CSV drag-drop upload, validation, preview |
+| Safety Banner | [wireframes/import/safety-banner.html](wireframes/import/safety-banner.html) | Pre-import data safety warning, all variants |
+| **wizard-animations** | | |
+| Step Indicator | [wireframes/wizard-animations/step-indicator.html](wireframes/wizard-animations/step-indicator.html) | Multi-step wizard progress indicator component |
+| Step Transitions | [wireframes/wizard-animations/step-transitions.html](wireframes/wizard-animations/step-transitions.html) | Animated step enter/exit transitions |
+| Mobile Layout | [wireframes/wizard-animations/mobile-layout.html](wireframes/wizard-animations/mobile-layout.html) | Mobile 375px wizard layout |
 
 ---
 
@@ -215,25 +234,19 @@ Key layout decisions:
 
 ## Dashboard — The Ledger of Fates
 
-[→ dashboard.html](wireframes/app/dashboard.html)
+> The original sidebar dashboard layout (`dashboard.html`) was superseded by the tabbed layout (#279) and sidebar removal (#403). The current layout uses `LedgerShell` (no sidebar) + `DashboardTabs`. See `wireframes/app/dashboard-tabs.html` and `wireframes/chrome/sidebar-removal-dropdown-settings.html`.
 
-Key layout decisions:
-- **TopBar row added (Sprint 3.1):** App shell now has 3 rows — `auto` (TopBar) · `1fr` (sidebar + content) · `auto` (footer). TopBar spans both columns.
-- Persistent left sidebar: `272px` fixed, collapses to icon-only rail
-- Logo: `ᛟ FENRIR LEDGER` + `Credit Card Tracker` subtitle
-- Active nav item highlighted (gold in implementation)
-- `[ADD CARD ▶]` lives in content header only — not in the summary bar
-- Summary bar: `{N} cards · {N} need attention` — card count bold, attention count accent
+Key layout decisions (current):
+- **LedgerTopBar:** Slim 48px top bar. No persistent sidebar on any viewport.
+- **DashboardTabs:** Content is organized into 5 tabs (The Howl, Active, The Hunt, Valhalla, All).
 - Card grid: 3-col desktop (>1024px) · 2-col tablet (640–1024px) · 1-col mobile
-- Mobile: sidebar hidden, toggled as overlay drawer via hamburger
-
-**The Howl panel** *(Sprint 3)*: fixed right sidebar (desktop), bottom drawer (mobile). See `howl-panel.html`.
+- Mobile: LedgerBottomTabs (4 tabs, 56px, fixed bottom) replaces sidebar entirely.
 
 ---
 
 ## Card Panel Component
 
-[→ dashboard.html](wireframes/app/dashboard.html) (cards rendered in the grid)
+[→ wireframes/app/dashboard-tabs.html](wireframes/app/dashboard-tabs.html) (cards rendered in tab content)
 
 Each card is a `CardChain` component. Structure:
 - Top: Status ring (SVG circle, `strokeDashoffset`-driven progress) + realm badge
