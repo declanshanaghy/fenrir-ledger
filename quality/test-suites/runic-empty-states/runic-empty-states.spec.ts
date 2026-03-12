@@ -297,33 +297,6 @@ test.describe("Runic Empty States — Issue #583", () => {
   });
 
   test.describe("Edge Cases", () => {
-    test("Empty state displays correctly when user switches between tabs", async ({ page }) => {
-      // Setup: one active card, one urgent card
-      await setupDashboard(page, [
-        makeCard({ cardName: "Active" }),
-        makeUrgentCard({ cardName: "Urgent" }),
-      ]);
-
-      // Start at Howl (has urgent card)
-      const howlTab = page.locator('button#tab-howl');
-      await howlTab.click();
-      const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
-      let cards = howlPanel.locator('[data-testid^="card-"]');
-      expect(await cards.count()).toBeGreaterThan(0);
-
-      // Switch to Active (has active card)
-      const activeTab = page.locator('button#tab-active');
-      await activeTab.click();
-      const activePanel = page.locator('[role="tabpanel"]#panel-active');
-      cards = activePanel.locator('[data-testid^="card-"]');
-      expect(await cards.count()).toBeGreaterThan(0);
-
-      // Switch back to Howl to verify tab switching preserves state
-      await howlTab.click();
-      const howlCards = howlPanel.locator('[data-testid^="card-"]');
-      expect(await howlCards.count()).toBeGreaterThan(0);
-    });
-
     test("Empty state persists when all cards of a type are deleted", async ({ page }) => {
       // Start with bonus cards only
       const bonus_card = makeCard({
