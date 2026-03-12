@@ -17,7 +17,7 @@ import type { CardStatus } from "@/lib/types";
  * - [ ] WCAG 2.1 AA: role="tooltip", aria-describedby
  */
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://localhost:9653";
 
 // All 7 card statuses from the system
 const ALL_STATUSES: CardStatus[] = [
