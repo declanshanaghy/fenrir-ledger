@@ -145,7 +145,7 @@ export function DashboardTabs({ cards, children }: DashboardTabsProps) {
             )}
             style={{ fontFamily: "serif" }}
           >
-            {ragnarokActive ? "\u16A0" : "\u16B2"}
+            {ragnarokActive ? "ᚠ" : "ᚲ"}
           </span>
           {ragnarokActive ? "Ragnarok Approaches" : "The Howl"}
           {/* Badge */}
@@ -190,7 +190,7 @@ export function DashboardTabs({ cards, children }: DashboardTabsProps) {
             className="text-base leading-none select-none"
             style={{ fontFamily: "serif" }}
           >
-            {"\u16C9"}
+            {"ᛉ"}
           </span>
           Active
           <span

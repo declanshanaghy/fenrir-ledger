@@ -629,7 +629,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         <TabSummary tabId="howl" cards={displayHowlCards} />
         <div tabIndex={-1} className="outline-none pt-5">
           {displayHowlCards.length === 0 ? (
-            <TabEmptyState tabId="howl" rune="\u16B2" />
+            <TabEmptyState tabId="howl" rune="ᚲ" />
           ) : (
             <AnimatedCardGrid
               cards={displayHowlCards}
@@ -656,7 +656,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         <TabSummary tabId="hunt" cards={displayHuntCards} />
         <div tabIndex={-1} className="outline-none pt-5">
           {displayHuntCards.length === 0 ? (
-            <TabEmptyState tabId="hunt" rune="\u16DC" />
+            <TabEmptyState tabId="hunt" rune="ᛜ" />
           ) : (
             <AnimatedCardGrid
               cards={displayHuntCards}
@@ -683,7 +683,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         <TabSummary tabId="active" cards={displayActiveCards} />
         <div tabIndex={-1} className="outline-none pt-5">
           {displayActiveCards.length === 0 ? (
-            <TabEmptyState tabId="active" rune="\u16C9" />
+            <TabEmptyState tabId="active" rune="ᛉ" />
           ) : (
             <AnimatedCardGrid
               cards={displayActiveCards}
@@ -710,7 +710,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         <TabSummary tabId="valhalla" cards={displayValhallaCards} />
         <div tabIndex={-1} className="outline-none pt-5">
           {displayValhallaCards.length === 0 ? (
-            <TabEmptyState tabId="valhalla" rune="\u2191" />
+            <TabEmptyState tabId="valhalla" rune="↑" />
           ) : (
             <AnimatedCardGrid
               cards={displayValhallaCards}
@@ -737,7 +737,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         <TabSummary tabId="all" cards={displayCards} />
         <div tabIndex={-1} className="outline-none pt-5">
           {displayCards.length === 0 ? (
-            <TabEmptyState tabId="all" rune="\u16DF" />
+            <TabEmptyState tabId="all" rune="ᛟ" />
           ) : (
             <AnimatedCardGrid
               cards={displayCards}

@@ -265,7 +265,7 @@ export function KarlUpsellDialog({
  * Usage: <KarlUpsellDialog {...KARL_UPSELL_VALHALLA} open={...} onDismiss={...} />
  */
 export const KARL_UPSELL_VALHALLA = {
-  featureIcon: "\u16CF", // ᛏ Tiwaz rune
+  featureIcon: "ᛏ", // Tiwaz rune
   featureName: "Valhalla",
   featureTagline: "Hall of the Honored Dead",
   featureTeaser:
@@ -284,7 +284,7 @@ export const KARL_UPSELL_VALHALLA = {
  * Usage: <KarlUpsellDialog {...KARL_UPSELL_HOWL} open={...} onDismiss={...} />
  */
 export const KARL_UPSELL_HOWL = {
-  featureIcon: "\u16B2", // ᚲ Kenaz rune
+  featureIcon: "ᚲ", // Kenaz rune
   featureName: "The Howl",
   featureTagline: "The Wolf Cries Before the Chain Breaks",
   featureTeaser:
@@ -303,7 +303,7 @@ export const KARL_UPSELL_HOWL = {
  * Usage: <KarlUpsellDialog {...KARL_UPSELL_VELOCITY} open={...} onDismiss={...} />
  */
 export const KARL_UPSELL_VELOCITY = {
-  featureIcon: "\u16CA", // ᛊ Sowilo rune
+  featureIcon: "ᛊ", // Sowilo rune
   featureName: "Velocity",
   featureTagline: "How Fast Does Your Plunder Flow?",
   featureTeaser:
@@ -322,7 +322,7 @@ export const KARL_UPSELL_VELOCITY = {
  * Usage: <KarlUpsellDialog {...KARL_UPSELL_IMPORT} open={...} onDismiss={...} />
  */
 export const KARL_UPSELL_IMPORT = {
-  featureIcon: "\u16DA", // ᛚ Laguz rune (flow, water — data flowing in)
+  featureIcon: "ᛚ", // Laguz rune (flow, water — data flowing in)
   featureName: "Import",
   featureTagline: "The Runes Inscribed Afar Shall Be Read Here",
   featureTeaser:
