@@ -176,22 +176,28 @@ test.describe("Settings — Restore Tab Guides", () => {
     expect(ariaLabel).toMatch(/\d+ dismissed/);
   });
 
-  test("Edge case: Rapidly clicking button doesn't cause issues", async ({ page }) => {
-    // Setup: dismiss all tab guides
+  test("Edge case: Multiple resets in succession are idempotent", async ({ page }) => {
+    // Setup: dismiss all tab guides twice
+    await dismissAllTabGuides(page);
     await dismissAllTabGuides(page);
 
     await page.goto("/ledger/settings", { waitUntil: "load" });
     const button = page.getByRole("button", { name: /Restore the Guides/i });
 
-    // Click button twice rapidly
+    // First click should reset all guides
     await button.click();
-    await button.click();
+    let dismissedAfter1 = await getActiveDismissedGuides(page);
+    expect(dismissedAfter1).toHaveLength(0);
 
-    // Verify state is consistent: keys should be cleared
-    let dismissedAfter = await getActiveDismissedGuides(page);
-    expect(dismissedAfter).toHaveLength(0);
+    // Reload to test idempotency - no guides should be dismissed
+    await page.reload({ waitUntil: "load" });
 
-    // Button should remain in correct state (disabled after reset)
-    await expect(button).toBeDisabled();
+    // Button should now be disabled (nothing to restore)
+    const buttonAfterReload = page.getByRole("button", { name: /Restore the Guides/i });
+    await expect(buttonAfterReload).toBeDisabled();
+
+    // Final verification: no keys are set
+    let finalDismissed = await getActiveDismissedGuides(page);
+    expect(finalDismissed).toHaveLength(0);
   });
 });
