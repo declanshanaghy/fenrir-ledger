@@ -48,10 +48,10 @@ test.describe("Auth returnTo — Query Param Validation", () => {
   }) => {
     // Spec: buildSignInUrl("/ledger") should include returnTo=/ledger
     // even though "/" is the default, the feature still works for base ledger path
-    await page.goto("/ledger", { waitUntil: "networkidle" });
+    await page.goto("/ledger", { waitUntil: "load" });
 
     // Navigate to sign-in (simulating the upsell flow)
-    await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
+    await page.goto("/ledger/sign-in", { waitUntil: "load" });
 
     // Verify the page loaded
     await expect(page).toHaveURL(/\/ledger\/sign-in/);
@@ -63,7 +63,7 @@ test.describe("Auth returnTo — Query Param Validation", () => {
     // Spec: when user navigates to /ledger/sign-in?returnTo=/ledger/settings,
     // they should return to /ledger/settings after sign-in
     await page.goto("/ledger/sign-in?returnTo=/ledger/settings", {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Verify returnTo param is in the URL
@@ -78,7 +78,7 @@ test.describe("Auth returnTo — Query Param Validation", () => {
     // Spec: when user navigates to /ledger/sign-in?returnTo=/ledger/valhalla,
     // they should return to /ledger/valhalla after sign-in
     await page.goto("/ledger/sign-in?returnTo=/ledger/valhalla", {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Verify returnTo param is in the URL
@@ -89,7 +89,7 @@ test.describe("Auth returnTo — Query Param Validation", () => {
 
   test("sign-in with no returnTo defaults to /ledger", async ({ page }) => {
     // Spec: /ledger/sign-in without returnTo param should default to /ledger
-    await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
+    await page.goto("/ledger/sign-in", { waitUntil: "load" });
 
     // Verify no returnTo param in URL
     await expect(page).toHaveURL(/\/ledger\/sign-in$/);
@@ -101,7 +101,7 @@ test.describe("Auth returnTo — Query Param Validation", () => {
     // Spec: validateReturnTo should reject "https://evil.com" and fall back to /ledger
     // This is validated in the sign-in page's handleSignIn method
     await page.goto("/ledger/sign-in?returnTo=https://evil.com", {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // The page should still load (validateReturnTo prevents the attack)
@@ -115,7 +115,7 @@ test.describe("Auth returnTo — Query Param Validation", () => {
   test("protocol-relative URLs in returnTo are rejected", async ({ page }) => {
     // Spec: validateReturnTo should reject "//evil.com"
     await page.goto("/ledger/sign-in?returnTo=//evil.com", {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // The page should still load
@@ -134,7 +134,7 @@ test.describe("Auth returnTo — sessionStorage Management", () => {
     // Spec: when user clicks "Sign in to Google", handleSignIn stores
     // { verifier, state, callbackUrl: validatedReturnTo } in sessionStorage
     await page.goto("/ledger/sign-in?returnTo=/ledger/settings", {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Get the initial sessionStorage state
@@ -156,7 +156,6 @@ test.describe("Auth returnTo — sessionStorage Management", () => {
     await signInButton.click();
 
     // Wait for a short delay to allow sessionStorage to be written
-    await page.waitForTimeout(500);
 
     // Verify PKCE data was stored with the correct callbackUrl
     const sessionAfter = await page.evaluate(() => {
@@ -174,7 +173,7 @@ test.describe("Auth returnTo — sessionStorage Management", () => {
     page,
   }) => {
     // Spec: when returnTo is missing, validateReturnTo returns "/ledger"
-    await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
+    await page.goto("/ledger/sign-in", { waitUntil: "load" });
 
     // Intercept the redirect to Google
     await page.route("https://accounts.google.com/**", (route) => {
@@ -185,7 +184,6 @@ test.describe("Auth returnTo — sessionStorage Management", () => {
     const signInButton = page.locator('button:has-text("Sign in to Google")');
     await signInButton.click();
 
-    await page.waitForTimeout(500);
 
     // Verify PKCE data was stored with /ledger as default
     const sessionData = await page.evaluate(() => {
@@ -201,7 +199,7 @@ test.describe("Auth returnTo — sessionStorage Management", () => {
   }) => {
     // Spec: validateReturnTo rejects https://evil.com and falls back to /ledger
     await page.goto("/ledger/sign-in?returnTo=https://evil.com", {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Intercept the redirect
@@ -213,7 +211,6 @@ test.describe("Auth returnTo — sessionStorage Management", () => {
     const signInButton = page.locator('button:has-text("Sign in to Google")');
     await signInButton.click();
 
-    await page.waitForTimeout(500);
 
     // Verify the external URL was rejected and /ledger is used instead
     const sessionData = await page.evaluate(() => {
@@ -244,8 +241,7 @@ test.describe("Auth returnTo — Graceful Degradation", () => {
     ];
 
     for (const url of malformedUrls) {
-      await page.goto(url, { waitUntil: "networkidle" });
-      await page.waitForTimeout(200);
+      await page.goto(url, { waitUntil: "load" });
     }
 
     // Filter out benign Next.js HMR noise
@@ -265,7 +261,7 @@ test.describe("Auth returnTo — Graceful Degradation", () => {
     page.on("pageerror", (err) => errors.push(err.message));
 
     await page.goto("/ledger/sign-in?returnTo=/ledger/sign-in", {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Intercept the redirect
@@ -277,7 +273,6 @@ test.describe("Auth returnTo — Graceful Degradation", () => {
     const signInButton = page.locator('button:has-text("Sign in to Google")');
     await signInButton.click();
 
-    await page.waitForTimeout(500);
 
     // Verify the loop is prevented by checking sessionStorage
     const sessionData = await page.evaluate(() => {

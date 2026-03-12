@@ -36,7 +36,7 @@ test.describe("AC-1 & AC-4 — Single primary CTA (no duplicate Add Card)", () =
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     // Reload with networkidle so all async effects settle.
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
@@ -51,7 +51,7 @@ test.describe("AC-1 & AC-4 — Single primary CTA (no duplicate Add Card)", () =
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
@@ -72,7 +72,7 @@ test.describe("AC-1 & AC-4 — Single primary CTA (no duplicate Add Card)", () =
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [makeCard()]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // With cards present the summary header is shown (e.g. "1 card").
     await page.waitForSelector('text=/\\d+ card/', { timeout: 10000 });
@@ -92,7 +92,7 @@ test.describe("AC-2 — Upsell banner not shown to new (zero-card) users", () =>
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
@@ -111,7 +111,7 @@ test.describe("AC-2 — Upsell banner not shown to new (zero-card) users", () =>
     await page.evaluate(() => localStorage.removeItem("fenrir:upsell_dismissed"));
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [makeCard()]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text=/\\d+ card/', { timeout: 10000 });
 
@@ -130,7 +130,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
@@ -143,7 +143,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
@@ -156,7 +156,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
@@ -175,7 +175,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
@@ -201,7 +201,7 @@ test.describe("Edge cases", () => {
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
@@ -216,7 +216,7 @@ test.describe("Edge cases", () => {
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
@@ -233,7 +233,7 @@ test.describe("Edge cases", () => {
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
@@ -247,7 +247,7 @@ test.describe("Edge cases", () => {
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 
@@ -261,7 +261,7 @@ test.describe("Edge cases", () => {
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.waitForSelector('text="Before"', { timeout: 10000 });
 

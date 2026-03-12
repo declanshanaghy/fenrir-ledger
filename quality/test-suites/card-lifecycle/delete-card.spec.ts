@@ -35,9 +35,9 @@ test.describe("Delete Card — Confirmation Dialog", () => {
     const card = makeCard({ cardName: "Dialog Delete Test" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Delete card")').first().click();
 
@@ -48,9 +48,9 @@ test.describe("Delete Card — Confirmation Dialog", () => {
     const card = makeCard({ cardName: "Cancel Delete Test" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();
@@ -74,9 +74,9 @@ test.describe("Delete Card — Confirm Action", () => {
     const card = makeCard({ cardName: "Card To Delete" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();
@@ -94,9 +94,9 @@ test.describe("Delete Card — Confirm Action", () => {
     const card = makeCard({ cardName: "Permanently Gone Card" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();
@@ -117,9 +117,9 @@ test.describe("Delete Card — Confirm Action", () => {
     const cardToKeep = makeCard({ cardName: "Keep This One" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [cardToDelete, cardToKeep]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${cardToDelete.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${cardToDelete.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();

@@ -27,7 +27,7 @@ import { clearAllStorage } from "../helpers/test-fixtures";
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await clearAllStorage(page);
-  await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
+  await page.goto("/ledger/sign-in", { waitUntil: "load" });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -40,7 +40,7 @@ test.describe("Sign-In Page — Rendering", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
+    await page.goto("/ledger/sign-in", { waitUntil: "load" });
 
     // Filter out known benign Next.js HMR noise in dev
     const fatal = errors.filter(
@@ -51,7 +51,7 @@ test.describe("Sign-In Page — Rendering", () => {
 
   test("page returns HTTP 200", async ({ page }) => {
     // Spec: /sign-in must be a valid, reachable route
-    const response = await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
+    const response = await page.goto("/ledger/sign-in", { waitUntil: "load" });
     expect(response?.status()).toBe(200);
   });
 
@@ -182,7 +182,7 @@ test.describe("Sign-In Page — Responsive (375px)", () => {
   test("page is usable at 375px viewport width", async ({ page }) => {
     // Spec: team norms — minimum 375px. Sign-in card uses w-full max-w-[400px]
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
+    await page.goto("/ledger/sign-in", { waitUntil: "load" });
 
     const heading = page.locator("h1#signin-heading");
     await expect(heading).toBeVisible();
@@ -199,7 +199,7 @@ test.describe("Sign-In Page — Responsive (375px)", () => {
   test("sign-in card does not overflow viewport at 375px", async ({ page }) => {
     // Spec: sign-in/page.tsx — w-full max-w-[400px], px-4 on the outer div
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
+    await page.goto("/ledger/sign-in", { waitUntil: "load" });
 
     const main = page.locator("main[aria-labelledby='signin-heading']");
     const box = await main.boundingBox();
@@ -252,7 +252,7 @@ test.describe("Sign-In Page — Variant B (has local cards)", () => {
       localStorage.setItem("fenrir:household", householdId);
     });
 
-    await page.goto("/ledger/sign-in", { waitUntil: "networkidle" });
+    await page.goto("/ledger/sign-in", { waitUntil: "load" });
 
     // If the anon household key matches, heading must switch to Variant B
     // The spec says cardCount > 0 produces: "Your chains are already here."

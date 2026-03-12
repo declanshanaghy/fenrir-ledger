@@ -35,9 +35,9 @@ test.describe("Close Card — Confirmation Dialog", () => {
     const card = makeCard({ cardName: "Dialog Test Card" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Close Card")').first().click();
 
@@ -50,9 +50,9 @@ test.describe("Close Card — Confirmation Dialog", () => {
     const card = makeCard({ cardName: "Cancel Close Test" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Close Card")').first().click();
     await expect(page.locator("text=Close this card?")).toBeVisible();
@@ -76,9 +76,9 @@ test.describe("Close Card — Confirm Action", () => {
     const card = makeCard({ cardName: "Card To Close" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Close Card")').first().click();
     await expect(page.locator("text=Close this card?")).toBeVisible();
@@ -98,9 +98,9 @@ test.describe("Close Card — Confirm Action", () => {
     const card = makeCard({ cardName: "Soon To Be Closed" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Close Card")').first().click();
     await expect(page.locator("text=Close this card?")).toBeVisible();

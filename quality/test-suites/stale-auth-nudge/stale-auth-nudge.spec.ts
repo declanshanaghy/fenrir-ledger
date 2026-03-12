@@ -135,7 +135,6 @@ test.describe("AC-2: Nudge is dismissible", () => {
     await expect(getBanner(page)).toBeVisible({ timeout: 5000 });
 
     await getDesktopDismissBtn(page).click();
-    await page.waitForTimeout(400);
 
     const cacheValue = await getEntitlementCacheValue(page);
     expect(cacheValue).toBeNull();
@@ -151,7 +150,6 @@ test.describe("AC-2: Nudge is dismissible", () => {
     await expect(getBanner(page)).toBeVisible({ timeout: 5000 });
 
     await getDesktopDismissBtn(page).click();
-    await page.waitForTimeout(400);
 
     const flag = await getDismissFlag(page);
     expect(flag).toBe("true");
@@ -167,7 +165,6 @@ test.describe("AC-3: No nudge for genuinely anonymous users", () => {
     page,
   }) => {
     await page.reload({ waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(500);
 
     await expect(getBanner(page)).not.toBeVisible();
   });
@@ -182,7 +179,6 @@ test.describe("AC-3: No nudge for genuinely anonymous users", () => {
     }, NUDGE_DISMISSED_KEY);
 
     await page.reload({ waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(500);
 
     await expect(getBanner(page)).not.toBeVisible();
   });

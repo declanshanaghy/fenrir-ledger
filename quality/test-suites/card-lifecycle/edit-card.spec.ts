@@ -35,9 +35,9 @@ test.describe("Edit Card — Pre-populated Fields", () => {
     const card = makeCard({ cardName: "Freya's Folly" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     const cardNameInput = page.locator("#cardName");
     await expect(cardNameInput).toHaveValue("Freya's Folly");
@@ -45,10 +45,10 @@ test.describe("Edit Card — Pre-populated Fields", () => {
 
   test("unknown card ID redirects to dashboard", async ({ page }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     await page.goto("/ledger/cards/nonexistent-id-that-does-not-exist/edit", {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     await page.waitForURL("**/", { timeout: 5000 });
@@ -67,9 +67,9 @@ test.describe("Edit Card — Save Changes", () => {
     const card = makeCard({ cardName: "Original Name" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator("#cardName").fill("Updated Name");
     await page.locator('button[type="submit"]').click();
@@ -84,9 +84,9 @@ test.describe("Edit Card — Save Changes", () => {
     const card = makeCard({ cardName: "Before Update" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     const newName = `After Update ${Date.now()}`;
     await page.locator("#cardName").fill(newName);
@@ -110,9 +110,9 @@ test.describe("Edit Card — Cancel Without Saving", () => {
     const card = makeCard({ cardName: "Do Not Change Me" });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator("#cardName").fill("Changed But Cancelled");
 
@@ -130,16 +130,16 @@ test.describe("Edit Card — Cancel Without Saving", () => {
     const card = makeCard({ cardName: originalName });
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator("#cardName").fill("This Should Not Save");
     await page.locator('button:has-text("Cancel")').click();
 
     await page.waitForURL("**/", { timeout: 5000 });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "networkidle" });
+    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
     const cardNameInput = page.locator("#cardName");
     await expect(cardNameInput).toHaveValue(originalName);
   });

@@ -29,7 +29,7 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     page,
   }) => {
     // Navigate to chronicles index
-    const response = await page.goto("/chronicles", { waitUntil: "networkidle" });
+    const response = await page.goto("/chronicles", { waitUntil: "load" });
     expect(response?.status()).toBe(200);
 
     // Verify page title
@@ -60,7 +60,7 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     page,
   }) => {
     // First get the list of chronicles
-    await page.goto("/chronicles", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "load" });
 
     // Get first chronicle card
     const firstCard = page.locator("a[href*='/chronicles/']").first();
@@ -68,7 +68,7 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     expect(href).toBeTruthy();
 
     // Navigate to the detail page
-    const response = await page.goto(href || "/chronicles", { waitUntil: "networkidle" });
+    const response = await page.goto(href || "/chronicles", { waitUntil: "load" });
     expect(response?.status()).toBe(200);
 
     // Verify breadcrumb navigation exists - look for link to /chronicles in breadcrumb
@@ -93,7 +93,7 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     page,
   }) => {
     // Navigate to chronicles index
-    await page.goto("/chronicles", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "load" });
 
     // Verify navbar exists with navigation - check for home link
     const homeLink = page.locator("a[href='/']").first();
@@ -116,7 +116,7 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     page,
   }) => {
     // Navigate to home page to verify navbar/footer
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "load" });
 
     // Find all links with text "Chronicles"
     const chroniclesLinks = page.locator("a:has-text('Chronicles')");
@@ -141,7 +141,7 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     page,
   }) => {
     // Navigate to old /blog route
-    const response = await page.goto("/blog", { waitUntil: "networkidle" });
+    const response = await page.goto("/blog", { waitUntil: "load" });
     expect(response?.status()).toBe(404);
   });
 
@@ -153,7 +153,7 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 812 });
 
-    await page.goto("/chronicles", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "load" });
 
     // Verify cards are visible and stacked on mobile
     const cards = page.locator("a[href*='/chronicles/']");
@@ -177,14 +177,14 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     page,
   }) => {
     // Navigate to chronicles index
-    await page.goto("/chronicles", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "load" });
 
     // Get first chronicle link
     const firstCard = page.locator("a[href*='/chronicles/']").first();
     const href = await firstCard.getAttribute("href");
 
     // Navigate to detail page
-    await page.goto(href || "/chronicles", { waitUntil: "networkidle" });
+    await page.goto(href || "/chronicles", { waitUntil: "load" });
 
     // Look for "All Chronicles" link which indicates prev/next nav exists
     const allChroniclesLink = page.locator("a:has-text('All Chronicles')");
@@ -203,7 +203,7 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     page,
   }) => {
     // Get all chronicle cards
-    await page.goto("/chronicles", { waitUntil: "networkidle" });
+    await page.goto("/chronicles", { waitUntil: "load" });
 
     // Test first 2 chronicles (budget test, 30s timeout is tight)
     for (let i = 0; i < 2; i++) {
@@ -212,7 +212,7 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
       expect(href).toMatch(/^\/chronicles\/[a-z0-9-]+$/);
 
       // Navigate and verify 200 status
-      const response = await page.goto(href || "/chronicles", { waitUntil: "networkidle" });
+      const response = await page.goto(href || "/chronicles", { waitUntil: "load" });
       expect(response?.status()).toBe(200);
 
       // Verify we're on a detail page (not index)
@@ -220,7 +220,7 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
       await expect(breadcrumb).toBeVisible();
 
       // Go back to index for next iteration
-      await page.goto("/chronicles", { waitUntil: "networkidle" });
+      await page.goto("/chronicles", { waitUntil: "load" });
     }
   });
 });

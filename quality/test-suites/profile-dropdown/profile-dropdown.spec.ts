@@ -75,12 +75,12 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
   test.beforeEach(async ({ page }) => {
     page.setViewportSize({ width: 1280, height: 720 });
     // Navigate to "/" first to establish browser context
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "load" });
     // Clear storage and seed auth session
     await clearAllStorage(page);
     await seedAuthSession(page);
     // Navigate to /ledger
-    await page.goto("/ledger", { waitUntil: "networkidle" });
+    await page.goto("/ledger", { waitUntil: "load" });
   });
 
   test("TC-PD01: Dropdown opens when avatar button is clicked", async ({
@@ -198,7 +198,6 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
 
     // Click to cycle
     await themeButton.click();
-    await page.waitForTimeout(100); // Wait for state update
 
     // Button should still be visible after click
     await expect(themeButton).toBeVisible();
@@ -234,7 +233,7 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
 
     // Then: user should be redirected to sign-in or home
     // and dropdown should close
-    await page.waitForNavigation({ waitUntil: "networkidle" });
+    await page.waitForNavigation({ waitUntil: "load" });
     const userMenuAfter = page.locator('[role="menu"]');
     await expect(userMenuAfter).not.toBeVisible();
   });
@@ -339,12 +338,12 @@ test.describe("Profile Dropdown — Mobile (375px)", () => {
   test.beforeEach(async ({ page }) => {
     page.setViewportSize({ width: 375, height: 667 });
     // Navigate to "/" first to establish browser context
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "load" });
     // Clear storage and seed auth session
     await clearAllStorage(page);
     await seedAuthSession(page);
     // Navigate to /ledger
-    await page.goto("/ledger", { waitUntil: "networkidle" });
+    await page.goto("/ledger", { waitUntil: "load" });
   });
 
   test("TC-PD-M01: Dropdown opens on mobile", async ({ page }) => {
@@ -475,12 +474,12 @@ test.describe("Profile Dropdown — Accessibility", () => {
   test.beforeEach(async ({ page }) => {
     page.setViewportSize({ width: 1280, height: 720 });
     // Navigate to "/" first to establish browser context
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "load" });
     // Clear storage and seed auth session
     await clearAllStorage(page);
     await seedAuthSession(page);
     // Navigate to /ledger
-    await page.goto("/ledger", { waitUntil: "networkidle" });
+    await page.goto("/ledger", { waitUntil: "load" });
   });
 
   test("TC-PD-A01: Dropdown has proper ARIA roles and labels", async ({

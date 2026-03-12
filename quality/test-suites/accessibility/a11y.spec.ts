@@ -39,7 +39,7 @@ test.describe("Page Landmarks", () => {
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
   });
 
   test("TC-A01: main landmark exists on dashboard", async ({ page }) => {
@@ -88,7 +88,7 @@ test.describe("Heading Hierarchy", () => {
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     const h1 = page.locator("h1").first();
     await expect(h1).toBeVisible();
@@ -118,7 +118,7 @@ test.describe("Heading Hierarchy", () => {
     await page.goto("/ledger/cards/new");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Wait for the form to render — it's gated behind status !== "loading"
     const heading = page.locator("h1, h2, h3").first();
@@ -137,7 +137,7 @@ test.describe("Form Accessibility", () => {
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
     // Navigate to the add card form
     await page.goto("/ledger/cards/new");
     // Wait for the form to appear (gated behind auth status resolution)
@@ -237,7 +237,7 @@ test.describe("Keyboard Navigation", () => {
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     const focusedElements = new Set<string>();
 
@@ -272,7 +272,7 @@ test.describe("Keyboard Navigation", () => {
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Find a card tile link — each card wraps in <Link href="/ledger/cards/{id}/edit">
     const cardLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
@@ -319,7 +319,7 @@ test.describe("Screen Reader Support", () => {
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, URGENT_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Badges are <span> elements inside the card tile header area with
     // aria-label="Card status: {label}"
@@ -354,7 +354,7 @@ test.describe("Screen Reader Support", () => {
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // At least one aria-live region must be present in the page
     const liveRegions = page.locator(
@@ -374,7 +374,7 @@ test.describe("Screen Reader Support", () => {
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // TopBar renders the anonymous avatar button when not authenticated
     const avatarButton = page.locator(
@@ -390,7 +390,7 @@ test.describe("Screen Reader Support", () => {
     await page.goto("/");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // In expanded state the button has aria-label="Collapse sidebar"
     const collapseButton = page.locator(

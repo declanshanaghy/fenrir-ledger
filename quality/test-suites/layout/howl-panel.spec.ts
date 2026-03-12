@@ -35,7 +35,7 @@ async function setup(
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "load" });
 }
 
 // ════════════════════════════════════════════════════════════════════════════

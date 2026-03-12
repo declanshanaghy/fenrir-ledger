@@ -54,7 +54,7 @@ test.describe("Dashboard — Empty State", () => {
     // Seed household only — no cards
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, EMPTY_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: EmptyState.tsx h2 begins "Before" and contains "Gleipnir was forged"
     // The heading includes two myth-link anchors (Gleipnir, Fenrir) so we
@@ -70,7 +70,7 @@ test.describe("Dashboard — Empty State", () => {
   }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, EMPTY_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: EmptyState.tsx renders <Link href="/ledger/cards/new">Add Card</Link>
     const addCardLink = page.locator('a[href="/ledger/cards/new"]').first();
@@ -83,7 +83,7 @@ test.describe("Dashboard — Empty State", () => {
   }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, EMPTY_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Dashboard renders EmptyState when cards.length === 0 — no card links
     // to /cards/{id}/edit should exist
@@ -102,7 +102,7 @@ test.describe("Dashboard — Card Grid", () => {
   }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: CardTile.tsx renders <CardTitle>{card.cardName}</CardTitle>
     // FEW_CARDS = [Sapphire Preferred, Platinum, Venture Rewards]
@@ -114,7 +114,7 @@ test.describe("Dashboard — Card Grid", () => {
   test("renders exactly 3 card tiles for FEW_CARDS", async ({ page }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Each CardTile is wrapped in a Link to /cards/{id}/edit
     // Cards appear in "All" tab + status tab; scope to the "All" tabpanel
@@ -126,7 +126,7 @@ test.describe("Dashboard — Card Grid", () => {
   test("renders MANY_CARDS (10 cards) — no empty state", async ({ page }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, MANY_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // When cards exist, EmptyState is not rendered — no h2 with "Gleipnir"
     // should be present. Use count check (instant) rather than textContent()
@@ -151,7 +151,7 @@ test.describe("Dashboard — Summary Stats", () => {
   }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, MANY_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: Dashboard.tsx renders "{cards.length} cards" in the summary header
     // MANY_CARDS has 10 entries
@@ -169,7 +169,7 @@ test.describe("Dashboard — Summary Stats", () => {
     const oneCard = [FEW_CARDS[0]!];
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, oneCard);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: Dashboard.tsx uses ternary → cards.length === 1 ? "card" : "cards"
     // Must be "1 card" not "1 cards"
@@ -184,7 +184,7 @@ test.describe("Dashboard — Summary Stats", () => {
   test("shows 'needs attention' count for URGENT_CARDS", async ({ page }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, URGENT_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: Dashboard.tsx renders "{needsAttention.length} need{plural} attention"
     // URGENT_CARDS has 5 cards: 3 fee_approaching + 2 promo_expiring = 5 urgent
@@ -199,7 +199,7 @@ test.describe("Dashboard — Summary Stats", () => {
     // FEW_CARDS are all status: "active" — no urgent entries
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: needsAttention.length > 0 guard before rendering the attention span
     const body = await page.locator("body").innerText();
@@ -217,7 +217,7 @@ test.describe("Dashboard — Status Badges", () => {
     // FEW_CARDS are all status: "active"
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: STATUS_LABELS.active = "Active" (constants.ts, authoritative)
     // StatusBadge renders <Badge>{label}</Badge> where label = STATUS_LABELS[status]
@@ -232,7 +232,7 @@ test.describe("Dashboard — Status Badges", () => {
   test("fee_approaching cards show 'Fee Due Soon' badge", async ({ page }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, URGENT_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: STATUS_LABELS.fee_approaching = "Fee Due Soon" (constants.ts)
     // Scope to "All" tab to avoid 5-tab duplication
@@ -246,7 +246,7 @@ test.describe("Dashboard — Status Badges", () => {
   test("promo_expiring cards show 'Promo Expiring' badge", async ({ page }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, URGENT_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: STATUS_LABELS.promo_expiring = "Promo Expiring" (constants.ts)
     // Scope to "All" tab to avoid 5-tab duplication
@@ -267,7 +267,7 @@ test.describe("Dashboard — Card Tile Links", () => {
   test("each card tile links to /cards/{id}/edit", async ({ page }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: CardTile.tsx wraps content in <Link href={`/cards/${card.id}/edit`}>
     // Each FEW_CARDS entry has a unique ID — verify the link pattern exists
@@ -285,7 +285,7 @@ test.describe("Dashboard — Card Tile Links", () => {
   }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     const firstCard = FEW_CARDS[0]!;
     const tileLink = page.locator(`a[href="/ledger/cards/${firstCard.id}/edit"]`).first();
@@ -299,7 +299,7 @@ test.describe("Dashboard — Card Tile Links", () => {
   test("Add Card button in header navigates to /cards/new", async ({ page }) => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
 
     // Spec: page.tsx renders <Link href="/ledger/cards/new">Add Card</Link> in the header
     const addCardBtn = page.locator('a[href="/ledger/cards/new"]').first();

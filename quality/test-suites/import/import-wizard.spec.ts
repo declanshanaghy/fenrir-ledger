@@ -24,7 +24,7 @@
  *   2. seed auth session → householdId === "test-household-id"
  *   3. seed household → "fenrir:household" = "test-household-id"
  *   4. seed cards → at least 1 active card under that household
- *   5. reload({ waitUntil: "networkidle" }) — causes React to re-read localStorage
+ *   5. reload({ waitUntil: "load" }) — causes React to re-read localStorage
  *
  * NOTE: baseURL is provided by Playwright config (playwright.config.ts).
  * Tests use page.goto(path) — no hardcoded port or BASE_URL constant.
