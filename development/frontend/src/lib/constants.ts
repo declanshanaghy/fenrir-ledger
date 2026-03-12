@@ -80,3 +80,55 @@ export const STATUS_TOOLTIPS: Record<CardStatus, string> = {
   overdue: getRealmDescription("overdue"),
   graduated: getRealmDescription("graduated"),
 };
+
+/**
+ * Rich tooltip content for status badges — follows the Two-Voice Rule.
+ *
+ * Each entry has:
+ *   label   — bold status name (Voice 1: functional)
+ *   meaning — plain English explanation (Voice 1: functional)
+ *   flavor  — Norse atmospheric one-liner (Voice 2: atmospheric)
+ *
+ * Interaction spec: ux/wireframes/chrome/dashboard-tab-headers-interaction-spec.md § 3
+ * Copy source: product/copywriting.md — Status Badges table
+ */
+export const TOOLTIP_CONTENT: Record<
+  CardStatus,
+  { label: string; meaning: string; flavor: string }
+> = {
+  active: {
+    label: "Active",
+    meaning: "Card is in good standing with no urgent deadlines.",
+    flavor: "Asgard-bound — rewards flowing, no urgent deadlines",
+  },
+  fee_approaching: {
+    label: "Fee Due Soon",
+    meaning: "Annual fee is due within 60 days. Decide: keep, downgrade, or close.",
+    flavor: "Muspelheim — the fee-serpent stirs",
+  },
+  promo_expiring: {
+    label: "Promo Expiring",
+    meaning: "Sign-up bonus deadline is approaching. Meet your spend requirement.",
+    flavor: "Hati approaches — the moon wanes",
+  },
+  closed: {
+    label: "Closed",
+    meaning: "Card has been closed. Rewards were harvested.",
+    flavor: "In Valhalla — chain broken, plunder secured",
+  },
+  bonus_open: {
+    label: "Bonus Open",
+    meaning: "Sign-up bonus window is open. Earn rewards by meeting the spend target.",
+    flavor: "Alfheim — light elves guide your spending",
+  },
+  overdue: {
+    label: "Overdue",
+    meaning: "Annual fee is past due. Take action to avoid penalties.",
+    flavor: "Niflheim — Gleipnir tightens",
+  },
+  graduated: {
+    label: "Graduated",
+    meaning: "Minimum spend met and bonus earned. Well played.",
+    flavor: "Valhalla — the mead-hall toll is paid",
+  },
+};
