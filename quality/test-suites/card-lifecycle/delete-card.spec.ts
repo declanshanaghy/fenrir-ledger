@@ -86,7 +86,7 @@ test.describe("Delete Card — Confirm Action", () => {
       .last();
     await confirmBtn.click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/");
   });
 
@@ -106,7 +106,7 @@ test.describe("Delete Card — Confirm Action", () => {
       .last();
     await confirmBtn.click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
 
     const body = await page.locator("body").innerText();
     expect(body).not.toContain("Permanently Gone Card");
@@ -129,7 +129,7 @@ test.describe("Delete Card — Confirm Action", () => {
       .last()
       .click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
 
     await expect(page.locator("text=Keep This One").first()).toBeVisible();
     const body = await page.locator("body").innerText();

@@ -135,7 +135,7 @@ test.describe("Sign-In Page — Continue Without Signing In", () => {
     // Spec: sign-in/page.tsx — onClick={() => router.push("/")}
     const btn = page.locator('button:has-text("Continue without signing in")');
     await btn.click();
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/sign-in");
   });
 

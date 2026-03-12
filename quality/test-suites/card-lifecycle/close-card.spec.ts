@@ -88,7 +88,7 @@ test.describe("Close Card — Confirm Action", () => {
       .last();
     await confirmBtn.click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/");
   });
 
@@ -110,7 +110,7 @@ test.describe("Close Card — Confirm Action", () => {
       .last();
     await confirmBtn.click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
 
     const body = await page.locator("body").innerText();
     expect(body).not.toContain("Soon To Be Closed");

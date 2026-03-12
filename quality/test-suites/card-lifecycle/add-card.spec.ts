@@ -63,7 +63,7 @@ test.describe("Add Card — Validation Errors", () => {
     const submitBtn = page.locator('button[type="submit"]');
     await submitBtn.click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/new");
   });
 });
@@ -82,7 +82,7 @@ test.describe("Add Card — Successful Creation", () => {
 
     await page.locator('button[type="submit"]').click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/new");
   });
 
@@ -97,7 +97,7 @@ test.describe("Add Card — Successful Creation", () => {
 
     await page.locator('button[type="submit"]').click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
 
     // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
     await expect(page.locator(`text=${uniqueName}`).first()).toBeVisible();
@@ -114,7 +114,7 @@ test.describe("Add Card — Cancel Navigation", () => {
     await expect(cancelBtn).toBeVisible();
     await cancelBtn.click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/new");
   });
 });

@@ -87,7 +87,7 @@ test.describe("Dashboard — Empty State", () => {
 
     // Dashboard renders EmptyState when cards.length === 0 — no card links
     // to /cards/{id}/edit should exist
-    const editLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
+    const editLinks = page.locator('a[href*="/ledger/cards/"][href*="/edit"]');
     await expect(editLinks).toHaveCount(0);
   });
 });
@@ -119,7 +119,7 @@ test.describe("Dashboard — Card Grid", () => {
     // Each CardTile is wrapped in a Link to /cards/{id}/edit
     // Cards appear in "All" tab + status tab; scope to the "All" tabpanel
     const allPanel = page.locator('[aria-labelledby="tab-all"]');
-    const editLinks = allPanel.locator('a[href*="/cards/"][href*="/edit"]');
+    const editLinks = allPanel.locator('a[href*="/ledger/cards/"][href*="/edit"]');
     await expect(editLinks).toHaveCount(3);
   });
 
@@ -136,7 +136,7 @@ test.describe("Dashboard — Card Grid", () => {
 
     // Scope to "All" tab to avoid 5-tab duplication
     const allPanel = page.locator('[aria-labelledby="tab-all"]');
-    const editLinks = allPanel.locator('a[href*="/cards/"][href*="/edit"]');
+    const editLinks = allPanel.locator('a[href*="/ledger/cards/"][href*="/edit"]');
     await expect(editLinks).toHaveCount(10);
   });
 });
