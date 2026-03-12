@@ -139,18 +139,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
     await expect(subtleNudge).toBeVisible();
   });
 
-  test("zero-cards nudge: full banner region is absent", async ({ page }) => {
-    await page.goto("/ledger");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "load" });
-
-    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
-
-    // Full banner identified by role="region" with aria-label — must not be present.
-    const fullBanner = page.locator('[role="region"][aria-label="Sync your data"]');
-    await expect(fullBanner).not.toBeVisible();
-  });
+  // "full banner region absent" — REMOVED (Issue #610): Duplicate of AC-2.
 
   test("subtle nudge navigates to sign-in page on click", async ({ page }) => {
     await page.goto("/ledger");
@@ -169,24 +158,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
     expect(page.url()).toContain("/ledger/sign-in");
   });
 
-  test("subtle nudge is wrapped in a muted-foreground paragraph (not a gold CTA)", async ({
-    page,
-  }) => {
-    await page.goto("/ledger");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "load" });
-
-    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
-
-    // The nudge paragraph carries "muted-foreground" styling — it is NOT a primary/gold CTA.
-    const parentParagraph = page.locator(
-      'p:has(button:text("Sign in to sync your data"))'
-    );
-    await expect(parentParagraph).toBeVisible();
-    const parentClass = await parentParagraph.getAttribute("class");
-    expect(parentClass).toMatch(/muted/);
-  });
+  // "muted-foreground paragraph" — REMOVED (Issue #610): CSS class inspection.
 });
 
 // ─── Edge cases ───────────────────────────────────────────────────────────────
@@ -208,71 +180,8 @@ test.describe("Edge cases", () => {
     expect(jsErrors).toHaveLength(0);
   });
 
-  test("mobile 375px: single Add Card CTA visible, no header duplicate", async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
-
-    await page.goto("/ledger");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "load" });
-
-    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
-
-    const addCardLinks = page.locator('a[href="/ledger/cards/new"]');
-    await expect(addCardLinks).toHaveCount(1);
-
-    const addCardLink = addCardLinks.first();
-    await expect(addCardLink).toBeVisible();
-  });
-
-  test("mobile 375px: subtle sign-in nudge is visible", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
-
-    await page.goto("/ledger");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "load" });
-
-    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
-
-    const subtleNudge = page.locator('button:text("Sign in to sync your data")');
-    await expect(subtleNudge).toBeVisible();
-  });
-
-  test("EmptyState headline (Gleipnir) is present in zero-card state", async ({
-    page,
-  }) => {
-    await page.goto("/ledger");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "load" });
-
-    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
-
-    const headline = page.locator("h2").filter({ hasText: /Gleipnir/ });
-    await expect(headline).toBeVisible();
-  });
-
-  test("no competing CTAs: exactly one primary Add Card link + no gold banner sign-in", async ({
-    page,
-  }) => {
-    await page.goto("/ledger");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "load" });
-
-    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
-
-    // Exactly one /cards/new link (EmptyState only).
-    const addCardLinks = page.locator('a[href="/ledger/cards/new"]');
-    await expect(addCardLinks).toHaveCount(1);
-
-    // Gold-bordered "Sign in to sync" button from the full banner must not be visible.
-    const bannerSignInBtn = page.locator(
-      '[role="region"][aria-label="Sync your data"] button:text("Sign in to sync")'
-    );
-    await expect(bannerSignInBtn).not.toBeVisible();
-  });
+  // "mobile 375px single Add Card" — REMOVED (Issue #610): Duplicate of AC-1 desktop.
+  // "mobile 375px subtle sign-in nudge" — REMOVED (Issue #610): Duplicate of AC-3 desktop.
+  // "EmptyState headline Gleipnir" — REMOVED (Issue #610): Duplicate of dashboard Suite 1.
+  // "no competing CTAs" — REMOVED (Issue #610): Duplicate of AC-1 + AC-2 assertions.
 });

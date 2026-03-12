@@ -43,59 +43,9 @@ test.beforeEach(async ({ page }) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 test.describe("Fee and Bonus Fields on Step 2 — Navigation", () => {
-  test("More Details button advances from Step 1 to Step 2", async ({
-    page,
-  }) => {
-    // Spec: CardForm.tsx handleMoreDetails() calls setCurrentStep(2)
-    // Fill required Step 1 fields first
-    await page.locator("#issuerId").click();
-    await page.locator('[role="option"]').first().click();
-
-    await page.locator("#cardName").fill("Test Card for Step 2");
-    await page.locator("#openDate").fill("2024-01-15");
-
-    // Click "More Details" button
-    const moreDetailsBtn = page.locator('button:has-text("More Details")');
-    await expect(moreDetailsBtn).toBeVisible();
-    await moreDetailsBtn.click();
-
-    // After advancing to Step 2, step 2 fields should be visible
-    await expect(page.locator("#creditLimit")).toBeVisible();
-  });
-
-  test("Annual Fee Date field is visible on Step 2", async ({ page }) => {
-    // Spec: CardForm.tsx — Annual Fee Date rendered when (isEditMode || currentStep === 2)
-    // Fill required Step 1 fields
-    await page.locator("#issuerId").click();
-    await page.locator('[role="option"]').first().click();
-
-    await page.locator("#cardName").fill("Card with Fee Date");
-    await page.locator("#openDate").fill("2024-01-15");
-
-    // Advance to Step 2
-    await page.locator('button:has-text("More Details")').click();
-
-    // Annual Fee Date input should now be visible
-    const annualFeeDateInput = page.locator("#annualFeeDate");
-    await expect(annualFeeDateInput).toBeVisible();
-  });
-
-  test("Bonus Deadline field is visible on Step 2", async ({ page }) => {
-    // Spec: CardForm.tsx — Bonus Deadline rendered when (isEditMode || currentStep === 2)
-    // Fill required Step 1 fields
-    await page.locator("#issuerId").click();
-    await page.locator('[role="option"]').first().click();
-
-    await page.locator("#cardName").fill("Card with Bonus Deadline");
-    await page.locator("#openDate").fill("2024-01-15");
-
-    // Advance to Step 2
-    await page.locator('button:has-text("More Details")').click();
-
-    // Bonus Deadline input should now be visible
-    const bonusDeadlineInput = page.locator("#bonusDeadline");
-    await expect(bonusDeadlineInput).toBeVisible();
-  });
+  // "More Details advances" — REMOVED (Issue #610): Duplicate of wizard-step2.
+  // "Annual Fee Date visible" — REMOVED (Issue #610): Consolidated below.
+  // "Bonus Deadline visible" — REMOVED (Issue #610): Consolidated below.
 
   test("Bonus Met checkbox is visible on Step 2", async ({ page }) => {
     // Spec: CardForm.tsx — Bonus Met checkbox rendered when (isEditMode || currentStep === 2)
@@ -120,45 +70,8 @@ test.describe("Fee and Bonus Fields on Step 2 — Navigation", () => {
 // ════════════════════════════════════════════════════════════════════════════
 
 test.describe("Fee and Bonus Fields on Step 2 — Editability", () => {
-  test("Annual Fee Date field is editable on Step 2", async ({ page }) => {
-    // Spec: CardForm.tsx — Annual Fee Date input has no disabled attribute on Step 2
-    // Fill required Step 1 fields
-    await page.locator("#issuerId").click();
-    await page.locator('[role="option"]').first().click();
-
-    await page.locator("#cardName").fill("Editable Fee Date Card");
-    await page.locator("#openDate").fill("2024-01-15");
-
-    // Advance to Step 2
-    await page.locator('button:has-text("More Details")').click();
-
-    // Annual Fee Date should be editable
-    const annualFeeDateInput = page.locator("#annualFeeDate");
-    await annualFeeDateInput.fill("2025-03-15");
-
-    // Verify the value was set
-    await expect(annualFeeDateInput).toHaveValue("2025-03-15");
-  });
-
-  test("Bonus Deadline field is editable on Step 2", async ({ page }) => {
-    // Spec: CardForm.tsx — Bonus Deadline input has no disabled attribute on Step 2
-    // Fill required Step 1 fields
-    await page.locator("#issuerId").click();
-    await page.locator('[role="option"]').first().click();
-
-    await page.locator("#cardName").fill("Editable Bonus Deadline Card");
-    await page.locator("#openDate").fill("2024-01-15");
-
-    // Advance to Step 2
-    await page.locator('button:has-text("More Details")').click();
-
-    // Bonus Deadline should be editable
-    const bonusDeadlineInput = page.locator("#bonusDeadline");
-    await bonusDeadlineInput.fill("2024-12-31");
-
-    // Verify the value was set
-    await expect(bonusDeadlineInput).toHaveValue("2024-12-31");
-  });
+  // "Annual Fee Date editable" — REMOVED (Issue #610): Visibility + fill = editable.
+  // "Bonus Deadline editable" — REMOVED (Issue #610): Visibility + fill = editable.
 
   test("Bonus Met checkbox is interactive on Step 2", async ({ page }) => {
     // Spec: CardForm.tsx — Bonus Met checkbox can be toggled on Step 2

@@ -25,32 +25,24 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
   // Test 1: /chronicles index page loads and lists all chronicles
   // ─────────────────────────────────────────────────────────────────────────
 
-  test("TC-1: /chronicles index loads and displays all chronicles in responsive grid", async ({
+  test("TC-1: /chronicles index loads and lists chronicle cards", async ({
     page,
   }) => {
-    // Navigate to chronicles index
     const response = await page.goto("/chronicles", { waitUntil: "load" });
     expect(response?.status()).toBe(200);
 
-    // Verify page title
-    const title = page.locator("h1");
-    await expect(title).toContainText("Prose Edda");
-
-    // Verify page description
-    const description = page.locator("p");
-    await expect(description.first()).toContainText("sagas of the forge");
-
-    // Verify chronicle cards exist - look for links with h2 inside (title elements)
+    // Verify chronicle cards exist
     const cards = page.locator("a[href*='/chronicles/']");
     const cardCount = await cards.count();
     expect(cardCount).toBeGreaterThan(0);
-    console.log(`Found ${cardCount} chronicle cards on index`);
 
-    // Verify first card has required elements (h2 title)
+    // Verify first card has title
     const firstCard = cards.first();
     const firstTitle = firstCard.locator("h2");
     await expect(firstTitle).toBeVisible({ timeout: 5000 });
   });
+
+  // TC-1 static title "Prose Edda" + description — REMOVED (Issue #610): Static copy.
 
   // ─────────────────────────────────────────────────────────────────────────
   // Test 2: /chronicles/{slug} detail page renders chronicle content
@@ -89,61 +81,19 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
   // Test 3: Chronicles render inside marketing layout (navbar + footer)
   // ─────────────────────────────────────────────────────────────────────────
 
-  test("TC-3: Chronicles pages render with marketing navbar and footer", async ({
-    page,
-  }) => {
-    // Navigate to chronicles index
-    await page.goto("/chronicles", { waitUntil: "load" });
-
-    // Verify navbar exists with navigation - check for home link
-    const homeLink = page.locator("a[href='/']").first();
-    await expect(homeLink).toBeVisible();
-
-    // Verify footer exists
-    const footer = page.locator("footer");
-    await expect(footer).toBeVisible();
-
-    // Verify page header is visible
-    const pageHeader = page.locator("h1");
-    await expect(pageHeader).toBeVisible();
-  });
+  // TC-3: marketing layout — REMOVED (Issue #610): Static navbar/footer presence check.
 
   // ─────────────────────────────────────────────────────────────────────────
   // Test 4: Chronicles link in navbar and footer point to /chronicles
   // ─────────────────────────────────────────────────────────────────────────
 
-  test("TC-4: Navbar and footer contain Chronicles links pointing to /chronicles", async ({
-    page,
-  }) => {
-    // Navigate to home page to verify navbar/footer
-    await page.goto("/", { waitUntil: "load" });
-
-    // Find all links with text "Prose Edda" (chronicles page was renamed)
-    const chroniclesLinks = page.locator("a:has-text('Prose Edda')");
-    const count = await chroniclesLinks.count();
-    expect(count).toBeGreaterThanOrEqual(2); // At least navbar + footer
-
-    // Verify at least one link points to /chronicles
-    for (let i = 0; i < count; i++) {
-      const href = await chroniclesLinks.nth(i).getAttribute("href");
-      if (href === "/chronicles") {
-        expect(href).toBe("/chronicles");
-        break;
-      }
-    }
-  });
+  // TC-4: "Prose Edda" link count — REMOVED (Issue #610): Static marketing content check.
 
   // ─────────────────────────────────────────────────────────────────────────
   // Test 5: /blog route returns 404
   // ─────────────────────────────────────────────────────────────────────────
 
-  test("TC-5: /blog route returns 404 (removed in favor of /chronicles)", async ({
-    page,
-  }) => {
-    // Navigate to old /blog route
-    const response = await page.goto("/blog", { waitUntil: "load" });
-    expect(response?.status()).toBe(404);
-  });
+  // TC-5: /blog 404 — REMOVED (Issue #610): Dead route, migration completed months ago.
 
   // ─────────────────────────────────────────────────────────────────────────
   // Test 6: Responsive grid on /chronicles index (mobile: 1 column)

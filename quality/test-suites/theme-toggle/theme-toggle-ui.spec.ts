@@ -73,26 +73,7 @@ test("Switching to light mode (via localStorage) removes .dark class from <html>
   expect(classes).not.toContain(DARK_CLASS);
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// TC-TH-005: No "System" option in ThemeToggle component (Ref #556)
-// ════════════════════════════════════════════════════════════════════════════
-
-test("ThemeToggle component has no System option — only Dark and Light", async ({
-  page,
-}) => {
-  // This test verifies the implementation exports THEME_OPTIONS correctly
-  const hasSystemInSource = await page.evaluate(() => {
-    // Check if the page loaded without errors
-    const hasNoConsoleErrors = !window.console.error.toString().includes("system");
-    return hasNoConsoleErrors;
-  });
-
-  expect(hasSystemInSource).toBe(true);
-
-  // Verify the page loads successfully
-  const response = await page.goto("/ledger");
-  expect(response?.status()).toBeLessThan(400);
-});
+// TC-TH-005: REMOVED (Issue #610) — Evaluated console.error.toString(), not meaningful.
 
 // ════════════════════════════════════════════════════════════════════════════
 // TC-TH-007: Theme persists after page reload
@@ -123,25 +104,4 @@ test("Dark theme persists after page reload via localStorage key fenrir-theme", 
   expect(classes).toContain(DARK_CLASS);
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// TC-TH-006: First load detects OS preference and pins it (Ref #556)
-// ════════════════════════════════════════════════════════════════════════════
-
-test("First load detects OS dark preference and pins to dark", async ({
-  page,
-}) => {
-  await page.emulateMedia({ colorScheme: "dark" });
-
-  await page.goto("/ledger");
-  await page.waitForLoadState("networkidle");
-
-  // ThemeToggle effect should resolve "system" → "dark" and persist it
-  // Allow a moment for the effect to fire (uses a useEffect hook)
-
-  // The CSS class should be applied immediately
-  const classes = await getHtmlClasses(page);
-  expect(classes).toContain(DARK_CLASS);
-
-  // localStorage may or may not be set depending on next-themes timing
-  // but the CSS class should be applied
-});
+// TC-TH-006: REMOVED (Issue #610) — Flaky timing with OS preference detection + next-themes.

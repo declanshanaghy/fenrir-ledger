@@ -28,10 +28,7 @@ test.beforeEach(async ({ page }) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 test.describe("Credit Limit Step 2 — Visibility", () => {
-  test("credit limit select is NOT visible on Step 1", async ({ page }) => {
-    const creditLimitTrigger = page.locator("#creditLimit");
-    await expect(creditLimitTrigger).not.toBeVisible();
-  });
+  // "NOT visible on Step 1" — REMOVED (Issue #610): Implicit from wizard-step2 "Step 1 renders".
 
   test("credit limit select IS visible on Step 2", async ({ page }) => {
     await page.locator("#issuerId").click();

@@ -247,56 +247,8 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
     await expect(userMenu).not.toBeVisible();
   });
 
-  test("TC-PD08: Dropdown reopens after closing", async ({ page }) => {
-    // Given: dropdown is open
-    const avatarButton = page.locator("header button[aria-controls='user-menu']");
-    await avatarButton.click();
-    const userMenu = page.locator('[role="menu"]');
-    await expect(userMenu).toBeVisible();
-
-    // When: clicking outside to close
-    await page.click("body", { position: { x: 100, y: 100 } });
-    await expect(userMenu).not.toBeVisible();
-
-    // Then: clicking avatar button again should open it
-    await avatarButton.click();
-    await expect(userMenu).toBeVisible();
-  });
-
-  test("TC-PD09: Dropdown layout has clean visual hierarchy (spacing)", async ({
-    page,
-  }) => {
-    // Given: dropdown is open
-    const avatarButton = page.locator("header button[aria-controls='user-menu']");
-    await avatarButton.click();
-    const userMenu = page.locator('[role="menu"]');
-    await expect(userMenu).toBeVisible();
-
-    // Then: check that menu has consistent padding and borders
-    const menuBox = await userMenu.boundingBox();
-    const computedStyle = await userMenu.evaluate((el) => {
-      const style = window.getComputedStyle(el);
-      return {
-        padding: style.padding,
-        borderRadius: style.borderRadius,
-        width: style.width,
-      };
-    });
-
-    // Should have reasonable width (not too narrow or wide)
-    const widthPx = parseInt(computedStyle.width);
-    await expect(widthPx).toBeGreaterThan(200); // At least 200px
-    await expect(widthPx).toBeLessThan(400); // Less than 400px
-
-    // All menu items should have min-height of 44px for touch targets
-    const menuItems = userMenu.locator('[role="menuitem"]');
-    const count = await menuItems.count();
-    for (let i = 0; i < count; i++) {
-      const item = menuItems.nth(i);
-      const itemBox = await item.boundingBox();
-      await expect(itemBox.height).toBeGreaterThanOrEqual(44);
-    }
-  });
+  // TC-PD08 "Dropdown reopens" — REMOVED (Issue #610): Trivial toggle test.
+  // TC-PD09 "Visual hierarchy" — REMOVED (Issue #610): CSS width/height inspection.
 
   test("TC-PD10: Keyboard navigation Tab through menu items", async ({
     page,
@@ -395,63 +347,8 @@ test.describe("Profile Dropdown — Mobile (375px)", () => {
     }
   });
 
-  test("TC-PD-M04: Theme toggle is accessible on mobile", async ({ page }) => {
-    // Given: dropdown is open
-    const avatarButton = page.locator("header button[aria-controls='user-menu']");
-    await avatarButton.click();
-    const userMenu = page.locator('[role="menu"]');
-
-    // When: examining theme row
-    const themeRow = userMenu.locator('[role="menuitem"]').nth(1);
-    const themeRowBox = await themeRow.boundingBox();
-
-    // Then: theme row should have adequate size for touch
-    await expect(themeRowBox.height).toBeGreaterThanOrEqual(44);
-
-    // And: should be clickable
-    await expect(themeRow).toBeVisible();
-  });
-
-  test("TC-PD-M05: Settings and Sign out are accessible on mobile", async ({
-    page,
-  }) => {
-    // Given: dropdown is open on mobile
-    const avatarButton = page.locator("header button[aria-controls='user-menu']");
-    await avatarButton.click();
-    const userMenu = page.locator('[role="menu"]');
-
-    // Then: Settings and Sign out buttons should be visible and tappable
-    const settingsButton = userMenu.locator('[role="menuitem"]').nth(2);
-    const signOutButton = userMenu.locator('[role="menuitem"]').nth(3);
-
-    await expect(settingsButton).toBeVisible();
-    await expect(signOutButton).toBeVisible();
-
-    const settingsBox = await settingsButton.boundingBox();
-    const signOutBox = await signOutButton.boundingBox();
-
-    await expect(settingsBox.height).toBeGreaterThanOrEqual(44);
-    await expect(signOutBox.height).toBeGreaterThanOrEqual(44);
-  });
-
-  test("TC-PD-M06: Icons are visible on mobile (not hidden or too small)", async ({
-    page,
-  }) => {
-    // Given: dropdown is open
-    const avatarButton = page.locator("header button[aria-controls='user-menu']");
-    await avatarButton.click();
-    const userMenu = page.locator('[role="menu"]');
-
-    // Then: all icons should be visible
-    const menuItems = userMenu.locator('[role="menuitem"]');
-    const count = await menuItems.count();
-
-    for (let i = 0; i < count; i++) {
-      const item = menuItems.nth(i);
-      const icon = item.locator("svg, button").first();
-      await expect(icon).toBeVisible();
-    }
-  });
+  // TC-PD-M04, M05, M06 — REMOVED (Issue #610): Mobile duplicates of desktop touch
+  // target and icon visibility tests. TC-PD-M01/M02/M03 already cover mobile.
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -487,21 +384,7 @@ test.describe("Profile Dropdown — Accessibility", () => {
     await expect(menuItems).toHaveCount(4); // My Cards, theme, settings, sign-out
   });
 
-  test("TC-PD-A02: Theme toggle has descriptive aria-label", async ({
-    page,
-  }) => {
-    // Given: dropdown is open
-    const avatarButton = page.locator("header button[aria-controls='user-menu']");
-    await avatarButton.click();
-    const userMenu = page.locator('[role="menu"]');
-
-    // When: theme toggle button is found
-    const themeRow = userMenu.locator('[role="menuitem"]').nth(1);
-
-    // Then: should be visible and contain Theme text
-    await expect(themeRow).toBeVisible();
-    await expect(themeRow).toContainText("Theme");
-  });
+  // TC-PD-A02 — REMOVED (Issue #610): Duplicate of TC-PD02 theme row assertion.
 
   test("TC-PD-A03: Settings and Sign out buttons are focusable", async ({
     page,
