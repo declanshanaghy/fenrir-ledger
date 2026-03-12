@@ -271,9 +271,9 @@ function analyzeChain(item, comments, prs, ciMap) {
     next_action = "wait";
     command = `/fire-next-up --resume #${item.num}`;
   } else {
-    position = "No PR \u2014 agent may have failed";
-    next_action = "re-dispatch";
-    command = `/fire-next-up #${item.num} --local`;
+    position = "Agent dispatched \u2014 awaiting PR";
+    next_action = "wait";
+    command = `/fire-next-up --resume #${item.num}`;
   }
   return {
     issue: item.num,
@@ -316,7 +316,7 @@ async function statusDashboard() {
       awaiting_loki: chains.filter((c) => c.position.includes("Awaiting Loki")).map((c) => c.issue),
       awaiting_decko: chains.filter((c) => c.position.includes("Awaiting FiremanDecko")).map((c) => c.issue),
       no_response: chains.filter(
-        (c) => c.position.includes("No PR") || c.position.includes("running")
+        (c) => c.position.includes("awaiting PR") || c.position.includes("running")
       ).map((c) => c.issue),
       research_review: chains.filter((c) => c.next_action === "review").map((c) => c.issue)
     },
