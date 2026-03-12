@@ -2,14 +2,8 @@
  * TopBar Test Suite — Fenrir Ledger
  * Authored by Loki, QA Tester of the Pack
  *
- * Slimmed to interactive behavior only:
- *   - Logo link exists and points to home
- *   - Anonymous avatar click opens upsell panel
- *   - 'Not now' dismisses upsell panel
- *   - Escape dismisses upsell panel
- *
- * Route: /ledger (uses LedgerTopBar, not the marketing navbar).
- * Sidebar was removed in Issue #403.
+ * Trimmed to 1 core test per issue #613:
+ *   1. Anonymous avatar click opens upsell panel
  */
 
 import { test, expect } from "@playwright/test";
@@ -19,10 +13,6 @@ import {
   ANONYMOUS_HOUSEHOLD_ID,
 } from "../helpers/test-fixtures";
 
-// ════════════════════════════════════════════════════════════════════════════
-// Setup
-// ════════════════════════════════════════════════════════════════════════════
-
 test.beforeEach(async ({ page }) => {
   await page.goto("/ledger");
   await clearAllStorage(page);
@@ -30,64 +20,16 @@ test.beforeEach(async ({ page }) => {
   await page.reload({ waitUntil: "load" });
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// Suite: Logo link
-// ════════════════════════════════════════════════════════════════════════════
+test("clicking anonymous avatar opens the upsell prompt panel", async ({
+  page,
+}) => {
+  const avatarButton = page.locator(
+    'header button[aria-label="Sign in to sync your data"]'
+  );
+  await avatarButton.click();
 
-test.describe("TopBar — Logo link", () => {
-  test("header contains a link with href='/' pointing to marketing home", async ({
-    page,
-  }) => {
-    const logoLink = page.locator('header a[href="/"]').first();
-    await expect(logoLink).toBeAttached();
-  });
-});
-
-// ════════════════════════════════════════════════════════════════════════════
-// Suite: Anonymous state — upsell panel interaction
-// ════════════════════════════════════════════════════════════════════════════
-
-test.describe("TopBar — Anonymous state", () => {
-  test("clicking anonymous avatar opens the upsell prompt panel", async ({
-    page,
-  }) => {
-    const avatarButton = page.locator(
-      'header button[aria-label="Sign in to sync your data"]'
-    );
-    await avatarButton.click();
-
-    const upsellPanel = page.locator('[role="dialog"][aria-label="Sign in to sync"]');
-    await expect(upsellPanel).toBeVisible();
-  });
-
-  test("'Not now' dismisses the upsell panel", async ({ page }) => {
-    const avatarButton = page.locator(
-      'header button[aria-label="Sign in to sync your data"]'
-    );
-    await avatarButton.click();
-
-    const notNow = page.locator('button:has-text("Not now")');
-    await expect(notNow).toBeVisible();
-    await notNow.click();
-
-    const upsellPanel = page.locator('[role="dialog"][aria-label="Sign in to sync"]');
-    await expect(upsellPanel).not.toBeVisible();
-  });
-
-  test("pressing Escape dismisses the upsell panel", async ({ page }) => {
-    const avatarButton = page.locator(
-      'header button[aria-label="Sign in to sync your data"]'
-    );
-    await avatarButton.click();
-
-    await expect(
-      page.locator('[role="dialog"][aria-label="Sign in to sync"]')
-    ).toBeVisible();
-
-    await page.keyboard.press("Escape");
-
-    await expect(
-      page.locator('[role="dialog"][aria-label="Sign in to sync"]')
-    ).not.toBeVisible();
-  });
+  const upsellPanel = page.locator(
+    '[role="dialog"][aria-label="Sign in to sync"]'
+  );
+  await expect(upsellPanel).toBeVisible();
 });
