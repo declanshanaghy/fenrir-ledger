@@ -302,21 +302,22 @@ test.describe("Runic Empty States — Issue #583", () => {
     });
 
     test("Rune characters display correctly on mobile", async ({ page }) => {
+      // Use Hunt tab which will be empty with just active cards
       await setupDashboard(page, [
-        makeClosedCard({ cardName: "Closed" }),
+        makeCard({ cardName: "Active" }),
       ]);
 
-      const allTab = page.locator('button#tab-all');
-      await allTab.click();
+      const huntTab = page.locator('button#tab-hunt');
+      await huntTab.click();
 
-      const allPanel = page.locator('[role="tabpanel"]#panel-all');
-      const emptyText = allPanel.locator("p");
+      const huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
+      const emptyText = huntPanel.locator("p");
 
       await expect(emptyText).toBeVisible();
       const content = await emptyText.textContent();
 
       // Rune character should be present
-      expect(content).toContain("ᛟ");
+      expect(content).toContain("ᛜ");
     });
   });
 
