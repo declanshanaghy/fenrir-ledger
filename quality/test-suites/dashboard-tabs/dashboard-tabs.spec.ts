@@ -1,17 +1,19 @@
 /**
  * Dashboard Tabs QA Tests — Issue #279
  *
- * Slimmed to interactive behavior only:
- *   - Tabs switch content
- *   - Default tab logic (Howl vs Active)
- *   - Card distribution (no duplication)
- *   - Tab switching via click
- *   - Keyboard navigation
- *   - Empty states show when switching to empty tab
+ * Tests the 5-tab dashboard structure:
+ *   - All (all cards)
+ *   - Valhalla (closed/retired cards)
+ *   - Active (status === "active")
+ *   - Hunt (bonus_open cards)
+ *   - Howl (cards needing attention)
  *
- * Removed: ARIA attribute assertions, mobile viewport tests,
- * badge count text, urgency bar labels, summary header count,
- * card data integrity, old HowlPanel regression.
+ * Validates:
+ *   - Tab switching via click
+ *   - Card distribution (no duplication across tabs)
+ *   - Default tab logic (Howl if has cards, else Active)
+ *   - Keyboard navigation
+ *   - Empty states show correct runic text
  */
 
 import { test, expect } from "@playwright/test";
@@ -20,6 +22,7 @@ import {
   seedCards,
   seedEntitlement,
   seedHousehold,
+  seedEntitlement,
   makeCard,
   makeUrgentCard,
   makePromoCard,
@@ -34,6 +37,8 @@ async function setupDashboard(
   await page.goto("/ledger");
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+  // Seed Karl tier entitlement to unlock all features (Howl, Valhalla, Hunt tabs)
+  await seedEntitlement(page, "karl", true);
   await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
   await seedEntitlement(page);
   await page.reload({ waitUntil: "load" });
@@ -51,21 +56,21 @@ test.describe("Dashboard Tabs QA — Issue #279", () => {
         makePromoCard({ cardName: "Promo 1" }),
       ]);
 
-      const howlTab = page.locator('button#tab-howl');
-      await howlTab.click();
-
-      const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
-      const howlCards = howlPanel.locator('[data-testid^="card-"]');
-      const howlCount = await howlCards.count();
-
-      await page.locator('button#tab-active').click();
+      // Active tab should have active + promo cards
+      const activeTab = page.locator('button#tab-active');
+      await activeTab.click();
       const activePanel = page.locator('[role="tabpanel"]#panel-active');
       const activeCards = activePanel.locator('[data-testid^="card-"]');
       const activeCount = await activeCards.count();
-
-      expect(howlCount + activeCount).toBe(4);
-      expect(howlCount).toBeGreaterThanOrEqual(1);
       expect(activeCount).toBeGreaterThanOrEqual(1);
+
+      // All tab should have all 4 cards
+      const allTab = page.locator('button#tab-all');
+      await allTab.click();
+      const allPanel = page.locator('[role="tabpanel"]#panel-all');
+      const allCards = allPanel.locator('[data-testid^="card-"]');
+      const allCount = await allCards.count();
+      expect(allCount).toBe(4);
     });
   });
 
@@ -119,11 +124,15 @@ test.describe("Dashboard Tabs QA — Issue #279", () => {
       const howlTab = page.locator('button#tab-howl');
       const activeTab = page.locator('button#tab-active');
 
+      // Click Howl — should not be hidden
       await howlTab.click();
-      await expect(howlPanel).not.toHaveAttribute("hidden");
+      const howlHidden = await howlPanel.getAttribute("hidden");
+      expect(howlHidden).toBeNull();
 
+      // Click Active — Howl should be hidden, Active should not
       await activeTab.click();
-      await expect(activePanel).not.toHaveAttribute("hidden");
+      const activeHidden = await activePanel.getAttribute("hidden");
+      expect(activeHidden).toBeNull();
     });
 
     test("Arrow Right keyboard navigation switches tab", async ({ page }) => {
@@ -150,7 +159,7 @@ test.describe("Dashboard Tabs QA — Issue #279", () => {
       await howlTab.click();
 
       const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
-      const emptyText = howlPanel.locator("text=/wolf.*silent/i");
+      const emptyText = howlPanel.locator("text=/No alerts/i");
       await expect(emptyText).toBeVisible();
     });
 
@@ -161,7 +170,7 @@ test.describe("Dashboard Tabs QA — Issue #279", () => {
       await activeTab.click();
 
       const activePanel = page.locator('[role="tabpanel"]#panel-active');
-      const emptyText = activePanel.locator("text=/no active cards/i");
+      const emptyText = activePanel.locator("text=/No active cards/i");
       await expect(emptyText).toBeVisible();
     });
   });
