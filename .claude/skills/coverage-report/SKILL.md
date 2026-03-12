@@ -66,10 +66,9 @@ cd "$REPO_ROOT" && node quality/scripts/coverage.mjs
 
 ### Prerequisites
 
-**Unit-only mode:**
-- `@vitest/coverage-v8` installed (devDependency)
+The script auto-installs missing dependencies (`@vitest/coverage-v8`, rollup native modules) and handles the npm optional-dep bug that corrupts `node_modules`. No manual setup needed.
 
-**Full E2E mode:**
+**Full E2E mode additionally requires:**
 - Next.js app must be buildable (`npm run build` in `development/frontend/`)
 - Port 9653 must be free (kill any running dev server first)
 - Coverage packages installed: `c8`, `v8-to-istanbul`, `istanbul-lib-coverage`, `istanbul-lib-report`, `istanbul-reports`
