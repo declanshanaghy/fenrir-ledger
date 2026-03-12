@@ -102,6 +102,11 @@ run_build() {
 
 # ─── Step: build (ensure only — for --tests-only) ─────────────────────────────
 ensure_build() {
+  # If SERVER_URL is set we're testing against an external deployment (e.g. Vercel preview).
+  # No local build needed — skip silently.
+  if [ -n "${SERVER_URL:-}" ]; then
+    return 0
+  fi
   if [ ! -d "$FRONTEND_DIR/.next" ]; then
     echo "[build] no .next found, building"
     if cd "$FRONTEND_DIR" && npx --silent next build > "$REPORTS_DIR/build-output.txt" 2>&1; then
