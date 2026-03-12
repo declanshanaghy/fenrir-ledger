@@ -7,11 +7,15 @@
  * not in what the code currently does.
  *
  * Covers:
- *   - Page landmark structure (main, nav, footer, header)
  *   - Heading hierarchy on each route
  *   - Form field labelling and required-field marking
  *   - Keyboard navigation: Tab order and Enter activation
  *   - Screen reader support: status badge text, aria-live regions
+ *
+ * Removed (superseded by integration tests — Issue #582):
+ *   - Page landmark structure (TC-A01..A04) → component render tests
+ *   - Avatar aria-label (TC-A14) → ledger-topbar.test.tsx
+ *   - Sidebar collapse label (TC-A15) → dead code (sidebar removed #403)
  *
  * Seeding pattern: all card data is written to localStorage before
  * page.reload() so the app reads the expected state on first render.
@@ -29,51 +33,12 @@ import {
 } from "../helpers/test-fixtures";
 import { FEW_CARDS, URGENT_CARDS } from "../helpers/seed-data";
 
-// ════════════════════════════════════════════════════════════════════════════
-// Suite 1 — Page Landmarks
-// ════════════════════════════════════════════════════════════════════════════
-
-test.describe("Page Landmarks", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "load" });
-  });
-
-  test("TC-A01: main landmark exists on dashboard", async ({ page }) => {
-    // Spec: every page must have a <main> landmark so assistive technology
-    // can skip directly to the primary content region.
-    const main = page.locator("main");
-    await expect(main).toBeAttached();
-    await expect(main).toBeVisible();
-  });
-
-  test("TC-A02: navigation landmark exists on dashboard", async ({ page }) => {
-    // Spec: the SideNav renders an <aside> containing a <nav> element.
-    // Screen readers expose <nav> as the "navigation" landmark role.
-    const nav = page.locator("nav");
-    await expect(nav).toBeAttached();
-    await expect(nav).toBeVisible();
-  });
-
-  test("TC-A03: footer landmark exists on dashboard", async ({ page }) => {
-    // Spec: Footer renders <footer role="contentinfo"> per Footer.tsx.
-    // role="contentinfo" is the ARIA equivalent of <footer> at page level.
-    const footer = page.locator("footer[role='contentinfo'], [role='contentinfo']");
-    await expect(footer).toBeAttached();
-    await expect(footer).toBeVisible();
-  });
-
-  test("TC-A04: header landmark exists on dashboard", async ({ page }) => {
-    // Spec: TopBar renders a <header> element.
-    // role="banner" is the ARIA equivalent exposed by <header> at page level.
-    const header = page.locator("header");
-    await expect(header).toBeAttached();
-    await expect(header).toBeVisible();
-  });
-});
+// Suite 1 — Page Landmarks: REMOVED
+// TC-A01 to TC-A04 superseded by integration tests:
+//   - app-shell.test.tsx (main, footer landmarks)
+//   - ledger-shell.test.tsx (main landmark)
+//   - ledger-topbar.test.tsx (header/banner landmark)
+//   - footer.test.tsx (footer/contentinfo landmark)
 
 // ════════════════════════════════════════════════════════════════════════════
 // Suite 2 — Heading Hierarchy
@@ -365,39 +330,9 @@ test.describe("Screen Reader Support", () => {
     expect(count).toBeGreaterThan(0);
   });
 
-  test("TC-A14: avatar button has accessible label for anonymous users", async ({
-    page,
-  }) => {
-    // Spec (TopBar.tsx): the anonymous avatar button has
-    // aria-label="Sign in to sync your data". Per WCAG 4.1.2 (AA), all
-    // interactive elements must have an accessible name.
-    await page.goto("/");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "load" });
+  // TC-A14: avatar button aria-label — REMOVED
+  // Superseded by ledger-topbar.test.tsx "renders the anonymous avatar button with correct aria-label"
 
-    // TopBar renders the anonymous avatar button when not authenticated
-    const avatarButton = page.locator(
-      'button[aria-label="Sign in to sync your data"]'
-    );
-    await expect(avatarButton).toBeAttached();
-  });
-
-  test("TC-A15: sidebar collapse button has accessible label", async ({ page }) => {
-    // Spec (SideNav.tsx): the collapse/expand toggle button has
-    // aria-label="Collapse sidebar" or "Expand sidebar" depending on state.
-    // Per WCAG 4.1.2 (AA), controls must have accessible names.
-    await page.goto("/");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "load" });
-
-    // In expanded state the button has aria-label="Collapse sidebar"
-    const collapseButton = page.locator(
-      'button[aria-label="Collapse sidebar"], button[aria-label="Expand sidebar"]'
-    );
-    await expect(collapseButton).toBeAttached();
-    const label = await collapseButton.getAttribute("aria-label");
-    expect(label).toMatch(/Collapse sidebar|Expand sidebar/);
-  });
+  // TC-A15: sidebar collapse button — REMOVED
+  // Sidebar was removed in Issue #403. This test was dead code.
 });

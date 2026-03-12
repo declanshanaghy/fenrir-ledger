@@ -5,10 +5,18 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 ## Test Pyramid
 
 ```
-        ╱ E2E (Playwright) ╲       ← Fewest: real browser, real pages
-       ╱  Integration (Vitest) ╲    ← Middle: component + API route tests
-      ╱   Unit (Vitest)          ╲  ← Most: pure logic, no DOM
+        / E2E (Playwright) \       <- Fewest: real browser, real pages
+       /  Integration (Vitest) \    <- Middle: component + API route tests
+      /   Unit (Vitest)          \  <- Most: pure logic, no DOM
 ```
+
+### Current test counts
+
+| Layer | Runner | Tests | Runtime |
+|-------|--------|-------|---------|
+| Unit | Vitest | ~136 | ~2s |
+| Integration | Vitest + happy-dom | ~93 | ~3s |
+| E2E | Playwright | ~228 | ~6min |
 
 ## Unit Tests (Vitest)
 
@@ -33,9 +41,11 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 
 ### Examples of good unit tests
 
-- `stripe/helpers.test.ts` — pure Stripe URL construction
+- `stripe/helpers.test.ts` — pure Stripe webhook status mapping
 - `stripe/membership.test.ts` — membership state logic
 - `sheets/url-validation.test.ts` — URL pattern matching
+- `stripe/url-construction.test.ts` — Stripe redirect URL building
+- `auth/require-auth.test.ts` — auth guard logic
 
 ---
 
@@ -43,32 +53,92 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 
 **Location:** `development/frontend/src/__tests__/`
 **Runner:** `npm run test:unit` (same runner, happy-dom environment)
+**Environment:** happy-dom (configured in `vitest.config.ts`)
 
 ### What belongs here
 
-- API route handlers: mock request → call handler → assert response
-- Webhook processing: mock Stripe event → assert side effects
-- Auth middleware: mock session → assert access control
-- Component render tests: mount component → assert output (no navigation)
+- API route handlers: mock request -> call handler -> assert response
+- Webhook processing: mock Stripe event -> assert side effects
+- Auth middleware: mock session -> assert access control
+- Component render tests: mount component -> assert output (no navigation)
 - Feature flag / entitlement gate logic
 - CSP header generation and nonce injection
 - Session token refresh logic
-- LLM prompt construction and response parsing
+- Hook state machines: import flow, picker config, entitlement gating
 
 ### What does NOT belong here
 
 - Multi-page navigation flows
 - Visual layout assertions (use E2E)
 - Anything requiring a real HTTP server
+- CSS pixel measurements or bounding box checks
 
-### Tests that were removed from E2E and SHOULD become integration tests
+### Examples of good integration tests
 
-| Old E2E suite | Why it's integration | What to test |
-|---------------|---------------------|--------------|
-| `csp-nonce/` (17 tests) | HTTP header assertions | CSP header contains nonce, frame-ancestors set |
-| `csp-youtube/` (11 tests) | CSP policy checks | YouTube iframe allowed in CSP |
-| `google-session-refresh/` (24 tests) | Token refresh logic | Token expiry detection, refresh flow, error handling |
-| `wizard-animations/` (32 tests) | CSS class assertions | *Only* the ARIA label + reduced-motion tests are worth keeping; animation timing tests are not |
+**Component render tests** (landmarks, aria-labels, structural output):
+- `components/footer.test.tsx` — footer landmark, aria-labels, brand text, team colophon
+- `components/ledger-topbar.test.tsx` — header banner, skip-nav, anonymous vs authenticated states
+- `components/site-header.test.tsx` — marketing header, back link, action slot
+- `components/app-shell.test.tsx` — main + footer landmarks, children rendering
+- `components/ledger-shell.test.tsx` — main landmark with id="main-content"
+
+**Hook tests** (state machines, fetch logic):
+- `hooks/use-sheet-import.test.ts` — import state machine (method -> loading -> preview/error)
+- `hooks/use-picker-config.test.ts` — Picker API key fetch, auth-gated, error handling
+- `hooks/use-entitlement.test.ts` — tier gating, hasFeature(), Thrall vs Karl
+
+**API route handler tests** (mock request -> assert response):
+- `integration/auth-token-route.test.ts` — input validation, rate limiting, Google proxy
+- `integration/sheets-import-route.test.ts` — auth gating, Karl tier, pipeline dispatch
+- `integration/csp-headers.test.ts` — CSP nonce generation, directive building, security headers
+
+### Pattern: mocking Next.js in component tests
+
+```tsx
+// Mock next/link
+vi.mock("next/link", () => ({
+  __esModule: true,
+  default: ({ href, children, ...props }) => <a href={href} {...props}>{children}</a>,
+}));
+
+// Mock next/navigation
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/ledger",
+}));
+
+// Mock next-themes
+vi.mock("next-themes", () => ({
+  useTheme: () => ({ theme: "dark", setTheme: vi.fn() }),
+}));
+```
+
+### Pattern: mocking API route dependencies
+
+```typescript
+// Mock auth guard
+const mockRequireAuth = vi.fn();
+vi.mock("@/lib/auth/require-auth", () => ({
+  requireAuth: (...args) => mockRequireAuth(...args),
+}));
+
+// In test: configure mock per scenario
+mockRequireAuth.mockResolvedValueOnce({ ok: true, user: MOCK_USER });
+// or
+mockRequireAuth.mockResolvedValueOnce({
+  ok: false,
+  response: NextResponse.json({ error: "missing_token" }, { status: 401 }),
+});
+```
+
+### Tests migrated from E2E (already implemented)
+
+| Old E2E suite | Integration replacement | Tests |
+|---------------|------------------------|-------|
+| `csp-nonce/` (deleted Sprint 5) | `integration/csp-headers.test.ts` | 21 |
+| `csp-youtube/` (deleted Sprint 5) | `integration/csp-headers.test.ts` | (included above) |
+| `accessibility/` TC-A01..A04 | `components/app-shell.test.tsx`, `components/ledger-shell.test.tsx` | 5 |
+| `accessibility/` TC-A14 | `components/ledger-topbar.test.tsx` | 1 |
 
 ---
 
@@ -80,9 +150,9 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 
 ### What belongs here
 
-- **User journeys:** Add card → edit → close → delete → Valhalla
-- **Navigation flows:** Sign in → redirect → dashboard
-- **Multi-page interactions:** Import wizard URL → CSV → save
+- **User journeys:** Add card -> edit -> close -> delete -> Valhalla
+- **Navigation flows:** Sign in -> redirect -> dashboard
+- **Multi-page interactions:** Import wizard URL -> CSV -> save
 - **Visual regression:** Page loads, key elements visible, layout correct
 - **Auth flows:** Sign in, sign out, callback handling, return-to
 - **Responsive layout:** Mobile 375px breakpoints (real viewport)
@@ -90,12 +160,14 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 
 ### What does NOT belong here
 
-- **HTTP header checks** → integration test (no browser needed)
-- **Pure logic validation** → unit test
-- **CSS animation timing** → not testable reliably in E2E
-- **One-time migration/upgrade checks** → delete after migration lands
-- **Issue-specific regression tests** → merge into the feature suite once verified
-- **Token/session logic** → integration test (mock the token, test the flow)
+- **Landmark presence checks** -> integration test (component render test)
+- **HTTP header checks** -> integration test (no browser needed)
+- **Pure logic validation** -> unit test
+- **CSS animation timing** -> not testable reliably in E2E
+- **One-time migration/upgrade checks** -> delete after migration lands
+- **Issue-specific regression tests** -> merge into the feature suite once verified
+- **Token/session logic** -> integration test (mock the token, test the flow)
+- **aria-label presence** -> integration test (component render test)
 
 ### Rules for E2E test suites
 
@@ -106,8 +178,9 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 5. **Issue-specific regression tests** get merged into the parent feature suite after the fix lands.
 6. **No animation timing assertions.** Test that elements appear/disappear, not how fast.
 7. **Touch target / a11y checks** belong in `accessibility/a11y.spec.ts`, not scattered across suites.
+8. **No structural DOM assertions.** Landmark presence, aria-label existence, and tag structure belong in integration tests. E2E tests should focus on user interactions and navigation.
 
-### Current E2E suites (29 files, 234 tests)
+### Current E2E suites (29 files, ~228 tests)
 
 | Category | Suites | Tests |
 |----------|--------|-------|
@@ -119,7 +192,7 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 | Settings | settings-gate/ | ~9 |
 | Theme | theme-toggle/ | ~10 |
 | Profile | profile-dropdown/ | ~20 |
-| A11y | accessibility/, dialog-a11y/ | ~20 |
+| A11y | accessibility/ (TC-A05..A13), dialog-a11y/ | ~14 |
 | Other | chronicles/, empty-state-cta/, select-reset/, howl-count/, credit-limit-step2/, fee-bonus-step2/, csv-format-help/, reverse-tab-order/ | ~71 |
 
 ---
@@ -132,3 +205,5 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 - **Do not keep one-time validation suites** (e.g., "nextjs-upgrade") after the change is stable.
 - **Do not test CSS animation durations.** They're flaky and provide no value.
 - **Do not exceed 15 tests per spec file.** Split or you're probably testing too granularly.
+- **Do not test landmark presence in E2E.** Use component render tests with `@testing-library/react`.
+- **Do not test aria-label presence in E2E.** Render the component in happy-dom and assert directly.
