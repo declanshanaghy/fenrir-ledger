@@ -26,8 +26,8 @@
  */
 
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { ThemedFeatureImage } from "@/components/shared/ThemedFeatureImage";
 
 export const dynamic = "force-static";
 
@@ -349,54 +349,15 @@ function TierBadge({ tier }: { tier: "thrall" | "karl" }) {
 }
 
 /**
- * ThemedFeatureImage — renders both dark and light variants of a feature image,
- * toggling visibility via CSS `hidden dark:block` / `block dark:hidden` so the
- * correct image shows per the current theme without any client-side JS.
- *
- * Includes a mystical hover animation: gold glow pulse + subtle scale + rune shimmer.
+ * FeatureImage — wraps shared ThemedFeatureImage for the features page context.
+ * Hover effects (shimmer + scale + glow) are enabled since this is a browse context.
  */
-function ThemedFeatureImage({ feature }: { feature: FeatureDetail }) {
-  const altText = `${feature.title} — ${feature.eyebrow}`;
+function FeatureImage({ feature }: { feature: FeatureDetail }) {
   return (
-    <div className="group relative overflow-hidden rounded-sm border border-border bg-card">
-      {/* Rune shimmer overlay on hover */}
-      <div
-        className={[
-          "pointer-events-none absolute inset-0 z-10",
-          "opacity-0 group-hover:opacity-100",
-          "bg-gradient-to-r from-transparent via-primary/10 to-transparent",
-          "translate-x-[-100%] group-hover:translate-x-[100%]",
-          "transition-all duration-1000 ease-in-out",
-        ].join(" ")}
-        aria-hidden="true"
-      />
-      {/* Dark-mode image */}
-      <Image
-        src={`/images/features/${feature.image}-dark.png`}
-        alt={altText}
-        width={800}
-        height={600}
-        className={[
-          "hidden dark:block w-full h-auto object-cover",
-          "transition-all duration-500 ease-out",
-          "group-hover:scale-[1.03]",
-          "group-hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]",
-        ].join(" ")}
-      />
-      {/* Light-mode image */}
-      <Image
-        src={`/images/features/${feature.image}-light.png`}
-        alt={altText}
-        width={800}
-        height={600}
-        className={[
-          "block dark:hidden w-full h-auto object-cover",
-          "transition-all duration-500 ease-out",
-          "group-hover:scale-[1.03]",
-          "group-hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]",
-        ].join(" ")}
-      />
-    </div>
+    <ThemedFeatureImage
+      image={feature.image}
+      alt={`${feature.title} — ${feature.eyebrow}`}
+    />
   );
 }
 
@@ -450,7 +411,7 @@ function FeatureSection({ feature }: { feature: FeatureDetail }) {
     </div>
   );
 
-  const visual = <ThemedFeatureImage feature={feature} />;
+  const visual = <FeatureImage feature={feature} />;
 
   return (
     <section

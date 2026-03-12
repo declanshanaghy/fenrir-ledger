@@ -21,8 +21,9 @@
  *   "Not now" / ✕ / Escape / backdrop click → closes dialog, no permanent flag.
  *
  * Wireframe: ux/wireframes/stripe-direct/karl-upsell-dialog.html
+ *            ux/wireframes/stripe-direct/karl-upsell-dialog-artwork.html (#560)
  * Interaction spec: ux/karl-upsell-interaction-spec.md
- * Issues: #377, #378, #398, #488
+ * Issues: #377, #378, #398, #488, #559, #560
  *
  * @module entitlement/KarlUpsellDialog
  */
@@ -35,6 +36,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ThemedFeatureImage } from "@/components/shared/ThemedFeatureImage";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +55,8 @@ export interface KarlUpsellDialogProps {
   featureTeaser: string;
   /** List of benefit strings shown as a checklist in the right column */
   featureBenefits: readonly string[];
+  /** Base filename for /images/features/ artwork (e.g. "valhalla" → valhalla-dark.png, valhalla-light.png). Same images as /features page. */
+  featureImage: string;
   /** Whether the dialog is open */
   open: boolean;
   /** Callback when the dialog is dismissed (X, "Not now", Escape, backdrop) */
@@ -78,6 +82,7 @@ export function KarlUpsellDialog({
   featureTagline,
   featureTeaser,
   featureBenefits,
+  featureImage,
   open,
   onDismiss,
 }: KarlUpsellDialogProps) {
@@ -127,10 +132,22 @@ export function KarlUpsellDialog({
         {/* ── Two-column body ────────────────────────────────────────── */}
         <div className="flex flex-col md:grid md:grid-cols-2 md:gap-0">
 
-          {/* ── Left column: icon + name + tagline + teaser ──────────── */}
+          {/* ── Left column: image + icon + name + tagline + teaser ──── */}
           <div className="flex flex-col md:border-r md:border-border">
+            {/* Feature image — same artwork as /features page */}
+            <div className="w-full border-b border-border overflow-hidden">
+              <ThemedFeatureImage
+                image={featureImage}
+                alt={`${featureName} feature artwork`}
+                width={600}
+                height={450}
+                shimmer={false}
+                hoverEffect={false}
+                className="rounded-none border-0"
+              />
+            </div>
             {/* Feature hero — prop-driven */}
-            <div className="flex flex-col items-center gap-2.5 px-5 pt-6 pb-5 border-b border-border md:border-b-0 md:flex-1 md:justify-center">
+            <div className="flex flex-col items-center gap-2.5 px-5 pt-4 pb-5 border-b border-border md:border-b-0 md:flex-1 md:justify-center">
               {/* Feature icon with lock badge */}
               <div
                 className="relative w-[56px] h-[56px] sm:w-[72px] sm:h-[72px] border border-dashed border-border flex items-center justify-center"
@@ -259,6 +276,7 @@ export const KARL_UPSELL_VALHALLA = {
     "Total rewards extracted per card",
     "Annual fees avoided over time",
   ] as const,
+  featureImage: "valhalla",
 } as const;
 
 /**
@@ -277,6 +295,7 @@ export const KARL_UPSELL_HOWL = {
     "Ragnar\u00F6k alert when \u22655 urgent cards pile up",
     "Proactive notifications before you lose value",
   ] as const,
+  featureImage: "garmr",
 } as const;
 
 /**
@@ -295,6 +314,7 @@ export const KARL_UPSELL_VELOCITY = {
     "Deadline countdown with progress bars",
     "Alerts when you fall behind target pace",
   ] as const,
+  featureImage: "norns",
 } as const;
 
 /**
@@ -313,4 +333,5 @@ export const KARL_UPSELL_IMPORT = {
     "Upload CSV and Excel files",
     "Automatic deduplication of existing cards",
   ] as const,
+  featureImage: "mimir",
 } as const;
