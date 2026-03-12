@@ -117,7 +117,7 @@ test("Dark theme persists after page reload via localStorage key fenrir-theme", 
   expect(stored).toBe("dark");
 
   // Reload and verify dark theme persists
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "load" });
 
   classes = await getHtmlClasses(page);
   expect(classes).toContain(DARK_CLASS);
@@ -137,7 +137,6 @@ test("First load detects OS dark preference and pins to dark", async ({
 
   // ThemeToggle effect should resolve "system" → "dark" and persist it
   // Allow a moment for the effect to fire (uses a useEffect hook)
-  await page.waitForTimeout(1000);
 
   // The CSS class should be applied immediately
   const classes = await getHtmlClasses(page);

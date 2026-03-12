@@ -61,8 +61,8 @@ test.describe("Valhalla — Net gain (positive, with earned cashback)", () => {
       },
     });
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const tombstone = page.locator('article[aria-label="Closed card: Profitable Card"]');
     // Spec: net gain displays with positive value
@@ -84,8 +84,8 @@ test.describe("Valhalla — Net gain (positive, with earned cashback)", () => {
       signUpBonus: null, // No bonus
     });
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const tombstone = page.locator('article[aria-label="Closed card: Fee Card"]');
     // Spec: "Net gain:" label is always present in plunder section
@@ -109,8 +109,8 @@ test.describe("Valhalla — Net gain (positive, with earned cashback)", () => {
       },
     });
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const tombstone = page.locator('article[aria-label="Closed card: High Cashback Card"]');
     // Spec: earned cashback is summed into net gain
@@ -142,8 +142,8 @@ test.describe("Valhalla — Net gain (forfeited bonuses, zero contribution)", ()
       },
     });
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const tombstone = page.locator(
       'article[aria-label="Closed card: Forfeited Cashback Card"]'
@@ -169,8 +169,8 @@ test.describe("Valhalla — Net gain (forfeited bonuses, zero contribution)", ()
       },
     });
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const tombstone = page.locator('article[aria-label="Closed card: Forfeited Points Card"]');
     // Spec: points have no monetary value, only fee avoided counts
@@ -199,8 +199,8 @@ test.describe("Valhalla — Net gain (no-fee cards)", () => {
       },
     });
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const tombstone = page.locator('article[aria-label="Closed card: No-Fee Premium Card"]');
     // Spec: no-fee card shows explicit "$0 (no-fee card)" message
@@ -218,8 +218,8 @@ test.describe("Valhalla — Net gain (no-fee cards)", () => {
       signUpBonus: null,
     });
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const tombstone = page.locator('article[aria-label="Closed card: Zero Gain Card"]');
     // Spec: zero net gain displays in muted-foreground color
@@ -241,8 +241,8 @@ test.describe("Valhalla — Net gain (zero and neutral scenarios)", () => {
       signUpBonus: null,
     });
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const tombstone = page.locator('article[aria-label="Closed card: Neutral Card"]');
     // Spec: zero net gain displays in muted-foreground color
@@ -268,8 +268,8 @@ test.describe("Valhalla — Net gain (zero and neutral scenarios)", () => {
       },
     });
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const tombstone = page.locator('article[aria-label="Closed card: Formatted Card"]');
     // Spec: currency displayed with proper formatting
@@ -316,8 +316,8 @@ test.describe("Valhalla — Net gain (multiple cards, mixed scenarios)", () => {
       }),
     ];
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     // Card 1: $150 + $300 = $450
     const card1 = page.locator('article[aria-label="Closed card: High Gain Card"]');
@@ -364,8 +364,8 @@ test.describe("Valhalla — Net gain (miles bonuses, zero contribution)", () => 
     };
 
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const tombstone = page.locator('article[aria-label="Closed card: Mixed Bonus Card"]');
     // Net gain: $100 fee + $50 cashback = $150

@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-  await page.goto('/cards/new', { waitUntil: 'networkidle' });
+  await page.goto('/cards/new', { waitUntil: 'load' });
   await page.waitForSelector('#issuerId');
 });
 
@@ -26,13 +26,11 @@ test('Clicking Back returns to Step 1', async ({ page }) => {
   await page.locator('#openDate').fill('2026-01-15');
 
   await page.click('button:has-text("More Details")');
-  await page.waitForTimeout(300);
 
   const backButton = page.locator('button:has-text("Back")');
   await expect(backButton).toBeVisible();
 
   await page.click('button:has-text("Back")');
-  await page.waitForTimeout(300);
 
   await expect(page.locator('button:has-text("More Details")')).toBeVisible();
   await expect(page.locator('button:has-text("Back")')).not.toBeVisible();
@@ -50,10 +48,8 @@ test('All Step 1 values are preserved after clicking Back', async ({ page }) => 
   await page.locator('#openDate').fill(openDate);
 
   await page.click('button:has-text("More Details")');
-  await page.waitForTimeout(300);
 
   await page.click('button:has-text("Back")');
-  await page.waitForTimeout(300);
 
   const cardNameInput = page.locator('#cardName');
   const openDateInput = page.locator('#openDate');
@@ -70,7 +66,6 @@ test('Notes field is preserved through Step 2 navigation', async ({ page }) => {
   await page.locator('#openDate').fill('2026-01-10');
 
   await page.click('button:has-text("More Details")');
-  await page.waitForTimeout(300);
 
   const notesArea = page.locator('#notes');
   if (await notesArea.isVisible()) {
@@ -78,10 +73,8 @@ test('Notes field is preserved through Step 2 navigation', async ({ page }) => {
   }
 
   await page.click('button:has-text("Back")');
-  await page.waitForTimeout(300);
 
   await page.click('button:has-text("More Details")');
-  await page.waitForTimeout(300);
 
   const notesAfter = page.locator('#notes');
   if (await notesAfter.isVisible()) {
@@ -97,16 +90,13 @@ test('Multiple back-and-forth cycles preserve all data', async ({ page }) => {
   await page.locator('#openDate').fill('2026-02-01');
 
   await page.click('button:has-text("More Details")');
-  await page.waitForTimeout(300);
 
   await page.click('button:has-text("Back")');
-  await page.waitForTimeout(300);
 
   await expect(page.locator('#cardName')).toHaveValue('Multi-Cycle Card');
   await expect(page.locator('#openDate')).toHaveValue('2026-02-01');
 
   await page.click('button:has-text("More Details")');
-  await page.waitForTimeout(300);
 
   const notesArea = page.locator('#notes');
   if (await notesArea.isVisible()) {
@@ -114,12 +104,10 @@ test('Multiple back-and-forth cycles preserve all data', async ({ page }) => {
   }
 
   await page.click('button:has-text("Back")');
-  await page.waitForTimeout(300);
 
   await expect(page.locator('#cardName')).toHaveValue('Multi-Cycle Card');
 
   await page.click('button:has-text("More Details")');
-  await page.waitForTimeout(300);
 
   const notesAfter = page.locator('#notes');
   if (await notesAfter.isVisible()) {

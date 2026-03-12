@@ -19,7 +19,7 @@ import {
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
 async function goToNewCard(page: import("@playwright/test").Page) {
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "load" });
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await page.goto("/ledger/cards/new", { waitUntil: "domcontentloaded" });
   await page.locator("#cardName").waitFor({ state: "visible", timeout: 15000 });

@@ -29,7 +29,7 @@ test.beforeEach(async ({ page }) => {
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [makeCard({ cardName: "Test Card" })]);
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "load" });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -95,7 +95,6 @@ test.describe("SideNav — Collapse toggle", () => {
     // Collapse
     const collapseBtn = page.locator('aside button[aria-label="Collapse sidebar"]');
     await collapseBtn.click();
-    await page.waitForTimeout(300);
 
     // Label span should not be rendered (not just hidden)
     await expect(cardsLabel).not.toBeAttached();

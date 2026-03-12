@@ -42,8 +42,8 @@ async function setupAndGotoValhalla(page: Parameters<typeof clearAllStorage>[0])
 test.describe("Valhalla — Page heading", () => {
   test("displays 'Valhalla' heading", async ({ page }) => {
     await setupAndGotoValhalla(page);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const heading = page.locator("h1").first();
     await expect(heading).toContainText("Valhalla");
@@ -64,8 +64,8 @@ test.describe("Valhalla — Closed cards display", () => {
       makeClosedCard({ cardName: "Honored Card Beta" }),
     ];
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, closedCards);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     await expect(
       page.locator('article[aria-label="Closed card: Honored Card Alpha"]')
@@ -79,8 +79,8 @@ test.describe("Valhalla — Closed cards display", () => {
     await setupAndGotoValhalla(page);
     const card = makeClosedCard({ cardName: "Linkable Tombstone" });
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const tombstone = page.locator('article[aria-label="Closed card: Linkable Tombstone"]');
     const viewLink = tombstone.locator('a[href*="/cards/"]');
@@ -92,8 +92,8 @@ test.describe("Valhalla — Closed cards display", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [
       makeClosedCard({ cardName: "Filter Test Card" }),
     ]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const issuerFilter = page.locator('select[aria-label="Filter by issuer"]');
     const sortFilter = page.locator('select[aria-label="Sort order"]');
@@ -104,8 +104,8 @@ test.describe("Valhalla — Closed cards display", () => {
   test("filter bar is hidden when Valhalla is empty", async ({ page }) => {
     await setupAndGotoValhalla(page);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, []);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     const issuerFilter = page.locator('select[aria-label="Filter by issuer"]');
     await expect(issuerFilter).not.toBeVisible();
@@ -123,8 +123,8 @@ test.describe("Valhalla — Active cards excluded", () => {
       makeCard({ cardName: "Still Active Card" }),
       makeUrgentCard({ cardName: "Urgent Active Card" }),
     ]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     await expect(page.locator('article[aria-label^="Closed card:"]')).toHaveCount(0);
     await expect(page.locator('[aria-label="Valhalla is empty"]')).toBeVisible();
@@ -147,8 +147,8 @@ test.describe("Valhalla — Deleted cards excluded", () => {
     const honestClosedCard = makeClosedCard({ cardName: "Honored Dead" });
 
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [deletedClosedCard, honestClosedCard]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     await expect(
       page.locator('article[aria-label="Closed card: Erased From Memory"]')
@@ -166,8 +166,8 @@ test.describe("Valhalla — Deleted cards excluded", () => {
       deletedAt: new Date().toISOString(),
     });
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [deletedCard]);
-    await page.reload({ waitUntil: "networkidle" });
-    await page.goto("/ledger/valhalla", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "load" });
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     await expect(page.locator('[aria-label="Valhalla is empty"]')).toBeVisible();
     await expect(page.locator('article[aria-label^="Closed card:"]')).toHaveCount(0);

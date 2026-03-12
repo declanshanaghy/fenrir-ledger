@@ -7,13 +7,13 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: false,
   retries: 0,
-  workers: 2,
+  workers: process.env.CI ? 2 : (process.env.PW_WORKERS ? Number(process.env.PW_WORKERS) : 4),
   reporter: process.env.CI
     ? [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]]
     : "list",
   use: {
     baseURL: process.env.SERVER_URL || "http://localhost:9653",
-    trace: "on-first-retry",
+    trace: "off",
     // Pass Vercel's automation bypass secret as a header so tests can reach
     // preview deployments that are behind deployment protection.
     extraHTTPHeaders: process.env.VERCEL_BYPASS_SECRET
