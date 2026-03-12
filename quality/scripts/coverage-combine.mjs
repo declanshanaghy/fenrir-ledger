@@ -9,6 +9,12 @@
  * Outputs combined report to:
  *   quality/reports/coverage/combined/  (HTML + LCOV + text-summary)
  *
+ * Filters out .next/ compiled artifacts and node_modules so genhtml only
+ * sees src/ source files.
+ *
+ * Custom CSS: if quality/scripts/coverage.css exists it is passed to genhtml
+ * via --css-file to style the HTML report.
+ *
  * Overwrites previous combined report on every run.
  *
  * Usage:
@@ -24,10 +30,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
 const COVERAGE_DIR = path.join(REPO_ROOT, "quality/reports/coverage");
 const COMBINED_DIR = path.join(COVERAGE_DIR, "combined");
+const CUSTOM_CSS = path.join(__dirname, "coverage.css");
 
 const SOURCES = [
   { name: "vitest", lcov: path.join(COVERAGE_DIR, "vitest/lcov.info") },
   { name: "playwright", lcov: path.join(COVERAGE_DIR, "playwright/lcov.info") },
+];
+
+// LCOV entries (SF: ... end_of_record) to exclude from the combined report.
+// Playwright source maps produce both .next/ compiled artifacts and src/ entries
+// for the same code — keep only src/. node_modules slips through source map
+// resolution occasionally.
+const EXCLUDE_PREFIXES = [
+  ".next/",
+  "node_modules/",
 ];
 
 function ts() {
@@ -37,10 +53,27 @@ function log(msg) {
   console.log(`[${ts()}] ${msg}`);
 }
 
+/**
+ * Filter out LCOV records whose SF: path starts with any of EXCLUDE_PREFIXES.
+ * Returns cleaned LCOV string and a count of dropped records.
+ */
+function filterLcov(lcov) {
+  const records = lcov.split("end_of_record");
+  let kept = 0, dropped = 0;
+  const filtered = records.filter((rec) => {
+    const sf = rec.match(/^SF:(.+)$/m)?.[1]?.trim();
+    if (!sf) return false; // empty trailing chunk
+    const exclude = EXCLUDE_PREFIXES.some((p) => sf.startsWith(p));
+    if (exclude) { dropped++; return false; }
+    kept++;
+    return true;
+  });
+  return { lcov: filtered.map((r) => r + "end_of_record").join("\n"), kept, dropped };
+}
+
 function main() {
   log("Combining coverage reports...");
 
-  // Check which sources exist
   const available = SOURCES.filter((s) => existsSync(s.lcov));
   if (available.length === 0) {
     log("ERROR: No coverage data found. Run verify.sh --coverage first.");
@@ -50,41 +83,47 @@ function main() {
 
   log(`Found coverage from: ${available.map((s) => s.name).join(", ")}`);
 
-  // Clean and recreate combined output dir
   if (existsSync(COMBINED_DIR)) rmSync(COMBINED_DIR, { recursive: true });
   mkdirSync(COMBINED_DIR, { recursive: true });
 
-  // Merge LCOV files (simple concatenation — lcov format supports this)
-  const mergedLcov = available.map((s) => readFileSync(s.lcov, "utf-8")).join("\n");
+  // Merge then filter
+  const raw = available.map((s) => readFileSync(s.lcov, "utf-8")).join("\n");
+  const { lcov: filtered, kept, dropped } = filterLcov(raw);
+  log(`LCOV filtered: ${kept} records kept, ${dropped} dropped (.next/ + node_modules)`);
+
   const mergedLcovPath = path.join(COMBINED_DIR, "lcov.info");
-  writeFileSync(mergedLcovPath, mergedLcov);
+  writeFileSync(mergedLcovPath, filtered);
   log(`Merged LCOV written to ${mergedLcovPath}`);
 
-  // Generate HTML + text-summary from merged LCOV using genhtml (if available) or lcov-summary
+  // Build genhtml command
+  const frontendDir = path.join(REPO_ROOT, "development/frontend");
+  const cssFlag = existsSync(CUSTOM_CSS) ? `--css-file "${CUSTOM_CSS}"` : "";
+  if (cssFlag) log(`Custom CSS: ${path.relative(REPO_ROOT, CUSTOM_CSS)}`);
+
+  const genHtmlCmd = [
+    `genhtml "${mergedLcovPath}"`,
+    `--output-directory "${COMBINED_DIR}"`,
+    "--quiet",
+    "--ignore-errors inconsistent,corrupt,source,count,category",
+    "--synthesize-missing",
+    "--rc max_message_count=0",
+    cssFlag,
+  ].filter(Boolean).join(" ");
+
   try {
-    // Try genhtml (from lcov package) for HTML report.
-    // Turbopack bundles produce duplicate function entries and missing source
-    // references — ignore these non-fatal inconsistencies.
-    const frontendDir = path.join(REPO_ROOT, "development/frontend");
-    execSync(
-      `genhtml "${mergedLcovPath}" --output-directory "${COMBINED_DIR}" --quiet --ignore-errors inconsistent,corrupt,source,count,category --synthesize-missing --rc max_message_count=0`,
-      { stdio: ["pipe", "pipe", "pipe"], cwd: frontendDir },
-    );
+    execSync(genHtmlCmd, { stdio: ["pipe", "pipe", "pipe"], cwd: frontendDir });
     log("HTML report generated via genhtml");
   } catch (err) {
-    // genhtml exits non-zero even with --ignore-errors for some warning classes.
-    // Check if it actually produced output despite the exit code.
     if (existsSync(path.join(COMBINED_DIR, "index.html"))) {
       log("HTML report generated via genhtml (with warnings)");
     } else {
       const stderr = err.stderr?.toString() || "";
-      log(`genhtml failed — generating text summary only${stderr ? `: ${stderr.split("\n")[0]}` : ""}`);
-      generateTextSummary(mergedLcov);
+      log(`genhtml failed — text summary only${stderr ? `: ${stderr.split("\n")[0]}` : ""}`);
+      generateTextSummary(filtered);
     }
   }
 
-  // Always print a text summary
-  generateTextSummary(mergedLcov);
+  generateTextSummary(filtered);
 
   log("");
   log("Coverage reports:");
@@ -98,7 +137,6 @@ function main() {
 }
 
 function generateTextSummary(lcovContent) {
-  // Parse LCOV to extract line/function/branch counts
   let linesHit = 0, linesTotal = 0;
   let fnHit = 0, fnTotal = 0;
   let brHit = 0, brTotal = 0;
