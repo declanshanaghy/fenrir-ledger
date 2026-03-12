@@ -94,13 +94,13 @@ describe("daysUntil", () => {
   });
 
   it("returns positive for future dates", () => {
-    const today = new Date("2025-03-01T00:00:00");
-    expect(daysUntil("2025-03-11T00:00:00.000Z", today)).toBe(10);
+    const today = new Date("2025-01-01T00:00:00.000Z");
+    expect(daysUntil("2025-01-11T00:00:00.000Z", today)).toBe(10);
   });
 
   it("returns negative for past dates", () => {
-    const today = new Date("2025-03-11T00:00:00");
-    expect(daysUntil("2025-03-01T00:00:00.000Z", today)).toBe(-10);
+    const today = new Date("2025-01-11T00:00:00.000Z");
+    expect(daysUntil("2025-01-01T00:00:00.000Z", today)).toBe(-10);
   });
 
   it("returns Infinity for empty string", () => {
