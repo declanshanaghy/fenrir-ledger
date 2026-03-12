@@ -180,20 +180,20 @@ mockRequireAuth.mockResolvedValueOnce({
 7. **Touch target / a11y checks** belong in `accessibility/a11y.spec.ts`, not scattered across suites.
 8. **No structural DOM assertions.** Landmark presence, aria-label existence, and tag structure belong in integration tests. E2E tests should focus on user interactions and navigation.
 
-### Current E2E suites (27 files, ~222 tests)
+### Current E2E suites (27 files, ~219 tests)
 
 | Category | Suites | Tests |
 |----------|--------|-------|
-| Auth | auth/, auth-returnto/, stale-auth-nudge/ | ~25 |
+| Auth | auth/, auth-returnto/, stale-auth-nudge/ | ~31 |
 | Dashboard | dashboard/, dashboard-tabs/ | ~24 |
 | Cards | card-lifecycle/ (add, edit, close, delete) | ~21 |
-| Wizard | wizard-step2/, wizard-back-button/ | ~15 |
-| Layout | layout/ (topbar, howl-panel) | ~7 |
+| Wizard | wizard-step2/, wizard-back-button/, select-reset/ | ~23 |
+| Layout | layout/ (topbar, howl-panel) | ~10 |
 | Settings | settings-gate/ | ~9 |
-| Theme | theme-toggle/ | ~10 |
+| Theme | theme-toggle/ | ~5 |
 | Profile | profile-dropdown/ | ~20 |
 | A11y | accessibility/ (TC-A05..A13), dialog-a11y/ | ~14 |
-| Other | chronicles/, empty-state-cta/, select-reset/, howl-count/, credit-limit-step2/, fee-bonus-step2/, csv-format-help/, reverse-tab-order/ | ~71 |
+| Other | chronicles/, empty-state-cta/, howl-count/, credit-limit-step2/, fee-bonus-step2/, csv-format-help/, reverse-tab-order/ | ~62 |
 
 **Note (Issue #589):** sidebar.spec.ts and footer.spec.ts were deleted because the
 sidebar was removed in Issue #403 and the Ledger Footer with About modal is no longer
@@ -212,3 +212,78 @@ the current route structure (marketing pages own `/`, app pages own `/ledger`).
 - **Do not exceed 15 tests per spec file.** Split or you're probably testing too granularly.
 - **Do not test landmark presence in E2E.** Use component render tests with `@testing-library/react`.
 - **Do not test aria-label presence in E2E.** Render the component in happy-dom and assert directly.
+
+---
+
+## Bloat Detection Rules (Loki Critique Checklist)
+
+These rules are evaluated by `quality/scripts/loki-critique.sh` on every coverage run and
+by Loki manually on every PR review. A suite that violates any of these rules is flagged as bloat.
+
+### Consolidation Candidates
+
+A suite is a consolidation candidate when any of the following is true:
+
+1. **Issue-scoped directory name** — directory contains an issue number (e.g. `issue-333/`),
+   a step number (e.g. `credit-limit-step2/`, `fee-bonus-step2/`, `wizard-step2/`), or a
+   PR-specific scope (e.g. `wizard-back-button/`). These should be merged into the parent
+   feature suite (`card-lifecycle/`, `wizard/`, etc.) once the fix is confirmed stable.
+
+2. **Sub-feature tested in isolation** — a tiny suite (1-3 tests) for a single field or
+   badge that belongs inside a larger feature suite. Examples: `howl-count/` (3 tests),
+   `csv-format-help/` (3 tests), `credit-limit-step2/` (3 tests). These belong inside
+   `dashboard-tabs/` or `card-lifecycle/` or the import wizard suite respectively.
+
+3. **Duplicate page coverage** — two suites navigate to the same route and test overlapping
+   behavior. Run `quality/scripts/loki-critique.sh --pattern-check` to surface these.
+
+4. **Static content assertions** — tests that assert on exact copy text (e.g. h1, h2 text
+   content, paragraph copy, button labels other than aria-label). These belong in a
+   snapshot test or are not worth testing at all. They break on every copy edit.
+
+5. **Layout/positioning measurements** — tests that check pixel widths, bounding box
+   dimensions, or CSS properties (padding, borderRadius) to validate visual hierarchy.
+   These are CSS tests in disguise and belong in visual regression tooling, not Playwright.
+   Example: profile-dropdown TC-PD09 (`widthPx > 200`, `height >= 44` loop).
+
+6. **Keyboard navigation over-specification** — testing every arrow key + wrap-around in
+   a single suite is over-specified when the underlying tablist is a standard WAI-ARIA
+   widget. Test: first tab activates, keyboard moves focus. Do not test every intermediate
+   step. Example: `reverse-tab-order/` tests 7 keyboard navigation assertions that overlap
+   with `dashboard-tabs/`.
+
+7. **Guard-clause tests** — testing that a field is NOT visible on step 1 (i.e., a negative
+   visibility assertion on state that is never supposed to show) adds minimal value because
+   it tests the absence of an unrelated feature. These inflate count without covering risk.
+
+### Per-File Hard Limits (Enforced by loki-critique.sh)
+
+| Limit | Threshold | Action |
+|-------|-----------|--------|
+| Tests per spec file | >10 = WARNING, >15 = BLOAT | Split or cull |
+| Navigation steps per test | >2 = WARNING | Refactor with seedCards() |
+| Duplicated beforeEach setup | Same 4+ line block in 3+ tests | Extract helper |
+| Static text assertions | ≥3 per file | Convert to integration test |
+| BoundingBox/computedStyle calls | ≥1 per file | Remove (CSS test) |
+
+### Coverage Layer Assignment (Authoritative Reference)
+
+Before writing any test, consult this table:
+
+| What you want to verify | Layer | Runner |
+|-------------------------|-------|--------|
+| Pure function output | Unit | Vitest |
+| Component renders correct HTML | Integration | Vitest + happy-dom |
+| API route returns correct status | Integration | Vitest mock |
+| HTTP security headers | Integration | Vitest mock |
+| ARIA role/label presence on component | Integration | Vitest + testing-library |
+| User clicks button, sees result | E2E | Playwright |
+| Multi-page navigation flow | E2E | Playwright |
+| Auth redirect with real session mock | E2E | Playwright |
+| Responsive layout at 375px viewport | E2E | Playwright (1 test per layout) |
+| Form validation (field-level) | Integration | Vitest + testing-library |
+| Form validation (submit flow) | E2E | Playwright |
+| localStorage persistence across reload | E2E | Playwright |
+| Static page copy / MDX content | None | Skip entirely |
+| CSS animation timing | None | Skip entirely |
+| CSS pixel dimensions | None | Skip entirely |
