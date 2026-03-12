@@ -3,7 +3,7 @@
  * coverage.mjs — Collect Playwright code coverage via V8 and generate reports.
  *
  * Usage:
- *   node quality/scripts/coverage.mjs [--skip-build] [--skip-tests] [-- playwright args...]
+ *   node quality/scripts/coverage.mjs [--skip-build] [--skip-tests] [--unit-only] [-- playwright args...]
  *
  * Flow:
  *   1. Build the Next.js app (unless --skip-build)
@@ -27,6 +27,7 @@ const REPORTS_DIR = path.join(REPO_ROOT, "quality/reports/coverage");
 const V8_COVERAGE_DIR = path.join(REPO_ROOT, "quality/.coverage-tmp");
 
 const args = process.argv.slice(2);
+const unitOnly = args.includes("--unit-only");
 const skipBuild = args.includes("--skip-build");
 const skipTests = args.includes("--skip-tests");
 const dashDashIdx = args.indexOf("--");
@@ -189,7 +190,24 @@ function generateReports() {
   log("  - LCOV:  quality/reports/coverage/lcov.info");
 }
 
+function runUnitCoverage() {
+  log("Running Vitest unit tests with V8 coverage...");
+  const vitestReportsDir = path.join(REPORTS_DIR, "vitest");
+  mkdirSync(vitestReportsDir, { recursive: true });
+  run("npm run test:unit:coverage", { cwd: FRONTEND_DIR });
+  log(`Vitest coverage reports written to ${vitestReportsDir}`);
+  log("  - HTML:  quality/reports/coverage/vitest/index.html");
+  log("  - LCOV:  quality/reports/coverage/vitest/lcov.info");
+}
+
 async function main() {
+  if (unitOnly) {
+    log("Running in --unit-only mode (Vitest coverage only)");
+    runUnitCoverage();
+    log("Done! Open quality/reports/coverage/vitest/index.html to view the report.");
+    return;
+  }
+
   let serverProc;
   try {
     clean();
