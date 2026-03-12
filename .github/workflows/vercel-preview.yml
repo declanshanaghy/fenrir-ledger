@@ -66,15 +66,22 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         timeout-minutes: 2
 
-      - name: Run Playwright tests against preview
-        id: playwright
-        working-directory: development/frontend
+      - name: TypeScript check
+        id: tsc
+        run: bash quality/scripts/verify.sh --step tsc
+
+      - name: Unit tests
+        id: unit
+        run: bash quality/scripts/verify.sh --step unit
+
+      - name: E2E tests (Playwright)
+        id: e2e
         env:
           SERVER_URL: ${{ steps.url.outputs.preview_url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           CI: "true"
-          NODE_PATH: ./node_modules
-        run: npx playwright test --config playwright.config.ts
+          NODE_PATH: ./development/frontend/node_modules
+        run: bash quality/scripts/verify.sh --step e2e
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -90,7 +97,9 @@ jobs:
         env:
           PREVIEW_URL: ${{ steps.url.outputs.preview_url }}
           BRANCH_NAME: ${{ steps.url.outputs.branch }}
-          PLAYWRIGHT_OUTCOME: ${{ steps.playwright.outcome }}
+          TSC_OUTCOME: ${{ steps.tsc.outcome }}
+          UNIT_OUTCOME: ${{ steps.unit.outcome }}
+          E2E_OUTCOME: ${{ steps.e2e.outcome }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
           script: |
@@ -111,16 +120,14 @@ jobs:
             // Use the plain preview URL — never append secrets to public PR comments.
             const previewUrl = process.env.PREVIEW_URL || '';
 
-            // Build test result line
-            const outcome = process.env.PLAYWRIGHT_OUTCOME;
             const runUrl = process.env.RUN_URL;
-            const testLine = outcome === 'success'
-              ? '✅ All Playwright tests passed'
-              : outcome === 'failure'
-                ? `❌ Playwright tests failed — [view report](${runUrl})`
-                : outcome === 'skipped'
-                  ? '⏭️ Playwright tests skipped (deploy did not complete)'
-                  : '⚠️ Playwright tests did not run';
+
+            const stepLine = (label, outcome) => {
+              if (outcome === 'success') return `✅ ${label} passed`;
+              if (outcome === 'failure') return `❌ ${label} failed — [view run](${runUrl})`;
+              if (outcome === 'skipped') return `⏭️ ${label} skipped`;
+              return `⚠️ ${label} did not run`;
+            };
 
             const deployLine = previewUrl
               ? `🔍 **Preview URL:** ${previewUrl}`
@@ -131,8 +138,10 @@ jobs:
               '',
               deployLine,
               '',
-              '### Playwright Tests',
-              testLine,
+              '### CI Checks',
+              stepLine('TypeScript', process.env.TSC_OUTCOME),
+              stepLine('Unit tests', process.env.UNIT_OUTCOME),
+              stepLine('E2E tests (Playwright)', process.env.E2E_OUTCOME),
               '',
               `_Updated on push to \`${process.env.BRANCH_NAME}\`_`,
             ].join('\n');
