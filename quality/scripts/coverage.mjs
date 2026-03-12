@@ -73,10 +73,12 @@ function startServer() {
   log("Starting Next.js production server with V8 coverage enabled...");
 
   // NODE_V8_COVERAGE tells Node.js to write V8 coverage JSON files to this
-  // directory when the process exits. No wrapper tool needed.
+  // directory when the process exits cleanly. Use node directly (not npx) so
+  // SIGTERM reaches the actual Node process for a clean exit + coverage write.
+  const nextBin = path.join(FRONTEND_DIR, "node_modules", ".bin", "next");
   const serverProc = spawn(
-    "npx",
-    ["next", "start", "-p", "9653"],
+    "node",
+    [nextBin, "start", "-p", "9653"],
     {
       cwd: FRONTEND_DIR,
       stdio: ["ignore", "pipe", "pipe"],
@@ -173,7 +175,10 @@ function generateReports() {
 
   log("Generating Playwright coverage reports via c8...");
 
-  // c8 report reads NODE_V8_COVERAGE data and generates Istanbul-format reports
+  // c8 reads V8 coverage JSON and resolves source maps from .next/server/chunks/
+  // back to src/. Do NOT use --all/--src/--include as they prevent source map
+  // resolution — the compiled chunks live under .next/ not src/.
+  // Instead, exclude non-app code and let source maps handle the mapping.
   const c8Args = [
     "c8", "report",
     "--temp-directory", V8_COVERAGE_DIR,
@@ -182,12 +187,6 @@ function generateReports() {
     "--reporter", "html",
     "--reporter", "lcov",
     "--reports-dir", reportsDir,
-    "--all",
-    "--src", path.join(FRONTEND_DIR, "src"),
-    "--include", "src/**/*.ts",
-    "--include", "src/**/*.tsx",
-    "--exclude", "src/**/*.test.*",
-    "--exclude", "src/**/*.spec.*",
     "--exclude", "node_modules/**",
   ];
 

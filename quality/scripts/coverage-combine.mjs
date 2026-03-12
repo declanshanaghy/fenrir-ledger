@@ -62,16 +62,25 @@ function main() {
 
   // Generate HTML + text-summary from merged LCOV using genhtml (if available) or lcov-summary
   try {
-    // Try genhtml (from lcov package) for HTML report
+    // Try genhtml (from lcov package) for HTML report.
+    // Turbopack bundles produce duplicate function entries and missing source
+    // references — ignore these non-fatal inconsistencies.
+    const frontendDir = path.join(REPO_ROOT, "development/frontend");
     execSync(
-      `genhtml "${mergedLcovPath}" --output-directory "${COMBINED_DIR}" --quiet`,
-      { stdio: "pipe" },
+      `genhtml "${mergedLcovPath}" --output-directory "${COMBINED_DIR}" --quiet --ignore-errors inconsistent,corrupt,source,count,category --synthesize-missing --rc max_message_count=0`,
+      { stdio: ["pipe", "pipe", "pipe"], cwd: frontendDir },
     );
     log("HTML report generated via genhtml");
-  } catch {
-    // Fall back: just report the LCOV stats manually
-    log("genhtml not available — generating text summary only");
-    generateTextSummary(mergedLcov);
+  } catch (err) {
+    // genhtml exits non-zero even with --ignore-errors for some warning classes.
+    // Check if it actually produced output despite the exit code.
+    if (existsSync(path.join(COMBINED_DIR, "index.html"))) {
+      log("HTML report generated via genhtml (with warnings)");
+    } else {
+      const stderr = err.stderr?.toString() || "";
+      log(`genhtml failed — generating text summary only${stderr ? `: ${stderr.split("\n")[0]}` : ""}`);
+      generateTextSummary(mergedLcov);
+    }
   }
 
   // Always print a text summary
