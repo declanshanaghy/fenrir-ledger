@@ -3,20 +3,21 @@
  * coverage.mjs — Collect code coverage and generate reports.
  *
  * Usage:
- *   node quality/scripts/coverage.mjs [--unit-only] [--combined] [--skip-build] [--skip-tests] [-- playwright args...]
+ *   node quality/scripts/coverage.mjs [--unit-only | --e2e-only] [--skip-build] [--skip-tests] [-- playwright args...]
  *
  * Modes:
  *   --unit-only   Vitest coverage only (fast, no browser)
- *   --combined    Vitest + Playwright coverage merged into a single report
- *   (default)     Playwright E2E coverage only
+ *   (default)     Vitest + Playwright coverage merged into a single report
+ *   --e2e-only    Playwright E2E coverage only (no Vitest)
  *
- * Flow (default / --combined):
- *   1. Build the Next.js app (unless --skip-build)
- *   2. Start the production server with NODE_V8_COVERAGE
- *   3. Run Playwright tests
- *   4. Stop server (SIGTERM triggers V8 coverage write)
- *   5. Use c8 to generate reports from collected V8 data
- *   6. (--combined only) Run Vitest coverage, then merge via coverage-combine.mjs
+ * Flow (default / --e2e-only):
+ *   1. (default) Run Vitest unit/integration coverage (fast, no server)
+ *   2. Build the Next.js app (unless --skip-build)
+ *   3. Start the production server with NODE_V8_COVERAGE
+ *   4. Run Playwright tests
+ *   5. Stop server (SIGTERM triggers V8 coverage write)
+ *   6. Use c8 to generate reports from collected V8 data
+ *   7. (default) Merge Vitest + Playwright via coverage-combine.mjs
  *
  * Reports are written to: quality/reports/coverage/
  */
@@ -34,7 +35,7 @@ const V8_COVERAGE_DIR = path.join(REPO_ROOT, "quality/.coverage-tmp");
 
 const args = process.argv.slice(2);
 const unitOnly = args.includes("--unit-only");
-const combined = args.includes("--combined");
+const combined = unitOnly ? false : !args.includes("--e2e-only"); // default: combined (unless --unit-only or --e2e-only)
 const skipBuild = args.includes("--skip-build");
 const skipTests = args.includes("--skip-tests");
 const dashDashIdx = args.indexOf("--");
