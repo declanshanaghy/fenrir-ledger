@@ -52,7 +52,7 @@ async function seedStaleEntitlement(
 }
 
 async function resetAllState(page: Page): Promise<void> {
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.goto("/ledger", { waitUntil: "domcontentloaded" });
   await clearAllStorage(page);
   await page.evaluate((key: string) => {
     sessionStorage.removeItem(key);

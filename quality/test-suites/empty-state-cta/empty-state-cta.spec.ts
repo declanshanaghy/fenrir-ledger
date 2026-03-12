@@ -32,7 +32,7 @@ test.describe("AC-1 & AC-4 — Single primary CTA (no duplicate Add Card)", () =
     page,
   }) => {
     // Establish browser context, clear storage, seed household (no cards).
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     // Reload with networkidle so all async effects settle.
@@ -48,7 +48,7 @@ test.describe("AC-1 & AC-4 — Single primary CTA (no duplicate Add Card)", () =
   test("the single Add Card CTA is inside the EmptyState (not the header)", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
@@ -68,7 +68,7 @@ test.describe("AC-1 & AC-4 — Single primary CTA (no duplicate Add Card)", () =
   test("header Add Card button appears once cards exist (anonymous)", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [makeCard()]);
@@ -89,7 +89,7 @@ test.describe("AC-2 — Upsell banner not shown to new (zero-card) users", () =>
   test("UpsellBanner full-width region is not rendered when zero cards (anonymous)", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
@@ -105,7 +105,7 @@ test.describe("AC-2 — Upsell banner not shown to new (zero-card) users", () =>
   test("UpsellBanner region appears when user has at least one card (anonymous)", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     // Remove any previous dismiss so the banner is shown.
     await page.evaluate(() => localStorage.removeItem("fenrir:upsell_dismissed"));
@@ -127,7 +127,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
   test("zero-cards nudge renders as a small text button, not the full banner", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
@@ -140,7 +140,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
   });
 
   test("zero-cards nudge: full banner region is absent", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
@@ -153,7 +153,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
   });
 
   test("subtle nudge navigates to sign-in page on click", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
@@ -172,7 +172,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
   test("subtle nudge is wrapped in a muted-foreground paragraph (not a gold CTA)", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
@@ -198,7 +198,7 @@ test.describe("Edge cases", () => {
     const jsErrors: string[] = [];
     page.on("pageerror", (err) => jsErrors.push(err.message));
 
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
@@ -213,7 +213,7 @@ test.describe("Edge cases", () => {
   }) => {
     await page.setViewportSize({ width: 375, height: 667 });
 
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
@@ -230,7 +230,7 @@ test.describe("Edge cases", () => {
   test("mobile 375px: subtle sign-in nudge is visible", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
 
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
@@ -244,7 +244,7 @@ test.describe("Edge cases", () => {
   test("EmptyState headline (Gleipnir) is present in zero-card state", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
@@ -258,7 +258,7 @@ test.describe("Edge cases", () => {
   test("no competing CTAs: exactly one primary Add Card link + no gold banner sign-in", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });

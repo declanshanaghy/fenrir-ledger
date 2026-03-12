@@ -31,7 +31,7 @@ async function setup(
   page: Parameters<typeof clearAllStorage>[0],
   cards: Parameters<typeof seedCards>[2]
 ) {
-  await page.goto("/");
+  await page.goto("/ledger");
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);

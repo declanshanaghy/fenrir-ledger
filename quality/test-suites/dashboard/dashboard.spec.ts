@@ -39,7 +39,7 @@ import {
 // clears storage so the base state is deterministic.
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/ledger");
   await clearAllStorage(page);
 });
 

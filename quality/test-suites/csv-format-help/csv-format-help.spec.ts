@@ -39,7 +39,7 @@ async function seedFakeAuth(page: any): Promise<void> {
 }
 
 async function setupAuthenticatedWithCards(page: any): Promise<void> {
-  await page.goto("/", { waitUntil: "load" });
+  await page.goto("/ledger", { waitUntil: "load" });
   await seedFakeAuth(page);
   await seedHousehold(page, AUTH_HOUSEHOLD_ID);
   await seedCards(page, AUTH_HOUSEHOLD_ID, FEW_CARDS);

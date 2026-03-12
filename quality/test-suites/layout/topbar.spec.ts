@@ -3,13 +3,13 @@
  * Authored by Loki, QA Tester of the Pack
  *
  * Slimmed to interactive behavior only:
+ *   - Logo link exists and points to home
  *   - Anonymous avatar click opens upsell panel
  *   - 'Not now' dismisses upsell panel
  *   - Escape dismisses upsell panel
- *   - Logo link opens in new tab
  *
- * Removed: static text/tagline checks, brand name presence,
- * aria-label text, rel attribute, email pattern assertions.
+ * Route: /ledger (uses LedgerTopBar, not the marketing navbar).
+ * Sidebar was removed in Issue #403.
  */
 
 import { test, expect } from "@playwright/test";
@@ -24,7 +24,7 @@ import {
 // ════════════════════════════════════════════════════════════════════════════
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/ledger");
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await page.reload({ waitUntil: "load" });
@@ -35,12 +35,11 @@ test.beforeEach(async ({ page }) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 test.describe("TopBar — Logo link", () => {
-  test("header contains a link with href='/static' that opens in a new tab", async ({
+  test("header contains a link with href='/' pointing to marketing home", async ({
     page,
   }) => {
     const logoLink = page.locator('header a[href="/"]').first();
     await expect(logoLink).toBeAttached();
-    await expect(logoLink).toHaveAttribute("target", "_blank");
   });
 });
 
