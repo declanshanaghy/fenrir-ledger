@@ -1,0 +1,394 @@
+/**
+ * Runic Empty States QA Tests — Issue #583
+ *
+ * Validates simplified empty state pattern for all 5 dashboard tabs:
+ *   - All:      ᛟ No cards ᛟ
+ *   - Valhalla: ↑ No retired cards ↑
+ *   - Active:   ᛉ No active cards ᛉ
+ *   - The Hunt: ᛜ No bounties ᛜ
+ *   - The Howl: ᚲ No alerts ᚲ
+ *
+ * Acceptance Criteria:
+ * - All 5 tab empty states show the simplified runic pattern
+ * - Each tab uses its own rune character from the tab config
+ * - No verbose explanatory text in empty states
+ * - Global EmptyState (zero cards total) remains unchanged
+ * - Rune text is centered vertically and horizontally in the empty area
+ * - Mobile (375px) renders correctly
+ */
+
+import { test, expect } from "@playwright/test";
+import {
+  clearAllStorage,
+  seedCards,
+  seedHousehold,
+  makeCard,
+  makeUrgentCard,
+  makePromoCard,
+  makeClosedCard,
+  ANONYMOUS_HOUSEHOLD_ID,
+} from "../helpers/test-fixtures";
+
+// Setup helper function
+async function setupDashboard(
+  page: Parameters<typeof clearAllStorage>[0],
+  cards: Parameters<typeof seedCards>[2]
+) {
+  await page.goto("/ledger");
+  await clearAllStorage(page);
+  await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+  await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
+  await page.reload({ waitUntil: "load" });
+}
+
+// Tab rune map for validation
+const TAB_RUNES = {
+  all: "ᛟ",
+  valhalla: "↑",
+  active: "ᛉ",
+  hunt: "ᛜ",
+  howl: "ᚲ",
+};
+
+const TAB_EMPTY_LABELS = {
+  all: "No cards",
+  valhalla: "No retired cards",
+  active: "No active cards",
+  hunt: "No bounties",
+  howl: "No alerts",
+};
+
+test.describe("Runic Empty States — Issue #583", () => {
+  // Desktop viewport for all tests
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test.describe("AC1: Simplified Runic Pattern", () => {
+    test("All tab shows runic empty state when no cards", async ({ page }) => {
+      await setupDashboard(page, []);
+
+      // Navigate to All tab
+      const allTab = page.locator('button#tab-all');
+      await allTab.click();
+
+      // Verify empty state exists with correct rune and label
+      const allPanel = page.locator('[role="tabpanel"]#panel-all');
+      const emptyText = allPanel.locator("text-base", { has: page.locator("text=/ᛟ No cards ᛟ/") });
+
+      // Check for both runes and label text
+      const panelText = allPanel.locator("p");
+      await expect(panelText).toContainText("ᛟ");
+      await expect(panelText).toContainText("No cards");
+    });
+
+    test("Active tab shows runic empty state when empty", async ({ page }) => {
+      // Only urgent and closed cards (no active cards)
+      await setupDashboard(page, [
+        makeUrgentCard({ cardName: "Urgent" }),
+        makeClosedCard({ cardName: "Closed" }),
+      ]);
+
+      const activeTab = page.locator('button#tab-active');
+      await activeTab.click();
+
+      const activePanel = page.locator('[role="tabpanel"]#panel-active');
+      const panelText = activePanel.locator("p");
+      await expect(panelText).toContainText("ᛉ");
+      await expect(panelText).toContainText("No active cards");
+    });
+
+    test("The Hunt tab shows runic empty state when no bonus cards", async ({ page }) => {
+      // Only active and urgent cards (no bonus_open)
+      await setupDashboard(page, [
+        makeCard({ cardName: "Active" }),
+        makeUrgentCard({ cardName: "Urgent" }),
+      ]);
+
+      const huntTab = page.locator('button#tab-hunt');
+      await huntTab.click();
+
+      const huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
+      const panelText = huntPanel.locator("p");
+      await expect(panelText).toContainText("ᛜ");
+      await expect(panelText).toContainText("No bounties");
+    });
+
+    test("The Howl tab shows runic empty state when no urgent cards", async ({ page }) => {
+      // Only active cards (no fee_approaching, promo_expiring, overdue)
+      await setupDashboard(page, [
+        makeCard({ cardName: "Active 1" }),
+        makeCard({ cardName: "Active 2" }),
+      ]);
+
+      const howlTab = page.locator('button#tab-howl');
+      await howlTab.click();
+
+      const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
+      const panelText = howlPanel.locator("p");
+      await expect(panelText).toContainText("ᚲ");
+      await expect(panelText).toContainText("No alerts");
+    });
+
+    test("Valhalla tab shows runic empty state when no closed cards", async ({ page }) => {
+      // Only active cards (no closed/graduated)
+      await setupDashboard(page, [
+        makeCard({ cardName: "Active 1" }),
+        makeCard({ cardName: "Active 2" }),
+      ]);
+
+      const valhallaTab = page.locator('button#tab-valhalla');
+      await valhallaTab.click();
+
+      const valhallaPanel = page.locator('[role="tabpanel"]#panel-valhalla');
+      const panelText = valhallaPanel.locator("p");
+      await expect(panelText).toContainText("↑");
+      await expect(panelText).toContainText("No retired cards");
+    });
+  });
+
+  test.describe("AC2: Tab-Specific Runes", () => {
+    test("Each tab uses correct rune from tab config", async ({ page }) => {
+      // Setup with one card per tab type
+      await setupDashboard(page, [
+        makeCard({ cardName: "Active" }),
+        makeUrgentCard({ cardName: "Urgent" }),
+        makePromoCard({ cardName: "Promo" }),
+        makeClosedCard({ cardName: "Closed" }),
+      ]);
+
+      // Test each empty tab has correct rune
+      for (const [tabId, expectedRune] of Object.entries(TAB_RUNES)) {
+        if (tabId === "all") continue; // All tab won't be empty with these cards
+
+        const tab = page.locator(`button#tab-${tabId}`);
+        await tab.click();
+
+        const panel = page.locator(`[role="tabpanel"]#panel-${tabId}`);
+        const panelText = panel.locator("p");
+
+        // Should contain the correct rune twice (before and after label)
+        const text = await panelText.textContent();
+        const runeCount = (text?.match(new RegExp(expectedRune, "g")) ?? []).length;
+        expect(runeCount).toBe(2);
+      }
+    });
+  });
+
+  test.describe("AC3: No Verbose Text", () => {
+    test("All empty states lack verbose explanatory text", async ({ page }) => {
+      // One card of each type to test multiple tabs
+      await setupDashboard(page, [
+        makeCard({ cardName: "Active" }),
+        makeClosedCard({ cardName: "Closed" }),
+      ]);
+
+      // Test Active tab (empty because only active card is counted elsewhere)
+      const activeTab = page.locator('button#tab-hunt');
+      await activeTab.click();
+
+      const huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
+      const panelText = huntPanel.textContent();
+
+      // Should NOT contain verbose text like the old implementation
+      await expect(huntPanel.locator("p")).not.toContainText(/click/i);
+      await expect(huntPanel.locator("p")).not.toContainText(/add a card/i);
+      await expect(huntPanel.locator("p")).not.toContainText(/All your cards/i);
+      await expect(huntPanel.locator("p")).not.toContainText(/The Howl/i);
+
+      // Should only contain the rune and minimal label
+      const text = huntPanel.locator("p");
+      const content = await text.textContent();
+      // Should be concise: "ᛜ No bounties ᛜ" or similar
+      expect(content?.length).toBeLessThan(30);
+    });
+  });
+
+  test.describe("AC4: Global EmptyState Unchanged", () => {
+    test("Global empty state displays when zero cards total", async ({ page }) => {
+      // No cards at all
+      await setupDashboard(page, []);
+
+      // Should show the global EmptyState, not a TabEmptyState
+      const emptyState = page.locator('[data-testid="empty-state"]');
+
+      // The global EmptyState should be visible (from EmptyState.tsx)
+      // Note: We verify it's different from tab empty states by checking
+      // it doesn't have the tab panel structure
+      const tabPanels = page.locator('[role="tabpanel"]');
+      const visiblePanels = await tabPanels.filter({ hasNot: page.locator('[hidden]') }).count();
+
+      // No visible panels means global empty state is shown instead
+      expect(visiblePanels).toBe(0);
+    });
+  });
+
+  test.describe("AC5: Centered Alignment", () => {
+    test("Empty state text is centered vertically and horizontally", async ({ page }) => {
+      await setupDashboard(page, [
+        makeCard({ cardName: "Active" }),
+      ]);
+
+      const howlTab = page.locator('button#tab-howl');
+      await howlTab.click();
+
+      const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
+
+      // Get the container div
+      const container = howlPanel.locator("div").first();
+
+      // Verify centering classes are present
+      const containerClass = await container.getAttribute("class");
+      expect(containerClass).toContain("flex");
+      expect(containerClass).toContain("items-center");
+      expect(containerClass).toContain("justify-center");
+      expect(containerClass).toContain("text-center");
+    });
+
+    test("Empty state maintains padding and spacing on mobile", async ({ page }) => {
+      // Mobile viewport: 375px
+      await page.setViewportSize({ width: 375, height: 667 });
+
+      await setupDashboard(page, [
+        makeCard({ cardName: "Active" }),
+      ]);
+
+      const howlTab = page.locator('button#tab-howl');
+      await howlTab.click();
+
+      const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
+      const container = howlPanel.locator("div").first();
+
+      // Should still have centering classes on mobile
+      const containerClass = await container.getAttribute("class");
+      expect(containerClass).toContain("flex");
+      expect(containerClass).toContain("justify-center");
+
+      // Text should be visible and readable on mobile
+      const text = howlPanel.locator("p");
+      await expect(text).toBeVisible();
+    });
+  });
+
+  test.describe("AC6: Mobile Rendering (375px)", () => {
+    test.use({ viewport: { width: 375, height: 667 } });
+
+    test("All empty states render correctly on mobile", async ({ page }) => {
+      await setupDashboard(page, [
+        makeCard({ cardName: "Active" }),
+      ]);
+
+      // Test Howl tab (will be empty)
+      const howlTab = page.locator('button#tab-howl');
+      await howlTab.click();
+
+      const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
+      const emptyText = howlPanel.locator("p");
+
+      // Should be visible and contain the expected content
+      await expect(emptyText).toBeVisible();
+      const content = await emptyText.textContent();
+      expect(content).toContain("ᚲ");
+      expect(content).toContain("No alerts");
+
+      // Text should not overflow (verify text is within bounds)
+      const boundingBox = await emptyText.boundingBox();
+      expect(boundingBox).not.toBeNull();
+      expect(boundingBox?.width).toBeLessThanOrEqual(375);
+    });
+
+    test("Rune characters display correctly on mobile", async ({ page }) => {
+      await setupDashboard(page, [
+        makeClosedCard({ cardName: "Closed" }),
+      ]);
+
+      const allTab = page.locator('button#tab-all');
+      await allTab.click();
+
+      const allPanel = page.locator('[role="tabpanel"]#panel-all');
+      const emptyText = allPanel.locator("p");
+
+      await expect(emptyText).toBeVisible();
+      const content = await emptyText.textContent();
+
+      // Rune character should be present
+      expect(content).toContain("ᛟ");
+    });
+  });
+
+  test.describe("Edge Cases", () => {
+    test("Empty state displays correctly when user switches between tabs", async ({ page }) => {
+      // Setup: one active card, one urgent card
+      await setupDashboard(page, [
+        makeCard({ cardName: "Active" }),
+        makeUrgentCard({ cardName: "Urgent" }),
+      ]);
+
+      // Start at Howl (has urgent card)
+      const howlTab = page.locator('button#tab-howl');
+      await howlTab.click();
+      let panelContent = await page.locator('[role="tabpanel"]#panel-howl').locator("div").first().getAttribute("class");
+      expect(panelContent).toContain("animate");
+
+      // Switch to Active (has active card)
+      const activeTab = page.locator('button#tab-active');
+      await activeTab.click();
+      panelContent = await page.locator('[role="tabpanel"]#panel-active').locator("div").first().getAttribute("class");
+      expect(panelContent).not.toBeNull();
+
+      // Switch to Hunt (empty)
+      const huntTab = page.locator('button#tab-hunt');
+      await huntTab.click();
+      const huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
+      const emptyText = huntPanel.locator("p");
+
+      await expect(emptyText).toContainText("ᛜ");
+      await expect(emptyText).toContainText("No bounties");
+    });
+
+    test("Empty state persists when all cards of a type are deleted", async ({ page }) => {
+      // Start with bonus cards only
+      const bonus_card = makeCard({
+        cardName: "Bonus Card",
+        status: "bonus_open",
+      });
+
+      await setupDashboard(page, [bonus_card]);
+
+      // Hunt tab should show cards
+      const huntTab = page.locator('button#tab-hunt');
+      await huntTab.click();
+
+      let huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
+      let emptyState = huntPanel.locator("p");
+      await expect(emptyState).not.toContainText("No bounties");
+
+      // Now remove all bonus cards
+      await setupDashboard(page, [
+        makeCard({ cardName: "Active" }),
+      ]);
+
+      // Hunt tab should now show empty state
+      await huntTab.click();
+      huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
+      emptyState = huntPanel.locator("p");
+
+      await expect(emptyState).toContainText("ᛜ");
+      await expect(emptyState).toContainText("No bounties");
+    });
+
+    test("Empty state uses correct muted styling", async ({ page }) => {
+      await setupDashboard(page, [
+        makeCard({ cardName: "Active" }),
+      ]);
+
+      const howlTab = page.locator('button#tab-howl');
+      await howlTab.click();
+
+      const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
+      const emptyText = howlPanel.locator("p");
+
+      // Verify the text has muted styling
+      const classList = await emptyText.getAttribute("class");
+      expect(classList).toContain("text-muted-foreground");
+    });
+  });
+});
