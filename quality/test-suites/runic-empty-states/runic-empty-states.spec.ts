@@ -150,32 +150,52 @@ test.describe("Runic Empty States — Issue #583", () => {
   });
 
   test.describe("AC2: Tab-Specific Runes", () => {
-    test("Empty tabs use their correct rune from tab config", async ({ page }) => {
-      // Setup with only active cards (so all other tabs are empty)
+    test("Empty Howl tab uses correct rune from config", async ({ page }) => {
+      // Setup with only active cards (so Howl tab is empty)
       await setupDashboard(page, [
         makeCard({ cardName: "Active 1" }),
         makeCard({ cardName: "Active 2" }),
       ]);
 
-      // Test non-gated empty tabs: howl and valhalla
-      const emptyTabs = ["howl", "valhalla"];
-      for (const tabId of emptyTabs) {
-        const expectedRune = TAB_RUNES[tabId as keyof typeof TAB_RUNES];
+      const expectedRune = TAB_RUNES["howl"];
 
-        const tab = page.locator(`button#tab-${tabId}`);
-        await tab.click();
+      const tab = page.locator('button#tab-howl');
+      await tab.click();
 
-        const panel = page.locator(`[role="tabpanel"]#panel-${tabId}`);
-        const panelText = panel.locator("p");
+      const panel = page.locator('[role="tabpanel"]#panel-howl');
+      const panelText = panel.locator("p");
 
-        // Should contain the correct rune twice (before and after label)
-        const text = await panelText.textContent();
-        expect(text).toContain(expectedRune);
+      // Should contain the correct rune twice (before and after label)
+      const text = await panelText.textContent();
+      expect(text).toContain(expectedRune);
 
-        // Count runes in text
-        const runeCount = (text?.match(new RegExp(expectedRune, "g")) ?? []).length;
-        expect(runeCount).toBe(2);
-      }
+      // Count runes in text
+      const runeCount = (text?.match(new RegExp(expectedRune, "g")) ?? []).length;
+      expect(runeCount).toBe(2);
+    });
+
+    test("Empty Active tab uses correct rune from config", async ({ page }) => {
+      // Setup with only urgent cards (so Active tab is empty)
+      await setupDashboard(page, [
+        makeUrgentCard({ cardName: "Urgent 1" }),
+        makeUrgentCard({ cardName: "Urgent 2" }),
+      ]);
+
+      const expectedRune = TAB_RUNES["active"];
+
+      const tab = page.locator('button#tab-active');
+      await tab.click();
+
+      const panel = page.locator('[role="tabpanel"]#panel-active');
+      const panelText = panel.locator("p");
+
+      // Should contain the correct rune twice (before and after label)
+      const text = await panelText.textContent();
+      expect(text).toContain(expectedRune);
+
+      // Count runes in text
+      const runeCount = (text?.match(new RegExp(expectedRune, "g")) ?? []).length;
+      expect(runeCount).toBe(2);
     });
   });
 
