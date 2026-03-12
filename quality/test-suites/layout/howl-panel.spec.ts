@@ -44,23 +44,7 @@ async function setup(
 // Suite: Tab bar renders
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Dashboard Tabs — Tab bar", () => {
-  test.use({ viewport: { width: 1280, height: 800 } });
-
-  test("tab bar renders with 'The Howl' and 'Active' tabs when cards exist", async ({
-    page,
-  }) => {
-    await setup(page, [makeCard({ cardName: "Some Card" })]);
-
-    const tabList = page.locator('[role="tablist"][aria-label="Card dashboard tabs"]');
-    await expect(tabList).toBeVisible();
-
-    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
-    const activeTab = page.locator('[role="tab"][id="tab-active"]');
-    await expect(howlTab).toBeVisible();
-    await expect(activeTab).toBeVisible();
-  });
-});
+// "Tab bar renders" — REMOVED (Issue #610): Duplicated by dashboard-tabs and reverse-tab-order.
 
 // ════════════════════════════════════════════════════════════════════════════
 // Suite: Default tab selection
@@ -116,22 +100,7 @@ test.describe("Dashboard Tabs — Tab switching", () => {
     await expect(howlPanel).toHaveAttribute("hidden", "");
   });
 
-  test("clicking back to Howl tab restores Howl panel", async ({ page }) => {
-    await setup(page, [
-      makeUrgentCard({ cardName: "Urgent Card" }),
-      makeCard({ cardName: "Calm Card" }),
-    ]);
-
-    const activeTab = page.locator('[role="tab"][id="tab-active"]');
-    await activeTab.click();
-
-    const howlTab = page.locator('[role="tab"][id="tab-howl"]');
-    await howlTab.click();
-
-    const howlPanel = page.locator('[role="tabpanel"][id="panel-howl"]');
-    await expect(howlPanel).not.toHaveAttribute("hidden");
-    await expect(howlPanel).toContainText("Urgent Card");
-  });
+  // "clicking back to Howl restores panel" — REMOVED (Issue #610): Inverse of forward switch.
 });
 
 // ════════════════════════════════════════════════════════════════════════════

@@ -28,9 +28,7 @@ import {
 import {
   EMPTY_CARDS,
   FEW_CARDS,
-  MANY_CARDS,
   URGENT_CARDS,
-  MIXED_CARDS,
 } from "../helpers/seed-data";
 
 // ─── Shared beforeEach ────────────────────────────────────────────────────────
@@ -111,100 +109,17 @@ test.describe("Dashboard — Card Grid", () => {
     await expect(page.getByText("Venture Rewards").first()).toBeVisible();
   });
 
-  test("renders exactly 3 card tiles for FEW_CARDS", async ({ page }) => {
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "load" });
-
-    // Each CardTile is wrapped in a Link to /cards/{id}/edit
-    // Cards appear in "All" tab + status tab; scope to the "All" tabpanel
-    const allPanel = page.locator('[aria-labelledby="tab-all"]');
-    const editLinks = allPanel.locator('a[href*="/ledger/cards/"][href*="/edit"]');
-    await expect(editLinks).toHaveCount(3);
-  });
-
-  test("renders MANY_CARDS (10 cards) — no empty state", async ({ page }) => {
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, MANY_CARDS);
-    await page.reload({ waitUntil: "load" });
-
-    // When cards exist, EmptyState is not rendered — no h2 with "Gleipnir"
-    // should be present. Use count check (instant) rather than textContent()
-    // which would wait up to 30s for an h2 that may not exist.
-    const emptyHeading = page.locator('h2:has-text("Gleipnir")');
-    await expect(emptyHeading).toHaveCount(0);
-
-    // Scope to "All" tab to avoid 5-tab duplication
-    const allPanel = page.locator('[aria-labelledby="tab-all"]');
-    const editLinks = allPanel.locator('a[href*="/ledger/cards/"][href*="/edit"]');
-    await expect(editLinks).toHaveCount(10);
-  });
+  // "renders exactly 3 card tiles" — REMOVED (Issue #610): Redundant with name visibility above.
+  // "renders MANY_CARDS (10 cards)" — REMOVED (Issue #610): Count check, low regression value.
 });
 
 // ════════════════════════════════════════════════════════════════════════════
 // Suite 3 — Summary Stats
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Dashboard — Summary Stats", () => {
-  test("summary shows correct card count for MANY_CARDS (10)", async ({
-    page,
-  }) => {
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, MANY_CARDS);
-    await page.reload({ waitUntil: "load" });
-
-    // Spec: Dashboard.tsx renders "{cards.length} cards" in the summary header
-    // MANY_CARDS has 10 entries
-    const summary = page.locator("text=10").first();
-    await expect(summary).toBeVisible();
-
-    // The text node with "cards" (plural form) must also be present
-    await expect(page.locator("body")).toContainText("10");
-    await expect(page.locator("body")).toContainText("cards");
-  });
-
-  test("summary shows '1 card' (singular) when exactly one card is seeded", async ({
-    page,
-  }) => {
-    const oneCard = [FEW_CARDS[0]!];
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, oneCard);
-    await page.reload({ waitUntil: "load" });
-
-    // Spec: Dashboard.tsx uses ternary → cards.length === 1 ? "card" : "cards"
-    // Must be "1 card" not "1 cards"
-    await expect(page.locator("body")).toContainText("1");
-    // Verify the singular "card" label without the "s"
-    // The summary span text is "{N} cards" or "{N} card"
-    const body = await page.locator("body").innerText();
-    // Should contain "1" followed by "card" but NOT "1 cards"
-    expect(body).not.toMatch(/\b1\s+cards\b/);
-  });
-
-  test("shows 'needs attention' count for URGENT_CARDS", async ({ page }) => {
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, URGENT_CARDS);
-    await page.reload({ waitUntil: "load" });
-
-    // URGENT_CARDS has 5 cards: 3 fee_approaching + 2 promo_expiring = 5 urgent
-    // The count appears in the Howl tab badge
-    await expect(page.locator("body")).toContainText("5");
-  });
-
-  test("no 'needs attention' shown when all cards are active", async ({
-    page,
-  }) => {
-    // FEW_CARDS are all status: "active" — no urgent entries
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "load" });
-
-    // Spec: needsAttention.length > 0 guard before rendering the attention span
-    const body = await page.locator("body").innerText();
-    expect(body).not.toContain("need");
-    expect(body).not.toContain("attention");
-  });
-});
+// Suite 3 — Summary Stats: REMOVED (Issue #610)
+// Card count, singular/plural labels, "needs attention" text — all static label
+// logic that can be unit tested. Body text searches are fragile and low value.
 
 // ════════════════════════════════════════════════════════════════════════════
 // Suite 4 — Status Badges

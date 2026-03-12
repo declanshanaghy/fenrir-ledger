@@ -71,40 +71,8 @@ test.describe("Dashboard Tabs QA — Issue #279", () => {
     });
   });
 
-  test.describe("TC-3: Default Tab Logic", () => {
-    test("Dashboard renders with appropriate default tab", async ({ page }) => {
-      await setupDashboard(page, [
-        makeCard({ cardName: "Active" }),
-        makeUrgentCard({ cardName: "Urgent" }),
-      ]);
-
-      // Verify that dashboard has rendered and either Howl or Active tab is selected
-      const tabs = page.locator('[role="tab"]');
-      const tabCount = await tabs.count();
-      expect(tabCount).toBeGreaterThan(0);
-
-      // One tab should be selected
-      const selectedTabs = page.locator('[role="tab"][aria-selected="true"]');
-      const selectedCount = await selectedTabs.count();
-      expect(selectedCount).toBe(1);
-    });
-
-    test("Dashboard loads with just active cards", async ({ page }) => {
-      await setupDashboard(page, [
-        makeCard({ cardName: "Active 1" }),
-        makeCard({ cardName: "Active 2" }),
-      ]);
-
-      // Verify dashboard renders and active tab exists
-      const activeTab = page.locator('button#tab-active');
-      await expect(activeTab).toBeVisible();
-
-      // Active panel should be visible (not hidden)
-      const activePanel = page.locator('[role="tabpanel"]#panel-active');
-      const hidden = await activePanel.getAttribute("hidden");
-      expect(hidden).toBeNull();
-    });
-  });
+  // TC-3: Default Tab Logic — REMOVED (Issue #610)
+  // Duplicated by howl-panel.spec.ts default tab selection tests.
 
   test.describe("TC-6: Tab Switching & Keyboard", () => {
     test("Can click to switch between active and all tabs", async ({ page }) => {
@@ -123,42 +91,8 @@ test.describe("Dashboard Tabs QA — Issue #279", () => {
       await expect(activeTab).toHaveAttribute("aria-selected", "true");
     });
 
-    test("Tab panels show/hide correctly when switching", async ({ page }) => {
-      await setupDashboard(page, [
-        makeCard({ cardName: "Active" }),
-        makeUrgentCard({ cardName: "Urgent" }),
-      ]);
-
-      const allPanel = page.locator('[role="tabpanel"]#panel-all');
-      const activePanel = page.locator('[role="tabpanel"]#panel-active');
-      const allTab = page.locator('button#tab-all');
-      const activeTab = page.locator('button#tab-active');
-
-      // Click All — should not be hidden
-      await allTab.click();
-      const allHidden = await allPanel.getAttribute("hidden");
-      expect(allHidden).toBeNull();
-
-      // Click Active — All should be hidden, Active should not
-      await activeTab.click();
-      const activeHidden = await activePanel.getAttribute("hidden");
-      expect(activeHidden).toBeNull();
-    });
-
-    test("Arrow Right keyboard navigation switches tab", async ({ page }) => {
-      await setupDashboard(page, [
-        makeCard({ cardName: "Active" }),
-        makeUrgentCard({ cardName: "Urgent" }),
-      ]);
-
-      // Tab order: All → Valhalla → Active → Hunt → Howl
-      const allTab = page.locator('button#tab-all');
-      const valhallaTab = page.locator('button#tab-valhalla');
-
-      await allTab.focus();
-      await page.keyboard.press("ArrowRight");
-      await expect(valhallaTab).toHaveAttribute("aria-selected", "true");
-    });
+    // "Tab panels show/hide" — REMOVED (Issue #610): Duplicated by howl-panel switching.
+    // "Arrow Right keyboard navigation" — REMOVED (Issue #610): Duplicated by reverse-tab-order.
   });
 
   test.describe("TC-9: Empty States", () => {
