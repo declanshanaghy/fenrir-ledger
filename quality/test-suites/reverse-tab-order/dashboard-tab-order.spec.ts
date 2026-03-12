@@ -18,6 +18,7 @@ import {
   seedCards,
   seedEntitlement,
   seedHousehold,
+  seedEntitlement,
   makeCard,
   makeUrgentCard,
   makePromoCard,
@@ -32,6 +33,8 @@ async function setupDashboard(
   await page.goto("/ledger");
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
+  // Seed Karl tier entitlement to unlock all features (Howl, Valhalla, Hunt tabs)
+  await seedEntitlement(page, "karl", true);
   await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
   await seedEntitlement(page);
   await page.reload({ waitUntil: "load" });
