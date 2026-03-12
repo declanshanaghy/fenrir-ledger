@@ -41,7 +41,7 @@ When a chain is interrupted (session ended, agent failed, context lost), use `--
 
 5. **Determine the next step:**
    - No handoff comments → Step 1 agent failed before completing. Re-run Step 1.
-   - `Luna → FiremanDecko Handoff` exists but no further → spawn FiremanDecko.
+   - `Luna → FiremanDecko Handoff` exists but no further → extract wireframe file paths from the handoff `**Files:**` field, then spawn FiremanDecko with those paths via `--prompt-extra`.
    - `FiremanDecko → Loki Handoff` or `Heimdall → Loki Handoff` exists but no verdict → spawn Loki.
    - `Loki QA Verdict` exists → check CI status (see Step 5b below).
    - `Freya Handoff` or `FiremanDecko Handoff` (without `→ Loki`) on a research issue → **Research Review** (see Step 5c below).

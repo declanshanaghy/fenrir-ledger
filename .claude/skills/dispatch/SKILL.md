@@ -155,6 +155,24 @@ Substitute variables in the template:
 - `<TITLE>` → issue title
 - `<BRANCH>` → branch name
 - `<FULL ISSUE BODY>` → full issue body text
+- `<WIREFRAME_FILES>` → (UX chain Step 2 only) exact wireframe file paths from Luna's handoff
+
+**UX Chain — Wireframe Extraction (Step 2 FiremanDecko only):**
+
+When dispatching FiremanDecko as Step 2 of a UX chain, the orchestrator MUST:
+1. Read the `## Luna → FiremanDecko Handoff` comment from the issue.
+2. Extract the file paths listed under `**Files:**` in that comment.
+3. Substitute them into the `<WIREFRAME_FILES>` placeholder as a bulleted list of exact paths.
+
+Example substitution:
+```
+  Luna's wireframes are on this branch. Read EVERY file listed below BEFORE writing any code:
+  - `ux/wireframes/chrome/dashboard-tab-headers.html`
+  - `ux/wireframes/chrome/dashboard-tab-headers-interaction-spec.md`
+  These are the exact wireframe files Luna produced. ...
+```
+
+If no `**Files:**` field exists in the handoff, fall back to: list ALL files changed in the PR (from `gh pr view --json files`).
 
 If `--prompt-extra`, append after the issue body:
 ```
