@@ -63,8 +63,12 @@ test.describe("Runic Empty States — Issue #583", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
   test.describe("AC1: Simplified Runic Pattern", () => {
-    test("All tab shows runic empty state when no cards", async ({ page }) => {
-      await setupDashboard(page, []);
+    test("All tab shows runic empty state when no active/urgent cards but has closed cards", async ({ page }) => {
+      // Only closed cards (so All tab is empty, but global EmptyState not triggered)
+      await setupDashboard(page, [
+        makeClosedCard({ cardName: "Closed 1" }),
+        makeClosedCard({ cardName: "Closed 2" }),
+      ]);
 
       // Navigate to All tab
       const allTab = page.locator('button#tab-all');
@@ -72,9 +76,6 @@ test.describe("Runic Empty States — Issue #583", () => {
 
       // Verify empty state exists with correct rune and label
       const allPanel = page.locator('[role="tabpanel"]#panel-all');
-      const emptyText = allPanel.locator("text-base", { has: page.locator("text=/ᛟ No cards ᛟ/") });
-
-      // Check for both runes and label text
       const panelText = allPanel.locator("p");
       await expect(panelText).toContainText("ᛟ");
       await expect(panelText).toContainText("No cards");
@@ -147,17 +148,16 @@ test.describe("Runic Empty States — Issue #583", () => {
 
   test.describe("AC2: Tab-Specific Runes", () => {
     test("Each tab uses correct rune from tab config", async ({ page }) => {
-      // Setup with one card per tab type
+      // Setup with only active cards (so all other tabs are empty)
       await setupDashboard(page, [
-        makeCard({ cardName: "Active" }),
-        makeUrgentCard({ cardName: "Urgent" }),
-        makePromoCard({ cardName: "Promo" }),
-        makeClosedCard({ cardName: "Closed" }),
+        makeCard({ cardName: "Active 1" }),
+        makeCard({ cardName: "Active 2" }),
       ]);
 
       // Test each empty tab has correct rune
-      for (const [tabId, expectedRune] of Object.entries(TAB_RUNES)) {
-        if (tabId === "all") continue; // All tab won't be empty with these cards
+      const emptyTabs = ["howl", "hunt", "valhalla"];
+      for (const tabId of emptyTabs) {
+        const expectedRune = TAB_RUNES[tabId as keyof typeof TAB_RUNES];
 
         const tab = page.locator(`button#tab-${tabId}`);
         await tab.click();
@@ -167,6 +167,9 @@ test.describe("Runic Empty States — Issue #583", () => {
 
         // Should contain the correct rune twice (before and after label)
         const text = await panelText.textContent();
+        expect(text).toContain(expectedRune);
+
+        // Count runes in text
         const runeCount = (text?.match(new RegExp(expectedRune, "g")) ?? []).length;
         expect(runeCount).toBe(2);
       }
