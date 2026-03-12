@@ -34,6 +34,8 @@ coverage/
 test-results/
 playwright-report/
 quality/reports/
+quality/.coverage-tmp/
+quality/.coverage-tmp-pw/
 .playwright-mcp/
 .playwright-cli/
 .vercel

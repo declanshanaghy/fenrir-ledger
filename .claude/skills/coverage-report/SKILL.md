@@ -5,94 +5,67 @@ description: "Generate code coverage reports. Supports Vitest unit test coverage
 
 # Coverage Report
 
-Generate code coverage reports for unit tests (Vitest) or E2E tests (Playwright).
+Generate code coverage reports via `verify.sh --coverage` and combine them.
 
 ## Usage
 
 ```
-/coverage-report [--unit-only] [--skip-build] [--skip-tests] [-- playwright args...]
+/coverage-report [--unit-only] [-- playwright args...]
 ```
 
 ## Modes
 
 ### Unit-only mode (`--unit-only`)
 
-Runs Vitest unit tests with `@vitest/coverage-v8` instrumentation. Fast, no server needed.
-
 ```bash
-cd "$REPO_ROOT" && node quality/scripts/coverage.mjs --unit-only
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT" && bash quality/scripts/verify.sh --step unit --coverage
 ```
 
-Reports go to `quality/reports/coverage/vitest/`:
-- `index.html` — interactive HTML report
-- `lcov.info` — LCOV format for CI tools
-- Text summary printed to stdout
+Reports: `quality/reports/coverage/vitest/` (HTML + LCOV + text-summary)
 
-### Full E2E mode (default)
+### E2E-only mode
 
-1. Builds the Next.js app (unless `--skip-build`)
-2. Starts the production server with `NODE_V8_COVERAGE` enabled (collects server-side coverage)
-3. Runs the full Playwright test suite
-4. Converts V8 coverage data to Istanbul format
-5. Generates reports to `quality/reports/coverage/` (overwrites previous)
+```bash
+cd "$REPO_ROOT" && bash quality/scripts/verify.sh --step e2e --coverage
+```
 
-Reports go to `quality/reports/coverage/`:
-- `index.html` — interactive HTML report
-- `lcov.info` — LCOV format for CI tools
-- Text summary printed to stdout
+Reports: `quality/reports/coverage/playwright/` (HTML + LCOV + text-summary)
+
+### Full coverage (unit + e2e + combined)
+
+```bash
+cd "$REPO_ROOT" && bash quality/scripts/verify.sh --step test --coverage
+cd "$REPO_ROOT" && node quality/scripts/coverage-combine.mjs
+```
+
+Reports:
+- `quality/reports/coverage/vitest/` — unit test coverage
+- `quality/reports/coverage/playwright/` — E2E server-side coverage
+- `quality/reports/coverage/combined/` — merged report (LCOV + HTML if genhtml available)
 
 ## Execution
 
-Run the coverage script from the repo root:
+Always run from the repo root. The scripts handle dependency installation automatically (including `@vitest/coverage-v8` and the npm rollup native module bug).
 
-```bash
-REPO_ROOT=$(git rev-parse --show-toplevel)
-
-# Unit tests only (fast)
-cd "$REPO_ROOT" && node quality/scripts/coverage.mjs --unit-only
-
-# Full E2E coverage
-cd "$REPO_ROOT" && node quality/scripts/coverage.mjs
-```
-
-### Flags
-
-| Flag | Effect |
-|------|--------|
-| `--unit-only` | Run Vitest unit coverage only (skips build/server/Playwright) |
-| `--skip-build` | Skip `npm run build`, use existing `.next` output (E2E mode only) |
-| `--skip-tests` | Skip Playwright run, only regenerate reports from existing coverage data (E2E mode only) |
-| `-- <args>` | Pass additional args to `npx playwright test` (e.g. `-- --grep "dashboard"`) |
-
-### Prerequisites
-
-The script auto-installs missing dependencies (`@vitest/coverage-v8`, rollup native modules) and handles the npm optional-dep bug that corrupts `node_modules`. No manual setup needed.
-
-**Full E2E mode additionally requires:**
-- Next.js app must be buildable (`npm run build` in `development/frontend/`)
-- Port 9653 must be free (kill any running dev server first)
-- Coverage packages installed: `c8`, `v8-to-istanbul`, `istanbul-lib-coverage`, `istanbul-lib-report`, `istanbul-reports`
-
-### If port is busy
-
-```bash
-lsof -ti:9653 | xargs kill 2>/dev/null
-```
-
-### Viewing the HTML report
+### Viewing reports
 
 ```bash
 # Unit coverage
 open quality/reports/coverage/vitest/index.html
 
 # E2E coverage
-open quality/reports/coverage/index.html
+open quality/reports/coverage/playwright/index.html
+
+# Combined coverage
+open quality/reports/coverage/combined/index.html
 ```
 
 ## Notes
 
-- Unit coverage uses `@vitest/coverage-v8` directly — no server or build needed
-- Server-side E2E coverage (API routes, middleware) is collected via `NODE_V8_COVERAGE`
-- Client-side code is bundled/minified by Next.js so browser-side coverage maps are approximate
-- The script continues to generate reports even if some tests fail, giving partial coverage data
-- `quality/reports/` is in `.gitignore` — use `git add -f` if you need to commit a report
+- Reports are overwritten on every run (no dated directories)
+- `quality/reports/` is in `.gitignore`
+- The combiner (`coverage-combine.mjs`) merges LCOV files from all available sources
+- If only one source has data, it still generates the combined report from that source
+- E2E coverage is server-side only (API routes, middleware) — client code is bundled/minified
+- `--coverage` flag works with all `verify.sh` step modes: `--step unit`, `--step e2e`, `--step test`

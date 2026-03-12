@@ -256,11 +256,8 @@ async function main() {
 
   generateReports();
 
-  // Clean up temp coverage data
-  if (existsSync(V8_COVERAGE_DIR)) {
-    rmSync(V8_COVERAGE_DIR, { recursive: true });
-  }
-
+  // Keep intermediate V8 coverage data for inspection (gitignored)
+  log("V8 coverage data kept at: quality/.coverage-tmp/");
   log("Done! Open quality/reports/coverage/index.html to view the report.");
 }
 
