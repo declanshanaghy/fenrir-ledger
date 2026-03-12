@@ -1,16 +1,22 @@
 #!/usr/bin/env node
 /**
- * coverage.mjs — Collect Playwright code coverage via V8 and generate reports.
+ * coverage.mjs — Collect code coverage and generate reports.
  *
  * Usage:
- *   node quality/scripts/coverage.mjs [--skip-build] [--skip-tests] [--unit-only] [-- playwright args...]
+ *   node quality/scripts/coverage.mjs [--unit-only] [--combined] [--skip-build] [--skip-tests] [-- playwright args...]
  *
- * Flow:
+ * Modes:
+ *   --unit-only   Vitest coverage only (fast, no browser)
+ *   --combined    Vitest + Playwright coverage merged into a single report
+ *   (default)     Playwright E2E coverage only
+ *
+ * Flow (default / --combined):
  *   1. Build the Next.js app (unless --skip-build)
- *   2. Start the production server with NODE_V8_COVERAGE (V8 writes coverage on exit)
+ *   2. Start the production server with NODE_V8_COVERAGE
  *   3. Run Playwright tests
  *   4. Stop server (SIGTERM triggers V8 coverage write)
  *   5. Use c8 to generate reports from collected V8 data
+ *   6. (--combined only) Run Vitest coverage, then merge via coverage-combine.mjs
  *
  * Reports are written to: quality/reports/coverage/
  */
@@ -28,6 +34,7 @@ const V8_COVERAGE_DIR = path.join(REPO_ROOT, "quality/.coverage-tmp");
 
 const args = process.argv.slice(2);
 const unitOnly = args.includes("--unit-only");
+const combined = args.includes("--combined");
 const skipBuild = args.includes("--skip-build");
 const skipTests = args.includes("--skip-tests");
 const dashDashIdx = args.indexOf("--");
@@ -159,7 +166,12 @@ function stopServer(serverProc) {
 }
 
 function generateReports() {
-  log("Generating coverage reports via c8...");
+  // When running combined mode, output Playwright reports to playwright/ subdirectory
+  // so they don't overwrite Vitest reports and can be merged later
+  const reportsDir = combined ? path.join(REPORTS_DIR, "playwright") : REPORTS_DIR;
+  mkdirSync(reportsDir, { recursive: true });
+
+  log("Generating Playwright coverage reports via c8...");
 
   // c8 report reads NODE_V8_COVERAGE data and generates Istanbul-format reports
   const c8Args = [
@@ -169,7 +181,7 @@ function generateReports() {
     "--reporter", "text-summary",
     "--reporter", "html",
     "--reporter", "lcov",
-    "--reports-dir", REPORTS_DIR,
+    "--reports-dir", reportsDir,
     "--all",
     "--src", path.join(FRONTEND_DIR, "src"),
     "--include", "src/**/*.ts",
@@ -185,9 +197,20 @@ function generateReports() {
     log("c8 report generation had warnings (non-zero exit) — reports may still be valid");
   }
 
-  log(`Reports written to ${REPORTS_DIR}`);
-  log("  - HTML:  quality/reports/coverage/index.html");
-  log("  - LCOV:  quality/reports/coverage/lcov.info");
+  const relDir = path.relative(REPO_ROOT, reportsDir);
+  log(`Reports written to ${reportsDir}`);
+  log(`  - HTML:  ${relDir}/index.html`);
+  log(`  - LCOV:  ${relDir}/lcov.info`);
+}
+
+function runCombine() {
+  log("Merging Vitest + Playwright coverage via coverage-combine.mjs...");
+  const combineScript = path.join(__dirname, "coverage-combine.mjs");
+  try {
+    run(`node "${combineScript}"`, { cwd: REPO_ROOT });
+  } catch {
+    log("Coverage combine had warnings — combined report may still be valid");
+  }
 }
 
 function ensureDeps() {
@@ -237,10 +260,26 @@ async function main() {
     return;
   }
 
+  if (combined) {
+    log("Running in --combined mode (Vitest + Playwright → merged report)");
+  }
+
   let serverProc;
   try {
     clean();
     ensureDeps();
+
+    // In combined mode, run Vitest coverage first (fast, no server needed)
+    if (combined) {
+      log("Phase 1/3: Vitest unit/integration coverage...");
+      const vitestReportsDir = path.join(REPORTS_DIR, "vitest");
+      mkdirSync(vitestReportsDir, { recursive: true });
+      run("npm run test:unit:coverage", { cwd: FRONTEND_DIR });
+      log("Vitest coverage complete.");
+    }
+
+    // Phase 2: Playwright E2E coverage
+    if (combined) log("Phase 2/3: Playwright E2E coverage...");
     build();
     serverProc = await startServer();
     runTests(playwrightArgs);
@@ -256,9 +295,17 @@ async function main() {
 
   generateReports();
 
+  // Phase 3: Merge coverage reports
+  if (combined) {
+    log("Phase 3/3: Merging coverage reports...");
+    runCombine();
+    log("Done! Combined report: quality/reports/coverage/combined/index.html");
+  } else {
+    log("Done! Open quality/reports/coverage/index.html to view the report.");
+  }
+
   // Keep intermediate V8 coverage data for inspection (gitignored)
   log("V8 coverage data kept at: quality/.coverage-tmp/");
-  log("Done! Open quality/reports/coverage/index.html to view the report.");
 }
 
 main().catch((err) => {

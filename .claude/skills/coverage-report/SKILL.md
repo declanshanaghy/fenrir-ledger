@@ -1,46 +1,58 @@
 ---
 name: coverage-report
-description: "Generate code coverage reports. Supports Vitest unit test coverage (--unit-only) and full Playwright E2E coverage. Outputs HTML + text-summary + LCOV reports. Overwrites previous reports."
+description: "Generate code coverage reports. Supports Vitest (--unit-only), Playwright E2E (default), and combined (--combined) modes. Outputs HTML + text-summary + LCOV reports."
 ---
 
 # Coverage Report
 
-Generate code coverage reports via `verify.sh --coverage` and combine them.
+Generate code coverage reports via `verify.sh --coverage` or `coverage.mjs` directly.
 
 ## Usage
 
 ```
-/coverage-report [--unit-only] [-- playwright args...]
+/coverage-report [--unit-only | --combined] [-- playwright args...]
 ```
 
 ## Modes
 
 ### Unit-only mode (`--unit-only`)
 
+Runs Vitest unit + integration tests with V8 coverage. Fast, no browser needed.
+
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT" && bash quality/scripts/verify.sh --step unit --coverage
+# or
+cd "$REPO_ROOT" && node quality/scripts/coverage.mjs --unit-only
 ```
 
 Reports: `quality/reports/coverage/vitest/` (HTML + LCOV + text-summary)
 
-### E2E-only mode
+### E2E-only mode (default)
+
+Runs Playwright E2E tests with V8 server-side coverage.
 
 ```bash
 cd "$REPO_ROOT" && bash quality/scripts/verify.sh --step e2e --coverage
+# or
+cd "$REPO_ROOT" && node quality/scripts/coverage.mjs
 ```
 
-Reports: `quality/reports/coverage/playwright/` (HTML + LCOV + text-summary)
+Reports: `quality/reports/coverage/` (HTML + LCOV + text-summary)
 
-### Full coverage (unit + e2e + combined)
+### Combined mode (`--combined`)
+
+Runs Vitest + Playwright coverage, then merges into a single combined report.
 
 ```bash
+cd "$REPO_ROOT" && node quality/scripts/coverage.mjs --combined
+# or manually:
 cd "$REPO_ROOT" && bash quality/scripts/verify.sh --step test --coverage
 cd "$REPO_ROOT" && node quality/scripts/coverage-combine.mjs
 ```
 
 Reports:
-- `quality/reports/coverage/vitest/` — unit test coverage
+- `quality/reports/coverage/vitest/` — unit/integration coverage
 - `quality/reports/coverage/playwright/` — E2E server-side coverage
 - `quality/reports/coverage/combined/` — merged report (LCOV + HTML if genhtml available)
 
@@ -69,3 +81,4 @@ open quality/reports/coverage/combined/index.html
 - If only one source has data, it still generates the combined report from that source
 - E2E coverage is server-side only (API routes, middleware) — client code is bundled/minified
 - `--coverage` flag works with all `verify.sh` step modes: `--step unit`, `--step e2e`, `--step test`
+- `--combined` flag on `coverage.mjs` orchestrates the full pipeline in one command
