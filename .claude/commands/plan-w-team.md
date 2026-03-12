@@ -103,11 +103,11 @@ commit them before filing issues. Implementers need these artifacts on `main`.
 
 ```bash
 # Check for uncommitted design artifacts
-git status --short -- ux/ designs/
+git status --short -- ux/ product/
 
 # If there are changes:
 git checkout -b ux/<feature-slug>-wireframes
-git add ux/ designs/
+git add ux/ product/
 git commit -m "feat(ux): add <feature> wireframes and interaction spec
 
 Refs #<issue numbers if known>
