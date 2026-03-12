@@ -18,9 +18,6 @@ import { test, expect, type Page } from "@playwright/test";
 // Constants
 // ---------------------------------------------------------------------------
 
-const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9653";
-const SETTINGS_URL = `${BASE_URL}/settings`;
-
 const CLOUD_SYNC_LABEL = "Cloud Sync";
 const MULTI_HOUSEHOLD_LABEL = "Multi-Household";
 const DATA_EXPORT_LABEL = "Data Export";
@@ -31,7 +28,7 @@ const BANNER_ARIA_LABEL = "Unlock this feature";
 // ---------------------------------------------------------------------------
 
 async function clearSubscriptionState(page: Page): Promise<void> {
-  await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.evaluate(() => {
     localStorage.removeItem("fenrir:entitlement");
     localStorage.removeItem("fenrir:patreon-user-id");
@@ -42,8 +39,7 @@ async function clearSubscriptionState(page: Page): Promise<void> {
 }
 
 async function navigateToSettings(page: Page): Promise<void> {
-  await page.goto(SETTINGS_URL, { waitUntil: "domcontentloaded" });
-  await page.waitForLoadState("networkidle");
+  await page.goto("/ledger/settings", { waitUntil: "load" });
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible({ timeout: 10000 });
 }
 
@@ -138,16 +134,14 @@ test.describe("Regression -- no pages broken", () => {
   });
 
   test("Dashboard loads without SubscriptionGate-related errors", async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState("networkidle");
+    await page.goto("/", { waitUntil: "load" });
 
     await expect(page.getByText("Something went wrong")).not.toBeVisible();
     await expect(page.getByText("Application error")).not.toBeVisible();
   });
 
   test("Valhalla page loads without regression", async ({ page }) => {
-    await page.goto(`${BASE_URL}/valhalla`);
-    await page.waitForLoadState("networkidle");
+    await page.goto("/ledger/valhalla", { waitUntil: "load" });
 
     await expect(page.getByText("Application error")).not.toBeVisible();
   });

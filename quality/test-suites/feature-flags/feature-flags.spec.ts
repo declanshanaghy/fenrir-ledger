@@ -14,13 +14,11 @@ import { test, expect, type Page } from "@playwright/test";
 // Constants & Helpers
 // ---------------------------------------------------------------------------
 
-const BASE_URL = process.env.SERVER_URL ?? "http://localhost:9653";
-
 /**
  * Clear all entitlement state from localStorage.
  */
 async function clearEntitlementState(page: Page): Promise<void> {
-  await page.goto(`${BASE_URL}/`);
+  await page.goto("/");
   await page.evaluate(() => {
     localStorage.removeItem("fenrir:entitlement");
     localStorage.removeItem("fenrir:stripe_upsell_dismissed");
@@ -35,7 +33,7 @@ async function clearEntitlementState(page: Page): Promise<void> {
 test.describe("Settings page structure", () => {
   test("TC-FF-101: /settings page loads with HTTP 200", async ({ page }) => {
     await clearEntitlementState(page);
-    const response = await page.goto(`${BASE_URL}/settings`, {
+    const response = await page.goto("/ledger/settings", {
       waitUntil: "load",
     });
     expect(response?.status()).toBe(200);
@@ -43,7 +41,7 @@ test.describe("Settings page structure", () => {
 
   test("TC-FF-102: Settings page renders the page heading", async ({ page }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "load" });
+    await page.goto("/ledger/settings", { waitUntil: "load" });
     const heading = page.getByRole("heading", { level: 1, name: /Settings/i });
     await expect(heading).toBeVisible();
   });
@@ -52,7 +50,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "load" });
+    await page.goto("/ledger/settings", { waitUntil: "load" });
     const stripeSection = page.locator('[role="region"][aria-label="Subscription"]');
     await expect(stripeSection).toBeVisible();
   });
@@ -61,7 +59,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "load" });
+    await page.goto("/ledger/settings", { waitUntil: "load" });
     // SubscriptionGate renders a locked upsell card (aria-label ends with "(locked)")
     // instead of children for Thrall users
     const cloudSyncLocked = page.locator('[aria-label="Cloud Sync (locked)"]');
@@ -72,7 +70,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "load" });
+    await page.goto("/ledger/settings", { waitUntil: "load" });
     // All three SubscriptionGate instances render locked upsell cards with
     // aria-label="<Feature Name> (locked)" when the user is a Thrall
     const cloudSyncLocked = page.locator('[aria-label="Cloud Sync (locked)"]');
@@ -87,7 +85,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "load" });
+    await page.goto("/ledger/settings", { waitUntil: "load" });
     // Locked upsell cards render an "Unlock with Karl" CTA button
     const unlockButtons = page.getByRole("button", { name: /unlock with karl/i });
     const count = await unlockButtons.count();
@@ -98,7 +96,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "load" });
+    await page.goto("/ledger/settings", { waitUntil: "load" });
     // The actual feature sections (Cloud Sync, Multi-Household, Data Export)
     // Soft gate: children are always rendered alongside the upsell card
     const cloudSync = page.locator('[aria-label="Cloud Sync"]');
@@ -111,7 +109,7 @@ test.describe("Settings page structure", () => {
 
   test("TC-FF-108: Settings page header tagline is visible", async ({ page }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "load" });
+    await page.goto("/ledger/settings", { waitUntil: "load" });
     const tagline = page.getByText("Forge your preferences. Shape the ledger to your will.");
     await expect(tagline).toBeVisible();
   });
@@ -120,7 +118,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "load" });
+    await page.goto("/ledger/settings", { waitUntil: "load" });
     // "Coming soon to Karl supporters" is inside gated children -- Thrall users
     // Soft gate: children always render, so "Coming soon" text is visible
     const comingSoonText = page.getByText("Coming soon to Karl supporters.");
@@ -131,7 +129,7 @@ test.describe("Settings page structure", () => {
     page,
   }) => {
     await clearEntitlementState(page);
-    const response = await page.goto(`${BASE_URL}/`, { waitUntil: "load" });
+    const response = await page.goto("/", { waitUntil: "load" });
     expect(response?.status()).toBe(200);
   });
 
@@ -140,7 +138,7 @@ test.describe("Settings page structure", () => {
   }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await clearEntitlementState(page);
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "load" });
+    await page.goto("/ledger/settings", { waitUntil: "load" });
     const heading = page.getByRole("heading", { level: 1, name: /Settings/i });
     await expect(heading).toBeVisible();
     const stripeSection = page.locator('[role="region"][aria-label="Subscription"]');
@@ -151,7 +149,7 @@ test.describe("Settings page structure", () => {
     await clearEntitlementState(page);
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
-    await page.goto(`${BASE_URL}/settings`, { waitUntil: "load" });
+    await page.goto("/ledger/settings", { waitUntil: "load" });
     expect(
       errors.filter((e) => !e.includes("hydration") && !e.includes("Warning:")),
     ).toHaveLength(0);
@@ -164,7 +162,7 @@ test.describe("Settings page structure", () => {
 
 test.describe("Stripe API route sanity checks", () => {
   test("TC-FF-201: POST /api/stripe/checkout exists", async ({ request }) => {
-    const response = await request.post(`${BASE_URL}/api/stripe/checkout`, {
+    const response = await request.post("/api/stripe/checkout", {
       data: {},
     });
     // Should respond (possibly 200/400/401/429/500), but NOT 404
@@ -172,12 +170,12 @@ test.describe("Stripe API route sanity checks", () => {
   });
 
   test("TC-FF-202: GET /api/stripe/membership requires auth", async ({ request }) => {
-    const response = await request.get(`${BASE_URL}/api/stripe/membership`);
+    const response = await request.get("/api/stripe/membership");
     expect(response.status()).toBe(401);
   });
 
   test("TC-FF-203: POST /api/stripe/webhook handles missing signature", async ({ request }) => {
-    const response = await request.post(`${BASE_URL}/api/stripe/webhook`, {
+    const response = await request.post("/api/stripe/webhook", {
       data: "{}",
       headers: { "Content-Type": "application/json" },
     });
@@ -185,7 +183,7 @@ test.describe("Stripe API route sanity checks", () => {
   });
 
   test("TC-FF-204: non-subscription routes are unaffected", async ({ request }) => {
-    const response = await request.post(`${BASE_URL}/api/auth/token`, { data: {} });
+    const response = await request.post("/api/auth/token", { data: {} });
     expect(response.status()).not.toBe(404);
   });
 });

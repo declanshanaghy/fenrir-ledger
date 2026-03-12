@@ -27,7 +27,7 @@ test.beforeEach(async ({ page }) => {
   // Seed household so the form loads properly
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   // Navigate to the new card form
-  await page.goto('/cards/new', { waitUntil: 'load' });
+  await page.goto('/ledger/cards/new', { waitUntil: 'load' });
   // Wait for the form to be visible
   await page.waitForSelector('#issuerId');
 });
