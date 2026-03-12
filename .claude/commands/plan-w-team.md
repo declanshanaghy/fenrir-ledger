@@ -96,6 +96,29 @@ Agent({
 
 Wait for Luna's wireframes before proceeding. Reference them in issue bodies.
 
+### Step 3b — Commit Design Artifacts
+
+If Luna produced wireframes or if the orchestrator modified any design files (e.g., mermaid fixes),
+commit them before filing issues. Implementers need these artifacts on `main`.
+
+```bash
+# Check for uncommitted design artifacts
+git status --short -- ux/ designs/
+
+# If there are changes:
+git checkout -b ux/<feature-slug>-wireframes
+git add ux/ designs/
+git commit -m "feat(ux): add <feature> wireframes and interaction spec
+
+Refs #<issue numbers if known>
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+git push -u origin ux/<feature-slug>-wireframes
+gh pr create --title "Add <feature> wireframes" --body "Luna wireframes for <feature>"
+gh pr merge --squash --delete-branch
+git checkout main && git pull origin main
+```
+
 ### Step 4 — Break Into Issues
 
 Using Freya's brief (and Luna's wireframes if applicable), break the work into 1-5 issues.
