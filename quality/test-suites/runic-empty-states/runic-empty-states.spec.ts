@@ -275,9 +275,10 @@ test.describe("Runic Empty States — Issue #583", () => {
   });
 
   test.describe("AC6: Mobile Rendering (375px)", () => {
-    test.use({ viewport: { width: 375, height: 667 } });
+    test("Empty states render and runes display on mobile viewport", async ({ page }) => {
+      // Set mobile viewport before setup
+      await page.setViewportSize({ width: 375, height: 667 });
 
-    test("All empty states render correctly on mobile", async ({ page }) => {
       await setupDashboard(page, [
         makeCard({ cardName: "Active" }),
       ]);
@@ -298,26 +299,20 @@ test.describe("Runic Empty States — Issue #583", () => {
       // Text should not overflow (verify text is within bounds)
       const boundingBox = await emptyText.boundingBox();
       expect(boundingBox).not.toBeNull();
-      expect(boundingBox?.width).toBeLessThanOrEqual(375);
-    });
+      if (boundingBox) {
+        expect(boundingBox.width).toBeLessThanOrEqual(375);
+      }
 
-    test("Rune characters display correctly on mobile", async ({ page }) => {
-      // Use Hunt tab which will be empty with just active cards
-      await setupDashboard(page, [
-        makeCard({ cardName: "Active" }),
-      ]);
-
+      // Test Hunt tab rune
       const huntTab = page.locator('button#tab-hunt');
       await huntTab.click();
 
       const huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
-      const emptyText = huntPanel.locator("p");
+      const huntEmptyText = huntPanel.locator("p");
 
-      await expect(emptyText).toBeVisible();
-      const content = await emptyText.textContent();
-
-      // Rune character should be present
-      expect(content).toContain("ᛜ");
+      await expect(huntEmptyText).toBeVisible();
+      const huntContent = await huntEmptyText.textContent();
+      expect(huntContent).toContain("ᛜ");
     });
   });
 
