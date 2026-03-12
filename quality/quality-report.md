@@ -1,24 +1,27 @@
-# Fenrir Ledger — Quality Report
+# ⚔️ Fenrir Ledger — Quality Report
+
+**_The wolf hunts. The tests must be ruthless._**
 
 <!-- This file is maintained by quality/scripts/loki-critique.sh and Loki QA verdicts. -->
 <!-- The "Loki QA Critique" section is auto-generated and will be overwritten on each run. -->
+<!-- Styled with the voice of Loki (wolf son of Fenrir) and the dark Norse aesthetic. -->
 
 ## Loki QA Critique
 
-_Last run: 2026-03-12 09:51 PDT_
-_Script: `quality/scripts/loki-critique.sh`_
+_Bite sharpened. Chains weighed. Last hunt: 2026-03-12 09:51 PDT_
+_Weapon: `quality/scripts/loki-critique.sh`_
 
-### Summary
+### Summary — The Hunt Reveals Many Wounds
 
 | Metric | Value |
 |--------|-------|
 | Total E2E spec files | 29 |
 | Total E2E tests | 248 |
-| Flagged files | 16 |
-| Critical violations (>15 tests/file) | 4 |
+| Flagged files | 16 🔴 _packs of bloat_ |
+| Critical violations (>15 tests/file) | 4 ⚔️ _mortal wounds_ |
 | Bloat warnings | 19 |
 | Bloat exposure (% of files flagged) | 79% |
-| Overall health | **CRITICAL** |
+| Overall health | **🐺 CRITICAL — THE WOLF IS STARVING** |
 
 ### Flagged Files
 
@@ -41,9 +44,9 @@ _Script: `quality/scripts/loki-critique.sh`_
 | `quality/test-suites/wizard-back-button/wizard-back-button.spec.ts` | 4 | WARNING: issue/step-scoped dir, consolidate |
 | `quality/test-suites/wizard-step2/wizard-step2.spec.ts` | 11 | WARNING: >10 tests in one file, WARNING: issue/step-scoped dir, consolidate |
 
-### Bloat Pattern Breakdown
+### Bloat Pattern Breakdown — Fangs Sink Deep
 
-**Issue/step-scoped directories** (should be merged into feature suites):
+**🐁 Issue/step-scoped directories** — _Easy prey, left scattered. Consolidate._
 - `wizard-step2/`, `wizard-back-button/`, `select-reset/`, `credit-limit-step2/`, `fee-bonus-step2/`
 - These were created as one-shot regression suites for individual issues.
   Once the fix is confirmed stable, the tests belong in `card-lifecycle/` or a `wizard/` suite.
@@ -79,10 +82,12 @@ _Script: `quality/scripts/loki-critique.sh`_
 
 6. **Split `profile-dropdown/`** — 20 tests across 3 describe blocks (desktop, mobile, a11y). Desktop and mobile blocks repeat the same open/close/navigate assertions. Cull to: opens, navigates to settings, sign-out works, mobile viewport fits. Max 6 tests total.
 
-### Rules Enforced
+### Rules Enforced — The Pack's Law
+
+_From the howling wastelands of Valheim, carved in bone and stone._
 
 See `quality/test-guidelines.md` §"Bloat Detection Rules" for the authoritative checklist.
-The thresholds evaluated by this script:
+The thresholds Loki's teeth sink into:
 
 | Rule | Threshold | Severity |
 |------|-----------|----------|
