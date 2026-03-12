@@ -190,7 +190,36 @@ function generateReports() {
   log("  - LCOV:  quality/reports/coverage/lcov.info");
 }
 
+function ensureDeps() {
+  log("Ensuring coverage dependencies are installed...");
+  const nodeModules = path.join(FRONTEND_DIR, "node_modules");
+  const rollupNative = path.join(nodeModules, "@rollup/rollup-darwin-arm64");
+  const coverageV8 = path.join(nodeModules, "@vitest/coverage-v8");
+
+  // If rollup native module is missing, nuke and reinstall (npm optional dep bug)
+  if (!existsSync(rollupNative) && existsSync(nodeModules)) {
+    log("Rollup native module missing — running clean reinstall...");
+    rmSync(nodeModules, { recursive: true });
+    run("npm ci", { cwd: FRONTEND_DIR });
+    return;
+  }
+
+  // If @vitest/coverage-v8 is missing, install it
+  if (!existsSync(coverageV8)) {
+    log("@vitest/coverage-v8 missing — installing...");
+    run("npm install --save-dev @vitest/coverage-v8", { cwd: FRONTEND_DIR });
+    // Verify rollup didn't break
+    if (!existsSync(rollupNative)) {
+      log("Rollup native module broken after install — clean reinstall...");
+      rmSync(nodeModules, { recursive: true });
+      run("npm i", { cwd: FRONTEND_DIR });
+    }
+  }
+}
+
 function runUnitCoverage() {
+  clean();
+  ensureDeps();
   log("Running Vitest unit tests with V8 coverage...");
   const vitestReportsDir = path.join(REPORTS_DIR, "vitest");
   mkdirSync(vitestReportsDir, { recursive: true });
@@ -211,6 +240,7 @@ async function main() {
   let serverProc;
   try {
     clean();
+    ensureDeps();
     build();
     serverProc = await startServer();
     runTests(playwrightArgs);
@@ -226,11 +256,8 @@ async function main() {
 
   generateReports();
 
-  // Clean up temp coverage data
-  if (existsSync(V8_COVERAGE_DIR)) {
-    rmSync(V8_COVERAGE_DIR, { recursive: true });
-  }
-
+  // Keep intermediate V8 coverage data for inspection (gitignored)
+  log("V8 coverage data kept at: quality/.coverage-tmp/");
   log("Done! Open quality/reports/coverage/index.html to view the report.");
 }
 

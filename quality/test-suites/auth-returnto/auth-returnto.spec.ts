@@ -148,14 +148,21 @@ test.describe("Auth returnTo — sessionStorage Management", () => {
     const signInButton = page.locator('button:has-text("Sign in to Google")');
     await expect(signInButton).toBeVisible();
 
-    // Intercept the redirect to Google to prevent actual navigation
+    // Intercept the redirect to Google — fulfill with empty response to keep page context valid
     await page.route("https://accounts.google.com/**", (route) => {
-      route.abort();
+      route.fulfill({ status: 200, body: "" });
     });
 
-    await signInButton.click();
+    // Click and wait for the Google redirect request (PKCE written before navigation)
+    await Promise.all([
+      page.waitForRequest((req) => req.url().includes("accounts.google.com")),
+      signInButton.click(),
+    ]);
 
-    // Wait for a short delay to allow sessionStorage to be written
+    // Navigate back to read sessionStorage (fulfill left us on a blank page)
+    await page.goto("/ledger/sign-in?returnTo=/ledger/settings", {
+      waitUntil: "load",
+    });
 
     // Verify PKCE data was stored with the correct callbackUrl
     const sessionAfter = await page.evaluate(() => {
@@ -175,15 +182,20 @@ test.describe("Auth returnTo — sessionStorage Management", () => {
     // Spec: when returnTo is missing, validateReturnTo returns "/ledger"
     await page.goto("/ledger/sign-in", { waitUntil: "load" });
 
-    // Intercept the redirect to Google
+    // Intercept the redirect to Google — fulfill to keep page context valid
     await page.route("https://accounts.google.com/**", (route) => {
-      route.abort();
+      route.fulfill({ status: 200, body: "" });
     });
 
-    // Click sign-in button
+    // Click sign-in button and wait for Google redirect request
     const signInButton = page.locator('button:has-text("Sign in to Google")');
-    await signInButton.click();
+    await Promise.all([
+      page.waitForRequest((req) => req.url().includes("accounts.google.com")),
+      signInButton.click(),
+    ]);
 
+    // Navigate back to read sessionStorage (fulfill left us on a blank page)
+    await page.goto("/ledger/sign-in", { waitUntil: "load" });
 
     // Verify PKCE data was stored with /ledger as default
     const sessionData = await page.evaluate(() => {
@@ -202,15 +214,22 @@ test.describe("Auth returnTo — sessionStorage Management", () => {
       waitUntil: "load",
     });
 
-    // Intercept the redirect
+    // Intercept the redirect — fulfill to keep page context valid
     await page.route("https://accounts.google.com/**", (route) => {
-      route.abort();
+      route.fulfill({ status: 200, body: "" });
     });
 
-    // Click sign-in button
+    // Click sign-in button and wait for Google redirect request
     const signInButton = page.locator('button:has-text("Sign in to Google")');
-    await signInButton.click();
+    await Promise.all([
+      page.waitForRequest((req) => req.url().includes("accounts.google.com")),
+      signInButton.click(),
+    ]);
 
+    // Navigate back to read sessionStorage (fulfill left us on a blank page)
+    await page.goto("/ledger/sign-in?returnTo=https://evil.com", {
+      waitUntil: "load",
+    });
 
     // Verify the external URL was rejected and /ledger is used instead
     const sessionData = await page.evaluate(() => {
@@ -264,15 +283,22 @@ test.describe("Auth returnTo — Graceful Degradation", () => {
       waitUntil: "load",
     });
 
-    // Intercept the redirect
+    // Intercept the redirect — fulfill to keep page context valid
     await page.route("https://accounts.google.com/**", (route) => {
-      route.abort();
+      route.fulfill({ status: 200, body: "" });
     });
 
-    // Click sign-in button
+    // Click sign-in button and wait for Google redirect request
     const signInButton = page.locator('button:has-text("Sign in to Google")');
-    await signInButton.click();
+    await Promise.all([
+      page.waitForRequest((req) => req.url().includes("accounts.google.com")),
+      signInButton.click(),
+    ]);
 
+    // Navigate back to read sessionStorage (fulfill left us on a blank page)
+    await page.goto("/ledger/sign-in?returnTo=/ledger/sign-in", {
+      waitUntil: "load",
+    });
 
     // Verify the loop is prevented by checking sessionStorage
     const sessionData = await page.evaluate(() => {

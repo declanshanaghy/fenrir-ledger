@@ -68,7 +68,7 @@ test.describe("Credit Limit Step 2 — Data Persistence", () => {
 
     await page.locator('button[type="submit"]:has-text("Save Card")').click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
 
     const savedCards = await getCards(page, ANONYMOUS_HOUSEHOLD_ID);
     expect(savedCards).toHaveLength(1);

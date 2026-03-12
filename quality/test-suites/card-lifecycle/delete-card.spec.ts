@@ -37,7 +37,7 @@ test.describe("Delete Card — Confirmation Dialog", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Delete card")').first().click();
 
@@ -50,7 +50,7 @@ test.describe("Delete Card — Confirmation Dialog", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();
@@ -76,7 +76,7 @@ test.describe("Delete Card — Confirm Action", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();
@@ -86,7 +86,7 @@ test.describe("Delete Card — Confirm Action", () => {
       .last();
     await confirmBtn.click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/");
   });
 
@@ -96,7 +96,7 @@ test.describe("Delete Card — Confirm Action", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();
@@ -106,7 +106,7 @@ test.describe("Delete Card — Confirm Action", () => {
       .last();
     await confirmBtn.click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
 
     const body = await page.locator("body").innerText();
     expect(body).not.toContain("Permanently Gone Card");
@@ -119,7 +119,7 @@ test.describe("Delete Card — Confirm Action", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [cardToDelete, cardToKeep]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${cardToDelete.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${cardToDelete.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Delete card")').first().click();
     await expect(page.locator("text=Delete this card?")).toBeVisible();
@@ -129,7 +129,7 @@ test.describe("Delete Card — Confirm Action", () => {
       .last()
       .click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
 
     await expect(page.locator("text=Keep This One").first()).toBeVisible();
     const body = await page.locator("body").innerText();

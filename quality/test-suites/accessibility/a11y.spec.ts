@@ -275,7 +275,7 @@ test.describe("Keyboard Navigation", () => {
     await page.reload({ waitUntil: "load" });
 
     // Find a card tile link — each card wraps in <Link href="/ledger/cards/{id}/edit">
-    const cardLinks = page.locator('a[href*="/cards/"][href*="/edit"]');
+    const cardLinks = page.locator('a[href*="/ledger/cards/"][href*="/edit"]');
     await expect(cardLinks.first()).toBeAttached();
 
     // Get the href to verify navigation target after Enter
@@ -290,7 +290,7 @@ test.describe("Keyboard Navigation", () => {
         const el = document.activeElement as HTMLAnchorElement | null;
         return el?.tagName === "A" ? el.getAttribute("href") : null;
       });
-      if (activeHref && activeHref.includes("/cards/") && activeHref.includes("/edit")) {
+      if (activeHref && activeHref.includes("/ledger/cards/") && activeHref.includes("/edit")) {
         found = true;
         break;
       }

@@ -74,7 +74,7 @@ test.describe("Wizard Step 2 — Validation", () => {
     await page.locator("#cardName").fill("Should Not Be Saved");
     await page.locator('button:has-text("Cancel")').click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/");
     const bodyText = await page.locator("body").innerText();
     expect(bodyText).not.toContain("Should Not Be Saved");
@@ -114,7 +114,7 @@ test.describe("Wizard Step 2 — Save Card", () => {
     await page.locator("#cardName").fill("Step1SaveCard");
 
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/");
   });
 
@@ -132,7 +132,7 @@ test.describe("Wizard Step 2 — Save Card", () => {
     await page.locator("#notes").fill("Gleipnir binds even gods");
 
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
     await expect(page.locator(`text=${cardName}`).first()).toBeVisible();
   });
@@ -140,7 +140,7 @@ test.describe("Wizard Step 2 — Save Card", () => {
   test("Cancel from Step 2 returns to dashboard without saving", async ({ page }) => {
     await goToStep2(page);
     await page.locator('button:has-text("Cancel")').click();
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/");
   });
 });

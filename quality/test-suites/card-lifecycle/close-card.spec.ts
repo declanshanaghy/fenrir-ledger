@@ -37,7 +37,7 @@ test.describe("Close Card — Confirmation Dialog", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Close Card")').first().click();
 
@@ -52,7 +52,7 @@ test.describe("Close Card — Confirmation Dialog", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Close Card")').first().click();
     await expect(page.locator("text=Close this card?")).toBeVisible();
@@ -78,7 +78,7 @@ test.describe("Close Card — Confirm Action", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Close Card")').first().click();
     await expect(page.locator("text=Close this card?")).toBeVisible();
@@ -88,7 +88,7 @@ test.describe("Close Card — Confirm Action", () => {
       .last();
     await confirmBtn.click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/");
   });
 
@@ -100,7 +100,7 @@ test.describe("Close Card — Confirm Action", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator('button:has-text("Close Card")').first().click();
     await expect(page.locator("text=Close this card?")).toBeVisible();
@@ -110,7 +110,7 @@ test.describe("Close Card — Confirm Action", () => {
       .last();
     await confirmBtn.click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
 
     const body = await page.locator("body").innerText();
     expect(body).not.toContain("Soon To Be Closed");

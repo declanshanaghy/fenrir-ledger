@@ -37,7 +37,7 @@ test.describe("Edit Card — Pre-populated Fields", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     const cardNameInput = page.locator("#cardName");
     await expect(cardNameInput).toHaveValue("Freya's Folly");
@@ -51,7 +51,7 @@ test.describe("Edit Card — Pre-populated Fields", () => {
       waitUntil: "load",
     });
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/");
   });
 });
@@ -69,12 +69,12 @@ test.describe("Edit Card — Save Changes", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator("#cardName").fill("Updated Name");
     await page.locator('button[type="submit"]').click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
     expect(page.url()).not.toContain("/ledger/cards/");
   });
 
@@ -86,13 +86,13 @@ test.describe("Edit Card — Save Changes", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     const newName = `After Update ${Date.now()}`;
     await page.locator("#cardName").fill(newName);
     await page.locator('button[type="submit"]').click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
 
     // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
     await expect(page.locator(`text=${newName}`).first()).toBeVisible();
@@ -112,14 +112,14 @@ test.describe("Edit Card — Cancel Without Saving", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator("#cardName").fill("Changed But Cancelled");
 
     const cancelBtn = page.locator('button:has-text("Cancel")');
     await cancelBtn.click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
 
     // Use first() — with 5-tab dashboard, card names appear in multiple tab panels
     await expect(page.locator("text=Do Not Change Me").first()).toBeVisible();
@@ -132,14 +132,14 @@ test.describe("Edit Card — Cancel Without Saving", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, [card]);
     await page.reload({ waitUntil: "load" });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
 
     await page.locator("#cardName").fill("This Should Not Save");
     await page.locator('button:has-text("Cancel")').click();
 
-    await page.waitForURL("**/", { timeout: 5000 });
+    await page.waitForURL("**/ledger", { timeout: 5000 });
 
-    await page.goto(`/cards/${card.id}/edit`, { waitUntil: "load" });
+    await page.goto(`/ledger/cards/${card.id}/edit`, { waitUntil: "load" });
     const cardNameInput = page.locator("#cardName");
     await expect(cardNameInput).toHaveValue(originalName);
   });
