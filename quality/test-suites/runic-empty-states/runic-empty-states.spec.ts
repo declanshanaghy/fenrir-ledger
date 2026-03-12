@@ -74,9 +74,10 @@ test.describe("Runic Empty States — Issue #583", () => {
       await activeTab.click();
 
       const activePanel = page.locator('[role="tabpanel"]#panel-active');
-      const panelText = activePanel.locator("p");
-      await expect(panelText).toContainText("ᛉ");
-      await expect(panelText).toContainText("No active cards");
+      // Target the empty state p element specifically (text-base font-heading)
+      const emptyStateText = activePanel.locator("p.text-base.font-heading");
+      await expect(emptyStateText).toContainText("ᛉ");
+      await expect(emptyStateText).toContainText("No active cards");
     });
 
     test("The Hunt tab shows runic empty state when no bonus cards", async ({ page }) => {
@@ -90,9 +91,10 @@ test.describe("Runic Empty States — Issue #583", () => {
       await huntTab.click();
 
       const huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
-      const panelText = huntPanel.locator("p");
-      await expect(panelText).toContainText("ᛜ");
-      await expect(panelText).toContainText("No bounties");
+      // Target the empty state p element specifically (text-base font-heading)
+      const emptyStateText = huntPanel.locator("p.text-base.font-heading");
+      await expect(emptyStateText).toContainText("ᛜ");
+      await expect(emptyStateText).toContainText("No bounties");
     });
 
     test("The Howl tab shows runic empty state when no urgent cards", async ({ page }) => {
@@ -106,9 +108,10 @@ test.describe("Runic Empty States — Issue #583", () => {
       await howlTab.click();
 
       const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
-      const panelText = howlPanel.locator("p");
-      await expect(panelText).toContainText("ᚲ");
-      await expect(panelText).toContainText("No alerts");
+      // Target the empty state p element specifically (text-base font-heading)
+      const emptyStateText = howlPanel.locator("p.text-base.font-heading");
+      await expect(emptyStateText).toContainText("ᚲ");
+      await expect(emptyStateText).toContainText("No alerts");
     });
 
     test("Valhalla tab shows runic empty state when no closed cards", async ({ page }) => {
@@ -122,9 +125,10 @@ test.describe("Runic Empty States — Issue #583", () => {
       await valhallaTab.click();
 
       const valhallaPanel = page.locator('[role="tabpanel"]#panel-valhalla');
-      const panelText = valhallaPanel.locator("p");
-      await expect(panelText).toContainText("↑");
-      await expect(panelText).toContainText("No retired cards");
+      // Target the empty state p element specifically (text-base font-heading)
+      const emptyStateText = valhallaPanel.locator("p.text-base.font-heading");
+      await expect(emptyStateText).toContainText("↑");
+      await expect(emptyStateText).toContainText("No retired cards");
     });
 
     test("All tab shows runic empty state when no non-Valhalla cards", async ({ page }) => {
@@ -163,10 +167,11 @@ test.describe("Runic Empty States — Issue #583", () => {
       await tab.click();
 
       const panel = page.locator('[role="tabpanel"]#panel-howl');
-      const panelText = panel.locator("p");
+      // Target the empty state p element specifically (text-base font-heading)
+      const emptyStateText = panel.locator("p.text-base.font-heading");
 
       // Should contain the correct rune twice (before and after label)
-      const text = await panelText.textContent();
+      const text = await emptyStateText.textContent();
       expect(text).toContain(expectedRune);
 
       // Count runes in text
@@ -187,10 +192,11 @@ test.describe("Runic Empty States — Issue #583", () => {
       await tab.click();
 
       const panel = page.locator('[role="tabpanel"]#panel-active');
-      const panelText = panel.locator("p");
+      // Target the empty state p element specifically (text-base font-heading)
+      const emptyStateText = panel.locator("p.text-base.font-heading");
 
       // Should contain the correct rune twice (before and after label)
-      const text = await panelText.textContent();
+      const text = await emptyStateText.textContent();
       expect(text).toContain(expectedRune);
 
       // Count runes in text
@@ -212,17 +218,17 @@ test.describe("Runic Empty States — Issue #583", () => {
       await activeTab.click();
 
       const huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
-      const panelText = huntPanel.textContent();
 
       // Should NOT contain verbose text like the old implementation
-      await expect(huntPanel.locator("p")).not.toContainText(/click/i);
-      await expect(huntPanel.locator("p")).not.toContainText(/add a card/i);
-      await expect(huntPanel.locator("p")).not.toContainText(/All your cards/i);
-      await expect(huntPanel.locator("p")).not.toContainText(/The Howl/i);
+      // Target the empty state p specifically since header/summary also have p elements
+      const emptyStateText = huntPanel.locator("p.text-base.font-heading");
+      await expect(emptyStateText).not.toContainText(/click/i);
+      await expect(emptyStateText).not.toContainText(/add a card/i);
+      await expect(emptyStateText).not.toContainText(/All your cards/i);
+      await expect(emptyStateText).not.toContainText(/The Howl/i);
 
       // Should only contain the rune and minimal label
-      const text = huntPanel.locator("p");
-      const content = await text.textContent();
+      const content = await emptyStateText.textContent();
       // Should be concise: "ᛜ No bounties ᛜ" or similar
       expect(content?.length).toBeLessThan(30);
     });
@@ -258,8 +264,9 @@ test.describe("Runic Empty States — Issue #583", () => {
 
       const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
 
-      // Get the container div
-      const container = howlPanel.locator("div").first();
+      // Get the empty state container div (the one that contains the rune p element)
+      // Target the div that directly contains the empty state p element
+      const container = howlPanel.locator("div:has(> p.text-base.font-heading)");
 
       // Verify centering classes are present
       const containerClass = await container.getAttribute("class");
@@ -282,7 +289,8 @@ test.describe("Runic Empty States — Issue #583", () => {
       await howlTab.click();
 
       const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
-      const emptyText = howlPanel.locator("p");
+      // Target the empty state p element specifically (text-base font-heading)
+      const emptyText = howlPanel.locator("p.text-base.font-heading");
 
       // Verify content contains expected rune and label
       const content = await emptyText.textContent();
@@ -290,7 +298,7 @@ test.describe("Runic Empty States — Issue #583", () => {
       expect(content).toContain("No alerts");
 
       // Verify the container has centering classes for mobile
-      const container = howlPanel.locator("div").first();
+      const container = howlPanel.locator("div:has(> p.text-base.font-heading)");
       const containerClass = await container.getAttribute("class");
       expect(containerClass).toContain("px-6"); // padding for mobile-like spacing
     });
@@ -311,7 +319,8 @@ test.describe("Runic Empty States — Issue #583", () => {
       await huntTab.click();
 
       let huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
-      let emptyState = huntPanel.locator("p");
+      // Target the empty state p element specifically
+      let emptyState = huntPanel.locator("p.text-base.font-heading");
       await expect(emptyState).not.toContainText("No bounties");
 
       // Now remove all bonus cards
@@ -322,7 +331,8 @@ test.describe("Runic Empty States — Issue #583", () => {
       // Hunt tab should now show empty state
       await huntTab.click();
       huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
-      emptyState = huntPanel.locator("p");
+      // Target the empty state p element specifically
+      emptyState = huntPanel.locator("p.text-base.font-heading");
 
       await expect(emptyState).toContainText("ᛜ");
       await expect(emptyState).toContainText("No bounties");
@@ -337,7 +347,8 @@ test.describe("Runic Empty States — Issue #583", () => {
       await howlTab.click();
 
       const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
-      const emptyText = howlPanel.locator("p");
+      // Target the empty state p element specifically (text-base font-heading)
+      const emptyText = howlPanel.locator("p.text-base.font-heading");
 
       // Verify the text has muted styling
       const classList = await emptyText.getAttribute("class");
