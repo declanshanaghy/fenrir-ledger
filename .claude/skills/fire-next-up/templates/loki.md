@@ -84,8 +84,51 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 
 ## Test Standards (UNBREAKABLE)
 
-**Budget:** 3-5 tests per feature. >10 requires justification. Small fix = 1-3 tests.
+**READ FIRST:** `quality/test-guidelines.md` — the test pyramid and what belongs where.
+
+### Test Pyramid Enforcement (UNBREAKABLE)
+
+Before writing ANY Playwright test, ask: "Does this need a browser?"
+- HTTP header checks → **Vitest integration test**, not Playwright
+- Pure logic (utils, validators, formatters) → **Vitest unit test**, not Playwright
+- CSS animation timing → **DO NOT TEST AT ALL**
+- Token/session logic → **Vitest integration test**, not Playwright
+- One-time migration/upgrade checks → **DO NOT WRITE**
+
+If the answer is "no browser needed", write a Vitest test in `src/__tests__/` instead.
+
+### Budget (UNBREAKABLE — HARD LIMITS)
+
+| Change size | Max Playwright tests | Max Vitest tests |
+|-------------|---------------------|-----------------|
+| Small fix (1-3 files) | 1-3 | 3-5 |
+| Feature (4-10 files) | 3-5 | 5-10 |
+| Large feature (10+ files) | 5-8 | 10-15 |
+
+**>8 Playwright tests per feature = VIOLATION.** No exceptions. No justification accepted.
 One strong assertion beats five weak ones. Never pad count.
+
+**>10 tests per spec file = VIOLATION.** Split by sub-feature if you truly need more.
+
+### No Duplicate Suites (UNBREAKABLE)
+
+- **ONE suite per feature area.** Check existing suites before creating a new file.
+- If `card-lifecycle/edit-card.spec.ts` exists, add your test THERE. Do not create `card-crud/edit-card.spec.ts`.
+- If the issue number is in the filename (e.g., `issue-333/`), you're doing it wrong. Use the feature name.
+- After a bug fix lands, merge the regression test into the parent feature suite.
+
+### No Animation / CSS Timing Tests (UNBREAKABLE)
+
+Do NOT test:
+- Animation durations or easing curves
+- CSS transition timing
+- Framer Motion variants or animation states
+- Element position during animation
+
+DO test:
+- Elements appear/disappear after interaction (final state only)
+- ARIA labels exist on animated elements
+- `prefers-reduced-motion` disables animation (single test, not a whole suite)
 
 **Static/content-only changes (MDX, copy, CSS, images, docs) — ZERO Playwright tests.**
 If the PR only changes static content (MDX files, markdown, CSS classes, copy text, images),
@@ -98,7 +141,7 @@ ONLY test what THIS PR implements. If issue says "add X" but code doesn't, that'
 Assertions derive from acceptance criteria, not from what the code currently does.
 
 **What to test:** Interactive workflows, auth flows, data persistence, form validation, error handling.
-**What NOT to test:** Static pages, static content (MDX/markdown), CSS appearance, exact text copy, DOM structure, removed features, source files (no readFileSync).
+**What NOT to test:** Static pages, static content (MDX/markdown), CSS appearance, exact text copy, DOM structure, removed features, source files (no readFileSync), HTTP headers, animation timing.
 
 **Locators — semantic only:**
 ```typescript
@@ -124,5 +167,5 @@ Pre-populate via `seedCards()` in `beforeEach`. Multi-step flows are the #1 flak
 
 **Group by feature:** `test.describe("Add Card — Validation", ...)` not `test.describe("CardForm renders", ...)`
 
-**Keep lean:** Max 15-20 tests per spec file. Use shared seed data helpers. Never use date-dependent assertions.
+**Keep lean:** Max 10 tests per spec file. Use shared seed data helpers. Never use date-dependent assertions.
 ```
