@@ -327,16 +327,18 @@ test.describe("Runic Empty States — Issue #583", () => {
       // Start at Howl (has urgent card)
       const howlTab = page.locator('button#tab-howl');
       await howlTab.click();
-      let panelContent = await page.locator('[role="tabpanel"]#panel-howl').locator("div").first().getAttribute("class");
-      expect(panelContent).toContain("animate");
+      const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
+      let cards = howlPanel.locator('[data-testid^="card-"]');
+      expect(await cards.count()).toBeGreaterThan(0);
 
       // Switch to Active (has active card)
       const activeTab = page.locator('button#tab-active');
       await activeTab.click();
-      panelContent = await page.locator('[role="tabpanel"]#panel-active').locator("div").first().getAttribute("class");
-      expect(panelContent).not.toBeNull();
+      const activePanel = page.locator('[role="tabpanel"]#panel-active');
+      cards = activePanel.locator('[data-testid^="card-"]');
+      expect(await cards.count()).toBeGreaterThan(0);
 
-      // Switch to Hunt (empty)
+      // Switch to Hunt (empty) and verify empty state is shown
       const huntTab = page.locator('button#tab-hunt');
       await huntTab.click();
       const huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
