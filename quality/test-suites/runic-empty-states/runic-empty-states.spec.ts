@@ -248,30 +248,6 @@ test.describe("Runic Empty States — Issue #583", () => {
       expect(containerClass).toContain("justify-center");
       expect(containerClass).toContain("text-center");
     });
-
-    test("Empty state maintains padding and spacing on mobile", async ({ page }) => {
-      // Mobile viewport: 375px
-      await page.setViewportSize({ width: 375, height: 667 });
-
-      await setupDashboard(page, [
-        makeCard({ cardName: "Active" }),
-      ]);
-
-      const howlTab = page.locator('button#tab-howl');
-      await howlTab.click();
-
-      const howlPanel = page.locator('[role="tabpanel"]#panel-howl');
-      const container = howlPanel.locator("div").first();
-
-      // Should still have centering classes on mobile
-      const containerClass = await container.getAttribute("class");
-      expect(containerClass).toContain("flex");
-      expect(containerClass).toContain("justify-center");
-
-      // Text should be visible and readable on mobile
-      const text = howlPanel.locator("p");
-      await expect(text).toBeVisible();
-    });
   });
 
   test.describe("AC6: Mobile Rendering (375px)", () => {
