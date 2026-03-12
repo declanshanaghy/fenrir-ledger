@@ -150,15 +150,15 @@ test.describe("Runic Empty States — Issue #583", () => {
   });
 
   test.describe("AC2: Tab-Specific Runes", () => {
-    test("Each tab uses correct rune from tab config", async ({ page }) => {
+    test("Empty tabs use their correct rune from tab config", async ({ page }) => {
       // Setup with only active cards (so all other tabs are empty)
       await setupDashboard(page, [
         makeCard({ cardName: "Active 1" }),
         makeCard({ cardName: "Active 2" }),
       ]);
 
-      // Test each empty tab has correct rune
-      const emptyTabs = ["howl", "hunt", "valhalla"];
+      // Test non-gated empty tabs: howl and valhalla
+      const emptyTabs = ["howl", "valhalla"];
       for (const tabId of emptyTabs) {
         const expectedRune = TAB_RUNES[tabId as keyof typeof TAB_RUNES];
 
