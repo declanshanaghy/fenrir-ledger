@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Wolf's Hunger Meter + About Modal — Story 4.5</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 4px; }
+    .label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .scenario { margin-bottom: 48px; }
+    .scenario-title { font-size: 16px; font-weight: bold; border-bottom: 2px solid; padding-bottom: 8px; margin-bottom: 16px; }
+    .scenario-subtitle { font-size: 12px; margin-bottom: 12px; }
+
+    /* Spec boxes */
+    .spec-box { border: 1px solid; padding: 16px; margin-bottom: 24px; }
+    .spec-title { font-weight: bold; margin-bottom: 12px; }
+
+    /* Tables */
+    table { border-collapse: collapse; width: 100%; margin-bottom: 12px; }
+    th, td { border: 1px solid; padding: 6px 10px; font-size: 12px; text-align: left; vertical-align: top; }
+    th { font-weight: bold; }
+
+    /* About modal structure */
+    .modal-backdrop { border: 1px solid; padding: 0; max-width: 620px; }
+    .modal-header { border-bottom: 1px solid; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 18px; font-weight: bold; }
+    .modal-close { border: none; font-size: 18px; cursor: pointer; }
+    .modal-body { display: grid; grid-template-columns: 200px 1fr; }
+    .modal-left { border-right: 1px solid; padding: 20px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .modal-right { padding: 16px; overflow-y: auto; max-height: 480px; }
+    .modal-footer { border-top: 1px solid; padding: 10px 16px; display: flex; justify-content: flex-end; }
+
+    /* Wolf logo placeholder */
+    .wolf-logo { width: 120px; height: 120px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .wolf-wordmark { font-size: 13px; font-weight: bold; text-align: center; letter-spacing: 0.1em; }
+    .wolf-tagline { font-size: 11px; font-style: italic; text-align: center; }
+
+    /* Right column sections */
+    .section-header { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+    .team-member { padding: 6px 0; border-bottom: 1px solid; font-size: 13px; }
+    .team-member:last-child { border-bottom: none; }
+    .team-role { font-size: 11px; }
+    .section-divider { border-top: 1px solid; margin: 12px 0; }
+
+    /* Gleipnir ingredients list */
+    .ingredients-list { list-style: none; font-size: 12px; font-style: italic; line-height: 2; }
+
+    /* Fragment count */
+    .fragment-count { border: 1px solid; padding: 6px 10px; font-size: 12px; display: inline-block; font-family: monospace; }
+
+    /* Wolf Hunger Meter */
+    .hunger-section { }
+    .hunger-total { font-size: 14px; margin-bottom: 4px; }
+    .hunger-total strong { font-family: monospace; font-size: 16px; }
+    .hunger-subline { font-size: 12px; font-style: italic; }
+    .hunger-breakdown { margin-top: 8px; font-size: 12px; font-family: monospace; line-height: 1.8; }
+    .hunger-fallback { font-size: 12px; font-style: italic; }
+    .hunger-trigger-note { border: 1px dashed; padding: 8px; font-size: 11px; margin-top: 8px; }
+
+    /* ForgeMasterEgg overlay */
+    .forgemaster-overlay { border: 2px solid; padding: 0; max-width: 480px; }
+    .forgemaster-header { border-bottom: 1px solid; padding: 12px 16px; }
+    .forgemaster-title { font-size: 16px; font-weight: bold; }
+    .forgemaster-subtitle { font-size: 12px; font-style: italic; margin-top: 4px; }
+    .forgemaster-body { padding: 16px; }
+    .forgemaster-section { margin-bottom: 16px; }
+    .forgemaster-section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+    .forgemaster-team-row { font-size: 12px; padding: 3px 0; }
+    .forgemaster-footer { border-top: 1px solid; padding: 10px 16px; text-align: right; }
+
+    /* Mobile viewport */
+    .mobile-viewport { width: 375px; border: 2px solid; }
+    .mobile-modal { border: 1px solid; padding: 0; }
+    .mobile-modal-header { border-bottom: 1px solid; padding: 10px 12px; display: flex; gap: 10px; align-items: center; }
+    .mobile-modal-body { padding: 12px; overflow-y: auto; max-height: 400px; }
+
+    /* Display scenarios */
+    .display-variants { display: flex; flex-direction: column; gap: 16px; }
+    .display-variant { border: 1px solid; padding: 12px; }
+    .display-variant-label { font-weight: bold; font-size: 12px; margin-bottom: 8px; }
+    .display-variant-content { font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div style="padding: 24px;">
+
+    <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">
+      Story 4.5 — Wolf's Hunger Meter + About Modal Completeness
+    </h1>
+    <p class="note" style="margin-bottom: 24px;">
+      Wireframe covers: the About modal with Wolf's Hunger section added,
+      the ForgeMasterEgg overlay with the same meter, display format variants,
+      data source (signUpBonus.met === true), and mobile full-sheet behavior.
+      No theme colors applied — structure only.
+    </p>
+
+    <!-- ── DATA MODEL SUMMARY ────────────────────────── -->
+    <div class="spec-box">
+      <div class="spec-title">Data Source — SignUpBonus.met Field</div>
+      <table>
+        <tr>
+          <th>Field</th>
+          <th>Type</th>
+          <th>Inclusion Rule</th>
+          <th>Note</th>
+        </tr>
+        <tr>
+          <td>signUpBonus.met</td>
+          <td>boolean</td>
+          <td>Only count bonuses where met === true</td>
+          <td>Field name is met (NOT bonusMet) — confirmed Sprint 4 groom</td>
+        </tr>
+        <tr>
+          <td>signUpBonus.amount</td>
+          <td>number</td>
+          <td>Sum by type when met === true</td>
+          <td>Points count, miles count, or cashback in cents</td>
+        </tr>
+        <tr>
+          <td>signUpBonus.type</td>
+          <td>BonusType</td>
+          <td>Group by: "points" | "miles" | "cashback"</td>
+          <td>Aggregate totals per type, display all in one line</td>
+        </tr>
+        <tr>
+          <td>Card scope</td>
+          <td>All cards</td>
+          <td>Active cards + closed (Valhalla) cards — both included</td>
+          <td>The wolf remembers every meal</td>
+        </tr>
+      </table>
+      <p class="note">
+        getCards(householdId) = active cards. getClosedCards(householdId) = Valhalla cards.
+        Both calls required. Filter by signUpBonus?.met === true. Aggregate by type.
+      </p>
+    </div>
+
+    <!-- ── DISPLAY FORMAT VARIANTS ──────────────────── -->
+    <div class="spec-box" style="margin-bottom: 32px;">
+      <div class="spec-title">Wolf's Hunger Meter — Display Format Variants</div>
+      <div class="display-variants">
+        <div class="display-variant">
+          <div class="display-variant-label">Variant 1: All cash back</div>
+          <div class="display-variant-content">
+            <strong>Fenrir has consumed:</strong> $1,240 cashback
+          </div>
+          <p class="note">Currency: $ prefix, integer (no decimals). toLocaleString() for commas.</p>
+        </div>
+        <div class="display-variant">
+          <div class="display-variant-label">Variant 2: All points</div>
+          <div class="display-variant-content">
+            <strong>Fenrir has consumed:</strong> 847,000 pts
+          </div>
+          <p class="note">Bare number + type label. No $ prefix.</p>
+        </div>
+        <div class="display-variant">
+          <div class="display-variant-label">Variant 3: Mixed types (points + miles + cashback)</div>
+          <div class="display-variant-content">
+            <strong>Fenrir has consumed:</strong> 412,000 pts · 95,000 miles · $320 cashback
+          </div>
+          <p class="note">Separator: " · " (space·space). All types on one line. JetBrains Mono for numbers.</p>
+        </div>
+        <div class="display-variant">
+          <div class="display-variant-label">Variant 4: No bonuses met (empty state)</div>
+          <div class="display-variant-content" style="font-style: italic;">
+            The wolf has not yet fed. Add reward details to your cards.
+          </div>
+          <p class="note">No "Fenrir has consumed:" label. No "The chain grows heavier." subline. Just the fallback copy.</p>
+        </div>
+      </div>
+      <p class="note" style="margin-top: 8px;">
+        Atmospheric subline "The chain grows heavier." appears ONLY when any rewards are shown.
+        Format numbers: amount.toLocaleString(). Cash: $N. Points/miles: N type.
+      </p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         ABOUT MODAL — FULL SPEC WITH HUNGER SECTION
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">About Modal — Updated with Wolf's Hunger Section</div>
+      <p class="scenario-subtitle">
+        Triggered by: Fenrir logo click in Footer, or TopBar brand button.
+        The hunger section is added BELOW the Gleipnir fragment count line,
+        separated by a divider. Both triggers open the same modal.
+      </p>
+
+      <!-- Desktop About Modal -->
+      <span class="label" style="display: block; margin-bottom: 8px;">Desktop — Two-column layout (unchanged structure)</span>
+      <div class="modal-backdrop">
+        <div class="modal-header">
+          <h1 class="modal-title">Fenrir Ledger</h1>
+          <button class="modal-close" aria-label="Close">×</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Left column: wolf logo + wordmark -->
+          <div class="modal-left">
+            <div class="wolf-logo" role="img" aria-label="Fenrir wolf logo">
+              <img src="/static/icon.png" alt="" style="width: 100%; height: 100%; object-fit: contain;" />
+            </div>
+            <div class="wolf-wordmark">ᛟ FENRIR<br>LEDGER</div>
+            <div class="wolf-tagline">Break free.<br>Harvest every reward.<br>Let no chain hold.</div>
+            <div class="note" style="margin-top: 8px; text-align: center;">200px fixed width.<br>Left col unchanged from Sprint 3.</div>
+          </div>
+
+          <!-- Right column: team + ingredients + hunger -->
+          <div class="modal-right">
+
+            <!-- Team section -->
+            <div class="section-header">The Pack</div>
+            <div class="team-member">
+              <span>Freya</span>
+              <span class="team-role"> — She decides what the wolf hunts next.</span>
+            </div>
+            <div class="team-member">
+              <span>Luna</span>
+              <span class="team-role"> — She shapes the shadows where the wolf moves.</span>
+            </div>
+            <div class="team-member">
+              <span>FiremanDecko</span>
+              <span class="team-role"> — He forged the chain. Then built a better one.</span>
+            </div>
+            <div class="team-member">
+              <span>Loki</span>
+              <span class="team-role"> — He tests every lock. He is, after all, the wolf's father.</span>
+            </div>
+
+            <!-- Divider -->
+            <div class="section-divider"></div>
+
+            <!-- Gleipnir ingredients -->
+            <div class="section-header">Bound by Seven Impossible Things</div>
+            <ul class="ingredients-list">
+              <li>The sound of a cat's footstep</li>
+              <li>The beard of a woman</li>
+              <li>The roots of a mountain</li>
+              <li>The sinews of a bear</li>
+              <li>The breath of a fish</li>
+              <li>The spittle of a bird</li>
+              <li>The first debt willingly forgiven</li>
+            </ul>
+
+            <!-- Fragment count -->
+            <div style="margin-top: 8px; margin-bottom: 4px;">
+              <span class="fragment-count">N of 6 Gleipnir fragments found</span>
+            </div>
+            <p class="note">N is computed from count of set egg:gleipnir-N keys at render time.</p>
+
+            <!-- NEW: Hunger section divider -->
+            <div class="section-divider"></div>
+
+            <!-- NEW: Wolf's Hunger section -->
+            <div class="hunger-section">
+              <div class="section-header">Fenrir's Hunger</div>
+
+              <!-- Variant: rewards present -->
+              <div class="hunger-total">
+                Fenrir has consumed: <strong>412,000 pts · 95,000 miles · $320 cashback</strong>
+              </div>
+              <div class="hunger-subline">The chain grows heavier.</div>
+
+              <div class="hunger-trigger-note">
+                TRIGGER NOTE: Data reads once on modal open. No live polling.
+                Source: getCards(householdId) + getClosedCards(householdId).
+                Filter: signUpBonus?.met === true.
+                Aggregate by signUpBonus.type. Format with toLocaleString().
+              </div>
+
+              <!-- Fallback state (when no bonuses met) -->
+              <div style="margin-top: 12px; border-top: 1px dashed; padding-top: 10px;">
+                <span class="label" style="display: block; margin-bottom: 4px;">Empty state variant:</span>
+                <div class="hunger-fallback">
+                  The wolf has not yet fed. Add reward details to your cards.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button style="border: 1px solid; padding: 8px 24px; font-size: 13px;">Close</button>
+        </div>
+      </div>
+
+      <!-- Layout notes -->
+      <div class="spec-box" style="margin-top: 16px; max-width: 620px;">
+        <div class="spec-title">About Modal Layout Notes</div>
+        <table>
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td>Left column width</td><td>200px fixed</td></tr>
+          <tr><td>Right column</td><td>flexible, overflow-y: auto, max-height: 480px (must scroll to show hunger section)</td></tr>
+          <tr><td>Vertical divider</td><td>1px border-right on left column</td></tr>
+          <tr><td>Section dividers</td><td>border-top: 1px solid between team, ingredients, and hunger sections</td></tr>
+          <tr><td>Fragment count position</td><td>Below ingredients list, above hunger divider</td></tr>
+          <tr><td>Hunger section position</td><td>Last section — below fragment count + divider</td></tr>
+          <tr><td>Close button</td><td>Right-aligned in footer (global button alignment convention)</td></tr>
+          <tr><td>Modal z-index</td><td>210 (standard modal layer)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         FORGEMASTER EGG OVERLAY
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">ForgeMasterEgg Overlay (? key) — Updated with Hunger Meter</div>
+      <p class="scenario-subtitle">
+        Triggered by ? key (shift+/). Full-viewport overlay, not a dialog modal.
+        The same Wolf's Hunger data renders here via a shared WolfHungerMeter component.
+        Hunger section is the last section, below the Gleipnir fragment count.
+      </p>
+
+      <div class="forgemaster-overlay">
+        <div class="forgemaster-header">
+          <div class="forgemaster-title">Fenrir Ledger</div>
+          <div class="forgemaster-subtitle">Sprint 4 · Built with the fires of Muspelheim</div>
+        </div>
+
+        <div class="forgemaster-body">
+          <!-- The Pack -->
+          <div class="forgemaster-section">
+            <div class="forgemaster-section-title">The Pack</div>
+            <div class="forgemaster-team-row">Freya — Product Owner</div>
+            <div class="forgemaster-team-row">Luna — UX Designer</div>
+            <div class="forgemaster-team-row">FiremanDecko — Principal Engineer</div>
+            <div class="forgemaster-team-row">Loki — QA Tester</div>
+          </div>
+
+          <!-- Gleipnir -->
+          <div class="forgemaster-section" style="border-top: 1px solid; padding-top: 12px;">
+            <div class="forgemaster-section-title">Gleipnir was made of:</div>
+            <p style="font-size: 12px; font-style: italic; line-height: 1.8;">
+              The sound of a cat's footfall · The beard of a woman<br>
+              The roots of a mountain · The sinews of a bear<br>
+              The breath of a fish · The spittle of a bird
+            </p>
+            <p style="font-size: 12px; font-style: italic; margin-top: 6px;">
+              Though it looks like silk ribbon, no chain is stronger.
+            </p>
+          </div>
+
+          <!-- Fragment count -->
+          <div style="border-top: 1px solid; padding-top: 10px; margin-top: 0; margin-bottom: 12px;">
+            <span class="fragment-count">N of 6 Gleipnir fragments found</span>
+            <p class="note">Shows "6 of 6 Gleipnir fragments found" when Gleipnir is complete.</p>
+          </div>
+
+          <!-- NEW: Wolf's Hunger section -->
+          <div style="border-top: 1px solid; padding-top: 12px;">
+            <div class="forgemaster-section-title">Fenrir's Hunger</div>
+            <div style="font-size: 13px; margin-bottom: 4px;">
+              Fenrir has consumed: <strong style="font-family: monospace;">412,000 pts · $320 cashback</strong>
+            </div>
+            <div style="font-size: 12px; font-style: italic;">The chain grows heavier.</div>
+            <p class="note">Same WolfHungerMeter component as About modal. Shared via householdId prop.</p>
+          </div>
+        </div>
+
+        <div class="forgemaster-footer">
+          <button style="border: 1px solid; padding: 8px 20px; font-size: 13px;">Close</button>
+        </div>
+      </div>
+
+      <div class="spec-box" style="margin-top: 16px; max-width: 480px;">
+        <div class="spec-title">WolfHungerMeter — Shared Component</div>
+        <p style="font-size: 12px; margin-bottom: 8px;">
+          Extract as &lt;WolfHungerMeter householdId={householdId} /&gt;
+          to avoid duplicating the aggregation logic in both AboutModal and ForgeMasterEgg.
+        </p>
+        <table>
+          <tr><th>Prop</th><th>Type</th><th>Description</th></tr>
+          <tr><td>householdId</td><td>string</td><td>From useAuth() hook — already imported in both components</td></tr>
+        </table>
+        <p class="note">
+          Component reads: getCards(householdId) + getClosedCards(householdId) on mount.
+          No live polling. Static snapshot at render time.
+        </p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         MOBILE ABOUT MODAL — FULL-SCREEN SHEET
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">About Modal — Mobile (375px) Full-Screen Sheet</div>
+      <p class="scenario-subtitle">
+        On mobile, the two-column layout collapses. Wolf logo moves to inline header
+        alongside the title. Right column fills full width. Content is scrollable.
+        Hunger section remains at the bottom of the scrollable content.
+      </p>
+
+      <div class="mobile-viewport">
+        <div class="mobile-modal">
+          <!-- Mobile header: logo + title inline -->
+          <div class="mobile-modal-header">
+            <div style="width: 40px; height: 40px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">ᛟ</div>
+            <div style="flex: 1;">
+              <h1 style="font-size: 15px; font-weight: bold;">Fenrir Ledger</h1>
+              <div style="font-size: 11px; font-style: italic;">Break free. Harvest every reward.</div>
+            </div>
+            <button style="border: none; font-size: 20px; cursor: pointer; padding: 8px;" aria-label="Close">×</button>
+          </div>
+
+          <!-- Mobile body: full-width single column -->
+          <div class="mobile-modal-body">
+
+            <!-- Team -->
+            <div class="section-header" style="margin-bottom: 6px;">The Pack</div>
+            <div class="team-member" style="font-size: 12px;">Freya — Product Owner</div>
+            <div class="team-member" style="font-size: 12px;">Luna — UX Designer</div>
+            <div class="team-member" style="font-size: 12px;">FiremanDecko — Principal Engineer</div>
+            <div class="team-member" style="font-size: 12px; border-bottom: none;">Loki — QA Tester</div>
+
+            <div class="section-divider"></div>
+
+            <!-- Ingredients -->
+            <div class="section-header" style="margin-bottom: 6px;">Bound by Seven Impossible Things</div>
+            <ul class="ingredients-list" style="font-size: 11px;">
+              <li>The sound of a cat's footstep</li>
+              <li>The beard of a woman</li>
+              <li>The roots of a mountain</li>
+              <li>The sinews of a bear</li>
+              <li>The breath of a fish</li>
+              <li>The spittle of a bird</li>
+              <li>The first debt willingly forgiven</li>
+            </ul>
+            <div style="margin-top: 8px;">
+              <span class="fragment-count" style="font-size: 11px;">N of 6 Gleipnir fragments found</span>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Hunger meter on mobile -->
+            <div class="section-header" style="margin-bottom: 6px;">Fenrir's Hunger</div>
+            <div style="font-size: 12px; margin-bottom: 4px;">
+              Fenrir has consumed: <strong style="font-family: monospace;">412,000 pts · $320 cashback</strong>
+            </div>
+            <div style="font-size: 12px; font-style: italic; margin-bottom: 8px;">The chain grows heavier.</div>
+          </div>
+
+          <!-- Mobile footer -->
+          <div style="border-top: 1px solid; padding: 10px 12px; display: flex; justify-content: flex-end;">
+            <button style="border: 1px solid; padding: 8px 20px; font-size: 13px; min-height: 44px; min-width: 80px;">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec-box" style="margin-top: 16px; max-width: 375px;">
+        <div class="spec-title">Mobile Layout Notes</div>
+        <ul style="font-size: 12px; padding-left: 16px; line-height: 1.8;">
+          <li>Full-screen sheet: 100vw × 100vh on mobile</li>
+          <li>Left column collapses — wolf logo moves to inline header (40×40)</li>
+          <li>Right column fills full width (no grid-template-columns)</li>
+          <li>Content area is scrollable (overflow-y: auto) to reach hunger section</li>
+          <li>Close button: min-height 44px (touch target)</li>
+          <li>Body text reduces to 12px for density</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── AGGREGATION LOGIC SPEC ──────────────────── -->
+    <div class="spec-box">
+      <div class="spec-title">Aggregation Logic — State Diagram</div>
+      <p class="note" style="margin-bottom: 8px;">
+        Mermaid flowchart — follows ux/ux-assets/mermaid-style-guide.md conventions.
+      </p>
+      <pre style="border: 1px solid; padding: 12px; font-size: 12px; line-height: 1.6; overflow-x: auto;">
+```mermaid
+graph TD
+    classDef primary fill:#03A9F4,stroke:#0288D1,color:#FFF
+    classDef healthy fill:#4CAF50,stroke:#388E3C,color:#FFF
+    classDef neutral fill:#9E9E9E,stroke:#757575,color:#FFF
+
+    modalOpen([Modal opens]) --> fetchActive[getCards(householdId)\nactive cards]
+    modalOpen --> fetchClosed[getClosedCards(householdId)\nValhalla cards]
+    fetchActive --> combine[Combine all cards]
+    fetchClosed --> combine
+    combine --> filter{signUpBonus?.met\n=== true?}
+    filter -->|No| skip[Skip card\n(0 contribution)]
+    filter -->|Yes| aggregate[Sum amount\nby type]
+    aggregate --> group{Any totals > 0?}
+    group -->|No| fallback[Render fallback copy\nThe wolf has not yet fed...]
+    group -->|Yes| render[Render hunger line\nFenrir has consumed: ...]
+    render --> subline[Render subline\nThe chain grows heavier.]
+
+    class modalOpen primary
+    class render healthy
+    class fallback neutral
+```
+      </pre>
+    </div>
+
+  </div>
+</body>
+</html>

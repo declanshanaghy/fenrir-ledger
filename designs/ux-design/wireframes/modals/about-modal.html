@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: About Modal</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Backdrop ─────────────────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200; /* standard modal layer — see wireframes.md z-index table */
+    }
+
+    /* ── Modal shell ──────────────────────────────────────────────── */
+    .modal {
+      position: relative;
+      width: min(680px, 92vw);
+      border: 1px solid;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────── */
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h1 { font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ── Close button ─────────────────────────────────────────────── */
+    .btn-close {
+      width: 28px;
+      height: 28px;
+      border: 1px solid;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      font-family: inherit;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    /* ── Two-column body ──────────────────────────────────────────── */
+    .modal-body {
+      display: grid;
+      grid-template-columns: 200px 1px 1fr;
+      min-height: 280px;
+    }
+
+    /* Left column — wolf logo */
+    .col-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 24px 16px;
+    }
+    .logo-img {
+      width: 120px;
+      height: 120px;
+      border: 1px dashed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      text-align: center;
+    }
+    .logo-wordmark { font-size: 12px; font-weight: bold; text-align: center; letter-spacing: 0.08em; }
+    .logo-tagline { font-size: 11px; font-style: italic; text-align: center; }
+
+    /* Vertical divider */
+    .col-divider { border-left: 1px solid; }
+
+    /* Right column — content */
+    .col-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 24px 20px;
+      overflow-y: auto;
+      max-height: 420px;
+    }
+
+    /* Team snippets */
+    .team-section { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .team-intro { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .team-member { font-size: 13px; padding-left: 0; }
+    .team-member strong { font-weight: bold; }
+
+    /* Separator */
+    .separator { border-top: 1px solid; margin: 16px 0; }
+
+    /* Ingredients list */
+    .ingredients-label { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+    .ingredients-list { list-style: disc; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+    .ingredients-list li { font-size: 13px; }
+
+    /* ── Footer ───────────────────────────────────────────────────── */
+    .modal-footer {
+      border-top: 1px solid;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    button.btn-primary {
+      border: 1px solid;
+      padding: 8px 24px;
+      cursor: pointer;
+      background: none;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: bold;
+    }
+
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+  </style>
+</head>
+<body>
+
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="about-title">
+    <div class="modal">
+
+      <!-- Header -->
+      <header class="modal-header">
+        <h1 id="about-title">About Fenrir Ledger</h1>
+        <button class="btn-close" aria-label="Close">×</button>
+      </header>
+
+      <!-- Two-column body -->
+      <div class="modal-body">
+
+        <!-- Left — wolf logo from static marketing site -->
+        <div class="col-logo">
+          <div class="logo-img">
+            <!-- img src="../../static/icon.png" in implementation -->
+            <span>Wolf Logo<br/>icon.png</span>
+          </div>
+          <div class="logo-wordmark">ᛟ FENRIR LEDGER</div>
+          <div class="logo-tagline">The wolf watches what<br/>the issuers hope you forget.</div>
+        </div>
+
+        <!-- Vertical divider -->
+        <div class="col-divider" aria-hidden="true"></div>
+
+        <!-- Right — team + ingredients -->
+        <div class="col-content">
+
+          <!-- Team snippets, in the voice of the wolf -->
+          <div class="team-section">
+            <div class="team-intro">The Pack</div>
+            <div class="team-member"><strong>Freya</strong> — She decides what the wolf hunts next.</div>
+            <div class="team-member"><strong>Luna</strong> — She shapes the shadows where the wolf walks.</div>
+            <div class="team-member"><strong>FiremanDecko</strong> — He forged the chain. Then taught the wolf to wear it willingly.</div>
+            <div class="team-member"><strong>Loki</strong> — He tests every lock. He is, after all, the reason locks exist.</div>
+          </div>
+
+          <!-- Separator -->
+          <div class="separator" aria-hidden="true"></div>
+
+          <!-- 7 mythical ingredients -->
+          <div class="ingredients-label">Bound by Seven Impossible Things</div>
+          <ul class="ingredients-list">
+            <li>The sound of a cat's footstep</li>
+            <li>The beard of a woman</li>
+            <li>The roots of a mountain</li>
+            <li>The sinews of a bear</li>
+            <li>The breath of a fish</li>
+            <li>The spittle of a bird</li>
+            <li>The first debt willingly forgiven</li>
+          </ul>
+
+        </div><!-- /.col-content -->
+      </div><!-- /.modal-body -->
+
+      <!-- Footer -->
+      <footer class="modal-footer">
+        <button class="btn-primary" type="button">Close</button>
+      </footer>
+
+    </div><!-- /.modal -->
+  </div><!-- /.modal-backdrop -->
+
+  <p class="note" style="position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);white-space:nowrap;">
+    Wireframe — about-modal.html · Fenrir Ledger · z-index 200
+  </p>
+
+</body>
+</html>

@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Dashboard Tabs Redesign — Issue #279</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../theme-system.md.
+       Permitted: display flex/grid, border, width/height, padding/margin, font-size, font-weight */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 24px; }
+
+    h1 { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+    h2 { font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin: 32px 0 12px; border-bottom: 1px solid; padding-bottom: 8px; }
+    h3 { font-size: 13px; font-weight: bold; margin-bottom: 8px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    p { margin-bottom: 8px; }
+
+    /* ── Variants grid ───────────────────────────────────────────── */
+    .section { margin-bottom: 48px; }
+    .variant-group { display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start; }
+
+    /* ── App shell (desktop) ─────────────────────────────────────── */
+    .app-shell {
+      display: grid;
+      grid-template-columns: 272px 1fr;
+      grid-template-rows: auto auto 1fr auto;
+      min-height: 600px;
+      border: 1px solid;
+      width: 960px;
+    }
+
+    /* ── TopBar ──────────────────────────────────────────────────── */
+    .topbar {
+      grid-column: 1 / 3;
+      grid-row: 1;
+      height: 56px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+    .topbar-brand { display: flex; flex-direction: column; gap: 1px; }
+    .topbar-brand .brand-name { font-size: 15px; font-weight: bold; }
+    .topbar-brand .brand-sub { font-size: 10px; }
+    .topbar-avatar { width: 36px; height: 36px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+
+    /* ── Upsell banner row (optional, spans full width) ────────────── */
+    .upsell-banner {
+      grid-column: 1 / 3;
+      grid-row: 2;
+      border-bottom: 1px solid;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .upsell-banner span { font-size: 12px; flex: 1; }
+    .upsell-banner button { border: 1px solid; padding: 4px 12px; font-size: 12px; background: none; cursor: pointer; }
+
+    /* ── Sidebar ──────────────────────────────────────────────────── */
+    .sidebar {
+      grid-column: 1;
+      grid-row: 3;
+      border-right: 1px solid;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-logo { padding: 16px; border-bottom: 1px solid; }
+    .sidebar-logo .logo-rune { font-size: 24px; }
+    .sidebar-logo .logo-name { font-size: 14px; font-weight: bold; }
+    .sidebar-logo .logo-sub { font-size: 10px; }
+    .sidebar-nav { flex: 1; padding: 8px 0; }
+    .nav-item { padding: 10px 16px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .nav-item.active { font-weight: bold; border-left: 3px solid; }
+    .nav-item:not(.active) { border-left: 3px solid transparent; }
+    .sidebar-footer { padding: 12px 16px; border-top: 1px solid; }
+    .sidebar-footer button { font-size: 11px; background: none; border: none; cursor: pointer; }
+
+    /* ── Content area ─────────────────────────────────────────────── */
+    .content {
+      grid-column: 2;
+      grid-row: 3;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Content header (page title + add card CTA) ─────────────────── */
+    .content-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .content-header h1 { font-size: 16px; font-weight: bold; }
+    .content-header .summary-text { font-size: 12px; }
+    .btn-primary { border: 1px solid; padding: 6px 14px; font-size: 13px; font-weight: bold; background: none; cursor: pointer; }
+
+    /* ── Tab bar ─────────────────────────────────────────────────── */
+    /* The tab bar replaces the Howl side panel. Tabs sit below the content header. */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid;
+      padding: 0 20px;
+      gap: 0;
+    }
+    .tab {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 3px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .tab.active {
+      border-bottom: 3px solid;
+    }
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      border: 1px solid;
+      padding: 1px 6px;
+      min-width: 20px;
+    }
+    /* Howl tab badge — urgency indicator (pulsing dot defined by implementation) */
+    .tab-badge.howl {
+      border-width: 2px;
+    }
+
+    /* ── Tab panel content ──────────────────────────────────────── */
+    .tab-panel { flex: 1; padding: 20px; overflow-y: auto; }
+
+    /* ── Card grid ──────────────────────────────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    /* Tablet: 2 columns. Implementation: @media (max-width: 1024px) */
+    /* Mobile: 1 column. Implementation: @media (max-width: 640px) */
+
+    /* ── Card tile ──────────────────────────────────────────────── */
+    .card-tile {
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .card-tile-header {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid;
+    }
+    .status-ring {
+      width: 40px;
+      height: 40px;
+      border: 2px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .card-identity { flex: 1; min-width: 0; }
+    .card-issuer { font-size: 12px; font-weight: bold; }
+    .card-name { font-size: 11px; }
+    .card-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+    .card-deadline { font-size: 12px; display: flex; gap: 6px; }
+    .card-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-top: 1px solid; padding-top: 8px; }
+    .stat-cell { display: flex; flex-direction: column; gap: 1px; }
+    .stat-label { font-size: 10px; }
+    .stat-value { font-size: 12px; font-weight: bold; }
+    .card-actions { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid; }
+    .card-actions button { flex: 1; border: 1px solid; padding: 5px; font-size: 12px; background: none; cursor: pointer; }
+
+    /* ── Howl tab card — urgency variant ────────────────────────── */
+    /* In The Howl tab, cards display an urgency indicator row at top */
+    .card-tile.howl-card .card-urgency-bar {
+      padding: 5px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      border-bottom: 1px solid;
+    }
+    .urgency-dot {
+      width: 8px;
+      height: 8px;
+      border: 2px solid;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Empty state ────────────────────────────────────────────── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .empty-rune { font-size: 48px; }
+    .empty-title { font-size: 16px; font-weight: bold; }
+    .empty-body { font-size: 13px; max-width: 320px; }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    .footer {
+      grid-column: 2;
+      grid-row: 4;
+      border-top: 1px solid;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       MOBILE (375px) SHELL
+    ═══════════════════════════════════════════════════════════ */
+    .mobile-shell {
+      width: 375px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      min-height: 700px;
+    }
+
+    /* Mobile TopBar — single row: hamburger | brand | bell */
+    .mobile-topbar {
+      height: 56px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+    .mobile-topbar-brand { font-size: 14px; font-weight: bold; }
+    .mobile-topbar-right { display: flex; align-items: center; gap: 12px; }
+    .icon-btn { width: 36px; height: 36px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 14px; background: none; cursor: pointer; }
+
+    /* Mobile tab bar — horizontally scrollable */
+    .mobile-tab-bar {
+      display: flex;
+      border-bottom: 1px solid;
+      padding: 0 16px;
+      gap: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .mobile-tab-bar::-webkit-scrollbar { display: none; }
+    .mobile-tab {
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: bold;
+      border: none;
+      background: none;
+      border-bottom: 3px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .mobile-tab.active { border-bottom: 3px solid; }
+    .mobile-tab .tab-badge { font-size: 10px; border: 1px solid; padding: 1px 5px; }
+
+    /* Mobile card — single column, full width */
+    .mobile-content { flex: 1; padding: 16px; overflow-y: auto; }
+    .mobile-card-grid { display: flex; flex-direction: column; gap: 12px; }
+    .mobile-card-tile {
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-card-header {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid;
+    }
+    .mobile-status-ring {
+      width: 36px;
+      height: 36px;
+      border: 2px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .mobile-card-body { padding: 8px 12px; font-size: 12px; }
+    .mobile-card-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 8px 12px; border-top: 1px solid; }
+    .mobile-card-actions { display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid; }
+    .mobile-card-actions button { flex: 1; border: 1px solid; padding: 6px; font-size: 12px; background: none; cursor: pointer; }
+
+    .mobile-content-header { padding: 12px 16px; border-bottom: 1px solid; display: flex; align-items: center; justify-content: space-between; }
+    .mobile-content-header .btn-primary { padding: 5px 12px; font-size: 12px; }
+
+    /* ── Interaction spec notes ─────────────────────────────────── */
+    .spec-box {
+      border: 1px solid;
+      padding: 16px;
+      margin-top: 16px;
+      max-width: 960px;
+    }
+    .spec-box h3 { margin-bottom: 10px; font-size: 13px; font-weight: bold; }
+    .spec-box ul { list-style: disc; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+    .spec-box li { font-size: 12px; }
+    .spec-box code { font-family: monospace; font-size: 11px; border: 1px solid; padding: 1px 4px; }
+  </style>
+</head>
+<body>
+
+<h1>Wireframe: Dashboard Tabs Redesign</h1>
+<p class="note">Issue #279 — Replaces grid + Howl side panel with a tabbed layout. One card, one state, one tab.</p>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SCENARIO 1: Desktop — The Howl tab active (has urgent cards)
+══════════════════════════════════════════════════════════════════ -->
+
+<h2>Scenario 1 — Desktop: "The Howl" Tab Active (default when Howl has cards)</h2>
+<p class="note">1024px+ layout. The Howl tab is selected by default. No Howl side panel — urgency lives inside this tab.</p>
+
+<div class="app-shell">
+
+  <!-- TopBar -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="brand-name">ᛟ FENRIR LEDGER</span>
+      <span class="brand-sub">Credit Card Tracker</span>
+    </div>
+    <div class="topbar-avatar">ᛟ</div>
+  </header>
+
+  <!-- Sidebar -->
+  <nav class="sidebar" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <div class="logo-rune">ᛟ</div>
+      <div class="logo-name">FENRIR LEDGER</div>
+      <div class="logo-sub">Credit Card Tracker</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-item active">ᛉ Cards</div>
+      <div class="nav-item">ᛏ Valhalla</div>
+      <div class="nav-item">⚙ Settings</div>
+    </div>
+    <div class="sidebar-footer">
+      <button>◀ Collapse</button>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- Content header -->
+    <div class="content-header">
+      <div>
+        <h1>THE LEDGER OF FATES</h1>
+        <span class="summary-text">9 cards · 3 need attention</span>
+      </div>
+      <button class="btn-primary">ADD CARD ▶</button>
+    </div>
+
+    <!-- Tab bar — replaces the Howl side panel -->
+    <div class="tab-bar" role="tablist" aria-label="Card dashboard tabs">
+      <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-howl" id="tab-howl">
+        ᚲ The Howl
+        <span class="tab-badge howl" aria-label="3 cards need attention">3</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-active" id="tab-active">
+        ᛉ Active
+        <span class="tab-badge" aria-label="6 active cards">6</span>
+      </button>
+    </div>
+
+    <!-- The Howl tab panel -->
+    <div class="tab-panel" role="tabpanel" id="panel-howl" aria-labelledby="tab-howl">
+      <p class="note" style="margin-bottom: 16px;">Cards needing attention (fee_approaching, promo_expiring, overdue). Urgency bar at top of each card. Sorted by days remaining ascending (most urgent first).</p>
+
+      <div class="card-grid">
+
+        <!-- Overdue card (most urgent) -->
+        <div class="card-tile howl-card">
+          <div class="card-urgency-bar">
+            <div class="urgency-dot"></div>
+            <span>OVERDUE · 5 days past</span>
+          </div>
+          <div class="card-tile-header">
+            <div class="status-ring">ᚱ</div>
+            <div class="card-identity">
+              <div class="card-issuer">CHASE</div>
+              <div class="card-name">Sapphire Reserve</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-deadline">⏰ Annual fee: Mar 3, 2026</div>
+            <div class="card-stats">
+              <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value">$10,000</div></div>
+              <div class="stat-cell"><div class="stat-label">Annual Fee</div><div class="stat-value">$550</div></div>
+              <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value">$300</div></div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button>View Record</button>
+            <button>···</button>
+          </div>
+        </div>
+
+        <!-- Fee approaching card -->
+        <div class="card-tile howl-card">
+          <div class="card-urgency-bar">
+            <div class="urgency-dot"></div>
+            <span>FEE APPROACHING · 12 days</span>
+          </div>
+          <div class="card-tile-header">
+            <div class="status-ring">ᚠ</div>
+            <div class="card-identity">
+              <div class="card-issuer">AMEX</div>
+              <div class="card-name">Platinum Card</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-deadline">⏰ Annual fee: Mar 20, 2026</div>
+            <div class="card-stats">
+              <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value">$25,000</div></div>
+              <div class="stat-cell"><div class="stat-label">Annual Fee</div><div class="stat-value">$695</div></div>
+              <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value">—</div></div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button>View Record</button>
+            <button>···</button>
+          </div>
+        </div>
+
+        <!-- Promo expiring card -->
+        <div class="card-tile howl-card">
+          <div class="card-urgency-bar">
+            <div class="urgency-dot"></div>
+            <span>PROMO EXPIRING · 28 days</span>
+          </div>
+          <div class="card-tile-header">
+            <div class="status-ring">ᚷ</div>
+            <div class="card-identity">
+              <div class="card-issuer">CITI</div>
+              <div class="card-name">Double Cash</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-deadline">ᛉ Spend deadline: Apr 5, 2026</div>
+            <div class="card-stats">
+              <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value">$8,000</div></div>
+              <div class="stat-cell"><div class="stat-label">Annual Fee</div><div class="stat-value">$0</div></div>
+              <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value">$200</div></div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button>View Record</button>
+            <button>···</button>
+          </div>
+        </div>
+
+      </div><!-- /card-grid -->
+    </div><!-- /tab-panel howl -->
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span>ᛟ FENRIR LEDGER · v2.0</span>
+    <span>About · Privacy · Terms</span>
+  </footer>
+
+</div><!-- /app-shell scenario 1 -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SCENARIO 2: Desktop — Active tab active (calm view)
+══════════════════════════════════════════════════════════════════ -->
+
+<h2>Scenario 2 — Desktop: "Active" Tab Active</h2>
+<p class="note">User has switched to Active tab, or The Howl is empty (Active becomes default). Cards in good standing — no urgency bars.</p>
+
+<div class="app-shell">
+
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="brand-name">ᛟ FENRIR LEDGER</span>
+      <span class="brand-sub">Credit Card Tracker</span>
+    </div>
+    <div class="topbar-avatar">ᛟ</div>
+  </header>
+
+  <nav class="sidebar" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <div class="logo-rune">ᛟ</div>
+      <div class="logo-name">FENRIR LEDGER</div>
+      <div class="logo-sub">Credit Card Tracker</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-item active">ᛉ Cards</div>
+      <div class="nav-item">ᛏ Valhalla</div>
+      <div class="nav-item">⚙ Settings</div>
+    </div>
+    <div class="sidebar-footer">
+      <button>◀ Collapse</button>
+    </div>
+  </nav>
+
+  <main class="content">
+
+    <div class="content-header">
+      <div>
+        <h1>THE LEDGER OF FATES</h1>
+        <span class="summary-text">9 cards · 3 need attention</span>
+      </div>
+      <button class="btn-primary">ADD CARD ▶</button>
+    </div>
+
+    <!-- Tab bar — Active tab selected -->
+    <div class="tab-bar" role="tablist" aria-label="Card dashboard tabs">
+      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-howl" id="tab-howl-s2">
+        ᚲ The Howl
+        <span class="tab-badge howl">3</span>
+      </button>
+      <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-active" id="tab-active-s2">
+        ᛉ Active
+        <span class="tab-badge">6</span>
+      </button>
+    </div>
+
+    <!-- Active tab panel -->
+    <div class="tab-panel" role="tabpanel" id="panel-active" aria-labelledby="tab-active-s2">
+      <p class="note" style="margin-bottom: 16px;">Cards in good standing (active status, NOT in The Howl). No urgency bars — calm view. 3-col grid on desktop.</p>
+
+      <div class="card-grid">
+
+        <!-- Active card 1 -->
+        <div class="card-tile">
+          <div class="card-tile-header">
+            <div class="status-ring">ᚦ</div>
+            <div class="card-identity">
+              <div class="card-issuer">DISCOVER</div>
+              <div class="card-name">it Cash Back</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-deadline">ᛉ Fee: Nov 2026</div>
+            <div class="card-stats">
+              <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value">$5,000</div></div>
+              <div class="stat-cell"><div class="stat-label">Annual Fee</div><div class="stat-value">$0</div></div>
+              <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value">—</div></div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button>View Record</button>
+            <button>···</button>
+          </div>
+        </div>
+
+        <!-- Active card 2 -->
+        <div class="card-tile">
+          <div class="card-tile-header">
+            <div class="status-ring">ᚾ</div>
+            <div class="card-identity">
+              <div class="card-issuer">CAPITAL ONE</div>
+              <div class="card-name">Venture X</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-deadline">ᛉ Fee: Jul 2026</div>
+            <div class="card-stats">
+              <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value">$20,000</div></div>
+              <div class="stat-cell"><div class="stat-label">Annual Fee</div><div class="stat-value">$395</div></div>
+              <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value">$750</div></div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button>View Record</button>
+            <button>···</button>
+          </div>
+        </div>
+
+        <!-- Active card 3 -->
+        <div class="card-tile">
+          <div class="card-tile-header">
+            <div class="status-ring">ᚨ</div>
+            <div class="card-identity">
+              <div class="card-issuer">WELLS FARGO</div>
+              <div class="card-name">Active Cash</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-deadline">ᛉ Fee: Sep 2026</div>
+            <div class="card-stats">
+              <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value">$12,000</div></div>
+              <div class="stat-cell"><div class="stat-label">Annual Fee</div><div class="stat-value">$0</div></div>
+              <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value">$200</div></div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button>View Record</button>
+            <button>···</button>
+          </div>
+        </div>
+
+      </div><!-- /card-grid -->
+    </div><!-- /tab-panel active -->
+
+  </main>
+
+  <footer class="footer">
+    <span>ᛟ FENRIR LEDGER · v2.0</span>
+    <span>About · Privacy · Terms</span>
+  </footer>
+
+</div><!-- /app-shell scenario 2 -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SCENARIO 3: Desktop — Empty Howl state (Active is default)
+══════════════════════════════════════════════════════════════════ -->
+
+<h2>Scenario 3 — Desktop: Empty Howl State (Active tab is default)</h2>
+<p class="note">No cards need attention. Active tab selected by default. The Howl tab badge shows 0 (or is hidden). The Howl tab is visible but inactive.</p>
+
+<div class="app-shell">
+
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="brand-name">ᛟ FENRIR LEDGER</span>
+      <span class="brand-sub">Credit Card Tracker</span>
+    </div>
+    <div class="topbar-avatar">ᛟ</div>
+  </header>
+
+  <nav class="sidebar" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <div class="logo-rune">ᛟ</div>
+      <div class="logo-name">FENRIR LEDGER</div>
+      <div class="logo-sub">Credit Card Tracker</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-item active">ᛉ Cards</div>
+      <div class="nav-item">ᛏ Valhalla</div>
+      <div class="nav-item">⚙ Settings</div>
+    </div>
+    <div class="sidebar-footer">
+      <button>◀ Collapse</button>
+    </div>
+  </nav>
+
+  <main class="content">
+
+    <div class="content-header">
+      <div>
+        <h1>THE LEDGER OF FATES</h1>
+        <span class="summary-text">6 cards · 0 need attention</span>
+      </div>
+      <button class="btn-primary">ADD CARD ▶</button>
+    </div>
+
+    <!-- Tab bar — Howl empty, Active is default -->
+    <div class="tab-bar" role="tablist" aria-label="Card dashboard tabs">
+      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-howl-s3" id="tab-howl-s3">
+        ᚲ The Howl
+        <span class="tab-badge" aria-label="0 cards need attention" style="opacity: 0.4;">0</span>
+      </button>
+      <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-active-s3" id="tab-active-s3">
+        ᛉ Active
+        <span class="tab-badge">6</span>
+      </button>
+    </div>
+
+    <!-- Active tab panel (default when Howl empty) -->
+    <div class="tab-panel" role="tabpanel" id="panel-active-s3" aria-labelledby="tab-active-s3">
+      <div class="card-grid">
+        <div class="card-tile">
+          <div class="card-tile-header">
+            <div class="status-ring">ᚦ</div>
+            <div class="card-identity">
+              <div class="card-issuer">DISCOVER</div>
+              <div class="card-name">it Cash Back</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-deadline">ᛉ Fee: Nov 2026</div>
+            <div class="card-stats">
+              <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value">$5,000</div></div>
+              <div class="stat-cell"><div class="stat-label">Annual Fee</div><div class="stat-value">$0</div></div>
+              <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value">—</div></div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button>View Record</button>
+            <button>···</button>
+          </div>
+        </div>
+        <div class="card-tile">
+          <div class="card-tile-header">
+            <div class="status-ring">ᚾ</div>
+            <div class="card-identity">
+              <div class="card-issuer">CAPITAL ONE</div>
+              <div class="card-name">Venture X</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-deadline">ᛉ Fee: Jul 2026</div>
+            <div class="card-stats">
+              <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value">$20,000</div></div>
+              <div class="stat-cell"><div class="stat-label">Annual Fee</div><div class="stat-value">$395</div></div>
+              <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value">$750</div></div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button>View Record</button>
+            <button>···</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Howl tab panel — empty state (shown when user clicks The Howl tab) -->
+    <!-- NOTE: hidden by default in this scenario; shown here for reference only -->
+    <div style="display:none" role="tabpanel" id="panel-howl-s3" aria-labelledby="tab-howl-s3">
+      <div class="empty-state">
+        <div class="empty-rune">ᚱ</div>
+        <div class="empty-title">The wolf is silent.</div>
+        <div class="empty-body">All chains are loose. No cards need attention right now.</div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <span>ᛟ FENRIR LEDGER · v2.0</span>
+    <span>About · Privacy · Terms</span>
+  </footer>
+
+</div><!-- /app-shell scenario 3 -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SCENARIO 4: The Howl empty state panel (when user taps into it)
+══════════════════════════════════════════════════════════════════ -->
+
+<h2>Scenario 4 — The Howl Tab: Empty State Panel</h2>
+<p class="note">User explicitly navigates to The Howl tab, but it is empty. Calm rune + message. No urgency.</p>
+
+<div style="border: 1px solid; width: 600px; margin-bottom: 32px;">
+  <div class="tab-bar" role="tablist" style="padding: 0 16px;">
+    <button class="tab active" role="tab" aria-selected="true">
+      ᚲ The Howl
+      <span class="tab-badge" style="opacity: 0.4;">0</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false">
+      ᛉ Active
+      <span class="tab-badge">6</span>
+    </button>
+  </div>
+  <div class="empty-state" style="min-height: 240px;">
+    <div class="empty-rune">ᚱ</div>
+    <div class="empty-title">The wolf is silent.</div>
+    <div class="empty-body">No cards need attention. All chains are loose.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SCENARIO 5: Mobile (375px) — The Howl tab active
+══════════════════════════════════════════════════════════════════ -->
+
+<h2>Scenario 5 — Mobile (375px): The Howl Tab Active</h2>
+<p class="note">Mobile-first, 375px min viewport. Single column layout. No sidebar (hamburger drawer instead). Tabs horizontally scrollable.</p>
+
+<div class="mobile-shell">
+
+  <!-- Mobile TopBar -->
+  <header class="mobile-topbar">
+    <button class="icon-btn" aria-label="Open navigation menu">☰</button>
+    <span class="mobile-topbar-brand">ᛟ FENRIR LEDGER</span>
+    <div class="mobile-topbar-right">
+      <button class="icon-btn" aria-label="Avatar">ᛟ</button>
+    </div>
+  </header>
+
+  <!-- Mobile content header -->
+  <div class="mobile-content-header">
+    <span style="font-size: 13px; font-weight: bold;">9 cards · 3 need attention</span>
+    <button class="btn-primary">+ ADD</button>
+  </div>
+
+  <!-- Mobile tab bar — horizontally scrollable -->
+  <div class="mobile-tab-bar" role="tablist" aria-label="Card dashboard tabs">
+    <button class="mobile-tab active" role="tab" aria-selected="true">
+      ᚲ The Howl
+      <span class="tab-badge howl">3</span>
+    </button>
+    <button class="mobile-tab" role="tab" aria-selected="false">
+      ᛉ Active
+      <span class="tab-badge">6</span>
+    </button>
+  </div>
+
+  <!-- Mobile Howl tab content -->
+  <div class="mobile-content">
+    <p class="note" style="margin-bottom: 12px;">Single column. Cards sorted by urgency (most urgent first).</p>
+
+    <div class="mobile-card-grid">
+
+      <!-- Overdue -->
+      <div class="mobile-card-tile">
+        <div style="padding: 5px 12px; font-size: 11px; font-weight: bold; border-bottom: 1px solid; display: flex; align-items: center; gap: 6px;">
+          <div class="urgency-dot"></div>
+          OVERDUE · 5 days past
+        </div>
+        <div class="mobile-card-header">
+          <div class="mobile-status-ring">ᚱ</div>
+          <div class="card-identity">
+            <div class="card-issuer">CHASE</div>
+            <div class="card-name">Sapphire Reserve</div>
+          </div>
+        </div>
+        <div class="mobile-card-body">⏰ Annual fee: Mar 3, 2026</div>
+        <div class="mobile-card-stats">
+          <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value" style="font-size:11px;">$10k</div></div>
+          <div class="stat-cell"><div class="stat-label">Fee</div><div class="stat-value" style="font-size:11px;">$550</div></div>
+          <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value" style="font-size:11px;">$300</div></div>
+        </div>
+        <div class="mobile-card-actions">
+          <button>View Record</button>
+          <button>···</button>
+        </div>
+      </div>
+
+      <!-- Fee approaching -->
+      <div class="mobile-card-tile">
+        <div style="padding: 5px 12px; font-size: 11px; font-weight: bold; border-bottom: 1px solid; display: flex; align-items: center; gap: 6px;">
+          <div class="urgency-dot"></div>
+          FEE APPROACHING · 12 days
+        </div>
+        <div class="mobile-card-header">
+          <div class="mobile-status-ring">ᚠ</div>
+          <div class="card-identity">
+            <div class="card-issuer">AMEX</div>
+            <div class="card-name">Platinum Card</div>
+          </div>
+        </div>
+        <div class="mobile-card-body">⏰ Annual fee: Mar 20, 2026</div>
+        <div class="mobile-card-stats">
+          <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value" style="font-size:11px;">$25k</div></div>
+          <div class="stat-cell"><div class="stat-label">Fee</div><div class="stat-value" style="font-size:11px;">$695</div></div>
+          <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value" style="font-size:11px;">—</div></div>
+        </div>
+        <div class="mobile-card-actions">
+          <button>View Record</button>
+          <button>···</button>
+        </div>
+      </div>
+
+    </div><!-- /mobile-card-grid -->
+  </div><!-- /mobile-content -->
+
+</div><!-- /mobile-shell scenario 5 -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SCENARIO 6: Mobile (375px) — Active tab active
+══════════════════════════════════════════════════════════════════ -->
+
+<h2>Scenario 6 — Mobile (375px): Active Tab Active</h2>
+
+<div class="mobile-shell">
+
+  <header class="mobile-topbar">
+    <button class="icon-btn" aria-label="Open navigation menu">☰</button>
+    <span class="mobile-topbar-brand">ᛟ FENRIR LEDGER</span>
+    <div class="mobile-topbar-right">
+      <button class="icon-btn">ᛟ</button>
+    </div>
+  </header>
+
+  <div class="mobile-content-header">
+    <span style="font-size: 13px; font-weight: bold;">9 cards · 3 need attention</span>
+    <button class="btn-primary">+ ADD</button>
+  </div>
+
+  <div class="mobile-tab-bar" role="tablist" aria-label="Card dashboard tabs">
+    <button class="mobile-tab" role="tab" aria-selected="false">
+      ᚲ The Howl
+      <span class="tab-badge howl">3</span>
+    </button>
+    <button class="mobile-tab active" role="tab" aria-selected="true">
+      ᛉ Active
+      <span class="tab-badge">6</span>
+    </button>
+  </div>
+
+  <div class="mobile-content">
+    <div class="mobile-card-grid">
+
+      <!-- Active card — no urgency bar -->
+      <div class="mobile-card-tile">
+        <div class="mobile-card-header">
+          <div class="mobile-status-ring">ᚦ</div>
+          <div class="card-identity">
+            <div class="card-issuer">DISCOVER</div>
+            <div class="card-name">it Cash Back</div>
+          </div>
+        </div>
+        <div class="mobile-card-body">ᛉ Fee: Nov 2026</div>
+        <div class="mobile-card-stats">
+          <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value" style="font-size:11px;">$5k</div></div>
+          <div class="stat-cell"><div class="stat-label">Fee</div><div class="stat-value" style="font-size:11px;">$0</div></div>
+          <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value" style="font-size:11px;">—</div></div>
+        </div>
+        <div class="mobile-card-actions">
+          <button>View Record</button>
+          <button>···</button>
+        </div>
+      </div>
+
+      <div class="mobile-card-tile">
+        <div class="mobile-card-header">
+          <div class="mobile-status-ring">ᚾ</div>
+          <div class="card-identity">
+            <div class="card-issuer">CAPITAL ONE</div>
+            <div class="card-name">Venture X</div>
+          </div>
+        </div>
+        <div class="mobile-card-body">ᛉ Fee: Jul 2026</div>
+        <div class="mobile-card-stats">
+          <div class="stat-cell"><div class="stat-label">Limit</div><div class="stat-value" style="font-size:11px;">$20k</div></div>
+          <div class="stat-cell"><div class="stat-label">Fee</div><div class="stat-value" style="font-size:11px;">$395</div></div>
+          <div class="stat-cell"><div class="stat-label">Bonus</div><div class="stat-value" style="font-size:11px;">$750</div></div>
+        </div>
+        <div class="mobile-card-actions">
+          <button>View Record</button>
+          <button>···</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /mobile-shell scenario 6 -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     INTERACTION SPEC
+══════════════════════════════════════════════════════════════════ -->
+
+<h2>Interaction Spec</h2>
+
+<div class="spec-box">
+  <h3>Tab Classification Logic</h3>
+  <ul>
+    <li><strong>The Howl tab</strong> receives cards with status: <code>fee_approaching</code>, <code>promo_expiring</code>, <code>overdue</code>.</li>
+    <li><strong>Active tab</strong> receives cards with status: <code>active</code> — i.e. all cards NOT in The Howl.</li>
+    <li>Each card appears in exactly ONE tab. No duplication across tabs.</li>
+    <li>Status is computed by existing <code>card-utils.ts</code> <code>getCardStatus()</code> — no new logic needed for classification.</li>
+  </ul>
+</div>
+
+<div class="spec-box">
+  <h3>Default Tab Selection</h3>
+  <ul>
+    <li>On initial render: if <code>howlCards.length &gt; 0</code>, default to <strong>The Howl</strong> tab.</li>
+    <li>On initial render: if <code>howlCards.length === 0</code>, default to <strong>Active</strong> tab.</li>
+    <li>Tab selection is client-side state only (<code>useState</code>). No URL params, no persisted preference.</li>
+    <li>When cards are updated (added/edited/deleted), re-evaluate default tab rule only on fresh mount — do not reset tab mid-session.</li>
+  </ul>
+</div>
+
+<div class="spec-box">
+  <h3>Tab Switching Behavior</h3>
+  <ul>
+    <li>Tab switching is instant — client-side show/hide. No page reload, no network request.</li>
+    <li>Use <code>role="tablist"</code>, <code>role="tab"</code>, <code>role="tabpanel"</code> ARIA pattern.</li>
+    <li>Active tab: <code>aria-selected="true"</code>. Inactive: <code>aria-selected="false"</code>.</li>
+    <li>Tab panel visibility: use <code>hidden</code> attribute or conditional render. Either is acceptable — engineer's choice based on animation needs.</li>
+    <li>Keyboard: <kbd>←</kbd> / <kbd>→</kbd> arrow keys navigate between tabs (standard ARIA tabs pattern).</li>
+    <li>Transition: no required animation spec for tab switch. Optional: 150ms fade on panel content.</li>
+  </ul>
+</div>
+
+<div class="spec-box">
+  <h3>Badge Count Updates</h3>
+  <ul>
+    <li>Badges reflect live derived counts: <code>howlCards.length</code> and <code>activeCards.length</code>.</li>
+    <li>Badges update automatically when <code>cards</code> array changes (derive from prop/state, no separate badge state).</li>
+    <li>When Howl count drops to 0: badge shows <code>0</code> at reduced opacity (or hide badge entirely — engineer's preference). Do NOT remove the tab button itself.</li>
+    <li>The Howl badge uses a visually distinct style (heavier border) to signal urgency when count &gt; 0.</li>
+  </ul>
+</div>
+
+<div class="spec-box">
+  <h3>Howl Tab Urgency Styling</h3>
+  <ul>
+    <li>Cards in The Howl tab display an <strong>urgency bar</strong> above the card header (see <code>.card-urgency-bar</code>).</li>
+    <li>Urgency bar content: indicator dot + status label + days remaining (or "X days past" for overdue).</li>
+    <li>Urgency dot: pulsing animation for overdue cards; static for fee_approaching and promo_expiring.</li>
+    <li>Sort order within The Howl: ascending by days remaining — most urgent (lowest/negative days) at top.</li>
+    <li>Reuse existing Howl panel urgency styling tokens from <code>HowlPanel.tsx</code> and theme system.</li>
+    <li>The <code>ᚲ</code> Kenaz rune badge on The Howl tab should pulse when count &gt; 0 (matches existing HowlPanel header behavior).</li>
+  </ul>
+</div>
+
+<div class="spec-box">
+  <h3>Mobile Tab Navigation</h3>
+  <ul>
+    <li>Tab bar is horizontally scrollable (<code>overflow-x: auto</code>, <code>-webkit-overflow-scrolling: touch</code>, scrollbar hidden).</li>
+    <li>Minimum viewport: 375px. All tab text and badges must be readable at 375px with default system font size.</li>
+    <li>Touch target for each tab: minimum 44px height (accessible tap area).</li>
+    <li>The Howl bottom drawer (current pattern) is <strong>removed</strong> — tabs are the sole navigation mechanism on mobile.</li>
+    <li>The bell/raven icon in the mobile TopBar is also <strong>removed</strong> — no longer needed once tabs replace the drawer.</li>
+  </ul>
+</div>
+
+<div class="spec-box">
+  <h3>Layout Changes from Current Dashboard</h3>
+  <ul>
+    <li><strong>Removed:</strong> Right-side <code>AnimatedHowlPanel</code> / <code>HowlPanel</code> sidebar on desktop.</li>
+    <li><strong>Removed:</strong> Mobile bottom drawer for Howl panel.</li>
+    <li><strong>Removed:</strong> <code>mobileHowlOpen</code> state in <code>page.tsx</code>.</li>
+    <li><strong>Added:</strong> Tab bar below content header, spanning full content column width.</li>
+    <li><strong>Added:</strong> <code>activeTab</code> state: <code>'howl' | 'active'</code>.</li>
+    <li><strong>Changed:</strong> Card grid now renders only the subset matching the active tab.</li>
+    <li>Sidebar, TopBar, footer, content header: unchanged.</li>
+  </ul>
+</div>
+
+<div class="spec-box">
+  <h3>Component Reuse Notes (for FiremanDecko)</h3>
+  <ul>
+    <li>Reuse <code>card-utils.ts</code> — no new status computation. Classification is purely: <code>['fee_approaching','promo_expiring','overdue'].includes(card.status)</code>.</li>
+    <li>The Howl tab card urgency bar can be a thin wrapper/variant prop on the existing <code>CardChain</code> component.</li>
+    <li>Consider <strong>shadcn/ui Tabs</strong> (<code>Tabs</code>, <code>TabsList</code>, <code>TabsTrigger</code>, <code>TabsContent</code>) for accessible tab implementation.</li>
+    <li>The <code>HowlPanel.tsx</code> urgency row logic (<code>toUrgentRows()</code>) can be adapted for the in-tab card urgency bar.</li>
+    <li>The Howl tab empty state reuses the existing <code>ᚱ</code> Raido rune + "The wolf is silent" copy from <code>HowlPanel</code>.</li>
+  </ul>
+</div>
+
+</body>
+</html>

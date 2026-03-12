@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Dashboard Tab Headers, Tooltips, and Empty States</title>
+  <style>
+    /* ============================================================
+       WIREFRAME RULES — structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in theme-system.md.
+       Permitted: display flex/grid, border: 1px solid,
+       width/height, padding/margin, font-size, font-weight.
+       ============================================================ */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* ── Page chrome (wireframe doc wrapper) ──────────────────── */
+    .page { display: flex; flex-direction: column; gap: 64px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 16px; }
+    .scenario-label {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.08em; border-bottom: 1px solid; padding-bottom: 6px;
+    }
+
+    /* ── Annotation helpers ───────────────────────────────────── */
+    .note {
+      font-size: 11px; font-style: italic; opacity: 0.65;
+    }
+    .note-block {
+      font-size: 11px; font-style: italic; opacity: 0.65;
+      border: 1px dashed; padding: 10px 14px; margin-top: 8px;
+      line-height: 1.6;
+    }
+    .annot-row {
+      display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start;
+    }
+    .annot-col { display: flex; flex-direction: column; gap: 8px; min-width: 200px; }
+    .col-label {
+      font-size: 10px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── App shell (desktop) ─────────────────────────────────── */
+    .app-shell {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 500px;
+      border: 1px solid;
+      width: 740px;
+    }
+
+    /* ── Mobile shell ───────────────────────────────────────── */
+    .app-shell--mobile {
+      width: 375px;
+    }
+
+    /* ── Tab bar ──────────────────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid;
+      overflow-x: auto;
+    }
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      min-height: 44px;
+    }
+    .tab--active {
+      border-bottom: 3px solid;
+    }
+    .tab-badge {
+      font-size: 11px;
+      font-weight: bold;
+      border: 1px solid;
+      padding: 0 5px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    /* ── Tab panel ────────────────────────────────────────────── */
+    .tab-panel {
+      padding: 0;
+    }
+
+    /* ── Tab header (dismissable) ──────────────────────────── */
+    .tab-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid;
+    }
+    .tab-header__content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .tab-header__title {
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .tab-header__desc {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .tab-header__statuses {
+      font-size: 11px;
+      line-height: 1.5;
+      margin-top: 4px;
+    }
+    .tab-header__dismiss {
+      font-size: 18px;
+      padding: 4px 8px;
+      border: 1px solid;
+      min-width: 32px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* ── Tab summary sub-header (dismissable) ────────────────── */
+    .tab-summary {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1px solid;
+    }
+    .tab-summary__content {
+      flex: 1;
+      font-size: 12px;
+    }
+    .tab-summary__stat {
+      font-weight: bold;
+    }
+    .tab-summary__dismiss {
+      font-size: 14px;
+      padding: 2px 6px;
+      border: 1px solid;
+      min-width: 28px;
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* ── Empty state ──────────────────────────────────────────── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 64px 24px;
+      text-align: center;
+    }
+    .empty-state__rune {
+      font-size: 36px;
+      font-family: serif;
+    }
+    .empty-state__text {
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    /* ── Card grid placeholder ────────────────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
+    }
+    .card-grid--mobile {
+      grid-template-columns: 1fr;
+    }
+    .card-placeholder {
+      border: 1px dashed;
+      padding: 20px 12px;
+      text-align: center;
+      font-size: 11px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Tooltip overlay ──────────────────────────────────────── */
+    .tooltip-demo {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 16px;
+    }
+    .tooltip-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .tooltip-trigger {
+      font-size: 12px;
+      font-weight: bold;
+      border: 1px solid;
+      padding: 4px 10px;
+      white-space: nowrap;
+      position: relative;
+    }
+    .tooltip-overlay {
+      border: 1px solid;
+      padding: 8px 12px;
+      font-size: 11px;
+      line-height: 1.5;
+      max-width: 260px;
+    }
+    .tooltip-overlay__label {
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+    .tooltip-overlay__meaning {
+      margin-bottom: 4px;
+    }
+    .tooltip-overlay__action {
+      font-style: italic;
+    }
+
+    /* ── Tables ───────────────────────────────────────────────── */
+    table { border-collapse: collapse; font-size: 12px; width: 100%; }
+    th, td { border: 1px solid; padding: 6px 10px; text-align: left; vertical-align: top; }
+    th { font-weight: bold; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ============================================================ -->
+  <!-- TITLE & PURPOSE                                               -->
+  <!-- ============================================================ -->
+  <header>
+    <h1 style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">
+      Dashboard Tab Headers, Tooltips, and Empty States
+    </h1>
+    <p class="note">
+      Wireframe for 4 new features inside the Ledger of Fates dashboard tabs:
+      (1) simplified runic empty states, (2) card status label tooltips,
+      (3) dismissable tab header explaining each tab's purpose,
+      (4) dismissable tab summary sub-header showing dynamic card data.
+      Applies to all 5 tabs: ALL, VALHALLA, ACTIVE, THE HUNT, THE HOWL.
+    </p>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- SCENARIO 1: THE HOWL TAB — FULL ANATOMY (Desktop)            -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 — The Howl Tab: Header + Summary + Cards (Desktop)</div>
+    <p class="note">
+      Shows all three layers inside a tab panel: dismissable header,
+      dismissable summary sub-header, then card grid. Both header and
+      summary can be independently dismissed.
+    </p>
+
+    <div class="app-shell">
+      <!-- Tab bar -->
+      <nav class="tab-bar" role="tablist" aria-label="Card dashboard tabs">
+        <div class="tab">ALL <span class="tab-badge">12</span></div>
+        <div class="tab">VALHALLA <span class="tab-badge">3</span></div>
+        <div class="tab">ACTIVE <span class="tab-badge">5</span></div>
+        <div class="tab">THE HUNT <span class="tab-badge">2</span></div>
+        <div class="tab tab--active">THE HOWL <span class="tab-badge">2</span></div>
+      </nav>
+
+      <!-- Tab panel -->
+      <div class="tab-panel" role="tabpanel">
+        <!-- Dismissable tab header -->
+        <div class="tab-header">
+          <div class="tab-header__content">
+            <div class="tab-header__title">The Howl -- Where Chains Tighten</div>
+            <div class="tab-header__desc">
+              Cards shown here demand your attention. Annual fees are approaching,
+              promotional rates are expiring, or deadlines have already passed.
+              These are the chains that will tighten if ignored.
+            </div>
+            <div class="tab-header__statuses">
+              Status labels in this tab:
+              <strong>Fee Due Soon</strong> -- annual fee due within 30 days |
+              <strong>Promo Expiring</strong> -- promotional rate ending soon |
+              <strong>Overdue</strong> -- a deadline has passed
+            </div>
+          </div>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+        </div>
+
+        <!-- Dismissable tab summary sub-header -->
+        <div class="tab-summary">
+          <div class="tab-summary__content">
+            <span class="tab-summary__stat">1 card</span> with fee due within 30 days,
+            <span class="tab-summary__stat">1 card</span> with promo expiring
+          </div>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+        </div>
+
+        <!-- Card grid -->
+        <div class="card-grid">
+          <div class="card-placeholder">[CardTile: Chase Sapphire — Fee Due Soon]</div>
+          <div class="card-placeholder">[CardTile: Amex Gold — Promo Expiring]</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note-block">
+      <strong>localStorage keys:</strong><br>
+      Header dismissed: <code>fenrir:tab-header-dismissed:howl</code> = "true"<br>
+      Summary dismissed: <code>fenrir:tab-summary-dismissed:howl</code> = "true"<br>
+      <br>
+      <strong>Behavior:</strong> Header and summary are independent. Dismissing one
+      does not affect the other. Dismissed state persists across sessions.
+      The header explains the tab's PURPOSE (static). The summary shows
+      the CURRENT STATE of cards (dynamic, updates as cards change).
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SCENARIO 2: ACTIVE TAB — FULL ANATOMY (Desktop)              -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 — Active Tab: Header + Summary + Cards (Desktop)</div>
+
+    <div class="app-shell">
+      <nav class="tab-bar">
+        <div class="tab">ALL <span class="tab-badge">12</span></div>
+        <div class="tab">VALHALLA <span class="tab-badge">3</span></div>
+        <div class="tab tab--active">ACTIVE <span class="tab-badge">5</span></div>
+        <div class="tab">THE HUNT <span class="tab-badge">2</span></div>
+        <div class="tab">THE HOWL <span class="tab-badge">2</span></div>
+      </nav>
+
+      <div class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-header__content">
+            <div class="tab-header__title">Active Cards -- Asgard's Warriors</div>
+            <div class="tab-header__desc">
+              Cards in good standing with no urgent deadlines. These are your
+              reliable earners -- rewards are flowing and no fees are imminent.
+            </div>
+            <div class="tab-header__statuses">
+              Status label in this tab:
+              <strong>Active</strong> -- card is open, no bonus window, no approaching fee
+            </div>
+          </div>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+        </div>
+
+        <div class="tab-summary">
+          <div class="tab-summary__content">
+            <span class="tab-summary__stat">5 active cards</span> in good standing
+          </div>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+        </div>
+
+        <div class="card-grid">
+          <div class="card-placeholder">[CardTile: Citi Double Cash — Active]</div>
+          <div class="card-placeholder">[CardTile: Capital One Venture — Active]</div>
+          <div class="card-placeholder">[CardTile: Chase Freedom — Active]</div>
+          <div class="card-placeholder">[CardTile: Amex Blue — Active]</div>
+          <div class="card-placeholder">[CardTile: Discover It — Active]</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SCENARIO 3: THE HUNT TAB — FULL ANATOMY (Desktop)            -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 — The Hunt Tab: Header + Summary + Cards (Desktop)</div>
+
+    <div class="app-shell">
+      <nav class="tab-bar">
+        <div class="tab">ALL <span class="tab-badge">12</span></div>
+        <div class="tab">VALHALLA <span class="tab-badge">3</span></div>
+        <div class="tab">ACTIVE <span class="tab-badge">5</span></div>
+        <div class="tab tab--active">THE HUNT <span class="tab-badge">2</span></div>
+        <div class="tab">THE HOWL <span class="tab-badge">2</span></div>
+      </nav>
+
+      <div class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-header__content">
+            <div class="tab-header__title">The Hunt -- Pursue the Plunder</div>
+            <div class="tab-header__desc">
+              Cards with open sign-up bonus windows. You are actively hunting
+              the welcome mead -- track your spending progress and hit the
+              threshold before the deadline.
+            </div>
+            <div class="tab-header__statuses">
+              Status label in this tab:
+              <strong>Bonus Open</strong> -- sign-up bonus spending window is active
+            </div>
+          </div>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+        </div>
+
+        <div class="tab-summary">
+          <div class="tab-summary__content">
+            <span class="tab-summary__stat">2 cards</span> with open bonus windows,
+            <span class="tab-summary__stat">1</span> approaching its deadline
+          </div>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+        </div>
+
+        <div class="card-grid">
+          <div class="card-placeholder">[CardTile: Chase Sapphire Reserve — Bonus Open]</div>
+          <div class="card-placeholder">[CardTile: Amex Platinum — Bonus Open]</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SCENARIO 4: VALHALLA TAB — FULL ANATOMY (Desktop)            -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 4 — Valhalla Tab: Header + Summary + Cards (Desktop)</div>
+
+    <div class="app-shell">
+      <nav class="tab-bar">
+        <div class="tab">ALL <span class="tab-badge">12</span></div>
+        <div class="tab tab--active">VALHALLA <span class="tab-badge">3</span></div>
+        <div class="tab">ACTIVE <span class="tab-badge">5</span></div>
+        <div class="tab">THE HUNT <span class="tab-badge">2</span></div>
+        <div class="tab">THE HOWL <span class="tab-badge">2</span></div>
+      </nav>
+
+      <div class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-header__content">
+            <div class="tab-header__title">Valhalla -- Hall of the Honored Dead</div>
+            <div class="tab-header__desc">
+              Cards that have completed their journey. Closed cards and cards
+              that graduated after earning their sign-up bonus rest here.
+              Their rewards were harvested. Their chains were broken.
+            </div>
+            <div class="tab-header__statuses">
+              Status labels in this tab:
+              <strong>Closed</strong> -- card cancelled or closed |
+              <strong>Graduated</strong> -- minimum spend met, bonus earned
+            </div>
+          </div>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+        </div>
+
+        <div class="tab-summary">
+          <div class="tab-summary__content">
+            <span class="tab-summary__stat">2 closed</span>,
+            <span class="tab-summary__stat">1 graduated</span> --
+            chains broken, plunder secured
+          </div>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+        </div>
+
+        <div class="card-grid">
+          <div class="card-placeholder">[CardTile: BofA Cash — Closed]</div>
+          <div class="card-placeholder">[CardTile: Chase Ink — Graduated]</div>
+          <div class="card-placeholder">[CardTile: Citi Premier — Closed]</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SCENARIO 5: ALL TAB — FULL ANATOMY (Desktop)                 -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 5 — All Tab: Header + Summary + Cards (Desktop)</div>
+
+    <div class="app-shell">
+      <nav class="tab-bar">
+        <div class="tab tab--active">ALL <span class="tab-badge">12</span></div>
+        <div class="tab">VALHALLA <span class="tab-badge">3</span></div>
+        <div class="tab">ACTIVE <span class="tab-badge">5</span></div>
+        <div class="tab">THE HUNT <span class="tab-badge">2</span></div>
+        <div class="tab">THE HOWL <span class="tab-badge">2</span></div>
+      </nav>
+
+      <div class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-header__content">
+            <div class="tab-header__title">All Cards -- The Full Ledger</div>
+            <div class="tab-header__desc">
+              Every card in your portfolio, regardless of status. The complete
+              record of every chain forged, every hunt begun, every warrior
+              that earned its place in the hall.
+            </div>
+            <div class="tab-header__statuses">
+              All status labels appear here:
+              <strong>Active</strong> |
+              <strong>Fee Due Soon</strong> |
+              <strong>Promo Expiring</strong> |
+              <strong>Overdue</strong> |
+              <strong>Bonus Open</strong> |
+              <strong>Closed</strong> |
+              <strong>Graduated</strong>
+            </div>
+          </div>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+        </div>
+
+        <div class="tab-summary">
+          <div class="tab-summary__content">
+            <span class="tab-summary__stat">12 cards</span> total:
+            <span class="tab-summary__stat">5</span> active,
+            <span class="tab-summary__stat">2</span> hunting,
+            <span class="tab-summary__stat">2</span> howling,
+            <span class="tab-summary__stat">3</span> in Valhalla
+          </div>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+        </div>
+
+        <div class="card-grid">
+          <div class="card-placeholder">[CardTile: Card 1]</div>
+          <div class="card-placeholder">[CardTile: Card 2]</div>
+          <div class="card-placeholder">[... all 12 cards ...]</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SCENARIO 6: EMPTY STATES — ALL 5 TABS                        -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 6 — Empty States for All 5 Tabs</div>
+    <p class="note">
+      Simplified empty states using Elder Futhark rune decoration.
+      Format: rune + short text + rune. No explanatory subtext.
+      Voice 2 (atmospheric). Each tab uses a distinct rune.
+    </p>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 32px;">
+      <!-- ALL empty -->
+      <div style="width: 320px; border: 1px solid;">
+        <div style="padding: 6px 12px; border-bottom: 1px solid; font-size: 11px; font-weight: bold;">ALL TAB EMPTY STATE</div>
+        <div class="empty-state">
+          <div class="empty-state__text">&#5765; No cards in the ledger &#5765;</div>
+        </div>
+        <p class="note" style="padding: 8px 12px;">Rune: &#5765; (Othalan). Shown when card array is empty.</p>
+      </div>
+
+      <!-- VALHALLA empty -->
+      <div style="width: 320px; border: 1px solid;">
+        <div style="padding: 6px 12px; border-bottom: 1px solid; font-size: 11px; font-weight: bold;">VALHALLA TAB EMPTY STATE</div>
+        <div class="empty-state">
+          <div class="empty-state__text">&#5848; No cards in Valhalla &#5848;</div>
+        </div>
+        <p class="note" style="padding: 8px 12px;">Rune: &#5848; (Tiwaz). Matches the Valhalla rune from mythology-map.md.</p>
+      </div>
+
+      <!-- ACTIVE empty -->
+      <div style="width: 320px; border: 1px solid;">
+        <div style="padding: 6px 12px; border-bottom: 1px solid; font-size: 11px; font-weight: bold;">ACTIVE TAB EMPTY STATE</div>
+        <div class="empty-state">
+          <div class="empty-state__text">&#5765; No active cards &#5765;</div>
+        </div>
+        <p class="note" style="padding: 8px 12px;">Rune: &#5765; (Othalan). Matches the existing tab rune.</p>
+      </div>
+
+      <!-- THE HUNT empty -->
+      <div style="width: 320px; border: 1px solid;">
+        <div style="padding: 6px 12px; border-bottom: 1px solid; font-size: 11px; font-weight: bold;">THE HUNT TAB EMPTY STATE</div>
+        <div class="empty-state">
+          <div class="empty-state__text">&#5852; No cards on the hunt &#5852;</div>
+        </div>
+        <p class="note" style="padding: 8px 12px;">Rune: &#5852; (Ingwaz). Matches the Hunt tab rune.</p>
+      </div>
+
+      <!-- THE HOWL empty -->
+      <div style="width: 320px; border: 1px solid;">
+        <div style="padding: 6px 12px; border-bottom: 1px solid; font-size: 11px; font-weight: bold;">THE HOWL TAB EMPTY STATE</div>
+        <div class="empty-state">
+          <div class="empty-state__text">&#5810; No cards in the howl &#5810;</div>
+        </div>
+        <p class="note" style="padding: 8px 12px;">Rune: &#5810; (Kenaz). Matches the Howl tab rune.</p>
+      </div>
+    </div>
+
+    <div class="note-block">
+      <strong>Pattern:</strong> "[rune] No [category noun] [rune]"<br>
+      <strong>Voice:</strong> Atmospheric (Voice 2). Runes are decorative, flanking the text.<br>
+      <strong>Previous design:</strong> The old empty states had multi-line explanatory subtext
+      (e.g. "All your cards are currently in The Howl. Add a card to see it here.").
+      This is replaced by the simpler runic pattern above. The tab header (when visible)
+      already explains what cards belong in each tab, so the empty state only needs to
+      confirm "nothing here."
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SCENARIO 7: CARD STATUS LABEL TOOLTIPS                       -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 7 — Card Status Label Tooltips</div>
+    <p class="note">
+      Each card status badge on a CardTile shows a tooltip on hover (desktop)
+      or tap (mobile). The tooltip explains what the label means in plain
+      English (Voice 1 — functional) with a Norse flavor line (Voice 2 —
+      atmospheric) below it.
+    </p>
+
+    <div class="tooltip-demo">
+      <!-- Active -->
+      <div class="tooltip-row">
+        <div class="tooltip-trigger">Active</div>
+        <div class="tooltip-overlay">
+          <div class="tooltip-overlay__label">Active</div>
+          <div class="tooltip-overlay__meaning">
+            This card is open with no urgent deadlines. Rewards are flowing normally.
+          </div>
+          <div class="tooltip-overlay__action">
+            Asgard-bound -- no chains tighten here.
+          </div>
+        </div>
+      </div>
+
+      <!-- Fee Due Soon -->
+      <div class="tooltip-row">
+        <div class="tooltip-trigger">Fee Due Soon</div>
+        <div class="tooltip-overlay">
+          <div class="tooltip-overlay__label">Fee Due Soon</div>
+          <div class="tooltip-overlay__meaning">
+            The annual fee is due within 30 days. Decide whether to keep or close this card before it renews.
+          </div>
+          <div class="tooltip-overlay__action">
+            Muspelheim burns -- the fee-serpent approaches.
+          </div>
+        </div>
+      </div>
+
+      <!-- Promo Expiring -->
+      <div class="tooltip-row">
+        <div class="tooltip-trigger">Promo Expiring</div>
+        <div class="tooltip-overlay">
+          <div class="tooltip-overlay__label">Promo Expiring</div>
+          <div class="tooltip-overlay__meaning">
+            A promotional rate (0% APR, bonus cashback, etc.) on this card is ending soon.
+          </div>
+          <div class="tooltip-overlay__action">
+            Hati approaches -- the promo window narrows.
+          </div>
+        </div>
+      </div>
+
+      <!-- Overdue -->
+      <div class="tooltip-row">
+        <div class="tooltip-trigger">Overdue</div>
+        <div class="tooltip-overlay">
+          <div class="tooltip-overlay__label">Overdue</div>
+          <div class="tooltip-overlay__meaning">
+            A deadline on this card has already passed. The annual fee may have renewed, or a promo has expired.
+          </div>
+          <div class="tooltip-overlay__action">
+            Gleipnir tightens -- the chain was not broken in time.
+          </div>
+        </div>
+      </div>
+
+      <!-- Bonus Open -->
+      <div class="tooltip-row">
+        <div class="tooltip-trigger">Bonus Open</div>
+        <div class="tooltip-overlay">
+          <div class="tooltip-overlay__label">Bonus Open</div>
+          <div class="tooltip-overlay__meaning">
+            The sign-up bonus spending window is active. Meet the minimum spend before the deadline to earn the bonus.
+          </div>
+          <div class="tooltip-overlay__action">
+            The hunt is on -- pursue the welcome mead.
+          </div>
+        </div>
+      </div>
+
+      <!-- Closed -->
+      <div class="tooltip-row">
+        <div class="tooltip-trigger">Closed</div>
+        <div class="tooltip-overlay">
+          <div class="tooltip-overlay__label">Closed</div>
+          <div class="tooltip-overlay__meaning">
+            This card has been cancelled or closed. No further fees or rewards apply.
+          </div>
+          <div class="tooltip-overlay__action">
+            In Valhalla -- the chain is broken, rewards harvested.
+          </div>
+        </div>
+      </div>
+
+      <!-- Graduated -->
+      <div class="tooltip-row">
+        <div class="tooltip-trigger">Graduated</div>
+        <div class="tooltip-overlay">
+          <div class="tooltip-overlay__label">Graduated</div>
+          <div class="tooltip-overlay__meaning">
+            The minimum spend was met and the sign-up bonus was earned. This card has completed its primary mission.
+          </div>
+          <div class="tooltip-overlay__action">
+            The dragon's gold is yours -- Valhalla awaits.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note-block">
+      <strong>Implementation:</strong> Use a Tooltip component (e.g. Radix/shadcn Tooltip).<br>
+      <strong>Desktop:</strong> Show on hover with 200ms delay. Dismiss on mouse leave.<br>
+      <strong>Mobile:</strong> Show on tap. Dismiss on tap outside or after 3s timeout.<br>
+      <strong>Position:</strong> Below the badge by default; flip above if near viewport bottom.<br>
+      <strong>ARIA:</strong> Badge gets <code>aria-describedby</code> pointing to tooltip content.
+      Tooltip content is in a <code>role="tooltip"</code> element.<br>
+      <strong>Max width:</strong> 260px. Line 1 (bold label) + Line 2 (plain meaning) + Line 3 (italic Norse flavor).
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SCENARIO 8: MOBILE — THE HOWL TAB (375px)                    -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 8 — Mobile 375px: The Howl Tab with Header + Summary</div>
+
+    <div class="app-shell app-shell--mobile">
+      <nav class="tab-bar">
+        <div class="tab" style="font-size: 10px; padding: 8px 10px;">ALL</div>
+        <div class="tab" style="font-size: 10px; padding: 8px 10px;">VAL</div>
+        <div class="tab" style="font-size: 10px; padding: 8px 10px;">ACT</div>
+        <div class="tab" style="font-size: 10px; padding: 8px 10px;">HUNT</div>
+        <div class="tab tab--active" style="font-size: 10px; padding: 8px 10px;">HOWL</div>
+      </nav>
+
+      <div class="tab-panel">
+        <div class="tab-header" style="padding: 10px 12px;">
+          <div class="tab-header__content">
+            <div class="tab-header__title" style="font-size: 12px;">The Howl -- Where Chains Tighten</div>
+            <div class="tab-header__desc" style="font-size: 11px;">
+              Cards needing attention: fees approaching, promos expiring, or deadlines passed.
+            </div>
+            <!-- On mobile, statuses list is hidden to save space -->
+            <!-- p class="note">Status descriptions hidden on mobile; header text is sufficient.</p -->
+          </div>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide" style="min-width: 28px; min-height: 28px; font-size: 16px;">x</button>
+        </div>
+
+        <div class="tab-summary" style="padding: 8px 12px;">
+          <div class="tab-summary__content" style="font-size: 11px;">
+            <span class="tab-summary__stat">1 fee due</span>,
+            <span class="tab-summary__stat">1 promo expiring</span>
+          </div>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary" style="min-width: 24px; min-height: 24px; font-size: 12px;">x</button>
+        </div>
+
+        <div class="card-grid card-grid--mobile">
+          <div class="card-placeholder">[CardTile: Chase Sapphire]</div>
+          <div class="card-placeholder">[CardTile: Amex Gold]</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note-block">
+      <strong>Mobile adaptations:</strong><br>
+      - Tab labels may abbreviate on very narrow screens (handled by existing scrollable tab bar).<br>
+      - Header description is shortened on mobile (detail statuses list hidden; the header + summary provide enough context).<br>
+      - Dismiss buttons remain touch-friendly: min 44x44px touch target (visual size smaller, padding extends hit area).<br>
+      - Tooltip on mobile: tap to show, tap outside to dismiss.
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SCENARIO 9: HEADER DISMISSED, SUMMARY VISIBLE                -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 9 — Header Dismissed, Summary Still Visible (Active Tab)</div>
+    <p class="note">
+      After dismissing the header, only the summary sub-header remains.
+      The user still sees the dynamic card count summary.
+    </p>
+
+    <div class="app-shell">
+      <nav class="tab-bar">
+        <div class="tab">ALL</div>
+        <div class="tab">VALHALLA</div>
+        <div class="tab tab--active">ACTIVE</div>
+        <div class="tab">THE HUNT</div>
+        <div class="tab">THE HOWL</div>
+      </nav>
+
+      <div class="tab-panel">
+        <!-- Header is dismissed — not rendered -->
+
+        <div class="tab-summary">
+          <div class="tab-summary__content">
+            <span class="tab-summary__stat">5 active cards</span> in good standing
+          </div>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+        </div>
+
+        <div class="card-grid">
+          <div class="card-placeholder">[CardTile 1]</div>
+          <div class="card-placeholder">[CardTile 2]</div>
+          <div class="card-placeholder">[CardTile 3]</div>
+          <div class="card-placeholder">[CardTile 4]</div>
+          <div class="card-placeholder">[CardTile 5]</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SCENARIO 10: BOTH DISMISSED — CLEAN STATE                    -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 10 — Both Header and Summary Dismissed (Clean State)</div>
+    <p class="note">
+      Power users who dismiss both headers see just the tab bar + card grid.
+      This is the "veteran" layout — identical to the current design.
+    </p>
+
+    <div class="app-shell">
+      <nav class="tab-bar">
+        <div class="tab">ALL</div>
+        <div class="tab">VALHALLA</div>
+        <div class="tab tab--active">ACTIVE</div>
+        <div class="tab">THE HUNT</div>
+        <div class="tab">THE HOWL</div>
+      </nav>
+
+      <div class="tab-panel">
+        <div class="card-grid">
+          <div class="card-placeholder">[CardTile 1]</div>
+          <div class="card-placeholder">[CardTile 2]</div>
+          <div class="card-placeholder">[CardTile 3]</div>
+          <div class="card-placeholder">[CardTile 4]</div>
+          <div class="card-placeholder">[CardTile 5]</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SCENARIO 11: EMPTY STATE WITH HEADER (not yet dismissed)     -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 11 — Empty Tab with Header Visible (The Hunt)</div>
+    <p class="note">
+      When a tab is empty AND the header has not been dismissed,
+      both the header and the simple runic empty state appear.
+      The summary sub-header is NOT shown when the tab is empty
+      (there is nothing to summarize).
+    </p>
+
+    <div class="app-shell">
+      <nav class="tab-bar">
+        <div class="tab">ALL</div>
+        <div class="tab">VALHALLA</div>
+        <div class="tab">ACTIVE</div>
+        <div class="tab tab--active">THE HUNT <span class="tab-badge">0</span></div>
+        <div class="tab">THE HOWL</div>
+      </nav>
+
+      <div class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-header__content">
+            <div class="tab-header__title">The Hunt -- Pursue the Plunder</div>
+            <div class="tab-header__desc">
+              Cards with open sign-up bonus windows. You are actively hunting
+              the welcome mead -- track your spending progress and hit the
+              threshold before the deadline.
+            </div>
+            <div class="tab-header__statuses">
+              Status label in this tab:
+              <strong>Bonus Open</strong> -- sign-up bonus spending window is active
+            </div>
+          </div>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+        </div>
+
+        <!-- No summary sub-header when empty -->
+
+        <div class="empty-state">
+          <div class="empty-state__text">&#5852; No cards on the hunt &#5852;</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- COMPONENT SPEC: TabHeader                                     -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Component Spec — TabHeader</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Prop</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>tabId</code></td>
+          <td><code>DashboardTab</code></td>
+          <td>Which tab this header belongs to. Used to construct the localStorage key.</td>
+        </tr>
+        <tr>
+          <td><code>title</code></td>
+          <td><code>string</code></td>
+          <td>Bold header title (e.g. "The Howl -- Where Chains Tighten").</td>
+        </tr>
+        <tr>
+          <td><code>description</code></td>
+          <td><code>string</code></td>
+          <td>Explanation of the tab's purpose.</td>
+        </tr>
+        <tr>
+          <td><code>statuses</code></td>
+          <td><code>string</code></td>
+          <td>Description of card status labels found in this tab.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>Behavior</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Visible (default)</td>
+          <td>Rendered when <code>localStorage.getItem("fenrir:tab-header-dismissed:{tabId}")</code> is not <code>"true"</code>.</td>
+        </tr>
+        <tr>
+          <td>Dismissed</td>
+          <td>On dismiss click: set localStorage key to <code>"true"</code>, remove from DOM (no animation).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note-block">
+      <strong>Accessibility:</strong><br>
+      - Dismiss button: <code>aria-label="Dismiss tab guide"</code><br>
+      - Header container: no special ARIA role needed (it is informational content, not a landmark)<br>
+      - On mobile, the statuses line may be hidden (<code>hidden sm:block</code>) to save vertical space
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- COMPONENT SPEC: TabSummary                                    -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Component Spec — TabSummary</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Prop</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>tabId</code></td>
+          <td><code>DashboardTab</code></td>
+          <td>Which tab this summary belongs to. Used to construct the localStorage key.</td>
+        </tr>
+        <tr>
+          <td><code>cards</code></td>
+          <td><code>Card[]</code></td>
+          <td>The filtered cards for this tab. Summary text is computed from this array.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th>Tab</th>
+          <th>Summary Text Pattern</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ALL</td>
+          <td><code>{total} cards total: {active} active, {hunt} hunting, {howl} howling, {valhalla} in Valhalla</code></td>
+        </tr>
+        <tr>
+          <td>VALHALLA</td>
+          <td><code>{closed} closed, {graduated} graduated -- chains broken, plunder secured</code></td>
+        </tr>
+        <tr>
+          <td>ACTIVE</td>
+          <td><code>{count} active cards in good standing</code></td>
+        </tr>
+        <tr>
+          <td>THE HUNT</td>
+          <td><code>{count} cards with open bonus windows, {approaching} approaching deadline</code><br>(approaching = bonus deadline within 30 days)</td>
+        </tr>
+        <tr>
+          <td>THE HOWL</td>
+          <td><code>{fee} with fee due, {promo} promo expiring, {overdue} overdue</code><br>(omit zero-count segments)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>Behavior</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Visible (default)</td>
+          <td>Rendered when localStorage key is not <code>"true"</code> AND <code>cards.length > 0</code>.</td>
+        </tr>
+        <tr>
+          <td>Empty tab</td>
+          <td>Not rendered. When the tab has zero cards, there is nothing to summarize.</td>
+        </tr>
+        <tr>
+          <td>Dismissed</td>
+          <td>On dismiss click: set <code>fenrir:tab-summary-dismissed:{tabId}</code> to <code>"true"</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note-block">
+      <strong>Dynamic updates:</strong> The summary text recomputes whenever <code>cards</code> changes.
+      It always reflects the current state of the portfolio.<br>
+      <strong>Accessibility:</strong> Dismiss button: <code>aria-label="Dismiss tab summary"</code>.
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- COMPONENT SPEC: StatusTooltip                                 -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Component Spec — StatusTooltip</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Prop</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>status</code></td>
+          <td><code>CardStatus</code></td>
+          <td>The card status to describe.</td>
+        </tr>
+        <tr>
+          <td><code>children</code></td>
+          <td><code>ReactNode</code></td>
+          <td>The badge/trigger element to wrap.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Functional Meaning (Voice 1)</th>
+          <th>Norse Flavor (Voice 2)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>active</td>
+          <td>This card is open with no urgent deadlines. Rewards are flowing normally.</td>
+          <td>Asgard-bound -- no chains tighten here.</td>
+        </tr>
+        <tr>
+          <td>fee_approaching</td>
+          <td>The annual fee is due within 30 days. Decide whether to keep or close.</td>
+          <td>Muspelheim burns -- the fee-serpent approaches.</td>
+        </tr>
+        <tr>
+          <td>promo_expiring</td>
+          <td>A promotional rate on this card is ending soon.</td>
+          <td>Hati approaches -- the promo window narrows.</td>
+        </tr>
+        <tr>
+          <td>overdue</td>
+          <td>A deadline has already passed. The fee may have renewed or a promo expired.</td>
+          <td>Gleipnir tightens -- the chain was not broken in time.</td>
+        </tr>
+        <tr>
+          <td>bonus_open</td>
+          <td>The sign-up bonus spending window is active. Meet the minimum spend to earn the bonus.</td>
+          <td>The hunt is on -- pursue the welcome mead.</td>
+        </tr>
+        <tr>
+          <td>closed</td>
+          <td>This card has been cancelled or closed. No further fees or rewards apply.</td>
+          <td>In Valhalla -- the chain is broken, rewards harvested.</td>
+        </tr>
+        <tr>
+          <td>graduated</td>
+          <td>Minimum spend met. The sign-up bonus was earned.</td>
+          <td>The dragon's gold is yours -- Valhalla awaits.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note-block">
+      <strong>Implementation notes:</strong><br>
+      - Wrap the existing status badge in a shadcn/ui Tooltip component.<br>
+      - The tooltip content has 3 lines: bold label, plain meaning, italic Norse flavor.<br>
+      - Desktop: <code>delayDuration={200}</code>. Mobile: tap to toggle.<br>
+      - <code>role="tooltip"</code> on the content, <code>aria-describedby</code> on the trigger.<br>
+      - Max width: 260px. Z-index: 300 (toast layer — above cards/panels).
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- TAB HEADER CONTENT REFERENCE TABLE                            -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Reference — Tab Header Content per Tab</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Tab</th>
+          <th>Title</th>
+          <th>Description</th>
+          <th>Status Labels</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ALL</td>
+          <td>All Cards -- The Full Ledger</td>
+          <td>Every card in your portfolio, regardless of status. The complete record of every chain forged, every hunt begun, every warrior that earned its place in the hall.</td>
+          <td>Active | Fee Due Soon | Promo Expiring | Overdue | Bonus Open | Closed | Graduated</td>
+        </tr>
+        <tr>
+          <td>VALHALLA</td>
+          <td>Valhalla -- Hall of the Honored Dead</td>
+          <td>Cards that have completed their journey. Closed cards and cards that graduated after earning their sign-up bonus rest here. Their rewards were harvested. Their chains were broken.</td>
+          <td>Closed | Graduated</td>
+        </tr>
+        <tr>
+          <td>ACTIVE</td>
+          <td>Active Cards -- Asgard's Warriors</td>
+          <td>Cards in good standing with no urgent deadlines. These are your reliable earners -- rewards are flowing and no fees are imminent.</td>
+          <td>Active</td>
+        </tr>
+        <tr>
+          <td>THE HUNT</td>
+          <td>The Hunt -- Pursue the Plunder</td>
+          <td>Cards with open sign-up bonus windows. You are actively hunting the welcome mead -- track your spending progress and hit the threshold before the deadline.</td>
+          <td>Bonus Open</td>
+        </tr>
+        <tr>
+          <td>THE HOWL</td>
+          <td>The Howl -- Where Chains Tighten</td>
+          <td>Cards shown here demand your attention. Annual fees are approaching, promotional rates are expiring, or deadlines have already passed. These are the chains that will tighten if ignored.</td>
+          <td>Fee Due Soon | Promo Expiring | Overdue</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- EMPTY STATE CONTENT REFERENCE TABLE                           -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Reference — Empty State Text per Tab</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Tab</th>
+          <th>Rune</th>
+          <th>Empty State Text</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ALL</td>
+          <td>&#5765; (Othalan)</td>
+          <td>&#5765; No cards in the ledger &#5765;</td>
+        </tr>
+        <tr>
+          <td>VALHALLA</td>
+          <td>&#5848; (Tiwaz)</td>
+          <td>&#5848; No cards in Valhalla &#5848;</td>
+        </tr>
+        <tr>
+          <td>ACTIVE</td>
+          <td>&#5765; (Othalan)</td>
+          <td>&#5765; No active cards &#5765;</td>
+        </tr>
+        <tr>
+          <td>THE HUNT</td>
+          <td>&#5852; (Ingwaz)</td>
+          <td>&#5852; No cards on the hunt &#5852;</td>
+        </tr>
+        <tr>
+          <td>THE HOWL</td>
+          <td>&#5810; (Kenaz)</td>
+          <td>&#5810; No cards in the howl &#5810;</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note-block">
+      <strong>Rune selection rationale:</strong><br>
+      - ALL uses Othalan (&#5765;) -- heritage, the whole portfolio<br>
+      - VALHALLA uses Tiwaz (&#5848;) -- victory, justice (matches mythology-map.md)<br>
+      - ACTIVE uses Othalan (&#5765;) -- mirrors the tab's existing rune<br>
+      - THE HUNT uses Ingwaz (&#5852;) -- mirrors the tab's existing rune<br>
+      - THE HOWL uses Kenaz (&#5810;) -- fire, mirrors the tab's existing rune
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- LOCALSTORAGE KEY REFERENCE                                    -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Reference — localStorage Keys</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Value</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>fenrir:tab-header-dismissed:all</code></td>
+          <td><code>"true"</code></td>
+          <td>ALL tab header dismissed</td>
+        </tr>
+        <tr>
+          <td><code>fenrir:tab-header-dismissed:valhalla</code></td>
+          <td><code>"true"</code></td>
+          <td>VALHALLA tab header dismissed</td>
+        </tr>
+        <tr>
+          <td><code>fenrir:tab-header-dismissed:active</code></td>
+          <td><code>"true"</code></td>
+          <td>ACTIVE tab header dismissed</td>
+        </tr>
+        <tr>
+          <td><code>fenrir:tab-header-dismissed:hunt</code></td>
+          <td><code>"true"</code></td>
+          <td>THE HUNT tab header dismissed</td>
+        </tr>
+        <tr>
+          <td><code>fenrir:tab-header-dismissed:howl</code></td>
+          <td><code>"true"</code></td>
+          <td>THE HOWL tab header dismissed</td>
+        </tr>
+        <tr>
+          <td><code>fenrir:tab-summary-dismissed:all</code></td>
+          <td><code>"true"</code></td>
+          <td>ALL tab summary dismissed</td>
+        </tr>
+        <tr>
+          <td><code>fenrir:tab-summary-dismissed:valhalla</code></td>
+          <td><code>"true"</code></td>
+          <td>VALHALLA tab summary dismissed</td>
+        </tr>
+        <tr>
+          <td><code>fenrir:tab-summary-dismissed:active</code></td>
+          <td><code>"true"</code></td>
+          <td>ACTIVE tab summary dismissed</td>
+        </tr>
+        <tr>
+          <td><code>fenrir:tab-summary-dismissed:hunt</code></td>
+          <td><code>"true"</code></td>
+          <td>THE HUNT tab summary dismissed</td>
+        </tr>
+        <tr>
+          <td><code>fenrir:tab-summary-dismissed:howl</code></td>
+          <td><code>"true"</code></td>
+          <td>THE HOWL tab summary dismissed</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note-block">
+      <strong>Namespace:</strong> All keys use the <code>fenrir:</code> prefix per project convention.<br>
+      <strong>Pattern:</strong> <code>fenrir:tab-{header|summary}-dismissed:{tabId}</code><br>
+      <strong>Clearing:</strong> No UI to un-dismiss. Users would need to clear localStorage manually
+      or the app could add a "Reset tips" option in Settings (future consideration).
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- ACCESSIBILITY REQUIREMENTS                                    -->
+  <!-- ============================================================ -->
+  <section class="scenario">
+    <div class="scenario-label">Accessibility Requirements</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Element</th>
+          <th>Requirement</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Tab header dismiss button</td>
+          <td><code>aria-label="Dismiss tab guide"</code>. Touch target: min 44x44px (visual size can be smaller with extended padding).</td>
+        </tr>
+        <tr>
+          <td>Tab summary dismiss button</td>
+          <td><code>aria-label="Dismiss tab summary"</code>. Same touch target requirement.</td>
+        </tr>
+        <tr>
+          <td>Status badge tooltip</td>
+          <td><code>role="tooltip"</code> on content. Trigger gets <code>aria-describedby</code>. Tooltip dismissible via Escape key.</td>
+        </tr>
+        <tr>
+          <td>Empty state runes</td>
+          <td>Runes are decorative. The text between them carries the semantic meaning. No <code>aria-hidden</code> needed since the runes are inline with the text and screen readers will read the full string.</td>
+        </tr>
+        <tr>
+          <td>Tab header content</td>
+          <td>No ARIA landmark needed. Content is informational, not a navigation or region landmark.</td>
+        </tr>
+        <tr>
+          <td>Focus management on dismiss</td>
+          <td>After dismissing header: focus moves to the first focusable element in the tab panel (summary dismiss button, or first card). After dismissing summary: focus moves to the first card.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+</body>
+</html>

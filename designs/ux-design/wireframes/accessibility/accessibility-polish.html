@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Accessibility + UX Polish — Story 4.4</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 4px; }
+    .label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .scenario { margin-bottom: 48px; }
+    .scenario-title { font-size: 16px; font-weight: bold; border-bottom: 2px solid; padding-bottom: 8px; margin-bottom: 16px; }
+    .scenario-subtitle { font-size: 12px; margin-bottom: 12px; }
+
+    /* Spec boxes */
+    .spec-box { border: 1px solid; padding: 16px; margin-bottom: 24px; }
+    .spec-title { font-weight: bold; margin-bottom: 12px; }
+
+    /* Tables */
+    table { border-collapse: collapse; width: 100%; margin-bottom: 12px; }
+    th, td { border: 1px solid; padding: 6px 10px; font-size: 12px; text-align: left; vertical-align: top; }
+    th { font-weight: bold; }
+
+    /* Focus ring demo */
+    .focus-demo { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+    .focus-example { border: 1px solid; padding: 12px; text-align: center; min-width: 120px; }
+    .focus-label { font-size: 11px; margin-top: 8px; }
+    .btn-unfocused { border: 1px solid; padding: 8px 16px; cursor: pointer; }
+    .btn-focused { border: 3px solid; padding: 8px 16px; cursor: pointer; outline-offset: 3px; }
+
+    /* Skip nav spec */
+    .skip-nav-demo { border: 1px solid; margin-bottom: 16px; }
+    .skip-nav-bar { border-bottom: 2px dashed; padding: 8px 16px; font-size: 12px; display: flex; align-items: center; gap: 16px; }
+    .skip-nav-link { border: 1px solid; padding: 4px 10px; font-size: 12px; font-weight: bold; }
+
+    /* Page shell (mini) */
+    .mini-shell { border: 1px solid; }
+    .mini-topbar { height: 48px; border-bottom: 1px solid; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+    .mini-body { display: flex; }
+    .mini-sidebar { width: 200px; border-right: 1px solid; padding: 12px; font-size: 12px; }
+    .mini-main { flex: 1; padding: 12px; font-size: 12px; }
+
+    /* Touch target audit */
+    .touch-target-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .touch-target-item { border: 1px solid; padding: 12px; }
+    .touch-target-name { font-weight: bold; font-size: 12px; margin-bottom: 4px; }
+    .touch-target-current { font-size: 11px; font-family: monospace; margin-bottom: 4px; }
+    .touch-target-required { font-size: 11px; font-weight: bold; }
+    .touch-target-status { border: 1px solid; padding: 2px 6px; font-size: 10px; display: inline-block; margin-top: 4px; }
+
+    /* Heading hierarchy diagram */
+    .heading-tree { font-family: monospace; font-size: 12px; line-height: 1.8; border: 1px solid; padding: 12px; margin-bottom: 12px; }
+
+    /* ARIA landmarks diagram */
+    .landmark-diagram { border: 2px solid; padding: 0; }
+    .landmark-row { border-bottom: 1px solid; padding: 6px 12px; font-size: 12px; display: flex; gap: 12px; align-items: center; }
+    .landmark-row:last-child { border-bottom: none; }
+    .landmark-tag { font-family: monospace; font-size: 11px; border: 1px solid; padding: 1px 6px; flex-shrink: 0; }
+    .landmark-role { font-size: 11px; border: 1px dashed; padding: 1px 6px; flex-shrink: 0; }
+
+    /* Mobile viewport */
+    .mobile-viewport { width: 375px; border: 2px solid; position: relative; overflow: hidden; }
+
+    /* Reduced motion spec */
+    .animation-table { border: 1px solid; padding: 12px; margin-bottom: 16px; }
+
+    /* Section separator */
+    .section-separator { border-top: 2px solid; margin: 32px 0; }
+
+    /* Annotation box */
+    .annotation { border: 1px dashed; padding: 8px 12px; font-size: 11px; margin-top: 8px; }
+
+    /* Modal focus trap diagram */
+    .focus-trap-diagram { border: 1px solid; padding: 16px; margin-bottom: 16px; }
+    .focus-trap-inner { border: 2px dashed; padding: 12px; }
+    .focusable-item { border: 1px solid; padding: 6px 10px; font-size: 12px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .tab-order { font-size: 10px; border: 1px solid; padding: 1px 4px; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <div style="padding: 24px;">
+
+    <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">
+      Story 4.4 — Accessibility + UX Polish Pass
+    </h1>
+    <p class="note" style="margin-bottom: 24px;">
+      Wireframe specifies: focus ring design, skip-nav placement, ARIA landmark hierarchy,
+      heading hierarchy per page, touch target audit, and reduced-motion animation requirements.
+      This story enforces existing team norms — minimum 375px viewport, 44x44px touch targets, WCAG AA.
+    </p>
+
+    <!-- ═══════════════════════════════════════════════
+         SECTION 1: FOCUS RING SPEC
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Focus Ring Specification</div>
+
+      <div class="spec-box">
+        <div class="spec-title">Focus Ring Design Tokens</div>
+        <table>
+          <tr>
+            <th>Property</th>
+            <th>Value</th>
+            <th>Token / Note</th>
+          </tr>
+          <tr>
+            <td>Outline style</td>
+            <td>2px solid</td>
+            <td>Gold accent (#c9920a)</td>
+          </tr>
+          <tr>
+            <td>Outline offset</td>
+            <td>2px</td>
+            <td>Avoids clipping inside bordered containers</td>
+          </tr>
+          <tr>
+            <td>Border radius</td>
+            <td>Match element radius (0.25rem default)</td>
+            <td>--radius from theme-system.md</td>
+          </tr>
+          <tr>
+            <td>Applies to</td>
+            <td>All interactive elements: buttons, links, inputs, selects, role="button"</td>
+            <td>:focus-visible (not :focus — suppressed on mouse click)</td>
+          </tr>
+          <tr>
+            <td>High contrast</td>
+            <td>@media (forced-colors: active) — use Highlight keyword</td>
+            <td>Windows High Contrast mode compatibility</td>
+          </tr>
+        </table>
+        <p class="note">
+          Use :focus-visible not :focus. This suppresses the ring on mouse click
+          while preserving it for keyboard navigation. Critical for visual design — gold ring
+          on mouse-focused elements would feel cluttered.
+        </p>
+      </div>
+
+      <div class="focus-demo">
+        <div class="focus-example">
+          <div class="btn-unfocused">Add Card</div>
+          <div class="focus-label">Default (no ring)</div>
+        </div>
+        <div class="focus-example">
+          <div class="btn-focused" style="outline: 2px solid; outline-offset: 2px;">Add Card</div>
+          <div class="focus-label">:focus-visible (keyboard tab)</div>
+        </div>
+        <div class="focus-example">
+          <div style="border: 1px solid; padding: 6px 8px; font-size: 13px; outline: 2px solid; outline-offset: 2px; width: 160px;">Chase Sapphire</div>
+          <div class="focus-label">Input :focus-visible</div>
+        </div>
+        <div class="focus-example">
+          <a href="#" style="text-decoration: underline; outline: 2px solid; outline-offset: 2px;">View</a>
+          <div class="focus-label">Link :focus-visible</div>
+        </div>
+        <div class="focus-example">
+          <!-- SyncIndicator (small dot) — enlarged focus ring -->
+          <div style="width: 10px; height: 10px; border-radius: 50%; border: 1px solid; display: inline-block; outline: 2px solid; outline-offset: 4px;"></div>
+          <div class="focus-label">SyncIndicator dot<br>:focus-visible<br>(larger offset needed for small target)</div>
+        </div>
+      </div>
+
+      <!-- SyncIndicator keyboard accessibility -->
+      <div class="spec-box">
+        <div class="spec-title">SyncIndicator Keyboard Accessibility</div>
+        <p style="font-size: 12px; margin-bottom: 6px;">
+          The SyncIndicator dot (Fragment 1 trigger, bottom-right of viewport) must be keyboard-accessible.
+        </p>
+        <table>
+          <tr><th>Property</th><th>Required Value</th></tr>
+          <tr><td>tabIndex</td><td>0</td></tr>
+          <tr><td>role</td><td>"button" (or &lt;button&gt; element)</td></tr>
+          <tr><td>aria-label</td><td>"Sync status" (not the easter egg copy — that is revealed on interaction)</td></tr>
+          <tr><td>Enter / Space</td><td>Fires same handler as click</td></tr>
+          <tr><td>Minimum touch target</td><td>44x44px effective area via padding</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         SECTION 2: SKIP NAV LINK
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Skip Navigation Link Placement</div>
+      <p class="scenario-subtitle">
+        A "skip to main content" link is the first focusable element on every page.
+        Visually hidden until focused — then appears above the TopBar.
+        This is the primary accessibility mechanism for keyboard users to bypass repeated navigation.
+      </p>
+
+      <div class="skip-nav-demo">
+        <!-- Skip nav appears above everything when focused -->
+        <div class="skip-nav-bar">
+          <span style="font-size: 11px; font-weight: bold;">Tab ▶</span>
+          <a href="#main-content" class="skip-nav-link">Skip to main content</a>
+          <span class="note">Visually hidden until :focus-visible. Position: absolute, top: 0, z: 9999.</span>
+        </div>
+        <!-- Then the normal topbar -->
+        <div class="mini-shell">
+          <div class="mini-topbar">
+            <span>ᛟ FENRIR LEDGER</span>
+            <span>ᛟ</span>
+          </div>
+          <div class="mini-body">
+            <nav class="mini-sidebar">
+              <p>Nav links (Tab order 2, 3, 4...)</p>
+            </nav>
+            <main class="mini-main" id="main-content">
+              <p>[main content — skip link jumps here]</p>
+            </main>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec-box">
+        <div class="spec-title">Skip Link CSS Pattern</div>
+        <pre style="font-family: monospace; font-size: 12px; border: 1px solid; padding: 10px; line-height: 1.6; overflow-x: auto;">
+/* Skip to main content — visually hidden, shown on focus */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 8px 16px;
+  /* theme: background forge-surface, border gold-accent, text text-saga */
+  transition: top 150ms ease-out;
+}
+.skip-link:focus-visible {
+  top: 8px;  /* animates into view */
+}
+        </pre>
+        <p class="note">
+          Target: &lt;main id="main-content"&gt; — already in the page shell.
+          The HowlPanel is reached via normal Tab order (it is in the DOM flow on desktop).
+        </p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         SECTION 3: ARIA LANDMARK + HEADING HIERARCHY
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">ARIA Landmark + Heading Hierarchy — Dashboard Page</div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <!-- ARIA Landmarks -->
+        <div>
+          <div class="spec-title">ARIA Landmarks (Dashboard)</div>
+          <div class="landmark-diagram">
+            <div class="landmark-row" style="font-weight: bold; border-bottom: 2px solid;">
+              <span>Element</span><span>Role</span><span>aria-label</span>
+            </div>
+            <div class="landmark-row">
+              <span class="landmark-tag">&lt;header&gt;</span>
+              <span class="landmark-role">banner</span>
+              <span style="font-size: 11px;">implicit</span>
+            </div>
+            <div class="landmark-row">
+              <span class="landmark-tag">&lt;nav&gt;</span>
+              <span class="landmark-role">navigation</span>
+              <span style="font-size: 11px;">"Site navigation"</span>
+            </div>
+            <div class="landmark-row">
+              <span class="landmark-tag">&lt;main&gt;</span>
+              <span class="landmark-role">main</span>
+              <span style="font-size: 11px;">implicit</span>
+            </div>
+            <div class="landmark-row">
+              <span class="landmark-tag">&lt;aside&gt; (HowlPanel)</span>
+              <span class="landmark-role">complementary</span>
+              <span style="font-size: 11px;">"Urgent deadlines"</span>
+            </div>
+            <div class="landmark-row">
+              <span class="landmark-tag">&lt;footer&gt;</span>
+              <span class="landmark-role">contentinfo</span>
+              <span style="font-size: 11px;">"App footer"</span>
+            </div>
+          </div>
+          <p class="note">All 6 landmark roles present. Screen reader users can jump between landmarks.</p>
+        </div>
+
+        <!-- Heading hierarchy -->
+        <div>
+          <div class="spec-title">Heading Hierarchy — Dashboard</div>
+          <div class="heading-tree">
+h1 — (page, not visible — for SR only or TopBar brand)
+  h2 — "The Ledger of Fates" [page title, content header]
+    h3 — [card issuer name] (per card in grid)
+      h4 — [card name below issuer] (if needed)
+  h2 — "The Howl" [HowlPanel header]
+          </div>
+          <div class="spec-title" style="margin-top: 12px;">Heading Hierarchy — Valhalla</div>
+          <div class="heading-tree">
+h1 — (page, TopBar brand or visually hidden)
+  h2 — "Valhalla — Hall of the Honored Dead" [page title]
+    h3 — [card name in tombstone card]
+  h2 — "Gleipnir" [special entry, if visible]
+          </div>
+          <p class="note">h1 must not be skipped. If TopBar brand = h1, page titles = h2.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         SECTION 4: MODAL FOCUS TRAP
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Modal Focus Trap — Required for All Dialogs</div>
+      <p class="scenario-subtitle">
+        Every modal/dialog must: trap focus inside while open, close on Escape,
+        return focus to the trigger element on close. Radix UI Dialog handles this
+        by default — verify it is working correctly for all 8 modal instances.
+      </p>
+
+      <div class="spec-box">
+        <div class="spec-title">Focus Trap Verification Checklist</div>
+        <table>
+          <tr>
+            <th>Modal</th>
+            <th>Trigger Element (focus returns here on close)</th>
+            <th>Escape behavior</th>
+            <th>Tab cycles through</th>
+          </tr>
+          <tr>
+            <td>About modal</td>
+            <td>Fenrir logo button (TopBar) OR "ᛟ FENRIR LEDGER" footer button</td>
+            <td>Closes</td>
+            <td>× close + content links + Close button</td>
+          </tr>
+          <tr>
+            <td>ForgeMasterEgg (? key)</td>
+            <td>Previously focused element (document.activeElement before open)</td>
+            <td>Closes</td>
+            <td>× close + OK button</td>
+          </tr>
+          <tr>
+            <td>All 6 Gleipnir fragment modals</td>
+            <td>The trigger element that opened the modal</td>
+            <td>Closes</td>
+            <td>× close + OK button</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Focus trap diagram for the About modal -->
+      <div class="focus-trap-diagram">
+        <div class="spec-title">About Modal — Focus Trap Tab Order</div>
+        <div style="font-size: 11px; margin-bottom: 8px;">[Backdrop — not focusable. Click closes.]</div>
+        <div class="focus-trap-inner">
+          <div style="font-size: 11px; font-weight: bold; margin-bottom: 8px;">Tab cycles within this boundary:</div>
+          <div class="focusable-item">
+            <span>× Close button (top-right)</span>
+            <span class="tab-order">Tab 1 (first focus on open)</span>
+          </div>
+          <div class="focusable-item">
+            <span>Wolf logo button (if interactive)</span>
+            <span class="tab-order">Tab 2</span>
+          </div>
+          <div class="focusable-item">
+            <span>Team member links (if any)</span>
+            <span class="tab-order">Tab 3–6</span>
+          </div>
+          <div class="focusable-item">
+            <span>Gleipnir ingredient text (Fragment 2 trigger)</span>
+            <span class="tab-order">Tab 7</span>
+          </div>
+          <div class="focusable-item">
+            <span>[Close] button (footer)</span>
+            <span class="tab-order">Tab 8 → cycles back to Tab 1</span>
+          </div>
+        </div>
+        <p class="note">On modal open: focus moves to × close button. On Escape or close: focus returns to trigger.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         SECTION 5: TOUCH TARGET AUDIT
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Touch Target Audit — 44x44px Minimum</div>
+      <p class="scenario-subtitle">
+        Per team norms (memory/team-norms.md): minimum touch target is 44x44px.
+        Effective area can be achieved via padding, ::after pseudo-elements, or wrapper divs.
+        Visual size and effective touch target can differ.
+      </p>
+
+      <div class="touch-target-grid">
+        <div class="touch-target-item">
+          <div class="touch-target-name">© copyright symbol (Fragment 5 trigger)</div>
+          <div class="touch-target-current">Visual: ~12x16px</div>
+          <div class="touch-target-required">Required: 44x44px effective area</div>
+          <div class="touch-target-status">IMPLEMENTED: px-2 py-3 -my-3 -mx-2 (Footer.tsx)</div>
+          <p class="note">Already correct — verify on 375px mobile.</p>
+        </div>
+        <div class="touch-target-item">
+          <div class="touch-target-name">"Loki" text (Loki Mode trigger)</div>
+          <div class="touch-target-current">Visual: ~28x16px</div>
+          <div class="touch-target-required">Required: 44x44px effective area</div>
+          <div class="touch-target-status">IMPLEMENTED: px-2 py-3 -my-3 -mx-2 (Footer.tsx)</div>
+          <p class="note">Already correct — verify on 375px mobile.</p>
+        </div>
+        <div class="touch-target-item">
+          <div class="touch-target-name">SyncIndicator dot (Fragment 1 trigger)</div>
+          <div class="touch-target-current">Visual: ~10x10px</div>
+          <div class="touch-target-required">Required: 44x44px effective area</div>
+          <div class="touch-target-status">AUDIT REQUIRED — verify padding in SyncIndicator.tsx</div>
+          <p class="note">Use padding or invisible expanded hit area via ::after.</p>
+        </div>
+        <div class="touch-target-item">
+          <div class="touch-target-name">HowlPanel "View" link per urgent card</div>
+          <div class="touch-target-current">Visual: ~30x16px</div>
+          <div class="touch-target-required">Required: 44x44px effective area</div>
+          <div class="touch-target-status">AUDIT REQUIRED — add padding if insufficient</div>
+        </div>
+        <div class="touch-target-item">
+          <div class="touch-target-name">Sidebar collapse toggle button</div>
+          <div class="touch-target-current">Visual: depends on implementation</div>
+          <div class="touch-target-required">Required: 44x44px minimum</div>
+          <div class="touch-target-status">AUDIT REQUIRED</div>
+        </div>
+        <div class="touch-target-item">
+          <div class="touch-target-name">Add Card button</div>
+          <div class="touch-target-current">Visual: ~32px height via h-8 / h-10</div>
+          <div class="touch-target-required">Required: 44x44px minimum</div>
+          <div class="touch-target-status">AUDIT REQUIRED — increase height to h-11 (44px) on mobile</div>
+        </div>
+        <div class="touch-target-item">
+          <div class="touch-target-name">Card tile "View Record" / "···" actions</div>
+          <div class="touch-target-current">Visual: depends on implementation</div>
+          <div class="touch-target-required">Required: 44x44px</div>
+          <div class="touch-target-status">AUDIT REQUIRED</div>
+        </div>
+        <div class="touch-target-item">
+          <div class="touch-target-name">HowlPanel mobile close button</div>
+          <div class="touch-target-current">Visual: text "Close" — small</div>
+          <div class="touch-target-required">Required: 44x44px</div>
+          <div class="touch-target-status">AUDIT REQUIRED — add padding per AnimatedHowlPanel close btn</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         SECTION 6: MOBILE LAYOUT 375PX
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Mobile Layout — 375px Minimum Width</div>
+      <p class="scenario-subtitle">
+        Every page must render without horizontal overflow at 375px viewport width.
+        HowlPanel must render as a bottom drawer on mobile — not a fixed sidebar.
+      </p>
+
+      <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+
+        <!-- Dashboard 375px -->
+        <div>
+          <span class="label" style="display: block; margin-bottom: 8px;">Dashboard — 375px</span>
+          <div class="mobile-viewport" style="height: 600px; position: relative; overflow: hidden;">
+
+            <!-- TopBar -->
+            <div style="height: 56px; border-bottom: 1px solid; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; flex-shrink: 0;">
+              <span style="font-weight: bold; font-size: 11px;">ᛟ FENRIR LEDGER</span>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <!-- Mobile: hamburger + bell -->
+                <button style="border: 1px solid; width: 36px; height: 36px; font-size: 16px; display: flex; align-items: center; justify-content: center;">☰</button>
+                <button style="border: 1px solid; width: 36px; height: 36px; font-size: 14px; display: flex; align-items: center; justify-content: center;">🔔</button>
+                <div style="width: 32px; height: 32px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 11px;">ᛟ</div>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 12px; overflow-y: auto; height: calc(600px - 56px - 40px);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h2 style="font-size: 15px; font-weight: bold;">The Ledger of Fates</h2>
+                <button style="border: 1px solid; padding: 6px 12px; font-size: 12px; height: 44px;">Add Card ▶</button>
+              </div>
+
+              <div style="border: 1px solid; padding: 8px 12px; margin-bottom: 12px; font-size: 12px;">
+                <strong>2</strong> cards · <strong>1</strong> needs attention
+              </div>
+
+              <!-- 1-col card grid on mobile -->
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="border: 1px solid; padding: 12px;">
+                  <div style="display: flex; gap: 10px;">
+                    <div style="width: 40px; height: 40px; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0;">ᚺ</div>
+                    <div>
+                      <div style="font-size: 13px; font-weight: bold;">Chase</div>
+                      <div style="font-size: 12px;">Sapphire Preferred</div>
+                      <div style="font-size: 11px; font-family: monospace; margin-top: 4px;">22 days · $95 fee</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="border: 1px solid; padding: 12px;">
+                  <div style="display: flex; gap: 10px;">
+                    <div style="width: 40px; height: 40px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0;">ᛊ</div>
+                    <div>
+                      <div style="font-size: 13px; font-weight: bold;">Amex</div>
+                      <div style="font-size: 12px;">Gold Card</div>
+                      <div style="font-size: 11px; font-family: monospace; margin-top: 4px;">Active · 280 days</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="height: 40px; border-top: 1px solid; padding: 0 12px; display: flex; align-items: center; font-size: 10px; position: absolute; bottom: 0; left: 0; right: 0;">
+              ᛟ FENRIR LEDGER · Break free.
+            </div>
+          </div>
+          <div class="annotation">
+            No horizontal overflow. Sidebar hidden (hamburger toggle).
+            Card grid is 1-column. TopBar at full width. Footer below content.
+          </div>
+        </div>
+
+        <!-- HowlPanel mobile: bottom drawer -->
+        <div>
+          <span class="label" style="display: block; margin-bottom: 8px;">HowlPanel — Mobile Bottom Drawer</span>
+          <div class="mobile-viewport" style="height: 600px; position: relative; overflow: hidden;">
+
+            <div style="height: 56px; border-bottom: 1px solid; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; font-size: 12px;">
+              <span style="font-weight: bold; font-size: 11px;">ᛟ FENRIR LEDGER</span>
+              <div style="display: flex; gap: 8px;">
+                <button style="border: 1px solid; width: 36px; height: 36px; font-size: 16px; display: flex; align-items: center; justify-content: center;">☰</button>
+                <button style="border: 2px solid; width: 36px; height: 36px; font-size: 14px; display: flex; align-items: center; justify-content: center;">🔔</button>
+              </div>
+            </div>
+
+            <!-- Blurred dashboard content behind -->
+            <div style="padding: 12px; height: calc(600px - 56px); position: relative; opacity: 0.4;">
+              <p style="font-size: 12px;">Dashboard content (dimmed when drawer open)</p>
+            </div>
+
+            <!-- Mobile backdrop -->
+            <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.3); z-index: 40; top: 56px;"></div>
+
+            <!-- Bottom drawer — max 70vh -->
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; z-index: 50; border: 1px solid; border-bottom: none; max-height: 300px; overflow-y: auto;">
+              <!-- Close button — 44x44 touch target -->
+              <div style="position: relative; border-bottom: 1px solid; padding: 10px 16px; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;">ᚲ</span>
+                <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; flex: 1;">The Howl</span>
+                <span style="font-size: 11px; border: 1px solid; padding: 2px 6px; font-family: monospace;">1</span>
+                <button style="border: 1px solid; padding: 0; width: 44px; height: 44px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: bold;" aria-label="Close urgent panel">✕</button>
+              </div>
+              <div style="padding: 12px 16px; border-bottom: 1px solid;">
+                <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 4px;">
+                  <span style="width: 8px; height: 8px; border: 1px solid; border-radius: 50%; display: inline-block;"></span>
+                  <span style="font-size: 11px; text-transform: uppercase;">Annual Fee</span>
+                  <span style="font-size: 11px; font-family: monospace; font-weight: bold; margin-left: auto;">22 days</span>
+                </div>
+                <p style="font-size: 12px; font-weight: bold;">Sapphire Preferred</p>
+                <p style="font-size: 11px; margin-bottom: 4px;">Chase · Mar 15, 2026 · $95</p>
+                <a href="#" style="font-size: 11px; text-decoration: underline;">View</a>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">
+            HowlPanel renders as bottom sheet (max-h-[70vh]) when mobileOpen=true.
+            Backdrop dims content. Close button: 44x44px. Drawer slides in from bottom.
+            Does NOT narrow the content column. AnimatedHowlPanel already implements this.
+          </div>
+        </div>
+
+        <!-- Toast positioning on mobile -->
+        <div>
+          <span class="label" style="display: block; margin-bottom: 8px;">Toast on Mobile — Must Not Overlap TopBar</span>
+          <div class="mobile-viewport" style="height: 300px; position: relative;">
+            <div style="height: 56px; border-bottom: 1px solid; padding: 0 16px; display: flex; align-items: center; font-size: 12px; font-weight: bold;">
+              ᛟ FENRIR LEDGER
+            </div>
+            <div style="padding: 12px; font-size: 12px;">
+              <p>Dashboard content</p>
+            </div>
+            <!-- Toast: bottom positioned on mobile -->
+            <div style="position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 300; border: 1px solid; padding: 10px 12px; font-size: 12px; display: flex; gap: 8px; align-items: flex-start;">
+              <span style="font-size: 16px; flex-shrink: 0;">ᚠ</span>
+              <span style="font-style: italic;">The first chain is forged. Fenrir stirs.</span>
+            </div>
+          </div>
+          <div class="annotation">
+            Toast anchors BOTTOM on mobile. Never overlaps TopBar.
+            For Desktop: anchors top-right (below TopBar) per card-count-milestones.html.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         SECTION 7: SCREEN READER — ARIA LABELS
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Screen Reader — ARIA Labels for Status Components</div>
+
+      <div class="spec-box">
+        <div class="spec-title">StatusBadge and StatusRing aria-label Requirements</div>
+        <table>
+          <tr>
+            <th>Component</th>
+            <th>Current State</th>
+            <th>Required aria-label</th>
+            <th>Additional</th>
+          </tr>
+          <tr>
+            <td>StatusBadge</td>
+            <td>Renders text like "Active" or "Fee Due Soon"</td>
+            <td>aria-label="Card status: [plain English]. [N] days remaining"<br>e.g. "Card status: Fee Due Soon — 14 days remaining"</td>
+            <td>Add role="status" if badge updates dynamically</td>
+          </tr>
+          <tr>
+            <td>StatusRing (SVG)</td>
+            <td>Visual progress ring only</td>
+            <td>&lt;title&gt; inside SVG: "[N] days remaining until [fee/promo deadline]"<br>OR aria-label on wrapper</td>
+            <td>role="img" on the SVG wrapper</td>
+          </tr>
+          <tr>
+            <td>Rune characters (decorative)</td>
+            <td>Mixed — some have aria-hidden, some do not</td>
+            <td>aria-hidden="true" on ALL decorative rune spans</td>
+            <td>Search codebase for &lt;span&gt;ᚠ&lt;/span&gt; pattern — audit all occurrences</td>
+          </tr>
+          <tr>
+            <td>HowlPanel urgency dot</td>
+            <td>Colored dot, no label</td>
+            <td>aria-hidden="true" (dot is decorative — type label already present)</td>
+            <td>Type label ("Annual Fee") provides the screen reader information</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         SECTION 8: REDUCED MOTION
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Reduced Motion Support — prefers-reduced-motion: reduce</div>
+      <p class="scenario-subtitle">
+        When the user has opted into reduced motion in their OS settings, all CSS keyframe
+        animations and Framer Motion transitions must be suppressed or significantly reduced.
+        Content must still appear — just without movement or flashing.
+      </p>
+
+      <div class="spec-box">
+        <div class="spec-title">Animations to Suppress Under Reduced Motion</div>
+        <table>
+          <tr>
+            <th>Animation Name</th>
+            <th>Where Used</th>
+            <th>Reduced Motion Treatment</th>
+          </tr>
+          <tr>
+            <td>saga-enter</td>
+            <td>Page load stagger on card grid</td>
+            <td>animation: none; opacity: 1; transform: none (immediate show)</td>
+          </tr>
+          <tr>
+            <td>saga-shimmer (skeleton)</td>
+            <td>Loading skeletons</td>
+            <td>animation: none (static grey skeleton is fine)</td>
+          </tr>
+          <tr>
+            <td>muspel-pulse</td>
+            <td>StatusRing urgent pulse (≤30 days)</td>
+            <td>animation: none (ring still shows — just static)</td>
+          </tr>
+          <tr>
+            <td>wolf-rise</td>
+            <td>KonamiHowl wolf silhouette</td>
+            <td>animation: none; FENRIR AWAKENS band still shows for 3s</td>
+          </tr>
+          <tr>
+            <td>saga-shake</td>
+            <td>Body shake on Konami trigger</td>
+            <td>Skip entirely — no shake</td>
+          </tr>
+          <tr>
+            <td>raven-warn</td>
+            <td>HowlPanel header shake on new urgent card</td>
+            <td>animation: none — header still updates</td>
+          </tr>
+          <tr>
+            <td>gleipnir-shimmer</td>
+            <td>html.gleipnir-complete on unlock</td>
+            <td>animation: none — Valhalla entry still appears</td>
+          </tr>
+          <tr>
+            <td>Framer Motion (card grid)</td>
+            <td>AnimatedCardGrid enter/exit</td>
+            <td>useReducedMotion() → skip AnimatePresence transitions (immediate mount/unmount)</td>
+          </tr>
+          <tr>
+            <td>Ragnarök overlay transition</td>
+            <td>Opacity fade 1.2s / 0.8s</td>
+            <td>Reduce to instant (transition: none) — overlay still appears/disappears</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="spec-box">
+        <div class="spec-title">CSS Pattern — globals.css addition</div>
+        <pre style="font-family: monospace; font-size: 12px; border: 1px solid; padding: 10px; line-height: 1.6; overflow-x: auto;">
+@media (prefers-reduced-motion: reduce) {
+  /* Suppress staggered reveal */
+  .saga-reveal > * {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  /* Suppress urgency pulse */
+  .ring--urgent {
+    animation: none;
+  }
+  /* Suppress skeleton shimmer */
+  .skeleton {
+    animation: none;
+    background: #1e2235; /* static rune-border color */
+  }
+  /* Suppress Gleipnir shimmer */
+  html.gleipnir-complete {
+    animation: none;
+  }
+  /* Ragnarok overlay — instant transition */
+  .ragnarok-overlay {
+    transition: none;
+  }
+}
+        </pre>
+      </div>
+
+      <div class="spec-box">
+        <div class="spec-title">Framer Motion Pattern — AnimatedCardGrid</div>
+        <pre style="font-family: monospace; font-size: 12px; border: 1px solid; padding: 10px; line-height: 1.6; overflow-x: auto;">
+import { useReducedMotion } from 'framer-motion';
+
+function AnimatedCardGrid({ cards }) {
+  const shouldReduce = useReducedMotion();
+
+  return (
+    &lt;AnimatePresence initial={false}&gt;
+      {cards.map(card =&gt; (
+        &lt;motion.div
+          key={card.id}
+          initial={shouldReduce ? false : { opacity: 0, scale: 0.96, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={shouldReduce ? {} : { opacity: 0, scale: 0.94, y: -4 }}
+          transition={shouldReduce ? { duration: 0 } : { duration: 0.35 }}
+        &gt;
+          &lt;CardChain card={card} /&gt;
+        &lt;/motion.div&gt;
+      ))}
+    &lt;/AnimatePresence&gt;
+  );
+}
+        </pre>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         SECTION 9: FOCUS MANAGEMENT AFTER CARD ACTIONS
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">Focus Management — After Card Add / Edit / Close</div>
+
+      <div class="spec-box">
+        <div class="spec-title">Post-Action Focus Destinations</div>
+        <table>
+          <tr>
+            <th>User Action</th>
+            <th>Focus Should Move To</th>
+            <th>Implementation Note</th>
+          </tr>
+          <tr>
+            <td>Successful card add</td>
+            <td>The newly created card tile (first focusable element inside it)</td>
+            <td>After grid re-renders, ref.focus() on the new card. Fallback: "Add Card" button.</td>
+          </tr>
+          <tr>
+            <td>Successful card edit</td>
+            <td>The updated card tile (same card, now refreshed)</td>
+            <td>cardId is known — query DOM by data-card-id after save, then focus.</td>
+          </tr>
+          <tr>
+            <td>Card sent to Valhalla (closed)</td>
+            <td>Next card in grid, or empty state, or "Add Card" button</td>
+            <td>Calculate next card before action. If none remain: focus "Add Card".</td>
+          </tr>
+          <tr>
+            <td>Modal closed (any modal)</td>
+            <td>The element that triggered the modal open</td>
+            <td>Radix Dialog handles this automatically via returnFocus. Verify it works.</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         SECTION 10: WCAG AA CONTRAST — RAGNARÖK OVERLAY
+    ═══════════════════════════════════════════════ -->
+    <div class="scenario">
+      <div class="scenario-title">WCAG AA Contrast — Ragnarök Overlay Impact</div>
+
+      <div class="spec-box">
+        <div class="spec-title">Contrast Analysis — Red Overlay at rgba(150,30,10,0.18)</div>
+        <table>
+          <tr>
+            <th>Scenario</th>
+            <th>Foreground</th>
+            <th>Background (with overlay)</th>
+            <th>WCAG AA pass?</th>
+            <th>Action if failing</th>
+          </tr>
+          <tr>
+            <td>Primary text on void background</td>
+            <td>#e8e4d4 (text-saga)</td>
+            <td>#07070d + rgba(150,30,10,0.18) = effectively ~#110508</td>
+            <td>PASS — overlay at 18% opacity has negligible contrast impact on near-black bg</td>
+            <td>None required</td>
+          </tr>
+          <tr>
+            <td>Gold text on elevated surface</td>
+            <td>#c9920a (gold)</td>
+            <td>#0f1018 + overlay = ~#130d10</td>
+            <td>PASS — gold on near-black exceeds 4.5:1</td>
+            <td>None required</td>
+          </tr>
+          <tr>
+            <td>Milestone toast body text</td>
+            <td>#e8e4d4 on #0f1018</td>
+            <td>Toast renders above overlay (z:300 > z:1)</td>
+            <td>PASS — toast is unaffected by overlay</td>
+            <td>None required</td>
+          </tr>
+        </table>
+        <p class="note">
+          The 18% opacity red overlay does not meaningfully change foreground:background contrast ratios
+          against the near-black void background. No WCAG AA failures expected.
+          FiremanDecko should run automated contrast checks with the overlay active as a final verification.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

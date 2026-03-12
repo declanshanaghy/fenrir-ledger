@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Easter Egg Modal</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../theme-system.md.
+       Full design spec: ../easter-egg-modal.md */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Backdrop ─────────────────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9653; /* W-O-L-F on a phone keypad */
+    }
+
+    /* ── Modal shell ──────────────────────────────────────────────── */
+    .modal {
+      position: relative;
+      width: min(680px, 92vw);
+      border: 1px solid;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────── */
+    .modal-header {
+      padding: 1.5rem 2rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid;
+    }
+    .modal-eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .eyebrow-runes {
+      flex: 1;
+      text-align: center;
+      letter-spacing: 0.25em;
+    }
+    .modal-title {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 700;
+    }
+
+    /* ── Two-column body ──────────────────────────────────────────── */
+    .modal-body-inner {
+      margin: 1.25rem;
+      border: 1px solid;
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      min-height: 200px;
+    }
+
+    /* Left column — image */
+    .col-image {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      gap: 0.75rem;
+    }
+    .image-placeholder {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      max-width: 200px;
+      border: 1px dashed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+    .image-placeholder-icon { font-size: 2rem; opacity: 0.35; }
+
+    /* Vertical divider */
+    .col-divider { width: 1px; border-left: 1px solid; }
+
+    /* Right column — text */
+    .col-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 1.5rem;
+      gap: 0.75rem;
+    }
+    .text-placeholder-label { font-size: 0.65rem; text-transform: uppercase; }
+    .text-placeholder-block { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    /* Skeleton text lines */
+    .text-line { height: 0.875rem; border: 1px solid; opacity: 0.3; }
+    .text-line:nth-child(1) { width: 92%; }
+    .text-line:nth-child(2) { width: 78%; }
+    .text-line:nth-child(3) { width: 85%; }
+    .text-line:nth-child(4) { width: 60%; }
+
+    /* ── Footer ───────────────────────────────────────────────────── */
+    .modal-footer {
+      display: flex;
+      justify-content: center;
+      padding: 1rem 2rem 1.5rem;
+      border-top: 1px solid;
+    }
+
+    /* ── Buttons ──────────────────────────────────────────────────── */
+    .btn-ok {
+      padding: 0.625rem 2.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      border: 1px solid;
+      cursor: pointer;
+      background: none;
+      font-family: inherit;
+    }
+    .btn-close {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      width: 1.75rem;
+      height: 1.75rem;
+      border: 1px solid;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      font-family: inherit;
+    }
+
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+  </style>
+</head>
+<body>
+
+  <!-- Backdrop — z-index 9653 = W-O-L-F on phone keypad (see ../../product/copywriting.md Magic Numbers) -->
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="egg-title">
+
+    <div class="modal">
+
+      <!-- Close button -->
+      <button class="btn-close" aria-label="Dismiss">×</button>
+
+      <!-- Header -->
+      <header class="modal-header">
+        <p class="modal-eyebrow">
+          <span class="eyebrow-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ</span>
+          Easter Egg Discovered
+          <span class="eyebrow-runes" aria-hidden="true">ᛁ ᚱ ᛊ</span><!-- ᛏ stolen by Loki -->
+        </p>
+        <h1 class="modal-title" id="egg-title">[EASTER EGG TITLE]</h1>
+      </header>
+
+      <!-- Two-column body: single outer border, gradient vertical divider in implementation -->
+      <div class="modal-body-inner">
+
+        <!-- Left — artifact image -->
+        <div class="col-image">
+          <div class="image-placeholder">
+            <span class="image-placeholder-icon">ᚠ</span>
+            <span>Image Placeholder</span>
+          </div>
+        </div>
+
+        <!-- Vertical divider (1px column) -->
+        <div class="col-divider" aria-hidden="true"></div>
+
+        <!-- Right — discovery text -->
+        <div class="col-text">
+          <span class="text-placeholder-label">Discovery Text</span>
+          <div class="text-placeholder-block">
+            <div class="text-line"></div>
+            <div class="text-line"></div>
+            <div class="text-line"></div>
+            <div class="text-line"></div>
+          </div>
+        </div>
+
+      </div><!-- /.modal-body-inner -->
+
+      <!-- Footer — OK is the sole primary action -->
+      <footer class="modal-footer">
+        <button class="btn-ok" type="button">OK</button>
+      </footer>
+
+    </div><!-- /.modal -->
+  </div><!-- /.modal-backdrop -->
+
+  <p class="note" style="position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);white-space:nowrap;">
+    Wireframe — easter-egg-modal.html · Fenrir Ledger · z-index 9653 (W-O-L-F)
+  </p>
+
+</body>
+</html>

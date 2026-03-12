@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chronicle Theme Variants — Light & Dark | Wireframe</title>
+  <style>
+    /* Base reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Theme comparison grid */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+
+    .theme-column {
+      border: 2px solid #333;
+      padding: 24px;
+    }
+
+    .theme-label {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      padding: 12px;
+      margin: -24px -24px 24px;
+    }
+
+    /* Light theme simulation */
+    .light-theme {
+      background: #ffffff;
+      color: #1a1a1a;
+    }
+
+    .light-theme .theme-label {
+      background: #f8f8f8;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .light-theme .card {
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .light-theme .accent { color: #c9920a; }
+    .light-theme .muted { color: #6b6b6b; }
+    .light-theme .border { border-color: #e0e0e0; }
+    .light-theme .code-block {
+      background: #f6f6f6;
+      border: 1px solid #e0e0e0;
+      border-left: 3px solid #c9920a;
+    }
+
+    /* Dark theme simulation */
+    .dark-theme {
+      background: #0f1018;
+      color: #e8e4d4;
+    }
+
+    .dark-theme .theme-label {
+      background: #07070d;
+      border-bottom: 1px solid #1e2235;
+      color: #e8e4d4;
+    }
+
+    .dark-theme .card {
+      background: #13151f;
+      border: 1px solid #1e2235;
+      padding: 16px;
+      margin-bottom: 16px;
+      color: #e8e4d4;
+    }
+
+    .dark-theme .accent { color: #f0b429; }
+    .dark-theme .muted { color: #8a8578; }
+    .dark-theme .border { border-color: #1e2235; }
+    .dark-theme .code-block {
+      background: #050508;
+      border: 1px solid #1e2235;
+      border-left: 3px solid #c9920a;
+      color: #e8e4d4;
+    }
+
+    /* Component examples */
+    .component-example {
+      margin-bottom: 32px;
+    }
+
+    .component-title {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .chronicle-header-example {
+      text-align: center;
+      padding: 24px;
+      border-bottom: 1px solid;
+    }
+
+    .nav-example {
+      display: flex;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid;
+    }
+
+    .grievance-example {
+      padding: 20px;
+      border-left: 4px solid;
+      margin: 16px 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .theme-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Documentation notes */
+    .note {
+      background: #fffbf0;
+      border: 2px solid #f0b429;
+      padding: 16px;
+      margin: 24px 0;
+      font-size: 14px;
+    }
+
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 style="text-align: center; margin-bottom: 32px;">Chronicle Theme Variants</h1>
+
+    <div class="note">
+      <strong>Purpose:</strong> This document shows how chronicle pages adapt between light and dark themes.
+      Chronicles now respect the user's theme selection (matching the marketing site) instead of being hardcoded dark.
+      All colors, borders, and contrast ratios adjust automatically based on the selected theme.
+    </div>
+
+    <!-- Chronicle Index Variants -->
+    <h2 style="margin: 32px 0 16px;">Chronicle Index Page</h2>
+    <div class="theme-grid">
+      <!-- Light Theme -->
+      <div class="theme-column light-theme">
+        <div class="theme-label">Light Theme</div>
+
+        <div class="component-example">
+          <div class="component-title">Page Header</div>
+          <div style="text-align: center; padding: 20px 0;">
+            <h3 style="font-size: 32px; margin-bottom: 8px;">Prose Edda</h3>
+            <p class="muted" style="font-size: 14px;">The sagas of the forge</p>
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title">Chronicle Cards</div>
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <span class="accent" style="font-size: 24px;">ᚠ</span>
+              <span class="muted" style="font-size: 11px;">DEC 15, 2024</span>
+            </div>
+            <h4 style="font-size: 16px; margin-bottom: 8px;">The Import Pipeline Awakens</h4>
+            <p class="muted" style="font-size: 13px;">Bank statements transform into structured data...</p>
+          </div>
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <span class="accent" style="font-size: 24px;">ᛚ</span>
+              <span class="muted" style="font-size: 11px;">DEC 8, 2024</span>
+            </div>
+            <h4 style="font-size: 16px; margin-bottom: 8px;">Depot Integration Field Report</h4>
+            <p class="muted" style="font-size: 13px;">A tale of frustration and triumph...</p>
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title">Color Palette</div>
+          <div style="font-size: 12px;">
+            <div>Background: #ffffff</div>
+            <div>Text: #1a1a1a</div>
+            <div class="muted">Muted: #6b6b6b</div>
+            <div class="accent">Accent (Gold): #c9920a</div>
+            <div>Borders: #e0e0e0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dark Theme -->
+      <div class="theme-column dark-theme">
+        <div class="theme-label">Dark Theme</div>
+
+        <div class="component-example">
+          <div class="component-title" style="color: #8a8578;">Page Header</div>
+          <div style="text-align: center; padding: 20px 0;">
+            <h3 style="font-size: 32px; margin-bottom: 8px;">Prose Edda</h3>
+            <p class="muted" style="font-size: 14px;">The sagas of the forge</p>
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title" style="color: #8a8578;">Chronicle Cards</div>
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <span class="accent" style="font-size: 24px;">ᚠ</span>
+              <span class="muted" style="font-size: 11px;">DEC 15, 2024</span>
+            </div>
+            <h4 style="font-size: 16px; margin-bottom: 8px;">The Import Pipeline Awakens</h4>
+            <p class="muted" style="font-size: 13px;">Bank statements transform into structured data...</p>
+          </div>
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <span class="accent" style="font-size: 24px;">ᛚ</span>
+              <span class="muted" style="font-size: 11px;">DEC 8, 2024</span>
+            </div>
+            <h4 style="font-size: 16px; margin-bottom: 8px;">Depot Integration Field Report</h4>
+            <p class="muted" style="font-size: 13px;">A tale of frustration and triumph...</p>
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title" style="color: #8a8578;">Color Palette</div>
+          <div style="font-size: 12px;">
+            <div>Background: #0f1018</div>
+            <div>Text: #e8e4d4</div>
+            <div class="muted">Muted: #8a8578</div>
+            <div class="accent">Accent (Gold): #f0b429</div>
+            <div>Borders: #1e2235</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Individual Article Variants -->
+    <h2 style="margin: 32px 0 16px;">Individual Chronicle Article</h2>
+    <div class="theme-grid">
+      <!-- Light Theme -->
+      <div class="theme-column light-theme">
+        <div class="theme-label">Light Theme Article</div>
+
+        <div class="component-example">
+          <div class="component-title">Compact Header</div>
+          <div class="chronicle-header-example border">
+            <div class="muted" style="font-size: 11px; margin-bottom: 12px;">
+              SESSION 462 • DEC 15, 2024 • BY FREYA
+            </div>
+            <h3 style="font-size: 24px; margin-bottom: 8px;">The Import Pipeline Awakens</h3>
+            <p class="muted" style="font-size: 13px; font-style: italic;">Bank statements transform into data</p>
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title">Prev/Next Nav (Top)</div>
+          <div class="nav-example border">
+            <div style="text-align: left;">
+              <div class="muted" style="font-size: 10px;">← PREVIOUS</div>
+              <div style="font-size: 13px;">Depot Integration</div>
+            </div>
+            <span class="accent">ᛟ</span>
+            <div style="text-align: right;">
+              <div class="muted" style="font-size: 10px;">NEXT →</div>
+              <div style="font-size: 13px;">Subscription Guard</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title">Code Block</div>
+          <div class="code-block" style="padding: 12px; font-family: monospace; font-size: 13px;">
+            const parse = require('csv-parse')<br>
+            // Light syntax highlighting<br>
+            <span style="color: #0969da;">const</span> records = parse(data)
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title">Agent Message</div>
+          <div class="card">
+            <span style="display: inline-block; padding: 2px 8px; border: 1px solid #f59e0b; font-size: 10px; margin-bottom: 8px;">FREYA</span>
+            <p style="font-size: 14px;">The parser must be resilient...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dark Theme -->
+      <div class="theme-column dark-theme">
+        <div class="theme-label">Dark Theme Article</div>
+
+        <div class="component-example">
+          <div class="component-title" style="color: #8a8578;">Compact Header</div>
+          <div class="chronicle-header-example border">
+            <div class="muted" style="font-size: 11px; margin-bottom: 12px;">
+              SESSION 462 • DEC 15, 2024 • BY FREYA
+            </div>
+            <h3 style="font-size: 24px; margin-bottom: 8px;">The Import Pipeline Awakens</h3>
+            <p class="muted" style="font-size: 13px; font-style: italic;">Bank statements transform into data</p>
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title" style="color: #8a8578;">Prev/Next Nav (Top)</div>
+          <div class="nav-example border">
+            <div style="text-align: left;">
+              <div class="muted" style="font-size: 10px;">← PREVIOUS</div>
+              <div style="font-size: 13px;">Depot Integration</div>
+            </div>
+            <span class="accent">ᛟ</span>
+            <div style="text-align: right;">
+              <div class="muted" style="font-size: 10px;">NEXT →</div>
+              <div style="font-size: 13px;">Subscription Guard</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title" style="color: #8a8578;">Code Block</div>
+          <div class="code-block" style="padding: 12px; font-family: monospace; font-size: 13px;">
+            const parse = require('csv-parse')<br>
+            // Dark syntax highlighting<br>
+            <span style="color: #79c0ff;">const</span> records = parse(data)
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title" style="color: #8a8578;">Agent Message</div>
+          <div class="card">
+            <span style="display: inline-block; padding: 2px 8px; border: 1px solid #f59e0b55; background: rgba(245,158,11,0.1); color: #f59e0b; font-size: 10px; margin-bottom: 8px;">FREYA</span>
+            <p style="font-size: 14px;">The parser must be resilient...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Field Report Variants -->
+    <h2 style="margin: 32px 0 16px;">Field Report Components</h2>
+    <div class="theme-grid">
+      <!-- Light Theme -->
+      <div class="theme-column light-theme">
+        <div class="theme-label">Light Theme Field Report</div>
+
+        <div class="component-example">
+          <div class="component-title">Grievance Card</div>
+          <div class="grievance-example" style="border-color: #dc2626; background: #fef2f2;">
+            <div style="font-size: 11px; color: #dc2626; font-weight: bold; margin-bottom: 8px;">GRIEVANCE #1</div>
+            <h4 style="font-size: 18px; margin-bottom: 8px;">The Column Headers That Weren't</h4>
+            <p style="font-size: 14px; font-style: italic; color: #7f1d1d; margin-bottom: 12px;">
+              Home Depot exports CSV files without headers...
+            </p>
+            <p style="font-size: 14px;">
+              Most banks put column headers on line 1...
+            </p>
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title">Hunt Table</div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="border-bottom: 2px solid #c9920a;">
+                <th style="padding: 8px; text-align: left; color: #c9920a;">Issue</th>
+                <th style="padding: 8px; text-align: left; color: #c9920a;">Impact</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 8px;">Missing headers</td>
+                <td style="padding: 8px;">Parser fails</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 8px;">Date formats</td>
+                <td style="padding: 8px;">Wrong dates</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title">UPDATE Banner</div>
+          <div style="padding: 16px; border: 1px dashed #dc2626; text-align: center; font-size: 13px;">
+            <strong style="color: #dc2626;">UPDATE:</strong> As of December 2024...
+          </div>
+        </div>
+      </div>
+
+      <!-- Dark Theme -->
+      <div class="theme-column dark-theme">
+        <div class="theme-label">Dark Theme Field Report</div>
+
+        <div class="component-example">
+          <div class="component-title" style="color: #8a8578;">Grievance Card</div>
+          <div class="grievance-example" style="border-color: #c94a0a; background: rgba(201,74,10,0.07);">
+            <div style="font-size: 11px; color: #c94a0a; font-weight: bold; margin-bottom: 8px;">GRIEVANCE #1</div>
+            <h4 style="font-size: 18px; margin-bottom: 8px;">The Column Headers That Weren't</h4>
+            <p style="font-size: 14px; font-style: italic; color: #fca5a5; margin-bottom: 12px;">
+              Home Depot exports CSV files without headers...
+            </p>
+            <p style="font-size: 14px;">
+              Most banks put column headers on line 1...
+            </p>
+          </div>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title" style="color: #8a8578;">Hunt Table</div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="border-bottom: 2px solid #c9920a;">
+                <th style="padding: 8px; text-align: left; color: #f0b429;">Issue</th>
+                <th style="padding: 8px; text-align: left; color: #f0b429;">Impact</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid #1e2235;">
+                <td style="padding: 8px;">Missing headers</td>
+                <td style="padding: 8px;">Parser fails</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #1e2235;">
+                <td style="padding: 8px;">Date formats</td>
+                <td style="padding: 8px;">Wrong dates</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="component-example">
+          <div class="component-title" style="color: #8a8578;">UPDATE Banner</div>
+          <div style="padding: 16px; border: 1px dashed #c94a0a; text-align: center; font-size: 13px;">
+            <strong style="color: #c94a0a;">UPDATE:</strong> As of December 2024...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Implementation Guidelines:</strong><br><br>
+
+      <strong>Typography (Both Themes):</strong><br>
+      • Headings: <code>font-family: 'Cinzel', serif</code> (matching About page)<br>
+      • Body text: <code>font-family: 'Source Serif 4', serif</code><br>
+      • Code/technical: <code>font-family: 'JetBrains Mono', monospace</code><br><br>
+
+      <strong>Theme Detection:</strong><br>
+      • Use Next.js <code>next-themes</code> package (already in use on marketing site)<br>
+      • CSS variables switch based on <code>[data-theme="dark"]</code> attribute<br>
+      • Remove hardcoded dark background from <code>chronicle.css</code><br><br>
+
+      <strong>Color Variables to Update:</strong><br>
+      Light Theme:<br>
+      • <code>--background: #ffffff</code><br>
+      • <code>--foreground: #1a1a1a</code><br>
+      • <code>--muted: #6b6b6b</code><br>
+      • <code>--border: #e0e0e0</code><br>
+      • <code>--accent: #c9920a</code> (gold stays similar)<br><br>
+
+      Dark Theme:<br>
+      • <code>--background: #0f1018</code><br>
+      • <code>--foreground: #e8e4d4</code><br>
+      • <code>--muted: #8a8578</code><br>
+      • <code>--border: #1e2235</code><br>
+      • <code>--accent: #f0b429</code> (brighter gold)<br><br>
+
+      <strong>Code Block Syntax Highlighting:</strong><br>
+      • Use theme-aware syntax highlighter (e.g., Prism with light/dark themes)<br>
+      • Light theme: GitHub light color scheme<br>
+      • Dark theme: GitHub dark color scheme<br><br>
+
+      <strong>Accessibility:</strong><br>
+      • Maintain WCAG AA contrast ratios in both themes<br>
+      • Light theme: 4.5:1 minimum for normal text<br>
+      • Dark theme: Careful with muted text on dark backgrounds<br>
+      • Test with browser dev tools contrast checker
+    </div>
+  </div>
+</body>
+</html>

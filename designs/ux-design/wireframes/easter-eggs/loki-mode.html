@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Loki Mode — Easter Egg #3</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* ── Page chrome ─────────────────────────────────────────── */
+    .wireframe-header {
+      border-bottom: 2px solid;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .wireframe-header h1 { font-size: 16px; font-weight: 700; }
+    .wireframe-header .tag { font-size: 11px; font-weight: 400; }
+
+    /* ── Two-section side-by-side layout ─────────────────────── */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid;
+    }
+    .state-panel {
+      padding: 16px;
+      border-right: 1px solid;
+    }
+    .state-panel:last-child { border-right: none; }
+
+    .state-label {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding-bottom: 8px;
+      border-bottom: 1px solid;
+      margin-bottom: 14px;
+    }
+
+    /* ── Card grid (shared structure) ───────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .card-chip {
+      border: 1px solid;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-chip-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .card-order-label {
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .status-badge {
+      border: 1px solid;
+      font-size: 10px;
+      padding: 2px 5px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .card-issuer { font-size: 12px; font-weight: 700; }
+    .card-name   { font-size: 11px; }
+
+    .card-meta {
+      font-size: 10px;
+      border-top: 1px solid;
+      padding-top: 5px;
+      margin-top: 2px;
+    }
+
+    /* ── Loki-mode scramble annotations ─────────────────────── */
+    .scramble-note {
+      border: 1px dashed;
+      padding: 4px 6px;
+      font-size: 10px;
+      font-style: italic;
+      text-align: center;
+    }
+
+    /* ── Restoration timer strip ─────────────────────────────── */
+    .restore-strip {
+      margin-top: 12px;
+      border: 1px dashed;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .timer-bar-track {
+      flex: 1;
+      height: 6px;
+      border: 1px solid;
+      position: relative;
+    }
+    .timer-bar-fill {
+      /* Represents elapsed time; implementation uses CSS animation */
+      width: 40%;
+      height: 100%;
+      border-right: 1px solid;
+    }
+    .restore-strip .note { font-size: 10px; font-style: italic; }
+
+    /* ── Toast notification ───────────────────────────────────── */
+    .toast-section {
+      margin-top: 20px;
+    }
+    .toast-section-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .toast-demo-wrapper {
+      position: relative;
+      border: 1px dashed;
+      padding: 10px;
+      min-height: 80px;
+    }
+    .toast-demo-label {
+      font-size: 10px;
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+    .toast-widget {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border: 1px solid;
+      padding: 8px 12px;
+      max-width: 240px;
+    }
+    .toast-widget-text {
+      font-size: 12px;
+      font-style: italic;
+    }
+    .toast-widget-meta {
+      font-size: 10px;
+      margin-top: 4px;
+    }
+
+    /* ── Footer trigger section ──────────────────────────────── */
+    .trigger-section {
+      margin-top: 20px;
+    }
+    .trigger-section-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .footer-strip {
+      border: 1px solid;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-strip-copy { font-size: 12px; }
+    .footer-loki-link {
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .loki-click-counter {
+      border: 1px dashed;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .trigger-annotation {
+      margin-top: 6px;
+      font-size: 10px;
+      font-style: italic;
+    }
+
+    /* ── Interaction state diagram note ─────────────────────── */
+    .state-diagram-section {
+      margin-top: 20px;
+    }
+    .state-diagram-section-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .state-diagram-placeholder {
+      border: 1px dashed;
+      padding: 10px;
+      font-size: 11px;
+      font-style: italic;
+    }
+
+    /* ── Spec annotations ────────────────────────────────────── */
+    .note {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.6;
+    }
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 12px;
+    }
+    .spec-table th,
+    .spec-table td {
+      border: 1px solid;
+      padding: 5px 8px;
+      text-align: left;
+    }
+    .spec-table th { font-weight: 700; }
+
+    /* ── Outer page wrapper ──────────────────────────────────── */
+    .page { padding: 20px; max-width: 1200px; margin: 0 auto; }
+    .section-gap { margin-top: 28px; }
+    hr.divider { border: none; border-top: 1px solid; margin: 20px 0; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ── Wireframe page header ──────────────────────────────── -->
+  <header class="wireframe-header">
+    <h1>Loki Mode — Easter Egg #3</h1>
+    <span class="tag">Wireframe · ./loki-mode.html · Sprint 3</span>
+  </header>
+
+  <!-- ── Intent note ────────────────────────────────────────── -->
+  <p class="note" style="margin-top: 10px; margin-bottom: 16px;">
+    This wireframe shows the full Loki Mode surface: trigger element in the footer,
+    side-by-side before/after states of the card grid, the toast notification, and the
+    5-second restoration timer. No colors, no decorative styles — structural layout only.
+    Theme styling (gold flash, scramble keyframes, realm badge palette) is defined in
+    ../theme-system.md and ../interactions.md.
+  </p>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 1 — SIDE-BY-SIDE STATE COMPARISON
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="comparison-grid">
+
+      <!-- ── LEFT: Normal State ──────────────────────────────── -->
+      <div class="state-panel">
+        <div class="state-label">Normal State</div>
+
+        <!-- 3-card grid in natural order -->
+        <div class="card-grid">
+
+          <article class="card-chip">
+            <div class="card-chip-header">
+              <span class="card-order-label">Card 1</span>
+              <span class="status-badge">Midgard</span>
+            </div>
+            <div class="card-issuer">Chase</div>
+            <div class="card-name">Sapphire Preferred</div>
+            <div class="card-meta">Fee due: 2026-06-01</div>
+          </article>
+
+          <article class="card-chip">
+            <div class="card-chip-header">
+              <span class="card-order-label">Card 2</span>
+              <span class="status-badge">Asgard</span>
+            </div>
+            <div class="card-issuer">Amex</div>
+            <div class="card-name">Gold Card</div>
+            <div class="card-meta">Promo: 45 days left</div>
+          </article>
+
+          <article class="card-chip">
+            <div class="card-chip-header">
+              <span class="card-order-label">Card 3</span>
+              <span class="status-badge">Helheim</span>
+            </div>
+            <div class="card-issuer">Citi</div>
+            <div class="card-name">Double Cash</div>
+            <div class="card-meta">Fee: 8 days left</div>
+          </article>
+
+        </div>
+
+        <p class="note" style="margin-top: 10px;">
+          Cards appear in their natural sort order (by nearest deadline or user preference).
+          Status badges display real realm names derived from CardStatus.
+          No animation in progress.
+        </p>
+      </div><!-- /Normal State -->
+
+      <!-- ── RIGHT: Loki Mode Active ─────────────────────────── -->
+      <div class="state-panel">
+        <div class="state-label">Loki Mode Active</div>
+
+        <!-- 3-card grid scrambled: Card 3 · Card 1 · Card 2 -->
+        <div class="card-grid">
+
+          <article class="card-chip">
+            <div class="card-chip-header">
+              <!--
+                SCRAMBLE: Card 3 appears in slot 1.
+                The card-order-label shows its original identity so the
+                engineer can see which card was displaced where.
+              -->
+              <span class="card-order-label">Card 3 → slot 1</span>
+              <span class="status-badge">[RANDOM REALM]</span>
+            </div>
+            <div class="card-issuer">Citi</div>
+            <div class="card-name">Double Cash</div>
+            <div class="card-meta scramble-note">scramble animation</div>
+          </article>
+
+          <article class="card-chip">
+            <div class="card-chip-header">
+              <!-- SCRAMBLE: Card 1 appears in slot 2 -->
+              <span class="card-order-label">Card 1 → slot 2</span>
+              <span class="status-badge">[RANDOM REALM]</span>
+            </div>
+            <div class="card-issuer">Chase</div>
+            <div class="card-name">Sapphire Preferred</div>
+            <div class="card-meta scramble-note">scramble animation</div>
+          </article>
+
+          <article class="card-chip">
+            <div class="card-chip-header">
+              <!-- SCRAMBLE: Card 2 appears in slot 3 -->
+              <span class="card-order-label">Card 2 → slot 3</span>
+              <span class="status-badge">[RANDOM REALM]</span>
+            </div>
+            <div class="card-issuer">Amex</div>
+            <div class="card-name">Gold Card</div>
+            <div class="card-meta scramble-note">scramble animation</div>
+          </article>
+
+        </div><!-- /scrambled card grid -->
+
+        <!-- ── Restoration timer ──────────────────────────────── -->
+        <div class="restore-strip">
+          <span class="note">Restores after 5 seconds</span>
+          <div class="timer-bar-track">
+            <!--
+              Implementation: CSS @keyframes shrinks this fill from 100% → 0%
+              over 5 000ms linear. When it reaches 0%, the scramble reverses.
+              The bar is a linear progress indicator, not a spinner.
+            -->
+            <div class="timer-bar-fill"></div>
+          </div>
+          <span class="note">← timer bar (shrinks left-to-right)</span>
+        </div>
+
+        <p class="note" style="margin-top: 8px;">
+          [RANDOM REALM] placeholders cycle rapidly through realm names
+          (Midgard / Asgard / Helheim / Niflheim / etc.) — a "shapeshifter flash" effect.
+          Actual card data is never modified; only display order and badge labels are
+          temporarily overridden in component state.
+          Restoration fades back with a CSS transition matching saga-enter easing.
+        </p>
+      </div><!-- /Loki Mode Active -->
+
+    </div><!-- /comparison-grid -->
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 2 — TOAST NOTIFICATION
+  ═══════════════════════════════════════════════════════════════ -->
+  <section class="section-gap toast-section">
+    <div class="toast-section-label">Toast Notification (z-index: 300)</div>
+
+    <div class="toast-demo-wrapper">
+      <p class="toast-demo-label">
+        Simulated viewport top-right corner. Toast appears immediately when Loki Mode
+        activates. Dismissed automatically when order restores (5 s), or on click.
+      </p>
+
+      <!--
+        Toast is position: fixed in the real implementation.
+        Here it is position: absolute within the demo wrapper to simulate top-right placement.
+        z-index: 300 per the Z-Index table in ../wireframes.md (Toast layer).
+      -->
+      <div class="toast-widget">
+        <div class="toast-widget-text">
+          "Loki was here. Your data is fine. Probably."
+        </div>
+        <div class="toast-widget-meta">
+          <!-- Annotation for engineer -->
+          z-index: 300 · position: fixed · top: 16px · right: 16px<br>
+          auto-dismiss: 5 000ms (tied to restoration timer)<br>
+          click-to-dismiss: yes
+        </div>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top: 6px;">
+      Uses the same toast component as card-count milestone toasts (Easter Egg #11).
+      No custom toast layout is required — copy text is the only Loki-specific override.
+      Entry animation: slide-in from right edge (matches existing toast convention).
+    </p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 3 — FOOTER TRIGGER ELEMENT
+  ═══════════════════════════════════════════════════════════════ -->
+  <section class="section-gap trigger-section">
+    <div class="trigger-section-label">Footer Trigger — "Loki" Credit Link</div>
+
+    <!--
+      This is a representative excerpt of the dashboard footer.
+      The full footer layout is defined in dashboard.html.
+      Only the "Loki" credit element is annotated here.
+    -->
+    <div class="footer-strip">
+      <span class="footer-strip-copy">
+        Fenrir Ledger · Forged by FiremanDecko · Designed by Luna · Owned by Freya ·
+        Tested by
+      </span>
+      <!--
+        The word "Loki" in the footer carries a hidden click counter.
+        No visual affordance — pure discovery. Users who find it click repeatedly.
+        7 clicks = Loki Mode activates.
+        Why 7: Loki has 7 known children in Norse myth.
+      -->
+      <span class="footer-loki-link" aria-label="Loki (QA Tester)">Loki</span>
+      <span class="loki-click-counter">[ 0 / 7 clicks ]</span>
+    </div>
+
+    <p class="trigger-annotation note">
+      "Loki" text — Click 7 times to trigger. No visual affordance in normal state.
+      Click counter resets after Loki Mode completes its 5-second cycle.
+      Counter is held in component state only (not persisted to localStorage).
+      The loki-click-counter element shown here is a wireframe annotation label only —
+      it does NOT render in the production UI.
+    </p>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 4 — INTERACTION STATE FLOW (Mermaid reference)
+  ═══════════════════════════════════════════════════════════════ -->
+  <section class="section-diagram state-diagram-section">
+    <div class="state-diagram-section-label">Interaction State Flow</div>
+
+    <div class="state-diagram-placeholder">
+      <!-- Mermaid diagram is defined inline in the sprint design doc.
+           Reproduced here in text form for the wireframe record. -->
+      <p style="margin-bottom: 8px;">
+        State machine (see ../interactions.md or sprint doc for rendered Mermaid):
+      </p>
+      <pre style="font-size: 11px; font-family: monospace; white-space: pre-wrap;">
+stateDiagram-v2
+    [*] --> Normal : page loads
+
+    Normal --> Counting : user clicks "Loki" in footer
+    Counting --> Counting : click &lt; 7 (counter increments)
+    Counting --> Normal : 30 s idle — counter resets
+
+    Counting --> LokiActive : click 7 reached
+    LokiActive --> LokiActive : card grid scrambled\nstatus badges cycling random realms\ntoast displayed\ntimer running
+
+    LokiActive --> Restoring : 5 s elapsed
+    Restoring --> Normal : fade-back transition complete\ncounter resets
+      </pre>
+      <p class="note" style="margin-top: 6px;">
+        Render the above in Mermaid stateDiagram-v2 syntax following
+        ../ux-assets/mermaid-style-guide.md conventions.
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 5 — SPECIFICATION REFERENCE TABLE
+  ═══════════════════════════════════════════════════════════════ -->
+  <section class="section-gap">
+    <p style="font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
+      Specification Reference
+    </p>
+    <table class="spec-table">
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>Value</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Trigger element</td>
+          <td>"Loki" text in dashboard footer</td>
+          <td>No affordance. Click 7 times. Counter resets after 30 s idle or after cycle completes.</td>
+        </tr>
+        <tr>
+          <td>Click count</td>
+          <td>7</td>
+          <td>Loki has 7 children in Norse myth.</td>
+        </tr>
+        <tr>
+          <td>Card grid scramble</td>
+          <td>Fisher-Yates shuffle of display order</td>
+          <td>No data mutation. CSS scramble animation (translate + rotate). Duration: ~400 ms.</td>
+        </tr>
+        <tr>
+          <td>Status badge flash</td>
+          <td>[RANDOM REALM] cycling</td>
+          <td>Cycles through all 4 CardStatus realm display names rapidly during scramble animation. Stops when scramble settles.</td>
+        </tr>
+        <tr>
+          <td>Toast copy</td>
+          <td>"Loki was here. Your data is fine. Probably."</td>
+          <td>Standard toast component. z-index: 300. Fixed top-right. Auto-dismiss at 5 s.</td>
+        </tr>
+        <tr>
+          <td>Restoration duration</td>
+          <td>5 seconds</td>
+          <td>Timer begins when scramble animation settles. Linear progress bar visible (wireframe section 1 right panel).</td>
+        </tr>
+        <tr>
+          <td>Restoration animation</td>
+          <td>Fade-back to original order</td>
+          <td>Matches saga-enter easing: cubic-bezier(0.16, 1, 0.3, 1). Cards return to natural sort positions.</td>
+        </tr>
+        <tr>
+          <td>Data safety</td>
+          <td>No localStorage writes during Loki Mode</td>
+          <td>Non-negotiable. Display state only. Engineer must confirm no persistence side-effects.</td>
+        </tr>
+        <tr>
+          <td>Z-index (toast)</td>
+          <td>300</td>
+          <td>Per z-index table in ../wireframes.md.</td>
+        </tr>
+        <tr>
+          <td>Accessibility</td>
+          <td>aria-live="polite" on toast region</td>
+          <td>Scramble must not trap focus or disrupt keyboard navigation order.</td>
+        </tr>
+        <tr>
+          <td>Mobile behavior</td>
+          <td>Same trigger; single-column card stack reorders</td>
+          <td>Footer "Loki" remains tappable at min 44×44 px touch target.</td>
+        </tr>
+        <tr>
+          <td>Sprint</td>
+          <td>Sprint 3</td>
+          <td>Per Easter Egg implementation priority table in ../easter-eggs.md.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── Page footer ─────────────────────────────────────────── -->
+  <footer style="margin-top: 28px; padding-top: 12px; border-top: 1px solid;">
+    <p class="note">
+      Wireframe: Loki Mode (Easter Egg #3) · Luna, UX Designer · Fenrir Ledger ·
+      All theme styling in ../theme-system.md · Interactions in ../interactions.md
+    </p>
+  </footer>
+
+</div><!-- /page -->
+</body>
+</html>

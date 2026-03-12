@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chronicle Index — Prose Edda | Wireframe</title>
+  <style>
+    /* Base reset + layout CSS only — no theme styling */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    /* Layout structure */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header section */
+    .header-section {
+      text-align: center;
+      padding: 80px 0 60px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .header-section h1 {
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+
+    .header-section .subtitle {
+      font-size: 18px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* Chronicle grid */
+    .chronicle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 32px;
+      padding: 60px 0;
+    }
+
+    /* Chronicle card */
+    .chronicle-card {
+      border: 1px solid #ddd;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .rune-symbol {
+      font-size: 28px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-date {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .card-excerpt {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .card-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .tag {
+      font-size: 11px;
+      padding: 4px 8px;
+      border: 1px solid #ddd;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .header-section {
+        padding: 40px 0 30px;
+      }
+
+      .header-section h1 {
+        font-size: 32px;
+      }
+
+      .header-section .subtitle {
+        font-size: 16px;
+      }
+
+      .chronicle-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 40px 0;
+      }
+    }
+
+    @media (max-width: 375px) {
+      .container {
+        padding: 0 16px;
+      }
+
+      .chronicle-card {
+        padding: 20px;
+      }
+    }
+
+    /* Annotation styles */
+    .note {
+      background: #f9f9f9;
+      border-left: 3px solid #888;
+      padding: 12px;
+      margin: 20px 0;
+      font-size: 14px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR PLACEHOLDER -->
+  <nav style="height: 60px; border-bottom: 1px solid #ddd; margin-bottom: 0;">
+    <div style="padding: 20px; text-align: center; font-size: 14px;">
+      [Marketing Site Navbar — Theme Toggle, Links to About/Features/Pricing]
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero/Header Section -->
+    <section class="header-section">
+      <div class="container">
+        <h1>Prose Edda</h1>
+        <p class="subtitle">
+          The sagas of the forge. Each session carved into the record, as the skalds once carved runes into stone.
+          Technical chronicles from the development of Fenrir Ledger.
+        </p>
+        <!-- NOTE: In both light and dark themes, this subtitle uses muted text color for hierarchy -->
+      </div>
+    </section>
+
+    <!-- Chronicle Grid -->
+    <section class="container">
+      <div class="note">
+        <strong>UX Note:</strong> Chronicle cards adapt to both light and dark themes.
+        Light theme: White cards with subtle borders, dark text.
+        Dark theme: Dark cards with subtle borders, light text.
+        Rune symbols use accent color (gold/amber) in both themes.
+        Grid responsive: 3-col desktop, 2-col tablet, 1-col mobile.
+      </div>
+
+      <div class="chronicle-grid">
+        <!-- Chronicle Card 1 (Most Recent) -->
+        <article class="chronicle-card">
+          <header class="card-header">
+            <div class="rune-symbol">ᚠ</div>
+            <time class="card-date">December 15, 2024</time>
+          </header>
+          <h2 class="card-title">Session 462: The Import Pipeline Awakens</h2>
+          <p class="card-excerpt">
+            Freya breathes life into the import system. Bank statements transform into structured data,
+            CSV chaos becomes clarity. The pipeline runs, the wolf feeds.
+          </p>
+          <footer class="card-tags">
+            <span class="tag">Import</span>
+            <span class="tag">Freya</span>
+            <span class="tag">Pipeline</span>
+          </footer>
+        </article>
+
+        <!-- Chronicle Card 2 -->
+        <article class="chronicle-card">
+          <header class="card-header">
+            <div class="rune-symbol">ᛚ</div>
+            <time class="card-date">December 8, 2024</time>
+          </header>
+          <h2 class="card-title">Session 459: Depot Integration Issues Field Report</h2>
+          <p class="card-excerpt">
+            A tale of frustration and triumph. The Home Depot card resists our import attempts.
+            Classification battles, missing data, edge cases. Luna documents the war.
+          </p>
+          <footer class="card-tags">
+            <span class="tag">Field Report</span>
+            <span class="tag">Integration</span>
+            <span class="tag">Luna</span>
+          </footer>
+        </article>
+
+        <!-- Chronicle Card 3 -->
+        <article class="chronicle-card">
+          <header class="card-header">
+            <div class="rune-symbol">ᛏ</div>
+            <time class="card-date">November 28, 2024</time>
+          </header>
+          <h2 class="card-title">Session 445: Authentication Architecture Forged</h2>
+          <p class="card-excerpt">
+            FiremanDecko builds the authentication fortress. OAuth2 flows, JWT tokens, session management.
+            The Rainbow Bridge guards access to the ledger.
+          </p>
+          <footer class="card-tags">
+            <span class="tag">Auth</span>
+            <span class="tag">Security</span>
+            <span class="tag">FiremanDecko</span>
+          </footer>
+        </article>
+
+        <!-- Chronicle Card 4 -->
+        <article class="chronicle-card">
+          <header class="card-header">
+            <div class="rune-symbol">ᚺ</div>
+            <time class="card-date">November 20, 2024</time>
+          </header>
+          <h2 class="card-title">Session 437: The Chaos Tests Begin</h2>
+          <p class="card-excerpt">
+            Loki unleashes his test suite. Edge cases multiply, boundaries break, assumptions shatter.
+            Every bug found is a future crisis averted.
+          </p>
+          <footer class="card-tags">
+            <span class="tag">Testing</span>
+            <span class="tag">QA</span>
+            <span class="tag">Loki</span>
+          </footer>
+        </article>
+
+        <!-- Chronicle Card 5 -->
+        <article class="chronicle-card">
+          <header class="card-header">
+            <div class="rune-symbol">ᚠ</div>
+            <time class="card-date">November 12, 2024</time>
+          </header>
+          <h2 class="card-title">Session 429: Auto-Complete Prophecies</h2>
+          <p class="card-excerpt">
+            Transaction descriptions predict themselves. Machine learning meets user input.
+            The ledger learns your spending patterns, suggests classifications.
+          </p>
+          <footer class="card-tags">
+            <span class="tag">ML</span>
+            <span class="tag">Features</span>
+            <span class="tag">Freya</span>
+          </footer>
+        </article>
+
+        <!-- Chronicle Card 6 (Older) -->
+        <article class="chronicle-card">
+          <header class="card-header">
+            <div class="rune-symbol">ᛚ</div>
+            <time class="card-date">October 30, 2024</time>
+          </header>
+          <h2 class="card-title">Session 415: Dark Mode Descends</h2>
+          <p class="card-excerpt">
+            Luna crafts the shadow theme. Every component gains a dark twin.
+            The interface shifts between light and void at user command.
+          </p>
+          <footer class="card-tags">
+            <span class="tag">Design</span>
+            <span class="tag">Theme</span>
+            <span class="tag">Luna</span>
+          </footer>
+        </article>
+      </div>
+
+      <div class="note">
+        <strong>Implementation Notes:</strong>
+        <br>• Chronicles sorted newest-first (descending by date)
+        <br>• Each card is clickable, linking to /chronicles/{slug}
+        <br>• Rune symbols are decorative but consistent per agent/topic
+        <br>• Tags optional — only show if chronicle has tags in frontmatter
+        <br>• Typography uses same scale as About page: Cinzel for headings, Source Serif for body
+        <br>• Mobile-first responsive with 375px minimum viewport
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER PLACEHOLDER -->
+  <footer style="margin-top: 80px; padding: 40px 20px; border-top: 1px solid #ddd; text-align: center;">
+    <p style="font-size: 14px;">[Marketing Site Footer — Links, Copyright, Social]</p>
+  </footer>
+</body>
+</html>

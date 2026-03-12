@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Upsell Banner -- Stripe Variant</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* -- Page layout -------------------------------------------------------- */
+    .page { display: flex; flex-direction: column; gap: 48px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* -- App shell skeleton (for context) ----------------------------------- */
+    .app-shell {
+      display: grid;
+      grid-template-columns: 272px 1fr;
+      grid-template-rows: auto auto 1fr;
+      min-height: 300px;
+      border: 1px solid;
+    }
+    .topbar-stub {
+      grid-column: 1 / 3;
+      grid-row: 1;
+      height: 56px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+    .topbar-brand-stub {
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .topbar-avatar-stub {
+      width: 32px;
+      height: 32px;
+      border: 1px dashed;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .sidebar-stub {
+      grid-column: 1;
+      grid-row: 3;
+      border-right: 1px solid;
+      padding: 16px;
+      font-size: 11px;
+      opacity: 0.4;
+    }
+    .content-stub {
+      grid-column: 2;
+      grid-row: 3;
+      padding: 16px;
+      font-size: 11px;
+      opacity: 0.4;
+    }
+
+    /* -- Upsell banner (Stripe variant) ------------------------------------- */
+    /*
+     * This banner replaces the Cloud Sync upsell banner for Stripe Direct.
+     * Instead of promoting sign-in (cloud sync), it promotes the Karl
+     * subscription tier via Stripe Checkout.
+     *
+     * Placement: same as the original upsell banner --
+     *   grid-row: 2; grid-column: 1/3 (full width below TopBar).
+     *
+     * Shown to: Thrall (free tier) users, both anonymous and authenticated.
+     * Hidden when: user is Karl subscriber, OR has dismissed the banner.
+     *
+     * Key difference from the cloud-sync upsell banner:
+     *   - CTA redirects to Stripe Checkout (not /sign-in).
+     *   - Copy mentions subscription benefits (not cloud sync).
+     *   - Works for both anonymous AND authenticated users.
+     *   - Anonymous users see the email modal first (then Stripe Checkout).
+     *
+     * dismiss_flag: localStorage key "fenrir:stripe_upsell_dismissed" = "true".
+     */
+    .upsell-banner {
+      grid-column: 1 / 3;
+      grid-row: 2;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      gap: 16px;
+    }
+    .upsell-banner-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
+    }
+    .upsell-atmos {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.7;
+    }
+    .upsell-desc {
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .upsell-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn-upsell-primary {
+      padding: 8px 14px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      font-family: inherit;
+      background: none;
+      white-space: nowrap;
+      min-height: 36px;
+    }
+    .btn-upsell-dismiss {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    /* -- Mobile banner variant ---------------------------------------------- */
+    .upsell-banner-mobile {
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 16px;
+      position: relative;
+    }
+    .upsell-banner-mobile .upsell-desc {
+      padding-right: 32px;
+    }
+    .upsell-banner-mobile .btn-upsell-primary {
+      align-self: flex-start;
+    }
+    .upsell-banner-mobile .btn-upsell-dismiss {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+    }
+
+    /* -- Utilities ---------------------------------------------------------- */
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note-block {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.6;
+      border: 1px dashed;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+    .scenario-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .scenario-col { display: flex; flex-direction: column; gap: 8px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      padding: 0;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+
+  <!-- =====================================================================
+       DESIGN DECISION -- Stripe upsell banner
+       Luna's recommendation: same banner pattern as the cloud-sync upsell
+       (upsell-banner.html), but repurposed for Karl subscription promotion.
+
+       The banner structure is identical:
+         - Atmospheric line (Voice 2)
+         - Functional description (Voice 1)
+         - Primary CTA
+         - Dismiss button
+
+       What changes:
+         - CTA text: "Upgrade to Karl" (not "Sign in to sync")
+         - CTA action: Stripe Checkout redirect (not /sign-in navigation)
+         - Copy: subscription benefits (not cloud sync benefits)
+         - Dismiss flag: separate localStorage key ("fenrir:stripe_upsell_dismissed")
+         - Shown to ALL Thrall users (anonymous + authenticated)
+
+       This banner and the cloud-sync banner are mutually exclusive --
+       only one should be active at a time based on the feature flag.
+  ===================================================================== -->
+
+
+  <!-- =====================================================================
+       SCENARIO 1 -- Desktop: Stripe Upsell Banner (visible)
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 -- Desktop -- Stripe Upsell Banner (visible, Thrall user)</div>
+
+    <div class="app-shell">
+
+      <div class="topbar-stub">
+        <span class="topbar-brand-stub">&#x16DF; Fenrir Ledger</span>
+        <div class="topbar-avatar-stub" aria-label="User"><span aria-hidden="true">&#x16DF;</span></div>
+      </div>
+
+      <!-- Stripe upsell banner -->
+      <!--
+        role="region" aria-label="Upgrade your subscription"
+
+        Copy structure:
+          - Atmospheric line (Voice 2): Norse framing for the upgrade
+          - Functional description (Voice 1): plain English value prop
+          - Primary CTA (Voice 1): "Upgrade to Karl -- $3.99/mo"
+          - Dismiss (Voice 1): "x" with aria-label
+
+        CTA behavior:
+          - Authenticated users: POST /api/stripe/checkout-session -> redirect
+          - Anonymous users: open email modal first, then checkout
+      -->
+      <div class="upsell-banner" role="region" aria-label="Upgrade your subscription">
+
+        <div class="upsell-banner-left">
+          <!-- Voice 2: atmospheric frame -->
+          <p class="upsell-atmos">The wolf hunts greater prey for those who forge the bond.</p>
+          <!-- Voice 1: functional value prop -->
+          <p class="upsell-desc">
+            Upgrade to Karl for cloud sync, priority alerts, and advanced analytics -- $3.99/month.
+          </p>
+        </div>
+
+        <div class="upsell-banner-actions">
+          <!--
+            "Upgrade to Karl" triggers Stripe Checkout.
+            For anonymous users: email modal appears first (see anonymous-checkout.html).
+            For authenticated users: direct redirect to Stripe Checkout.
+          -->
+          <button class="btn-upsell-primary" type="button">
+            Upgrade to Karl
+          </button>
+
+          <!--
+            Dismiss button.
+            Sets localStorage: fenrir:stripe_upsell_dismissed = "true".
+            Triggers collapse animation (same as cloud-sync banner: height 0, opacity 0, 300ms ease).
+            aria-label="Dismiss upgrade banner"
+          -->
+          <button
+            class="btn-upsell-dismiss"
+            type="button"
+            aria-label="Dismiss upgrade banner"
+          >
+            x
+          </button>
+        </div>
+
+      </div>
+
+      <div class="sidebar-stub">[Sidebar -- nav]</div>
+      <div class="content-stub">[Dashboard content -- card grid]</div>
+
+    </div>
+
+    <p class="note-block">
+      Same placement as the cloud-sync upsell banner: <code>grid-row: 2; grid-column: 1 / 3</code>.<br/>
+      Shown to Thrall users (both anonymous and authenticated) who have not dismissed it.<br/>
+      CTA: "Upgrade to Karl" -- concise, includes tier name for brand recognition.<br/>
+      Price is in the description line, not the CTA button (keeps button text short).<br/>
+      Dismiss flag: <code>fenrir:stripe_upsell_dismissed</code> (separate from the cloud-sync dismiss flag).<br/>
+      Banner shown on dashboard only -- same page restriction as the original upsell banner.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 2 -- Desktop: Karl Subscriber (no banner)
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 -- Desktop -- Karl Subscriber (no banner shown)</div>
+
+    <div class="app-shell" style="grid-template-rows: auto 1fr;">
+
+      <div class="topbar-stub" style="grid-row: 1;">
+        <span class="topbar-brand-stub">&#x16DF; Fenrir Ledger</span>
+        <div class="topbar-avatar-stub"><span aria-hidden="true">&#x16DF;</span></div>
+      </div>
+
+      <div class="sidebar-stub" style="grid-row: 2;">[Sidebar -- nav]</div>
+      <div class="content-stub" style="grid-row: 2;">[Dashboard content -- no banner]</div>
+
+    </div>
+
+    <p class="note-block">
+      Karl subscribers never see the upsell banner.<br/>
+      Render condition: <code>tier === 'thrall' AND !dismissed</code>.<br/>
+      After subscribing via the banner, the next page load will not show the banner.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 3 -- Mobile (375px): Stripe Upsell Banner
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 -- Mobile 375px -- Stripe Upsell Banner</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">375px frame</div>
+        <div class="mobile-frame">
+
+          <div class="topbar-stub" style="height: 56px;">
+            <span class="topbar-brand-stub" style="font-size: 11px;">&#x16DF; Fenrir Ledger</span>
+            <div class="topbar-avatar-stub"><span aria-hidden="true">&#x16DF;</span></div>
+          </div>
+
+          <!--
+            Mobile banner: stacks vertically.
+            Atmospheric line hidden on mobile (same convention as cloud-sync banner).
+            Description + CTA stack. x dismiss absolute top-right.
+          -->
+          <div class="upsell-banner-mobile" role="region" aria-label="Upgrade your subscription">
+            <p class="upsell-desc">
+              Upgrade to Karl for cloud sync and priority alerts -- $3.99/month.
+            </p>
+            <button class="btn-upsell-primary" type="button" style="font-size: 11px; padding: 7px 12px;">
+              Upgrade to Karl
+            </button>
+            <button
+              class="btn-upsell-dismiss"
+              type="button"
+              aria-label="Dismiss upgrade banner"
+              style="position: absolute; top: 4px; right: 4px;"
+            >
+              x
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="scenario-col" style="max-width: 380px;">
+        <div class="col-label">Mobile rules</div>
+        <p class="note">
+          Atmospheric line hidden on mobile -- same as cloud-sync banner convention.<br/>
+          Description shortened for mobile: fewer feature mentions.<br/>
+          CTA left-aligned, not full-width (avoids "button wall" on narrow screens).<br/>
+          x dismiss: 44px touch target, absolute top-right.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       INTERACTION SPECIFICATION -- Banner lifecycle
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Interaction Specification -- Stripe Upsell Banner Lifecycle</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1;">
+
+      <p style="font-weight: bold; margin-bottom: 8px;">Render condition</p>
+      <p style="margin-bottom: 12px; font-size: 12px;">
+        <code>subscriptionTier === 'thrall' AND localStorage.getItem('fenrir:stripe_upsell_dismissed') !== 'true'</code><br/>
+        Evaluated on every dashboard page load. Not shown on /valhalla, /cards/*, /settings.
+      </p>
+
+      <p style="font-weight: bold; margin-bottom: 8px;">CTA flow</p>
+      <ol style="padding-left: 18px; display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; font-size: 12px;">
+        <li>User clicks "Upgrade to Karl".</li>
+        <li>If anonymous: open email collection modal (see anonymous-checkout.html).</li>
+        <li>If authenticated: proceed directly.</li>
+        <li>POST <code>/api/stripe/checkout-session</code> with email + priceId.</li>
+        <li>Redirect to Stripe Checkout URL.</li>
+        <li>On success: user returns via success_url with Karl tier active.</li>
+        <li>Banner dismiss flag is NOT set by the CTA -- but the banner will not render because tier is now Karl.</li>
+      </ol>
+
+      <p style="font-weight: bold; margin-bottom: 8px;">Dismiss flow</p>
+      <ol style="padding-left: 18px; display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; font-size: 12px;">
+        <li>User clicks x dismiss button.</li>
+        <li>Immediately: <code>localStorage.setItem('fenrir:stripe_upsell_dismissed', 'true')</code>.</li>
+        <li>Collapse animation: height to 0, opacity to 0, 300ms ease.</li>
+        <li>After animation: element removed from DOM.</li>
+        <li>On all future loads: banner is not rendered.</li>
+      </ol>
+
+      <p style="font-weight: bold; margin-bottom: 8px;">Re-entry point</p>
+      <p style="font-size: 12px;">
+        Users who dismissed the banner can still subscribe from <code>/settings</code> (StripeSettings component).
+        The SealedRuneModal also provides a subscribe CTA when accessing locked features.
+      </p>
+
+    </div>
+  </section>
+
+  <p class="note" style="text-align: center; padding-bottom: 24px;">
+    Wireframe -- upsell-banner-stripe.html -- Fenrir Ledger -- Subscription upgrade banner -- No theme styling applied
+  </p>
+
+</div>
+
+</body>
+</html>

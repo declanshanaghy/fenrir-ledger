@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Button Feedback States — Hover, Active, Loading, Disabled</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* -- Page layout -------------------------------------------------------- */
+    .page { display: flex; flex-direction: column; gap: 48px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* -- Button base -------------------------------------------------------- */
+    .btn {
+      padding: 10px 18px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      background: none;
+      white-space: nowrap;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+    }
+    .btn-primary { font-weight: bold; }
+    .btn-secondary { font-weight: normal; }
+    .btn-destructive { font-weight: normal; }
+    .btn-ghost { border: none; }
+
+    /* -- State label badges ------------------------------------------------- */
+    .state-label {
+      display: inline-block;
+      border: 1px solid;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    /* -- State row ---------------------------------------------------------- */
+    .state-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .state-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-width: 160px;
+    }
+
+    /* -- Annotation boxes --------------------------------------------------- */
+    .annotation-box {
+      border: 1px dashed;
+      padding: 6px 10px;
+      font-size: 11px;
+      max-width: 160px;
+      text-align: center;
+    }
+
+    /* -- Spinner placeholder ------------------------------------------------ */
+    .spinner-placeholder {
+      width: 14px;
+      height: 14px;
+      border: 2px solid;
+      border-top: 2px solid transparent;
+      display: inline-block;
+    }
+
+    /* -- Visual indicator lines --------------------------------------------- */
+    .state-indicator {
+      width: 100%;
+      height: 3px;
+      border: 1px solid;
+      margin-top: 2px;
+    }
+    .state-indicator--hover { border-style: dotted; }
+    .state-indicator--active { border-style: solid; border-width: 2px; }
+    .state-indicator--loading { border-style: dashed; }
+    .state-indicator--disabled { border-style: double; }
+
+    /* -- Variant section ---------------------------------------------------- */
+    .variant-group {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border: 1px solid;
+      padding: 16px;
+    }
+    .variant-heading {
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* -- Mobile frame ------------------------------------------------------- */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      padding: 16px;
+    }
+    .mobile-btn-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mobile-btn-stack .btn { width: 100%; text-align: center; }
+
+    /* -- Transition diagram frame ------------------------------------------ */
+    .diagram-frame {
+      border: 1px dashed;
+      padding: 12px 16px;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+    .diagram-frame pre { font-size: 11px; white-space: pre-wrap; }
+
+    /* -- Utilities ---------------------------------------------------------- */
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note-block {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.6;
+      border: 1px dashed;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+    .scenario-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .col-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+
+  <!-- =====================================================================
+       DESIGN DECISION -- Button Feedback States (Issue #150)
+       Luna's recommendation: all interactive buttons must have hover,
+       active, loading, and disabled states. CSS-only for hover/active;
+       React state for loading/disabled.
+
+       Rationale:
+         - The "Manage Subscription" button triggers a 1-2s API call
+           (POST /api/stripe/portal) with no visual feedback. Users
+           re-click or assume the app is broken.
+         - Every button that triggers an async operation needs a loading
+           indicator to show the click registered.
+         - Hover and active states are pure CSS (:hover, :active pseudo-
+           classes) -- zero JS required, instant feedback.
+         - Loading state requires React state: set loading=true on click,
+           render spinner + "Loading..." text, disable the button until
+           the operation completes or fails.
+         - This spec covers ALL button variants across the app.
+
+       NON-NEGOTIABLE:
+         - All buttons must have visible hover feedback.
+         - All buttons must have visible active/pressed feedback.
+         - All async buttons must show a loading indicator.
+         - Minimum 44x44px touch target on all buttons.
+         - Loading state must disable the button to prevent double-submit.
+         - Screen readers must announce the loading state.
+  ===================================================================== -->
+
+
+  <!-- =====================================================================
+       SCENARIO 1 -- Primary Button (Gold) -- All 5 States
+       Used for: Subscribe, Add Card, Save Changes, Manage Subscription
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 -- Primary Button (Gold) -- All States</div>
+
+    <div class="variant-group">
+      <div class="variant-heading">btn-primary</div>
+      <p class="note">
+        Used for: "Subscribe for $3.99/month", "Add Card", "Save changes",
+        "Manage Subscription", "Resubscribe". The highest-emphasis button.
+      </p>
+
+      <div class="state-row">
+
+        <!-- DEFAULT -->
+        <div class="state-cell">
+          <div class="state-label">Default</div>
+          <button class="btn btn-primary" type="button">
+            Manage Subscription
+          </button>
+          <div class="annotation-box">
+            Solid border. Bold label. Full opacity. cursor: pointer.
+          </div>
+        </div>
+
+        <!-- HOVER -->
+        <div class="state-cell">
+          <div class="state-label">:hover</div>
+          <button class="btn btn-primary" type="button" style="border-width: 2px; padding: 9px 17px;">
+            Manage Subscription
+          </button>
+          <div class="state-indicator state-indicator--hover"></div>
+          <div class="annotation-box">
+            CSS-only. Border thickens to 2px. In theme: brightness(1.15)
+            + subtle border glow (gold). Transition: 150ms ease-out.
+            <!-- Implementation: filter: brightness(1.15); border-color: var(--gold-bright); -->
+          </div>
+        </div>
+
+        <!-- ACTIVE / PRESSED -->
+        <div class="state-cell">
+          <div class="state-label">:active</div>
+          <button class="btn btn-primary" type="button" style="border-width: 2px; padding: 9px 17px; font-size: 12.5px;">
+            Manage Subscription
+          </button>
+          <div class="state-indicator state-indicator--active"></div>
+          <div class="annotation-box">
+            CSS-only. Scale down to 0.97. In theme: brightness(0.9) +
+            inset shadow feel. Transition: 80ms ease-out. Immediate
+            visual "press" feedback.
+            <!-- Implementation: transform: scale(0.97); filter: brightness(0.9); -->
+          </div>
+        </div>
+
+        <!-- LOADING -->
+        <div class="state-cell">
+          <div class="state-label">Loading</div>
+          <button class="btn btn-primary" type="button" disabled style="opacity: 0.7; cursor: not-allowed;">
+            <span class="spinner-placeholder" aria-hidden="true"></span>
+            Loading...
+          </button>
+          <div class="state-indicator state-indicator--loading"></div>
+          <div class="annotation-box">
+            React state. Spinner (14px, border animation, 0.8s linear
+            infinite rotate) + text changes to "Loading...". Button
+            disabled. Opacity: 0.7. cursor: not-allowed.
+            aria-busy="true" + aria-label updated.
+          </div>
+        </div>
+
+        <!-- DISABLED -->
+        <div class="state-cell">
+          <div class="state-label">Disabled</div>
+          <button class="btn btn-primary" type="button" disabled style="opacity: 0.4; cursor: not-allowed;">
+            Manage Subscription
+          </button>
+          <div class="state-indicator state-indicator--disabled"></div>
+          <div class="annotation-box">
+            Static disabled state (not loading -- just unavailable).
+            Opacity: 0.4. cursor: not-allowed. No hover/active effects.
+            aria-disabled="true".
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <p class="note-block">
+      Primary buttons are the highest-emphasis CTA. In the theme: gold background (#c9920a),
+      dark text (#07070d). Hover brightens the gold. Active darkens it and scales down.
+      Loading replaces the label with spinner + "Loading..." and disables interaction.<br/>
+      The 150ms hover and 80ms active durations match the existing interaction spec
+      (see interactions.md -- hover: 150-200ms).
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 2 -- Secondary / Ghost Button -- All 5 States
+       Used for: Cancel, Manage Subscription (canceled state), Continue without signing in
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 -- Secondary / Ghost Button -- All States</div>
+
+    <div class="variant-group">
+      <div class="variant-heading">btn-secondary / btn-ghost</div>
+      <p class="note">
+        Used for: "Cancel", "Manage Subscription" (in canceled state),
+        "Continue without signing in", "Not now". Outlined or borderless style.
+      </p>
+
+      <div class="state-row">
+
+        <!-- DEFAULT -->
+        <div class="state-cell">
+          <div class="state-label">Default</div>
+          <button class="btn btn-secondary" type="button">
+            Cancel
+          </button>
+          <div class="annotation-box">
+            1px solid border. Normal weight. Full opacity.
+          </div>
+        </div>
+
+        <!-- HOVER -->
+        <div class="state-cell">
+          <div class="state-label">:hover</div>
+          <button class="btn btn-secondary" type="button" style="border-width: 2px; padding: 9px 17px;">
+            Cancel
+          </button>
+          <div class="state-indicator state-indicator--hover"></div>
+          <div class="annotation-box">
+            CSS-only. Border brightens. In theme: background shifts to
+            subtle fill (rgba white 5%). Transition: 150ms ease-out.
+            <!-- Implementation: background: hsl(var(--muted)/0.3); border-color: hsl(var(--border-highlight)); -->
+          </div>
+        </div>
+
+        <!-- ACTIVE -->
+        <div class="state-cell">
+          <div class="state-label">:active</div>
+          <button class="btn btn-secondary" type="button" style="border-width: 2px; padding: 9px 17px; font-size: 12.5px;">
+            Cancel
+          </button>
+          <div class="state-indicator state-indicator--active"></div>
+          <div class="annotation-box">
+            CSS-only. Scale(0.97). In theme: background darkens slightly.
+            Transition: 80ms ease-out.
+          </div>
+        </div>
+
+        <!-- LOADING (rare for secondary but needed for "Manage Subscription" in canceled state) -->
+        <div class="state-cell">
+          <div class="state-label">Loading</div>
+          <button class="btn btn-secondary" type="button" disabled style="opacity: 0.7; cursor: not-allowed;">
+            <span class="spinner-placeholder" aria-hidden="true"></span>
+            Loading...
+          </button>
+          <div class="state-indicator state-indicator--loading"></div>
+          <div class="annotation-box">
+            Same pattern as primary. Spinner + text + disabled.
+            Used when secondary buttons trigger API calls (e.g.,
+            "Manage Subscription" in canceled state opens Portal).
+          </div>
+        </div>
+
+        <!-- DISABLED -->
+        <div class="state-cell">
+          <div class="state-label">Disabled</div>
+          <button class="btn btn-secondary" type="button" disabled style="opacity: 0.4; cursor: not-allowed;">
+            Cancel
+          </button>
+          <div class="state-indicator state-indicator--disabled"></div>
+          <div class="annotation-box">
+            Opacity: 0.4. cursor: not-allowed. No hover/active.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 3 -- Destructive Button -- All 5 States
+       Used for: Cancel Subscription, Delete Card
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 -- Destructive Button -- All States</div>
+
+    <div class="variant-group">
+      <div class="variant-heading">btn-destructive</div>
+      <p class="note">
+        Used for: "Cancel" (subscription cancel), "Delete card".
+        Visually de-emphasized but distinct as a danger action.
+      </p>
+
+      <div class="state-row">
+
+        <!-- DEFAULT -->
+        <div class="state-cell">
+          <div class="state-label">Default</div>
+          <button class="btn btn-destructive" type="button">
+            Cancel Subscription
+          </button>
+          <div class="annotation-box">
+            1px solid border. In theme: muted red/danger color, not
+            prominent. Normal font weight.
+          </div>
+        </div>
+
+        <!-- HOVER -->
+        <div class="state-cell">
+          <div class="state-label">:hover</div>
+          <button class="btn btn-destructive" type="button" style="border-width: 2px; padding: 9px 17px;">
+            Cancel Subscription
+          </button>
+          <div class="state-indicator state-indicator--hover"></div>
+          <div class="annotation-box">
+            CSS-only. In theme: danger color intensifies. Background
+            gains subtle red tint. Transition: 150ms ease-out.
+            <!-- Implementation: background: hsl(var(--destructive)/0.1); border-color: hsl(var(--destructive)); -->
+          </div>
+        </div>
+
+        <!-- ACTIVE -->
+        <div class="state-cell">
+          <div class="state-label">:active</div>
+          <button class="btn btn-destructive" type="button" style="border-width: 2px; padding: 9px 17px; font-size: 12.5px;">
+            Cancel Subscription
+          </button>
+          <div class="state-indicator state-indicator--active"></div>
+          <div class="annotation-box">
+            CSS-only. Scale(0.97). Danger color deepens.
+            Transition: 80ms ease-out.
+          </div>
+        </div>
+
+        <!-- LOADING -->
+        <div class="state-cell">
+          <div class="state-label">Loading</div>
+          <button class="btn btn-destructive" type="button" disabled style="opacity: 0.7; cursor: not-allowed;">
+            <span class="spinner-placeholder" aria-hidden="true"></span>
+            Canceling...
+          </button>
+          <div class="state-indicator state-indicator--loading"></div>
+          <div class="annotation-box">
+            Spinner + contextual text ("Canceling...", "Deleting...").
+            Button disabled. Same opacity/cursor as other variants.
+          </div>
+        </div>
+
+        <!-- DISABLED -->
+        <div class="state-cell">
+          <div class="state-label">Disabled</div>
+          <button class="btn btn-destructive" type="button" disabled style="opacity: 0.4; cursor: not-allowed;">
+            Cancel Subscription
+          </button>
+          <div class="state-indicator state-indicator--disabled"></div>
+          <div class="annotation-box">
+            Opacity: 0.4. cursor: not-allowed.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 4 -- Loading State Detail: Spinner + Text Pattern
+       Close-up of the loading indicator placement and behavior.
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 4 -- Loading Indicator Detail</div>
+
+    <div class="variant-group">
+      <div class="variant-heading">Loading state anatomy</div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+
+        <!-- Anatomy diagram -->
+        <div style="border: 1px solid; padding: 16px; display: flex; align-items: center; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px dashed; padding: 10px 18px; min-height: 44px;">
+            <div style="width: 14px; height: 14px; border: 2px solid; border-top: 2px solid transparent; flex-shrink: 0;">
+              <!-- Spinner: 14x14px circle with one transparent quadrant. Rotates 360deg in 0.8s linear infinite. -->
+            </div>
+            <span style="font-size: 13px; font-weight: bold;">Loading...</span>
+          </div>
+          <div style="font-size: 11px; display: flex; flex-direction: column; gap: 4px;">
+            <p><strong>Spinner:</strong> 14 x 14px. Circular border with one transparent side. CSS animation: rotate 360deg, 0.8s, linear, infinite.</p>
+            <p><strong>Text:</strong> Replaces the original label. Contextual: "Loading...", "Redirecting...", "Saving...", "Canceling..."</p>
+            <p><strong>Gap:</strong> 8px between spinner and text.</p>
+            <p><strong>Alignment:</strong> Spinner and text vertically centered within button.</p>
+          </div>
+        </div>
+
+        <!-- Contextual loading text examples -->
+        <div style="font-size: 12px; line-height: 1.6;">
+          <p style="font-weight: bold; margin-bottom: 6px;">Contextual loading text by button:</p>
+          <table style="border-collapse: collapse; width: 100%; font-size: 11px;">
+            <thead>
+              <tr style="border-bottom: 1px solid;">
+                <th style="text-align: left; padding: 4px 8px;">Button</th>
+                <th style="text-align: left; padding: 4px 8px;">Default Label</th>
+                <th style="text-align: left; padding: 4px 8px;">Loading Label</th>
+                <th style="text-align: left; padding: 4px 8px;">API Call</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid;">
+                <td style="padding: 4px 8px;">Manage Subscription</td>
+                <td style="padding: 4px 8px;">Manage Subscription</td>
+                <td style="padding: 4px 8px;">Redirecting...</td>
+                <td style="padding: 4px 8px;">POST /api/stripe/portal</td>
+              </tr>
+              <tr style="border-bottom: 1px solid;">
+                <td style="padding: 4px 8px;">Subscribe</td>
+                <td style="padding: 4px 8px;">Subscribe for $3.99/month</td>
+                <td style="padding: 4px 8px;">Redirecting...</td>
+                <td style="padding: 4px 8px;">POST /api/stripe/checkout-session</td>
+              </tr>
+              <tr style="border-bottom: 1px solid;">
+                <td style="padding: 4px 8px;">Add Card</td>
+                <td style="padding: 4px 8px;">Add Card</td>
+                <td style="padding: 4px 8px;">Saving...</td>
+                <td style="padding: 4px 8px;">localStorage (fast, but keep pattern consistent)</td>
+              </tr>
+              <tr style="border-bottom: 1px solid;">
+                <td style="padding: 4px 8px;">Save Changes</td>
+                <td style="padding: 4px 8px;">Save changes</td>
+                <td style="padding: 4px 8px;">Saving...</td>
+                <td style="padding: 4px 8px;">localStorage</td>
+              </tr>
+              <tr style="border-bottom: 1px solid;">
+                <td style="padding: 4px 8px;">Cancel (subscription)</td>
+                <td style="padding: 4px 8px;">Cancel</td>
+                <td style="padding: 4px 8px;">Redirecting...</td>
+                <td style="padding: 4px 8px;">POST /api/stripe/portal</td>
+              </tr>
+              <tr style="border-bottom: 1px solid;">
+                <td style="padding: 4px 8px;">Delete Card</td>
+                <td style="padding: 4px 8px;">Delete card</td>
+                <td style="padding: 4px 8px;">Deleting...</td>
+                <td style="padding: 4px 8px;">localStorage</td>
+              </tr>
+              <tr>
+                <td style="padding: 4px 8px;">Resubscribe</td>
+                <td style="padding: 4px 8px;">Resubscribe</td>
+                <td style="padding: 4px 8px;">Redirecting...</td>
+                <td style="padding: 4px 8px;">POST /api/stripe/checkout-session</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Timing note -->
+        <p class="note">
+          For localStorage operations (Add Card, Save, Delete), the loading state
+          may flash too quickly. Use a minimum display time of 300ms to prevent
+          jarring flicker. For API calls (Stripe portal/checkout), show loading
+          until redirect or error. On error, revert to default state and show
+          error toast.
+        </p>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 5 -- Sidebar Nav Items -- Hover/Active States
+       Sidebar links also need hover feedback.
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 5 -- Sidebar Nav Item States</div>
+
+    <div class="variant-group">
+      <div class="variant-heading">Nav items (sidebar)</div>
+      <p class="note">
+        Sidebar nav items ("Cards", "Valhalla", "Settings") need hover and active
+        feedback. These are CSS-only -- no loading state since navigation is instant.
+      </p>
+
+      <div class="state-row">
+
+        <div class="state-cell">
+          <div class="state-label">Default</div>
+          <div style="border: 1px solid; padding: 10px 16px; width: 200px; display: flex; align-items: center; gap: 10px; min-height: 44px;">
+            <span style="font-size: 16px;">&#x16B2;</span>
+            <span style="font-size: 13px;">Cards</span>
+          </div>
+          <div class="annotation-box">Normal text. No background fill.</div>
+        </div>
+
+        <div class="state-cell">
+          <div class="state-label">:hover</div>
+          <div style="border: 2px solid; padding: 9px 15px; width: 200px; display: flex; align-items: center; gap: 10px; min-height: 44px;">
+            <span style="font-size: 16px;">&#x16B2;</span>
+            <span style="font-size: 13px;">Cards</span>
+          </div>
+          <div class="state-indicator state-indicator--hover"></div>
+          <div class="annotation-box">
+            In theme: subtle background fill (rgba white 5-8%).
+            Text brightens. Transition: 150ms ease-out.
+          </div>
+        </div>
+
+        <div class="state-cell">
+          <div class="state-label">:active</div>
+          <div style="border: 2px solid; padding: 9px 15px; width: 200px; display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 12.5px;">
+            <span style="font-size: 15px;">&#x16B2;</span>
+            <span style="font-size: 12.5px;">Cards</span>
+          </div>
+          <div class="state-indicator state-indicator--active"></div>
+          <div class="annotation-box">
+            Scale(0.98). Background darkens slightly. 80ms.
+          </div>
+        </div>
+
+        <div class="state-cell">
+          <div class="state-label">Active (current page)</div>
+          <div style="border: 2px solid; border-left-width: 3px; padding: 9px 15px; width: 200px; display: flex; align-items: center; gap: 10px; min-height: 44px;">
+            <span style="font-size: 16px;">&#x16B2;</span>
+            <span style="font-size: 13px; font-weight: bold;">Cards</span>
+          </div>
+          <div class="annotation-box">
+            In theme: gold left border accent + gold text.
+            Background: subtle gold tint. This is the "you are here" state.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 6 -- Mobile Layout (375px) -- Button States
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 6 -- Mobile 375px -- Button States</div>
+
+    <div class="scenario-row">
+
+      <!-- Default mobile -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="col-label">Default State (375px)</div>
+        <div class="mobile-frame">
+          <div class="mobile-btn-stack">
+            <button class="btn btn-primary" type="button" style="width: 100%; justify-content: center;">
+              Manage Subscription
+            </button>
+            <button class="btn btn-destructive" type="button" style="width: 100%; justify-content: center;">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading mobile -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="col-label">Loading State (375px)</div>
+        <div class="mobile-frame">
+          <div class="mobile-btn-stack">
+            <button class="btn btn-primary" type="button" disabled style="width: 100%; justify-content: center; opacity: 0.7; cursor: not-allowed;">
+              <span class="spinner-placeholder" aria-hidden="true"></span>
+              Redirecting...
+            </button>
+            <button class="btn btn-destructive" type="button" disabled style="width: 100%; justify-content: center; opacity: 0.4; cursor: not-allowed;">
+              Cancel
+            </button>
+          </div>
+          <p class="note" style="margin-top: 8px;">
+            When one button in a group is loading, sibling action buttons
+            are disabled (opacity 0.4) to prevent conflicting actions.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      Mobile: all buttons full-width, stacked vertically. Touch targets remain 44px minimum height.<br/>
+      Hover states still apply for devices with hover capability (@media (hover: hover)).<br/>
+      Active/pressed state (scale 0.97) is especially important on mobile -- provides
+      immediate tap feedback on touchscreens where hover is unavailable.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 7 -- Error Recovery After Loading
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 7 -- Error Recovery Flow</div>
+
+    <div class="variant-group">
+      <div class="variant-heading">Loading -> Error -> Default</div>
+
+      <div class="state-row">
+
+        <div class="state-cell">
+          <div class="state-label">1. Click</div>
+          <button class="btn btn-primary" type="button">
+            Manage Subscription
+          </button>
+          <div class="annotation-box">User clicks button.</div>
+        </div>
+
+        <div style="display: flex; align-items: center; font-size: 20px; padding-top: 20px;">&#8594;</div>
+
+        <div class="state-cell">
+          <div class="state-label">2. Loading</div>
+          <button class="btn btn-primary" type="button" disabled style="opacity: 0.7; cursor: not-allowed;">
+            <span class="spinner-placeholder" aria-hidden="true"></span>
+            Redirecting...
+          </button>
+          <div class="annotation-box">API call in progress.</div>
+        </div>
+
+        <div style="display: flex; align-items: center; font-size: 20px; padding-top: 20px;">&#8594;</div>
+
+        <div class="state-cell">
+          <div class="state-label">3. Error</div>
+          <button class="btn btn-primary" type="button">
+            Manage Subscription
+          </button>
+          <div style="border: 1px dashed; padding: 4px 8px; font-size: 10px; text-align: center; max-width: 160px;">
+            [TOAST: "Something went wrong. Try again."]
+          </div>
+          <div class="annotation-box">
+            Button reverts to default state. Error toast appears
+            (sonner, 5s auto-dismiss). User can retry.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       ACCESSIBILITY SUMMARY
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Accessibility Requirements</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size: 12px;">
+      <table style="border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr style="border-bottom: 1px solid;">
+            <th style="text-align: left; padding: 6px 8px;">Element</th>
+            <th style="text-align: left; padding: 6px 8px;">Requirement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">All buttons</td>
+            <td style="padding: 6px 8px;">Visible focus ring on keyboard focus (<code>:focus-visible</code>). Must meet WCAG 2.1 AA contrast (3:1 for UI components). Min touch target 44x44px.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Loading state</td>
+            <td style="padding: 6px 8px;"><code>aria-busy="true"</code> on the button while loading. <code>aria-disabled="true"</code> alongside <code>disabled</code> attribute. <code>aria-label</code> updated to include loading context (e.g., "Manage Subscription, loading").</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Spinner</td>
+            <td style="padding: 6px 8px;"><code>aria-hidden="true"</code> on the spinner SVG/element -- it is decorative. The loading text ("Redirecting...") is the accessible indicator. Spinner respects <code>prefers-reduced-motion: reduce</code> -- stops rotation, shows static circle.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Hover/active states</td>
+            <td style="padding: 6px 8px;">Do NOT rely on hover alone for critical information. Hover feedback is enhancement, not gating. All information available without hover (keyboard, touch).</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 8px;">Reduced motion</td>
+            <td style="padding: 6px 8px;"><code>@media (prefers-reduced-motion: reduce)</code>: disable scale transforms on :active, disable spinner rotation (show static indicator), keep opacity changes (they are not motion).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       INTERACTION SPECIFICATION -- State Machine
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Interaction Specification -- Button State Machine</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size: 12px;">
+
+      <p style="font-weight: bold; margin-bottom: 8px;">State Diagram (Mermaid -- render in wireframes.md or interactions.md)</p>
+      <pre style="font-size: 11px; padding: 8px; border: 1px solid; white-space: pre-wrap;">
+stateDiagram-v2
+    [*] --> Default: Button rendered
+
+    Default --> Hover: Mouse enters (CSS :hover)
+    Hover --> Default: Mouse leaves
+    Hover --> Active: Mouse down (CSS :active)
+    Active --> Hover: Mouse up (still hovering)
+    Active --> Loading: Mouse up triggers async action
+
+    Default --> Loading: Click triggers async action
+    Loading --> Default: Operation succeeds (redirect or complete)
+    Loading --> Default: Operation fails (revert + error toast)
+
+    Default --> Disabled: External condition disables button
+    Disabled --> Default: External condition re-enables button
+
+    note right of Loading
+        aria-busy="true"
+        aria-disabled="true"
+        Spinner + contextual text
+        Sibling buttons disabled
+    end note
+
+    note right of Hover
+        CSS-only: filter brightness
+        border glow, 150ms ease-out
+    end note
+
+    note right of Active
+        CSS-only: scale(0.97)
+        80ms ease-out
+    end note
+      </pre>
+
+      <p style="font-weight: bold; margin-bottom: 8px; margin-top: 12px;">CSS Implementation Summary</p>
+      <pre style="font-size: 11px; padding: 8px; border: 1px solid; white-space: pre-wrap;">
+/* All button variants share these transition foundations */
+.btn {
+    transition:
+        transform 80ms ease-out,
+        filter 150ms ease-out,
+        border-color 150ms ease-out,
+        background-color 150ms ease-out,
+        box-shadow 150ms ease-out,
+        opacity 150ms ease-out;
+}
+
+/* Hover -- CSS-only, all variants */
+.btn:not(:disabled):hover {
+    filter: brightness(1.15);
+    /* Primary: border glow gold */
+    /* Secondary: subtle background fill */
+    /* Destructive: danger color intensifies */
+}
+
+/* Active / Pressed -- CSS-only, all variants */
+.btn:not(:disabled):active {
+    transform: scale(0.97);
+    filter: brightness(0.9);
+}
+
+/* Loading -- applied via React state (isLoading prop) */
+.btn[aria-busy="true"] {
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Disabled -- static unavailable state */
+.btn:disabled:not([aria-busy="true"]) {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Spinner rotation */
+@keyframes btn-spinner {
+    to { transform: rotate(360deg); }
+}
+.btn-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: btn-spinner 0.8s linear infinite;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .btn:not(:disabled):active { transform: none; }
+    .btn-spinner { animation: none; }
+}
+      </pre>
+
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       COMPONENTS AFFECTED -- Inventory
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Components Requiring Updates</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size: 12px;">
+      <table style="border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr style="border-bottom: 1px solid;">
+            <th style="text-align: left; padding: 6px 8px;">Component / Page</th>
+            <th style="text-align: left; padding: 6px 8px;">Buttons</th>
+            <th style="text-align: left; padding: 6px 8px;">Needs Loading State?</th>
+            <th style="text-align: left; padding: 6px 8px;">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">StripeSettings</td>
+            <td style="padding: 6px 8px;">Manage Subscription, Cancel, Subscribe, Resubscribe</td>
+            <td style="padding: 6px 8px;">YES -- all trigger API calls</td>
+            <td style="padding: 6px 8px;">Highest priority. 1-2s latency on Stripe portal/checkout API.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">CardForm (add/edit)</td>
+            <td style="padding: 6px 8px;">Add Card, Save changes, Delete card, Cancel</td>
+            <td style="padding: 6px 8px;">Optional (localStorage is fast)</td>
+            <td style="padding: 6px 8px;">Keep pattern consistent. 300ms min display if shown.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">SealedRuneModal</td>
+            <td style="padding: 6px 8px;">Subscribe CTA, Not now</td>
+            <td style="padding: 6px 8px;">YES -- Subscribe triggers checkout</td>
+            <td style="padding: 6px 8px;">Modal dismiss ("Not now") does not need loading.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">AnonymousCheckoutModal</td>
+            <td style="padding: 6px 8px;">Submit (email), Cancel</td>
+            <td style="padding: 6px 8px;">YES -- Submit triggers checkout</td>
+            <td style="padding: 6px 8px;">Email validation is synchronous; loading starts after validation passes.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Sidebar nav items</td>
+            <td style="padding: 6px 8px;">Cards, Valhalla, Settings</td>
+            <td style="padding: 6px 8px;">No -- navigation is instant</td>
+            <td style="padding: 6px 8px;">CSS hover/active only.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Modal action buttons</td>
+            <td style="padding: 6px 8px;">OK, Close, Confirm</td>
+            <td style="padding: 6px 8px;">No -- dismiss is instant</td>
+            <td style="padding: 6px 8px;">CSS hover/active only.</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 8px;">globals.css (shared)</td>
+            <td style="padding: 6px 8px;">All .btn-* classes</td>
+            <td style="padding: 6px 8px;">N/A</td>
+            <td style="padding: 6px 8px;">Add :hover, :active, :disabled, and .btn-spinner rules.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <p class="note" style="text-align: center; padding-bottom: 24px;">
+    Wireframe -- button-feedback-states.html -- Fenrir Ledger -- Issue #150 -- No theme styling applied
+  </p>
+
+</div>
+
+</body>
+</html>

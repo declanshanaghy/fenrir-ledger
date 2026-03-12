@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Font Size Scale Increase — Issue #149</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 16px; line-height: 1.5; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+
+    .page { max-width: 960px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { font-size: 14px; margin-bottom: 32px; }
+
+    /* ── Comparison layout ─────────────────────────────────── */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+    @media (max-width: 640px) {
+      .comparison { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      border: 1px solid;
+      padding: 24px;
+    }
+    .panel-title {
+      font-size: 16px;
+      font-weight: 700;
+      border-bottom: 1px solid;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+
+    /* ── Scale table ───────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 32px;
+    }
+    th, td {
+      border: 1px solid;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th { font-weight: 700; }
+
+    /* ── Before/after sample blocks ────────────────────────── */
+    .sample-block {
+      border: 1px solid;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .sample-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    /* ── Before samples (current sizes) ────────────────────── */
+    .before .s-h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .before .s-h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .before .s-h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .before .s-h4 { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+    .before .s-body { font-size: 14px; margin-bottom: 4px; }
+    .before .s-body-sm { font-size: 12px; margin-bottom: 4px; }
+    .before .s-label { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+    .before .s-meta { font-size: 11px; margin-bottom: 4px; }
+    .before .s-code { font-size: 12px; font-family: monospace; margin-bottom: 4px; }
+    .before .s-button { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+    .before .s-badge { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── After samples (proposed sizes) ────────────────────── */
+    .after .s-h1 { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
+    .after .s-h2 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .after .s-h3 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .after .s-h4 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .after .s-body { font-size: 16px; margin-bottom: 4px; }
+    .after .s-body-sm { font-size: 14px; margin-bottom: 4px; }
+    .after .s-label { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .after .s-meta { font-size: 13px; margin-bottom: 4px; }
+    .after .s-code { font-size: 14px; font-family: monospace; margin-bottom: 4px; }
+    .after .s-button { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .after .s-badge { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── Component samples ─────────────────────────────────── */
+    .component-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 640px) {
+      .component-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Card tile sample */
+    .card-sample {
+      border: 1px solid;
+      padding: 16px;
+    }
+    .card-sample header {
+      margin-bottom: 8px;
+    }
+    .card-sample .issuer { font-weight: 700; }
+    .card-sample .card-name { font-weight: 400; }
+    .card-sample .deadline-line { font-family: monospace; margin: 8px 0; }
+    .card-sample .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .card-sample .stat-label { font-weight: 500; }
+    .card-sample .stat-value { font-family: monospace; }
+    .card-sample hr { border: none; border-top: 1px solid; margin: 8px 0; }
+
+    /* Before card sizes */
+    .before .card-sample .issuer { font-size: 14px; }
+    .before .card-sample .card-name { font-size: 12px; }
+    .before .card-sample .deadline-line { font-size: 12px; }
+    .before .card-sample .stat-label { font-size: 10px; }
+    .before .card-sample .stat-value { font-size: 12px; }
+
+    /* After card sizes */
+    .after .card-sample .issuer { font-size: 16px; }
+    .after .card-sample .card-name { font-size: 14px; }
+    .after .card-sample .deadline-line { font-size: 14px; }
+    .after .card-sample .stat-label { font-size: 12px; }
+    .after .card-sample .stat-value { font-size: 14px; }
+
+    /* Form sample */
+    .form-sample {
+      border: 1px solid;
+      padding: 16px;
+    }
+    .form-sample fieldset {
+      border: 1px solid;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .form-sample legend { font-weight: 600; padding: 0 4px; }
+    .form-sample label { display: block; font-weight: 500; margin-bottom: 4px; }
+    .form-sample input {
+      width: 100%;
+      border: 1px solid;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+    .form-sample button {
+      border: 1px solid;
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Before form sizes */
+    .before .form-sample legend { font-size: 12px; }
+    .before .form-sample label { font-size: 12px; }
+    .before .form-sample input { font-size: 12px; }
+    .before .form-sample button { font-size: 12px; }
+
+    /* After form sizes */
+    .after .form-sample legend { font-size: 14px; }
+    .after .form-sample label { font-size: 14px; }
+    .after .form-sample input { font-size: 16px; }
+    .after .form-sample button { font-size: 14px; }
+
+    /* Sidebar sample */
+    .sidebar-sample {
+      border: 1px solid;
+      padding: 12px;
+      width: 100%;
+    }
+    .sidebar-sample .brand { font-weight: 700; margin-bottom: 4px; }
+    .sidebar-sample .brand-sub { margin-bottom: 12px; }
+    .sidebar-sample nav a {
+      display: block;
+      padding: 6px 0;
+      text-decoration: none;
+      border-bottom: 1px solid;
+    }
+
+    /* Before sidebar sizes */
+    .before .sidebar-sample .brand { font-size: 14px; }
+    .before .sidebar-sample .brand-sub { font-size: 10px; }
+    .before .sidebar-sample nav a { font-size: 12px; }
+
+    /* After sidebar sizes */
+    .after .sidebar-sample .brand { font-size: 16px; }
+    .after .sidebar-sample .brand-sub { font-size: 12px; }
+    .after .sidebar-sample nav a { font-size: 14px; }
+
+    /* HowlPanel sample */
+    .howl-sample {
+      border: 1px solid;
+      padding: 12px;
+    }
+    .howl-sample .howl-title { font-weight: 700; margin-bottom: 8px; }
+    .howl-sample .alert-item { border: 1px solid; padding: 8px; margin-bottom: 8px; }
+    .howl-sample .alert-type { font-weight: 600; }
+    .howl-sample .alert-card-name { margin: 4px 0; }
+    .howl-sample .alert-deadline { font-family: monospace; }
+    .howl-sample .alert-days { font-weight: 700; }
+
+    /* Before howl sizes */
+    .before .howl-sample .howl-title { font-size: 12px; }
+    .before .howl-sample .alert-type { font-size: 10px; }
+    .before .howl-sample .alert-card-name { font-size: 12px; }
+    .before .howl-sample .alert-deadline { font-size: 11px; }
+    .before .howl-sample .alert-days { font-size: 12px; }
+
+    /* After howl sizes */
+    .after .howl-sample .howl-title { font-size: 14px; }
+    .after .howl-sample .alert-type { font-size: 12px; }
+    .after .howl-sample .alert-card-name { font-size: 14px; }
+    .after .howl-sample .alert-deadline { font-size: 13px; }
+    .after .howl-sample .alert-days { font-size: 14px; }
+
+    /* ── Section headings ──────────────────────────────────── */
+    .section-heading {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 32px 0 16px;
+      border-bottom: 2px solid;
+      padding-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Font Size Scale: Before vs After</h1>
+    <p class="subtitle">Issue #149 -- Increase base font sizes for readability</p>
+    <p class="note">
+      This wireframe demonstrates the typography hierarchy at current (BEFORE) and
+      proposed (AFTER) sizes. No theme styling is applied -- structure only.
+      The goal is a proportional scale-up that preserves visual hierarchy while
+      matching modern readability standards (Stripe docs as reference).
+    </p>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SECTION 1: Typography Scale Reference Table
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-heading">Typography Scale Reference</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Level</th>
+            <th>Role</th>
+            <th>Before (px)</th>
+            <th>After (px)</th>
+            <th>Tailwind Before</th>
+            <th>Tailwind After</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>H1</td>
+            <td>Page title (display)</td>
+            <td>24</td>
+            <td>32</td>
+            <td>text-2xl</td>
+            <td>text-3xl / text-[32px]</td>
+          </tr>
+          <tr>
+            <td>H2</td>
+            <td>Section heading</td>
+            <td>18</td>
+            <td>24</td>
+            <td>text-lg</td>
+            <td>text-2xl</td>
+          </tr>
+          <tr>
+            <td>H3</td>
+            <td>Card / panel heading</td>
+            <td>14</td>
+            <td>18</td>
+            <td>text-sm</td>
+            <td>text-lg</td>
+          </tr>
+          <tr>
+            <td>H4</td>
+            <td>Subheading / fieldset legend</td>
+            <td>12</td>
+            <td>16</td>
+            <td>text-xs</td>
+            <td>text-base</td>
+          </tr>
+          <tr>
+            <td>Body</td>
+            <td>Primary body text</td>
+            <td>14</td>
+            <td>16</td>
+            <td>text-sm</td>
+            <td>text-base</td>
+          </tr>
+          <tr>
+            <td>Body Small</td>
+            <td>Secondary body text, descriptions</td>
+            <td>12</td>
+            <td>14</td>
+            <td>text-xs</td>
+            <td>text-sm</td>
+          </tr>
+          <tr>
+            <td>Label</td>
+            <td>Form labels, stat labels</td>
+            <td>12</td>
+            <td>14</td>
+            <td>text-xs</td>
+            <td>text-sm</td>
+          </tr>
+          <tr>
+            <td>Meta</td>
+            <td>Timestamps, footnotes, helper text</td>
+            <td>11</td>
+            <td>13</td>
+            <td>text-[11px]</td>
+            <td>text-[13px]</td>
+          </tr>
+          <tr>
+            <td>Code / Mono</td>
+            <td>Dates, amounts, data values</td>
+            <td>12</td>
+            <td>14</td>
+            <td>text-xs font-mono</td>
+            <td>text-sm font-mono</td>
+          </tr>
+          <tr>
+            <td>Button</td>
+            <td>Button labels, CTAs</td>
+            <td>12</td>
+            <td>14</td>
+            <td>text-xs</td>
+            <td>text-sm</td>
+          </tr>
+          <tr>
+            <td>Badge</td>
+            <td>Status badges, realm tags</td>
+            <td>10</td>
+            <td>12</td>
+            <td>text-[10px]</td>
+            <td>text-xs</td>
+          </tr>
+          <tr>
+            <td>Nav Item</td>
+            <td>Sidebar navigation links</td>
+            <td>12</td>
+            <td>14</td>
+            <td>text-xs</td>
+            <td>text-sm</td>
+          </tr>
+          <tr>
+            <td>Input</td>
+            <td>Form input text</td>
+            <td>12</td>
+            <td>16</td>
+            <td>text-xs</td>
+            <td>text-base</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="note">
+        Input text is set to 16px specifically to prevent iOS Safari from
+        zooming on focus -- this is a non-negotiable accessibility requirement.
+        The anonymous-checkout.html wireframe already documented this for
+        the email field; now it applies to ALL form inputs.
+      </p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SECTION 2: Side-by-Side Typography Samples
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-heading">Typography Hierarchy Comparison</h2>
+      <div class="comparison">
+        <!-- BEFORE panel -->
+        <div class="panel before">
+          <div class="panel-title">BEFORE (Current)</div>
+          <div class="sample-block">
+            <div class="sample-label">Headings</div>
+            <div class="s-h1">H1: The Ledger of Fates (24px)</div>
+            <div class="s-h2">H2: Active Chains (18px)</div>
+            <div class="s-h3">H3: Card Panel Heading (14px)</div>
+            <div class="s-h4">H4: Fee-Serpent Details (12px)</div>
+          </div>
+          <div class="sample-block">
+            <div class="sample-label">Text</div>
+            <div class="s-body">Body text at 14px -- the primary reading size for card descriptions and form help text.</div>
+            <div class="s-body-sm">Body small at 12px -- secondary descriptions and supplementary information.</div>
+            <div class="s-label">Label: Annual Fee (12px)</div>
+            <div class="s-meta">Meta: Updated 2 hours ago (11px)</div>
+            <div class="s-code">Code: $495.00 | 03/15/2026 (12px)</div>
+          </div>
+          <div class="sample-block">
+            <div class="sample-label">Controls</div>
+            <div class="s-button">[Forge a Chain] (12px)</div>
+            <div class="s-badge">MUSPELHEIM (10px)</div>
+          </div>
+        </div>
+
+        <!-- AFTER panel -->
+        <div class="panel after">
+          <div class="panel-title">AFTER (Proposed)</div>
+          <div class="sample-block">
+            <div class="sample-label">Headings</div>
+            <div class="s-h1">H1: The Ledger of Fates (32px)</div>
+            <div class="s-h2">H2: Active Chains (24px)</div>
+            <div class="s-h3">H3: Card Panel Heading (18px)</div>
+            <div class="s-h4">H4: Fee-Serpent Details (16px)</div>
+          </div>
+          <div class="sample-block">
+            <div class="sample-label">Text</div>
+            <div class="s-body">Body text at 16px -- the primary reading size for card descriptions and form help text.</div>
+            <div class="s-body-sm">Body small at 14px -- secondary descriptions and supplementary information.</div>
+            <div class="s-label">Label: Annual Fee (14px)</div>
+            <div class="s-meta">Meta: Updated 2 hours ago (13px)</div>
+            <div class="s-code">Code: $495.00 | 03/15/2026 (14px)</div>
+          </div>
+          <div class="sample-block">
+            <div class="sample-label">Controls</div>
+            <div class="s-button">[Forge a Chain] (14px)</div>
+            <div class="s-badge">MUSPELHEIM (12px)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SECTION 3: Component Samples -- Card Tile
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-heading">Component: Card Tile</h2>
+      <p class="note">
+        The card tile is the most information-dense component. It uses 5 distinct
+        text levels (issuer, card name, deadline mono, stat label, stat value).
+        All must scale proportionally.
+      </p>
+      <div class="component-grid">
+        <div class="before">
+          <div class="sample-label">BEFORE</div>
+          <div class="card-sample">
+            <header>
+              <div class="issuer">Chase</div>
+              <div class="card-name">Sapphire Preferred</div>
+            </header>
+            <hr />
+            <div class="deadline-line">Fee due: 04/15/2026 (32 days)</div>
+            <hr />
+            <div class="stats">
+              <div>
+                <div class="stat-label">Credit</div>
+                <div class="stat-value">$10,000</div>
+              </div>
+              <div>
+                <div class="stat-label">Fee</div>
+                <div class="stat-value">$95/yr</div>
+              </div>
+              <div>
+                <div class="stat-label">Bonus</div>
+                <div class="stat-value">60,000 pts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="after">
+          <div class="sample-label">AFTER</div>
+          <div class="card-sample">
+            <header>
+              <div class="issuer">Chase</div>
+              <div class="card-name">Sapphire Preferred</div>
+            </header>
+            <hr />
+            <div class="deadline-line">Fee due: 04/15/2026 (32 days)</div>
+            <hr />
+            <div class="stats">
+              <div>
+                <div class="stat-label">Credit</div>
+                <div class="stat-value">$10,000</div>
+              </div>
+              <div>
+                <div class="stat-label">Fee</div>
+                <div class="stat-value">$95/yr</div>
+              </div>
+              <div>
+                <div class="stat-label">Bonus</div>
+                <div class="stat-value">60,000 pts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SECTION 4: Component Samples -- Form
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-heading">Component: Form (Add Card)</h2>
+      <p class="note">
+        Form inputs must be 16px on mobile to prevent iOS Safari zoom-on-focus.
+        Labels and legends scale from text-xs to text-sm. Buttons from text-xs to text-sm.
+      </p>
+      <div class="component-grid">
+        <div class="before">
+          <div class="sample-label">BEFORE</div>
+          <div class="form-sample">
+            <fieldset>
+              <legend>Chain Identity</legend>
+              <label>Issuer</label>
+              <input type="text" placeholder="Select issuer..." />
+              <label>Card Name</label>
+              <input type="text" placeholder="e.g. Sapphire Preferred" />
+            </fieldset>
+            <div style="text-align: right;">
+              <button>Cancel</button>
+              <button style="margin-left: 8px;">Forge a Chain</button>
+            </div>
+          </div>
+        </div>
+        <div class="after">
+          <div class="sample-label">AFTER</div>
+          <div class="form-sample">
+            <fieldset>
+              <legend>Chain Identity</legend>
+              <label>Issuer</label>
+              <input type="text" placeholder="Select issuer..." />
+              <label>Card Name</label>
+              <input type="text" placeholder="e.g. Sapphire Preferred" />
+            </fieldset>
+            <div style="text-align: right;">
+              <button>Cancel</button>
+              <button style="margin-left: 8px;">Forge a Chain</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SECTION 5: Component Samples -- Sidebar + HowlPanel
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-heading">Component: Sidebar + Howl Panel</h2>
+      <div class="component-grid">
+        <div class="before">
+          <div class="sample-label">BEFORE -- Sidebar</div>
+          <div class="sidebar-sample">
+            <div class="brand">FENRIR LEDGER</div>
+            <div class="brand-sub">Credit Card Tracker</div>
+            <nav>
+              <a>Cards</a>
+              <a>Valhalla</a>
+              <a>The Ravens</a>
+            </nav>
+          </div>
+        </div>
+        <div class="after">
+          <div class="sample-label">AFTER -- Sidebar</div>
+          <div class="sidebar-sample">
+            <div class="brand">FENRIR LEDGER</div>
+            <div class="brand-sub">Credit Card Tracker</div>
+            <nav>
+              <a>Cards</a>
+              <a>Valhalla</a>
+              <a>The Ravens</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <div class="component-grid">
+        <div class="before">
+          <div class="sample-label">BEFORE -- Howl Panel</div>
+          <div class="howl-sample">
+            <div class="howl-title">THE HOWL</div>
+            <div class="alert-item">
+              <div class="alert-type">FEE APPROACHING</div>
+              <div class="alert-card-name">Chase Sapphire Preferred</div>
+              <div class="alert-deadline">Due: 04/15/2026</div>
+              <div class="alert-days">32 days</div>
+            </div>
+          </div>
+        </div>
+        <div class="after">
+          <div class="sample-label">AFTER -- Howl Panel</div>
+          <div class="howl-sample">
+            <div class="howl-title">THE HOWL</div>
+            <div class="alert-item">
+              <div class="alert-type">FEE APPROACHING</div>
+              <div class="alert-card-name">Chase Sapphire Preferred</div>
+              <div class="alert-deadline">Due: 04/15/2026</div>
+              <div class="alert-days">32 days</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SECTION 6: Mobile Considerations (375px)
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-heading">Mobile Considerations (375px min)</h2>
+      <p class="note">
+        At 375px, the increased font sizes must not cause horizontal overflow or
+        line wrapping that breaks layout. Key constraints:
+      </p>
+      <ul style="padding-left: 24px; margin: 12px 0; font-size: 14px;">
+        <li>Card tile stat labels (3-col grid): at 12px (up from 10px), "Credit" / "Fee" / "Bonus" still fit in 3 columns at 375px - 32px padding = 343px usable / 3 = ~114px per column. Safe.</li>
+        <li>Badge text at 12px (up from 10px): "MUSPELHEIM" is the longest realm name at ~11 chars. At 12px uppercase, this is ~90px. Fits in badge with padding.</li>
+        <li>Form inputs at 16px: already the iOS-safe size. No change needed on mobile.</li>
+        <li>H1 at 32px: on mobile, consider scaling down to 28px via responsive class (text-[28px] md:text-3xl). The page title "The Ledger of Fates" at 32px is ~320px wide -- tight at 375px with padding.</li>
+        <li>Sidebar nav at 14px: sidebar is overlay drawer on mobile, 272px wide. 14px nav items fit comfortably.</li>
+      </ul>
+      <p class="note">
+        Responsive recommendation: H1 can use text-[28px] on mobile, text-3xl (32px)
+        on md+ breakpoint. All other sizes are safe at all viewports.
+      </p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SECTION 7: Implementation Mapping
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-heading">Tailwind Class Migration Map</h2>
+      <p class="note">
+        This section maps the Tailwind class changes needed. The primary strategy
+        is a systematic find-and-replace of text-xs to text-sm, and text-sm to
+        text-base, with exceptions noted below.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Current Class</th>
+            <th>New Class</th>
+            <th>Context / Exceptions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>text-xs (12px)</td>
+            <td>text-sm (14px)</td>
+            <td>Default migration for labels, buttons, nav items, body-small</td>
+          </tr>
+          <tr>
+            <td>text-sm (14px)</td>
+            <td>text-base (16px)</td>
+            <td>Body text, card issuer names, descriptions</td>
+          </tr>
+          <tr>
+            <td>text-base (16px)</td>
+            <td>text-lg (18px)</td>
+            <td>Only where text-base was used for subheadings</td>
+          </tr>
+          <tr>
+            <td>text-lg (18px)</td>
+            <td>text-xl (20px) or text-2xl (24px)</td>
+            <td>Section headings -- context dependent</td>
+          </tr>
+          <tr>
+            <td>text-2xl (24px)</td>
+            <td>text-3xl (30px) or text-[32px]</td>
+            <td>Page titles (H1)</td>
+          </tr>
+          <tr>
+            <td>text-[10px]</td>
+            <td>text-xs (12px)</td>
+            <td>Badges, uppercase labels</td>
+          </tr>
+          <tr>
+            <td>text-[11px]</td>
+            <td>text-[13px]</td>
+            <td>Metadata, timestamps</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="note">
+        EXCEPTION: Do not blindly find-replace. Some text-xs/text-sm usages are
+        intentional for dense data displays (e.g., LCARS overlay easter egg,
+        Gleipnir fragment modals). Review each file. The 260 occurrences across
+        51 files should be reviewed component by component.
+      </p>
+      <p class="note">
+        globals.css change: Update `body { font-size: 14px }` in the base layer to
+        `body { font-size: 16px }`. This sets the new base for any element that
+        inherits font-size from body without an explicit Tailwind class.
+      </p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SECTION 8: Exceptions -- Components That Should NOT Change
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-heading">Exceptions: Do Not Change</h2>
+      <p class="note">
+        These components use intentionally small text for stylistic or functional
+        reasons. They should be left at their current sizes.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Current Size</th>
+            <th>Reason to Preserve</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ConsoleSignature.tsx (console ASCII art)</td>
+            <td>Various</td>
+            <td>ASCII art alignment depends on fixed character widths</td>
+          </tr>
+          <tr>
+            <td>LcarsOverlay.tsx (easter egg)</td>
+            <td>text-xs, text-[10px]</td>
+            <td>LCARS aesthetic requires compact data-dense text</td>
+          </tr>
+          <tr>
+            <td>Gleipnir copyright tooltip (globals.css)</td>
+            <td>10px</td>
+            <td>Intentionally tiny -- easter egg hint, not primary UI</td>
+          </tr>
+          <tr>
+            <td>.note class (wireframes only)</td>
+            <td>11px</td>
+            <td>Wireframe annotations, not shipped UI</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+</html>

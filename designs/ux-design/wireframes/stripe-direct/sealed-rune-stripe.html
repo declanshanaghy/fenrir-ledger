@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: SealedRuneModal -- Stripe CTA</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* -- Page layout -------------------------------------------------------- */
+    .page { display: flex; flex-direction: column; gap: 48px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* -- Modal backdrop + shell --------------------------------------------- */
+    /*
+     * SealedRuneModal is shown when a user tries to access a premium feature
+     * while on the Thrall (free) tier. It acts as a paywall gate.
+     *
+     * The modal locks the premium feature behind a Stripe subscription.
+     * CTA redirects to Stripe Checkout.
+     *
+     * Z-index: 210 (standard modal layer).
+     * Backdrop: semi-transparent overlay -- user can see content behind it.
+     *
+     * Trigger: user clicks on a locked premium feature (feature-flagged).
+     * Dismiss: X close button or backdrop click -- user returns to free tier view.
+     */
+    .modal-backdrop {
+      border: 1px solid;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+    }
+    .modal-shell {
+      border: 1px solid;
+      max-width: 440px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* -- Modal header ------------------------------------------------------- */
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid;
+    }
+    .modal-eyebrow {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: bold;
+    }
+    .btn-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    /* -- Modal body --------------------------------------------------------- */
+    .modal-body {
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Rune icon placeholder */
+    .rune-icon {
+      width: 64px;
+      height: 64px;
+      border: 1px dashed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      align-self: center;
+    }
+
+    .modal-heading {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .modal-desc {
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .modal-atmos {
+      font-size: 11px;
+      font-style: italic;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* -- Feature name (which feature is locked) ----------------------------- */
+    .locked-feature {
+      border: 1px solid;
+      padding: 10px 14px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* -- CTA area ----------------------------------------------------------- */
+    .modal-cta {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn-subscribe {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      font-family: inherit;
+      background: none;
+      min-height: 44px;
+    }
+    .cta-price-note {
+      font-size: 11px;
+      text-align: center;
+    }
+
+    /* -- Modal footer ------------------------------------------------------- */
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid;
+      display: flex;
+      justify-content: center;
+    }
+    .btn-dismiss {
+      padding: 8px 16px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+      background: none;
+      min-height: 44px;
+    }
+
+    /* -- Mobile frame ------------------------------------------------------- */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+    }
+    .mobile-modal-backdrop {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 380px;
+    }
+    .mobile-modal-shell {
+      border: 1px solid;
+      width: 92%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* -- Utilities ---------------------------------------------------------- */
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note-block {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.6;
+      border: 1px dashed;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+    .scenario-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .scenario-col { display: flex; flex-direction: column; gap: 8px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+
+  <!-- =====================================================================
+       DESIGN DECISION -- SealedRuneModal Stripe integration
+       SealedRuneModal uses Stripe Checkout for premium feature gating.
+
+       Key decisions:
+         - The CTA is "Unlock with Karl -- $3.99/month" (Voice 1 + tier name).
+         - The button triggers Stripe Checkout redirect.
+         - Anonymous users: email modal appears first, then Stripe Checkout.
+         - Authenticated users: redirect directly to Stripe Checkout.
+         - The modal remains dismissible -- it is a gate with a clear exit.
+         - The locked feature name is displayed so the user knows WHAT they
+           are unlocking (e.g., "Cloud Sync", "Advanced Analytics").
+  ===================================================================== -->
+
+
+  <!-- =====================================================================
+       SCENARIO 1 -- Desktop: SealedRuneModal with Stripe CTA
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 -- Desktop -- SealedRuneModal (Stripe CTA)</div>
+
+    <div class="modal-backdrop">
+
+      <div class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="sealed-heading-1">
+
+        <!-- Header -->
+        <div class="modal-header">
+          <span class="modal-eyebrow">Sealed Rune</span>
+          <button class="btn-close" type="button" aria-label="Dismiss">x</button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+
+          <!-- Rune icon (sealed/locked rune glyph) -->
+          <div class="rune-icon" aria-hidden="true">&#x16B1;</div>
+          <!-- U+16B1 is a runic letter; implementation may use a custom SVG -->
+
+          <!-- Heading (Voice 2 -- atmospheric) -->
+          <h1 class="modal-heading" id="sealed-heading-1">This rune is sealed.</h1>
+
+          <!-- Atmospheric context (Voice 2) -->
+          <p class="modal-atmos" aria-hidden="true">
+            Only those who pledge to Karl may read what is carved here.
+          </p>
+
+          <!-- Which feature is locked (Voice 1 -- functional) -->
+          <div class="locked-feature">
+            <strong>Locked feature:</strong> Cloud Sync
+          </div>
+          <!--
+            The locked feature name is dynamic -- passed as a prop to SealedRuneModal.
+            Examples: "Cloud Sync", "Advanced Analytics", "Priority Howl Alerts".
+            This helps the user understand the specific value they are unlocking.
+          -->
+
+          <!-- Functional description (Voice 1) -->
+          <p class="modal-desc">
+            Unlock with a Karl subscription -- $3.99/month.
+            Cancel anytime.
+          </p>
+
+          <!-- CTA area -->
+          <div class="modal-cta">
+            <!--
+              Subscribe button:
+              - Authenticated users: POST /api/stripe/checkout-session -> redirect.
+              - Anonymous users: open email collection modal FIRST (see anonymous-checkout.html),
+                then POST /api/stripe/checkout-session with email -> redirect.
+              - On successful checkout, Stripe webhook activates Karl tier.
+              - User returns to app via success_url with ?session_id query param.
+            -->
+            <button class="btn-subscribe" type="button">
+              Subscribe for $3.99/month
+            </button>
+            <p class="cta-price-note">
+              Billed monthly. Cancel anytime from your account.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <!--
+            "Not now" dismisses the modal. Does NOT set any permanent flag.
+            The modal will appear again next time the user tries to access
+            the same locked feature.
+          -->
+          <button class="btn-dismiss" type="button">Not now</button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      SealedRuneModal appears when a Thrall user clicks a premium-only feature.<br/>
+      The locked feature name is dynamic (prop-driven) -- helps user understand what they unlock.<br/>
+      CTA: "Subscribe for $3.99/month" (Voice 1 -- plain English, price explicit).<br/>
+      "Not now" dismisses without penalty -- modal reappears on next premium feature tap.<br/>
+      Z-index: 210 (modal layer). <code>role="dialog"</code> + <code>aria-modal="true"</code>.<br/>
+      Atmospheric copy (<code>aria-hidden="true"</code>) adds Norse flavor without blocking screen readers.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 2 -- Mobile (375px): SealedRuneModal
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 -- Mobile 375px -- SealedRuneModal</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">375px frame</div>
+        <div class="mobile-frame">
+          <div class="mobile-modal-backdrop">
+
+            <div class="mobile-modal-shell" role="dialog" aria-modal="true" aria-labelledby="sealed-heading-m">
+
+              <div class="modal-header" style="padding: 12px 14px;">
+                <span class="modal-eyebrow" style="font-size: 9px;">Sealed Rune</span>
+                <button class="btn-close" type="button" aria-label="Dismiss" style="font-size: 14px;">x</button>
+              </div>
+
+              <div class="modal-body" style="padding: 18px 14px; gap: 12px;">
+                <div class="rune-icon" style="width: 48px; height: 48px; font-size: 22px;" aria-hidden="true">&#x16B1;</div>
+                <h1 class="modal-heading" id="sealed-heading-m" style="font-size: 16px;">This rune is sealed.</h1>
+                <div class="locked-feature" style="font-size: 11px; padding: 8px 10px;">
+                  <strong>Locked:</strong> Cloud Sync
+                </div>
+                <p class="modal-desc" style="font-size: 12px;">
+                  Unlock with Karl -- $3.99/month. Cancel anytime.
+                </p>
+                <div class="modal-cta">
+                  <button class="btn-subscribe" type="button" style="font-size: 13px; padding: 12px 14px;">
+                    Subscribe for $3.99/month
+                  </button>
+                  <p class="cta-price-note" style="font-size: 10px;">
+                    Billed monthly. Cancel anytime.
+                  </p>
+                </div>
+              </div>
+
+              <div class="modal-footer" style="padding: 10px 14px;">
+                <button class="btn-dismiss" type="button" style="font-size: 11px;">Not now</button>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="scenario-col" style="max-width: 380px;">
+        <div class="col-label">Mobile rules</div>
+        <p class="note">
+          Modal width: <code>w-[92vw] max-w-[340px]</code> -- follows the project mobile modal convention.<br/>
+          Atmospheric copy hidden on mobile to save space -- only functional copy shown.<br/>
+          Rune icon: 48px (down from 64px desktop).<br/>
+          All buttons: min 44px touch target.<br/>
+          "Not now" remains visible and accessible -- never hidden on mobile.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       INTERACTION SPECIFICATION -- SealedRuneModal flow
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Interaction Specification -- SealedRuneModal Flow</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size: 12px;">
+
+      <p style="font-weight: bold; margin-bottom: 8px;">Trigger</p>
+      <p style="margin-bottom: 12px;">
+        User (Thrall tier) clicks on a feature gated by <code>requireKarl</code> feature flag.
+        The component checks subscription status. If not Karl, renders SealedRuneModal instead of the feature.
+      </p>
+
+      <p style="font-weight: bold; margin-bottom: 8px;">Subscribe flow (Mermaid -- render in wireframes.md)</p>
+      <pre style="font-size: 11px; padding: 8px; border: 1px solid; white-space: pre-wrap;">
+sequenceDiagram
+    participant U as User
+    participant M as SealedRuneModal
+    participant E as EmailModal
+    participant A as /api/stripe/checkout-session
+    participant S as Stripe Checkout
+
+    U->>M: Clicks locked feature
+    M->>M: Renders modal (Thrall gate)
+    alt Authenticated user
+        U->>M: Clicks "Subscribe for $3.99/month"
+        M->>A: POST {priceId, email: googleEmail}
+        A-->>M: {checkoutUrl}
+        M->>S: Redirect to Stripe Checkout
+    else Anonymous user
+        U->>M: Clicks "Subscribe for $3.99/month"
+        M->>E: Opens email collection modal
+        U->>E: Enters email + submits
+        E->>A: POST {priceId, email: userEmail}
+        A-->>E: {checkoutUrl}
+        E->>S: Redirect to Stripe Checkout
+    end
+    S-->>U: Checkout complete -> success_url
+      </pre>
+
+      <p style="font-weight: bold; margin-bottom: 8px; margin-top: 12px;">Dismiss behavior</p>
+      <ul style="padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
+        <li>"Not now" button: closes modal, returns to underlying view.</li>
+        <li>X close button: same behavior as "Not now".</li>
+        <li>Backdrop click: same behavior as "Not now".</li>
+        <li>Escape key: closes modal.</li>
+        <li>No permanent dismiss flag -- modal reappears on next locked feature access.</li>
+      </ul>
+
+    </div>
+  </section>
+
+  <p class="note" style="text-align: center; padding-bottom: 24px;">
+    Wireframe -- sealed-rune-stripe.html -- Fenrir Ledger -- Premium feature paywall modal -- No theme styling applied
+  </p>
+
+</div>
+
+</body>
+</html>

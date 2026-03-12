@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chronicle Field Report Variant | Wireframe</title>
+  <style>
+    /* Base reset + layout CSS only — no theme styling */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    /* Layout containers */
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    .wide-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    /* Compact header (same as standard chronicle) */
+    .chronicle-header {
+      padding: 48px 0 32px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .header-meta {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .field-report-badge {
+      padding: 2px 8px;
+      border: 1px solid #ddd;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .header-title {
+      font-size: 36px;
+      font-weight: bold;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .header-subtitle {
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    /* Prev/Next Navigation (top position) */
+    .chronicle-nav {
+      padding: 24px 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-item {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .nav-item.next {
+      text-align: right;
+    }
+
+    .nav-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
+    }
+
+    .nav-title {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    /* FIELD REPORT CUSTOM COMPONENTS */
+
+    /* Classified document style corners */
+    .classified-header {
+      position: relative;
+      padding: 32px;
+      margin: 40px 0;
+      border: 2px solid #ddd;
+    }
+
+    .corner-mark {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 2px solid #ddd;
+    }
+
+    .corner-mark.top-left {
+      top: -2px;
+      left: -2px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .corner-mark.top-right {
+      top: -2px;
+      right: -2px;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    .corner-mark.bottom-left {
+      bottom: -2px;
+      left: -2px;
+      border-right: none;
+      border-top: none;
+    }
+
+    .corner-mark.bottom-right {
+      bottom: -2px;
+      right: -2px;
+      border-left: none;
+      border-top: none;
+    }
+
+    .classified-label {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 8px;
+    }
+
+    .classified-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    /* Grievance cards */
+    .grievance-card {
+      border: 1px solid #ddd;
+      border-left-width: 4px;
+      padding: 32px;
+      margin: 32px 0;
+    }
+
+    .grievance-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 12px;
+    }
+
+    .grievance-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .grievance-summary {
+      font-style: italic;
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+
+    .grievance-body {
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* Hunt List Table */
+    .hunt-section {
+      margin: 48px -28px;
+      padding: 48px 28px;
+      border-top: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .hunt-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 32px;
+    }
+
+    .hunt-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .hunt-table th {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .hunt-table td {
+      font-size: 14px;
+      padding: 14px 16px;
+      border-bottom: 1px solid #ddd;
+      vertical-align: top;
+    }
+
+    /* UPDATE callout banner */
+    .update-banner {
+      text-align: center;
+      padding: 20px;
+      margin: 32px 0;
+      border: 1px dashed #ddd;
+      font-style: italic;
+      font-size: 14px;
+    }
+
+    .update-banner strong {
+      font-weight: 700;
+      text-transform: uppercase;
+      font-style: normal;
+    }
+
+    /* Want/Instead comparison blocks */
+    .comparison-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin: 32px 0;
+    }
+
+    .comparison-item {
+      padding: 20px;
+      border: 1px solid #ddd;
+    }
+
+    .comparison-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+
+    .comparison-content {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Article content sections */
+    .chronicle-content {
+      padding: 40px 0;
+    }
+
+    .content-section {
+      margin-bottom: 48px;
+    }
+
+    .section-text {
+      font-size: 16px;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .comparison-block {
+        grid-template-columns: 1fr;
+      }
+
+      .hunt-section {
+        margin: 32px -16px;
+        padding: 32px 16px;
+      }
+
+      .hunt-table {
+        font-size: 12px;
+      }
+
+      .grievance-card {
+        padding: 24px;
+      }
+    }
+
+    @media (max-width: 375px) {
+      .container, .wide-container {
+        padding: 0 16px;
+      }
+
+      .classified-header {
+        padding: 24px;
+      }
+    }
+
+    /* Annotation styles */
+    .note {
+      background: #f9f9f9;
+      border-left: 3px solid #888;
+      padding: 12px;
+      margin: 20px 0;
+      font-size: 14px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR PLACEHOLDER -->
+  <nav style="height: 60px; border-bottom: 1px solid #ddd; margin-bottom: 0;">
+    <div style="padding: 20px; text-align: center; font-size: 14px;">
+      [Marketing Site Navbar — Theme Toggle, Links to About/Features/Pricing]
+    </div>
+  </nav>
+
+  <article>
+    <!-- Compact Header with Field Report badge -->
+    <header class="chronicle-header">
+      <div class="container">
+        <div class="header-meta">
+          <span class="field-report-badge">FIELD REPORT</span>
+          <span>•</span>
+          <span>Session 459</span>
+          <span>•</span>
+          <time>December 8, 2024</time>
+          <span>•</span>
+          <span>By Luna</span>
+        </div>
+        <h1 class="header-title">Depot Integration Issues</h1>
+        <p class="header-subtitle">When import pipelines meet corporate banking chaos</p>
+      </div>
+    </header>
+
+    <!-- Prev/Next Navigation (at top) -->
+    <nav class="chronicle-nav" aria-label="Chronicle navigation">
+      <div class="container">
+        <div class="nav-container">
+          <a href="#" class="nav-item">
+            <div class="nav-label">← Previous</div>
+            <div class="nav-title">Authentication Architecture Forged</div>
+          </a>
+          <div style="font-size: 20px;" aria-hidden="true">ᛟ</div>
+          <a href="#" class="nav-item next">
+            <div class="nav-label">Next →</div>
+            <div class="nav-title">The Import Pipeline Awakens</div>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="chronicle-content">
+      <div class="container">
+        <!-- Opening epigraph -->
+        <section class="content-section">
+          <blockquote style="font-style: italic; border-left: 2px solid #ddd; padding-left: 24px; margin: 32px 0;">
+            "In the depths of winter, I finally learned that there was in me an invincible summer."
+            <br>— Albert Camus, contemplating CSV parsing errors
+          </blockquote>
+        </section>
+
+        <div class="note">
+          <strong>UX Note:</strong> Field Report variant preserves all custom components
+          but styled to match the marketing site's design language.
+          Components adapt to light/dark themes while maintaining their special formatting.
+        </div>
+
+        <!-- CUSTOM: Classified document header -->
+        <div class="classified-header">
+          <div class="corner-mark top-left"></div>
+          <div class="corner-mark top-right"></div>
+          <div class="corner-mark bottom-left"></div>
+          <div class="corner-mark bottom-right"></div>
+          <div class="classified-label">Classification: Integration Nightmare</div>
+          <div class="classified-title">The Home Depot Credit Card Saga</div>
+        </div>
+
+        <!-- CUSTOM: UPDATE banner -->
+        <div class="update-banner">
+          <strong>UPDATE:</strong> As of December 2024, Home Depot has changed their export format again.
+          This field report documents the third format change in six months.
+          See <a href="#">Issue #461</a> for the latest parser updates.
+        </div>
+
+        <!-- Main narrative -->
+        <section class="content-section">
+          <p class="section-text">
+            It started innocently enough. A user reported that their Home Depot card transactions
+            weren't importing correctly. "Should be a quick fix," I thought. Three days later,
+            I emerged from the parsing trenches with a thousand-yard stare and this field report.
+          </p>
+        </section>
+
+        <!-- CUSTOM: Grievance card #1 -->
+        <div class="grievance-card">
+          <div class="grievance-label">Grievance #1</div>
+          <h2 class="grievance-title">The Column Headers That Weren't</h2>
+          <p class="grievance-summary">
+            Home Depot exports CSV files without column headers, but with a 12-line preamble of account information.
+          </p>
+          <p class="grievance-body">
+            Most banks put column headers on line 1. Chase might add a single summary line above.
+            Home Depot? They give you a manifesto. Account number, statement period, available credit,
+            payment due date, minimum payment amount — all before you reach the actual transaction data.
+            And no headers when you get there. Just raw data, columns unnamed, meaning inferred.
+          </p>
+        </div>
+
+        <!-- CUSTOM: Want/Instead comparison -->
+        <div class="comparison-block">
+          <div class="comparison-item">
+            <div class="comparison-label">What We Want</div>
+            <div class="comparison-content">
+              Date,Description,Amount<br>
+              2024-12-01,"PURCHASE - LUMBER",129.99<br>
+              2024-12-02,"PURCHASE - PAINT",45.67
+            </div>
+          </div>
+          <div class="comparison-item">
+            <div class="comparison-label">What We Get</div>
+            <div class="comparison-content">
+              Account: ****1234<br>
+              Statement Period: 11/01 - 11/30<br>
+              [... 10 more lines ...]<br>
+              12/01/2024,LUMBER DEPT 0934,129.99,,<br>
+              12/02/2024,PAINT - BEHR PREMIUM,45.67,,
+            </div>
+          </div>
+        </div>
+
+        <!-- CUSTOM: Grievance card #2 -->
+        <div class="grievance-card">
+          <div class="grievance-label">Grievance #2</div>
+          <h2 class="grievance-title">Date Formats From The Abyss</h2>
+          <p class="grievance-summary">
+            Sometimes MM/DD/YYYY. Sometimes M/D/YY. Sometimes "Dec 1, 2024". In the same file.
+          </p>
+          <p class="grievance-body">
+            The date parser started simple. Then it grew. Now it's a 200-line monster that handles
+            seventeen different date formats, including one that appears to be European but only
+            on Tuesdays. I've seen dates with forward slashes, backslashes, dots, and in one
+            memorable case, emoji separators (that was a corrupted export, but still).
+          </p>
+        </div>
+
+        <!-- CUSTOM: Hunt List Table -->
+        <div class="hunt-section">
+          <h2 class="hunt-title">The Hunt List: Edge Cases Found</h2>
+          <table class="hunt-table">
+            <thead>
+              <tr>
+                <th>Issue</th>
+                <th>Frequency</th>
+                <th>Impact</th>
+                <th>Solution</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Missing column headers</td>
+                <td>100% of exports</td>
+                <td>Parser fails immediately</td>
+                <td>Pattern matching on line 13+</td>
+              </tr>
+              <tr>
+                <td>Inconsistent date formats</td>
+                <td>~40% of files</td>
+                <td>Transactions on wrong dates</td>
+                <td>Multi-format date parser</td>
+              </tr>
+              <tr>
+                <td>Commas in descriptions</td>
+                <td>~15% of transactions</td>
+                <td>Column misalignment</td>
+                <td>Quoted field detection</td>
+              </tr>
+              <tr>
+                <td>Negative amounts as "(123.45)"</td>
+                <td>All returns/credits</td>
+                <td>Credits import as charges</td>
+                <td>Parenthesis parser</td>
+              </tr>
+              <tr>
+                <td>Random UTF-16 encoding</td>
+                <td>~5% of exports</td>
+                <td>Complete gibberish</td>
+                <td>Encoding detection library</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Resolution section -->
+        <section class="content-section">
+          <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 16px;">The Solution</h2>
+          <p class="section-text">
+            We built a dedicated Home Depot parser. It's not elegant. It's not clean.
+            But it works. The parser now:
+          </p>
+          <ul style="margin: 16px 0; padding-left: 24px;">
+            <li>Skips the first 12 lines automatically</li>
+            <li>Infers column positions from data patterns</li>
+            <li>Handles all seventeen date format variations</li>
+            <li>Detects and converts parenthetical negatives</li>
+            <li>Auto-detects file encoding</li>
+          </ul>
+          <p class="section-text">
+            The lesson? Every bank's export is a unique snowflake of chaos.
+            Plan accordingly. Document everything. And keep a bottle of something
+            strong in your desk drawer.
+          </p>
+        </section>
+
+        <!-- Closing -->
+        <section class="content-section" style="text-align: center; margin-top: 60px;">
+          <p style="font-style: italic;">
+            This field report filed by Luna, UX Designer, survivor of the CSV wars.
+            <br>
+            <span style="font-size: 12px; margin-top: 8px; display: block;">
+              — December 8, 2024, 3:47 AM (yes, AM)
+            </span>
+          </p>
+        </section>
+
+        <div class="note">
+          <strong>Implementation Notes:</strong>
+          <br>• All custom components (grievances, hunt table, etc.) adapt to theme
+          <br>• Light theme: Clean borders, subtle backgrounds where needed
+          <br>• Dark theme: Muted borders, dark backgrounds with good contrast
+          <br>• Typography matches marketing site but preserves field report character
+          <br>• Mobile responsive with appropriate stacking/sizing
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="chronicle-footer" style="margin-top: 60px; padding-top: 32px; border-top: 1px solid #ddd; text-align: center;">
+      <div class="container">
+        <a href="/chronicles" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;">
+          ↑ Back to All Sagas
+        </a>
+      </div>
+    </footer>
+  </article>
+
+  <!-- MARKETING FOOTER PLACEHOLDER -->
+  <footer style="margin-top: 80px; padding: 40px 20px; border-top: 1px solid #ddd; text-align: center;">
+    <p style="font-size: 14px;">[Marketing Site Footer — Links, Copyright, Social]</p>
+  </footer>
+</body>
+</html>

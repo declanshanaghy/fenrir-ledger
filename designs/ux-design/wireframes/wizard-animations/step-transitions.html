@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Wizard Step Transitions — Animation Spec</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .note {
+      background: #f5f5f5;
+      border-left: 4px solid #666;
+      padding: 1rem;
+      margin: 1rem 0;
+      font-size: 0.875rem;
+      color: #333;
+    }
+
+    .animation-container {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 2rem;
+      margin: 1.5rem 0;
+      position: relative;
+      min-height: 400px;
+      overflow: hidden;
+    }
+
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 2px solid #999;
+      background: white;
+      position: relative;
+    }
+
+    .step-dot.active {
+      background: #666;
+      border-color: #666;
+      /* Animation for dot state change */
+    }
+
+    .step-content {
+      position: relative;
+      width: 100%;
+      height: 300px;
+    }
+
+    .step-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      border: 1px dashed #ccc;
+      padding: 1.5rem;
+      background: white;
+    }
+
+    .step-panel.entering-right {
+      /* Entering from right side */
+      transform: translateX(100%);
+      opacity: 0;
+    }
+
+    .step-panel.entering-left {
+      /* Entering from left side */
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+
+    .step-panel.exiting-left {
+      /* Exiting to left */
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+
+    .step-panel.exiting-right {
+      /* Exiting to right */
+      transform: translateX(100%);
+      opacity: 0;
+    }
+
+    .step-panel.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .animation-timeline {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #fafafa;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+
+    .timeline-label {
+      font-weight: 600;
+    }
+
+    .code-block {
+      background: #f8f8f8;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 0.875rem;
+      margin: 1rem 0;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      justify-content: center;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      border: 2px solid #999;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      min-width: 100px;
+    }
+
+    button.primary {
+      background: #666;
+      color: white;
+      border-color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Card Wizard Step Transitions — Animation Specification</h1>
+
+  <p class="note">
+    <strong>Animation Direction:</strong> Steps slide based on navigation direction. Forward (Next/More Details)
+    slides left, revealing new content from right. Backward (Back) slides right, revealing previous content from left.
+    This creates a natural left-to-right reading progression.
+  </p>
+
+  <h2>Step 1 → Step 2 (Forward Navigation)</h2>
+
+  <div class="animation-container">
+    <!-- Step dots showing state transition -->
+    <div class="step-indicator">
+      <div class="step-dot active" aria-label="Step 1 of 2: Card Details">
+        <!-- Note: Active dot scales from 1.0 to 0.9 then back to 1.0 during transition -->
+      </div>
+      <div class="step-dot" aria-label="Step 2 of 2: More Details">
+        <!-- Note: This dot animates from inactive to active state with 100ms delay after slide starts -->
+      </div>
+    </div>
+
+    <div class="step-content">
+      <!-- Step 1 exiting -->
+      <div class="step-panel exiting-left">
+        <h3>Step 1: Card Details</h3>
+        <p>• Issuer (required)</p>
+        <p>• Card Name (required)</p>
+        <p>• Open Date (required)</p>
+        <p>• Annual Fee</p>
+        <p>• Sign-up Bonus</p>
+        <div class="note">
+          EXIT ANIMATION: translateX(0) → translateX(-30%), opacity: 1 → 0
+          Duration: 200ms, Ease: [0.16, 1, 0.3, 1] (expo out)
+        </div>
+      </div>
+
+      <!-- Step 2 entering -->
+      <div class="step-panel entering-right">
+        <h3>Step 2: More Details</h3>
+        <p>• Credit Limit</p>
+        <p>• Annual Fee Date</p>
+        <p>• Bonus Deadline</p>
+        <p>• Bonus Met checkbox</p>
+        <p>• Notes</p>
+        <div class="note">
+          ENTER ANIMATION: translateX(100%) → translateX(0), opacity: 0 → 1
+          Duration: 250ms, Ease: [0.16, 1, 0.3, 1] (expo out)
+          Delay: 50ms after exit starts (overlap for smoothness)
+        </div>
+      </div>
+    </div>
+
+    <div class="animation-timeline">
+      <span class="timeline-label">0ms:</span>
+      <span>User clicks "More Details" → validate Step 1 fields</span>
+
+      <span class="timeline-label">0-200ms:</span>
+      <span>Step 1 slides out left (30% distance, fades out)</span>
+
+      <span class="timeline-label">50-300ms:</span>
+      <span>Step 2 slides in from right (overlapping for fluid motion)</span>
+
+      <span class="timeline-label">100ms:</span>
+      <span>Step 2 dot begins active transition (scale + color change)</span>
+
+      <span class="timeline-label">300ms:</span>
+      <span>Animation complete, Step 2 interactive</span>
+    </div>
+  </div>
+
+  <h2>Step 2 → Step 1 (Backward Navigation)</h2>
+
+  <div class="animation-container">
+    <div class="step-indicator">
+      <div class="step-dot" aria-label="Step 1 of 2: Card Details">
+        <!-- Note: This dot animates to active state -->
+      </div>
+      <div class="step-dot active" aria-label="Step 2 of 2: More Details">
+        <!-- Note: Active dot animates to inactive -->
+      </div>
+    </div>
+
+    <div class="step-content">
+      <!-- Step 2 exiting -->
+      <div class="step-panel exiting-right">
+        <h3>Step 2: More Details</h3>
+        <p>Current step content...</p>
+        <div class="note">
+          EXIT ANIMATION: translateX(0) → translateX(30%), opacity: 1 → 0
+          Duration: 200ms, Ease: [0.16, 1, 0.3, 1]
+        </div>
+      </div>
+
+      <!-- Step 1 entering -->
+      <div class="step-panel entering-left">
+        <h3>Step 1: Card Details</h3>
+        <p>Previous step content...</p>
+        <div class="note">
+          ENTER ANIMATION: translateX(-100%) → translateX(0), opacity: 0 → 1
+          Duration: 250ms, Ease: [0.16, 1, 0.3, 1]
+          Delay: 50ms after exit starts
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Framer Motion Implementation</h2>
+
+  <div class="code-block">
+// AnimatePresence wrapper for step transitions
+&lt;AnimatePresence mode="wait" initial={false}&gt;
+  {currentStep === 1 && (
+    &lt;motion.div
+      key="step1"
+      custom={direction}
+      initial="enter"
+      animate="center"
+      exit="exit"
+      variants={{
+        enter: (direction: number) => ({
+          x: direction > 0 ? '100%' : '-100%',
+          opacity: 0
+        }),
+        center: {
+          x: 0,
+          opacity: 1
+        },
+        exit: (direction: number) => ({
+          x: direction < 0 ? '30%' : '-30%',
+          opacity: 0
+        })
+      }}
+      transition={{
+        x: { duration: 0.25, ease: [0.16, 1, 0.3, 1] },
+        opacity: { duration: 0.2 }
+      }}
+    &gt;
+      {/* Step 1 Content */}
+    &lt;/motion.div&gt;
+  )}
+&lt;/AnimatePresence&gt;
+  </div>
+
+  <h2>Step Indicator Dots Animation</h2>
+
+  <div class="code-block">
+// Step dot component with animated state
+&lt;motion.div
+  className="step-dot"
+  animate={{
+    scale: isActive ? [1, 0.9, 1] : 1,
+    backgroundColor: isActive ? '#gold' : '#muted'
+  }}
+  transition={{
+    scale: { duration: 0.3, ease: [0.16, 1, 0.3, 1] },
+    backgroundColor: { duration: 0.2, delay: 0.1 }
+  }}
+  aria-label={`Step ${step} of 2: ${stepTitle}`}
+/&gt;
+  </div>
+
+  <h2>Accessibility: prefers-reduced-motion</h2>
+
+  <div class="code-block">
+// CSS media query for reduced motion
+@media (prefers-reduced-motion: reduce) {
+  .step-panel {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  // In React/Framer Motion
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  transition={{
+    duration: prefersReducedMotion ? 0 : 0.25,
+    ease: [0.16, 1, 0.3, 1]
+  }}
+}
+  </div>
+
+  <p class="note">
+    <strong>Implementation Notes:</strong><br>
+    • Use Framer Motion's AnimatePresence with mode="wait" to prevent layout jumps<br>
+    • Track direction state: 1 for forward, -1 for backward navigation<br>
+    • Exit animations are shorter (200ms) than enter (250ms) for perceived speed<br>
+    • 50ms overlap between exit and enter creates fluid motion<br>
+    • Step dots animate 100ms after slide begins to avoid competing for attention<br>
+    • All animations respect prefers-reduced-motion with instant swaps
+  </p>
+
+  <div class="button-group">
+    <button>Back</button>
+    <button class="primary">More Details</button>
+  </div>
+</body>
+</html>

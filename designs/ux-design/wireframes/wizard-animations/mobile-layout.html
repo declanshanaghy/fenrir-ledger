@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Wizard Mobile Layout — 375px Breakpoint</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+
+    .viewport-container {
+      max-width: 375px;
+      margin: 0 auto;
+      border: 2px solid #333;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    .device-header {
+      background: #f0f0f0;
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #666;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .app-container {
+      padding: 1rem;
+      min-height: 600px;
+      background: white;
+    }
+
+    .note {
+      background: #fffbf0;
+      border-left: 4px solid #f59e0b;
+      padding: 0.75rem;
+      margin: 1rem 0;
+      font-size: 0.875rem;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    /* Step Indicator */
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      padding: 1rem 0;
+      /* Touch target: entire indicator row is 44px tall */
+      min-height: 44px;
+    }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 2px solid #999;
+      background: white;
+      /* Invisible touch target extension */
+      position: relative;
+    }
+
+    .step-dot::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 44px;
+      height: 44px;
+      /* Visual indicator of touch target size */
+      border: 1px dashed #f0f0f0;
+    }
+
+    .step-dot.active {
+      background: #666;
+      border-color: #666;
+    }
+
+    /* Form Fields */
+    .form-field {
+      margin-bottom: 1rem;
+    }
+
+    .form-field label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      color: #333;
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      width: 100%;
+      min-height: 44px; /* Touch target minimum */
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem; /* 16px prevents iOS zoom */
+    }
+
+    .form-field textarea {
+      min-height: 88px; /* 2x touch target height */
+      resize: vertical;
+    }
+
+    /* Fieldset Groups */
+    fieldset {
+      border: 2px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    fieldset legend {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0 0.5rem;
+    }
+
+    /* Checkbox with extended touch target */
+    .checkbox-field {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0.5rem 0;
+    }
+
+    .checkbox-field input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-right: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .checkbox-field label {
+      flex: 1;
+      font-size: 0.875rem;
+      cursor: pointer;
+      /* Label acts as extended touch target */
+      padding: 0.5rem 0;
+    }
+
+    /* Button Group */
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .button-group.horizontal {
+      flex-direction: row;
+    }
+
+    button {
+      min-height: 44px;
+      padding: 0.75rem 1rem;
+      border: 2px solid #999;
+      background: white;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    button.primary {
+      background: #666;
+      color: white;
+      border-color: #666;
+    }
+
+    button.outline {
+      background: white;
+      color: #666;
+    }
+
+    /* Two-column grid for related fields */
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 376px) {
+      .field-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Visual touch target indicator */
+    .touch-target-demo {
+      margin: 2rem 0;
+      padding: 1rem;
+      background: #f8f8f8;
+      border-radius: 4px;
+    }
+
+    .touch-target-demo h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .touch-target-visual {
+      display: inline-block;
+      width: 44px;
+      height: 44px;
+      border: 2px dashed #999;
+      position: relative;
+      margin: 0.5rem;
+    }
+
+    .touch-target-visual::after {
+      content: '44px';
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    /* Scrollable container simulation */
+    .scroll-container {
+      max-height: 500px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="viewport-container">
+    <div class="device-header">iPhone 12 Mini · 375 × 812 · Mobile Safari</div>
+
+    <div class="app-container">
+      <h1>Add New Card</h1>
+
+      <!-- Step Indicator with Touch Targets -->
+      <div class="step-indicator">
+        <div class="step-dot active" role="tab" tabindex="0" aria-selected="true" aria-label="Step 1 of 2: Card Details"></div>
+        <div class="step-dot" role="tab" tabindex="0" aria-selected="false" aria-label="Step 2 of 2: More Details"></div>
+      </div>
+
+      <div class="note">
+        <strong>Touch Target Compliance:</strong> All interactive elements are minimum 44×44px.
+        Dashed borders show invisible touch extension around small visual elements.
+      </div>
+
+      <div class="scroll-container">
+        <!-- Step 1: Card Details (Mobile Layout) -->
+        <section aria-label="Step 1: Card Details">
+          <fieldset>
+            <legend>Card Details</legend>
+
+            <div class="form-field">
+              <label for="issuer">Issuer *</label>
+              <select id="issuer" required aria-required="true">
+                <option value="">Select issuer</option>
+                <option value="chase">Chase</option>
+                <option value="amex">American Express</option>
+                <option value="citi">Citi</option>
+              </select>
+              <!-- Note: Select height is 44px minimum -->
+            </div>
+
+            <div class="form-field">
+              <label for="cardName">Card Name *</label>
+              <input type="text" id="cardName" placeholder="e.g. Sapphire Preferred" required aria-required="true">
+              <!-- Note: Input height is 44px, font-size 16px prevents iOS zoom -->
+            </div>
+
+            <div class="form-field">
+              <label for="openDate">Date Opened *</label>
+              <input type="date" id="openDate" required aria-required="true">
+              <!-- Note: Native date picker has proper touch targets -->
+            </div>
+          </fieldset>
+
+          <!-- Annual Fee and Bonus fields stack vertically on mobile -->
+          <fieldset>
+            <legend>Annual Fee</legend>
+            <div class="form-field">
+              <label for="annualFee">Annual Fee Amount</label>
+              <input type="number" id="annualFee" placeholder="95" min="0" step="1">
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Sign-up Bonus</legend>
+
+            <div class="form-field">
+              <label for="bonusType">Bonus Type</label>
+              <select id="bonusType">
+                <option value="">Select type</option>
+                <option value="points">Points</option>
+                <option value="miles">Miles</option>
+                <option value="cashback">Cashback ($)</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="bonusAmount">Bonus Amount</label>
+              <input type="number" id="bonusAmount" placeholder="60000" min="0">
+            </div>
+
+            <div class="form-field">
+              <label for="minSpend">Minimum Spend</label>
+              <select id="minSpend">
+                <option value="">Select amount</option>
+                <option value="1000">$1,000</option>
+                <option value="2000">$2,000</option>
+                <option value="3000">$3,000</option>
+                <option value="4000">$4,000</option>
+              </select>
+            </div>
+          </fieldset>
+        </section>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+          <!-- On narrow mobile (<=375px), buttons stack vertically -->
+          <button type="button" class="outline">Cancel</button>
+          <button type="button" class="outline">More Details</button>
+          <button type="submit" class="primary">Save Card</button>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>Mobile Layout Rules:</strong><br>
+        • All form fields stack vertically (single column)<br>
+        • Fieldsets group related fields with visual borders<br>
+        • Buttons stack vertically when space is tight<br>
+        • No horizontal scrolling at 375px width<br>
+        • Content scrolls vertically within viewport
+      </div>
+    </div>
+  </div>
+
+  <!-- Touch Target Documentation -->
+  <div style="max-width: 800px; margin: 2rem auto; padding: 0 1rem;">
+    <h2>Touch Target Specifications</h2>
+
+    <div class="touch-target-demo">
+      <h3>Minimum Touch Target Size: 44×44px</h3>
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <div class="touch-target-visual"></div>
+        <p style="font-size: 0.875rem;">
+          All interactive elements must have a touch target of at least 44×44 pixels.
+          This can be achieved through padding, invisible extensions, or parent containers.
+        </p>
+      </div>
+    </div>
+
+    <h2>Implementation Notes</h2>
+
+    <div class="note">
+      <strong>Form Inputs:</strong><br>
+      • Set min-height: 44px on all inputs, selects, and textareas<br>
+      • Use padding: 0.75rem (12px) for comfortable touch spacing<br>
+      • Font-size: 16px (1rem) prevents iOS Safari zoom on focus<br>
+      • Border: 2px provides clear visual boundaries
+    </div>
+
+    <div class="note">
+      <strong>Step Dots:</strong><br>
+      • Visual dot is only 8×8px but has invisible 44×44px touch target<br>
+      • Use ::after pseudo-element or wrapper to extend clickable area<br>
+      • Ensure keyboard navigation with tabindex and role="tab"
+    </div>
+
+    <div class="note">
+      <strong>Buttons:</strong><br>
+      • Min-height: 44px with padding: 0.75rem 1rem<br>
+      • Stack vertically on mobile when horizontal space is limited<br>
+      • Primary action (Save) should be visually prominent
+    </div>
+
+    <div class="note">
+      <strong>Responsive Behavior:</strong><br>
+      • At 375px: Single column layout, stacked buttons<br>
+      • At 600px+: Can start using 2-column grids for related fields<br>
+      • At 768px+: Horizontal button groups, side-by-side fieldsets<br>
+      • Never require horizontal scrolling on mobile
+    </div>
+  </div>
+</body>
+</html>

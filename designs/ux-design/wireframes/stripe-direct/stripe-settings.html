@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Stripe Settings — Subscription Status</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* -- Page layout -------------------------------------------------------- */
+    .page { display: flex; flex-direction: column; gap: 48px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* -- Settings card container -------------------------------------------- */
+    /*
+     * The StripeSettings component lives inside the Settings page (/settings).
+     * It is one section within a larger settings layout.
+     * It follows a standard settings card pattern:
+     *   - Section heading
+     *   - Status indicator
+     *   - Action buttons
+     *
+     * This component is rendered regardless of auth state:
+     *   - Anonymous users: can subscribe (email collected before checkout)
+     *   - Authenticated users: can subscribe (email from Google profile)
+     *
+     * Data source: /api/stripe/status endpoint returns { tier, status, currentPeriodEnd }
+     */
+    .settings-card {
+      border: 1px solid;
+      padding: 24px;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .settings-heading {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .settings-subhead {
+      font-size: 12px;
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    /* -- Status row --------------------------------------------------------- */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+    .status-badge {
+      border: 1px solid;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .status-detail {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* -- Feature list (Thrall state) ---------------------------------------- */
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .feature-icon {
+      width: 16px;
+      height: 16px;
+      border: 1px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* -- Action buttons ----------------------------------------------------- */
+    .actions-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      padding: 10px 18px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      font-family: inherit;
+      background: none;
+      white-space: nowrap;
+      min-height: 44px;
+    }
+    .btn-secondary {
+      padding: 10px 18px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      background: none;
+      white-space: nowrap;
+      min-height: 44px;
+    }
+    .btn-destructive {
+      padding: 10px 18px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      background: none;
+      white-space: nowrap;
+      min-height: 44px;
+    }
+
+    /* -- Divider ------------------------------------------------------------ */
+    .section-divider {
+      border-top: 1px solid;
+      margin: 4px 0;
+    }
+
+    /* -- Mobile frame ------------------------------------------------------- */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      padding: 16px;
+    }
+    .mobile-settings-card {
+      border: 1px solid;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .mobile-actions-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mobile-actions-row .btn-primary,
+    .mobile-actions-row .btn-secondary,
+    .mobile-actions-row .btn-destructive {
+      width: 100%;
+      text-align: center;
+    }
+
+    /* -- Utilities ---------------------------------------------------------- */
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note-block {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.6;
+      border: 1px dashed;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+    .scenario-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .scenario-col { display: flex; flex-direction: column; gap: 8px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+
+  <!-- =====================================================================
+       DESIGN DECISION -- Stripe Settings placement and structure
+       Luna's recommendation: single settings card inside /settings page.
+
+       Rationale:
+         - Standard settings card pattern: heading + status + actions.
+         - Three clear states: Thrall (unsubscribed), Karl (active), Canceled.
+         - Anonymous users see the same component -- they can subscribe too.
+           The only difference is that anonymous users will be prompted for
+           an email before Stripe Checkout redirect (see anonymous-checkout.html).
+         - "Manage Subscription" opens the Stripe Customer Portal in a new tab.
+           This is a hosted Stripe page -- we do not build billing management UI.
+         - Cancel is a secondary action that also routes to Stripe Portal
+           (the portal has its own cancel flow with confirmation).
+
+       QUESTIONS FOR ODIN (interview -- best-guess wireframes produced below):
+         1. Should the anonymous checkout email form be a MODAL or INLINE
+            within the settings card? Current best guess: modal dialog.
+         2. Should upsell messaging differ between anonymous vs authenticated
+            users? Current best guess: same copy, same CTA. The email prompt
+            is the only difference (anonymous gets it, authenticated does not).
+         3. Any specific Norse copy/language preferences for the Stripe
+            subscribe CTA? Current best guess: "Pledge as Karl" for
+            atmospheric, "Subscribe for $3.99/month" for functional.
+         4. Should StripeSettings show billing history or just current status?
+            Current best guess: status only -- billing history lives in
+            the Stripe Customer Portal.
+  ===================================================================== -->
+
+
+  <!-- =====================================================================
+       SCENARIO 1 -- Thrall (Unsubscribed) State
+       The user has no active subscription. Show value proposition + CTA.
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 -- Thrall (Unsubscribed) -- Desktop</div>
+
+    <div class="settings-card" role="region" aria-labelledby="stripe-heading-1">
+
+      <!-- Section heading -->
+      <h2 class="settings-heading" id="stripe-heading-1">Subscription</h2>
+
+      <!-- Atmospheric subhead (Voice 2) -->
+      <p class="settings-subhead" aria-hidden="true">
+        The wolf runs free -- but Karl's chains hold power.
+      </p>
+
+      <!-- Current tier -->
+      <div class="status-row">
+        <span class="status-badge">Thrall</span>
+        <span>Free tier</span>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- What Karl tier unlocks (Voice 1 -- plain English) -->
+      <div class="feature-list" aria-label="Karl tier benefits">
+        <p style="font-size: 12px; font-weight: bold;">Upgrade to Karl -- $3.99/month:</p>
+        <div class="feature-item">
+          <div class="feature-icon" aria-hidden="true">+</div>
+          <span>Cloud sync across all your devices</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon" aria-hidden="true">+</div>
+          <span>Priority Howl notifications</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon" aria-hidden="true">+</div>
+          <span>Advanced card analytics</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon" aria-hidden="true">+</div>
+          <span>Unlock all hidden runes</span>
+        </div>
+      </div>
+
+      <!-- Primary CTA -->
+      <!--
+        For authenticated users: redirects directly to Stripe Checkout.
+        For anonymous users: opens email collection modal first (see anonymous-checkout.html),
+        then redirects to Stripe Checkout with email pre-filled.
+
+        Implementation: POST /api/stripe/checkout-session
+          - Authenticated: uses Google profile email
+          - Anonymous: uses email from the modal form
+          - Returns Stripe Checkout URL -> window.location.href redirect
+      -->
+      <div class="actions-row">
+        <button class="btn-primary" type="button">
+          Subscribe for $3.99/month
+        </button>
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      Thrall is the free tier. The settings card shows a value proposition and a single CTA.<br/>
+      The CTA text is functional (Voice 1): "Subscribe for $3.99/month" -- price is explicit, no surprises.<br/>
+      For anonymous users, clicking this button opens the email collection modal before Stripe Checkout redirect.<br/>
+      For authenticated users, clicking this button redirects directly to Stripe Checkout.<br/>
+      The feature list is placeholder -- replace with actual Karl tier benefits from Freya's product brief.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 2 -- Karl (Active Subscriber) State
+       The user has an active Karl subscription.
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 -- Karl (Active Subscriber) -- Desktop</div>
+
+    <div class="settings-card" role="region" aria-labelledby="stripe-heading-2">
+
+      <h2 class="settings-heading" id="stripe-heading-2">Subscription</h2>
+
+      <p class="settings-subhead" aria-hidden="true">
+        The wolf is bound. The chains hold true.
+      </p>
+
+      <!-- Current tier + status -->
+      <div class="status-row">
+        <span class="status-badge">Karl</span>
+        <span>Active</span>
+      </div>
+
+      <!-- Subscription details (Voice 1) -->
+      <div class="status-detail">
+        <p>$3.99/month</p>
+        <p>Next billing date: March 15, 2026</p>
+      </div>
+      <!--
+        "Next billing date" comes from Stripe's currentPeriodEnd.
+        Format: human-readable date in user's locale.
+        Implementation: new Date(subscription.current_period_end * 1000).toLocaleDateString()
+      -->
+
+      <div class="section-divider"></div>
+
+      <!-- Actions -->
+      <!--
+        "Manage Subscription" opens Stripe Customer Portal in a new tab.
+        Implementation: POST /api/stripe/portal-session -> returns portal URL -> window.open()
+        The portal handles: payment method updates, invoice history, plan changes.
+
+        "Cancel Subscription" also routes to Stripe Portal's cancel flow.
+        Implementation: same portal URL, but the user navigates to cancel within the portal.
+        We do NOT build our own cancel confirmation -- Stripe Portal handles retention flow.
+        However, the button should be visually de-emphasized (secondary/destructive).
+      -->
+      <div class="actions-row">
+        <button class="btn-primary" type="button">
+          Manage Subscription
+        </button>
+        <button class="btn-destructive" type="button">
+          Cancel
+        </button>
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      Active subscriber state shows current tier, price, and next billing date.<br/>
+      "Manage Subscription" opens Stripe Customer Portal (new tab) -- handles payment methods, invoices, plan changes.<br/>
+      "Cancel" also routes to Stripe Portal cancel flow -- we do not build our own cancel confirmation UI.<br/>
+      Cancel button is visually de-emphasized (destructive style in theme: muted, not prominent).<br/>
+      No billing history is shown here -- it lives in the Stripe Customer Portal.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 3 -- Canceled State
+       The subscription was canceled but access continues until period end.
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 -- Canceled (Access Until Period End) -- Desktop</div>
+
+    <div class="settings-card" role="region" aria-labelledby="stripe-heading-3">
+
+      <h2 class="settings-heading" id="stripe-heading-3">Subscription</h2>
+
+      <p class="settings-subhead" aria-hidden="true">
+        The chain weakens -- but it holds until the moon turns.
+      </p>
+
+      <!-- Current tier + canceled status -->
+      <div class="status-row">
+        <span class="status-badge">Karl</span>
+        <span>Canceled</span>
+      </div>
+
+      <!-- Cancellation details (Voice 1) -->
+      <div class="status-detail">
+        <p>Your Karl access continues until March 15, 2026.</p>
+        <p>After that date, your account reverts to Thrall (free tier).</p>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- Resubscribe CTA -->
+      <!--
+        Resubscribe redirects to Stripe Checkout for a new subscription.
+        Implementation: POST /api/stripe/checkout-session (same as initial subscribe).
+        If the user still has a Stripe customer ID, Checkout pre-fills their info.
+      -->
+      <div class="actions-row">
+        <button class="btn-primary" type="button">
+          Resubscribe
+        </button>
+        <button class="btn-secondary" type="button">
+          Manage Subscription
+        </button>
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      Canceled state: access continues until <code>currentPeriodEnd</code>.<br/>
+      Copy is honest -- tells the user exactly when access ends and what happens after.<br/>
+      "Resubscribe" creates a new Stripe Checkout session.<br/>
+      "Manage Subscription" still available to view invoices or update payment method in Stripe Portal.<br/>
+      After <code>currentPeriodEnd</code>, status changes to Thrall and this card shows Scenario 1.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 4 -- Mobile (375px) -- All three states
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 4 -- Mobile 375px -- All States</div>
+
+    <div class="scenario-row">
+
+      <!-- Thrall mobile -->
+      <div class="scenario-col">
+        <div class="col-label">Thrall (375px)</div>
+        <div class="mobile-frame">
+          <div class="mobile-settings-card">
+            <h2 style="font-size: 15px; font-weight: bold;">Subscription</h2>
+            <div class="status-row">
+              <span class="status-badge">Thrall</span>
+              <span style="font-size: 12px;">Free tier</span>
+            </div>
+            <p style="font-size: 11px; font-weight: bold;">Upgrade to Karl -- $3.99/month</p>
+            <div class="mobile-actions-row">
+              <button class="btn-primary" type="button" style="font-size: 12px;">
+                Subscribe for $3.99/month
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Karl active mobile -->
+      <div class="scenario-col">
+        <div class="col-label">Karl Active (375px)</div>
+        <div class="mobile-frame">
+          <div class="mobile-settings-card">
+            <h2 style="font-size: 15px; font-weight: bold;">Subscription</h2>
+            <div class="status-row">
+              <span class="status-badge">Karl</span>
+              <span style="font-size: 12px;">Active</span>
+            </div>
+            <div style="font-size: 11px;">
+              <p>$3.99/month</p>
+              <p>Next billing: March 15, 2026</p>
+            </div>
+            <div class="mobile-actions-row">
+              <button class="btn-primary" type="button" style="font-size: 12px;">
+                Manage Subscription
+              </button>
+              <button class="btn-destructive" type="button" style="font-size: 12px;">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canceled mobile -->
+      <div class="scenario-col">
+        <div class="col-label">Canceled (375px)</div>
+        <div class="mobile-frame">
+          <div class="mobile-settings-card">
+            <h2 style="font-size: 15px; font-weight: bold;">Subscription</h2>
+            <div class="status-row">
+              <span class="status-badge">Karl</span>
+              <span style="font-size: 12px;">Canceled</span>
+            </div>
+            <p style="font-size: 11px;">Access continues until March 15, 2026</p>
+            <div class="mobile-actions-row">
+              <button class="btn-primary" type="button" style="font-size: 12px;">
+                Resubscribe
+              </button>
+              <button class="btn-secondary" type="button" style="font-size: 12px;">
+                Manage Subscription
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="note-block">
+      Mobile: buttons stack vertically (full width). Feature list condensed to single summary line.<br/>
+      Touch targets: all buttons min 44px height.<br/>
+      Status badge + status text remain on one line at 375px.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       ACCESSIBILITY SUMMARY
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Accessibility Requirements</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size: 12px;">
+      <table style="border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr style="border-bottom: 1px solid;">
+            <th style="text-align: left; padding: 6px 8px;">Element</th>
+            <th style="text-align: left; padding: 6px 8px;">Requirement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Settings card region</td>
+            <td style="padding: 6px 8px;"><code>role="region"</code> + <code>aria-labelledby</code> bound to section heading. Screen readers announce "Subscription" on region entry.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Status badge</td>
+            <td style="padding: 6px 8px;">Text content is sufficient -- no icon-only state. Screen readers announce "Thrall" or "Karl" naturally.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Subscribe button</td>
+            <td style="padding: 6px 8px;">Full text label includes price. Min 44px touch target. Focus visible.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid;">
+            <td style="padding: 6px 8px;">Cancel button</td>
+            <td style="padding: 6px 8px;"><code>aria-label="Cancel subscription"</code> for disambiguation from other cancel buttons on page.</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 8px;">Atmospheric subhead</td>
+            <td style="padding: 6px 8px;"><code>aria-hidden="true"</code> -- decorative Norse copy, not functional content.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       INTERACTION SPECIFICATION -- State transitions
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Interaction Specification -- State Machine</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size: 12px;">
+
+      <p style="font-weight: bold; margin-bottom: 8px;">State Diagram (Mermaid -- render in wireframes.md)</p>
+      <pre style="font-size: 11px; padding: 8px; border: 1px solid; white-space: pre-wrap;">
+stateDiagram-v2
+    [*] --> Thrall: No subscription
+    Thrall --> CheckoutRedirect: Subscribe clicked
+    CheckoutRedirect --> Karl: Stripe webhook confirms
+    CheckoutRedirect --> Thrall: User abandons checkout
+    Karl --> Canceled: Cancel via Stripe Portal
+    Canceled --> Karl: Resubscribe before period end
+    Canceled --> Thrall: Period ends (webhook)
+    Karl --> Karl: Renewal (automatic)
+      </pre>
+
+      <p style="font-weight: bold; margin-bottom: 8px; margin-top: 12px;">Data flow</p>
+      <ol style="padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+        <li>Component mounts: GET <code>/api/stripe/status</code> to fetch current tier + status.</li>
+        <li>Subscribe: POST <code>/api/stripe/checkout-session</code> -> Stripe Checkout URL -> redirect.</li>
+        <li>Manage/Cancel: POST <code>/api/stripe/portal-session</code> -> Stripe Portal URL -> window.open().</li>
+        <li>Resubscribe: same as Subscribe (POST <code>/api/stripe/checkout-session</code>).</li>
+        <li>Webhook: <code>/api/stripe/webhook</code> processes <code>checkout.session.completed</code>, <code>customer.subscription.updated</code>, <code>customer.subscription.deleted</code>.</li>
+      </ol>
+
+    </div>
+  </section>
+
+  <p class="note" style="text-align: center; padding-bottom: 24px;">
+    Wireframe -- stripe-settings.html -- Fenrir Ledger -- Subscription management component -- No theme styling applied
+  </p>
+
+</div>
+
+</body>
+</html>

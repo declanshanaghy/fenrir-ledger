@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Valhalla — Hall of the Honored Dead</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    .page { max-width: 900px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+
+    /* ── Page header ──────────────────────────────────────────────── */
+    .page-header { border-bottom: 1px solid; padding-bottom: 16px; }
+    .page-header h1 { font-size: 24px; font-weight: bold; margin-bottom: 4px; }
+    .page-header .subtitle { font-size: 13px; }
+    .page-header blockquote { margin-top: 10px; font-style: italic; font-size: 13px; padding-left: 12px; border-left: 2px solid; }
+
+    /* ── Filter / sort bar ────────────────────────────────────────── */
+    .filter-bar { display: flex; gap: 12px; align-items: center; }
+    select { border: 1px solid; padding: 6px 8px; font-size: 13px; font-family: inherit; }
+
+    /* ── Tombstone card ───────────────────────────────────────────── */
+    .tombstone {
+      border: 1px solid;
+      border-left: 4px solid;   /* thicker left accent — stone-hel color in impl */
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .tombstone-header { display: flex; justify-content: space-between; align-items: baseline; }
+    .tombstone-rune { font-size: 16px; margin-right: 8px; }
+    .tombstone-title { font-weight: bold; font-size: 15px; }
+    .tombstone-closed { font-size: 12px; }
+    .tombstone-meta { font-size: 12px; }
+    .tombstone-rule { border-top: 1px solid; }
+    .tombstone-plunder { display: grid; grid-template-columns: auto 1fr; gap: 2px 16px; font-size: 13px; }
+    .tombstone-epitaph { font-style: italic; font-size: 13px; padding-top: 4px; }
+    .tombstone-actions { display: flex; gap: 8px; }
+
+    /* ── Empty state ──────────────────────────────────────────────── */
+    .empty-state { border: 1px dashed; padding: 48px 24px; text-align: center; }
+    .empty-state p { font-size: 13px; margin-bottom: 8px; }
+    .empty-state .rune { font-size: 28px; margin-bottom: 12px; }
+
+    button { border: 1px solid; padding: 6px 14px; cursor: pointer; background: none; font-size: 12px; font-family: inherit; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Page header -->
+  <header class="page-header">
+    <h1>VALHALLA</h1>
+    <div class="subtitle">Closed Card Archive</div>
+    <p class="note">Slightly darker, sepia-tinted variant of the main background in implementation. Narrower content column.</p>
+  </header>
+
+  <!-- Filter / sort bar -->
+  <div class="filter-bar">
+    <select aria-label="Filter by issuer">
+      <option>Filter by issuer ▾</option>
+      <option>Chase</option>
+      <option>American Express</option>
+    </select>
+    <select aria-label="Sort by">
+      <option>Sort by: Closed date ▾</option>
+      <option>Sort by: Annual fee avoided</option>
+      <option>Sort by: Rewards earned</option>
+    </select>
+  </div>
+
+  <!-- Tombstone: closed card #1 -->
+  <article class="tombstone">
+    <div class="tombstone-header">
+      <div>
+        <span class="tombstone-title">CHASE FREEDOM UNLIMITED</span>
+      </div>
+      <span class="tombstone-closed">Closed Oct 2024</span>
+    </div>
+    <div class="tombstone-meta">Chase · Opened Jan 2024 · Held 9 months</div>
+    <div class="tombstone-rule"></div>
+    <div class="tombstone-plunder">
+      <span>Rewards earned:</span><span>45,000 pts ($450 est. value)</span>
+      <span>Fee avoided:</span><span>$95</span>
+      <span>Net gain:</span><span>$545</span>
+    </div>
+    <div class="tombstone-actions">
+      <button>View full record</button>
+    </div>
+  </article>
+
+  <!-- Tombstone: closed card #2 -->
+  <article class="tombstone">
+    <div class="tombstone-header">
+      <div>
+        <span class="tombstone-title">CITI DOUBLE CASH</span>
+      </div>
+      <span class="tombstone-closed">Closed Jun 2024</span>
+    </div>
+    <div class="tombstone-meta">Citi · Opened Dec 2023 · Held 6 months</div>
+    <div class="tombstone-rule"></div>
+    <div class="tombstone-plunder">
+      <span>Rewards earned:</span><span>$200 cashback</span>
+      <span>Fee avoided:</span><span>$0 (no-fee card)</span>
+      <span>Net gain:</span><span>$200</span>
+    </div>
+    <div class="tombstone-actions">
+      <button>View full record</button>
+    </div>
+  </article>
+
+  <!-- Placeholder tombstones -->
+  <p class="note">Additional tombstone rows follow the same pattern above. Gleipnir special entry appears at top when all 6 fragments found (see easter-eggs.md).</p>
+
+  <!-- Empty state (shown when Valhalla has no closed cards) -->
+  <section class="empty-state" aria-label="Empty Valhalla state">
+    <div class="rune">ᛏ</div>
+    <p><strong>No closed cards yet.</strong></p>
+    <p>Close a card to archive it here.</p>
+    <p class="note">Hidden aria-description: "the spittle of a bird" (Gleipnir Hunt ingredient #6)</p>
+  </section>
+
+</div><!-- /.page -->
+
+</body>
+</html>

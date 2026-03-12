@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: App Footer (Minimal)</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+
+    /* ── Footer shell ─────────────────────────────────────────────────────
+       No border-top. No border-bottom. Padding is small enough to keep
+       the footer under ~2 lines tall at the rendered font sizes below.   */
+    footer {
+      padding: 6px 32px;
+    }
+
+    /* ── Single-row layout: wordmark+tagline left | credits+copyright right
+       On mobile the row wraps into two lines (each centred or left-aligned).
+       Either way the total height stays at two text lines.               */
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 2px 16px;
+    }
+
+    /* ── Left cell: wordmark · tagline ──────────────────────────────────── */
+    .footer-left {
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .footer-wordmark {
+      font-weight: bold;
+      letter-spacing: 0.06em;
+    }
+
+    /* Separator between wordmark and tagline — middot, no extra element */
+
+    .footer-tagline {
+      /* same font-size as parent; no emphasis */
+    }
+
+    /* ── Right cell: team colophon · copyright ──────────────────────────── */
+    .footer-right {
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    /* ── © Easter Egg #5 — Gleipnir Hunt "Breath of a Fish" ──────────────
+         The © symbol is the trigger for fragment #5.
+         On hover a CSS ::after pseudo-element reveals "The breath of a fish"
+         positioned above the © character. No DOM tooltip node required.
+         The fragment is registered in localStorage key `gleipnir-found`
+         on first hover. Touch devices: fire on first tap (touchstart).
+         aria-hidden the ::after (CSS-only; no ARIA announcement).
+         See easter-eggs.md §1.                                            */
+    .copyright-symbol {
+      display: inline-block;
+      cursor: default;
+      position: relative;
+      /* data-gleipnir="breath-of-a-fish" attribute required on this element.
+         CSS ::after: content: '"The breath of a fish"'; appears on :hover.
+         Position: absolute; bottom: calc(100% + 4px); left: 50%;
+         transform: translateX(-50%); white-space: nowrap; font-size: 10px; */
+    }
+
+    /* Wireframe annotation standing in for the ::after tooltip */
+    .copyright-symbol-hint {
+      display: inline-block;
+      border: 1px dashed;
+      font-size: 10px;
+      padding: 1px 4px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    /* ── Responsive: wrap gracefully on narrow viewports ────────────────── */
+    @media (max-width: 639px) {
+      footer {
+        padding: 6px 16px;
+      }
+      .footer-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+      }
+      .footer-left,
+      .footer-right {
+        white-space: normal;
+      }
+    }
+
+    /* ── Demo scaffold ─────────────────────────────────────────────────── */
+    .page-stub {
+      min-height: 200px;
+      border-bottom: 1px solid;
+      padding: 40px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Page stub — represents the main content area above the footer -->
+  <div class="page-stub">
+    <p class="note">[ Main content area — Dashboard, Valhalla, etc. ]</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       APP FOOTER — MINIMAL REDESIGN
+       ─────────────────────────────────────────────────────────────────
+       Intent: nearly invisible footer. No border, no nav. Wordmark links to /static.
+       Maximum two lines tall at 11px. Left side = brand identity.
+       Right side = colophon + copyright (easter egg triggers intact).
+       ═══════════════════════════════════════════════════════════════════ -->
+  <footer role="contentinfo" aria-label="App footer">
+
+    <div class="footer-row">
+
+      <!-- ── Left: wordmark · tagline ─────────────────────────────────── -->
+      <span class="footer-left">
+        <a href="/static" class="footer-wordmark" aria-label="Fenrir Ledger — visit the marketing site">ᛟ FENRIR LEDGER</a>
+        &nbsp;·&nbsp;
+        <span class="footer-tagline">Break free. Harvest every reward. Let no chain hold.</span>
+      </span>
+      <!--
+        Design note: wordmark and tagline share a single text line,
+        separated by a middot. Wordmark links to /static (marketing site).
+      -->
+
+      <!-- ── Right: team colophon · © ─────────────────────────────────── -->
+      <span class="footer-right">
+        <!--
+          Team credit — colophon style.
+          "Loki" is Easter Egg #3 trigger (Loki Mode):
+            - Wrap in <span data-loki-trigger> with no visual affordance.
+            - Count clicks in a ref; at 7 clicks activate Loki Mode.
+            - See easter-eggs.md §3 and magic-numbers (7 = Loki's children).
+        -->
+        Forged by FiremanDecko · Guarded by Freya · Tested by
+        <span
+          data-loki-trigger
+          title="[Easter Egg #3] Click 7 times to activate Loki Mode"
+        >Loki</span>
+        &nbsp;&mdash;&nbsp;
+        <!--
+          © is Easter Egg #5 trigger (Gleipnir Hunt fragment #5 "Breath of a Fish").
+          Implementation contract:
+            - Element: <span data-gleipnir="breath-of-a-fish" aria-label="Copyright">©</span>
+            - On first hover: add "breath-of-a-fish" to localStorage `gleipnir-found`
+            - CSS ::after: content: '"The breath of a fish"'; visible on :hover
+            - Tooltip appears ABOVE the © character (bottom: calc(100% + 4px))
+            - aria-hidden on ::after (CSS-only, no DOM tooltip node)
+            - Touch: trigger on first tap (touchstart)
+            - Touch target must be ≥ 44×44px; pad via CSS padding trick if needed.
+          See easter-eggs.md §1.
+        -->
+        <span
+          class="copyright-symbol"
+          data-gleipnir="breath-of-a-fish"
+          aria-label="Copyright"
+          title="[Easter Egg #5] Hover to reveal a Gleipnir fragment"
+        >©</span>
+        <span class="copyright-symbol-hint">
+          ::after hover: "The breath of a fish"
+        </span>
+        2026 Fenrir Ledger
+      </span>
+
+    </div>
+
+    <p class="note" style="padding: 2px 0 0;">
+      Layout: single flex row, left = brand, right = colophon + ©.
+      No border. No nav. Wordmark (ᛟ FENRIR LEDGER) links to /static. Font 11px. Padding 6px vertical.
+      Mobile: wraps to two stacked lines, both left-aligned.
+      "Loki" (EE#3) and © (EE#5) triggers are preserved — see easter-eggs.md.
+    </p>
+
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       RESPONSIVE NOTES
+       ─────────────────────────────────────────────────────────────────
+       Desktop (>1024px): single flex row — brand left, colophon right.
+       Tablet (640–1024px): same row; tagline may truncate gracefully.
+       Mobile (<640px):
+         - flex-direction: column; both lines left-aligned.
+         - Line 1: ᛟ FENRIR LEDGER · tagline
+         - Line 2: Forged by … Tested by Loki — © 2026 Fenrir Ledger
+         - Touch targets for © and "Loki" must be ≥ 44×44px.
+           Apply CSS padding trick: padding + negative margin to enlarge
+           the hit area without disturbing layout.
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       EASTER EGG INTERACTION SPECS (summary for FiremanDecko)
+       ─────────────────────────────────────────────────────────────────
+       EGG #1 — Gleipnir Hunt, Fragment #5 "Breath of a Fish":
+         Trigger:    mouse hover (or first tap on touch) on © symbol
+         Element:    <span data-gleipnir="breath-of-a-fish">©</span>
+         Visual:     CSS ::after tooltip appears above the © character
+         Copy:       "The breath of a fish"
+         Storage:    add "breath-of-a-fish" to localStorage `gleipnir-found` Set
+         Modal:      if this completes all 6, fire gleipnir-shimmer + Valhalla entry
+         a11y:       ::after is CSS-only; no ARIA announcement needed for tooltip
+
+       EGG #3 — Loki Mode:
+         Trigger:    7 clicks on "Loki" in team credits
+         Element:    <span data-loki-trigger>Loki</span>
+         Visual:     no affordance in default state (discoverable only)
+         Effect:     card grid scrambles, realm badges randomize, toast appears,
+                     restores after 5s — see easter-eggs.md §3 for full spec
+         a11y:       no ARIA change needed; effect is cosmetic and self-reverting
+
+       Full spec for both eggs: ../easter-eggs.md
+       ═══════════════════════════════════════════════════════════════════ -->
+
+</body>
+</html>

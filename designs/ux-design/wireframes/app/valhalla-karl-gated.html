@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Valhalla Karl Tier Gating — Issue #377</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md.
+       Permitted: display flex/grid, border, width/height, padding/margin, font-size, font-weight */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* -- Page layout -------------------------------------------------------- */
+    .page { display: flex; flex-direction: column; gap: 64px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* =====================================================================
+       DESIGN DECISIONS — Valhalla Karl gating (#377)
+
+       1. TAB VISIBILITY: Valhalla tab is ALWAYS visible to Thrall users.
+          It is NOT hidden. It shows with a "Karl" lock indicator.
+          This preserves feature discoverability — Thrall users know Valhalla
+          exists and can unlock it.
+
+       2. CLICK BEHAVIOR (Thrall): Clicking the Valhalla tab does NOT navigate
+          to /ledger/valhalla. It opens KarlUpsellDialog immediately.
+          The tab content area behind the dialog shows a blurred/gated state.
+
+       3. /ledger/valhalla ROUTE REMOVED: Per issue spec, the direct route
+          is deprecated. Valhalla lives exclusively in the dashboard tab bar.
+          Karl users access it via the tab — never via direct URL.
+
+       4. "ALL" TAB BEHAVIOR: Archived cards remain visible in the "All" tab
+          for BOTH Thrall and Karl users. Only the Valhalla tab is gated.
+
+       5. KARL INDICATOR ON TAB:
+          - Desktop sidebar nav item: small "Karl" badge or lock icon beside label
+          - Mobile bottom tab bar: same lock indicator on tab item
+          - The tab is NOT greyed out — it's interactive and discoverable
+    ===================================================================== -->
+
+    /* -- App shell — desktop ------------------------------------------------ */
+    .app-shell {
+      border: 1px solid;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      grid-template-rows: 48px 1fr;
+      width: 900px;
+      min-height: 560px;
+    }
+
+    /* -- Slim top bar ------------------------------------------------------- */
+    .slim-topbar {
+      grid-column: 1 / 3;
+      grid-row: 1;
+      height: 48px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 8px; }
+    .topbar-brand-rune { font-size: 18px; }
+    .topbar-brand-name { font-size: 13px; font-weight: bold; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .topbar-avatar {
+      width: 32px;
+      height: 32px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .topbar-icon-btn {
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 6px;
+      font-size: 14px;
+      min-width: 32px;
+      min-height: 32px;
+    }
+
+    /* -- Sidebar nav -------------------------------------------------------- */
+    .sidebar {
+      grid-column: 1;
+      grid-row: 2;
+      border-right: 1px solid;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-nav { flex: 1; padding: 8px 0; }
+    .nav-item {
+      padding: 10px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-left: 3px solid transparent;
+      text-decoration: none;
+    }
+    .nav-item.active {
+      font-weight: bold;
+      border-left: 3px solid;
+    }
+    .nav-item-rune { font-size: 16px; min-width: 20px; }
+    .nav-item-label { flex: 1; }
+
+    /* Karl lock indicator on nav item */
+    .karl-nav-badge {
+      font-size: 8px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 1px solid;
+      padding: 1px 4px;
+    }
+
+    /* -- Content area ------------------------------------------------------- */
+    .content {
+      grid-column: 2;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      /* position: relative needed for dialog overlay */
+    }
+
+    /* -- Dashboard tab bar (inside content area) ---------------------------- */
+    /*
+     * The dashboard tabs live inside the content area below the content header.
+     * Tabs: Active | All | Valhalla | [Howl — optional Karl tab]
+     */
+    .content-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .content-header h1 { font-size: 15px; font-weight: bold; }
+    .dashboard-tab-bar {
+      display: flex;
+      align-items: stretch;
+      border-bottom: 1px solid;
+      padding: 0 20px;
+    }
+    .tab-item {
+      padding: 10px 16px;
+      font-size: 12px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .tab-item.active {
+      font-weight: bold;
+      border-bottom: 2px solid;
+      /* implementation: border-bottom color = gold */
+    }
+    .tab-rune { font-size: 14px; }
+
+    /*
+     * Karl tab indicator — lock icon placed after tab label.
+     * Uses button role so Thrall users can click to trigger upsell dialog.
+     * Does NOT navigate to /ledger/valhalla.
+     */
+    .tab-karl-lock {
+      font-size: 10px;
+      /* lock glyph: 🔒 or SVG in implementation */
+    }
+
+    /* -- Gated content area (Thrall view when dialog NOT open) -------------- */
+    .gated-content-placeholder {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 40px;
+      /* This area is NEVER shown to Thrall users without the dialog —
+         clicking Valhalla tab immediately opens KarlUpsellDialog.
+         This placeholder is included for completeness in the wireframe. */
+    }
+    .gated-icon { font-size: 40px; }
+    .gated-heading { font-size: 16px; font-weight: bold; text-align: center; }
+    .gated-desc { font-size: 12px; text-align: center; max-width: 300px; line-height: 1.6; }
+    .btn-upgrade-inline {
+      padding: 10px 20px;
+      border: 1px solid;
+      background: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      font-family: inherit;
+      min-height: 44px;
+    }
+
+    /* -- Modal overlay (dialog on top of content) --------------------------- */
+    .dialog-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* semi-transparent backdrop — theme applies opacity to background */
+      border: 1px dashed; /* wireframe-only indicator of overlay boundary */
+      z-index: 210;
+    }
+
+    /* -- Inline KarlUpsellDialog (compact version, re-used here) ------------ */
+    .dialog-shell {
+      border: 1px solid;
+      width: 400px;
+      display: flex;
+      flex-direction: column;
+      background: none; /* theme handles background */
+    }
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid;
+    }
+    .dialog-eyebrow { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; }
+    .dialog-eyebrow-sub { font-size: 9px; display: block; margin-top: 2px; }
+    .btn-close-sm {
+      min-width: 44px; min-height: 44px;
+      border: none; background: none; cursor: pointer;
+      font-size: 14px; display: flex; align-items: center; justify-content: center;
+    }
+    .dialog-hero {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid;
+    }
+    .dialog-icon-wrap {
+      width: 56px; height: 56px;
+      border: 1px dashed;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      position: relative;
+    }
+    .dialog-lock-badge {
+      position: absolute; bottom: -5px; right: -5px;
+      width: 16px; height: 16px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 8px;
+    }
+    .dialog-heading { font-size: 17px; font-weight: bold; text-align: center; }
+    .dialog-tagline { font-size: 10px; font-style: italic; text-align: center; }
+    .dialog-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .dialog-teaser {
+      border: 1px dashed; padding: 10px 12px;
+      font-size: 11px; line-height: 1.5;
+    }
+    .dialog-teaser strong { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+    .dialog-karl-row {
+      display: flex; align-items: center; gap: 8px;
+      border: 1px solid; padding: 8px 10px;
+    }
+    .dialog-karl-badge { font-size: 9px; font-weight: bold; text-transform: uppercase; border: 1px solid; padding: 1px 4px; }
+    .dialog-karl-desc { font-size: 11px; flex: 1; }
+    .dialog-karl-price { font-size: 12px; font-weight: bold; }
+    .btn-subscribe-sm {
+      width: 100%; padding: 12px; border: 1px solid;
+      cursor: pointer; font-size: 13px; font-weight: bold;
+      text-align: center; font-family: inherit; background: none;
+      min-height: 44px;
+    }
+    .dialog-footer {
+      padding: 10px 16px; border-top: 1px solid;
+      display: flex; justify-content: center;
+    }
+    .btn-not-now-sm {
+      padding: 6px 14px; border: 1px solid;
+      cursor: pointer; font-size: 11px;
+      font-family: inherit; background: none; min-height: 44px;
+    }
+
+    /* -- Mobile frame ------------------------------------------------------- */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      min-height: 580px;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-slim-topbar {
+      height: 48px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      flex-shrink: 0;
+    }
+    .mobile-topbar-brand { font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+    .mobile-topbar-rune { font-size: 16px; }
+    .mobile-topbar-right { display: flex; align-items: center; gap: 4px; }
+    .mobile-topbar-avatar { width: 32px; height: 32px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .mobile-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+    .mobile-content-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .mobile-content-header h1 { font-size: 13px; font-weight: bold; }
+
+    /* Mobile tab bar INSIDE content (horizontal scroll if needed) */
+    .mobile-tab-bar {
+      display: flex;
+      border-bottom: 1px solid;
+      padding: 0 14px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .mobile-tab-item {
+      padding: 9px 12px;
+      font-size: 11px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .mobile-tab-item.active {
+      font-weight: bold;
+      border-bottom: 2px solid;
+    }
+    .mobile-tab-lock { font-size: 9px; }
+
+    /* Mobile card area */
+    .mobile-card-area {
+      flex: 1;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mobile-card-stub {
+      border: 1px solid;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .mobile-card-title { font-size: 12px; font-weight: bold; }
+    .mobile-card-sub { font-size: 10px; }
+
+    /* Mobile bottom tab bar (navigation, NOT dashboard content tabs) */
+    .mobile-bottom-nav {
+      height: 56px;
+      border-top: 1px solid;
+      display: flex;
+      flex-shrink: 0;
+    }
+    .mobile-nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      text-decoration: none;
+      cursor: pointer;
+      position: relative;
+    }
+    .mobile-nav-item.active { font-weight: bold; }
+    .mobile-nav-icon { font-size: 18px; }
+    .mobile-nav-label { font-size: 9px; }
+    .mobile-nav-karl-badge {
+      position: absolute;
+      top: 8px;
+      right: calc(50% - 18px);
+      width: 12px;
+      height: 12px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 7px;
+      font-weight: bold;
+    }
+
+    /* Mobile dialog overlay */
+    .mobile-dialog-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 210;
+      border: 1px dashed;
+    }
+    .mobile-dialog-shell {
+      border: 1px solid;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* -- Utilities ---------------------------------------------------------- */
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note-block {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.65;
+      border: 1px dashed;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+    .scenario-row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .scenario-col { display: flex; flex-direction: column; gap: 8px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    table { border-collapse: collapse; font-size: 12px; width: 100%; }
+    th, td { border: 1px solid; padding: 6px 10px; text-align: left; }
+    th { font-weight: bold; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+
+  <!-- =====================================================================
+       SCENARIO 1 — Desktop: Tab bar — Thrall user, Valhalla tab with Karl indicator
+       Shows the sidebar nav item AND dashboard content tab bar
+       State: dashboard is on "Active" tab, Valhalla tab shows lock indicator
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 — Desktop — Tab bar: Thrall user (Valhalla tab has Karl indicator)</div>
+
+    <div class="app-shell">
+
+      <!-- Slim top bar -->
+      <header class="slim-topbar" role="banner">
+        <div class="topbar-brand">
+          <span class="topbar-brand-rune" aria-hidden="true">ᛟ</span>
+          <span class="topbar-brand-name">FENRIR LEDGER</span>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-icon-btn" type="button" aria-label="Dark mode">☀</button>
+          <div class="topbar-avatar" aria-label="Anonymous user — click to sign in">ᛟ</div>
+        </div>
+      </header>
+
+      <!-- Sidebar nav -->
+      <nav class="sidebar" role="navigation" aria-label="App navigation">
+        <div class="sidebar-nav">
+
+          <a class="nav-item active" href="/ledger" aria-current="page">
+            <span class="nav-item-rune" aria-hidden="true">▦</span>
+            <span class="nav-item-label">Dashboard</span>
+          </a>
+
+          <a class="nav-item" href="/ledger/add">
+            <span class="nav-item-rune" aria-hidden="true">+</span>
+            <span class="nav-item-label">Add Card</span>
+          </a>
+
+          <!--
+            VALHALLA — always visible in sidebar.
+            Shows "Karl" badge to signal tier requirement.
+            Clicking opens KarlUpsellDialog (NOT /ledger/valhalla).
+            The anchor href is left as "#" — JS intercepts and shows dialog.
+            aria-label explains the lock for screen readers.
+          -->
+          <a class="nav-item"
+             href="#"
+             aria-label="Valhalla — Karl tier feature. Click to upgrade."
+             role="menuitem">
+            <span class="nav-item-rune" aria-hidden="true">ᛏ</span>
+            <span class="nav-item-label">Valhalla</span>
+            <span class="karl-nav-badge" aria-hidden="true">Karl</span>
+          </a>
+
+          <a class="nav-item" href="/ledger/settings">
+            <span class="nav-item-rune" aria-hidden="true">⚙</span>
+            <span class="nav-item-label">Settings</span>
+          </a>
+
+        </div>
+      </nav>
+
+      <!-- Content area — Active tab selected, dashboard cards shown -->
+      <main class="content" role="main">
+
+        <div class="content-header">
+          <h1>THE LEDGER OF FATES</h1>
+          <button type="button" style="border: 1px solid; padding: 6px 14px; background: none; cursor: pointer; font-size: 12px; font-weight: bold; font-family: inherit; min-height: 36px;">
+            ADD CARD ▶
+          </button>
+        </div>
+
+        <!--
+          Dashboard content tab bar.
+          Tabs: Active | All | Valhalla
+          (Howl may also be Karl-gated in future, shown as optional)
+
+          VALHALLA TAB in content tab bar:
+          - Visible to all users (Thrall + Karl)
+          - Thrall users: tab is interactive, clicking opens KarlUpsellDialog
+          - Karl users: tab navigates/switches to Valhalla content
+          - Lock indicator: small "🔒" glyph after tab label
+          - Tab is NOT greyed out — it looks clickable and discoverable
+        -->
+        <nav class="dashboard-tab-bar" role="tablist" aria-label="Dashboard sections">
+
+          <a class="tab-item active"
+             href="#active"
+             role="tab"
+             aria-selected="true"
+             aria-controls="panel-active">
+            Active
+          </a>
+
+          <a class="tab-item"
+             href="#all"
+             role="tab"
+             aria-selected="false"
+             aria-controls="panel-all">
+            All
+            <!-- "All" tab shows ALL cards including archived — no Karl gating -->
+          </a>
+
+          <!--
+            VALHALLA CONTENT TAB — Thrall state
+            aria-label explains lock. aria-selected="false".
+            JS onclick handler opens KarlUpsellDialog.
+            Does NOT navigate to /ledger/valhalla.
+          -->
+          <button class="tab-item"
+                  role="tab"
+                  aria-selected="false"
+                  aria-label="Valhalla — Karl tier required. Click to upgrade."
+                  type="button">
+            <span class="tab-rune" aria-hidden="true">ᛏ</span>
+            Valhalla
+            <span class="tab-karl-lock" aria-hidden="true">🔒</span>
+          </button>
+
+        </nav>
+
+        <!-- Active tab panel content (currently shown) -->
+        <div role="tabpanel" id="panel-active" aria-label="Active cards"
+             style="padding: 16px 20px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="border: 1px solid; padding: 14px; display: flex; gap: 12px; align-items: flex-start;">
+            <div style="border: 1px dashed; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">○</div>
+            <div>
+              <div style="font-weight: bold; font-size: 13px;">Chase Sapphire Preferred</div>
+              <div style="font-size: 11px; margin-top: 3px;">Annual fee due in 47 days · $95</div>
+            </div>
+          </div>
+          <div style="border: 1px solid; padding: 14px; display: flex; gap: 12px; align-items: flex-start;">
+            <div style="border: 1px dashed; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">○</div>
+            <div>
+              <div style="font-weight: bold; font-size: 13px;">Amex Gold</div>
+              <div style="font-size: 11px; margin-top: 3px;">Spend $2k by Dec 31 · $1,200 / $2,000</div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+    </div><!-- /.app-shell -->
+
+    <p class="note-block">
+      Sidebar "Valhalla" nav item: always visible, shows "Karl" badge. Clicking opens KarlUpsellDialog.<br/>
+      Dashboard tab bar "Valhalla" tab: always visible, shows 🔒 icon. Clicking opens KarlUpsellDialog.<br/>
+      Tab is a &lt;button&gt; (not &lt;a&gt;) in Thrall state — no destination URL to navigate to.<br/>
+      Tab is NOT greyed out — full opacity, fully interactive, just gated behind dialog.<br/>
+      The "All" tab shows ALL cards (including archived) regardless of tier — no gating there.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 2 — Desktop: KarlUpsellDialog open over dashboard
+       State: Thrall user clicked Valhalla tab, dialog appears on top
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 — Desktop — Valhalla tab clicked: KarlUpsellDialog appears</div>
+
+    <div class="app-shell">
+
+      <header class="slim-topbar" role="banner">
+        <div class="topbar-brand">
+          <span class="topbar-brand-rune" aria-hidden="true">ᛟ</span>
+          <span class="topbar-brand-name">FENRIR LEDGER</span>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-icon-btn" type="button" aria-label="Dark mode">☀</button>
+          <div class="topbar-avatar">ᛟ</div>
+        </div>
+      </header>
+
+      <nav class="sidebar" role="navigation" aria-label="App navigation">
+        <div class="sidebar-nav">
+          <a class="nav-item active" href="/ledger" aria-current="page">
+            <span class="nav-item-rune" aria-hidden="true">▦</span>
+            <span class="nav-item-label">Dashboard</span>
+          </a>
+          <a class="nav-item" href="/ledger/add">
+            <span class="nav-item-rune" aria-hidden="true">+</span>
+            <span class="nav-item-label">Add Card</span>
+          </a>
+          <a class="nav-item" href="#"
+             aria-label="Valhalla — Karl tier feature"
+             style="font-weight: bold; border-left: 3px solid;">
+            <!-- Sidebar item appears "active" when dialog is open -->
+            <span class="nav-item-rune" aria-hidden="true">ᛏ</span>
+            <span class="nav-item-label">Valhalla</span>
+            <span class="karl-nav-badge" aria-hidden="true">Karl</span>
+          </a>
+          <a class="nav-item" href="/ledger/settings">
+            <span class="nav-item-rune" aria-hidden="true">⚙</span>
+            <span class="nav-item-label">Settings</span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Content area with dialog overlay on top -->
+      <main class="content" role="main">
+
+        <div class="content-header">
+          <h1>THE LEDGER OF FATES</h1>
+          <button type="button" style="border: 1px solid; padding: 6px 14px; background: none; cursor: pointer; font-size: 12px; font-weight: bold; font-family: inherit; min-height: 36px;">
+            ADD CARD ▶
+          </button>
+        </div>
+
+        <nav class="dashboard-tab-bar" role="tablist" aria-label="Dashboard sections">
+          <a class="tab-item" href="#active" role="tab" aria-selected="false">Active</a>
+          <a class="tab-item" href="#all" role="tab" aria-selected="false">All</a>
+          <button class="tab-item" role="tab" aria-selected="true" type="button"
+                  aria-label="Valhalla — Karl tier required"
+                  style="font-weight: bold; border-bottom: 2px solid;">
+            <!-- Valhalla tab shows as "active" while dialog is open -->
+            <span class="tab-rune" aria-hidden="true">ᛏ</span>
+            Valhalla
+            <span class="tab-karl-lock" aria-hidden="true">🔒</span>
+          </button>
+        </nav>
+
+        <!--
+          Card content is still visible behind the overlay (blurred in implementation).
+          Users can see they're still on their dashboard.
+        -->
+        <div style="padding: 16px 20px; opacity: 0.3; display: flex; flex-direction: column; gap: 10px;">
+          <div style="border: 1px solid; padding: 14px; font-size: 12px;">[Card content visible behind overlay]</div>
+          <div style="border: 1px solid; padding: 14px; font-size: 12px;">[Card content visible behind overlay]</div>
+        </div>
+
+        <!-- =================================================================
+             DIALOG OVERLAY — z-index: 210
+             KarlUpsellDialog open, Valhalla props injected
+        ================================================================= -->
+        <div class="dialog-overlay"
+             role="presentation"
+             aria-hidden="true">
+          <!--
+            Backdrop area (inset: 0) is semi-transparent.
+            Clicking backdrop closes dialog (calls onDismiss).
+          -->
+        </div>
+
+        <div style="position: absolute; inset: 0; z-index: 211; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+          <div class="dialog-shell" style="pointer-events: all;"
+               role="dialog"
+               aria-modal="true"
+               aria-labelledby="valhalla-upsell-heading">
+
+            <div class="dialog-header">
+              <div>
+                <span class="dialog-eyebrow">Karl Tier Feature</span>
+                <span class="dialog-eyebrow-sub">KARL · $3.99/month</span>
+              </div>
+              <button class="btn-close-sm" type="button" aria-label="Close dialog">✕</button>
+            </div>
+
+            <div class="dialog-hero">
+              <div class="dialog-icon-wrap" aria-hidden="true">
+                <span>ᛏ</span>
+                <span class="dialog-lock-badge" aria-hidden="true">🔒</span>
+              </div>
+              <h2 class="dialog-heading" id="valhalla-upsell-heading">Valhalla</h2>
+              <p class="dialog-tagline" aria-hidden="true">Hall of the Honored Dead</p>
+            </div>
+
+            <div class="dialog-body">
+              <div class="dialog-teaser">
+                <strong>What you're missing</strong>
+                See every card you've closed — anniversary dates, total rewards extracted,
+                annual fees avoided, and how long each chain held you.
+              </div>
+
+              <div class="dialog-karl-row">
+                <span class="dialog-karl-badge">Karl</span>
+                <span class="dialog-karl-desc">Unlock all premium features</span>
+                <span class="dialog-karl-price">$3.99/mo</span>
+              </div>
+
+              <button class="btn-subscribe-sm" type="button">
+                Upgrade to Karl — $3.99/month
+              </button>
+            </div>
+
+            <div class="dialog-footer">
+              <button class="btn-not-now-sm" type="button">Not now</button>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+
+    </div><!-- /.app-shell -->
+
+    <p class="note-block">
+      Dialog appears immediately when Thrall user clicks Valhalla tab.<br/>
+      Tab bar shows Valhalla tab as "active" (selected state) while dialog is open.<br/>
+      Dashboard content behind overlay is visible at reduced opacity (blurred in implementation).<br/>
+      Backdrop click (outside dialog) → closes dialog, user returns to Active tab state.<br/>
+      "Not now" → closes dialog. Valhalla tab returns to unselected state. No penalty flag.<br/>
+      Z-index: 210 (standard modal layer per the project z-index table).
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 3 — Desktop: Karl user view (Valhalla fully unlocked)
+       Shows how the tab and content look for a Karl subscriber
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 3 — Desktop — Karl user: Valhalla tab fully unlocked (no lock indicator)</div>
+
+    <div class="app-shell">
+
+      <header class="slim-topbar" role="banner">
+        <div class="topbar-brand">
+          <span class="topbar-brand-rune" aria-hidden="true">ᛟ</span>
+          <span class="topbar-brand-name">FENRIR LEDGER</span>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-icon-btn" type="button" aria-label="Dark mode">☀</button>
+          <div class="topbar-avatar" style="border: 2px solid;" aria-label="Signed-in user">G</div>
+        </div>
+      </header>
+
+      <nav class="sidebar" role="navigation" aria-label="App navigation">
+        <div class="sidebar-nav">
+          <a class="nav-item" href="/ledger">
+            <span class="nav-item-rune" aria-hidden="true">▦</span>
+            <span class="nav-item-label">Dashboard</span>
+          </a>
+          <a class="nav-item" href="/ledger/add">
+            <span class="nav-item-rune" aria-hidden="true">+</span>
+            <span class="nav-item-label">Add Card</span>
+          </a>
+          <!--
+            Karl user: Valhalla nav item has NO lock badge.
+            Clicking navigates normally within dashboard (tab switch).
+          -->
+          <a class="nav-item active" href="/ledger" aria-current="page">
+            <span class="nav-item-rune" aria-hidden="true">ᛏ</span>
+            <span class="nav-item-label">Valhalla</span>
+            <!-- NO karl-nav-badge for Karl users -->
+          </a>
+          <a class="nav-item" href="/ledger/settings">
+            <span class="nav-item-rune" aria-hidden="true">⚙</span>
+            <span class="nav-item-label">Settings</span>
+          </a>
+        </div>
+      </nav>
+
+      <main class="content" role="main">
+
+        <div class="content-header">
+          <h1>THE LEDGER OF FATES</h1>
+          <button type="button" style="border: 1px solid; padding: 6px 14px; background: none; cursor: pointer; font-size: 12px; font-weight: bold; font-family: inherit; min-height: 36px;">
+            ADD CARD ▶
+          </button>
+        </div>
+
+        <nav class="dashboard-tab-bar" role="tablist" aria-label="Dashboard sections">
+          <a class="tab-item" href="#active" role="tab" aria-selected="false">Active</a>
+          <a class="tab-item" href="#all" role="tab" aria-selected="false">All</a>
+          <!--
+            Karl user: Valhalla tab is a full link (or tab switch).
+            NO lock indicator. Fully interactive.
+          -->
+          <a class="tab-item active"
+             href="#valhalla"
+             role="tab"
+             aria-selected="true"
+             aria-controls="panel-valhalla">
+            <span class="tab-rune" aria-hidden="true">ᛏ</span>
+            Valhalla
+            <!-- NO lock icon for Karl users -->
+          </a>
+        </nav>
+
+        <!-- Valhalla content panel — tombstone cards -->
+        <div role="tabpanel" id="panel-valhalla" aria-label="Valhalla — closed cards"
+             style="padding: 16px 20px; display: flex; flex-direction: column; gap: 10px;">
+
+          <!-- Filter bar -->
+          <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 4px;">
+            <select style="border: 1px solid; padding: 4px 8px; font-family: inherit; font-size: 11px; background: none;">
+              <option>All issuers</option>
+            </select>
+            <select style="border: 1px solid; padding: 4px 8px; font-family: inherit; font-size: 11px; background: none;">
+              <option>Sort: Closed date</option>
+            </select>
+          </div>
+
+          <!-- Tombstone card -->
+          <div style="border: 1px solid; border-left: 4px solid; padding: 14px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <span style="font-size: 16px;" aria-hidden="true">ᛏ</span>
+              <strong style="font-size: 13px;">Chase Freedom Flex</strong>
+              <span style="font-size: 11px; margin-left: auto;">Closed Jun 2024</span>
+            </div>
+            <div style="font-size: 11px; display: flex; gap: 16px; flex-wrap: wrap;">
+              <span>Held: 2y 3m</span>
+              <span>Rewards extracted: $840</span>
+              <span>Fees avoided: $0</span>
+            </div>
+          </div>
+
+          <div style="border: 1px solid; border-left: 4px solid; padding: 14px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <span style="font-size: 16px;" aria-hidden="true">ᛏ</span>
+              <strong style="font-size: 13px;">Citi Double Cash</strong>
+              <span style="font-size: 11px; margin-left: auto;">Closed Jan 2023</span>
+            </div>
+            <div style="font-size: 11px; display: flex; gap: 16px; flex-wrap: wrap;">
+              <span>Held: 4y 1m</span>
+              <span>Rewards extracted: $1,240</span>
+              <span>Fees avoided: $190</span>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+
+    </div><!-- /.app-shell -->
+
+    <p class="note-block">
+      Karl user: Valhalla tab has NO lock indicator. No KarlUpsellDialog on click.<br/>
+      Sidebar nav item has NO "Karl" badge — feature just works.<br/>
+      Tombstone cards shown with left accent border, ᛏ rune, closed date, held duration, rewards summary.<br/>
+      Filter bar (issuer + sort) same as existing valhalla.html wireframe pattern.<br/>
+      /ledger/valhalla route removed — Valhalla is tab-only; Karl users access via tab switch.
+    </p>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 4 — Mobile: Bottom nav tab with Karl indicator
+       + content tab bar Valhalla tab
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 4 — Mobile 375px — Thrall user: Valhalla in both nav bars</div>
+
+    <div class="scenario-row">
+
+      <!-- 4a: Dashboard active, Valhalla bottom nav shows lock badge -->
+      <div class="scenario-col">
+        <div class="col-label">4a: Bottom nav — Valhalla locked</div>
+        <div class="mobile-frame">
+
+          <header class="mobile-slim-topbar" role="banner">
+            <div class="mobile-topbar-brand">
+              <span class="mobile-topbar-rune" aria-hidden="true">ᛟ</span>
+              FL
+            </div>
+            <div class="mobile-topbar-right">
+              <div class="mobile-topbar-avatar" aria-label="Anonymous user">ᛟ</div>
+            </div>
+          </header>
+
+          <div class="mobile-content">
+
+            <div class="mobile-content-header">
+              <h1>THE LEDGER</h1>
+              <button type="button" style="border: 1px solid; padding: 4px 10px; background: none; cursor: pointer; font-size: 11px; font-family: inherit; min-height: 36px;">+ ADD</button>
+            </div>
+
+            <!-- Dashboard content tab bar -->
+            <nav class="mobile-tab-bar" role="tablist" aria-label="Dashboard sections">
+              <a class="mobile-tab-item active" href="#active" role="tab" aria-selected="true">Active</a>
+              <a class="mobile-tab-item" href="#all" role="tab" aria-selected="false">All</a>
+              <!--
+                Valhalla content tab in mobile dashboard:
+                Shows lock indicator. Clicking opens KarlUpsellDialog.
+              -->
+              <button class="mobile-tab-item" role="tab" aria-selected="false" type="button"
+                      aria-label="Valhalla — Karl tier required">
+                <span aria-hidden="true">ᛏ</span>
+                Valhalla
+                <span class="mobile-tab-lock" aria-hidden="true">🔒</span>
+              </button>
+            </nav>
+
+            <div class="mobile-card-area">
+              <div class="mobile-card-stub">
+                <div class="mobile-card-title">Chase Sapphire Preferred</div>
+                <div class="mobile-card-sub">Fee due in 47 days · $95</div>
+              </div>
+              <div class="mobile-card-stub">
+                <div class="mobile-card-title">Amex Gold</div>
+                <div class="mobile-card-sub">Spend by Dec 31 · $1,200/$2,000</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom navigation bar -->
+          <!--
+            BOTTOM NAV: The 4-tab mobile navigation for /ledger/* routes.
+            Valhalla nav tab shows a lock badge (🔒 or "K") to signal Karl tier.
+            Clicking Valhalla nav tab → opens KarlUpsellDialog (does NOT navigate).
+          -->
+          <nav class="mobile-bottom-nav" role="navigation" aria-label="App tabs">
+
+            <a class="mobile-nav-item active" href="/ledger" aria-current="page">
+              <span class="mobile-nav-icon" aria-hidden="true">▦</span>
+              <span class="mobile-nav-label">Dashboard</span>
+            </a>
+
+            <a class="mobile-nav-item" href="/ledger/add">
+              <span class="mobile-nav-icon" aria-hidden="true">+</span>
+              <span class="mobile-nav-label">Add</span>
+            </a>
+
+            <!--
+              Valhalla nav tab — Thrall user
+              aria-label explains the lock for screen readers.
+              onclick → opens KarlUpsellDialog (JS intercepts navigation).
+            -->
+            <a class="mobile-nav-item"
+               href="#"
+               aria-label="Valhalla — Karl tier feature. Tap to upgrade.">
+              <span class="mobile-nav-icon" aria-hidden="true">ᛏ</span>
+              <span class="mobile-nav-label">Valhalla</span>
+              <!--
+                Karl lock indicator: small badge top-right of the icon.
+                "K" character in implementation — or small lock SVG.
+              -->
+              <span class="mobile-nav-karl-badge" aria-hidden="true">K</span>
+            </a>
+
+            <a class="mobile-nav-item" href="/ledger/settings">
+              <span class="mobile-nav-icon" aria-hidden="true">⚙</span>
+              <span class="mobile-nav-label">Settings</span>
+            </a>
+
+          </nav>
+
+        </div>
+      </div>
+
+      <!-- 4b: Valhalla tab clicked — dialog appears (bottom-sheet) -->
+      <div class="scenario-col">
+        <div class="col-label">4b: Dialog open (bottom-sheet)</div>
+        <div class="mobile-frame" style="position: relative;">
+
+          <header class="mobile-slim-topbar" role="banner">
+            <div class="mobile-topbar-brand">
+              <span class="mobile-topbar-rune" aria-hidden="true">ᛟ</span>
+              FL
+            </div>
+            <div class="mobile-topbar-right">
+              <div class="mobile-topbar-avatar" aria-label="Anonymous user">ᛟ</div>
+            </div>
+          </header>
+
+          <!-- Background content (dimmed behind dialog) -->
+          <div style="padding: 12px 14px; opacity: 0.2; flex: 1;">
+            <div style="border: 1px solid; padding: 12px; margin-bottom: 8px; font-size: 11px;">[Dashboard content behind overlay]</div>
+            <div style="border: 1px solid; padding: 12px; font-size: 11px;">[Dashboard content behind overlay]</div>
+          </div>
+
+          <!-- Dialog overlay (bottom-sheet, full-width) -->
+          <div class="mobile-dialog-overlay" aria-hidden="true">
+            <!--
+              Mobile dialog anchored to bottom.
+              Full-width (100vw), not a floating card.
+              Bottom-sheet pattern for one-thumb usability.
+            -->
+          </div>
+
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; z-index: 211;">
+            <div class="mobile-dialog-shell"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="mobile-valhalla-heading">
+
+              <div class="dialog-header" style="padding: 12px 16px;">
+                <div>
+                  <span class="dialog-eyebrow" style="font-size: 9px;">Karl Tier Feature</span>
+                  <span class="dialog-eyebrow-sub" style="font-size: 8px;">KARL · $3.99/month</span>
+                </div>
+                <button class="btn-close-sm" type="button" aria-label="Close dialog" style="font-size: 14px;">✕</button>
+              </div>
+
+              <div style="padding: 14px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; border-bottom: 1px solid;">
+                <div class="mobile-feature-icon-wrap" style="width: 52px; height: 52px; border: 1px dashed; display: flex; align-items: center; justify-content: center; font-size: 22px; position: relative;" aria-hidden="true">
+                  <span>ᛏ</span>
+                  <span style="position: absolute; bottom: -4px; right: -4px; width: 14px; height: 14px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 7px;" aria-hidden="true">🔒</span>
+                </div>
+                <h2 id="mobile-valhalla-heading" style="font-size: 16px; font-weight: bold; text-align: center;">Valhalla</h2>
+              </div>
+
+              <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="border: 1px dashed; padding: 10px 12px; font-size: 11px; line-height: 1.5;">
+                  <strong style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px;">What you're missing</strong>
+                  See every card you've closed — rewards extracted, fees avoided, and how long each chain held you.
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; border: 1px solid; padding: 8px 10px;">
+                  <span style="font-size: 9px; font-weight: bold; text-transform: uppercase; border: 1px solid; padding: 1px 4px;">Karl</span>
+                  <span style="font-size: 11px; flex: 1;">All premium features</span>
+                  <span style="font-size: 12px; font-weight: bold;">$3.99/mo</span>
+                </div>
+
+                <button type="button"
+                        style="width: 100%; padding: 14px; border: 1px solid; cursor: pointer; font-size: 15px; font-weight: bold; text-align: center; font-family: inherit; background: none; min-height: 44px;">
+                  Upgrade to Karl — $3.99/month
+                </button>
+              </div>
+
+              <div style="padding: 10px 16px; border-top: 1px solid; display: flex; justify-content: center;">
+                <button type="button"
+                        style="padding: 8px 24px; border: 1px solid; cursor: pointer; font-size: 11px; font-family: inherit; background: none; min-height: 44px;">
+                  Not now
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Bottom nav (behind dialog) -->
+          <nav class="mobile-bottom-nav" role="navigation" aria-label="App tabs" style="opacity: 0.3;">
+            <a class="mobile-nav-item active" href="/ledger">
+              <span class="mobile-nav-icon" aria-hidden="true">▦</span>
+              <span class="mobile-nav-label">Dashboard</span>
+            </a>
+            <a class="mobile-nav-item" href="/ledger/add">
+              <span class="mobile-nav-icon" aria-hidden="true">+</span>
+              <span class="mobile-nav-label">Add</span>
+            </a>
+            <a class="mobile-nav-item" href="#">
+              <span class="mobile-nav-icon" aria-hidden="true">ᛏ</span>
+              <span class="mobile-nav-label">Valhalla</span>
+              <span class="mobile-nav-karl-badge" aria-hidden="true">K</span>
+            </a>
+            <a class="mobile-nav-item" href="/ledger/settings">
+              <span class="mobile-nav-icon" aria-hidden="true">⚙</span>
+              <span class="mobile-nav-label">Settings</span>
+            </a>
+          </nav>
+
+        </div>
+      </div>
+
+      <!-- Notes column -->
+      <div class="scenario-col" style="max-width: 280px;">
+        <div class="col-label">Mobile rules</div>
+        <ul style="font-size: 11px; font-style: italic; opacity: 0.65; padding-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+          <li>Two tab bars: bottom nav (route tabs) + dashboard content tabs (Active / All / Valhalla).</li>
+          <li>Both show Karl lock indicator on Valhalla. Both trigger the same KarlUpsellDialog.</li>
+          <li>Dialog bottom-sheet: anchored to bottom, full-width, not floating.</li>
+          <li>Background content dims to ~20% opacity when dialog is open.</li>
+          <li>Bottom nav also dims behind open dialog.</li>
+          <li>Touch target for "K" badge: badge is visual only — entire tab item is the touch target (56px tall × ~94px wide).</li>
+          <li>iOS: padding-bottom: env(safe-area-inset-bottom) on bottom nav.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       SCENARIO 5 — Behavior comparison table (Thrall vs Karl)
+  ===================================================================== -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 5 — Behavior Table: Thrall vs Karl</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Location</th>
+          <th>Thrall (free) behavior</th>
+          <th>Karl ($3.99/mo) behavior</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Dashboard "Valhalla" content tab</td>
+          <td>Tab visible with 🔒 indicator. Click → KarlUpsellDialog. Does NOT navigate.</td>
+          <td>Tab visible, NO lock indicator. Click → shows Valhalla tombstone cards.</td>
+        </tr>
+        <tr>
+          <td>Sidebar "Valhalla" nav item (desktop)</td>
+          <td>Item visible with "Karl" badge. Click → KarlUpsellDialog.</td>
+          <td>Item visible, NO badge. Click → activates Valhalla tab in dashboard.</td>
+        </tr>
+        <tr>
+          <td>Mobile bottom nav "Valhalla" tab</td>
+          <td>Tab visible with "K" lock badge on icon. Tap → KarlUpsellDialog.</td>
+          <td>Tab visible, NO lock badge. Tap → activates Valhalla tab in dashboard.</td>
+        </tr>
+        <tr>
+          <td>"All" tab</td>
+          <td>Archived cards visible alongside active cards. NO gating.</td>
+          <td>Same — all cards visible.</td>
+        </tr>
+        <tr>
+          <td>/ledger/valhalla URL</td>
+          <td>Route removed. 404 or redirect to /ledger.</td>
+          <td>Route removed. Karl users access via tab only.</td>
+        </tr>
+        <tr>
+          <td>KarlUpsellDialog "Not now"</td>
+          <td>Dialog closes. No flag set. Tab returns to previous state.</td>
+          <td>N/A — Karl users never see dialog.</td>
+        </tr>
+        <tr>
+          <td>KarlUpsellDialog "Upgrade"</td>
+          <td>Auth check → Stripe Checkout (direct, no /pricing).</td>
+          <td>N/A</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="note-block">
+      /ledger/valhalla route REMOVED per issue spec. Valhalla is tab-only for all users.<br/>
+      The "All" tab is intentionally NOT gated — it gives Thrall users access to archived card data in context.<br/>
+      The Karl lock indicator is purely visual and informational — the tab is ALWAYS fully interactive.<br/>
+      Clicking a locked tab is a deliberate action that leads to conversion, not a dead end.
+    </p>
+  </section>
+
+
+  <p class="note" style="text-align: center; padding-bottom: 24px;">
+    Wireframe — valhalla-karl-gated.html — Fenrir Ledger — Valhalla Karl Tier Gating — No theme styling applied
+  </p>
+
+</div>
+
+</body>
+</html>

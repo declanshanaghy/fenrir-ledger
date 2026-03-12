@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Migration Prompt — Anonymous to Signed-In</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* ── Page layout ─────────────────────────────────────────────────── */
+    .page { display: flex; flex-direction: column; gap: 48px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+
+    /* ── Modal backdrop ───────────────────────────────────────────────── */
+    /*
+     * The migration prompt is a MODAL DIALOG — not a dedicated page.
+     * Rationale:
+     *   - The user just completed OAuth. They are mid-flow. A full page
+     *     redirect adds navigation cost and loses the context that they
+     *     were just signing in.
+     *   - A modal keeps the dashboard behind it — the user can see their
+     *     data is safe (it is right there, behind the dialog).
+     *   - The modal has exactly two choices, no third path — it is a
+     *     binary decision, well-suited to dialog pattern.
+     *
+     * Backdrop: semi-transparent overlay. z-index: 200 (standard modal layer).
+     * The page behind SHOULD be visible — this reassures the user that
+     * their data is not lost. Do NOT use a fully opaque backdrop.
+     *
+     * Fires: immediately after OAuth completes, before the dashboard
+     * renders in the signed-in state — IF anonymous data is found in localStorage.
+     * If no anonymous data: skip this dialog entirely.
+     */
+    .modal-backdrop {
+      position: relative;
+      width: 100%;
+      min-height: 400px;
+      border: 1px dashed; /* dashed = page-behind / backdrop in wireframe */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+    .backdrop-label {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 10px;
+      font-style: italic;
+      opacity: 0.4;
+    }
+    .page-content-behind {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      opacity: 0.2;
+      pointer-events: none;
+    }
+
+    /* ── Modal dialog ─────────────────────────────────────────────────── */
+    /*
+     * Width: 480px desktop; calc(92vw) mobile (min 320px).
+     * max-height: 90vh with overflow-y: auto for very long content.
+     * Positioned: fixed center of viewport. z-index: 210.
+     * role="dialog" aria-modal="true" aria-labelledby="migration-heading"
+     * Focus trap: Tab cycles within the modal. Escape does NOT close this
+     *   dialog — the user must make a choice. Both choices are equally valid.
+     * Animation: modal-rise translateY(-16px → 0) + opacity 0→1, 320ms
+     *   cubic-bezier(0.16, 1, 0.3, 1) — same saga-enter curve.
+     */
+    .migration-modal {
+      width: 100%;
+      max-width: 480px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      z-index: 210;
+      position: relative;
+    }
+
+    /* Modal header */
+    .migration-header {
+      padding: 20px 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Atmospheric eyebrow (Voice 2) */
+    .migration-eyebrow {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-style: italic;
+      opacity: 0.7;
+    }
+
+    /* Modal heading (Voice 2) */
+    /*
+     * Short and clear — the situation in one Norse-voice phrase.
+     * aria-labelledby target.
+     */
+    .migration-heading {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* Modal body */
+    .migration-body {
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Atmospheric context (Voice 2) — the "lore frame" */
+    .migration-atmos {
+      font-size: 12px;
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    /* Summary block — what we found */
+    /*
+     * The data summary is a plain-English (Voice 1) statement of facts.
+     * No Norse here — the user needs to understand what they're deciding.
+     * Card count is dynamic.
+     */
+    .migration-summary {
+      border: 1px solid;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .migration-summary-count {
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .migration-summary-detail {
+      font-size: 11px;
+    }
+
+    /* Choice cards */
+    /*
+     * Two explicit choices, side by side on desktop, stacked on mobile.
+     * Both choices are valid — neither is visually degraded.
+     * However: "Import cards" is the primary action (recommended path),
+     * and "Start fresh" is the secondary. Visual hierarchy:
+     *   - "Import" has a solid border + bold label (primary feel)
+     *   - "Start fresh" has a standard border + standard label (secondary feel)
+     *   - Both are full buttons — NOT links. "Start fresh" must not look like
+     *     a dangerous or irreversible action.
+     * Reassurance copy inside each choice card explains consequences.
+     */
+    .migration-choices {
+      display: flex;
+      gap: 12px;
+    }
+    .migration-choice {
+      flex: 1;
+      border: 1px solid;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .migration-choice-label {
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .migration-choice-desc {
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .migration-choice-btn {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      font-family: inherit;
+      background: none;
+      text-align: center;
+      min-height: 44px;
+    }
+    /* "Start fresh" extra reassurance */
+    .migration-choice-note {
+      font-size: 10px;
+      font-style: italic;
+      opacity: 0.6;
+      line-height: 1.4;
+    }
+
+    /* Modal footer — atmospheric quote only, no actions */
+    /*
+     * The footer holds the Norse saga quote that provides emotional framing.
+     * No CTA here — the two choice buttons above are the only actions.
+     * The quote reassures: the user's data is part of a larger story.
+     */
+    .migration-footer {
+      padding: 12px 24px 20px;
+      border-top: 1px solid;
+    }
+    .migration-quote {
+      font-size: 11px;
+      font-style: italic;
+      line-height: 1.6;
+      opacity: 0.7;
+    }
+
+    /* ── Mobile variant ───────────────────────────────────────────────── */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      position: relative;
+    }
+    .mobile-modal {
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-modal-header {
+      padding: 16px 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .mobile-modal-body {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .mobile-choices {
+      display: flex;
+      flex-direction: column; /* stacked on mobile */
+      gap: 10px;
+    }
+    .mobile-modal-footer {
+      padding: 10px 16px 16px;
+      border-top: 1px solid;
+    }
+
+    /* ── Generic utilities ─────────────────────────────────────────────── */
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note-block {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.6;
+      border: 1px dashed;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+    .scenario-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .scenario-col { display: flex; flex-direction: column; gap: 8px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       WHEN THIS FIRES
+       Condition: User completes Google OAuth AND localStorage contains
+       a 'fenrir:household' key with at least 1 card.
+       Timing: BEFORE the dashboard renders in signed-in state.
+       Implementation: check localStorage after session is established.
+       If no anonymous data: skip entirely, render signed-in dashboard directly.
+  ═══════════════════════════════════════════════════════════════════ -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 1 — Desktop: Migration prompt (N cards found)
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 1 — Desktop · Migration prompt · 3 anonymous cards found</div>
+
+    <div class="modal-backdrop">
+      <div class="backdrop-label">Page behind modal — semi-transparent overlay</div>
+      <div class="page-content-behind">[Dashboard — Ledger of Fates — behind modal]</div>
+
+      <!--
+        Migration dialog.
+        role="dialog" aria-modal="true" aria-labelledby="migration-heading"
+        No × close button — user must choose. Both choices are safe.
+        Escape does NOT close — this is a required decision before the app loads.
+        Focus trap: Tab cycles between "Import {N} cards" and "Start fresh" buttons.
+        Focus on open: "Import {N} cards" button receives initial focus (recommended path).
+      -->
+      <div
+        class="migration-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="migration-heading"
+      >
+
+        <!-- Header -->
+        <div class="migration-header">
+          <!-- Atmospheric eyebrow (Voice 2) -->
+          <p class="migration-eyebrow" aria-hidden="true">The ledger speaks</p>
+
+          <!-- Heading (Voice 2) — Norse saga voice -->
+          <!--
+            "Your ledger was already written before you named yourself."
+            This echoes the sign-in page atmospheric footnote, creating a
+            continuous narrative thread through the sign-in flow.
+          -->
+          <h1 class="migration-heading" id="migration-heading">
+            Your ledger was already written.
+          </h1>
+        </div>
+
+        <!-- Body -->
+        <div class="migration-body">
+
+          <!-- Atmospheric framing (Voice 2) -->
+          <p class="migration-atmos">
+            Before you named yourself, the wolf's chains were already counted here.
+            What would you have us do with them?
+          </p>
+
+          <!-- Data summary (Voice 1 — plain English) -->
+          <!--
+            Dynamic: replace N with actual card count.
+            Simple, factual — no anxiety-inducing language.
+            "We found" is friendly and non-alarming.
+          -->
+          <div class="migration-summary" role="region" aria-label="Anonymous data found">
+            <div class="migration-summary-count">We found 3 cards from your anonymous session.</div>
+            <div class="migration-summary-detail">
+              These cards, deadlines, and notes are stored locally in this browser.
+            </div>
+          </div>
+
+          <!-- Choice cards (Voice 1 CTAs, Voice 1 descriptions) -->
+          <div class="migration-choices">
+
+            <!-- Choice A: Import (primary path) -->
+            <!--
+              Recommended action. Receives initial focus on dialog open.
+              Clicking: merges anonymous household into the signed-in account.
+              The anonymous householdId is cleared from localStorage after import.
+              Implementation: POST /api/household/migrate with the anonymous data.
+            -->
+            <div class="migration-choice">
+              <div class="migration-choice-label">Import my cards</div>
+              <div class="migration-choice-desc">
+                Add your 3 local cards to your cloud account.
+                You'll have a complete ledger in both places.
+              </div>
+              <!--
+                Button label includes the count — makes the consequence concrete.
+                "Import 3 cards" — not just "Import."
+              -->
+              <button class="migration-choice-btn" type="button">
+                Import 3 cards
+              </button>
+            </div>
+
+            <!-- Choice B: Start fresh (secondary path) -->
+            <!--
+              Valid choice — not a "danger" action, not styled in red.
+              The user's anonymous data is NOT deleted on choosing this.
+              It stays in localStorage under the anonymous householdId.
+              The signed-in account starts empty.
+              Reassurance copy makes this explicit.
+            -->
+            <div class="migration-choice">
+              <div class="migration-choice-label">Start fresh</div>
+              <div class="migration-choice-desc">
+                Begin with an empty cloud account.
+                Your local cards stay safe in this browser — they are not deleted.
+              </div>
+              <button class="migration-choice-btn" type="button">
+                Start fresh
+              </button>
+              <!--
+                Extra reassurance — the "start fresh" path is often feared.
+                This note defuses that fear directly.
+              -->
+              <p class="migration-choice-note">
+                Your 3 local cards will still be here if you sign out.
+                Nothing is deleted.
+              </p>
+            </div>
+
+          </div><!-- /.migration-choices -->
+
+        </div><!-- /.migration-body -->
+
+        <!-- Footer — atmospheric quote (Voice 2), no actions -->
+        <div class="migration-footer">
+          <!--
+            Quote: from the product copywriting guide — anonymous auth section.
+            Sets a calm, narrative tone. Removes urgency.
+          -->
+          <p class="migration-quote">
+            "Your ledger was already written before you named yourself."
+          </p>
+        </div>
+
+      </div><!-- /.migration-modal -->
+
+    </div><!-- /.modal-backdrop -->
+
+    <p class="note-block">
+      Modal fires after OAuth completes, ONLY when anonymous card count &gt; 0.<br/>
+      No × close button — user must choose one path. Both are safe, reversible in spirit ("start fresh" does not delete local data).<br/>
+      Focus on open: "Import {N} cards" button (recommended path). Escape does NOT close — this is a required checkpoint.<br/>
+      "Import {N} cards" button label is dynamic — includes the actual count.<br/>
+      "Start fresh" note makes data preservation explicit: <em>"Your N local cards will still be here if you sign out."</em><br/>
+      z-index: 210 (dialog layer — see z-index table in wireframes.md).<br/>
+      Backdrop: semi-transparent so the dashboard is visible behind — user sees their data is already there.<br/>
+      Animation: <code>modal-rise</code> — same saga-enter easing as all modals in this product.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCENARIO 2 — Mobile (375px): Migration prompt
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Scenario 2 — Mobile 375px · Migration prompt · Choices stacked</div>
+
+    <div class="scenario-row">
+      <div class="scenario-col">
+        <div class="col-label">375px frame</div>
+        <div class="mobile-frame">
+
+          <!--
+            On mobile: choices stack vertically (flex-direction: column).
+            "Import" comes first (top), "Start fresh" comes second (bottom).
+            Both remain full-width.
+            Modal width: calc(92vw) — standard modal width for mobile.
+          -->
+          <div class="mobile-modal" role="dialog" aria-modal="true" aria-labelledby="migration-heading-m">
+
+            <div class="mobile-modal-header">
+              <p class="migration-eyebrow" aria-hidden="true" style="font-size: 9px;">The ledger speaks</p>
+              <h1 class="migration-heading" id="migration-heading-m" style="font-size: 15px;">
+                Your ledger was already written.
+              </h1>
+            </div>
+
+            <div class="mobile-modal-body">
+
+              <p class="migration-atmos" style="font-size: 11px;">
+                Before you named yourself, the wolf's chains were counted here.
+              </p>
+
+              <div class="migration-summary">
+                <div class="migration-summary-count" style="font-size: 12px;">3 cards from your anonymous session.</div>
+                <div class="migration-summary-detail" style="font-size: 10px;">
+                  Stored locally in this browser.
+                </div>
+              </div>
+
+              <!-- Stacked on mobile -->
+              <div class="mobile-choices">
+
+                <div class="migration-choice" style="padding: 12px;">
+                  <div class="migration-choice-label" style="font-size: 12px;">Import my cards</div>
+                  <div class="migration-choice-desc" style="font-size: 10px;">
+                    Add your 3 local cards to your cloud account.
+                  </div>
+                  <button class="migration-choice-btn" type="button" style="font-size: 11px; padding: 9px 12px;">
+                    Import 3 cards
+                  </button>
+                </div>
+
+                <div class="migration-choice" style="padding: 12px;">
+                  <div class="migration-choice-label" style="font-size: 12px;">Start fresh</div>
+                  <div class="migration-choice-desc" style="font-size: 10px;">
+                    Empty cloud account. Local cards are not deleted.
+                  </div>
+                  <button class="migration-choice-btn" type="button" style="font-size: 11px; padding: 9px 12px;">
+                    Start fresh
+                  </button>
+                  <p class="migration-choice-note" style="font-size: 9px;">
+                    Your 3 local cards stay safe in this browser.
+                  </p>
+                </div>
+
+              </div><!-- /.mobile-choices -->
+
+            </div><!-- /.mobile-modal-body -->
+
+            <div class="mobile-modal-footer">
+              <p class="migration-quote" style="font-size: 10px;">
+                "Your ledger was already written before you named yourself."
+              </p>
+            </div>
+
+          </div><!-- /.mobile-modal -->
+
+        </div><!-- /.mobile-frame -->
+      </div>
+
+      <div class="scenario-col" style="max-width: 380px;">
+        <div class="col-label">Mobile rules</div>
+        <p class="note">
+          Choices stack vertically on mobile (flex-direction: column).<br/>
+          "Import" is always first (top) — recommended path gets visual priority.<br/>
+          Both buttons remain full-width for easy tapping. Min 44px height.<br/>
+          Modal width: <code>calc(92vw)</code> — same as all modals in the product per team norms.<br/>
+          <code>max-height: 90vh; overflow-y: auto</code> — handles very small screens without clipping.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       STATE DIAGRAM — Migration prompt flow
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">State Flow — Migration prompt decision tree</div>
+
+    <!--
+      Mermaid diagram (for wireframes.md / FiremanDecko handoff).
+      Reproduced here as an ASCII approximation for the wireframe document.
+      See the full Mermaid version in handoff-to-fireman-anon-auth.md.
+
+      OAuth completes
+           │
+           ▼
+      Anonymous data in localStorage?
+           │
+        No │                      │ Yes (cardCount > 0)
+           ▼                      ▼
+      Dashboard                Migration prompt fires
+      (signed-in)                    │
+                               ┌─────┴──────┐
+                               │            │
+                          "Import"     "Start fresh"
+                               │            │
+                               ▼            ▼
+                          POST migrate   Clear anon flag
+                          anon → cloud   (data preserved)
+                               │            │
+                               └────┬───────┘
+                                    ▼
+                              Dashboard (signed-in)
+                              Avatar transition animates
+    -->
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size: 12px; font-family: monospace; line-height: 2;">
+      OAuth completes<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br/>
+      Anonymous data in localStorage?<br/>
+      &nbsp;&nbsp;NO │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│ YES (cardCount &gt; 0)<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br/>
+      Dashboard (signed-in)&nbsp;&nbsp;&nbsp;Migration prompt<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌──────┴──────┐<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Import N cards"&nbsp;"Start fresh"<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Merge anon data&nbsp;&nbsp;Anon data preserved<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;into cloud acct&nbsp;&nbsp;in localStorage<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──────┬──────┘<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Dashboard (signed-in)<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Avatar transition fires
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ACCESSIBILITY SUMMARY
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="scenario">
+    <div class="scenario-label">Accessibility Requirements</div>
+
+    <div class="note-block" style="font-style: normal; opacity: 1; font-size:12px;">
+      <table style="border-collapse:collapse; width:100%;">
+        <thead>
+          <tr style="border-bottom:1px solid;">
+            <th style="text-align:left; padding:6px 8px;">Element</th>
+            <th style="text-align:left; padding:6px 8px;">Requirement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Modal container</td>
+            <td style="padding:6px 8px;"><code>role="dialog"</code>. <code>aria-modal="true"</code>. <code>aria-labelledby</code> bound to H1 id. Focus trap: Tab cycles within dialog.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">H1 heading</td>
+            <td style="padding:6px 8px;">Receives focus on dialog open. Acts as the dialog's accessible name via <code>aria-labelledby</code>.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">Data summary block</td>
+            <td style="padding:6px 8px;"><code>role="region"</code>. <code>aria-label="Anonymous data found"</code>. Screen readers announce before the choice buttons.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">"Import N cards" button</td>
+            <td style="padding:6px 8px;">Dynamic label including count. Min 44px touch target. Receives initial focus on dialog open.</td>
+          </tr>
+          <tr style="border-bottom:1px solid;">
+            <td style="padding:6px 8px;">"Start fresh" button</td>
+            <td style="padding:6px 8px;">Same visual weight as "Import" button. Min 44px touch target. Must not be styled to imply "danger" — it is a valid choice.</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px;">Atmospheric copy</td>
+            <td style="padding:6px 8px;">Eyebrow: <code>aria-hidden="true"</code>. Footer quote: readable but not a focusable element. Both are Voice 2 — decorative framing, not action copy.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="note" style="text-align:center; padding-bottom: 24px;">
+    Wireframe — migration-prompt.html · Fenrir Ledger · Post-OAuth modal · No theme styling applied
+  </p>
+
+</div><!-- /.page -->
+
+</body>
+</html>

@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing Page Wireframe — Fenrir Ledger</title>
+  <style>
+    /* Wireframe CSS — structural only, no theme styling */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    section {
+      padding: 56px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    /* Page Hero */
+    .page-hero {
+      padding: 64px 0 48px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+      background: #f9f9f9;
+    }
+    .page-hero-rune {
+      font-size: 13px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .page-hero-title {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin: 0 0 16px;
+      line-height: 1.1;
+    }
+    .page-hero-subtitle {
+      font-size: 17px;
+      font-style: italic;
+      max-width: 520px;
+      margin: 0 auto 12px;
+      line-height: 1.7;
+    }
+    .page-hero-desc {
+      font-size: 15px;
+      max-width: 540px;
+      margin: 0 auto;
+      line-height: 1.75;
+    }
+
+    /* Tier comparison grid */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 48px;
+    }
+    .tier-card {
+      border: 1px solid #ccc;
+      padding: 36px 32px;
+      position: relative;
+    }
+    .tier-card.featured {
+      border: 2px solid #333;
+    }
+    .tier-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      white-space: nowrap;
+    }
+    .tier-rune {
+      font-size: 28px;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .tier-name {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin: 0 0 6px;
+    }
+    .tier-tagline {
+      font-size: 14px;
+      font-style: italic;
+      margin: 0 0 20px;
+      line-height: 1.5;
+    }
+    .tier-price {
+      font-size: 40px;
+      font-weight: 900;
+      line-height: 1;
+      margin: 0 0 4px;
+    }
+    .tier-price-period {
+      font-size: 13px;
+      margin: 0 0 28px;
+      letter-spacing: 0.05em;
+    }
+    .tier-cta {
+      display: block;
+      text-align: center;
+      border: 2px solid #333;
+      padding: 14px 24px;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      margin-bottom: 28px;
+    }
+    .tier-card.featured .tier-cta {
+      background: #333;
+      color: #fff;
+    }
+
+    /* Feature list inside tier card */
+    .tier-features-heading {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 14px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+    .tier-feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .tier-feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .tier-feature-list .check {
+      flex-shrink: 0;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .tier-feature-list .check.included { /* ✓ */ }
+    .tier-feature-list .check.excluded {
+      opacity: 0.35;
+    }
+    .tier-feature-list .feature-name {
+      flex: 1;
+    }
+    .tier-feature-list .feature-name.excluded {
+      opacity: 0.4;
+      text-decoration: line-through;
+      text-decoration-style: solid;
+    }
+
+    /* Comparison table (detailed) */
+    .comparison-table-section {
+      padding: 56px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .section-heading {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .section-pre {
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      margin: 0 0 12px;
+    }
+    .section-subtitle {
+      font-size: 15px;
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.75;
+    }
+
+    table.comparison {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    table.comparison thead tr {
+      border-bottom: 2px solid #333;
+    }
+    table.comparison th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    table.comparison th:nth-child(2),
+    table.comparison th:nth-child(3) {
+      text-align: center;
+      width: 140px;
+    }
+    table.comparison .category-row td {
+      background: #f5f5f5;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-top: 1px solid #ddd;
+    }
+    table.comparison tr.feature-row td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #eee;
+      vertical-align: middle;
+    }
+    table.comparison tr.feature-row td:nth-child(2),
+    table.comparison tr.feature-row td:nth-child(3) {
+      text-align: center;
+    }
+    table.comparison .check-yes { font-size: 16px; }
+    table.comparison .check-no { font-size: 16px; opacity: 0.3; }
+
+    /* FAQ Section */
+    .faq-section {
+      padding: 56px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .faq-item {
+      border-bottom: 1px solid #ddd;
+      padding: 24px 0;
+    }
+    .faq-question {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 16px;
+    }
+    .faq-question .expand-icon {
+      flex-shrink: 0;
+      font-size: 20px;
+      line-height: 1;
+      font-weight: 300;
+      margin-top: 2px;
+    }
+    .faq-answer {
+      font-size: 14px;
+      line-height: 1.8;
+      max-width: 680px;
+    }
+
+    /* Final CTA */
+    .final-cta {
+      text-align: center;
+      padding: 72px 0;
+      background: #f5f5f5;
+    }
+    .final-cta h2 {
+      font-size: 30px;
+      font-weight: 700;
+      margin: 0 0 16px;
+    }
+    .final-cta p {
+      font-size: 16px;
+      max-width: 500px;
+      margin: 0 auto 28px;
+      line-height: 1.7;
+    }
+    .btn {
+      border: 2px solid #333;
+      padding: 14px 32px;
+      display: inline-block;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .btn-ghost {
+      border: 1px solid #666;
+      padding: 12px 24px;
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      margin-left: 12px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .tier-grid {
+        grid-template-columns: 1fr;
+        max-width: 420px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .page-hero-title {
+        font-size: 28px;
+      }
+      table.comparison th:nth-child(2),
+      table.comparison th:nth-child(3) {
+        width: auto;
+      }
+    }
+    @media (max-width: 480px) {
+      .tier-card {
+        padding: 28px 20px;
+      }
+      .tier-price {
+        font-size: 32px;
+      }
+    }
+
+    /* Annotations */
+    .note {
+      background: #fffbcc;
+      border: 1px solid #e6d600;
+      padding: 8px 12px;
+      margin: 16px 0;
+      font-size: 12px;
+      font-style: italic;
+    }
+    .note strong {
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       PAGE HERO
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="page-hero">
+    <div class="container">
+      <p class="page-hero-rune">ᛟ · ᚦ · ᚲ</p>
+      <h1 class="page-hero-title">Choose Your Standing</h1>
+      <p class="page-hero-subtitle">
+        Two tiers. One price. No dark patterns.
+      </p>
+      <p class="page-hero-desc">
+        Thrall gets you started — free forever, no credit card required.
+        Karl unlocks the full arsenal for the serious churner.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TIER CARDS
+       ════════════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="container">
+
+      <div class="tier-grid">
+
+        <!-- THRALL (Free) -->
+        <div class="tier-card">
+          <div class="tier-rune">ᚦ</div>
+          <h2 class="tier-name">Thrall</h2>
+          <p class="tier-tagline">The free fighter. No chains, no cost.</p>
+          <p class="tier-price">$0</p>
+          <p class="tier-price-period">Free forever — no credit card required</p>
+
+          <a href="/app" class="tier-cta">Start Free →</a>
+
+          <p class="tier-features-heading">What's included</p>
+          <ul class="tier-feature-list">
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name">Annual fee tracking with 60-day warnings</span>
+            </li>
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name">Sign-up bonus &amp; minimum spend tracking</span>
+            </li>
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name">Velocity management (Chase 5/24, Citi 1/8, etc.)</span>
+            </li>
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name">The Howl — urgent cards dashboard</span>
+            </li>
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name">Card archive (Valhalla)</span>
+            </li>
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name">Single household</span>
+            </li>
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name">Google sign-in</span>
+            </li>
+            <!-- Karl features — shown as locked -->
+            <li>
+              <span class="check excluded">✗</span>
+              <span class="feature-name excluded">Cloud Sync (multi-device)</span>
+            </li>
+            <li>
+              <span class="check excluded">✗</span>
+              <span class="feature-name excluded">Multi-Household management</span>
+            </li>
+            <li>
+              <span class="check excluded">✗</span>
+              <span class="feature-name excluded">Smart Import (AI-Powered)</span>
+            </li>
+            <li>
+              <span class="check excluded">✗</span>
+              <span class="feature-name excluded">Data Export (CSV / JSON)</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- KARL (Paid) — featured -->
+        <div class="tier-card featured">
+          <div class="tier-badge">Most Popular</div>
+
+          <div class="tier-rune">ᚲ</div>
+          <h2 class="tier-name">Karl</h2>
+          <p class="tier-tagline">The free farmer. Owns the land he works.</p>
+          <p class="tier-price">$3.99</p>
+          <p class="tier-price-period">per month · cancel anytime</p>
+
+          <a href="/app" class="tier-cta">Upgrade to Karl →</a>
+
+          <p class="tier-features-heading">Everything in Thrall, plus</p>
+          <ul class="tier-feature-list">
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name"><strong>Cloud Sync</strong> — real-time sync across all devices</span>
+            </li>
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name"><strong>Multi-Household</strong> — manage multiple household ledgers</span>
+            </li>
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name"><strong>Smart Import</strong> — AI extracts card data from spreadsheets</span>
+            </li>
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name"><strong>Data Export</strong> — CSV and JSON export, anytime</span>
+            </li>
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name">All current and future Karl-tier features</span>
+            </li>
+            <li>
+              <span class="check included">✓</span>
+              <span class="feature-name">Support the project — keeps Fenrir independent</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <p style="text-align: center; margin-top: 32px; font-size: 13px; font-style: italic;">
+        Both tiers use Google Sign-In. No separate account creation.
+        Karl subscriptions are managed via Stripe — cancel anytime from settings.
+      </p>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       DETAILED COMPARISON TABLE
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="comparison-table-section">
+    <div class="container">
+
+      <div class="section-heading">
+        <p class="section-pre">ᛊ</p>
+        <h2 class="section-title">Full Comparison</h2>
+        <p class="section-subtitle">Every feature, side by side. No hidden differences.</p>
+      </div>
+
+      <table class="comparison">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Thrall<br><span style="font-size: 10px; font-weight: 400; text-transform: none;">Free</span></th>
+            <th>Karl<br><span style="font-size: 10px; font-weight: 400; text-transform: none;">$3.99/mo</span></th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- Core Tracking -->
+          <tr class="category-row">
+            <td colspan="3">Core Tracking</td>
+          </tr>
+          <tr class="feature-row">
+            <td>Annual fee tracking with 60-day advance warning</td>
+            <td><span class="check-yes">✓</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+          <tr class="feature-row">
+            <td>Sign-up bonus &amp; minimum spend deadline tracking</td>
+            <td><span class="check-yes">✓</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+          <tr class="feature-row">
+            <td>Velocity management (Chase 5/24, Citi 1/8, Amex OPLB, etc.)</td>
+            <td><span class="check-yes">✓</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+          <tr class="feature-row">
+            <td>The Howl — urgent cards dashboard (fee + promo alerts)</td>
+            <td><span class="check-yes">✓</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+          <tr class="feature-row">
+            <td>Card archive — Valhalla (closed cards with full history)</td>
+            <td><span class="check-yes">✓</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+          <tr class="feature-row">
+            <td>Google Sign-In authentication</td>
+            <td><span class="check-yes">✓</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+
+          <!-- Data & Devices -->
+          <tr class="category-row">
+            <td colspan="3">Data &amp; Devices</td>
+          </tr>
+          <tr class="feature-row">
+            <td>Cloud Sync — real-time sync across all signed-in devices</td>
+            <td><span class="check-no">—</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+          <tr class="feature-row">
+            <td>Smart Import — AI-powered extraction from spreadsheets (CSV/XLSX)</td>
+            <td><span class="check-no">—</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+          <tr class="feature-row">
+            <td>Data Export — download your ledger as CSV or JSON</td>
+            <td><span class="check-no">—</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+
+          <!-- Households -->
+          <tr class="category-row">
+            <td colspan="3">Households</td>
+          </tr>
+          <tr class="feature-row">
+            <td>Single household</td>
+            <td><span class="check-yes">✓</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+          <tr class="feature-row">
+            <td>Multi-Household — create and manage multiple household ledgers</td>
+            <td><span class="check-no">—</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+
+          <!-- Support -->
+          <tr class="category-row">
+            <td colspan="3">Support &amp; Future Features</td>
+          </tr>
+          <tr class="feature-row">
+            <td>Community support (GitHub Issues)</td>
+            <td><span class="check-yes">✓</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+          <tr class="feature-row">
+            <td>All future Karl-tier features at no extra cost</td>
+            <td><span class="check-no">—</span></td>
+            <td><span class="check-yes">✓</span></td>
+          </tr>
+
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       FAQ SECTION
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="faq-section">
+    <div class="container">
+
+      <div class="section-heading">
+        <p class="section-pre">ᚹ · Frequently Asked</p>
+        <h2 class="section-title">Questions About the Price</h2>
+        <p class="section-subtitle">Everything you'd want to know before deciding.</p>
+      </div>
+
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <h3 class="faq-question">
+            Is Thrall actually free forever?
+            <span class="expand-icon">+</span>
+          </h3>
+          <p class="faq-answer">
+            Yes. The Thrall tier has no time limit, no trial expiry, and no credit card required.
+            Every core tracking feature — annual fees, sign-up bonuses, velocity management,
+            The Howl — is free. We don't reduce functionality over time to push upgrades.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h3 class="faq-question">
+            What's the difference between Thrall and Karl in practice?
+            <span class="expand-icon">+</span>
+          </h3>
+          <p class="faq-answer">
+            Thrall covers everything you need to track cards on a single device.
+            Karl adds the features that matter when you're serious: your data syncs
+            everywhere you're signed in, you can manage cards for multiple people in
+            your household, and you can import from a spreadsheet or export at any time.
+            If you only track your own cards on one device, Thrall may be all you need.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h3 class="faq-question">
+            How does billing work?
+            <span class="expand-icon">+</span>
+          </h3>
+          <p class="faq-answer">
+            Karl subscriptions are billed monthly via Stripe. You can cancel anytime
+            from your account settings — your subscription stays active until the end of
+            the current billing period. We don't offer annual billing at this time.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h3 class="faq-question">
+            What happens to my data if I cancel Karl?
+            <span class="expand-icon">+</span>
+          </h3>
+          <p class="faq-answer">
+            Your card data stays intact. If you were using Cloud Sync, your cards remain
+            in the cloud and continue to be accessible — but new changes will only sync
+            after re-subscribing. Multi-Household cards are preserved but you'll only
+            be able to view your primary household until you re-subscribe. We never delete
+            your data when you downgrade.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h3 class="faq-question">
+            Why $3.99 and not free with ads?
+            <span class="expand-icon">+</span>
+          </h3>
+          <p class="faq-answer">
+            Fenrir Ledger tracks sensitive financial data — card names, fee amounts,
+            application history. Ads mean ad networks. Ad networks mean your data
+            leaves this site. That's not a trade we're willing to make.
+            $3.99/month keeps Fenrir independent and your data private.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h3 class="faq-question">
+            Does Smart Import store my spreadsheet data?
+            <span class="expand-icon">+</span>
+          </h3>
+          <p class="faq-answer">
+            Smart Import sends your spreadsheet to an AI model to extract card data.
+            The spreadsheet content is processed in memory and not stored after extraction.
+            Only the extracted card records — name, dates, amounts — are saved to your ledger.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h3 class="faq-question">
+            Do you offer refunds?
+            <span class="expand-icon">+</span>
+          </h3>
+          <p class="faq-answer">
+            If something is wrong, contact us at support@fenrirledger.com within 7 days
+            of a charge and we'll make it right. We don't have a formal refund policy
+            because we haven't needed one.
+          </p>
+        </div>
+
+      </div>
+
+      <p style="text-align: center; margin-top: 32px; font-size: 13px;">
+        More questions? <a href="/faq" style="text-decoration: underline;">Read the full FAQ →</a>
+      </p>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       FINAL CTA
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="final-cta">
+    <div class="container">
+      <p style="font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 16px;">ᚠ</p>
+      <h2>The ledger is open. The fee dates are not waiting.</h2>
+      <p>
+        Start free. Upgrade when you need the full arsenal.
+        Either way, the wolf watches.
+      </p>
+      <a href="/app" class="btn">Start Free →</a>
+      <a href="/features" class="btn-ghost">See All Features</a>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       INTERACTION SPEC
+       ════════════════════════════════════════════════════════════════════ -->
+  <p class="note container">
+    <strong>Interaction Spec — Pricing Page:</strong><br>
+    <br>
+    <strong>Tier cards:</strong> Side-by-side on desktop (&gt;768px), stacked on mobile.
+    Karl card has a "Most Popular" badge, 2px border (vs 1px for Thrall), and primary
+    background CTA button. Thrall has ghost/outline CTA.<br>
+    <br>
+    <strong>Feature list in tier cards:</strong> Excluded features use strikethrough text + low opacity.
+    This communicates what Thrall doesn't have without being punitive.
+    No lock icons — they feel hostile on a pricing page.<br>
+    <br>
+    <strong>Comparison table:</strong> Static table, no interactive filtering.
+    Category rows use muted background (bg-muted) to group features visually.
+    ✓ uses primary color. — (em dash) uses muted/low-opacity foreground.<br>
+    <br>
+    <strong>FAQ accordion:</strong> Client component — expand/collapse on click.
+    All items collapsed by default. Single open item at a time (accordion behavior).
+    The + icon rotates to × when open. Uses FaqAccordion component pattern from /faq page
+    (or a simplified inline version if the pricing FAQ is small enough).<br>
+    <br>
+    <strong>PREMIUM_FEATURES registry:</strong> Feature gates in the comparison table
+    match the PremiumFeature slugs in types.ts:
+    cloud-sync, multi-household, data-export, (smart-import maps to a future slug).
+    Do not list advanced-analytics, extended-history, or cosmetic-perks —
+    these are not yet exposed in the product per the issue spec.<br>
+    <br>
+    <strong>CTAs:</strong> "Start Free →" links to /app (app sign-in/sign-up flow).
+    "Upgrade to Karl →" also links to /app — the app handles subscription flow via Stripe.
+    Do not link directly to Stripe Checkout from the marketing page.<br>
+    <br>
+    <strong>Light/dark:</strong> Tier cards use bg-card border-border. Featured Karl card
+    adds a ring/border in primary or foreground color. All semantic tokens.
+    Comparison table alternates row bg between transparent and bg-muted/5.<br>
+    <br>
+    <strong>export const dynamic = 'force-static'</strong> — no server data fetching.
+    Feature gate list is hardcoded from PREMIUM_FEATURES at build time.
+  </p>
+
+</body>
+</html>
