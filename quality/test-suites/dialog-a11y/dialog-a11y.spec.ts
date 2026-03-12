@@ -54,7 +54,7 @@ async function seedFakeAuth(page: any): Promise<void> {
  * Full setup for tests that need the toolbar Import button.
  */
 async function setupAuthenticatedWithCards(page: any): Promise<void> {
-  await page.goto("/", { waitUntil: "load" });
+  await page.goto("/ledger", { waitUntil: "load" });
   await seedFakeAuth(page);
   await seedHousehold(page, AUTH_HOUSEHOLD_ID);
   await seedCards(page, AUTH_HOUSEHOLD_ID, FEW_CARDS);
@@ -197,7 +197,7 @@ test.describe("Dialog A11y — /api/sheets/import route and COOP header", () => 
    */
   test("COOP header configuration is compatible with Google Picker", async ({ page }) => {
     // Navigate to home to get base page response headers
-    await page.goto("/", { waitUntil: "load" });
+    await page.goto("/ledger", { waitUntil: "load" });
 
     // Check response headers from the main page
     // Google Picker requires certain COOP policies to function

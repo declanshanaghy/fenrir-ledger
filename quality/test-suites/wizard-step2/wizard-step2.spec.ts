@@ -19,7 +19,7 @@ import {
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
 async function goToNewCard(page: import("@playwright/test").Page) {
-  await page.goto("/", { waitUntil: "load" });
+  await page.goto("/ledger", { waitUntil: "load" });
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await page.goto("/ledger/cards/new", { waitUntil: "domcontentloaded" });
   await page.locator("#cardName").waitFor({ state: "visible", timeout: 15000 });
@@ -41,7 +41,7 @@ async function goToStep2(page: import("@playwright/test").Page) {
 // ─── Setup ────────────────────────────────────────────────────────────────────
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/ledger");
   await clearAllStorage(page);
 });
 

@@ -17,7 +17,7 @@ import {
 // ─── Shared setup ─────────────────────────────────────────────────────────────
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/ledger");
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await page.goto("/ledger/cards/new", { waitUntil: "load" });

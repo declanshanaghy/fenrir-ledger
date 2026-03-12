@@ -37,7 +37,7 @@ import { clearAllStorage } from "../helpers/test-fixtures";
 // ─── Shared setup ─────────────────────────────────────────────────────────────
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/ledger");
   await clearAllStorage(page);
 });
 
@@ -128,7 +128,7 @@ test.describe("Auth Callback — Google Error Param", () => {
   }) => {
     // Edge case: arbitrary error string from Google should not crash
     await page.goto(
-      "/auth/callback?error=server_error",
+      "/ledger/auth/callback?error=server_error",
       { waitUntil: "load" }
     );
 
@@ -186,7 +186,7 @@ test.describe("Auth Callback — CSRF State Mismatch", () => {
   }) => {
     // Spec: auth/callback/page.tsx — pkceData.state !== stateParam →
     //       "State mismatch — possible CSRF attack. Please sign in again."
-    await page.goto("/");
+    await page.goto("/ledger");
     // Seed PKCE session with a known state
     await page.evaluate(() => {
       sessionStorage.setItem(
@@ -227,7 +227,7 @@ test.describe("Auth Callback — Loading State", () => {
     });
 
     // Seed valid PKCE data so the page proceeds to the exchange step
-    await page.goto("/");
+    await page.goto("/ledger");
     await page.evaluate(() => {
       sessionStorage.setItem(
         "fenrir:pkce",
@@ -241,7 +241,7 @@ test.describe("Auth Callback — Loading State", () => {
 
     // Navigate — the exchange is stalled so page stays in "exchanging"
     const navPromise = page.goto(
-      "/auth/callback?code=fake_code&state=consistent-state",
+      "/ledger/auth/callback?code=fake_code&state=consistent-state",
       { waitUntil: "domcontentloaded", timeout: 5000 }
     );
 
@@ -264,7 +264,7 @@ test.describe("Auth Callback — Corrupt PKCE Data", () => {
     page,
   }) => {
     // Spec: auth/callback/page.tsx — JSON.parse throws → "Corrupt PKCE session data."
-    await page.goto("/");
+    await page.goto("/ledger");
     await page.evaluate(() => {
       sessionStorage.setItem("fenrir:pkce", "this-is-not-valid-json{{{{");
     });

@@ -34,7 +34,7 @@ import { clearAllStorage } from "../helpers/test-fixtures";
 // ─── Shared setup ─────────────────────────────────────────────────────────────
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/ledger");
   await clearAllStorage(page);
 });
 

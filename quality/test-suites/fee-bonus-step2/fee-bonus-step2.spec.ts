@@ -31,7 +31,7 @@ import {
 // Every test starts from a clean state with a known household.
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/ledger");
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   // Navigate to new card form
