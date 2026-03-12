@@ -26,16 +26,10 @@ Then create your todo list via TodoWrite. Every todo below is required:
 <FULL ISSUE BODY>
 
 **Step 3 — Implement (with incremental commits).**
+- Read `.claude/agents/fireman-decko.md` for full behavioral rules (Implementation Rules, Technical Standards, Design Principles).
 - Read affected files FIRST, then make changes.
 - <If UX Step 2: Follow Luna's wireframes for layout and structure.>
-- All file paths relative to REPO_ROOT. Do NOT double-nest paths.
-- Mobile-friendly: min 375px, two-col collapse with `flex flex-col md:grid`.
-- **Accessibility aria-labels (UNBREAKABLE):** Every interactive region, card, section,
-  and landmark MUST have a meaningful `aria-label` or `aria-labelledby`. Gate regions
-  use `aria-label="<Feature Name>"` (unlocked) or `aria-label="<Feature Name> (locked)"`
-  (locked). List items like cards use `aria-label="<Card type>: <Card name>"`. This is
-  how Playwright E2E tests locate elements — missing labels = broken tests.
-- Backend code: use `import { log } from "@/lib/logger"`, never raw console.*.
+- Follow ALL Implementation Rules from the agent definition (aria-labels, mobile-friendly, logger, paths).
 - **After each logical chunk** (1-3 files changed):
   1. git add -A && git commit -m 'wip: <what> — Ref #<NUMBER>' && git push origin <BRANCH>
   2. cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc

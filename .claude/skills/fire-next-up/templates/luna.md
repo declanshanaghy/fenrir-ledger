@@ -23,6 +23,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
 <FULL ISSUE BODY>
 
 **Step 3 — Design wireframes (with incremental commits):**
+- Read `.claude/agents/luna.md` for full behavioral rules (Wireframe Rules, Design Principles, Responsibilities).
 - Create HTML wireframe(s) in `ux/wireframes/` — structure only, no theme styling.
 - Update `ux/wireframes.md` if adding new wireframes.
 - Write a brief interaction spec if the feature has non-obvious interactions.

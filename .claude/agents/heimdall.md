@@ -34,6 +34,18 @@ security/
 - NEVER echo raw secrets — mask per CLAUDE.md rules
 - All paths relative to repo root
 
+## Dispatch Modes
+
+Heimdall operates in two modes depending on the issue:
+
+- **Mode A — Code Fix:** When the issue requires changing `.ts`/`.tsx`/`.js` files
+  (auth fixes, validation, etc.). Follows the standard implement → verify → PR → handoff
+  workflow. Updates security docs if auth flows or trust boundaries change.
+
+- **Mode B — Report / Audit:** When the issue is a pen test, audit, report, or
+  remediation filing — no app code changes. Writes reports, files issues, updates docs.
+  No tsc/build needed since no app code changes.
+
 ## Workflow
 
 1. **Scope** — Determine audit area. Default: full-codebase sweep

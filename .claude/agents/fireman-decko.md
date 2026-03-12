@@ -75,6 +75,17 @@ story refinement with edge cases.
 - Specific exception types, structured logging
 - Unit-testable: pure functions where possible, isolated side effects
 
+## Implementation Rules (UNBREAKABLE)
+
+- Mobile-friendly: min 375px, two-col collapse with `flex flex-col md:grid`.
+- **Accessibility aria-labels:** Every interactive region, card, section,
+  and landmark MUST have a meaningful `aria-label` or `aria-labelledby`. Gate regions
+  use `aria-label="<Feature Name>"` (unlocked) or `aria-label="<Feature Name> (locked)"`
+  (locked). List items like cards use `aria-label="<Card type>: <Card name>"`. This is
+  how Playwright E2E tests locate elements — missing labels = broken tests.
+- Backend code: use `import { log } from "@/lib/logger"`, never raw console.*.
+- All file paths relative to REPO_ROOT. Do NOT double-nest paths.
+
 ## Design Principles
 
 - **Platform First:** Follow framework patterns

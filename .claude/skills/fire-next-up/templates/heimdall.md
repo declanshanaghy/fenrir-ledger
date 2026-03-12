@@ -31,6 +31,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
 <FULL ISSUE BODY>
 
 **Step 3 — Implement the security fix (with incremental commits).**
+- Read `.claude/agents/heimdall.md` for full behavioral rules (Constraints, Workflow, Severity, Report Format).
 - Read affected files FIRST, then make changes.
 - Update security docs if the fix changes auth flows, trust boundaries, or threat model.
 - Secret masking (UNBREAKABLE): never log secrets, tokens, or credentials.
@@ -102,6 +103,7 @@ Then create your todo list via TodoWrite.
 <FULL ISSUE BODY>
 
 **Step 3 — Do the work.**
+- Read `.claude/agents/heimdall.md` for full behavioral rules (Constraints, Workflow, Severity, Report Format).
 Write reports, file issues, update docs — whatever the issue requires.
 Commit and push incrementally after each logical chunk:
   git add -A && git commit -m 'security: <what> — Ref #<NUMBER>' && git push origin <BRANCH>
