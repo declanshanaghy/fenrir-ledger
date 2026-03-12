@@ -180,7 +180,7 @@ mockRequireAuth.mockResolvedValueOnce({
 7. **Touch target / a11y checks** belong in `accessibility/a11y.spec.ts`, not scattered across suites.
 8. **No structural DOM assertions.** Landmark presence, aria-label existence, and tag structure belong in integration tests. E2E tests should focus on user interactions and navigation.
 
-### Current E2E suites (29 files, ~228 tests)
+### Current E2E suites (27 files, ~222 tests)
 
 | Category | Suites | Tests |
 |----------|--------|-------|
@@ -188,12 +188,17 @@ mockRequireAuth.mockResolvedValueOnce({
 | Dashboard | dashboard/, dashboard-tabs/ | ~24 |
 | Cards | card-lifecycle/ (add, edit, close, delete) | ~21 |
 | Wizard | wizard-step2/, wizard-back-button/ | ~15 |
-| Layout | layout/ (sidebar, topbar, footer, howl-panel) | ~19 |
+| Layout | layout/ (topbar, howl-panel) | ~7 |
 | Settings | settings-gate/ | ~9 |
 | Theme | theme-toggle/ | ~10 |
 | Profile | profile-dropdown/ | ~20 |
 | A11y | accessibility/ (TC-A05..A13), dialog-a11y/ | ~14 |
 | Other | chronicles/, empty-state-cta/, select-reset/, howl-count/, credit-limit-step2/, fee-bonus-step2/, csv-format-help/, reverse-tab-order/ | ~71 |
+
+**Note (Issue #589):** sidebar.spec.ts and footer.spec.ts were deleted because the
+sidebar was removed in Issue #403 and the Ledger Footer with About modal is no longer
+rendered in any active layout. All E2E routes updated from `/` to `/ledger` to match
+the current route structure (marketing pages own `/`, app pages own `/ledger`).
 
 ---
 
