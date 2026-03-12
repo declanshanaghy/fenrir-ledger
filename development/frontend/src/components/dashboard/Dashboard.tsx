@@ -29,7 +29,6 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { CardTile } from "./CardTile";
 import { EmptyState } from "./EmptyState";
 import { AnimatedCardGrid } from "./AnimatedCardGrid";
@@ -221,95 +220,36 @@ function TabBadge({ count, isHowl }: TabBadgeProps) {
 
 // ─── Empty states ──────────────────────────────────────────────────────────────
 
-function HowlEmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
-      <span
-        aria-hidden="true"
-        className="text-5xl text-muted-foreground/40 select-none"
-        style={{ fontFamily: "serif" }}
-      >
-        ᚱ
-      </span>
-      <p className="text-base font-heading text-foreground">The wolf is silent.</p>
-      <p className="text-sm text-muted-foreground max-w-xs">
-        All chains are loose. No cards need attention right now.
-      </p>
-    </div>
-  );
+/** Runic labels per tab — displayed as `ᚱ No [category] ᚱ` when tab is empty. */
+const TAB_EMPTY_LABELS: Record<DashboardTab, string> = {
+  all: "No cards",
+  valhalla: "No retired cards",
+  active: "No active cards",
+  hunt: "No bounties",
+  howl: "No alerts",
+};
+
+interface TabEmptyStateProps {
+  tabId: DashboardTab;
+  rune: string;
 }
 
-function HuntEmptyState() {
+/**
+ * TabEmptyState — unified runic empty state for all 5 dashboard tabs.
+ * Displays: `ᚱ No [category] ᚱ` centered in the empty area.
+ * Issue #583 — simplified from verbose per-tab empty states.
+ */
+function TabEmptyState({ tabId, rune }: TabEmptyStateProps) {
+  const label = TAB_EMPTY_LABELS[tabId];
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
-      <span
-        aria-hidden="true"
-        className="text-5xl text-muted-foreground/40 select-none"
-        style={{ fontFamily: "serif" }}
-      >
-        ᛜ
-      </span>
-      <p className="text-base font-heading text-foreground">No bounties to claim.</p>
-      <p className="text-sm text-muted-foreground max-w-xs">
-        Add a card with a sign-up bonus to begin the hunt.
-      </p>
-    </div>
-  );
-}
-
-function ActiveEmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
-      <span
-        aria-hidden="true"
-        className="text-5xl text-muted-foreground/40 select-none"
-        style={{ fontFamily: "serif" }}
-      >
-        ᛉ
-      </span>
-      <p className="text-base font-heading text-foreground">No active cards.</p>
-      <p className="text-sm text-muted-foreground max-w-xs">
-        All your cards are currently in The Howl.{" "}
-        <Link href="/ledger/cards/new" className="text-gold hover:text-primary transition-colors">
-          Add a card
-        </Link>{" "}
-        to see it here.
-      </p>
-    </div>
-  );
-}
-
-function ValhallaEmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
-      <span
-        aria-hidden="true"
-        className="text-5xl text-muted-foreground/40 select-none"
-        style={{ fontFamily: "serif" }}
-      >
-        ↑
-      </span>
-      <p className="text-base font-heading text-foreground">Valhalla is quiet.</p>
-      <p className="text-sm text-muted-foreground max-w-xs">
-        No cards have been retired yet.
-      </p>
-    </div>
-  );
-}
-
-function AllEmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
-      <span
-        aria-hidden="true"
-        className="text-5xl text-muted-foreground/40 select-none"
-        style={{ fontFamily: "serif" }}
-      >
-        ᛟ
-      </span>
-      <p className="text-base font-heading text-foreground">The ledger is empty.</p>
-      <p className="text-sm text-muted-foreground max-w-xs">
-        Add your first card to begin.
+    <div
+      className="flex items-center justify-center py-16 px-6 text-center"
+      aria-label={label}
+    >
+      <p className="text-base font-heading text-muted-foreground tracking-wide">
+        <span aria-hidden="true" style={{ fontFamily: "serif" }}>{rune}</span>
+        {" "}{label}{" "}
+        <span aria-hidden="true" style={{ fontFamily: "serif" }}>{rune}</span>
       </p>
     </div>
   );
@@ -686,7 +626,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         className="pt-5"
       >
         {displayHowlCards.length === 0 ? (
-          <HowlEmptyState />
+          <TabEmptyState tabId="howl" rune="ᚲ" />
         ) : (
           <AnimatedCardGrid
             cards={displayHowlCards}
@@ -710,7 +650,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         className="pt-5"
       >
         {displayHuntCards.length === 0 ? (
-          <HuntEmptyState />
+          <TabEmptyState tabId="hunt" rune="ᛜ" />
         ) : (
           <AnimatedCardGrid
             cards={displayHuntCards}
@@ -734,7 +674,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         className="pt-5"
       >
         {displayActiveCards.length === 0 ? (
-          <ActiveEmptyState />
+          <TabEmptyState tabId="active" rune="ᛉ" />
         ) : (
           <AnimatedCardGrid
             cards={displayActiveCards}
@@ -758,7 +698,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         className="pt-5"
       >
         {displayValhallaCards.length === 0 ? (
-          <ValhallaEmptyState />
+          <TabEmptyState tabId="valhalla" rune="↑" />
         ) : (
           <AnimatedCardGrid
             cards={displayValhallaCards}
@@ -782,7 +722,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         className="pt-5"
       >
         {displayCards.length === 0 ? (
-          <AllEmptyState />
+          <TabEmptyState tabId="all" rune="ᛟ" />
         ) : (
           <AnimatedCardGrid
             cards={displayCards}
