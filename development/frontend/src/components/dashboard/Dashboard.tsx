@@ -32,7 +32,10 @@ import { useEffect, useRef, useState } from "react";
 import { CardTile } from "./CardTile";
 import { EmptyState } from "./EmptyState";
 import { AnimatedCardGrid } from "./AnimatedCardGrid";
+import { TabHeader } from "./TabHeader";
+import { TabSummary } from "./TabSummary";
 import type { Card } from "@/lib/types";
+import type { DashboardTab } from "@/lib/constants";
 import { LOKI_REALM_NAMES } from "@/components/layout/Footer";
 import { daysUntil } from "@/lib/card-utils";
 import { cn } from "@/lib/utils";
@@ -46,8 +49,6 @@ import {
 } from "@/components/entitlement/KarlUpsellDialog";
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
-
-type DashboardTab = "howl" | "hunt" | "active" | "valhalla" | "all";
 
 const VALID_TABS = new Set<string>(["howl", "hunt", "active", "valhalla", "all"]);
 
@@ -623,21 +624,24 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         aria-labelledby="tab-howl"
         tabIndex={0}
         hidden={activeTab !== "howl"}
-        className="pt-5"
       >
-        {displayHowlCards.length === 0 ? (
-          <TabEmptyState tabId="howl" rune="ᚲ" />
-        ) : (
-          <AnimatedCardGrid
-            cards={displayHowlCards}
-            renderCard={(card) => (
-              <HowlCard
-                card={card}
-                lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
-              />
-            )}
-          />
-        )}
+        <TabHeader tabId="howl" />
+        <TabSummary tabId="howl" cards={displayHowlCards} />
+        <div tabIndex={-1} className="outline-none pt-5">
+          {displayHowlCards.length === 0 ? (
+            <TabEmptyState tabId="howl" rune="\u16B2" />
+          ) : (
+            <AnimatedCardGrid
+              cards={displayHowlCards}
+              renderCard={(card) => (
+                <HowlCard
+                  card={card}
+                  lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
+                />
+              )}
+            />
+          )}
+        </div>
       </div>
 
       {/* The Hunt panel */}
@@ -647,21 +651,24 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         aria-labelledby="tab-hunt"
         tabIndex={0}
         hidden={activeTab !== "hunt"}
-        className="pt-5"
       >
-        {displayHuntCards.length === 0 ? (
-          <TabEmptyState tabId="hunt" rune="ᛜ" />
-        ) : (
-          <AnimatedCardGrid
-            cards={displayHuntCards}
-            renderCard={(card) => (
-              <CardTile
-                card={card}
-                lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
-              />
-            )}
-          />
-        )}
+        <TabHeader tabId="hunt" />
+        <TabSummary tabId="hunt" cards={displayHuntCards} />
+        <div tabIndex={-1} className="outline-none pt-5">
+          {displayHuntCards.length === 0 ? (
+            <TabEmptyState tabId="hunt" rune="\u16DC" />
+          ) : (
+            <AnimatedCardGrid
+              cards={displayHuntCards}
+              renderCard={(card) => (
+                <CardTile
+                  card={card}
+                  lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
+                />
+              )}
+            />
+          )}
+        </div>
       </div>
 
       {/* Active panel */}
@@ -671,21 +678,24 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         aria-labelledby="tab-active"
         tabIndex={0}
         hidden={activeTab !== "active"}
-        className="pt-5"
       >
-        {displayActiveCards.length === 0 ? (
-          <TabEmptyState tabId="active" rune="ᛉ" />
-        ) : (
-          <AnimatedCardGrid
-            cards={displayActiveCards}
-            renderCard={(card) => (
-              <CardTile
-                card={card}
-                lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
-              />
-            )}
-          />
-        )}
+        <TabHeader tabId="active" />
+        <TabSummary tabId="active" cards={displayActiveCards} />
+        <div tabIndex={-1} className="outline-none pt-5">
+          {displayActiveCards.length === 0 ? (
+            <TabEmptyState tabId="active" rune="\u16C9" />
+          ) : (
+            <AnimatedCardGrid
+              cards={displayActiveCards}
+              renderCard={(card) => (
+                <CardTile
+                  card={card}
+                  lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
+                />
+              )}
+            />
+          )}
+        </div>
       </div>
 
       {/* Valhalla panel — closed cards */}
@@ -695,21 +705,24 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         aria-labelledby="tab-valhalla"
         tabIndex={0}
         hidden={activeTab !== "valhalla"}
-        className="pt-5"
       >
-        {displayValhallaCards.length === 0 ? (
-          <TabEmptyState tabId="valhalla" rune="↑" />
-        ) : (
-          <AnimatedCardGrid
-            cards={displayValhallaCards}
-            renderCard={(card) => (
-              <CardTile
-                card={card}
-                lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
-              />
-            )}
-          />
-        )}
+        <TabHeader tabId="valhalla" />
+        <TabSummary tabId="valhalla" cards={displayValhallaCards} />
+        <div tabIndex={-1} className="outline-none pt-5">
+          {displayValhallaCards.length === 0 ? (
+            <TabEmptyState tabId="valhalla" rune="\u2191" />
+          ) : (
+            <AnimatedCardGrid
+              cards={displayValhallaCards}
+              renderCard={(card) => (
+                <CardTile
+                  card={card}
+                  lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
+                />
+              )}
+            />
+          )}
+        </div>
       </div>
 
       {/* All panel — every card regardless of status */}
@@ -719,31 +732,34 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         aria-labelledby="tab-all"
         tabIndex={0}
         hidden={activeTab !== "all"}
-        className="pt-5"
       >
-        {displayCards.length === 0 ? (
-          <TabEmptyState tabId="all" rune="ᛟ" />
-        ) : (
-          <AnimatedCardGrid
-            cards={displayCards}
-            renderCard={(card) => {
-              if (isHowlCard(card)) {
+        <TabHeader tabId="all" />
+        <TabSummary tabId="all" cards={displayCards} />
+        <div tabIndex={-1} className="outline-none pt-5">
+          {displayCards.length === 0 ? (
+            <TabEmptyState tabId="all" rune="\u16DF" />
+          ) : (
+            <AnimatedCardGrid
+              cards={displayCards}
+              renderCard={(card) => {
+                if (isHowlCard(card)) {
+                  return (
+                    <HowlCard
+                      card={card}
+                      lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
+                    />
+                  );
+                }
                 return (
-                  <HowlCard
+                  <CardTile
                     card={card}
                     lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
                   />
                 );
-              }
-              return (
-                <CardTile
-                  card={card}
-                  lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
-                />
-              );
-            }}
-          />
-        )}
+              }}
+            />
+          )}
+        </div>
       </div>
 
       {/* Karl upsell dialog — shown when Thrall user clicks Valhalla tab */}
