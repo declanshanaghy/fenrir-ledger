@@ -30,6 +30,11 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - <If UX Step 2: Follow Luna's wireframes for layout and structure.>
 - All file paths relative to REPO_ROOT. Do NOT double-nest paths.
 - Mobile-friendly: min 375px, two-col collapse with `flex flex-col md:grid`.
+- **Accessibility aria-labels (UNBREAKABLE):** Every interactive region, card, section,
+  and landmark MUST have a meaningful `aria-label` or `aria-labelledby`. Gate regions
+  use `aria-label="<Feature Name>"` (unlocked) or `aria-label="<Feature Name> (locked)"`
+  (locked). List items like cards use `aria-label="<Card type>: <Card name>"`. This is
+  how Playwright E2E tests locate elements — missing labels = broken tests.
 - Backend code: use `import { log } from "@/lib/logger"`, never raw console.*.
 - **After each logical chunk** (1-3 files changed):
   1. git add -A && git commit -m 'wip: <what> — Ref #<NUMBER>' && git push origin <BRANCH>
