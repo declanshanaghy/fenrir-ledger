@@ -18,6 +18,7 @@ import { test, expect } from "@playwright/test";
 import {
   clearAllStorage,
   seedCards,
+  seedEntitlement,
   seedHousehold,
   makeCard,
   makeUrgentCard,
@@ -34,6 +35,7 @@ async function setupDashboard(
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
+  await seedEntitlement(page);
   await page.reload({ waitUntil: "load" });
 }
 
@@ -130,13 +132,13 @@ test.describe("Dashboard Tabs QA — Issue #279", () => {
         makeUrgentCard({ cardName: "Urgent" }),
       ]);
 
-      // Tab order: Howl → Hunt → Active → Valhalla → All
-      const howlTab = page.locator('button#tab-howl');
-      const huntTab = page.locator('button#tab-hunt');
+      // Tab order: All → Valhalla → Active → Hunt → Howl
+      const allTab = page.locator('button#tab-all');
+      const valhallaTab = page.locator('button#tab-valhalla');
 
-      await howlTab.focus();
+      await allTab.focus();
       await page.keyboard.press("ArrowRight");
-      await expect(huntTab).toHaveAttribute("aria-selected", "true");
+      await expect(valhallaTab).toHaveAttribute("aria-selected", "true");
     });
   });
 
