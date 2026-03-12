@@ -38,7 +38,7 @@ test.describe("AC-1 & AC-4 — Single primary CTA (no duplicate Add Card)", () =
     // Reload with networkidle so all async effects settle.
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     // Count all /cards/new links — must be exactly 1 (EmptyState only, no header dupe).
     const addCardLinks = page.locator('a[href="/ledger/cards/new"]');
@@ -53,7 +53,7 @@ test.describe("AC-1 & AC-4 — Single primary CTA (no duplicate Add Card)", () =
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     // The EmptyState is identified by its aria-description (Gleipnir ingredient 6 easter egg).
     const emptyState = page.locator('[aria-description="the spittle of a bird"]');
@@ -94,7 +94,7 @@ test.describe("AC-2 — Upsell banner not shown to new (zero-card) users", () =>
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     // The full SignInNudge banner has role="region" aria-label="Sync your data".
     // It must NOT appear in the zero-cards state.
@@ -132,7 +132,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     // The subtle nudge renders as a <button> with text "Sign in to sync your data".
     const subtleNudge = page.locator('button:text("Sign in to sync your data")');
@@ -145,7 +145,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     // Full banner identified by role="region" with aria-label — must not be present.
     const fullBanner = page.locator('[role="region"][aria-label="Sync your data"]');
@@ -158,7 +158,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     const subtleNudge = page.locator('button:text("Sign in to sync your data")');
     await expect(subtleNudge).toBeVisible();
@@ -177,7 +177,7 @@ test.describe("AC-3 — Sign-in nudge is subtle (not a full-width banner) at zer
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     // The nudge paragraph carries "muted-foreground" styling — it is NOT a primary/gold CTA.
     const parentParagraph = page.locator(
@@ -203,7 +203,7 @@ test.describe("Edge cases", () => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     expect(jsErrors).toHaveLength(0);
   });
@@ -218,7 +218,7 @@ test.describe("Edge cases", () => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     const addCardLinks = page.locator('a[href="/ledger/cards/new"]');
     await expect(addCardLinks).toHaveCount(1);
@@ -235,7 +235,7 @@ test.describe("Edge cases", () => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     const subtleNudge = page.locator('button:text("Sign in to sync your data")');
     await expect(subtleNudge).toBeVisible();
@@ -249,7 +249,7 @@ test.describe("Edge cases", () => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     const headline = page.locator("h2").filter({ hasText: /Gleipnir/ });
     await expect(headline).toBeVisible();
@@ -263,7 +263,7 @@ test.describe("Edge cases", () => {
     await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
     await page.reload({ waitUntil: "load" });
 
-    await page.waitForSelector('text="Before"', { timeout: 10000 });
+    await page.waitForSelector('[aria-description="the spittle of a bird"]', { timeout: 10000 });
 
     // Exactly one /cards/new link (EmptyState only).
     const addCardLinks = page.locator('a[href="/ledger/cards/new"]');

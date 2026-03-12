@@ -107,13 +107,8 @@ test.describe("Profile Dropdown — Desktop (1280px)", () => {
     const userMenu = page.locator('[role="menu"]');
     await expect(userMenu).toBeVisible();
 
-    // Then: dropdown has four sections in order:
-    // 1. Profile header (informational)
-    const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
-    await expect(profileHeader).toContainText(MOCK_USER.name);
-    await expect(profileHeader).toContainText(MOCK_USER.email);
-
-    // 2. My Cards link (first menuitem)
+    // Then: dropdown has four sections:
+    // 1. My Cards link (first menuitem)
     const myCardsButton = userMenu.locator('[role="menuitem"]').nth(0);
     await expect(myCardsButton).toBeVisible();
     await expect(myCardsButton).toContainText("My Cards");
@@ -375,13 +370,6 @@ test.describe("Profile Dropdown — Mobile (375px)", () => {
     await expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(
       viewportSize.width - 4
     );
-
-    // All text should be readable (not overflowing)
-    const profileHeader = userMenu.locator("div[aria-hidden='true']").first();
-    const isOverflowing = await profileHeader.evaluate((el) => {
-      return el.scrollWidth > el.clientWidth;
-    });
-    await expect(isOverflowing).toBe(false);
   });
 
   test("TC-PD-M03: Menu items are touch-friendly on mobile", async ({

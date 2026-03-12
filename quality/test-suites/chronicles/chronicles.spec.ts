@@ -34,11 +34,11 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
 
     // Verify page title
     const title = page.locator("h1");
-    await expect(title).toContainText("Chronicles");
+    await expect(title).toContainText("Prose Edda");
 
     // Verify page description
     const description = page.locator("p");
-    await expect(description.first()).toContainText("Behind-the-scenes narratives");
+    await expect(description.first()).toContainText("sagas of the forge");
 
     // Verify chronicle cards exist - look for links with h2 inside (title elements)
     const cards = page.locator("a[href*='/chronicles/']");
@@ -118,8 +118,8 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     // Navigate to home page to verify navbar/footer
     await page.goto("/", { waitUntil: "load" });
 
-    // Find all links with text "Chronicles"
-    const chroniclesLinks = page.locator("a:has-text('Chronicles')");
+    // Find all links with text "Prose Edda" (chronicles page was renamed)
+    const chroniclesLinks = page.locator("a:has-text('Prose Edda')");
     const count = await chroniclesLinks.count();
     expect(count).toBeGreaterThanOrEqual(2); // At least navbar + footer
 
@@ -186,8 +186,8 @@ test.describe("Chronicles Migration QA — Issue #373", () => {
     // Navigate to detail page
     await page.goto(href || "/chronicles", { waitUntil: "load" });
 
-    // Look for "All Chronicles" link which indicates prev/next nav exists
-    const allChroniclesLink = page.locator("a:has-text('All Chronicles')");
+    // Look for "Back to All Sagas" link which indicates prev/next nav exists
+    const allChroniclesLink = page.locator("a:has-text('Back to All Sagas')");
     await expect(allChroniclesLink).toBeVisible({ timeout: 5000 });
 
     // Verify navigation sections exist (breadcrumb + prev/next)

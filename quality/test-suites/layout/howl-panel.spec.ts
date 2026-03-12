@@ -16,6 +16,7 @@ import { test, expect } from "@playwright/test";
 import {
   clearAllStorage,
   seedCards,
+  seedEntitlement,
   seedHousehold,
   makeCard,
   makeUrgentCard,
@@ -35,6 +36,7 @@ async function setup(
   await clearAllStorage(page);
   await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
   await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, cards);
+  await seedEntitlement(page);
   await page.reload({ waitUntil: "load" });
 }
 
