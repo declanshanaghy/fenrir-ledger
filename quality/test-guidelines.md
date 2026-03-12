@@ -179,6 +179,7 @@ mockRequireAuth.mockResolvedValueOnce({
 6. **No animation timing assertions.** Test that elements appear/disappear, not how fast.
 7. **Touch target / a11y checks** belong in `accessibility/a11y.spec.ts`, not scattered across suites.
 8. **No structural DOM assertions.** Landmark presence, aria-label existence, and tag structure belong in integration tests. E2E tests should focus on user interactions and navigation.
+9. **Critical integrations are non-negotiable.** Always keep E2E coverage for: OAuth flows (sign-in, callback, returnto), Stripe integration (checkout, webhook, portal), card CRUD (add, edit, delete), data persistence (localStorage), dashboard navigation, and a11y gates (dialog, landmarks). Delete or trim low-value suites first (static content, CSS measurements, regression suites) before cutting critical path tests.
 
 ### Current E2E suites (27 files, ~219 tests)
 
