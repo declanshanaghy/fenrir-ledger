@@ -72,13 +72,19 @@ If agent cannot be inferred, error and tell user to use `--agent`.
 
 Templates live in `/fire-next-up/templates/` (shared, not duplicated):
 
-| Agent | Template |
-|-------|----------|
-| Luna | `templates/luna.md` |
-| FiremanDecko | `templates/firemandecko.md` |
-| Heimdall | `templates/heimdall.md` |
-| Loki | `templates/loki.md` |
-| Loki (CI bounce-back) | `templates/loki-bounce-back.md` |
+| Agent | Template | Agent Definition (canonical rules) |
+|-------|----------|------------------------------------|
+| Luna | `templates/luna.md` | `.claude/agents/luna.md` |
+| FiremanDecko | `templates/firemandecko.md` | `.claude/agents/fireman-decko.md` |
+| Heimdall | `templates/heimdall.md` | `.claude/agents/heimdall.md` |
+| Loki | `templates/loki.md` | `.claude/agents/loki.md` |
+| Loki (CI bounce-back) | `templates/loki-bounce-back.md` | `.claude/agents/loki.md` |
+
+**Single source of truth:** Agent definition files (`.claude/agents/*.md`) are the
+canonical source for behavioral rules (test standards, implementation rules, design
+principles, constraints, etc.). Templates contain only the dispatch workflow steps
+and reference the agent definition for behavioral rules. Do NOT duplicate behavioral
+rules in templates — add them to the agent definition file instead.
 
 All templates use `{{SANDBOX_PREAMBLE}}` — replace with the embedded preamble below.
 
