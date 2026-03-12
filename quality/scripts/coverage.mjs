@@ -299,10 +299,18 @@ async function main() {
   if (combined) {
     log("Phase 3/3: Merging coverage reports...");
     runCombine();
-    log("Done! Combined report: quality/reports/coverage/combined/index.html");
-  } else {
-    log("Done! Open quality/reports/coverage/index.html to view the report.");
   }
+
+  // Generate master index page
+  log("Generating master coverage index...");
+  const indexScript = path.join(__dirname, "coverage-index.mjs");
+  try {
+    run(`node "${indexScript}"`, { cwd: REPO_ROOT });
+  } catch {
+    log("Index generation had warnings — master index may still be valid");
+  }
+
+  log("Done! Open quality/reports/coverage/index.html to view all reports.");
 
   // Keep intermediate V8 coverage data for inspection (gitignored)
   log("V8 coverage data kept at: quality/.coverage-tmp/");
