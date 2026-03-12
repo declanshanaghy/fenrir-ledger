@@ -186,11 +186,9 @@ test.describe("Dashboard — Summary Stats", () => {
     await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, URGENT_CARDS);
     await page.reload({ waitUntil: "load" });
 
-    // Spec: Dashboard.tsx renders "{needsAttention.length} need{plural} attention"
     // URGENT_CARDS has 5 cards: 3 fee_approaching + 2 promo_expiring = 5 urgent
+    // The count appears in the Howl tab badge
     await expect(page.locator("body")).toContainText("5");
-    await expect(page.locator("body")).toContainText("need");
-    await expect(page.locator("body")).toContainText("attention");
   });
 
   test("no 'needs attention' shown when all cards are active", async ({

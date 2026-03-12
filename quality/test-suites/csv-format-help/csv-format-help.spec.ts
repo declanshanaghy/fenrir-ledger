@@ -9,6 +9,7 @@
 import { test, expect } from "@playwright/test";
 import {
   seedCards,
+  seedEntitlement,
   seedHousehold,
   clearAllStorage,
   ANONYMOUS_HOUSEHOLD_ID,
@@ -43,6 +44,7 @@ async function setupAuthenticatedWithCards(page: any): Promise<void> {
   await seedFakeAuth(page);
   await seedHousehold(page, AUTH_HOUSEHOLD_ID);
   await seedCards(page, AUTH_HOUSEHOLD_ID, FEW_CARDS);
+  await seedEntitlement(page);
   await page.reload({ waitUntil: "load" });
   await page.getByRole("link", { name: "Add Card" }).waitFor({ state: "visible", timeout: 15000 });
 }
