@@ -99,3 +99,50 @@ SERVER_URL=http://localhost:9653 npx playwright test ../../quality/test-suites/s
 - Each test clears relevant localStorage before running — idempotent by design.
 - All defects filed as GitHub Issues immediately upon discovery.
 - A PASS verdict requires: code review clean, build clean, tsc clean, GH Actions green, AND new Playwright tests written and passing.
+
+---
+
+## QA Critique
+
+Loki runs an automated bloat critique after every coverage pass and on demand. The critique
+scans `quality/test-suites/` for the anti-patterns defined in `quality/test-guidelines.md` and
+writes findings to `quality/quality-report.md` under a "Loki QA Critique" section.
+
+### When the critique runs
+
+| Trigger | Command |
+|---------|---------|
+| After full coverage run | `bash quality/scripts/verify.sh --coverage` then `bash quality/scripts/loki-critique.sh` |
+| On demand (fire-next-up / Loki sessions) | `bash quality/scripts/loki-critique.sh` |
+| Dry-run (stdout only, no file write) | `bash quality/scripts/loki-critique.sh --dry-run` |
+| Route duplication check | `bash quality/scripts/loki-critique.sh --pattern-check` |
+
+### What the critique evaluates
+
+1. **File size violations** — spec files >10 tests (WARNING) or >15 tests (CRITICAL)
+2. **Issue/step-scoped directories** — suites named after issues or wizard steps instead of features
+3. **Tiny isolated suites** — 1-3 tests that belong inside a larger feature suite
+4. **CSS measurement calls** — `boundingBox()` / `computedStyle` — these are CSS tests, not behavior tests
+5. **Static content assertions** — h1/h2 text checks that break on every copy edit
+6. **Keyboard over-specification** — testing every arrow key + wrap-around (>3 key presses per file)
+7. **Guard-clause tests** — negative visibility assertions on step-1 fields that add no risk coverage
+
+### How to act on findings
+
+Findings in `quality/quality-report.md` feed directly into Issue #610 (E2E culling).
+Each CRITICAL finding should become a GitHub Issue assigned to FiremanDecko via the normal
+`bug` issue flow. WARNINGS accumulate: when a suite has 3+ warnings, file a consolidation issue.
+
+The critique does NOT auto-file issues. Loki reviews the output and decides which findings
+warrant a GitHub Issue versus which are informational.
+
+### Health targets
+
+| Health | Criteria |
+|--------|----------|
+| HEALTHY | 0-2 warnings, 0 critical |
+| FAIR | 3-5 warnings, 0 critical |
+| NEEDS WORK | >5 warnings, 0 critical |
+| CRITICAL | Any file >15 tests |
+
+Current health: **CRITICAL** (3 files exceed 15-test limit). See Issue #610.

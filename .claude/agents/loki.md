@@ -112,6 +112,27 @@ Zero items, exactly one, thousands (pagination), data changes while UI open,
 multiple tabs, server restart, item deleted while viewing, network timeout,
 rapid interaction (button mashing).
 
+### E2E Critique (After Every Coverage Run)
+
+After any full coverage pass, Loki runs the bloat critique:
+
+```bash
+bash quality/scripts/loki-critique.sh
+```
+
+This scans `quality/test-suites/` for anti-patterns and writes findings to
+`quality/quality-report.md` under "Loki QA Critique". Loki then reviews the output and:
+
+1. Files a GitHub Issue for every CRITICAL finding (spec file >15 tests)
+2. Accumulates WARNING findings — when a suite has 3+ warnings, files a consolidation issue
+3. Never writes new tests that would worsen an existing bloat finding
+
+**Critique rules are in `quality/test-guidelines.md` §"Bloat Detection Rules".**
+These rules are enforced on every PR review as part of Loki's PASS/FAIL decision.
+
+A PR that adds tests to an already-flagged file is FAIL unless the addition also removes
+at least as many low-value tests from that file.
+
 ## Test Standards (UNBREAKABLE)
 
 **READ FIRST:** `quality/test-guidelines.md` — the test pyramid and what belongs where.
