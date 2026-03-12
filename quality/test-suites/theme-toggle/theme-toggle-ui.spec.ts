@@ -45,7 +45,7 @@ test("Switching to dark mode (via localStorage) applies .dark class to <html>", 
     localStorage.setItem(key, "dark");
   }, THEME_STORAGE_KEY);
 
-  await page.goto("/");
+  await page.goto("/ledger");
   await page.waitForLoadState("networkidle");
 
   // Verify dark class is applied
@@ -65,7 +65,7 @@ test("Switching to light mode (via localStorage) removes .dark class from <html>
     localStorage.setItem(key, "light");
   }, THEME_STORAGE_KEY);
 
-  await page.goto("/");
+  await page.goto("/ledger");
   await page.waitForLoadState("networkidle");
 
   // Verify dark class is NOT applied
@@ -90,7 +90,7 @@ test("ThemeToggle component has no System option — only Dark and Light", async
   expect(hasSystemInSource).toBe(true);
 
   // Verify the page loads successfully
-  const response = await page.goto("/");
+  const response = await page.goto("/ledger");
   expect(response?.status()).toBeLessThan(400);
 });
 
@@ -106,7 +106,7 @@ test("Dark theme persists after page reload via localStorage key fenrir-theme", 
     localStorage.setItem(key, "dark");
   }, THEME_STORAGE_KEY);
 
-  await page.goto("/");
+  await page.goto("/ledger");
   await page.waitForLoadState("networkidle");
 
   let classes = await getHtmlClasses(page);
@@ -132,7 +132,7 @@ test("First load detects OS dark preference and pins to dark", async ({
 }) => {
   await page.emulateMedia({ colorScheme: "dark" });
 
-  await page.goto("/");
+  await page.goto("/ledger");
   await page.waitForLoadState("networkidle");
 
   // ThemeToggle effect should resolve "system" → "dark" and persist it

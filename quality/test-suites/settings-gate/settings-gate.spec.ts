@@ -16,7 +16,7 @@ import { test, expect, type Page } from "@playwright/test";
 // ---------------------------------------------------------------------------
 
 async function clearEntitlementState(page: Page): Promise<void> {
-  await page.goto("/");
+  await page.goto("/ledger");
   await page.evaluate(() => {
     localStorage.removeItem("fenrir:entitlement");
     localStorage.removeItem("fenrir:stripe_upsell_dismissed");

@@ -25,7 +25,7 @@ import { clearAllStorage } from "../helpers/test-fixtures";
 // ─── Shared setup ─────────────────────────────────────────────────────────────
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/ledger");
   await clearAllStorage(page);
   await page.goto("/ledger/sign-in", { waitUntil: "load" });
 });
@@ -220,7 +220,7 @@ test.describe("Sign-In Page — Variant B (has local cards)", () => {
   }) => {
     // Spec: sign-in/page.tsx — hasLocalCards → h1 = "Your chains are already here."
     // Seed a card for the anonymous household and navigate to /sign-in
-    await page.goto("/");
+    await page.goto("/ledger");
     await clearAllStorage(page);
 
     // Seed household + one card via localStorage so the sign-in page sees cardCount > 0
