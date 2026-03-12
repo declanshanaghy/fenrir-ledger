@@ -107,22 +107,20 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 6. **No animation timing assertions.** Test that elements appear/disappear, not how fast.
 7. **Touch target / a11y checks** belong in `accessibility/a11y.spec.ts`, not scattered across suites.
 
-### Current E2E suites (post-cull, 336 tests / 40 files)
+### Current E2E suites (29 files, 234 tests)
 
 | Category | Suites | Tests |
 |----------|--------|-------|
-| Auth | auth/, auth-returnto/, stale-auth-nudge/ | ~37 |
+| Auth | auth/, auth-returnto/, stale-auth-nudge/ | ~25 |
 | Dashboard | dashboard/, dashboard-tabs/ | ~24 |
 | Cards | card-lifecycle/ (add, edit, close, delete) | ~21 |
 | Wizard | wizard-step2/, wizard-back-button/ | ~15 |
-| Import | import/ (wizard, norse-copy) | ~34 |
 | Layout | layout/ (sidebar, topbar, footer, howl-panel) | ~19 |
-| Settings | settings-soft-gate/, feature-flags/ | ~23 |
-| Valhalla | valhalla/, valhalla-financial-sort/ | ~24 |
+| Settings | settings-gate/ | ~9 |
 | Theme | theme-toggle/ | ~10 |
 | Profile | profile-dropdown/ | ~20 |
 | A11y | accessibility/, dialog-a11y/ | ~20 |
-| Other | chronicles/, empty-state-cta/, select-reset/, status-badges/, sync-indicator/, homepage-logo/, howl-count/, credit-limit-step2/, fee-bonus-step2/, reverse-tab-order/ | ~89 |
+| Other | chronicles/, empty-state-cta/, select-reset/, howl-count/, credit-limit-step2/, fee-bonus-step2/, csv-format-help/, reverse-tab-order/ | ~71 |
 
 ---
 
