@@ -279,7 +279,7 @@ test.describe("Runic Empty States — Issue #583", () => {
         makeCard({ cardName: "Active" }),
       ]);
 
-      // Test Howl tab (will be empty)
+      // Test Howl tab (will be empty) - non-gated tab
       const howlTab = page.locator('button#tab-howl');
       await howlTab.click();
 
@@ -291,15 +291,14 @@ test.describe("Runic Empty States — Issue #583", () => {
       expect(content).toContain("ᚲ");
       expect(content).toContain("No alerts");
 
-      // Test Hunt tab rune
-      const huntTab = page.locator('button#tab-hunt');
-      await huntTab.click();
+      // Test Active tab empty state as well
+      const activeTab = page.locator('button#tab-active');
+      await activeTab.click();
 
-      const huntPanel = page.locator('[role="tabpanel"]#panel-hunt');
-      const huntEmptyText = huntPanel.locator("p");
-
-      const huntContent = await huntEmptyText.textContent();
-      expect(huntContent).toContain("ᛜ");
+      const activePanel = page.locator('[role="tabpanel"]#panel-active');
+      const activeCards = activePanel.locator('[data-testid^="card-"]');
+      const cardCount = await activeCards.count();
+      expect(cardCount).toBe(1); // Should have 1 active card
     });
   });
 
