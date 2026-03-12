@@ -16,7 +16,7 @@ import type { CardStatus } from "@/lib/types";
  * rather than multi-step navigation.
  */
 
-const BASE_URL = "http://localhost:9653";
+const BASE_URL = process.env.SERVER_URL || "http://localhost:9653";
 
 test.describe("Status Badge Tooltips — Issue #585", () => {
   test("AC-1: TOOLTIP_CONTENT constant has all 7 status types defined", async ({
