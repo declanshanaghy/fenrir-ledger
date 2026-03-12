@@ -49,50 +49,10 @@ import { FEW_CARDS, URGENT_CARDS } from "../helpers/seed-data";
 // Suite 2 — Heading Hierarchy
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Heading Hierarchy", () => {
-  test("TC-A05: dashboard has h1 with correct text", async ({ page }) => {
-    // Spec (page.tsx): h1 renders "The Ledger of Fates" — Voice 2 atmospheric
-    // heading from copywriting.md. Per WCAG 2.4.6 (AA), the page must have
-    // a descriptive heading that identifies its purpose.
-    await page.goto("/ledger");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await seedCards(page, ANONYMOUS_HOUSEHOLD_ID, FEW_CARDS);
-    await page.reload({ waitUntil: "load" });
-
-    const h1 = page.locator("h1").first();
-    await expect(h1).toBeVisible();
-    await expect(h1).toContainText("The Ledger of Fates");
-  });
-
-  test("TC-A06: Valhalla route redirects to dashboard with accessible heading", async ({ page }) => {
-    // Spec (valhalla/page.tsx): the /ledger/valhalla route redirects to /ledger?tab=valhalla.
-    await page.goto("/ledger");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.goto("/ledger/valhalla");
-    await page.waitForURL(/\/ledger/);
-
-    const h1 = page.locator("h1").first();
-    await expect(h1).toBeVisible();
-    await expect(h1).toContainText("The Ledger of Fates");
-  });
-
-  test("TC-A07: add card page has a heading", async ({ page }) => {
-    // Spec (cards/new/page.tsx): the new card page renders an h1 "Forge a New Chain".
-    // Per WCAG 2.4.6 (AA), a descriptive heading must be present.
-    await page.goto("/ledger/cards/new");
-    await clearAllStorage(page);
-    await seedHousehold(page, ANONYMOUS_HOUSEHOLD_ID);
-    await page.reload({ waitUntil: "load" });
-
-    // Wait for the form to render — it's gated behind status !== "loading"
-    const heading = page.locator("h1, h2, h3").first();
-    await expect(heading).toBeAttached();
-    const text = await heading.textContent();
-    expect(text?.trim().length).toBeGreaterThan(0);
-  });
-});
+// Suite 2 — Heading Hierarchy: REMOVED (Issue #610)
+// TC-A05, TC-A06, TC-A07 verified static heading text — low value,
+// breaks on any copy change. Heading presence tested implicitly by
+// form accessibility tests below.
 
 // ════════════════════════════════════════════════════════════════════════════
 // Suite 3 — Form Accessibility

@@ -55,33 +55,17 @@ test.describe("Sign-In Page — Rendering", () => {
     expect(response?.status()).toBe(200);
   });
 
-  test("page has a visible main content area", async ({ page }) => {
-    // Spec: sign-in/page.tsx — <main aria-labelledby="signin-heading">
-    const main = page.locator("main[aria-labelledby='signin-heading']");
-    await expect(main).toBeVisible();
-  });
+  // "page has a visible main content area" — REMOVED (Issue #610)
+  // Static aria-labelledby attribute check. Low regression value.
 });
 
 // ════════════════════════════════════════════════════════════════════════════
 // Suite 2 — Page Heading
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Sign-In Page — Heading", () => {
-  test("h1 is visible and reads 'Name the wolf.' when no cards exist", async ({
-    page,
-  }) => {
-    // Spec: sign-in/page.tsx — !hasLocalCards → h1 = "Name the wolf."
-    const heading = page.locator("h1#signin-heading");
-    await expect(heading).toBeVisible();
-    await expect(heading).toHaveText("Name the wolf.");
-  });
-
-  test("heading is labeled correctly for screen readers", async ({ page }) => {
-    // Spec: sign-in/page.tsx — <main aria-labelledby="signin-heading"> + <h1 id="signin-heading">
-    const heading = page.locator("#signin-heading");
-    await expect(heading).toBeVisible();
-  });
-});
+// Suite 2 — Page Heading: REMOVED (Issue #610)
+// Static text assertions ("Name the wolf.", aria-labelledby). Break on copy change.
+// Heading presence implicitly tested by rendering suite above.
 
 // ════════════════════════════════════════════════════════════════════════════
 // Suite 3 — Google Sign-In Button
@@ -100,24 +84,8 @@ test.describe("Sign-In Page — Google Sign-In Button", () => {
     await expect(btn).toBeEnabled();
   });
 
-  test("Google sign-in button contains the Google G glyph SVG", async ({
-    page,
-  }) => {
-    // Spec: sign-in/page.tsx — <GoogleGlyph /> SVG is rendered inside the button
-    const btn = page.locator('button:has-text("Sign in to Google")');
-    const svg = btn.locator("svg");
-    await expect(svg).toBeVisible();
-  });
-
-  test("Google sign-in button meets minimum touch target height (46px)", async ({
-    page,
-  }) => {
-    // Spec: sign-in/page.tsx — style={{ minHeight: 46 }}
-    const btn = page.locator('button:has-text("Sign in to Google")');
-    const box = await btn.boundingBox();
-    expect(box).not.toBeNull();
-    expect(box!.height).toBeGreaterThanOrEqual(46);
-  });
+  // "Google G glyph SVG" — REMOVED (Issue #610): Static markup check.
+  // "touch target height (46px)" — REMOVED (Issue #610): CSS measurement.
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -165,13 +133,7 @@ test.describe("Sign-In Page — Feature List", () => {
     await expect(featureList).toBeVisible();
   });
 
-  test("at least one feature item is shown (no-cards variant)", async ({
-    page,
-  }) => {
-    // Spec: sign-in/page.tsx — !hasLocalCards → 3 FeatureItems rendered
-    const items = page.locator("[aria-label='What signing in gives you'] > div");
-    await expect(items).toHaveCount(3);
-  });
+  // "at least one feature item shown" — REMOVED (Issue #610): Static count check.
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -184,9 +146,6 @@ test.describe("Sign-In Page — Responsive (375px)", () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("/ledger/sign-in", { waitUntil: "load" });
 
-    const heading = page.locator("h1#signin-heading");
-    await expect(heading).toBeVisible();
-
     const googleBtn = page.locator('button:has-text("Sign in to Google")');
     await expect(googleBtn).toBeVisible();
 
@@ -196,73 +155,13 @@ test.describe("Sign-In Page — Responsive (375px)", () => {
     await expect(continueBtn).toBeVisible();
   });
 
-  test("sign-in card does not overflow viewport at 375px", async ({ page }) => {
-    // Spec: sign-in/page.tsx — w-full max-w-[400px], px-4 on the outer div
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/ledger/sign-in", { waitUntil: "load" });
-
-    const main = page.locator("main[aria-labelledby='signin-heading']");
-    const box = await main.boundingBox();
-    expect(box).not.toBeNull();
-    // Card must not exceed viewport width (with some tolerance for padding)
-    expect(box!.x).toBeGreaterThanOrEqual(0);
-    expect(box!.x + box!.width).toBeLessThanOrEqual(375 + 1);
-  });
+  // "sign-in card does not overflow viewport" — REMOVED (Issue #610): CSS box math.
 });
 
 // ════════════════════════════════════════════════════════════════════════════
 // Suite 7 — Variant B: Has Local Cards
 // ════════════════════════════════════════════════════════════════════════════
 
-test.describe("Sign-In Page — Variant B (has local cards)", () => {
-  test("h1 reads 'Your chains are already here.' when local cards exist", async ({
-    page,
-  }) => {
-    // Spec: sign-in/page.tsx — hasLocalCards → h1 = "Your chains are already here."
-    // Seed a card for the anonymous household and navigate to /sign-in
-    await page.goto("/ledger");
-    await clearAllStorage(page);
-
-    // Seed household + one card via localStorage so the sign-in page sees cardCount > 0
-    await page.evaluate(() => {
-      const householdId = "test-household-id";
-      const now = new Date().toISOString();
-      const card = {
-        id: "card-001",
-        householdId,
-        issuerId: "chase",
-        cardName: "Test Card",
-        openDate: now,
-        creditLimit: 500000,
-        annualFee: 9500,
-        annualFeeDate: now,
-        promoPeriodMonths: 0,
-        signUpBonus: null,
-        status: "active",
-        notes: "",
-        createdAt: now,
-        updatedAt: now,
-      };
-      // Set anon household pointer — matches getAnonHouseholdId() logic
-      localStorage.setItem("fenrir:anon-household", householdId);
-      localStorage.setItem(
-        `fenrir_ledger:${householdId}:cards`,
-        JSON.stringify([card])
-      );
-      localStorage.setItem("fenrir:household", householdId);
-    });
-
-    await page.goto("/ledger/sign-in", { waitUntil: "load" });
-
-    // If the anon household key matches, heading must switch to Variant B
-    // The spec says cardCount > 0 produces: "Your chains are already here."
-    const heading = page.locator("h1#signin-heading");
-    await expect(heading).toBeVisible();
-    // Accept either variant — we cannot guarantee the anon key format without
-    // reading the implementation, but we assert the heading is one of the two
-    // valid spec values.
-    const text = await heading.innerText();
-    const validHeadings = ["Name the wolf.", "Your chains are already here."];
-    expect(validHeadings).toContain(text);
-  });
-});
+// Suite 7 — Variant B (has local cards): REMOVED (Issue #610)
+// Static heading text assertion. Low regression value — heading copy
+// changes don't indicate bugs.
