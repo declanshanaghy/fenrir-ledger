@@ -338,42 +338,42 @@ add_segment() {
 }
 
 if [ "$TERM_WIDTH" -ge 100 ]; then
-    # Full layout
+    # Full layout: model | context | diffs | cost | duration | branch | agent
+    add_segment "$(section_model "$MODEL_SHORT")" "$(plain_model "$MODEL_SHORT")"
+    add_segment "$(section_context)" "$(plain_context)"
+    add_segment "$(section_lines)" "$(plain_lines)"
+    add_segment "$(section_cost)" "$(plain_cost)"
+    add_segment "$(section_duration)" "$(plain_duration)"
     if [ -n "$WT_BRANCH" ]; then
         add_segment "$(section_branch 25)" "$(plain_branch 25)"
     fi
-    add_segment "$(section_model "$MODEL_SHORT")" "$(plain_model "$MODEL_SHORT")"
-    add_segment "$(section_cost)" "$(plain_cost)"
-    add_segment "$(section_lines)" "$(plain_lines)"
-    add_segment "$(section_context)" "$(plain_context)"
-    add_segment "$(section_duration)" "$(plain_duration)"
     if [ -n "$AGENT_NAME" ]; then
         add_segment "$(section_agent)" "$(plain_agent)"
     fi
 
 elif [ "$TERM_WIDTH" -ge 80 ]; then
-    # Compact: abbreviate model, drop duration
+    # Compact: model | context | diffs | cost | branch | agent
+    add_segment "$(section_model "$MODEL_ABBREV")" "$(plain_model "$MODEL_ABBREV")"
+    add_segment "$(section_context)" "$(plain_context)"
+    add_segment "$(section_lines)" "$(plain_lines)"
+    add_segment "$(section_cost)" "$(plain_cost)"
     if [ -n "$WT_BRANCH" ]; then
         add_segment "$(section_branch 18)" "$(plain_branch 18)"
     fi
-    add_segment "$(section_model "$MODEL_ABBREV")" "$(plain_model "$MODEL_ABBREV")"
-    add_segment "$(section_cost)" "$(plain_cost)"
-    add_segment "$(section_lines)" "$(plain_lines)"
-    add_segment "$(section_context)" "$(plain_context)"
     if [ -n "$AGENT_NAME" ]; then
         add_segment "$(section_agent)" "$(plain_agent)"
     fi
 
 elif [ "$TERM_WIDTH" -ge 60 ]; then
-    # Minimal: model + cost + lines + context
+    # Minimal: model | context | diffs | cost
     add_segment "$(section_model "$MODEL_ABBREV")" "$(plain_model "$MODEL_ABBREV")"
-    add_segment "$(section_cost)" "$(plain_cost)"
-    add_segment "$(section_lines)" "$(plain_lines)"
     add_segment "$(section_context)" "$(plain_context)"
+    add_segment "$(section_lines)" "$(plain_lines)"
+    add_segment "$(section_cost)" "$(plain_cost)"
 
 else
-    # Ultra-compact: ctx:XX% | $cost
-    printf '%bctx:%d%%%b %b│%b %b%s%b' "${FG_PARCHMENT}" "$CTX_PCT" "${RESET}" "${FG_GOLD}" "${RESET}" "$(cost_color)" "$(format_cost)" "${RESET}"
+    # Ultra-compact
+    printf '%bctx:%d%%%b  %b%s%b' "${FG_PARCHMENT}" "$CTX_PCT" "${RESET}" "$(cost_color)" "$(format_cost)" "${RESET}"
     exit 0
 fi
 
