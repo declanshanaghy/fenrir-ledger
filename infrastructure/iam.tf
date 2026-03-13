@@ -17,10 +17,13 @@ resource "google_service_account" "app_workload" {
 }
 
 # Allow the K8s service account to impersonate the GCP service account
+# Depends on cluster because the Workload Identity pool doesn't exist until the cluster is created
 resource "google_service_account_iam_member" "app_workload_identity" {
   service_account_id = google_service_account.app_workload.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "serviceAccount:${var.project_id}.svc.id.goog[fenrir-app/fenrir-app-sa]"
+
+  depends_on = [google_container_cluster.autopilot]
 }
 
 # App pods can read from Cloud Storage (for assets, config, etc.)
@@ -59,6 +62,8 @@ resource "google_service_account_iam_member" "agents_workload_identity" {
   service_account_id = google_service_account.agents_workload.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "serviceAccount:${var.project_id}.svc.id.goog[fenrir-agents/fenrir-agents-sa]"
+
+  depends_on = [google_container_cluster.autopilot]
 }
 
 # Agent pods can read/write Cloud Storage (for sandbox artifacts)
@@ -96,6 +101,7 @@ resource "google_project_iam_member" "deploy_gke_admin" {
 # --------------------------------------------------------------------------
 
 resource "google_billing_budget" "monthly_budget" {
+  count    = var.billing_account_id != "" ? 1 : 0
   provider = google-beta
 
   billing_account = var.billing_account_id
