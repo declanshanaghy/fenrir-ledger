@@ -194,11 +194,14 @@ ctx_color() {
 }
 
 # ---------------------------------------------------------------------------
-# Progress bar (filled=▓, empty=░)
+# Progress bar — 20 Elder Futhark runes (filled = glyphs, empty = ·)
+# Cycles through the runes of the Elder Futhark as the bar fills
 # ---------------------------------------------------------------------------
+FUTHARK_GLYPHS=(ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ)
+
 progress_bar() {
     local pct="$1"
-    local width="${2:-10}"
+    local width=20
     local filled=$(( (pct * width + 50) / 100 ))
     if [ "$filled" -gt "$width" ]; then filled=$width; fi
     if [ "$filled" -lt 0 ]; then filled=0; fi
@@ -206,9 +209,9 @@ progress_bar() {
 
     local bar=""
     local i=0
-    while [ "$i" -lt "$filled" ]; do bar="${bar}▓"; i=$((i + 1)); done
+    while [ "$i" -lt "$filled" ]; do bar="${bar}${FUTHARK_GLYPHS[$i]}"; i=$((i + 1)); done
     i=0
-    while [ "$i" -lt "$empty" ]; do bar="${bar}░"; i=$((i + 1)); done
+    while [ "$i" -lt "$empty" ]; do bar="${bar}·"; i=$((i + 1)); done
     printf '%s' "$bar"
 }
 
@@ -247,14 +250,8 @@ is_ragnarok_mode() {
 }
 
 # ---------------------------------------------------------------------------
-# Separator: normal = gold │, Ragnarok = red ┃
+# No separator character — section runes serve as visual dividers
 # ---------------------------------------------------------------------------
-SEP_CHAR="│"
-SEP_COLOR="$FG_GOLD"
-if is_ragnarok_mode; then
-    SEP_CHAR="┃"
-    SEP_COLOR="$FG_RAGNAROK"
-fi
 
 # ---------------------------------------------------------------------------
 # Section builders — each outputs ANSI text; plain_* returns visible length
@@ -265,65 +262,63 @@ section_branch() {
     local max_len="${1:-20}"
     local branch_display
     branch_display="$(truncate_branch "$WT_BRANCH" "$max_len")"
-    printf '%bᚱ %b%s%b' "${FG_GOLD}" "${FG_PARCHMENT}" "$branch_display" "${RESET}"
+    printf '%bᚱ  %b%s%b' "${FG_GOLD}" "${FG_PARCHMENT}" "$branch_display" "${RESET}"
 }
 plain_branch() {
     local max_len="${1:-20}"
     local branch_display
     branch_display="$(truncate_branch "$WT_BRANCH" "$max_len")"
-    printf 'ᚱ %s' "$branch_display"
+    printf 'ᚱ  %s' "$branch_display"
 }
 
 # Model name
 section_model() {
     local name="${1:-$MODEL_SHORT}"
-    printf '%bᛖ %b%s%b' "${FG_GOLD}" "${FG_PARCHMENT}" "$name" "${RESET}"
+    printf '%bᛖ  %b%s%b' "${FG_GOLD}" "${FG_PARCHMENT}" "$name" "${RESET}"
 }
 plain_model() {
     local name="${1:-$MODEL_SHORT}"
-    printf 'ᛖ %s' "$name"
+    printf 'ᛖ  %s' "$name"
 }
 
 # Cost
 section_cost() {
-    printf '%bᚠ %b%s%b' "${FG_GOLD}" "$(cost_color)" "$(format_cost)" "${RESET}"
+    printf '%bᚠ  %b%s%b' "${FG_GOLD}" "$(cost_color)" "$(format_cost)" "${RESET}"
 }
 plain_cost() {
-    printf 'ᚠ %s' "$(format_cost)"
+    printf 'ᚠ  %s' "$(format_cost)"
 }
 
 # Lines changed
 section_lines() {
-    printf '%bᛚ %b+%d%b %b-%d%b' "${FG_GOLD}" "${FG_ASGARD}" "$LINES_ADDED" "${RESET}" "${FG_MUSPEL}" "$LINES_REMOVED" "${RESET}"
+    printf '%bᛚ  %b+%d%b %b-%d%b' "${FG_GOLD}" "${FG_ASGARD}" "$LINES_ADDED" "${RESET}" "${FG_MUSPEL}" "$LINES_REMOVED" "${RESET}"
 }
 plain_lines() {
-    printf 'ᛚ +%d -%d' "$LINES_ADDED" "$LINES_REMOVED"
+    printf 'ᛚ  +%d -%d' "$LINES_ADDED" "$LINES_REMOVED"
 }
 
 # Context window with progress bar
 section_context() {
-    local bar_width="${1:-10}"
-    printf '%bᚾ %b%d%% %s%b' "${FG_GOLD}" "$(ctx_color "$CTX_PCT")" "$CTX_PCT" "$(progress_bar "$CTX_PCT" "$bar_width")" "${RESET}"
+    printf '%bᚾ  %b%d%% %s%b' "${FG_GOLD}" "$(ctx_color "$CTX_PCT")" "$CTX_PCT" "$(progress_bar "$CTX_PCT")" "${RESET}"
 }
 plain_context() {
-    local bar_width="${1:-10}"
-    printf 'ᚾ %d%% %s' "$CTX_PCT" "$(progress_bar "$CTX_PCT" "$bar_width")"
+    printf 'ᚾ  %d%% %s' "$CTX_PCT" "$(progress_bar "$CTX_PCT")"
 }
 
 # Duration
 section_duration() {
-    printf '%bᛏ %b%s%b' "${FG_GOLD}" "${FG_STONE}" "$(format_duration "$DURATION_MS")" "${RESET}"
+    printf '%bᛏ  %b%s%b' "${FG_GOLD}" "${FG_STONE}" "$(format_duration "$DURATION_MS")" "${RESET}"
 }
 plain_duration() {
-    printf 'ᛏ %s' "$(format_duration "$DURATION_MS")"
+    printf 'ᛏ  %s' "$(format_duration "$DURATION_MS")"
 }
 
 # Agent (only shown when present)
 section_agent() {
-    printf '%bᚲ %b%b%s%b' "${FG_GOLD}" "${FG_PARCHMENT}" "${BOLD}" "$AGENT_NAME" "${RESET}"
+    printf '%bᚲ  %b%b%s%b' "${FG_GOLD}" "${FG_PARCHMENT}" "${BOLD}" "$AGENT_NAME" "${RESET}"
 }
 plain_agent() {
-    printf 'ᚲ %s' "$AGENT_NAME"
+    printf 'ᚲ  %s' "$AGENT_NAME"
 }
 
 # ---------------------------------------------------------------------------
@@ -343,42 +338,42 @@ add_segment() {
 }
 
 if [ "$TERM_WIDTH" -ge 100 ]; then
-    # Full layout
+    # Full layout: model | context | diffs | cost | duration | branch | agent
+    add_segment "$(section_model "$MODEL_SHORT")" "$(plain_model "$MODEL_SHORT")"
+    add_segment "$(section_context)" "$(plain_context)"
+    add_segment "$(section_lines)" "$(plain_lines)"
+    add_segment "$(section_cost)" "$(plain_cost)"
+    add_segment "$(section_duration)" "$(plain_duration)"
     if [ -n "$WT_BRANCH" ]; then
         add_segment "$(section_branch 25)" "$(plain_branch 25)"
     fi
-    add_segment "$(section_model "$MODEL_SHORT")" "$(plain_model "$MODEL_SHORT")"
-    add_segment "$(section_cost)" "$(plain_cost)"
-    add_segment "$(section_lines)" "$(plain_lines)"
-    add_segment "$(section_context 10)" "$(plain_context 10)"
-    add_segment "$(section_duration)" "$(plain_duration)"
     if [ -n "$AGENT_NAME" ]; then
         add_segment "$(section_agent)" "$(plain_agent)"
     fi
 
 elif [ "$TERM_WIDTH" -ge 80 ]; then
-    # Compact: abbreviate model, drop duration
+    # Compact: model | context | diffs | cost | branch | agent
+    add_segment "$(section_model "$MODEL_ABBREV")" "$(plain_model "$MODEL_ABBREV")"
+    add_segment "$(section_context)" "$(plain_context)"
+    add_segment "$(section_lines)" "$(plain_lines)"
+    add_segment "$(section_cost)" "$(plain_cost)"
     if [ -n "$WT_BRANCH" ]; then
         add_segment "$(section_branch 18)" "$(plain_branch 18)"
     fi
-    add_segment "$(section_model "$MODEL_ABBREV")" "$(plain_model "$MODEL_ABBREV")"
-    add_segment "$(section_cost)" "$(plain_cost)"
-    add_segment "$(section_lines)" "$(plain_lines)"
-    add_segment "$(section_context 8)" "$(plain_context 8)"
     if [ -n "$AGENT_NAME" ]; then
         add_segment "$(section_agent)" "$(plain_agent)"
     fi
 
 elif [ "$TERM_WIDTH" -ge 60 ]; then
-    # Minimal: model + cost + lines + context
+    # Minimal: model | context | diffs | cost
     add_segment "$(section_model "$MODEL_ABBREV")" "$(plain_model "$MODEL_ABBREV")"
-    add_segment "$(section_cost)" "$(plain_cost)"
+    add_segment "$(section_context)" "$(plain_context)"
     add_segment "$(section_lines)" "$(plain_lines)"
-    add_segment "$(section_context 6)" "$(plain_context 6)"
+    add_segment "$(section_cost)" "$(plain_cost)"
 
 else
-    # Ultra-compact: ctx:XX% | $cost
-    printf '%bctx:%d%%%b %b│%b %b%s%b' "${FG_PARCHMENT}" "$CTX_PCT" "${RESET}" "${FG_GOLD}" "${RESET}" "$(cost_color)" "$(format_cost)" "${RESET}"
+    # Ultra-compact
+    printf '%bctx:%d%%%b  %b%s%b' "${FG_PARCHMENT}" "$CTX_PCT" "${RESET}" "$(cost_color)" "$(format_cost)" "${RESET}"
     exit 0
 fi
 
@@ -388,16 +383,15 @@ fi
 NUM_SEGS="${#SEGMENTS_ANSI[@]}"
 NUM_GAPS=$(( NUM_SEGS - 1 ))
 
-# Each gap needs at minimum: space + separator_char + space = 3 visible chars
 # Measure visible width using plain text (no ANSI escapes)
 total_content_width=0
 for plain in "${SEGMENTS_PLAIN[@]}"; do
-    # wc -m counts characters; strip trailing whitespace from wc output
     w="$(printf '%s' "$plain" | wc -m | tr -d ' ')"
     total_content_width=$(( total_content_width + w ))
 done
 
-min_gap_width=3  # " │ "
+# Each gap is just spacing (no separator character) — minimum 2 spaces
+min_gap_width=2
 total_min_gaps=$(( NUM_GAPS * min_gap_width ))
 used=$(( total_content_width + total_min_gaps ))
 remaining=$(( TERM_WIDTH - used ))
@@ -413,27 +407,19 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Render with dynamic padding
+# Render with dynamic padding (runes are the dividers, no separator char)
 # ---------------------------------------------------------------------------
 output=""
 for (( i=0; i<NUM_SEGS; i++ )); do
     output+="${SEGMENTS_ANSI[$i]}"
     if [ "$i" -lt "$NUM_GAPS" ]; then
-        # Calculate padding for this gap
-        pad=$(( extra_per_gap ))
-        # Distribute leftover 1 char at a time to earlier gaps
+        pad=$(( extra_per_gap + min_gap_width ))
         if [ "$i" -lt "$leftover" ]; then
             pad=$(( pad + 1 ))
         fi
-        # Left side padding (half), separator, right side padding (other half)
-        left_pad=$(( (pad + 1) / 2 + 1 ))   # +1 for the minimum space
-        right_pad=$(( pad / 2 + 1 ))          # +1 for the minimum space
-        # Build padding strings
-        left_spaces=""
-        for (( j=0; j<left_pad; j++ )); do left_spaces+=" "; done
-        right_spaces=""
-        for (( j=0; j<right_pad; j++ )); do right_spaces+=" "; done
-        output+="${left_spaces}${SEP_COLOR}${SEP_CHAR}${RESET}${right_spaces}"
+        spaces=""
+        for (( j=0; j<pad; j++ )); do spaces+=" "; done
+        output+="${spaces}"
     fi
 done
 
