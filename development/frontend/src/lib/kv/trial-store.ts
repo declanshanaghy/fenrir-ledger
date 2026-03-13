@@ -109,6 +109,48 @@ export async function initTrial(fingerprint: string): Promise<StoredTrial> {
 }
 
 /**
+ * Marks a trial as converted by setting the convertedDate field.
+ * Called after a successful Stripe subscription from a trial user.
+ *
+ * @param fingerprint - 64-char SHA-256 hex fingerprint
+ * @returns true if the trial was found and updated, false otherwise
+ */
+export async function markTrialConverted(fingerprint: string): Promise<boolean> {
+  log.debug("markTrialConverted called", { fingerprint });
+
+  const existing = await getTrial(fingerprint);
+  if (!existing) {
+    log.debug("markTrialConverted: no trial found", { fingerprint });
+    return false;
+  }
+
+  if (existing.convertedDate) {
+    log.debug("markTrialConverted: already converted", { fingerprint });
+    return true;
+  }
+
+  const updated: StoredTrial = {
+    ...existing,
+    convertedDate: new Date().toISOString(),
+  };
+
+  try {
+    await kv.set(trialKey(fingerprint), updated, {
+      ex: TRIAL_TTL_SECONDS,
+    });
+    log.debug("markTrialConverted success", {
+      fingerprint,
+      convertedDate: updated.convertedDate,
+    });
+    return true;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error("markTrialConverted failed", { fingerprint, error: message });
+    return false;
+  }
+}
+
+/**
  * Computes the trial status for a given trial record.
  *
  * @param trial - The stored trial record (or null if none exists)

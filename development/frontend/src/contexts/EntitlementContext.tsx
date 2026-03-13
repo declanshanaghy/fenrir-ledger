@@ -28,6 +28,8 @@ import {
 } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
+import { computeFingerprint } from "@/lib/trial-utils";
+import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
 import {
   getEntitlementCache,
   setEntitlementCache,
@@ -414,6 +416,26 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     if (stripeParam === "success") {
       console.debug("[Fenrir] Stripe checkout success callback", { sessionId });
       void refreshEntitlement(sessionId);
+      // Mark trial as converted in KV (best-effort, Issue #623)
+      void (async () => {
+        try {
+          const token = await ensureFreshToken();
+          const fingerprint = await computeFingerprint();
+          if (token && fingerprint) {
+            await fetch("/api/trial/convert", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ fingerprint }),
+            });
+            clearTrialStatusCache();
+          }
+        } catch {
+          // Trial conversion is best-effort — don't block checkout flow
+        }
+      })();
     } else if (stripeParam === "checkout") {
       console.debug("[Fenrir] Stripe auto-checkout after sign-in");
       void subscribeStripe();
