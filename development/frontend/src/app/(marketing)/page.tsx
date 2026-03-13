@@ -18,6 +18,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { DataSafetyBanner } from "@/components/marketing/DataSafetyBanner";
 
 export const dynamic = "force-static";
 
@@ -304,6 +305,41 @@ function FeaturesSection() {
   );
 }
 
+// ── Section: Data Safety Trust ────────────────────────────────────────────────
+
+function DataSafetySection() {
+  return (
+    <section
+      aria-labelledby="home-trust-heading"
+      className="border-b border-border"
+    >
+      <div className="max-w-[1100px] mx-auto px-6 py-14 sm:py-20 max-[375px]:py-8">
+        {/* Section heading */}
+        <div className="text-center mb-10">
+          <p
+            className="font-mono text-xs tracking-[0.3em] text-primary uppercase mb-3"
+            aria-hidden="true"
+          >
+            ᛊ · The Wolf&apos;s Code · ᛊ
+          </p>
+          <h2
+            className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wide text-foreground mb-4"
+            id="home-trust-heading"
+          >
+            What I Guard. What I Never Touch.
+          </h2>
+          <p className="font-body text-base text-muted-foreground max-w-lg mx-auto leading-relaxed">
+            I track card metadata, not payment credentials.
+            The distinction is everything.
+          </p>
+        </div>
+
+        <DataSafetyBanner variant="full" />
+      </div>
+    </section>
+  );
+}
+
 // ── Section: Onboarding (Three Runes to Freedom) ─────────────────────────────
 
 const STEPS = [
@@ -440,6 +476,7 @@ export default function MarketingHomePage() {
       <HeroSection />
       <ChainsSection />
       <FeaturesSection />
+      <DataSafetySection />
       <OnboardingSection />
       <FinalCtaSection />
     </>
