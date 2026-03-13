@@ -29,11 +29,11 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - Write a brief interaction spec if the feature has non-obvious interactions.
 - Mobile-first: 375px minimum viewport.
 - **After completing wireframes, commit+push immediately:**
-  git add -A && git commit -m 'wip: wireframes for #<NUMBER>' && git push origin <BRANCH>
+  git add -A && git commit -m 'wip: wireframes — issue:<NUMBER>' && git push origin <BRANCH>
   Update your todos.
 
-**Step 4 — Create PR (use Ref, not Fixes — you are not the final agent):**
-gh pr create --title "design: wireframes for #<NUMBER> — <short description>" --body "Ref #<NUMBER>
+**Step 4 — Create PR:**
+gh pr create --title "design: <short description>" --body "Fixes #<NUMBER>
 
 <summary of wireframes>"
 

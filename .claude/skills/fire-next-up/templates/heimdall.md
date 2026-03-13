@@ -36,7 +36,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - Update security docs if the fix changes auth flows, trust boundaries, or threat model.
 - Secret masking (UNBREAKABLE): never log secrets, tokens, or credentials.
 - **After each logical chunk** (1-3 files changed):
-  1. git add -A && git commit -m 'wip: <what> — Ref #<NUMBER>' && git push origin <BRANCH>
+  1. git add -A && git commit -m 'wip: <what> — issue:<NUMBER>' && git push origin <BRANCH>
   2. cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc
   3. If tsc fails: fix, commit+push, re-run tsc.
   4. Update your todos.
@@ -51,10 +51,10 @@ Update each verify todo as you complete it.
 **Step 5 — Rebase + final push:**
   cd <REPO_ROOT> && git fetch origin && git rebase origin/main
 If conflicts: resolve, re-run verify steps.
-  cd <REPO_ROOT> && git add -A && git commit -m 'security: <description> — Ref #<NUMBER>' && git push origin <BRANCH>
+  cd <REPO_ROOT> && git add -A && git commit -m 'security: <description> — issue:<NUMBER>' && git push origin <BRANCH>
 
-**Step 6 — Create PR (use Ref, not Fixes — Loki updates after QA):**
-gh pr create --title "security: <short title> — Ref #<NUMBER>" --body "Ref #<NUMBER>
+**Step 6 — Create PR:**
+gh pr create --title "security: <short title>" --body "Fixes #<NUMBER>
 
 <summary of security fix>"
 
@@ -106,7 +106,7 @@ Then create your todo list via TodoWrite.
 - Read `.claude/agents/heimdall.md` for full behavioral rules (Constraints, Workflow, Severity, Report Format).
 Write reports, file issues, update docs — whatever the issue requires.
 Commit and push incrementally after each logical chunk:
-  git add -A && git commit -m 'security: <what> — Ref #<NUMBER>' && git push origin <BRANCH>
+  git add -A && git commit -m 'security: <what> — issue:<NUMBER>' && git push origin <BRANCH>
 
 NO tsc. NO build. This is a report/audit — there is no app code to verify.
 
@@ -115,7 +115,7 @@ NO tsc. NO build. This is a report/audit — there is no app code to verify.
   git push origin <BRANCH>
 
 **Step 5 — Create PR:**
-gh pr create --title "security: <short title> — Ref #<NUMBER>" --body "Ref #<NUMBER>
+gh pr create --title "security: <short title>" --body "Fixes #<NUMBER>
 
 <summary>"
 

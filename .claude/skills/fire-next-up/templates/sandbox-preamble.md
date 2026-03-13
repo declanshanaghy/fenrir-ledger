@@ -20,7 +20,7 @@ state shows exactly where you stopped.
 
 INCREMENTAL COMMIT + VERIFY LOOP (UNBREAKABLE):
 After every logical chunk of implementation work (~5-10 min or 1-3 files changed):
-  1. git add -A && git commit -m 'wip: <what> — Ref #<NUMBER>' && git push origin <BRANCH>
+  1. git add -A && git commit -m 'wip: <what> — issue:<NUMBER>' && git push origin <BRANCH>
   2. bash quality/scripts/verify.sh --step tsc
   3. If tsc fails: fix immediately, commit+push, re-run tsc.
   4. Update your todo progress.

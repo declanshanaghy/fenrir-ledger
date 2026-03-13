@@ -19,7 +19,7 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 
 **Research:** Technical → FiremanDecko, Product → Freya. Sole agent, posts findings and creates PR. No Loki step. After PR merges, orchestrator presents findings to Odin for **Review** (plan into issues, shelve, or drop).
 
-**Chain rules:** Same branch throughout. First agent creates PR with `Ref #<NUMBER>`. Final agent (Loki) changes `Ref` to `Fixes`. If any agent fails, chain stops and orchestrator reports.
+**Chain rules:** Same branch throughout. First agent creates PR with `Fixes #<NUMBER>` in the body (clean title, no issue ref). Loki adds tests on the same PR. If any agent fails, chain stops and orchestrator reports.
 
 ## Flags
 

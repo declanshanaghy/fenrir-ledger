@@ -19,15 +19,15 @@ Composes a prompt from templates and spawns the agent via Depot (default) or loc
 6. **Reuse agent templates from context.** If the same agent template was already read earlier in the session, do NOT read it again.
 7. **No intermediate temp files.** Pass the composed prompt directly to `depot claude` via heredoc.
 8. **No step-by-step narration.** Only output the final dispatch report.
-9. **Board move runs parallel with spawn** (or skip if already In Progress).
+9. **Board move is MANDATORY after spawn succeeds.** Append it to the spawn command with `&&`.
 
 **Ideal flow (2 tool calls per dispatch):**
 ```
 Call 1: Read <agent>.md           (skip if already in context)
-Call 2: source .env && depot claude ... -p "$(cat <<'PROMPT' ... PROMPT)"
+Call 2: source .env && depot claude ... && node pack-status.mjs --move N in-progress
 ```
 
-If issue data + agent template are already in context, that's **1 tool call** (just the spawn).
+If issue data + agent template are already in context, that's **1 tool call** (spawn + board move combined).
 
 ## Arguments
 
@@ -110,7 +110,7 @@ state shows exactly where you stopped.
 
 INCREMENTAL COMMIT + VERIFY LOOP (UNBREAKABLE):
 After every logical chunk of implementation work (~5-10 min or 1-3 files changed):
-  1. git add -A && git commit -m 'wip: <what> — Ref #<NUMBER>' && git push origin <BRANCH>
+  1. git add -A && git commit -m 'wip: <what> — issue:<NUMBER>' && git push origin <BRANCH>
   2. bash quality/scripts/verify.sh --step tsc
   3. If tsc fails: fix immediately, commit+push, re-run tsc.
   4. Update your todo progress.
@@ -196,7 +196,8 @@ source <repo-root>/.env && depot claude \
   -p "$(cat <<'PROMPT'
 <composed prompt content here>
 PROMPT
-)"
+)" && \
+node "<repo-root>/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N> in-progress
 ```
 
 **CRITICAL: Always `--branch "main"`** — `sandbox-setup.sh` handles branch checkout.
@@ -207,15 +208,21 @@ PROMPT
 
 Launch via Agent tool with `isolation: "worktree"`, `run_in_background: true`, using the composed prompt as the agent task.
 
-### Phase 3 — Board Move (if needed)
+### Phase 3 — Board Move (MANDATORY)
 
-Skip if `--skip-board-move` or already In Progress. Otherwise:
+**ALWAYS move to In Progress after a successful spawn.** This is chained with `&&` in the
+spawn command so it only runs if spawn succeeds.
+
+Skip ONLY if `--skip-board-move` flag is explicitly passed.
+
+The board move is embedded in the spawn command (see Phase 2). If for any reason it was
+not included in the spawn command, run it separately:
 
 ```bash
 node "<repo-root>/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N> in-progress
 ```
 
-**Do NOT move if spawn failed.**
+**Do NOT move if spawn failed.** The `&&` chaining handles this automatically.
 
 ### Output — Dispatch Report (only output)
 

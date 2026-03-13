@@ -46,7 +46,7 @@ The following tests are failing in CI. You MUST fix ALL of them.
 - If any tests still fail, keep fixing until ALL pass. Do not stop with failures remaining.
 
 **Step 5 — Commit and push:**
-cd <REPO_ROOT> && git add -A && git commit -m 'fix: repair failing tests — Ref #<NUMBER>' && git push origin <BRANCH>
+cd <REPO_ROOT> && git add -A && git commit -m 'fix: repair failing tests — issue:<NUMBER>' && git push origin <BRANCH>
 
 **Step 6 — Post updated verdict:**
 gh issue comment <NUMBER> --body "## Loki QA Verdict (Revised)
