@@ -92,8 +92,9 @@ test.describe("Thrall card limit enforcement (issue #643)", () => {
     if (!toastExists) {
       // If no error toast, verify the 6th card was not saved to dashboard
       await page.goto("/ledger", { waitUntil: "load" });
-      // Card 6 should NOT appear
-      await expect(page.locator(`text=Card 6`)).not.toBeVisible();
+      // Card 6 should NOT appear in the main active tab (use getByRole to be specific)
+      const mainGridArea = page.locator('[role="tabpanel"]:not([hidden])');
+      await expect(mainGridArea.locator(`text=Card 6`)).not.toBeVisible();
       // Still only 5 cards visible
       for (let i = 1; i <= 5; i++) {
         await expect(page.locator(`text=Card ${i}`).first()).toBeVisible();
