@@ -3,8 +3,8 @@
 > *"I know that I hung on a wind-swept gallows, nine long nights, wounded with a spear, dedicated to Odin, myself to myself."*
 > — Hávamál, Stanzas 138
 
-<img src="odin-dark.png" width="120" alt="Odin — dark portrait">
-<img src="odin-light.png" width="120" alt="Odin — light portrait">
+<img src="profiles/odin-dark.png" width="120" alt="Odin — dark portrait">
+<img src="profiles/odin-light.png" width="120" alt="Odin — light portrait">
 
 ---
 

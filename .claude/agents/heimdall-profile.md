@@ -3,7 +3,8 @@
 > *"He needs less sleep than a bird. He sees equally well night and day, even a hundred leagues away. He can hear the grass growing in the fields and the wool growing on the sheep."*
 > — Prose Edda, Gylfaginning
 
-ᚺ *(Portrait forthcoming — the Guardian watches in silence)*
+<img src="profiles/heimdall-dark.png" width="120" alt="Heimdall — dark portrait">
+<img src="profiles/heimdall-light.png" width="120" alt="Heimdall — light portrait">
 
 ---
 

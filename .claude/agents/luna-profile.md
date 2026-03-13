@@ -3,8 +3,8 @@
 > *"Máni steers the course of the moon and controls its waxing and waning."*
 > — Prose Edda, Gylfaginning
 
-<img src="luna-dark.png" width="120" alt="Luna — dark portrait">
-<img src="luna-light.png" width="120" alt="Luna — light portrait">
+<img src="profiles/luna-dark.png" width="120" alt="Luna — dark portrait">
+<img src="profiles/luna-light.png" width="120" alt="Luna — light portrait">
 
 ---
 

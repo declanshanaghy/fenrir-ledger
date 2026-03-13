@@ -3,8 +3,8 @@
 > *"She is the most renowned of all the goddesses, and it is she who owns that dwelling in the heavens which is called Fólkvangr, and wheresoever she rides to the fight, she has one-half of the kill."*
 > — Prose Edda, Gylfaginning
 
-<img src="freya-dark.png" width="120" alt="Freya — dark portrait">
-<img src="freya-light.png" width="120" alt="Freya — light portrait">
+<img src="profiles/freya-dark.png" width="120" alt="Freya — dark portrait">
+<img src="profiles/freya-light.png" width="120" alt="Freya — light portrait">
 
 ---
 
