@@ -15,7 +15,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import type {
   PackStatusResult,
@@ -543,7 +543,7 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
-function IssueLink({ num, title }: { num: number; title?: string }) {
+function IssueLink({ num, title }: { num: number; title?: string | undefined }) {
   return (
     <a
       href={`https://github.com/${OWNER}/${REPO}/issues/${num}`}
