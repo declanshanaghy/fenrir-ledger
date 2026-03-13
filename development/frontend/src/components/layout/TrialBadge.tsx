@@ -9,16 +9,17 @@
  *   Day 30:     red/urgent ("Expires today")
  *   Expired:    "THRALL" badge
  *
- * Click opens TrialStatusPanel (implemented in Issue #3 — placeholder for now).
+ * Click opens TrialStatusPanel dropdown with personalized metrics.
  *
  * @see plans/001-trial.md (Phase 3)
  * @see ux/wireframes/trial/trial-start.html
- * @see Issue #621
+ * @see Issue #621, #622
  */
 
 import { useState } from "react";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { TRIAL_DURATION_DAYS } from "@/lib/trial-utils";
+import { TrialStatusPanel } from "@/components/trial/TrialStatusPanel";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -102,32 +103,13 @@ export function TrialBadge() {
         {label}
       </button>
 
-      {/* TrialStatusPanel placeholder — Issue #3 will implement the full panel */}
+      {/* TrialStatusPanel — full dropdown with metrics and CTA (Issue #622) */}
       {panelOpen && (
-        <div
-          role="dialog"
-          aria-label="Trial status"
-          className={[
-            "absolute right-0 top-full mt-2",
-            "w-64 border border-border bg-background/95 backdrop-blur-sm",
-            "rounded-sm shadow-lg z-50 p-4",
-          ].join(" ")}
-        >
-          <p className="text-sm text-muted-foreground font-body">
-            {status === "expired"
-              ? "Your trial has ended. Subscribe to Karl to unlock full features."
-              : `You have ${remainingDays} day${remainingDays !== 1 ? "s" : ""} remaining in your Karl trial.`}
-          </p>
-          <button
-            type="button"
-            onClick={() => setPanelOpen(false)}
-            className="mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Close trial status panel"
-            style={{ minHeight: 44, minWidth: 44 }}
-          >
-            Close
-          </button>
-        </div>
+        <TrialStatusPanel
+          remainingDays={remainingDays}
+          status={status}
+          onClose={() => setPanelOpen(false)}
+        />
       )}
     </>
   );

@@ -5,6 +5,7 @@
  *
  * Central settings hub for the Fenrir Ledger. Contains:
  *   - Subscription management (Stripe) -- left column on desktop
+ *   - Trial status section (shown during active trial) -- left column
  *   - Settings controls (Restore Tab Guides, etc.) -- right column on desktop
  *
  * Anonymous-first: accessible without a signed-in session. The settings
@@ -16,6 +17,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { StripeSettings } from "@/components/entitlement/StripeSettings";
+import { TrialSettingsSection } from "@/components/trial/TrialSettingsSection";
 import type { DashboardTab } from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
@@ -174,9 +176,10 @@ export default function SettingsPage() {
 
       {/* Two-column layout: subscription left, settings right */}
       <div className="flex flex-col md:grid md:grid-cols-2 gap-6">
-        {/* Left column: Subscription management */}
+        {/* Left column: Subscription management + trial status */}
         <div className="flex flex-col gap-6">
           <StripeSettings />
+          <TrialSettingsSection />
         </div>
 
         {/* Right column: Settings controls */}
