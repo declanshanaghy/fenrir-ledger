@@ -1,0 +1,24 @@
+# --------------------------------------------------------------------------
+# Fenrir Ledger — Next.js App Service
+#
+# ClusterIP service exposes the app internally for Ingress routing.
+# --------------------------------------------------------------------------
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: fenrir-app
+  namespace: fenrir-app
+  labels:
+    app.kubernetes.io/name: fenrir-app
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: frontend
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: fenrir-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

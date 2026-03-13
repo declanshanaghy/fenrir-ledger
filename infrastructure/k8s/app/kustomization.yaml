@@ -1,0 +1,21 @@
+# --------------------------------------------------------------------------
+# Fenrir Ledger — Kustomize manifest for the Next.js app
+#
+# Apply all app manifests:
+#   kubectl apply -k infrastructure/k8s/app/
+# --------------------------------------------------------------------------
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: fenrir-app
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  # secrets.yaml is a template — actual secrets are created by CD pipeline
+  # Do NOT include secrets.yaml here to avoid committing placeholder values
+
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
