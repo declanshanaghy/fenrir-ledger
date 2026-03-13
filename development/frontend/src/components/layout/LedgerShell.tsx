@@ -22,6 +22,7 @@ import { KonamiHowl } from "./KonamiHowl";
 import { ForgeMasterEgg } from "./ForgeMasterEgg";
 import { HeilungModal } from "@/components/easter-eggs/HeilungModal";
 import { TrialDay15Modal } from "@/components/trial/TrialDay15Modal";
+import { TrialExpiryModal } from "@/components/trial/TrialExpiryModal";
 import { Toaster } from "sonner";
 
 import {
@@ -99,6 +100,9 @@ export function LedgerShell({ children }: LedgerShellProps) {
 
       {/* Day-15 mid-trial nudge modal (Issue #622) */}
       <TrialDay15Modal />
+
+      {/* Day-30 trial expiry modal (Issue #623) */}
+      <TrialExpiryModal />
 
       {/* Ragnarok overlay */}
       {ragnarokActive && (

@@ -141,6 +141,19 @@ export function TrialSettingsSection() {
         </div>
       </div>
 
+      {/* Returning user message — shown when trial expired (Issue #623) */}
+      {status === "expired" && (
+        <div className="border border-gold/20 bg-gold/5 p-3 flex flex-col gap-1.5">
+          <p className="text-[13px] font-heading font-semibold text-foreground">
+            Upgrade to Karl
+          </p>
+          <p className="text-[12px] text-muted-foreground font-body leading-relaxed">
+            Your trial ended. Subscribe to Karl to unlock all features including
+            The Howl, Valhalla, and unlimited cards &mdash; $3.99/mo.
+          </p>
+        </div>
+      )}
+
       {/* Subscribe CTA */}
       <button
         type="button"
@@ -158,14 +171,14 @@ export function TrialSettingsSection() {
         ].join(" ")}
         aria-label={
           status === "expired"
-            ? "Reactivate Karl subscription"
+            ? "Upgrade to Karl subscription"
             : "Subscribe to Karl"
         }
       >
         {isSubscribing
           ? "Redirecting\u2026"
           : status === "expired"
-            ? "Reactivate \u2014 $3.99/month"
+            ? "Upgrade to Karl \u2014 $3.99/month"
             : "Subscribe for $3.99/month"}
       </button>
     </section>

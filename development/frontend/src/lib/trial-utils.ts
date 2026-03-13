@@ -26,6 +26,12 @@ export const LS_TRIAL_DAY15_NUDGE_SHOWN = "fenrir:trial-day15-nudge-shown";
 /** Boolean — whether the day-30 expiry modal has been shown. */
 export const LS_TRIAL_EXPIRY_MODAL_SHOWN = "fenrir:trial-expiry-modal-shown";
 
+/** Boolean — whether the post-trial upgrade banner has been dismissed. */
+export const LS_POST_TRIAL_BANNER_DISMISSED = "fenrir:post-trial-banner-dismissed";
+
+/** Thrall-tier card visibility limit. Cards beyond this count are locked. */
+export const THRALL_CARD_LIMIT = 5;
+
 // ---------------------------------------------------------------------------
 // Trial status types
 // ---------------------------------------------------------------------------

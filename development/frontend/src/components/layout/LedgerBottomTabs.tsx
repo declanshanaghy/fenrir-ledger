@@ -26,6 +26,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { LayoutGrid, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEntitlement } from "@/hooks/useEntitlement";
+import { useIsKarlOrTrial } from "@/hooks/useIsKarlOrTrial";
 import {
   KarlUpsellDialog,
   KARL_UPSELL_VALHALLA,
@@ -49,8 +50,9 @@ export function LedgerBottomTabs() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { hasFeature } = useEntitlement();
-  const hasValhalla = hasFeature("card-archive");
-  const hasVelocity = hasFeature("velocity-management");
+  const karlOrTrial = useIsKarlOrTrial();
+  const hasValhalla = hasFeature("card-archive") || karlOrTrial;
+  const hasVelocity = hasFeature("velocity-management") || karlOrTrial;
   const [upsellOpen, setUpsellOpen] = useState(false);
   const [velocityUpsellOpen, setVelocityUpsellOpen] = useState(false);
 

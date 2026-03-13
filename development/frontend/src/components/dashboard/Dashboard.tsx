@@ -41,6 +41,8 @@ import { daysUntil } from "@/lib/card-utils";
 import { cn } from "@/lib/utils";
 import { useRagnarok } from "@/contexts/RagnarokContext";
 import { useEntitlement } from "@/hooks/useEntitlement";
+import { useIsKarlOrTrial } from "@/hooks/useIsKarlOrTrial";
+import { THRALL_CARD_LIMIT } from "@/lib/trial-utils";
 import {
   KarlUpsellDialog,
   KARL_UPSELL_VALHALLA,
@@ -311,9 +313,11 @@ interface DashboardProps {
 export function Dashboard({ cards, initialTab }: DashboardProps) {
   const { ragnarokActive } = useRagnarok();
   const { hasFeature } = useEntitlement();
-  const isHowlUnlocked = hasFeature("howl-panel");
-  const hasValhalla = hasFeature("card-archive");
-  const hasVelocity = hasFeature("velocity-management");
+  const karlOrTrial = useIsKarlOrTrial();
+  // Feature gates: unlocked if Karl subscriber OR active trial
+  const isHowlUnlocked = hasFeature("howl-panel") || karlOrTrial;
+  const hasValhalla = hasFeature("card-archive") || karlOrTrial;
+  const hasVelocity = hasFeature("velocity-management") || karlOrTrial;
   const [upsellOpen, setUpsellOpen] = useState(false);
   const [velocityUpsellOpen, setVelocityUpsellOpen] = useState(false);
   const [howlUpsellOpen, setHowlUpsellOpen] = useState(false);
@@ -493,7 +497,14 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
   const displayCards = lokiActive ? lokiOrder : cards;
   const displayHowlCards = displayCards.filter(isHowlCard);
   const displayHuntCards = displayCards.filter(isHuntCard);
-  const displayActiveCards = displayCards.filter(isActiveCard);
+  const allDisplayActiveCards = displayCards.filter(isActiveCard);
+  // Thrall card limit: show only first 5 active cards when not Karl or trial
+  const displayActiveCards = karlOrTrial
+    ? allDisplayActiveCards
+    : allDisplayActiveCards.slice(0, THRALL_CARD_LIMIT);
+  const lockedActiveCardCount = karlOrTrial
+    ? 0
+    : Math.max(0, allDisplayActiveCards.length - THRALL_CARD_LIMIT);
   const displayValhallaCards = displayCards.filter(isValhallaCard);
 
   // Per-tab badge counts (from non-Loki buckets for consistency)
@@ -685,15 +696,29 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
           {displayActiveCards.length === 0 ? (
             <TabEmptyState tabId="active" rune="ᛉ" />
           ) : (
-            <AnimatedCardGrid
-              cards={displayActiveCards}
-              renderCard={(card) => (
-                <CardTile
-                  card={card}
-                  lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
-                />
+            <>
+              <AnimatedCardGrid
+                cards={displayActiveCards}
+                renderCard={(card) => (
+                  <CardTile
+                    card={card}
+                    lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
+                  />
+                )}
+              />
+              {/* Locked cards indicator — Thrall card limit (Issue #623) */}
+              {lockedActiveCardCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setUpsellOpen(true)}
+                  className="w-full border border-dashed border-border p-4 text-center text-sm text-muted-foreground hover:border-gold/30 hover:text-foreground transition-colors cursor-pointer mt-4 mx-auto max-w-[calc(100%-2rem)]"
+                  aria-label={`${lockedActiveCardCount} more cards locked. Upgrade to Karl to view all cards.`}
+                >
+                  <span aria-hidden="true">{"\uD83D\uDD12"} </span>
+                  {lockedActiveCardCount} more card{lockedActiveCardCount !== 1 ? "s" : ""} &mdash; Upgrade to Karl
+                </button>
               )}
-            />
+            </>
           )}
         </div>
       </div>
