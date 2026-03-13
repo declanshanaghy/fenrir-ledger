@@ -43,6 +43,17 @@ if ! command -v gke-gcloud-auth-plugin &>/dev/null; then
 fi
 info "gke-gcloud-auth-plugin installed"
 
+# k9s (terminal UI for Kubernetes)
+if ! command -v k9s &>/dev/null; then
+  echo "Installing k9s..."
+  if command -v brew &>/dev/null; then
+    brew install derailed/k9s/k9s
+  else
+    fail "k9s not found and brew not available. Install manually: https://k9scli.io/topics/install/"
+  fi
+fi
+info "k9s $(k9s version --short 2>/dev/null || echo 'installed')"
+
 # --------------------------------------------------------------------------
 # 2. Authenticate (if needed)
 # --------------------------------------------------------------------------
@@ -98,6 +109,7 @@ echo ""
 echo "=== Setup Complete ==="
 echo ""
 echo "Useful commands:"
+echo "  k9s                                     # Terminal UI for the cluster"
 echo "  kubectl get pods -n fenrir-app          # App pods"
 echo "  kubectl get svc -n fenrir-app           # Services"
 echo "  kubectl get ingress -n fenrir-app       # Ingress + external IP"
