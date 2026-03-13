@@ -96,7 +96,7 @@ test.describe("Trust/Safety Messaging — Marketing Pages", () => {
     // Check for compact variant text (use regex for more flexibility)
     const compactText = page.locator(
       'text=/Fenrir.*never.*collects.*credit card/'
-    );
+    ).first();
     await expect(compactText).toBeVisible();
 
     // Check for role=note
