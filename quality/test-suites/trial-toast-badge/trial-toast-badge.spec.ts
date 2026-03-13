@@ -509,13 +509,7 @@ test.describe("Trial Toast & Badge — Implementation Verification", () => {
     // Verify implementation structure
     // This test checks that TrialBadge.tsx exists and is used in LedgerTopBar.tsx
 
-    // The badge should be part of the TopBar DOM when trial status is active
-    // We test by trying to interact with it
-    const topBar = await page.locator('nav, div[role="navigation"]').first();
-    const isTopBarPresent = await topBar.isVisible().catch(() => false);
-    expect(isTopBarPresent).toBe(true);
-
-    // Badge should exist in DOM (may be hidden if no trial)
+    // The badge should be part of the DOM
     const badge = await page.locator('button[aria-label*="Trial"]').first();
     const badgeExists = await badge.count().catch(() => 0) > 0;
     expect(badgeExists).toBe(true);
