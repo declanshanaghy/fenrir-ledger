@@ -16,8 +16,11 @@ export {
   type PremiumFeature,
   type FeatureDefinition,
   PREMIUM_FEATURES,
+  THRALL_CARD_LIMIT,
   tierMeetsRequirement,
 } from "./types";
+
+export { canAddCard, type CardLimitResult } from "./card-limit";
 
 export {
   getEntitlementCache,

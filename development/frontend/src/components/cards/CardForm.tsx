@@ -51,6 +51,9 @@ import { checkMilestone } from "@/lib/milestone-utils";
 import { LS_TRIAL_START_TOAST_SHOWN, computeFingerprint } from "@/lib/trial-utils";
 import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
+import { canAddCard } from "@/lib/entitlement/card-limit";
+import { useEntitlement } from "@/hooks/useEntitlement";
+import { useTrialStatus } from "@/hooks/useTrialStatus";
 import {
   computeCardStatus,
   dollarsToCents,
@@ -122,6 +125,9 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   const [direction, setDirection] = useState<1 | -1>(1);
   const prefersReducedMotion = useReducedMotion();
   const { open: bearOpen, trigger: triggerBear, dismiss: dismissBear } = useGleipnirFragment4();
+  const { tier } = useEntitlement();
+  const { status: trialStatus } = useTrialStatus();
+  const isTrialActive = trialStatus === "active";
 
   // Step transition animation variants (directional slide)
   const STEP_TRANSITION_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -246,6 +252,19 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
     setIsSubmitting(true);
 
     try {
+      // Check card limit for new cards (issue #643)
+      if (!isEditMode) {
+        const existingCards = getCards(householdId);
+        const activeCardCount = existingCards.filter(c => c.status !== "closed" && c.status !== "graduated").length;
+        const limitCheck = canAddCard(tier, activeCardCount, isTrialActive);
+
+        if (!limitCheck.allowed) {
+          toast.error(limitCheck.reason || "Unable to add card at this time");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       const now = new Date().toISOString();
 
       // Auto-calculate derived fields when saving from Step 1 (wizard mode only)
