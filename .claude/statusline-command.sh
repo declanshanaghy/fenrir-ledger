@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
 # Fenrir Ledger -- Norse Statusline for Claude Code
 # Renders a single-line statusline with Elder Futhark rune prefixes,
-# realm-color thresholds, and responsive width breakpoints.
+# realm-color thresholds, and dynamic full-width justification.
 #
 # Input:  JSON on stdin from Claude Code
 # Output: ANSI-colored statusline text on stdout
 #
 # JSON fields consumed:
-#   workspace.current_dir     -- for git detection
-#   model.display_name        -- model name
-#   context_window.used_percentage -- integer 0-100
-#   cost.total_cost_usd       -- float
-#   cost.total_duration_ms    -- milliseconds
-#   agent.name                -- optional, present in subagent mode
+#   model.display_name                -- model name
+#   context_window.used_percentage    -- integer 0-100
+#   cost.total_cost_usd              -- float
+#   cost.total_duration_ms           -- milliseconds
+#   cost.total_lines_added           -- integer
+#   cost.total_lines_removed         -- integer
+#   agent.name                       -- optional, present in subagent mode
+#   worktree.branch                  -- optional, present in --worktree mode
 
 set -euo pipefail
 
@@ -29,26 +31,6 @@ FG_RAGNAROK="\033[38;2;239;68;68m"
 BOLD="\033[1m"
 DIM="\033[2m"
 RESET="\033[0m"
-
-# ---------------------------------------------------------------------------
-# Cache directory and TTL
-# ---------------------------------------------------------------------------
-CACHE_DIR="${TMPDIR:-/tmp}/fenrir-statusline"
-CACHE_FILE="$CACHE_DIR/git-cache.json"
-CACHE_TTL=30  # seconds
-
-mkdir -p "$CACHE_DIR"
-
-# Check if cache is still valid
-is_cache_valid() {
-    if [ ! -f "$CACHE_FILE" ]; then
-        return 1
-    fi
-    local mtime=$(stat -f%m "$CACHE_FILE" 2>/dev/null || stat -c%Y "$CACHE_FILE" 2>/dev/null || echo 0)
-    local now=$(date +%s)
-    local age=$((now - mtime))
-    [ "$age" -lt "$CACHE_TTL" ]
-}
 
 # ---------------------------------------------------------------------------
 # Read JSON from stdin
@@ -94,48 +76,20 @@ except Exception:
     fi
 }
 
-CWD="$(parse_json_field '.workspace.current_dir' '.')"
 MODEL="$(parse_json_field '.model.display_name' 'unknown')"
 CTX_PCT="$(parse_json_field '.context_window.used_percentage' '0')"
 COST_USD="$(parse_json_field '.cost.total_cost_usd' '0')"
 DURATION_MS="$(parse_json_field '.cost.total_duration_ms' '0')"
+LINES_ADDED="$(parse_json_field '.cost.total_lines_added' '0')"
+LINES_REMOVED="$(parse_json_field '.cost.total_lines_removed' '0')"
 AGENT_NAME="$(parse_json_field '.agent.name' '')"
+WT_BRANCH="$(parse_json_field '.worktree.branch' '')"
 
 # Ensure numeric values are integers where needed
 CTX_PCT="${CTX_PCT%%.*}"
 DURATION_MS="${DURATION_MS%%.*}"
-
-# ---------------------------------------------------------------------------
-# Git detection (with 30s cache)
-# ---------------------------------------------------------------------------
-GIT_BRANCH=""
-GIT_DIRTY=""
-GIT_UNTRACKED=""
-
-if is_cache_valid; then
-    # Use cached values
-    GIT_BRANCH="$(jq -r '.branch // empty' "$CACHE_FILE" 2>/dev/null || echo '')"
-    GIT_DIRTY="$(jq -r '.dirty // empty' "$CACHE_FILE" 2>/dev/null || echo '')"
-    GIT_UNTRACKED="$(jq -r '.untracked // empty' "$CACHE_FILE" 2>/dev/null || echo '')"
-else
-    # Compute and cache
-    if git -C "$CWD" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        GIT_BRANCH="$(git -C "$CWD" symbolic-ref --short HEAD 2>/dev/null || git -C "$CWD" rev-parse --short HEAD 2>/dev/null || echo '')"
-
-        if ! git -C "$CWD" diff --quiet 2>/dev/null || ! git -C "$CWD" diff --cached --quiet 2>/dev/null; then
-            GIT_DIRTY="!"
-        fi
-
-        if [ -n "$(git -C "$CWD" ls-files --others --exclude-standard 2>/dev/null | head -1)" ]; then
-            GIT_UNTRACKED="?"
-        fi
-    fi
-
-    # Write cache
-    if command -v jq >/dev/null 2>&1; then
-        printf '{"branch":"%s","dirty":"%s","untracked":"%s"}\n' "$GIT_BRANCH" "$GIT_DIRTY" "$GIT_UNTRACKED" > "$CACHE_FILE" 2>/dev/null || true
-    fi
-fi
+LINES_ADDED="${LINES_ADDED%%.*}"
+LINES_REMOVED="${LINES_REMOVED%%.*}"
 
 # ---------------------------------------------------------------------------
 # Terminal width detection
@@ -157,7 +111,6 @@ shorten_model() {
 
 MODEL_SHORT="$(shorten_model "$MODEL")"
 
-# Compact abbreviations for 80-99 col mode
 abbreviate_model() {
     local m="$1"
     case "$m" in
@@ -192,25 +145,18 @@ format_cost() {
 }
 
 cost_color() {
-    # Use bc for floating-point comparison, fallback to python3
     local cost="$COST_USD"
     if command -v bc >/dev/null 2>&1; then
         if [ "$(echo "$cost > 10" | bc -l 2>/dev/null)" = "1" ]; then
-            printf '%b%b' "$FG_RAGNAROK" "$BOLD"
-            return
+            printf '%b%b' "$FG_RAGNAROK" "$BOLD"; return
         elif [ "$(echo "$cost > 5" | bc -l 2>/dev/null)" = "1" ]; then
-            printf '%b' "$FG_MUSPEL"
-            return
+            printf '%b' "$FG_MUSPEL"; return
         elif [ "$(echo "$cost >= 2" | bc -l 2>/dev/null)" = "1" ]; then
-            printf '%b' "$FG_HATI"
-            return
+            printf '%b' "$FG_HATI"; return
         else
-            printf '%b' "$FG_PARCHMENT"
-            return
+            printf '%b' "$FG_PARCHMENT"; return
         fi
     fi
-
-    # Fallback: python3
     if command -v python3 >/dev/null 2>&1; then
         local tier
         tier="$(python3 -c "
@@ -228,8 +174,6 @@ else: print('parchment')
         esac
         return
     fi
-
-    # Last resort: treat as parchment
     printf '%b' "$FG_PARCHMENT"
 }
 
@@ -250,11 +194,11 @@ ctx_color() {
 }
 
 # ---------------------------------------------------------------------------
-# Progress bar (10 chars: filled=▓, empty=░)
+# Progress bar (filled=▓, empty=░)
 # ---------------------------------------------------------------------------
 progress_bar() {
     local pct="$1"
-    local width=10
+    local width="${2:-10}"
     local filled=$(( (pct * width + 50) / 100 ))
     if [ "$filled" -gt "$width" ]; then filled=$width; fi
     if [ "$filled" -lt 0 ]; then filled=0; fi
@@ -262,15 +206,9 @@ progress_bar() {
 
     local bar=""
     local i=0
-    while [ "$i" -lt "$filled" ]; do
-        bar="${bar}▓"
-        i=$((i + 1))
-    done
+    while [ "$i" -lt "$filled" ]; do bar="${bar}▓"; i=$((i + 1)); done
     i=0
-    while [ "$i" -lt "$empty" ]; do
-        bar="${bar}░"
-        i=$((i + 1))
-    done
+    while [ "$i" -lt "$empty" ]; do bar="${bar}░"; i=$((i + 1)); done
     printf '%s' "$bar"
 }
 
@@ -311,88 +249,192 @@ is_ragnarok_mode() {
 # ---------------------------------------------------------------------------
 # Separator: normal = gold │, Ragnarok = red ┃
 # ---------------------------------------------------------------------------
-separator() {
-    if is_ragnarok_mode; then
-        printf '%b┃%b' "${FG_RAGNAROK}" "${RESET}"
-    else
-        printf '%b│%b' "${FG_GOLD}" "${RESET}"
-    fi
-}
+SEP_CHAR="│"
+SEP_COLOR="$FG_GOLD"
+if is_ragnarok_mode; then
+    SEP_CHAR="┃"
+    SEP_COLOR="$FG_RAGNAROK"
+fi
 
 # ---------------------------------------------------------------------------
-# Section builders
+# Section builders — each outputs ANSI text; plain_* returns visible length
 # ---------------------------------------------------------------------------
 
-# Section 1: Git branch with dirty/untracked markers
+# Worktree branch (only shown when present)
 section_branch() {
     local max_len="${1:-20}"
     local branch_display
-    branch_display="$(truncate_branch "$GIT_BRANCH" "$max_len")"
-    local markers=""
-    if [ -n "$GIT_DIRTY" ] || [ -n "$GIT_UNTRACKED" ]; then
-        markers="${FG_HATI}${GIT_DIRTY}${GIT_UNTRACKED}${RESET}"
-    fi
-    printf '%b%bᚱ %b%s%b%b' "${FG_GOLD}" "" "${FG_PARCHMENT}" "$branch_display" "${RESET}" "$markers"
+    branch_display="$(truncate_branch "$WT_BRANCH" "$max_len")"
+    printf '%bᚱ %b%s%b' "${FG_GOLD}" "${FG_PARCHMENT}" "$branch_display" "${RESET}"
+}
+plain_branch() {
+    local max_len="${1:-20}"
+    local branch_display
+    branch_display="$(truncate_branch "$WT_BRANCH" "$max_len")"
+    printf 'ᚱ %s' "$branch_display"
 }
 
-# Section 2: Model name
+# Model name
 section_model() {
     local name="${1:-$MODEL_SHORT}"
     printf '%bᛖ %b%s%b' "${FG_GOLD}" "${FG_PARCHMENT}" "$name" "${RESET}"
 }
+plain_model() {
+    local name="${1:-$MODEL_SHORT}"
+    printf 'ᛖ %s' "$name"
+}
 
-# Section 3: Cost
+# Cost
 section_cost() {
-    local cost_str
-    cost_str="$(format_cost)"
-    local color
-    color="$(cost_color)"
-    printf '%bᚠ %b%s%b' "${FG_GOLD}" "$color" "$cost_str" "${RESET}"
+    printf '%bᚠ %b%s%b' "${FG_GOLD}" "$(cost_color)" "$(format_cost)" "${RESET}"
+}
+plain_cost() {
+    printf 'ᚠ %s' "$(format_cost)"
 }
 
-# Section 4: Context window with progress bar
+# Lines changed
+section_lines() {
+    printf '%bᛚ %b+%d%b %b-%d%b' "${FG_GOLD}" "${FG_ASGARD}" "$LINES_ADDED" "${RESET}" "${FG_MUSPEL}" "$LINES_REMOVED" "${RESET}"
+}
+plain_lines() {
+    printf 'ᛚ +%d -%d' "$LINES_ADDED" "$LINES_REMOVED"
+}
+
+# Context window with progress bar
 section_context() {
-    local color
-    color="$(ctx_color "$CTX_PCT")"
-    local bar
-    bar="$(progress_bar "$CTX_PCT")"
-    printf '%bᚾ %b%d%% %s%b' "${FG_GOLD}" "$color" "$CTX_PCT" "$bar" "${RESET}"
+    local bar_width="${1:-10}"
+    printf '%bᚾ %b%d%% %s%b' "${FG_GOLD}" "$(ctx_color "$CTX_PCT")" "$CTX_PCT" "$(progress_bar "$CTX_PCT" "$bar_width")" "${RESET}"
+}
+plain_context() {
+    local bar_width="${1:-10}"
+    printf 'ᚾ %d%% %s' "$CTX_PCT" "$(progress_bar "$CTX_PCT" "$bar_width")"
 }
 
-# Section 5: Duration
+# Duration
 section_duration() {
-    local dur
-    dur="$(format_duration "$DURATION_MS")"
-    printf '%bᛏ %b%s%b' "${FG_GOLD}" "${FG_STONE}" "$dur" "${RESET}"
+    printf '%bᛏ %b%s%b' "${FG_GOLD}" "${FG_STONE}" "$(format_duration "$DURATION_MS")" "${RESET}"
+}
+plain_duration() {
+    printf 'ᛏ %s' "$(format_duration "$DURATION_MS")"
 }
 
-# Section 6: Agent
+# Agent (only shown when present)
 section_agent() {
-    if [ -n "$AGENT_NAME" ]; then
-        printf '%bᚲ %b%b%s%b' "${FG_GOLD}" "${FG_PARCHMENT}" "${BOLD}" "$AGENT_NAME" "${RESET}"
-    else
-        printf '%bᛁ%b' "${FG_STONE}" "${RESET}"
-    fi
+    printf '%bᚲ %b%b%s%b' "${FG_GOLD}" "${FG_PARCHMENT}" "${BOLD}" "$AGENT_NAME" "${RESET}"
+}
+plain_agent() {
+    printf 'ᚲ %s' "$AGENT_NAME"
 }
 
 # ---------------------------------------------------------------------------
-# Width-responsive rendering
+# Dynamic full-width justification
+#
+# Strategy: collect the visible segments into an array, measure total visible
+# character count, then distribute remaining space as padding between segments.
 # ---------------------------------------------------------------------------
-SEP="$(separator)"
+
+# Build segment lists based on width tier
+SEGMENTS_ANSI=()
+SEGMENTS_PLAIN=()
+
+add_segment() {
+    SEGMENTS_ANSI+=("$1")
+    SEGMENTS_PLAIN+=("$2")
+}
 
 if [ "$TERM_WIDTH" -ge 100 ]; then
-    # Full layout: 6 sections (git diff stats removed, cached git checks)
-    printf '%b' "$(section_branch 20) ${SEP} $(section_model "$MODEL_SHORT") ${SEP} $(section_cost) ${SEP} $(section_context) ${SEP} $(section_duration) ${SEP} $(section_agent)"
+    # Full layout
+    if [ -n "$WT_BRANCH" ]; then
+        add_segment "$(section_branch 25)" "$(plain_branch 25)"
+    fi
+    add_segment "$(section_model "$MODEL_SHORT")" "$(plain_model "$MODEL_SHORT")"
+    add_segment "$(section_cost)" "$(plain_cost)"
+    add_segment "$(section_lines)" "$(plain_lines)"
+    add_segment "$(section_context 10)" "$(plain_context 10)"
+    add_segment "$(section_duration)" "$(plain_duration)"
+    if [ -n "$AGENT_NAME" ]; then
+        add_segment "$(section_agent)" "$(plain_agent)"
+    fi
 
 elif [ "$TERM_WIDTH" -ge 80 ]; then
-    # Compact: truncate branch to 15, abbreviate model, drop duration
-    printf '%b' "$(section_branch 15) ${SEP} $(section_model "$MODEL_ABBREV") ${SEP} $(section_cost) ${SEP} $(section_context) ${SEP} $(section_agent)"
+    # Compact: abbreviate model, drop duration
+    if [ -n "$WT_BRANCH" ]; then
+        add_segment "$(section_branch 18)" "$(plain_branch 18)"
+    fi
+    add_segment "$(section_model "$MODEL_ABBREV")" "$(plain_model "$MODEL_ABBREV")"
+    add_segment "$(section_cost)" "$(plain_cost)"
+    add_segment "$(section_lines)" "$(plain_lines)"
+    add_segment "$(section_context 8)" "$(plain_context 8)"
+    if [ -n "$AGENT_NAME" ]; then
+        add_segment "$(section_agent)" "$(plain_agent)"
+    fi
 
 elif [ "$TERM_WIDTH" -ge 60 ]; then
-    # Minimal: branch + cost + context bar only
-    printf '%b' "$(section_branch 12) ${SEP} $(section_cost) ${SEP} $(section_context)"
+    # Minimal: model + cost + lines + context
+    add_segment "$(section_model "$MODEL_ABBREV")" "$(plain_model "$MODEL_ABBREV")"
+    add_segment "$(section_cost)" "$(plain_cost)"
+    add_segment "$(section_lines)" "$(plain_lines)"
+    add_segment "$(section_context 6)" "$(plain_context 6)"
 
 else
     # Ultra-compact: ctx:XX% | $cost
     printf '%bctx:%d%%%b %b│%b %b%s%b' "${FG_PARCHMENT}" "$CTX_PCT" "${RESET}" "${FG_GOLD}" "${RESET}" "$(cost_color)" "$(format_cost)" "${RESET}"
+    exit 0
 fi
+
+# ---------------------------------------------------------------------------
+# Measure total visible width of all segments + minimum separators
+# ---------------------------------------------------------------------------
+NUM_SEGS="${#SEGMENTS_ANSI[@]}"
+NUM_GAPS=$(( NUM_SEGS - 1 ))
+
+# Each gap needs at minimum: space + separator_char + space = 3 visible chars
+# Measure visible width using plain text (no ANSI escapes)
+total_content_width=0
+for plain in "${SEGMENTS_PLAIN[@]}"; do
+    # wc -m counts characters; strip trailing whitespace from wc output
+    w="$(printf '%s' "$plain" | wc -m | tr -d ' ')"
+    total_content_width=$(( total_content_width + w ))
+done
+
+min_gap_width=3  # " │ "
+total_min_gaps=$(( NUM_GAPS * min_gap_width ))
+used=$(( total_content_width + total_min_gaps ))
+remaining=$(( TERM_WIDTH - used ))
+if [ "$remaining" -lt 0 ]; then remaining=0; fi
+
+# Distribute remaining space evenly across gaps
+if [ "$NUM_GAPS" -gt 0 ]; then
+    extra_per_gap=$(( remaining / NUM_GAPS ))
+    leftover=$(( remaining % NUM_GAPS ))
+else
+    extra_per_gap=0
+    leftover=0
+fi
+
+# ---------------------------------------------------------------------------
+# Render with dynamic padding
+# ---------------------------------------------------------------------------
+output=""
+for (( i=0; i<NUM_SEGS; i++ )); do
+    output+="${SEGMENTS_ANSI[$i]}"
+    if [ "$i" -lt "$NUM_GAPS" ]; then
+        # Calculate padding for this gap
+        pad=$(( extra_per_gap ))
+        # Distribute leftover 1 char at a time to earlier gaps
+        if [ "$i" -lt "$leftover" ]; then
+            pad=$(( pad + 1 ))
+        fi
+        # Left side padding (half), separator, right side padding (other half)
+        left_pad=$(( (pad + 1) / 2 + 1 ))   # +1 for the minimum space
+        right_pad=$(( pad / 2 + 1 ))          # +1 for the minimum space
+        # Build padding strings
+        left_spaces=""
+        for (( j=0; j<left_pad; j++ )); do left_spaces+=" "; done
+        right_spaces=""
+        for (( j=0; j<right_pad; j++ )); do right_spaces+=" "; done
+        output+="${left_spaces}${SEP_COLOR}${SEP_CHAR}${RESET}${right_spaces}"
+    fi
+done
+
+printf '%b' "$output"
