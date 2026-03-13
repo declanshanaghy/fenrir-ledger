@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Trust/Safety Placements — Marketing Site (Issue #644)</title>
+  <!--
+    WIREFRAME RULES (enforced):
+    - No theme styling: no colors, backgrounds, font-family beyond sans-serif,
+      border-radius, box-shadow, or opacity (except placeholder items).
+    - Layout CSS only: flex/grid, border, width/height, padding/margin,
+      font-size/weight, letter-spacing, text-transform, line-height.
+    - Semantic HTML throughout.
+    - Annotations in <p class="note"> or HTML comments.
+
+    COMPONENT: Trust/Safety Placement Mockups — per-page
+    FILE: ux/wireframes/marketing-site/trust-placements.html
+    ISSUE: #644
+    RELATED: ux/wireframes/marketing-site/data-safety-banner.html (component spec)
+
+    PAGES COVERED (top → bottom in this document):
+    1. HOME PAGE — Trust section between Features and Onboarding
+    2. FEATURES PAGE — Smart Import callout + trust section before Final CTA
+    3. PRICING PAGE — Trust line below tier cards + new FAQ entry
+    4. ABOUT PAGE — Expanded "Data Protection" subsection under Heimdall
+    5. FREE TRIAL PAGE — Enhanced "I Never Forget" box
+    6. MARKETING FOOTER — Trust line above copyright (all pages)
+    7. FAQ DATA — 2 new Q&A entries
+
+    DataSafetyBanner component variants used:
+    - Home, Features, About: variant="full"
+    - Features Smart Import: variant="inline"
+    - Pricing: variant="compact"
+    - Free Trial: enhanced "I Never Forget" box (existing pattern + card number callout)
+    - Footer: variant="footer"
+
+    RESPONSIVE: Mobile-first 375px minimum. All page section breakpoints annotated.
+  -->
+  <style>
+    /* Wireframe CSS — structural only */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Annotation styles ─────────────────────────────────────────────── */
+    .note {
+      border: 1px dashed #aaa;
+      padding: 8px 12px;
+      font-size: 12px;
+      margin: 8px 0 16px;
+      font-style: italic;
+    }
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-left: 3px solid #333;
+      padding-left: 8px;
+      margin-bottom: 24px;
+      margin-top: 40px;
+    }
+    hr { border: none; border-top: 2px dashed #ccc; margin: 56px 0; }
+    hr.minor { border: none; border-top: 1px dashed #ddd; margin: 24px 0; }
+
+    /* ── Page section skeleton ─────────────────────────────────────────── */
+    .page-skeleton {
+      border: 1px solid #ccc;
+      margin-bottom: 8px;
+    }
+    .skeleton-section {
+      border-bottom: 1px solid #eee;
+      padding: 20px 24px;
+    }
+    .skeleton-section:last-child { border-bottom: none; }
+    .skeleton-section-label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      font-weight: 700;
+      opacity: 0.4;
+      margin-bottom: 6px;
+    }
+    .skeleton-placeholder {
+      border: 1px dashed #ccc;
+      padding: 12px;
+      font-size: 12px;
+      font-style: italic;
+      opacity: 0.6;
+      text-align: center;
+    }
+
+    /* ── Shared component stubs ───────────────────────────────────────── */
+    /* These are simplified representations of the DataSafetyBanner component */
+
+    /* Full variant stub */
+    .dsb-full {
+      border: 2px solid;
+      padding: 20px;
+    }
+    .dsb-full-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .dsb-full-icon {
+      width: 28px;
+      height: 28px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .dsb-full-title {
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .dsb-full-lead {
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .dsb-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 480px) {
+      .dsb-columns { grid-template-columns: 1fr; }
+    }
+    .dsb-col {
+      border: 1px solid;
+      padding: 14px;
+    }
+    .dsb-col-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    .dsb-col ul {
+      list-style: none;
+      padding: 0;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+    .dsb-col li::before { content: '· '; }
+    .dsb-full-footer {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid;
+      font-size: 12px;
+      font-style: italic;
+    }
+
+    /* Compact variant stub */
+    .dsb-compact {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border: 1px solid;
+      font-size: 13px;
+    }
+    .dsb-compact-icon { font-size: 14px; }
+    .dsb-compact-link {
+      margin-left: auto;
+      font-size: 11px;
+      text-decoration: underline;
+      white-space: nowrap;
+    }
+
+    /* Inline variant stub */
+    .dsb-inline {
+      border: 1px solid;
+      padding: 16px;
+      display: flex;
+      gap: 14px;
+    }
+    .dsb-inline-icon {
+      width: 36px;
+      height: 36px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .dsb-inline-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .dsb-inline-text { font-size: 12px; line-height: 1.6; }
+    .dsb-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .dsb-chip {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1px solid;
+      padding: 2px 8px;
+    }
+
+    /* Footer trust line stub */
+    .dsb-footer-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 0;
+      border-top: 1px solid;
+      font-size: 12px;
+    }
+
+    /* Enhanced "I Never Forget" box (free-trial pattern + card number callout) */
+    .ineverforget-box {
+      border: 1px solid;
+      padding: 20px 24px;
+      text-align: center;
+    }
+    .ineverforget-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .ineverforget-desc {
+      font-size: 13px;
+      line-height: 1.65;
+      max-width: 560px;
+      margin: 0 auto 12px;
+    }
+    .ineverforget-never {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding-top: 10px;
+      border-top: 1px solid;
+    }
+
+    /* ── Page-level structural elements ─────────────────────────────── */
+    .page-section {
+      padding: 56px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .section-heading {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .section-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 26px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 0 0 12px;
+    }
+    .section-sub {
+      font-size: 15px;
+      font-style: italic;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.65;
+    }
+
+    /* FAQ accordion stub */
+    .faq-item {
+      border-bottom: 1px solid #eee;
+      padding: 14px 0;
+    }
+    .faq-question {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .faq-question-toggle {
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 400;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+    .faq-answer {
+      font-size: 13px;
+      line-height: 1.65;
+      margin-top: 8px;
+      padding-left: 0;
+    }
+    .faq-answer.new {
+      border-left: 2px solid;
+      padding-left: 12px;
+      margin-top: 10px;
+    }
+
+    /* Trust section heading row (with icon) */
+    .trust-section-heading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .trust-section-icon {
+      width: 40px;
+      height: 40px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    /* Viewport annotation banner */
+    .viewport-note {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-top: 2px solid #333;
+      border-bottom: 1px solid #aaa;
+      padding: 6px 24px;
+    }
+    .page-header {
+      padding: 24px;
+      border-bottom: 2px solid #333;
+    }
+    .page-header h1 {
+      font-size: 18px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+    .page-header p { font-size: 12px; font-style: italic; }
+
+    /* NEW badge for new elements */
+    .new-badge {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border: 1px solid;
+      padding: 1px 6px;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<p class="viewport-note">Wireframe — Desktop &gt;1024px default · Responsive annotations inline · Issue #644</p>
+<div class="page-header">
+  <h1>Trust/Safety Placements — Marketing Site</h1>
+  <p>
+    Per-page placement mockups for DataSafetyBanner (Issue #644).
+    Component spec: ux/wireframes/marketing-site/data-safety-banner.html.
+    Pages: Home · Features · Pricing · About · Free Trial · Footer (all pages) · FAQ data.
+  </p>
+</div>
+
+<div class="container">
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       PAGE 1: HOME PAGE
+       Placement: New "Data Safety" trust section between Features and Onboarding sections.
+       ══════════════════════════════════════════════════════════════════ -->
+  <p class="section-label">Page 1 — Home Page (/)</p>
+  <p class="note">
+    CHANGE: Insert a new "Data Safety" section between the existing Features section and the
+    Onboarding/Steps section. The new section uses DataSafetyBanner variant="full".
+    No other home page sections change. Section heading uses wolf-voice framing.
+    Scroll-trigger: section fades in when it enters viewport (consistent with other home sections).
+    MOBILE (375px): two-column collapses to single column at 480px. Section padding: 56px → 32px.
+  </p>
+
+  <!-- Home page skeleton showing section order -->
+  <div class="page-skeleton">
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Nav</p>
+      <div class="skeleton-placeholder">ᛟ FENRIR LEDGER &nbsp;|&nbsp; Features · Pricing · About · Free Trial &nbsp;|&nbsp; [Unleash the Wolf]</div>
+    </div>
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Hero</p>
+      <div class="skeleton-placeholder">Hero — "The Wolf Who Never Forgets" · CTA</div>
+    </div>
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: CHAINS — Problems section</p>
+      <div class="skeleton-placeholder">Fee-Serpent · Promo Tide · Unclaimed Plunder</div>
+    </div>
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Features grid</p>
+      <div class="skeleton-placeholder">6 feature pillars</div>
+    </div>
+
+    <!-- NEW: Data Safety section -->
+    <div class="skeleton-section" style="border-left: 3px solid #333;">
+      <p class="skeleton-section-label">
+        <strong>NEW: Data Safety Trust Section</strong>
+        <span class="new-badge">new</span>
+      </p>
+
+      <section class="page-section" aria-labelledby="home-trust-heading" style="padding: 0;">
+        <div class="section-heading">
+          <p class="section-eyebrow" aria-hidden="true">ᛊ · The Wolf's Code · ᛊ</p>
+          <h2 class="section-title" id="home-trust-heading">What I Guard. What I Never Touch.</h2>
+          <p class="section-sub">
+            I track card metadata, not payment credentials.
+            The distinction is everything.
+          </p>
+        </div>
+
+        <!-- DataSafetyBanner variant="full" -->
+        <section class="dsb-full" role="note" aria-label="Data safety guarantee" aria-labelledby="home-dsb-title">
+          <div class="dsb-full-header">
+            <span class="dsb-full-icon" aria-hidden="true">ᛊ</span>
+            <h3 class="dsb-full-title" id="home-dsb-title">What Fenrir Tracks — and What It Never Touches</h3>
+          </div>
+          <p class="dsb-full-lead">
+            Fenrir is a card metadata tracker — not a payment processor.
+            I watch card names, issuers, fees, and deadlines.
+            I never see, store, or transmit credit card numbers, CVVs, PINs, or passwords.
+          </p>
+          <div class="dsb-columns">
+            <div class="dsb-col include">
+              <p class="dsb-col-title">✓ What Fenrir Tracks</p>
+              <ul>
+                <li>Card name &amp; product</li>
+                <li>Card issuer</li>
+                <li>Annual fee amount &amp; renewal date</li>
+                <li>Sign-up bonus details, spend threshold &amp; deadline</li>
+                <li>Card open date &amp; credit limit</li>
+                <li>Notes you add manually</li>
+                <li>Alerts and reminders you set</li>
+              </ul>
+            </div>
+            <div class="dsb-col exclude">
+              <p class="dsb-col-title">✗ What Fenrir Never Touches</p>
+              <ul>
+                <li>Credit card numbers (16-digit PAN)</li>
+                <li>CVV / CVC security codes</li>
+                <li>Card PINs</li>
+                <li>Online banking passwords</li>
+                <li>Social Security numbers</li>
+                <li>Bank account / routing numbers</li>
+                <li>Actual transaction or purchase history</li>
+              </ul>
+            </div>
+          </div>
+          <p class="dsb-full-footer">
+            ᛟ &nbsp; I was born to guard, not to harvest. The ledger holds your strategy — never your secrets.
+          </p>
+        </section>
+        <!-- / DataSafetyBanner -->
+      </section>
+    </div>
+    <!-- / NEW section -->
+
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Onboarding / Steps</p>
+      <div class="skeleton-placeholder">Forge → Watch → Break Free (3-step flow)</div>
+    </div>
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Final CTA</p>
+      <div class="skeleton-placeholder">[Unleash the Wolf] CTA</div>
+    </div>
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Footer</p>
+      <div class="skeleton-placeholder">Footer nav · [NEW: trust line] · © 2026</div>
+    </div>
+  </div>
+
+  <p class="note">
+    HOME — IMPLEMENTATION NOTES:
+    File: development/frontend/src/app/(marketing)/page.tsx (or home-page.tsx)
+    1. Add a new &lt;section&gt; between Features grid and Onboarding/Steps sections.
+    2. Section order after change: Nav → Hero → CHAINS → Features → DATA SAFETY (new) → Steps → Final CTA → Footer.
+    3. Use DataSafetyBanner variant="full".
+    4. Section heading: "What I Guard. What I Never Touch." (wolf-voice, declarative).
+    5. Eyebrow rune: ᛊ (Sowilo — truth/light, same rune used in the component icon).
+    6. Framer Motion: section fades in with scroll-trigger (whileInView, once, 0.2 threshold).
+       opacity 0→1, translateY 24px→0, 500ms. Consistent with other home sections.
+    7. MOBILE: section padding 56px→32px at 375px. Banner columns collapse at 480px.
+    8. aria-labelledby on the section → section h2. DataSafetyBanner aria-labelledby → h3.
+  </p>
+
+  <hr />
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       PAGE 2: FEATURES PAGE (/features)
+       Placement A: Compact inline callout below "Smart Import" feature section.
+       Placement B: Full DataSafetyBanner in new trust section before Final CTA.
+       ══════════════════════════════════════════════════════════════════ -->
+  <p class="section-label">Page 2 — Features Page (/features)</p>
+  <p class="note">
+    TWO PLACEMENTS on the features page:
+    A) Inline callout (variant="inline") immediately after the Smart Import feature row —
+       context-specific, addresses the anxiety that arises when the user reads about import.
+    B) Full DataSafetyBanner (variant="full") in a new dedicated trust section between
+       the last feature row and the Final CTA section.
+    No existing features sections change (no deletions or reorders).
+  </p>
+
+  <div class="page-skeleton">
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Nav</p>
+      <div class="skeleton-placeholder">Nav</div>
+    </div>
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Hero — "Everything I Can Do"</p>
+      <div class="skeleton-placeholder">Features hero</div>
+    </div>
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Feature Rows 1–3 (Card Tracking, Fee Calendar, Household Mgmt)</p>
+      <div class="skeleton-placeholder">Feature rows (alternating left/right layout)</div>
+    </div>
+
+    <!-- Smart Import row with inline safety callout -->
+    <div class="skeleton-section" style="border-left: 3px solid #333;">
+      <p class="skeleton-section-label">Existing: Feature Row 4 — Smart Import + <strong>NEW: Inline Callout</strong> <span class="new-badge">new</span></p>
+
+      <!-- Smart Import feature row (existing structure) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 16px;">
+        <div>
+          <p style="font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 8px;">Feature 04</p>
+          <h3 style="font-size: 20px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Smart Import</h3>
+          <p style="font-size: 14px; line-height: 1.65; margin-bottom: 16px;">
+            Paste a share URL, upload a CSV, or connect Google Sheets.
+            Fenrir reads your spreadsheet and extracts card details automatically.
+            No manual re-keying. Feed me and I remember.
+          </p>
+          <!-- Existing feature tags / bullets -->
+          <ul style="font-size: 13px; line-height: 1.8; list-style: none; padding: 0;">
+            <li>✓ Google Sheets URL import</li>
+            <li>✓ CSV drag-and-drop upload</li>
+            <li>✓ LLM-powered field extraction</li>
+            <li>✓ Preview before committing</li>
+          </ul>
+        </div>
+        <div class="skeleton-placeholder" style="min-height: 160px;">[ Smart Import feature artwork — mimir image ]</div>
+      </div>
+
+      <!-- NEW: Inline DataSafetyBanner below Smart Import row -->
+      <section class="dsb-inline" role="note" aria-label="Smart Import data safety">
+        <div class="dsb-inline-icon" aria-hidden="true">ᛊ</div>
+        <div>
+          <h4 class="dsb-inline-title">Safe By Design — Smart Import Never Reads Card Numbers</h4>
+          <p class="dsb-inline-text">
+            Smart Import extracts card names, issuers, fees, and dates from your spreadsheet.
+            It is architecturally incapable of collecting card numbers, CVVs, PINs, or passwords.
+            Those fields are not mapped, not processed, not stored.
+          </p>
+          <div class="dsb-chips" aria-label="What Smart Import reads vs. never reads">
+            <span class="dsb-chip" aria-label="Reads: Card name">Card name ✓</span>
+            <span class="dsb-chip" aria-label="Reads: Issuer">Issuer ✓</span>
+            <span class="dsb-chip" aria-label="Reads: Annual fee">Annual fee ✓</span>
+            <span class="dsb-chip" aria-label="Reads: Bonus deadline">Bonus deadline ✓</span>
+            <span class="dsb-chip" aria-label="Never reads: Card number">Card number ✗</span>
+            <span class="dsb-chip" aria-label="Never reads: CVV">CVV ✗</span>
+            <span class="dsb-chip" aria-label="Never reads: PIN">PIN ✗</span>
+            <span class="dsb-chip" aria-label="Never reads: Password">Password ✗</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Feature Rows 5–9 (Valhalla, Howl, Velocity, Household, Nine Realms)</p>
+      <div class="skeleton-placeholder">Remaining feature rows</div>
+    </div>
+
+    <!-- NEW: Full trust section before Final CTA -->
+    <div class="skeleton-section" style="border-left: 3px solid #333;">
+      <p class="skeleton-section-label"><strong>NEW: Trust Section before Final CTA</strong> <span class="new-badge">new</span></p>
+
+      <section class="page-section" aria-labelledby="features-trust-heading" style="padding: 0;">
+        <div class="section-heading">
+          <p class="section-eyebrow" aria-hidden="true">ᛊ · The Wolf's Code · ᛊ</p>
+          <h2 class="section-title" id="features-trust-heading">I Track Metadata. Never Credentials.</h2>
+          <p class="section-sub">
+            Every feature you just read tracks card information.
+            None of it requires — or touches — your actual card numbers.
+          </p>
+        </div>
+
+        <!-- DataSafetyBanner variant="full" -->
+        <section class="dsb-full" role="note" aria-label="Data safety guarantee" aria-labelledby="features-dsb-title">
+          <div class="dsb-full-header">
+            <span class="dsb-full-icon" aria-hidden="true">ᛊ</span>
+            <h3 class="dsb-full-title" id="features-dsb-title">What Fenrir Tracks — and What It Never Touches</h3>
+          </div>
+          <p class="dsb-full-lead">
+            Fenrir is a card metadata tracker — not a payment processor.
+            Every feature above uses only the information you see here.
+            I never see, store, or transmit credit card numbers, CVVs, PINs, or passwords.
+          </p>
+          <div class="dsb-columns">
+            <div class="dsb-col include">
+              <p class="dsb-col-title">✓ What Fenrir Tracks</p>
+              <ul>
+                <li>Card name &amp; product</li>
+                <li>Card issuer</li>
+                <li>Annual fee amount &amp; renewal date</li>
+                <li>Sign-up bonus, spend threshold &amp; deadline</li>
+                <li>Open date &amp; credit limit</li>
+                <li>Notes &amp; custom alerts</li>
+              </ul>
+            </div>
+            <div class="dsb-col exclude">
+              <p class="dsb-col-title">✗ What Fenrir Never Touches</p>
+              <ul>
+                <li>Credit card numbers (16-digit PAN)</li>
+                <li>CVV / CVC security codes</li>
+                <li>Card PINs</li>
+                <li>Online banking passwords</li>
+                <li>Social Security numbers</li>
+                <li>Bank account / routing numbers</li>
+                <li>Transaction or purchase history</li>
+              </ul>
+            </div>
+          </div>
+          <p class="dsb-full-footer">
+            ᛟ &nbsp; I was born to guard, not to harvest. The ledger holds your strategy — never your secrets.
+          </p>
+        </section>
+      </section>
+    </div>
+
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Final CTA</p>
+      <div class="skeleton-placeholder">[Unleash the Wolf] CTA</div>
+    </div>
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Footer (with new trust line)</p>
+      <div class="skeleton-placeholder">Footer · [trust line] · ©</div>
+    </div>
+  </div>
+
+  <p class="note">
+    FEATURES PAGE — IMPLEMENTATION NOTES:
+    File: development/frontend/src/app/(marketing)/features/page.tsx
+    1. Smart Import callout: add DataSafetyBanner variant="inline" BELOW the Smart Import feature row.
+       Use headingOverride="Safe By Design — Smart Import Never Reads Card Numbers"
+       Use descriptionOverride to explain Smart Import specifically (not generic).
+    2. Trust section: add BEFORE the existing Final CTA section.
+       Section order: ... Feature Rows → DATA SAFETY (new) → Final CTA → Footer.
+    3. Both additions are independent — the inline callout is inside the feature rows container,
+       the trust section is a top-level sibling section.
+    4. Framer Motion: trust section uses same scroll-trigger as other sections (whileInView, once).
+       Inline callout: no animation (it's part of an already-animated feature row).
+  </p>
+
+  <hr />
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       PAGE 3: PRICING PAGE (/pricing)
+       Placement A: Compact trust line (variant="compact") below tier cards.
+       Placement B: New FAQ entry — "Does Fenrir collect my card numbers?"
+       ══════════════════════════════════════════════════════════════════ -->
+  <p class="section-label">Page 3 — Pricing Page (/pricing)</p>
+  <p class="note">
+    TWO CHANGES on the pricing page:
+    A) One-line compact trust statement below the tier card row.
+    B) New FAQ entry at the top of the Data &amp; Privacy FAQ group (or as a new group).
+    The tier cards and existing FAQ structure remain unchanged.
+  </p>
+
+  <div class="page-skeleton">
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Nav + Hero</p>
+      <div class="skeleton-placeholder">Nav · Pricing hero</div>
+    </div>
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Tier cards — Thrall · Karl · Jarl</p>
+      <div class="skeleton-placeholder">Tier comparison cards</div>
+    </div>
+
+    <!-- NEW: Compact trust line below tier cards -->
+    <div class="skeleton-section" style="border-left: 3px solid #333;">
+      <p class="skeleton-section-label"><strong>NEW: Compact trust line</strong> <span class="new-badge">new</span></p>
+      <section class="dsb-compact" role="note" aria-label="Data safety note">
+        <span class="dsb-compact-icon" aria-hidden="true">ᛊ</span>
+        <span>
+          Fenrir never collects credit card numbers, CVVs, PINs, or passwords — only card metadata.
+        </span>
+        <a class="dsb-compact-link" href="#faq-card-numbers" aria-label="Read FAQ about data safety">FAQ ↓</a>
+      </section>
+    </div>
+
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: FAQ accordion</p>
+
+      <!-- NEW: FAQ entry at top of Data & Privacy group -->
+      <div style="margin-bottom: 16px;">
+        <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 10px;">
+          Data &amp; Privacy <span class="new-badge">updated</span>
+        </p>
+
+        <!-- NEW FAQ Entry 1 -->
+        <div class="faq-item" id="faq-card-numbers">
+          <div class="faq-question">
+            <span>Does Fenrir collect my credit card numbers? <span class="new-badge">new</span></span>
+            <span class="faq-question-toggle">[−]</span>
+          </div>
+          <div class="faq-answer new" role="region" aria-label="Answer: Does Fenrir collect credit card numbers">
+            <p>No. Fenrir Ledger never collects, stores, or transmits credit card numbers, CVVs, PINs, passwords, Social Security numbers, or bank account details.</p>
+            <p style="margin-top: 8px;">Fenrir is a <strong>card metadata tracker</strong>. We track the information you'd write on a sticky note about your card — the name, issuer, annual fee, and bonus deadline. Not the payment credentials.</p>
+            <p style="margin-top: 8px;">This is true during manual entry, Smart Import, and all other features. The fields for card numbers simply do not exist in our data model.</p>
+          </div>
+        </div>
+
+        <!-- NEW FAQ Entry 2 -->
+        <div class="faq-item" id="faq-smart-import-safety">
+          <div class="faq-question">
+            <span>Is my data safe during Smart Import? <span class="new-badge">new</span></span>
+            <span class="faq-question-toggle">[−]</span>
+          </div>
+          <div class="faq-answer new" role="region" aria-label="Answer: Is data safe during Smart Import">
+            <p>Yes. Smart Import reads your spreadsheet to extract card names, issuers, annual fees, and bonus details. It does not read, copy, or store credit card numbers, CVVs, or passwords — even if those fields appear in your spreadsheet.</p>
+            <p style="margin-top: 8px;">Our field extraction model is trained on card metadata only. Sensitive payment fields are excluded from the data model. If our system detects a potential card number in your spreadsheet, it flags a warning and excludes that data from the import.</p>
+          </div>
+        </div>
+
+        <!-- Existing FAQ entries placeholder -->
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>What data does Fenrir store?</span>
+            <span class="faq-question-toggle">[+]</span>
+          </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Can I delete my data?</span>
+            <span class="faq-question-toggle">[+]</span>
+          </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Where is my data stored?</span>
+            <span class="faq-question-toggle">[+]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Final CTA + Footer (with trust line)</p>
+      <div class="skeleton-placeholder">Final CTA · Footer · [trust line] · ©</div>
+    </div>
+  </div>
+
+  <p class="note">
+    PRICING PAGE — IMPLEMENTATION NOTES:
+    File: development/frontend/src/app/(marketing)/pricing/page.tsx
+    1. Compact trust line: add DataSafetyBanner variant="compact" immediately after the tier comparison grid,
+       before any existing content below tier cards (billing FAQ, etc).
+       learnMoreHref="#faq-card-numbers" to scroll to the FAQ anchor.
+       learnMoreText="FAQ ↓" (directional affordance).
+    2. FAQ entries: add to the "Data &amp; Privacy" FAQ group. If that group doesn't exist, create it.
+       FAQ items are currently stored as data arrays — add 2 new entries to that array.
+       FAQ IDs for anchor links: id="faq-card-numbers" and id="faq-smart-import-safety".
+       FAQ items default to OPEN (expanded) on the pricing page (high-intent readers).
+       NOTE: The existing FAQ accordion pattern should be reused. Check pricing/page.tsx for current FAQ data structure.
+    3. New FAQ answers are plain text — no markdown, no special formatting. Keep answers under 100 words each.
+  </p>
+
+  <hr />
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       PAGE 4: ABOUT PAGE (/about)
+       Placement: Expand Heimdall's "Data Protection" subsection.
+       ══════════════════════════════════════════════════════════════════ -->
+  <p class="section-label">Page 4 — About Page (/about)</p>
+  <p class="note">
+    CHANGE: Expand the existing "Data Protection" subsection under Heimdall's agent profile.
+    The current subsection is a short paragraph. Expand it to include the DataSafetyBanner
+    inline variant, framing it as Heimdall's security domain.
+    No other agent profiles change.
+  </p>
+
+  <div class="page-skeleton">
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Nav + Myth section + Agent profiles (Freya, Luna, FiremanDecko, Loki)</p>
+      <div class="skeleton-placeholder">About hero · Myth section · Agent profiles 1-4</div>
+    </div>
+
+    <!-- Heimdall agent profile with expanded Data Protection -->
+    <div class="skeleton-section" style="border-left: 3px solid #333;">
+      <p class="skeleton-section-label">Existing: Heimdall agent profile + <strong>EXPANDED: Data Protection subsection</strong> <span class="new-badge">updated</span></p>
+
+      <!-- Heimdall profile (existing structure — alternating row layout) -->
+      <div style="display: grid; grid-template-columns: 200px 1fr; gap: 32px; margin-bottom: 20px;">
+        <div class="skeleton-placeholder" style="min-height: 200px;">[ Heimdall portrait — light/dark crossfade ]</div>
+        <div>
+          <p style="font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 4px;">AGENT — SECURITY</p>
+          <h2 style="font-size: 22px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px;">Heimdall</h2>
+          <p style="font-size: 13px; font-style: italic; margin-bottom: 12px;">
+            The Watchman. He sees all that enters and leaves the system.
+          </p>
+          <p style="font-size: 13px; line-height: 1.65; margin-bottom: 16px;">
+            [Existing Heimdall bio copy — unchanged]
+          </p>
+
+          <!-- Existing "Data Protection" subsection — BEFORE change -->
+          <div style="border-top: 1px solid; padding-top: 14px; margin-bottom: 14px;">
+            <p style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;">Data Protection</p>
+            <p style="font-size: 12px; font-style: italic; opacity: 0.6; margin-bottom: 12px;">
+              [BEFORE] Short paragraph: "Fenrir never stores payment credentials..."
+            </p>
+
+            <!-- AFTER: Expanded with inline DataSafetyBanner -->
+            <p style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px;">
+              ↓ AFTER: Expanded subsection <span class="new-badge">updated</span>
+            </p>
+            <p style="font-size: 12px; line-height: 1.65; margin-bottom: 12px;">
+              Heimdall stands at the boundary between what Fenrir knows and what it must never know.
+              The distinction between card metadata and payment credentials is not a policy —
+              it is an architectural guarantee.
+            </p>
+
+            <!-- DataSafetyBanner variant="inline" with Heimdall context -->
+            <section
+              class="dsb-inline"
+              role="note"
+              aria-label="Heimdall data protection guarantee"
+            >
+              <div class="dsb-inline-icon" aria-hidden="true">ᛊ</div>
+              <div>
+                <h3 class="dsb-inline-title">What Heimdall Guards</h3>
+                <p class="dsb-inline-text">
+                  The boundary Heimdall defends separates card metadata (what Fenrir tracks)
+                  from payment credentials (what Fenrir never touches).
+                  Credit card numbers, CVVs, PINs, passwords, SSNs, and bank account numbers
+                  are architecturally excluded — not filtered, not redacted, not present.
+                </p>
+                <div class="dsb-chips" aria-label="Data Heimdall permits vs. blocks">
+                  <span class="dsb-chip" aria-label="Permitted: Card metadata">Card metadata ✓</span>
+                  <span class="dsb-chip" aria-label="Permitted: Fee dates">Fee dates ✓</span>
+                  <span class="dsb-chip" aria-label="Permitted: Bonus details">Bonus details ✓</span>
+                  <span class="dsb-chip" aria-label="Blocked: Card numbers">Card numbers ✗</span>
+                  <span class="dsb-chip" aria-label="Blocked: CVV">CVV ✗</span>
+                  <span class="dsb-chip" aria-label="Blocked: PINs">PINs ✗</span>
+                  <span class="dsb-chip" aria-label="Blocked: Passwords">Passwords ✗</span>
+                </div>
+              </div>
+            </section>
+          </div>
+          <!-- / Data Protection subsection -->
+
+        </div>
+      </div>
+    </div>
+
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Remaining sections + Footer (with trust line)</p>
+      <div class="skeleton-placeholder">Remaining about page content · Footer · [trust line] · ©</div>
+    </div>
+  </div>
+
+  <p class="note">
+    ABOUT PAGE — IMPLEMENTATION NOTES:
+    File: development/frontend/src/app/(marketing)/about/page.tsx
+    1. Find Heimdall's agent profile section. Locate the "Data Protection" subsection.
+    2. Replace the existing short paragraph with:
+       - A new 2-sentence framing paragraph (wolf/Heimdall voice, see wireframe above).
+       - DataSafetyBanner variant="inline" with headingOverride="What Heimdall Guards"
+         and descriptionOverride explaining the architectural boundary.
+    3. The inline variant chips use "permitted/blocked" framing (Heimdall as guardian, not tracker).
+    4. MOBILE: at 768px, the agent portrait stacks above the text column (existing responsive behavior).
+       The inline DataSafetyBanner stacks its icon above content at 480px (existing component behavior).
+    5. NOTE: About page uses the alternating portrait layout from wireframes/marketing-site/about.html.
+       Do not change the portrait/layout behavior — only the content inside Heimdall's text column.
+  </p>
+
+  <hr />
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       PAGE 5: FREE TRIAL PAGE (/free-trial)
+       Placement: Enhance "I Never Forget" data safety box with explicit card number mention.
+       ══════════════════════════════════════════════════════════════════ -->
+  <p class="section-label">Page 5 — Free Trial Page (/free-trial) — Enhanced "I Never Forget" Box</p>
+  <p class="note">
+    CHANGE: The existing "I Never Forget" data safety box (in the tier comparison section)
+    gets one new sentence explicitly mentioning card numbers. The box structure, title, and
+    role="note" pattern are unchanged. Only the description text expands.
+    See: ux/wireframes/marketing-site/free-trial.html — .data-safety element.
+  </p>
+
+  <!-- Tier comparison section skeleton — showing the data safety box in context -->
+  <div class="page-skeleton">
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Free trial → Tier comparison (Thrall vs Karl)</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px;">
+        <div class="skeleton-placeholder" style="min-height: 180px;">Thrall tier card</div>
+        <div class="skeleton-placeholder" style="min-height: 180px;">Karl tier card (featured)</div>
+      </div>
+
+      <!-- Data safety box — BEFORE/AFTER comparison -->
+      <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">
+        BEFORE (existing copy)
+      </p>
+      <div class="ineverforget-box" role="note" aria-label="Data safety guarantee" style="margin-bottom: 16px; opacity: 0.5;">
+        <p class="ineverforget-title">I Never Forget</p>
+        <p class="ineverforget-desc">
+          Whether you choose Karl or Thrall, every card you entrusted to me stays in the ledger.
+          Nothing is deleted when the trial ends. I was born to guard — not to destroy.
+        </p>
+      </div>
+
+      <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">
+        AFTER (enhanced — <span class="new-badge">updated</span>)
+      </p>
+      <!-- ENHANCED: same structure, same role/aria, new sentence added -->
+      <div class="ineverforget-box" role="note" aria-label="Data safety guarantee">
+        <p class="ineverforget-title">I Never Forget</p>
+        <p class="ineverforget-desc">
+          Whether you choose Karl or Thrall, every card you entrusted to me stays in the ledger.
+          Nothing is deleted when the trial ends. I was born to guard — not to destroy.
+        </p>
+        <!-- NEW: explicit card number guarantee -->
+        <p class="ineverforget-never" aria-label="Payment credential guarantee">
+          ᛊ &nbsp; I track card names, fees, and deadlines.
+          I never see, store, or ask for credit card numbers, CVVs, or PINs. Not now. Not ever.
+        </p>
+      </div>
+      <!-- / Enhanced "I Never Forget" box -->
+    </div>
+  </div>
+
+  <p class="note">
+    FREE TRIAL PAGE — IMPLEMENTATION NOTES:
+    File: development/frontend/src/app/(marketing)/free-trial/page.tsx
+    1. Locate the .data-safety div (or equivalent component) in the tier comparison section.
+    2. After the existing description paragraph, add a new &lt;p&gt; with the card number guarantee.
+    3. The new paragraph uses a subtle dividing border-top and smaller text (see .ineverforget-never styles).
+    4. Keep the same role="note" and aria-label="Data safety guarantee" — do NOT add a new aria role.
+    5. The new sentence uses wolf-voice framing: "I never see, store, or ask for..."
+    6. Icon ᛊ (Sowilo rune) used consistently across all trust callouts on this issue.
+    7. MOBILE: The enhanced box is still centered, full-width. The new paragraph wraps naturally.
+    8. DO NOT restructure into a full DataSafetyBanner component here —
+       the "I Never Forget" box pattern is intentional for the trial page tone.
+  </p>
+
+  <hr />
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       PAGE 6: MARKETING FOOTER — Trust line (all pages)
+       ══════════════════════════════════════════════════════════════════ -->
+  <p class="section-label">Page 6 — Marketing Footer (all marketing pages)</p>
+  <p class="note">
+    CHANGE: Add a single trust line to the marketing footer, above the copyright/legal row.
+    This appears on ALL marketing pages. Uses DataSafetyBanner variant="footer".
+    The existing footer structure (brand column, nav columns, legal row) is unchanged.
+    The trust line is inserted between the footer nav grid and the legal/copyright row.
+  </p>
+
+  <div class="page-skeleton">
+    <!-- Footer structure -->
+    <div class="skeleton-section">
+      <p class="skeleton-section-label">Existing: Footer nav grid (brand + links + legal)</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 16px; font-size: 13px;">
+        <div>
+          <strong>ᛟ FENRIR LEDGER</strong>
+          <p style="font-size: 12px; margin-top: 4px;">The wolf who breaks chains.</p>
+        </div>
+        <div>
+          <strong>Product</strong>
+          <ul style="list-style: none; padding: 0; margin-top: 6px; font-size: 12px;">
+            <li>Features</li>
+            <li>Free Trial</li>
+            <li>Pricing</li>
+            <li>About</li>
+          </ul>
+        </div>
+        <div>
+          <strong>Legal</strong>
+          <ul style="list-style: none; padding: 0; margin-top: 6px; font-size: 12px;">
+            <li>Privacy Policy</li>
+            <li>Terms of Service</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- NEW: Trust line above copyright -->
+      <div class="dsb-footer-line" role="note" aria-label="Data safety statement">
+        <!-- DataSafetyBanner variant="footer" stub -->
+        <span style="font-size: 13px;">ᛊ</span>
+        <span style="font-size: 12px;">
+          Fenrir Ledger never collects credit card numbers, CVVs, PINs, or passwords.
+          Only card metadata is stored.
+        </span>
+        <span class="new-badge" style="margin-left: auto;">new</span>
+      </div>
+
+      <!-- Existing copyright/legal row -->
+      <div style="font-size: 12px; padding-top: 12px; border-top: 1px solid #ddd; display: flex; gap: 16px;">
+        <span>© 2026 Fenrir Ledger</span>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">
+    FOOTER — IMPLEMENTATION NOTES:
+    File: The shared marketing footer component (likely layout.tsx or a Footer component).
+    1. Add DataSafetyBanner variant="footer" between the footer nav grid and the legal/copyright row.
+    2. This is one line — do not add a full banner or two-column layout in the footer.
+    3. role="note" + aria-label="Data safety statement".
+    4. MOBILE: single line wraps to two lines naturally. Full statement always visible (no truncation).
+    5. The trust line appears on: /, /features, /pricing, /about, /free-trial, and all other marketing pages.
+    6. It does NOT appear inside the authenticated app (LedgerShell footer is separate).
+    7. Check: static-site-footer.html for the canonical footer spec. This change is additive only.
+  </p>
+
+  <hr />
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       FAQ DATA UPDATES
+       New FAQ entries for the Pricing page FAQ accordion.
+       ══════════════════════════════════════════════════════════════════ -->
+  <p class="section-label">FAQ Data — 2 New Entries (also shown in Pricing page above)</p>
+  <p class="note">
+    The FAQ data is likely defined in a data array in pricing/page.tsx or a shared faq-data.ts file.
+    Add these 2 new entries to the "Data &amp; Privacy" group (create the group if it doesn't exist).
+    Default state: expanded (open) — users landing on /pricing with data concerns should see the answers immediately.
+  </p>
+
+  <div style="border: 1px solid #ccc; padding: 20px; margin-bottom: 16px;">
+    <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 16px;">
+      FAQ Data — New entries
+    </p>
+
+    <div class="faq-item" id="faq-data-1">
+      <div class="faq-question">
+        <strong>Q1 (new): Does Fenrir collect my credit card numbers?</strong>
+      </div>
+      <div class="faq-answer new" style="margin-top: 8px;">
+        <p><strong>A:</strong> No. Fenrir Ledger never collects, stores, or transmits credit card numbers, CVVs, PINs, passwords, Social Security numbers, or bank account details.</p>
+        <br>
+        <p>Fenrir is a card metadata tracker. We track the information you'd write on a sticky note about your card — the name, issuer, annual fee, and bonus deadline. Not the payment credentials.</p>
+        <br>
+        <p>This applies to manual entry, Smart Import, and all other features. Card number fields simply do not exist in our data model.</p>
+      </div>
+    </div>
+
+    <hr class="minor" />
+
+    <div class="faq-item" id="faq-data-2">
+      <div class="faq-question">
+        <strong>Q2 (new): Is my data safe during Smart Import?</strong>
+      </div>
+      <div class="faq-answer new" style="margin-top: 8px;">
+        <p><strong>A:</strong> Yes. Smart Import reads your spreadsheet to extract card names, issuers, annual fees, and bonus details. It does not read, copy, or store credit card numbers, CVVs, or passwords — even if those fields appear in your spreadsheet.</p>
+        <br>
+        <p>Our field extraction model is trained on card metadata only. Sensitive payment fields are excluded from the data model. If our system detects a potential card number in your spreadsheet, it flags a warning and excludes that data from the import.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">
+    FAQ DATA — IMPLEMENTATION NOTES:
+    1. Locate the FAQ data array (likely in pricing/page.tsx or a shared faq-data.ts constant).
+    2. Add a new FAQ group: { group: "Data &amp; Privacy", items: [ Q1, Q2, ...existingItems ] }
+       OR prepend Q1 and Q2 to an existing data/privacy FAQ group if one exists.
+    3. FAQ item shape (infer from existing items in the codebase):
+       { id: "faq-card-numbers", question: "...", answer: "...", defaultOpen: true }
+       { id: "faq-smart-import-safety", question: "...", answer: "...", defaultOpen: true }
+    4. defaultOpen: true — trust questions should be visible immediately on pricing page load.
+    5. IDs are used for anchor links from the compact trust line (learnMoreHref="#faq-card-numbers").
+    6. Answer text is plain prose — no markdown, no lists, no JSX. Keep each answer under 100 words.
+  </p>
+
+</div>
+
+<!--
+  ════════════════════════════════════════════════════════════════
+  RESPONSIVE BEHAVIOR SUMMARY — All placements
+  ════════════════════════════════════════════════════════════════
+
+  INTERACTION SPEC: Responsive Collapse
+
+  DataSafetyBanner variant="full" (Home, Features, About):
+  - Desktop (>1024px): Two-column grid. Both columns visible side by side.
+  - Tablet (600-1024px): Two-column grid maintained. May feel slightly tight — verify visually.
+    If content overflows at ~700px, reduce padding before collapsing columns.
+  - Mobile (≤480px): BREAKPOINT — grid-template-columns: 1fr (single column).
+    Include column appears FIRST (above exclude column) — positive framing first.
+  - Mobile (375px min): Full banner remains visible. Padding: 24px → 16px.
+    Banner lead font: 14px → 13px. Column item font: 12px stays 12px.
+    Column border: 1px — no change. Banner outer border: 2px — no change.
+
+  DataSafetyBanner variant="compact" (Pricing):
+  - Desktop: Single row — icon + text + "FAQ ↓" link.
+  - Mobile (≤480px): wraps — icon + text on one line, link drops to next line if needed.
+    "FAQ ↓" link min-height: 40px for touch target.
+    Full text remains visible — no truncation.
+
+  DataSafetyBanner variant="inline" (Features, About):
+  - Desktop: Horizontal — icon column (40px) + content column.
+  - Mobile (≤480px): flex-direction: column — icon above content.
+    Chips wrap naturally (flex-wrap: wrap already set).
+
+  DataSafetyBanner variant="footer" (all footer):
+  - Desktop: Single row.
+  - Mobile: Wraps to 2 lines (icon + text). Full statement visible.
+  - Tablet: Same as desktop.
+
+  Enhanced "I Never Forget" box (Free Trial):
+  - Desktop: Centered, max-width 560px.
+  - Mobile: Full width within container. New paragraph wraps naturally.
+
+  ════════════════════════════════════════════════════════════════
+  ACCESSIBILITY SUMMARY — All placements
+  ════════════════════════════════════════════════════════════════
+
+  [x] All DataSafetyBanner instances: role="note" (supplementary, not urgent)
+  [x] All DataSafetyBanner instances: aria-label specific to context
+  [x] Full variant: aria-labelledby bound to h3 heading within banner
+  [x] Inline variant: h3 heading + descriptive aria-label on chips container
+  [x] Compact variant: "FAQ ↓" link has aria-label="Read FAQ about data safety"
+  [x] Footer variant: role="note" + aria-label="Data safety statement"
+  [x] Enhanced free-trial box: new paragraph has aria-label="Payment credential guarantee"
+  [x] All decorative icons/runes: aria-hidden="true"
+  [x] WCAG AA contrast: verify all text against amber-tinted background in both light + dark themes
+  [x] No animations on DataSafetyBanner (trust signals must be immediately visible)
+  [x] FAQ new entries: role="region" + aria-label on answer panels (accordion pattern)
+  [x] FAQ anchor IDs enable keyboard navigation from compact trust line link
+  [x] All new sections: aria-labelledby pointing to the section h2
+
+  ════════════════════════════════════════════════════════════════
+  IMPLEMENTATION CHECKLIST FOR FIREMAN DECKO
+  ════════════════════════════════════════════════════════════════
+
+  Components to create:
+  [ ] DataSafetyBanner component (4 variants)
+      → development/frontend/src/components/marketing/DataSafetyBanner.tsx
+
+  Pages to update:
+  [ ] Home page (/) — add trust section between Features and Steps
+  [ ] Features page (/features) — add inline callout + trust section
+  [ ] Pricing page (/pricing) — add compact line + 2 FAQ entries
+  [ ] About page (/about) — expand Heimdall Data Protection subsection
+  [ ] Free Trial page (/free-trial) — enhance "I Never Forget" box
+  [ ] Marketing footer (shared) — add footer trust line
+
+  Data to update:
+  [ ] FAQ data — add 2 new entries (faq-card-numbers, faq-smart-import-safety)
+
+  All changes are ADDITIVE — no existing content is removed or restructured.
+-->
+</body>
+</html>

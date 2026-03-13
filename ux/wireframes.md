@@ -11,6 +11,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Trust / Safety Messaging — Marketing Site (Issue #644)
+
+| File | Description |
+|------|-------------|
+| [wireframes/marketing-site/data-safety-banner.html](wireframes/marketing-site/data-safety-banner.html) | DataSafetyBanner shared component: 4 variants (full two-column include/exclude, compact one-liner, inline callout with chips, footer trust line). Props contract. WCAG AA spec. Two-column collapses ≤480px. Mobile-first 375px. Wolf-voice copy. |
+| [wireframes/marketing-site/trust-placements.html](wireframes/marketing-site/trust-placements.html) | Per-page trust/safety placement mockups: Home (full banner, new section), Features (inline Smart Import callout + full banner), Pricing (compact line + 2 new FAQ entries), About (expanded Heimdall Data Protection), Free Trial (enhanced "I Never Forget" box), Footer (trust line all pages). Implementation checklist. Responsive + accessibility spec. |
+
+---
+
 ## About Page — Dual-Realm Agent Profiles (Issue #633)
 
 | File | Description |
@@ -167,6 +176,8 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Trial Feature Gates | [wireframes/trial/trial-feature-gates.html](wireframes/trial/trial-feature-gates.html) | During-trial vs. Thrall gate states, tab bar locks, card limit overlay, mobile bottom tabs, gate matrix, localStorage keys |
 | **marketing-site** | | |
 | Marketing Nav — Wolf-Toned Display Font | [wireframes/marketing-site/nav-font-648.html](wireframes/marketing-site/nav-font-648.html) | Nav link font update (#648): 7-section wireframe — font specimen comparison (Cinzel vs Cinzel Decorative at 13px/18px), desktop before/after (correct link order: Features · Prose Edda · About · Free Trial · Pricing), mobile overlay before/after (375px), font-display: swap strategy, light/dark mode compatibility, full implementation notes for FiremanDecko, WCAG 2.1 AA checklist. Decision: Cinzel (font-heading) recommended over Cinzel Decorative for nav scale. |
+| DataSafetyBanner — Shared Component | [wireframes/marketing-site/data-safety-banner.html](wireframes/marketing-site/data-safety-banner.html) | Trust/safety messaging shared component (#644): 4 variants — full (two-column include/exclude), compact (single trust line), inline (callout card with chips), footer (trust line above copyright). Props contract table. WCAG AA accessibility spec. Gold/amber 2px border. Two-column collapses to single column at 480px. Mobile-first 375px minimum. Wolf-voice copy ("I was born to guard, not to harvest"). Never-touches list: card numbers, CVV, PIN, password, SSN, bank account, transaction history. |
+| Trust/Safety Placements — All Marketing Pages | [wireframes/marketing-site/trust-placements.html](wireframes/marketing-site/trust-placements.html) | Per-page placement mockups for Issue #644: Home (new trust section between Features and Steps, variant="full"), Features (Smart Import inline callout + trust section before Final CTA), Pricing (compact line below tier cards + 2 new FAQ entries — "Does Fenrir collect card numbers?" + "Is Smart Import safe?"), About (expanded Heimdall Data Protection subsection with inline variant), Free Trial (enhanced "I Never Forget" box with explicit card number guarantee), Marketing footer (trust line above copyright on all pages). Full responsive collapse spec. WCAG AA accessibility checklist. Implementation checklist for FiremanDecko. All changes additive — no existing content removed. |
 | Static Site Footer | [wireframes/marketing-site/static-site-footer.html](wireframes/marketing-site/static-site-footer.html) | Dedicated footer spec: brand, quote, runes, CTA, session link, legal row (Privacy Policy + Terms of Service), team credits; easter egg triggers preserved |
 | Marketing Site — Layout Shell | [wireframes/marketing-site/layout-shell.html](wireframes/marketing-site/layout-shell.html) | Full marketing site shell: nav + hero + sections + footer |
 | Home Page | [wireframes/marketing-site/home-page.html](wireframes/marketing-site/home-page.html) | Hero, CHAINS problems, FEATURES grid, STEPS flow |

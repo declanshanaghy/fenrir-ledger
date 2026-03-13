@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: DataSafetyBanner — Shared Component (Issue #644)</title>
+  <!--
+    WIREFRAME RULES (enforced):
+    - No theme styling: no colors, backgrounds, font-family beyond sans-serif,
+      border-radius, box-shadow, or opacity (except placeholder items).
+    - Layout CSS only: flex/grid, border, width/height, padding/margin,
+      font-size/weight, letter-spacing, text-transform, line-height.
+    - Semantic HTML throughout.
+    - Annotations in <p class="note"> or HTML comments.
+
+    COMPONENT: DataSafetyBanner
+    FILE: development/frontend/src/components/marketing/DataSafetyBanner.tsx
+    ISSUE: #644
+    WIREFRAME: ux/wireframes/marketing-site/data-safety-banner.html
+
+    PURPOSE:
+    A shared marketing-site component that communicates the core trust message:
+    Fenrir tracks card METADATA (names, issuers, fees, deadlines) and NEVER
+    collects, stores, or transmits card numbers, CVVs, PINs, or passwords.
+
+    SOURCE PATTERNS:
+    - ux/wireframes/import/safety-banner.html — Variant 1 (full banner, two-column)
+    - ux/wireframes/marketing-site/free-trial.html — "I Never Forget" data safety box
+
+    VARIANTS DOCUMENTED IN THIS WIREFRAME:
+    1. FULL — Two-column include/exclude layout (home, features pages)
+    2. COMPACT — Single horizontal trust line (pricing page, footer)
+    3. INLINE CALLOUT — Tight card within a section (features Smart Import section)
+
+    RESPONSIVE:
+    - Mobile-first: 375px minimum viewport
+    - Two-column include/exclude layout collapses to single column below 480px
+    - All text meets WCAG AA contrast against themed backgrounds
+  -->
+  <style>
+    /* Wireframe CSS — structural only */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    /* ── Annotation styles ─────────────────────────────────────────────── */
+    .note {
+      border: 1px dashed #aaa;
+      padding: 8px 12px;
+      font-size: 12px;
+      margin: 8px 0 16px;
+      font-style: italic;
+    }
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-left: 3px solid #333;
+      padding-left: 8px;
+      margin-bottom: 24px;
+      margin-top: 40px;
+    }
+    .page-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 20px; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+    hr { border: none; border-top: 1px dashed #ccc; margin: 40px 0; }
+
+    /* ════════════════════════════════════════════════════════════════
+       VARIANT 1: FULL DataSafetyBanner
+       Usage: Home page trust section, Features page trust section
+       Props: variant="full" (default)
+       ════════════════════════════════════════════════════════════════ */
+    .data-safety-banner {
+      border: 2px solid;
+      padding: 24px;
+    }
+    .data-safety-banner-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .data-safety-banner-icon {
+      width: 32px;
+      height: 32px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .data-safety-banner-title {
+      font-size: 16px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .data-safety-banner-lead {
+      font-size: 14px;
+      line-height: 1.65;
+      margin-bottom: 20px;
+      max-width: 640px;
+    }
+
+    /* Two-column include/exclude grid */
+    .safety-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    /* RESPONSIVE: collapses to single column below 480px */
+    @media (max-width: 480px) {
+      .safety-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .safety-column {
+      border: 1px solid;
+      padding: 16px;
+    }
+    .safety-column-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .safety-column-icon {
+      font-size: 14px;
+      width: 20px;
+      text-align: center;
+    }
+    .safety-column-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .safety-column ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .safety-column li {
+      font-size: 13px;
+      line-height: 1.7;
+      padding: 3px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .safety-column li::before {
+      content: '·';
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    /* THEME NOTE: .include column uses neutral/positive bullet color.
+       .exclude column uses muted warning tone for bullets (NOT red — amber family). */
+    .safety-column.include li::before { content: '✓'; font-size: 11px; }
+    .safety-column.exclude li::before { content: '✗'; font-size: 11px; }
+
+    .data-safety-banner-footer {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid;
+      font-size: 12px;
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       VARIANT 2: COMPACT — Single trust line
+       Usage: Pricing page below tier cards, Marketing footer trust line
+       Props: variant="compact"
+       ════════════════════════════════════════════════════════════════ */
+    .data-safety-compact {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border: 1px solid;
+    }
+    .data-safety-compact-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .data-safety-compact-text {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .data-safety-compact-link {
+      font-size: 12px;
+      text-decoration: underline;
+      cursor: pointer;
+      white-space: nowrap;
+      margin-left: auto;
+      padding: 0 4px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* MOBILE: compact wraps to two lines when needed */
+    @media (max-width: 480px) {
+      .data-safety-compact {
+        flex-wrap: wrap;
+      }
+      .data-safety-compact-link {
+        margin-left: 0;
+        min-height: 40px;
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       VARIANT 3: INLINE CALLOUT — Tight card within section
+       Usage: Features page Smart Import callout, About page
+       Props: variant="inline"
+       ════════════════════════════════════════════════════════════════ */
+    .data-safety-inline {
+      border: 1px solid;
+      padding: 20px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .data-safety-inline-icon-col {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .data-safety-inline-content { flex: 1; }
+    .data-safety-inline-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .data-safety-inline-text {
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .data-safety-inline-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .data-safety-chip {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 600;
+      border: 1px solid;
+      padding: 3px 10px;
+    }
+    .data-safety-chip.never {
+      /* THEME: muted warning border/text — amber family, NOT red */
+    }
+
+    /* MOBILE: inline variant stacks icon above content */
+    @media (max-width: 480px) {
+      .data-safety-inline {
+        flex-direction: column;
+      }
+      .data-safety-inline-icon-col {
+        width: 36px;
+        height: 36px;
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       VARIANT 4: FOOTER TRUST LINE
+       Usage: Marketing footer, above copyright row
+       Props: variant="footer"
+       ════════════════════════════════════════════════════════════════ */
+    .data-safety-footer-line {
+      padding: 10px 0;
+      border-top: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .data-safety-footer-icon {
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    /* ── Viewport context banner ─────────────────────────────────── */
+    .viewport-note {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-top: 2px solid #333;
+      border-bottom: 1px solid #aaa;
+      padding: 6px 0;
+      margin-bottom: 32px;
+    }
+
+    /* ── Section context frames ──────────────────────────────────── */
+    .context-frame {
+      border: 1px dashed #999;
+      padding: 16px;
+      margin-bottom: 8px;
+    }
+    .context-frame-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+<div class="page-container">
+
+  <p class="viewport-note">Wireframe — Desktop &gt;1024px default · Responsive annotations inline · Issue #644</p>
+
+  <h1>DataSafetyBanner — Shared Component</h1>
+  <p class="note">
+    Component: <code>DataSafetyBanner</code> — shared across all marketing site pages.
+    Four variants: full (two-column), compact (one-line), inline (callout card), footer (trust line).
+    Source patterns: <code>ux/wireframes/import/safety-banner.html</code> Variant 1 +
+    <code>ux/wireframes/marketing-site/free-trial.html</code> "I Never Forget" box.
+    All variants use <code>role="note"</code> + <code>aria-label</code>. Gold/amber border (2px full, 1px compact/inline).
+    Two-column layout collapses to single column at 480px. Mobile-first: 375px minimum.
+  </p>
+
+  <!-- ══════════════════════════════════════════════════════════
+       VARIANT 1: FULL — Two-column include/exclude
+       ══════════════════════════════════════════════════════════ -->
+  <p class="section-label">Variant 1 — Full (variant="full")</p>
+  <p class="note">
+    Placement: Home page trust section · Features page trust section · About page data protection subsection.
+    Full-width within its container. Not dismissible. Always visible.
+    ARIA: role="note" aria-label="Data safety guarantee" — informational, not urgent.
+    THEME: 2px solid gold/amber border, subtle amber background ~8% opacity.
+  </p>
+
+  <section
+    class="data-safety-banner"
+    role="note"
+    aria-label="Data safety guarantee"
+    aria-labelledby="dsb-title"
+  >
+    <div class="data-safety-banner-header">
+      <span class="data-safety-banner-icon" aria-hidden="true">ᛊ</span>
+      <!-- ICON NOTE: Elder Futhark ᛊ (Sowilo / sun) chosen for "light / truth revealed".
+           FiremanDecko may use a ThemedIcon (shield or lock SVG) instead.
+           The rune character is a semantic placeholder only. -->
+      <h2 class="data-safety-banner-title" id="dsb-title">
+        What Fenrir Tracks — and What It Never Touches
+      </h2>
+    </div>
+
+    <p class="data-safety-banner-lead">
+      Fenrir is a <strong>card metadata tracker</strong> — not a payment processor.
+      I watch your card names, issuers, fees, and deadlines.
+      I never see, store, or transmit credit card numbers, CVVs, PINs, or passwords.
+      Not during import. Not in the ledger. Not ever.
+    </p>
+
+    <div class="safety-columns">
+
+      <!-- Column 1: What Fenrir Tracks -->
+      <div class="safety-column include" aria-label="What Fenrir Ledger tracks">
+        <div class="safety-column-header">
+          <span class="safety-column-icon" aria-hidden="true">✓</span>
+          <h3 class="safety-column-title">What Fenrir Tracks</h3>
+        </div>
+        <ul>
+          <li>Card name &amp; product (e.g., "Sapphire Preferred")</li>
+          <li>Card issuer (e.g., "Chase", "Amex", "Capital One")</li>
+          <li>Annual fee amount &amp; renewal date</li>
+          <li>Sign-up bonus details, spend threshold &amp; deadline</li>
+          <li>Card open date &amp; credit limit</li>
+          <li>Spending notes you add manually</li>
+          <li>Custom alerts and reminders you set</li>
+        </ul>
+      </div>
+
+      <!-- Column 2: What Fenrir Never Touches -->
+      <div class="safety-column exclude" aria-label="What Fenrir Ledger never collects">
+        <div class="safety-column-header">
+          <span class="safety-column-icon" aria-hidden="true">✗</span>
+          <h3 class="safety-column-title">What Fenrir Never Touches</h3>
+        </div>
+        <ul>
+          <!-- COPY NOTE: Each item must name the sensitive data type explicitly.
+               Screen readers will read the full list — keep it clear and direct. -->
+          <li>Credit card numbers (16-digit PAN)</li>
+          <li>CVV / CVC security codes</li>
+          <li>Card PINs</li>
+          <li>Online banking passwords</li>
+          <li>Social Security numbers</li>
+          <li>Bank account numbers or routing numbers</li>
+          <li>Actual transaction data or purchase history</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <p class="data-safety-banner-footer">
+      <!-- COPY: Wolf-voice closing line reinforces brand mythology while communicating the guarantee. -->
+      ᛟ &nbsp; I was born to guard, not to harvest. The ledger holds your strategy — never your secrets.
+    </p>
+  </section>
+
+  <p class="note">
+    ACCESSIBILITY: role="note" for supplementary information (not role="alert" — this is reassurance, not urgent).
+    aria-labelledby="dsb-title" ties the section heading to the landmark.
+    Heading h2 "What Fenrir Tracks — and What It Never Touches" is clear in meaning independent of context.
+    Column headings are h3, announced by screen readers within the section.
+    ✓ / ✗ symbols are aria-hidden (decorative); column aria-label provides context ("What Fenrir Ledger tracks").
+    "Never Touches" column: muted amber/warning text color — NOT red (off-brand). Amber family only.
+    RESPONSIVE (480px): Two columns collapse to single column. Include column appears first (above exclude).
+    RESPONSIVE (375px): Padding reduces from 24px to 16px. Banner-lead font drops to 13px.
+    THEME: 2px gold/amber (#c9920a) border. Amber background ~8% opacity. White text on dark theme.
+    Rune icon ᛊ is decorative fallback — replace with ThemedIcon lock or shield SVG in implementation.
+  </p>
+
+  <hr />
+
+  <!-- ══════════════════════════════════════════════════════════
+       VARIANT 2: COMPACT — Single trust line
+       ══════════════════════════════════════════════════════════ -->
+  <p class="section-label">Variant 2 — Compact (variant="compact")</p>
+  <p class="note">
+    Placement: Pricing page — one line below tier cards · FAQ section context line.
+    Single horizontal row. Subdued visual weight — does not compete with tier cards.
+    "Details" link expands to a Variant 1 panel or navigates to the relevant FAQ entry.
+    ARIA: role="note" aria-label="Data safety note".
+    THEME: 1px border (thinner than full variant to reduce visual weight).
+  </p>
+
+  <div
+    class="data-safety-compact"
+    role="note"
+    aria-label="Data safety note"
+  >
+    <span class="data-safety-compact-icon" aria-hidden="true">ᛊ</span>
+    <span class="data-safety-compact-text">
+      Fenrir never collects credit card numbers, CVVs, PINs, or passwords — only card metadata.
+    </span>
+    <a
+      class="data-safety-compact-link"
+      href="#data-safety-full"
+      aria-label="Learn more about data safety"
+    >Learn more</a>
+  </div>
+
+  <p class="note">
+    "Learn more" link: anchor to full DataSafetyBanner on same page OR navigate to /about#data-safety.
+    ACCESSIBILITY: touch target 44px min-height on "Learn more" link (WCAG 2.1 AA).
+    MOBILE (below 480px): wraps to two lines if needed — icon + text on line 1, "Learn more" below.
+    THEME: 1px neutral-ish border (not amber — subtlety intentional at footer/pricing placement).
+    FiremanDecko: icon can be a small SVG shield or lock. Rune is placeholder.
+  </p>
+
+  <hr />
+
+  <!-- ══════════════════════════════════════════════════════════
+       VARIANT 3: INLINE CALLOUT — Tight card within section
+       ══════════════════════════════════════════════════════════ -->
+  <p class="section-label">Variant 3 — Inline Callout (variant="inline")</p>
+  <p class="note">
+    Placement: Features page — below "Smart Import" section · About page "Data Protection" subsection.
+    Tight card with icon column + content column. More compact than Variant 1 but richer than Variant 2.
+    Chips show tracked vs. never-touched items at a glance without full two-column layout.
+    ARIA: role="note" aria-label="Smart Import data safety".
+  </p>
+
+  <div
+    class="data-safety-inline"
+    role="note"
+    aria-label="Smart Import data safety"
+  >
+    <div class="data-safety-inline-icon-col" aria-hidden="true">ᛊ</div>
+    <div class="data-safety-inline-content">
+      <h3 class="data-safety-inline-title">Safe By Design</h3>
+      <p class="data-safety-inline-text">
+        Smart Import reads card names, issuers, fees, and dates from your spreadsheet.
+        It is architecturally incapable of collecting card numbers, CVVs, PINs, or passwords —
+        those fields are not mapped, not stored, and not transmitted.
+      </p>
+      <div class="data-safety-inline-chips" aria-label="What Fenrir tracks vs. never touches">
+        <span class="data-safety-chip" aria-label="Tracked: Card name">Card name ✓</span>
+        <span class="data-safety-chip" aria-label="Tracked: Issuer">Issuer ✓</span>
+        <span class="data-safety-chip" aria-label="Tracked: Annual fee">Annual fee ✓</span>
+        <span class="data-safety-chip" aria-label="Tracked: Bonus deadline">Bonus deadline ✓</span>
+        <span class="data-safety-chip never" aria-label="Never collected: Card number">Card number ✗</span>
+        <span class="data-safety-chip never" aria-label="Never collected: CVV">CVV ✗</span>
+        <span class="data-safety-chip never" aria-label="Never collected: PIN">PIN ✗</span>
+        <span class="data-safety-chip never" aria-label="Never collected: Password">Password ✗</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">
+    CHIPS: ✓ chips for what IS tracked (positive framing first). ✗ chips for what is NEVER collected.
+    "never" class chips: muted warning border color (amber family, not red).
+    ACCESSIBILITY: .data-safety-inline-chips has aria-label; individual chips have aria-label for screen readers
+    (the ✓/✗ symbols are not self-explanatory out of context).
+    MOBILE (480px): flex-direction: column — icon 36px appears above content block.
+    FiremanDecko: icon col can use a SVG shield/lock ThemedIcon. Rune is placeholder.
+  </p>
+
+  <hr />
+
+  <!-- ══════════════════════════════════════════════════════════
+       VARIANT 4: FOOTER TRUST LINE
+       ══════════════════════════════════════════════════════════ -->
+  <p class="section-label">Variant 4 — Footer Trust Line (variant="footer")</p>
+  <p class="note">
+    Placement: Marketing footer — single subdued trust line above the copyright row.
+    Minimal footprint. Does not compete with footer navigation.
+    ARIA: role="contentinfo" inherited from footer; no additional landmark needed.
+    THEME: 1px border-top only (no box). Subdued text — lower visual weight than footer nav.
+  </p>
+
+  <!-- Shown in context of marketing footer structure -->
+  <div class="context-frame">
+    <p class="context-frame-label">Context: Marketing footer (bottom of every marketing page)</p>
+    <!-- ... footer nav grid above ... -->
+    <div class="data-safety-footer-line" role="note" aria-label="Data safety statement">
+      <span class="data-safety-footer-icon" aria-hidden="true">ᛊ</span>
+      <span>
+        Fenrir Ledger never collects credit card numbers, CVVs, PINs, or passwords.
+        Only card metadata is stored.
+      </span>
+    </div>
+    <!-- ... copyright row below ... -->
+    <div style="font-size:12px; padding-top: 10px; border-top: 1px solid #eee;">
+      <span>© 2026 Fenrir Ledger</span>
+      &nbsp;·&nbsp; <a href="#">Privacy Policy</a>
+      &nbsp;·&nbsp; <a href="#">Terms of Service</a>
+    </div>
+  </div>
+
+  <p class="note">
+    PLACEMENT: Sits between the footer nav grid and the copyright/legal row.
+    Intentionally plain — single line, icon + text, border-top only.
+    MOBILE: Wraps to two lines if needed. No truncation. Full statement always visible.
+    COPY NOTE: "Only card metadata is stored." — use this exact phrasing. Consistent across all pages.
+    FiremanDecko: This is a simple static element in the shared footer component.
+    Add it to the <code>&lt;footer&gt;</code> in <code>marketing-layout.tsx</code> (or equivalent footer component).
+  </p>
+
+  <hr />
+
+  <!-- ══════════════════════════════════════════════════════════
+       COMPONENT SPEC — Props Contract
+       ══════════════════════════════════════════════════════════ -->
+  <p class="section-label">Component Spec — Props Contract</p>
+
+  <div class="context-frame">
+    <p class="context-frame-label">DataSafetyBanner Props (TypeScript)</p>
+    <pre style="font-size: 12px; line-height: 1.7; overflow-x: auto;">
+interface DataSafetyBannerProps {
+  /** Visual variant — determines layout and visual weight */
+  variant?: 'full' | 'compact' | 'inline' | 'footer';
+  /** Context-specific label for screen readers */
+  ariaLabel?: string;
+  /** For variant="inline": heading text override */
+  headingOverride?: string;
+  /** For variant="inline": lead paragraph text override */
+  descriptionOverride?: string;
+  /** For variant="compact": link text (default: "Learn more") */
+  learnMoreText?: string;
+  /** For variant="compact": link href (default: "/about#data-safety") */
+  learnMoreHref?: string;
+  /** For variant="full": show wolf-voice closing line (default: true) */
+  showFooterLine?: boolean;
+  /** CSS class passthrough for placement adjustments */
+  className?: string;
+}
+
+// Default variant: 'full'
+// Default ariaLabel: 'Data safety guarantee'
+    </pre>
+  </div>
+
+  <p class="note">
+    IMPLEMENTATION NOTES FOR FIREMAN DECKO:
+    - Component location: development/frontend/src/components/marketing/DataSafetyBanner.tsx
+    - Export from components/marketing/index.ts
+    - All content strings should be hardcoded (not props) EXCEPT headingOverride + descriptionOverride
+      for the inline variant (needed for page-specific context like "Smart Import data safety").
+    - The include/exclude lists are always the canonical Fenrir lists — never page-configurable.
+    - "Never include" items: apply a muted amber/warning text class (theme token: text-warning-muted
+      or similar — NOT text-red). Amber family only. See safety-banner.html Variant 1 theme notes.
+    - Two-column CSS: identical to ux/wireframes/import/safety-banner.html .safety-columns.
+      Copy the exact CSS grid pattern. 480px breakpoint is non-negotiable.
+    - WCAG AA: All text must meet 4.5:1 contrast ratio against the amber-tinted background.
+    - Framer Motion: NOT animated (trust signals should be immediately visible, not enter-animated).
+    - prefers-reduced-motion: no animation, so no guard needed.
+    - SSR-safe: no localStorage, no client-only hooks. This is a pure server component.
+  </p>
+
+</div>
+
+<!--
+  ════════════════════════════════════════════════════════════════
+  DESIGN RATIONALE
+  ════════════════════════════════════════════════════════════════
+
+  WHY FOUR VARIANTS?
+  - Full (Variant 1): Primary trust signal on high-traffic pages. Builds confidence
+    before conversion. Two-column shows both what IS tracked and what is NOT —
+    the explicit denial ("never touches") is the core trust message.
+  - Compact (Variant 2): Repeated trust reinforcement at pricing decision points
+    without dominating the visual hierarchy.
+  - Inline (Variant 3): Contextual safety assurance adjacent to the Smart Import
+    feature (the most likely anxiety point for new users).
+  - Footer (Variant 4): Ambient trust presence on every page without taking up section space.
+
+  WHY role="note" NOT role="alert"?
+  - On the marketing site, trust messaging is supplementary information, not urgent.
+  - role="alert" interrupts screen reader flow. We want a calm, confident statement.
+  - Compare: import wizard uses role="alert" because the user is about to take an action.
+  - Marketing site: user is reading, not acting. role="note" is correct.
+
+  WOLF-VOICE CONSISTENCY:
+  - Fenrir speaks in first person: "I never see, store, or transmit..."
+  - Wolf loyalty framing: "I was born to guard, not to harvest."
+  - "Never Touches" (not "Never Collects") — more visceral, matches wolf tactile language.
+  - The wolf declares its limits as a point of pride, not a disclaimer.
+
+  INCLUDE/EXCLUDE LIST — WHY THESE ITEMS?
+  Include list matches what a user would put in a spreadsheet for card tracking:
+  card name, issuer, annual fee, bonus details, open date, credit limit, notes.
+  Exclude list names every piece of sensitive financial data a user might worry about:
+  16-digit PAN, CVV, PIN, password, SSN, bank account numbers, transaction history.
+  The explicit exclusion of "actual transaction data" addresses the question of
+  whether Fenrir connects to bank feeds (it does not).
+
+  RESPONSIVE STRATEGY:
+  - 480px breakpoint (same as import safety-banner.html Variant 1) — two columns → one.
+  - Include column appears ABOVE exclude column in single-column layout.
+  - This ordering mirrors the positive-first principle: show what we DO before what we DON'T.
+  - At 375px minimum: padding reduces, font-size of lead text drops 1px.
+  - No content is hidden on any viewport — all items remain visible.
+
+  ACCESSIBILITY CHECKLIST:
+  [x] role="note" on all variants (appropriate landmark for supplementary info)
+  [x] aria-label on all variants (context-specific, not generic)
+  [x] aria-labelledby for full variant (h2 heading bound to section)
+  [x] Decorative icons: aria-hidden="true" (text conveys meaning without icons)
+  [x] Column aria-label for the include/exclude columns (adds context for list items)
+  [x] Individual chip aria-labels (✓/✗ symbols not self-explanatory out of context)
+  [x] "Learn more" link: 44px min touch target, descriptive aria-label
+  [x] WCAG AA contrast: all text against amber-tinted background (verify with themed colors)
+  [x] No animation on this component (trust signals must be immediately visible)
+-->
+</body>
+</html>
