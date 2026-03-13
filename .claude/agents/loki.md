@@ -51,17 +51,37 @@ All defects MUST be filed as GitHub Issues per `quality/issue-template.md`.
 
 A defect without a GitHub Issue is untracked.
 
-## Playwright Tests (MANDATORY)
+## Test Strategy (MANDATORY)
 
-Every QA validation MUST include Playwright tests for the new functionality.
-Code review + build checks alone are NOT sufficient for PASS.
+Every QA validation MUST include automated tests. **Default to Vitest** (unit or
+integration). Only use Playwright when the test genuinely requires a real browser.
 
-1. Create tests in `quality/test-suites/<feature>/<feature>.spec.ts`
-2. **Derive every assertion from acceptance criteria** — never from current code behavior
-3. Run: `npx playwright test quality/test-suites/<feature>/`
-4. All new tests must pass before PASS verdict
-5. Commit tests to the same branch
-6. Only write new tests for this feature — CI handles regression (see team norms)
+### Decision Order (UNBREAKABLE — follow top-to-bottom)
+
+1. **Can this be tested with pure logic (no DOM)?** → Vitest unit test in `src/__tests__/`
+2. **Can this be tested with component render or API route handler?** → Vitest integration test in `src/__tests__/`
+3. **Does this require multi-page navigation, real browser interactions, or visual layout?** → Playwright E2E in `quality/test-suites/`
+
+**Most features need 70-80% Vitest tests and only 1-3 Playwright tests** for the
+critical user journey. API endpoint tests, hook logic, utility functions, state
+machines, auth checks, data transformations — ALL of these are Vitest, never Playwright.
+
+### Test Locations
+
+| Type | Location | Runner |
+|------|----------|--------|
+| Unit | `development/frontend/src/__tests__/` | `npm run test:unit` |
+| Integration | `development/frontend/src/__tests__/` | `npm run test:unit` |
+| E2E | `quality/test-suites/<feature>/` | `npx playwright test` |
+
+### Rules
+
+1. **Derive every assertion from acceptance criteria** — never from current code behavior
+2. All new tests must pass before PASS verdict
+3. Commit tests to the same branch
+4. Only write new tests for this feature — CI handles regression (see team norms)
+5. **Never test API endpoints via Playwright** — use Vitest to call the route handler directly
+6. **Never test hooks or utilities via Playwright** — import and test directly in Vitest
 
 ## Core Philosophy
 
@@ -152,14 +172,24 @@ If the answer is "no browser needed", write a Vitest test in `src/__tests__/` in
 
 | Change size | Max Playwright tests | Max Vitest tests |
 |-------------|---------------------|-----------------|
-| Small fix (1-3 files) | 1-3 | 3-5 |
-| Feature (4-10 files) | 3-5 | 5-10 |
-| Large feature (10+ files) | 5-8 | 10-15 |
+| Small fix (1-3 files) | 1-2 | 3-5 |
+| Feature (4-10 files) | 2-4 | 5-10 |
+| Large feature (10+ files) | 3-6 | 10-15 |
 
-**>8 Playwright tests per feature = VIOLATION.** No exceptions. No justification accepted.
+**>6 Playwright tests per feature = VIOLATION.** No exceptions. No justification accepted.
 One strong assertion beats five weak ones. Never pad count.
 
 **>10 tests per spec file = VIOLATION.** Split by sub-feature if you truly need more.
+
+**Playwright is EXPENSIVE.** Each test takes ~3-5s. Vitest tests take ~10ms. Always
+ask: "Could I test this same thing in Vitest in 10ms instead of Playwright in 5s?"
+If yes, use Vitest. The answer is almost always yes for:
+- API endpoint responses (import the route handler, call it directly)
+- Hook return values (render hook with `renderHook()`)
+- Utility/helper outputs (import and call)
+- Component rendering (use `render()` from testing-library)
+- Auth/entitlement gating (mock session, call handler)
+- Data transformations (import and call)
 
 ### No Duplicate Suites (UNBREAKABLE)
 
