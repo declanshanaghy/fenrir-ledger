@@ -2,8 +2,9 @@
  * Add Card Test Suite — Fenrir Ledger
  * Authored by Loki, QA Tester of the Pack
  *
- * Trimmed to 1 core test per issue #613:
+ * Test cases:
  *   1. Add card happy path: fill form, save, card appears on dashboard
+ *   2. Thrall tier card limit (issue #643): max 5 cards, 6th blocked with upsell
  *
  * Data isolation: clearAllStorage() before each test.
  */
@@ -35,4 +36,50 @@ test("new card appears on dashboard after creation", async ({ page }) => {
 
   await page.waitForURL("**/ledger", { timeout: 5000 });
   await expect(page.locator(`text=${uniqueName}`).first()).toBeVisible();
+});
+
+test.describe("Thrall card limit enforcement (issue #643)", () => {
+  const addCardWithName = async (page: any, name: string) => {
+    await page.locator("#issuerId").click();
+    await page.locator('[role="option"]').first().click();
+    await page.locator("#cardName").fill(name);
+    await page.locator("#openDate").fill("2024-06-01");
+    await page.locator('button[type="submit"]').click();
+    await page.waitForURL("**/ledger", { timeout: 5000 });
+  };
+
+  test("allows exactly 5 cards on Thrall tier", async ({ page }) => {
+    // Add 5 cards (at limit)
+    for (let i = 1; i <= 5; i++) {
+      await page.goto("/ledger/cards/new", { waitUntil: "load" });
+      await addCardWithName(page, `Card ${i}`);
+      await expect(page.locator(`text=Card ${i}`).first()).toBeVisible();
+    }
+
+    // Verify all 5 cards visible
+    await page.goto("/ledger", { waitUntil: "load" });
+    for (let i = 1; i <= 5; i++) {
+      await expect(page.locator(`text=Card ${i}`).first()).toBeVisible();
+    }
+  });
+
+  test("blocks 6th card on Thrall tier with upsell message", async ({ page }) => {
+    // Add 5 cards first
+    for (let i = 1; i <= 5; i++) {
+      await page.goto("/ledger/cards/new", { waitUntil: "load" });
+      await addCardWithName(page, `Card ${i}`);
+    }
+
+    // Try to add 6th card
+    await page.goto("/ledger/cards/new", { waitUntil: "load" });
+    await page.locator("#issuerId").click();
+    await page.locator('[role="option"]').first().click();
+    await page.locator("#cardName").fill("Card 6");
+    await page.locator("#openDate").fill("2024-06-01");
+    await page.locator('button[type="submit"]').click();
+
+    // Should show card limit error with Karl upsell message
+    const errorMsg = page.locator('[role="alert"], .error, [aria-label*="limit"]').first();
+    await expect(errorMsg).toContainText(/Thrall.*5.*Karl|limit.*5|Upgrade/i);
+  });
 });
