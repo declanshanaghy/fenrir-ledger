@@ -27,6 +27,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Marketing Nav — Wolf-Toned Display Font (Issue #648)
+
+| File | Description |
+|------|-------------|
+| [wireframes/marketing-site/nav-font-648.html](wireframes/marketing-site/nav-font-648.html) | Font confirmation wireframe for nav link update: 7 sections — font specimen comparison (Cinzel vs Cinzel Decorative at 13px desktop / 18px mobile), desktop nav before/after with corrected link order (Features · Prose Edda · About · Free Trial · Pricing), mobile hamburger overlay before/after (375px), font-display: swap strategy, light/dark mode compatibility, full FiremanDecko implementation notes (class name diffs, NAV_LINKS update, no globals.css/tailwind changes needed), WCAG 2.1 AA checklist. Design decision: Cinzel (font-heading, Tailwind class) at weight 400 for standard links; weight 600 + border for "Free Trial" CTA-adjacent link. Cinzel Decorative excluded — too ornate at nav scale. |
+
+---
+
 ## Free Trial Marketing Page (#636)
 
 | File | Description |
@@ -158,6 +166,7 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Trial Expiry &amp; Upgrade Prompt | [wireframes/trial/trial-expiry.html](wireframes/trial/trial-expiry.html) | Expiry modal, value recap, feature comparison, data safety, post-decline dashboard, re-subscribe path; component spec (TrialExpiryModal) |
 | Trial Feature Gates | [wireframes/trial/trial-feature-gates.html](wireframes/trial/trial-feature-gates.html) | During-trial vs. Thrall gate states, tab bar locks, card limit overlay, mobile bottom tabs, gate matrix, localStorage keys |
 | **marketing-site** | | |
+| Marketing Nav — Wolf-Toned Display Font | [wireframes/marketing-site/nav-font-648.html](wireframes/marketing-site/nav-font-648.html) | Nav link font update (#648): 7-section wireframe — font specimen comparison (Cinzel vs Cinzel Decorative at 13px/18px), desktop before/after (correct link order: Features · Prose Edda · About · Free Trial · Pricing), mobile overlay before/after (375px), font-display: swap strategy, light/dark mode compatibility, full implementation notes for FiremanDecko, WCAG 2.1 AA checklist. Decision: Cinzel (font-heading) recommended over Cinzel Decorative for nav scale. |
 | Static Site Footer | [wireframes/marketing-site/static-site-footer.html](wireframes/marketing-site/static-site-footer.html) | Dedicated footer spec: brand, quote, runes, CTA, session link, legal row (Privacy Policy + Terms of Service), team credits; easter egg triggers preserved |
 | Marketing Site — Layout Shell | [wireframes/marketing-site/layout-shell.html](wireframes/marketing-site/layout-shell.html) | Full marketing site shell: nav + hero + sections + footer |
 | Home Page | [wireframes/marketing-site/home-page.html](wireframes/marketing-site/home-page.html) | Hero, CHAINS problems, FEATURES grid, STEPS flow |

@@ -25,10 +25,10 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/features", label: "Features" },
+  { href: "/chronicles", label: "Prose Edda" },
+  { href: "/about", label: "About" },
   { href: "/free-trial", label: "Free Trial" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/about", label: "About" },
-  { href: "/chronicles", label: "Prose Edda" },
 ] as const;
 
 // ── MarketingNavbar ────────────────────────────────────────────────────────────
@@ -90,7 +90,11 @@ export function MarketingNavbar() {
               <Link
                 key={href}
                 href={href}
-                className="font-body text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className={
+                  label === "Free Trial"
+                    ? "font-heading text-sm font-semibold text-foreground border border-border px-2.5 py-1 hover:border-primary/50 transition-colors"
+                    : "font-heading text-sm text-muted-foreground hover:text-foreground transition-colors"
+                }
               >
                 {label}
               </Link>
@@ -182,7 +186,8 @@ export function MarketingNavbar() {
                 onClick={() => setMobileOpen(false)}
                 className={[
                   "block py-3 border-b border-border",
-                  "font-body text-lg text-foreground",
+                  "font-heading text-lg text-foreground",
+                  label === "Free Trial" ? "font-semibold" : "",
                   "hover:text-primary transition-colors",
                 ].join(" ")}
               >
