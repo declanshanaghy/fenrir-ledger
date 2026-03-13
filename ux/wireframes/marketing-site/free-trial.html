@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free Trial Page Wireframe — Fenrir Ledger</title>
+  <!--
+    WIREFRAME RULES (enforced):
+    - No theme styling: no colors, backgrounds, font-family beyond sans-serif,
+      border-radius, box-shadow, or opacity (except placeholder items).
+    - Layout CSS only: flex/grid, border, width/height, padding/margin,
+      font-size/weight, letter-spacing, text-transform, line-height.
+    - Semantic HTML throughout: nav, main, section, article, header, footer, figure.
+    - Annotations in <p class="note"> or HTML comments.
+
+    ROUTE: /free-trial
+    FILE: development/frontend/src/app/(marketing)/free-trial/page.tsx
+    ISSUE: #636
+    WIREFRAME: ux/wireframes/marketing-site/free-trial.html
+
+    PAGE SECTIONS (top → bottom):
+    1. NAV          — Reused marketing nav shell (see layout-shell.html)
+    2. HERO         — Bold headline + trial pitch + primary CTA
+    3. FEATURES     — 7-card compact feature showcase grid
+    4. TIMELINE     — 30-day journey: Day 1 → Day 15 → Day 30
+    5. AFTER TRIAL  — Thrall vs Karl tier comparison
+    6. SECOND CTA   — Final "Start Your Free Trial" push
+    7. FOOTER       — Reused marketing footer (see static-site-footer.html)
+
+    RESPONSIVE STRATEGY:
+    - Mobile-first: 375px minimum. All annotations call out mobile behavior.
+    - Feature grid: 1-col mobile → 2-col tablet (≥600px) → 3-col desktop (≥1024px)
+    - Timeline: vertical stacked on mobile → horizontal row on desktop
+    - Tier comparison: stacked on mobile → 2-col on tablet+
+
+    FRAMER MOTION HOOKS (annotated, not implemented in wireframe):
+    - Hero: fade-in-up on mount (consistent with /features, /pricing)
+    - Feature cards: scroll-triggered staggered fade-in-up (stagger 80ms per card)
+    - Timeline steps: scroll-triggered sequential reveal (400ms apart)
+    - Tier cards: scroll-triggered fade-in-up
+  -->
+  <style>
+    /* Wireframe CSS — structural only */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    section {
+      padding: 56px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    /* ── Annotation styles ───────────────────────────────────────────────── */
+    .note {
+      border: 1px dashed #aaa;
+      padding: 8px 12px;
+      font-size: 12px;
+      margin: 8px 0;
+      font-style: italic;
+    }
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-left: 3px solid #333;
+      padding-left: 8px;
+      margin-bottom: 24px;
+    }
+
+    /* ── Marketing nav (stub — canonical spec in layout-shell.html) ─────── */
+    nav.marketing-nav {
+      border-bottom: 1px solid #ccc;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .nav-links a {
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+    }
+    .nav-links a.active {
+      font-weight: 700;
+      text-decoration: underline;
+    }
+    .nav-cta {
+      border: 2px solid #333;
+      padding: 8px 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    /* Mobile: nav collapses to brand + hamburger */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .nav-cta { display: none; }
+    }
+
+    /* ── SECTION 1: HERO ─────────────────────────────────────────────────── */
+    .hero {
+      padding: 80px 0 64px;
+      text-align: center;
+      border-bottom: 2px solid #333;
+    }
+    .hero-rune {
+      font-size: 13px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .hero-title {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.05;
+      margin: 0 0 20px;
+    }
+    /* Mobile: scale down headline */
+    @media (max-width: 600px) {
+      .hero-title { font-size: 32px; }
+    }
+    .hero-subtitle {
+      font-size: 20px;
+      font-style: italic;
+      max-width: 580px;
+      margin: 0 auto 16px;
+      line-height: 1.65;
+    }
+    .hero-desc {
+      font-size: 16px;
+      max-width: 560px;
+      margin: 0 auto 40px;
+      line-height: 1.8;
+    }
+    .hero-cta-group {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      border: 2px solid #333;
+      padding: 16px 40px;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-secondary {
+      border: 1px solid #888;
+      padding: 15px 32px;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .hero-trust-line {
+      margin-top: 20px;
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    /* ── SECTION 2: FEATURE SHOWCASE ─────────────────────────────────────── */
+    .features-section {
+      padding: 72px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .features-heading {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .features-heading-eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .features-heading-title {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 0 0 14px;
+    }
+    .features-heading-sub {
+      font-size: 16px;
+      font-style: italic;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.65;
+    }
+
+    /* Feature card grid: 3-col desktop → 2-col tablet → 1-col mobile */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+    @media (max-width: 1023px) {
+      .feature-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 599px) {
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Compact feature card */
+    .feature-card {
+      border: 1px solid #ccc;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .feature-card-icon {
+      width: 56px;
+      height: 56px;
+      border: 1px solid #aaa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .feature-card-rune {
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .feature-card-title {
+      font-size: 16px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .feature-card-desc {
+      font-size: 14px;
+      line-height: 1.65;
+      margin: 0;
+    }
+    .feature-card-tag {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 600;
+      border: 1px solid #888;
+      padding: 3px 8px;
+      width: fit-content;
+    }
+
+    /* ── SECTION 3: TIMELINE ─────────────────────────────────────────────── */
+    .timeline-section {
+      padding: 72px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .timeline-heading {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .timeline-heading-eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .timeline-heading-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 0 0 14px;
+    }
+
+    /* Desktop: horizontal 3-step row with connecting line */
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 1fr 48px 1fr 48px 1fr;
+      align-items: start;
+      gap: 0;
+    }
+    /* Mobile: vertical stacked steps */
+    @media (max-width: 767px) {
+      .timeline-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+      .timeline-connector { display: none; }
+      .timeline-connector-v {
+        display: block !important;
+      }
+    }
+
+    .timeline-step {
+      border: 1px solid #ccc;
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .timeline-step-day {
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .timeline-step-rune {
+      font-size: 28px;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .timeline-step-title {
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 0 0 10px;
+    }
+    .timeline-step-desc {
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .timeline-step.milestone {
+      border: 2px solid #333;
+    }
+
+    /* Horizontal connector arrow between steps (desktop only) */
+    .timeline-connector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      padding-top: 48px;
+    }
+    /* Vertical connector (mobile only) */
+    .timeline-connector-v {
+      display: none;
+      text-align: center;
+      font-size: 18px;
+      padding: 12px 0;
+    }
+
+    /* ── SECTION 4: AFTER THE TRIAL (Thrall vs Karl) ─────────────────────── */
+    .after-section {
+      padding: 72px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .after-heading {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .after-heading-eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .after-heading-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 0 0 14px;
+    }
+    .after-heading-sub {
+      font-size: 15px;
+      font-style: italic;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.65;
+    }
+
+    /* Tier comparison: 2-col tablet+ → stacked mobile */
+    .tier-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    @media (max-width: 639px) {
+      .tier-comparison { grid-template-columns: 1fr; }
+    }
+    .tier-card {
+      border: 1px solid #ccc;
+      padding: 36px 32px;
+      position: relative;
+    }
+    .tier-card.featured {
+      border: 2px solid #333;
+    }
+    .tier-badge {
+      position: absolute;
+      top: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border: 1px solid #333;
+      padding: 3px 12px;
+    }
+    .tier-name {
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .tier-title {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 0 0 6px;
+    }
+    .tier-price {
+      font-size: 28px;
+      font-weight: 900;
+      margin: 16px 0 4px;
+    }
+    .tier-price-sub {
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    .tier-feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 28px;
+      border-top: 1px solid #ddd;
+      padding-top: 20px;
+    }
+    .tier-feature-list li {
+      font-size: 14px;
+      padding: 7px 0;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .tier-feature-list li .check {
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .tier-feature-list li .lock {
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .tier-desc {
+      font-size: 13px;
+      font-style: italic;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .tier-cta {
+      display: block;
+      border: 2px solid #333;
+      padding: 14px 24px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .tier-cta.secondary {
+      border: 1px solid #888;
+    }
+    /* Data safety reassurance */
+    .data-safety {
+      margin-top: 32px;
+      border: 1px solid #ccc;
+      padding: 20px 24px;
+      text-align: center;
+    }
+    .data-safety-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 0 0 8px;
+    }
+    .data-safety-desc {
+      font-size: 13px;
+      line-height: 1.6;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ── SECTION 5: FINAL CTA ────────────────────────────────────────────── */
+    .final-cta-section {
+      padding: 80px 0;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+    .final-cta-rune {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 16px;
+    }
+    .final-cta-title {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 0 0 14px;
+    }
+    .final-cta-sub {
+      font-size: 16px;
+      font-style: italic;
+      max-width: 460px;
+      margin: 0 auto 32px;
+      line-height: 1.65;
+    }
+    .final-cta-trust {
+      margin-top: 20px;
+      font-size: 13px;
+    }
+
+    /* ── Marketing footer (stub — canonical spec in static-site-footer.html) */
+    footer.marketing-footer {
+      border-top: 2px solid #333;
+      padding: 40px 24px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+      max-width: 1100px;
+      margin: 0 auto 32px;
+    }
+    @media (max-width: 639px) {
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+    .footer-brand { font-size: 13px; }
+    .footer-links-col { font-size: 13px; }
+    .footer-links-col ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .footer-links-col li { margin-bottom: 6px; }
+    .footer-links-col a { text-decoration: none; font-size: 13px; }
+    .footer-legal {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      font-size: 12px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Viewport annotation banner ──────────────────────────────────────── */
+    .viewport-note {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-top: 2px solid #333;
+      border-bottom: 1px solid #aaa;
+      padding: 6px 24px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- =========================================================================
+     VIEWPORT CONTEXT — DESKTOP (>1024px)
+     This wireframe renders as desktop by default. Responsive annotations
+     describe how each section collapses at mobile 375px and tablet 600–1024px.
+     ========================================================================= -->
+
+<!-- =========================================================================
+     SECTION 0: MARKETING NAV
+     Canonical spec: ux/wireframes/marketing-site/layout-shell.html
+     Changes for #636: add "Free Trial" link to nav (marked active on this page)
+     ========================================================================= -->
+<nav class="marketing-nav" aria-label="Main navigation">
+  <span class="nav-brand">ᛟ Fenrir Ledger</span>
+  <ul class="nav-links" role="list">
+    <li><a href="#">Features</a></li>
+    <li><a href="#" class="active" aria-current="page">Free Trial</a></li>
+    <li><a href="#">Pricing</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+  <a href="/ledger" class="nav-cta">Start Free Trial</a>
+  <!-- Mobile: nav-links and nav-cta hidden. Brand remains. Add hamburger icon button. -->
+</nav>
+<p class="note">NAV: "Free Trial" link is new — add between Features and Pricing in both desktop nav and mobile drawer. "Start Free Trial" replaces generic "Get Started" CTA in nav. On mobile (&lt;640px), nav-links collapse behind hamburger; only brand + hamburger shown in bar. See layout-shell.html for full nav spec.</p>
+
+<!-- =========================================================================
+     SECTION 1: HERO
+     Layout: centered, full-width. No image — text-forward.
+     Framer Motion: fade-in-up on mount, 500ms, same as /features hero.
+     ========================================================================= -->
+<header class="hero">
+  <div class="container">
+    <p class="hero-rune" aria-hidden="true">ᚠ · 30-Day Free Trial · ᚠ</p>
+    <h1 class="hero-title">
+      30 Days.<br>Full Power.<br>Zero Risk.
+    </h1>
+    <p class="hero-subtitle">
+      The entire Fenrir Ledger — every tracking tool, every alert, every archive — free for 30 days. No card required.
+    </p>
+    <p class="hero-desc">
+      Start tracking the moment you add your first card. The wolf hunts from day one: fee alerts, bonus countdowns, household management, smart import. All of it, yours.
+    </p>
+    <div class="hero-cta-group">
+      <a href="/ledger" class="btn-primary" role="button">Start Your Free Trial</a>
+      <a href="/features" class="btn-secondary">See All Features</a>
+    </div>
+    <p class="hero-trust-line">No credit card required. Trial begins when you add your first card.</p>
+  </div>
+</header>
+<p class="note">HERO: Three-line stacked headline on desktop (shown above). On mobile 375px, font-size drops from 52px to 32px; line-height stays 1.05. The two-button CTA group stacks to single column on mobile (primary on top, secondary below). "See All Features" is Voice 1 — functional label, not Norse. The trust line (italic, smaller) addresses the #1 trial friction: "do I need a card?"</p>
+<p class="note">COPY NOTE: "30 Days. Full Power. Zero Risk." is the lead candidate per issue brief. Voice 2 subtitle uses wolf metaphor ("the wolf hunts") while body copy (Voice 1) lists concrete features by plain name. Keep this discipline — no Norse in feature names in the list.</p>
+
+<!-- =========================================================================
+     SECTION 2: FEATURE SHOWCASE — compact cards
+     Layout: 3-col desktop, 2-col tablet, 1-col mobile.
+     NOT full-width alternating rows like /features. Deliberately compact.
+     Framer Motion: scroll-triggered stagger, 80ms per card, fade-in-up 40px.
+     ========================================================================= -->
+<section class="features-section" aria-labelledby="features-heading">
+  <div class="container">
+    <div class="features-heading">
+      <p class="features-heading-eyebrow" aria-hidden="true">ᚾ · Everything in the Pack · ᚾ</p>
+      <h2 class="features-heading-title" id="features-heading">Everything You Get For Free</h2>
+      <p class="features-heading-sub">Seven tools. All unlocked. All yours from day one.</p>
+    </div>
+
+    <ol class="feature-grid" aria-label="Trial features">
+
+      <!-- Feature 01: Card Tracking & Fee Alerts -->
+      <li class="feature-card" aria-labelledby="feat-01-title">
+        <div class="feature-card-icon" aria-hidden="true">ᚲ</div>
+        <p class="feature-card-rune" aria-hidden="true">Feature 01</p>
+        <h3 class="feature-card-title" id="feat-01-title">Card Tracking &amp; Fee Alerts</h3>
+        <p class="feature-card-desc">Every card in your wallet — name, issuer, annual fee date, sign-up bonus deadline. Fenrir watches the calendar so you don't have to.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+      </li>
+
+      <!-- Feature 02: Annual Fee Calendar -->
+      <li class="feature-card" aria-labelledby="feat-02-title">
+        <div class="feature-card-icon" aria-hidden="true">ᛊ</div>
+        <p class="feature-card-rune" aria-hidden="true">Feature 02</p>
+        <h3 class="feature-card-title" id="feat-02-title">Annual Fee Calendar</h3>
+        <p class="feature-card-desc">A live countdown to every annual fee across your full portfolio. Cancel, downgrade, or keep — decide before the charge hits.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+      </li>
+
+      <!-- Feature 03: Household Management -->
+      <li class="feature-card" aria-labelledby="feat-03-title">
+        <div class="feature-card-icon" aria-hidden="true">ᛗ</div>
+        <p class="feature-card-rune" aria-hidden="true">Feature 03</p>
+        <h3 class="feature-card-title" id="feat-03-title">Household Management</h3>
+        <p class="feature-card-desc">Track cards across everyone in your household — partner, family members — in one ledger. One login, the whole pack.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+      </li>
+
+      <!-- Feature 04: Smart Import -->
+      <li class="feature-card" aria-labelledby="feat-04-title">
+        <div class="feature-card-icon" aria-hidden="true">ᚱ</div>
+        <p class="feature-card-rune" aria-hidden="true">Feature 04</p>
+        <h3 class="feature-card-title" id="feat-04-title">Import from Spreadsheets</h3>
+        <p class="feature-card-desc">Paste a URL, upload a CSV, or connect Google Sheets. The rune-reader pulls your existing data in — no re-keying.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+      </li>
+
+      <!-- Feature 05: Valhalla -->
+      <li class="feature-card" aria-labelledby="feat-05-title">
+        <div class="feature-card-icon" aria-hidden="true">ᛏ</div>
+        <p class="feature-card-rune" aria-hidden="true">Feature 05</p>
+        <h3 class="feature-card-title" id="feat-05-title">Valhalla — Closed Card Archive</h3>
+        <p class="feature-card-desc">Cards you've closed live on in Valhalla. Track what you earned, what you paid, and how long each chain lasted.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+      </li>
+
+      <!-- Feature 06: Norse UI + Easter Eggs -->
+      <li class="feature-card" aria-labelledby="feat-06-title">
+        <div class="feature-card-icon" aria-hidden="true">ᛟ</div>
+        <p class="feature-card-rune" aria-hidden="true">Feature 06</p>
+        <h3 class="feature-card-title" id="feat-06-title">Norse-Themed Interface</h3>
+        <p class="feature-card-desc">A dark Nordic war room aesthetic, Elder Futhark runes, and a handful of hidden easter eggs for the curious. Boring spreadsheets, this is not.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+      </li>
+
+      <!-- Feature 07: Mobile Dashboard -->
+      <li class="feature-card" aria-labelledby="feat-07-title">
+        <div class="feature-card-icon" aria-hidden="true">ᚢ</div>
+        <p class="feature-card-rune" aria-hidden="true">Feature 07</p>
+        <h3 class="feature-card-title" id="feat-07-title">Mobile-Friendly Dashboard</h3>
+        <p class="feature-card-desc">Full-featured on a 375px phone screen. Bottom navigation, touch-optimized cards, readable at a glance — at the airport, at checkout, anywhere.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+      </li>
+
+    </ol>
+    <!-- NOTE: 7 items in a 3-col grid leaves one empty cell in the last row on desktop.
+         This is intentional — do not add a filler card. The grid reads naturally;
+         FiremanDecko should not "balance" it with a placeholder element. -->
+  </div>
+</section>
+<p class="note">FEATURE CARDS: Compact card pattern — NOT the alternating 2-col full-bleed rows used on /features. Each card is 1/3 desktop width with border, icon glyph (Elder Futhark rune), ordinal eyebrow, h3 title, 1-2 sentence description, and an "Included" tag. The tag confirms trial access for each item (no lock icons on this page — everything is unlocked during trial). Icon slot: 56x56px, border-outlined placeholder. FiremanDecko should use a ThemedIcon component or SVG here — the rune character is a temporary stand-in showing which character maps to which feature, not the final icon.</p>
+<p class="note">ANIMATION: Scroll-triggered. Stagger 80ms per card. Each card: opacity 0 → 1, translateY 40px → 0, duration 400ms ease-out. Fire when the grid container enters viewport at 20% threshold. Use Framer Motion's `whileInView` with `staggerChildren` on the `ol` element. See /features page for existing pattern (FeatureCard animation is the reference).</p>
+
+<!-- =========================================================================
+     SECTION 3: 30-DAY JOURNEY TIMELINE
+     Layout: Desktop: 3 steps in a horizontal row connected by arrows.
+             Mobile: 3 steps stacked vertically with down-arrows between.
+     Framer Motion: sequential reveal — each step enters 400ms after the previous,
+     triggered when the timeline container enters viewport.
+     ========================================================================= -->
+<section class="timeline-section" aria-labelledby="timeline-heading">
+  <div class="container">
+    <div class="timeline-heading">
+      <p class="timeline-heading-eyebrow" aria-hidden="true">ᚾ · The Journey · ᚾ</p>
+      <h2 class="timeline-heading-title" id="timeline-heading">Your 30-Day Journey</h2>
+    </div>
+
+    <!-- Desktop: grid with connector columns. Mobile: single column (connectors hidden). -->
+    <div class="timeline-row" role="list" aria-label="30-day trial timeline">
+
+      <!-- Step 1: Day 1 -->
+      <article class="timeline-step" role="listitem" aria-labelledby="step-day1-title">
+        <p class="timeline-step-day">Day 1</p>
+        <span class="timeline-step-rune" aria-hidden="true">ᚠ</span>
+        <h3 class="timeline-step-title" id="step-day1-title">Add Your First Card</h3>
+        <p class="timeline-step-desc">Your trial starts the moment you save your first card. The full Fenrir Ledger — all Karl features — activates immediately. No setup. No waiting.</p>
+      </article>
+
+      <!-- Horizontal connector arrow (desktop) / vertical arrow (mobile) -->
+      <div class="timeline-connector" aria-hidden="true">→</div>
+      <div class="timeline-connector-v" aria-hidden="true">↓</div>
+
+      <!-- Step 2: Day 15 — mid-trial nudge -->
+      <article class="timeline-step milestone" role="listitem" aria-labelledby="step-day15-title">
+        <p class="timeline-step-day">Day 15</p>
+        <span class="timeline-step-rune" aria-hidden="true">ᛊ</span>
+        <h3 class="timeline-step-title" id="step-day15-title">Halfway Check-In</h3>
+        <p class="timeline-step-desc">A gentle nudge arrives — showing everything you've tracked so far: cards monitored, fees watched, bonuses in flight. No pressure. Just proof the wolf has been working.</p>
+        <!-- NOTE: "milestone" class triggers heavier border — this is the featured/highlighted step -->
+      </article>
+
+      <!-- Horizontal connector arrow (desktop) / vertical arrow (mobile) -->
+      <div class="timeline-connector" aria-hidden="true">→</div>
+      <div class="timeline-connector-v" aria-hidden="true">↓</div>
+
+      <!-- Step 3: Day 30 — decision point -->
+      <article class="timeline-step" role="listitem" aria-labelledby="step-day30-title">
+        <p class="timeline-step-day">Day 30</p>
+        <span class="timeline-step-rune" aria-hidden="true">ᚱ</span>
+        <h3 class="timeline-step-title" id="step-day30-title">Your Decision</h3>
+        <p class="timeline-step-desc">Continue with Karl ($3.99/mo) — or stay on the free Thrall plan. Your data is always yours. Nothing is deleted. The ledger remembers everything.</p>
+      </article>
+
+    </div>
+
+    <!-- Mobile layout note for FiremanDecko -->
+    <!--
+      RESPONSIVE: On mobile <768px:
+      - grid-template-columns: 1fr (single column)
+      - .timeline-connector (→ arrows) hidden via display:none
+      - .timeline-connector-v (↓ arrows) shown via display:block
+      - Steps stack top-to-bottom with separator arrows between
+      See CSS @media block above for implementation.
+    -->
+  </div>
+</section>
+<p class="note">TIMELINE: Three milestone steps. Day 15 step uses .milestone class (thicker border, heavier visual weight) — it is the featured/highlighted step because the mid-trial nudge is the key conversion moment. Day 1 and Day 30 use standard card border. On desktop, the three steps sit in a 5-column grid: step | connector | step | connector | step. Connectors are simple arrow characters — FiremanDecko may replace with an SVG line+arrowhead for polish. Animation: whileInView, each step enters sequentially 400ms apart. See /features page motion config for reference.</p>
+<p class="note">COPY NOTE: "Day 30: Your Decision" language is deliberately low-pressure per trial plan — tone shifts from "Subscribe" to "Your choice" at expiry. "The ledger remembers everything" addresses data safety anxiety inline, on this page, before it becomes a blocker at day 30.</p>
+
+<!-- =========================================================================
+     SECTION 4: WHAT HAPPENS AFTER 30 DAYS?
+     Thrall (free) vs Karl (paid) tier comparison.
+     Layout: 2-col desktop/tablet → stacked mobile.
+     ========================================================================= -->
+<section class="after-section" aria-labelledby="after-heading">
+  <div class="container">
+    <div class="after-heading">
+      <p class="after-heading-eyebrow" aria-hidden="true">ᚦ · After the Trial · ᚦ</p>
+      <h2 class="after-heading-title" id="after-heading">What Happens After 30 Days?</h2>
+      <p class="after-heading-sub">Your data never disappears. You choose what comes next.</p>
+    </div>
+
+    <div class="tier-comparison" role="list" aria-label="Plan comparison">
+
+      <!-- Thrall (Free) -->
+      <article class="tier-card" role="listitem" aria-labelledby="thrall-title">
+        <p class="tier-name">Tier</p>
+        <h3 class="tier-title" id="thrall-title">Thrall</h3>
+        <p class="tier-desc">The Lone Wolf. Essential tracking, always free.</p>
+        <p class="tier-price">Free</p>
+        <p class="tier-price-sub">Forever. No card needed.</p>
+        <ul class="tier-feature-list" aria-label="Thrall features">
+          <li><span class="check" aria-label="Included">✓</span> Add up to 3 cards</li>
+          <li><span class="check" aria-label="Included">✓</span> Annual fee tracking</li>
+          <li><span class="check" aria-label="Included">✓</span> Sign-up bonus tracking</li>
+          <li><span class="check" aria-label="Included">✓</span> Card notes</li>
+          <li><span class="check" aria-label="Included">✓</span> Mobile dashboard</li>
+          <li><span class="lock" aria-label="Karl only">⌒</span> Unlimited cards</li>
+          <li><span class="lock" aria-label="Karl only">⌒</span> The Howl (fee alerts)</li>
+          <li><span class="lock" aria-label="Karl only">⌒</span> Valhalla archive</li>
+          <li><span class="lock" aria-label="Karl only">⌒</span> Smart Import</li>
+          <li><span class="lock" aria-label="Karl only">⌒</span> Household management</li>
+          <li><span class="lock" aria-label="Karl only">⌒</span> Cloud sync</li>
+        </ul>
+        <a href="/ledger" class="tier-cta secondary">Continue Free</a>
+        <!-- NOTE: Voice 1. Button text "Continue Free" — not "Downgrade" — to avoid negative framing. -->
+      </article>
+
+      <!-- Karl (Paid) -->
+      <article class="tier-card featured" role="listitem" aria-labelledby="karl-title">
+        <span class="tier-badge" aria-label="Recommended plan">Full Power</span>
+        <p class="tier-name">Tier</p>
+        <h3 class="tier-title" id="karl-title">Karl</h3>
+        <p class="tier-desc">Everything you had during the trial. All features, always on.</p>
+        <p class="tier-price">$3.99<span style="font-size:16px;font-weight:400;">/mo</span></p>
+        <p class="tier-price-sub">Cancel anytime. No annual lock-in.</p>
+        <ul class="tier-feature-list" aria-label="Karl features">
+          <li><span class="check" aria-label="Included">✓</span> Everything in Thrall</li>
+          <li><span class="check" aria-label="Included">✓</span> Unlimited cards</li>
+          <li><span class="check" aria-label="Included">✓</span> The Howl — live fee alerts</li>
+          <li><span class="check" aria-label="Included">✓</span> Valhalla — closed card archive</li>
+          <li><span class="check" aria-label="Included">✓</span> Smart Import (URL, CSV, Sheets)</li>
+          <li><span class="check" aria-label="Included">✓</span> Household management</li>
+          <li><span class="check" aria-label="Included">✓</span> Cloud sync</li>
+          <li><span class="check" aria-label="Included">✓</span> Data export</li>
+          <li><span class="check" aria-label="Included">✓</span> Priority updates</li>
+        </ul>
+        <a href="/ledger" class="tier-cta">Keep Full Access — $3.99/mo</a>
+        <!-- NOTE: CTA text "Keep Full Access" is trial-specific framing (vs generic "Subscribe").
+             This matches the trial plan tone shift: "Keep" not "Upgrade". -->
+      </article>
+
+    </div>
+
+    <!-- Data safety reassurance block -->
+    <div class="data-safety" role="note" aria-label="Data safety guarantee">
+      <p class="data-safety-title">Your Data Is Always Safe</p>
+      <p class="data-safety-desc">Whether you choose Karl or Thrall, every card you added during your trial stays in your ledger. Nothing is deleted when your trial ends. The wolf never forgets.</p>
+    </div>
+
+  </div>
+</section>
+<p class="note">TIER COMPARISON: Thrall column left, Karl column right — consistent with /pricing page layout. Karl column has .featured class (2px border + "Full Power" badge chip) to draw the eye. Thrall shows locked items with a lock indicator (⌒ symbol here — FiremanDecko: use an SVG lock icon with aria-label="Karl only"). Karl CTA uses "Keep Full Access" (trial-specific) not "Subscribe" (generic) — this is intentional per the trial plan messaging. "Continue Free" for Thrall avoids negative "Downgrade" framing.</p>
+<p class="note">DATA SAFETY BOX: Critical trust signal. Placed immediately below the tier cards. Users making the trial decision need to know their data persists regardless of choice. This block MUST appear on this page — it removes a major conversion barrier. Copy is Voice 2 ("The wolf never forgets") wrapping Voice 1 facts.</p>
+
+<!-- =========================================================================
+     SECTION 5: FINAL CTA
+     Second conversion opportunity at page bottom.
+     ========================================================================= -->
+<section class="final-cta-section" aria-labelledby="final-cta-heading">
+  <div class="container">
+    <span class="final-cta-rune" aria-hidden="true">ᛟ</span>
+    <h2 class="final-cta-title" id="final-cta-heading">Begin Your Hunt</h2>
+    <p class="final-cta-sub">
+      Add your first card. The wolf wakes. Every chain, every fee, every deadline — all of it watched.
+    </p>
+    <a href="/ledger" class="btn-primary">Start Your Free Trial</a>
+    <p class="final-cta-trust">No credit card required · No commitment · Cancel anytime</p>
+  </div>
+</section>
+<p class="note">FINAL CTA: Centered, single-button. Same primary CTA as hero ("Start Your Free Trial" → /ledger). Rune glyph ᛟ above as decorative anchor. Atmospheric Voice 2 subtitle. Trust line below in small italic — reinforces the three main trial objections: "Do I need a card?", "Am I committing?", "Can I leave?". These three concerns are answered in order.</p>
+
+<!-- =========================================================================
+     FOOTER
+     Canonical spec: ux/wireframes/marketing/static-site-footer.html
+     Changes for #636: add "Free Trial" link to footer nav column.
+     ========================================================================= -->
+<footer class="marketing-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <p><strong>ᛟ FENRIR LEDGER</strong></p>
+      <p>Credit card churn tracker.<br>Named for the wolf who breaks chains.</p>
+    </div>
+    <nav class="footer-links-col" aria-label="Product links">
+      <p><strong>Product</strong></p>
+      <ul>
+        <li><a href="#">Features</a></li>
+        <li><a href="#" aria-current="page"><strong>Free Trial</strong></a></li>
+        <!-- NOTE: "Free Trial" link is new — add here in footer nav column -->
+        <li><a href="#">Pricing</a></li>
+        <li><a href="#">About</a></li>
+      </ul>
+    </nav>
+    <div class="footer-links-col">
+      <p><strong>Legal</strong></p>
+      <ul>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-legal">
+    <span>© 2026 Fenrir Ledger</span>
+    <a href="#">Privacy Policy</a>
+    <a href="#">Terms of Service</a>
+  </div>
+</footer>
+<p class="note">FOOTER: Reuses existing marketing footer shell. Only change: add "Free Trial" link in the Product column, between Features and Pricing. See static-site-footer.html for the full footer spec (easter egg triggers, rune cipher, Session Chronicles link). The footer change applies globally — FiremanDecko should update the shared MarketingFooter component or layout footer data array, not just this page.</p>
+
+<!-- =========================================================================
+     MOBILE VARIANT ANNOTATION — 375px
+     Not rendered as a separate section; annotated here for FiremanDecko reference.
+
+     HERO (375px):
+     - h1: 32px (down from 52px). Line breaks preserved.
+     - .hero-subtitle: 17px, max-width: 100%.
+     - .hero-desc: 15px.
+     - .hero-cta-group: flex-direction: column; .btn-primary width: 100%; .btn-secondary width: 100%.
+     - Trust line remains visible.
+
+     FEATURE GRID (375px):
+     - grid-template-columns: 1fr (single column).
+     - Each .feature-card fills full width.
+     - .feature-card-icon stays 56px.
+     - Stagger animation still applies — each card enters sequentially.
+
+     TIMELINE (375px):
+     - grid-template-columns: 1fr (single column, via @media).
+     - .timeline-connector (→) hidden.
+     - .timeline-connector-v (↓) shown between steps.
+     - Steps stack: Day 1 → ↓ → Day 15 → ↓ → Day 30.
+     - .milestone border still thicker on Day 15.
+
+     TIER COMPARISON (375px):
+     - grid-template-columns: 1fr (single column, via @media).
+     - Karl card appears FIRST (move it above Thrall in DOM order on mobile,
+       OR use CSS order property: .featured { order: -1 } at <640px).
+       DESIGN DECISION: Karl goes first on mobile — it is the primary action.
+     - .tier-cta: width: 100% on mobile.
+     - .tier-badge: stays absolute-positioned at top of card.
+
+     NAV (375px):
+     - .nav-links hidden.
+     - .nav-cta hidden.
+     - Brand stays left.
+     - Add hamburger button right (see layout-shell.html for mobile nav drawer spec).
+
+     TOUCH TARGETS:
+     - All .btn-primary, .btn-secondary, .tier-cta: min-height 44px (WCAG AA touch).
+     - .nav-cta: min-height 44px when visible.
+     - Feature card "Included" tag: not interactive, no touch target requirement.
+     ========================================================================= -->
+<!--
+  ACCESSIBILITY REQUIREMENTS (WCAG 2.1 AA):
+  - All sections have aria-labelledby pointing to their h2 heading.
+  - Feature cards use ol/li with aria-labelledby on each li.
+  - Timeline steps use role="list" + role="listitem" pattern (matches screen reader expectations).
+  - Tier cards: role="list" + role="listitem" on the comparison grid and each card.
+  - .data-safety has role="note" to signal it is supplementary information.
+  - CTA buttons: both "Start Your Free Trial" anchors point to /ledger — ensure consistent label (no "Click here").
+  - Lock icons in Thrall column: aria-label="Karl only" on each ⌒ span. FiremanDecko: replace span with SVG icon carrying aria-label.
+  - Check marks in feature lists: aria-label="Included" on each ✓ span.
+  - hero-rune, features-heading-eyebrow, timeline step runes: all aria-hidden="true" (decorative).
+  - footer legal links: standard anchor elements, no special aria needed.
+  - Framer Motion: all animated elements must respect prefers-reduced-motion.
+    Pattern: if (prefersReducedMotion) skip translateY, keep opacity transition only.
+    Reference existing /features page implementation.
+-->
+
+<!--
+  SEO META (for page.tsx — not in wireframe):
+  export const metadata: Metadata = {
+    title: "Free Trial — Fenrir Ledger",
+    description: "30-day free trial of Fenrir Ledger — the Norse-themed credit card tracker. Track fees, bonuses, and deadlines. Full Karl access, no credit card required.",
+    keywords: "free credit card tracker trial, credit card churn tracker free trial, annual fee tracker, sign-up bonus tracker",
+  };
+  og:title = "30 Days. Full Power. Zero Risk. — Fenrir Ledger Free Trial"
+  og:description = "Every Fenrir Ledger feature, free for 30 days. No card needed. Start tracking the moment you add your first card."
+-->
+
+<!--
+  IMPLEMENTATION NOTES FOR FIREMAN DECKO:
+  1. Route: development/frontend/src/app/(marketing)/free-trial/page.tsx
+     - Add `export const dynamic = "force-static"` (matches /features pattern)
+     - Import Metadata from "next"
+     - Use SEO metadata block above
+
+  2. Feature card data: define as a typed array (similar to THRALL_FEATURES / KARL_FEATURES in features/page.tsx)
+     - Fields: id, rune (Elder Futhark char), ordinal, title, desc
+     - Rune-to-feature mapping (from this wireframe):
+       ᚲ Kenaz    → Card Tracking & Fee Alerts
+       ᛊ Sowilo   → Annual Fee Calendar
+       ᛗ Mannaz   → Household Management
+       ᚱ Raidho   → Smart Import
+       ᛏ Tiwaz    → Valhalla
+       ᛟ Othalan  → Norse UI + Easter Eggs
+       ᚢ Uruz     → Mobile Dashboard
+     - Icon slot: use a small ThemedIcon or plain SVG. The rune character is a placeholder.
+
+  3. Timeline: three data objects — { day, rune, title, desc, milestone: boolean }
+     Day 15 has milestone: true → renders with heavier border class.
+
+  4. Tier comparison: reuse tier data from /pricing page where possible.
+     CTA text override for this page: "Keep Full Access — $3.99/mo" (trial-specific).
+
+  5. Nav + Footer changes (global — not page-scoped):
+     - Add "Free Trial" link to marketing nav (between Features and Pricing)
+     - Add "Free Trial" link to marketing footer Product column
+     - Update wherever the nav links array is defined (layout or shared component)
+
+  6. Framer Motion: all animations use whileInView + viewport={{ once: true, amount: 0.2 }}
+     prefersReducedMotion guard: import { useReducedMotion } from "framer-motion"
+     If reducedMotion: omit y translation, keep opacity fade only.
+
+  7. CTA destination: href="/ledger" — trial starts on first card save (existing logic in trial-start.html spec).
+     No trial-specific landing or modal — user lands on the dashboard and normal trial flow kicks in.
+-->
+
+</body>
+</html>
