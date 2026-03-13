@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketing Nav — Wolf-Toned Display Font — Issue #648</title>
+  <!--
+    Wireframe: Marketing Nav Link Font — Issue #648
+    ─────────────────────────────────────────────────────────────────────────────
+    Scope:
+      Confirm font choice (Cinzel vs Cinzel Decorative) at nav link scale
+      before FiremanDecko implements.  Layout is structural only — no theme colors,
+      no backgrounds, no shadows.
+
+    Nav link order per issue: Features · Prose Edda · About · Free Trial · Pricing
+    (NAV_LINKS in MarketingNavbar.tsx currently has wrong order; must be corrected.)
+
+    Design Decision:
+      Use Cinzel (--font-heading / font-heading Tailwind alias) for nav links.
+      Cinzel Decorative is too ornate at 14px nav scale — its ligatures and serifs
+      merge and reduce legibility. Cinzel at 400–600 weight renders crisply at
+      small sizes while retaining the Norse war-room authority needed for the brand.
+
+    font-display strategy:
+      Both Cinzel and Cinzel Decorative are loaded via next/font in layout.tsx with
+      display: 'swap' (Next.js default), preventing layout shift. No additional
+      configuration needed.
+
+    Light / Dark mode:
+      Font stack is identical in both modes. Only the inherited text token changes
+      (text-muted-foreground in light → same token resolved differently in dark).
+      Wireframe section 3 shows the nav bar twice to confirm layout is font-agnostic.
+
+    Mobile hamburger menu:
+      Uses the same Cinzel font-heading class. Size increases to text-lg (18px) for
+      touch-friendly tap targets. Shown in section 2.
+
+    A11y:
+      - nav landmark with aria-label
+      - Each <a> has visible focus ring (outline: 2px solid)
+      - Min touch target 44×44px on mobile (padding applied)
+      - No font-display: block (would cause invisible text FOIT flash)
+
+    Affected files (for FiremanDecko):
+      • development/frontend/src/components/marketing/MarketingNavbar.tsx
+          - Change desktop nav links class: font-body → font-heading
+          - Change mobile nav links class: font-body → font-heading
+          - Update NAV_LINKS order and add Free Trial:
+            Features · Prose Edda · About · Free Trial · Pricing
+      • No changes needed to globals.css or tailwind.config.ts —
+        --font-cinzel / font-heading already configured.
+  -->
+  <style>
+    /* ── Wireframe reset — layout CSS only ───────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    h1, h2, h3 {
+      font-family: sans-serif;
+      font-weight: 700;
+    }
+
+    .page-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      border-bottom: 2px solid #333;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      margin-bottom: 48px;
+    }
+
+    /* ── Section labels ───────────────────────────────────────────────────── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid #333;
+      padding-bottom: 4px;
+      margin-bottom: 16px;
+    }
+
+    .section-spacer {
+      margin-bottom: 48px;
+    }
+
+    .note {
+      font-size: 12px;
+      font-style: italic;
+      margin-top: 8px;
+    }
+
+    .annotation {
+      font-size: 11px;
+      border-left: 3px solid #333;
+      padding: 6px 10px;
+      margin-top: 8px;
+    }
+
+    /* ── Font specimen labels ─────────────────────────────────────────────── */
+    .font-comparison {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 32px;
+    }
+
+    .font-specimen {
+      flex: 1;
+      border: 1px solid #333;
+      padding: 16px;
+    }
+
+    .font-specimen-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed #999;
+    }
+
+    .font-specimen-item {
+      margin-bottom: 10px;
+    }
+
+    .font-specimen-item .size-label {
+      font-size: 10px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Font A: Cinzel — rendered via Google Fonts embed for visual comparison */
+    .cinzel {
+      font-family: 'Cinzel', serif;
+    }
+
+    /* Font B: Cinzel Decorative */
+    .cinzel-decorative {
+      font-family: 'Cinzel Decorative', serif;
+    }
+
+    /* ── Nav wireframe ────────────────────────────────────────────────────── */
+    .nav-bar {
+      border: 1px solid #333;
+      border-bottom: 2px solid #333;
+      padding: 0 24px;
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .nav-logo .rune {
+      font-size: 22px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    /* BEFORE: font-body (sans-serif proxy) */
+    .nav-link-before {
+      font-family: sans-serif;
+      font-weight: 400;
+    }
+
+    /* AFTER: font-heading = Cinzel */
+    .nav-link-after-cinzel {
+      font-family: 'Cinzel', serif;
+      font-weight: 400;
+    }
+
+    /* AFTER: font-display = Cinzel Decorative (for comparison — not recommended) */
+    .nav-link-after-decorative {
+      font-family: 'Cinzel Decorative', serif;
+      font-weight: 400;
+    }
+
+    /* Free Trial: slightly heavier weight to distinguish CTA-adjacent link */
+    .nav-link-free-trial {
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      border: 1px solid #333;
+      padding: 4px 10px;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle-placeholder {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+
+    .cta-btn {
+      border: 1px solid #333;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .before-after-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border: 1px solid #333;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    .variant-block {
+      margin-bottom: 24px;
+    }
+
+    /* ── Mobile wireframe ─────────────────────────────────────────────────── */
+    .mobile-frame {
+      width: 375px;
+      border: 1px solid #333;
+      overflow: hidden;
+    }
+
+    .mobile-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 56px;
+      border-bottom: 1px solid #333;
+    }
+
+    .hamburger-icon {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .mobile-overlay {
+      padding: 24px 16px;
+    }
+
+    .mobile-overlay-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .close-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .mobile-nav-links {
+      list-style: none;
+    }
+
+    .mobile-nav-links li {
+      border-bottom: 1px solid #333;
+    }
+
+    .mobile-nav-links a {
+      display: block;
+      padding: 14px 0;
+      text-decoration: none;
+      font-size: 18px;
+    }
+
+    .mobile-nav-link-before {
+      font-family: sans-serif;
+      font-weight: 400;
+    }
+
+    .mobile-nav-link-after {
+      font-family: 'Cinzel', serif;
+      font-weight: 400;
+    }
+
+    .mobile-cta {
+      margin-top: 32px;
+      border: 1px solid #333;
+      padding: 14px;
+      text-align: center;
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      display: block;
+    }
+
+    /* ── Comparison side-by-side ──────────────────────────────────────────── */
+    .side-by-side {
+      display: flex;
+      gap: 24px;
+    }
+
+    .side-by-side > * {
+      flex: 1;
+    }
+
+    /* ── Decision matrix ──────────────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 16px;
+    }
+
+    th, td {
+      border: 1px solid #333;
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    th {
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .verdict {
+      font-weight: 700;
+    }
+  </style>
+
+  <!-- Load fonts only for visual comparison in this wireframe document -->
+  <!-- In production: loaded via next/font in layout.tsx (already configured) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- ── Page Header ───────────────────────────────────────────────────────── -->
+  <h1 class="page-title">Marketing Nav — Wolf-Toned Display Font</h1>
+  <p class="page-subtitle">
+    Issue #648 · Wireframe for font choice at nav link scale · Luna UX Design
+  </p>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 1: Font Specimen Comparison -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-spacer">
+    <h2 class="section-label">Section 1 — Font Specimen: Cinzel vs Cinzel Decorative at Nav Scale</h2>
+    <p class="note" style="margin-bottom: 16px;">
+      Side-by-side comparison of the two design system display fonts at nav link sizes (13px desktop, 18px mobile).
+      The goal: confirm which font is legible and regal at small sizes without excessive ornamental noise.
+    </p>
+
+    <div class="font-comparison">
+
+      <!-- Font A: Cinzel -->
+      <div class="font-specimen">
+        <div class="font-specimen-label">Option A — Cinzel (font-heading) — RECOMMENDED</div>
+
+        <div class="font-specimen-item">
+          <span class="size-label">13px / weight 400 — desktop nav link</span>
+          <span class="cinzel" style="font-size: 13px; font-weight: 400;">Features · Prose Edda · About · Free Trial · Pricing</span>
+        </div>
+
+        <div class="font-specimen-item">
+          <span class="size-label">13px / weight 600 — desktop nav "Free Trial" (optional emphasis)</span>
+          <span class="cinzel" style="font-size: 13px; font-weight: 600;">Free Trial</span>
+        </div>
+
+        <div class="font-specimen-item">
+          <span class="size-label">18px / weight 400 — mobile overlay link</span>
+          <span class="cinzel" style="font-size: 18px; font-weight: 400; display: block;">Features</span>
+          <span class="cinzel" style="font-size: 18px; font-weight: 400; display: block;">Prose Edda</span>
+          <span class="cinzel" style="font-size: 18px; font-weight: 400; display: block;">About</span>
+          <span class="cinzel" style="font-size: 18px; font-weight: 400; display: block;">Free Trial</span>
+          <span class="cinzel" style="font-size: 18px; font-weight: 400; display: block;">Pricing</span>
+        </div>
+
+        <div class="annotation">
+          Cinzel at 13px weight 400 renders all letterforms distinctly. The classical Roman proportions
+          give the nav a regal authority that matches the Saga Ledger war-room aesthetic.
+          Readability is high. Appropriate for repeated navigation items a user scans frequently.
+        </div>
+      </div>
+
+      <!-- Font B: Cinzel Decorative -->
+      <div class="font-specimen">
+        <div class="font-specimen-label">Option B — Cinzel Decorative (font-display) — NOT RECOMMENDED for nav</div>
+
+        <div class="font-specimen-item">
+          <span class="size-label">13px / weight 400 — desktop nav link</span>
+          <span class="cinzel-decorative" style="font-size: 13px; font-weight: 400;">Features · Prose Edda · About · Free Trial · Pricing</span>
+        </div>
+
+        <div class="font-specimen-item">
+          <span class="size-label">18px / weight 400 — mobile overlay link</span>
+          <span class="cinzel-decorative" style="font-size: 18px; font-weight: 400; display: block;">Features</span>
+          <span class="cinzel-decorative" style="font-size: 18px; font-weight: 400; display: block;">Prose Edda</span>
+          <span class="cinzel-decorative" style="font-size: 18px; font-weight: 400; display: block;">About</span>
+          <span class="cinzel-decorative" style="font-size: 18px; font-weight: 400; display: block;">Free Trial</span>
+          <span class="cinzel-decorative" style="font-size: 18px; font-weight: 400; display: block;">Pricing</span>
+        </div>
+
+        <div class="annotation">
+          Cinzel Decorative has additional flourishes and modified capital letterforms designed for
+          display-scale headings (48px+). At 13px the extra ornamentation reduces legibility and
+          competes with the content hierarchy — nav links should scan quickly, not demand attention.
+          Reserve Cinzel Decorative for H1 page titles and brand moments only.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Decision table -->
+    <table>
+      <thead>
+        <tr>
+          <th>Criterion</th>
+          <th>Cinzel (font-heading)</th>
+          <th>Cinzel Decorative (font-display)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Legibility at 13px nav scale</td>
+          <td class="verdict">✓ Clear and crisp</td>
+          <td>✗ Ornament noise at small sizes</td>
+        </tr>
+        <tr>
+          <td>Wolf-toned / Norse brand authority</td>
+          <td class="verdict">✓ Regal Roman proportions</td>
+          <td>✓ Strong but over-ornate for nav</td>
+        </tr>
+        <tr>
+          <td>Matches design system role</td>
+          <td class="verdict">✓ Headings: H2–H4, card names, section labels</td>
+          <td>✗ Reserved for H1, page titles, brand hero</td>
+        </tr>
+        <tr>
+          <td>Already loaded (no new font request)</td>
+          <td class="verdict">✓ Yes — layout.tsx already loads Cinzel</td>
+          <td>✓ Yes — layout.tsx already loads Cinzel Decorative</td>
+        </tr>
+        <tr>
+          <td>Mobile overlay readability at 18px</td>
+          <td class="verdict">✓ Confident and readable</td>
+          <td>△ Acceptable but heavier than needed</td>
+        </tr>
+        <tr>
+          <td>Recommendation</td>
+          <td class="verdict">✓ USE for nav links</td>
+          <td>✗ Keep for display headings only</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 2: Desktop Nav — Before / After -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-spacer">
+    <h2 class="section-label">Section 2 — Desktop Nav Bar — Before vs After</h2>
+    <p class="note" style="margin-bottom: 16px;">
+      Desktop viewport (>768px). Full nav bar at 1100px content width.
+      Nav link order per issue: Features · Prose Edda · About · Free Trial · Pricing
+    </p>
+
+    <!-- BEFORE -->
+    <div class="variant-block">
+      <div class="before-after-label">BEFORE — font-body (sans-serif), order: Features · Pricing · About · Prose Edda</div>
+      <nav class="nav-bar" aria-label="Before state — marketing site navigation">
+        <div class="nav-inner">
+          <a href="#" class="nav-logo" aria-label="Fenrir Ledger — home">
+            <span class="rune" aria-hidden="true">ᚠ</span>
+            <span>Fenrir Ledger</span>
+          </a>
+          <ul class="nav-links" role="list">
+            <li><a href="#" class="nav-link-before">Features</a></li>
+            <li><a href="#" class="nav-link-before">Pricing</a></li>
+            <li><a href="#" class="nav-link-before">About</a></li>
+            <li><a href="#" class="nav-link-before">Prose Edda</a></li>
+          </ul>
+          <div class="nav-right">
+            <div class="theme-toggle-placeholder" aria-hidden="true">☀</div>
+            <a href="#" class="cta-btn">Open the Ledger →</a>
+          </div>
+        </div>
+      </nav>
+      <p class="annotation">
+        Current state: generic sans-serif, wrong link order, missing Free Trial link.
+        Nav links blend into the chrome — no typographic distinction from the body text.
+      </p>
+    </div>
+
+    <!-- AFTER -->
+    <div class="variant-block">
+      <div class="before-after-label">AFTER — font-heading (Cinzel 400), order: Features · Prose Edda · About · Free Trial · Pricing</div>
+      <nav class="nav-bar" aria-label="After state — marketing site navigation">
+        <div class="nav-inner">
+          <a href="#" class="nav-logo cinzel" aria-label="Fenrir Ledger — home">
+            <span class="rune" aria-hidden="true">ᚠ</span>
+            <span>Fenrir Ledger</span>
+          </a>
+          <ul class="nav-links" role="list">
+            <li><a href="#" class="nav-link-after-cinzel">Features</a></li>
+            <li><a href="#" class="nav-link-after-cinzel">Prose Edda</a></li>
+            <li><a href="#" class="nav-link-after-cinzel">About</a></li>
+            <li><a href="#" class="nav-link-free-trial">Free Trial</a></li>
+            <li><a href="#" class="nav-link-after-cinzel">Pricing</a></li>
+          </ul>
+          <div class="nav-right">
+            <div class="theme-toggle-placeholder" aria-hidden="true">☀</div>
+            <a href="#" class="cta-btn">Open the Ledger →</a>
+          </div>
+        </div>
+      </nav>
+      <p class="annotation">
+        After: Cinzel at 13px weight 400 for standard links. "Free Trial" uses weight 600 with
+        a subtle border to differentiate it as a CTA-adjacent link without breaking the nav rhythm.
+        Link order matches issue spec. Logo wordmark also uses Cinzel (already correct in implementation).
+      </p>
+    </div>
+
+    <!-- AFTER (Cinzel Decorative — for reference only) -->
+    <div class="variant-block">
+      <div class="before-after-label">REFERENCE ONLY — font-display (Cinzel Decorative) — not recommended</div>
+      <nav class="nav-bar" aria-label="Reference — Cinzel Decorative at nav scale">
+        <div class="nav-inner">
+          <a href="#" class="nav-logo" aria-label="Fenrir Ledger — home">
+            <span class="rune" aria-hidden="true">ᚠ</span>
+            <span>Fenrir Ledger</span>
+          </a>
+          <ul class="nav-links" role="list">
+            <li><a href="#" class="nav-link-after-decorative">Features</a></li>
+            <li><a href="#" class="nav-link-after-decorative">Prose Edda</a></li>
+            <li><a href="#" class="nav-link-after-decorative">About</a></li>
+            <li><a href="#" class="nav-link-after-decorative" style="font-weight:700; border:1px solid #333; padding:4px 10px;">Free Trial</a></li>
+            <li><a href="#" class="nav-link-after-decorative">Pricing</a></li>
+          </ul>
+          <div class="nav-right">
+            <div class="theme-toggle-placeholder" aria-hidden="true">☀</div>
+            <a href="#" class="cta-btn" style="font-family: 'Cinzel Decorative', serif;">Open the Ledger →</a>
+          </div>
+        </div>
+      </nav>
+      <p class="annotation">
+        Cinzel Decorative at nav scale: heavier visual weight than needed, reduces scan speed.
+        The modified capitals compete with the brand wordmark. Included here for client reference
+        only — Cinzel is the correct choice.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 3: Mobile Hamburger Overlay — Before / After -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-spacer">
+    <h2 class="section-label">Section 3 — Mobile Hamburger Overlay (375px) — Before vs After</h2>
+    <p class="note" style="margin-bottom: 20px;">
+      Mobile viewport 375px. Full-screen overlay triggered by hamburger button.
+      Nav links at 18px for touch-friendly tap targets (min 44×44px tap area with padding).
+    </p>
+
+    <div class="side-by-side">
+
+      <!-- Mobile BEFORE -->
+      <div>
+        <div class="before-after-label">BEFORE — font-body (sans-serif)</div>
+        <div class="mobile-frame">
+          <div class="mobile-nav-bar">
+            <a href="#" class="nav-logo" style="font-size:13px;" aria-label="Fenrir Ledger home">
+              <span style="font-size:20px;" aria-hidden="true">ᚠ</span>
+              <span>Fenrir Ledger</span>
+            </a>
+            <div class="hamburger-icon" aria-label="Open menu" role="button">☰</div>
+          </div>
+          <!-- Overlay shown open -->
+          <div class="mobile-overlay">
+            <div class="mobile-overlay-header">
+              <a href="#" class="nav-logo" style="font-size:13px;">
+                <span style="font-size:20px;" aria-hidden="true">ᚠ</span>
+                <span>Fenrir Ledger</span>
+              </a>
+              <div class="close-btn" role="button" aria-label="Close menu">✕</div>
+            </div>
+            <nav aria-label="Mobile navigation before">
+              <ul class="mobile-nav-links" role="list">
+                <li><a href="#" class="mobile-nav-link-before">Features</a></li>
+                <li><a href="#" class="mobile-nav-link-before">Pricing</a></li>
+                <li><a href="#" class="mobile-nav-link-before">About</a></li>
+                <li><a href="#" class="mobile-nav-link-before">Prose Edda</a></li>
+              </ul>
+            </nav>
+            <a href="#" class="mobile-cta" style="font-family: sans-serif;">Open the Ledger →</a>
+          </div>
+        </div>
+        <p class="annotation">Sans-serif body font. Links lack typographic presence at mobile scale.</p>
+      </div>
+
+      <!-- Mobile AFTER -->
+      <div>
+        <div class="before-after-label">AFTER — font-heading (Cinzel 400)</div>
+        <div class="mobile-frame">
+          <div class="mobile-nav-bar">
+            <a href="#" class="nav-logo cinzel" style="font-size:13px;" aria-label="Fenrir Ledger home">
+              <span style="font-size:20px;" aria-hidden="true">ᚠ</span>
+              <span>Fenrir Ledger</span>
+            </a>
+            <div class="hamburger-icon" aria-label="Open menu" role="button">☰</div>
+          </div>
+          <!-- Overlay shown open -->
+          <div class="mobile-overlay">
+            <div class="mobile-overlay-header">
+              <a href="#" class="nav-logo cinzel" style="font-size:13px;">
+                <span style="font-size:20px;" aria-hidden="true">ᚠ</span>
+                <span>Fenrir Ledger</span>
+              </a>
+              <div class="close-btn" role="button" aria-label="Close menu">✕</div>
+            </div>
+            <nav aria-label="Mobile navigation after">
+              <ul class="mobile-nav-links" role="list">
+                <li><a href="#" class="mobile-nav-link-after">Features</a></li>
+                <li><a href="#" class="mobile-nav-link-after">Prose Edda</a></li>
+                <li><a href="#" class="mobile-nav-link-after">About</a></li>
+                <li><a href="#" class="mobile-nav-link-after" style="font-weight:600;">Free Trial</a></li>
+                <li><a href="#" class="mobile-nav-link-after">Pricing</a></li>
+              </ul>
+            </nav>
+            <a href="#" class="mobile-cta">Open the Ledger →</a>
+          </div>
+        </div>
+        <p class="annotation">
+          Cinzel at 18px weight 400 on mobile. Each link commands its row with authority.
+          "Free Trial" at weight 600 — slightly bolder but not disruptive to the visual rhythm.
+          All links meet 44px minimum touch target height via padding.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 4: Font Display Strategy -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-spacer">
+    <h2 class="section-label">Section 4 — Font-Display Strategy (No Layout Shift)</h2>
+
+    <p style="font-size:13px; margin-bottom: 12px;">
+      Both Cinzel and Cinzel Decorative are already loaded via <code>next/font/google</code> in
+      <code>development/frontend/src/app/layout.tsx</code>. Next.js uses <code>font-display: swap</code>
+      by default, which ensures:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Phase</th>
+          <th>Behavior</th>
+          <th>User impact</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Font loading (FOIT window ~100ms)</td>
+          <td>Swap period begins immediately. Fallback serif renders.</td>
+          <td>Nav links visible almost instantly in fallback font.</td>
+        </tr>
+        <tr>
+          <td>Font loaded</td>
+          <td>Browser swaps to Cinzel. Layout reflows only if metrics differ.</td>
+          <td>Minor text reflow possible but nav height is fixed (h-16 / 64px).</td>
+        </tr>
+        <tr>
+          <td>Subsequent page loads</td>
+          <td>Font cached — no FOIT, no swap, no layout shift.</td>
+          <td>Instant Cinzel render from cache.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="annotation" style="margin-top: 12px;">
+      No changes to font loading configuration needed. The font-display: swap behavior is
+      built into next/font. The nav bar fixed height (64px desktop, 56px mobile) prevents
+      vertical layout shift even if horizontal character widths differ slightly during swap.
+      FiremanDecko: do NOT add manual @font-face declarations — use existing CSS vars
+      (--font-cinzel / Tailwind class font-heading) only.
+    </p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 5: Light / Dark Mode Rendering -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-spacer">
+    <h2 class="section-label">Section 5 — Light / Dark Mode Compatibility</h2>
+    <p class="note" style="margin-bottom: 16px;">
+      Font stack is identical in both modes — only the inherited color token changes.
+      The wireframe below confirms layout stability across themes.
+    </p>
+
+    <div class="side-by-side">
+
+      <!-- Light mode sim -->
+      <div>
+        <div class="before-after-label">Light Mode — nav link text is muted-foreground token</div>
+        <nav class="nav-bar" style="background: #f8f7f4; border-color: #ccc;" aria-label="Light mode nav">
+          <div class="nav-inner">
+            <a href="#" class="nav-logo cinzel" aria-label="Fenrir Ledger">
+              <span class="rune">ᚠ</span>
+              <span>Fenrir Ledger</span>
+            </a>
+            <ul class="nav-links" role="list">
+              <li><a href="#" class="nav-link-after-cinzel" style="color: #666;">Features</a></li>
+              <li><a href="#" class="nav-link-after-cinzel" style="color: #666;">Prose Edda</a></li>
+              <li><a href="#" class="nav-link-after-cinzel" style="color: #666;">About</a></li>
+              <li><a href="#" class="nav-link-free-trial" style="color: #333;">Free Trial</a></li>
+              <li><a href="#" class="nav-link-after-cinzel" style="color: #666;">Pricing</a></li>
+            </ul>
+            <div class="nav-right">
+              <div class="theme-toggle-placeholder">☀</div>
+              <a href="#" class="cta-btn">Open the Ledger →</a>
+            </div>
+          </div>
+        </nav>
+        <p class="annotation">Light mode: Cinzel at 13px reads clearly at medium contrast. No layout difference from dark mode.</p>
+      </div>
+
+      <!-- Dark mode sim -->
+      <div>
+        <div class="before-after-label">Dark Mode — nav link text is muted-foreground token</div>
+        <nav class="nav-bar" style="background: #0f1018; border-color: #1e2235;" aria-label="Dark mode nav">
+          <div class="nav-inner">
+            <a href="#" class="nav-logo cinzel" style="color: #e8e4d4;" aria-label="Fenrir Ledger">
+              <span class="rune" style="color: #c9920a;">ᚠ</span>
+              <span style="color: #e8e4d4;">Fenrir Ledger</span>
+            </a>
+            <ul class="nav-links" role="list">
+              <li><a href="#" class="nav-link-after-cinzel" style="color: #8a8578;">Features</a></li>
+              <li><a href="#" class="nav-link-after-cinzel" style="color: #8a8578;">Prose Edda</a></li>
+              <li><a href="#" class="nav-link-after-cinzel" style="color: #8a8578;">About</a></li>
+              <li><a href="#" class="nav-link-free-trial" style="color: #e8e4d4; border-color: #2a2d45;">Free Trial</a></li>
+              <li><a href="#" class="nav-link-after-cinzel" style="color: #8a8578;">Pricing</a></li>
+            </ul>
+            <div class="nav-right">
+              <div class="theme-toggle-placeholder" style="border-color: #2a2d45; color: #e8e4d4;">◑</div>
+              <a href="#" class="cta-btn" style="border-color: #c9920a; color: #e8e4d4; background: #c9920a20;">Open the Ledger →</a>
+            </div>
+          </div>
+        </nav>
+        <p class="annotation">Dark mode: Cinzel remains legible. Wolf-toned rune accent and muted-foreground text create correct hierarchy depth.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 6: Implementation Notes for FiremanDecko -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-spacer">
+    <h2 class="section-label">Section 6 — Implementation Notes</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>MarketingNavbar.tsx</code></td>
+          <td>
+            1. Update <code>NAV_LINKS</code> array — new order + add Free Trial:<br>
+            <code>{ href: "/features", label: "Features" }</code><br>
+            <code>{ href: "/chronicles", label: "Prose Edda" }</code><br>
+            <code>{ href: "/about", label: "About" }</code><br>
+            <code>{ href: "/free-trial", label: "Free Trial" }</code><br>
+            <code>{ href: "/pricing", label: "Pricing" }</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>MarketingNavbar.tsx</code> — desktop links</td>
+          <td>
+            Change class on desktop <code>&lt;Link&gt;</code> nav items:<br>
+            <strong>Before:</strong> <code>font-body text-sm text-muted-foreground</code><br>
+            <strong>After:</strong> <code>font-heading text-sm text-muted-foreground hover:text-foreground</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>MarketingNavbar.tsx</code> — desktop Free Trial link</td>
+          <td>
+            Apply additional emphasis to "Free Trial" link:<br>
+            <code>font-heading text-sm font-semibold text-foreground border border-border px-2.5 py-1 hover:border-primary/50</code><br>
+            (distinguishes it visually as a CTA-adjacent link)
+          </td>
+        </tr>
+        <tr>
+          <td><code>MarketingNavbar.tsx</code> — mobile overlay links</td>
+          <td>
+            Change class on mobile overlay <code>&lt;Link&gt;</code> nav items:<br>
+            <strong>Before:</strong> <code>font-body text-lg text-foreground</code><br>
+            <strong>After:</strong> <code>font-heading text-lg text-foreground hover:text-primary</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>MarketingNavbar.tsx</code> — mobile Free Trial link</td>
+          <td>
+            Apply <code>font-semibold</code> to mobile "Free Trial" link for visual consistency with desktop.
+          </td>
+        </tr>
+        <tr>
+          <td><code>globals.css</code></td>
+          <td>No changes needed. Cinzel is already loaded via <code>--font-cinzel</code> CSS var.</td>
+        </tr>
+        <tr>
+          <td><code>tailwind.config.ts</code></td>
+          <td>No changes needed. <code>font-heading</code> already maps to <code>var(--font-cinzel)</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="annotation" style="margin-top: 12px;">
+      Do NOT use <code>font-display</code> (Cinzel Decorative) for nav links.
+      Do NOT add letter-spacing reduction — Cinzel's default tracking is appropriate at nav scale.
+      If tracking feels slightly wide at 13px, <code>tracking-normal</code> (0em) is acceptable;
+      avoid negative tracking which breaks Cinzel's classical proportions.
+    </p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION 7: Accessibility Checklist -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-spacer">
+    <h2 class="section-label">Section 7 — Accessibility Checklist (WCAG 2.1 AA)</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Criterion</th>
+          <th>Requirement</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1.4.3 Contrast (Minimum)</td>
+          <td>Nav links: text-muted-foreground on background must be ≥ 4.5:1</td>
+          <td>Existing tokens pass — no change from font swap</td>
+        </tr>
+        <tr>
+          <td>1.4.4 Resize Text</td>
+          <td>Nav links must be legible at 200% zoom</td>
+          <td>Cinzel scales well; test at 200% zoom after implementation</td>
+        </tr>
+        <tr>
+          <td>2.1.1 Keyboard</td>
+          <td>All nav links reachable via Tab; Enter activates</td>
+          <td>No change — existing Link components handle this</td>
+        </tr>
+        <tr>
+          <td>2.4.7 Focus Visible</td>
+          <td>Focus ring visible on all nav links</td>
+          <td>Confirm existing focus-visible: ring styles still render with Cinzel</td>
+        </tr>
+        <tr>
+          <td>2.5.5 Target Size</td>
+          <td>Mobile tap targets ≥ 44×44px</td>
+          <td>Existing py-3 padding on mobile links maintains ≥ 44px height</td>
+        </tr>
+        <tr>
+          <td>Font weight</td>
+          <td>Avoid weight-only differentiation for state (hover)</td>
+          <td>Color + weight used together for "Free Trial" active state — compliant</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- /page-wrapper -->
+
+</body>
+</html>
