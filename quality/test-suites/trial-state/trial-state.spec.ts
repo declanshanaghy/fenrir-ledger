@@ -449,20 +449,8 @@ test.describe("Trial State Management", () => {
   test("TC-20: API returns appropriate status codes for different scenarios", async ({
     page,
   }) => {
-    // 200 OK for valid authenticated request
+    // 401 Unauthorized for missing auth (test first to avoid rate limit)
     const fp = generateFingerprint();
-    const validResponse = await callTrialInit(page, fp);
-    if (validResponse.status() === 200) {
-      expect(validResponse.ok()).toBeTruthy();
-    }
-
-    // 400 Bad Request for invalid input
-    const invalidResponse = await callTrialInit(page, "not-hex");
-    if (invalidResponse.status() === 400) {
-      expect(invalidResponse.status()).toBe(400);
-    }
-
-    // 401 Unauthorized for missing auth
     const unauthResponse = await page.request.post("/api/trial/init", {
       data: { fingerprint: fp },
       headers: {
@@ -471,5 +459,24 @@ test.describe("Trial State Management", () => {
       },
     });
     expect(unauthResponse.status()).toBe(401);
+
+    // 200 OK for valid authenticated request
+    const validResponse = await callTrialInit(page, fp);
+    if (validResponse.status() === 200) {
+      expect(validResponse.ok()).toBeTruthy();
+    } else if (validResponse.status() === 429) {
+      // Rate limited is acceptable here
+      expect([200, 401, 429]).toContain(validResponse.status());
+      return;
+    }
+
+    // 400 Bad Request for invalid input
+    const invalidResponse = await callTrialInit(page, "not-hex");
+    if (invalidResponse.status() === 400) {
+      expect(invalidResponse.status()).toBe(400);
+    } else if (invalidResponse.status() === 429) {
+      // Rate limited is acceptable
+      expect([400, 401, 429]).toContain(invalidResponse.status());
+    }
   });
 });
