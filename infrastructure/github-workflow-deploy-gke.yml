@@ -1,0 +1,208 @@
+# --------------------------------------------------------------------------
+# CD Pipeline — Build, Push, Deploy to GKE Autopilot
+#
+# Copy this file to .github/workflows/deploy-gke.yml to activate.
+# The PAT used by CI needs the `workflow` scope to push workflow files.
+#
+# Triggers on push to main when app source changes.
+# Builds the Next.js app image, pushes to Google Artifact Registry,
+# and deploys to GKE Autopilot cluster.
+#
+# Required GitHub Secrets:
+#   GCP_PROJECT_ID              — Google Cloud project ID
+#   GCP_SA_KEY                  — Base64-encoded service account JSON key
+#   GCP_REGION                  — GCP region (e.g. us-central1)
+#   GCP_ZONE                    — GCP zone (e.g. us-central1-a)
+#   GKE_CLUSTER_NAME            — GKE cluster name (e.g. fenrir-autopilot)
+#   GOOGLE_CLIENT_SECRET        — OAuth client secret
+#   NEXT_PUBLIC_GOOGLE_CLIENT_ID — OAuth client ID
+#   GOOGLE_PICKER_API_KEY       — Google Picker API key
+#   FENRIR_ANTHROPIC_API_KEY    — Anthropic API key
+#   ENTITLEMENT_ENCRYPTION_KEY  — AES-256 encryption key
+#   STRIPE_SECRET_KEY           — Stripe secret key
+#   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY — Stripe publishable key
+#   STRIPE_WEBHOOK_SECRET       — Stripe webhook signing secret
+#   STRIPE_PRICE_ID             — Stripe price ID
+#   KV_REST_API_URL             — KV store REST API URL
+#   KV_REST_API_TOKEN           — KV store REST API token
+# --------------------------------------------------------------------------
+
+name: Deploy to GKE
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "development/frontend/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - "infrastructure/k8s/app/**"
+      - ".github/workflows/deploy-gke.yml"
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Custom image tag (default: git SHA)"
+        required: false
+        type: string
+      skip_deploy:
+        description: "Build only — skip K8s deployment"
+        required: false
+        type: boolean
+        default: false
+
+env:
+  REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/fenrir-images
+  IMAGE_NAME: fenrir-app
+  IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
+
+jobs:
+  build-and-push:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+      full_image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push app image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_BUILD_ID=${{ github.sha }}
+            NEXT_PUBLIC_APP_VERSION=${{ github.sha }}
+
+      - name: Output image details
+        run: |
+          echo "### Docker Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registry:** \`${{ env.REGISTRY }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image:** \`${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Digest:** \`${{ steps.build.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+
+  deploy:
+    name: Deploy to GKE
+    needs: build-and-push
+    if: ${{ !inputs.skip_deploy }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
+          location: ${{ secrets.GCP_ZONE }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Create/update K8s secrets
+        run: |
+          kubectl create secret generic fenrir-app-secrets \
+            --namespace=fenrir-app \
+            --from-literal=NEXT_PUBLIC_GOOGLE_CLIENT_ID="${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}" \
+            --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            --from-literal=GOOGLE_PICKER_API_KEY="${{ secrets.GOOGLE_PICKER_API_KEY }}" \
+            --from-literal=FENRIR_ANTHROPIC_API_KEY="${{ secrets.FENRIR_ANTHROPIC_API_KEY }}" \
+            --from-literal=ENTITLEMENT_ENCRYPTION_KEY="${{ secrets.ENTITLEMENT_ENCRYPTION_KEY }}" \
+            --from-literal=APP_BASE_URL="https://app.fenrirledger.com" \
+            --from-literal=STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
+            --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}" \
+            --from-literal=STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+            --from-literal=STRIPE_PRICE_ID="${{ secrets.STRIPE_PRICE_ID }}" \
+            --from-literal=KV_REST_API_URL="${{ secrets.KV_REST_API_URL }}" \
+            --from-literal=KV_REST_API_TOKEN="${{ secrets.KV_REST_API_TOKEN }}" \
+            --from-literal=NEXT_PUBLIC_APP_VERSION="${{ github.sha }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply K8s manifests
+        run: |
+          kubectl apply -f infrastructure/k8s/app/deployment.yaml
+          kubectl apply -f infrastructure/k8s/app/service.yaml
+          kubectl apply -f infrastructure/k8s/app/ingress.yaml
+
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/fenrir-app \
+            fenrir-app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
+            --namespace=fenrir-app
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/fenrir-app \
+            --namespace=fenrir-app \
+            --timeout=300s
+
+      - name: Verify deployment
+        run: |
+          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Pod Status" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n fenrir-app -l app.kubernetes.io/name=fenrir-app >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Service Endpoints" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get svc -n fenrir-app >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Ingress" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get ingress -n fenrir-app >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Post-deploy health check
+        run: |
+          # Get the Ingress external IP (may take time to provision)
+          INGRESS_IP=$(kubectl get ingress fenrir-app -n fenrir-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+          if [ -n "$INGRESS_IP" ]; then
+            echo "Ingress IP: $INGRESS_IP"
+            # Health check via direct IP (skip SSL for post-deploy check)
+            curl -sf --max-time 10 "http://$INGRESS_IP/api/health" || echo "Warning: Health check via Ingress IP not yet available (SSL provisioning may be in progress)"
+          else
+            echo "Warning: Ingress external IP not yet assigned. SSL certificate provisioning may take 15-60 minutes."
+          fi
