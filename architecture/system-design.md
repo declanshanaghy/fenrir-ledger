@@ -11,27 +11,28 @@ Fenrir Ledger is a client-side Next.js 15 application deployed on GKE Autopilot 
 ### 10,000ft Overview
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
 graph LR
     classDef gcp fill:#4285F4,stroke:#3367D6,color:#FFF
     classDef k8s fill:#326CE5,stroke:#2558B1,color:#FFF
     classDef ext fill:#FF9800,stroke:#F57C00,color:#FFF
     classDef ci fill:#2EA44F,stroke:#238636,color:#FFF
 
-    user([User Browser]) --> lb[Google Cloud\nLoad Balancer]
-    lb --> gke[GKE Autopilot\nus-central1]
-    gke --> app[fenrir-app\n2 replicas]
+    user([User Browser]) --> lb[Google Cloud - Load Balancer]
+    lb --> gke[GKE Autopilot - us-central1]
+    gke --> app[fenrir-app - 2 replicas]
 
-    dev([Developer]) --> gh[GitHub\nmain branch]
-    gh --> actions[GitHub Actions\nCI/CD Pipeline]
-    actions --> tf[Terraform\nInfra as Code]
-    actions --> ar[Artifact Registry\nDocker Images]
+    dev([Developer]) --> gh[GitHub - main branch]
+    gh --> actions[GitHub Actions - CI/CD Pipeline]
+    actions --> tf[Terraform - Infra as Code]
+    actions --> ar[Artifact Registry - Docker Images]
     ar --> gke
-    tf --> gcp[GCP Project\nfenrir-ledger-prod]
+    tf --> gcp[GCP Project - fenrir-ledger-prod]
 
     app --> stripe[Stripe API]
-    app --> google[Google APIs\nOAuth + Sheets]
-    app --> anthropic[Anthropic API\nLLM Extraction]
-    app --> kv[KV Store\nEntitlements]
+    app --> google[Google APIs - OAuth + Sheets]
+    app --> anthropic[Anthropic API - LLM Extraction]
+    app --> kv[KV Store - Entitlements]
 
     class lb gcp
     class gke gcp
@@ -62,25 +63,26 @@ graph LR
 ### Kubernetes Resources
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
 graph TD
     classDef ns fill:#326CE5,stroke:#2558B1,color:#FFF
     classDef resource fill:#F5F5F5,stroke:#E0E0E0,color:#212121
     classDef config fill:#4CAF50,stroke:#388E3C,color:#FFF
 
-    ns_app[Namespace:\nfenrir-app] --> deploy[Deployment\n2 replicas]
-    deploy --> pod1[Pod 1\nfenrir-app:latest]
-    deploy --> pod2[Pod 2\nfenrir-app:latest]
-    ns_app --> svc[Service\nClusterIP :80 → :3000]
-    ns_app --> ingress[Ingress\nGCE Load Balancer]
-    ns_app --> cert[ManagedCertificate\napp.fenrirledger.com]
-    ns_app --> backend[BackendConfig\nHealth: /api/health]
-    ns_app --> secrets[Secret\nfenrir-app-secrets\n13 keys]
-    ns_app --> sa[ServiceAccount\nfenrir-app-sa]
-    sa --> wi[Workload Identity\n→ fenrir-app-workload@GCP]
+    ns_app[Namespace: fenrir-app] --> deploy[Deployment - 2 replicas]
+    deploy --> pod1[Pod 1 - fenrir-app:latest]
+    deploy --> pod2[Pod 2 - fenrir-app:latest]
+    ns_app --> svc[Service - ClusterIP :80 to :3000]
+    ns_app --> ingress[Ingress - GCE Load Balancer]
+    ns_app --> cert[ManagedCertificate - app.fenrirledger.com]
+    ns_app --> backend[BackendConfig - Health: /api/health]
+    ns_app --> secrets[Secret - fenrir-app-secrets - 13 keys]
+    ns_app --> sa[ServiceAccount - fenrir-app-sa]
+    sa --> wi[Workload Identity - fenrir-app-workload@GCP]
 
-    ns_agents[Namespace:\nfenrir-agents] --> jobs[Agent Jobs\nK8s Jobs on demand]
-    ns_agents --> sa_agents[ServiceAccount\nfenrir-agents-sa]
-    sa_agents --> wi_agents[Workload Identity\n→ fenrir-agents-workload@GCP]
+    ns_agents[Namespace: fenrir-agents] --> jobs[Agent Jobs - K8s Jobs on demand]
+    ns_agents --> sa_agents[ServiceAccount - fenrir-agents-sa]
+    sa_agents --> wi_agents[Workload Identity - fenrir-agents-workload@GCP]
 
     class ns_app ns
     class ns_agents ns
@@ -104,13 +106,14 @@ graph TD
 Every push to `main` triggers a 4-stage pipeline (`.github/workflows/deploy.yml`):
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
 graph LR
     classDef stage fill:#2EA44F,stroke:#238636,color:#FFF
     classDef check fill:#FF9800,stroke:#F57C00,color:#FFF
 
-    tf[1. Terraform\nPlan & Apply] --> build[2. Docker Build\n& Push to AR]
-    build --> deploy[3. Deploy to GKE\nRolling Update]
-    deploy --> health[4. Health Check\n/api/health]
+    tf[1. Terraform - Plan & Apply] --> build[2. Docker Build & Push to AR]
+    build --> deploy[3. Deploy to GKE - Rolling Update]
+    deploy --> health[4. Health Check - /api/health]
 
     class tf stage
     class build stage
@@ -126,15 +129,16 @@ graph LR
 ### IAM & Workload Identity
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
 graph LR
     classDef sa fill:#4285F4,stroke:#3367D6,color:#FFF
     classDef role fill:#F5F5F5,stroke:#E0E0E0,color:#212121
 
-    deploy_sa[fenrir-deploy SA\nGitHub Actions] --> gke_dev[roles/container.developer]
-    app_sa[fenrir-app-workload SA\nApp Pods] --> storage[roles/storage.objectViewer]
+    deploy_sa[fenrir-deploy SA - GitHub Actions] --> gke_dev[roles/container.developer]
+    app_sa[fenrir-app-workload SA - App Pods] --> storage[roles/storage.objectViewer]
     app_sa --> logging[roles/logging.logWriter]
     app_sa --> monitoring[roles/monitoring.metricWriter]
-    agents_sa[fenrir-agents-workload SA\nAgent Pods] --> storage_admin[roles/storage.objectAdmin]
+    agents_sa[fenrir-agents-workload SA - Agent Pods] --> storage_admin[roles/storage.objectAdmin]
     agents_sa --> logging2[roles/logging.logWriter]
     agents_sa --> monitoring2[roles/monitoring.metricWriter]
 
@@ -164,6 +168,7 @@ graph LR
 ### Component Architecture
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
 graph TD
     classDef primary fill:#03A9F4,stroke:#0288D1,color:#FFF
     classDef neutral fill:#F5F5F5,stroke:#E0E0E0,color:#212121
@@ -172,29 +177,29 @@ graph TD
     classDef background fill:#2C2C2C,stroke:#444,color:#FFF
 
     %% Entry points
-    browser([User Browser]) -->|HTTP GET /| dashpage[Dashboard Page\n/app/page.tsx]
-    browser -->|HTTP GET /cards/new| newpage[Add Card Page\n/app/cards/new/page.tsx]
-    browser -->|HTTP GET /cards/id/edit| editpage[Edit Card Page\n/app/cards/id/edit/page.tsx]
-    browser -->|HTTP GET /valhalla| valpage[Valhalla Page\n/app/valhalla/page.tsx]
-    browser -->|HTTP GET /sign-in| signinpage[Sign-In Page\n/app/sign-in/page.tsx]
-    browser -->|HTTP GET /auth/callback| callbackpage[Auth Callback\n/app/auth/callback/page.tsx]
-    browser -->|HTTP GET /settings| settingspage[Settings Page\n/app/settings/page.tsx]
+    browser([User Browser]) -->|HTTP GET /| dashpage[Dashboard Page - /app/page.tsx]
+    browser -->|HTTP GET /cards/new| newpage[Add Card Page -/app/cards/new/page.tsx]
+    browser -->|HTTP GET /cards/id/edit| editpage[Edit Card Page -/app/cards/id/edit/page.tsx]
+    browser -->|HTTP GET /valhalla| valpage[Valhalla Page -/app/valhalla/page.tsx]
+    browser -->|HTTP GET /sign-in| signinpage[Sign-In Page -/app/sign-in/page.tsx]
+    browser -->|HTTP GET /auth/callback| callbackpage[Auth Callback -/app/auth/callback/page.tsx]
+    browser -->|HTTP GET /settings| settingspage[Settings Page -/app/settings/page.tsx]
 
     %% Auth + entitlement contexts
-    authctx[AuthContext\nanonymous or authenticated] --> dashpage
+    authctx[AuthContext -anonymous or authenticated] --> dashpage
     authctx --> newpage
     authctx --> editpage
     authctx --> valpage
-    entctx[EntitlementContext\nStripe subscription state] --> dashpage
+    entctx[EntitlementContext -Stripe subscription state] --> dashpage
     entctx --> settingspage
 
     %% App shell
-    dashpage --> appshell[AppShell\nlayout wrapper]
+    dashpage --> appshell[AppShell -layout wrapper]
     appshell --> topbar[TopBar]
     appshell --> sidenav[SideNav]
     appshell --> footer[Footer]
     appshell --> upsell[UpsellBanner]
-    appshell --> howlpanel[HowlPanel\nurgent cards sidebar]
+    appshell --> howlpanel[HowlPanel -urgent cards sidebar]
 
     %% Dashboard page components
     dashpage --> dashboard[Dashboard Component]
@@ -202,49 +207,49 @@ graph TD
     dashboard --> skeleton[CardSkeletonGrid]
     animgrid --> cardtile[CardTile Component]
     cardtile --> statusbadge[StatusBadge Component]
-    cardtile --> statusring[StatusRing\nSVG deadline ring]
+    cardtile --> statusring[StatusRing -SVG deadline ring]
     dashboard --> emptyst[EmptyState Component]
 
     %% Form pages
     newpage --> cardform[CardForm Component]
     editpage --> cardform
-    cardform --> gleipnir[Gleipnir Fragment\nComponents]
+    cardform --> gleipnir[Gleipnir Fragment -Components]
 
     %% Import flow
     dashpage --> importwiz[ImportWizard]
     importwiz --> shareurl[ShareUrlEntry]
     importwiz --> csvupload[CsvUpload]
-    importwiz --> pickerstep[PickerStep\nGoogle Picker]
+    importwiz --> pickerstep[PickerStep -Google Picker]
     importwiz --> dedupstep[ImportDedupStep]
     importwiz --> authgate[AuthGate]
 
     %% Entitlement / Stripe
     settingspage --> stripesettings[StripeSettings]
-    settingspage --> subgate[SubscriptionGate\nsoft-only upsell]
+    settingspage --> subgate[SubscriptionGate -soft-only upsell]
     subgate --> sealedmodal[SealedRuneModal]
-    subgate --> upsellent[UpsellBanner\nentitlement]
+    subgate --> upsellent[UpsellBanner -entitlement]
     stripesettings --> unlinkdlg[UnlinkConfirmDialog]
 
     %% Easter eggs
     appshell --> konami[KonamiHowl]
-    appshell --> ragnarok[RagnarokContext\nthreshold overlay]
+    appshell --> ragnarok[RagnarokContext -threshold overlay]
     footer --> lokimode[Loki Mode trigger]
     footer --> fishbreath[GleipnirFishBreath modal]
-    appshell --> consolesig[ConsoleSignature\nclient-only, console art]
+    appshell --> consolesig[ConsoleSignature -client-only, console art]
     appshell --> forgemaster[ForgeMasterEgg]
 
     %% Shared
     dashboard --> wolfhunger[WolfHungerMeter]
 
     %% Shared lib
-    dashboard -->|reads| storage[storage.ts\nLocalStorage Abstraction]
+    dashboard -->|reads| storage[storage.ts -LocalStorage Abstraction]
     cardform -->|reads/writes| storage
     importwiz -->|writes| storage
-    storage -->|JSON serialize/deserialize| ls[(localStorage\nbrowser storage)]
+    storage -->|JSON serialize/deserialize| ls[(localStorage -browser storage)]
 
     %% Auth lib
-    signinpage -->|PKCE flow| authlib[auth/pkce.ts\nauth/session.ts]
-    callbackpage -->|token exchange| tokenapi[/api/auth/token\nserver proxy]
+    signinpage -->|PKCE flow| authlib[auth/pkce.ts -auth/session.ts]
+    callbackpage -->|token exchange| tokenapi[/api/auth/token -server proxy]
     authlib --> ls
 
     %% API routes
@@ -257,9 +262,9 @@ graph TD
     browser -->|POST webhook| stripewebhook[/api/stripe/webhook]
 
     %% Utilities
-    storage --> types[types.ts\nTypeScript Interfaces]
-    cardform --> cardutils[card-utils.ts\ncomputeCardStatus]
-    statusbadge --> realmutils[realm-utils.ts\ngetRealmLabel]
+    storage --> types[types.ts -TypeScript Interfaces]
+    cardform --> cardutils[card-utils.ts -computeCardStatus]
+    statusbadge --> realmutils[realm-utils.ts -getRealmLabel]
     dashboard --> milestoneutils[milestone-utils.ts]
     dashboard --> gleipnirutils[gleipnir-utils.ts]
 
@@ -317,6 +322,7 @@ graph TD
 ### Data Flow: Load Dashboard
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
 sequenceDiagram
     participant U as User
     participant D as Dashboard Page
@@ -339,6 +345,7 @@ sequenceDiagram
 ### Data Flow: Add Card
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
 sequenceDiagram
     participant U as User
     participant F as CardForm
@@ -370,6 +377,7 @@ sequenceDiagram
 ### Entity Relationship
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
 classDiagram
     class Household {
         +String id
@@ -409,6 +417,7 @@ classDiagram
 ### Card Status State Machine
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
 stateDiagram-v2
     [*] --> active: Card added
     active --> fee_approaching: Annual fee date within 60 days
