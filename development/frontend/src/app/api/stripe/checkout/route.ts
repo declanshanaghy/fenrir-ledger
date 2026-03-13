@@ -83,14 +83,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // No body or invalid JSON — use default
     }
 
-    // Determine the base URL for success/cancel redirects (SEV-002 fix: never use Origin header)
-    // vercel dev sets VERCEL_URL but runs plain HTTP — only use https for deployed environments
-    const baseUrl = process.env.APP_BASE_URL
-      ?? (process.env.VERCEL_URL
-        ? (process.env.VERCEL_ENV === "development"
-          ? `http://${process.env.VERCEL_URL}`
-          : `https://${process.env.VERCEL_URL}`)
-        : "http://localhost:9653");
+    // Determine the base URL for success/cancel redirects (SEV-002 fix: never use Origin header).
+    // APP_BASE_URL is set per-environment via K8s secrets (production) or .env.local (dev).
+    const baseUrl = process.env.APP_BASE_URL ?? "http://localhost:9653";
 
     // -----------------------------------------------------------------------
     // Pre-checkout: check for existing subscription to prevent duplicates

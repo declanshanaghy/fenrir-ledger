@@ -12,7 +12,7 @@
  *   - View billing history
  *
  * Requires the user to have an existing Stripe entitlement (with customer ID)
- * in Vercel KV. If no entitlement exists, returns 404.
+ * in the KV store. If no entitlement exists, returns 404.
  *
  * @see ADR-010 for the Stripe Direct integration decision
  */
@@ -81,14 +81,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // No body or invalid JSON — use default
     }
 
-    // SEV-002 fix: never use Origin header for redirect URLs
-    // vercel dev sets VERCEL_URL but runs plain HTTP — only use https for deployed environments
-    const baseUrl = process.env.APP_BASE_URL
-      ?? (process.env.VERCEL_URL
-        ? (process.env.VERCEL_ENV === "development"
-          ? `http://${process.env.VERCEL_URL}`
-          : `https://${process.env.VERCEL_URL}`)
-        : "http://localhost:9653");
+    // SEV-002 fix: never use Origin header for redirect URLs.
+    // APP_BASE_URL is set per-environment via K8s secrets (production) or .env.local (dev).
+    const baseUrl = process.env.APP_BASE_URL ?? "http://localhost:9653";
 
     const session = await stripe.billingPortal.sessions.create({
       customer: entitlement.stripeCustomerId,

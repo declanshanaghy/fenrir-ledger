@@ -8,7 +8,7 @@
   </tr>
   <tr>
     <td colspan="4">
-      <a href="https://fenrir-ledger.vercel.app"><img src="https://img.shields.io/badge/Production-Live-c9920a?style=for-the-badge&logo=vercel&logoColor=white&labelColor=07070d" alt="Production"></a>
+      <a href="https://app.fenrirledger.com"><img src="https://img.shields.io/badge/Production-GKE-c9920a?style=for-the-badge&logo=googlecloud&logoColor=white&labelColor=07070d" alt="Production"></a>
     </td>
   </tr>
   <tr>
@@ -30,21 +30,21 @@
 <table><tr>
 <td align="center" width="33%">
 
-ᚠ **<a href="https://fenrir-ledger.vercel.app/ledger" target="_blank" rel="noopener">Enter the Ledger</a>** ᚠ
+ᚠ **<a href="https://app.fenrirledger.com/ledger" target="_blank" rel="noopener">Enter the Ledger</a>** ᚠ
 
 *Name your chains before they name you.*
 
 </td>
 <td align="center" width="33%">
 
-ᚱ **<a href="https://fenrir-ledger.vercel.app" target="_blank" rel="noopener">Marketing Site</a>** ᚱ
+ᚱ **<a href="https://app.fenrirledger.com" target="_blank" rel="noopener">Marketing Site</a>** ᚱ
 
 *Read the runes. Know what hunts next.*
 
 </td>
 <td align="center" width="33%">
 
-ᛟ **<a href="https://fenrir-ledger.vercel.app/chronicles" target="_blank" rel="noopener">Session Chronicles</a>** ᛟ
+ᛟ **<a href="https://app.fenrirledger.com/chronicles" target="_blank" rel="noopener">Session Chronicles</a>** ᛟ
 
 *Every session forged in fire, recorded in runes.*
 
@@ -55,7 +55,7 @@
 
 Track every credit card in your portfolio. Every annual fee deadline, promo expiration, and sign-up bonus threshold — Fenrir watches and howls before the trap snaps shut. Add your cards, set your thresholds, and the wolf does the rest.
 
-**Stack:** Next.js 15 (App Router) · TypeScript · Tailwind · Vercel (serverless) · Stripe (subscriptions) · localStorage (data)
+**Stack:** Next.js 15 (App Router) · TypeScript · Tailwind · GKE Autopilot · Stripe (subscriptions) · localStorage (data)
 
 ---
 
@@ -194,7 +194,7 @@ graph LR
 - [System Design](architecture/system-design.md) — The load-bearing bones of this hall, forged to outlast the age
 - [ADRs](architecture/adrs/) — Every decision struck in fire, recorded so none may undo them lightly
 - [Pipeline](architecture/pipeline.md) — The channel through which all work flows, from raw ore to tempered steel
-- [Remote Builders (ADR-007)](architecture/adrs/ADR-007-remote-builder-platforms.md) — Why Depot carries our iron across the Bifrost
+- [Remote Builders (ADR-007)](architecture/adrs/ADR-007-remote-builder-platforms.md) — How agent sandboxes run across the Bifrost
 
 ---
 
@@ -223,7 +223,7 @@ graph LR
 
 - [Git Convention](.claude/skills/git-commit/SKILL.md) — How all wolves mark their kills, signed with Kenaz ᚲ
 - [Mermaid Guide](ux/ux-assets/mermaid-style-guide.md) — Runes for rendering diagrams, clear as Dagaz ᛞ
-- [Depot Setup](.claude/scripts/depot-setup.sh) — Lighting the forge from cold iron, the first spark of Fehu ᚠ
+- [GKE Infrastructure](infrastructure/) — The forge's foundation, where iron meets cloud
 - [Fire Next Up](.claude/skills/fire-next-up/SKILL.md) — The rite of passing the flame from one wolf to the next
 
 ---
