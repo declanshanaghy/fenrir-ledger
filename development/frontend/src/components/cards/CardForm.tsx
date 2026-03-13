@@ -48,6 +48,9 @@ import { toast } from "sonner";
 import type { Card, CardStatus } from "@/lib/types";
 import { saveCard, deleteCard, closeCard, getCards } from "@/lib/storage";
 import { checkMilestone } from "@/lib/milestone-utils";
+import { LS_TRIAL_START_TOAST_SHOWN, computeFingerprint } from "@/lib/trial-utils";
+import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
+import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import {
   computeCardStatus,
   dollarsToCents,
@@ -324,6 +327,38 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           toast(milestone.message, {
             duration: 5000,
             className: "milestone-toast",
+          });
+        }
+
+        // Trial start toast — fires once on first card creation (Issue #621)
+        const toastShown = localStorage.getItem(LS_TRIAL_START_TOAST_SHOWN);
+        if (!toastShown) {
+          localStorage.setItem(LS_TRIAL_START_TOAST_SHOWN, "true");
+
+          // Initialize trial via API (idempotent — safe to call multiple times)
+          void (async () => {
+            try {
+              const token = await ensureFreshToken();
+              const fingerprint = await computeFingerprint();
+              if (token && fingerprint) {
+                await fetch("/api/trial/init", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ fingerprint }),
+                });
+                // Clear trial status cache so badge picks up new state
+                clearTrialStatusCache();
+              }
+            } catch {
+              // Trial init is best-effort — don't block card creation
+            }
+          })();
+
+          toast("Your 30-day trial has begun — explore all features", {
+            duration: 8000,
           });
         }
       }

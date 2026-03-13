@@ -28,6 +28,7 @@ import { useTheme } from "next-themes";
 import { LayoutGrid, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle, cycleTheme } from "@/components/layout/ThemeToggle";
+import { TrialBadge } from "@/components/layout/TrialBadge";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -386,6 +387,9 @@ export function LedgerTopBar() {
 
       {/* RIGHT: Controls cluster */}
       <div className="relative flex items-center gap-0.5" ref={panelRef}>
+
+        {/* Trial badge — shows remaining days with color urgency (Issue #621) */}
+        <TrialBadge />
 
         {/* Theme toggle (icon variant) — hidden when signed in, theme lives in dropdown */}
         {!isAuthenticated && <ThemeToggle variant="icon" />}

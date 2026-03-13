@@ -26,6 +26,9 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { LS_TRIAL_START_TOAST_SHOWN, computeFingerprint } from "@/lib/trial-utils";
+import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
+import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import Link from "next/link";
@@ -128,6 +131,37 @@ function DashboardPageContent() {
 
     const count = importedCards.length;
     toast.success(`${count} card${count !== 1 ? "s" : ""} added to your ledger.`);
+
+    // Trial start toast — fires once on first card import (Issue #621)
+    const toastShown = localStorage.getItem(LS_TRIAL_START_TOAST_SHOWN);
+    if (!toastShown) {
+      localStorage.setItem(LS_TRIAL_START_TOAST_SHOWN, "true");
+
+      // Initialize trial via API (idempotent)
+      void (async () => {
+        try {
+          const token = await ensureFreshToken();
+          const fingerprint = await computeFingerprint();
+          if (token && fingerprint) {
+            await fetch("/api/trial/init", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ fingerprint }),
+            });
+            clearTrialStatusCache();
+          }
+        } catch {
+          // Trial init is best-effort — don't block import flow
+        }
+      })();
+
+      toast("Your 30-day trial has begun — explore all features", {
+        duration: 8000,
+      });
+    }
   }
 
   // Whether we have at least one card (drives CTA visibility rules)
