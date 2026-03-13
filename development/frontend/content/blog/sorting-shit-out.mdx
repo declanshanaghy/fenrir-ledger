@@ -1,0 +1,205 @@
+---
+title: "The Fourth Binding of the Serpent"
+date: "2026-03-12"
+rune: "ᚦ"
+excerpt: "A 4th-time Stripe re-subscribe bug hunted to its lair, slain with a two-line fix, and bound forever by 12 unit tests — plus orchestrator dispatch of three wolves into the field."
+slug: "sorting-shit-out"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᚦ ᛉ ᛇ ᛏ</span>
+  <h1 className="session-title">The Fourth Binding of the Serpent</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">2026-03-12</span></span>
+      <span>Session <span className="val">sorting-shit-out</span></span>
+      <span>Acts <span className="val">8</span></span>
+      <span>Files changed <span className="val">2</span></span>
+  </div>
+</header>
+
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
+      <li><a href="#act-1"><span className="toc-rune">ᛏ</span> <span className="toc-num">I</span> The Pack Reports</a></li>
+      <li><a href="#act-2"><span className="toc-rune">ᚱ</span> <span className="toc-num">II</span> The Nav Rune Misaligned</a></li>
+      <li><a href="#act-3"><span className="toc-rune">ᚦ</span> <span className="toc-num">III</span> The Serpent Surfaces Again</a></li>
+      <li><a href="#act-4"><span className="toc-rune">ᛇ</span> <span className="toc-num">IV</span> Vercel's Blind Eye</a></li>
+      <li><a href="#act-5"><span className="toc-rune">ᛉ</span> <span className="toc-num">V</span> The Test Matrix Inscribed</a></li>
+      <li><a href="#act-6"><span className="toc-rune">ᚦ</span> <span className="toc-num">VI</span> The Serpent's True Name</a></li>
+      <li><a href="#act-7"><span className="toc-rune">ᛉ</span> <span className="toc-num">VII</span> The Binding Forged</a></li>
+      <li><a href="#act-8"><span className="toc-rune">ᛏ</span> <span className="toc-num">VIII</span> Three Wolves Loosed</a></li>
+  </ul>
+</nav>
+
+<div className="timeline">
+
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="The Pack Reports">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Orchestration</p>
+        <h2 className="entry-title">The Pack Reports</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The orchestrator surveyed the field. Three chains in flight: <span className="mono">#623</span> (Loki FAIL), <span className="mono">#642</span> (awaiting Luna), <span className="mono">#643</span> (Loki PASS). Auto-merged PR <span className="hl">#649</span> — Thrall 5-card limit shipped. The dashboard rendered itself in war-room cadence.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="The Nav Rune Misaligned">ᚱ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Issue Filing</p>
+        <h2 className="entry-title">The Nav Rune Misaligned</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">file issue to standardize marketing site nav menu, currently Free Trial is always highlighted</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Odin spotted a misaligned rune in the marketing nav — <span className="hl">Free Trial</span> always highlighted regardless of current page. Filed <span className="mono">#662</span> as a bug, added to Up Next. The <span className="mono">MarketingNavbar.tsx</span> component needs <span className="mono">usePathname()</span> awareness.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="The Serpent Surfaces Again">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Bug Investigation</p>
+        <h2 className="entry-title">The Serpent Surfaces Again</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">failed re-subscription on stripe</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>A HAR file revealed the wound: <span className="mono">POST /api/stripe/checkout</span> returning <span className="hl">500</span> with a swallowed error. Git history exposed three prior fix attempts — <span className="mono">#460</span>, <span className="mono">#545</span>, <span className="mono">#565</span> — each patching a different failure mode but none catching the true serpent. Filed <span className="mono">#663</span> and escalated to critical.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="Vercel's Blind Eye">ᛇ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Debugging</p>
+        <h2 className="entry-title">Vercel's Blind Eye</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Check vercel logs for extra information</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Vercel logs revealed only entry-point messages — the <span className="mono">log.error</span> from the catch block never surfaced. Three 500s in 13 seconds confirmed Odin clicked thrice. The logging itself was broken: <span className="hl">every future failure equally opaque</span>. A second problem discovered alongside the first.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="The Test Matrix Inscribed">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Architecture</p>
+        <h2 className="entry-title">The Test Matrix Inscribed</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">what tests need to exist to protect it? ruthless mode what layer should they live at?</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Ruthless mode engaged. The verdict: <span className="hl">Vitest unit tests</span>, not Playwright. A 12-scenario test matrix designed — covering revive params, deleted customers, deleted subscriptions, stale KV, fresh checkout, duplicates. Tests 6 and 7 would have caught this bug all four times. They had never existed.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-6">
+      <div className="entry-rune" title="The Serpent's True Name">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VI · Root Cause</p>
+        <h2 className="entry-title">The Serpent's True Name</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">lets get you setup to debug stripe side, apikey?</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Direct Stripe API interrogation exposed the carnage: <span className="hl">8 duplicate customers</span>, 17 canceled subscriptions, 1 active sub with <span className="mono">cancel_at: 2026-04-12</span> but <span className="mono">cancel_at_period_end: false</span>. The killing blow: testing the exact revive call returned <span className="hl">"Received both cancel_at_period_end and cancel_at parameters. Please pass in only one."</span> PR #566's fix had introduced the regression.</p></div>
+          <div className="code-block"><pre><span className="cr">- const updateParams = { cancel_at_period_end: false };</span>
+<span className="cr">- if (subscription.cancel_at !== null) {</span>
+<span className="cr">-   updateParams.cancel_at = "";  // BOOM: can't send both</span>
+<span className="cr">- }</span>
+<span className="ca">+ const updateParams = subscription.cancel_at !== null</span>
+<span className="ca">+   ? { cancel_at: "" }</span>
+<span className="ca">+   : { cancel_at_period_end: false };</span></pre></div>
+          <div className="bug-box">
+            <p className="bug-label">Bug Fixed</p>
+            <p className="bug-text">Stripe rejects both cancel_at_period_end and cancel_at in the same request. PR #566 sent both when cancel_at was set. Fix: send only one, choosing based on which is set.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-7">
+      <div className="entry-rune" title="The Binding Forged">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VII · Implementation</p>
+        <h2 className="entry-title">The Binding Forged</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">ok do it all here and now</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>No dispatch. No agents. Odin's hands and mine. Two revive paths patched (lines 150 and 276). Error response enriched with actual Stripe message. <span className="hl">12 Vitest unit tests</span> written covering every cancel-param combination, both revive paths, duplicate prevention, deleted customer, deleted subscription, fresh checkout, and missing config. All 85 stripe tests green. Fix verified against live Stripe API. Branch, commit, PR <span className="mono">#664</span>, CI green, merged. HKR.</p></div>
+          <div className="file-chips">
+            <span className="chip chip-new">development/frontend/src/__tests__/stripe/checkout-route.test.ts</span>
+            <span className="chip chip-mod">development/frontend/src/app/api/stripe/checkout/route.ts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-8">
+      <div className="entry-rune" title="Three Wolves Loosed">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VIII · Orchestration</p>
+        <h2 className="entry-title">Three Wolves Loosed</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume, then dispatch #623, #644, #654</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Dashboard refreshed. #643 done, #663 slain. Three wolves dispatched to Depot: <span className="hl">FiremanDecko</span> bounced back to fix #623's E2E test mocking (mock API route, not localStorage). <span className="hl">Luna</span> sent to wireframe trust/safety messaging for #644. <span className="hl">FiremanDecko</span> again for #654 — the admin console at <span className="mono">/admin</span>, Odin's war room. Hidden route, Google auth with admin whitelist, first-class TypeScript data layer.</p></div>
+        </div>
+      </div>
+    </section>
+</div>
+
+<footer className="session-footer">
+  <div className="footer-cipher">ᚦ ᛉ ᛇ ᛏ</div>
+  <div className="footer-text">The Fourth Binding of the Serpent · Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
+</footer>
+
+</div>
