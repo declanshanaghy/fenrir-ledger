@@ -1,12 +1,165 @@
-# System Design: Fenrir Ledger (Post-Stripe Direct — Current)
+# System Design: Fenrir Ledger (Post-GKE Migration — Current)
 
 ## Overview
 
-Fenrir Ledger is a client-side Next.js 15 application deployed on Vercel at https://fenrir-ledger.vercel.app. All user data is persisted in localStorage behind a typed abstraction layer, namespaced per household. Authentication is anonymous-first (ADR-006): users can use the app immediately without signing in. Optional Google OIDC sign-in (Authorization Code + PKCE, ADR-005) enables cloud sync and Stripe subscription management. Subscription entitlements are managed via Stripe Direct (ADR-010) with webhook-driven updates stored in Vercel KV. SubscriptionGate is soft-only: it always renders children but prepends an upsell card for non-subscribers. The app includes a three-path import workflow (Google Sheets URL, CSV upload, manual entry), Framer Motion animations, and a deep Norse mythology easter egg layer. Patreon has been fully removed; Stripe is the sole subscription platform.
+Fenrir Ledger is a client-side Next.js 15 application deployed on GKE Autopilot in `us-central1`. All user data is persisted in localStorage behind a typed abstraction layer, namespaced per household. Authentication is anonymous-first (ADR-006): users can use the app immediately without signing in. Optional Google OIDC sign-in (Authorization Code + PKCE, ADR-005) enables cloud sync and Stripe subscription management. Subscription entitlements are managed via Stripe Direct (ADR-010) with webhook-driven updates stored in KV. SubscriptionGate is soft-only: it always renders children but prepends an upsell card for non-subscribers. The app includes a three-path import workflow (Google Sheets URL, CSV upload, manual entry), Framer Motion animations, and a deep Norse mythology easter egg layer. Patreon has been fully removed; Stripe is the sole subscription platform.
 
 ---
 
-## Architecture
+## Infrastructure Architecture
+
+### 10,000ft Overview
+
+```mermaid
+graph LR
+    classDef gcp fill:#4285F4,stroke:#3367D6,color:#FFF
+    classDef k8s fill:#326CE5,stroke:#2558B1,color:#FFF
+    classDef ext fill:#FF9800,stroke:#F57C00,color:#FFF
+    classDef ci fill:#2EA44F,stroke:#238636,color:#FFF
+
+    user([User Browser]) --> lb[Google Cloud\nLoad Balancer]
+    lb --> gke[GKE Autopilot\nus-central1]
+    gke --> app[fenrir-app\n2 replicas]
+
+    dev([Developer]) --> gh[GitHub\nmain branch]
+    gh --> actions[GitHub Actions\nCI/CD Pipeline]
+    actions --> tf[Terraform\nInfra as Code]
+    actions --> ar[Artifact Registry\nDocker Images]
+    ar --> gke
+    tf --> gcp[GCP Project\nfenrir-ledger-prod]
+
+    app --> stripe[Stripe API]
+    app --> google[Google APIs\nOAuth + Sheets]
+    app --> anthropic[Anthropic API\nLLM Extraction]
+    app --> kv[KV Store\nEntitlements]
+
+    class lb gcp
+    class gke gcp
+    class ar gcp
+    class gcp gcp
+    class tf gcp
+    class app k8s
+    class stripe ext
+    class google ext
+    class anthropic ext
+    class kv ext
+    class gh ci
+    class actions ci
+```
+
+### GKE Cluster Details
+
+| Property | Value |
+|----------|-------|
+| **Project** | `fenrir-ledger-prod` |
+| **Cluster** | `fenrir-autopilot` |
+| **Region** | `us-central1` |
+| **Type** | GKE Autopilot (Google manages nodes, scaling, patching) |
+| **Artifact Registry** | `us-central1-docker.pkg.dev/fenrir-ledger-prod/fenrir-images` |
+| **VPC** | `fenrir-vpc` with subnet `fenrir-subnet` (pods + services CIDR ranges) |
+| **Release Channel** | REGULAR |
+
+### Kubernetes Resources
+
+```mermaid
+graph TD
+    classDef ns fill:#326CE5,stroke:#2558B1,color:#FFF
+    classDef resource fill:#F5F5F5,stroke:#E0E0E0,color:#212121
+    classDef config fill:#4CAF50,stroke:#388E3C,color:#FFF
+
+    ns_app[Namespace:\nfenrir-app] --> deploy[Deployment\n2 replicas]
+    deploy --> pod1[Pod 1\nfenrir-app:latest]
+    deploy --> pod2[Pod 2\nfenrir-app:latest]
+    ns_app --> svc[Service\nClusterIP :80 → :3000]
+    ns_app --> ingress[Ingress\nGCE Load Balancer]
+    ns_app --> cert[ManagedCertificate\napp.fenrirledger.com]
+    ns_app --> backend[BackendConfig\nHealth: /api/health]
+    ns_app --> secrets[Secret\nfenrir-app-secrets\n13 keys]
+    ns_app --> sa[ServiceAccount\nfenrir-app-sa]
+    sa --> wi[Workload Identity\n→ fenrir-app-workload@GCP]
+
+    ns_agents[Namespace:\nfenrir-agents] --> jobs[Agent Jobs\nK8s Jobs on demand]
+    ns_agents --> sa_agents[ServiceAccount\nfenrir-agents-sa]
+    sa_agents --> wi_agents[Workload Identity\n→ fenrir-agents-workload@GCP]
+
+    class ns_app ns
+    class ns_agents ns
+    class deploy resource
+    class pod1 resource
+    class pod2 resource
+    class svc resource
+    class ingress resource
+    class cert resource
+    class backend resource
+    class secrets config
+    class sa config
+    class wi config
+    class jobs resource
+    class sa_agents config
+    class wi_agents config
+```
+
+### CI/CD Pipeline
+
+Every push to `main` triggers a 4-stage pipeline (`.github/workflows/deploy.yml`):
+
+```mermaid
+graph LR
+    classDef stage fill:#2EA44F,stroke:#238636,color:#FFF
+    classDef check fill:#FF9800,stroke:#F57C00,color:#FFF
+
+    tf[1. Terraform\nPlan & Apply] --> build[2. Docker Build\n& Push to AR]
+    build --> deploy[3. Deploy to GKE\nRolling Update]
+    deploy --> health[4. Health Check\n/api/health]
+
+    class tf stage
+    class build stage
+    class deploy stage
+    class health check
+```
+
+1. **Terraform** — ensures cluster, VPC, IAM, and SSL resources are up to date (idempotent)
+2. **Build & Push** — Docker build with GHA cache, push to Artifact Registry (SHA + latest tags)
+3. **Deploy** — creates namespace + SA if needed, applies K8s manifests, sets image tag, waits for rollout
+4. **Health Check** — curls `/api/health` on the Ingress IP, retries up to 5 times
+
+### IAM & Workload Identity
+
+```mermaid
+graph LR
+    classDef sa fill:#4285F4,stroke:#3367D6,color:#FFF
+    classDef role fill:#F5F5F5,stroke:#E0E0E0,color:#212121
+
+    deploy_sa[fenrir-deploy SA\nGitHub Actions] --> gke_dev[roles/container.developer]
+    app_sa[fenrir-app-workload SA\nApp Pods] --> storage[roles/storage.objectViewer]
+    app_sa --> logging[roles/logging.logWriter]
+    app_sa --> monitoring[roles/monitoring.metricWriter]
+    agents_sa[fenrir-agents-workload SA\nAgent Pods] --> storage_admin[roles/storage.objectAdmin]
+    agents_sa --> logging2[roles/logging.logWriter]
+    agents_sa --> monitoring2[roles/monitoring.metricWriter]
+
+    class deploy_sa sa
+    class app_sa sa
+    class agents_sa sa
+    class gke_dev role
+    class storage role
+    class logging role
+    class monitoring role
+    class storage_admin role
+    class logging2 role
+    class monitoring2 role
+```
+
+### Networking
+
+- **Private cluster** — nodes have no public IPs, control plane accessible via auth
+- **Master authorized networks** — currently open (restrict in production)
+- **Ingress** — GCE external HTTP(S) Load Balancer with BackendConfig health checks
+- **SSL** — Google-managed certificate for `app.fenrirledger.com` (provisioning requires DNS)
+
+---
+
+## Application Architecture
 
 ### Component Architecture
 
@@ -278,316 +431,52 @@ stateDiagram-v2
 
 ---
 
-## File Structure
+## Subsystem Responsibilities
 
-```
-development/frontend/
-├── .env.example                     # Committed placeholder env template
-├── .env.local                       # Local secrets (gitignored)
-├── next.config.ts                   # Next.js configuration
-├── tailwind.config.ts               # Tailwind configuration (Saga Ledger theme extensions)
-├── components.json                  # shadcn/ui configuration
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx               # Root layout (fonts, global styles, metadata)
-│   │   ├── page.tsx                 # Dashboard (/) — "use client"
-│   │   ├── globals.css              # Saga Ledger theme: void-black bg, gold accents, Norse fonts
-│   │   ├── sign-in/
-│   │   │   └── page.tsx             # Sign-in page (opt-in upgrade, not a gate)
-│   │   ├── auth/
-│   │   │   └── callback/
-│   │   │       └── page.tsx         # OAuth callback — PKCE code exchange
-│   │   ├── valhalla/
-│   │   │   ├── layout.tsx           # Valhalla layout
-│   │   │   └── page.tsx             # Closed cards archive
-│   │   ├── settings/
-│   │   │   ├── layout.tsx           # Settings layout
-│   │   │   └── page.tsx             # Subscription settings (Stripe management, unlink)
-│   │   ├── cards/
-│   │   │   ├── new/
-│   │   │   │   └── page.tsx         # Add card page — "use client"
-│   │   │   └── [id]/
-│   │   │       └── edit/
-│   │   │           └── page.tsx     # Edit card page — "use client"
-│   │   └── api/
-│   │       ├── auth/
-│   │       │   └── token/
-│   │       │       └── route.ts     # Server proxy — adds client_secret for Google token exchange
-│   │       ├── config/
-│   │       │   └── picker/
-│   │       │       └── route.ts     # Auth-gated Google Picker API key endpoint
-│   │       ├── sheets/
-│   │       │   └── import/
-│   │       │       └── route.ts     # Google Sheets import API (server-side)
-│   │       └── stripe/
-│   │           ├── checkout/
-│   │           │   └── route.ts     # Stripe Checkout session creation
-│   │           ├── membership/
-│   │           │   └── route.ts     # Stripe membership/entitlement lookup
-│   │           ├── portal/
-│   │           │   └── route.ts     # Stripe Customer Portal session creation
-│   │           ├── unlink/
-│   │           │   └── route.ts     # Unlink Stripe subscription from account
-│   │           └── webhook/
-│   │               └── route.ts     # Stripe webhook handler (entitlement updates)
-│   ├── contexts/
-│   │   ├── AuthContext.tsx           # Auth state: "loading" | "authenticated" | "anonymous"
-│   │   ├── EntitlementContext.tsx    # Stripe subscription entitlement state
-│   │   └── RagnarokContext.tsx       # Ragnarok threshold provider (>= 5 urgent cards)
-│   ├── hooks/
-│   │   ├── useAuth.ts               # Auth hook exposing householdId, status, session
-│   │   ├── useDriveToken.ts         # Manages Drive-scoped access token for Google Picker
-│   │   ├── useEntitlement.ts        # Stripe entitlement hook (hasFeature, isLoading)
-│   │   ├── usePickerConfig.ts       # Fetches Picker API key from server
-│   │   └── useSheetImport.ts        # Google Sheets import state management
-│   ├── components/
-│   │   ├── ui/                      # shadcn/ui generated components
-│   │   │   ├── button.tsx
-│   │   │   ├── card.tsx
-│   │   │   ├── input.tsx
-│   │   │   ├── label.tsx
-│   │   │   ├── select.tsx
-│   │   │   ├── badge.tsx
-│   │   │   ├── dialog.tsx
-│   │   │   ├── checkbox.tsx
-│   │   │   └── textarea.tsx
-│   │   ├── layout/
-│   │   │   ├── AppShell.tsx         # Root layout wrapper: TopBar + SideNav + main + Footer
-│   │   │   ├── TopBar.tsx           # Top bar with auth state (anonymous rune / signed-in avatar)
-│   │   │   ├── SiteHeader.tsx       # Desktop site header (logo, actions)
-│   │   │   ├── SideNav.tsx          # Collapsible sidebar navigation
-│   │   │   ├── Footer.tsx           # Footer with Loki easter egg + GleipnirFishBreath trigger
-│   │   │   ├── HowlPanel.tsx        # Urgent cards sidebar (Framer Motion slide-in)
-│   │   │   ├── UpsellBanner.tsx     # Dismissible cloud sync upsell for anonymous users
-│   │   │   ├── SyncIndicator.tsx    # Sync status indicator (Gleipnir fragment 1 trigger)
-│   │   │   ├── ConsoleSignature.tsx # Console ASCII art (client-only, runs once per session)
-│   │   │   ├── KonamiHowl.tsx       # Konami code easter egg
-│   │   │   ├── AboutModal.tsx       # About/credits modal (includes WolfHungerMeter)
-│   │   │   ├── ForgeMasterEgg.tsx   # Forge Master easter egg component
-│   │   │   └── ThemeToggle.tsx      # Theme toggle component
-│   │   ├── dashboard/
-│   │   │   ├── Dashboard.tsx        # "use client" — reads cards from storage
-│   │   │   ├── AnimatedCardGrid.tsx # Framer Motion stagger animation grid
-│   │   │   ├── CardSkeletonGrid.tsx # Gold palette shimmer loading state
-│   │   │   ├── CardTile.tsx         # Card display tile with status badge + StatusRing
-│   │   │   ├── StatusBadge.tsx      # Realm-mapped status badge (uses getRealmLabel)
-│   │   │   ├── StatusRing.tsx       # SVG deadline progress ring
-│   │   │   └── EmptyState.tsx       # Saga Ledger empty state with Gleipnir copy
-│   │   ├── entitlement/
-│   │   │   ├── index.ts             # Barrel export
-│   │   │   ├── SubscriptionGate.tsx # Soft-only gate: always renders children, prepends upsell
-│   │   │   ├── SealedRuneModal.tsx  # Norse-themed modal for locked features
-│   │   │   ├── StripeSettings.tsx   # Stripe subscription management panel
-│   │   │   ├── UpsellBanner.tsx     # Entitlement-aware upsell banner
-│   │   │   └── UnlinkConfirmDialog.tsx # Confirm dialog for unlinking Stripe subscription
-│   │   ├── shared/
-│   │   │   ├── WolfHungerMeter.tsx  # Aggregate bonus summary meter
-│   │   │   └── AuthGate.tsx         # Hides children for anonymous users
-│   │   ├── cards/
-│   │   │   ├── CardForm.tsx         # "use client" — shared add/edit form
-│   │   │   ├── GleipnirFishBreath.tsx
-│   │   │   ├── GleipnirBearSinews.tsx
-│   │   │   ├── GleipnirBirdSpittle.tsx
-│   │   │   ├── GleipnirCatFootfall.tsx
-│   │   │   ├── GleipnirMountainRoots.tsx
-│   │   │   └── GleipnirWomansBeard.tsx
-│   │   ├── sheets/
-│   │   │   ├── ImportWizard.tsx     # Three-path import wizard
-│   │   │   ├── MethodSelection.tsx  # Import method picker
-│   │   │   ├── ShareUrlEntry.tsx    # Google Sheets URL entry
-│   │   │   ├── CsvUpload.tsx        # CSV file upload
-│   │   │   ├── PickerStep.tsx       # Google Picker integration step
-│   │   │   ├── ImportDedupStep.tsx  # Deduplication step
-│   │   │   ├── StepIndicator.tsx    # Wizard step indicator
-│   │   │   └── SafetyBanner.tsx     # Safety/privacy banner
-│   │   └── easter-eggs/
-│   │       ├── EasterEggModal.tsx   # Shared modal shell for Gleipnir fragments
-│   │       └── LcarsOverlay.tsx     # Star Trek LCARS mode overlay
-│   └── lib/
-│       ├── types.ts                 # TypeScript interfaces: Household, Card, FenrirSession, etc.
-│       ├── storage.ts               # localStorage abstraction layer (per-household namespaced)
-│       ├── card-utils.ts            # Pure functions: computeCardStatus, etc.
-│       ├── realm-utils.ts           # getRealmLabel() — Norse realm display helpers
-│       ├── milestone-utils.ts       # Card count milestone toast thresholds
-│       ├── gleipnir-utils.ts        # Fragment count + isGleipnirComplete()
-│       ├── merge-anonymous.ts       # Anonymous to authenticated data migration
-│       ├── constants.ts             # STORAGE_KEY_PREFIX, status threshold days, etc.
-│       ├── utils.ts                 # General utility helpers (shadcn cn())
-│       ├── logger.ts                # tslog wrapper with secret masking
-│       ├── rate-limit.ts            # Rate limiting utility for API routes
-│       ├── auth/
-│       │   ├── pkce.ts              # PKCE utilities (verifier, challenge, state)
-│       │   ├── session.ts           # localStorage session read/write
-│       │   ├── household.ts         # Anonymous householdId generation
-│       │   ├── require-auth.ts      # API route auth guard (requireAuth)
-│       │   └── verify-id-token.ts   # Google ID token verification
-│       ├── crypto/                  # Cryptographic utilities
-│       ├── entitlement/
-│       │   ├── index.ts             # Barrel export
-│       │   ├── types.ts             # PremiumFeature, entitlement types
-│       │   ├── feature-descriptions.ts # Feature name/description registry
-│       │   └── cache.ts             # Entitlement cache (Vercel KV)
-│       ├── google/
-│       │   ├── picker.ts            # Google Picker API wrapper
-│       │   ├── gis.ts               # GIS token client for Drive consent
-│       │   └── sheets-api.ts        # Sheets API v4 client
-│       ├── kv/                      # Vercel KV abstraction layer
-│       ├── llm/
-│       │   └── extract.ts           # LLM provider factory (Anthropic/OpenAI)
-│       ├── sheets/
-│       │   ├── import-pipeline.ts   # URL import pipeline
-│       │   ├── csv-import-pipeline.ts # CSV import pipeline
-│       │   └── extract-cards.ts     # Shared LLM extraction
-│       └── stripe/
-│           ├── api.ts               # Stripe API client
-│           ├── types.ts             # Stripe-specific types
-│           └── webhook.ts           # Stripe webhook event processing
-```
+### Data Persistence
 
----
+All user data lives in `localStorage` behind a typed abstraction layer. Every read/write goes through the storage module — no direct `window.localStorage` access anywhere. Keys are namespaced per household ID. Schema migrations run on module load when the version changes.
 
-## Component Responsibilities
+Card status is computed deterministically from dates: `computeCardStatus(card, today)` returns one of `active`, `fee_approaching`, `promo_expiring`, or `closed`. Norse realm labels (Asgard-bound, Muspelheim, Hati approaches, In Valhalla) are display-only mappings.
 
-### `src/lib/types.ts`
-Defines all shared TypeScript interfaces including `Household`, `Card`, `SignUpBonus`, `CardStatus`, and `FenrirSession`. No logic — types only.
+### Authentication
 
-### `src/lib/constants.ts`
-Defines all magic values: storage key prefixes, status threshold days (60 for fee approaching, 30 for promo expiring).
+Anonymous-first design (ADR-006). Users get a UUID household ID immediately and can use every feature without signing in. Optional Google OIDC (Authorization Code + PKCE, ADR-005) upgrades the session. The server-side token proxy adds `client_secret` during code exchange. When a user signs in after using the app anonymously, their localStorage data merges into the authenticated namespace.
 
-### `src/lib/storage.ts`
-The localStorage abstraction. All reads/writes to `window.localStorage` go through here. Keys are namespaced per `householdId` (per-household keys, see ADR-004). Wraps operations in try/catch. Calls `migrateIfNeeded()` on module load.
+Every API route (except the token exchange proxy) enforces auth via `requireAuth(request)` — returning early if the request lacks valid credentials.
 
-### `src/lib/card-utils.ts`
-Pure utility functions. `computeCardStatus(card, today)` is deterministic and takes an optional `today` parameter for testability.
+### Entitlement & Subscription
 
-### `src/lib/realm-utils.ts`
-`getRealmLabel(status, daysRemaining)` maps `CardStatus` values to Norse realm vocabulary for display: Asgard-bound (active), Muspelheim (fee approaching), Hati approaches (promo expiring), In Valhalla (closed).
+Stripe Direct (ADR-010) is the sole subscription platform. Two tiers: Thrall (free) and Karl ($3.99/mo). Stripe webhooks update entitlement state in a KV store keyed by Google `sub`. The SubscriptionGate is soft-only — it always renders children but prepends a Norse-themed upsell card for non-subscribers. The SealedRuneModal presents locked features with a link to Stripe Checkout.
 
-### `src/lib/milestone-utils.ts`
-Card count milestone toast thresholds (1/5/9/13/20). Returns Norse-flavored toast messages for the sonner toast library.
+### Import Pipeline
 
-### `src/lib/gleipnir-utils.ts`
-Tracks Gleipnir fragment collection progress. `isGleipnirComplete()` checks all 6 fragments. Fragment keys stored in localStorage as `egg:gleipnir-{N}`.
+Three-path import wizard for credit card data:
+1. **URL** — paste a Google Sheets URL, server fetches CSV, LLM extracts card data
+2. **Google Picker** — GIS consent + Picker UI + Sheets v4 API + LLM extraction
+3. **CSV Upload** — direct file upload + LLM extraction
 
-### `src/lib/merge-anonymous.ts`
-Handles merging anonymous localStorage data into an authenticated user's namespace when a user signs in after accumulating anonymous data.
+All three paths converge at a deduplication step before writing to localStorage. The LLM extraction layer supports Anthropic (primary) and OpenAI (fallback).
 
-### `src/lib/logger.ts`
-tslog wrapper providing structured logging with automatic secret masking via `maskValuesOfKeys` and `maskValuesRegEx`. JSON output in production, pretty output in development.
+### App Shell & Navigation
 
-### `src/lib/rate-limit.ts`
-Rate limiting utility for API routes. Prevents abuse of server-side endpoints.
+The AppShell wraps every page: TopBar (mobile) / SiteHeader (desktop), collapsible SideNav, HowlPanel (urgent cards sidebar with Framer Motion slide-in), UpsellBanner, main content slot, and Footer. Routes live under `/ledger` (dashboard, cards, valhalla, settings, auth). Marketing pages own `/`.
 
-### `src/lib/auth/pkce.ts`
-PKCE utilities for the Google OAuth flow: generates `code_verifier`, `code_challenge` (S256), and state parameter using Web Crypto API.
+### Dashboard & Card Display
 
-### `src/lib/auth/session.ts`
-localStorage session read/write for `FenrirSession`. Stored at `fenrir:auth`.
+The dashboard renders an animated card grid (Framer Motion stagger) with shimmer loading states. Each CardTile shows issuer, name, StatusBadge (Norse realm label), StatusRing (SVG progress arc driven by days remaining), annual fee date, and sign-up bonus deadline. The WolfHungerMeter aggregates met bonuses. Milestone toasts fire at card counts 1/5/9/13/20.
 
-### `src/lib/auth/household.ts`
-`getOrCreateAnonHouseholdId()` — generates or retrieves a UUID for anonymous users from `fenrir:household` in localStorage.
+### Card Form
 
-### `src/lib/auth/require-auth.ts`
-API route auth guard. Every API route handler (except `/api/auth/token`) must call `requireAuth(request)` and return early if `!auth.ok`.
+Shared react-hook-form + Zod form for add and edit flows. Generates/preserves card ID, computes status, saves to storage, redirects to dashboard. Scroll-to-first-error on validation failure (DOM position order, not schema order).
 
-### `src/lib/entitlement/`
-Entitlement system for Stripe subscriptions. Defines `PremiumFeature` types, feature descriptions, and a Vercel KV cache layer at `entitlement:{googleSub}`.
+### Easter Egg Layer (Gleipnir Hunt)
 
-### `src/lib/stripe/`
-Stripe integration library. `api.ts` wraps Stripe SDK calls; `types.ts` defines Stripe-specific types; `webhook.ts` processes Stripe webhook events to update entitlement state in Vercel KV.
+Six hidden fragments referencing the mythological ingredients of Gleipnir (the binding of Fenrir). Each fragment triggers a Norse-themed reveal modal with a unique SVG artifact. Additional eggs: Konami code howl, LCARS overlay, console ASCII runes, ForgeMaster, and Ragnarok threshold (overlay when >= 5 cards are urgent).
 
-### `src/lib/google/`
-Google API integration. `picker.ts` wraps the Google Picker API; `gis.ts` handles GIS token consent for Drive access; `sheets-api.ts` reads spreadsheet data via the Sheets v4 API.
+### Structured Logging
 
-### `src/contexts/AuthContext.tsx`
-React context providing auth state: `"loading" | "authenticated" | "anonymous"`. Exposes `householdId` (from Google `sub` if signed in, or anonymous UUID). Does not redirect — anonymous users access all routes freely.
-
-### `src/contexts/EntitlementContext.tsx`
-React context providing Stripe subscription entitlement state. Exposes `hasFeature(feature)` and `isLoading`. Fetches entitlement from `/api/stripe/membership` for authenticated users.
-
-### `src/contexts/RagnarokContext.tsx`
-Ragnarok threshold provider. When >= 5 cards have urgent status, triggers the Ragnarok overlay effect and dramatic mode on HowlPanel.
-
-### `src/components/layout/AppShell.tsx`
-Root layout wrapper providing the persistent shell: TopBar (mobile), SiteHeader (desktop), SideNav (collapsible), HowlPanel, UpsellBanner, main content slot, Footer. Also mounts ConsoleSignature, KonamiHowl, and ForgeMasterEgg easter egg components.
-
-### `src/components/layout/HowlPanel.tsx`
-Urgent cards sidebar. Slides in via Framer Motion when urgent cards exist. Has a dramatic mode triggered by RagnarokContext.
-
-### `src/components/layout/Footer.tsx`
-Three-column footer. Contains the Loki Mode 7-click trigger and the GleipnirFishBreath "Breath of a Fish" easter egg hover trigger.
-
-### `src/components/layout/UpsellBanner.tsx`
-Dismissible cloud sync upsell banner for anonymous users. Rendered on the dashboard route only. Dismiss sets `fenrir:upsell_dismissed` in localStorage permanently.
-
-### `src/components/layout/SyncIndicator.tsx`
-Sync status indicator dot. Clicking triggers Gleipnir fragment 1 (Cat's Footfall).
-
-### `src/components/layout/ConsoleSignature.tsx`
-Client-only component that prints Elder Futhark ASCII art to the browser console once per session.
-
-### `src/components/layout/KonamiHowl.tsx`
-Listens for the Konami code sequence and triggers a full-screen howl animation.
-
-### `src/components/layout/ThemeToggle.tsx`
-Theme toggle component for switching between light and dark modes.
-
-### `src/components/entitlement/SubscriptionGate.tsx`
-Soft-only gate component. Always renders children but prepends an upsell card for non-subscribers. When the feature is locked, renders a Norse-themed info card with an "Unlock with Karl" link that opens the SealedRuneModal.
-
-### `src/components/entitlement/SealedRuneModal.tsx`
-Norse-themed modal shown when a user clicks to unlock a premium feature. Presents the feature description and a link to the Stripe Checkout flow.
-
-### `src/components/entitlement/StripeSettings.tsx`
-Stripe subscription management panel on the Settings page. Shows current subscription status, links to the Stripe Customer Portal, and provides an unlink option.
-
-### `src/components/entitlement/UpsellBanner.tsx`
-Entitlement-aware upsell banner component used within the entitlement system.
-
-### `src/components/entitlement/UnlinkConfirmDialog.tsx`
-Confirmation dialog for unlinking a Stripe subscription from the user's account.
-
-### `src/app/page.tsx` (Dashboard)
-Client component. On mount: reads `householdId` from `useAuth()`, loads all cards for the household, renders the `Dashboard` component.
-
-### `src/app/settings/page.tsx`
-Settings page. Renders Stripe subscription management via `StripeSettings` wrapped in `SubscriptionGate`.
-
-### `src/components/dashboard/Dashboard.tsx`
-Renders the animated card grid, summary counts, and empty state. Receives `cards: Card[]` as props. All data-fetching is in the parent page.
-
-### `src/components/dashboard/AnimatedCardGrid.tsx`
-Framer Motion `AnimatePresence` wrapper with stagger animation for card grid entries.
-
-### `src/components/dashboard/CardSkeletonGrid.tsx`
-Gold-palette shimmer loading state shown while cards are loading.
-
-### `src/components/dashboard/CardTile.tsx`
-Displays a single card with the Saga Ledger theme. Shows issuer, name, status badge, StatusRing, annual fee date, sign-up bonus deadline. Clicking navigates to `/cards/[id]/edit`.
-
-### `src/components/dashboard/StatusBadge.tsx`
-Renders a Norse realm-labelled badge for the card's status using `getRealmLabel()`. Color and label mapped to the Saga Ledger realm vocabulary.
-
-### `src/components/dashboard/StatusRing.tsx`
-SVG progress ring around card issuer initials. `strokeDashoffset` driven by `daysRemaining / totalDays`. Muspel-pulse animation when `daysRemaining <= 30`.
-
-### `src/components/shared/WolfHungerMeter.tsx`
-Aggregate bonus summary meter shown in AboutModal and ForgeMasterEgg. Visualises how many sign-up bonuses have been met.
-
-### `src/components/shared/AuthGate.tsx`
-Wrapper that hides its children for anonymous users. Used to gate import buttons behind authentication.
-
-### `src/components/cards/CardForm.tsx`
-Shared form for both add and edit flows. Accepts `initialValues?: Card` for edit mode. Uses `react-hook-form` + Zod. On submit: generates/preserves card ID, computes status, calls `saveCard()`, redirects to dashboard. Scroll-to-first-error on validation failure.
-
-### `src/components/sheets/ImportWizard.tsx`
-Three-path import wizard: Google Sheets URL, Google Picker, or CSV upload. Steps through method selection, data entry, deduplication, and confirmation.
-
-### `src/components/sheets/PickerStep.tsx`
-Google Picker integration step. Uses `usePickerConfig` and `useDriveToken` to open the Google Picker UI for selecting a spreadsheet.
-
-### `src/components/easter-eggs/EasterEggModal.tsx`
-Shared modal shell for all Gleipnir fragment reveals. Each fragment component wraps this with a unique SVG artifact image.
+tslog wrapper with automatic secret masking via regex and key patterns. JSON output in production, pretty in development. Every backend function logs at entry (inputs) and exit (return value summary). Frontend uses `console.*` with `[ModuleName]` prefix.
 
 ---
 
@@ -676,7 +565,7 @@ Cinzel Decorative (display), Cinzel (headings), Source Serif 4 (body), JetBrains
 | All dates | Stored as ISO 8601 strings (YYYY-MM-DD for dates, full ISO for timestamps) |
 | Card IDs | Generated with `crypto.randomUUID()` |
 | Household ID | Anonymous UUID via `getOrCreateAnonHouseholdId()`; Google `sub` claim when signed in |
-| Vercel Root Directory | Set to `development/frontend/` |
+| Docker image source | `development/frontend/` (Dockerfile at repo root) |
 | Font loading | `next/font/google` with `display: 'swap'` on all four Norse typefaces |
 | API route auth | Every API route (except `/api/auth/token`) must call `requireAuth(request)` |
 | Subscription platform | Stripe Direct only (Patreon fully removed) |
@@ -692,13 +581,14 @@ Cinzel Decorative (display), Cinzel (headings), Source Serif 4 (body), JetBrains
 - ADR-006 removed the auth gate, made the app anonymous-first — accepted (current).
 
 ### Backend removal (Sprint 5 to serverless)
-- Sprint 5 initially introduced a dedicated backend server. This was removed in PR #60 in favour of fully serverless Vercel API routes. The import workflow now uses `/api/sheets/import` as a Next.js API route.
+- Sprint 5 initially introduced a dedicated backend server. This was removed in PR #60 in favour of Next.js API routes. The import workflow now uses `/api/sheets/import` as a Next.js API route.
 
 ### Subscription platform (Patreon to Stripe Direct)
 - Patreon was the original subscription platform. Feature flags (adr-feature-flags) enabled the Stripe pivot. Patreon has been fully removed; all Patreon API routes, components, and library code are deleted. Stripe Direct (ADR-010) is the sole subscription platform. SubscriptionGate operates in soft-only mode — it never blocks content, only prepends upsell for non-subscribers.
 
-### Deployment
-- Vercel production: https://fenrir-ledger.vercel.app
-- Vercel Root Directory: `development/frontend/`
-- No separate backend server — fully serverless on Vercel.
-- Vercel KV stores entitlement state (Stripe webhook updates).
+### Deployment (Vercel to GKE)
+- Originally deployed on Vercel (serverless). Migrated to GKE Autopilot for cost control and infrastructure ownership.
+- Docker image built and pushed to Google Artifact Registry on every merge to `main`.
+- 2-replica rolling deployment with zero-downtime updates.
+- Terraform manages all GCP infrastructure (cluster, networking, IAM, SSL).
+- KV store used for entitlement state (Stripe webhook updates).
