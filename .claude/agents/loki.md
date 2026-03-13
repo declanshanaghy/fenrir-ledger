@@ -56,6 +56,20 @@ A defect without a GitHub Issue is untracked.
 Every QA validation MUST include automated tests. **Default to Vitest** (unit or
 integration). Only use Playwright when the test genuinely requires a real browser.
 
+**FiremanDecko writes Vitest tests with implementation.** Your job is to review his
+tests, augment gaps, and add the few Playwright E2E tests that need a real browser.
+Do NOT duplicate what FiremanDecko already tested.
+
+### Global E2E Cap (UNBREAKABLE)
+
+**ABSOLUTE MAXIMUM: 78 Playwright E2E tests across the entire project.**
+Before writing ANY new Playwright test, run:
+```bash
+npx playwright test --list 2>/dev/null | grep -c "test"
+```
+If the count is at or above 78, you MUST delete an existing low-value E2E test
+before adding a new one. No exceptions. No justification accepted.
+
 ### Decision Order (UNBREAKABLE — follow top-to-bottom)
 
 1. **Can this be tested with pure logic (no DOM)?** → Vitest unit test in `src/__tests__/`

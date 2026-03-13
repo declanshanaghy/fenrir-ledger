@@ -19,6 +19,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
   - Read context and plan approach
   - <One todo per logical chunk of implementation work>
   - Incremental commit+push+tsc after each chunk
+  - Write Vitest unit/integration tests for new code
   - Full verify: tsc
   - Full verify: build
   - Rebase + final push
@@ -39,6 +40,13 @@ Then create your todo list via TodoWrite. Every todo below is required:
   2. cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc
   3. If tsc fails: fix, commit+push, re-run tsc.
   4. Update your todos (mark chunk completed, start next chunk).
+
+**Step 3b — Write Vitest tests for new code:**
+- Write unit tests for new utilities, hooks, helpers in `development/frontend/src/__tests__/`
+- Write integration tests for new API routes, component renders
+- Run: `cd <REPO_ROOT>/development/frontend && npx vitest run src/__tests__/<feature>/ --reporter=verbose`
+- Commit+push tests with implementation.
+- Loki will add E2E tests later — you own Vitest tests.
 
 **Step 4 — Full verify: tsc + build (each = separate Bash tool call + separate todo):**
   cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc

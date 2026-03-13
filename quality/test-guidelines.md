@@ -16,7 +16,22 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 |-------|--------|-------|---------|
 | Unit | Vitest | ~136 | ~2s |
 | Integration | Vitest + happy-dom | ~93 | ~3s |
-| E2E | Playwright | ~228 | ~6min |
+| E2E | Playwright | ~60 | ~1min |
+
+### Global E2E Cap (UNBREAKABLE)
+
+**ABSOLUTE MAXIMUM: 78 Playwright E2E tests.** This is a hard ceiling. Before adding
+any new Playwright test, check the current count. If at or above 78, delete a
+low-value test first. No exceptions.
+
+### Test Ownership
+
+| Agent | Owns | Location |
+|-------|------|----------|
+| FiremanDecko | Vitest unit + integration | `src/__tests__/` |
+| Loki | Playwright E2E (few) + Vitest gap-fill | `quality/test-suites/` + `src/__tests__/` |
+
+FiremanDecko writes tests with implementation. Loki augments gaps only.
 
 ## Unit Tests (Vitest)
 
