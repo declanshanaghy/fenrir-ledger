@@ -62,11 +62,11 @@ If conflicts: resolve, re-run feature tests.
 
 **Step 5 — Update PR to close issue:**
   gh pr view <BRANCH> --json number --jq '.number'
-  gh pr edit <PR_NUMBER> --body "Fixes #<NUMBER>
+  gh pr edit <PR_NUMBER> --body "PR for issue: #<NUMBER>
 
 <keep existing summary, add test results>"
 
-If no PR exists (sole agent): `gh pr create --title "<title>" --body "Fixes #<NUMBER>\n\n<summary>"`
+If no PR exists (sole agent): `gh pr create --title "<title>" --body "PR for issue: #<NUMBER>\n\n<summary>"`
 
 **DO NOT MERGE.** Only the orchestrator merges. Your job ends at the verdict comment.
 
