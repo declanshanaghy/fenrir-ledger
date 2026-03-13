@@ -371,7 +371,7 @@ export function DataSafetyBanner({
         <FullBanner
           ariaLabel={ariaLabel}
           showFooterLine={showFooterLine}
-          className={className}
+          {...(className !== undefined ? { className } : {})}
         />
       );
     case "compact":
@@ -380,23 +380,23 @@ export function DataSafetyBanner({
           ariaLabel={ariaLabel}
           learnMoreText={learnMoreText}
           learnMoreHref={learnMoreHref}
-          className={className}
+          {...(className !== undefined ? { className } : {})}
         />
       );
     case "inline":
       return (
         <InlineBanner
           ariaLabel={ariaLabel}
-          headingOverride={headingOverride}
-          descriptionOverride={descriptionOverride}
-          className={className}
+          {...(headingOverride !== undefined ? { headingOverride } : {})}
+          {...(descriptionOverride !== undefined ? { descriptionOverride } : {})}
+          {...(className !== undefined ? { className } : {})}
         />
       );
     case "footer":
       return (
         <FooterBanner
           ariaLabel={ariaLabel}
-          className={className}
+          {...(className !== undefined ? { className } : {})}
         />
       );
     default:
