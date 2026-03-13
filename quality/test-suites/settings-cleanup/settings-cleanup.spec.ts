@@ -175,14 +175,9 @@ test.describe("Issue #628 — Settings Page Restructuring", () => {
   test("layout maintains consistent gap spacing (gap-6)", async ({ page }) => {
     await navigateToSettings(page);
 
-    const layoutContainer = page.locator("div.gap-6");
+    // The main grid container should have gap-6 class
+    const layoutContainer = page.locator("div.flex.flex-col.md\\:grid.md\\:grid-cols-2.gap-6");
     await expect(layoutContainer).toBeVisible();
-
-    // Verify the class is present for both desktop and mobile
-    const classList = await layoutContainer.evaluate((el) =>
-      el.className.split(" ")
-    );
-    expect(classList).toContain("gap-6");
   });
 
   // ─────────────────────────────────────────────────────────────────────────
