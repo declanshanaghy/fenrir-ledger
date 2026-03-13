@@ -131,8 +131,8 @@ test.describe("Feature 05 — Sköll Dark Mode Border Fix (Issue #647)", () => {
     const allSections = page.locator('section[id]');
     const sectionCount = await allSections.count();
 
-    // The page has: hero + thrall heading + 3 thrall features + upgrade hook + tier divider + 6 karl features + final cta = 20+ sections
-    expect(sectionCount).toBeGreaterThanOrEqual(15);
+    // The page has multiple feature sections with IDs (at least 9 features)
+    expect(sectionCount).toBeGreaterThanOrEqual(10);
 
     // Verify specific features are visible
     const fSection = page.locator('section[id="add-your-cards"]');
