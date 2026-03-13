@@ -194,6 +194,15 @@ jobs:
           location: ${{ secrets.GCP_ZONE }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
+      - name: Ensure namespaces and service accounts exist
+        run: |
+          kubectl create namespace fenrir-app --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create serviceaccount fenrir-app-sa \
+            --namespace=fenrir-app --dry-run=client -o yaml | kubectl apply -f -
+          kubectl annotate serviceaccount fenrir-app-sa \
+            --namespace=fenrir-app --overwrite \
+            iam.gke.io/gcp-service-account=fenrir-app-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+
       - name: Create/update K8s secrets
         run: |
           kubectl create secret generic fenrir-app-secrets \

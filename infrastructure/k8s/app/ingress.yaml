@@ -22,8 +22,8 @@ metadata:
     kubernetes.io/ingress.class: "gce"
     # Reference the Google-managed SSL cert created by Terraform
     networking.gke.io/managed-certificates: "fenrir-app-cert"
-    # Redirect HTTP to HTTPS
-    kubernetes.io/ingress.allow-http: "false"
+    # Allow HTTP until DNS/SSL is configured (health checks need it)
+    kubernetes.io/ingress.allow-http: "true"
     # Backend health check configuration
     cloud.google.com/backend-config: '{"default":"fenrir-app-backend-config"}'
 spec:
