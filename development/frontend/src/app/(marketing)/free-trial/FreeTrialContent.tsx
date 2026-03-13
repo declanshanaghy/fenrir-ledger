@@ -662,6 +662,14 @@ function AfterTrialSection() {
           <p className="font-body text-[13px] text-muted-foreground leading-[1.6] max-w-[560px] mx-auto">
             Whether you choose Karl or Thrall, every card you entrusted to me stays in the ledger. Nothing is deleted when the trial ends. I was born to guard &mdash; not to destroy.
           </p>
+          <p
+            className="font-heading text-xs font-bold tracking-[0.06em] text-foreground/80 pt-2.5 mt-3 border-t border-border"
+            aria-label="Payment credential guarantee"
+          >
+            <span aria-hidden="true" className="text-amber-600 dark:text-amber-400">ᛊ</span>
+            &nbsp; I track card names, fees, and deadlines.
+            I never see, store, or ask for credit card numbers, CVVs, or PINs. Not now. Not ever.
+          </p>
         </motion.div>
       </div>
     </section>

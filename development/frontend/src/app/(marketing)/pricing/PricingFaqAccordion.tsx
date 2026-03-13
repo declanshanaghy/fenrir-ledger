@@ -16,6 +16,18 @@ interface FaqItem {
 
 const FAQ_ITEMS: FaqItem[] = [
   {
+    id: "faq-card-numbers",
+    question: "Does Fenrir collect my credit card numbers?",
+    answer:
+      "No. Fenrir Ledger never collects, stores, or transmits credit card numbers, CVVs, PINs, passwords, Social Security numbers, or bank account details. Fenrir is a card metadata tracker. We track the information you'd write on a sticky note about your card — the name, issuer, annual fee, and bonus deadline. Not the payment credentials. This applies to manual entry, Smart Import, and all other features. Card number fields simply do not exist in our data model.",
+  },
+  {
+    id: "faq-smart-import-safety",
+    question: "Is my data safe during Smart Import?",
+    answer:
+      "Yes. Smart Import reads your spreadsheet to extract card names, issuers, annual fees, and bonus details. It does not read, copy, or store credit card numbers, CVVs, or passwords — even if those fields appear in your spreadsheet. Our field extraction model is trained on card metadata only. Sensitive payment fields are excluded from the data model.",
+  },
+  {
     id: "thrall-free-forever",
     question: "Is Thrall actually free forever?",
     answer:
@@ -65,6 +77,7 @@ export function PricingFaqAccordion() {
       {FAQ_ITEMS.map((item) => (
         <details
           key={item.id}
+          id={item.id}
           className="group border-b border-border"
         >
           <summary
