@@ -18,6 +18,7 @@ const FOOTER_COLUMNS = [
     heading: "Product",
     links: [
       { href: "/features", label: "Features" },
+      { href: "/free-trial", label: "Free Trial" },
       { href: "/pricing", label: "Pricing" },
       { href: "/faq", label: "FAQ" },
     ],
