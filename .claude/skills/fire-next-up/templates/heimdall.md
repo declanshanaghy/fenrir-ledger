@@ -54,7 +54,7 @@ If conflicts: resolve, re-run verify steps.
   cd <REPO_ROOT> && git add -A && git commit -m 'security: <description> — issue:<NUMBER>' && git push origin <BRANCH>
 
 **Step 6 — Create PR:**
-gh pr create --title "security: <short title>" --body "Fixes #<NUMBER>
+gh pr create --title "security: <short title>" --body "PR for issue: #<NUMBER>
 
 <summary of security fix>"
 
@@ -115,7 +115,7 @@ NO tsc. NO build. This is a report/audit — there is no app code to verify.
   git push origin <BRANCH>
 
 **Step 5 — Create PR:**
-gh pr create --title "security: <short title>" --body "Fixes #<NUMBER>
+gh pr create --title "security: <short title>" --body "PR for issue: #<NUMBER>
 
 <summary>"
 

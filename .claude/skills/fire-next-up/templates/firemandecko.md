@@ -53,7 +53,7 @@ If conflicts: resolve, re-run verify steps.
   cd <REPO_ROOT> && git add -A && git commit -m 'feat: <description> — issue:<NUMBER>' && git push origin <BRANCH>
 
 **Step 6 — Create PR:**
-gh pr create --title "feat: <short title>" --body "Fixes #<NUMBER>
+gh pr create --title "feat: <short title>" --body "PR for issue: #<NUMBER>
 
 <1-3 line summary>
 
