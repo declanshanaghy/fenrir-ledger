@@ -60,11 +60,6 @@ resource "google_container_cluster" "autopilot" {
   monitoring_config {
     enable_components = [
       "SYSTEM_COMPONENTS",
-      "STORAGE",
-      "POD",
-      "DEPLOYMENT",
-      "STATEFUL_SET",
-      "HPA",
     ]
 
     managed_prometheus {
