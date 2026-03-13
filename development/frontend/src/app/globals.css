@@ -738,12 +738,12 @@ body.konami-shake-mobile {
 
 /* ── About Page — Hover Effects ──────────────────────────────────────────── */
 /*
- * Per-agent hover effects for the About page profile cards.
+ * Per-agent hover effects for the About page agent portraits.
  * Freya = golden glow, Luna = shimmer sweep, FiremanDecko = fire gradient,
- * Loki = glitch distortion, Heimdall = golden glow (shared with Freya).
+ * Loki = glitch distortion, Heimdall = horizontal scan-line sweep.
  */
 
-/* Freya / Heimdall — warm golden glow with pulse */
+/* Freya — warm golden glow with pulse */
 .about-hover-glow {
   background: radial-gradient(
     ellipse at center,
@@ -813,12 +813,34 @@ body.konami-shake-mobile {
   100% { transform: translateX(0); }
 }
 
+/* Heimdall — horizontal scan-line sweep */
+.about-hover-scan {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 45%,
+    rgba(91, 158, 201, 0.3) 48%,
+    rgba(91, 158, 201, 0.5) 50%,
+    rgba(91, 158, 201, 0.3) 52%,
+    transparent 55%,
+    transparent 100%
+  );
+  background-size: 100% 300%;
+  animation: about-scan-sweep 2s ease-in-out infinite;
+}
+
+@keyframes about-scan-sweep {
+  0%   { background-position: 0 100%; }
+  100% { background-position: 0 -100%; }
+}
+
 /* About page — reduced motion: disable all hover animations */
 @media (prefers-reduced-motion: reduce) {
   .about-hover-glow,
   .about-hover-shimmer,
   .about-hover-fire,
-  .about-hover-glitch {
+  .about-hover-glitch,
+  .about-hover-scan {
     animation: none !important;
     transition: none !important;
   }
@@ -829,7 +851,8 @@ body.konami-shake-mobile {
   .about-hover-glow,
   .about-hover-shimmer,
   .about-hover-fire,
-  .about-hover-glitch {
+  .about-hover-glitch,
+  .about-hover-scan {
     animation: none;
   }
 }

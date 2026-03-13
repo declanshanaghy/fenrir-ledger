@@ -3,242 +3,249 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wireframe: About Page — /about</title>
+  <title>Wireframe: About Page — /about (Issue #633 Dual-Realm Agent Profiles)</title>
   <style>
     /* Layout and structure only.
        No colors, no custom fonts, no shadows, no border-radius.
-       Theme styling is defined in ../../theme-system.md. */
+       Theme styling is defined in ../../theme-system.md.
+       Issue #633: Agents woven into The Myth section, alternating left/right,
+       with dual-realm (Ljósálfar/Svartálfar) lore per agent. */
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; font-size: 14px; }
+    body { font-family: sans-serif; font-size: 14px; max-width: 100%; }
 
-    /* ── Section wrappers ────────────────────────────────────────────────── */
-    section { padding: 80px 48px; border-bottom: 1px solid; position: relative; }
+    /* ── Utility ─────────────────────────────────────────────────────────── */
     .section-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; margin-bottom: 8px; }
-    .note { font-size: 11px; font-style: italic; opacity: 0.6; }
+    .note { font-size: 11px; font-style: italic; opacity: 0.6; margin-top: 6px; }
+    .note-block { font-size: 11px; font-style: italic; opacity: 0.6; border: 1px dashed; padding: 8px 12px; margin: 8px 0; }
+    button { border: 1px solid; padding: 7px 16px; cursor: pointer; background: none; font-family: inherit; font-size: 13px; }
 
-    /* ── Nav (reused from marketing site) ─────────────────────────────────── */
+    /* ── Nav ──────────────────────────────────────────────────────────────── */
     nav.site-nav {
-      position: sticky;
-      top: 0;
+      position: sticky; top: 0;
       border-bottom: 1px solid;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 48px;
-      z-index: 10;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 48px; z-index: 10;
     }
     .nav-brand { font-weight: bold; }
     .nav-links { display: flex; gap: 24px; align-items: center; }
     .nav-links a { text-decoration: none; font-size: 13px; }
-    button { border: 1px solid; padding: 7px 16px; cursor: pointer; background: none; font-family: inherit; font-size: 13px; }
+
+    /* ── Sections ─────────────────────────────────────────────────────────── */
+    section { padding: 80px 48px; border-bottom: 1px solid; position: relative; }
 
     /* ── Origin Story Hero ────────────────────────────────────────────────── */
     .origin-hero {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 80px 48px;
+      min-height: 100vh; display: flex; align-items: center;
+      justify-content: center; text-align: center; padding: 80px 48px;
     }
-    .origin-content {
-      max-width: 800px;
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-      align-items: center;
-    }
+    .origin-content { max-width: 800px; display: flex; flex-direction: column; gap: 32px; align-items: center; }
     .origin-content h1 { font-size: 48px; font-weight: bold; line-height: 1.1; }
     .origin-content .subtitle { font-size: 20px; font-weight: 300; }
     .origin-myth { max-width: 600px; }
     .origin-myth p { font-size: 16px; line-height: 1.6; margin-bottom: 16px; }
-    .runic-divider {
-      font-size: 24px;
-      letter-spacing: 0.5em;
-      opacity: 0.4;
-      margin: 24px 0;
-    }
+    .runic-divider { font-size: 24px; letter-spacing: 0.5em; opacity: 0.4; margin: 24px 0; }
 
-    /* ── Origin Story Detail ──────────────────────────────────────────────── */
+    /* ── Origin Story Detail (2-col, unchanged) ───────────────────────────── */
     .origin-detail {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 48px;
-      max-width: 1200px;
-      margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+      max-width: 1200px; margin: 0 auto;
     }
     .origin-column h3 { font-size: 24px; margin-bottom: 16px; font-weight: bold; }
     .origin-column p { font-size: 15px; line-height: 1.6; margin-bottom: 12px; }
     .origin-column blockquote {
-      border-left: 2px solid;
-      padding-left: 16px;
-      font-style: italic;
-      font-size: 14px;
-      margin: 20px 0;
+      border-left: 2px solid; padding-left: 16px; font-style: italic;
+      font-size: 14px; margin: 20px 0;
     }
 
-    /* ── The Pack (Team) ───────────────────────────────────────────────────── */
-    .pack-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 32px;
-      max-width: 1200px;
-      margin: 48px auto 0;
-    }
-    .agent-card {
-      border: 2px solid;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.3s ease;
-      cursor: pointer;
-    }
-    .agent-card:hover {
-      transform: translateY(-8px);
-    }
-    .agent-portrait {
-      width: 100%;
-      height: 280px;
-      border-bottom: 2px solid;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      position: relative;
-      overflow: hidden;
-    }
-    .agent-portrait img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .portrait-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .agent-card:hover .portrait-overlay { opacity: 1; }
-    .agent-info {
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .agent-name {
-      font-size: 20px;
-      font-weight: bold;
-    }
-    .agent-role {
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      opacity: 0.7;
-    }
-    .agent-bio {
-      font-size: 14px;
-      line-height: 1.5;
-    }
-    .agent-rune {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      font-size: 24px;
-      opacity: 0.3;
-    }
+    /* ════════════════════════════════════════════════════════════════════════
+       ── THE MYTH WITH AGENTS WOVEN IN (Issue #633 NEW DESIGN) ──────────────
+       ════════════════════════════════════════════════════════════════════════
 
-    /* ── Heimdall special case (no portrait yet) ───────────────────────────── */
-    .agent-placeholder {
+       Replaces the separate "The Pack" card grid.
+       Each agent section: portrait flanks myth text, alternating L/R by index.
+       Agent 0 (Freya):      portrait LEFT  | text RIGHT
+       Agent 1 (Luna):       text LEFT      | portrait RIGHT
+       Agent 2 (FiremanDe):  portrait LEFT  | text RIGHT
+       Agent 3 (Loki):       text LEFT      | portrait RIGHT
+       Agent 4 (Heimdall):   portrait LEFT  | text RIGHT
+    */
+
+    /* Section container */
+    .myth-with-agents { max-width: 1200px; margin: 0 auto; }
+    .myth-section-intro { text-align: center; max-width: 700px; margin: 0 auto 64px; }
+    .myth-section-intro h2 { font-size: 36px; font-weight: bold; margin-bottom: 16px; }
+    .myth-section-intro p { font-size: 16px; line-height: 1.6; }
+
+    /* ── Single agent row ───────────────────────────────────────────────────
+       .agent-myth-row is a flex row.
+       Even-index (0,2,4): portrait on left  → flex-direction: row
+       Odd-index (1,3):    portrait on right → flex-direction: row-reverse
+       On mobile: always portrait on top, text below (flex-direction: column)
+    */
+    .agent-myth-row {
+      display: flex;
+      flex-direction: row;          /* default: portrait left */
+      align-items: flex-start;
+      gap: 48px;
+      padding: 56px 0;
+      border-bottom: 1px solid;
+    }
+    .agent-myth-row:last-child { border-bottom: none; }
+
+    /* Odd-index rows reverse the portrait to the right */
+    .agent-myth-row.portrait-right { flex-direction: row-reverse; }
+
+    /* ── Portrait column ─────────────────────────────────────────────────── */
+    .agent-portrait-col {
+      flex: 0 0 340px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       gap: 16px;
-      height: 100%;
-    }
-    .runic-symbol {
-      font-size: 72px;
-      opacity: 0.5;
+      position: relative;
     }
 
-    /* ── Built by AI Section ──────────────────────────────────────────────── */
-    .ai-chain {
-      max-width: 1000px;
-      margin: 48px auto 0;
+    /* Portrait container — square, responsive */
+    .agent-portrait-frame {
+      width: 340px;
+      height: 340px;
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
     }
-    .chain-visualization {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0;
-      margin: 32px 0;
+
+    /* The actual <img> tag fills the frame */
+    .agent-portrait-frame img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      /* Implementation: transition-opacity duration-500 for theme crossfade */
     }
-    .chain-node {
+
+    /* Runic placeholder (shown when image missing / loading) */
+    .portrait-fallback {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; border: none;
+    }
+    .portrait-fallback .rune-symbol { font-size: 80px; opacity: 0.4; }
+    .portrait-fallback .fallback-label { font-size: 11px; opacity: 0.5; font-style: italic; }
+
+    /* Rune badge — top-right corner of portrait frame */
+    .portrait-rune-badge {
+      position: absolute; top: 12px; right: 12px;
+      font-size: 28px; opacity: 0.25;
+      /* group-hover: opacity 0.7, transition 300ms */
+    }
+
+    /* Realm badge — shows which realm is active (light/dark) */
+    .realm-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid; padding: 4px 12px;
+      font-size: 10px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.12em;
+      /* Implementation: content switches with theme; subtle fade-in */
+    }
+    .realm-badge.light-realm::before { content: '☀ '; }
+    .realm-badge.dark-realm::before { content: '☽ '; }
+
+    /* Hover effect overlay (personality-specific) */
+    .portrait-hover-overlay {
+      position: absolute; inset: 0; opacity: 0; pointer-events: none;
+      /* Implementation: group-hover:opacity-100 transition-opacity 300ms
+         Freya: glow effect | Luna: shimmer | FiremanDecko: fire particles
+         Loki: glitch | Heimdall: scan-line sweep */
+    }
+
+    /* ── Text column ─────────────────────────────────────────────────────── */
+    .agent-text-col {
       flex: 1;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      padding: 20px;
-      border: 1px solid;
+      gap: 20px;
+      padding-top: 8px;
+    }
+
+    .agent-name { font-size: 32px; font-weight: bold; line-height: 1.1; }
+    .agent-role {
+      font-size: 12px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.12em; opacity: 0.6;
+    }
+    .agent-bio { font-size: 15px; line-height: 1.7; }
+
+    /* ── Dual-realm lore block ──────────────────────────────────────────────
+       This is the new element per #633.
+       Shows ONE lore variant at a time based on current theme.
+       Implementation: useTheme() drives which block shows; crossfade on toggle.
+    */
+    .realm-lore-wrapper {
       position: relative;
+      min-height: 80px;   /* reserve space to prevent layout shift during transition */
+    }
+
+    .realm-lore {
+      border-left: 3px solid;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    /* Implementation: one is visible, other is opacity:0 + position:absolute
+       Crossfade: transition-opacity duration-500 ease-in-out */
+
+    .realm-lore .realm-title {
+      font-size: 10px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.15em; opacity: 0.5;
+    }
+    .realm-lore .realm-quote {
+      font-size: 14px; line-height: 1.6; font-style: italic;
+    }
+    .realm-lore .realm-aspect {
+      font-size: 11px; opacity: 0.5; font-style: normal;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+
+    /* Light realm lore (shown in light theme) */
+    .realm-lore.lore-light {
+      /* Implementation: visible when resolvedTheme === 'light' */
+    }
+    /* Dark realm lore (shown in dark theme) */
+    .realm-lore.lore-dark {
+      /* Implementation: visible when resolvedTheme === 'dark' */
+    }
+
+    /* Rune decorative divider between agents */
+    .agent-rune-divider {
+      text-align: center;
+      font-size: 20px;
+      letter-spacing: 0.5em;
+      opacity: 0.2;
+      padding: 24px 0;
+    }
+
+    /* ── Forge section (unchanged) ───────────────────────────────────────── */
+    .ai-chain { max-width: 1000px; margin: 48px auto 0; }
+    .chain-visualization {
+      display: flex; align-items: stretch; justify-content: center;
+      gap: 0; margin: 32px 0;
+    }
+    .chain-node {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; gap: 12px; padding: 20px;
+      border: 1px solid; position: relative;
     }
     .chain-node:not(:last-child)::after {
-      content: '→';
-      position: absolute;
-      right: -20px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 24px;
-      z-index: 1;
+      content: '→'; position: absolute; right: -20px; top: 50%;
+      transform: translateY(-50%); font-size: 24px; z-index: 1;
     }
     .chain-icon {
-      width: 64px;
-      height: 64px;
-      border: 2px solid;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
+      width: 64px; height: 64px; border: 2px solid;
+      display: flex; align-items: center; justify-content: center; font-size: 24px;
     }
     .chain-label { font-weight: bold; font-size: 14px; }
     .chain-desc { font-size: 12px; text-align: center; opacity: 0.8; }
 
-    /* ── Technology Stack ──────────────────────────────────────────────────── */
-    .tech-stack {
-      display: flex;
-      justify-content: center;
-      gap: 48px;
-      margin-top: 32px;
-      flex-wrap: wrap;
-    }
-    .tech-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-    .tech-logo {
-      width: 48px;
-      height: 48px;
-      border: 1px solid;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-    }
-    .tech-name { font-size: 13px; font-weight: bold; }
-
-    /* ── Responsive Mobile (375px) ─────────────────────────────────────────── */
+    /* ── Responsive: Mobile (375px min) ─────────────────────────────────── */
     @media (max-width: 768px) {
       section { padding: 48px 24px; }
       nav.site-nav { padding: 12px 24px; }
@@ -247,48 +254,47 @@
       .origin-content h1 { font-size: 32px; }
       .origin-content .subtitle { font-size: 18px; }
 
-      .origin-detail {
-        grid-template-columns: 1fr;
-        gap: 32px;
+      .origin-detail { grid-template-columns: 1fr; gap: 32px; }
+
+      /* Agent rows: collapse to portrait-above-text stacked layout */
+      .agent-myth-row {
+        flex-direction: column !important; /* force column for ALL rows on mobile */
+        gap: 28px;
+        padding: 40px 0;
+        align-items: center;
       }
 
-      .pack-grid {
-        grid-template-columns: 1fr;
-        gap: 24px;
+      .agent-portrait-col {
+        flex: 0 0 auto;
+        width: 100%;
+        align-items: center;
+      }
+      .agent-portrait-frame {
+        width: 280px; height: 280px;
       }
 
-      .chain-visualization {
-        flex-direction: column;
-        gap: 16px;
-      }
+      .agent-text-col { padding-top: 0; }
+      .agent-name { font-size: 26px; }
+
+      .chain-visualization { flex-direction: column; gap: 16px; }
       .chain-node:not(:last-child)::after {
-        content: '↓';
-        right: 50%;
-        top: auto;
-        bottom: -24px;
+        content: '↓'; right: 50%; top: auto; bottom: -24px;
         transform: translateX(50%);
       }
-
-      .tech-stack {
-        gap: 24px;
-      }
     }
 
-    /* ── Parallax zones (implementation note) ────────────────────────────────── */
-    .parallax-layer {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      opacity: 0.1;
+    /* ── Annotation helpers ───────────────────────────────────────────────── */
+    .annotation-box {
+      border: 1px dashed; padding: 12px 16px; margin: 16px 0;
+      font-size: 11px; font-style: italic; opacity: 0.55;
     }
-    .parallax-layer.back { z-index: -2; }
-    .parallax-layer.mid { z-index: -1; }
+    .label-LIGHT { font-weight: bold; }
+    .label-DARK { font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <!-- ── Sticky nav ────────────────────────────────────────────────────────── -->
+  <!-- ── Sticky Nav (unchanged from current) ──────────────────────────────── -->
   <nav class="site-nav" aria-label="Site navigation">
     <div class="nav-brand">[ᛟ wolf icon] FENRIR LEDGER</div>
     <div class="nav-links">
@@ -298,304 +304,424 @@
       <button>[Enter the Ledger ▶]</button>
     </div>
   </nav>
-  <p class="note" style="padding: 4px 48px;">Nav: glassmorphism backdrop-blur. Active page underlined with rune accent.</p>
+  <p class="note" style="padding: 4px 48px;">Nav: glassmorphism backdrop-blur. Active page underlined with rune accent. Theme toggle button (rotary) in nav.</p>
 
-  <!-- ── Origin Story Hero (100vh) ───────────────────────────────────────────── -->
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 1: Origin Story Hero (100vh) — UNCHANGED
+       ═══════════════════════════════════════════════════════════════════════ -->
   <section class="origin-hero">
-    <div class="parallax-layer back">
-      <p class="note">[Parallax BG: Faint runic patterns, slow drift on scroll]</p>
-    </div>
     <div class="origin-content">
       <h1>THE WOLF WAS NOT BOUND.<br/>YOU ARE.</h1>
       <p class="subtitle">Every annual fee is Gleipnir — the impossible chain</p>
-
       <div class="runic-divider">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
-
       <div class="origin-myth">
-        <p>
-          In Norse mythology, Fenrir was the wolf prophesied to devour Odin at Ragnarök.
-          The gods feared him, so they bound him with Gleipnir — a chain forged from impossible things:
-          the breath of a fish, the beard of a woman, the roots of a mountain.
-        </p>
-        <p>
-          <strong>Credit card companies are your Gleipnir.</strong> They bind you with things that seem impossible to track:
-          annual fees that strike in silence, sign-up bonuses that expire forgotten, rewards that vanish unclaimed.
-        </p>
-        <p>
-          <strong>Fenrir Ledger breaks the chain.</strong> Built by Odin himself to free you from the bonds
-          of modern finance. The wolf remembers what you forget. The wolf watches what you miss.
-        </p>
+        <p>In Norse mythology, Fenrir was the wolf prophesied to devour Odin at Ragnarök. The gods feared him, so they bound him with Gleipnir — a chain forged from impossible things: the breath of a fish, the beard of a woman, the roots of a mountain.</p>
+        <p><strong>Credit card companies are your Gleipnir.</strong> They bind you with things that seem impossible to track: annual fees that strike in silence, sign-up bonuses that expire forgotten, rewards that vanish unclaimed.</p>
+        <p><strong>Fenrir Ledger breaks the chain.</strong> Built by Odin himself to free you from the bonds of modern finance. The wolf remembers what you forget. The wolf watches what you miss.</p>
       </div>
     </div>
   </section>
+  <!-- Note: Framer Motion scroll-triggered stagger, parallax runic bg opacity 0.03 -->
 
-  <!-- ── Origin Story Detail ──────────────────────────────────────────────── -->
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 2: Why the Wolf — 2-col founding myth — UNCHANGED
+       ═══════════════════════════════════════════════════════════════════════ -->
   <section>
-    <div class="section-label">The Founding Myth</div>
+    <div class="section-label">ᚠ — The Founding Myth</div>
     <h2 style="font-size: 36px; text-align: center; margin-bottom: 48px;">WHY THE WOLF?</h2>
-
     <div class="origin-detail">
       <div class="origin-column">
         <h3>The Personal Mission</h3>
-        <p>
-          Odin, the Allfather of this codebase, watched too many warriors fall to forgotten fees.
-          Too many friends missing bonuses. Too many kin paying for cards they don't use.
-        </p>
-        <blockquote>
-          "I built Fenrir because I was tired of being Gleipnir's victim. Now the wolf hunts for us all."
-          <br/>— Odin
-        </blockquote>
-        <p>
-          This isn't corporate software. This is mythology made manifest. Every line of code
-          is a fang. Every notification is a howl. Every saved dollar is plunder from the hoard.
-        </p>
+        <p>Odin, the Allfather of this codebase, watched too many warriors fall to forgotten fees. Too many friends missing bonuses. Too many kin paying for cards they don't use.</p>
+        <blockquote>"I built Fenrir because I was tired of being Gleipnir's victim. Now the wolf hunts for us all." <br/>— Odin</blockquote>
+        <p>This isn't corporate software. This is mythology made manifest. Every line of code is a fang. Every notification is a howl. Every saved dollar is plunder from the hoard.</p>
       </div>
-
       <div class="origin-column">
         <h3>The Norse Connection</h3>
-        <p>
-          We didn't choose Norse mythology for aesthetics. We chose it because it fits.
-          The credit card industry deals in cycles — billing cycles, statement cycles, promo cycles.
-          Norse mythology understands cycles: Ragnarök isn't the end, it's the turning of the wheel.
-        </p>
-        <p>
-          Every card you close breaks a link in Gleipnir. Every fee you dodge weakens the binding.
-          Every bonus you claim is tribute taken back from those who would bind you.
-        </p>
-        <blockquote>
-          "Though it looks like silk ribbon, no chain is stronger."
-          <br/>— Prose Edda, on Gleipnir
-        </blockquote>
+        <p>We didn't choose Norse mythology for aesthetics. We chose it because it fits. The credit card industry deals in cycles — billing, statement, promo. Norse mythology understands cycles: Ragnarök isn't the end, it's the turning of the wheel.</p>
+        <p>Every card you close breaks a link in Gleipnir. Every fee you dodge weakens the binding. Every bonus you claim is tribute taken back from those who would bind you.</p>
+        <blockquote>"Though it looks like silk ribbon, no chain is stronger." <br/>— Prose Edda, on Gleipnir</blockquote>
       </div>
     </div>
-
-    <p class="note" style="text-align: center; margin-top: 32px;">
-      Implementation: Subtle parallax on runic elements. Stone texture overlays on section borders.
-    </p>
   </section>
 
-  <!-- ── The Pack (Team Section) ──────────────────────────────────────────── -->
-  <section style="overflow: visible;">
-    <div class="section-label">Meet the Pack</div>
-    <h2 style="font-size: 36px; text-align: center; margin-bottom: 16px;">THE AGENTS OF ASGARD</h2>
-    <p style="text-align: center; max-width: 600px; margin: 0 auto 48px; font-size: 16px;">
-      Fenrir Ledger is built entirely by AI agents, each with their domain, their purpose, their saga.
-      Click their portraits to hear their howl.
-    </p>
 
-    <div class="pack-grid">
-      <!-- Freya -->
-      <div class="agent-card">
-        <div class="agent-portrait">
-          <img src="[freya-dark.png on dark theme / freya-light.png on light]" alt="Freya portrait" />
-          <div class="portrait-overlay">
-            <p class="note">[Glow effect on hover]</p>
-          </div>
-          <span class="agent-rune">ᚠ</span>
-        </div>
-        <div class="agent-info">
-          <div class="agent-name">Freya</div>
-          <div class="agent-role">Product Owner</div>
-          <div class="agent-bio">
-            Guardian of the product vision. She shapes what Fenrir becomes, channeling user needs into features.
-            Powers the AI import pipeline that reads your credit card PDFs and transforms chaos into clarity.
-          </div>
-        </div>
-      </div>
-
-      <!-- Luna -->
-      <div class="agent-card">
-        <div class="agent-portrait">
-          <img src="[luna-dark.png on dark theme / luna-light.png on light]" alt="Luna portrait" />
-          <div class="portrait-overlay">
-            <p class="note">[Shimmer effect on hover]</p>
-          </div>
-          <span class="agent-rune">ᛚ</span>
-        </div>
-        <div class="agent-info">
-          <div class="agent-name">Luna</div>
-          <div class="agent-role">UX Designer</div>
-          <div class="agent-bio">
-            Architect of every interface, every interaction. She ensures the ledger feels mythic yet usable,
-            that every click has purpose, every view tells a story. The wolf's eyes see through her designs.
-          </div>
-        </div>
-      </div>
-
-      <!-- FiremanDecko -->
-      <div class="agent-card">
-        <div class="agent-portrait">
-          <img src="[fireman-decko-dark.png on dark / fireman-decko-light.png on light]" alt="FiremanDecko portrait" />
-          <div class="portrait-overlay">
-            <p class="note">[Fire particle effect on hover]</p>
-          </div>
-          <span class="agent-rune">ᛏ</span>
-        </div>
-        <div class="agent-info">
-          <div class="agent-name">FiremanDecko</div>
-          <div class="agent-role">Principal Engineer</div>
-          <div class="agent-bio">
-            The forge-master who transforms design into reality. Every component, every API, every line of TypeScript
-            flows from his keyboard. He builds with the precision of dwarven smiths and the power of Mjolnir.
-          </div>
-        </div>
-      </div>
-
-      <!-- Loki -->
-      <div class="agent-card">
-        <div class="agent-portrait">
-          <img src="[loki-dark.png on dark theme / loki-light.png on light]" alt="Loki portrait" />
-          <div class="portrait-overlay">
-            <p class="note">[Glitch effect on hover]</p>
-          </div>
-          <span class="agent-rune">ᛚ</span>
-        </div>
-        <div class="agent-info">
-          <div class="agent-name">Loki</div>
-          <div class="agent-role">QA Tester</div>
-          <div class="agent-bio">
-            Son of the wolf, breaker of things. He tests with chaos and cunning, finding bugs before users do.
-            Every edge case is his playground, every error his trophy. If it can break, Loki will break it first.
-          </div>
-        </div>
-      </div>
-
-      <!-- Heimdall (no portrait yet) -->
-      <div class="agent-card">
-        <div class="agent-portrait">
-          <div class="agent-placeholder">
-            <div class="runic-symbol">ᚺ</div>
-            <p class="note">[Portrait coming soon]</p>
-          </div>
-          <span class="agent-rune">ᚺ</span>
-        </div>
-        <div class="agent-info">
-          <div class="agent-name">Heimdall</div>
-          <div class="agent-role">Security Guardian</div>
-          <div class="agent-bio">
-            Watcher of the Rainbow Bridge, guardian of your data. He sees all threats, blocks all intrusions.
-            Your financial data is his sacred charge. Not even Loki's tricks can bypass his vigilance.
-          </div>
-        </div>
-      </div>
-
-      <!-- Empty slot for future agent -->
-      <div class="agent-card" style="border-style: dashed; opacity: 0.3;">
-        <div class="agent-portrait">
-          <div class="agent-placeholder">
-            <div class="runic-symbol">?</div>
-            <p class="note">[The next saga awaits]</p>
-          </div>
-        </div>
-        <div class="agent-info">
-          <div class="agent-name">Coming Soon</div>
-          <div class="agent-role">The Pack Grows</div>
-          <div class="agent-bio">
-            New agents join when Odin calls. Each brings their skills to strengthen Fenrir.
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <p class="note" style="text-align: center; margin-top: 32px;">
-      Implementation: Framer Motion stagger animations on scroll. Each card has unique hover effect matching personality.
-      Click opens modal with extended agent story. Theme switch animates portrait swap with crossfade.
-    </p>
-  </section>
-
-  <!-- ── Built by AI Section ───────────────────────────────────────────────── -->
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 3: THE MYTH — AGENTS WOVEN IN (Issue #633 NEW DESIGN)
+       Replaces: "The Pack" card grid section entirely.
+       Page flow: Hero → Myth Intro → Each agent interwoven as myth progresses
+       ═══════════════════════════════════════════════════════════════════════ -->
   <section>
-    <div class="section-label">The Forge</div>
+    <div class="myth-with-agents">
+
+      <!-- Section intro copy -->
+      <div class="myth-section-intro">
+        <div class="section-label">ᛏ — The Pack</div>
+        <h2>The Agents of Asgard</h2>
+        <p>
+          Fenrir Ledger is built entirely by AI agents. Each carries a dual nature —
+          a light face for construction, a shadow face for the hunt.
+          The theme toggle doesn't just change colors. It reveals which realm you're peering into.
+        </p>
+        <div class="annotation-box">
+          ☀ <span class="label-LIGHT">LIGHT THEME</span> → Ljósálfar realm (Alfheim). Agent in benevolent, constructive form.<br/>
+          ☽ <span class="label-DARK">DARK THEME</span> → Svartálfar realm (Svartalfheim). Agent's shadow nature — fierce, cunning, relentless.<br/>
+          Portrait and lore text both crossfade when theme toggles (transition-opacity 500ms).
+        </div>
+      </div>
+
+      <!-- ───────────────────────────────────────────────────────────────────
+           AGENT 0 — FREYA (index 0 → portrait LEFT, text RIGHT)
+           ─────────────────────────────────────────────────────────────────── -->
+      <article class="agent-myth-row" aria-label="Freya — Product Owner">
+        <!-- Portrait column (left on desktop, top on mobile) -->
+        <div class="agent-portrait-col">
+          <div class="agent-portrait-frame">
+
+            <!-- Light portrait (shown in light theme) -->
+            <img
+              src="/images/team/freya-light.png"
+              alt="Freya — light realm portrait"
+              style="opacity: 1; /* 1 in light, 0 in dark */"
+            />
+            <!--
+              Implementation:
+              Light portrait: opacity: resolvedTheme === 'light' ? 1 : 0
+              Dark portrait: opacity: resolvedTheme === 'dark' ? 1 : 0
+              Both stacked (position: absolute), transition-opacity 500ms
+            -->
+            <img
+              src="/images/team/freya-dark.png"
+              alt="Freya — dark realm portrait"
+              style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity: 0; /* 0 in light, 1 in dark */"
+            />
+
+            <!-- Runic placeholder fallback (shown if both images error) -->
+            <div class="portrait-fallback" style="display: none; /* shown only on image error */">
+              <div class="rune-symbol">ᚠ</div>
+              <div class="fallback-label">Portrait coming soon</div>
+            </div>
+
+            <!-- Rune badge (always visible) -->
+            <span class="portrait-rune-badge" aria-hidden="true">ᚠ</span>
+
+            <!-- Hover overlay (personality-specific, no structural difference) -->
+            <div class="portrait-hover-overlay" aria-hidden="true">
+              <!-- Implementation: about-hover-glow class (Freya) -->
+            </div>
+          </div>
+
+          <!-- Realm badge — changes content with theme -->
+          <div class="realm-badge light-realm">LJÓSÁLFAR · ALFHEIM</div>
+          <!-- Implementation: shown when light theme; dark realm badge shown when dark theme -->
+          <div class="realm-badge dark-realm" style="display:none;">SVARTÁLFAR · SVARTALFHEIM</div>
+          <p class="note">Realm badge text switches with theme toggle.</p>
+        </div>
+
+        <!-- Text column (right on desktop, bottom on mobile) -->
+        <div class="agent-text-col">
+          <div>
+            <div class="agent-name">Freya</div>
+            <div class="agent-role">Product Owner</div>
+          </div>
+
+          <p class="agent-bio">
+            Guardian of the product vision. She shapes what Fenrir becomes,
+            channeling user needs into features. Powers the import pipeline that
+            reads your credit card data and transforms chaos into clarity.
+          </p>
+
+          <!-- Dual-realm lore block (NEW — #633) -->
+          <div class="realm-lore-wrapper">
+            <!-- Light theme lore (Ljósálfar) -->
+            <div class="realm-lore lore-light">
+              <span class="realm-title">☀ Ljósálfar Aspect · Light Realm</span>
+              <p class="realm-quote">"Keeper of the harvest, she nurtures ideas into being — patient, far-sighted, a mother to every feature that grows in Fenrir's fields."</p>
+              <span class="realm-aspect">Benevolent · Guiding · Constructive</span>
+            </div>
+            <!-- Dark theme lore (Svartálfar) — crossfades in on dark toggle -->
+            <div class="realm-lore lore-dark" style="display:none;">
+              <!-- Implementation: position:absolute, opacity crossfade with light version -->
+              <span class="realm-title">☽ Svartálfar Aspect · Dark Realm</span>
+              <p class="realm-quote">"The Völva who sees all futures and chooses the cruelest path to victory. She does not suggest features — she issues prophecy. Deny her and Ragnarök finds you first."</p>
+              <span class="realm-aspect">Fierce · Prophetic · Relentless</span>
+            </div>
+          </div>
+
+          <p class="note">Implementation: useTheme() drives lore visibility. Crossfade via CSS opacity transition (500ms) not display:none in production — both divs rendered, one opacity:0. The realm-lore-wrapper min-height prevents layout shift.</p>
+        </div>
+      </article>
+
+      <div class="agent-rune-divider" aria-hidden="true">ᚠ · · · ᛚ</div>
+
+      <!-- ───────────────────────────────────────────────────────────────────
+           AGENT 1 — LUNA (index 1 → portrait RIGHT, text LEFT)
+           ─────────────────────────────────────────────────────────────────── -->
+      <article class="agent-myth-row portrait-right" aria-label="Luna — UX Designer">
+        <!-- Portrait column (right on desktop, top on mobile) -->
+        <div class="agent-portrait-col">
+          <div class="agent-portrait-frame">
+            <img src="/images/team/luna-light.png" alt="Luna — light realm portrait" style="opacity: 1;" />
+            <img src="/images/team/luna-dark.png" alt="Luna — dark realm portrait" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity: 0;" />
+            <div class="portrait-fallback" style="display: none;">
+              <div class="rune-symbol">ᛚ</div>
+              <div class="fallback-label">Portrait coming soon</div>
+            </div>
+            <span class="portrait-rune-badge" aria-hidden="true">ᛚ</span>
+            <div class="portrait-hover-overlay" aria-hidden="true"><!-- shimmer --></div>
+          </div>
+          <div class="realm-badge light-realm">LJÓSÁLFAR · ALFHEIM</div>
+          <div class="realm-badge dark-realm" style="display:none;">SVARTÁLFAR · SVARTALFHEIM</div>
+        </div>
+
+        <!-- Text column (left on desktop, bottom on mobile) -->
+        <div class="agent-text-col">
+          <div>
+            <div class="agent-name">Luna</div>
+            <div class="agent-role">UX Designer</div>
+          </div>
+          <p class="agent-bio">
+            Architect of every interface, every interaction. She ensures the
+            ledger feels mythic yet usable, that every click has purpose, every
+            view tells a story. The wolf's eyes see through her designs.
+          </p>
+          <div class="realm-lore-wrapper">
+            <div class="realm-lore lore-light">
+              <span class="realm-title">☀ Ljósálfar Aspect · Light Realm</span>
+              <p class="realm-quote">"Máni's daughter, painting interfaces in moonlight — every pixel deliberate, every margin a breath between words, her layouts as calm and inevitable as the tide."</p>
+              <span class="realm-aspect">Deliberate · Luminous · Harmonious</span>
+            </div>
+            <div class="realm-lore lore-dark" style="display:none;">
+              <span class="realm-title">☽ Svartálfar Aspect · Dark Realm</span>
+              <p class="realm-quote">"The Norns' weaver — every pixel a thread of fate, every layout a prophecy. She doesn't design interfaces; she weaves the loom that determines who falls and who ascends."</p>
+              <span class="realm-aspect">Fateful · Inexorable · Prophetic</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <div class="agent-rune-divider" aria-hidden="true">ᛚ · · · ᛏ</div>
+
+      <!-- ───────────────────────────────────────────────────────────────────
+           AGENT 2 — FIREMAN DECKO (index 2 → portrait LEFT, text RIGHT)
+           ─────────────────────────────────────────────────────────────────── -->
+      <article class="agent-myth-row" aria-label="FiremanDecko — Principal Engineer">
+        <div class="agent-portrait-col">
+          <div class="agent-portrait-frame">
+            <img src="/images/team/fireman-decko-light.png" alt="FiremanDecko — light realm portrait" style="opacity: 1;" />
+            <img src="/images/team/fireman-decko-dark.png" alt="FiremanDecko — dark realm portrait" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity: 0;" />
+            <div class="portrait-fallback" style="display: none;">
+              <div class="rune-symbol">ᛏ</div>
+              <div class="fallback-label">Portrait coming soon</div>
+            </div>
+            <span class="portrait-rune-badge" aria-hidden="true">ᛏ</span>
+            <div class="portrait-hover-overlay" aria-hidden="true"><!-- fire particles --></div>
+          </div>
+          <div class="realm-badge light-realm">LJÓSÁLFAR · ALFHEIM</div>
+          <div class="realm-badge dark-realm" style="display:none;">SVARTÁLFAR · SVARTALFHEIM</div>
+        </div>
+
+        <div class="agent-text-col">
+          <div>
+            <div class="agent-name">FiremanDecko</div>
+            <div class="agent-role">Principal Engineer</div>
+          </div>
+          <p class="agent-bio">
+            The forge-master who transforms design into reality. Every component,
+            every API, every line of TypeScript flows from his keyboard. He builds
+            with the precision of dwarven smiths and the power of Mjolnir.
+          </p>
+          <div class="realm-lore-wrapper">
+            <div class="realm-lore lore-light">
+              <span class="realm-title">☀ Ljósálfar Aspect · Light Realm</span>
+              <p class="realm-quote">"The master smith of Nidavellir, forging with patience and precision — each commit a ring in the chain, each function a rune that binds reality to intention."</p>
+              <span class="realm-aspect">Patient · Precise · Masterful</span>
+            </div>
+            <div class="realm-lore lore-dark" style="display:none;">
+              <span class="realm-title">☽ Svartálfar Aspect · Dark Realm</span>
+              <p class="realm-quote">"Surtr's apprentice — he doesn't build, he conjures from the flames. The codebase is his pyre; what rises from it is either legend or ash. There is no middle outcome."</p>
+              <span class="realm-aspect">Incendiary · Absolute · Uncompromising</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <div class="agent-rune-divider" aria-hidden="true">ᛏ · · · ᛚ</div>
+
+      <!-- ───────────────────────────────────────────────────────────────────
+           AGENT 3 — LOKI (index 3 → portrait RIGHT, text LEFT)
+           ─────────────────────────────────────────────────────────────────── -->
+      <article class="agent-myth-row portrait-right" aria-label="Loki — QA Tester">
+        <div class="agent-portrait-col">
+          <div class="agent-portrait-frame">
+            <img src="/images/team/loki-light.png" alt="Loki — light realm portrait" style="opacity: 1;" />
+            <img src="/images/team/loki-dark.png" alt="Loki — dark realm portrait" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity: 0;" />
+            <div class="portrait-fallback" style="display: none;">
+              <div class="rune-symbol">ᛚ</div>
+              <div class="fallback-label">Portrait coming soon</div>
+            </div>
+            <span class="portrait-rune-badge" aria-hidden="true">ᛚ</span>
+            <div class="portrait-hover-overlay" aria-hidden="true"><!-- glitch --></div>
+          </div>
+          <div class="realm-badge light-realm">LJÓSÁLFAR · ALFHEIM</div>
+          <div class="realm-badge dark-realm" style="display:none;">SVARTÁLFAR · SVARTALFHEIM</div>
+        </div>
+
+        <div class="agent-text-col">
+          <div>
+            <div class="agent-name">Loki</div>
+            <div class="agent-role">QA Tester</div>
+          </div>
+          <p class="agent-bio">
+            Son of the wolf, breaker of things. He tests with chaos and cunning,
+            finding bugs before users do. Every edge case is his playground,
+            every error his trophy. If it can break, Loki will break it first.
+          </p>
+          <div class="realm-lore-wrapper">
+            <div class="realm-lore lore-light">
+              <span class="realm-title">☀ Ljósálfar Aspect · Light Realm</span>
+              <p class="realm-quote">"The trickster who finds flaws before they become wounds — his mischief is medicine, his pranks preventative, each test a gentle probe that saves the pack from greater harm."</p>
+              <span class="realm-aspect">Curious · Preventive · Cleverly Protective</span>
+            </div>
+            <div class="realm-lore lore-dark" style="display:none;">
+              <span class="realm-title">☽ Svartálfar Aspect · Dark Realm</span>
+              <p class="realm-quote">"Chaos incarnate — he doesn't find bugs, he breeds them to hunt their parents. He is the wolf inside the wolf, the test that tears the code apart to prove whether it deserved to live."</p>
+              <span class="realm-aspect">Chaotic · Relentless · Merciless</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <div class="agent-rune-divider" aria-hidden="true">ᛚ · · · ᚺ</div>
+
+      <!-- ───────────────────────────────────────────────────────────────────
+           AGENT 4 — HEIMDALL (index 4 → portrait LEFT, text RIGHT)
+           ─────────────────────────────────────────────────────────────────── -->
+      <article class="agent-myth-row" aria-label="Heimdall — Security Guardian">
+        <div class="agent-portrait-col">
+          <div class="agent-portrait-frame">
+            <img src="/images/team/heimdall-light.png" alt="Heimdall — light realm portrait" style="opacity: 1;" />
+            <img src="/images/team/heimdall-dark.png" alt="Heimdall — dark realm portrait" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity: 0;" />
+            <div class="portrait-fallback" style="display: none;">
+              <div class="rune-symbol">ᚺ</div>
+              <div class="fallback-label">Portrait coming soon</div>
+            </div>
+            <span class="portrait-rune-badge" aria-hidden="true">ᚺ</span>
+            <div class="portrait-hover-overlay" aria-hidden="true"><!-- scan-line sweep --></div>
+          </div>
+          <div class="realm-badge light-realm">LJÓSÁLFAR · ALFHEIM</div>
+          <div class="realm-badge dark-realm" style="display:none;">SVARTÁLFAR · SVARTALFHEIM</div>
+        </div>
+
+        <div class="agent-text-col">
+          <div>
+            <div class="agent-name">Heimdall</div>
+            <div class="agent-role">Security Guardian</div>
+          </div>
+          <p class="agent-bio">
+            Watcher of the Rainbow Bridge, guardian of your data. He sees all
+            threats, blocks all intrusions. Your financial data is his sacred
+            charge. Not even Loki's tricks can bypass his vigilance.
+          </p>
+          <div class="realm-lore-wrapper">
+            <div class="realm-lore lore-light">
+              <span class="realm-title">☀ Ljósálfar Aspect · Light Realm</span>
+              <p class="realm-quote">"The watchman who guards all nine realms — patient as stone at the Bifröst's edge, his eye ever open, his horn Gjallarhorn poised but silent so long as the realms are safe."</p>
+              <span class="realm-aspect">Vigilant · Patient · Protective</span>
+            </div>
+            <div class="realm-lore lore-dark" style="display:none;">
+              <span class="realm-title">☽ Svartálfar Aspect · Dark Realm</span>
+              <p class="realm-quote">"He who hears the grass grow and the wool stretch on sheep across the nine realms — nothing escapes, nothing is forgiven. He does not warn; he terminates. The audit log is his axe."</p>
+              <span class="realm-aspect">Omniscient · Merciless · Zero-Tolerance</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div><!-- /myth-with-agents -->
+
+    <!-- Global annotation block -->
+    <div class="annotation-box" style="margin-top: 40px;">
+      <strong>Design decision — Pack card grid removed (#633):</strong><br/>
+      The 3-col agent card grid ("The Pack" section) is replaced by this alternating inline layout.
+      Agents are now narrative participants in The Myth, not a separate directory.
+      The "coming soon" placeholder slot is removed; new agents added to AGENTS array
+      will automatically extend this section with the alternating pattern.
+    </div>
+
+    <p class="note" style="text-align: center; margin-top: 20px;">
+      Implementation: Framer Motion scroll-triggered stagger animations preserved per agent row.
+      Each .agent-myth-row animates in from the side matching its portrait position
+      (left-row: slide from left; right-row: slide from right). Duration 0.5s ease-out.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 4: The Forge — UNCHANGED
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-label">ᚺ — The Forge</div>
     <h2 style="font-size: 36px; text-align: center; margin-bottom: 16px;">BUILT BY AI, FOR HUMANS</h2>
 
     <div class="ai-chain">
       <p style="text-align: center; font-size: 16px; margin-bottom: 32px;">
-        Fenrir Ledger is the first credit card tracker built entirely by AI agents. No human wrote this code.
-        Odin orchestrates the agents, but they do the work. This is how modern software should be built.
+        Fenrir Ledger is the first credit card tracker built entirely by AI agents.
+        Odin orchestrates the pack. The pack delivers.
       </p>
 
       <div class="chain-visualization">
         <div class="chain-node">
           <div class="chain-icon">ᚠ</div>
           <div class="chain-label">Freya Defines</div>
-          <div class="chain-desc">Requirements & user stories</div>
+          <div class="chain-desc">Requirements &amp; user stories</div>
         </div>
-
         <div class="chain-node">
           <div class="chain-icon">ᛚ</div>
           <div class="chain-label">Luna Designs</div>
-          <div class="chain-desc">Wireframes & interactions</div>
+          <div class="chain-desc">Wireframes &amp; interactions</div>
         </div>
-
         <div class="chain-node">
           <div class="chain-icon">ᛏ</div>
           <div class="chain-label">FiremanDecko Builds</div>
-          <div class="chain-desc">Code & implementation</div>
+          <div class="chain-desc">Code &amp; implementation</div>
         </div>
-
         <div class="chain-node">
           <div class="chain-icon">ᛚ</div>
           <div class="chain-label">Loki Validates</div>
-          <div class="chain-desc">Testing & QA</div>
+          <div class="chain-desc">Testing &amp; QA</div>
         </div>
       </div>
 
       <p style="text-align: center; font-size: 15px; margin-top: 32px;">
-        Each agent has autonomy within their domain. They collaborate through shared artifacts:
-        design docs, wireframes, code. The result is software with the consistency of a singular vision
-        but the expertise of specialists.
-      </p>
-
-      <p style="text-align: center; margin-top: 24px;">
-        <strong>This changes everything.</strong> Development velocity unconstrained by human limits.
-        Features shipped at the speed of thought. Bugs fixed before coffee gets cold.
+        Each member of the pack has autonomy within their domain. They collaborate through
+        shared artifacts: design docs, wireframes, code. The result is software with
+        the consistency of a singular vision but the expertise of specialists.
       </p>
     </div>
-
     <p class="note" style="text-align: center; margin-top: 32px;">
-      Implementation: Chain nodes pulse with subtle animation. Arrows animate as energy flow between nodes.
-      Parallax depth with nodes at different z-layers.
+      Implementation: Chain nodes pulse with subtle animation. Arrows animate as energy flow.
+      This section is unchanged by issue #633.
     </p>
   </section>
 
-  <!-- ── Technology Section ────────────────────────────────────────────────── -->
-  <section style="border-bottom: none;">
-    <div class="section-label">The Arsenal</div>
-    <h2 style="font-size: 36px; text-align: center; margin-bottom: 32px;">FORGED WITH MODERN STEEL</h2>
 
-    <div class="tech-stack">
-      <div class="tech-item">
-        <div class="tech-logo">Next.js</div>
-        <div class="tech-name">Next.js 15</div>
-      </div>
-      <div class="tech-item">
-        <div class="tech-logo">TS</div>
-        <div class="tech-name">TypeScript</div>
-      </div>
-      <div class="tech-item">
-        <div class="tech-logo">Vercel</div>
-        <div class="tech-name">Vercel</div>
-      </div>
-      <div class="tech-item">
-        <div class="tech-logo">Claude</div>
-        <div class="tech-name">Anthropic Claude</div>
-      </div>
-      <div class="tech-item">
-        <div class="tech-logo">Tailwind</div>
-        <div class="tech-name">Tailwind CSS</div>
-      </div>
-    </div>
-
-    <p style="text-align: center; margin-top: 32px;">
-      <a href="https://github.com/fenrir-ledger" style="font-size: 14px;">Open Source (source available) →</a>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 5: Final CTA — UNCHANGED
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section style="border-bottom: none; text-align: center;">
+    <h2 style="font-size: 36px; margin-bottom: 24px;">The wolf waits. The chain weakens.</h2>
+    <p style="font-size: 18px; max-width: 480px; margin: 0 auto 32px; line-height: 1.6;">
+      Every day you delay is another fee that might land, another bonus that might expire.
+      Start tracking before the next deadline passes.
     </p>
-
-    <p class="note" style="text-align: center; margin-top: 16px;">
-      Implementation: Tech logos as SVG icons. Hover reveals brief description tooltip.
-    </p>
+    <button style="padding: 16px 40px; font-size: 14px; font-weight: bold; letter-spacing: 0.1em;">[Open the Ledger ▶]</button>
   </section>
 
-  <!-- ── Footer (reuse from marketing site) ──────────────────────────────────── -->
+
+  <!-- ── Footer (unchanged) ─────────────────────────────────────────────── -->
   <footer style="padding: 32px 48px; border-top: 1px solid;">
     <div style="display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: end;">
       <div>
@@ -603,9 +729,7 @@
         <em>"Though it looks like silk ribbon…" — Prose Edda</em><br/>
         <small>ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</small>
       </div>
-      <div>
-        <button>[Enter the Ledger ▶]</button>
-      </div>
+      <div><button>[Enter the Ledger ▶]</button></div>
     </div>
     <nav aria-label="Footer links" style="margin-top: 24px; display: flex; gap: 24px; font-size: 13px;">
       <a href="/">Home</a>
@@ -615,11 +739,91 @@
       <a href="/static/terms.html">Terms</a>
     </nav>
     <p style="margin-top: 16px; font-size: 12px;">
-      <span>&copy; 2026 Fenrir Ledger</span> ·
-      <span>Built by AI Agents</span> ·
-      <span>Orchestrated by Odin</span>
+      © 2026 Fenrir Ledger · Built by AI Agents · Orchestrated by Odin
     </p>
   </footer>
+
+
+  <!--
+  ══════════════════════════════════════════════════════════════════════════════
+  INTERACTION SPEC — Issue #633 Dual-Realm Agent Profiles
+  ══════════════════════════════════════════════════════════════════════════════
+
+  1. PORTRAIT CROSSFADE (theme toggle)
+     ─────────────────────────────────
+     Both portrait <img> tags are always rendered in the DOM.
+     Light portrait: className="... transition-opacity duration-500"
+                     style={{ opacity: resolvedTheme === 'light' ? 1 : 0 }}
+     Dark portrait:  position: absolute inset-0, same crossfade
+                     style={{ opacity: resolvedTheme === 'dark' ? 1 : 0 }}
+     No layout shift — both absolutely positioned within the fixed-size frame.
+
+  2. LORE TEXT CROSSFADE (theme toggle)
+     ─────────────────────────────────
+     Both .lore-light and .lore-dark divs are always in the DOM.
+     .realm-lore-wrapper has position: relative; min-height: [tallest variant].
+     .lore-light: position: relative; opacity controlled by theme
+     .lore-dark:  position: absolute; top: 0; left: 0; width: 100%; opacity controlled
+     Crossfade: transition-opacity duration-500 ease-in-out
+     min-height on wrapper prevents layout jump when switching.
+
+  3. REALM BADGE
+     ─────────────────────────────────
+     Two badges stacked (position: relative / absolute pattern same as portraits).
+     Content: "LJÓSÁLFAR · ALFHEIM" vs "SVARTÁLFAR · SVARTALFHEIM"
+     Consider: single badge with text content swap + transition.
+
+  4. ALTERNATING ROW LAYOUT
+     ─────────────────────────────────
+     AGENTS array index 0,2,4 → .agent-myth-row (portrait left, flex-row)
+     AGENTS array index 1,3   → .agent-myth-row.portrait-right (flex-row-reverse)
+     Mobile (max-width: 768px): ALL rows → flex-direction: column (portrait top)
+     Implementation shortcut: index % 2 === 0 ? '' : 'portrait-right'
+
+  5. SCROLL ANIMATIONS (Framer Motion — preserved)
+     ─────────────────────────────────
+     Each .agent-myth-row wraps in <motion.article> with useInView.
+     Even-index rows: initial={{ opacity:0, x:-32 }} animate={{ opacity:1, x:0 }}
+     Odd-index rows:  initial={{ opacity:0, x:32 }}  animate={{ opacity:1, x:0 }}
+     Stagger the portrait col and text col children with staggerChildren: 0.15
+     Transition: duration 0.5, ease "easeOut", once: true
+
+  6. HOVER EFFECTS (personality-specific — preserved from card design)
+     ─────────────────────────────────
+     Freya: about-hover-glow (radial glow from center)
+     Luna:  about-hover-shimmer (shimmer sweep)
+     FiremanDecko: about-hover-fire (fire particle / heat haze)
+     Loki:  about-hover-glitch (RGB split / jitter)
+     Heimdall: about-hover-scan (horizontal scan line sweep)
+     Applied via .portrait-hover-overlay group-hover:opacity-100
+
+  7. ACCESSIBILITY
+     ─────────────────────────────────
+     - Each .agent-myth-row is <article> with aria-label="[Name] — [Role]"
+     - Portrait <img> alt describes realm: "Freya — light realm portrait"
+     - Realm badge: aria-live="polite" so screen readers announce theme change
+     - Lore text: aria-hidden on the non-active variant (opacity:0 version)
+       Implementation: aria-hidden={resolvedTheme !== 'light'} on lore-light div
+     - Portrait frame min touch-target satisfied by full-width mobile layout
+     - Hover overlays: aria-hidden="true" on all decorative elements
+     - Reduced motion: @media (prefers-reduced-motion): skip crossfade, instant swap
+
+  8. DATA INTERFACE CHANGES (for FiremanDecko)
+     ─────────────────────────────────
+     Add to AgentProfile interface:
+       lightLore: { title: string; quote: string; aspect: string }
+       darkLore:  { title: string; quote: string; aspect: string }
+     Add to each AGENTS entry (see lore text in wireframe above).
+     AgentPortrait component: accept theme prop or use useTheme() internally.
+     Remove: hoverEffect field can stay (repurposed for portrait hover overlay).
+
+  9. SECTION CHANGES SUMMARY
+     ─────────────────────────────────
+     REMOVED: ThePackSection() (3-col card grid + placeholder slot)
+     ADDED:   TheMythWithAgentsSection() (alternating portrait rows)
+     UNCHANGED: OriginHeroSection, WhyTheWolfSection, TheForgeSection, FinalCtaSection
+  ══════════════════════════════════════════════════════════════════════════════
+  -->
 
 </body>
 </html>
