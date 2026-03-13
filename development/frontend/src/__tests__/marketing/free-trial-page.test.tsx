@@ -139,10 +139,10 @@ describe("FreeTrialContent — Feature Showcase", () => {
     expect(heading.tagName.toLowerCase()).toBe("h2");
   });
 
-  it("renders exactly 7 feature cards", () => {
+  it("renders exactly 6 feature cards", () => {
     const featureList = screen.getByLabelText("Trial features");
     const items = within(featureList).getAllByRole("listitem");
-    expect(items).toHaveLength(7);
+    expect(items).toHaveLength(6);
   });
 
   it("all feature card titles start with 'I' (wolf-voice)", () => {
@@ -152,7 +152,6 @@ describe("FreeTrialContent — Feature Showcase", () => {
       "I Guard the Whole Pack",
       "I Devour Your Spreadsheets",
       "I Remember the Fallen",
-      "I Am No Ordinary Ledger",
       "I Follow You Everywhere",
     ];
     for (const title of expectedTitles) {
@@ -162,7 +161,7 @@ describe("FreeTrialContent — Feature Showcase", () => {
 
   it("each feature card has a 'Yours Free' tag", () => {
     const tags = screen.getAllByText("Yours Free");
-    expect(tags).toHaveLength(7);
+    expect(tags).toHaveLength(6);
   });
 });
 

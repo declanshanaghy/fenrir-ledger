@@ -45,22 +45,22 @@ test("hero contains 'No credit card. No chains.' trust line", async ({
   expect(text).toContain("No chains");
 });
 
-test("feature showcase displays exactly 7 cards with 'Yours Free' tags", async ({
+test("feature showcase displays exactly 6 cards with 'Yours Free' tags", async ({
   page,
 }) => {
   await page.goto("/free-trial", { waitUntil: "networkidle" });
   const featureList = page.locator('[aria-label="Trial features"]');
   const items = page.locator('[aria-label="Trial features"] li');
   const count = await items.count();
-  expect(count).toBe(7);
+  expect(count).toBe(6);
 
   // Verify "Yours Free" tags
   const tags = page.locator('text="Yours Free"');
   const tagCount = await tags.count();
-  expect(tagCount).toBe(7);
+  expect(tagCount).toBe(6);
 });
 
-test("all 7 feature card titles start with 'I' (wolf-voice)", async ({
+test("all 6 feature card titles start with 'I' (wolf-voice)", async ({
   page,
 }) => {
   await page.goto("/free-trial", { waitUntil: "networkidle" });
@@ -70,7 +70,6 @@ test("all 7 feature card titles start with 'I' (wolf-voice)", async ({
     "I Guard the Whole Pack",
     "I Devour Your Spreadsheets",
     "I Remember the Fallen",
-    "I Am No Ordinary Ledger",
     "I Follow You Everywhere",
   ];
 
