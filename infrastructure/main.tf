@@ -16,11 +16,9 @@ terraform {
     }
   }
 
-  # Remote state in GCS — create the bucket before first apply:
-  #   gsutil mb -l us-central1 gs://fenrir-ledger-tfstate
-  #   gsutil versioning set on gs://fenrir-ledger-tfstate
+  # Remote state in GCS (bucket already exists)
   backend "gcs" {
-    bucket = "fenrir-ledger-tfstate"
+    bucket = "fenrir-ledger-tf-state"
     prefix = "infrastructure"
   }
 }
