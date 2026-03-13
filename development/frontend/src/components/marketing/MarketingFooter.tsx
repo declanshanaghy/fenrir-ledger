@@ -8,7 +8,7 @@
  *   - Copyright line (Norse styling)
  *
  * Wireframe: ux/wireframes/marketing-site/layout-shell.html
- * Also references: ux/wireframes/marketing/static-site-footer.html
+ * Also references: ux/wireframes/marketing-site/static-site-footer.html
  */
 
 import Link from "next/link";
