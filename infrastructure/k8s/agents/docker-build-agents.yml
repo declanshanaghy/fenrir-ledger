@@ -1,0 +1,77 @@
+# --------------------------------------------------------------------------
+# Docker Build & Push — Agent Sandbox Image
+#
+# Builds the agent sandbox container and pushes to Google Artifact Registry.
+# Triggers on changes to agent infrastructure files or manual dispatch.
+#
+# Required GitHub Secrets:
+#   GCP_PROJECT_ID   — Google Cloud project ID
+#   GCP_SA_KEY       — Base64-encoded service account JSON key
+#   GCP_REGION       — GCP region (e.g. us-central1)
+# --------------------------------------------------------------------------
+
+name: Build Agent Sandbox Image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infrastructure/k8s/agents/Dockerfile"
+      - "infrastructure/k8s/agents/entrypoint.sh"
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Custom image tag (default: git SHA)"
+        required: false
+        type: string
+
+env:
+  REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/fenrir-images
+  IMAGE_NAME: agent-sandbox
+  IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
+
+jobs:
+  build-and-push:
+    name: Build & Push Agent Sandbox
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push agent sandbox image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./infrastructure/k8s/agents/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output image digest
+        run: |
+          echo "### Agent Sandbox Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registry:** \`${{ env.REGISTRY }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image:** \`${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY

@@ -1,11 +1,11 @@
 ---
 name: dispatch
-description: "Dispatch agents to Depot remote sandboxes or local worktrees for GitHub issues. Use when the user says 'dispatch', 'spawn agent', 'send to Depot', or when /fire-next-up needs to spawn an agent. Supports parallel dispatch, agent selection, branch override, and prompt customization."
+description: "Dispatch agents to GKE Autopilot K8s Jobs or local worktrees for GitHub issues. Use when the user says 'dispatch', 'spawn agent', 'send to GKE', or when /fire-next-up needs to spawn an agent. Supports parallel dispatch, agent selection, branch override, and prompt customization."
 ---
 
 # Dispatch — Spawn Agents for GitHub Issues
 
-Composes a prompt from templates and spawns the agent via Depot (default) or local worktree. No intermediate files.
+Composes a prompt from templates and spawns the agent via GKE Autopilot K8s Jobs (default) or local worktree. No intermediate files.
 
 ## Speed Rules (UNBREAKABLE)
 
@@ -13,18 +13,18 @@ Composes a prompt from templates and spawns the agent via Depot (default) or loc
 
 1. **No separate path-resolution call.** Use the known repo root directly.
 2. **No separate issue fetch if caller already has the data.** When `/fire-next-up` or `--resume` invokes `/dispatch`, the issue title, body, and labels are already in context — use them directly.
-3. **No separate DEPOT_ORG_ID check.** Source `.env` inline in the spawn command. Let `depot` fail if it's missing.
-4. **No separate UUID call.** Generate inline: `$(uuidgen | cut -c1-8 | tr A-Z a-z)` inside the session title.
+3. **No separate kubectl config check.** Let `dispatch-job.sh` fail if kubectl is not configured.
+4. **No separate UUID call.** Generate inline: `$(uuidgen | cut -c1-8 | tr A-Z a-z)` inside the session ID.
 5. **Sandbox preamble is embedded below** — never Read `sandbox-preamble.md`.
 6. **Reuse agent templates from context.** If the same agent template was already read earlier in the session, do NOT read it again.
-7. **No intermediate temp files.** Pass the composed prompt directly to `depot claude` via heredoc.
+7. **No intermediate temp files.** `dispatch-job.sh` handles Job manifest generation internally.
 8. **No step-by-step narration.** Only output the final dispatch report.
 9. **Board move is MANDATORY after spawn succeeds.** Append it to the spawn command with `&&`.
 
 **Ideal flow (2 tool calls per dispatch):**
 ```
 Call 1: Read <agent>.md           (skip if already in context)
-Call 2: source .env && depot claude ... && node pack-status.mjs --move N in-progress
+Call 2: bash dispatch-job.sh ... && node pack-status.mjs --move N in-progress
 ```
 
 If issue data + agent template are already in context, that's **1 tool call** (spawn + board move combined).
@@ -48,8 +48,8 @@ If issue data + agent template are already in context, that's **1 tool call** (s
 
 ## Agent Model Mapping
 
-| Agent | Remote (Depot) | Local (`--local`) |
-|-------|----------------|-------------------|
+| Agent | Remote (GKE) | Local (`--local`) |
+|-------|--------------|-------------------|
 | Luna | `claude-sonnet-4-6` | `sonnet` |
 | FiremanDecko | `claude-opus-4-6` | `opus` |
 | Freya | `claude-sonnet-4-6` | `sonnet` |
@@ -183,26 +183,28 @@ If `--prompt-extra`, append after the issue body:
 
 **If `--dry-run`:** Display the composed prompt and stop. No spawn.
 
-#### Remote (default) — pass prompt via heredoc, no temp file
+#### Remote (default) — GKE Autopilot K8s Job
 
 ```bash
-source <repo-root>/.env && depot claude \
-  --org "$DEPOT_ORG_ID" \
-  --session-id "issue-<N>-step<S>-<agent>-$(uuidgen | cut -c1-8 | tr A-Z a-z)" \
-  --repository "https://github.com/declanshanaghy/fenrir-ledger" \
-  --branch "main" \
+SESSION_ID="issue-<N>-step<S>-<agent>-$(uuidgen | cut -c1-8 | tr A-Z a-z)" && \
+bash "<repo-root>/infrastructure/k8s/agents/dispatch-job.sh" \
+  --session-id "$SESSION_ID" \
+  --branch "<BRANCH>" \
   --model "<MODEL>" \
-  --dangerously-skip-permissions \
-  -p "$(cat <<'PROMPT'
+  --prompt "$(cat <<'PROMPT'
 <composed prompt content here>
 PROMPT
 )" && \
 node "<repo-root>/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N> in-progress
 ```
 
-**CRITICAL: Always `--branch "main"`** — `sandbox-setup.sh` handles branch checkout.
+**Key:** Use a `<<'PROMPT'` heredoc (single-quoted delimiter) to avoid all shell expansion issues. The `$(cat ...)` wrapping passes the heredoc content as a single string argument to `--prompt`.
 
-**Key:** Use a `<<'PROMPT'` heredoc (single-quoted delimiter) to avoid all shell expansion issues. The `$(cat ...)` wrapping passes the heredoc content as a single string argument to `-p`.
+**Job naming:** The dispatch script generates DNS-compatible job names from the session ID.
+
+**Fire-and-forget:** `dispatch-job.sh` applies the Job and returns immediately. The Job runs asynchronously on GKE Autopilot.
+
+**Logs:** `kubectl logs job/agent-<session-id> -n fenrir-agents --follow`
 
 #### Local (`--local`)
 
@@ -228,8 +230,9 @@ node "<repo-root>/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N
 
 ```
 **Dispatched #<N>**: <TITLE>
-**Agent:** <AgentName> (Step <S>) | **Model:** <MODEL> | **Mode:** Depot/Local
-**Branch:** `<BRANCH>` | **Session:** `<SESSION_ID>` — <link>
+**Agent:** <AgentName> (Step <S>) | **Model:** <MODEL> | **Mode:** GKE/Local
+**Branch:** `<BRANCH>` | **Session:** `<SESSION_ID>`
+**Logs:** `kubectl logs job/agent-<SESSION_ID> -n fenrir-agents --follow`
 ```
 
 One line per issue for parallel dispatches. No step-by-step narration.
@@ -254,16 +257,16 @@ One line per issue for parallel dispatches. No step-by-step narration.
 | Unknown agent name | **Error** with valid list |
 | Cannot infer agent | **Error**: use `--agent` |
 | Template missing | **Error** |
-| `DEPOT_ORG_ID` unset (remote) | **Error**, do NOT fall back to local |
-| `depot claude` fails | **Error**, do NOT move board |
+| `kubectl` not configured | **Error**, do NOT fall back to local |
+| `dispatch-job.sh` fails | **Error**, do NOT move board |
 | Board move fails | **Warning** (non-fatal) |
 
 ---
 
 ## Rules
 
-- All agent spawning goes through `/dispatch`. Never call `depot claude` directly.
+- All agent spawning goes through `/dispatch`. Never call `dispatch-job.sh` directly outside of dispatch.
 - Templates are read from `fire-next-up/templates/` — no duplication.
-- Always use `--branch "main"` for Depot.
-- Depot is fire-and-forget: spawn and report, do NOT poll or wait.
+- GKE Jobs are fire-and-forget: spawn and report, do NOT poll or wait.
 - The orchestrator coordinates — never do an agent's work yourself.
+- Job logs are retrievable via `kubectl logs` or Cloud Logging for debugging.
