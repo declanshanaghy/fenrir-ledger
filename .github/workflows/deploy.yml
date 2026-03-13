@@ -1,12 +1,11 @@
 # --------------------------------------------------------------------------
-# CD Pipeline — Build, Push, Deploy to GKE Autopilot
+# Unified CI/CD Pipeline — Terraform + Build + Deploy to GKE Autopilot
 #
-# Copy this file to .github/workflows/deploy-gke.yml to activate.
-# The PAT used by CI needs the `workflow` scope to push workflow files.
-#
-# Triggers on push to main when app source changes.
-# Builds the Next.js app image, pushes to Google Artifact Registry,
-# and deploys to GKE Autopilot cluster.
+# Runs on every push to main:
+#   1. Terraform init/plan/apply (idempotent — no-ops if nothing changed)
+#   2. Docker build & push to Google Artifact Registry
+#   3. Rolling deployment to GKE Autopilot (zero-downtime)
+#   4. Post-deploy health check against /api/health
 #
 # Required GitHub Secrets:
 #   GCP_PROJECT_ID              — Google Cloud project ID
@@ -25,6 +24,7 @@
 #   STRIPE_PRICE_ID             — Stripe price ID
 #   KV_REST_API_URL             — KV store REST API URL
 #   KV_REST_API_TOKEN           — KV store REST API token
+#   TF_VAR_BILLING_ACCOUNT_ID   — GCP billing account ID for Terraform
 # --------------------------------------------------------------------------
 
 name: Deploy to GKE
@@ -32,12 +32,6 @@ name: Deploy to GKE
 on:
   push:
     branches: [main]
-    paths:
-      - "development/frontend/**"
-      - "Dockerfile"
-      - ".dockerignore"
-      - "infrastructure/k8s/app/**"
-      - ".github/workflows/deploy-gke.yml"
   workflow_dispatch:
     inputs:
       image_tag:
@@ -49,6 +43,11 @@ on:
         required: false
         type: boolean
         default: false
+      skip_terraform:
+        description: "Skip Terraform plan/apply"
+        required: false
+        type: boolean
+        default: false
 
 env:
   REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/fenrir-images
@@ -56,8 +55,63 @@ env:
   IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
 
 jobs:
+  # --------------------------------------------------------------------------
+  # Job 1: Terraform — ensure GKE infrastructure is up to date
+  # --------------------------------------------------------------------------
+  terraform:
+    name: Terraform Plan & Apply
+    if: ${{ !inputs.skip_terraform }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: infrastructure
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.5"
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -out=tfplan
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_region: ${{ secrets.GCP_REGION }}
+          TF_VAR_zone: ${{ secrets.GCP_ZONE }}
+          TF_VAR_billing_account_id: ${{ secrets.TF_VAR_BILLING_ACCOUNT_ID }}
+
+      - name: Terraform Apply
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Terraform Output Summary
+        run: |
+          echo "### Terraform Applied" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          terraform output -no-color >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  # --------------------------------------------------------------------------
+  # Job 2: Build Docker image & push to Artifact Registry
+  # --------------------------------------------------------------------------
   build-and-push:
     name: Build & Push Image
+    needs: terraform
+    if: always() && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -109,6 +163,9 @@ jobs:
           echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Digest:** \`${{ steps.build.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
+  # --------------------------------------------------------------------------
+  # Job 3: Deploy to GKE Autopilot with rolling update
+  # --------------------------------------------------------------------------
   deploy:
     name: Deploy to GKE
     needs: build-and-push
@@ -195,14 +252,60 @@ jobs:
           kubectl get ingress -n fenrir-app >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-      - name: Post-deploy health check
+  # --------------------------------------------------------------------------
+  # Job 4: Post-deploy health check
+  # --------------------------------------------------------------------------
+  health-check:
+    name: Post-Deploy Health Check
+    needs: deploy
+    if: ${{ !inputs.skip_deploy }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
+          location: ${{ secrets.GCP_ZONE }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Health check via Ingress
         run: |
-          # Get the Ingress external IP (may take time to provision)
-          INGRESS_IP=$(kubectl get ingress fenrir-app -n fenrir-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+          INGRESS_IP=$(kubectl get ingress fenrir-app -n fenrir-app \
+            -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+
           if [ -n "$INGRESS_IP" ]; then
-            echo "Ingress IP: $INGRESS_IP"
-            # Health check via direct IP (skip SSL for post-deploy check)
-            curl -sf --max-time 10 "http://$INGRESS_IP/api/health" || echo "Warning: Health check via Ingress IP not yet available (SSL provisioning may be in progress)"
+            echo "Checking health at http://$INGRESS_IP/api/health"
+            RETRIES=5
+            for i in $(seq 1 $RETRIES); do
+              if curl -sf --max-time 10 "http://$INGRESS_IP/api/health"; then
+                echo ""
+                echo "Health check passed on attempt $i"
+                echo "### Health Check Passed" >> $GITHUB_STEP_SUMMARY
+                exit 0
+              fi
+              echo "Attempt $i/$RETRIES failed, retrying in 15s..."
+              sleep 15
+            done
+            echo "::warning::Health check failed after $RETRIES attempts (may need DNS/SSL propagation)"
+            echo "### Health Check Warning" >> $GITHUB_STEP_SUMMARY
+            echo "Health check did not pass after $RETRIES attempts. This may be expected if SSL is still provisioning." >> $GITHUB_STEP_SUMMARY
           else
-            echo "Warning: Ingress external IP not yet assigned. SSL certificate provisioning may take 15-60 minutes."
+            echo "::warning::Ingress external IP not yet assigned. SSL certificate provisioning may take 15-60 minutes."
+            echo "### Health Check Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "Ingress IP not yet available. SSL provisioning may still be in progress." >> $GITHUB_STEP_SUMMARY
           fi
