@@ -1,0 +1,48 @@
+# --------------------------------------------------------------------------
+# Docker ignore — Fenrir Ledger
+# Keeps build context small for faster Docker builds.
+# --------------------------------------------------------------------------
+
+# Git
+.git
+.gitignore
+
+# Node
+**/node_modules
+**/.next
+**/out
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment files (secrets must come from K8s Secrets, not build context)
+**/.env
+**/.env.local
+**/.env.production
+**/.env.*.local
+
+# Test artifacts
+**/playwright-report
+**/test-results
+**/coverage
+
+# Infrastructure (not needed in app image)
+infrastructure/
+.claude/
+
+# Documentation and quality (not needed in app image)
+architecture/
+product/
+quality/
+ux/
+memory/
+sessions/
+*.md
+
+# Terraform
+**/*.tf
+**/*.tfvars
+**/*.tfstate*

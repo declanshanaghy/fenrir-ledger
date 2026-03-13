@@ -10,6 +10,10 @@ import type { NextConfig } from "next";
  */
 
 const nextConfig: NextConfig = {
+  // Standalone output for containerized deployment (GKE Autopilot)
+  // Produces a self-contained server.js with only required node_modules
+  output: "standalone",
+
   // Pin the workspace root so Next.js doesn't infer it from stray lockfiles
   // in parent directories. This is the frontend directory itself.
   outputFileTracingRoot: __dirname,
