@@ -42,11 +42,10 @@ test.describe("Feature 05 — Sköll Dark Mode Border Fix (Issue #647)", () => {
     const featureSection = page.locator('section[id="annual-fee-tracking"]');
     await expect(featureSection).toBeVisible();
 
-    // Find the dark mode image within this section
-    // Note: _next/image wraps the actual PNG, but srcset contains the path
-    const darkImage = featureSection.locator(
-      'img[alt*="Sköll Watches the Fee"]'
-    );
+    // Find the dark mode image (first one, as both dark and light variants exist in DOM)
+    const darkImage = featureSection
+      .locator('img[alt*="Sköll Watches the Fee"]')
+      .first();
     await expect(darkImage).toBeVisible();
 
     // Verify image has correct src
@@ -71,10 +70,10 @@ test.describe("Feature 05 — Sköll Dark Mode Border Fix (Issue #647)", () => {
     const featureSection = page.locator('section[id="annual-fee-tracking"]');
     await expect(featureSection).toBeVisible();
 
-    // Find the light mode image
-    const lightImage = featureSection.locator(
-      'img[alt*="Sköll Watches the Fee"]'
-    );
+    // Find the light mode image (second one, as both dark and light variants exist in DOM)
+    const lightImage = featureSection
+      .locator('img[alt*="Sköll Watches the Fee"]')
+      .nth(1);
     await expect(lightImage).toBeVisible();
 
     // Verify it points to light image
@@ -107,10 +106,10 @@ test.describe("Feature 05 — Sköll Dark Mode Border Fix (Issue #647)", () => {
     const featureSection = page.locator('section[id="annual-fee-tracking"]');
     await expect(featureSection).toBeVisible();
 
-    // Verify dark image is visible and rendered
-    const darkImage = featureSection.locator(
-      'img[alt*="Sköll Watches the Fee"]'
-    );
+    // Verify dark image is visible and rendered (first one in dark mode)
+    const darkImage = featureSection
+      .locator('img[alt*="Sköll Watches the Fee"]')
+      .first();
     await expect(darkImage).toBeVisible();
 
     // Check that image fits within viewport and has content
@@ -127,14 +126,12 @@ test.describe("Feature 05 — Sköll Dark Mode Border Fix (Issue #647)", () => {
     await page.goto(FEATURES_PAGE);
     await page.waitForLoadState("networkidle");
 
-    // Find all feature section elements
-    const featureSections = page.locator(
-      'section[id]:has(img[src*="/images/features/"])'
-    );
-    const sectionCount = await featureSections.count();
+    // Find all feature section elements by checking for img tags
+    const allImages = page.locator('img[src*="/images/features/"]');
+    const imageCount = await allImages.count();
 
-    // Should have at least 9 features on the page
-    expect(sectionCount).toBeGreaterThanOrEqual(9);
+    // Should have at least 18 images (dark + light variants of 9+ features)
+    expect(imageCount).toBeGreaterThanOrEqual(18);
 
     // Verify specific features are visible
     const fSection = page.locator('section[id="add-your-cards"]');
@@ -158,20 +155,20 @@ test.describe("Feature 05 — Sköll Dark Mode Border Fix (Issue #647)", () => {
     await page.waitForLoadState("networkidle");
 
     const featureSection = page.locator('section[id="annual-fee-tracking"]');
-    const skollImg = featureSection.locator('img[alt*="Sköll Watches the Fee"]');
+    const skollImgDark = featureSection
+      .locator('img[alt*="Sköll Watches the Fee"]')
+      .first();
 
     // Get the srcset which contains the image path
-    const srcset = await skollImg.getAttribute("srcset");
+    const srcset = await skollImgDark.getAttribute("srcset");
     expect(srcset).toBeTruthy();
     expect(srcset).toContain("skoll-dark.png");
 
-    // Reload in light mode
-    await page.context().clearCookies();
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-
-    // Verify light image is now used
-    const lightSrcset = await skollImg.getAttribute("srcset");
+    // Verify light image variant also exists in DOM
+    const skollImgLight = featureSection
+      .locator('img[alt*="Sköll Watches the Fee"]')
+      .nth(1);
+    const lightSrcset = await skollImgLight.getAttribute("srcset");
     expect(lightSrcset).toContain("skoll-light.png");
   });
 });
