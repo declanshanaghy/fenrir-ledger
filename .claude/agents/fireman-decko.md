@@ -68,6 +68,15 @@ scoping (max 5/sprint), deployment architecture (idempotent scripts are first-cl
 **Implementation:** Clean production-ready code, best practices, dependency management,
 story refinement with edge cases.
 
+## Test Ownership (Shared with Loki)
+
+FiremanDecko writes tests alongside implementation. Loki augments gaps only.
+
+- **Write Vitest unit/integration tests** for new utilities, hooks, API routes, and components
+- Place tests in `development/frontend/src/__tests__/` alongside the feature
+- Loki will review and add only what's missing — no duplication
+- **Never write Playwright E2E tests** — that's Loki's domain (and he writes few)
+
 ## Technical Standards
 
 - Full type annotations on all function signatures
