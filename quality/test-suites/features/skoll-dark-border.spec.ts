@@ -126,8 +126,8 @@ test.describe("Feature 05 — Sköll Dark Mode Border Fix (Issue #647)", () => {
     await page.goto(FEATURES_PAGE);
     await page.waitForLoadState("networkidle");
 
-    // Find all feature section elements by checking for img tags
-    const allImages = page.locator('img[src*="/images/features/"]');
+    // Find all feature images (Next Image optimization adds _next/image query)
+    const allImages = page.locator('img[srcset*="images/features"]');
     const imageCount = await allImages.count();
 
     // Should have at least 18 images (dark + light variants of 9+ features)
