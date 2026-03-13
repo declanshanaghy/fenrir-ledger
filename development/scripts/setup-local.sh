@@ -93,6 +93,21 @@ else
   info "Created .env.local from .env.example ✓"
 fi
 
+# ── GKE setup (required) ────────────────────────────────────────────────────
+header "GKE / kubectl setup..."
+
+GKE_SETUP="${REPO_ROOT}/scripts/gke-setup.sh"
+if [ ! -f "${GKE_SETUP}" ]; then
+  error "scripts/gke-setup.sh not found. Repo may be incomplete."
+fi
+
+if ! command -v gcloud &>/dev/null; then
+  error "gcloud CLI is required. Install: https://cloud.google.com/sdk/docs/install"
+fi
+
+bash "${GKE_SETUP}"
+info "GKE setup complete ✓"
+
 # ── Done ──────────────────────────────────────────────────────────────────────
 header "Setup complete!"
 echo ""
@@ -100,4 +115,7 @@ echo -e "  ${GREEN}To start the development server:${RESET}"
 echo -e "  ${BOLD}cd development/frontend && npm run dev${RESET}"
 echo ""
 echo -e "  Then open: ${BOLD}http://localhost:3000${RESET}"
+echo ""
+echo -e "  ${GREEN}Other setup scripts:${RESET}"
+echo -e "  ${BOLD}bash scripts/gke-setup.sh${RESET}  — Reconfigure kubectl for GKE"
 echo ""

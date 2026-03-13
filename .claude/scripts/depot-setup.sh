@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# DEPRECATED — Depot is being replaced by GKE Autopilot K8s Jobs.
+# Use scripts/gke-setup.sh instead.
+# This script remains for backward compatibility during migration.
+#
 # depot-setup.sh — One-time Depot remote builder setup for Fenrir Ledger
 #
 # This script configures the Depot CLI for remote agent sandboxes.
@@ -14,6 +18,9 @@
 #
 # Ref: ADR-007 (architecture/adrs/ADR-007-remote-builder-platforms.md)
 #      GitHub Issue #192
+
+echo "⚠  DEPRECATED: Depot is being replaced by GKE Autopilot. Use 'bash scripts/gke-setup.sh' instead."
+echo ""
 
 set -euo pipefail
 
