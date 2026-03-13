@@ -133,12 +133,6 @@ All files in this list match the implemented UI or document planned features tha
 | `wireframes/stripe-direct/karl-upsell-dialog.html` | current | KarlUpsellDialog.tsx implemented (#377) |
 | `wireframes/stripe-direct/karl-upsell-dialog-artwork.html` | current | KarlUpsellDialog featureImage prop + ThemedFeatureImage.tsx implemented (#560) |
 
-### Wireframes — marketing/
-
-| File | Status | Notes |
-|------|--------|-------|
-| `wireframes/marketing/static-site-footer.html` | current | MarketingFooter.tsx implemented |
-
 ### Wireframes — marketing-site/
 
 | File | Status | Notes |

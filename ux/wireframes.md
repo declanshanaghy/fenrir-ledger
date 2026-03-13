@@ -141,9 +141,8 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Trial Status &amp; During-Trial Messaging | [wireframes/trial/trial-status.html](wireframes/trial/trial-status.html) | Status panel dropdown, progress bar, value metrics, day-15 nudge, Settings row, mobile 375px; component spec (TrialStatusPanel) |
 | Trial Expiry &amp; Upgrade Prompt | [wireframes/trial/trial-expiry.html](wireframes/trial/trial-expiry.html) | Expiry modal, value recap, feature comparison, data safety, post-decline dashboard, re-subscribe path; component spec (TrialExpiryModal) |
 | Trial Feature Gates | [wireframes/trial/trial-feature-gates.html](wireframes/trial/trial-feature-gates.html) | During-trial vs. Thrall gate states, tab bar locks, card limit overlay, mobile bottom tabs, gate matrix, localStorage keys |
-| **marketing** | | |
-| Static Site Footer | [wireframes/marketing/static-site-footer.html](wireframes/marketing/static-site-footer.html) | Dedicated footer spec: brand, quote, runes, CTA, session link, legal row (Privacy Policy + Terms of Service), team credits; easter egg triggers preserved |
 | **marketing-site** | | |
+| Static Site Footer | [wireframes/marketing-site/static-site-footer.html](wireframes/marketing-site/static-site-footer.html) | Dedicated footer spec: brand, quote, runes, CTA, session link, legal row (Privacy Policy + Terms of Service), team credits; easter egg triggers preserved |
 | Marketing Site — Layout Shell | [wireframes/marketing-site/layout-shell.html](wireframes/marketing-site/layout-shell.html) | Full marketing site shell: nav + hero + sections + footer |
 | Home Page | [wireframes/marketing-site/home-page.html](wireframes/marketing-site/home-page.html) | Hero, CHAINS problems, FEATURES grid, STEPS flow |
 | Features Page | [wireframes/marketing-site/features.html](wireframes/marketing-site/features.html) | All 9 Karl features with artwork slots |
@@ -338,7 +337,7 @@ Z-index: 50 (see z-index table below). Mobile: bottom drawer toggle.
 
 ## Marketing Site — `/static/index.html`
 
-[→ marketing-site.html](wireframes/marketing/marketing-site.html) | [→ static-site-footer.html](wireframes/marketing/static-site-footer.html) (dedicated footer spec)
+[→ static-site-footer.html](wireframes/marketing-site/static-site-footer.html) (dedicated footer spec)
 
 Single-page, no framework, inline CSS/JS. Five sections:
 
@@ -351,7 +350,7 @@ Single-page, no framework, inline CSS/JS. Five sections:
 | STEPS | 3-step flow | Forge → Watch → Break Free |
 | FOOTER | | Logo · quote · runic cipher · CTA · legal links · credits |
 
-**Footer legal links:** The footer includes a legal links row between the Session Chronicles link and the team credits. Structure: `(c) 2026 Fenrir Ledger · Privacy Policy · Terms of Service`. Links navigate same-tab to `/static/privacy.html` and `/static/terms.html`. See [static-site-footer.html](wireframes/marketing/static-site-footer.html) for the dedicated footer wireframe with full annotations.
+**Footer legal links:** The footer includes a legal links row between the Session Chronicles link and the team credits. Structure: `(c) 2026 Fenrir Ledger · Privacy Policy · Terms of Service`. Links navigate same-tab to `/static/privacy.html` and `/static/terms.html`. See [static-site-footer.html](wireframes/marketing-site/static-site-footer.html) for the dedicated footer wireframe with full annotations.
 
 Easter egg placements visible in wireframe annotations (Gleipnir Hunt #5 on ©, Loki Mode on "Loki").
 
