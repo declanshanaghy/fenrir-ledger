@@ -18,6 +18,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PricingFaqAccordion } from "./PricingFaqAccordion";
+import { DataSafetyBanner } from "@/components/marketing/DataSafetyBanner";
 
 export const dynamic = "force-static";
 
@@ -239,6 +240,15 @@ function TierCardsSection() {
           Both tiers use Google Sign-In. No separate account creation.
           Karl subscriptions are managed via Stripe — cancel anytime from settings.
         </p>
+
+        <div className="mt-6 max-w-[900px] mx-auto">
+          <DataSafetyBanner
+            variant="compact"
+            ariaLabel="Data safety note"
+            learnMoreText="FAQ ↓"
+            learnMoreHref="#faq-card-numbers"
+          />
+        </div>
       </div>
     </section>
   );

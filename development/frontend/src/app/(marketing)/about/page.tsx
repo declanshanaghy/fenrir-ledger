@@ -31,6 +31,7 @@ import { motion, useInView, type Variants } from "framer-motion";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
+import { DataSafetyBanner } from "@/components/marketing/DataSafetyBanner";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -767,6 +768,25 @@ function TheMythWithAgentsSection(): React.ReactElement {
         {AGENTS.map((agent, i) => (
           <div key={agent.slug}>
             <AgentMythRow agent={agent} index={i} />
+
+            {/* Heimdall Data Protection subsection */}
+            {agent.slug === "heimdall" && (
+              <div className="max-w-[900px] mx-auto px-6 py-8">
+                <p className="font-body text-sm text-muted-foreground leading-relaxed mb-4">
+                  Heimdall stands at the boundary between what Fenrir knows and
+                  what it must never know. The distinction between card metadata
+                  and payment credentials is not a policy — it is an
+                  architectural guarantee.
+                </p>
+                <DataSafetyBanner
+                  variant="inline"
+                  ariaLabel="Heimdall data protection guarantee"
+                  headingOverride="What Heimdall Guards"
+                  descriptionOverride="The boundary Heimdall defends separates card metadata (what Fenrir tracks) from payment credentials (what Fenrir never touches). Credit card numbers, CVVs, PINs, passwords, SSNs, and bank account numbers are architecturally excluded — not filtered, not redacted, not present."
+                />
+              </div>
+            )}
+
             {i < AGENTS.length - 1 && AGENT_DIVIDERS[i] && (
               <div
                 className="text-center font-heading text-xl tracking-[0.5em] opacity-20 py-6"

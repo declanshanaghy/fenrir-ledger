@@ -28,6 +28,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ThemedFeatureImage } from "@/components/shared/ThemedFeatureImage";
+import { DataSafetyBanner } from "@/components/marketing/DataSafetyBanner";
 
 export const dynamic = "force-static";
 
@@ -568,6 +569,53 @@ function TierDivider() {
   );
 }
 
+function SmartImportSafetyCallout() {
+  return (
+    <div className="border-b border-border">
+      <div className="max-w-[1100px] mx-auto px-6 pb-8">
+        <DataSafetyBanner
+          variant="inline"
+          ariaLabel="Smart Import data safety"
+          headingOverride="Safe By Design — Smart Import Never Reads Card Numbers"
+          descriptionOverride="Smart Import extracts card names, issuers, fees, and dates from your spreadsheet. It is architecturally incapable of collecting card numbers, CVVs, PINs, or passwords. Those fields are not mapped, not processed, not stored."
+        />
+      </div>
+    </div>
+  );
+}
+
+function DataSafetyTrustSection() {
+  return (
+    <section
+      aria-labelledby="features-trust-heading"
+      className="border-b border-border"
+    >
+      <div className="max-w-[1100px] mx-auto px-6 py-14 sm:py-20 max-[375px]:py-8">
+        <div className="text-center mb-10">
+          <p
+            className="font-mono text-xs tracking-[0.3em] text-primary uppercase mb-3"
+            aria-hidden="true"
+          >
+            ᛊ · The Wolf&apos;s Code · ᛊ
+          </p>
+          <h2
+            className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wide text-foreground mb-4"
+            id="features-trust-heading"
+          >
+            I Track Metadata. Never Credentials.
+          </h2>
+          <p className="font-body text-base text-muted-foreground max-w-lg mx-auto leading-relaxed">
+            Every feature you just read tracks card information.
+            None of it requires — or touches — your actual card numbers.
+          </p>
+        </div>
+
+        <DataSafetyBanner variant="full" />
+      </div>
+    </section>
+  );
+}
+
 function FinalCta() {
   return (
     <section aria-label="Call to action" className="bg-card border-b border-border">
@@ -627,8 +675,12 @@ export default function FeaturesPage() {
       <UpgradeHook />
       <TierDivider />
       {KARL_FEATURES.map((feature) => (
-        <FeatureSection key={feature.id} feature={feature} />
+        <div key={feature.id}>
+          <FeatureSection feature={feature} />
+          {feature.id === "smart-import" && <SmartImportSafetyCallout />}
+        </div>
       ))}
+      <DataSafetyTrustSection />
       <FinalCta />
     </>
   );

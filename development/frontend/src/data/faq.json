@@ -89,7 +89,17 @@
       {
         "id": "what-we-collect",
         "question": "What data do you collect?",
-        "answer": "We collect minimal data: authentication info from Google (name, email, profile picture) and anonymous analytics to understand how the app is used. Your card and financial tracking data stays in your browser. See our Privacy Policy for full details."
+        "answer": "We collect minimal data: authentication info from Google (name, email, profile picture) and anonymous analytics to understand how the app is used. Your card and financial tracking data stays in your browser. Card data is limited to card names, issuers, annual fee amounts, fee dates, and sign-up bonus details — we never collect, store, or transmit credit card numbers, CVVs, PINs, or passwords. See our Privacy Policy for full details."
+      },
+      {
+        "id": "collect-card-numbers",
+        "question": "Does Fenrir Ledger collect my credit card numbers?",
+        "answer": "No. Fenrir Ledger is a card metadata tracker only. We track card names (e.g., \"Sapphire Preferred\"), issuers (e.g., \"Chase\", \"Amex\"), annual fee amounts and renewal dates, sign-up bonus details and deadlines, and spending notes you add manually. We never collect, store, transmit, or have access to actual credit card numbers, CVV/security codes, PINs, passwords, Social Security numbers, or bank account numbers. Your sensitive payment credentials never enter the system."
+      },
+      {
+        "id": "smart-import-safety",
+        "question": "Is my data safe during Smart Import?",
+        "answer": "Yes. Smart Import reads your spreadsheet to extract card names, dates, and fee amounts. It does not extract, process, or store card numbers, CVVs, PINs, or any payment credentials — those fields are not mapped, not collected, and not transmitted. The spreadsheet content is processed in memory and discarded after extraction — only the safe metadata fields are saved to your ledger."
       }
     ]
   },

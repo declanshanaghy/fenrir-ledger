@@ -12,6 +12,7 @@
  */
 
 import Link from "next/link";
+import { DataSafetyBanner } from "@/components/marketing/DataSafetyBanner";
 
 const FOOTER_COLUMNS = [
   {
@@ -98,6 +99,13 @@ export function MarketingFooter() {
             Open the Ledger
           </Link>
         </div>
+
+        {/* Data safety trust line */}
+        <DataSafetyBanner
+          variant="footer"
+          ariaLabel="Data safety statement"
+          className="mt-8"
+        />
 
         {/* Bottom copyright */}
         <div className="border-t border-border pt-8 text-center">
