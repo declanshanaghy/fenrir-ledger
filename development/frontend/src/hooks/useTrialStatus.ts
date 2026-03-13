@@ -144,7 +144,7 @@ export function useTrialStatus(): UseTrialStatusReturn {
   return {
     remainingDays: data.remainingDays,
     status: data.status,
-    convertedDate: data.convertedDate,
+    ...(data.convertedDate !== undefined ? { convertedDate: data.convertedDate } : {}),
     isLoading,
     refresh: fetchStatus,
   };
