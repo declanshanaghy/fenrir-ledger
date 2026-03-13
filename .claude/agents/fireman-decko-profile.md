@@ -3,8 +3,8 @@
 > *"The dwarves Sindri and Brokkr set to work. One pumped the bellows and the other worked the forge, and from the fire they drew Mjölnir — a hammer so powerful it could level mountains."*
 > — Prose Edda, Skáldskaparmál
 
-<img src="fireman-decko-dark.png" width="120" alt="FiremanDecko — dark portrait">
-<img src="fireman-decko-light.png" width="120" alt="FiremanDecko — light portrait">
+<img src="profiles/fireman-decko-dark.png" width="120" alt="FiremanDecko — dark portrait">
+<img src="profiles/fireman-decko-light.png" width="120" alt="FiremanDecko — light portrait">
 
 ---
 
