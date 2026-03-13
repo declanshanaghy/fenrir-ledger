@@ -43,6 +43,8 @@ async function setupDashboard(
   }
   await seedEntitlement(page);
   await page.reload({ waitUntil: "load" });
+  // Wait for dashboard/tablist to appear
+  await page.waitForSelector('[role="tablist"]', { timeout: 10000 });
 }
 
 test.describe("Rune Rendering — Tab Headers", () => {
@@ -52,11 +54,6 @@ test.describe("Rune Rendering — Tab Headers", () => {
     page,
   }) => {
     await setupDashboard(page, [makeCard({ cardName: "Test Card" })]);
-
-    // Navigate to dashboard
-    const dashboardLink = page.locator('a[href="/ledger"]').first();
-    await dashboardLink.click();
-    await page.waitForSelector('[role="tablist"]', { timeout: 5000 });
 
     // Active tab button should contain the active rune
     const activeTab = page.getByRole("tab", { name: /active/i });
@@ -78,11 +75,6 @@ test.describe("Rune Rendering — Tab Headers", () => {
   }) => {
     await setupDashboard(page, [makeCard({ cardName: "Test Card" })]);
 
-    // Navigate to dashboard
-    const dashboardLink = page.locator('a[href="/ledger"]').first();
-    await dashboardLink.click();
-    await page.waitForSelector('[role="tablist"]', { timeout: 5000 });
-
     // Get all text content on the page
     const bodyText = await page.locator("body").textContent();
 
@@ -93,11 +85,6 @@ test.describe("Rune Rendering — Tab Headers", () => {
 
   test("should render runes with serif font-family", async ({ page }) => {
     await setupDashboard(page, [makeCard({ cardName: "Test Card" })]);
-
-    // Navigate to dashboard
-    const dashboardLink = page.locator('a[href="/ledger"]').first();
-    await dashboardLink.click();
-    await page.waitForSelector('[role="tablist"]', { timeout: 5000 });
 
     // Find a rune span in the active tab button
     const activeTab = page.getByRole("tab", { name: /active/i });
@@ -119,11 +106,6 @@ test.describe("Rune Rendering — Tab Headers", () => {
 
     await setupDashboard(page, [makeCard({ cardName: "Test Card" })]);
 
-    // Navigate to dashboard
-    const dashboardLink = page.locator('a[href="/ledger"]').first();
-    await dashboardLink.click();
-    await page.waitForSelector('[role="tablist"]', { timeout: 5000 });
-
     // Verify runes are still visible on mobile
     const activeTab = page.getByRole("tab", { name: /active/i });
     const mobileRune = await activeTab.locator("span").first().textContent();
@@ -142,11 +124,6 @@ test.describe("Rune Rendering — Tab Content Consistency", () => {
   }) => {
     await setupDashboard(page, [makeCard({ cardName: "Test Card" })]);
 
-    // Navigate to dashboard
-    const dashboardLink = page.locator('a[href="/ledger"]').first();
-    await dashboardLink.click();
-    await page.waitForSelector('[role="tablist"]', { timeout: 5000 });
-
     // Capture initial rune text
     const activeTab = page.getByRole("tab", { name: /active/i });
     const initialRune = await activeTab.locator("span").first().textContent();
@@ -155,8 +132,8 @@ test.describe("Rune Rendering — Tab Content Consistency", () => {
     expect(initialRune).toBe(RUNE_MAP.active);
 
     // Reload the page and verify consistency
-    await page.reload();
-    await page.waitForSelector('[role="tablist"]', { timeout: 5000 });
+    await page.reload({ waitUntil: "load" });
+    await page.waitForSelector('[role="tablist"]', { timeout: 10000 });
 
     const reloadedRune = await activeTab.locator("span").first().textContent();
     expect(reloadedRune).toBe(initialRune);
@@ -166,11 +143,6 @@ test.describe("Rune Rendering — Tab Content Consistency", () => {
     page,
   }) => {
     await setupDashboard(page, [makeCard({ cardName: "Test Card" })]);
-
-    // Navigate to dashboard
-    const dashboardLink = page.locator('a[href="/ledger"]').first();
-    await dashboardLink.click();
-    await page.waitForSelector('[role="tablist"]', { timeout: 5000 });
 
     // Tabs should be visible in tab list
     const tablist = page.locator('[role="tablist"]');
