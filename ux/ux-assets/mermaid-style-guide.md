@@ -10,6 +10,28 @@ All diagrams across the project must use Mermaid syntax. This guide defines the 
 - Use meaningful node IDs (not `A`, `B`, `C` — use `panel`, `backend`, `api`)
 - Label all edges with the action or data being passed
 
+### Font Size (REQUIRED)
+
+Every diagram MUST include the init directive as its first line to set readable font sizes:
+
+```
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
+```
+
+This ensures diagrams are legible in all renderers and at all viewport sizes.
+
+### Line Breaks in Node Labels (UNBREAKABLE)
+
+**Never use `\n` in node labels** — it does not render in most Mermaid environments (GitHub, VS Code, etc.). Instead, use ` - ` (space-dash-space) to separate label segments within a single line.
+
+```
+%% BAD — \n will appear as literal text
+node["Line 1\nLine 2"]
+
+%% GOOD — renders correctly everywhere
+node["Line 1 - Line 2"]
+```
+
 ## Color Palette
 
 <!-- CUSTOMIZE: Replace these colors with your project's brand / platform colors -->
