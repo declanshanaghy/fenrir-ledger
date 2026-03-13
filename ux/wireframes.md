@@ -19,6 +19,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Free Trial Marketing Page (#636)
+
+| File | Description |
+|------|-------------|
+| [wireframes/marketing-site/free-trial.html](wireframes/marketing-site/free-trial.html) | `/free-trial` page wireframe — hero ("30 Days. Full Power. Zero Risk."), 7 compact feature cards in responsive 3/2/1-col grid, 30-day journey timeline (Day 1 / Day 15 nudge / Day 30 decision), Thrall vs Karl tier comparison, data safety reassurance, final CTA. Includes Framer Motion annotation, mobile 375px spec, WCAG 2.1 AA a11y requirements, SEO metadata block, and full implementation notes for FiremanDecko. Also specs the global nav + footer "Free Trial" link addition. |
+
+---
+
 ## Trial Flow Wireframes (30-Day Free Trial)
 
 | File | Description |
@@ -146,6 +154,7 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Marketing Site — Layout Shell | [wireframes/marketing-site/layout-shell.html](wireframes/marketing-site/layout-shell.html) | Full marketing site shell: nav + hero + sections + footer |
 | Home Page | [wireframes/marketing-site/home-page.html](wireframes/marketing-site/home-page.html) | Hero, CHAINS problems, FEATURES grid, STEPS flow |
 | Features Page | [wireframes/marketing-site/features.html](wireframes/marketing-site/features.html) | All 9 Karl features with artwork slots |
+| Free Trial Page | [wireframes/marketing-site/free-trial.html](wireframes/marketing-site/free-trial.html) | /free-trial marketing page (#636): hero ("30 Days. Full Power. Zero Risk."), 7-card compact feature showcase grid (3-col desktop / 2-col tablet / 1-col mobile), 30-day journey timeline (Day 1 / Day 15 nudge / Day 30 decision), Thrall vs Karl tier comparison with data-safety reassurance, final CTA; Framer Motion scroll-triggered animation annotations; mobile 375px responsive spec; SEO metadata; global nav + footer "Free Trial" link changes; full implementation notes for FiremanDecko |
 | Pricing Page | [wireframes/marketing-site/pricing.html](wireframes/marketing-site/pricing.html) | Tier comparison, FAQ accordion |
 | About Page | [wireframes/marketing-site/about.html](wireframes/marketing-site/about.html) | About page: team pack, mythology |
 | About Page — Mobile | [wireframes/marketing-site/about-mobile.html](wireframes/marketing-site/about-mobile.html) | Mobile 375px variant of About page |
