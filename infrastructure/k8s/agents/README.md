@@ -40,8 +40,8 @@ docker push us-central1-docker.pkg.dev/fenrir-ledger-prod/fenrir-images/agent-sa
 ```bash
 kubectl create secret generic agent-secrets \
   --namespace fenrir-agents \
-  --from-literal=anthropic-api-key="sk-ant-..." \
-  --from-literal=gh-token="ghp_..."
+  --from-literal=anthropic-api-key="<your-anthropic-key>" \
+  --from-literal=gh-token="<your-github-token>"
 ```
 
 ### 3. Dispatch an agent
