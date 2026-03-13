@@ -146,13 +146,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             cancelAt: subscription.cancel_at,
           });
 
-          // Only clear cancel_at when it was actually set
-          const updateParams: { cancel_at_period_end: false; cancel_at?: "" } = {
-            cancel_at_period_end: false,
-          };
-          if (subscription.cancel_at !== null) {
-            updateParams.cancel_at = "";
-          }
+          // Stripe rejects both cancel_at_period_end and cancel_at in the same
+          // request. Send only the relevant one. Clearing cancel_at implicitly
+          // clears cancel_at_period_end, so it's sufficient on its own.
+          const updateParams: { cancel_at_period_end: false } | { cancel_at: "" } =
+            subscription.cancel_at !== null
+              ? { cancel_at: "" }
+              : { cancel_at_period_end: false };
 
           const revived = await stripe.subscriptions.update(subscription.id, updateParams);
 
@@ -273,12 +273,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             googleSub,
           });
 
-          const updateParams: { cancel_at_period_end: false; cancel_at?: "" } = {
-            cancel_at_period_end: false,
-          };
-          if (activeSub.cancel_at !== null) {
-            updateParams.cancel_at = "";
-          }
+          // Stripe rejects both cancel params together — send only one
+          const updateParams: { cancel_at_period_end: false } | { cancel_at: "" } =
+            activeSub.cancel_at !== null
+              ? { cancel_at: "" }
+              : { cancel_at_period_end: false };
 
           const revived = await stripe.subscriptions.update(activeSub.id, updateParams);
           const updatedEntitlement = buildEntitlementFromSubscription(
@@ -378,9 +377,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       googleSub,
       error: message,
     });
-    log.debug("POST /api/stripe/checkout returning", { status: 500, error: "stripe_error" });
+    log.debug("POST /api/stripe/checkout returning", { status: 500, error: "stripe_error", message });
     return NextResponse.json(
-      { error: "checkout_error", error_description: "Failed to create checkout session." },
+      { error: "checkout_error", error_description: `Failed to create checkout session: ${message}` },
       { status: 500 },
     );
   }
