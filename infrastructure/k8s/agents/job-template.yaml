@@ -1,0 +1,103 @@
+# --------------------------------------------------------------------------
+# Agent Sandbox Job Template — Fenrir Ledger
+#
+# Kubernetes Job spec for running ephemeral Claude Code agent tasks
+# on GKE Autopilot. Designed for fire-and-forget dispatch.
+#
+# Placeholders (substituted by dispatch skill):
+#   {{JOB_NAME}}       — Unique job name (e.g., agent-681-firemandecko-a1b2c3d4)
+#   {{SESSION_ID}}     — Session identifier for logging
+#   {{BRANCH}}         — Git branch to checkout/create
+#   {{AGENT_MODEL}}    — Claude model (e.g., claude-opus-4-6)
+#   {{IMAGE_TAG}}      — Container image tag (default: latest)
+#   {{TASK_PROMPT}}    — Base64-encoded task prompt
+#
+# Apply: kubectl apply -f <generated-job>.yaml -n fenrir-agents
+# Logs:  kubectl logs job/{{JOB_NAME}} -n fenrir-agents --follow
+# --------------------------------------------------------------------------
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{JOB_NAME}}"
+  namespace: fenrir-agents
+  labels:
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: agent-sandbox
+    fenrir.dev/session-id: "{{SESSION_ID}}"
+spec:
+  # Auto-delete completed/failed Jobs after 1 hour
+  ttlSecondsAfterFinished: 3600
+
+  # Max runtime: 60 minutes — prevents runaway agents
+  activeDeadlineSeconds: 3600
+
+  # Do not retry on failure — agent tasks are not idempotent
+  backoffLimit: 0
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: fenrir-ledger
+        app.kubernetes.io/component: agent-sandbox
+        fenrir.dev/session-id: "{{SESSION_ID}}"
+    spec:
+      serviceAccountName: fenrir-agents-sa
+
+      # Use Spot/preemptible pods for cost savings (up to 70% cheaper)
+      # GKE Autopilot supports Spot via node selector
+      nodeSelector:
+        cloud.google.com/gke-spot: "true"
+
+      # Tolerate Spot eviction
+      tolerations:
+        - key: cloud.google.com/gke-spot
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+
+      # Grace period for eviction cleanup (commit WIP before pod dies)
+      terminationGracePeriodSeconds: 30
+
+      restartPolicy: Never
+
+      containers:
+        - name: agent
+          image: "us-central1-docker.pkg.dev/fenrir-ledger-prod/fenrir-images/agent-sandbox:{{IMAGE_TAG}}"
+          imagePullPolicy: Always
+
+          resources:
+            requests:
+              cpu: "2"
+              memory: 4Gi
+              ephemeral-storage: 10Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+              ephemeral-storage: 10Gi
+
+          env:
+            - name: SESSION_ID
+              value: "{{SESSION_ID}}"
+            - name: BRANCH
+              value: "{{BRANCH}}"
+            - name: AGENT_MODEL
+              value: "{{AGENT_MODEL}}"
+            - name: REPO_URL
+              value: "https://github.com/declanshanaghy/fenrir-ledger"
+            - name: SKIP_PERMISSIONS
+              value: "true"
+            # Task prompt is base64-encoded to avoid YAML escaping issues
+            - name: TASK_PROMPT
+              value: "{{TASK_PROMPT}}"
+            # Secrets injected from K8s Secret
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: agent-secrets
+                  key: anthropic-api-key
+            - name: GH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: agent-secrets
+                  key: gh-token

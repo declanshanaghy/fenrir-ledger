@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# sandbox-setup.sh — Run at the start of every Depot sandbox session.
+# sandbox-setup.sh — Run at the start of every agent sandbox session.
 # Ensures consistent tooling, auth, dependency versions, branch state,
 # and test infrastructure (Playwright + system deps).
+#
+# Works in both GKE Autopilot containers and local worktree sandboxes.
 #
 # Usage: bash .claude/scripts/sandbox-setup.sh [BRANCH_NAME]
 #
@@ -13,14 +15,23 @@ set -euo pipefail
 
 echo "=== Fenrir Sandbox Setup ==="
 
-# 0. Ensure we're at the repo root (Depot clones into /workspace)
+# Detect environment
+if [ -f "/.dockerenv" ] || [ -n "${KUBERNETES_SERVICE_HOST:-}" ]; then
+  SANDBOX_ENV="container"
+  echo "[info] running in container environment (GKE/Docker)"
+else
+  SANDBOX_ENV="local"
+  echo "[info] running in local environment"
+fi
+
+# 0. Ensure we're at the repo root
 REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT"
 echo "[ok] repo root: $REPO_ROOT"
 
-# 1. Git identity — required for commits in Depot sandboxes
+# 1. Git identity — required for commits in sandboxes
 git config user.email "firemandecko@fenrir-ledger.dev"
-git config user.name "FiremanDecko (Depot)"
+git config user.name "FiremanDecko (GKE Agent)"
 echo "[ok] git identity configured"
 
 # 2. Git credential helper — required for git push in Depot sandboxes
