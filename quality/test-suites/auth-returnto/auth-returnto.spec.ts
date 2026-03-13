@@ -38,49 +38,9 @@ test.beforeEach(async ({ page }) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 test.describe("Auth returnTo — Query Param Validation", () => {
-  test("sign-in from /ledger includes returnTo=/ledger in URL", async ({
-    page,
-  }) => {
-    // Spec: buildSignInUrl("/ledger") should include returnTo=/ledger
-    // even though "/" is the default, the feature still works for base ledger path
-    await page.goto("/ledger", { waitUntil: "load" });
-
-    // Navigate to sign-in (simulating the upsell flow)
-    await page.goto("/ledger/sign-in", { waitUntil: "load" });
-
-    // Verify the page loaded
-    await expect(page).toHaveURL(/\/ledger\/sign-in/);
-  });
-
-  test("sign-in from /ledger/settings includes returnTo=/ledger/settings", async ({
-    page,
-  }) => {
-    // Spec: when user navigates to /ledger/sign-in?returnTo=/ledger/settings,
-    // they should return to /ledger/settings after sign-in
-    await page.goto("/ledger/sign-in?returnTo=/ledger/settings", {
-      waitUntil: "load",
-    });
-
-    // Verify returnTo param is in the URL
-    await expect(page).toHaveURL(
-      /\/ledger\/sign-in\?returnTo=\/ledger\/settings/
-    );
-  });
-
-  test("sign-in from /ledger/valhalla includes returnTo=/ledger/valhalla", async ({
-    page,
-  }) => {
-    // Spec: when user navigates to /ledger/sign-in?returnTo=/ledger/valhalla,
-    // they should return to /ledger/valhalla after sign-in
-    await page.goto("/ledger/sign-in?returnTo=/ledger/valhalla", {
-      waitUntil: "load",
-    });
-
-    // Verify returnTo param is in the URL
-    await expect(page).toHaveURL(
-      /\/ledger\/sign-in\?returnTo=\/ledger\/valhalla/
-    );
-  });
+  // "sign-in from /ledger includes returnTo" — REMOVED (Issue #610): Just navigates + URL echo.
+  // "sign-in from /ledger/settings includes returnTo" — REMOVED (Issue #610): URL echo.
+  // "sign-in from /ledger/valhalla includes returnTo" — REMOVED (Issue #610): URL echo.
 
   test("sign-in with no returnTo defaults to /ledger", async ({ page }) => {
     // Spec: /ledger/sign-in without returnTo param should default to /ledger
