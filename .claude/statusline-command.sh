@@ -31,6 +31,26 @@ DIM="\033[2m"
 RESET="\033[0m"
 
 # ---------------------------------------------------------------------------
+# Cache directory and TTL
+# ---------------------------------------------------------------------------
+CACHE_DIR="${TMPDIR:-/tmp}/fenrir-statusline"
+CACHE_FILE="$CACHE_DIR/git-cache.json"
+CACHE_TTL=30  # seconds
+
+mkdir -p "$CACHE_DIR"
+
+# Check if cache is still valid
+is_cache_valid() {
+    if [ ! -f "$CACHE_FILE" ]; then
+        return 1
+    fi
+    local mtime=$(stat -f%m "$CACHE_FILE" 2>/dev/null || stat -c%Y "$CACHE_FILE" 2>/dev/null || echo 0)
+    local now=$(date +%s)
+    local age=$((now - mtime))
+    [ "$age" -lt "$CACHE_TTL" ]
+}
+
+# ---------------------------------------------------------------------------
 # Read JSON from stdin
 # ---------------------------------------------------------------------------
 INPUT="$(cat)"
@@ -86,38 +106,34 @@ CTX_PCT="${CTX_PCT%%.*}"
 DURATION_MS="${DURATION_MS%%.*}"
 
 # ---------------------------------------------------------------------------
-# Git detection
+# Git detection (with 30s cache)
 # ---------------------------------------------------------------------------
 GIT_BRANCH=""
 GIT_DIRTY=""
 GIT_UNTRACKED=""
 
-if git -C "$CWD" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    GIT_BRANCH="$(git -C "$CWD" symbolic-ref --short HEAD 2>/dev/null || git -C "$CWD" rev-parse --short HEAD 2>/dev/null || echo '')"
+if is_cache_valid; then
+    # Use cached values
+    GIT_BRANCH="$(jq -r '.branch // empty' "$CACHE_FILE" 2>/dev/null || echo '')"
+    GIT_DIRTY="$(jq -r '.dirty // empty' "$CACHE_FILE" 2>/dev/null || echo '')"
+    GIT_UNTRACKED="$(jq -r '.untracked // empty' "$CACHE_FILE" 2>/dev/null || echo '')"
+else
+    # Compute and cache
+    if git -C "$CWD" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        GIT_BRANCH="$(git -C "$CWD" symbolic-ref --short HEAD 2>/dev/null || git -C "$CWD" rev-parse --short HEAD 2>/dev/null || echo '')"
 
-    if ! git -C "$CWD" diff --quiet 2>/dev/null || ! git -C "$CWD" diff --cached --quiet 2>/dev/null; then
-        GIT_DIRTY="!"
+        if ! git -C "$CWD" diff --quiet 2>/dev/null || ! git -C "$CWD" diff --cached --quiet 2>/dev/null; then
+            GIT_DIRTY="!"
+        fi
+
+        if [ -n "$(git -C "$CWD" ls-files --others --exclude-standard 2>/dev/null | head -1)" ]; then
+            GIT_UNTRACKED="?"
+        fi
     fi
 
-    if [ -n "$(git -C "$CWD" ls-files --others --exclude-standard 2>/dev/null | head -1)" ]; then
-        GIT_UNTRACKED="?"
-    fi
-fi
-
-# ---------------------------------------------------------------------------
-# Git diff stats (lines added/deleted)
-# ---------------------------------------------------------------------------
-LINES_ADDED=0
-LINES_DELETED=0
-
-if [ -n "$GIT_BRANCH" ]; then
-    SHORTSTAT="$(git -C "$CWD" diff --shortstat HEAD 2>/dev/null || echo '')"
-    if [ -n "$SHORTSTAT" ]; then
-        # Extract insertions
-        INS="$(printf '%s' "$SHORTSTAT" | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || echo '0')"
-        DEL="$(printf '%s' "$SHORTSTAT" | grep -oE '[0-9]+ deletion' | grep -oE '[0-9]+' || echo '0')"
-        LINES_ADDED="${INS:-0}"
-        LINES_DELETED="${DEL:-0}"
+    # Write cache
+    if command -v jq >/dev/null 2>&1; then
+        printf '{"branch":"%s","dirty":"%s","untracked":"%s"}\n' "$GIT_BRANCH" "$GIT_DIRTY" "$GIT_UNTRACKED" > "$CACHE_FILE" 2>/dev/null || true
     fi
 fi
 
@@ -343,23 +359,14 @@ section_context() {
     printf '%bᚾ %b%d%% %s%b' "${FG_GOLD}" "$color" "$CTX_PCT" "$bar" "${RESET}"
 }
 
-# Section 5: Lines added/deleted
-section_lines() {
-    if [ "$LINES_ADDED" -eq 0 ] && [ "$LINES_DELETED" -eq 0 ]; then
-        printf '%b+0/-0%b' "${FG_STONE}" "${RESET}"
-    else
-        printf '%b+%d%b/%b-%d%b' "${FG_ASGARD}" "$LINES_ADDED" "${RESET}" "${FG_RAGNAROK}" "$LINES_DELETED" "${RESET}"
-    fi
-}
-
-# Section 6: Duration
+# Section 5: Duration
 section_duration() {
     local dur
     dur="$(format_duration "$DURATION_MS")"
     printf '%bᛏ %b%s%b' "${FG_GOLD}" "${FG_STONE}" "$dur" "${RESET}"
 }
 
-# Section 7: Agent
+# Section 6: Agent
 section_agent() {
     if [ -n "$AGENT_NAME" ]; then
         printf '%bᚲ %b%b%s%b' "${FG_GOLD}" "${FG_PARCHMENT}" "${BOLD}" "$AGENT_NAME" "${RESET}"
@@ -374,12 +381,12 @@ section_agent() {
 SEP="$(separator)"
 
 if [ "$TERM_WIDTH" -ge 100 ]; then
-    # Full layout: all 7 sections
-    printf '%b' "$(section_branch 20) ${SEP} $(section_model "$MODEL_SHORT") ${SEP} $(section_cost) ${SEP} $(section_context) ${SEP} $(section_lines) ${SEP} $(section_duration) ${SEP} $(section_agent)"
+    # Full layout: 6 sections (git diff stats removed, cached git checks)
+    printf '%b' "$(section_branch 20) ${SEP} $(section_model "$MODEL_SHORT") ${SEP} $(section_cost) ${SEP} $(section_context) ${SEP} $(section_duration) ${SEP} $(section_agent)"
 
 elif [ "$TERM_WIDTH" -ge 80 ]; then
     # Compact: truncate branch to 15, abbreviate model, drop duration
-    printf '%b' "$(section_branch 15) ${SEP} $(section_model "$MODEL_ABBREV") ${SEP} $(section_cost) ${SEP} $(section_context) ${SEP} $(section_lines) ${SEP} $(section_agent)"
+    printf '%b' "$(section_branch 15) ${SEP} $(section_model "$MODEL_ABBREV") ${SEP} $(section_cost) ${SEP} $(section_context) ${SEP} $(section_agent)"
 
 elif [ "$TERM_WIDTH" -ge 60 ]; then
     # Minimal: branch + cost + context bar only

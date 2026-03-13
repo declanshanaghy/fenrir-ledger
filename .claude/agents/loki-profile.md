@@ -3,8 +3,8 @@
 > *"Loki is handsome and beautiful to look at. His character is wicked, his disposition exceedingly mutable. He surpasses all men in the art of cunning and trickery."*
 > — Prose Edda, Gylfaginning
 
-<img src="loki-dark.png" width="120" alt="Loki — dark portrait">
-<img src="loki-light.png" width="120" alt="Loki — light portrait">
+<img src="profiles/loki-dark.png" width="120" alt="Loki — dark portrait">
+<img src="profiles/loki-light.png" width="120" alt="Loki — light portrait">
 
 ---
 

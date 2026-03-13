@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Trial Start Experience</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md.
+       Permitted: display flex/grid, border, width/height, padding/margin, font-size, font-weight */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    /* -- Page layout -------------------------------------------------------- */
+    .page { display: flex; flex-direction: column; gap: 56px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid;
+      padding-bottom: 6px;
+    }
+    .note {
+      font-size: 11px;
+      font-style: italic;
+      border-left: 2px solid;
+      padding-left: 8px;
+      margin: 4px 0;
+    }
+
+    /* =====================================================================
+       TRIAL START EXPERIENCE
+       =====================================================================
+       Triggered when user creates their first card (manual or import).
+       Trial starts silently — no gate, no modal, no interruption.
+
+       Key design decision: The trial begins as a REWARD, not a warning.
+       The user just completed their first meaningful action (adding a card).
+       We celebrate that moment and reveal the trial as a bonus.
+
+       Trigger conditions:
+         - First card added via CardForm submit
+         - First card added via Import Wizard completion
+         - fenrir:trial_start_date not already set in localStorage
+
+       Storage keys:
+         - fenrir:trial_start_date  — ISO date string (set once, never reset)
+         - fenrir:trial_converted   — "true" if user subscribed during/after trial
+
+       The trial start experience has TWO parts:
+         1. A toast notification (immediate, non-blocking)
+         2. A persistent trial badge in the TopBar (appears after toast)
+    ===================================================================== */
+
+    /* -- App shell skeleton ------------------------------------------------- */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 400px;
+      border: 1px solid;
+    }
+    .topbar {
+      height: 48px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+    .topbar-brand {
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar-avatar {
+      width: 32px;
+      height: 32px;
+      border: 1px dashed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    /* -- Trial badge in TopBar ---------------------------------------------- */
+    /*
+     * Small badge next to the avatar showing trial status.
+     * Voice 1 (functional): "30-day trial" / "22 days left"
+     * No Norse kennings in the badge itself.
+     * Badge is a link — clicking opens the trial info panel (see trial-status.html).
+     */
+    .trial-badge {
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid;
+      padding: 2px 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .trial-badge-label { font-size: 11px; }
+
+    /* -- Toast notification ------------------------------------------------- */
+    /*
+     * Uses existing sonner toast infrastructure.
+     * Appears at bottom-right (desktop) or bottom-center (mobile).
+     * Auto-dismisses after 8 seconds (longer than standard 5s — this is a moment).
+     * Z-index: 300 (toast layer per wireframes.md).
+     */
+    .toast-container {
+      position: relative;
+      border: 1px solid;
+      max-width: 380px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast-eyebrow {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .toast-heading {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .toast-body {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .toast-dismiss {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      padding: 4px;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* -- Content area (card grid) ------------------------------------------- */
+    .content-area {
+      padding: 24px 16px;
+      flex: 1;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .card-stub {
+      border: 1px solid;
+      padding: 16px;
+      min-height: 120px;
+    }
+    .card-stub-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .card-stub-meta {
+      font-size: 11px;
+    }
+
+    /* -- Mobile variant ----------------------------------------------------- */
+    .mobile-frame {
+      max-width: 375px;
+      border: 1px solid;
+    }
+    .mobile-frame .card-grid {
+      grid-template-columns: 1fr;
+    }
+    .mobile-toast {
+      max-width: 343px;
+      margin: 0 auto;
+    }
+
+    /* -- Annotation --------------------------------------------------------- */
+    .annotation-box {
+      border: 1px dashed;
+      padding: 12px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .annotation-box dt { font-weight: 600; }
+    .annotation-box dd { margin-left: 12px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ================================================================
+         SCENARIO 1: Trial Start Toast — Desktop
+         After first card is saved/imported. Non-blocking celebration.
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 1: Trial Start Toast — Desktop (after first card saved)</div>
+
+      <div class="app-shell">
+        <nav class="topbar">
+          <div class="topbar-brand">FENRIR LEDGER</div>
+          <div class="topbar-right">
+            <!-- Trial badge appears AFTER toast auto-dismisses -->
+            <div class="trial-badge">
+              <span class="trial-badge-label">30-day trial</span>
+            </div>
+            <div class="topbar-avatar">&#5765;</div>
+          </div>
+        </nav>
+        <div class="content-area">
+          <div class="card-grid">
+            <div class="card-stub">
+              <div class="card-stub-title">Chase Sapphire Preferred</div>
+              <div class="card-stub-meta">Active — just added</div>
+              <p class="note">First card — this triggered the trial start</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast (positioned bottom-right on desktop) -->
+      <div style="display: flex; justify-content: flex-end; margin-top: -8px;">
+        <div class="toast-container">
+          <button class="toast-dismiss" aria-label="Dismiss">x</button>
+          <div class="toast-eyebrow">KARL TRIAL ACTIVATED</div>
+          <div class="toast-heading">Your 30-day trial has begun</div>
+          <div class="toast-body">
+            You have full access to every Karl feature for 30 days.
+            Track fees, archive to Valhalla, and let the wolves howl.
+          </div>
+          <p class="note">
+            Voice 2 (atmospheric) in the body copy.
+            Voice 1 (functional) in the heading and eyebrow.
+            Auto-dismiss: 8 seconds.
+            Sonner toast component, z-index 300.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 2: Trial Badge in TopBar — Desktop (persistent)
+         Visible for the full 30-day trial period.
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 2: Trial Badge in TopBar — Desktop (persistent during trial)</div>
+
+      <div class="app-shell">
+        <nav class="topbar">
+          <div class="topbar-brand">FENRIR LEDGER</div>
+          <div class="topbar-right">
+            <!--
+              Badge text changes based on days remaining:
+              Day 1-25:  "N days left"
+              Day 26-30: "N days left" (same text, but theme applies urgency color)
+              Day 30:    "Trial ends today"
+              Expired:   "Trial ended" (only shown briefly before expiry flow takes over)
+            -->
+            <div class="trial-badge">
+              <span class="trial-badge-label">22 days left</span>
+            </div>
+            <div class="topbar-avatar">&#5765;</div>
+          </div>
+        </nav>
+        <div class="content-area" style="min-height: 80px; padding: 16px;">
+          <p class="note">
+            The trial badge is always visible in the TopBar during the trial.
+            It is a clickable link that opens the trial status panel (see trial-status.html).
+            Touch target: 44x44px minimum (padded hit area around the badge text).
+          </p>
+        </div>
+      </div>
+
+      <div class="annotation-box">
+        <dt>Trial badge states:</dt>
+        <dd>Days 1-25: Neutral styling. Text: "N days left"</dd>
+        <dd>Days 26-29: Warning styling (amber-hati). Text: "N days left"</dd>
+        <dd>Day 30: Urgent styling (fire-muspel). Text: "Trial ends today"</dd>
+        <dd>Expired: Critical styling (red-ragnarok). Text: "Trial ended"</dd>
+        <dt>Click action:</dt>
+        <dd>Opens trial status panel (dropdown anchored to badge, right-aligned)</dd>
+        <dt>Accessibility:</dt>
+        <dd>role="status" + aria-live="polite" for countdown updates</dd>
+        <dd>aria-label="Karl trial: 22 days remaining. Click for details."</dd>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 3: Trial Start Toast — Mobile 375px
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 3: Trial Start Toast — Mobile 375px</div>
+
+      <div class="mobile-frame">
+        <nav class="topbar">
+          <div class="topbar-brand" style="font-size: 11px;">FENRIR</div>
+          <div class="topbar-right">
+            <div class="trial-badge">
+              <span class="trial-badge-label">30-day trial</span>
+            </div>
+            <div class="topbar-avatar" style="width: 28px; height: 28px; font-size: 10px;">&#5765;</div>
+          </div>
+        </nav>
+        <div class="content-area">
+          <div class="card-grid" style="grid-template-columns: 1fr;">
+            <div class="card-stub">
+              <div class="card-stub-title">Chase Sapphire Preferred</div>
+              <div class="card-stub-meta">Active — just added</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile toast: bottom-center, full width minus padding -->
+      <div class="mobile-toast">
+        <div class="toast-container" style="max-width: 343px;">
+          <button class="toast-dismiss" aria-label="Dismiss">x</button>
+          <div class="toast-eyebrow">KARL TRIAL ACTIVATED</div>
+          <div class="toast-heading" style="font-size: 15px;">Your 30-day trial has begun</div>
+          <div class="toast-body">
+            Full access to every Karl feature for 30 days.
+          </div>
+          <p class="note">
+            Mobile body copy is shortened.
+            Toast spans full width minus 16px side margins.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 4: Trial Start via Import Wizard
+         Same toast, but triggered after import completes.
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 4: Trial Start via Import — Toast after import completes</div>
+
+      <div class="app-shell">
+        <nav class="topbar">
+          <div class="topbar-brand">FENRIR LEDGER</div>
+          <div class="topbar-right">
+            <div class="trial-badge">
+              <span class="trial-badge-label">30-day trial</span>
+            </div>
+            <div class="topbar-avatar">&#5765;</div>
+          </div>
+        </nav>
+        <div class="content-area">
+          <div class="card-grid">
+            <div class="card-stub">
+              <div class="card-stub-title">Amex Gold</div>
+              <div class="card-stub-meta">Active — imported</div>
+            </div>
+            <div class="card-stub">
+              <div class="card-stub-title">Chase Freedom Unlimited</div>
+              <div class="card-stub-meta">Active — imported</div>
+            </div>
+            <div class="card-stub">
+              <div class="card-stub-title">Citi Double Cash</div>
+              <div class="card-stub-meta">Active — imported</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: -8px;">
+        <div class="toast-container">
+          <button class="toast-dismiss" aria-label="Dismiss">x</button>
+          <div class="toast-eyebrow">KARL TRIAL ACTIVATED</div>
+          <div class="toast-heading">Your 30-day trial has begun</div>
+          <div class="toast-body">
+            3 cards imported. You have full access to every Karl feature
+            for 30 days. The wolves are watching.
+          </div>
+          <p class="note">
+            When triggered via import, the toast body references the
+            imported card count for personalization.
+            "3 cards imported" is dynamic — reflects actual count.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         COMPONENT SPEC: TrialStartToast
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Component Spec: TrialStartToast</div>
+      <div class="annotation-box">
+        <dt>Component:</dt>
+        <dd>TrialStartToast (uses existing sonner toast infrastructure)</dd>
+
+        <dt>Props:</dt>
+        <dd>cardCount: number — how many cards triggered the trial (1 for manual, N for import)</dd>
+        <dd>source: "manual" | "import" — determines body copy variant</dd>
+
+        <dt>Trigger conditions:</dt>
+        <dd>1. User saves first card via CardForm OR import wizard completes</dd>
+        <dd>2. fenrir:trial_start_date is NOT already set in localStorage</dd>
+        <dd>3. User is NOT already a Karl subscriber</dd>
+
+        <dt>Side effects on trigger:</dt>
+        <dd>1. Set fenrir:trial_start_date = new Date().toISOString() in localStorage</dd>
+        <dd>2. Show toast (8s auto-dismiss, sonner "success" variant)</dd>
+        <dd>3. After toast dismisses, trial badge appears in TopBar</dd>
+
+        <dt>Idempotency:</dt>
+        <dd>If fenrir:trial_start_date already exists, skip — trial already started.</dd>
+        <dd>If user is Karl subscriber, skip — no trial needed.</dd>
+
+        <dt>Accessibility:</dt>
+        <dd>Toast announced via aria-live="polite" (sonner default)</dd>
+        <dd>Dismiss button: aria-label="Dismiss trial notification"</dd>
+        <dd>Not focus-trapping — toast is informational, not blocking</dd>
+
+        <dt>Responsive:</dt>
+        <dd>Desktop (>1024px): bottom-right, max-width 380px</dd>
+        <dd>Tablet (600-1024px): bottom-right, max-width 340px</dd>
+        <dd>Mobile (<600px): bottom-center, full width minus 32px (16px margins)</dd>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         COMPONENT SPEC: TrialBadge
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Component Spec: TrialBadge (TopBar integration)</div>
+      <div class="annotation-box">
+        <dt>Component:</dt>
+        <dd>TrialBadge — inline badge rendered in TopBar, left of avatar</dd>
+
+        <dt>Render conditions:</dt>
+        <dd>1. fenrir:trial_start_date exists in localStorage</dd>
+        <dd>2. User is NOT a Karl subscriber (fenrir:trial_converted !== "true")</dd>
+        <dd>3. Trial has not been expired for more than 7 days (grace display period)</dd>
+
+        <dt>Props (computed):</dt>
+        <dd>daysRemaining: number — computed from trial_start_date + 30 days vs. now</dd>
+
+        <dt>Display text:</dt>
+        <dd>Days 30-26: "N days left" (neutral)</dd>
+        <dd>Days 25-2: "N days left" (neutral)</dd>
+        <dd>Days 5-2: "N days left" (warning — amber-hati theme color)</dd>
+        <dd>Day 1: "1 day left" (urgent — fire-muspel theme color)</dd>
+        <dd>Day 0: "Trial ends today" (urgent — fire-muspel theme color)</dd>
+        <dd>Expired: "Trial ended" (critical — red-ragnarok theme color)</dd>
+
+        <dt>Click behavior:</dt>
+        <dd>Opens TrialStatusPanel (see trial-status.html)</dd>
+
+        <dt>Accessibility:</dt>
+        <dd>role="status" on the badge container</dd>
+        <dd>aria-live="polite" — updates when day count changes</dd>
+        <dd>aria-label includes full context: "Karl trial: N days remaining. Click for details."</dd>
+        <dd>Minimum touch target: 44x44px (padding around text)</dd>
+
+        <dt>Mobile (375px):</dt>
+        <dd>Badge text shortens: "N days" (drops "left")</dd>
+        <dd>Font-size: 10px</dd>
+        <dd>Still clickable, still meets 44x44 touch target via padding</dd>
+
+        <dt>Karl subscriber:</dt>
+        <dd>Badge is NOT rendered. Replaced by "KARL" badge if desired (existing pattern).</dd>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

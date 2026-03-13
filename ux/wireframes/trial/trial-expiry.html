@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Trial Expiry &amp; Upgrade Prompt</title>
+  <style>
+    /* Layout and structure only. No theme styling. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    .page { display: flex; flex-direction: column; gap: 56px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.08em; border-bottom: 1px solid; padding-bottom: 6px;
+    }
+    .note {
+      font-size: 11px; font-style: italic;
+      border-left: 2px solid; padding-left: 8px; margin: 4px 0;
+    }
+    .annotation-box {
+      border: 1px dashed; padding: 12px; font-size: 11px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .annotation-box dt { font-weight: 600; }
+    .annotation-box dd { margin-left: 12px; }
+
+    /* =====================================================================
+       TRIAL EXPIRY EXPERIENCE
+       =====================================================================
+       Day 30 boundary: trial ends, user must decide.
+
+       CRITICAL DESIGN DECISION:
+       Data is PRESERVED. The user does not lose anything.
+       They just need to subscribe to ACCESS Karl features again.
+       This must be communicated clearly and repeatedly.
+
+       Flow:
+       1. User opens app on/after Day 30
+       2. Trial expiry modal appears (blocking but not punishing)
+       3. User chooses: Subscribe OR Continue as Thrall
+       4. If Thrall: Karl features are gated, data stays intact
+       5. If Subscribe: Stripe checkout, then full access restored
+
+       This is NOT a "you've been locked out" experience.
+       It is: "Your trial is complete. Here's what you built.
+       Keep going, or step back — your data is safe either way."
+    ===================================================================== */
+
+    /* -- Modal backdrop + shell --------------------------------------------- */
+    .modal-backdrop {
+      border: 1px solid;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 520px;
+    }
+    .modal-shell {
+      border: 1px solid;
+      max-width: 500px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid;
+    }
+    .modal-eyebrow {
+      font-size: 10px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-bottom: 8px;
+    }
+    .modal-title {
+      font-size: 20px; font-weight: 700; margin-bottom: 6px;
+    }
+    .modal-subtitle {
+      font-size: 13px; font-style: italic; line-height: 1.4;
+    }
+    .modal-close {
+      position: absolute; top: 12px; right: 12px;
+      font-size: 16px; cursor: pointer; border: none; padding: 4px;
+      min-width: 44px; min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* -- Value recap section ------------------------------------------------ */
+    .value-recap {
+      padding: 16px 24px;
+      border-bottom: 1px solid;
+    }
+    .value-recap-heading {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 12px;
+    }
+    .value-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .value-item {
+      text-align: center;
+    }
+    .value-number {
+      font-size: 22px; font-weight: 700;
+    }
+    .value-label {
+      font-size: 10px; margin-top: 2px;
+    }
+
+    /* -- Data safety message ------------------------------------------------ */
+    .safety-message {
+      padding: 12px 24px;
+      border-bottom: 1px solid;
+      font-size: 12px;
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .safety-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* -- Action buttons ----------------------------------------------------- */
+    .modal-actions {
+      padding: 16px 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn-primary {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid;
+      cursor: pointer;
+      text-align: center;
+      min-height: 44px;
+    }
+    .btn-secondary {
+      width: 100%;
+      padding: 10px 16px;
+      font-size: 13px;
+      border: 1px solid;
+      cursor: pointer;
+      text-align: center;
+      min-height: 44px;
+    }
+    .btn-helper {
+      font-size: 11px;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* -- Feature comparison ------------------------------------------------- */
+    .feature-comparison {
+      padding: 16px 24px;
+      border-bottom: 1px solid;
+    }
+    .comparison-heading {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 10px;
+    }
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 6px 16px;
+      font-size: 12px;
+    }
+    .comparison-feature { font-weight: 500; }
+    .comparison-header {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      text-align: center;
+    }
+    .comparison-check { text-align: center; }
+
+    /* -- Post-decline dashboard state --------------------------------------- */
+    .app-shell {
+      display: flex; flex-direction: column;
+      min-height: 300px; border: 1px solid;
+    }
+    .topbar {
+      height: 48px; border-bottom: 1px solid;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px;
+    }
+    .topbar-brand { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar-avatar {
+      width: 32px; height: 32px; border: 1px dashed;
+      display: flex; align-items: center; justify-content: center; font-size: 12px;
+    }
+    .content-area { padding: 24px 16px; flex: 1; }
+
+    /* -- Upgrade banner (post-trial Thrall) --------------------------------- */
+    .upgrade-banner {
+      border: 1px solid;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .upgrade-banner-text {
+      font-size: 13px;
+      flex: 1;
+    }
+    .upgrade-banner-cta {
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid;
+      padding: 6px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      min-height: 36px;
+      display: flex; align-items: center;
+    }
+    .upgrade-banner-dismiss {
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      padding: 4px;
+      min-width: 44px; min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* -- Mobile variant ----------------------------------------------------- */
+    .mobile-frame { max-width: 375px; border: 1px solid; }
+    .mobile-modal {
+      border: 1px solid;
+      max-width: 343px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ================================================================
+         SCENARIO 1: Trial Expiry Modal — Desktop
+         Shown on first load after trial expires.
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 1: Trial Expiry Modal — Desktop (Day 30+, first load after expiry)</div>
+
+      <div class="modal-backdrop">
+        <div class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="expiry-title">
+          <button class="modal-close" aria-label="Close">x</button>
+
+          <div class="modal-header">
+            <div class="modal-eyebrow">YOUR TRIAL HAS ENDED</div>
+            <div class="modal-title" id="expiry-title">Your 30 days are complete</div>
+            <div class="modal-subtitle">
+              You built something worth keeping. Your data is safe and waiting.
+            </div>
+            <p class="note">
+              Voice 2 (atmospheric) subtitle. Key message: data is SAFE.
+              No guilt, no urgency. Celebration of what was built.
+            </p>
+          </div>
+
+          <div class="value-recap">
+            <div class="value-recap-heading">What You Built</div>
+            <div class="value-grid">
+              <div class="value-item">
+                <div class="value-number">12</div>
+                <div class="value-label">Cards tracked</div>
+              </div>
+              <div class="value-item">
+                <div class="value-number">$2,840</div>
+                <div class="value-label">Fees monitored</div>
+              </div>
+              <div class="value-item">
+                <div class="value-number">$390</div>
+                <div class="value-label">Potential savings</div>
+              </div>
+            </div>
+            <p class="note">
+              Same value metrics as TrialStatusPanel, but frozen at expiry.
+              All values computed from localStorage — real, not synthetic.
+            </p>
+          </div>
+
+          <div class="safety-message">
+            <span class="safety-icon">&#9432;</span>
+            <span>
+              Your card data is preserved. Subscribe anytime to pick up where you left off.
+              Nothing has been deleted.
+            </span>
+          </div>
+
+          <div class="feature-comparison">
+            <div class="comparison-heading">What Changes</div>
+            <div class="comparison-grid">
+              <span class="comparison-header"></span>
+              <span class="comparison-header">Free</span>
+              <span class="comparison-header">Karl</span>
+
+              <span class="comparison-feature">Add &amp; edit cards</span>
+              <span class="comparison-check">3 max</span>
+              <span class="comparison-check">Unlimited</span>
+
+              <span class="comparison-feature">Fee &amp; bonus tracking</span>
+              <span class="comparison-check">Yes</span>
+              <span class="comparison-check">Yes</span>
+
+              <span class="comparison-feature">The Howl (alerts)</span>
+              <span class="comparison-check">--</span>
+              <span class="comparison-check">Yes</span>
+
+              <span class="comparison-feature">Valhalla (archive)</span>
+              <span class="comparison-check">--</span>
+              <span class="comparison-check">Yes</span>
+
+              <span class="comparison-feature">Smart Import</span>
+              <span class="comparison-check">--</span>
+              <span class="comparison-check">Yes</span>
+            </div>
+            <p class="note">
+              Feature comparison uses existing Karl/Thrall tier definitions.
+              "--" means gated (not available on Thrall).
+              This is the same data as the pricing page but in a compact
+              inline format for the modal context.
+            </p>
+          </div>
+
+          <div class="modal-actions">
+            <div class="btn-primary">Subscribe for $3.99/month</div>
+            <div class="btn-secondary">Continue with free plan</div>
+            <div class="btn-helper">
+              You can upgrade anytime from Settings.
+            </div>
+            <p class="note">
+              Both buttons are full-width and visually distinct.
+              "Continue with free plan" is a first-class option — not a tiny link.
+              Helper text reassures: upgrade path is always available.
+              No "you're making a mistake" copy. No countdown pressure.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 2: Trial Expiry Modal — Mobile 375px
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 2: Trial Expiry Modal — Mobile 375px</div>
+
+      <div class="mobile-modal">
+        <div style="padding: 16px 20px 12px; border-bottom: 1px solid; position: relative;">
+          <button class="modal-close" aria-label="Close">x</button>
+          <div class="modal-eyebrow">YOUR TRIAL HAS ENDED</div>
+          <div class="modal-title" style="font-size: 18px;">Your 30 days are complete</div>
+          <div class="modal-subtitle" style="font-size: 12px;">
+            You built something worth keeping. Your data is safe.
+          </div>
+        </div>
+
+        <div style="padding: 12px 20px; border-bottom: 1px solid;">
+          <div class="value-recap-heading">What You Built</div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <div class="value-item">
+              <div class="value-number" style="font-size: 18px;">12</div>
+              <div class="value-label">Cards</div>
+            </div>
+            <div class="value-item">
+              <div class="value-number" style="font-size: 18px;">$2,840</div>
+              <div class="value-label">Fees</div>
+            </div>
+            <div class="value-item">
+              <div class="value-number" style="font-size: 18px;">$390</div>
+              <div class="value-label">Saved</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="safety-message" style="font-size: 11px;">
+          <span class="safety-icon">&#9432;</span>
+          <span>Your data is preserved. Subscribe anytime to continue.</span>
+        </div>
+
+        <div style="padding: 12px 20px 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div class="btn-primary" style="font-size: 13px;">Subscribe for $3.99/month</div>
+          <div class="btn-secondary" style="font-size: 12px;">Continue with free plan</div>
+          <div class="btn-helper">Upgrade anytime from Settings.</div>
+        </div>
+      </div>
+
+      <p class="note">
+        Mobile modal: w-[92vw] max-h-[90vh] per team norms.
+        Feature comparison table hidden on mobile — too dense.
+        Value grid labels shortened: "Cards", "Fees", "Saved".
+      </p>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 3: Post-Decline Dashboard — Thrall with Upgrade Banner
+         User chose "Continue with free plan". Dashboard with gated features.
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 3: Post-Trial Decline — Dashboard with Upgrade Banner</div>
+
+      <div class="app-shell">
+        <nav class="topbar">
+          <div class="topbar-brand">FENRIR LEDGER</div>
+          <div class="topbar-right">
+            <!-- No trial badge. Badge replaced by THRALL indicator -->
+            <span style="font-size: 10px; font-weight: 600; border: 1px solid; padding: 2px 6px;">THRALL</span>
+            <div class="topbar-avatar">&#5765;</div>
+          </div>
+        </nav>
+
+        <!-- Upgrade banner — shown once after trial expires, dismissible -->
+        <div class="upgrade-banner">
+          <div class="upgrade-banner-text">
+            Your trial has ended, but your data is intact.
+            Upgrade to keep full access.
+          </div>
+          <div class="upgrade-banner-cta">Upgrade to Karl</div>
+          <button class="upgrade-banner-dismiss" aria-label="Dismiss upgrade banner">x</button>
+        </div>
+
+        <div class="content-area">
+          <p class="note">
+            After trial expiry + decline:
+            1. Trial badge removed from TopBar
+            2. THRALL badge appears (existing pattern from StripeSettings)
+            3. Upgrade banner shown at top of content area (dismissible)
+            4. Karl-gated features show lock overlays (existing KarlUpsellDialog pattern)
+            5. All card data remains visible and editable (up to Thrall limits)
+            6. Dismiss flag: fenrir:post_trial_banner_dismissed
+            7. Re-entry: Settings page always has "Upgrade" CTA
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 4: Post-Decline — Gated Feature Access (Howl tab)
+         User clicks a Karl-gated feature after trial expired.
+         Uses existing KarlUpsellDialog pattern.
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 4: Post-Trial Decline — Gated Feature (Howl Tab)</div>
+
+      <div class="annotation-box">
+        <dt>Behavior when ex-trial user accesses Karl feature:</dt>
+        <dd>Uses EXISTING KarlUpsellDialog component (wireframes/stripe-direct/karl-upsell-dialog.html)</dd>
+        <dd>No new component needed — same dialog, same props, same flow</dd>
+        <dd>The only difference: copy references trial history</dd>
+
+        <dt>Dialog copy variant for ex-trial users:</dt>
+        <dd>featureTeaser: "You used [featureName] during your trial. Subscribe to keep access."</dd>
+        <dd>This is a prop-level change, not a new dialog.</dd>
+
+        <dt>Features gated after trial:</dt>
+        <dd>The Howl (alerts panel) -- lock icon on tab</dd>
+        <dd>Valhalla (archive) -- lock icon on tab</dd>
+        <dd>Smart Import -- upsell dialog on import wizard</dd>
+        <dd>Cards beyond Thrall limit (3 max) -- existing card limit gate</dd>
+
+        <dt>Features that REMAIN on Thrall (free):</dt>
+        <dd>Add/edit up to 3 cards</dd>
+        <dd>Fee and bonus date tracking</dd>
+        <dd>Basic card status badges</dd>
+        <dd>Settings page</dd>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 5: Returning User — Re-Subscribe Path
+         User who declined comes back days/weeks later.
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 5: Returning User — Re-Subscribe via Settings</div>
+
+      <div style="max-width: 600px; border: 1px solid; padding: 20px;">
+        <div style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Subscription</div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid; font-size: 13px;">
+          <span style="font-weight: 500;">Current plan</span>
+          <span style="font-size: 12px;">Thrall (Free)</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid; font-size: 13px;">
+          <span style="font-weight: 500;">Trial used</span>
+          <span style="font-size: 12px;">30 days (ended March 20, 2026)</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid; font-size: 13px;">
+          <span style="font-weight: 500;">Cards on file</span>
+          <span style="font-size: 12px;">12 (3 visible, 9 require Karl)</span>
+        </div>
+
+        <div style="padding: 12px 0 0;">
+          <div class="btn-primary" style="max-width: 280px;">Subscribe for $3.99/month</div>
+          <div style="font-size: 11px; margin-top: 6px;">
+            Unlock all 12 cards, Valhalla, The Howl, and Smart Import.
+          </div>
+        </div>
+
+        <p class="note">
+          Settings page shows trial history and card count.
+          "12 (3 visible, 9 require Karl)" — makes the lock tangible.
+          Subscribe CTA clearly states what unlocking provides.
+          No guilt. Just facts and the path forward.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         COMPONENT SPEC: TrialExpiryModal
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Component Spec: TrialExpiryModal</div>
+      <div class="annotation-box">
+        <dt>Component:</dt>
+        <dd>TrialExpiryModal — shown once when trial expires</dd>
+
+        <dt>Trigger:</dt>
+        <dd>On app load when: fenrir:trial_start_date + 30 days &lt; now</dd>
+        <dd>AND fenrir:trial_expiry_shown !== "true"</dd>
+        <dd>AND fenrir:trial_converted !== "true"</dd>
+
+        <dt>Modal behavior:</dt>
+        <dd>role="dialog" + aria-modal="true"</dd>
+        <dd>Focus trapped inside modal</dd>
+        <dd>Escape key closes (same as "Continue with free plan")</dd>
+        <dd>X button closes (same as "Continue with free plan")</dd>
+        <dd>Backdrop click does NOT close (intentional — user should make a choice)</dd>
+        <dd>z-index: 210 (standard modal layer)</dd>
+
+        <dt>Actions:</dt>
+        <dd>"Subscribe for $3.99/month" -- triggers Stripe Checkout flow</dd>
+        <dd>"Continue with free plan" -- sets fenrir:trial_expiry_shown = "true", closes modal</dd>
+
+        <dt>Post-subscribe:</dt>
+        <dd>Set fenrir:trial_converted = "true"</dd>
+        <dd>Set fenrir:trial_conversion_date = new Date().toISOString()</dd>
+        <dd>Remove trial badge, show KARL badge</dd>
+        <dd>All features unlocked</dd>
+
+        <dt>Post-decline:</dt>
+        <dd>Set fenrir:trial_expiry_shown = "true"</dd>
+        <dd>Show post-trial upgrade banner (dismissible, one-time)</dd>
+        <dd>Apply Thrall feature gates</dd>
+        <dd>Preserve all card data in localStorage</dd>
+
+        <dt>Accessibility:</dt>
+        <dd>aria-labelledby on modal title</dd>
+        <dd>aria-describedby on safety message</dd>
+        <dd>"Continue with free plan" is a visible button, not a link — equal to subscribe CTA</dd>
+        <dd>Both buttons meet 44px minimum touch target</dd>
+        <dd>Screen reader: announce value metrics via aria-label on the grid</dd>
+
+        <dt>Responsive:</dt>
+        <dd>Desktop: centered modal, max-width 500px</dd>
+        <dd>Mobile: w-[92vw] max-h-[90vh], scrollable body, feature comparison hidden</dd>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

@@ -286,7 +286,8 @@
         <!-- Dismissable tab header -->
         <div class="tab-header">
           <div class="tab-header__content">
-            <div class="tab-header__title">The Howl -- Where Chains Tighten</div>
+            <div class="tab-header__title">&#5802; The Howl &mdash; Where Chains Tighten</div>
+            <!-- Note: ᚲ Kenaz rune precedes tab name per spec ("Tab name + rune as title") -->
             <div class="tab-header__desc">
               Cards shown here demand your attention. Annual fees are approaching,
               promotional rates are expiring, or deadlines have already passed.
@@ -294,12 +295,13 @@
             </div>
             <div class="tab-header__statuses">
               Status labels in this tab:
-              <strong>Fee Due Soon</strong> -- annual fee due within 30 days |
-              <strong>Promo Expiring</strong> -- promotional rate ending soon |
-              <strong>Overdue</strong> -- a deadline has passed
+              <strong>Fee Due Soon</strong> &mdash; annual fee due within 30 days |
+              <strong>Promo Expiring</strong> &mdash; promotional rate ending soon |
+              <strong>Overdue</strong> &mdash; a deadline has passed
             </div>
           </div>
-          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide" type="button">&#x2715;</button>
+          <!-- Note: ✕ (×) char used for dismiss; aria-label carries semantic meaning for SR users -->
         </div>
 
         <!-- Dismissable tab summary sub-header -->
@@ -308,7 +310,7 @@
             <span class="tab-summary__stat">1 card</span> with fee due within 30 days,
             <span class="tab-summary__stat">1 card</span> with promo expiring
           </div>
-          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary" type="button">&#x2715;</button>
         </div>
 
         <!-- Card grid -->
@@ -349,24 +351,25 @@
       <div class="tab-panel">
         <div class="tab-header">
           <div class="tab-header__content">
-            <div class="tab-header__title">Active Cards -- Asgard's Warriors</div>
+            <div class="tab-header__title">&#5765; Active Cards &mdash; Asgard's Warriors</div>
+            <!-- Note: ᛟ Othalan rune precedes tab name -->
             <div class="tab-header__desc">
               Cards in good standing with no urgent deadlines. These are your
-              reliable earners -- rewards are flowing and no fees are imminent.
+              reliable earners &mdash; rewards are flowing and no fees are imminent.
             </div>
             <div class="tab-header__statuses">
               Status label in this tab:
-              <strong>Active</strong> -- card is open, no bonus window, no approaching fee
+              <strong>Active</strong> &mdash; card is open, no bonus window, no approaching fee
             </div>
           </div>
-          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide" type="button">&#x2715;</button>
         </div>
 
         <div class="tab-summary">
           <div class="tab-summary__content">
             <span class="tab-summary__stat">5 active cards</span> in good standing
           </div>
-          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary" type="button">&#x2715;</button>
         </div>
 
         <div class="card-grid">
@@ -398,18 +401,19 @@
       <div class="tab-panel">
         <div class="tab-header">
           <div class="tab-header__content">
-            <div class="tab-header__title">The Hunt -- Pursue the Plunder</div>
+            <div class="tab-header__title">&#5852; The Hunt &mdash; Pursue the Plunder</div>
+            <!-- Note: ᛜ Ingwaz rune precedes tab name -->
             <div class="tab-header__desc">
               Cards with open sign-up bonus windows. You are actively hunting
-              the welcome mead -- track your spending progress and hit the
+              the welcome mead &mdash; track your spending progress and hit the
               threshold before the deadline.
             </div>
             <div class="tab-header__statuses">
               Status label in this tab:
-              <strong>Bonus Open</strong> -- sign-up bonus spending window is active
+              <strong>Bonus Open</strong> &mdash; sign-up bonus spending window is active
             </div>
           </div>
-          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide" type="button">&#x2715;</button>
         </div>
 
         <div class="tab-summary">
@@ -417,7 +421,7 @@
             <span class="tab-summary__stat">2 cards</span> with open bonus windows,
             <span class="tab-summary__stat">1</span> approaching its deadline
           </div>
-          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary" type="button">&#x2715;</button>
         </div>
 
         <div class="card-grid">
@@ -446,7 +450,8 @@
       <div class="tab-panel">
         <div class="tab-header">
           <div class="tab-header__content">
-            <div class="tab-header__title">Valhalla -- Hall of the Honored Dead</div>
+            <div class="tab-header__title">&#5848; Valhalla &mdash; Hall of the Honored Dead</div>
+            <!-- Note: ᛏ Tiwaz rune precedes tab name -->
             <div class="tab-header__desc">
               Cards that have completed their journey. Closed cards and cards
               that graduated after earning their sign-up bonus rest here.
@@ -454,20 +459,20 @@
             </div>
             <div class="tab-header__statuses">
               Status labels in this tab:
-              <strong>Closed</strong> -- card cancelled or closed |
-              <strong>Graduated</strong> -- minimum spend met, bonus earned
+              <strong>Closed</strong> &mdash; card cancelled or closed |
+              <strong>Graduated</strong> &mdash; minimum spend met, bonus earned
             </div>
           </div>
-          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide" type="button">&#x2715;</button>
         </div>
 
         <div class="tab-summary">
           <div class="tab-summary__content">
             <span class="tab-summary__stat">2 closed</span>,
-            <span class="tab-summary__stat">1 graduated</span> --
+            <span class="tab-summary__stat">1 graduated</span> &mdash;
             chains broken, plunder secured
           </div>
-          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary" type="button">&#x2715;</button>
         </div>
 
         <div class="card-grid">
@@ -497,7 +502,8 @@
       <div class="tab-panel">
         <div class="tab-header">
           <div class="tab-header__content">
-            <div class="tab-header__title">All Cards -- The Full Ledger</div>
+            <div class="tab-header__title">&#5765; All Cards &mdash; The Full Ledger</div>
+            <!-- Note: ᛟ Othalan rune precedes tab name -->
             <div class="tab-header__desc">
               Every card in your portfolio, regardless of status. The complete
               record of every chain forged, every hunt begun, every warrior
@@ -514,7 +520,7 @@
               <strong>Graduated</strong>
             </div>
           </div>
-          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide" type="button">&#x2715;</button>
         </div>
 
         <div class="tab-summary">
@@ -525,7 +531,7 @@
             <span class="tab-summary__stat">2</span> howling,
             <span class="tab-summary__stat">3</span> in Valhalla
           </div>
-          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary" type="button">&#x2715;</button>
         </div>
 
         <div class="card-grid">
@@ -747,14 +753,14 @@
       <div class="tab-panel">
         <div class="tab-header" style="padding: 10px 12px;">
           <div class="tab-header__content">
-            <div class="tab-header__title" style="font-size: 12px;">The Howl -- Where Chains Tighten</div>
+            <div class="tab-header__title" style="font-size: 12px;">&#5802; The Howl &mdash; Where Chains Tighten</div>
             <div class="tab-header__desc" style="font-size: 11px;">
               Cards needing attention: fees approaching, promos expiring, or deadlines passed.
             </div>
-            <!-- On mobile, statuses list is hidden to save space -->
-            <!-- p class="note">Status descriptions hidden on mobile; header text is sufficient.</p -->
+            <!-- On mobile: statuses list is hidden (hidden sm:block) to save vertical space.
+                 Description alone provides sufficient onboarding context at 375px. -->
           </div>
-          <button class="tab-header__dismiss" aria-label="Dismiss tab guide" style="min-width: 28px; min-height: 28px; font-size: 16px;">x</button>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide" type="button" style="min-width: 28px; min-height: 28px; font-size: 16px;">&#x2715;</button>
         </div>
 
         <div class="tab-summary" style="padding: 8px 12px;">
@@ -762,7 +768,7 @@
             <span class="tab-summary__stat">1 fee due</span>,
             <span class="tab-summary__stat">1 promo expiring</span>
           </div>
-          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary" style="min-width: 24px; min-height: 24px; font-size: 12px;">x</button>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary" type="button" style="min-width: 24px; min-height: 24px; font-size: 12px;">&#x2715;</button>
         </div>
 
         <div class="card-grid card-grid--mobile">
@@ -807,7 +813,7 @@
           <div class="tab-summary__content">
             <span class="tab-summary__stat">5 active cards</span> in good standing
           </div>
-          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary">x</button>
+          <button class="tab-summary__dismiss" aria-label="Dismiss tab summary" type="button">&#x2715;</button>
         </div>
 
         <div class="card-grid">
@@ -876,21 +882,21 @@
       <div class="tab-panel">
         <div class="tab-header">
           <div class="tab-header__content">
-            <div class="tab-header__title">The Hunt -- Pursue the Plunder</div>
+            <div class="tab-header__title">&#5852; The Hunt &mdash; Pursue the Plunder</div>
             <div class="tab-header__desc">
               Cards with open sign-up bonus windows. You are actively hunting
-              the welcome mead -- track your spending progress and hit the
+              the welcome mead &mdash; track your spending progress and hit the
               threshold before the deadline.
             </div>
             <div class="tab-header__statuses">
               Status label in this tab:
-              <strong>Bonus Open</strong> -- sign-up bonus spending window is active
+              <strong>Bonus Open</strong> &mdash; sign-up bonus spending window is active
             </div>
           </div>
-          <button class="tab-header__dismiss" aria-label="Dismiss tab guide">x</button>
+          <button class="tab-header__dismiss" aria-label="Dismiss tab guide" type="button">&#x2715;</button>
         </div>
 
-        <!-- No summary sub-header when empty -->
+        <!-- No summary sub-header when empty — tab has zero cards, nothing to summarize -->
 
         <div class="empty-state">
           <div class="empty-state__text">&#5852; No cards on the hunt &#5852;</div>
@@ -1156,31 +1162,31 @@
       <tbody>
         <tr>
           <td>ALL</td>
-          <td>All Cards -- The Full Ledger</td>
+          <td>&#5765; All Cards &mdash; The Full Ledger</td>
           <td>Every card in your portfolio, regardless of status. The complete record of every chain forged, every hunt begun, every warrior that earned its place in the hall.</td>
           <td>Active | Fee Due Soon | Promo Expiring | Overdue | Bonus Open | Closed | Graduated</td>
         </tr>
         <tr>
           <td>VALHALLA</td>
-          <td>Valhalla -- Hall of the Honored Dead</td>
+          <td>&#5848; Valhalla &mdash; Hall of the Honored Dead</td>
           <td>Cards that have completed their journey. Closed cards and cards that graduated after earning their sign-up bonus rest here. Their rewards were harvested. Their chains were broken.</td>
           <td>Closed | Graduated</td>
         </tr>
         <tr>
           <td>ACTIVE</td>
-          <td>Active Cards -- Asgard's Warriors</td>
-          <td>Cards in good standing with no urgent deadlines. These are your reliable earners -- rewards are flowing and no fees are imminent.</td>
+          <td>&#5765; Active Cards &mdash; Asgard's Warriors</td>
+          <td>Cards in good standing with no urgent deadlines. These are your reliable earners &mdash; rewards are flowing and no fees are imminent.</td>
           <td>Active</td>
         </tr>
         <tr>
           <td>THE HUNT</td>
-          <td>The Hunt -- Pursue the Plunder</td>
-          <td>Cards with open sign-up bonus windows. You are actively hunting the welcome mead -- track your spending progress and hit the threshold before the deadline.</td>
+          <td>&#5852; The Hunt &mdash; Pursue the Plunder</td>
+          <td>Cards with open sign-up bonus windows. You are actively hunting the welcome mead &mdash; track your spending progress and hit the threshold before the deadline.</td>
           <td>Bonus Open</td>
         </tr>
         <tr>
           <td>THE HOWL</td>
-          <td>The Howl -- Where Chains Tighten</td>
+          <td>&#5802; The Howl &mdash; Where Chains Tighten</td>
           <td>Cards shown here demand your attention. Annual fees are approaching, promotional rates are expiring, or deadlines have already passed. These are the chains that will tighten if ignored.</td>
           <td>Fee Due Soon | Promo Expiring | Overdue</td>
         </tr>

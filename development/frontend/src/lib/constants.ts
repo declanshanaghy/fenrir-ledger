@@ -81,6 +81,59 @@ export const STATUS_TOOLTIPS: Record<CardStatus, string> = {
   graduated: getRealmDescription("graduated"),
 };
 
+// ─── Dashboard tab types ─────────────────────────────────────────────────────
+
+/** Dashboard tab identifiers — used by TabHeader and TabSummary components */
+export type DashboardTab = "howl" | "hunt" | "active" | "valhalla" | "all";
+
+/**
+ * Tab header content — static text for each dashboard tab.
+ *
+ * Defines the title (with rune prefix), purpose description, and status labels
+ * shown in the dismissable TabHeader component.
+ *
+ * Copy source: ux/wireframes/chrome/dashboard-tab-headers.html — Reference table
+ */
+export const TAB_HEADER_CONTENT: Record<
+  DashboardTab,
+  { title: string; description: string; statuses: string }
+> = {
+  all: {
+    title: "ᛟ All Cards — The Full Ledger",
+    description:
+      "Every card in your portfolio, regardless of status. The complete record of every chain forged, every hunt begun, every warrior that earned its place in the hall.",
+    statuses:
+      "All status labels appear here: Active | Fee Due Soon | Promo Expiring | Overdue | Bonus Open | Closed | Graduated",
+  },
+  valhalla: {
+    title: "↑ Valhalla — Hall of the Honored Dead",
+    description:
+      "Cards that have completed their journey. Closed cards and cards that graduated after earning their sign-up bonus rest here. Their rewards were harvested. Their chains were broken.",
+    statuses: "Status labels in this tab: Closed | Graduated",
+  },
+  active: {
+    title: "ᛉ Active Cards — Asgard\u2019s Warriors",
+    description:
+      "Cards in good standing with no urgent deadlines. These are your reliable earners — rewards are flowing and no fees are imminent.",
+    statuses:
+      "Status label in this tab: Active — card is open, no bonus window, no approaching fee",
+  },
+  hunt: {
+    title: "ᛜ The Hunt — Pursue the Plunder",
+    description:
+      "Cards with open sign-up bonus windows. You are actively hunting the welcome mead — track your spending progress and hit the threshold before the deadline.",
+    statuses:
+      "Status label in this tab: Bonus Open — sign-up bonus spending window is active",
+  },
+  howl: {
+    title: "ᚲ The Howl — Where Chains Tighten",
+    description:
+      "Cards shown here demand your attention. Annual fees are approaching, promotional rates are expiring, or deadlines have already passed. These are the chains that will tighten if ignored.",
+    statuses:
+      "Status labels in this tab: Fee Due Soon — annual fee due within 30 days | Promo Expiring — promotional rate ending soon | Overdue — a deadline has passed",
+  },
+};
+
 /**
  * Rich tooltip content for status badges — follows the Two-Voice Rule.
  *
