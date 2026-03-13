@@ -18,13 +18,17 @@
     ISSUE: #636
     WIREFRAME: ux/wireframes/marketing-site/free-trial.html
 
+    VOICE: First-person wolf. Fenrir speaks directly to the reader — predatory,
+    confident, protective. "I" = Fenrir. "You" = the user. The wolf is offering
+    its services. Mix menace with loyalty. The wolf doesn't beg — it declares.
+
     PAGE SECTIONS (top → bottom):
     1. NAV          — Reused marketing nav shell (see layout-shell.html)
-    2. HERO         — Bold headline + trial pitch + primary CTA
-    3. FEATURES     — 7-card compact feature showcase grid
+    2. HERO         — Wolf declares the offer + primary CTA
+    3. FEATURES     — 7-card compact feature showcase grid (wolf describes its abilities)
     4. TIMELINE     — 30-day journey: Day 1 → Day 15 → Day 30
     5. AFTER TRIAL  — Thrall vs Karl tier comparison
-    6. SECOND CTA   — Final "Start Your Free Trial" push
+    6. SECOND CTA   — Final wolf-voice push
     7. FOOTER       — Reused marketing footer (see static-site-footer.html)
 
     RESPONSIVE STRATEGY:
@@ -620,50 +624,52 @@
     <li><a href="#">Pricing</a></li>
     <li><a href="#">About</a></li>
   </ul>
-  <a href="/ledger" class="nav-cta">Start Free Trial</a>
+  <a href="/ledger" class="nav-cta">Unleash the Wolf</a>
   <!-- Mobile: nav-links and nav-cta hidden. Brand remains. Add hamburger icon button. -->
 </nav>
-<p class="note">NAV: "Free Trial" link is new — add between Features and Pricing in both desktop nav and mobile drawer. "Start Free Trial" replaces generic "Get Started" CTA in nav. On mobile (&lt;640px), nav-links collapse behind hamburger; only brand + hamburger shown in bar. See layout-shell.html for full nav spec.</p>
+<p class="note">NAV: "Free Trial" link is new — add between Features and Pricing in both desktop nav and mobile drawer. CTA text "Unleash the Wolf" replaces generic "Get Started" — wolf-voice framing. On mobile (&lt;640px), nav-links collapse behind hamburger; only brand + hamburger shown in bar. See layout-shell.html for full nav spec.</p>
 
 <!-- =========================================================================
      SECTION 1: HERO
      Layout: centered, full-width. No image — text-forward.
+     Voice: Fenrir speaks directly. First-person wolf.
      Framer Motion: fade-in-up on mount, 500ms, same as /features hero.
      ========================================================================= -->
 <header class="hero">
   <div class="container">
-    <p class="hero-rune" aria-hidden="true">ᚠ · 30-Day Free Trial · ᚠ</p>
+    <p class="hero-rune" aria-hidden="true">ᚠ · I Am Unbound · ᚠ</p>
     <h1 class="hero-title">
-      30 Days.<br>Full Power.<br>Zero Risk.
+      I Hunt<br>For 30 Days.<br>Free.
     </h1>
     <p class="hero-subtitle">
-      The entire Fenrir Ledger — every tracking tool, every alert, every archive — free for 30 days. No card required.
+      I am Fenrir. Give me thirty days and I will guard every card in your wallet, every fee on your calendar, every deadline you've forgotten. I ask nothing in return.
     </p>
     <p class="hero-desc">
-      Start tracking the moment you add your first card. The wolf hunts from day one: fee alerts, bonus countdowns, household management, smart import. All of it, yours.
+      The moment you add your first card, I wake. I watch the fees. I count down the bonuses. I track the whole pack — your household, your spreadsheets, your graveyard of closed cards. All of it falls under my teeth.
     </p>
     <div class="hero-cta-group">
-      <a href="/ledger" class="btn-primary" role="button">Start Your Free Trial</a>
-      <a href="/features" class="btn-secondary">See All Features</a>
+      <a href="/ledger" class="btn-primary" role="button">Unleash the Wolf</a>
+      <a href="/features" class="btn-secondary">See What I Can Do</a>
     </div>
-    <p class="hero-trust-line">No credit card required. Trial begins when you add your first card.</p>
+    <p class="hero-trust-line">No credit card. No chains. I hunt from day one.</p>
   </div>
 </header>
-<p class="note">HERO: Three-line stacked headline on desktop (shown above). On mobile 375px, font-size drops from 52px to 32px; line-height stays 1.05. The two-button CTA group stacks to single column on mobile (primary on top, secondary below). "See All Features" is Voice 1 — functional label, not Norse. The trust line (italic, smaller) addresses the #1 trial friction: "do I need a card?"</p>
-<p class="note">COPY NOTE: "30 Days. Full Power. Zero Risk." is the lead candidate per issue brief. Voice 2 subtitle uses wolf metaphor ("the wolf hunts") while body copy (Voice 1) lists concrete features by plain name. Keep this discipline — no Norse in feature names in the list.</p>
+<p class="note">HERO: Wolf-voice copy. Fenrir speaks in first person throughout. Three-line stacked headline on desktop (shown above). On mobile 375px, font-size drops from 52px to 32px; line-height stays 1.05. The two-button CTA group stacks to single column on mobile (primary on top, secondary below). Trust line addresses the #1 trial friction: "do I need a card?" — reframed as "No chains" (wolf mythology: Fenrir breaks chains).</p>
+<p class="note">COPY NOTE: "I Hunt For 30 Days. Free." — the wolf declares its offer. Not a sales pitch, a statement of intent. The subtitle is Fenrir introducing itself. Body copy uses predatory language ("falls under my teeth") but in service of the user. "No chains" is a double meaning: no credit card required + Fenrir breaks free of chains (Gleipnir mythology).</p>
 
 <!-- =========================================================================
      SECTION 2: FEATURE SHOWCASE — compact cards
      Layout: 3-col desktop, 2-col tablet, 1-col mobile.
+     Voice: Each card is Fenrir describing one of its abilities.
      NOT full-width alternating rows like /features. Deliberately compact.
      Framer Motion: scroll-triggered stagger, 80ms per card, fade-in-up 40px.
      ========================================================================= -->
 <section class="features-section" aria-labelledby="features-heading">
   <div class="container">
     <div class="features-heading">
-      <p class="features-heading-eyebrow" aria-hidden="true">ᚾ · Everything in the Pack · ᚾ</p>
-      <h2 class="features-heading-title" id="features-heading">Everything You Get For Free</h2>
-      <p class="features-heading-sub">Seven tools. All unlocked. All yours from day one.</p>
+      <p class="features-heading-eyebrow" aria-hidden="true">ᚾ · My Teeth Are Many · ᚾ</p>
+      <h2 class="features-heading-title" id="features-heading">What I Bring to the Hunt</h2>
+      <p class="features-heading-sub">Seven weapons. All sharpened. All yours the moment I wake.</p>
     </div>
 
     <ol class="feature-grid" aria-label="Trial features">
@@ -672,63 +678,63 @@
       <li class="feature-card" aria-labelledby="feat-01-title">
         <div class="feature-card-icon" aria-hidden="true">ᚲ</div>
         <p class="feature-card-rune" aria-hidden="true">Feature 01</p>
-        <h3 class="feature-card-title" id="feat-01-title">Card Tracking &amp; Fee Alerts</h3>
-        <p class="feature-card-desc">Every card in your wallet — name, issuer, annual fee date, sign-up bonus deadline. Fenrir watches the calendar so you don't have to.</p>
-        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+        <h3 class="feature-card-title" id="feat-01-title">I Watch Every Card</h3>
+        <p class="feature-card-desc">Name, issuer, annual fee date, sign-up bonus deadline — I hold every detail in my jaws. While you sleep, I watch the calendar. Nothing slips past.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Yours Free</span>
       </li>
 
       <!-- Feature 02: Annual Fee Calendar -->
       <li class="feature-card" aria-labelledby="feat-02-title">
         <div class="feature-card-icon" aria-hidden="true">ᛊ</div>
         <p class="feature-card-rune" aria-hidden="true">Feature 02</p>
-        <h3 class="feature-card-title" id="feat-02-title">Annual Fee Calendar</h3>
-        <p class="feature-card-desc">A live countdown to every annual fee across your full portfolio. Cancel, downgrade, or keep — decide before the charge hits.</p>
-        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+        <h3 class="feature-card-title" id="feat-02-title">I Count Down Every Fee</h3>
+        <p class="feature-card-desc">A live countdown to every annual fee across your full portfolio. Cancel, downgrade, or keep — I make sure you decide before the charge bites.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Yours Free</span>
       </li>
 
       <!-- Feature 03: Household Management -->
       <li class="feature-card" aria-labelledby="feat-03-title">
         <div class="feature-card-icon" aria-hidden="true">ᛗ</div>
         <p class="feature-card-rune" aria-hidden="true">Feature 03</p>
-        <h3 class="feature-card-title" id="feat-03-title">Household Management</h3>
-        <p class="feature-card-desc">Track cards across everyone in your household — partner, family members — in one ledger. One login, the whole pack.</p>
-        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+        <h3 class="feature-card-title" id="feat-03-title">I Guard the Whole Pack</h3>
+        <p class="feature-card-desc">Your cards. Your partner's cards. The whole household in one ledger. A wolf does not protect only one — the pack runs together.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Yours Free</span>
       </li>
 
       <!-- Feature 04: Smart Import -->
       <li class="feature-card" aria-labelledby="feat-04-title">
         <div class="feature-card-icon" aria-hidden="true">ᚱ</div>
         <p class="feature-card-rune" aria-hidden="true">Feature 04</p>
-        <h3 class="feature-card-title" id="feat-04-title">Import from Spreadsheets</h3>
-        <p class="feature-card-desc">Paste a URL, upload a CSV, or connect Google Sheets. The rune-reader pulls your existing data in — no re-keying.</p>
-        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+        <h3 class="feature-card-title" id="feat-04-title">I Devour Your Spreadsheets</h3>
+        <p class="feature-card-desc">Paste a URL, upload a CSV, or connect Google Sheets. I swallow your existing data whole — no re-keying, no manual entry. Feed me and I remember.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Yours Free</span>
       </li>
 
       <!-- Feature 05: Valhalla -->
       <li class="feature-card" aria-labelledby="feat-05-title">
         <div class="feature-card-icon" aria-hidden="true">ᛏ</div>
         <p class="feature-card-rune" aria-hidden="true">Feature 05</p>
-        <h3 class="feature-card-title" id="feat-05-title">Valhalla — Closed Card Archive</h3>
-        <p class="feature-card-desc">Cards you've closed live on in Valhalla. Track what you earned, what you paid, and how long each chain lasted.</p>
-        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+        <h3 class="feature-card-title" id="feat-05-title">I Remember the Fallen</h3>
+        <p class="feature-card-desc">Closed cards pass into Valhalla — my hall of the honored dead. What you earned, what you paid, how long each chain held. Nothing is forgotten.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Yours Free</span>
       </li>
 
       <!-- Feature 06: Norse UI + Easter Eggs -->
       <li class="feature-card" aria-labelledby="feat-06-title">
         <div class="feature-card-icon" aria-hidden="true">ᛟ</div>
         <p class="feature-card-rune" aria-hidden="true">Feature 06</p>
-        <h3 class="feature-card-title" id="feat-06-title">Norse-Themed Interface</h3>
-        <p class="feature-card-desc">A dark Nordic war room aesthetic, Elder Futhark runes, and a handful of hidden easter eggs for the curious. Boring spreadsheets, this is not.</p>
-        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+        <h3 class="feature-card-title" id="feat-06-title">I Am No Ordinary Ledger</h3>
+        <p class="feature-card-desc">Dark war room. Elder Futhark runes. Hidden fragments for the bold. Other trackers are spreadsheets. I am something that bites back.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Yours Free</span>
       </li>
 
       <!-- Feature 07: Mobile Dashboard -->
       <li class="feature-card" aria-labelledby="feat-07-title">
         <div class="feature-card-icon" aria-hidden="true">ᚢ</div>
         <p class="feature-card-rune" aria-hidden="true">Feature 07</p>
-        <h3 class="feature-card-title" id="feat-07-title">Mobile-Friendly Dashboard</h3>
-        <p class="feature-card-desc">Full-featured on a 375px phone screen. Bottom navigation, touch-optimized cards, readable at a glance — at the airport, at checkout, anywhere.</p>
-        <span class="feature-card-tag" aria-label="Included in trial">Included</span>
+        <h3 class="feature-card-title" id="feat-07-title">I Follow You Everywhere</h3>
+        <p class="feature-card-desc">Full power on a phone screen. At the airport, at checkout, on the couch. I ride in your pocket. The hunt never pauses.</p>
+        <span class="feature-card-tag" aria-label="Included in trial">Yours Free</span>
       </li>
 
     </ol>
@@ -737,21 +743,22 @@
          FiremanDecko should not "balance" it with a placeholder element. -->
   </div>
 </section>
-<p class="note">FEATURE CARDS: Compact card pattern — NOT the alternating 2-col full-bleed rows used on /features. Each card is 1/3 desktop width with border, icon glyph (Elder Futhark rune), ordinal eyebrow, h3 title, 1-2 sentence description, and an "Included" tag. The tag confirms trial access for each item (no lock icons on this page — everything is unlocked during trial). Icon slot: 56x56px, border-outlined placeholder. FiremanDecko should use a ThemedIcon component or SVG here — the rune character is a temporary stand-in showing which character maps to which feature, not the final icon.</p>
-<p class="note">ANIMATION: Scroll-triggered. Stagger 80ms per card. Each card: opacity 0 → 1, translateY 40px → 0, duration 400ms ease-out. Fire when the grid container enters viewport at 20% threshold. Use Framer Motion's `whileInView` with `staggerChildren` on the `ol` element. See /features page for existing pattern (FeatureCard animation is the reference).</p>
+<p class="note">FEATURE CARDS: Wolf-voice. Each card title begins with "I" — Fenrir describing its own abilities. Tag changed from "Included" to "Yours Free" (wolf-voice framing: "I give this to you"). Compact card pattern — NOT the alternating 2-col full-bleed rows used on /features. Each card is 1/3 desktop width with border, icon glyph (Elder Futhark rune), ordinal eyebrow, h3 title, 1-2 sentence description, and tag. Icon slot: 56x56px, border-outlined placeholder. FiremanDecko should use a ThemedIcon component or SVG here — the rune character is a temporary stand-in.</p>
+<p class="note">ANIMATION: Scroll-triggered. Stagger 80ms per card. Each card: opacity 0 → 1, translateY 40px → 0, duration 400ms ease-out. Fire when the grid container enters viewport at 20% threshold. Use Framer Motion's `whileInView` with `staggerChildren` on the `ol` element. See /features page for existing pattern.</p>
 
 <!-- =========================================================================
      SECTION 3: 30-DAY JOURNEY TIMELINE
      Layout: Desktop: 3 steps in a horizontal row connected by arrows.
              Mobile: 3 steps stacked vertically with down-arrows between.
+     Voice: Fenrir narrates the journey from its perspective.
      Framer Motion: sequential reveal — each step enters 400ms after the previous,
      triggered when the timeline container enters viewport.
      ========================================================================= -->
 <section class="timeline-section" aria-labelledby="timeline-heading">
   <div class="container">
     <div class="timeline-heading">
-      <p class="timeline-heading-eyebrow" aria-hidden="true">ᚾ · The Journey · ᚾ</p>
-      <h2 class="timeline-heading-title" id="timeline-heading">Your 30-Day Journey</h2>
+      <p class="timeline-heading-eyebrow" aria-hidden="true">ᚾ · The Hunt Unfolds · ᚾ</p>
+      <h2 class="timeline-heading-title" id="timeline-heading">How I Hunt for You</h2>
     </div>
 
     <!-- Desktop: grid with connector columns. Mobile: single column (connectors hidden). -->
@@ -761,8 +768,8 @@
       <article class="timeline-step" role="listitem" aria-labelledby="step-day1-title">
         <p class="timeline-step-day">Day 1</p>
         <span class="timeline-step-rune" aria-hidden="true">ᚠ</span>
-        <h3 class="timeline-step-title" id="step-day1-title">Add Your First Card</h3>
-        <p class="timeline-step-desc">Your trial starts the moment you save your first card. The full Fenrir Ledger — all Karl features — activates immediately. No setup. No waiting.</p>
+        <h3 class="timeline-step-title" id="step-day1-title">You Feed Me a Card</h3>
+        <p class="timeline-step-desc">Add your first card and I open my eyes. Every feature unlocks. Every tool sharpens. No setup ritual. No waiting. I am already running.</p>
       </article>
 
       <!-- Horizontal connector arrow (desktop) / vertical arrow (mobile) -->
@@ -773,8 +780,8 @@
       <article class="timeline-step milestone" role="listitem" aria-labelledby="step-day15-title">
         <p class="timeline-step-day">Day 15</p>
         <span class="timeline-step-rune" aria-hidden="true">ᛊ</span>
-        <h3 class="timeline-step-title" id="step-day15-title">Halfway Check-In</h3>
-        <p class="timeline-step-desc">A gentle nudge arrives — showing everything you've tracked so far: cards monitored, fees watched, bonuses in flight. No pressure. Just proof the wolf has been working.</p>
+        <h3 class="timeline-step-title" id="step-day15-title">I Show You the Kill</h3>
+        <p class="timeline-step-desc">Halfway through, I report back. Cards guarded. Fees watched. Bonuses tracked. Not a sales pitch — proof that the wolf has been working while you weren't looking.</p>
         <!-- NOTE: "milestone" class triggers heavier border — this is the featured/highlighted step -->
       </article>
 
@@ -786,8 +793,8 @@
       <article class="timeline-step" role="listitem" aria-labelledby="step-day30-title">
         <p class="timeline-step-day">Day 30</p>
         <span class="timeline-step-rune" aria-hidden="true">ᚱ</span>
-        <h3 class="timeline-step-title" id="step-day30-title">Your Decision</h3>
-        <p class="timeline-step-desc">Continue with Karl ($3.99/mo) — or stay on the free Thrall plan. Your data is always yours. Nothing is deleted. The ledger remembers everything.</p>
+        <h3 class="timeline-step-title" id="step-day30-title">You Decide My Fate</h3>
+        <p class="timeline-step-desc">Keep me at full strength — or let me rest on the free plan. Either way, your data stays. I do not eat what I am sworn to protect.</p>
       </article>
 
     </div>
@@ -803,20 +810,21 @@
     -->
   </div>
 </section>
-<p class="note">TIMELINE: Three milestone steps. Day 15 step uses .milestone class (thicker border, heavier visual weight) — it is the featured/highlighted step because the mid-trial nudge is the key conversion moment. Day 1 and Day 30 use standard card border. On desktop, the three steps sit in a 5-column grid: step | connector | step | connector | step. Connectors are simple arrow characters — FiremanDecko may replace with an SVG line+arrowhead for polish. Animation: whileInView, each step enters sequentially 400ms apart. See /features page motion config for reference.</p>
-<p class="note">COPY NOTE: "Day 30: Your Decision" language is deliberately low-pressure per trial plan — tone shifts from "Subscribe" to "Your choice" at expiry. "The ledger remembers everything" addresses data safety anxiety inline, on this page, before it becomes a blocker at day 30.</p>
+<p class="note">TIMELINE: Wolf-voice narration of the 30-day journey. Day 15 step uses .milestone class (thicker border, heavier visual weight) — "I Show You the Kill" is the key conversion moment framed as the wolf presenting its work. Day 1 and Day 30 use standard card border. On desktop, the three steps sit in a 5-column grid: step | connector | step | connector | step. Connectors are simple arrow characters — FiremanDecko may replace with an SVG line+arrowhead. Animation: whileInView, each step enters sequentially 400ms apart.</p>
+<p class="note">COPY NOTE: "You Decide My Fate" — the wolf submits to the user's choice. Low-pressure but emotionally resonant. "I do not eat what I am sworn to protect" addresses data safety anxiety with wolf-mythology framing: the wolf's loyalty code.</p>
 
 <!-- =========================================================================
      SECTION 4: WHAT HAPPENS AFTER 30 DAYS?
      Thrall (free) vs Karl (paid) tier comparison.
+     Voice: Fenrir explains the two paths.
      Layout: 2-col desktop/tablet → stacked mobile.
      ========================================================================= -->
 <section class="after-section" aria-labelledby="after-heading">
   <div class="container">
     <div class="after-heading">
-      <p class="after-heading-eyebrow" aria-hidden="true">ᚦ · After the Trial · ᚦ</p>
-      <h2 class="after-heading-title" id="after-heading">What Happens After 30 Days?</h2>
-      <p class="after-heading-sub">Your data never disappears. You choose what comes next.</p>
+      <p class="after-heading-eyebrow" aria-hidden="true">ᚦ · Two Paths · ᚦ</p>
+      <h2 class="after-heading-title" id="after-heading">After 30 Days, You Choose</h2>
+      <p class="after-heading-sub">I serve either way. Your data stays no matter what you decide.</p>
     </div>
 
     <div class="tier-comparison" role="list" aria-label="Plan comparison">
@@ -825,11 +833,11 @@
       <article class="tier-card" role="listitem" aria-labelledby="thrall-title">
         <p class="tier-name">Tier</p>
         <h3 class="tier-title" id="thrall-title">Thrall</h3>
-        <p class="tier-desc">The Lone Wolf. Essential tracking, always free.</p>
+        <p class="tier-desc">I rest by the fire. Basic watch. Still loyal.</p>
         <p class="tier-price">Free</p>
-        <p class="tier-price-sub">Forever. No card needed.</p>
+        <p class="tier-price-sub">Forever. No chains required.</p>
         <ul class="tier-feature-list" aria-label="Thrall features">
-          <li><span class="check" aria-label="Included">✓</span> Add up to 3 cards</li>
+          <li><span class="check" aria-label="Included">✓</span> Up to 5 cards in my jaws</li>
           <li><span class="check" aria-label="Included">✓</span> Annual fee tracking</li>
           <li><span class="check" aria-label="Included">✓</span> Sign-up bonus tracking</li>
           <li><span class="check" aria-label="Included">✓</span> Card notes</li>
@@ -841,63 +849,64 @@
           <li><span class="lock" aria-label="Karl only">⌒</span> Household management</li>
           <li><span class="lock" aria-label="Karl only">⌒</span> Cloud sync</li>
         </ul>
-        <a href="/ledger" class="tier-cta secondary">Continue Free</a>
-        <!-- NOTE: Voice 1. Button text "Continue Free" — not "Downgrade" — to avoid negative framing. -->
+        <a href="/ledger" class="tier-cta secondary">Let Me Rest</a>
+        <!-- NOTE: Wolf-voice. "Let Me Rest" — not "Downgrade" — avoids negative framing while staying in character. -->
       </article>
 
       <!-- Karl (Paid) -->
       <article class="tier-card featured" role="listitem" aria-labelledby="karl-title">
-        <span class="tier-badge" aria-label="Recommended plan">Full Power</span>
+        <span class="tier-badge" aria-label="Recommended plan">Full Fury</span>
         <p class="tier-name">Tier</p>
         <h3 class="tier-title" id="karl-title">Karl</h3>
-        <p class="tier-desc">Everything you had during the trial. All features, always on.</p>
+        <p class="tier-desc">I hunt at full strength. Every fang. Every sense. Unleashed.</p>
         <p class="tier-price">$3.99<span style="font-size:16px;font-weight:400;">/mo</span></p>
-        <p class="tier-price-sub">Cancel anytime. No annual lock-in.</p>
+        <p class="tier-price-sub">Slip the chain anytime. No annual binding.</p>
         <ul class="tier-feature-list" aria-label="Karl features">
           <li><span class="check" aria-label="Included">✓</span> Everything in Thrall</li>
           <li><span class="check" aria-label="Included">✓</span> Unlimited cards</li>
           <li><span class="check" aria-label="Included">✓</span> The Howl — live fee alerts</li>
-          <li><span class="check" aria-label="Included">✓</span> Valhalla — closed card archive</li>
+          <li><span class="check" aria-label="Included">✓</span> Valhalla — hall of the fallen</li>
           <li><span class="check" aria-label="Included">✓</span> Smart Import (URL, CSV, Sheets)</li>
           <li><span class="check" aria-label="Included">✓</span> Household management</li>
           <li><span class="check" aria-label="Included">✓</span> Cloud sync</li>
           <li><span class="check" aria-label="Included">✓</span> Data export</li>
           <li><span class="check" aria-label="Included">✓</span> Priority updates</li>
         </ul>
-        <a href="/ledger" class="tier-cta">Keep Full Access — $3.99/mo</a>
-        <!-- NOTE: CTA text "Keep Full Access" is trial-specific framing (vs generic "Subscribe").
-             This matches the trial plan tone shift: "Keep" not "Upgrade". -->
+        <a href="/ledger" class="tier-cta">Keep Me Unleashed — $3.99/mo</a>
+        <!-- NOTE: CTA "Keep Me Unleashed" — wolf-voice trial-specific framing.
+             Not "Subscribe" — the wolf asks to stay free (unbound), not for money. -->
       </article>
 
     </div>
 
     <!-- Data safety reassurance block -->
     <div class="data-safety" role="note" aria-label="Data safety guarantee">
-      <p class="data-safety-title">Your Data Is Always Safe</p>
-      <p class="data-safety-desc">Whether you choose Karl or Thrall, every card you added during your trial stays in your ledger. Nothing is deleted when your trial ends. The wolf never forgets.</p>
+      <p class="data-safety-title">I Never Forget</p>
+      <p class="data-safety-desc">Whether you choose Karl or Thrall, every card you entrusted to me stays in the ledger. Nothing is deleted when the trial ends. I was born to guard — not to destroy.</p>
     </div>
 
   </div>
 </section>
-<p class="note">TIER COMPARISON: Thrall column left, Karl column right — consistent with /pricing page layout. Karl column has .featured class (2px border + "Full Power" badge chip) to draw the eye. Thrall shows locked items with a lock indicator (⌒ symbol here — FiremanDecko: use an SVG lock icon with aria-label="Karl only"). Karl CTA uses "Keep Full Access" (trial-specific) not "Subscribe" (generic) — this is intentional per the trial plan messaging. "Continue Free" for Thrall avoids negative "Downgrade" framing.</p>
-<p class="note">DATA SAFETY BOX: Critical trust signal. Placed immediately below the tier cards. Users making the trial decision need to know their data persists regardless of choice. This block MUST appear on this page — it removes a major conversion barrier. Copy is Voice 2 ("The wolf never forgets") wrapping Voice 1 facts.</p>
+<p class="note">TIER COMPARISON: Wolf-voice throughout. Thrall column left, Karl column right — consistent with /pricing page layout. Karl column has .featured class (2px border + "Full Fury" badge chip — wolf-voice variant of "Full Power"). Thrall CTA "Let Me Rest" avoids negative "Downgrade" framing while staying in Fenrir's voice. Karl CTA "Keep Me Unleashed" — the wolf's plea to stay unbound (Gleipnir mythology). "Slip the chain" for cancel-anytime messaging.</p>
+<p class="note">DATA SAFETY BOX: "I Never Forget" — critical trust signal reframed as wolf loyalty. "I was born to guard — not to destroy" is Fenrir's counter-myth: in the original saga, the gods feared Fenrir would destroy. Here, the wolf redefines itself as protector. This addresses data safety anxiety while deepening the brand mythology.</p>
 
 <!-- =========================================================================
      SECTION 5: FINAL CTA
      Second conversion opportunity at page bottom.
+     Voice: Fenrir's final declaration.
      ========================================================================= -->
 <section class="final-cta-section" aria-labelledby="final-cta-heading">
   <div class="container">
     <span class="final-cta-rune" aria-hidden="true">ᛟ</span>
-    <h2 class="final-cta-title" id="final-cta-heading">Begin Your Hunt</h2>
+    <h2 class="final-cta-title" id="final-cta-heading">Unleash Me</h2>
     <p class="final-cta-sub">
-      Add your first card. The wolf wakes. Every chain, every fee, every deadline — all of it watched.
+      One card is all it takes. I open my eyes. Every chain, every fee, every forgotten deadline — I find them all. Let me hunt.
     </p>
-    <a href="/ledger" class="btn-primary">Start Your Free Trial</a>
-    <p class="final-cta-trust">No credit card required · No commitment · Cancel anytime</p>
+    <a href="/ledger" class="btn-primary">Unleash the Wolf</a>
+    <p class="final-cta-trust">No credit card · No chains · No commitment</p>
   </div>
 </section>
-<p class="note">FINAL CTA: Centered, single-button. Same primary CTA as hero ("Start Your Free Trial" → /ledger). Rune glyph ᛟ above as decorative anchor. Atmospheric Voice 2 subtitle. Trust line below in small italic — reinforces the three main trial objections: "Do I need a card?", "Am I committing?", "Can I leave?". These three concerns are answered in order.</p>
+<p class="note">FINAL CTA: Wolf's direct plea. "Unleash Me" — short, commanding, emotional. The wolf asks to be freed (Gleipnir/chain mythology). Trust line reframed: "No chains" = no credit card + no lock-in, playing on the Fenrir-breaks-chains theme. Same primary CTA as hero ("Unleash the Wolf" → /ledger).</p>
 
 <!-- =========================================================================
      FOOTER
@@ -908,7 +917,7 @@
   <div class="footer-grid">
     <div class="footer-brand">
       <p><strong>ᛟ FENRIR LEDGER</strong></p>
-      <p>Credit card churn tracker.<br>Named for the wolf who breaks chains.</p>
+      <p>The wolf who breaks chains.<br>Credit card churn tracker.</p>
     </div>
     <nav class="footer-links-col" aria-label="Product links">
       <p><strong>Product</strong></p>
@@ -934,7 +943,7 @@
     <a href="#">Terms of Service</a>
   </div>
 </footer>
-<p class="note">FOOTER: Reuses existing marketing footer shell. Only change: add "Free Trial" link in the Product column, between Features and Pricing. See static-site-footer.html for the full footer spec (easter egg triggers, rune cipher, Session Chronicles link). The footer change applies globally — FiremanDecko should update the shared MarketingFooter component or layout footer data array, not just this page.</p>
+<p class="note">FOOTER: Reuses existing marketing footer shell. Only change: add "Free Trial" link in the Product column, between Features and Pricing. Footer tagline reordered: "The wolf who breaks chains" leads (brand voice), "Credit card churn tracker" follows (functional). See static-site-footer.html for the full footer spec.</p>
 
 <!-- =========================================================================
      MOBILE VARIANT ANNOTATION — 375px
@@ -977,7 +986,7 @@
      TOUCH TARGETS:
      - All .btn-primary, .btn-secondary, .tier-cta: min-height 44px (WCAG AA touch).
      - .nav-cta: min-height 44px when visible.
-     - Feature card "Included" tag: not interactive, no touch target requirement.
+     - Feature card tag: not interactive, no touch target requirement.
      ========================================================================= -->
 <!--
   ACCESSIBILITY REQUIREMENTS (WCAG 2.1 AA):
@@ -986,7 +995,7 @@
   - Timeline steps use role="list" + role="listitem" pattern (matches screen reader expectations).
   - Tier cards: role="list" + role="listitem" on the comparison grid and each card.
   - .data-safety has role="note" to signal it is supplementary information.
-  - CTA buttons: both "Start Your Free Trial" anchors point to /ledger — ensure consistent label (no "Click here").
+  - CTA buttons: both "Unleash the Wolf" anchors point to /ledger — ensure consistent label.
   - Lock icons in Thrall column: aria-label="Karl only" on each ⌒ span. FiremanDecko: replace span with SVG icon carrying aria-label.
   - Check marks in feature lists: aria-label="Included" on each ✓ span.
   - hero-rune, features-heading-eyebrow, timeline step runes: all aria-hidden="true" (decorative).
@@ -999,12 +1008,12 @@
 <!--
   SEO META (for page.tsx — not in wireframe):
   export const metadata: Metadata = {
-    title: "Free Trial — Fenrir Ledger",
-    description: "30-day free trial of Fenrir Ledger — the Norse-themed credit card tracker. Track fees, bonuses, and deadlines. Full Karl access, no credit card required.",
+    title: "Free Trial — Fenrir Ledger | Unleash the Wolf",
+    description: "30-day free trial of Fenrir Ledger — the wolf-guarded credit card tracker. Track fees, bonuses, and deadlines. Full Karl access, no credit card required.",
     keywords: "free credit card tracker trial, credit card churn tracker free trial, annual fee tracker, sign-up bonus tracker",
   };
-  og:title = "30 Days. Full Power. Zero Risk. — Fenrir Ledger Free Trial"
-  og:description = "Every Fenrir Ledger feature, free for 30 days. No card needed. Start tracking the moment you add your first card."
+  og:title = "I Hunt For 30 Days. Free. — Fenrir Ledger"
+  og:description = "Give me thirty days. I will guard every card, every fee, every deadline. No credit card. No chains."
 -->
 
 <!--
@@ -1017,25 +1026,26 @@
   2. Feature card data: define as a typed array (similar to THRALL_FEATURES / KARL_FEATURES in features/page.tsx)
      - Fields: id, rune (Elder Futhark char), ordinal, title, desc
      - Rune-to-feature mapping (from this wireframe):
-       ᚲ Kenaz    → Card Tracking & Fee Alerts
-       ᛊ Sowilo   → Annual Fee Calendar
-       ᛗ Mannaz   → Household Management
-       ᚱ Raidho   → Smart Import
-       ᛏ Tiwaz    → Valhalla
-       ᛟ Othalan  → Norse UI + Easter Eggs
-       ᚢ Uruz     → Mobile Dashboard
+       ᚲ Kenaz    → I Watch Every Card
+       ᛊ Sowilo   → I Count Down Every Fee
+       ᛗ Mannaz   → I Guard the Whole Pack
+       ᚱ Raidho   → I Devour Your Spreadsheets
+       ᛏ Tiwaz    → I Remember the Fallen
+       ᛟ Othalan  → I Am No Ordinary Ledger
+       ᚢ Uruz     → I Follow You Everywhere
      - Icon slot: use a small ThemedIcon or plain SVG. The rune character is a placeholder.
 
   3. Timeline: three data objects — { day, rune, title, desc, milestone: boolean }
      Day 15 has milestone: true → renders with heavier border class.
 
   4. Tier comparison: reuse tier data from /pricing page where possible.
-     CTA text override for this page: "Keep Full Access — $3.99/mo" (trial-specific).
+     CTA text override for this page: "Keep Me Unleashed — $3.99/mo" (trial-specific wolf-voice).
 
   5. Nav + Footer changes (global — not page-scoped):
      - Add "Free Trial" link to marketing nav (between Features and Pricing)
      - Add "Free Trial" link to marketing footer Product column
      - Update wherever the nav links array is defined (layout or shared component)
+     - Nav CTA: "Unleash the Wolf" (wolf-voice, replaces "Start Free Trial")
 
   6. Framer Motion: all animations use whileInView + viewport={{ once: true, amount: 0.2 }}
      prefersReducedMotion guard: import { useReducedMotion } from "framer-motion"
@@ -1043,6 +1053,18 @@
 
   7. CTA destination: href="/ledger" — trial starts on first card save (existing logic in trial-start.html spec).
      No trial-specific landing or modal — user lands on the dashboard and normal trial flow kicks in.
+
+  VOICE GUIDE FOR FIREMAN DECKO:
+  - The wolf speaks in first person ("I") throughout all copy on this page.
+  - Tone: confident, slightly predatory, fiercely loyal. Not cute. Not funny. Not begging.
+  - The wolf offers its services as a declaration, not a sales pitch.
+  - "Chains" = credit cards / commitments / Gleipnir binding. Triple meaning.
+  - "Teeth" / "jaws" / "hunt" / "prey" = tracking features. The wolf hunts fees.
+  - "Pack" = household. Wolf pack = family.
+  - "Valhalla" = closed card archive. Hall of the honored dead.
+  - "The Howl" = fee alerts. The wolf howls warnings.
+  - Keep feature names functional in list items (screen readers need clarity).
+    Wolf-voice lives in headlines and descriptions, not in aria-labels or tags.
 -->
 
 </body>
