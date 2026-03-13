@@ -17,7 +17,7 @@ var STATUS_OPTIONS = {
 var GH_API = "https://api.github.com";
 var GH_GQL = "https://api.github.com/graphql";
 var TOKEN = execSync("gh auth token", { encoding: "utf-8" }).trim();
-var EXCLUDED_LABELS = ["marketing"];
+var EXCLUDED_LABELS = [];
 var HEADERS = {
   Authorization: `bearer ${TOKEN}`,
   "Content-Type": "application/json",
@@ -87,7 +87,11 @@ async function fetchBoardAndComments() {
   while (hasNextPage) {
     const result = await graphql(itemsQuery, { owner: OWNER, number: PROJECT_NUMBER, cursor });
     const connection = result.data.user.projectV2.items;
-    allProjectItems.push(...connection.nodes);
+    // Filter out Done items during pagination to avoid fetching 200+ completed items
+    const activeItems = connection.nodes.filter(
+      (n) => n.fieldValueByName?.name !== "Done"
+    );
+    allProjectItems.push(...activeItems);
     hasNextPage = connection.pageInfo.hasNextPage;
     cursor = connection.pageInfo.endCursor;
   }
