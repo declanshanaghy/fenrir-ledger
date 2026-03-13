@@ -106,15 +106,26 @@ When `--resume` finds actions that are clearly ready, execute them immediately:
 |-----------|-------------|
 | Luna done (handoff exists) | Dispatch FiremanDecko on same branch |
 | FiremanDecko/Heimdall done (handoff exists) | Dispatch Loki on same branch |
-| Loki PASS + CI green + PR open | Merge PR, move to Done |
-| Loki PASS + no open PR (already merged) | Move to Done |
-| Completed chain still in "In Progress" | Move to Done |
+| Loki PASS + CI green + PR open | Merge PR (GitHub auto-moves board to Done) |
+| Loki PASS + no open PR (already merged) | No action needed (GitHub handled it) |
+| Completed chain still in "In Progress" | No action needed (GitHub auto-archives) |
 | Research handoff + PR merged + issue open | Present research review to Odin |
 
 **Only pause for Odin's approval on:** ambiguous situations or FAIL verdicts.
 
-**Do NOT pause for:** merges, Loki dispatches, board moves, or any other obvious action.
+**Do NOT pause for:** merges, Loki dispatches, or any other obvious action.
 Execute all clear-cut actions immediately and report what was done in the dashboard output.
+
+**Board automation (GitHub Projects V2 built-in workflows):**
+GitHub automatically handles these board transitions — do NOT move items manually for these:
+- PR opened/linked → **In Progress** (auto)
+- PR merged → **Done** (auto)
+- Issue closed (via `Fixes #N`) → **Done** (auto)
+- Stale Done items → **Archived** (auto)
+
+The orchestrator only moves items manually for:
+- `--move N up-next` — when filing new issues
+- `--move N in-progress` — belt & suspenders when dispatching agents (redundant with PR auto-move, but ensures the issue moves even before the PR exists)
 
 ---
 
@@ -283,5 +294,5 @@ git worktree prune
 - The orchestrator **coordinates** — never do an agent's work yourself.
 - Each agent handles its own commits and pushes.
 - For `test` issues, Loki is both first and final agent.
-- Board transitions: dispatched → **In Progress**, Loki PASS + merged → **Done**.
+- Board transitions are handled by GitHub Projects V2 built-in workflows (PR opened → In Progress, PR merged → Done, issue closed → Done). `/dispatch` also moves issues to In Progress as belt & suspenders.
 - **All agent spawning goes through `/dispatch`.** Never call `depot claude` directly.
