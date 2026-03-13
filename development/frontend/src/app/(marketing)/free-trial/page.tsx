@@ -6,7 +6,7 @@
  *
  * Sections:
  *   1. Hero — "I Hunt For 30 Days. Free."
- *   2. Feature Showcase — 7 compact cards in 3-col grid
+ *   2. Feature Showcase — 6 compact cards in 3-col grid
  *   3. Timeline — 3-step 30-day journey (Day 1 / Day 15 / Day 30)
  *   4. After Trial — Thrall vs Karl tier comparison
  *   5. Final CTA — "Unleash Me"

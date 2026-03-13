@@ -71,16 +71,9 @@ const TRIAL_FEATURES: TrialFeature[] = [
     desc: "Closed cards pass into Valhalla \u2014 my hall of the honored dead. What you earned, what you paid, how long each chain held. Nothing is forgotten.",
   },
   {
-    id: "norse-ui",
-    rune: "\u16DF",
-    ordinal: "Feature 06",
-    title: "I Am No Ordinary Ledger",
-    desc: "Dark war room. Elder Futhark runes. Hidden fragments for the bold. Other trackers are spreadsheets. I am something that bites back.",
-  },
-  {
     id: "mobile-dashboard",
     rune: "\u16A2",
-    ordinal: "Feature 07",
+    ordinal: "Feature 06",
     title: "I Follow You Everywhere",
     desc: "Full power on a phone screen. At the airport, at checkout, on the couch. I ride in your pocket. The hunt never pauses.",
   },
@@ -259,7 +252,7 @@ function FeatureShowcase() {
             What I Bring to the Hunt
           </h2>
           <p className="font-body text-base italic text-muted-foreground max-w-[480px] mx-auto leading-[1.65]">
-            Seven weapons. All sharpened. All yours the moment I wake.
+            Six weapons. All sharpened. All yours the moment I wake.
           </p>
         </div>
 
