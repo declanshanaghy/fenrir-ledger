@@ -25,6 +25,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/features", label: "Features" },
+  { href: "/free-trial", label: "Free Trial" },
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
   { href: "/chronicles", label: "Prose Edda" },
