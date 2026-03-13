@@ -32,7 +32,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - Follow ALL Test Standards from the agent definition — budgets, pyramid, locators, data isolation.
 - Use the handoff's "How to verify" and "Edge cases" to guide test design.
 - **Commit+push tests before running them:**
-  git add -A && git commit -m 'wip: add tests for #<NUMBER>' && git push origin <BRANCH>
+  git add -A && git commit -m 'wip: add tests for issue:<NUMBER>' && git push origin <BRANCH>
 - First run (fresh sandbox needs build):
   `cd <REPO_ROOT> && bash quality/scripts/verify.sh --step build`
   `cd <REPO_ROOT> && bash quality/scripts/verify.sh --step test -x <feature-slug>`
@@ -53,7 +53,7 @@ If conflicts: resolve, re-run feature tests.
   cd <REPO_ROOT> && rm -rf quality/reports/
 
 **Step 4 — Commit and push:**
-  cd <REPO_ROOT> && git add -A && git commit -m 'test: validate #<NUMBER> — <short description>' && git push origin <BRANCH>
+  cd <REPO_ROOT> && git add -A && git commit -m 'test: validate issue:<NUMBER>' && git push origin <BRANCH>
 
 **Step 5 — Update PR to close issue:**
   gh pr view <BRANCH> --json number --jq '.number'
