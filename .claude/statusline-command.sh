@@ -194,11 +194,14 @@ ctx_color() {
 }
 
 # ---------------------------------------------------------------------------
-# Progress bar (filled=▓, empty=░)
+# Progress bar — 20 Elder Futhark runes (filled = glyphs, empty = ·)
+# Cycles through the runes of the Elder Futhark as the bar fills
 # ---------------------------------------------------------------------------
+FUTHARK_GLYPHS=(ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ)
+
 progress_bar() {
     local pct="$1"
-    local width="${2:-10}"
+    local width=20
     local filled=$(( (pct * width + 50) / 100 ))
     if [ "$filled" -gt "$width" ]; then filled=$width; fi
     if [ "$filled" -lt 0 ]; then filled=0; fi
@@ -206,9 +209,9 @@ progress_bar() {
 
     local bar=""
     local i=0
-    while [ "$i" -lt "$filled" ]; do bar="${bar}▓"; i=$((i + 1)); done
+    while [ "$i" -lt "$filled" ]; do bar="${bar}${FUTHARK_GLYPHS[$i]}"; i=$((i + 1)); done
     i=0
-    while [ "$i" -lt "$empty" ]; do bar="${bar}░"; i=$((i + 1)); done
+    while [ "$i" -lt "$empty" ]; do bar="${bar}·"; i=$((i + 1)); done
     printf '%s' "$bar"
 }
 
@@ -296,12 +299,10 @@ plain_lines() {
 
 # Context window with progress bar
 section_context() {
-    local bar_width="${1:-10}"
-    printf '%bᚾ  %b%d%% %s%b' "${FG_GOLD}" "$(ctx_color "$CTX_PCT")" "$CTX_PCT" "$(progress_bar "$CTX_PCT" "$bar_width")" "${RESET}"
+    printf '%bᚾ  %b%d%% %s%b' "${FG_GOLD}" "$(ctx_color "$CTX_PCT")" "$CTX_PCT" "$(progress_bar "$CTX_PCT")" "${RESET}"
 }
 plain_context() {
-    local bar_width="${1:-10}"
-    printf 'ᚾ  %d%% %s' "$CTX_PCT" "$(progress_bar "$CTX_PCT" "$bar_width")"
+    printf 'ᚾ  %d%% %s' "$CTX_PCT" "$(progress_bar "$CTX_PCT")"
 }
 
 # Duration
@@ -344,7 +345,7 @@ if [ "$TERM_WIDTH" -ge 100 ]; then
     add_segment "$(section_model "$MODEL_SHORT")" "$(plain_model "$MODEL_SHORT")"
     add_segment "$(section_cost)" "$(plain_cost)"
     add_segment "$(section_lines)" "$(plain_lines)"
-    add_segment "$(section_context 10)" "$(plain_context 10)"
+    add_segment "$(section_context)" "$(plain_context)"
     add_segment "$(section_duration)" "$(plain_duration)"
     if [ -n "$AGENT_NAME" ]; then
         add_segment "$(section_agent)" "$(plain_agent)"
@@ -358,7 +359,7 @@ elif [ "$TERM_WIDTH" -ge 80 ]; then
     add_segment "$(section_model "$MODEL_ABBREV")" "$(plain_model "$MODEL_ABBREV")"
     add_segment "$(section_cost)" "$(plain_cost)"
     add_segment "$(section_lines)" "$(plain_lines)"
-    add_segment "$(section_context 8)" "$(plain_context 8)"
+    add_segment "$(section_context)" "$(plain_context)"
     if [ -n "$AGENT_NAME" ]; then
         add_segment "$(section_agent)" "$(plain_agent)"
     fi
@@ -368,7 +369,7 @@ elif [ "$TERM_WIDTH" -ge 60 ]; then
     add_segment "$(section_model "$MODEL_ABBREV")" "$(plain_model "$MODEL_ABBREV")"
     add_segment "$(section_cost)" "$(plain_cost)"
     add_segment "$(section_lines)" "$(plain_lines)"
-    add_segment "$(section_context 6)" "$(plain_context 6)"
+    add_segment "$(section_context)" "$(plain_context)"
 
 else
     # Ultra-compact: ctx:XX% | $cost
