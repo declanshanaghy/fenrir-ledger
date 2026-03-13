@@ -10,7 +10,7 @@ resource "google_container_cluster" "autopilot" {
 
   name     = var.cluster_name
   project  = var.project_id
-  location = var.zone # Zonal = free cluster management fee ($74.40/mo credit)
+  location = var.region # Autopilot clusters are always regional
 
   # Enable Autopilot mode
   enable_autopilot = true

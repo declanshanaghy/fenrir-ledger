@@ -11,7 +11,6 @@ set -euo pipefail
 
 PROJECT_ID="fenrir-ledger-prod"
 CLUSTER_NAME="fenrir-autopilot"
-ZONE="us-central1-a"
 REGION="us-central1"
 
 info()  { echo "✓ $*"; }
@@ -70,7 +69,7 @@ info "Project set to: ${PROJECT_ID}"
 echo ""
 echo "Fetching GKE cluster credentials..."
 gcloud container clusters get-credentials "$CLUSTER_NAME" \
-  --zone "$ZONE" \
+  --region "$REGION" \
   --project "$PROJECT_ID"
 info "kubectl context configured for: ${CLUSTER_NAME}"
 

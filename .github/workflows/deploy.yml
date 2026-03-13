@@ -11,7 +11,8 @@
 #   GCP_PROJECT_ID              — Google Cloud project ID
 #   GCP_SA_KEY                  — Base64-encoded service account JSON key
 #   GCP_REGION                  — GCP region (e.g. us-central1)
-#   GCP_ZONE                    — GCP zone (e.g. us-central1-a)
+#   GCP_ZONE                    — GCP zone (e.g. us-central1-a, used by Terraform)
+#   GCP_REGION                  — GCP region (e.g. us-central1, used by GKE)
 #   GKE_CLUSTER_NAME            — GKE cluster name (e.g. fenrir-autopilot)
 #   GOOGLE_CLIENT_SECRET        — OAuth client secret
 #   NEXT_PUBLIC_GOOGLE_CLIENT_ID — OAuth client ID
@@ -191,7 +192,7 @@ jobs:
         uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GCP_ZONE }}
+          location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Ensure namespaces and service accounts exist
@@ -289,7 +290,7 @@ jobs:
         uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GCP_ZONE }}
+          location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Health check via Ingress
