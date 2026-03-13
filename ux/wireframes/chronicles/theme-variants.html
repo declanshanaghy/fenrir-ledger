@@ -3,498 +3,751 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chronicle Theme Variants — Light & Dark | Wireframe</title>
+  <title>Theme Variants — Chronicles (Prose Edda) Wireframe — Fenrir Ledger — Issue #642</title>
   <style>
-    /* Base reset */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* ── Wireframe CSS — layout only. No colors, no custom fonts beyond sans-serif. ── */
+    * { box-sizing: border-box; }
     body {
+      margin: 0;
+      padding: 40px 24px;
       font-family: sans-serif;
-      font-size: 16px;
-      line-height: 1.6;
-      padding: 20px;
+      font-size: 14px;
+      line-height: 1.5;
     }
 
-    /* Container */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+    /* ── Document chrome ── */
+    h1 { font-size: 22px; margin: 0 0 8px; padding-bottom: 12px; border-bottom: 2px solid #333; }
+    h2 { font-size: 17px; margin: 40px 0 12px; font-weight: 700; border-left: 4px solid #333; padding-left: 10px; }
+    h3 { font-size: 14px; margin: 20px 0 8px; font-weight: 600; }
 
-    /* Theme comparison grid */
-    .theme-grid {
+    /* ── Side-by-side theme comparison ── */
+    .theme-comparison {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      margin-bottom: 48px;
+      gap: 24px;
+      margin-bottom: 40px;
     }
-
-    .theme-column {
+    .theme-variant {
       border: 2px solid #333;
-      padding: 24px;
+      padding: 20px;
+      position: relative;
     }
-
     .theme-label {
-      font-size: 18px;
-      font-weight: bold;
-      text-align: center;
-      padding: 12px;
-      margin: -24px -24px 24px;
-    }
-
-    /* Light theme simulation */
-    .light-theme {
-      background: #ffffff;
-      color: #1a1a1a;
-    }
-
-    .light-theme .theme-label {
-      background: #f8f8f8;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .light-theme .card {
-      background: #ffffff;
-      border: 1px solid #e0e0e0;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    .light-theme .accent { color: #c9920a; }
-    .light-theme .muted { color: #6b6b6b; }
-    .light-theme .border { border-color: #e0e0e0; }
-    .light-theme .code-block {
-      background: #f6f6f6;
-      border: 1px solid #e0e0e0;
-      border-left: 3px solid #c9920a;
-    }
-
-    /* Dark theme simulation */
-    .dark-theme {
-      background: #0f1018;
-      color: #e8e4d4;
-    }
-
-    .dark-theme .theme-label {
-      background: #07070d;
-      border-bottom: 1px solid #1e2235;
-      color: #e8e4d4;
-    }
-
-    .dark-theme .card {
-      background: #13151f;
-      border: 1px solid #1e2235;
-      padding: 16px;
-      margin-bottom: 16px;
-      color: #e8e4d4;
-    }
-
-    .dark-theme .accent { color: #f0b429; }
-    .dark-theme .muted { color: #8a8578; }
-    .dark-theme .border { border-color: #1e2235; }
-    .dark-theme .code-block {
-      background: #050508;
-      border: 1px solid #1e2235;
-      border-left: 3px solid #c9920a;
-      color: #e8e4d4;
-    }
-
-    /* Component examples */
-    .component-example {
-      margin-bottom: 32px;
-    }
-
-    .component-title {
-      font-size: 14px;
-      font-weight: bold;
-      margin-bottom: 12px;
+      position: absolute;
+      top: -12px;
+      left: 16px;
+      background: #fff;
+      padding: 0 8px;
+      font-weight: 700;
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.1em;
+      border: 1px solid #333;
     }
 
-    .chronicle-header-example {
-      text-align: center;
-      padding: 24px;
-      border-bottom: 1px solid;
+    /* ── Annotations ── */
+    .note {
+      border: 1px solid #666;
+      background: #f8f8f8;
+      padding: 10px 14px;
+      margin: 16px 0;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .note strong { display: block; margin-bottom: 4px; }
+
+    /* ── Spec table ── */
+    .spec-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    .spec-table th, .spec-table td { border: 1px solid #ccc; padding: 6px 8px; font-size: 11px; text-align: left; }
+    .spec-table th { font-weight: 700; }
+
+    /* ── Mobile indicator ── */
+    .mobile-note { display: inline-block; border: 1px solid; padding: 1px 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+
+    /* ── Chronicle page-level layout ── */
+    .chronicle-page-frame {
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
     }
 
-    .nav-example {
+    /* ── Marketing nav (inherited from layout) ── */
+    .nav-bar {
       display: flex;
       justify-content: space-between;
-      padding: 16px;
+      align-items: center;
+      padding: 8px 14px;
+      border-bottom: 1px solid;
+      font-size: 11px;
+    }
+    .nav-links { display: flex; gap: 12px; }
+    .nav-cta { padding: 4px 10px; border: 2px solid; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+
+    /* ── Chronicle index header ── */
+    .chronicle-index-header {
+      text-align: center;
+      padding: 20px 16px;
       border-bottom: 1px solid;
     }
+    .chronicle-h1 { font-size: 22px; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; }
+    .chronicle-subtitle { font-size: 11px; font-style: italic; max-width: 480px; margin: 0 auto; }
 
-    .grievance-example {
-      padding: 20px;
-      border-left: 4px solid;
-      margin: 16px 0;
+    /* ── Chronicle card grid ── */
+    .chronicle-card-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 16px; }
+    .chronicle-card-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 14px; }
+    .chronicle-card {
+      border: 1px solid;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
     }
+    .chronicle-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .chronicle-rune { font-size: 22px; }
+    .chronicle-date { font-family: monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .chronicle-title { font-size: 13px; font-weight: 700; line-height: 1.4; }
+    .chronicle-excerpt { font-size: 11px; font-style: italic; line-height: 1.5; }
+    .card-hover-note { font-size: 9px; border: 1px dashed; padding: 2px 5px; display: inline-block; margin-top: 4px; }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .theme-grid {
-        grid-template-columns: 1fr;
-      }
+    /* ── Chronicle detail header ── */
+    .chronicle-detail-header {
+      border-bottom: 1px solid;
+      padding: 20px 16px;
+      text-align: center;
     }
+    .chronicle-detail-meta { font-family: monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 8px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .chronicle-detail-h1 { font-size: 18px; font-weight: 900; line-height: 1.2; margin-bottom: 6px; }
+    .chronicle-detail-excerpt { font-size: 11px; font-style: italic; }
 
-    /* Documentation notes */
-    .note {
-      background: #fffbf0;
-      border: 2px solid #f0b429;
-      padding: 16px;
-      margin: 24px 0;
-      font-size: 14px;
+    /* ── Prev/Next nav ── */
+    .prev-next-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid;
     }
+    .prev-next-link { display: flex; flex-direction: column; gap: 2px; max-width: 45%; }
+    .prev-next-label { font-family: monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; }
+    .prev-next-title { font-size: 11px; font-weight: 700; line-height: 1.3; }
+    .prev-next-date { font-family: monospace; font-size: 9px; }
+    .prev-next-rune { font-size: 16px; }
 
-    code {
-      background: #f4f4f4;
-      padding: 2px 6px;
-      font-family: monospace;
-      font-size: 13px;
-    }
+    /* ── Chronicle MDX body ── */
+    .chronicle-body { padding: 16px; border-bottom: 1px solid; }
+    .chronicle-body-inner { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+    .chronicle-section-h2 { font-size: 14px; font-weight: 700; border-bottom: 1px solid; padding-bottom: 4px; margin-bottom: 4px; }
+    .chronicle-section-h3 { font-size: 12px; font-weight: 600; }
+    .chronicle-paragraph { font-size: 11px; line-height: 1.7; }
+    .chronicle-code-block { font-family: monospace; font-size: 10px; border: 1px solid; padding: 8px; line-height: 1.5; }
+    .chronicle-blockquote { border-left: 3px solid; padding-left: 10px; font-style: italic; font-size: 11px; }
+    .chronicle-dl { font-size: 10px; display: flex; flex-direction: column; gap: 4px; }
+    .chronicle-dt { font-weight: 700; font-family: monospace; }
+    .chronicle-dd { padding-left: 14px; }
+    .chronicle-tag { display: inline-block; border: 1px solid; padding: 1px 5px; font-family: monospace; font-size: 9px; text-transform: uppercase; margin: 1px; }
+    .chronicle-tags { margin-bottom: 4px; }
+
+    /* ── Back link ── */
+    .chronicle-back { padding: 14px 16px; text-align: center; border-top: 1px solid; }
+    .chronicle-back-link { font-family: monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; text-decoration: underline; }
+
+    /* ── Marketing footer ── */
+    .site-footer { border-top: 1px solid; padding: 14px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; font-size: 10px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1 style="text-align: center; margin-bottom: 32px;">Chronicle Theme Variants</h1>
 
-    <div class="note">
-      <strong>Purpose:</strong> This document shows how chronicle pages adapt between light and dark themes.
-      Chronicles now respect the user's theme selection (matching the marketing site) instead of being hardcoded dark.
-      All colors, borders, and contrast ratios adjust automatically based on the selected theme.
+  <h1>Theme Variants &mdash; Chronicles (Prose Edda)</h1>
+  <p style="margin: 0 0 8px; font-size: 13px;">
+    Wireframe: <code>ux/wireframes/chronicles/theme-variants.html</code><br>
+    Updated: Issue #642 &mdash; reflects current implemented chronicles pages<br>
+    Pages covered: /chronicles (index) &middot; /chronicles/[slug] (article detail)<br>
+    No dual-realm crossfade on chronicles &mdash; theme changes surface/border tokens only.
+  </p>
+
+  <div class="note">
+    <strong>Wireframe Rules (enforced)</strong>
+    Layout CSS only: flex/grid, border, width/height, padding/margin, font-size, font-weight.<br>
+    No colors, no backgrounds (except #f8f8f8 on annotation blocks), no custom fonts, no shadows, no border-radius.<br>
+    Theme styling lives in <code>ux/theme-system.md</code> &mdash; not here.
+  </div>
+
+  <div class="note">
+    <strong>Chronicles (Prose Edda) Architecture</strong>
+    Route: <code>/chronicles</code> (index) + <code>/chronicles/[slug]</code> (article).<br>
+    Part of the marketing layout (inherits top nav + site footer).<br>
+    MDX files in <code>content/chronicles/</code>. Rendered via <code>next-mdx-remote/rsc</code>.<br>
+    Typography: Cinzel (display/heading), Source Serif 4 (body), JetBrains Mono (mono).<br>
+    CSS scoped to <code>.chronicle-page</code> class via <code>chronicle.css</code>.<br>
+    No dual-realm crossfade on chronicles &mdash; these are developer logs, not lore-heavy UI. Theme changes: bg, text, border tokens only.
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>1. Chronicles Index &mdash; /chronicles</h2>
+
+  <div class="note">
+    <strong>Layout:</strong> Marketing nav (top) &rarr; Centered page header (Prose Edda title + subtitle) &rarr; Card grid (3-col desktop / 2-col tablet / 1-col mobile) &rarr; Marketing footer.<br>
+    Each card: rune + date header &middot; session title &middot; excerpt (3-line clamp). Hover: border-primary/50 + rune opacity 60%&rarr;100% + title text-primary.
+  </div>
+
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="chronicle-page-frame">
+        <!-- Nav -->
+        <div class="nav-bar">
+          <div class="nav-links"><span style="font-weight:700;">&#x16A0; FENRIR LEDGER</span><span>Features</span><span>Pricing</span><span>About</span><span>Prose Edda</span></div>
+          <div class="nav-links"><span>&#x2600; &circlearrowleft;</span><span class="nav-cta">Open Ledger</span></div>
+        </div>
+        <!-- Page header -->
+        <div class="chronicle-index-header">
+          <div class="chronicle-h1">Prose Edda</div>
+          <div class="chronicle-subtitle">The sagas of the forge. Each session carved into the record, as the skalds once carved runes into stone. Technical chronicles from the development of Fenrir Ledger.</div>
+        </div>
+        <!-- Card grid (3-col) -->
+        <div class="chronicle-card-grid-3">
+          <div class="chronicle-card">
+            <div class="chronicle-card-header">
+              <div class="chronicle-rune">&#x16DF;</div>
+              <div class="chronicle-date">March 13, 2026</div>
+            </div>
+            <div class="chronicle-title">Session 18: The Chronicles Refresh</div>
+            <div class="chronicle-excerpt">Updating theme variant wireframes to reflect current state of the marketing site and chronicles pages&hellip;</div>
+            <div class="card-hover-note">hover: border-primary/50 &middot; rune opacity&uarr; &middot; title text-primary</div>
+          </div>
+          <div class="chronicle-card">
+            <div class="chronicle-card-header">
+              <div class="chronicle-rune">&#x16B2;</div>
+              <div class="chronicle-date">Feb 28, 2026</div>
+            </div>
+            <div class="chronicle-title">Session 17: Free Trial Marketing Page</div>
+            <div class="chronicle-excerpt">The wolf speaks in first person. 30-day trial hero, feature showcase, and timeline&hellip;</div>
+          </div>
+          <div class="chronicle-card">
+            <div class="chronicle-card-header">
+              <div class="chronicle-rune">&#x16A0;</div>
+              <div class="chronicle-date">Feb 14, 2026</div>
+            </div>
+            <div class="chronicle-title">Session 16: About Page Agent Profiles</div>
+            <div class="chronicle-excerpt">Dual-realm agent portraits, realm lore crossfade, hover overlays by personality&hellip;</div>
+          </div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Light: cards bg=card. Border: border-border. Title: text-foreground. Date: text-muted-foreground. Rune: text-primary/60. Hover: border-primary/50.</p>
     </div>
 
-    <!-- Chronicle Index Variants -->
-    <h2 style="margin: 32px 0 16px;">Chronicle Index Page</h2>
-    <div class="theme-grid">
-      <!-- Light Theme -->
-      <div class="theme-column light-theme">
-        <div class="theme-label">Light Theme</div>
-
-        <div class="component-example">
-          <div class="component-title">Page Header</div>
-          <div style="text-align: center; padding: 20px 0;">
-            <h3 style="font-size: 32px; margin-bottom: 8px;">Prose Edda</h3>
-            <p class="muted" style="font-size: 14px;">The sagas of the forge</p>
-          </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="chronicle-page-frame">
+        <!-- Nav -->
+        <div class="nav-bar">
+          <div class="nav-links"><span style="font-weight:700;">&#x16A0; FENRIR LEDGER</span><span>Features</span><span>Pricing</span><span>Prose Edda</span></div>
+          <div class="nav-links"><span>&#x263E; &circlearrowleft;</span><span class="nav-cta">Open Ledger</span></div>
         </div>
-
-        <div class="component-example">
-          <div class="component-title">Chronicle Cards</div>
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-              <span class="accent" style="font-size: 24px;">ᚠ</span>
-              <span class="muted" style="font-size: 11px;">DEC 15, 2024</span>
-            </div>
-            <h4 style="font-size: 16px; margin-bottom: 8px;">The Import Pipeline Awakens</h4>
-            <p class="muted" style="font-size: 13px;">Bank statements transform into structured data...</p>
-          </div>
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-              <span class="accent" style="font-size: 24px;">ᛚ</span>
-              <span class="muted" style="font-size: 11px;">DEC 8, 2024</span>
-            </div>
-            <h4 style="font-size: 16px; margin-bottom: 8px;">Depot Integration Field Report</h4>
-            <p class="muted" style="font-size: 13px;">A tale of frustration and triumph...</p>
-          </div>
+        <!-- Page header -->
+        <div class="chronicle-index-header">
+          <div class="chronicle-h1">Prose Edda</div>
+          <div class="chronicle-subtitle">The sagas of the forge. Each session carved into the record&hellip;</div>
         </div>
-
-        <div class="component-example">
-          <div class="component-title">Color Palette</div>
-          <div style="font-size: 12px;">
-            <div>Background: #ffffff</div>
-            <div>Text: #1a1a1a</div>
-            <div class="muted">Muted: #6b6b6b</div>
-            <div class="accent">Accent (Gold): #c9920a</div>
-            <div>Borders: #e0e0e0</div>
+        <!-- Card grid (abbreviated for dark comparison) -->
+        <div class="chronicle-card-grid-3">
+          <div class="chronicle-card">
+            <div class="chronicle-card-header">
+              <div class="chronicle-rune">&#x16DF;</div>
+              <div class="chronicle-date">March 13, 2026</div>
+            </div>
+            <div class="chronicle-title">Session 18: The Chronicles Refresh</div>
+            <div class="chronicle-excerpt">Wireframe updates&hellip;</div>
+          </div>
+          <div class="chronicle-card">
+            <div class="chronicle-card-header"><div class="chronicle-rune">&#x16B2;</div><div class="chronicle-date">Feb 28, 2026</div></div>
+            <div class="chronicle-title">Session 17: Free Trial</div>
+          </div>
+          <div class="chronicle-card">
+            <div class="chronicle-card-header"><div class="chronicle-rune">&#x16A0;</div><div class="chronicle-date">Feb 14, 2026</div></div>
+            <div class="chronicle-title">Session 16: About Page</div>
           </div>
         </div>
       </div>
-
-      <!-- Dark Theme -->
-      <div class="theme-column dark-theme">
-        <div class="theme-label">Dark Theme</div>
-
-        <div class="component-example">
-          <div class="component-title" style="color: #8a8578;">Page Header</div>
-          <div style="text-align: center; padding: 20px 0;">
-            <h3 style="font-size: 32px; margin-bottom: 8px;">Prose Edda</h3>
-            <p class="muted" style="font-size: 14px;">The sagas of the forge</p>
-          </div>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title" style="color: #8a8578;">Chronicle Cards</div>
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-              <span class="accent" style="font-size: 24px;">ᚠ</span>
-              <span class="muted" style="font-size: 11px;">DEC 15, 2024</span>
-            </div>
-            <h4 style="font-size: 16px; margin-bottom: 8px;">The Import Pipeline Awakens</h4>
-            <p class="muted" style="font-size: 13px;">Bank statements transform into structured data...</p>
-          </div>
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-              <span class="accent" style="font-size: 24px;">ᛚ</span>
-              <span class="muted" style="font-size: 11px;">DEC 8, 2024</span>
-            </div>
-            <h4 style="font-size: 16px; margin-bottom: 8px;">Depot Integration Field Report</h4>
-            <p class="muted" style="font-size: 13px;">A tale of frustration and triumph...</p>
-          </div>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title" style="color: #8a8578;">Color Palette</div>
-          <div style="font-size: 12px;">
-            <div>Background: #0f1018</div>
-            <div>Text: #e8e4d4</div>
-            <div class="muted">Muted: #8a8578</div>
-            <div class="accent">Accent (Gold): #f0b429</div>
-            <div>Borders: #1e2235</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Individual Article Variants -->
-    <h2 style="margin: 32px 0 16px;">Individual Chronicle Article</h2>
-    <div class="theme-grid">
-      <!-- Light Theme -->
-      <div class="theme-column light-theme">
-        <div class="theme-label">Light Theme Article</div>
-
-        <div class="component-example">
-          <div class="component-title">Compact Header</div>
-          <div class="chronicle-header-example border">
-            <div class="muted" style="font-size: 11px; margin-bottom: 12px;">
-              SESSION 462 • DEC 15, 2024 • BY FREYA
-            </div>
-            <h3 style="font-size: 24px; margin-bottom: 8px;">The Import Pipeline Awakens</h3>
-            <p class="muted" style="font-size: 13px; font-style: italic;">Bank statements transform into data</p>
-          </div>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title">Prev/Next Nav (Top)</div>
-          <div class="nav-example border">
-            <div style="text-align: left;">
-              <div class="muted" style="font-size: 10px;">← PREVIOUS</div>
-              <div style="font-size: 13px;">Depot Integration</div>
-            </div>
-            <span class="accent">ᛟ</span>
-            <div style="text-align: right;">
-              <div class="muted" style="font-size: 10px;">NEXT →</div>
-              <div style="font-size: 13px;">Subscription Guard</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title">Code Block</div>
-          <div class="code-block" style="padding: 12px; font-family: monospace; font-size: 13px;">
-            const parse = require('csv-parse')<br>
-            // Light syntax highlighting<br>
-            <span style="color: #0969da;">const</span> records = parse(data)
-          </div>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title">Agent Message</div>
-          <div class="card">
-            <span style="display: inline-block; padding: 2px 8px; border: 1px solid #f59e0b; font-size: 10px; margin-bottom: 8px;">FREYA</span>
-            <p style="font-size: 14px;">The parser must be resilient...</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Dark Theme -->
-      <div class="theme-column dark-theme">
-        <div class="theme-label">Dark Theme Article</div>
-
-        <div class="component-example">
-          <div class="component-title" style="color: #8a8578;">Compact Header</div>
-          <div class="chronicle-header-example border">
-            <div class="muted" style="font-size: 11px; margin-bottom: 12px;">
-              SESSION 462 • DEC 15, 2024 • BY FREYA
-            </div>
-            <h3 style="font-size: 24px; margin-bottom: 8px;">The Import Pipeline Awakens</h3>
-            <p class="muted" style="font-size: 13px; font-style: italic;">Bank statements transform into data</p>
-          </div>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title" style="color: #8a8578;">Prev/Next Nav (Top)</div>
-          <div class="nav-example border">
-            <div style="text-align: left;">
-              <div class="muted" style="font-size: 10px;">← PREVIOUS</div>
-              <div style="font-size: 13px;">Depot Integration</div>
-            </div>
-            <span class="accent">ᛟ</span>
-            <div style="text-align: right;">
-              <div class="muted" style="font-size: 10px;">NEXT →</div>
-              <div style="font-size: 13px;">Subscription Guard</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title" style="color: #8a8578;">Code Block</div>
-          <div class="code-block" style="padding: 12px; font-family: monospace; font-size: 13px;">
-            const parse = require('csv-parse')<br>
-            // Dark syntax highlighting<br>
-            <span style="color: #79c0ff;">const</span> records = parse(data)
-          </div>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title" style="color: #8a8578;">Agent Message</div>
-          <div class="card">
-            <span style="display: inline-block; padding: 2px 8px; border: 1px solid #f59e0b55; background: rgba(245,158,11,0.1); color: #f59e0b; font-size: 10px; margin-bottom: 8px;">FREYA</span>
-            <p style="font-size: 14px;">The parser must be resilient...</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Field Report Variants -->
-    <h2 style="margin: 32px 0 16px;">Field Report Components</h2>
-    <div class="theme-grid">
-      <!-- Light Theme -->
-      <div class="theme-column light-theme">
-        <div class="theme-label">Light Theme Field Report</div>
-
-        <div class="component-example">
-          <div class="component-title">Grievance Card</div>
-          <div class="grievance-example" style="border-color: #dc2626; background: #fef2f2;">
-            <div style="font-size: 11px; color: #dc2626; font-weight: bold; margin-bottom: 8px;">GRIEVANCE #1</div>
-            <h4 style="font-size: 18px; margin-bottom: 8px;">The Column Headers That Weren't</h4>
-            <p style="font-size: 14px; font-style: italic; color: #7f1d1d; margin-bottom: 12px;">
-              Home Depot exports CSV files without headers...
-            </p>
-            <p style="font-size: 14px;">
-              Most banks put column headers on line 1...
-            </p>
-          </div>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title">Hunt Table</div>
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <thead>
-              <tr style="border-bottom: 2px solid #c9920a;">
-                <th style="padding: 8px; text-align: left; color: #c9920a;">Issue</th>
-                <th style="padding: 8px; text-align: left; color: #c9920a;">Impact</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="border-bottom: 1px solid #e0e0e0;">
-                <td style="padding: 8px;">Missing headers</td>
-                <td style="padding: 8px;">Parser fails</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e0e0e0;">
-                <td style="padding: 8px;">Date formats</td>
-                <td style="padding: 8px;">Wrong dates</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title">UPDATE Banner</div>
-          <div style="padding: 16px; border: 1px dashed #dc2626; text-align: center; font-size: 13px;">
-            <strong style="color: #dc2626;">UPDATE:</strong> As of December 2024...
-          </div>
-        </div>
-      </div>
-
-      <!-- Dark Theme -->
-      <div class="theme-column dark-theme">
-        <div class="theme-label">Dark Theme Field Report</div>
-
-        <div class="component-example">
-          <div class="component-title" style="color: #8a8578;">Grievance Card</div>
-          <div class="grievance-example" style="border-color: #c94a0a; background: rgba(201,74,10,0.07);">
-            <div style="font-size: 11px; color: #c94a0a; font-weight: bold; margin-bottom: 8px;">GRIEVANCE #1</div>
-            <h4 style="font-size: 18px; margin-bottom: 8px;">The Column Headers That Weren't</h4>
-            <p style="font-size: 14px; font-style: italic; color: #fca5a5; margin-bottom: 12px;">
-              Home Depot exports CSV files without headers...
-            </p>
-            <p style="font-size: 14px;">
-              Most banks put column headers on line 1...
-            </p>
-          </div>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title" style="color: #8a8578;">Hunt Table</div>
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <thead>
-              <tr style="border-bottom: 2px solid #c9920a;">
-                <th style="padding: 8px; text-align: left; color: #f0b429;">Issue</th>
-                <th style="padding: 8px; text-align: left; color: #f0b429;">Impact</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="border-bottom: 1px solid #1e2235;">
-                <td style="padding: 8px;">Missing headers</td>
-                <td style="padding: 8px;">Parser fails</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #1e2235;">
-                <td style="padding: 8px;">Date formats</td>
-                <td style="padding: 8px;">Wrong dates</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="component-example">
-          <div class="component-title" style="color: #8a8578;">UPDATE Banner</div>
-          <div style="padding: 16px; border: 1px dashed #c94a0a; text-align: center; font-size: 13px;">
-            <strong style="color: #c94a0a;">UPDATE:</strong> As of December 2024...
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="note">
-      <strong>Implementation Guidelines:</strong><br><br>
-
-      <strong>Typography (Both Themes):</strong><br>
-      • Headings: <code>font-family: 'Cinzel', serif</code> (matching About page)<br>
-      • Body text: <code>font-family: 'Source Serif 4', serif</code><br>
-      • Code/technical: <code>font-family: 'JetBrains Mono', monospace</code><br><br>
-
-      <strong>Theme Detection:</strong><br>
-      • Use Next.js <code>next-themes</code> package (already in use on marketing site)<br>
-      • CSS variables switch based on <code>[data-theme="dark"]</code> attribute<br>
-      • Remove hardcoded dark background from <code>chronicle.css</code><br><br>
-
-      <strong>Color Variables to Update:</strong><br>
-      Light Theme:<br>
-      • <code>--background: #ffffff</code><br>
-      • <code>--foreground: #1a1a1a</code><br>
-      • <code>--muted: #6b6b6b</code><br>
-      • <code>--border: #e0e0e0</code><br>
-      • <code>--accent: #c9920a</code> (gold stays similar)<br><br>
-
-      Dark Theme:<br>
-      • <code>--background: #0f1018</code><br>
-      • <code>--foreground: #e8e4d4</code><br>
-      • <code>--muted: #8a8578</code><br>
-      • <code>--border: #1e2235</code><br>
-      • <code>--accent: #f0b429</code> (brighter gold)<br><br>
-
-      <strong>Code Block Syntax Highlighting:</strong><br>
-      • Use theme-aware syntax highlighter (e.g., Prism with light/dark themes)<br>
-      • Light theme: GitHub light color scheme<br>
-      • Dark theme: GitHub dark color scheme<br><br>
-
-      <strong>Accessibility:</strong><br>
-      • Maintain WCAG AA contrast ratios in both themes<br>
-      • Light theme: 4.5:1 minimum for normal text<br>
-      • Dark theme: Careful with muted text on dark backgrounds<br>
-      • Test with browser dev tools contrast checker
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Dark: identical structure. bg=card (deep). Border: border-border (subtle). Hover: border-primary/50 (same token &mdash; primary is consistent in both themes). No images on index &mdash; text-only cards.</p>
     </div>
   </div>
+
+  <!-- ============================================================ -->
+  <h2>2. Chronicle Index &mdash; Card Anatomy Detail</h2>
+
+  <div style="border: 1px solid; padding: 14px; margin-bottom: 24px;">
+    <div style="font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 10px; border-bottom: 1px dashed; padding-bottom: 4px;">Card Component Anatomy (ChronicleCard)</div>
+    <div class="chronicle-card" style="max-width: 340px;">
+      <div class="chronicle-card-header">
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <div class="chronicle-rune" style="font-size: 28px;">&#x16CF;</div>
+          <div style="font-family: monospace; font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em;">[rune glyph]<br>text-primary/60 &rarr; text-primary/100 on hover</div>
+        </div>
+        <div class="chronicle-date" style="font-size: 9px; text-align: right;">
+          January 15, 2026<br>
+          <span style="font-size: 8px; font-style: italic; font-family: sans-serif;">font-mono · uppercase</span>
+        </div>
+      </div>
+      <div class="chronicle-title" style="font-size: 14px;">
+        Session 15: Velocity Management<br>
+        <span style="font-size: 9px; font-weight: 400; font-style: italic; font-family: sans-serif;">font-heading · text-foreground &rarr; text-primary on hover</span>
+      </div>
+      <div class="chronicle-excerpt">
+        Chase 5/24, Citi 1/8, Amex 1/month. The velocity matrix is born&hellip;
+        <br><span style="font-size: 9px; font-style: normal; font-family: sans-serif; font-weight: 400;">font-body · text-muted-foreground · line-clamp-3</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 2px; font-size: 9px; border-top: 1px dashed; padding-top: 6px; margin-top: 4px;">
+        <div>Link: href="/chronicles/{slug}" &mdash; full card is clickable</div>
+        <div>Hover: border-primary/50 transition-colors</div>
+        <div>No separate CTA button &mdash; entire card is the link</div>
+        <div>Min-height: none (varies by content)</div>
+      </div>
+    </div>
+  </div>
+
+  <table class="spec-table">
+    <thead>
+      <tr><th>Element</th><th>Token / Value</th><th>Hover Token</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Card container</td><td>border-border bg-card p-6 flex flex-col gap-4</td><td>border-primary/50 transition-colors</td></tr>
+      <tr><td>Rune glyph</td><td>text-[28px] text-primary opacity-60</td><td>opacity-100</td></tr>
+      <tr><td>Date</td><td>font-mono text-[0.65rem] text-muted-foreground uppercase tracking-wide</td><td>&mdash;</td></tr>
+      <tr><td>Title (h2)</td><td>font-heading text-lg font-semibold text-foreground</td><td>text-primary</td></tr>
+      <tr><td>Excerpt (p)</td><td>font-body text-sm text-muted-foreground line-clamp-3</td><td>&mdash;</td></tr>
+      <tr><td>Transition</td><td>transition-colors (default 150ms)</td><td>&mdash;</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2>3. Chronicle Detail &mdash; /chronicles/[slug]</h2>
+
+  <div class="note">
+    <strong>Layout (per implemented page.tsx, Issues #373 #427 #465 #469 #486):</strong><br>
+    Marketing nav &rarr; Compact Header (rune + session label + date + title + excerpt) &rarr; Prev/Next navigation (top, between header and content) &rarr; MDX content (.chronicle-page scoped CSS) &rarr; Back to index link &rarr; Marketing footer.<br>
+    No hero image. Dev-blog feel. Max-width: 880px centered content area.
+  </div>
+
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="chronicle-page-frame">
+        <!-- Nav -->
+        <div class="nav-bar">
+          <div class="nav-links"><span style="font-weight:700;">&#x16A0; FENRIR LEDGER</span><span>Features</span><span>Pricing</span><span>Prose Edda</span></div>
+          <div class="nav-links"><span>&#x2600; &circlearrowleft;</span><span class="nav-cta">Open Ledger</span></div>
+        </div>
+
+        <!-- Compact header (no hero) -->
+        <div class="chronicle-detail-header">
+          <div class="chronicle-detail-meta">
+            <span style="font-size:16px;">&#x16CF;</span>
+            <span>Session 18</span>
+            <span aria-hidden="true">&middot;</span>
+            <span>March 13, 2026</span>
+          </div>
+          <div class="chronicle-detail-h1">The Chronicles Refresh</div>
+          <div class="chronicle-detail-excerpt">Updating theme variant wireframes to reflect current state of the marketing site and chronicles pages.</div>
+        </div>
+
+        <!-- Prev/Next nav (ABOVE content — between header and body) -->
+        <div class="prev-next-nav">
+          <div class="prev-next-link">
+            <div class="prev-next-label">&larr; Previous</div>
+            <div class="prev-next-title">Session 17: Free Trial Marketing Page</div>
+            <div class="prev-next-date">Feb 28, 2026</div>
+          </div>
+          <div style="font-size: 16px; font-family: monospace; opacity: 0.3;" aria-hidden="true">&#x16DF;</div>
+          <div class="prev-next-link" style="text-align: right; margin-left: auto;">
+            <div class="prev-next-label">Next &rarr;</div>
+            <div class="prev-next-title">Session 19: (future saga)</div>
+            <div class="prev-next-date">&mdash;</div>
+          </div>
+        </div>
+
+        <!-- MDX body -->
+        <div class="chronicle-body">
+          <div class="chronicle-body-inner">
+            <!-- Typical chronicle MDX content structure -->
+            <div class="chronicle-section-h2">Context &amp; Motivation</div>
+            <div class="chronicle-paragraph">The theme variant wireframes for both the marketing site and chronicles have drifted from the implemented state&hellip;</div>
+
+            <div class="chronicle-section-h2">What Changed</div>
+            <div class="chronicle-section-h3">Marketing Site</div>
+            <div class="chronicle-paragraph">Five pages updated: Home, Features, Pricing, About, Free Trial&hellip;</div>
+
+            <div class="chronicle-code-block">
+// Example code block from chronicles
+const isDark = resolvedTheme === 'dark';
+opacity: isDark ? 1 : 0
+            </div>
+
+            <div class="chronicle-blockquote">&ldquo;Every reward has a deadline. Fenrir doesn&rsquo;t forget.&rdquo;</div>
+
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 6px; border-top: 1px solid; padding-top: 6px;">Status &amp; Tags</div>
+            <div class="chronicle-dl">
+              <div><span class="chronicle-dt">Status:</span> <span class="chronicle-dd">Shipped &#x2713;</span></div>
+              <div><span class="chronicle-dt">Issue:</span> <span class="chronicle-dd">#642</span></div>
+            </div>
+            <div class="chronicle-tags">
+              <span class="chronicle-tag">wireframes</span>
+              <span class="chronicle-tag">ux</span>
+              <span class="chronicle-tag">theme</span>
+              <span class="chronicle-tag">chronicles</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Back to index -->
+        <div class="chronicle-back">
+          <span class="chronicle-back-link">&uarr; Back to All Sagas</span>
+        </div>
+
+        <!-- Footer -->
+        <div class="site-footer">
+          <div>&#x16A0; FENRIR LEDGER<br><em style="font-style:italic;font-size:9px;">Every reward has a deadline</em></div>
+          <div>Features &middot; Pricing &middot; About &middot; Free Trial &middot; Prose Edda<br>Privacy &middot; Terms</div>
+          <div style="text-align:right;">Open the Ledger<br>&copy; 2026 Fenrir Ledger</div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Light: compact header bg=card. border-b border-border. Prev/Next: border-b border-border. Body: default bg. .chronicle-page CSS scoped styles apply to MDX output (prose typography).</p>
+    </div>
+
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="chronicle-page-frame">
+        <!-- Nav -->
+        <div class="nav-bar">
+          <div class="nav-links"><span style="font-weight:700;">&#x16A0; FENRIR LEDGER</span><span>Prose Edda</span></div>
+          <div class="nav-links"><span>&#x263E; &circlearrowleft;</span><span class="nav-cta">Open Ledger</span></div>
+        </div>
+
+        <!-- Compact header -->
+        <div class="chronicle-detail-header">
+          <div class="chronicle-detail-meta">
+            <span style="font-size:14px;">&#x16CF;</span>
+            <span>Session 18</span>
+            <span>&middot;</span>
+            <span>March 13, 2026</span>
+          </div>
+          <div class="chronicle-detail-h1">The Chronicles Refresh</div>
+          <div class="chronicle-detail-excerpt">Updating wireframes&hellip;</div>
+        </div>
+
+        <!-- Prev/Next nav -->
+        <div class="prev-next-nav">
+          <div class="prev-next-link">
+            <div class="prev-next-label">&larr; Previous</div>
+            <div class="prev-next-title">Session 17: Free Trial</div>
+          </div>
+          <div style="font-size:14px;font-family:monospace;opacity:0.3;">&#x16DF;</div>
+          <div class="prev-next-link" style="text-align:right;margin-left:auto;">
+            <div class="prev-next-label">Next &rarr;</div>
+            <div class="prev-next-title">(future)</div>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="chronicle-body">
+          <div class="chronicle-body-inner">
+            <div class="chronicle-section-h2">Context &amp; Motivation</div>
+            <div class="chronicle-paragraph">Wireframes refreshed for current implementation state&hellip;</div>
+            <div class="chronicle-code-block">// Code blocks: border-border bg-card</div>
+            <div class="chronicle-blockquote">&ldquo;Quoted prose — border-left: border-border&rdquo;</div>
+          </div>
+        </div>
+
+        <!-- Back link -->
+        <div class="chronicle-back"><span class="chronicle-back-link">&uarr; Back to All Sagas</span></div>
+        <div class="site-footer">
+          <div>&#x16A0; FENRIR LEDGER</div>
+          <div>Features &middot; Pricing &middot; Prose Edda</div>
+          <div style="text-align:right;">&copy; 2026</div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Dark: identical layout. Header bg=card (deep). MDX body bg=background (deep). border-border tokens apply throughout. chronicle.css scoped styles use --foreground / --muted-foreground CSS vars.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>4. Prev/Next Navigation &mdash; Detail</h2>
+
+  <div class="note">
+    <strong>Placement:</strong> Between header and content body (top position, Issue #427). One row, space-between.<br>
+    Prev = older entry (higher index in newest-first sorted array). Next = newer entry.<br>
+    When no prev or next: empty div flex-1 (placeholder). Rune divider &#x16DF; center, hidden on mobile (&lt;sm).
+  </div>
+
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT &mdash; Full Prev/Next</span>
+      <div style="border: 1px solid; padding: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+          <!-- Prev -->
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; max-width: 45%;">
+            <div style="font-family: monospace; font-size: 8px; text-transform: uppercase; letter-spacing: 0.2em;">&larr; Previous</div>
+            <div style="font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Session 17: Free Trial Marketing Page</div>
+            <div style="font-family: monospace; font-size: 8px; opacity: 0.5;">Feb 28, 2026</div>
+          </div>
+          <!-- Rune divider (hidden sm:block) -->
+          <div style="font-family: monospace; font-size: 14px; opacity: 0.3;" aria-hidden="true">&#x16DF;</div>
+          <!-- Next -->
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: right; max-width: 45%; margin-left: auto;">
+            <div style="font-family: monospace; font-size: 8px; text-transform: uppercase; letter-spacing: 0.2em;">Next &rarr;</div>
+            <div style="font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Session 19: (future saga)</div>
+            <div style="font-family: monospace; font-size: 8px; opacity: 0.5;">&mdash;</div>
+          </div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Light: border-b border-border. py-6 px-7. max-w-[880px] mx-auto. Link: text-foreground &rarr; text-primary transition-colors on group-hover. Rune: text-primary/30.</p>
+    </div>
+
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT &mdash; No Next (newest article)</span>
+      <div style="border: 1px solid; padding: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 2px; max-width: 45%;">
+            <div style="font-family: monospace; font-size: 8px; text-transform: uppercase;">&larr; Previous</div>
+            <div style="font-size: 11px; font-weight: 700;">Session 17: Free Trial</div>
+          </div>
+          <div style="font-family: monospace; font-size: 14px; opacity: 0.3;">&#x16DF;</div>
+          <!-- Empty flex-1 placeholder (no next) -->
+          <div style="flex: 1;"></div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">When no next: <code>&lt;div className="flex-1" /&gt;</code> placeholder. Rune stays centered. No &ldquo;no more articles&rdquo; text.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>5. MDX Content Body &mdash; Theme-Aware Prose Styles</h2>
+
+  <div class="note">
+    <strong>MDX rendering:</strong> <code>MDXRemote</code> with <code>format:&rsquo;md&rsquo;</code> + <code>rehype-raw</code>. Scoped to <code>.chronicle-page</code> CSS class.
+    HTML inline elements (inline header, inline footer) stripped via <code>stripInlineHeader()</code> / <code>stripInlineFooter()</code> (Issues #469, #486).
+    Leading whitespace stripped via <code>dedentHtml()</code> (Issue #407).
+  </div>
+
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT &mdash; Prose Styles</span>
+      <div style="border: 1px solid; padding: 14px; max-width: 100%;">
+        <div style="font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; border-bottom: 1px dashed; padding-bottom: 4px;">.chronicle-page CSS scope</div>
+
+        <div style="font-size: 16px; font-weight: 700; border-bottom: 1px solid; padding-bottom: 4px; margin-bottom: 6px;">H2 Section Heading (Cinzel 700)</div>
+        <div style="font-size: 13px; font-weight: 600; margin-bottom: 6px;">H3 Sub-heading (Cinzel 600)</div>
+
+        <div style="font-size: 12px; line-height: 1.7; margin-bottom: 8px;">
+          Body paragraph text (Source Serif 4, regular). Flowing prose about the development session. Technical context and decisions&hellip;
+        </div>
+
+        <div style="font-family: monospace; font-size: 10px; border: 1px solid; padding: 8px; line-height: 1.5; margin-bottom: 8px;">
+          // Code block (JetBrains Mono)<br>
+          // bg: bg-muted. border: border-border<br>
+          const example = &ldquo;highlighted&rdquo;;
+        </div>
+
+        <div style="border-left: 3px solid; padding-left: 8px; font-size: 11px; font-style: italic; margin-bottom: 8px; line-height: 1.6;">
+          Blockquote: atmospheric quote or Norse verse
+          (border-left: border-primary or border-border)
+        </div>
+
+        <div style="font-size: 10px; display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px;">
+          <div><strong>Status:</strong> Shipped &#x2713;</div>
+          <div><strong>Issue:</strong> #642</div>
+          <div><strong>Type:</strong> Wireframe update</div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;">
+          <span style="border: 1px solid; padding: 1px 5px; font-family: monospace; font-size: 9px; text-transform: uppercase;">wireframes</span>
+          <span style="border: 1px solid; padding: 1px 5px; font-family: monospace; font-size: 9px; text-transform: uppercase;">ux</span>
+          <span style="border: 1px solid; padding: 1px 5px; font-family: monospace; font-size: 9px; text-transform: uppercase;">theme</span>
+        </div>
+
+        <div style="font-size: 11px; display: flex; flex-direction: column; gap: 2px; padding-left: 14px; border-left: 2px solid;">
+          <div>&#x2022; Unordered list item &mdash; font-body text-sm</div>
+          <div>&#x2022; Second list item</div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Light: bg-muted on code blocks (light warm tint). Prose: text-foreground (dark on cream). Borders: border-border. Blockquote: border-primary/40.</p>
+    </div>
+
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK &mdash; Prose Styles</span>
+      <div style="border: 1px solid; padding: 14px;">
+        <div style="font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; border-bottom: 1px dashed; padding-bottom: 4px;">Same .chronicle-page scope &mdash; dark tokens</div>
+
+        <div style="font-size: 16px; font-weight: 700; border-bottom: 1px solid; padding-bottom: 4px; margin-bottom: 6px;">H2 Section Heading</div>
+
+        <div style="font-size: 12px; line-height: 1.7; margin-bottom: 8px;">Body paragraph &mdash; text-foreground (light on deep bg). Source Serif 4&hellip;</div>
+
+        <div style="font-family: monospace; font-size: 10px; border: 1px solid; padding: 8px; line-height: 1.5; margin-bottom: 8px;">
+          // Code block: bg-muted (dark variant)<br>
+          // border: border-border (subtle in dark)
+        </div>
+
+        <div style="border-left: 3px solid; padding-left: 8px; font-size: 11px; font-style: italic; margin-bottom: 8px;">
+          Blockquote &mdash; border-left border-primary/40 (same token)
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;">
+          <span style="border: 1px solid; padding: 1px 5px; font-family: monospace; font-size: 9px; text-transform: uppercase;">wireframes</span>
+          <span style="border: 1px solid; padding: 1px 5px; font-family: monospace; font-size: 9px; text-transform: uppercase;">ux</span>
+        </div>
+
+        <div style="font-size: 11px; display: flex; flex-direction: column; gap: 2px; padding-left: 14px; border-left: 2px solid;">
+          <div>&#x2022; List item &mdash; text-foreground (light)</div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Dark: identical structure. chronicle.css uses <code>var(--foreground)</code>, <code>var(--muted-foreground)</code>, <code>var(--border)</code>, <code>var(--primary)</code> CSS vars so all prose styles automatically adapt.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>6. Theme-Specific Differences Summary</h2>
+
+  <div class="note">
+    Chronicles pages have NO dual-realm crossfade content (no portrait images, no lore text). Theme changes are purely token-based surface changes via Tailwind CSS vars. The following table documents exactly which tokens change between themes.
+  </div>
+
+  <table class="spec-table">
+    <thead>
+      <tr><th>Element</th><th>Light (Lj&oacute;s&aacute;lfar)</th><th>Dark (Svart&aacute;lfar)</th><th>Token</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Page background</td><td>Cream warm</td><td>Deep cool</td><td>bg-background</td></tr>
+      <tr><td>Card background</td><td>Light warm</td><td>Deep panel</td><td>bg-card</td></tr>
+      <tr><td>Index header bg</td><td>bg-card (light)</td><td>bg-card (dark)</td><td>bg-card</td></tr>
+      <tr><td>Detail header bg</td><td>bg-card (light)</td><td>bg-card (dark)</td><td>bg-card</td></tr>
+      <tr><td>Primary text</td><td>Dark (near black)</td><td>Light (near white)</td><td>text-foreground</td></tr>
+      <tr><td>Secondary text</td><td>Medium gray warm</td><td>Medium gray cool</td><td>text-muted-foreground</td></tr>
+      <tr><td>Runes, accents</td><td>Primary gold/amber</td><td>Primary gold/amber</td><td>text-primary (same)</td></tr>
+      <tr><td>Borders</td><td>Subtle warm line</td><td>Subtle cool line</td><td>border-border</td></tr>
+      <tr><td>Card hover border</td><td>primary/50</td><td>primary/50</td><td>border-primary/50 (same)</td></tr>
+      <tr><td>Code block bg</td><td>bg-muted (light tint)</td><td>bg-muted (dark tint)</td><td>bg-muted</td></tr>
+      <tr><td>Blockquote border</td><td>border-primary/40</td><td>border-primary/40</td><td>Same token</td></tr>
+      <tr><td>Tags / badges</td><td>border-border bg-transparent</td><td>border-border bg-transparent</td><td>border-border</td></tr>
+      <tr><td>Prev/next link</td><td>text-foreground &rarr; text-primary</td><td>text-foreground &rarr; text-primary</td><td>Same tokens</td></tr>
+      <tr><td>Rune center divider</td><td>text-primary/30</td><td>text-primary/30</td><td>Same token</td></tr>
+      <tr><td>Back link</td><td>text-muted-foreground &rarr; text-primary</td><td>text-muted-foreground &rarr; text-primary</td><td>Same tokens</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2>7. Mobile 375px Responsive</h2>
+
+  <div class="note">
+    Breakpoints: &lt;640px (mobile) / 640&ndash;1024px (tablet) / &gt;1024px (desktop).<br>
+    Index card grid: 1-col mobile, 2-col tablet (md:), 3-col desktop (lg:).<br>
+    Max-width: 1200px centered on index. 880px on article detail (px-7 padding).<br>
+    Prev/Next rune divider: hidden on mobile (&lt;sm:hidden). Prev/Next links: flex-1, truncated titles.
+  </div>
+
+  <div style="max-width: 375px; border: 2px solid; padding: 12px; margin-bottom: 24px;">
+    <div class="mobile-note">375px Mobile Viewport</div>
+
+    <!-- Mobile nav -->
+    <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid;padding:8px;margin-bottom:6px;font-size:10px;">
+      <span style="font-weight:700;">&#x16A0; FENRIR</span>
+      <span>&#x2261; Menu</span>
+    </div>
+
+    <!-- Index header (mobile) -->
+    <div style="border:1px solid;padding:10px;text-align:center;margin-bottom:6px;">
+      <div style="font-size:18px;font-weight:900;text-transform:uppercase;">Prose Edda</div>
+      <div style="font-size:10px;font-style:italic;margin-top:4px;">The sagas of the forge&hellip;</div>
+    </div>
+
+    <!-- Card grid (1-col on mobile) -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:6px;">
+      <div class="chronicle-card" style="font-size:10px;">
+        <div class="chronicle-card-header">
+          <div style="font-size:18px;">&#x16CF;</div>
+          <div class="chronicle-date">Mar 13, 2026</div>
+        </div>
+        <div class="chronicle-title" style="font-size:12px;">Session 18: The Chronicles Refresh</div>
+        <div class="chronicle-excerpt" style="font-size:10px;">Updating wireframes&hellip;</div>
+      </div>
+      <div class="chronicle-card" style="font-size:10px;">
+        <div class="chronicle-card-header">
+          <div style="font-size:18px;">&#x16B2;</div>
+          <div class="chronicle-date">Feb 28, 2026</div>
+        </div>
+        <div class="chronicle-title" style="font-size:12px;">Session 17: Free Trial</div>
+      </div>
+    </div>
+
+    <!-- Article detail mobile: compact header -->
+    <div style="font-family:monospace;font-size:9px;text-transform:uppercase;margin-bottom:4px;">Article Detail &mdash; mobile header</div>
+    <div style="border:1px solid;padding:10px;text-align:center;margin-bottom:6px;">
+      <div style="font-family:monospace;font-size:9px;text-transform:uppercase;margin-bottom:4px;">&#x16CF; &middot; Session 18 &middot; Mar 13, 2026</div>
+      <div style="font-size:14px;font-weight:700;">The Chronicles Refresh</div>
+    </div>
+
+    <!-- Prev/Next mobile (no rune divider) -->
+    <div style="font-family:monospace;font-size:9px;text-transform:uppercase;margin-bottom:4px;">Prev/Next nav &mdash; mobile (no center rune)</div>
+    <div style="border:1px solid;padding:8px;display:flex;justify-content:space-between;margin-bottom:6px;font-size:10px;">
+      <div>&larr; Prev<br><strong style="font-size:9px;">Session 17</strong></div>
+      <!-- rune hidden on mobile -->
+      <div style="text-align:right;">Next &rarr;<br><strong style="font-size:9px;">Session 19</strong></div>
+    </div>
+
+    <!-- MDX body mobile (max-width: 880px but full width on mobile) -->
+    <div style="border:1px solid;padding:8px;font-size:10px;margin-bottom:6px;">
+      MDX prose body &mdash; full width on mobile<br>
+      Padding: px-7 (28px) each side<br>
+      Source Serif: readable at 16px base
+    </div>
+
+    <!-- Back link -->
+    <div style="border-top:1px solid;padding:8px;text-align:center;font-family:monospace;font-size:9px;text-transform:uppercase;">
+      &uarr; Back to All Sagas
+    </div>
+  </div>
+
+  <table class="spec-table">
+    <thead>
+      <tr><th>Breakpoint</th><th>Nav</th><th>Index grid</th><th>Detail max-w</th><th>Prev/next rune</th><th>Card excerpt</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>&lt;640px (375px min)</td><td>Hamburger</td><td>1-col</td><td>Full width, px-7</td><td>Hidden</td><td>line-clamp-3</td></tr>
+      <tr><td>640&ndash;1024px</td><td>Links visible</td><td>2-col (md:)</td><td>880px centered</td><td>Visible</td><td>line-clamp-3</td></tr>
+      <tr><td>&gt;1024px</td><td>Full nav + CTA</td><td>3-col (lg:)</td><td>880px centered</td><td>Visible</td><td>line-clamp-3</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2>8. Implementation Reference</h2>
+
+  <table class="spec-table">
+    <thead>
+      <tr><th>File / Component</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>src/app/(marketing)/chronicles/page.tsx</code></td><td>Index page. <code>getAllChronicles()</code> sorted newest-first. Static generation.</td></tr>
+      <tr><td><code>src/app/(marketing)/chronicles/[slug]/page.tsx</code></td><td>Article detail. Compact header (no hero). Prev/Next above content. MDXRemote rsc.</td></tr>
+      <tr><td><code>src/app/(marketing)/chronicles/chronicle.css</code></td><td>Scoped prose styles for .chronicle-page. Uses CSS vars for theme.</td></tr>
+      <tr><td><code>src/lib/chronicles.ts</code></td><td><code>getChronicleBySlug()</code>, <code>getAllChronicles()</code>, <code>getAllChroniclesSlugs()</code>.</td></tr>
+      <tr><td><code>stripInlineHeader()</code></td><td>Removes duplicate &lt;header&gt; from MDX body (Issue #469).</td></tr>
+      <tr><td><code>stripInlineFooter()</code></td><td>Removes duplicate &lt;footer&gt; from MDX body, global flag (Issue #486).</td></tr>
+      <tr><td><code>dedentHtml()</code></td><td>Strips leading whitespace to prevent markdown code-block interpretation (Issue #407).</td></tr>
+      <tr><td>Theme toggle</td><td>Rotary single-click in nav (via sidebar-removal wireframe). <code>next-themes</code>.</td></tr>
+      <tr><td>No dual-realm crossfade</td><td>Chronicles are dev logs, not lore content. Pure token-based theming only.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>WCAG 2.1 AA &mdash; Chronicles Pages</strong>
+    Both themes: 4.5:1 minimum for prose body text. Source Serif 4 at 14px (sm: 16px) base.<br>
+    Prev/Next links: title is the visible label; <code>aria-label</code> not required but session number in title provides context.<br>
+    Rune glyphs: <code>aria-hidden=&ldquo;true&rdquo;</code> on all decorative runes.<br>
+    Back link: <code>font-mono text-[0.65rem]</code> at minimum &mdash; verify 4.5:1 against bg-background.<br>
+    Code blocks: monospace at 10px min &mdash; use 12px minimum for WCAG compliance.<br>
+    Interactive targets (cards, prev/next links, back link): min 44&times;44px touch target.
+  </div>
+
 </body>
 </html>
