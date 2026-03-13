@@ -31,14 +31,14 @@ import Link from "next/link";
 
 /** Rune characters (Elder Futhark). */
 const RUNE = {
-  fehu: "\u16A0",
-  ehwaz: "\u16D6",
-  naudiz: "\u16BE",
-  raidho: "\u16B1",
-  isa: "\u16C1",
-  laguz: "\u16DA",
-  tiwaz: "\u16CF",
-  hagalaz: "\u16BA",
+  fehu: "ᚠ",
+  ehwaz: "ᛖ",
+  naudiz: "ᚾ",
+  raidho: "ᚱ",
+  isa: "ᛁ",
+  laguz: "ᛚ",
+  tiwaz: "ᛏ",
+  hagalaz: "ᚺ",
 } as const;
 
 /** FENRIR in Elder Futhark runes. */

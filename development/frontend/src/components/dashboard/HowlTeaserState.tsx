@@ -35,7 +35,7 @@ const SAMPLE_ALERTS: SampleAlert[] = [
   {
     id: "sample-1",
     urgencyLabel: "ANNUAL FEE \u00B7 7 DAYS REMAINING",
-    rune: "\u16A6",
+    rune: "ᚦ",
     issuer: "CHASE SAPPHIRE",
     cardName: "Preferred Reserve",
     amount: "$95 annual fee due Mar 15",
@@ -44,7 +44,7 @@ const SAMPLE_ALERTS: SampleAlert[] = [
   {
     id: "sample-2",
     urgencyLabel: "PROMO EXPIRING \u00B7 14 DAYS REMAINING",
-    rune: "\u16B7",
+    rune: "ᚷ",
     issuer: "AMEX GOLD",
     cardName: "Spend $4,000 by Apr 1",
     amount: "$2,100 remaining to unlock 75,000 pts",
@@ -53,7 +53,7 @@ const SAMPLE_ALERTS: SampleAlert[] = [
   {
     id: "sample-3",
     urgencyLabel: "ANNUAL FEE \u00B7 30 DAYS REMAINING",
-    rune: "\u16B9",
+    rune: "ᚹ",
     issuer: "CAPITAL ONE",
     cardName: "Venture X Rewards",
     amount: "$395 annual fee due Apr 2",
