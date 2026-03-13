@@ -16,33 +16,124 @@
  * @see Issue #623
  */
 
-import { test, expect, devices } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+// ---------------------------------------------------------------------------
+// Test Helpers — API route mocking
+// ---------------------------------------------------------------------------
+
+/**
+ * Creates a fake JWT token with the given claims.
+ * This is a test-only helper — the token is not cryptographically valid
+ * but has the correct structure for `decodeJwtPayload` in refresh-session.ts.
+ */
+function makeFakeJwt(claims: Record<string, unknown>): string {
+  const header = btoa(JSON.stringify({ alg: "none", typ: "JWT" }));
+  const payload = btoa(JSON.stringify(claims));
+  return `${header}.${payload}.fake-signature`;
+}
+
+/** A fake session object that satisfies FenrirSession and passes isTokenStale(). */
+function makeFakeSession() {
+  const futureExp = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+  const idToken = makeFakeJwt({
+    sub: "test-user-123",
+    email: "test@fenrir.dev",
+    name: "Test User",
+    picture: "https://example.com/avatar.png",
+    exp: futureExp,
+  });
+
+  return {
+    access_token: "fake-access-token",
+    id_token: idToken,
+    refresh_token: "fake-refresh-token",
+    expires_at: Date.now() + 3600 * 1000, // 1 hour from now
+    user: {
+      sub: "test-user-123",
+      email: "test@fenrir.dev",
+      name: "Test User",
+      picture: "https://example.com/avatar.png",
+    },
+  };
+}
+
+/**
+ * Sets up API route mocks and localStorage for a given trial status.
+ *
+ * Must be called BEFORE page.goto() or page.reload() so the route
+ * interceptors are in place when the app fetches /api/trial/status.
+ */
+async function setupTrialMocks(
+  page: Page,
+  opts: {
+    trialStatus: "expired" | "active" | "converted" | "none";
+    remainingDays: number;
+    modalAlreadyShown?: boolean;
+  },
+) {
+  // 1. Intercept POST /api/trial/status — the hook's data source
+  await page.route("**/api/trial/status", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        status: opts.trialStatus,
+        remainingDays: opts.remainingDays,
+        startDate: "2026-02-25",
+      }),
+    });
+  });
+
+  // 2. Intercept GET /api/stripe/membership — entitlement context
+  await page.route("**/api/stripe/membership*", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        tier: "thrall",
+        active: false,
+        platform: "stripe",
+        checkedAt: new Date().toISOString(),
+      }),
+    });
+  });
+
+  // 3. Set fake session in localStorage so ensureFreshToken() returns a token
+  //    and set/clear the modal-shown flag.
+  //    We need to navigate first to have a page context, then set localStorage.
+  //    But we also need routes set before goto. So we use addInitScript.
+  const session = makeFakeSession();
+  const sessionJson = JSON.stringify(session);
+  const modalShown = opts.modalAlreadyShown ? "true" : null;
+
+  await page.addInitScript(
+    ({ sessionJson, modalShown, householdId }) => {
+      localStorage.setItem("fenrir:auth", sessionJson);
+      // Set anonymous householdId for storage.ts
+      localStorage.setItem("fenrir:household", householdId);
+      if (modalShown) {
+        localStorage.setItem("fenrir:trial-expiry-modal-shown", modalShown);
+      } else {
+        localStorage.removeItem("fenrir:trial-expiry-modal-shown");
+      }
+    },
+    { sessionJson, modalShown, householdId: "test-user-123" },
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Test Setup & Teardown
 // ---------------------------------------------------------------------------
 
 test.describe("Trial Expiry Modal (Issue #623)", () => {
-  test.beforeEach(async ({ page }) => {
-    // Navigate to authenticated ledger page
-    await page.goto("/ledger");
-  });
-
   // =========================================================================
   // AC1: Modal Display Rules
   // =========================================================================
 
   test("AC1.1: Modal displays once when trial expires (day 30+)", async ({ page }) => {
-    // Set up trial as expired in localStorage to simulate day 30+ state
-    await page.evaluate(() => {
-      // Simulate trial status is expired
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    // Reload to trigger modal check
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     // Modal should be visible
     const modal = page.getByRole("dialog", { name: /trial expiry/i });
@@ -56,14 +147,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   test("AC1.2: Modal does NOT display during active trial (days remaining > 0)", async ({
     page,
   }) => {
-    // Set trial as active with days remaining
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "active");
-      localStorage.setItem("fenrir:trial-days-remaining", "15");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "active", remainingDays: 15 });
+    await page.goto("/ledger");
 
     // Modal should not be visible
     const modal = page.getByRole("dialog", { name: /trial expiry/i });
@@ -73,14 +158,12 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   test("AC1.3: Modal does NOT display if already shown once (localStorage flag)", async ({
     page,
   }) => {
-    // Set trial as expired but mark modal as already shown
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.setItem("fenrir:trial-expiry-modal-shown", "true");
+    await setupTrialMocks(page, {
+      trialStatus: "expired",
+      remainingDays: 0,
+      modalAlreadyShown: true,
     });
-
-    await page.reload();
+    await page.goto("/ledger");
 
     // Modal should NOT be visible
     const modal = page.getByRole("dialog", { name: /trial expiry/i });
@@ -90,14 +173,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   test("AC1.4: Modal does NOT display for converted users (subscription active)", async ({
     page,
   }) => {
-    // Set trial as converted
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "converted");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "converted", remainingDays: 0 });
+    await page.goto("/ledger");
 
     // Modal should NOT be visible
     const modal = page.getByRole("dialog", { name: /trial expiry/i });
@@ -111,13 +188,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   test("AC2.1: Modal displays value recap (cards tracked, fees monitored, potential savings)", async ({
     page,
   }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     // Check for value recap section
     const recap = page.getByText(/What You Built/i);
@@ -138,13 +210,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
     // Set viewport to desktop size
     await page.setViewportSize({ width: 1280, height: 1024 });
 
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     // Feature comparison should be visible on desktop
     const comparison = page.getByText(/What Changes/i);
@@ -162,27 +229,21 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
     // Set viewport to mobile size
     await page.setViewportSize({ width: 375, height: 667 });
 
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
-    await page.reload();
+    // Modal should be visible
+    const modal = page.getByRole("dialog", { name: /trial expiry/i });
+    await expect(modal).toBeVisible();
 
-    // Feature comparison should be hidden on mobile
+    // Feature comparison should be hidden on mobile (hidden sm:block)
     const comparison = page.getByText(/What Changes/i);
     await expect(comparison).toBeHidden();
   });
 
   test("AC2.4: Modal displays data safety reassurance message", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     // Check for safety message
     const safety = page.getByText(/Your card data is preserved/i);
@@ -194,13 +255,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   // =========================================================================
 
   test("AC3.1: Modal displays Subscribe button ($3.99/month)", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     // Subscribe button should be visible
     const subscribeBtn = page.getByRole("button", { name: /Subscribe for \$3\.99\/month/i });
@@ -208,13 +264,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   });
 
   test("AC3.2: Modal displays Continue with free plan button", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     // Continue button should be visible
     const continueBtn = page.getByRole("button", { name: /Continue with free plan/i });
@@ -222,13 +273,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   });
 
   test("AC3.3: Both buttons have equal visual weight", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     const subscribeBtn = page.getByRole("button", { name: /Subscribe for \$3\.99\/month/i });
     const continueBtn = page.getByRole("button", { name: /Continue with free plan/i });
@@ -247,13 +293,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   // =========================================================================
 
   test("AC4.1: Continue with free plan button closes modal and shows toast", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     // Modal should be visible initially
     const modal = page.getByRole("dialog", { name: /trial expiry/i });
@@ -272,13 +313,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   });
 
   test("AC4.2: Modal is marked as shown in localStorage after dismissal", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     // Click continue button
     const continueBtn = page.getByRole("button", { name: /Continue with free plan/i });
@@ -290,21 +326,22 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   });
 
   test("AC4.3: Subscribe button initiates Stripe checkout flow", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+
+    // Also mock the Stripe checkout endpoint to prevent actual redirect
+    await page.route("**/api/stripe/checkout", (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ url: "https://checkout.stripe.com/test" }),
+      });
     });
 
-    await page.reload();
-
-    // Mock Stripe to avoid actual redirect
-    const pagePromise = page.context().waitForEvent("page");
+    await page.goto("/ledger");
 
     const subscribeBtn = page.getByRole("button", { name: /Subscribe for \$3\.99\/month/i });
 
-    // Don't actually click if it would navigate away (Stripe checkout)
-    // Instead, verify button is clickable and properly configured
+    // Verify button is clickable and properly configured
     await expect(subscribeBtn).toBeEnabled();
     await expect(subscribeBtn).toBeVisible();
   });
@@ -314,13 +351,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   // =========================================================================
 
   test("AC5.1: ESC key closes the modal (same as Continue button)", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     const modal = page.getByRole("dialog", { name: /trial expiry/i });
     await expect(modal).toBeVisible();
@@ -337,32 +369,30 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   });
 
   test("AC5.2: Focus trap — focus starts on first focusable element", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
-    await page.reload();
+    // Wait for the modal to be visible first
+    const modal = page.getByRole("dialog", { name: /trial expiry/i });
+    await expect(modal).toBeVisible();
 
-    // The first focusable element should be the Subscribe button
-    const subscribeBtn = page.getByRole("button", { name: /Subscribe for \$3\.99\/month/i });
-    const focused = page.evaluate(() => {
+    // The first focusable element should have focus (close button or subscribe)
+    const focused = await page.evaluate(() => {
       const el = document.activeElement;
-      return el?.textContent?.includes("Subscribe") || false;
+      // The close button (x) is the first focusable element in the modal DOM
+      return (
+        el?.tagName === "BUTTON" &&
+        (el?.textContent?.includes("Subscribe") ||
+          el?.getAttribute("aria-label")?.includes("Close"))
+      );
     });
 
-    await expect.soft(focused).resolves.toBeTruthy();
+    expect.soft(focused).toBeTruthy();
   });
 
   test("AC5.3: Close button is keyboard accessible", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     // Tab to close button (top-right X)
     const closeBtn = page.getByLabel("Close trial expiry modal");
@@ -377,13 +407,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   test("AC6.1: Clicking backdrop does NOT close modal (intentional per spec)", async ({
     page,
   }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     const modal = page.getByRole("dialog", { name: /trial expiry/i });
     await expect(modal).toBeVisible();
@@ -404,13 +429,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   });
 
   test("AC6.2: Modal does not dismiss on background click", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     const modal = page.getByRole("dialog");
     const initiallyVisible = await modal.isVisible();
@@ -431,13 +451,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   test("AC7.1: Modal is responsive on mobile (375px width)", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
 
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     const modal = page.getByRole("dialog");
     await expect(modal).toBeVisible();
@@ -453,13 +468,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   test("AC7.2: Modal is responsive on tablet (768px width)", async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
 
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
+    await page.goto("/ledger");
 
     const modal = page.getByRole("dialog");
     await expect(modal).toBeVisible();
@@ -474,28 +484,31 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   // =========================================================================
 
   test("AC8.1: Howl feature is locked after trial expires", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-    });
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
 
-    // Navigate to a page that checks Howl availability
+    // Dismiss the modal first so we can interact with the page
     await page.goto("/ledger");
+    const modal = page.getByRole("dialog", { name: /trial expiry/i });
+    if (await modal.isVisible()) {
+      await page.keyboard.press("Escape");
+      await expect(modal).not.toBeVisible();
+    }
 
     // Howl should not be accessible (not shown in tabs or locked)
-    // This is a gate check - Howl should only be visible during active trial or for Karl users
-    // Checking that the feature is properly gated is part of the feature gate tests
     const howlTab = page.locator('button:has-text("Howl")');
     await expect.soft(howlTab).not.toBeEnabled();
   });
 
   test("AC8.2: Valhalla feature is locked after trial expires", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-    });
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
 
+    // Dismiss the modal first so we can interact with the page
     await page.goto("/ledger");
+    const modal = page.getByRole("dialog", { name: /trial expiry/i });
+    if (await modal.isVisible()) {
+      await page.keyboard.press("Escape");
+      await expect(modal).not.toBeVisible();
+    }
 
     // Valhalla should not be accessible
     const valhallTab = page.locator('button:has-text("Valhalla")');
@@ -509,13 +522,15 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   test("AC9.1: Thrall users can only see 5 active cards after trial expires", async ({
     page,
   }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.setItem("fenrir:user-tier", "thrall");
-    });
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
 
+    // Dismiss the modal first
     await page.goto("/ledger");
+    const modal = page.getByRole("dialog", { name: /trial expiry/i });
+    if (await modal.isVisible()) {
+      await page.keyboard.press("Escape");
+      await expect(modal).not.toBeVisible();
+    }
 
     // Count visible cards in the dashboard
     const cards = page.locator('[data-testid="card-item"]');
@@ -532,13 +547,15 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   });
 
   test("AC9.2: Upgrade prompt visible when Thrall user hits 5-card limit", async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.setItem("fenrir:user-tier", "thrall");
-    });
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
 
+    // Dismiss the modal first
     await page.goto("/ledger");
+    const modal = page.getByRole("dialog", { name: /trial expiry/i });
+    if (await modal.isVisible()) {
+      await page.keyboard.press("Escape");
+      await expect(modal).not.toBeVisible();
+    }
 
     // Check for upgrade prompt related to card limits
     const prompt = page.getByText(/5 card limit|upgrade to karl|unlimited cards/i);
@@ -552,13 +569,14 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   test("AC10.1: Settings shows Upgrade to Karl option when trial is expired", async ({
     page,
   }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "expired");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.setItem("fenrir:user-tier", "thrall");
-    });
-
+    await setupTrialMocks(page, { trialStatus: "expired", remainingDays: 0 });
     await page.goto("/ledger/settings");
+
+    // Dismiss modal if it appears on settings page too
+    const modal = page.getByRole("dialog", { name: /trial expiry/i });
+    if (await modal.isVisible().catch(() => false)) {
+      await page.keyboard.press("Escape");
+    }
 
     // Should show upgrade section
     const upgradeSection = page.getByText(/upgrade to karl|upgrade|subscribe/i).filter({
@@ -588,13 +606,8 @@ test.describe("Trial Expiry Modal (Issue #623)", () => {
   test("AC11.2: Converted users do not see expiry modal even if trial is expired", async ({
     page,
   }) => {
-    await page.evaluate(() => {
-      localStorage.setItem("fenrir:trial-status", "converted");
-      localStorage.setItem("fenrir:trial-days-remaining", "0");
-      localStorage.removeItem("fenrir:trial-expiry-modal-shown");
-    });
-
-    await page.reload();
+    await setupTrialMocks(page, { trialStatus: "converted", remainingDays: 0 });
+    await page.goto("/ledger");
 
     // Modal should NOT display for converted users
     const modal = page.getByRole("dialog", { name: /trial expiry/i });
