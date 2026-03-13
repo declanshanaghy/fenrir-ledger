@@ -82,10 +82,10 @@ test.describe("Issue #628 — Settings Page Restructuring", () => {
   }) => {
     await navigateToSettings(page);
 
-    // StripeSettings renders a section with "Subscription Management" heading
+    // StripeSettings renders a section with "Subscription" heading
     const subscriptionHeading = page.getByRole("heading", {
       level: 2,
-      name: /Subscription Management/i,
+      name: /Subscription/i,
     });
     await expect(subscriptionHeading).toBeVisible();
   });
@@ -118,7 +118,7 @@ test.describe("Issue #628 — Settings Page Restructuring", () => {
     // Both sections should be visible
     const subscriptionHeading = page.getByRole("heading", {
       level: 2,
-      name: /Subscription Management/i,
+      name: /Subscription/i,
     });
     const tabGuidesSection = page.locator(
       'section[aria-label="Restore Tab Guides"]'
@@ -149,7 +149,7 @@ test.describe("Issue #628 — Settings Page Restructuring", () => {
     // Both sections should still be visible but stacked
     const subscriptionHeading = page.getByRole("heading", {
       level: 2,
-      name: /Subscription Management/i,
+      name: /Subscription/i,
     });
     const tabGuidesSection = page.locator(
       'section[aria-label="Restore Tab Guides"]'
