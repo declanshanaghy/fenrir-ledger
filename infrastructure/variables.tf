@@ -57,9 +57,9 @@ variable "deploy_service_account" {
 }
 
 variable "billing_account_id" {
-  description = "GCP billing account ID (format: XXXXXX-XXXXXX-XXXXXX)"
+  description = "GCP billing account ID (format: XXXXXX-XXXXXX-XXXXXX). If empty, billing budget is skipped."
   type        = string
-  # No default — must be provided at apply time
+  default     = ""
 }
 
 variable "cost_alert_amount" {

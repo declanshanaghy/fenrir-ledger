@@ -64,7 +64,6 @@ resource "google_container_cluster" "autopilot" {
       "POD",
       "DEPLOYMENT",
       "STATEFUL_SET",
-      "DAEMON_SET",
       "HPA",
     ]
 
