@@ -147,3 +147,12 @@ back onto `main`. Full cycle, no pausing.
 
 If a subagent is idle after 2 pings / ~60s, kill it and spawn a fresh one.
 Never do the subagent's work as the orchestrator.
+
+---
+
+## No File Structure Trees in Documentation (UNBREAKABLE)
+
+Never include file/directory tree listings in READMEs or architecture docs. They go
+stale immediately and duplicate what `ls`/`find`/`tree` already provide. Instead,
+describe subsystems by their **functionality** — what they do, not where they live.
+The codebase is the source of truth for file structure.
