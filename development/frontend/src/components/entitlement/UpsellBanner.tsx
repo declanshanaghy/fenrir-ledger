@@ -120,58 +120,109 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
 
   return (
     <div
-      className="relative border border-gold/20 bg-background/60 p-4 md:px-5 flex flex-col md:flex-row gap-3 md:items-center rounded-sm"
+      className="border border-gold/20 bg-background/60 rounded-sm"
       role="region"
       aria-label="Upgrade your subscription"
     >
-      {/* Dismiss button */}
-      <button
-        type="button"
-        onClick={handleDismiss}
-        className="absolute top-2 right-2 w-8 h-8 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-        aria-label="Dismiss upgrade banner"
-      >
-        <span aria-hidden="true" className="text-base">&times;</span>
-      </button>
+      {/* Desktop layout: single row with inline dismiss */}
+      <div className="hidden md:flex items-center gap-3 px-5 py-4">
+        {/* Content */}
+        <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+          {/* Voice 2: atmospheric */}
+          <span className="text-[13px] italic text-muted-foreground font-body">
+            The wolf hunts greater prey for those who forge the bond.
+          </span>
+          {/* Voice 1: functional value prop */}
+          <span className="text-sm text-muted-foreground leading-snug font-body">
+            Upgrade to Karl for cloud sync, priority alerts, and advanced analytics -- $3.99/month.
+          </span>
+        </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col gap-0.5 pr-8 md:pr-0">
-        {/* Voice 2: atmospheric (hidden on mobile) */}
-        <span className="hidden sm:block text-[13px] italic text-muted-foreground font-body">
-          The wolf hunts greater prey for those who forge the bond.
-        </span>
-        {/* Voice 1: functional value prop */}
+        {/* CTA + Dismiss inline */}
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={handleStripeUpgrade}
+            disabled={isSubscribing}
+            aria-busy={isSubscribing || undefined}
+            aria-disabled={isSubscribing || undefined}
+            className={[
+              "px-3.5 py-1.5 text-sm font-heading font-bold tracking-wide",
+              "border border-gold/50 text-gold",
+              "hover:bg-gold/10 hover:brightness-110",
+              "active:scale-[0.97] active:brightness-90",
+              "transition-[transform,filter,background-color,color] duration-150 ease-out",
+              "rounded-sm whitespace-nowrap min-h-[36px]",
+              "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
+            ].join(" ")}
+          >
+            {isSubscribing ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="btn-spinner" aria-hidden="true" />
+                Redirecting...
+              </span>
+            ) : (
+              "Upgrade to Karl"
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            style={{ minWidth: 44, minHeight: 44 }}
+            aria-label="Dismiss upgrade banner"
+          >
+            <span aria-hidden="true" className="text-base">&times;</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile layout: stacked with dismiss at top-right */}
+      <div className="md:hidden relative px-4 py-4 pr-14 flex flex-col gap-3">
+        {/* Voice 1: functional value prop (atmospheric hidden on mobile) */}
         <span className="text-sm text-muted-foreground leading-snug font-body">
           Upgrade to Karl for cloud sync, priority alerts, and advanced analytics -- $3.99/month.
         </span>
-      </div>
 
-      {/* CTA */}
-      <button
-        type="button"
-        onClick={handleStripeUpgrade}
-        disabled={isSubscribing}
-        aria-busy={isSubscribing || undefined}
-        aria-disabled={isSubscribing || undefined}
-        className={[
-          "self-start md:self-center px-3.5 py-1.5 text-sm font-heading font-bold tracking-wide",
-          "border border-gold/50 text-gold",
-          "hover:bg-gold/10 hover:brightness-110",
-          "active:scale-[0.97] active:brightness-90",
-          "transition-[transform,filter,background-color,color] duration-150 ease-out",
-          "rounded-sm whitespace-nowrap min-h-[36px]",
-          "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
-        ].join(" ")}
-      >
-        {isSubscribing ? (
-          <span className="inline-flex items-center gap-2">
-            <span className="btn-spinner" aria-hidden="true" />
-            Redirecting...
-          </span>
-        ) : (
-          "Upgrade to Karl"
-        )}
-      </button>
+        {/* CTA — left-aligned, well away from the dismiss X */}
+        <button
+          type="button"
+          onClick={handleStripeUpgrade}
+          disabled={isSubscribing}
+          aria-busy={isSubscribing || undefined}
+          aria-disabled={isSubscribing || undefined}
+          className={[
+            "self-start px-3.5 py-1.5 text-sm font-heading font-bold tracking-wide",
+            "border border-gold/50 text-gold",
+            "hover:bg-gold/10 hover:brightness-110",
+            "active:scale-[0.97] active:brightness-90",
+            "transition-[transform,filter,background-color,color] duration-150 ease-out",
+            "rounded-sm whitespace-nowrap min-h-[36px]",
+            "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
+          ].join(" ")}
+        >
+          {isSubscribing ? (
+            <span className="inline-flex items-center gap-2">
+              <span className="btn-spinner" aria-hidden="true" />
+              Redirecting...
+            </span>
+          ) : (
+            "Upgrade to Karl"
+          )}
+        </button>
+
+        {/* Dismiss — absolute top-right, no overlap with CTA */}
+        <button
+          type="button"
+          onClick={handleDismiss}
+          className="absolute top-2 right-2 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          style={{ minWidth: 44, minHeight: 44 }}
+          aria-label="Dismiss upgrade banner"
+        >
+          <span aria-hidden="true" className="text-base">&times;</span>
+        </button>
+      </div>
     </div>
   );
 }
