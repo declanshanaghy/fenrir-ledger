@@ -117,6 +117,7 @@ function TierCardsSection() {
             </p>
             <ul className="flex flex-col gap-3" aria-label="Thrall tier features">
               {[
+                "Up to 5 cards — track your most important cards free",
                 "Add Your Cards — manual card entry with all key details",
                 "The Dashboard — all active cards at a glance",
                 "Card Notes — free-text notes on any card",
@@ -203,6 +204,7 @@ function TierCardsSection() {
             </p>
             <ul className="flex flex-col gap-3" aria-label="Karl tier premium features">
               {[
+                { name: "Unlimited Cards", desc: "no cap on how many cards you can track" },
                 { name: "Smart Import", desc: "AI extracts card data from spreadsheets" },
                 { name: "Annual Fee Tracking", desc: "60-day advance warnings before every fee date" },
                 { name: "Sign-Up Bonus Tracking", desc: "minimum spend deadlines and threshold monitoring" },

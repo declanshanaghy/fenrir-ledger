@@ -225,7 +225,7 @@
           <p class="note">
             After trial on Thrall:
             - The Howl tab: lock icon + KARL badge. Click opens KarlUpsellDialog.
-            - Active tab: accessible. Shows up to 3 cards (Thrall limit).
+            - Active tab: accessible. Shows up to 5 cards (Thrall limit).
             - The Hunt tab: accessible (no Karl gate on basic tracking).
             - Valhalla tab: lock icon + KARL badge. Click opens KarlUpsellDialog.
             - All tab: accessible, but only shows Thrall-visible cards.
@@ -244,10 +244,10 @@
          SCENARIO 3: Card Limit — Cards Beyond Thrall Limit
          ================================================================ -->
     <section class="scenario">
-      <div class="scenario-label">Scenario 3: Card Limit — 12 cards on file, 3 visible (Thrall limit)</div>
+      <div class="scenario-label">Scenario 3: Card Limit — 12 cards on file, 5 visible (Thrall limit)</div>
 
       <div class="card-grid">
-        <!-- Visible cards (within Thrall limit) -->
+        <!-- Visible cards (within Thrall 5-card limit) -->
         <div class="card-stub">
           <div class="card-stub-title">Chase Sapphire Preferred</div>
           <div class="card-stub-meta">Active — $95 annual fee</div>
@@ -260,22 +260,16 @@
           <div class="card-stub-title">Citi Double Cash</div>
           <div class="card-stub-meta">Active — $0 annual fee</div>
         </div>
+        <div class="card-stub">
+          <div class="card-stub-title">Capital One Venture X</div>
+          <div class="card-stub-meta">Active — $395 annual fee</div>
+        </div>
+        <div class="card-stub">
+          <div class="card-stub-title">Chase Freedom Unlimited</div>
+          <div class="card-stub-meta">Active — $0 annual fee</div>
+        </div>
 
-        <!-- Locked cards (beyond Thrall limit) -->
-        <div class="card-stub card-locked">
-          <div class="card-stub-title" style="opacity: 0.3;">Capital One Venture X</div>
-          <div class="card-stub-meta" style="opacity: 0.3;">Active — $395 annual fee</div>
-          <div class="card-locked-overlay">
-            [lock] Upgrade to view
-          </div>
-        </div>
-        <div class="card-stub card-locked">
-          <div class="card-stub-title" style="opacity: 0.3;">Chase Freedom Unlimited</div>
-          <div class="card-stub-meta" style="opacity: 0.3;">Active — $0 annual fee</div>
-          <div class="card-locked-overlay">
-            [lock] Upgrade to view
-          </div>
-        </div>
+        <!-- Locked cards (beyond Thrall 5-card limit) -->
         <div class="card-stub card-locked">
           <div class="card-stub-title" style="opacity: 0.3;">+7 more cards</div>
           <div class="card-stub-meta" style="opacity: 0.3;">Requires Karl</div>
@@ -287,9 +281,9 @@
 
       <div class="annotation-box">
         <dt>Card visibility rules (Thrall):</dt>
-        <dd>First 3 cards (by creation date) are fully visible and editable</dd>
-        <dd>Cards 4-N are shown as locked tiles with blurred/dimmed content</dd>
-        <dd>If user has 6+ locked cards, cards 4-5 show individually, card 6 shows "+N more cards"</dd>
+        <dd>First 5 cards (by creation date) are fully visible and editable</dd>
+        <dd>Cards 6-N are shown as locked tiles with blurred/dimmed content</dd>
+        <dd>If user has 2+ locked cards, card 6 shows individually, card 7+ shows "+N more cards"</dd>
         <dd>Clicking any locked card opens KarlUpsellDialog</dd>
 
         <dt>Sort order for visibility:</dt>
@@ -302,8 +296,8 @@
         <dd>If user subscribes, all 12 cards immediately appear</dd>
 
         <dt>"Add Card" button behavior on Thrall:</dt>
-        <dd>If user already has 3 cards: button opens KarlUpsellDialog</dd>
-        <dd>If user has fewer than 3: button works normally</dd>
+        <dd>If user already has 5 cards: button opens KarlUpsellDialog</dd>
+        <dd>If user has fewer than 5: button works normally</dd>
       </div>
     </section>
 
@@ -322,7 +316,7 @@
           </div>
         </nav>
 
-        <!-- Content area showing card limit -->
+        <!-- Content area showing card limit (5 visible on Thrall) -->
         <div style="padding: 12px;">
           <div style="border: 1px solid; padding: 12px; margin-bottom: 8px;">
             <div style="font-size: 12px; font-weight: 600;">Chase Sapphire Preferred</div>
@@ -336,8 +330,16 @@
             <div style="font-size: 12px; font-weight: 600;">Citi Double Cash</div>
             <div style="font-size: 10px;">Active</div>
           </div>
+          <div style="border: 1px solid; padding: 12px; margin-bottom: 8px;">
+            <div style="font-size: 12px; font-weight: 600;">Capital One Venture X</div>
+            <div style="font-size: 10px;">Active</div>
+          </div>
+          <div style="border: 1px solid; padding: 12px; margin-bottom: 8px;">
+            <div style="font-size: 12px; font-weight: 600;">Chase Freedom Unlimited</div>
+            <div style="font-size: 10px;">Active</div>
+          </div>
           <div style="border: 1px dashed; padding: 12px; text-align: center; font-size: 11px;">
-            [lock] 9 more cards — Upgrade to Karl
+            [lock] 7 more cards — Upgrade to Karl
           </div>
         </div>
 
@@ -389,9 +391,9 @@
           <tr>
             <td>Add/edit cards</td>
             <td>Unlimited</td>
-            <td>3 card limit</td>
+            <td>5 card limit</td>
             <td>Unlimited</td>
-            <td>KarlUpsellDialog on 4th card attempt</td>
+            <td>KarlUpsellDialog on 6th card attempt</td>
           </tr>
           <tr>
             <td>Fee/bonus tracking</td>

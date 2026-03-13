@@ -58,12 +58,12 @@
       {
         "id": "thrall-vs-karl",
         "question": "What is the difference between Thrall and Karl tiers?",
-        "answer": "Thrall is the free tier — full local tracking, unlimited cards, no account needed. Karl is the premium tier and adds cloud sync, Google Sheets import, CSV export, multi-household tracking, and priority support."
+        "answer": "Thrall is the free tier — local tracking for up to 5 cards, no account needed. Karl is the premium tier and adds unlimited cards, cloud sync, Google Sheets import, CSV export, multi-household tracking, and priority support."
       },
       {
         "id": "whats-free",
         "question": "What is included in the free tier?",
-        "answer": "The Thrall (free) tier includes: unlimited card tracking, signup bonus tracking, annual fee reminders, deadline alerts, light and dark theme, and full access to all card views including Valhalla (closed cards)."
+        "answer": "The Thrall (free) tier includes: up to 5 cards, signup bonus tracking, annual fee reminders, deadline alerts, light and dark theme, and single-device local storage. Upgrade to Karl for unlimited cards, Valhalla (closed-card archive), The Howl (alerts), and more."
       },
       {
         "id": "whats-premium",

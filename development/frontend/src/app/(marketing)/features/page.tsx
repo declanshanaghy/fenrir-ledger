@@ -506,13 +506,13 @@ function ThrallSectionHeading() {
         </h2>
         <p className="font-body text-base text-muted-foreground max-w-xl leading-relaxed mb-4">
           Your ledger lives on this device, no account needed. Start tracking immediately
-          — no sign-up, no email, no Google. Unlimited cards, forever free.
+          — no sign-up, no email, no Google. Up to 5 cards, forever free.
         </p>
         <ul className="flex flex-col sm:flex-row flex-wrap gap-x-6 gap-y-2" aria-label="Lone Wolf benefits">
           {[
             "One device, one wolf — your ledger, your device",
             "No sign-up required — start tracking immediately",
-            "Unlimited cards — track as many as you want, forever free",
+            "Up to 5 cards — track your most important cards, forever free",
             "Privacy-first — data stays on your device, never touches a server",
           ].map((point) => (
             <li
