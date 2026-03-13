@@ -49,15 +49,15 @@ test.describe("MarketingNavbar — E2E (issue #648)", () => {
     const overlay = page.getByLabel("Navigation menu");
     await expect(overlay).toBeVisible();
 
-    // Mobile nav should be visible
-    const mobileNav = page.getByLabel("Mobile navigation");
-    await expect(mobileNav).toBeVisible();
-
     // Mobile nav links should exist and use font-heading
+    // Wait for nav element to appear after clicking hamburger
+    await page.waitForSelector('nav[aria-label="Mobile navigation"]', {
+      timeout: 5000,
+    });
     const mobileLinks = page.locator('nav[aria-label="Mobile navigation"] a');
     const count = await mobileLinks.count();
 
-    // We should have 5 nav links
+    // We should have 5 nav links (Features, Prose Edda, About, Free Trial, Pricing)
     expect(count).toBe(5);
 
     // Verify first mobile link has font-heading
