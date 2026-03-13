@@ -21,6 +21,7 @@ import { SyncIndicator } from "./SyncIndicator";
 import { KonamiHowl } from "./KonamiHowl";
 import { ForgeMasterEgg } from "./ForgeMasterEgg";
 import { HeilungModal } from "@/components/easter-eggs/HeilungModal";
+import { TrialDay15Modal } from "@/components/trial/TrialDay15Modal";
 import { Toaster } from "sonner";
 
 import {
@@ -95,6 +96,9 @@ export function LedgerShell({ children }: LedgerShellProps) {
       <ForgeMasterEgg />
       <HeilungModal />
       <GleipnirMountainRoots open={rootsOpen} onClose={dismissRoots} />
+
+      {/* Day-15 mid-trial nudge modal (Issue #622) */}
+      <TrialDay15Modal />
 
       {/* Ragnarok overlay */}
       {ragnarokActive && (
