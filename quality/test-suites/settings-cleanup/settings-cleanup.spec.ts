@@ -246,21 +246,22 @@ test.describe("Issue #628 — Settings Page Restructuring", () => {
   // AC11: No dead code / orphaned elements
   // ─────────────────────────────────────────────────────────────────────────
 
-  test("no orphaned placeholder function remnants in DOM", async ({ page }) => {
+  test("no orphaned placeholder sections in DOM", async ({ page }) => {
     await navigateToSettings(page);
 
-    // All placeholder cards should be completely absent
-    const placeholderTexts = [
-      "Cloud Sync",
-      "Multi-Household",
-      "Data Export",
-      "Coming soon to Karl supporters",
-    ];
+    // All placeholder sections should be completely absent (not just their text)
+    // Using aria-label since placeholder sections had specific aria-labels
+    const cloudSyncSection = page.locator('section[aria-label="Cloud Sync"]');
+    const multiHouseholdSection = page.locator(
+      'section[aria-label="Multi-Household"]'
+    );
+    const dataExportSection = page.locator(
+      'section[aria-label="Data Export"]'
+    );
 
-    for (const text of placeholderTexts) {
-      const element = page.locator(`text=${text}`);
-      await expect(element).not.toBeVisible();
-    }
+    await expect(cloudSyncSection).not.toBeVisible();
+    await expect(multiHouseholdSection).not.toBeVisible();
+    await expect(dataExportSection).not.toBeVisible();
   });
 
   // ─────────────────────────────────────────────────────────────────────────
