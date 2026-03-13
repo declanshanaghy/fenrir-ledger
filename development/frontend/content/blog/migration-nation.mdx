@@ -1,0 +1,136 @@
+---
+title: "Migration Nation"
+date: "2026-03-12"
+rune: "ᛞ"
+excerpt: "The pack planned its exodus from Depot — research reviewed, four migration issues forged, wolves dispatched, and the war room ledger sealed in chronicle."
+slug: "migration-nation"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᛞ ᛏ ᛇ ᚠ</span>
+  <h1 className="session-title">Migration Nation</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">2026-03-12</span></span>
+      <span>Session <span className="val">migration-nation</span></span>
+      <span>Acts <span className="val">5</span></span>
+      <span>Files changed <span className="val">0</span></span>
+  </div>
+</header>
+
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
+      <li><a href="#act-1"><span className="toc-rune">ᛞ</span> <span className="toc-num">I</span> The Addendum Inscribed</a></li>
+      <li><a href="#act-2"><span className="toc-rune">ᛟ</span> <span className="toc-num">II</span> The Chronicle Sealed</a></li>
+      <li><a href="#act-3"><span className="toc-rune">ᛏ</span> <span className="toc-num">III</span> The Resume Storm</a></li>
+      <li><a href="#act-4"><span className="toc-rune">ᛇ</span> <span className="toc-num">IV</span> The Research Judged</a></li>
+      <li><a href="#act-5"><span className="toc-rune">ᚠ</span> <span className="toc-num">V</span> Four Chains Forged</a></li>
+  </ul>
+</nav>
+
+<div className="timeline">
+
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="The Addendum Inscribed">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Orchestration</p>
+        <h2 className="entry-title">The Addendum Inscribed</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">consider AWS native cos we're moving remote orchestration to that anyway</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Posted an addendum on <span className="hl">#656</span> (Vercel alternatives research) — Odin's directive to weight <span className="hl">AWS native hosting</span> heavily. Amplify, ECS/Fargate, EC2+CloudFront, and S3+CloudFront called out as primary evaluation targets. The angle: if agent sandboxes move to AWS per #627, co-locating the app there is the natural play.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="The Chronicle Sealed">ᛟ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Housekeeping</p>
+        <h2 className="entry-title">The Chronicle Sealed</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">did brandify finish? hkr'd?</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>PR <span className="hl">#655</span> — the "Pack Runs Lean" chronicle — was still open. <span className="mono">gh pr merge 655 --squash --delete-branch</span> sealed it into main. The chronicle now lives at <span className="mono">/chronicles/lean-wolfhkr1</span>.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="The Resume Storm">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Orchestration</p>
+        <h2 className="entry-title">The Resume Storm</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Full dashboard scan across four in-flight chains. <span className="hl">#623</span> (trial expiry) had a FiremanDecko handoff ready — auto-dispatched <span className="mono">Loki</span> for QA. <span className="hl">#643</span> (Thrall 5-card limit) still failing on <span className="mono">add-card.spec.ts:66</span> — a strict mode violation where <span className="mono">locator('text=Card 6')</span> resolved to two elements. Dispatched a targeted <span className="hl">Loki bounce-back</span> with the exact error and two investigation paths. #642 still awaiting Luna. #627 research revision confirmed landed.</p></div>
+          <div className="code-block"><pre><span className="cr">Error: locator('text=Card 6') resolved to 2 elements:</span>
+<span className="cr">  1) &lt;h3&gt;Card 6&lt;/h3&gt; in main grid</span>
+<span className="cr">  2) &lt;h3&gt;Card 6&lt;/h3&gt; in All tab</span></pre></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="The Research Judged">ᛇ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Research</p>
+        <h2 className="entry-title">The Research Judged</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Plan it — Break into actionable migration issues via /plan-w-team</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Presented <span className="hl">#627</span> research revision to Odin. Five platforms compared at corrected volume (150-300/wk): Depot <span className="mono">$217-435/mo</span>, EC2 Spot <span className="mono">$14-29/mo</span>, ECS Fargate <span className="mono">$38-76/mo</span>. Recommendation: <span className="hl">EC2 Spot with pre-baked AMIs</span>. Odin's verdict: <em>Plan it</em>.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="Four Chains Forged">ᚠ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Planning</p>
+        <h2 className="entry-title">Four Chains Forged</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Ensure cost output table is included in the issue migration plan as 'business justification'</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Skipped the Freya interview — infra work with no ambiguity. Filed four sequential migration issues, each bearing a <span className="hl">Business Justification</span> cost table per Odin's directive. <span className="hl">#657</span>: Packer AMI with Claude Code toolchain. <span className="hl">#658</span>: EC2 Spot launch/terminate orchestration (blocked by #657). <span className="hl">#659</span>: Integrate AWS dispatch into <span className="mono">/dispatch</span> skill (blocked by #658). <span className="hl">#660</span>: Validation and cutover from Depot (blocked by #659). All four added to Up Next. Closed #627, merged PR #651. The exodus has a plan.</p></div>
+        </div>
+      </div>
+    </section>
+</div>
+
+<footer className="session-footer">
+  <div className="footer-cipher">ᛞ ᛏ ᛇ ᚠ</div>
+  <div className="footer-text">Migration Nation · Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
+</footer>
+
+</div>
