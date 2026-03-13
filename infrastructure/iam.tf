@@ -98,7 +98,7 @@ resource "google_project_iam_member" "deploy_gke_admin" {
 resource "google_billing_budget" "monthly_budget" {
   provider = google-beta
 
-  billing_account = data.google_billing_account.account.id
+  billing_account = var.billing_account_id
   display_name    = "Fenrir Ledger Monthly Budget"
 
   budget_filter {
@@ -139,9 +139,4 @@ resource "google_billing_budget" "monthly_budget" {
 
 data "google_project" "project" {
   project_id = var.project_id
-}
-
-data "google_billing_account" "account" {
-  project_id = var.project_id
-  open       = true
 }

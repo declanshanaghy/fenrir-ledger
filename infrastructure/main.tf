@@ -41,14 +41,14 @@ provider "google-beta" {
 
 resource "google_project_service" "apis" {
   for_each = toset([
-    "container.googleapis.com",          # GKE
-    "artifactregistry.googleapis.com",   # Artifact Registry
-    "compute.googleapis.com",            # Compute Engine (networking)
-    "iam.googleapis.com",                # IAM
+    "container.googleapis.com",            # GKE
+    "artifactregistry.googleapis.com",     # Artifact Registry
+    "compute.googleapis.com",              # Compute Engine (networking)
+    "iam.googleapis.com",                  # IAM
     "cloudresourcemanager.googleapis.com", # Resource Manager
-    "monitoring.googleapis.com",         # Cloud Monitoring
-    "logging.googleapis.com",            # Cloud Logging
-    "billingbudgets.googleapis.com",     # Billing Budgets
+    "monitoring.googleapis.com",           # Cloud Monitoring
+    "logging.googleapis.com",              # Cloud Logging
+    "billingbudgets.googleapis.com",       # Billing Budgets
   ])
 
   project            = var.project_id
