@@ -1,0 +1,123 @@
+---
+title: "The Hosting Hunt"
+date: "2026-03-13"
+rune: "ᛃ"
+excerpt: "FiremanDecko investigates seven hosting alternatives to Vercel, weighing cost against deployment volume to find the cheapest path for Fenrir's relentless CI pipeline."
+slug: "fireman-decko-issue-656"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᛏ ᛃ ᛈ ᛞ</span>
+  <h1 className="session-title">The Hosting Hunt</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">2026-03-13</span></span>
+      <span>Session <span className="val">fireman-decko-issue-656</span></span>
+      <span>Acts <span className="val">4</span></span>
+      <span>Files changed <span className="val">1</span></span>
+  </div>
+</header>
+
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
+      <li><a href="#act-1"><span className="toc-rune">ᛏ</span> <span className="toc-num">I</span> The Sandbox Awakens</a></li>
+      <li><a href="#act-2"><span className="toc-rune">ᛃ</span> <span className="toc-num">II</span> Scouring the Realms</a></li>
+      <li><a href="#act-3"><span className="toc-rune">ᛈ</span> <span className="toc-num">III</span> Forging the Ledger</a></li>
+      <li><a href="#act-4"><span className="toc-rune">ᛞ</span> <span className="toc-num">IV</span> The Handoff Horn</a></li>
+  </ul>
+</nav>
+
+<div className="timeline">
+
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="The Sandbox Awakens">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Setup</p>
+        <h2 className="entry-title">The Sandbox Awakens</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Research GitHub Issue #656: Vercel alternatives for hosting — cost at our deployment volume</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>FiremanDecko received his orders and entered the Depot sandbox. The <span class="mono">sandbox-setup.sh</span> script forged the workspace, checked out <span class="mono">research/issue-656-vercel-alternatives</span>, and installed dependencies. The todo ledger was inscribed with thirteen steps — from reading the issue through posting the final handoff.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="Scouring the Realms">ᛃ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Research</p>
+        <h2 className="entry-title">Scouring the Realms</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Research all seven hosting platforms</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The engineer traversed the pricing pages of seven realms: <span class="hl">Vercel</span>, <span class="hl">Cloudflare Pages</span>, <span class="hl">Netlify</span>, <span class="hl">AWS Amplify</span>, <span class="hl">Coolify</span>, <span class="hl">Railway</span>, and <span class="hl">Render</span>. Web searches and fetches gathered current pricing models, free tier limits, build minute costs, Next.js SSR support, and deployment speed benchmarks. Hetzner VPS pricing was consulted for the self-hosted path. Each platform's cost structure was mapped against Fenrir's unique burden: 2,000–6,000 deploys per month, driven not by humans but by tireless agent wolves.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="Forging the Ledger">ᛈ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Analysis</p>
+        <h2 className="entry-title">Forging the Ledger</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Build cost comparison and feature parity tables</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The research crystallized into <span class="mono">product/research/vercel-alternatives.md</span> — a comprehensive report bearing an executive summary, per-platform breakdowns, cost comparison tables at both 2,000 and 6,000 deploys/month, a feature parity matrix spanning seven columns, deployment speed benchmarks, and a weighted decision matrix. The verdict was clear: <span class="hl">Cloudflare Pages + Workers at $5–20/mo</span> dominated on cost-to-feature ratio. <span class="hl">Coolify on a Hetzner VPS at $5–15/mo</span> stood as the self-hosted alternative. AWS Amplify, at $95–295/mo, was the most expensive — punished by its per-build-minute pricing model.</p></div>
+          <div className="code-block"><pre>| Platform           | 2K deploys | 6K deploys |
+|-------------------|-----------|------------|
+| <span class="ca">Cloudflare Pages   | $5/mo     | $20/mo</span>     |
+| <span class="ca">Coolify (Hetzner)  | $5-8/mo   | $8-15/mo</span>   |
+| Vercel Pro         | $20-25/mo | $25-40/mo  |
+| <span class="cr">AWS Amplify        | ~$95/mo   | ~$295/mo</span>   |</pre></div>
+          <div className="file-chips">
+            <span className="chip chip-new">product/research/vercel-alternatives.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="The Handoff Horn">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Delivery</p>
+        <h2 className="entry-title">The Handoff Horn</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Create PR and post handoff comment</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The report was committed, rebased onto <span class="mono">main</span>, and pushed to <span class="mono">research/issue-656-vercel-alternatives</span>. PR <span class="hl">#668</span> was opened with a clean summary. A handoff comment was posted on issue #656 with the six key findings — Cloudflare's structural advantage, Coolify's fixed-cost appeal, Vercel's billing unpredictability, Netlify's credit trap, Amplify's build-minute tax, and the triviality of migration. The research awaits Odin's verdict: plan it, shelve it, or drop it.</p></div>
+        </div>
+      </div>
+    </section>
+</div>
+
+<footer className="session-footer">
+  <div className="footer-cipher">ᛏ ᛃ ᛈ ᛞ</div>
+  <div className="footer-text">The Hosting Hunt · Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
+</footer>
+
+</div>
