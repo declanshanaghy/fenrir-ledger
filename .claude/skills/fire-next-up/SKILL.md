@@ -27,11 +27,22 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 |------|--------|
 | `--peek` | Show the prioritized Up Next queue — do NOT spawn anything. |
 | `--resume #N` | Resume an interrupted chain for issue #N. Read `templates/resume-flow.md`. |
+| `--resume <session-id>` | Extract issue number from session ID and resume that chain. Session IDs follow the pattern `issue-<N>-step<S>-<agent>-<uuid>` — parse `<N>` as the issue number. Example: `issue-621-step1-firemandecko-8d0410cd` → resume #621. |
 | `--resume` | (no issue number) Full dashboard: scan ALL in-progress chains, **auto-advance ready ones** (dispatch next agents, merge PASS+CI green PRs, move completed to Done), and report status. **If no chains need advancing**, fall through to default dispatch: pick top Up Next item and present for refinement (always refine, even if `skip-refinement` is in body). |
 | `--batch N` | Pull top N **unblocked** items from "Up Next", start chains in parallel. Max 5. |
 | `--local` | Force local worktree execution instead of Depot. |
 | `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
 | *(no flag)* | Default: pick the top item and start the agent chain via Depot. |
+
+### Session ID Parsing
+
+When `--resume` receives a Depot session ID instead of an issue number, extract the issue number from it. Session IDs follow the convention: `issue-<N>-step<S>-<agent>-<uuid8>`. Parse `<N>` as the issue number and resume that chain.
+
+Examples:
+- `issue-621-step1-firemandecko-8d0410cd` → `--resume #621`
+- `issue-300-step2-loki-a1b2c3d4` → `--resume #300`
+
+Also accept Depot URLs: `https://depot.dev/orgs/.../claude/<session-id>` — extract the session ID from the URL path, then parse as above.
 
 ---
 
