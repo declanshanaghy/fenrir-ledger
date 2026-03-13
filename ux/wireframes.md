@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## About Page — Dual-Realm Agent Profiles (Issue #633)
+
+| File | Description |
+|------|-------------|
+| [wireframes/marketing-site/about.html](wireframes/marketing-site/about.html) | About page redesign: alternating agent profiles woven into The Myth section — replaces 3-col card grid with 5 full-width portrait+text rows (portrait alternates left/right by index); dual-realm lore per agent (Ljósálfar/light aspect + Svartálfar/dark aspect); portrait crossfade on theme toggle (transition-opacity 500ms); realm badge beneath each portrait; runic placeholder fallback; personality-specific hover overlays (glow/shimmer/fire/glitch/scan); Framer Motion scroll-triggered slide-in (direction matches portrait side); responsive: portrait-above-text stacked at 768px; full interaction spec in HTML comments (portrait crossfade impl, lore crossfade impl, AgentProfile interface changes, section changes summary, a11y requirements including aria-live realm badge, prefers-reduced-motion) |
+
+---
+
 ## Dashboard Tab Headers, Tooltips, and Empty States
 
 | File | Description |
