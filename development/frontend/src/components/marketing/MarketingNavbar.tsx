@@ -21,6 +21,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const NAV_LINKS = [
@@ -33,7 +34,13 @@ const NAV_LINKS = [
 
 // ── MarketingNavbar ────────────────────────────────────────────────────────────
 
+/** Check whether a nav link matches the current pathname. */
+export function isNavLinkActive(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(href + "/");
+}
+
 export function MarketingNavbar() {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Prevent body scroll when overlay is open
@@ -86,19 +93,23 @@ export function MarketingNavbar() {
 
           {/* Desktop center nav links */}
           <div className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className={
-                  label === "Free Trial"
-                    ? "font-heading text-sm font-semibold text-foreground border border-border px-2.5 py-1 hover:border-primary/50 transition-colors"
-                    : "font-heading text-sm text-muted-foreground hover:text-foreground transition-colors"
-                }
-              >
-                {label}
-              </Link>
-            ))}
+            {NAV_LINKS.map(({ href, label }) => {
+              const active = isNavLinkActive(pathname, href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={
+                    active
+                      ? "font-heading text-sm font-semibold text-foreground border border-border px-2.5 py-1 hover:border-primary/50 transition-colors"
+                      : "font-heading text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  }
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Desktop right: theme toggle + CTA */}
@@ -179,21 +190,25 @@ export function MarketingNavbar() {
 
           {/* Mobile nav links */}
           <nav aria-label="Mobile navigation">
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setMobileOpen(false)}
-                className={[
-                  "block py-3 border-b border-border",
-                  "font-heading text-lg text-foreground",
-                  label === "Free Trial" ? "font-semibold" : "",
-                  "hover:text-primary transition-colors",
-                ].join(" ")}
-              >
-                {label}
-              </Link>
-            ))}
+            {NAV_LINKS.map(({ href, label }) => {
+              const active = isNavLinkActive(pathname, href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  className={[
+                    "block py-3 border-b border-border",
+                    "font-heading text-lg text-foreground",
+                    active ? "font-semibold" : "",
+                    "hover:text-primary transition-colors",
+                  ].join(" ")}
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Mobile CTA + theme toggle */}

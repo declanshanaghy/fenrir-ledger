@@ -12,6 +12,11 @@ import { render, screen, within } from "@testing-library/react";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
+// Mock next/navigation (usePathname used by MarketingNavbar)
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+}));
+
 // Mock next/link
 vi.mock("next/link", () => ({
   default: ({
