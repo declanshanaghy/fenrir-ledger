@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Trial Feature Gates &amp; Data Access</title>
+  <style>
+    /* Layout and structure only. No theme styling. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    .page { display: flex; flex-direction: column; gap: 56px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.08em; border-bottom: 1px solid; padding-bottom: 6px;
+    }
+    .note {
+      font-size: 11px; font-style: italic;
+      border-left: 2px solid; padding-left: 8px; margin: 4px 0;
+    }
+    .annotation-box {
+      border: 1px dashed; padding: 12px; font-size: 11px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .annotation-box dt { font-weight: 600; }
+    .annotation-box dd { margin-left: 12px; }
+
+    /* =====================================================================
+       FEATURE GATE BEHAVIOR
+       =====================================================================
+       When the trial expires and the user is on Thrall (free tier),
+       Karl features are gated. This wireframe documents how each
+       feature gate manifests in the UI.
+
+       CRITICAL: Data is never deleted or hidden from localStorage.
+       The UI gates ACCESS to features, not data itself.
+       If the user subscribes, everything is immediately available.
+    ===================================================================== */
+
+    /* -- Tab bar with gated indicators -------------------------------------- */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid;
+    }
+    .tab {
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab--active {
+      border-bottom: 2px solid;
+      font-weight: 700;
+    }
+    .tab--locked {
+      cursor: default;
+    }
+    .lock-icon {
+      font-size: 10px;
+    }
+    .tab-badge {
+      font-size: 9px;
+      font-weight: 700;
+      border: 1px solid;
+      padding: 1px 4px;
+      text-transform: uppercase;
+    }
+
+    /* -- Card grid ---------------------------------------------------------- */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      padding: 16px;
+    }
+    .card-stub {
+      border: 1px solid;
+      padding: 16px;
+      min-height: 120px;
+    }
+    .card-stub-title {
+      font-size: 13px; font-weight: 600; margin-bottom: 8px;
+    }
+    .card-stub-meta { font-size: 11px; }
+
+    /* -- Locked card overlay ------------------------------------------------ */
+    .card-locked {
+      position: relative;
+    }
+    .card-locked-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border: 1px dashed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* -- Dashboard tab bar states ------------------------------------------- */
+    .dashboard-shell {
+      border: 1px solid;
+      min-height: 300px;
+    }
+    .topbar {
+      height: 48px; border-bottom: 1px solid;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px;
+    }
+    .topbar-brand { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+    /* -- Feature gate table ------------------------------------------------- */
+    .gate-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .gate-table th, .gate-table td {
+      padding: 8px 12px;
+      border: 1px solid;
+      text-align: left;
+    }
+    .gate-table th {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* -- Mobile ------------------------------------------------------------- */
+    .mobile-frame { max-width: 375px; border: 1px solid; }
+    .mobile-tab-bar {
+      display: flex;
+      border-top: 1px solid;
+      padding: 8px 0;
+    }
+    .mobile-tab {
+      flex: 1;
+      text-align: center;
+      font-size: 10px;
+      padding: 8px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-height: 44px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ================================================================
+         SCENARIO 1: During Trial — All Features Unlocked (reference)
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 1: During Trial — All Tabs Unlocked (reference state)</div>
+
+      <div class="dashboard-shell">
+        <nav class="topbar">
+          <div class="topbar-brand">FENRIR LEDGER</div>
+          <div class="topbar-right">
+            <span style="font-size: 11px; font-weight: 600; border: 1px solid; padding: 2px 8px;">22 days left</span>
+            <div style="width: 32px; height: 32px; border: 1px dashed; display: flex; align-items: center; justify-content: center; font-size: 12px;">&#5765;</div>
+          </div>
+        </nav>
+
+        <div class="tab-bar">
+          <div class="tab">All</div>
+          <div class="tab">Valhalla <span style="font-size: 10px; border: 1px solid; padding: 0 4px;">4</span></div>
+          <div class="tab tab--active">Active <span style="font-size: 10px; border: 1px solid; padding: 0 4px;">8</span></div>
+          <div class="tab">The Hunt <span style="font-size: 10px; border: 1px solid; padding: 0 4px;">2</span></div>
+          <div class="tab">The Howl <span style="font-size: 10px; border: 1px solid; padding: 0 4px;">3</span></div>
+        </div>
+
+        <div style="padding: 16px; font-size: 12px;">
+          <p class="note">
+            During trial: all tabs are accessible, no lock icons, no KARL badges.
+            User has full Karl experience. The trial badge in TopBar is the only
+            indication they are on a trial (not a paid subscriber).
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 2: After Trial (Thrall) — Gated Tabs
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 2: After Trial (Thrall) — Tab Bar with Gated Features</div>
+
+      <div class="dashboard-shell">
+        <nav class="topbar">
+          <div class="topbar-brand">FENRIR LEDGER</div>
+          <div class="topbar-right">
+            <span style="font-size: 10px; font-weight: 600; border: 1px solid; padding: 2px 6px;">THRALL</span>
+            <div style="width: 32px; height: 32px; border: 1px dashed; display: flex; align-items: center; justify-content: center; font-size: 12px;">&#5765;</div>
+          </div>
+        </nav>
+
+        <div class="tab-bar">
+          <div class="tab">All</div>
+          <div class="tab tab--locked">
+            Valhalla
+            <span class="lock-icon">[lock]</span>
+            <span class="tab-badge">KARL</span>
+          </div>
+          <div class="tab tab--active">Active <span style="font-size: 10px; border: 1px solid; padding: 0 4px;">3</span></div>
+          <div class="tab">The Hunt</div>
+          <div class="tab tab--locked">
+            The Howl
+            <span class="lock-icon">[lock]</span>
+            <span class="tab-badge">KARL</span>
+          </div>
+        </div>
+
+        <div style="padding: 16px;">
+          <p class="note">
+            After trial on Thrall:
+            - The Howl tab: lock icon + KARL badge. Click opens KarlUpsellDialog.
+            - Active tab: accessible. Shows up to 3 cards (Thrall limit).
+            - The Hunt tab: accessible (no Karl gate on basic tracking).
+            - Valhalla tab: lock icon + KARL badge. Click opens KarlUpsellDialog.
+            - All tab: accessible, but only shows Thrall-visible cards.
+          </p>
+        </div>
+      </div>
+
+      <p class="note">
+        This matches the EXISTING gating pattern from Sprint 7 wireframes
+        (wireframes/app/howl-karl-tier.html and wireframes/app/valhalla-karl-gated.html).
+        No new gating UI needed — trial expiry simply transitions to the existing Thrall state.
+      </p>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 3: Card Limit — Cards Beyond Thrall Limit
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 3: Card Limit — 12 cards on file, 3 visible (Thrall limit)</div>
+
+      <div class="card-grid">
+        <!-- Visible cards (within Thrall limit) -->
+        <div class="card-stub">
+          <div class="card-stub-title">Chase Sapphire Preferred</div>
+          <div class="card-stub-meta">Active — $95 annual fee</div>
+        </div>
+        <div class="card-stub">
+          <div class="card-stub-title">Amex Gold</div>
+          <div class="card-stub-meta">Active — $250 annual fee</div>
+        </div>
+        <div class="card-stub">
+          <div class="card-stub-title">Citi Double Cash</div>
+          <div class="card-stub-meta">Active — $0 annual fee</div>
+        </div>
+
+        <!-- Locked cards (beyond Thrall limit) -->
+        <div class="card-stub card-locked">
+          <div class="card-stub-title" style="opacity: 0.3;">Capital One Venture X</div>
+          <div class="card-stub-meta" style="opacity: 0.3;">Active — $395 annual fee</div>
+          <div class="card-locked-overlay">
+            [lock] Upgrade to view
+          </div>
+        </div>
+        <div class="card-stub card-locked">
+          <div class="card-stub-title" style="opacity: 0.3;">Chase Freedom Unlimited</div>
+          <div class="card-stub-meta" style="opacity: 0.3;">Active — $0 annual fee</div>
+          <div class="card-locked-overlay">
+            [lock] Upgrade to view
+          </div>
+        </div>
+        <div class="card-stub card-locked">
+          <div class="card-stub-title" style="opacity: 0.3;">+7 more cards</div>
+          <div class="card-stub-meta" style="opacity: 0.3;">Requires Karl</div>
+          <div class="card-locked-overlay">
+            [lock] Upgrade to view all
+          </div>
+        </div>
+      </div>
+
+      <div class="annotation-box">
+        <dt>Card visibility rules (Thrall):</dt>
+        <dd>First 3 cards (by creation date) are fully visible and editable</dd>
+        <dd>Cards 4-N are shown as locked tiles with blurred/dimmed content</dd>
+        <dd>If user has 6+ locked cards, cards 4-5 show individually, card 6 shows "+N more cards"</dd>
+        <dd>Clicking any locked card opens KarlUpsellDialog</dd>
+
+        <dt>Sort order for visibility:</dt>
+        <dd>Cards are ordered by creation date (oldest first)</dd>
+        <dd>This means the user's earliest cards remain visible — they have the most history</dd>
+
+        <dt>Data integrity:</dt>
+        <dd>All 12 cards remain in localStorage</dd>
+        <dd>Locked cards still count toward fee totals in any summary views</dd>
+        <dd>If user subscribes, all 12 cards immediately appear</dd>
+
+        <dt>"Add Card" button behavior on Thrall:</dt>
+        <dd>If user already has 3 cards: button opens KarlUpsellDialog</dd>
+        <dd>If user has fewer than 3: button works normally</dd>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 4: Mobile 375px — Tab Bar + Bottom Nav with Gates
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 4: Mobile 375px — Bottom Tab Bar with Gated Features</div>
+
+      <div class="mobile-frame">
+        <nav class="topbar">
+          <div class="topbar-brand" style="font-size: 11px;">FENRIR</div>
+          <div class="topbar-right">
+            <span style="font-size: 9px; font-weight: 600; border: 1px solid; padding: 1px 4px;">THRALL</span>
+            <div style="width: 28px; height: 28px; border: 1px dashed; display: flex; align-items: center; justify-content: center; font-size: 10px;">&#5765;</div>
+          </div>
+        </nav>
+
+        <!-- Content area showing card limit -->
+        <div style="padding: 12px;">
+          <div style="border: 1px solid; padding: 12px; margin-bottom: 8px;">
+            <div style="font-size: 12px; font-weight: 600;">Chase Sapphire Preferred</div>
+            <div style="font-size: 10px;">Active</div>
+          </div>
+          <div style="border: 1px solid; padding: 12px; margin-bottom: 8px;">
+            <div style="font-size: 12px; font-weight: 600;">Amex Gold</div>
+            <div style="font-size: 10px;">Active</div>
+          </div>
+          <div style="border: 1px solid; padding: 12px; margin-bottom: 8px;">
+            <div style="font-size: 12px; font-weight: 600;">Citi Double Cash</div>
+            <div style="font-size: 10px;">Active</div>
+          </div>
+          <div style="border: 1px dashed; padding: 12px; text-align: center; font-size: 11px;">
+            [lock] 9 more cards — Upgrade to Karl
+          </div>
+        </div>
+
+        <!-- Mobile bottom tabs -->
+        <div class="mobile-tab-bar">
+          <div class="mobile-tab">
+            <span style="font-size: 14px;">[lock]</span>
+            <span>Howl</span>
+          </div>
+          <div class="mobile-tab" style="font-weight: 700;">
+            <span style="font-size: 14px;">&#9679;</span>
+            <span>Active</span>
+          </div>
+          <div class="mobile-tab">
+            <span style="font-size: 14px;">&#9675;</span>
+            <span>Hunt</span>
+          </div>
+          <div class="mobile-tab">
+            <span style="font-size: 14px;">[lock]</span>
+            <span>Valhalla</span>
+          </div>
+        </div>
+
+        <p class="note">
+          Mobile bottom tabs: Howl and Valhalla show lock icon instead of count badge.
+          Tapping locked tab opens KarlUpsellDialog (bottom sheet on mobile).
+          This matches existing Sprint 7 mobile gating pattern.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         COMPLETE FEATURE GATE REFERENCE TABLE
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Reference: Complete Feature Gate Matrix</div>
+
+      <table class="gate-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>During Trial</th>
+            <th>After Trial (Thrall)</th>
+            <th>Karl (Subscribed)</th>
+            <th>Gate UI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Add/edit cards</td>
+            <td>Unlimited</td>
+            <td>3 card limit</td>
+            <td>Unlimited</td>
+            <td>KarlUpsellDialog on 4th card attempt</td>
+          </tr>
+          <tr>
+            <td>Fee/bonus tracking</td>
+            <td>Full</td>
+            <td>Full (for visible cards)</td>
+            <td>Full</td>
+            <td>No gate (works on Thrall-visible cards)</td>
+          </tr>
+          <tr>
+            <td>Status badges</td>
+            <td>Full</td>
+            <td>Full (for visible cards)</td>
+            <td>Full</td>
+            <td>No gate</td>
+          </tr>
+          <tr>
+            <td>The Howl (alerts)</td>
+            <td>Full</td>
+            <td>Locked</td>
+            <td>Full</td>
+            <td>Lock icon on tab + KarlUpsellDialog</td>
+          </tr>
+          <tr>
+            <td>Valhalla (archive)</td>
+            <td>Full</td>
+            <td>Locked</td>
+            <td>Full</td>
+            <td>Lock icon on tab + KarlUpsellDialog</td>
+          </tr>
+          <tr>
+            <td>Smart Import</td>
+            <td>Full</td>
+            <td>Locked</td>
+            <td>Full</td>
+            <td>KarlUpsellDialog on import attempt</td>
+          </tr>
+          <tr>
+            <td>Settings</td>
+            <td>Full</td>
+            <td>Full</td>
+            <td>Full</td>
+            <td>No gate (subscribe CTA always present)</td>
+          </tr>
+          <tr>
+            <td>Card data in localStorage</td>
+            <td>All preserved</td>
+            <td>All preserved (but gated)</td>
+            <td>All preserved</td>
+            <td>No data deletion ever</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="annotation-box" style="margin-top: 16px;">
+        <dt>Implementation note for FiremanDecko:</dt>
+        <dd>Trial state check: if trial is active, treat user as Karl tier.</dd>
+        <dd>isKarlOrTrial() helper function: returns true if Karl subscriber OR trial active.</dd>
+        <dd>When trial expires: isKarlOrTrial() returns false, existing Thrall gates activate.</dd>
+        <dd>No new gate components needed — reuse existing KarlUpsellDialog and tab lock patterns.</dd>
+        <dd>The trial is a temporary Karl pass, not a separate tier.</dd>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 5: localStorage Keys Reference
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Reference: Trial localStorage Keys</div>
+
+      <div class="annotation-box">
+        <dt>Trial lifecycle keys:</dt>
+        <dd>fenrir:trial_start_date — ISO date string, set on first card add</dd>
+        <dd>fenrir:trial_converted — "true" if user subscribed during/after trial</dd>
+        <dd>fenrir:trial_conversion_date — ISO date string, set on subscription</dd>
+        <dd>fenrir:trial_expiry_shown — "true" after expiry modal dismissed</dd>
+        <dd>fenrir:trial_midpoint_shown — "true" after day-15 toast shown</dd>
+        <dd>fenrir:post_trial_banner_dismissed — "true" after post-trial banner dismissed</dd>
+        <dd>fenrir:howl_alert_count — number, incremented on each Howl alert (for value summary)</dd>
+
+        <dt>Metrics computation:</dt>
+        <dd>Cards tracked: count all cards in fenrir:cards localStorage</dd>
+        <dd>Fees monitored: sum annualFee across all cards</dd>
+        <dd>Potential savings: sum annualFee of cards with status "closed" during trial period</dd>
+        <dd>Alerts received: fenrir:howl_alert_count</dd>
+
+        <dt>Trial duration calculation:</dt>
+        <dd>const trialEnd = new Date(trialStartDate); trialEnd.setDate(trialEnd.getDate() + 30);</dd>
+        <dd>const daysRemaining = Math.max(0, Math.ceil((trialEnd - now) / 86400000));</dd>
+        <dd>const isTrialActive = daysRemaining > 0;</dd>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

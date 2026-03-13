@@ -585,3 +585,171 @@ textarea[aria-invalid="true"] {
 - The error message element should have `role="alert"` or use `aria-live="polite"` so screen readers announce errors as they appear.
 - Disabled buttons must have `aria-disabled="true"` in addition to the HTML `disabled` attribute.
 - Tooltip content for disabled buttons must be reachable by keyboard (wrap in focusable span if the button itself cannot receive focus).
+
+---
+
+## 30-Day Free Trial Flow
+
+The trial gives new users full Karl access for 30 days, starting when they create their first card. The trial is a temporary Karl pass -- not a separate tier. When it expires, existing Thrall feature gates activate. Data is never deleted.
+
+See wireframes: `wireframes/trial/trial-start.html`, `wireframes/trial/trial-status.html`, `wireframes/trial/trial-expiry.html`, `wireframes/trial/trial-feature-gates.html`.
+
+### Trial Lifecycle State Machine
+
+```mermaid
+stateDiagram-v2
+    classDef primary fill:#03A9F4,stroke:#0288D1,color:#FFF
+    classDef warning fill:#FF9800,stroke:#F57C00,color:#FFF
+    classDef critical fill:#F44336,stroke:#D32F2F,color:#FFF
+    classDef healthy fill:#4CAF50,stroke:#388E3C,color:#FFF
+
+    [*] --> NoTrial: App opened (no cards)
+
+    NoTrial --> TrialActive: First card created (manual or import)
+    note right of TrialActive: fenrir:trial_start_date set\nToast shown (8s)\nTrial badge appears in TopBar
+
+    TrialActive --> MidTrialNudge: Day 15 reached
+    MidTrialNudge --> TrialActive: Toast dismissed
+
+    TrialActive --> TrialWarning: Days 5-1 remaining
+    note right of TrialWarning: Badge turns amber\nPanel copy shifts to loss-aversion-lite
+
+    TrialWarning --> TrialExpired: Day 30+ reached
+    note right of TrialExpired: Expiry modal shown on next app load\nfenrir:trial_expiry_shown flag
+
+    TrialActive --> KarlSubscribed: User subscribes during trial
+    TrialWarning --> KarlSubscribed: User subscribes during warning
+    TrialExpired --> KarlSubscribed: User subscribes after expiry
+    TrialExpired --> ThrallFree: User declines ("Continue with free plan")
+
+    ThrallFree --> KarlSubscribed: User subscribes later (via Settings or gate dialog)
+
+    class NoTrial unavailable
+    class TrialActive primary
+    class MidTrialNudge primary
+    class TrialWarning warning
+    class TrialExpired critical
+    class KarlSubscribed healthy
+    class ThrallFree unavailable
+```
+
+### Trial Start Sequence
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant CF as CardForm / ImportWizard
+    participant LS as localStorage
+    participant TB as TopBar (TrialBadge)
+    participant T as Toast (Sonner)
+
+    U->>CF: Saves first card / completes import
+    CF->>LS: Check fenrir:trial_start_date
+    alt Trial not started
+        LS-->>CF: null (no trial yet)
+        CF->>LS: Set fenrir:trial_start_date = now
+        CF->>T: Show TrialStartToast (8s)
+        T-->>U: "Your 30-day trial has begun"
+        T->>TB: After toast dismisses, render TrialBadge
+        TB-->>U: Badge: "30-day trial"
+    else Trial already started
+        LS-->>CF: date exists
+        CF-->>CF: Skip (idempotent)
+    end
+```
+
+### Trial Expiry Sequence
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant App as App Shell
+    participant LS as localStorage
+    participant EM as TrialExpiryModal
+    participant SC as Stripe Checkout
+
+    U->>App: Opens app (Day 30+)
+    App->>LS: Check trial_start_date + 30 vs. now
+    LS-->>App: Trial expired
+
+    App->>LS: Check trial_expiry_shown
+    alt Not yet shown
+        LS-->>App: null
+        App->>EM: Render TrialExpiryModal
+        EM-->>U: Shows value recap + subscribe/decline
+
+        alt User subscribes
+            U->>EM: Clicks "Subscribe for $3.99/month"
+            EM->>SC: Redirect to Stripe Checkout
+            SC-->>App: Payment success callback
+            App->>LS: Set trial_converted = "true"
+            App->>LS: Set trial_conversion_date = now
+            App-->>U: Full Karl access restored
+        else User declines
+            U->>EM: Clicks "Continue with free plan"
+            EM->>LS: Set trial_expiry_shown = "true"
+            EM-->>App: Close modal
+            App-->>U: Dashboard with Thrall gates active
+        end
+    else Already shown
+        LS-->>App: "true"
+        App-->>U: Dashboard with Thrall gates (no modal)
+    end
+```
+
+### During-Trial Messaging Touchpoints
+
+| Day | Touchpoint | Type | Copy Strategy |
+|-----|-----------|------|---------------|
+| 1 | Trial start toast | Toast (8s, auto-dismiss) | Celebration: "Your 30-day trial has begun" |
+| 1-30 | TopBar badge | Persistent badge | Countdown: "N days left" |
+| 1-30 | Trial status panel | On-demand (click badge) | Value summary with real metrics |
+| 15 | Mid-trial checkpoint | Toast (one-time) | "Halfway there" + personalized card/fee stats |
+| 26-30 | Warning badge | Badge color change | Amber (26-29), fire (30) |
+| 30 | Expiry modal | Modal (one-time) | Value recap + subscribe/decline |
+| 30+ | Post-trial banner | Banner (dismissible) | "Your trial ended. Your data is intact." |
+| Ongoing | Settings page | Always visible | Trial dates, card count, subscribe CTA |
+| On gated feature | KarlUpsellDialog | Modal (on each attempt) | Feature-specific upsell with trial history |
+
+### Trial Badge Countdown — Urgency Progression
+
+```mermaid
+graph LR
+    classDef primary fill:#03A9F4,stroke:#0288D1,color:#FFF
+    classDef warning fill:#FF9800,stroke:#F57C00,color:#FFF
+    classDef critical fill:#F44336,stroke:#D32F2F,color:#FFF
+
+    day30([Day 1: 30 days left]) --> day25([Day 6: 25 days left])
+    day25 --> day15([Day 15: 15 days left])
+    day15 --> day5([Day 25: 5 days left])
+    day5 --> day1([Day 29: 1 day left])
+    day1 --> day0([Day 30: Trial ends today])
+    day0 --> expired([Expired: Trial ended])
+
+    class day30 primary
+    class day25 primary
+    class day15 primary
+    class day5 warning
+    class day1 warning
+    class day0 critical
+    class expired critical
+```
+
+### Messaging Tone Principles
+
+1. **Never guilt-trip.** "Your trial has ended" not "You're losing access."
+2. **Always reassure data safety.** Every expiry touchpoint says "Your data is safe/preserved."
+3. **Personalize with real metrics.** Card count, fee totals, alerts received -- all from localStorage.
+4. **Frame subscribe as continuity.** "Keep full access" not "Buy now."
+5. **Make decline first-class.** "Continue with free plan" is a visible button, never a tiny link.
+6. **Progressive urgency.** Neutral -> amber -> fire -> red. Copy shifts gradually, never abruptly.
+
+### Accessibility Requirements (Trial-Specific)
+
+- **TrialBadge:** `role="status"` + `aria-live="polite"` for countdown updates. Screen readers announce day changes.
+- **TrialStatusPanel:** `role="dialog"` + `aria-labelledby` on panel title. Focus trapped while open. Escape dismisses.
+- **TrialExpiryModal:** `role="dialog"` + `aria-modal="true"`. Focus trapped. Both action buttons meet 44px touch target. Value metrics have `aria-label` summarizing all values.
+- **Locked tabs:** `aria-disabled="true"` on locked tab buttons. `aria-label="The Howl (requires Karl subscription)"`.
+- **Locked cards:** `aria-label="Card locked. Upgrade to Karl to view."` on overlay.
+- **Reduced motion:** Progress bar animations respect `prefers-reduced-motion`. Badge does not animate.
+- **Color contrast:** All badge text states meet WCAG 2.1 AA 4.5:1 minimum. Warning/critical states tested against both void-black and forge backgrounds.

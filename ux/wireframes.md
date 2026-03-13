@@ -19,6 +19,17 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Trial Flow Wireframes (30-Day Free Trial)
+
+| File | Description |
+|------|-------------|
+| [wireframes/trial/trial-start.html](wireframes/trial/trial-start.html) | Trial start experience: toast notification on first card add (manual + import), persistent TopBar trial badge, 4 scenarios (desktop toast, badge states, mobile 375px, import variant), 2 component specs (TrialStartToast, TrialBadge), localStorage key reference |
+| [wireframes/trial/trial-status.html](wireframes/trial/trial-status.html) | During-trial messaging: TrialStatusPanel dropdown (click badge to open), progress bar, personalized value metrics (cards tracked, fees monitored, alerts received), day-15 mid-trial checkpoint toast, Settings page trial row, 5 scenarios (healthy day 8, warning day 27, Settings row, mobile 375px, mid-trial nudge), component spec |
+| [wireframes/trial/trial-expiry.html](wireframes/trial/trial-expiry.html) | Day 30 expiry: TrialExpiryModal with value recap + feature comparison + data safety reassurance, subscribe vs. decline (both full-width buttons), post-decline dashboard with upgrade banner, returning user re-subscribe via Settings, 5 scenarios (desktop modal, mobile 375px, post-decline dashboard, gated feature access, Settings re-subscribe), component spec |
+| [wireframes/trial/trial-feature-gates.html](wireframes/trial/trial-feature-gates.html) | Feature gate behavior: during-trial (all unlocked) vs. after-trial (Thrall gates active), tab bar with lock icons + KARL badges, card limit overlay (3 visible / N locked), mobile 375px bottom tab gates, complete feature gate matrix table, localStorage keys reference, implementation notes for FiremanDecko |
+
+---
+
 ## Sprint 10 Wireframes
 
 | Story | File | Description |
@@ -125,6 +136,11 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Anonymous Checkout Email Form | [wireframes/stripe-direct/anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html) | Email collection modal for anonymous Stripe subscribers, validation states, loading, mobile |
 | Common Karl Upsell Dialog | [wireframes/stripe-direct/karl-upsell-dialog.html](wireframes/stripe-direct/karl-upsell-dialog.html) | Shared KarlUpsellDialog for all Karl-gated features (#377, #378, #398): prop-driven feature icon/name/tagline/teaser, lock badge overlay, $3.99/mo price row, direct Stripe CTA; desktop + mobile bottom-sheet; props table per feature; anatomy annotation; interaction spec |
 | Karl Upsell Dialog — Artwork Alignment | [wireframes/stripe-direct/karl-upsell-dialog-artwork.html](wireframes/stripe-direct/karl-upsell-dialog-artwork.html) | Updated KarlUpsellDialog with featureImage prop — matches /features page artwork (#560): before/after Valhalla comparison, Howl + Smart Import variants, mobile 375px bottom-sheet, full featureImage mapping table (all 9 Karl features), ThemedFeatureImage anatomy, props diff |
+| **trial** | | |
+| Trial Start | [wireframes/trial/trial-start.html](wireframes/trial/trial-start.html) | Toast on first card add, TopBar badge, import variant, mobile 375px; component specs (TrialStartToast, TrialBadge) |
+| Trial Status &amp; During-Trial Messaging | [wireframes/trial/trial-status.html](wireframes/trial/trial-status.html) | Status panel dropdown, progress bar, value metrics, day-15 nudge, Settings row, mobile 375px; component spec (TrialStatusPanel) |
+| Trial Expiry &amp; Upgrade Prompt | [wireframes/trial/trial-expiry.html](wireframes/trial/trial-expiry.html) | Expiry modal, value recap, feature comparison, data safety, post-decline dashboard, re-subscribe path; component spec (TrialExpiryModal) |
+| Trial Feature Gates | [wireframes/trial/trial-feature-gates.html](wireframes/trial/trial-feature-gates.html) | During-trial vs. Thrall gate states, tab bar locks, card limit overlay, mobile bottom tabs, gate matrix, localStorage keys |
 | **marketing** | | |
 | Static Site Footer | [wireframes/marketing/static-site-footer.html](wireframes/marketing/static-site-footer.html) | Dedicated footer spec: brand, quote, runes, CTA, session link, legal row (Privacy Policy + Terms of Service), team credits; easter egg triggers preserved |
 | **marketing-site** | | |

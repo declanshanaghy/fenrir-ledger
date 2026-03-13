@@ -27,12 +27,13 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [multi-idp-interaction-spec.md](multi-idp-interaction-spec.md) -- Interaction spec: multi-IDP sign-in dialog (planned Clerk integration)
 - [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) -- Mermaid diagram conventions for all pack members
 
-### Wireframes (47 HTML5 documents — audited 2026-03-12)
+### Wireframes (51 HTML5 documents — audited 2026-03-12)
 
 | Category | Files |
 |----------|-------|
 | app | [dashboard-tabs.html](wireframes/app/dashboard-tabs.html), [howl-karl-tier.html](wireframes/app/howl-karl-tier.html), [valhalla.html](wireframes/app/valhalla.html), [valhalla-karl-gated.html](wireframes/app/valhalla-karl-gated.html) |
 | chrome | [sidebar-removal-dropdown-settings.html](wireframes/chrome/sidebar-removal-dropdown-settings.html), [topbar.html](wireframes/chrome/topbar.html), [profile-dropdown-avatar-right.html](wireframes/chrome/profile-dropdown-avatar-right.html), [profile-dropdown-redesign.html](wireframes/chrome/profile-dropdown-redesign.html), [howl-panel.html](wireframes/chrome/howl-panel.html), [footer.html](wireframes/chrome/footer.html), [button-feedback-states.html](wireframes/chrome/button-feedback-states.html), [dashboard-tab-headers.html](wireframes/chrome/dashboard-tab-headers.html) |
+| trial | [trial-start.html](wireframes/trial/trial-start.html), [trial-status.html](wireframes/trial/trial-status.html), [trial-expiry.html](wireframes/trial/trial-expiry.html), [trial-feature-gates.html](wireframes/trial/trial-feature-gates.html) |
 | cards | [add-card.html](wireframes/cards/add-card.html), [wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) |
 | auth | [sign-in.html](wireframes/auth/sign-in.html), [multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html), [migration-prompt.html](wireframes/auth/migration-prompt.html), [upsell-banner.html](wireframes/auth/upsell-banner.html) |
 | notifications | [ragnarok-threshold.html](wireframes/notifications/ragnarok-threshold.html), [card-count-milestones.html](wireframes/notifications/card-count-milestones.html) |

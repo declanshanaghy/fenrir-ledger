@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Trial Status Panel &amp; During-Trial Messaging</title>
+  <style>
+    /* Layout and structure only. No theme styling. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    .page { display: flex; flex-direction: column; gap: 56px; padding: 32px 24px; }
+    .scenario { display: flex; flex-direction: column; gap: 12px; }
+    .scenario-label {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.08em; border-bottom: 1px solid; padding-bottom: 6px;
+    }
+    .note {
+      font-size: 11px; font-style: italic;
+      border-left: 2px solid; padding-left: 8px; margin: 4px 0;
+    }
+    .annotation-box {
+      border: 1px dashed; padding: 12px; font-size: 11px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .annotation-box dt { font-weight: 600; }
+    .annotation-box dd { margin-left: 12px; }
+
+    /* =====================================================================
+       TRIAL STATUS PANEL
+       =====================================================================
+       Dropdown panel anchored to the TrialBadge in the TopBar.
+       Shows trial progress, value summary, and upgrade CTA.
+
+       Design intent: Show the user the VALUE they have received during
+       the trial. Personalized metrics make the trial feel earned, not
+       rented. The upgrade CTA is present but not aggressive.
+
+       Panel opens via: click on TrialBadge
+       Panel closes via: click outside, Escape, or badge re-click
+    ===================================================================== */
+
+    /* -- App shell ---------------------------------------------------------- */
+    .app-shell {
+      display: flex; flex-direction: column;
+      min-height: 400px; border: 1px solid;
+      position: relative;
+    }
+    .topbar {
+      height: 48px; border-bottom: 1px solid;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px;
+    }
+    .topbar-brand { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .trial-badge {
+      font-size: 11px; font-weight: 600; border: 1px solid;
+      padding: 2px 8px; cursor: pointer;
+    }
+    .topbar-avatar {
+      width: 32px; height: 32px; border: 1px dashed;
+      display: flex; align-items: center; justify-content: center; font-size: 12px;
+    }
+    .content-area { padding: 24px 16px; flex: 1; }
+
+    /* -- Trial status panel (dropdown) -------------------------------------- */
+    .trial-panel {
+      position: absolute;
+      top: 52px;
+      right: 56px;
+      width: 320px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      /* z-index: 210 (modal layer — same as profile dropdown) */
+    }
+    .trial-panel-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid;
+    }
+    .trial-panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .trial-panel-subtitle {
+      font-size: 12px;
+      font-style: italic;
+    }
+
+    /* -- Progress bar ------------------------------------------------------- */
+    .trial-progress {
+      padding: 12px 20px;
+      border-bottom: 1px solid;
+    }
+    .progress-bar-track {
+      height: 6px;
+      border: 1px solid;
+      margin-bottom: 6px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 73%; /* Example: 22/30 days used */
+      border-right: 1px solid;
+    }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+    }
+
+    /* -- Value summary section ---------------------------------------------- */
+    .trial-value {
+      padding: 12px 20px;
+      border-bottom: 1px solid;
+    }
+    .value-heading {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .value-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .value-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .value-number {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .value-label {
+      font-size: 10px;
+    }
+
+    /* -- CTA section -------------------------------------------------------- */
+    .trial-cta {
+      padding: 12px 20px 16px;
+    }
+    .cta-button {
+      width: 100%;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid;
+      cursor: pointer;
+      text-align: center;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cta-secondary {
+      font-size: 11px;
+      text-align: center;
+      margin-top: 8px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    /* -- Mobile variant ----------------------------------------------------- */
+    .mobile-frame { max-width: 375px; border: 1px solid; position: relative; }
+    .mobile-trial-panel {
+      position: absolute;
+      top: 52px;
+      left: 8px;
+      right: 8px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* -- Settings integration ----------------------------------------------- */
+    .settings-section {
+      border: 1px solid;
+      padding: 20px;
+      max-width: 600px;
+    }
+    .settings-heading {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid;
+      font-size: 13px;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-label { font-weight: 500; }
+    .settings-value { font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ================================================================
+         SCENARIO 1: Trial Status Panel — Desktop, Day 8 (healthy)
+         User has used 8 of 30 days. No urgency.
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 1: Trial Status Panel — Desktop, Day 8 (22 days left)</div>
+
+      <div class="app-shell">
+        <nav class="topbar">
+          <div class="topbar-brand">FENRIR LEDGER</div>
+          <div class="topbar-right">
+            <div class="trial-badge" style="font-weight: 700;">22 days left</div>
+            <div class="topbar-avatar">&#5765;</div>
+          </div>
+        </nav>
+
+        <!-- Panel open -->
+        <div class="trial-panel" role="dialog" aria-labelledby="trial-panel-title">
+          <div class="trial-panel-header">
+            <div class="trial-panel-title" id="trial-panel-title">Karl Trial</div>
+            <div class="trial-panel-subtitle">The wolf runs with the pack.</div>
+            <p class="note">Voice 2 (atmospheric) subtitle. Changes based on days remaining.</p>
+          </div>
+
+          <div class="trial-progress">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" style="width: 27%;"></div>
+            </div>
+            <div class="progress-labels">
+              <span>Day 8 of 30</span>
+              <span>22 days remaining</span>
+            </div>
+          </div>
+
+          <div class="trial-value">
+            <div class="value-heading">Your Trial So Far</div>
+            <div class="value-grid">
+              <div class="value-item">
+                <div class="value-number">7</div>
+                <div class="value-label">Cards tracked</div>
+              </div>
+              <div class="value-item">
+                <div class="value-number">$1,240</div>
+                <div class="value-label">Fees monitored</div>
+              </div>
+              <div class="value-item">
+                <div class="value-number">3</div>
+                <div class="value-label">Alerts received</div>
+              </div>
+              <div class="value-item">
+                <div class="value-number">1</div>
+                <div class="value-label">Cards in Valhalla</div>
+              </div>
+            </div>
+            <p class="note">
+              Values are computed from localStorage card data.
+              "Fees monitored" = sum of all annual fees across tracked cards.
+              "Alerts received" = count of Howl alerts shown during trial.
+              "Cards in Valhalla" = count of cards closed during trial.
+              All values are real — no synthetic/fake data.
+            </p>
+          </div>
+
+          <div class="trial-cta">
+            <div class="cta-button">Subscribe for $3.99/month</div>
+            <div class="cta-secondary">Not now</div>
+            <p class="note">
+              CTA uses existing Stripe Checkout flow.
+              "Not now" closes the panel. No penalty. No dismiss flag —
+              panel can be reopened anytime via the badge.
+            </p>
+          </div>
+        </div>
+
+        <div class="content-area" style="min-height: 200px;"></div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 2: Trial Status Panel — Day 27 (warning state)
+         Urgency increases. Copy shifts to loss aversion.
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 2: Trial Status Panel — Desktop, Day 27 (3 days left, warning)</div>
+
+      <div class="app-shell">
+        <nav class="topbar">
+          <div class="topbar-brand">FENRIR LEDGER</div>
+          <div class="topbar-right">
+            <div class="trial-badge" style="font-weight: 700;">3 days left</div>
+            <div class="topbar-avatar">&#5765;</div>
+          </div>
+        </nav>
+
+        <div class="trial-panel" role="dialog" aria-labelledby="trial-panel-title-2">
+          <div class="trial-panel-header">
+            <div class="trial-panel-title" id="trial-panel-title-2">Karl Trial</div>
+            <div class="trial-panel-subtitle">3 days remain. Your data is safe.</div>
+            <p class="note">
+              Reassurance copy: "Your data is safe" — reduces anxiety.
+              No guilt. No "you'll lose everything" pressure.
+            </p>
+          </div>
+
+          <div class="trial-progress">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" style="width: 90%;"></div>
+            </div>
+            <div class="progress-labels">
+              <span>Day 27 of 30</span>
+              <span>3 days remaining</span>
+            </div>
+          </div>
+
+          <div class="trial-value">
+            <div class="value-heading">What You Built During Your Trial</div>
+            <div class="value-grid">
+              <div class="value-item">
+                <div class="value-number">12</div>
+                <div class="value-label">Cards tracked</div>
+              </div>
+              <div class="value-item">
+                <div class="value-number">$2,840</div>
+                <div class="value-label">Fees monitored</div>
+              </div>
+              <div class="value-item">
+                <div class="value-number">8</div>
+                <div class="value-label">Alerts received</div>
+              </div>
+              <div class="value-item">
+                <div class="value-number">$390</div>
+                <div class="value-label">Potential savings</div>
+              </div>
+            </div>
+            <p class="note">
+              Heading shifts from "Your Trial So Far" to "What You Built During Your Trial"
+              — past tense, ownership language. Reinforces investment.
+              "Potential savings" replaces "Cards in Valhalla" when user has closed cards
+              and avoided fees — computed from fee amounts on closed cards.
+            </p>
+          </div>
+
+          <div class="trial-cta">
+            <div class="cta-button">Keep full access — $3.99/month</div>
+            <div class="cta-secondary">I'll decide later</div>
+            <p class="note">
+              CTA text shifts from "Subscribe" to "Keep full access" —
+              frames the action as continuity, not purchase.
+              Dismiss text: "I'll decide later" (softer than "Not now").
+              Still no guilt. Just value framing.
+            </p>
+          </div>
+        </div>
+
+        <div class="content-area" style="min-height: 200px;"></div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 3: Settings Page — Trial Status Row
+         Trial info is also accessible from Settings.
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 3: Settings Page — Trial Status Row (always visible during trial)</div>
+
+      <div class="settings-section">
+        <div class="settings-heading">Subscription</div>
+        <div class="settings-row">
+          <span class="settings-label">Current plan</span>
+          <span class="settings-value">Karl Trial (22 days remaining)</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Trial started</span>
+          <span class="settings-value">February 18, 2026</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Trial ends</span>
+          <span class="settings-value">March 20, 2026</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Cards tracked</span>
+          <span class="settings-value">7</span>
+        </div>
+        <div class="settings-row" style="border-bottom: none;">
+          <div class="cta-button" style="width: auto; padding: 8px 20px; min-height: 40px;">
+            Subscribe for $3.99/month
+          </div>
+        </div>
+        <p class="note">
+          The Settings subscription section shows trial details alongside
+          the existing StripeSettings component. This integrates with
+          the existing subscription management UI.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 4: Trial Status Panel — Mobile 375px
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 4: Trial Status Panel — Mobile 375px</div>
+
+      <div class="mobile-frame">
+        <nav class="topbar">
+          <div class="topbar-brand" style="font-size: 11px;">FENRIR</div>
+          <div class="topbar-right">
+            <div class="trial-badge" style="font-size: 10px;">22 days</div>
+            <div class="topbar-avatar" style="width: 28px; height: 28px; font-size: 10px;">&#5765;</div>
+          </div>
+        </nav>
+
+        <div class="mobile-trial-panel" role="dialog" aria-labelledby="trial-panel-title-m">
+          <div class="trial-panel-header">
+            <div class="trial-panel-title" id="trial-panel-title-m">Karl Trial</div>
+            <div class="trial-panel-subtitle">The wolf runs with the pack.</div>
+          </div>
+
+          <div class="trial-progress">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" style="width: 27%;"></div>
+            </div>
+            <div class="progress-labels">
+              <span>Day 8 of 30</span>
+              <span>22 days left</span>
+            </div>
+          </div>
+
+          <div class="trial-value">
+            <div class="value-heading">Your Trial So Far</div>
+            <div class="value-grid">
+              <div class="value-item">
+                <div class="value-number">7</div>
+                <div class="value-label">Cards tracked</div>
+              </div>
+              <div class="value-item">
+                <div class="value-number">$1,240</div>
+                <div class="value-label">Fees monitored</div>
+              </div>
+            </div>
+            <p class="note">
+              Mobile: 2-column grid stays, but only top 2 metrics shown.
+              "Alerts received" and "Valhalla" hidden on mobile to save space.
+              Full metrics visible in Settings.
+            </p>
+          </div>
+
+          <div class="trial-cta">
+            <div class="cta-button">Subscribe for $3.99/month</div>
+            <div class="cta-secondary">Not now</div>
+          </div>
+        </div>
+
+        <div class="content-area" style="min-height: 200px;"></div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SCENARIO 5: During-Trial Nudge — Day 15 (mid-trial checkpoint)
+         A one-time toast at the halfway mark.
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Scenario 5: Mid-Trial Checkpoint Toast — Day 15</div>
+
+      <div style="max-width: 380px;">
+        <div class="toast-container" style="border: 1px solid; padding: 16px 20px;">
+          <button style="position: absolute; top: 8px; right: 8px; font-size: 14px; cursor: pointer; border: none; padding: 4px; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;" aria-label="Dismiss">x</button>
+          <div style="font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em;">HALFWAY THERE</div>
+          <div style="font-size: 15px; font-weight: 700;">15 days left in your trial</div>
+          <div style="font-size: 13px; line-height: 1.5;">
+            You've tracked 9 cards and $1,840 in annual fees.
+            Keep the wolves watching?
+          </div>
+          <div style="margin-top: 8px;">
+            <div class="cta-button" style="font-size: 12px; padding: 8px 12px; min-height: 36px;">Subscribe now</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="annotation-box">
+        <dt>Trigger:</dt>
+        <dd>Shown once when trial reaches day 15 (or first login after day 15)</dd>
+        <dd>localStorage key: fenrir:trial_midpoint_shown = "true"</dd>
+        <dt>Frequency:</dt>
+        <dd>ONCE. Never repeats after dismissal or CTA click.</dd>
+        <dt>Copy strategy:</dt>
+        <dd>Personalized with real card count and fee total from localStorage.</dd>
+        <dd>"Keep the wolves watching?" — soft Voice 2 nudge, not guilt.</dd>
+        <dt>CTA:</dt>
+        <dd>"Subscribe now" — inline button in toast. Same Stripe flow.</dd>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         COMPONENT SPEC: TrialStatusPanel
+         ================================================================ -->
+    <section class="scenario">
+      <div class="scenario-label">Component Spec: TrialStatusPanel</div>
+      <div class="annotation-box">
+        <dt>Component:</dt>
+        <dd>TrialStatusPanel — dropdown anchored to TrialBadge in TopBar</dd>
+
+        <dt>Render conditions:</dt>
+        <dd>Opened by clicking TrialBadge</dd>
+        <dd>Only renders during active trial or within 7 days of expiry</dd>
+
+        <dt>Sections:</dt>
+        <dd>1. Header — "Karl Trial" + atmospheric subtitle</dd>
+        <dd>2. Progress bar — visual + text "Day N of 30"</dd>
+        <dd>3. Value summary — personalized metrics from localStorage</dd>
+        <dd>4. CTA — Stripe subscribe button + soft dismiss</dd>
+
+        <dt>Atmospheric subtitle rotation (Voice 2):</dt>
+        <dd>Days 30-20: "The wolf runs with the pack."</dd>
+        <dd>Days 19-10: "The pack grows stronger."</dd>
+        <dd>Days 9-4: "The hunt nears its end."</dd>
+        <dd>Days 3-1: "N days remain. Your data is safe."</dd>
+        <dd>Day 0: "Today is the last day. Your data is safe."</dd>
+
+        <dt>Value metrics (computed from localStorage):</dt>
+        <dd>Cards tracked — count of all cards in localStorage</dd>
+        <dd>Fees monitored — sum of annualFee fields across all cards</dd>
+        <dd>Alerts received — count of Howl alerts shown (fenrir:howl_alert_count)</dd>
+        <dd>Cards in Valhalla / Potential savings — conditional on user activity</dd>
+
+        <dt>CTA text rotation:</dt>
+        <dd>Days 30-6: "Subscribe for $3.99/month"</dd>
+        <dd>Days 5-0: "Keep full access — $3.99/month"</dd>
+        <dd>Expired: "Reactivate — $3.99/month"</dd>
+
+        <dt>Dismiss text rotation:</dt>
+        <dd>Days 30-6: "Not now"</dd>
+        <dd>Days 5-0: "I'll decide later"</dd>
+        <dd>Expired: "Maybe later"</dd>
+
+        <dt>Accessibility:</dt>
+        <dd>role="dialog" + aria-labelledby on panel title</dd>
+        <dd>Focus trapped inside panel while open</dd>
+        <dd>Dismiss: Escape key, click outside, or "Not now" link</dd>
+        <dd>aria-live="polite" on progress section for screen reader updates</dd>
+
+        <dt>Z-index:</dt>
+        <dd>210 (same as profile dropdown, modal layer)</dd>
+
+        <dt>Mobile:</dt>
+        <dd>Panel stretches full width (375px - 16px margins = 343px)</dd>
+        <dd>Value grid reduces to 2 metrics (cards + fees only)</dd>
+        <dd>Panel anchored below TopBar, no right-alignment</dd>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>
