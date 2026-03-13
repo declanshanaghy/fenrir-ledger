@@ -1,0 +1,86 @@
+# --------------------------------------------------------------------------
+# Fenrir Ledger — GKE Ingress
+#
+# Uses GKE-managed Ingress with Google-managed SSL certificate.
+# The SSL cert is provisioned via Terraform (google_compute_managed_ssl_certificate).
+#
+# For initial deployment, the app is accessible via the Ingress external IP.
+# DNS should point app.fenrirledger.com to the Ingress IP after provisioning.
+# --------------------------------------------------------------------------
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fenrir-app
+  namespace: fenrir-app
+  labels:
+    app.kubernetes.io/name: fenrir-app
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: frontend
+  annotations:
+    # Use the GKE Ingress controller (external HTTP(S) Load Balancer)
+    kubernetes.io/ingress.class: "gce"
+    # Reference the Google-managed SSL cert created by Terraform
+    networking.gke.io/managed-certificates: "fenrir-app-cert"
+    # Redirect HTTP to HTTPS
+    kubernetes.io/ingress.allow-http: "false"
+    # Backend health check configuration
+    cloud.google.com/backend-config: '{"default":"fenrir-app-backend-config"}'
+spec:
+  defaultBackend:
+    service:
+      name: fenrir-app
+      port:
+        number: 80
+  rules:
+    - host: app.fenrirledger.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fenrir-app
+                port:
+                  number: 80
+
+---
+# --------------------------------------------------------------------------
+# Managed Certificate — References the Terraform-created cert
+# --------------------------------------------------------------------------
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: fenrir-app-cert
+  namespace: fenrir-app
+  labels:
+    app.kubernetes.io/name: fenrir-app
+    app.kubernetes.io/part-of: fenrir-ledger
+spec:
+  domains:
+    - app.fenrirledger.com
+
+---
+# --------------------------------------------------------------------------
+# Backend Config — Health check and session affinity for GKE Ingress
+# --------------------------------------------------------------------------
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: fenrir-app-backend-config
+  namespace: fenrir-app
+  labels:
+    app.kubernetes.io/name: fenrir-app
+    app.kubernetes.io/part-of: fenrir-ledger
+spec:
+  healthCheck:
+    checkIntervalSec: 15
+    timeoutSec: 5
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: /api/health
+    port: 3000
+  timeoutSec: 30
+  connectionDraining:
+    drainingTimeoutSec: 15
