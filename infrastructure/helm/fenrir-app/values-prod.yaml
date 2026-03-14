@@ -1,0 +1,31 @@
+# --------------------------------------------------------------------------
+# Fenrir Ledger — Production Overrides
+#
+# Usage: helm upgrade --install fenrir-app ./infrastructure/helm/fenrir-app \
+#          -f ./infrastructure/helm/fenrir-app/values-prod.yaml \
+#          --set app.image.tag=$IMAGE_TAG
+# --------------------------------------------------------------------------
+
+namespace: fenrir-app
+
+app:
+  replicaCount: 2
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+      ephemeral-storage: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+      ephemeral-storage: "512Mi"
+
+ingress:
+  enabled: true
+  hosts:
+    - fenrirledger.com
+    - www.fenrirledger.com
+
+redis:
+  enabled: true

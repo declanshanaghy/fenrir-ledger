@@ -1,0 +1,138 @@
+# --------------------------------------------------------------------------
+# Fenrir Ledger — Helm Chart Default Values
+#
+# These defaults produce output equivalent to the raw K8s manifests in
+# infrastructure/k8s/app/. Override per-environment with values-prod.yaml etc.
+# --------------------------------------------------------------------------
+
+namespace: fenrir-app
+
+# -- App Deployment --------------------------------------------------------
+app:
+  replicaCount: 2
+  revisionHistoryLimit: 5
+
+  image:
+    repository: us-central1-docker.pkg.dev/fenrir-ledger-prod/fenrir-images/fenrir-app
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  serviceAccountName: fenrir-app-sa
+
+  env:
+    NODE_ENV: "production"
+    PORT: "3000"
+    HOSTNAME: "0.0.0.0"
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+      ephemeral-storage: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+      ephemeral-storage: "512Mi"
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  readinessProbe:
+    httpGet:
+      path: /api/health
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+    successThreshold: 1
+
+  livenessProbe:
+    httpGet:
+      path: /api/health
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  startupProbe:
+    httpGet:
+      path: /api/health
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 12
+
+# -- Service ---------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: http
+
+# -- Ingress ---------------------------------------------------------------
+ingress:
+  enabled: true
+  className: "gce"
+  hosts:
+    - fenrirledger.com
+    - www.fenrirledger.com
+  annotations:
+    networking.gke.io/managed-certificates: "fenrir-app-cert"
+    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.global-static-ip-name: "fenrir-app-ip"
+    cloud.google.com/backend-config: '{"default":"fenrir-app-backend-config"}'
+
+  backendConfig:
+    enabled: true
+    healthCheck:
+      checkIntervalSec: 15
+      timeoutSec: 5
+      healthyThreshold: 1
+      unhealthyThreshold: 3
+      type: HTTP
+      requestPath: /api/health
+      port: 3000
+    timeoutSec: 30
+    connectionDraining:
+      drainingTimeoutSec: 15
+
+  managedCertificate:
+    enabled: true
+    domains:
+      - fenrirledger.com
+      - www.fenrirledger.com
+
+# -- Secrets (template only) -----------------------------------------------
+secrets:
+  # When enabled, creates the Secret resource with placeholder values.
+  # In production, secrets are injected by the CD pipeline via kubectl.
+  enabled: false
+  appBaseUrl: "https://fenrirledger.com"
+
+# -- Redis -----------------------------------------------------------------
+redis:
+  enabled: true
+  image: redis:7-alpine
+  replicas: 1
+  args: ["--appendonly", "yes"]
+
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+      ephemeral-storage: "64Mi"
+    limits:
+      cpu: "100m"
+      memory: "128Mi"
+      ephemeral-storage: "128Mi"
+
+  persistence:
+    size: 1Gi
+    accessMode: ReadWriteOnce
+
+  service:
+    port: 6379
