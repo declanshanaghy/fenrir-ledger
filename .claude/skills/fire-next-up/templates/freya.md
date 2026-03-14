@@ -41,7 +41,7 @@ NO tsc. NO build. This is product/docs work — there is no app code to verify.
   git push origin <BRANCH>
 
 **Step 5 — Create PR:**
-gh pr create --title "docs: <short title>" --body "PR for issue: #<NUMBER>
+gh pr create --title "Issue #<NUMBER> - docs: <short title>" --body "PR for issue: #<NUMBER>
 
 <summary>"
 
@@ -101,7 +101,7 @@ NO tsc. NO build. This is docs-only work.
   git push origin <BRANCH>
 
 **Step 5 — Create PR:**
-gh pr create --title "docs: <short title>" --body "PR for issue: #<NUMBER>
+gh pr create --title "Issue #<NUMBER> - docs: <short title>" --body "PR for issue: #<NUMBER>
 
 <summary of what was updated/removed/added>
 
