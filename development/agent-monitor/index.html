@@ -611,6 +611,130 @@
     ::-webkit-scrollbar-thumb:hover {
       background: var(--gold-light);
     }
+
+    /* Heckler profile dialog */
+    .heckler-dialog-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 7, 13, 0.85);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .heckler-dialog {
+      background: linear-gradient(135deg, #1a1a2e 0%, var(--void-black) 100%);
+      border: 2px solid var(--red);
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 420px;
+      width: 90vw;
+      box-shadow: 0 20px 60px rgba(239, 68, 68, 0.2);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .heckler-dialog-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      display: block;
+      border: 3px solid var(--red);
+      object-fit: cover;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+    }
+
+    .heckler-dialog-name {
+      text-align: center;
+      color: var(--red);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .heckler-dialog-role {
+      text-align: center;
+      color: var(--gold);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .heckler-dialog-bio {
+      color: var(--white);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .heckler-dialog-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .heckler-dialog-stat {
+      text-align: center;
+      padding: 0.5rem;
+      background: rgba(239, 68, 68, 0.08);
+      border-radius: 0.5rem;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .heckler-dialog-stat-value {
+      color: var(--red);
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .heckler-dialog-stat-label {
+      color: var(--gray);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+    }
+
+    .heckler-dialog-close {
+      display: block;
+      width: 100%;
+      padding: 0.6rem;
+      background: var(--red);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .heckler-dialog-close:hover {
+      background: var(--red-dark);
+    }
+
+    .mayo-avatar {
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .mayo-avatar:hover {
+      transform: scale(1.15);
+    }
   </style>
 </head>
 <body>
@@ -785,6 +909,94 @@
         indicator.classList.remove('connected');
         statusText.textContent = text || 'Disconnected';
       }
+    }
+
+    // ========================================================================
+    // Heckler Family Profiles
+    // ========================================================================
+
+    const HECKLER_PROFILES = [
+      { img: 'assets/heckler-avatar.png', role: 'The Patriarch', why: "Been going to matches since before the curse began. Has a permanent seat at the bar in Gill's, Westport. Once threw his flat cap so hard at the TV it broke the aerial. The whole pub cheered anyway. His pint is always full and his voice is always hoarse. Nobody heckles harder." },
+      { img: 'assets/heckler-avatar-2.png', role: 'The Mammy with the Flag', why: "She sewed that Mayo flag herself from curtain material in 1996 and it's been to every final since. Cries at the national anthem, screams through the match, cries again at the final whistle regardless of result. Her handbag contains rosary beads, a naggin of brandy, and a letter to Sam Maguire she wrote in 1997." },
+      { img: 'assets/heckler-avatar-3.png', role: 'The Young Farmer', why: "Left the silage half-cut to watch this. Has Mayo GAA tattooed on his shoulder and Elvery's mud on his boots. Drove the tractor to Croke Park in 2017 and parked it on Jones Road. RTÉ interviewed the tractor. He was fierce proud." },
+      { img: 'assets/heckler-granny.png', role: 'The Granny', why: "Remembers 1951. ACTUALLY remembers it — she was there, age 7, on her father's shoulders. Has been waiting 73 years and she is NOT leaving this earth without seeing Sam come home. Makes the best soda bread in Connacht and will fight anyone who says otherwise. Her grandchildren number 47." },
+      { img: 'assets/heckler-da.png', role: 'The Da', why: "Accountant by day, absolute lunatic by Sunday. Wears his good suit to matches because 'ye never know when Sam might show up and ye want to look respectable.' Has a spreadsheet tracking every Mayo score since 1989. His glasses fog up from the passion." },
+      { img: 'assets/heckler-uncle.png', role: 'The Uncle', why: "Played minor for Mayo in '84. Still talks about it. Every. Single. Sunday. His V-neck jumper has been to more All-Ireland finals than most players. Claims he could still 'do a job at corner-back if they'd feckin ask.' Nobody has the heart to tell him he's 58." },
+      { img: 'assets/heckler-mammy.png', role: 'The Mammy', why: "Doesn't fully understand the rules but NOBODY supports Mayo harder. Once drove to Dublin and back in a day because she heard there was a challenge match. It was a U-14 hurling game. She stayed and cheered anyway. Her kitchen is a shrine to green and red." },
+      { img: 'assets/heckler-teen.png', role: 'The Teenager', why: "Has never known anything but heartbreak but is somehow the most optimistic person in the family. Runs the Mayo GAA TikTok fan account with 12 followers (all relatives). His school essays are exclusively about the 2016 replay. His teachers have stopped fighting it." },
+      { img: 'assets/heckler-lad.png', role: 'The Young Lad', why: "The family prodigy — can recite every Mayo team since 2004 from memory. His Communion money went on a Cillian O'Connor jersey. Wears his glasses with fierce pride because 'David Clarke wore glasses and HE was class.' Dreams in green and red." },
+      { img: 'assets/heckler-lass.png', role: 'The Wee Girl', why: "The youngest heckler in the family and arguably the loudest. Got sent home from school for painting the classroom green and red. Her favourite bedtime story is the 2012 drawn final. She can't spell 'championship' but she can ROAR it." },
+    ];
+
+    function showHecklerProfile(name, avatarImg) {
+      const profile = HECKLER_PROFILES.find(p => p.img === avatarImg) || HECKLER_PROFILES[0];
+      const overlay = document.createElement('div');
+      overlay.className = 'heckler-dialog-overlay';
+      overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+      overlay.innerHTML = `
+        <div class="heckler-dialog">
+          <img class="heckler-dialog-avatar" src="${profile.img}" alt="${escapeHtml(name)}">
+          <div class="heckler-dialog-name">${escapeHtml(name)}</div>
+          <div class="heckler-dialog-role">${escapeHtml(profile.role)}</div>
+          <div class="heckler-dialog-bio">${escapeHtml(profile.why)}</div>
+          <div class="heckler-dialog-stats">
+            <div class="heckler-dialog-stat">
+              <div class="heckler-dialog-stat-value">🟢🔴</div>
+              <div class="heckler-dialog-stat-label">Mayo for Sam</div>
+            </div>
+            <div class="heckler-dialog-stat">
+              <div class="heckler-dialog-stat-value">Since '51</div>
+              <div class="heckler-dialog-stat-label">Waiting</div>
+            </div>
+          </div>
+          <button class="heckler-dialog-close" onclick="this.closest('.heckler-dialog-overlay').remove()">
+            MAYO ABÚ — Back to the Match!! 🏆
+          </button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    // ========================================================================
+    // Agent Profiles
+    // ========================================================================
+
+    const AGENT_PROFILES = {
+      FiremanDecko: { img: '../../.claude/agents/profiles/fireman-decko-dark.png', role: 'Principal Engineer', emoji: '🔥', bio: "Forges code in the fires of Muspelheim. Owns architecture, infrastructure, and development. If it compiles, it's because FiremanDecko willed it. Has never met a merge conflict he couldn't resolve, a build he couldn't fix, or a heckler he couldn't silence. Ships code like Mayo ships heartbreak — relentlessly." },
+      Loki: { img: '../../.claude/agents/profiles/loki-dark.png', role: 'QA Tester', emoji: '🦊', bio: "The trickster god's own son — fitting that he finds every flaw. Writes tests that would make a grown developer weep. His Vitest suites are legendary, his Playwright specs are merciless, and his QA verdicts are final. PASS or FAIL, there is no maybe. Son of Loki, father of Fenrir — it's in the blood." },
+      Luna: { img: '../../.claude/agents/profiles/luna-dark.png', role: 'UX Designer', emoji: '🌙', bio: "Moonlight illuminates the wireframes. Luna sees the user journey before the first pixel is placed. Her HTML wireframes are structure-only poetry — no theme, no fluff, just pure layout truth. Mobile-first, always. If the interaction spec says 375px minimum, she means it. The Allfather trusts her eye." },
+      Freya: { img: '../../.claude/agents/profiles/freya-dark.png', role: 'Product Owner', emoji: '⚔️', bio: "Goddess of strategy, keeper of the backlog. Freya interviews Odin, distils chaos into requirements, and files issues with the precision of a Valkyrie choosing the slain. Her product briefs are legendary. Her prioritisation is ruthless. When Freya says 'ship it,' the pack ships it." },
+      Heimdall: { img: '../../.claude/agents/profiles/heimdall-dark.png', role: 'Security Specialist', emoji: '👁️', bio: "The watchman who sees all threats. Heimdall guards the Bifrost — and every API route, every secret, every auth flow. His OWASP audits are thorough, his threat models comprehensive, and his security reports unflinching. No secret passes unmasked. No vulnerability survives his gaze." },
+    };
+
+    function showAgentProfile(agentName) {
+      const profile = AGENT_PROFILES[agentName];
+      if (!profile) return;
+      const overlay = document.createElement('div');
+      overlay.className = 'heckler-dialog-overlay';
+      overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+      overlay.innerHTML = `
+        <div class="heckler-dialog" style="border-color: var(--green);">
+          <img class="heckler-dialog-avatar" src="${profile.img}" alt="${escapeHtml(agentName)}" style="border-color: var(--green);" onerror="this.outerHTML='<div style=\\'width:100px;height:100px;border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:3rem;background:linear-gradient(135deg,var(--green),var(--green-dark));border:3px solid var(--green)\\'>${profile.emoji}</div>'">
+          <div class="heckler-dialog-name" style="color: var(--green);">${escapeHtml(agentName)}</div>
+          <div class="heckler-dialog-role">${escapeHtml(profile.role)}</div>
+          <div class="heckler-dialog-bio">${escapeHtml(profile.bio)}</div>
+          <div class="heckler-dialog-stats">
+            <div class="heckler-dialog-stat" style="border-color: rgba(34,197,94,0.2); background: rgba(34,197,94,0.08);">
+              <div class="heckler-dialog-stat-value" style="color: var(--green);">${profile.emoji}</div>
+              <div class="heckler-dialog-stat-label">${escapeHtml(profile.role)}</div>
+            </div>
+            <div class="heckler-dialog-stat" style="border-color: rgba(34,197,94,0.2); background: rgba(34,197,94,0.08);">
+              <div class="heckler-dialog-stat-value" style="color: var(--green);">⚡</div>
+              <div class="heckler-dialog-stat-label">For Sam</div>
+            </div>
+          </div>
+          <button class="heckler-dialog-close" style="background: var(--green);" onclick="this.closest('.heckler-dialog-overlay').remove()">
+            Back to the Code!! 💻
+          </button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
     }
 
     // Simple string hash for consistent avatar assignment per heckler name
@@ -1212,7 +1424,7 @@
           const agentImg = agentSlug ? `../../.claude/agents/profiles/${agentSlug}-dark.png` : '';
           const agentFallback = {FiremanDecko:'🔥',Loki:'🦊',Luna:'🌙',Freya:'⚔️',Heimdall:'👁️'}[event.agent] || '🤖';
           return `<div class="log-agent-bubble" id="${id}">
-            <div class="avatar">${agentImg ? `<img src="${agentImg}" alt="${escapeHtml(event.agent)}" onerror="this.parentElement.innerHTML='${agentFallback}'">` : agentFallback}</div>
+            <div class="avatar" style="cursor:pointer;" onclick="showAgentProfile('${escapeHtml(event.agent)}')">${agentImg ? `<img src="${agentImg}" alt="${escapeHtml(event.agent)}" onerror="this.parentElement.innerHTML='${agentFallback}'">` : agentFallback}</div>
             <div class="bubble-content">
               <div class="agent-name">${escapeHtml(event.agent)}</div>
               ${escapeHtml(event.text)}
@@ -1241,9 +1453,10 @@
 
         case 'mayo': {
           const heckImg = HECKLER_AVATARS[Math.abs(hashStr(event.name || '')) % HECKLER_AVATARS.length];
+          const nameEsc = escapeHtml(event.name || '?');
           return `<div class="log-mayo" id="${id}">
-            <div class="mayo-avatar"><img src="${heckImg}" onerror="this.parentElement.innerHTML='🍺'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
-            <div class="mayo-bubble">🟢🔴 <strong>${escapeHtml(event.name || '?')}</strong>: ${escapeHtml(event.text)} 🟢🔴</div>
+            <div class="mayo-avatar" onclick="showHecklerProfile('${nameEsc}', '${heckImg}')"><img src="${heckImg}" onerror="this.parentElement.innerHTML='🍺'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
+            <div class="mayo-bubble">🟢🔴 <strong>${nameEsc}</strong>: ${escapeHtml(event.text)} 🟢🔴</div>
           </div>`;
         }
 
