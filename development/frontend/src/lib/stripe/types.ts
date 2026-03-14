@@ -38,13 +38,12 @@ export const ACTIVE_STRIPE_STATUSES = new Set([
 ]);
 
 // ---------------------------------------------------------------------------
-// Stored Stripe entitlement (Vercel KV)
+// Stored Stripe entitlement (Redis)
 // ---------------------------------------------------------------------------
 
 /**
- * Stripe-specific entitlement record stored in Vercel KV.
+ * Stripe-specific entitlement record stored in Redis.
  *
- * Keyed by Google user sub: `entitlement:{googleSub}`
  * Keyed by Google user sub: `entitlement:{googleSub}`.
  */
 export interface StoredStripeEntitlement {

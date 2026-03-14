@@ -23,8 +23,7 @@
 #   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY — Stripe publishable key
 #   STRIPE_WEBHOOK_SECRET       — Stripe webhook signing secret
 #   STRIPE_PRICE_ID             — Stripe price ID
-#   KV_REST_API_URL             — KV store REST API URL
-#   KV_REST_API_TOKEN           — KV store REST API token
+#   (REDIS_URL is set inline — not a secret, just the in-cluster service URL)
 #   TF_VAR_BILLING_ACCOUNT_ID   — GCP billing account ID for Terraform
 #   CLAUDE_CODE_OAUTH_TOKEN     — OAuth subscription token for agent sandboxes (claude setup-token)
 #   GH_TOKEN_AGENTS             — GitHub PAT for agent repo access (commits, PRs, issues)
@@ -236,8 +235,7 @@ jobs:
             --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}" \
             --from-literal=STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
             --from-literal=STRIPE_PRICE_ID="${{ secrets.STRIPE_PRICE_ID }}" \
-            --from-literal=KV_REST_API_URL="${{ secrets.KV_REST_API_URL }}" \
-            --from-literal=KV_REST_API_TOKEN="${{ secrets.KV_REST_API_TOKEN }}" \
+            --from-literal=REDIS_URL="redis://redis.fenrir-app.svc.cluster.local:6379" \
             --from-literal=NEXT_PUBLIC_APP_VERSION="${{ github.sha }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
@@ -253,6 +251,22 @@ jobs:
         uses: azure/setup-helm@v4
         with:
           version: 'v3.20.1'
+
+      - name: Apply Redis StatefulSet
+        run: |
+          kubectl apply -f infrastructure/k8s/app/redis-statefulset.yaml
+
+      - name: Wait for Redis ready
+        run: |
+          kubectl rollout status statefulset/redis \
+            --namespace=fenrir-app \
+            --timeout=120s
+
+      - name: Apply K8s manifests
+        run: |
+          kubectl apply -f infrastructure/k8s/app/deployment.yaml
+          kubectl apply -f infrastructure/k8s/app/service.yaml
+          kubectl apply -f infrastructure/k8s/app/ingress.yaml
 
       - name: Deploy with Helm
         run: |
