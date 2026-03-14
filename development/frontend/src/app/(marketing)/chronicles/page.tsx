@@ -63,14 +63,21 @@ export default function ChroniclesIndexPage() {
             href={`/chronicles/${entry.slug}`}
             className="group block border border-border rounded-sm bg-card hover:border-primary/50 transition-colors p-6 flex flex-col gap-4"
           >
-            {/* Rune + date header */}
+            {/* Rune + badge + date header */}
             <div className="flex items-center justify-between">
-              <span
-                className="text-[28px] text-primary opacity-60 group-hover:opacity-100 transition-opacity"
-                aria-hidden="true"
-              >
-                {entry.rune}
-              </span>
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-[28px] text-primary opacity-60 group-hover:opacity-100 transition-opacity"
+                  aria-hidden="true"
+                >
+                  {entry.rune}
+                </span>
+                {entry.category === "agent" && (
+                  <span className="font-mono text-[0.55rem] font-semibold tracking-widest uppercase px-1.5 py-0.5 border border-emerald-500/40 text-emerald-500 bg-emerald-500/5 rounded-sm">
+                    Agent
+                  </span>
+                )}
+              </div>
               <time
                 dateTime={entry.date}
                 className="font-mono text-[0.65rem] text-muted-foreground tracking-wide uppercase"
