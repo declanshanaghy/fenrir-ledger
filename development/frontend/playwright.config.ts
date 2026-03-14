@@ -14,11 +14,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.SERVER_URL || "http://localhost:9653",
     trace: "off",
-    // Pass Vercel's automation bypass secret as a header so tests can reach
-    // preview deployments that are behind deployment protection.
-    extraHTTPHeaders: process.env.VERCEL_BYPASS_SECRET
-      ? { "x-vercel-protection-bypass": process.env.VERCEL_BYPASS_SECRET }
-      : {},
+    extraHTTPHeaders: {},
   },
   projects: [
     {
@@ -30,7 +26,7 @@ export default defineConfig({
   // Start a production server when no SERVER_URL is provided.
   // Uses `npm start` (serves pre-built .next output) — no on-demand compilation.
   // Reuses an existing server if one is already running.
-  // Skipped entirely when SERVER_URL is set (CI hitting a Vercel preview).
+  // Skipped entirely when SERVER_URL is set (CI hitting GKE prod).
   ...(!process.env.SERVER_URL
     ? {
         webServer: {

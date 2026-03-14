@@ -1,0 +1,135 @@
+# --------------------------------------------------------------------------
+# CI Tests — TypeScript Check + Unit Tests + Playwright E2E against GKE Prod
+#
+# Runs on every push to PR branches and workflow_dispatch:
+#   1. TypeScript type-checking (tsc --noEmit)
+#   2. Vitest unit tests
+#   3. Playwright E2E tests against https://fenrirledger.com
+#   4. Upload test artifacts + upsert PR comment with results
+#
+# Replaces the former Vercel-deployment-based CI workflow (Issue #734).
+#
+# Required GitHub Secrets:
+#   (none — tests run against the public GKE prod endpoint)
+# --------------------------------------------------------------------------
+
+name: CI Tests
+
+concurrency:
+  group: ci-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+jobs:
+  ci:
+    name: TypeScript + Unit + E2E
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    defaults:
+      run:
+        working-directory: development/frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: development/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        id: tsc
+        run: npx tsc --noEmit
+
+      - name: Run unit tests
+        id: unit
+        run: npm run test:unit
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E tests
+        id: e2e
+        env:
+          SERVER_URL: https://fenrirledger.com
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: development/frontend/playwright-report/
+          retention-days: 14
+
+      - name: Upsert PR comment with CI results
+        if: always() && github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const sha = context.sha;
+            const branch = context.ref.replace('refs/heads/', '');
+
+            // Find open PR for this branch
+            const pulls = await github.rest.pulls.list({
+              owner, repo,
+              head: `${owner}:${branch}`,
+              state: 'open',
+            });
+
+            if (pulls.data.length === 0) return;
+
+            const prNumber = pulls.data[0].number;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const status = '${{ job.status }}' === 'success' ? '✅' : '❌';
+            const marker = '<!-- ci-tests-comment -->';
+
+            const body = [
+              marker,
+              `## ${status} CI Results`,
+              '',
+              `| Check | Status |`,
+              `|-------|--------|`,
+              `| TypeScript | ${'${{ steps.tsc.outcome }}' || '—'} |`,
+              `| Unit Tests | ${'${{ steps.unit.outcome }}' || '—'} |`,
+              `| E2E Tests  | ${'${{ steps.e2e.outcome }}' || '—'} |`,
+              '',
+              `**Commit:** \`${sha.slice(0, 7)}\``,
+              `**Run:** [View details](${runUrl})`,
+              `**Target:** https://fenrirledger.com`,
+            ].join('\n');
+
+            // Upsert: find existing comment or create new
+            const comments = await github.rest.issues.listComments({
+              owner, repo,
+              issue_number: prNumber,
+            });
+            const existing = comments.data.find(c => c.body?.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo,
+                issue_number: prNumber,
+                body,
+              });
+            }
