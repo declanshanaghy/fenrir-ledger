@@ -46,6 +46,13 @@ try {
   // Avatar not found — image will be omitted gracefully
 }
 
+let streamJs: Buffer | null = null;
+try {
+  streamJs = readFileSync(resolve(__dirname, "../public/js/stream.js"));
+} catch {
+  // stream.js not found — incremental renderer unavailable
+}
+
 function buildHlidskjalfHtml(quote: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -422,6 +429,7 @@ fetchJobs();
 setInterval(fetchJobs, 15000);
 setInterval(refreshTimestamps, 10000);
 </script>
+<script src="/js/stream.js"></script>
 </body>
 </html>`;
 }
@@ -435,6 +443,17 @@ app.get("/static/odin-dark.png", (c) => {
     headers: {
       "Content-Type": "image/png",
       "Cache-Control": "public, max-age=86400",
+    },
+  });
+});
+
+// Serve client-side incremental renderer
+app.get("/js/stream.js", (c) => {
+  if (!streamJs) return c.notFound();
+  return new Response(streamJs as Buffer, {
+    headers: {
+      "Content-Type": "application/javascript; charset=utf-8",
+      "Cache-Control": "no-cache",
     },
   });
 });
