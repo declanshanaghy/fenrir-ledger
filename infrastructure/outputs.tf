@@ -14,7 +14,7 @@ output "cluster_endpoint" {
 }
 
 output "cluster_location" {
-  description = "Location (zone) of the GKE cluster"
+  description = "Location (region) of the GKE cluster"
   value       = google_container_cluster.autopilot.location
 }
 
@@ -35,7 +35,7 @@ output "agents_service_account_email" {
 
 output "kubectl_connect_command" {
   description = "Command to configure kubectl for this cluster"
-  value       = "gcloud container clusters get-credentials ${google_container_cluster.autopilot.name} --zone ${var.zone} --project ${var.project_id}"
+  value       = "gcloud container clusters get-credentials ${google_container_cluster.autopilot.name} --region ${var.region} --project ${var.project_id}"
 }
 
 output "vpc_network" {
