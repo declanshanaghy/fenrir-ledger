@@ -21,7 +21,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { kv } from "@vercel/kv";
+import { getRedisClient } from "@/lib/kv/redis-client";
 import { stripe } from "@/lib/stripe/api";
 import { verifyWebhookSignature, buildEntitlementFromSubscription, mapStripeStatusToTier } from "@/lib/stripe/webhook";
 import {
@@ -307,7 +307,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // --- Check for duplicate event (deduplication cache) ---
   const deduplicationKey = `stripe-event-processed:${event.id}`;
   try {
-    const alreadyProcessed = await kv.get(deduplicationKey);
+    const redis = getRedisClient();
+    const alreadyProcessed = await redis.get(deduplicationKey);
     if (alreadyProcessed) {
       log.info("Stripe webhook event already processed (duplicate detected)", {
         eventId: event.id,
@@ -402,7 +403,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // --- Mark event as processed in deduplication cache (with 24h TTL) ---
   try {
-    await kv.set(deduplicationKey, true, { ex: WEBHOOK_EVENT_DEDUP_TTL_SECONDS });
+    const dedupRedis = getRedisClient();
+    await dedupRedis.set(deduplicationKey, "1", "EX", WEBHOOK_EVENT_DEDUP_TTL_SECONDS);
     log.debug("Stripe webhook event marked as processed", {
       eventId: event.id,
       eventType: event.type,

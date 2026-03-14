@@ -1,5 +1,5 @@
 /**
- * Vercel KV entitlement store -- server-side persistence for subscription entitlements.
+ * Redis entitlement store -- server-side persistence for subscription entitlements.
  *
  * Stores and retrieves entitlement records keyed by Google user sub (authenticated)
  * or Stripe customer ID (anonymous).
@@ -15,7 +15,7 @@
  * @module kv/entitlement-store
  */
 
-import { kv } from "@vercel/kv";
+import { getRedisClient } from "@/lib/kv/redis-client";
 import type { StoredStripeEntitlement } from "@/lib/stripe/types";
 import { log } from "@/lib/logger";
 
@@ -93,7 +93,9 @@ export async function getStripeEntitlement(
 ): Promise<StoredStripeEntitlement | null> {
   log.debug("getStripeEntitlement called", { googleSub });
   try {
-    const result = await kv.get<StoredStripeEntitlement>(entitlementKey(googleSub));
+    const redis = getRedisClient();
+    const raw = await redis.get(entitlementKey(googleSub));
+    const result: StoredStripeEntitlement | null = raw ? JSON.parse(raw) : null;
     log.debug("getStripeEntitlement returning", {
       googleSub,
       found: result !== null,
@@ -128,15 +130,13 @@ export async function setStripeEntitlement(
     stripeSubscriptionId: entitlement.stripeSubscriptionId,
   });
   try {
+    const redis = getRedisClient();
+
     // Store the entitlement with TTL
-    await kv.set(entitlementKey(googleSub), entitlement, {
-      ex: ENTITLEMENT_TTL_SECONDS,
-    });
+    await redis.set(entitlementKey(googleSub), JSON.stringify(entitlement), "EX", ENTITLEMENT_TTL_SECONDS);
 
     // Maintain the reverse index: Stripe customer ID -> Google sub
-    await kv.set(stripeCustomerKey(entitlement.stripeCustomerId), googleSub, {
-      ex: ENTITLEMENT_TTL_SECONDS,
-    });
+    await redis.set(stripeCustomerKey(entitlement.stripeCustomerId), JSON.stringify(googleSub), "EX", ENTITLEMENT_TTL_SECONDS);
 
     log.debug("setStripeEntitlement returning", { googleSub, success: true });
   } catch (err) {
@@ -155,15 +155,18 @@ export async function setStripeEntitlement(
 export async function deleteStripeEntitlement(googleSub: string): Promise<void> {
   log.debug("deleteStripeEntitlement called", { googleSub });
   try {
+    const redis = getRedisClient();
+
     // First, get the existing entitlement to find the Stripe customer ID for cleanup
-    const existing = await kv.get<StoredStripeEntitlement>(entitlementKey(googleSub));
+    const raw = await redis.get(entitlementKey(googleSub));
+    const existing: StoredStripeEntitlement | null = raw ? JSON.parse(raw) : null;
 
     // Delete the primary entitlement record
-    await kv.del(entitlementKey(googleSub));
+    await redis.del(entitlementKey(googleSub));
 
     // Delete the reverse index if we found the Stripe customer ID
     if (existing?.stripeCustomerId) {
-      await kv.del(stripeCustomerKey(existing.stripeCustomerId));
+      await redis.del(stripeCustomerKey(existing.stripeCustomerId));
     }
 
     log.debug("deleteStripeEntitlement returning", {
@@ -191,7 +194,9 @@ export async function getGoogleSubByStripeCustomerId(
 ): Promise<string | null> {
   log.debug("getGoogleSubByStripeCustomerId called", { stripeCustomerId });
   try {
-    const result = await kv.get<string>(stripeCustomerKey(stripeCustomerId));
+    const redis = getRedisClient();
+    const raw = await redis.get(stripeCustomerKey(stripeCustomerId));
+    const result: string | null = raw ? JSON.parse(raw) : null;
     log.debug("getGoogleSubByStripeCustomerId returning", {
       stripeCustomerId,
       found: result !== null,
@@ -221,9 +226,9 @@ export async function getAnonymousStripeEntitlement(
 ): Promise<StoredStripeEntitlement | null> {
   log.debug("getAnonymousStripeEntitlement called", { stripeCustomerId });
   try {
-    const result = await kv.get<StoredStripeEntitlement>(
-      stripeAnonymousEntitlementKey(stripeCustomerId),
-    );
+    const redis = getRedisClient();
+    const raw = await redis.get(stripeAnonymousEntitlementKey(stripeCustomerId));
+    const result: StoredStripeEntitlement | null = raw ? JSON.parse(raw) : null;
     log.debug("getAnonymousStripeEntitlement returning", {
       stripeCustomerId,
       found: result !== null,
@@ -257,16 +262,14 @@ export async function setAnonymousStripeEntitlement(
     active: entitlement.active,
   });
   try {
+    const redis = getRedisClient();
+
     // Store the entitlement with TTL under the anonymous key
-    await kv.set(stripeAnonymousEntitlementKey(stripeCustomerId), entitlement, {
-      ex: ENTITLEMENT_TTL_SECONDS,
-    });
+    await redis.set(stripeAnonymousEntitlementKey(stripeCustomerId), JSON.stringify(entitlement), "EX", ENTITLEMENT_TTL_SECONDS);
 
     // Maintain the reverse index: Stripe customer ID -> stripe:{stripeCustomerId}
     // The `stripe:` prefix indicates this is an anonymous user
-    await kv.set(stripeCustomerKey(stripeCustomerId), `stripe:${stripeCustomerId}`, {
-      ex: ENTITLEMENT_TTL_SECONDS,
-    });
+    await redis.set(stripeCustomerKey(stripeCustomerId), JSON.stringify(`stripe:${stripeCustomerId}`), "EX", ENTITLEMENT_TTL_SECONDS);
 
     log.debug("setAnonymousStripeEntitlement returning", { stripeCustomerId, success: true });
   } catch (err) {
@@ -302,8 +305,11 @@ export async function migrateStripeEntitlement(
   log.debug("migrateStripeEntitlement called", { stripeCustomerId, googleSub });
 
   try {
+    const redis = getRedisClient();
+
     // Check if Google-keyed entry already exists (idempotent)
-    const existingGoogle = await kv.get<StoredStripeEntitlement>(entitlementKey(googleSub));
+    const existingRaw = await redis.get(entitlementKey(googleSub));
+    const existingGoogle: StoredStripeEntitlement | null = existingRaw ? JSON.parse(existingRaw) : null;
     if (existingGoogle) {
       log.debug("migrateStripeEntitlement returning", {
         migrated: true,
@@ -319,9 +325,8 @@ export async function migrateStripeEntitlement(
     }
 
     // Read the anonymous entitlement
-    const anonymousEntitlement = await kv.get<StoredStripeEntitlement>(
-      stripeAnonymousEntitlementKey(stripeCustomerId),
-    );
+    const anonymousRaw = await redis.get(stripeAnonymousEntitlementKey(stripeCustomerId));
+    const anonymousEntitlement: StoredStripeEntitlement | null = anonymousRaw ? JSON.parse(anonymousRaw) : null;
 
     if (!anonymousEntitlement) {
       log.debug("migrateStripeEntitlement returning", {
@@ -332,17 +337,13 @@ export async function migrateStripeEntitlement(
     }
 
     // Copy to Google-keyed entry
-    await kv.set(entitlementKey(googleSub), anonymousEntitlement, {
-      ex: ENTITLEMENT_TTL_SECONDS,
-    });
+    await redis.set(entitlementKey(googleSub), JSON.stringify(anonymousEntitlement), "EX", ENTITLEMENT_TTL_SECONDS);
 
     // Update reverse index to point to Google sub instead of anonymous
-    await kv.set(stripeCustomerKey(stripeCustomerId), googleSub, {
-      ex: ENTITLEMENT_TTL_SECONDS,
-    });
+    await redis.set(stripeCustomerKey(stripeCustomerId), JSON.stringify(googleSub), "EX", ENTITLEMENT_TTL_SECONDS);
 
     // Delete the anonymous key
-    await kv.del(stripeAnonymousEntitlementKey(stripeCustomerId));
+    await redis.del(stripeAnonymousEntitlementKey(stripeCustomerId));
 
     log.debug("migrateStripeEntitlement returning", {
       migrated: true,
