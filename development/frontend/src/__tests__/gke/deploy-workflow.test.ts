@@ -423,37 +423,25 @@ describe("GitHub Actions Workflow: .github/workflows/deploy.yml", () => {
       expect(secretStep.run).toContain("fenrir-app");
     });
 
-    it("applies K8s manifests", () => {
+    it("deploys with Helm using image tag", () => {
       const job = workflowYAML.jobs.deploy;
-      const manifestStep = job.steps.find((s: any) =>
-        s.name?.includes("K8s manifests")
+      const helmStep = job.steps.find((s: any) =>
+        s.name?.includes("Deploy with Helm")
       );
-      expect(manifestStep).toBeDefined();
-      expect(manifestStep.run).toContain("kubectl apply");
-      expect(manifestStep.run).toContain("deployment.yaml");
-      expect(manifestStep.run).toContain("service.yaml");
-      expect(manifestStep.run).toContain("ingress.yaml");
+      expect(helmStep).toBeDefined();
+      expect(helmStep.run).toContain("helm upgrade --install");
+      expect(helmStep.run).toContain("fenrir-app");
+      expect(helmStep.run).toContain("app.image.tag");
     });
 
-    it("updates deployment image", () => {
+    it("waits for Helm deployment to complete", () => {
       const job = workflowYAML.jobs.deploy;
-      const imageStep = job.steps.find((s: any) =>
-        s.name?.includes("Update deployment image") ||
-        s.name?.includes("set image")
+      const helmStep = job.steps.find((s: any) =>
+        s.name?.includes("Deploy with Helm")
       );
-      expect(imageStep).toBeDefined();
-      expect(imageStep.run).toContain("kubectl set image");
-      expect(imageStep.run).toContain("fenrir-app");
-    });
-
-    it("waits for rollout to complete", () => {
-      const job = workflowYAML.jobs.deploy;
-      const rolloutStep = job.steps.find((s: any) =>
-        s.name?.includes("rollout")
-      );
-      expect(rolloutStep).toBeDefined();
-      expect(rolloutStep.run).toContain("kubectl rollout status");
-      expect(rolloutStep.run).toContain("timeout");
+      expect(helmStep).toBeDefined();
+      expect(helmStep.run).toContain("--wait");
+      expect(helmStep.run).toContain("--timeout");
     });
 
     it("verifies deployment with kubectl commands", () => {
@@ -612,14 +600,6 @@ describe("GitHub Actions Workflow: .github/workflows/deploy.yml", () => {
         s.name?.includes("secrets")
       );
       expect(secretStep.run).toContain("dry-run");
-    });
-
-    it("kubectl apply is idempotent", () => {
-      const job = workflowYAML.jobs.deploy;
-      const manifestStep = job.steps.find((s: any) =>
-        s.name?.includes("manifests")
-      );
-      expect(manifestStep.run).toContain("kubectl apply");
     });
 
     it("health check is warning-only (doesn't block)", () => {

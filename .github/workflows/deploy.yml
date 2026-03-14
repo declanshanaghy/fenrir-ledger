@@ -200,7 +200,7 @@ jobs:
         uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GCP_REGION }}
+          location: ${{ secrets.GCP_ZONE }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Ensure namespaces and service accounts exist
@@ -275,12 +275,6 @@ jobs:
             --namespace=fenrir-app \
             --timeout=120s
 
-      - name: Apply K8s manifests
-        run: |
-          kubectl apply -f infrastructure/k8s/app/deployment.yaml
-          kubectl apply -f infrastructure/k8s/app/service.yaml
-          kubectl apply -f infrastructure/k8s/app/ingress.yaml
-
       - name: Deploy with Helm
         run: |
           helm upgrade --install fenrir-app \
@@ -350,7 +344,7 @@ jobs:
         uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GCP_REGION }}
+          location: ${{ secrets.GCP_ZONE }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Health check via Ingress
