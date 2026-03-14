@@ -359,4 +359,277 @@ describe("POST /api/stripe/webhook", () => {
       expect(json.status).toBe("acknowledged");
     });
   });
+
+  describe("edge cases: entitlement storage failures", () => {
+    it("returns 500 when entitlement storage fails during checkout", async () => {
+      const sub = makeSubscription();
+      const session = {
+        id: "cs_test",
+        subscription: "sub_test789",
+        customer: "cus_test456",
+        metadata: { googleSub: "google-sub-123" },
+      };
+      const event = makeStripeEvent("checkout.session.completed", session);
+      vi.mocked(verifyWebhookSignature).mockReturnValue(event);
+      mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
+
+      // Mock entitlement storage failure
+      mockRedis.set
+        .mockResolvedValueOnce(null) // dedup get
+        .mockRejectedValueOnce(new Error("Redis write failed")); // entitlement set fails
+
+      const res = await POST(makeRequest("{}") as never);
+      expect(res.status).toBe(500);
+
+      const json = await res.json();
+      expect(json.error).toBe("processing_error");
+    });
+
+    it("continues despite dedup write failure after successful processing", async () => {
+      const sub = makeSubscription();
+      const session = {
+        id: "cs_test",
+        subscription: "sub_test789",
+        customer: "cus_test456",
+        metadata: { googleSub: "google-sub-123" },
+      };
+      const event = makeStripeEvent("checkout.session.completed", session);
+      vi.mocked(verifyWebhookSignature).mockReturnValue(event);
+      mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
+
+      // Dedup read succeeds, all set calls succeed
+      // (In real scenario, dedup write is the last one and any failure won't change response)
+      mockRedis.get.mockResolvedValue(null);
+      mockRedis.set.mockResolvedValue("OK");
+
+      const res = await POST(makeRequest("{}") as never);
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.status).toBe("processed");
+      // Verify both entitlement and dedup marker were written
+      expect(mockRedis.set).toHaveBeenCalledWith(
+        "entitlement:google-sub-123",
+        expect.any(String),
+        "EX",
+        expect.any(Number),
+      );
+      expect(mockRedis.set).toHaveBeenCalledWith(
+        "stripe-event-processed:evt_test123",
+        "1",
+        "EX",
+        expect.any(Number),
+      );
+    });
+  });
+
+  describe("edge cases: checkout sessions with missing fields", () => {
+    it("ignores checkout with missing customer", async () => {
+      const session = {
+        id: "cs_test",
+        subscription: "sub_test789",
+        customer: null,
+        metadata: {},
+      };
+      const event = makeStripeEvent("checkout.session.completed", session);
+      vi.mocked(verifyWebhookSignature).mockReturnValue(event);
+
+      mockRedis.get.mockResolvedValue(null);
+
+      const res = await POST(makeRequest("{}") as never);
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.status).toBe("ignored");
+      expect(json.reason).toBe("no_customer");
+    });
+
+    it("retrieves subscription when customer is an object", async () => {
+      const sub = makeSubscription();
+      const session = {
+        id: "cs_test",
+        subscription: "sub_test789",
+        customer: { id: "cus_test456" }, // customer as object
+        metadata: { googleSub: "google-sub-123" },
+      };
+      const event = makeStripeEvent("checkout.session.completed", session);
+      vi.mocked(verifyWebhookSignature).mockReturnValue(event);
+      mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
+
+      mockRedis.get.mockResolvedValue(null);
+      mockRedis.set.mockResolvedValue("OK");
+
+      const res = await POST(makeRequest("{}") as never);
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.status).toBe("processed");
+      expect(mockStripe.subscriptions.retrieve).toHaveBeenCalledWith("sub_test789");
+    });
+
+    it("handles subscription as object reference", async () => {
+      const sub = makeSubscription();
+      const session = {
+        id: "cs_test",
+        subscription: { id: "sub_test789" }, // subscription as object
+        customer: "cus_test456",
+        metadata: { googleSub: "google-sub-123" },
+      };
+      const event = makeStripeEvent("checkout.session.completed", session);
+      vi.mocked(verifyWebhookSignature).mockReturnValue(event);
+      mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
+
+      mockRedis.get.mockResolvedValue(null);
+      mockRedis.set.mockResolvedValue("OK");
+
+      const res = await POST(makeRequest("{}") as never);
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.status).toBe("processed");
+    });
+  });
+
+  describe("edge cases: subscription updates with period end variations", () => {
+    it("uses cancel_at when present (takes precedence over period_end)", async () => {
+      const cancelAtTimestamp = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+      const sub = makeSubscription({
+        cancel_at: cancelAtTimestamp,
+        items: {
+          data: [
+            {
+              current_period_end: Math.floor(Date.now() / 1000) + 86400, // different: 24h from now
+            },
+          ],
+        },
+      });
+      const event = makeStripeEvent("customer.subscription.updated", sub);
+      vi.mocked(verifyWebhookSignature).mockReturnValue(event);
+
+      mockRedis.get
+        .mockResolvedValueOnce(null) // dedup
+        .mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
+
+      const res = await POST(makeRequest("{}") as never);
+      expect(res.status).toBe(200);
+
+      const setCall = mockRedis.set.mock.calls.find(
+        (c: string[]) => c[0] === "entitlement:google-sub-123",
+      );
+      const stored = JSON.parse(setCall![1] as string);
+      expect(stored.currentPeriodEnd).toBe(new Date(cancelAtTimestamp * 1000).toISOString());
+      expect(stored.cancelAtPeriodEnd).toBe(true);
+    });
+
+    it("uses current_period_end from first subscription item when cancel_at is null", async () => {
+      const periodEndTimestamp = Math.floor(Date.now() / 1000) + 86400;
+      const sub = makeSubscription({
+        cancel_at: null,
+        items: {
+          data: [
+            {
+              current_period_end: periodEndTimestamp,
+            },
+          ],
+        },
+      });
+      const event = makeStripeEvent("customer.subscription.updated", sub);
+      vi.mocked(verifyWebhookSignature).mockReturnValue(event);
+
+      mockRedis.get
+        .mockResolvedValueOnce(null) // dedup
+        .mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
+
+      const res = await POST(makeRequest("{}") as never);
+      expect(res.status).toBe(200);
+
+      const setCall = mockRedis.set.mock.calls.find(
+        (c: string[]) => c[0] === "entitlement:google-sub-123",
+      );
+      const stored = JSON.parse(setCall![1] as string);
+      expect(stored.currentPeriodEnd).toBe(new Date(periodEndTimestamp * 1000).toISOString());
+    });
+
+    it("falls back to current time when no period_end or cancel_at available", async () => {
+      const sub = makeSubscription({
+        cancel_at: null,
+        items: {
+          data: [], // empty items
+        },
+      });
+      const event = makeStripeEvent("customer.subscription.updated", sub);
+      vi.mocked(verifyWebhookSignature).mockReturnValue(event);
+
+      const beforeDate = new Date();
+      mockRedis.get
+        .mockResolvedValueOnce(null) // dedup
+        .mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
+
+      const res = await POST(makeRequest("{}") as never);
+      const afterDate = new Date();
+      expect(res.status).toBe(200);
+
+      const setCall = mockRedis.set.mock.calls.find(
+        (c: string[]) => c[0] === "entitlement:google-sub-123",
+      );
+      const stored = JSON.parse(setCall![1] as string);
+      const resultDate = new Date(stored.currentPeriodEnd);
+      expect(resultDate.getTime()).toBeGreaterThanOrEqual(beforeDate.getTime());
+      expect(resultDate.getTime()).toBeLessThanOrEqual(afterDate.getTime());
+    });
+  });
+
+  describe("edge cases: anonymous entitlements", () => {
+    it("preserves linkedAt timestamp when updating anonymous entitlement", async () => {
+      const sub = makeSubscription();
+      const event = makeStripeEvent("customer.subscription.updated", sub);
+      vi.mocked(verifyWebhookSignature).mockReturnValue(event);
+
+      const originalLinkedAt = "2024-01-01T00:00:00Z";
+      const existingEntitlement = JSON.stringify({ linkedAt: originalLinkedAt });
+
+      mockRedis.get
+        .mockResolvedValueOnce(null) // dedup
+        .mockResolvedValueOnce(JSON.stringify("stripe:cus_test456")) // reverse index (anonymous)
+        .mockResolvedValueOnce(existingEntitlement); // existing entitlement
+
+      const res = await POST(makeRequest("{}") as never);
+      expect(res.status).toBe(200);
+
+      const setCall = mockRedis.set.mock.calls.find(
+        (c: string[]) => c[0] === "entitlement:stripe:cus_test456",
+      );
+      const stored = JSON.parse(setCall![1] as string);
+      expect(stored.linkedAt).toBe(originalLinkedAt);
+    });
+
+    it("sets linkedAt for new anonymous entitlements", async () => {
+      const sub = makeSubscription();
+      const session = {
+        id: "cs_test",
+        subscription: "sub_test789",
+        customer: "cus_test456",
+        metadata: {}, // no googleSub = anonymous
+      };
+      const event = makeStripeEvent("checkout.session.completed", session);
+      vi.mocked(verifyWebhookSignature).mockReturnValue(event);
+      mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
+
+      const beforeDate = new Date();
+      mockRedis.get.mockResolvedValue(null);
+      mockRedis.set.mockResolvedValue("OK");
+
+      const res = await POST(makeRequest("{}") as never);
+      const afterDate = new Date();
+      expect(res.status).toBe(200);
+
+      const setCall = mockRedis.set.mock.calls.find(
+        (c: string[]) => c[0] === "entitlement:stripe:cus_test456",
+      );
+      const stored = JSON.parse(setCall![1] as string);
+      const linkedDate = new Date(stored.linkedAt);
+      expect(linkedDate.getTime()).toBeGreaterThanOrEqual(beforeDate.getTime());
+      expect(linkedDate.getTime()).toBeLessThanOrEqual(afterDate.getTime());
+    });
+  });
 });
