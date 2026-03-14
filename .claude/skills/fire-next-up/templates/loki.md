@@ -46,11 +46,11 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - Use the handoff's "How to verify" and "Edge cases" to guide test design.
 - **Commit+push tests before running them:**
   git add -A && git commit -m 'wip: add tests for issue:<NUMBER>' && git push origin <BRANCH>
-- Run Vitest tests: `cd <REPO_ROOT> && npx vitest run src/__tests__/<feature>/ --reporter=verbose`
-- Fix tests until they pass. Commit+push after each fix. Update todos.
-- Do NOT proceed until your new tests are green.
-- Do NOT run the full test suite — CI handles that on every PR push.
-- Do NOT write or run any Playwright E2E tests. Vitest only.
+- Run ALL Vitest tests (not just your feature tests):
+  `cd <REPO_ROOT>/development/frontend && npx vitest run --reporter=verbose`
+- Fix ALL failing tests — yours AND any pre-existing failures you find. Update todos.
+- Do NOT proceed until the FULL Vitest suite is green.
+- Do NOT write or run any Playwright E2E tests. Vitest only. E2E is on lockdown.
 
 **Step 3b — tsc check:**
   `cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc`
