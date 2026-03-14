@@ -75,7 +75,7 @@ postgresql:
 # -- Ingress Production Config -----------------------------------------
 ingress:
   enabled: true
-  className: "gce"
+  className: ""  # Empty = default GCE controller on Autopilot (ingressClassName: gce is NOT recognized)
   hosts:
     - analytics.fenrirledger.com
   annotations:
