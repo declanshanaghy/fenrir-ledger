@@ -34,24 +34,58 @@ import { createInterface } from "node:readline";
 import { createWriteStream, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 
-// -- Colors (ANSI) ----------------------------------------------------------
+// -- Colors (ANSI) — Android messenger style --------------------------------
 const C = {
   reset: "\x1b[0m",
   bold: "\x1b[1m",
   dim: "\x1b[2m",
   italic: "\x1b[3m",
-  agent: "\x1b[38;5;75m",      // blue — agent chat bubble
-  agentBg: "\x1b[48;5;236m",   // dark gray bg for agent bubbles
-  tool: "\x1b[38;5;243m",      // muted gray for tool actions
-  toolName: "\x1b[38;5;250m",  // lighter gray for tool name
-  result: "\x1b[38;5;240m",    // dim for tool results
-  think: "\x1b[38;5;141m",     // purple
-  system: "\x1b[38;5;243m",    // dim gray
-  error: "\x1b[38;5;196m",     // red
-  header: "\x1b[38;5;220m",    // gold
-  done: "\x1b[38;5;114m",      // green
-  sep: "\x1b[38;5;238m",       // separator line color
+  // Agent messages = red bubble (right-aligned feel)
+  agent: "\x1b[38;5;203m",       // salmon red
+  agentLabel: "\x1b[38;5;196m",  // bright red for name
+  // Tool messages = green bubble (left-aligned feel)
+  tool: "\x1b[38;5;114m",        // green
+  toolLabel: "\x1b[38;5;40m",    // bright green for name
+  result: "\x1b[38;5;65m",       // muted green for results
+  think: "\x1b[38;5;141m",       // purple
+  system: "\x1b[38;5;243m",      // dim gray
+  error: "\x1b[38;5;196m",       // red
+  header: "\x1b[38;5;220m",      // gold
+  done: "\x1b[38;5;226m",        // yellow
+  mayo: "\x1b[38;5;34m",         // Mayo green
+  mayoBg: "\x1b[48;5;124m",      // Mayo red bg
 };
+
+// -- Mayo for SAM heckler ---------------------------------------------------
+const MAYO_HECKLES = [
+  "MAYO FOR SAM!! 🏆🟢🔴",
+  "SAM IS COMING WEST!! The curse is BROKEN!!",
+  "C'MON THE GREEN AND RED!! 🔴🟢",
+  "THIS IS OUR YEAR LADS!! MAYO ABÚ!!",
+  "Sam Maguire looks well in Castlebar!!",
+  "SÉAMUS Ó MÁILLE AG TEACHT ABHAILE!! 🏆",
+  "73 YEARS OF HURT — NO MORE!! MAYO!! MAYO!!",
+  "The west's awake!! SAM IS COMING HOME!!",
+  "Cillian O'Connor didn't die for THIS— wait he's alive. MAYO FOR SAM!!",
+  "Tell the Dubs Sam's on holidays in Westport!! 🏖️🏆",
+  "MAIGH EO ABÚ!! The faithful are RISING!!",
+  "Even the SHEEP in Achill know Sam's coming west!! 🐑🏆",
+  "Nephin is SHAKING!! Sam Maguire on the N5!! 🏔️",
+  "They said we'd never win it. THEY WERE WRONG. MAYO FOR SAM!!",
+  "Crossmolina to Croagh Patrick — the whole county is UP!! 🟢🔴",
+  "Liam McHale smiling somewhere right now!! MAYO!!",
+  "Is that Sam Maguire or just the sun rising over Clew Bay?? ☀️🏆",
+];
+
+let heckleCounter = 0;
+function maybeHeckle() {
+  heckleCounter++;
+  // Heckle roughly every 12-20 messages (random)
+  if (heckleCounter < 12 + Math.floor(Math.random() * 8)) return null;
+  heckleCounter = 0;
+  const heckle = MAYO_HECKLES[Math.floor(Math.random() * MAYO_HECKLES.length)];
+  return `${C.mayoBg}${C.bold} 📢 ${heckle} ${C.reset}`;
+}
 
 // -- Parse args --------------------------------------------------------------
 const args = process.argv.slice(2);
@@ -230,9 +264,12 @@ let toolBatch = [];  // collect consecutive tool calls into one block
 function flushToolBatch(lines) {
   if (toolBatch.length === 0) return;
   for (const t of toolBatch) {
-    lines.push(`${C.tool}  ▸ ${t}${C.reset}`);
+    lines.push(`${C.toolLabel}    ◀ ${C.tool}${t}${C.reset}`);
   }
   toolBatch = [];
+  // Maybe a heckle after a burst of tool calls
+  const h = maybeHeckle();
+  if (h) { lines.push(""); lines.push(h); lines.push(""); }
 }
 
 function formatLine(obj) {
@@ -241,7 +278,7 @@ function formatLine(obj) {
   if (obj.type === "system") {
     // Only show the init event (has model), skip context management events
     if (obj.subtype === "init" && obj.model) {
-      lines.push(`${C.system}⚙  ${obj.model}${C.reset}`);
+      lines.push(`${C.system}  ⚙  ${obj.model} connected${C.reset}`);
       lines.push("");
     }
   }
@@ -255,14 +292,18 @@ function formatLine(obj) {
     for (const block of obj.message.content) {
       if (block.type === "text" && block.text?.trim()) {
         const clean = stripMd(block.text.trim());
-        // Chat bubble: agent text with left border
         const textLines = clean.split("\n").filter(l => l.trim());
         if (lastType === "text" || lastType === "tool") lines.push("");
+        // Agent bubble — right side, red
+        lines.push(`${C.agentLabel}${C.bold}  🤖 Agent ▸${C.reset}`);
         for (const tl of textLines) {
-          lines.push(`${C.agent}│ ${tl}${C.reset}`);
+          lines.push(`${C.agent}  │ ${tl}${C.reset}`);
         }
         lines.push("");
         lastType = "text";
+        // Maybe heckle after agent speaks
+        const h = maybeHeckle();
+        if (h) { lines.push(h); lines.push(""); }
       }
       else if (block.type === "tool_use") {
         const summary = toolSummary(block);
@@ -293,7 +334,8 @@ function formatLine(obj) {
     const dur = obj.duration_seconds != null ? `${Math.round(obj.duration_seconds / 60)}m` : "?";
     const turns = obj.num_turns ?? "?";
     lines.push("");
-    lines.push(`${C.done}${C.bold}━━━ Done — ${cost} | ${dur} | ${turns} turns ━━━${C.reset}`);
+    lines.push(`${C.done}${C.bold}  🏁 Done — ${cost} | ${dur} | ${turns} turns${C.reset}`);
+    lines.push(`${C.mayoBg}${C.bold} 📢 MAYO FOR SAM!! The agents are DONE and Sam is COMING WEST!! 🏆🟢🔴 ${C.reset}`);
   }
 
   return lines;
