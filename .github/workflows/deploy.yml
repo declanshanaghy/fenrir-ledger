@@ -249,23 +249,21 @@ jobs:
             --from-literal=gh-token="${{ secrets.GH_TOKEN_AGENTS }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Apply K8s manifests
-        run: |
-          kubectl apply -f infrastructure/k8s/app/deployment.yaml
-          kubectl apply -f infrastructure/k8s/app/service.yaml
-          kubectl apply -f infrastructure/k8s/app/ingress.yaml
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.20.1'
 
-      - name: Update deployment image
+      - name: Deploy with Helm
         run: |
-          kubectl set image deployment/fenrir-app \
-            fenrir-app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
-            --namespace=fenrir-app
-
-      - name: Wait for rollout
-        run: |
-          kubectl rollout status deployment/fenrir-app \
+          helm upgrade --install fenrir-app \
+            ./infrastructure/helm/fenrir-app \
             --namespace=fenrir-app \
-            --timeout=300s
+            -f ./infrastructure/helm/fenrir-app/values-prod.yaml \
+            --set app.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set app.image.tag=${{ env.IMAGE_TAG }} \
+            --wait \
+            --timeout=5m
 
       - name: Verify deployment
         run: |

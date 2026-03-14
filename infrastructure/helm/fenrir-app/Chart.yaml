@@ -1,0 +1,6 @@
+apiVersion: v2
+name: fenrir-app
+description: Fenrir Ledger — Next.js app on GKE Autopilot
+version: 0.1.0
+appVersion: "1.0.0"
+type: application
