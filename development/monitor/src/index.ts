@@ -262,6 +262,18 @@ function fmtTime(ts) {
 let currentJobs = [];
 let activeSessionId = null;
 let activeWs = null;
+let reconnectTimer = null;
+let reconnectCount = 0;
+const MAX_RECONNECT = 10;
+const RECONNECT_DELAY_MS = 3000;
+
+function clearReconnect() {
+  if (reconnectTimer !== null) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+  reconnectCount = 0;
+}
 
 // ── Sidebar rendering ──────────────────────────────────────────────────────
 
@@ -336,6 +348,7 @@ function clearLog() {
 }
 
 function openSession(sessionId, job) {
+  clearReconnect();
   if (activeWs) {
     activeWs.close();
     activeWs = null;
@@ -370,6 +383,8 @@ function openSession(sessionId, job) {
 
   ws.addEventListener('open', () => setWsBadge('open'));
 
+  let streamEnded = false;
+
   ws.addEventListener('message', (ev) => {
     let msg;
     try { msg = JSON.parse(ev.data); } catch { return; }
@@ -383,13 +398,26 @@ function openSession(sessionId, job) {
       appendLog('<span class="log-error">\\u26A0 ' + escHtml(msg.message) + '</span>');
       setWsBadge('error');
     } else if (msg.type === 'end') {
+      streamEnded = true;
       appendLog('<div class="log-end">\\u2014 stream ended \\u2014</div>');
       setWsBadge('closed');
     }
   });
 
   ws.addEventListener('close', () => {
-    if (activeWs === ws) setWsBadge('closed');
+    if (activeWs !== ws) return;
+    setWsBadge('closed');
+    // Auto-reconnect on HMR reload or transient network blip (not on clean stream end)
+    if (!streamEnded && reconnectCount < MAX_RECONNECT) {
+      const attempt = ++reconnectCount;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (activeSessionId === sessionId && activeWs === ws) {
+          appendLog('<span class="log-system">\\u2014 reconnecting (attempt ' + attempt + ') \\u2014</span>');
+          openSession(sessionId, job);
+        }
+      }, RECONNECT_DELAY_MS);
+    }
   });
 
   ws.addEventListener('error', () => {
