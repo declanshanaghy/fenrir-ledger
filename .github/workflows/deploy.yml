@@ -59,6 +59,7 @@ on:
 env:
   REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/fenrir-images
   IMAGE_NAME: fenrir-app
+  MONITOR_IMAGE_NAME: odin-throne
   IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
 
 jobs:
@@ -173,11 +174,64 @@ jobs:
           echo "- **Digest:** \`${{ steps.build.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
   # --------------------------------------------------------------------------
+  # Job 2b: Build Odin's Throne monitor image & push to Artifact Registry
+  # --------------------------------------------------------------------------
+  build-and-push-monitor:
+    name: Build & Push Monitor Image
+    needs: terraform
+    if: always() && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      full_image: ${{ env.REGISTRY }}/${{ env.MONITOR_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push monitor image
+        id: build-monitor
+        uses: docker/build-push-action@v7
+        with:
+          context: ./development/monitor
+          file: ./development/monitor/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.MONITOR_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.MONITOR_IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output monitor image details
+        run: |
+          echo "### Monitor Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image:** \`${{ env.MONITOR_IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Digest:** \`${{ steps.build-monitor.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+
+  # --------------------------------------------------------------------------
   # Job 3: Deploy to GKE Autopilot with rolling update
   # --------------------------------------------------------------------------
   deploy:
     name: Deploy to GKE
-    needs: build-and-push
+    needs: [build-and-push, build-and-push-monitor]
     if: ${{ !inputs.skip_deploy }}
     runs-on: ubuntu-latest
     permissions:
@@ -223,6 +277,9 @@ jobs:
 
           # Analytics namespace (for Umami)
           kubectl create namespace fenrir-analytics --dry-run=client -o yaml | kubectl apply -f -
+
+          # Monitor namespace (for Odin's Throne)
+          kubectl create namespace fenrir-monitor --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Create/update K8s secrets
         run: |
@@ -292,6 +349,17 @@ jobs:
             ./infrastructure/helm/umami \
             --namespace=fenrir-analytics \
             -f ./infrastructure/helm/umami/values-prod.yaml \
+            --wait \
+            --timeout=5m
+
+      - name: Deploy Odin's Throne with Helm
+        run: |
+          helm upgrade --install odin-throne \
+            ./infrastructure/helm/odin-throne \
+            --namespace=fenrir-monitor \
+            -f ./infrastructure/helm/odin-throne/values-prod.yaml \
+            --set app.image.repository=${{ env.REGISTRY }}/${{ env.MONITOR_IMAGE_NAME }} \
+            --set app.image.tag=${{ env.IMAGE_TAG }} \
             --wait \
             --timeout=5m
 
