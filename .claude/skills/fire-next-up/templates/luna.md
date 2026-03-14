@@ -33,7 +33,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
   Update your todos.
 
 **Step 4 — Create PR:**
-gh pr create --title "design: <short description>" --body "PR for issue: #<NUMBER>
+gh pr create --title "Issue #<NUMBER> - design: <short description>" --body "PR for issue: #<NUMBER>
 
 <summary of wireframes>"
 

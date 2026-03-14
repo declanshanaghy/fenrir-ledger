@@ -72,7 +72,7 @@ If conflicts: resolve, re-run feature tests.
 
 <keep existing summary, add test results>"
 
-If no PR exists (sole agent): `gh pr create --title "<title>" --body "PR for issue: #<NUMBER>\n\n<summary>"`
+If no PR exists (sole agent): `gh pr create --title "Issue #<NUMBER> - test: <title>" --body "PR for issue: #<NUMBER>\n\n<summary>"`
 
 **DO NOT MERGE.** Only the orchestrator merges. Your job ends at the verdict comment.
 
