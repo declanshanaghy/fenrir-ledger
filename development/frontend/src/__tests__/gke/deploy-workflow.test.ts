@@ -408,7 +408,7 @@ describe("GitHub Actions Workflow: .github/workflows/deploy.yml", () => {
       expect(gkeStep).toBeDefined();
       expect(gkeStep.uses).toContain("google-github-actions/get-gke-credentials");
       expect(gkeStep.with.cluster_name).toContain("GKE_CLUSTER_NAME");
-      expect(gkeStep.with.location).toContain("GCP_ZONE");
+      expect(gkeStep.with.location).toContain("GCP_REGION");
       expect(gkeStep.with.project_id).toContain("GCP_PROJECT_ID");
     });
 
