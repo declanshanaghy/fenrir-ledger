@@ -1,0 +1,21 @@
+{{- if and .Values.ingress.enabled .Values.ingress.backendConfig.enabled }}
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: umami-backend-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "umami.labels" . | nindent 4 }}
+spec:
+  healthCheck:
+    checkIntervalSec: {{ .Values.ingress.backendConfig.healthCheck.checkIntervalSec | default 15 }}
+    healthyThreshold: {{ .Values.ingress.backendConfig.healthCheck.healthyThreshold | default 1 }}
+    port: {{ .Values.ingress.backendConfig.healthCheck.port | default 3000 }}
+    requestPath: {{ .Values.ingress.backendConfig.healthCheck.requestPath | default "/" }}
+    timeoutSec: {{ .Values.ingress.backendConfig.healthCheck.timeoutSec | default 5 }}
+    type: {{ .Values.ingress.backendConfig.healthCheck.type | default "HTTP" }}
+    unhealthyThreshold: {{ .Values.ingress.backendConfig.healthCheck.unhealthyThreshold | default 3 }}
+  connectionDraining:
+    drainingTimeoutSec: {{ .Values.ingress.backendConfig.connectionDraining.drainingTimeoutSec | default 15 }}
+  timeoutSec: {{ .Values.ingress.backendConfig.timeoutSec | default 30 }}
+{{- end }}
