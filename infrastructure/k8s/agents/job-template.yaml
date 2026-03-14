@@ -26,9 +26,8 @@ metadata:
     app.kubernetes.io/component: agent-sandbox
     fenrir.dev/session-id: "{{SESSION_ID}}"
 spec:
-  # Auto-delete completed/failed Jobs after 5 minutes
-  # Logs persist in Cloud Logging — no need to keep Jobs around
-  ttlSecondsAfterFinished: 300
+  # Auto-delete completed/failed Jobs after 30 minutes
+  ttlSecondsAfterFinished: 1800
 
   # Max runtime: 60 minutes — prevents runaway agents
   activeDeadlineSeconds: 3600
