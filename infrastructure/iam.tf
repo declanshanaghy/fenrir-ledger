@@ -87,18 +87,37 @@ resource "google_project_iam_member" "agents_monitoring" {
 }
 
 # --------------------------------------------------------------------------
-# Deploy service account — GKE access for GitHub Actions
+# Deploy service account — IAM roles for GitHub Actions CI/CD
+#
+# These roles are required for the deploy SA to manage all infrastructure.
+# For a fresh project, run scripts/bootstrap-iam.sh FIRST to grant these
+# roles before the initial terraform apply (chicken-and-egg: Terraform
+# can't grant itself permissions it doesn't yet have).
 # --------------------------------------------------------------------------
 
-resource "google_project_iam_member" "deploy_gke_admin" {
-  project = var.project_id
-  role    = "roles/container.developer"
-  member  = "serviceAccount:${var.deploy_service_account}"
+locals {
+  deploy_roles = [
+    "roles/container.admin",               # GKE cluster management
+    "roles/container.developer",           # K8s resource management
+    "roles/compute.loadBalancerAdmin",     # Ingress / LB management
+    "roles/compute.networkAdmin",          # VPC, subnets, firewall rules
+    "roles/compute.securityAdmin",         # SSL certs, security policies
+    "roles/dns.admin",                     # Cloud DNS zones and records
+    "roles/iam.serviceAccountAdmin",       # Create/manage service accounts
+    "roles/iam.serviceAccountUser",        # Attach SAs to resources
+    "roles/resourcemanager.projectIamAdmin", # Manage IAM bindings
+    "roles/artifactregistry.admin",        # Artifact Registry repos
+    "roles/logging.admin",                 # Cloud Logging config
+    "roles/monitoring.admin",              # Cloud Monitoring config
+    "roles/certificatemanager.editor",     # Managed SSL certs
+  ]
 }
 
-resource "google_project_iam_member" "deploy_dns_admin" {
+resource "google_project_iam_member" "deploy_roles" {
+  for_each = toset(local.deploy_roles)
+
   project = var.project_id
-  role    = "roles/dns.admin"
+  role    = each.value
   member  = "serviceAccount:${var.deploy_service_account}"
 }
 

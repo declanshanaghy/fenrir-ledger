@@ -15,7 +15,7 @@ variable "region" {
 }
 
 variable "zone" {
-  description = "GCP zone for the zonal Autopilot cluster (free tier)"
+  description = "GCP zone (used by Terraform plan env var, not by cluster)"
   type        = string
   default     = "us-central1-a"
 }

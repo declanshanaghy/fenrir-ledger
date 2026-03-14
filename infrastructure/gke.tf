@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------
 # GKE Autopilot Cluster — Fenrir Ledger
 #
-# Zonal cluster in us-central1-a to qualify for free management fee credit.
+# Regional Autopilot cluster in us-central1.
 # Autopilot mode: Google manages nodes, scaling, security patches.
 # --------------------------------------------------------------------------
 
