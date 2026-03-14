@@ -47,3 +47,13 @@ output "subnet" {
   description = "Subnet name"
   value       = google_compute_subnetwork.subnet.name
 }
+
+output "static_ip" {
+  description = "Reserved global static IP for the GKE Ingress"
+  value       = google_compute_global_address.app_ip.address
+}
+
+output "dns_nameservers" {
+  description = "Google Cloud DNS nameservers — set these as custom nameservers at your registrar"
+  value       = google_dns_managed_zone.app.name_servers
+}

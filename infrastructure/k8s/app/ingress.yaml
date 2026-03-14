@@ -5,7 +5,7 @@
 # The SSL cert is provisioned via Terraform (google_compute_managed_ssl_certificate).
 #
 # For initial deployment, the app is accessible via the Ingress external IP.
-# DNS should point app.fenrirledger.com to the Ingress IP after provisioning.
+# DNS should point fenrirledger.com to the reserved static IP after provisioning.
 # --------------------------------------------------------------------------
 
 apiVersion: networking.k8s.io/v1
@@ -24,6 +24,8 @@ metadata:
     networking.gke.io/managed-certificates: "fenrir-app-cert"
     # Allow HTTP until DNS/SSL is configured (health checks need it)
     kubernetes.io/ingress.allow-http: "true"
+    # Use the reserved static global IP
+    kubernetes.io/ingress.global-static-ip-name: "fenrir-app-ip"
     # Backend health check configuration
     cloud.google.com/backend-config: '{"default":"fenrir-app-backend-config"}'
 spec:
@@ -33,7 +35,7 @@ spec:
       port:
         number: 80
   rules:
-    - host: app.fenrirledger.com
+    - host: fenrirledger.com
       http:
         paths:
           - path: /
@@ -58,7 +60,7 @@ metadata:
     app.kubernetes.io/part-of: fenrir-ledger
 spec:
   domains:
-    - app.fenrirledger.com
+    - fenrirledger.com
 
 ---
 # --------------------------------------------------------------------------

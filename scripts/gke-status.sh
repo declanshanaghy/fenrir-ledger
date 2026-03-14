@@ -101,11 +101,14 @@ kubectl get ingress -n "$APP_NS" -o wide 2>/dev/null | sed 's/^/  /' || warn "No
 INGRESS_IP=$(kubectl get ingress fenrir-app -n "$APP_NS" \
   -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
 
+DOMAIN="fenrirledger.com"
+
 if [ -n "$INGRESS_IP" ]; then
   echo ""
   ok "External IP: ${BOLD}${INGRESS_IP}${RESET}"
-  echo -e "  HTTP:  http://${INGRESS_IP}"
-  echo -e "  App:   http://${INGRESS_IP}/api/health"
+  echo -e "  Domain: https://${DOMAIN}"
+  echo -e "  HTTP:   http://${INGRESS_IP}"
+  echo -e "  Health: https://${DOMAIN}/api/health"
 else
   warn "No external IP assigned yet"
 fi
@@ -174,18 +177,32 @@ fi
 # Health Check
 # --------------------------------------------------------------------------
 section "Health Check"
+
+# Try HTTPS via domain first, fall back to HTTP via IP
 if [ -n "$INGRESS_IP" ]; then
-  echo -e "  Checking http://${INGRESS_IP}/api/health ..."
-  HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' --max-time 10 \
-    "http://${INGRESS_IP}/api/health" 2>/dev/null || echo "000")
-  if [ "$HTTP_CODE" = "200" ]; then
-    ok "Health check PASSED (HTTP ${HTTP_CODE})"
-    BODY=$(curl -sf --max-time 10 "http://${INGRESS_IP}/api/health" 2>/dev/null || true)
+  echo -e "  Checking https://${DOMAIN}/api/health ..."
+  HTTPS_CODE=$(curl -sf -o /dev/null -w '%{http_code}' --max-time 10 \
+    "https://${DOMAIN}/api/health" 2>/dev/null || echo "000")
+  if [ "$HTTPS_CODE" = "200" ]; then
+    ok "HTTPS health check PASSED (HTTP ${HTTPS_CODE})"
+    BODY=$(curl -sf --max-time 10 "https://${DOMAIN}/api/health" 2>/dev/null || true)
     if [ -n "$BODY" ]; then
       echo -e "  Response: ${BODY}"
     fi
   else
-    warn "Health check returned HTTP ${HTTP_CODE}"
+    warn "HTTPS health check returned HTTP ${HTTPS_CODE} — falling back to IP"
+    echo -e "  Checking http://${INGRESS_IP}/api/health ..."
+    HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' --max-time 10 \
+      "http://${INGRESS_IP}/api/health" 2>/dev/null || echo "000")
+    if [ "$HTTP_CODE" = "200" ]; then
+      ok "HTTP health check PASSED (HTTP ${HTTP_CODE})"
+      BODY=$(curl -sf --max-time 10 "http://${INGRESS_IP}/api/health" 2>/dev/null || true)
+      if [ -n "$BODY" ]; then
+        echo -e "  Response: ${BODY}"
+      fi
+    else
+      warn "Health check returned HTTP ${HTTP_CODE}"
+    fi
   fi
 else
   warn "Skipped — no external IP"
