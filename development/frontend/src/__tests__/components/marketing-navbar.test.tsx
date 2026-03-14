@@ -1,12 +1,13 @@
 /**
  * Marketing Navbar — Component render tests
  *
- * Validates the MarketingNavbar component matches theme-variants wireframe spec (Issue #642):
- *   - Navigation link order: Features → Pricing → About → Free Trial
- *   - Prose Edda (Chronicles) NOT in main navbar (only in footer)
+ * Validates the MarketingNavbar component matches the current nav spec:
+ *   - Navigation link order: Features → Prose Edda → About → Free Trial → Pricing
  *   - Theme toggle button rendered
  *   - "Open the Ledger" CTA rendered
  *   - Correct aria-labels for accessibility
+ *
+ * Issue #642 (original), updated for Issue #648 (Prose Edda + Free Trial CTA styling)
  */
 
 import { describe, it, expect, vi } from "vitest";
@@ -51,9 +52,10 @@ describe("MarketingNavbar — Navigation Link Order (Issue #642)", () => {
 
     const navLinks = [
       { label: "Features", href: "/features" },
-      { label: "Pricing", href: "/pricing" },
+      { label: "Prose Edda", href: "/chronicles" },
       { label: "About", href: "/about" },
       { label: "Free Trial", href: "/free-trial" },
+      { label: "Pricing", href: "/pricing" },
     ];
 
     // Get all nav links
@@ -63,7 +65,7 @@ describe("MarketingNavbar — Navigation Link Order (Issue #642)", () => {
       navLinks.some(nl => link.textContent?.includes(nl.label))
     );
 
-    // Verify order matches wireframe spec
+    // Verify order matches wireframe spec (5 links)
     expect(actualNavLinks).toHaveLength(navLinks.length);
     actualNavLinks.forEach((link, index) => {
       expect(link.textContent).toBe(navLinks[index].label);
@@ -71,17 +73,12 @@ describe("MarketingNavbar — Navigation Link Order (Issue #642)", () => {
     });
   });
 
-  it("does NOT include Prose Edda in main navigation", () => {
+  it("includes Prose Edda (Chronicles) in main navigation", () => {
     render(<MarketingNavbar />);
 
-    // Look for the Prose Edda link - it should NOT be in the navbar
-    const proseEddaLink = screen.queryByText("Prose Edda");
-
-    // If found, verify it's not in the main nav (should only be in footer, which isn't rendered here)
-    if (proseEddaLink) {
-      const navContainer = screen.getByRole("navigation");
-      expect(navContainer.contains(proseEddaLink)).toBe(false);
-    }
+    const proseEddaLink = screen.getByRole("link", { name: "Prose Edda" });
+    expect(proseEddaLink).toBeDefined();
+    expect(proseEddaLink.getAttribute("href")).toBe("/chronicles");
   });
 });
 
@@ -137,9 +134,10 @@ describe("MarketingNavbar — Navigation Link Accessibility", () => {
 
     const expectedLinks = [
       { text: "Features", href: "/features" },
-      { text: "Pricing", href: "/pricing" },
+      { text: "Prose Edda", href: "/chronicles" },
       { text: "About", href: "/about" },
       { text: "Free Trial", href: "/free-trial" },
+      { text: "Pricing", href: "/pricing" },
     ];
 
     expectedLinks.forEach(({ text, href }) => {
