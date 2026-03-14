@@ -25,7 +25,7 @@ Composes a prompt from templates and spawns the agent via GKE Autopilot K8s Jobs
 ```
 Call 1: Read <agent>.md           (skip if already in context)
 Call 2: bash dispatch-job.sh ... && node pack-status.mjs --move N in-progress
-Call 3: tmux split-window -h "node agent-logs.mjs <SESSION_ID> --tools"
+Call 3: node agent-logs.mjs <SESSION_ID> --tools --spawn-pane
 ```
 
 If issue data + agent template are already in context, that's **2 tool calls** (spawn + board move, then log tail).
@@ -236,13 +236,22 @@ node "<repo-root>/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N
 After a successful GKE dispatch, open a tmux pane streaming the parsed agent logs.
 The pod may take 30-60s to schedule — `agent-logs.mjs` polls automatically.
 
+**Layout rule:** Agent logs always stack in the **right column** of the tmux window.
+The orchestrator stays in the left pane. `agent-logs.mjs` sets pane titles (`agent-logs-<N>`)
+and detects existing log panes to stack into.
+
+**Single dispatch:**
 ```bash
-tmux split-window -h "node \"<repo-root>/infrastructure/k8s/agents/agent-logs.mjs\" \"<SESSION_ID>\" --tools"
+node "<repo-root>/infrastructure/k8s/agents/agent-logs.mjs" "<SESSION_ID>" --tools --spawn-pane
 ```
 
-For parallel dispatches (`--parallel`), use `--all --tmux` to split all active jobs:
+The `--spawn-pane` flag tells agent-logs.mjs to spawn itself into a tmux pane using
+the right-column stacking logic (detect existing log column, stack vertically if found,
+or create new right column at 40% width if not). This replaces manual `tmux split-window`.
+
+**Parallel dispatches (`--parallel`):**
 ```bash
-tmux split-window -h "node \"<repo-root>/infrastructure/k8s/agents/agent-logs.mjs\" --all --tmux --tools"
+node "<repo-root>/infrastructure/k8s/agents/agent-logs.mjs" --all --tmux --tools
 ```
 
 This runs in a separate tmux pane — it does NOT block the orchestrator.
