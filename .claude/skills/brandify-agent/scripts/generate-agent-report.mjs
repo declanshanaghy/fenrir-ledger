@@ -96,12 +96,35 @@ body {
   padding-bottom: 1.5rem;
   margin-bottom: 1.5rem;
 }
+.odin-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.odin-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.odin-title { flex: 1; }
+.odin-quote {
+  font-family: 'Source Serif 4', serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--text-rune);
+  margin-top: 0.25rem;
+  opacity: 0.8;
+}
 .report-header h1 {
   font-family: 'Cinzel Decorative', serif;
   font-weight: 700;
   font-size: 1.75rem;
   color: var(--gold);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
 }
 .report-header .meta {
   font-family: 'JetBrains Mono', monospace;
@@ -561,7 +584,29 @@ function showProfile(name, imgSrc, role, bio, color) {
   document.body.appendChild(overlay);
 }
 
+const ODIN_QUOTES = [
+  "I hung on that windy tree for nine long nights, wounded by my own spear. What\\'s a failed build to that?",
+  "I gave my eye for wisdom. You lot better not waste it on sloppy commits.",
+  "The wolves are always hungry. Ship or be devoured.",
+  "In the beginning there was nothing. Then I filed an issue.",
+  "I see all nine worlds from Hlidskjalf. I can certainly see your merge conflicts.",
+  "Huginn brings me thought, Muninn brings me memory. Neither brings me passing tests — that\\'s Loki\\'s job.",
+  "Even Ragnarok has a sprint deadline.",
+  "The All-Father watches. The All-Father judges. The All-Father merges.",
+  "I didn\\'t sacrifice everything to build Asgard just to watch agents idle.",
+  "Wisdom is knowing when to dispatch. Courage is reading the agent logs.",
+  "Every rune I carved cost blood. Every PR you ship better be worth it.",
+  "Fenrir breaks chains. We break annual fees. Same energy.",
+  "The ravens fly at dawn. The agents deploy at merge.",
+  "I walked among mortals to learn their ways. Now I walk among agents to review their code.",
+  "My spear Gungnir never misses its mark. Your tests should aspire to the same.",
+];
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Odin quote
+  const quoteEl = document.getElementById('odin-quote');
+  if (quoteEl) quoteEl.textContent = ODIN_QUOTES[Math.floor(Math.random() * ODIN_QUOTES.length)];
+
   // Turn collapse/expand
   document.querySelectorAll('.turn-header').forEach(h => {
     h.addEventListener('click', () => h.closest('.turn').classList.toggle('open'));
@@ -1347,13 +1392,20 @@ let html = `<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${agentName} #${issueNum} — Agent Report</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="agent-report.css">
 </head>
 <body>
 <div class="report">
 
 <div class="report-header">
-  <h1>ᚲ ${agentName} — Issue #${issueNum} (Step ${stepNum})</h1>
+  <div class="odin-header">
+    <img class="odin-avatar" src="agents/profiles/odin-dark.png" alt="Odin — The All-Father">
+    <div class="odin-title">
+      <h1>ᚲ ${agentName} — Issue #${issueNum} (Step ${stepNum})</h1>
+      <div class="odin-quote" id="odin-quote"></div>
+    </div>
+  </div>
   <div class="meta">
     <span><span class="label">Session:</span> ${esc(meta.session || "unknown")}</span>
     <span><span class="label">Branch:</span> ${esc(meta.branch || "unknown")}</span>
