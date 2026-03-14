@@ -46,9 +46,12 @@ export function middleware(request: NextRequest) {
 
   const nonce = generateNonce();
 
-  // Clone response and inject nonce into headers for layout/scripts to read
-  const response = NextResponse.next();
-  response.headers.set("x-nonce-csp", nonce);
+  // Forward nonce to server components via request headers (accessible via headers() in layouts).
+  // Response headers set on NextResponse.next() go to the browser but are NOT accessible via
+  // headers() in Server Components — only headers forwarded through request are.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce-csp", nonce);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   // Build security headers with nonce and inject into response
   const securityHeaders = buildSecurityHeaders(nonce);
