@@ -5,9 +5,11 @@
  *
  * Usage:
  *   node generate-agent-report.mjs --input <log-file> [--output <html-file>]
+ *   node generate-agent-report.mjs --input <log-file> --publish [--blog-dir <dir>]
  *   node generate-agent-report.mjs --regen-assets [--output-dir <dir>]
  *
  * If --output is omitted, replaces .log with .html in the same directory.
+ * --publish generates MDX output to content/blog/ for chronicles publishing.
  * --regen-assets regenerates shared CSS/JS files in the output directory.
  */
 
@@ -25,12 +27,15 @@ function flag(name) {
 }
 
 const regenOnly = args.includes("--regen-assets");
+const publishMode = args.includes("--publish");
 const inputPath = flag("input");
 const outputPath = flag("output");
 const outputDir = flag("output-dir");
+const blogDir = flag("blog-dir");
 
 if (!regenOnly && !inputPath) {
   console.error("Usage: generate-agent-report.mjs --input <log> [--output <html>]");
+  console.error("       generate-agent-report.mjs --input <log> --publish [--blog-dir <dir>]");
   console.error("       generate-agent-report.mjs --regen-assets [--output-dir <dir>]");
   process.exit(1);
 }
@@ -882,6 +887,194 @@ function fmtNum(n) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
   return n.toString();
+}
+
+// ---------------------------------------------------------------------------
+// Build MDX (--publish mode)
+// ---------------------------------------------------------------------------
+if (publishMode) {
+  const defaultBlogDir = join(dirname(logFile), "../../development/frontend/content/blog");
+  const targetBlogDir = blogDir ? resolve(blogDir) : resolve(defaultBlogDir);
+
+  // Build slug from session metadata
+  const slugBase = (meta.session || "unknown")
+    .replace(/[^a-z0-9-]/gi, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase();
+  const mdxSlug = `agent-${slugBase}`;
+  const mdxFile = join(targetBlogDir, `${mdxSlug}.mdx`);
+
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const mdxTitle = `${agentName} Report: Issue #${issueNum}`;
+  const mdxExcerpt = `Agent execution report — ${agentName} on Issue #${issueNum}, Step ${stepNum}. ${turns.length} turns, ${totalTools} tool calls.`;
+
+  function mdxEsc(s) {
+    if (typeof s !== "string") s = JSON.stringify(s, null, 2) || "";
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/\{/g, "&#123;")
+      .replace(/\}/g, "&#125;");
+  }
+
+  function mdxToolInputPreview(tool) {
+    if (tool.name === "Bash" && tool.input?.command) return mdxEsc(tool.input.command.slice(0, 100));
+    if (tool.name === "Read" && tool.input?.file_path) return mdxEsc(shortPath(tool.input.file_path));
+    if (tool.name === "Edit" && tool.input?.file_path) return mdxEsc(shortPath(tool.input.file_path));
+    if (tool.name === "Write" && tool.input?.file_path) return mdxEsc(shortPath(tool.input.file_path));
+    if (tool.name === "Grep" && tool.input?.pattern) return mdxEsc(tool.input.pattern);
+    if (tool.name === "Glob" && tool.input?.pattern) return mdxEsc(tool.input.pattern);
+    return "";
+  }
+
+  function mdxRenderToolInput(tool) {
+    if (tool.name === "Bash") return mdxEsc(tool.input?.command || "");
+    if (tool.name === "Edit") {
+      const parts = [];
+      if (tool.input?.file_path) parts.push(`File: ${shortPath(tool.input.file_path)}`);
+      if (tool.input?.old_string) parts.push(`--- old\n${tool.input.old_string.slice(0, 500)}`);
+      if (tool.input?.new_string) parts.push(`+++ new\n${tool.input.new_string.slice(0, 500)}`);
+      return mdxEsc(parts.join("\n\n"));
+    }
+    return mdxEsc(JSON.stringify(tool.input, null, 2));
+  }
+
+  function mdxRenderToolOutput(tool) {
+    const content = tool.result_content;
+    if (typeof content === "string") return mdxEsc(content.slice(0, 2000));
+    return mdxEsc(JSON.stringify(content, null, 2).slice(0, 2000));
+  }
+
+  // Build turn markup using <details>/<summary> for native collapsibility
+  let turnsMarkup = "";
+  turns.forEach((turn, i) => {
+    const hasError = turn.tools.some(t => t.is_error);
+    const summary = turn.texts.length
+      ? mdxEsc(turn.texts[0].slice(0, 120))
+      : turn.tools.map(t => t.name).join(", ");
+    const toolBadges = turn.tools
+      .map(t => `<span className="agent-tool-badge agent-tool-${toolBadgeClass(t.name)}">${mdxEsc(t.name)}</span>`)
+      .join(" ");
+
+    turnsMarkup += `
+<details className="agent-turn${hasError ? " agent-turn-error" : ""}">
+<summary className="agent-turn-header">
+<span className="agent-turn-num">#${i + 1}</span>
+<span className="agent-turn-summary">${summary}</span>
+<span className="agent-turn-badges">${toolBadges}</span>
+</summary>
+<div className="agent-turn-body">
+`;
+
+    for (const thinking of turn.thinking) {
+      turnsMarkup += `<div className="agent-thinking">${mdxEsc(thinking.slice(0, 1000))}</div>\n`;
+    }
+    for (const text of turn.texts) {
+      turnsMarkup += `<div className="agent-text-block">${mdxEsc(text)}</div>\n`;
+    }
+    for (const tool of turn.tools) {
+      turnsMarkup += `<details className="agent-tool-block">
+<summary className="agent-tool-summary">
+<span className="agent-tool-name">${mdxEsc(tool.name)}</span>
+<span className="agent-tool-preview">${mdxToolInputPreview(tool)}</span>
+</summary>
+<div className="agent-tool-detail">
+<pre className="agent-tool-input">${mdxRenderToolInput(tool)}</pre>
+<pre className="agent-tool-output${tool.is_error ? " agent-tool-error" : ""}">${mdxRenderToolOutput(tool)}</pre>
+</div>
+</details>\n`;
+    }
+
+    turnsMarkup += `</div>
+</details>\n`;
+  });
+
+  // Build file changes markup
+  let changesMarkup = "";
+  if (filesCreated.size > 0 || filesModified.size > 0) {
+    changesMarkup = `
+<div className="agent-changes">
+<div className="agent-changes-title">Files Changed</div>
+<div className="agent-changes-list">
+${[...filesCreated].map(f => `<span className="chip chip-new">+ ${mdxEsc(shortPath(f))}</span>`).join("\n")}
+${[...filesModified].map(f => `<span className="chip chip-mod">~ ${mdxEsc(shortPath(f))}</span>`).join("\n")}
+</div>
+</div>`;
+  }
+
+  // Build commits markup
+  let commitsMarkup = "";
+  if (commits.length > 0) {
+    commitsMarkup = `
+<div className="agent-commits">
+<div className="agent-changes-title">Commits</div>
+${commits.map(c => `<div className="agent-commit-item">${mdxEsc(c)}</div>`).join("\n")}
+</div>`;
+  }
+
+  // Verdict markup
+  let verdictMarkup = "";
+  if (verdict) {
+    verdictMarkup = `
+<div className="agent-verdict ${verdict.pass ? "agent-verdict-pass" : "agent-verdict-fail"}">
+<div className="agent-verdict-label">${verdict.pass ? "PASS" : "FAIL"} — QA Verdict</div>
+<div className="agent-verdict-text">${mdxEsc(verdict.text)}</div>
+</div>`;
+  }
+
+  const mdx = `---
+title: "${mdxTitle.replace(/"/g, '\\"')}"
+date: "${dateStr}"
+rune: "ᚲ"
+excerpt: "${mdxExcerpt.replace(/"/g, '\\"')}"
+slug: "${mdxSlug}"
+category: "agent"
+---
+
+<div className="chronicle-page">
+
+<div className="agent-report">
+
+<div className="agent-report-header">
+<div className="agent-report-badge">Agent Report</div>
+<div className="agent-meta">
+<span>Session <span className="val">${mdxEsc(meta.session || "unknown")}</span></span>
+<span>Branch <span className="val">${mdxEsc(meta.branch || "unknown")}</span></span>
+<span>Model <span className="val">${mdxEsc(meta.model || "unknown")}</span></span>
+</div>
+</div>
+
+<div className="agent-stats">
+<div className="stat-card"><div className="stat-val">${turns.length}</div><div className="stat-label">Turns</div></div>
+<div className="stat-card"><div className="stat-val">${totalTools}</div><div className="stat-label">Tool Calls</div></div>
+<div className="stat-card"><div className="stat-val ${errors ? "stat-fire" : "stat-teal"}">${errors}</div><div className="stat-label">Errors</div></div>
+<div className="stat-card"><div className="stat-val">${commits.length}</div><div className="stat-label">Commits</div></div>
+<div className="stat-card"><div className="stat-val">${fmtNum(totalInputTokens)}</div><div className="stat-label">Tokens In</div></div>
+<div className="stat-card"><div className="stat-val">${fmtNum(totalOutputTokens)}</div><div className="stat-label">Tokens Out</div></div>
+</div>
+${changesMarkup}
+${commitsMarkup}
+
+<div className="agent-turns-section">
+<div className="agent-turns-title">Execution Turns</div>
+${turnsMarkup}
+</div>
+${verdictMarkup}
+
+</div>
+
+</div>
+`;
+
+  writeFileSync(mdxFile, mdx);
+  console.log(`[ok] chronicle published: ${mdxFile}`);
+  console.log(`     slug: ${mdxSlug}`);
+  console.log(`     url: /chronicles/${mdxSlug}`);
+  console.log(`     turns: ${turns.length} | tools: ${totalTools} | errors: ${errors}`);
+  process.exit(0);
 }
 
 // ---------------------------------------------------------------------------

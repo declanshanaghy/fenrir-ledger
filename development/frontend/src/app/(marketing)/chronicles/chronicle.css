@@ -731,3 +731,292 @@
     padding: 24px 16px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Agent Report — styles for chronicles published via brandify-agent --publish
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.chronicle-page .agent-report {
+  padding-top: 32px;
+}
+
+/* ── Agent Report Header ── */
+.chronicle-page .agent-report-header {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--c-border);
+}
+.chronicle-page .agent-report-badge {
+  display: inline-block;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 0.63rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 3px 10px;
+  border: 1px solid var(--c-teal);
+  color: var(--c-teal);
+  background: rgba(10, 140, 110, 0.07);
+  margin-bottom: 16px;
+}
+.chronicle-page .agent-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--c-fg-muted);
+}
+.chronicle-page .agent-meta .val { color: var(--c-gold); }
+
+/* ── Agent Stats Grid ── */
+.chronicle-page .agent-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+/* ── Agent Changes & Commits ── */
+.chronicle-page .agent-changes,
+.chronicle-page .agent-commits {
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+}
+.chronicle-page .agent-changes-title {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--c-gold);
+  margin-bottom: 12px;
+}
+.chronicle-page .agent-changes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.chronicle-page .agent-commit-item {
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--c-fg-muted);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+.chronicle-page .agent-commit-item:last-child { border-bottom: none; }
+
+/* ── Agent Turns Section ── */
+.chronicle-page .agent-turns-section {
+  margin-bottom: 32px;
+}
+.chronicle-page .agent-turns-title {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--c-gold);
+  margin-bottom: 16px;
+}
+
+/* ── Agent Turn (uses <details>/<summary> for native collapsibility) ── */
+.chronicle-page .agent-turn {
+  margin-bottom: 8px;
+  border: 1px solid var(--c-border);
+}
+.chronicle-page .agent-turn-error {
+  border-color: var(--c-fire);
+}
+.chronicle-page .agent-turn > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--c-bg-card);
+  border-bottom: 1px solid transparent;
+  user-select: none;
+}
+.chronicle-page .agent-turn > summary::-webkit-details-marker { display: none; }
+.chronicle-page .agent-turn > summary::before {
+  content: '\25B6';
+  font-size: 0.6rem;
+  color: var(--c-fg-muted);
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+.chronicle-page .agent-turn[open] > summary::before {
+  transform: rotate(90deg);
+}
+.chronicle-page .agent-turn > summary:hover {
+  background: var(--c-bg);
+}
+.chronicle-page .agent-turn[open] > summary {
+  border-bottom-color: var(--c-border);
+}
+.chronicle-page .agent-turn-num {
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--c-fg-muted);
+  min-width: 2rem;
+  flex-shrink: 0;
+}
+.chronicle-page .agent-turn-summary {
+  font-size: 0.82rem;
+  color: var(--c-fg);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chronicle-page .agent-turn-badges {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.chronicle-page .agent-tool-badge {
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  border: 1px solid var(--c-border);
+  color: var(--c-fg-muted);
+}
+.chronicle-page .agent-tool-bash { border-color: var(--c-teal); color: var(--c-teal); }
+.chronicle-page .agent-tool-read { border-color: #6b8afd; color: #6b8afd; }
+.chronicle-page .agent-tool-edit { border-color: var(--c-amber); color: var(--c-amber); }
+.chronicle-page .agent-tool-write { border-color: var(--c-gold); color: var(--c-gold); }
+.chronicle-page .agent-tool-todo { border-color: var(--c-violet); color: var(--c-violet); }
+
+/* ── Agent Turn Body ── */
+.chronicle-page .agent-turn-body {
+  padding: 0;
+}
+
+/* ── Agent Thinking Block ── */
+.chronicle-page .agent-thinking {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--c-border);
+  font-size: 0.78rem;
+  color: var(--c-fg-muted);
+  font-style: italic;
+  max-height: 180px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Agent Text Block ── */
+.chronicle-page .agent-text-block {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--c-border);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.82rem;
+}
+
+/* ── Agent Tool Block (nested <details>) ── */
+.chronicle-page .agent-tool-block {
+  border-bottom: 1px solid var(--c-border);
+}
+.chronicle-page .agent-tool-block > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--c-bg-card);
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+}
+.chronicle-page .agent-tool-block > summary::-webkit-details-marker { display: none; }
+.chronicle-page .agent-tool-block > summary::before {
+  content: '\25B6';
+  font-size: 0.55rem;
+  color: var(--c-fg-muted);
+  transition: transform 0.15s;
+}
+.chronicle-page .agent-tool-block[open] > summary::before {
+  transform: rotate(90deg);
+}
+.chronicle-page .agent-tool-block > summary:hover {
+  background: var(--c-bg);
+}
+.chronicle-page .agent-tool-name {
+  color: var(--c-gold);
+  font-weight: 600;
+}
+.chronicle-page .agent-tool-preview {
+  color: var(--c-fg-muted);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.7rem;
+}
+.chronicle-page .agent-tool-detail {
+  max-height: 350px;
+  overflow-y: auto;
+}
+.chronicle-page .agent-tool-input,
+.chronicle-page .agent-tool-output {
+  padding: 8px 14px;
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.4;
+  margin: 0;
+}
+.chronicle-page .agent-tool-input {
+  background: rgba(107, 138, 253, 0.04);
+  color: #8ba0fd;
+  border-bottom: 1px solid var(--c-border);
+}
+.chronicle-page .agent-tool-output {
+  background: rgba(10, 140, 110, 0.04);
+  color: var(--c-teal);
+}
+.chronicle-page .agent-tool-error {
+  background: hsl(var(--destructive) / 0.06);
+  color: var(--c-fire);
+}
+
+/* ── Agent Verdict ── */
+.chronicle-page .agent-verdict {
+  margin-top: 32px;
+  padding: 20px 24px;
+  border: 2px solid var(--c-gold);
+  background: var(--c-bg-card);
+}
+.chronicle-page .agent-verdict-pass { border-color: var(--c-teal); }
+.chronicle-page .agent-verdict-fail { border-color: var(--c-fire); }
+.chronicle-page .agent-verdict-label {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.chronicle-page .agent-verdict-pass .agent-verdict-label { color: var(--c-teal); }
+.chronicle-page .agent-verdict-fail .agent-verdict-label { color: var(--c-fire); }
+.chronicle-page .agent-verdict-text {
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+/* ── Agent Report Mobile ── */
+@media (max-width: 480px) {
+  .chronicle-page .agent-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .chronicle-page .agent-turn > summary { padding: 6px 10px; gap: 6px; }
+  .chronicle-page .agent-turn-badges { display: none; }
+  .chronicle-page .agent-tool-block > summary { padding: 4px 10px; }
+}
