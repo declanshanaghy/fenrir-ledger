@@ -3,7 +3,7 @@
 **Date:** 2026-03-13 (revised)
 **Author:** FiremanDecko (Principal Engineer)
 **Issue:** #627
-**Status:** Research deliverable — no code changes
+**Status:** Superseded — GKE Autopilot was selected as the dispatch platform. See `infrastructure/k8s/` and `dispatch/dispatch-job.sh` for the implementation.
 **Revision:** v2 — corrected usage volume (150-300 dispatches/week), added AWS options
 
 ---

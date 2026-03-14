@@ -3,6 +3,7 @@
 **Issue:** #656
 **Date:** 2026-03-13
 **Author:** FiremanDecko (Principal Engineer)
+**Status:** Superseded — GKE Autopilot was selected as the hosting platform. The Next.js app runs as a standalone container in GKE Pods. See `infrastructure/k8s/app/` for the implementation.
 
 ---
 
