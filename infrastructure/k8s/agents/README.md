@@ -22,6 +22,7 @@ dispatch skill → dispatch-job.sh → kubectl apply → GKE Autopilot Job
 | `job-template.yaml` | K8s Job spec template with placeholders |
 | `secrets-template.yaml` | K8s Secret template (DO NOT commit real values) |
 | `dispatch-job.sh` | Script to generate and apply Job manifests |
+| `agent-logs.mjs` | Stream + parse agent JSONL logs (saves to `tmp/agent-logs/`) |
 
 ## Setup
 
@@ -41,8 +42,12 @@ docker push us-central1-docker.pkg.dev/fenrir-ledger-prod/fenrir-images/agent-sa
 kubectl create secret generic agent-secrets \
   --namespace fenrir-agents \
   --from-literal=anthropic-api-key="<your-anthropic-key>" \
-  --from-literal=gh-token="<your-github-token>"
+  --from-literal=gh-token="<fine-grained-pat>" \
+  --from-literal=claude-oauth-token="<claude-code-oauth-token>"
 ```
+
+**Note:** `gh-token` must be a **fine-grained PAT** (not classic) scoped to this repo with
+Contents, Pull requests, Issues, Workflows, and Metadata permissions.
 
 ### 3. Dispatch an agent
 
@@ -67,13 +72,19 @@ bash infrastructure/k8s/agents/dispatch-job.sh \
 
 ```bash
 # List running agent jobs
-kubectl get jobs -n fenrir-agents
+just agent-jobs
 
-# Follow agent logs
-kubectl logs job/<job-name> -n fenrir-agents --follow
+# Stream parsed agent logs (with pod startup polling)
+just agent-log-issue 744
 
-# Check pod status
-kubectl get pods -n fenrir-agents
+# Stream all active agents in tmux panes
+just agent-log-all
+
+# Dump finished session logs
+just agent-log-dump <session-id>
+
+# Generate HTML report from saved logs
+/brandify-agent <session-id>
 ```
 
 Cloud Logging also captures all agent output automatically via GKE's workload logging.
