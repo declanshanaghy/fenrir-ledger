@@ -1,7 +1,7 @@
 # Trust Boundaries — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-05 (updated for Stripe Direct — Patreon removed)
+**Last reviewed**: 2026-03-14 (updated for GKE Autopilot — replaced Vercel references)
 
 ---
 
@@ -28,7 +28,7 @@ is trusted for payment processing and subscription lifecycle events.
         ─────────────────────┼─────────────────── TRUST BOUNDARY A
                              │
 ┌───────────────────────────▼──────────────────────────────────┐
-│  ZONE 2: Next.js Server (Trusted — Vercel Serverless)        │
+│  ZONE 2: Next.js Server (Trusted — GKE Autopilot)            │
 │                                                              │
 │  - process.env (server-only secrets)                         │
 │  - API route handlers                                        │
@@ -63,7 +63,7 @@ is trusted for payment processing and subscription lifecycle events.
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│  ZONE 5: Vercel KV / Upstash Redis (Trusted Persistent Store)│
+│  ZONE 5: Upstash Redis (Trusted Persistent Store)            │
 │                                                              │
 │  - entitlement:{googleSub}       → StripeEntitlement         │
 │  - stripe-customer:{stripeId}    → googleSub (reverse index) │
@@ -85,8 +85,8 @@ is trusted for payment processing and subscription lifecycle events.
 | `STRIPE_SECRET_KEY` | `process.env` (server) | No | Used only in Stripe API calls (server-side) |
 | `STRIPE_WEBHOOK_SECRET` | `process.env` (server) | No | Used only for webhook signature verification |
 | `STRIPE_PRICE_ID` | `process.env` (server) | No | Stripe price ID for subscription |
-| `KV_REST_API_URL` | `process.env` (server) | No | Vercel KV connection |
-| `KV_REST_API_TOKEN` | `process.env` (server) | No | Vercel KV auth token |
+| `KV_REST_API_URL` | `process.env` (server) | No | Upstash Redis connection |
+| `KV_REST_API_TOKEN` | `process.env` (server) | No | Upstash Redis auth token |
 | `GOOGLE_PICKER_API_KEY` | `process.env` (server) | Yes — served on request | Auth-gated; GCP referrer restriction required |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | `process.env` (public) | Yes — by design | OAuth Client ID is public; embedded in auth URL |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `process.env` (public) | Yes — by design | Stripe publishable key is safe for client exposure |
@@ -169,14 +169,14 @@ A successful XSS attack on fenrir-ledger.vercel.app could read:
 - `fenrir:pkce` → PKCE verifier if XSS fires during OAuth flow (tab-scoped)
 
 Note: Stripe entitlements are NOT in localStorage. They are stored server-side in
-Vercel KV and fetched on demand from the API. An XSS payload cannot access entitlement
+Upstash Redis and fetched on demand from the API. An XSS payload cannot access entitlement
 data directly.
 
 ### Mitigations in place
 
 | Mitigation | Status |
 |------------|--------|
-| Content Security Policy | PASS (`next.config.ts` — includes Google, Stripe, Vercel) |
+| Content Security Policy | PASS (`next.config.ts` — includes Google, Stripe domains) |
 | X-Frame-Options: DENY | PASS |
 | X-Content-Type-Options: nosniff | PASS |
 | HSTS (max-age=63072000) | PASS |
@@ -219,7 +219,7 @@ This means:
 
 ## Stripe Entitlement Data
 
-Unlike card data, subscription entitlements are stored server-side in Vercel KV.
+Unlike card data, subscription entitlements are stored server-side in Upstash Redis.
 The browser fetches the current tier from `/api/stripe/membership` on demand and
 caches it in React state only (not localStorage). This means:
 

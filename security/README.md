@@ -4,12 +4,14 @@ Owned by **Heimdall** (`.claude/agents/heimdall.md`).
 
 This directory contains all security documentation for the Fenrir Ledger project: audit reports, architecture diagrams, checklists, and advisories.
 
-## Current State (as of 2026-03-05)
+## Current State (as of 2026-03-14)
 
+- **Infrastructure**: GKE Autopilot (not Vercel). See `infrastructure/k8s/app/` for deployment manifests.
 - **Subscription platform**: Stripe Direct only. Patreon has been fully removed.
 - **Prompt injection**: Fixed in PR #171 — CSV wrapped in XML-style system/user role separation with explicit RAW DATA instruction.
 - **Stripe webhook**: SHA-256 HMAC via `stripe.webhooks.constructEvent()`.
-- **CSP**: Includes all required Google, Stripe, and Vercel domains.
+- **CSP**: Includes all required Google and Stripe domains.
+- **KV store**: Upstash Redis, configured via `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
 - **Open findings**: 3 LOW (distributed rate limiting, webhook deduplication, email validation), 3 INFO (trust chain comment, KV delete race, publishable key monitoring).
 
 ---
@@ -22,6 +24,24 @@ This directory contains all security documentation for the Fenrir Ledger project
 | 2026-03-02 | Google API Integration | 0C / 3H / 3M / 3L / 3I | Active — findings partially open | [reports/2026-03-02-google-api-integration.md](reports/2026-03-02-google-api-integration.md) |
 | 2026-03-04 | Stripe Direct Integration | 0C / 0H / 0M / 3L / 3I | Active — CRITICAL/MEDIUM resolved | [reports/2026-03-04-stripe-direct-integration.md](reports/2026-03-04-stripe-direct-integration.md) |
 | 2026-03-05 | LLM Prompt Injection Remediation (#157) | 0C / 0H / 0M / 0L / 2I | Active | [reports/2026-03-05-llm-prompt-injection-remediation.md](reports/2026-03-05-llm-prompt-injection-remediation.md) |
+| 2026-03-07 | Gmail MCP Deep Audit | N/A (advisory) | Active | [reports/2026-03-07-gmail-mcp-deep-audit.md](reports/2026-03-07-gmail-mcp-deep-audit.md) |
+| 2026-03-07 | Gmail MCP PR #324 Review | 0C / 0H / 0M / 2 new findings | Resolved | [reports/2026-03-07-gmail-mcp-pr324-review.md](reports/2026-03-07-gmail-mcp-pr324-review.md) |
+| 2026-03-08 | Gmail MCP PR #324 Remediation | All findings resolved | Closed | [reports/2026-03-08-gmail-mcp-pr324-remediation.md](reports/2026-03-08-gmail-mcp-pr324-remediation.md) |
+
+### Penetration Test Sub-Reports (consolidated into 2026-03-09 External Pentest)
+
+| Date | Scope | Path |
+|------|-------|------|
+| 2026-03-09 | Client-Side Security & Payment Flow | [reports/2026-03-09-pentest-clientside-payment.md](reports/2026-03-09-pentest-clientside-payment.md) |
+| 2026-03-10 | Authentication & API Authorization | [reports/2026-03-10-pentest-auth.md](reports/2026-03-10-pentest-auth.md) |
+| 2026-03-10 | Reconnaissance & Surface Enumeration | [reports/2026-03-10-pentest-recon.md](reports/2026-03-10-pentest-recon.md) |
+| 2026-03-10 | Injection & SSRF Testing | [reports/2026-03-10-pentest-injection.md](reports/2026-03-10-pentest-injection.md) |
+
+### Archived Reports
+
+| Date | Scope | Notes | Path |
+|------|-------|-------|------|
+| 2026-03-02 | Patreon Integration | Historical — Patreon fully removed | [reports/2026-03-02-patreon-integration.md](reports/2026-03-02-patreon-integration.md) |
 
 ### Risk Summary Notes
 
@@ -42,10 +62,10 @@ This directory contains all security documentation for the Fenrir Ledger project
 
 | Document | Description | Last Reviewed |
 |----------|-------------|---------------|
-| [architecture/auth-architecture.md](architecture/auth-architecture.md) | Full OAuth 2.0 PKCE flow, session storage model, token expiration, incremental Drive consent, trust boundaries, JWKS verification, and Stripe subscription auth model | 2026-03-05 |
-| [architecture/data-flow-diagrams.md](architecture/data-flow-diagrams.md) | Security-focused data flow diagrams for OAuth PKCE, URL import (Path A), CSV upload (Path C), Google Picker (Path B), and Stripe checkout; marks trust boundaries, SSRF surfaces, and injection points | 2026-03-05 |
-| [architecture/trust-boundaries.md](architecture/trust-boundaries.md) | Five trust zones (browser, server, Google infra, Stripe infra, Vercel KV); secret locations; what data crosses each boundary; localStorage XSS implications and mitigations | 2026-03-05 |
-| [architecture/threat-model.md](architecture/threat-model.md) | Assets, threat actors, attack surfaces, mitigations in place, and residual risks; updated for Stripe Direct | 2026-03-05 |
+| [architecture/auth-architecture.md](architecture/auth-architecture.md) | Full OAuth 2.0 PKCE flow, session storage model, token expiration, incremental Drive consent, trust boundaries, JWKS verification, and Stripe subscription auth model | 2026-03-14 |
+| [architecture/data-flow-diagrams.md](architecture/data-flow-diagrams.md) | Security-focused data flow diagrams for OAuth PKCE, URL import (Path A), CSV upload (Path C), Google Picker (Path B), and Stripe checkout; marks trust boundaries, SSRF surfaces, and injection points | 2026-03-14 |
+| [architecture/trust-boundaries.md](architecture/trust-boundaries.md) | Five trust zones (browser, GKE server, Google infra, Stripe infra, Upstash Redis); secret locations; what data crosses each boundary; localStorage XSS implications and mitigations | 2026-03-14 |
+| [architecture/threat-model.md](architecture/threat-model.md) | Assets, threat actors, attack surfaces, mitigations in place, and residual risks; updated for GKE Autopilot | 2026-03-14 |
 
 ---
 
@@ -53,8 +73,8 @@ This directory contains all security documentation for the Fenrir Ledger project
 
 | Document | Description | Last Reviewed |
 |----------|-------------|---------------|
-| [checklists/api-route-checklist.md](checklists/api-route-checklist.md) | Pre-merge checklist for adding or modifying API routes: requireAuth pattern, input validation, error handling, secret hygiene, SSRF prevention; includes Stripe webhook exemption | 2026-03-05 |
-| [checklists/deployment-security.md](checklists/deployment-security.md) | Pre-deployment checklist: secret hygiene, CSP verification, OAuth config, Stripe config, dependency audit, build verification, post-deployment checks | 2026-03-05 |
+| [checklists/api-route-checklist.md](checklists/api-route-checklist.md) | Pre-merge checklist for adding or modifying API routes: requireAuth pattern, input validation, error handling, secret hygiene, SSRF prevention; includes Stripe webhook exemption | 2026-03-14 |
+| [checklists/deployment-security.md](checklists/deployment-security.md) | Pre-deployment checklist for GKE Autopilot: secret hygiene, CSP verification, OAuth config, Stripe config, dependency audit, build verification, post-deployment checks | 2026-03-14 |
 
 ---
 

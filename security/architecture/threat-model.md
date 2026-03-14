@@ -1,7 +1,7 @@
 # Threat Model — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-05 (updated for Stripe Direct — Patreon removed; prompt injection fix noted)
+**Last reviewed**: 2026-03-14 (updated for GKE Autopilot — replaced Vercel references)
 **Methodology**: STRIDE-lite with OWASP Top 10 mapping
 
 ---
@@ -21,7 +21,7 @@
 | `GOOGLE_PICKER_API_KEY` | MEDIUM | Server env, served to browser auth-gated | Attacker can display Picker UI with Fenrir's quota |
 | Card portfolio data | MEDIUM | localStorage per-user | Financial metadata exposure (no PAN/CVV stored) |
 | User PII (email, name, picture) | MEDIUM | localStorage["fenrir:auth"].user | Identity exposure |
-| Stripe entitlements in KV | MEDIUM | Vercel KV | Attacker can grant or revoke subscription tier |
+| Stripe entitlements in KV | MEDIUM | Upstash Redis | Attacker can grant or revoke subscription tier |
 
 ---
 
@@ -149,7 +149,7 @@
 
 ### Content Security
 
-- CSP restricting scripts to self, Google APIs, Stripe.js, and Vercel analytics
+- CSP restricting scripts to self, Google APIs, and Stripe.js
 - `X-Frame-Options: DENY` (prevents clickjacking)
 - `X-Content-Type-Options: nosniff` (prevents MIME sniffing)
 - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
@@ -191,7 +191,7 @@
 | Refresh token in localStorage | HIGH | Long-lived token accessible to XSS; no server-side revocation | Move to HttpOnly cookie or shorten TTL |
 | Drive token in localStorage | MEDIUM | Persisted despite 1-hour TTL; widens XSS window | Keep in React state only |
 | `unsafe-inline` in CSP | MEDIUM | Allows inline script execution; reduces XSS protection | Move to nonce-based CSP |
-| Non-distributed rate limiting | MEDIUM | In-memory rate limiter doesn't work across serverless instances | Upstash Redis / Vercel KV |
+| Non-distributed rate limiting | MEDIUM | In-memory rate limiter doesn't work across Pod instances | Upstash Redis |
 | Anonymous data merge without Zod | LOW | Malformed localStorage data merged without validation | Add `CardsArraySchema.safeParse()` |
 | No refresh token rotation | LOW | Refresh token never rotated; stolen token remains valid | Implement token refresh + rotation via server proxy |
 | LLM singleton caches stale key | LOW | API key rotation may not take effect until cold start | Document; add version check to invalidate singleton |

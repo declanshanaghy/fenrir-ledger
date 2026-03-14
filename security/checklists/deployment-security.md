@@ -1,7 +1,7 @@
 # Deployment Security Checklist — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-05 (updated for Stripe Direct — Patreon removed; Stripe env vars added)
+**Last reviewed**: 2026-03-14 (updated for GKE Autopilot — replaced Vercel references)
 
 Run this checklist before every production deployment. Items marked [AUTOMATED] are
 covered by the Playwright test suite or CI. Items marked [MANUAL] require human review.
@@ -27,10 +27,8 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
   ```
   All results should be references to `process.env.*`, not literal values.
 
-- [ ] [MANUAL] **All required env vars are set in Vercel**
-  ```
-  vercel env ls
-  ```
+- [ ] [MANUAL] **All required env vars are set in GKE (K8s Secrets / ConfigMaps)**
+  Verify via `infrastructure/k8s/app/deployment.yaml` or `kubectl get secrets`.
   Required vars:
   - `GOOGLE_CLIENT_SECRET`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_PICKER_API_KEY`
   - `FENRIR_ANTHROPIC_API_KEY`
@@ -38,6 +36,7 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
   - `KV_REST_API_URL`, `KV_REST_API_TOKEN`
   - `APP_BASE_URL` (production URL for Stripe redirects)
+  - `UPTIME_CHECK_HOST` (Google Cloud Monitoring uptime check target)
 
 - [ ] [MANUAL] **No server secrets use `NEXT_PUBLIC_` prefix**
   ```
@@ -93,7 +92,7 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 - [ ] [MANUAL] **Google Cloud Console: OAuth redirect URIs are restricted**
   - Verify only these redirect URIs are registered:
-    - `https://fenrir-ledger.vercel.app/auth/callback`
+    - Production GKE Ingress hostname + `/auth/callback`
     - `http://localhost:9653/auth/callback`
   - No wildcard redirect URIs
 
@@ -102,7 +101,7 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
   - For production: publish the app (requires Google verification for sensitive scopes)
 
 - [ ] [MANUAL] **`GOOGLE_PICKER_API_KEY` has HTTP referrer restrictions in GCP Console**
-  - Restrict to: `https://fenrir-ledger.vercel.app/*`
+  - Restrict to production GKE Ingress hostname + `/*`
   - Without this restriction, the key can be used from any domain
 
 ---
@@ -147,30 +146,29 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 ## 7. Stripe Configuration
 
 - [ ] [MANUAL] **Stripe webhook endpoint is registered in Stripe Dashboard**
-  - Endpoint URL: `https://fenrir-ledger.vercel.app/api/stripe/webhook`
+  - Endpoint URL: production GKE Ingress hostname + `/api/stripe/webhook`
   - Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
-  - `STRIPE_WEBHOOK_SECRET` in Vercel matches the signing secret from Stripe Dashboard
+  - `STRIPE_WEBHOOK_SECRET` in K8s Secrets matches the signing secret from Stripe Dashboard
 
 - [ ] [MANUAL] **Stripe Dashboard redirect URL allowlist is configured**
-  - Add `https://fenrir-ledger.vercel.app/settings` to allowed redirect URLs
+  - Add the production GKE Ingress hostname + `/settings` to allowed redirect URLs
   - This is a defence-in-depth control (primary control is `APP_BASE_URL` in code)
 
-- [ ] [MANUAL] **`APP_BASE_URL` is set in Vercel production environment**
-  - Value: `https://fenrir-ledger.vercel.app`
+- [ ] [MANUAL] **`APP_BASE_URL` is set in GKE production environment**
+  - Value: production GKE Ingress hostname (see `infrastructure/k8s/app/deployment.yaml`)
   - Used by checkout and portal routes for success/cancel redirect URLs
-  - If unset, `VERCEL_URL` is used as fallback (automatically set by Vercel)
 
 ---
 
-## 9. Vercel Deployment Configuration
+## 9. GKE Deployment Configuration
 
-- [ ] [MANUAL] **Vercel Protection Bypass secret is not exposed in PR comments or logs**
-  - The bypass secret must only travel via `extraHTTPHeaders` in the Playwright runner
-  - Never append it to URLs in GitHub Actions step summaries or PR comments
+- [ ] [MANUAL] **K8s Secrets are not exposed in PR comments, logs, or CI summaries**
+  - Secrets must only travel via K8s Secret objects injected into Pods
+  - Never expose secrets in GitHub Actions step summaries or PR comments
 
-- [ ] [MANUAL] **Production environment variables are scoped to Production only**
-  - Do not use the same API keys for Preview and Production environments
-  - Preview environments should use test/sandbox API keys where available
+- [ ] [MANUAL] **Production environment variables are scoped to Production namespace only**
+  - Do not use the same API keys for staging and production
+  - Staging environments should use test/sandbox API keys where available
 
 ---
 
@@ -184,7 +182,7 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 - [ ] [MANUAL] **Security headers are present on production responses**
   ```
-  curl -I https://fenrir-ledger.vercel.app/ | grep -E "Content-Security|X-Frame|X-Content|Strict-Transport|Referrer"
+  curl -I <GKE_INGRESS_HOSTNAME>/ | grep -E "Content-Security|X-Frame|X-Content|Strict-Transport|Referrer"
   ```
 
 - [ ] [MANUAL] **Import pipeline works end-to-end**
