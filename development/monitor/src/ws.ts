@@ -2,6 +2,20 @@ import { WebSocketServer, WebSocket } from "ws";
 import type { IncomingMessage, Server } from "node:http";
 import type { ServerType } from "@hono/node-server";
 import { streamPodLogs, findPodForSession } from "./k8s.js";
+import { verifySessionToken, SESSION_COOKIE } from "./auth.js";
+
+/** Parse a single cookie header value into a map. */
+function parseCookies(cookieHeader: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const part of cookieHeader.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq === -1) continue;
+    const key = part.slice(0, eq).trim();
+    const val = decodeURIComponent(part.slice(eq + 1).trim());
+    result[key] = val;
+  }
+  return result;
+}
 
 type WsMessage =
   | { type: "log"; line: string; ts: number }
@@ -19,6 +33,16 @@ export function attachWebSocketServer(server: ServerType): WebSocketServer {
   const wss = new WebSocketServer({ server: server as Server, path: "/ws/logs" });
 
   wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
+    // Validate session cookie before allowing the WS connection
+    const cookieHeader = req.headers.cookie ?? "";
+    const cookies = parseCookies(cookieHeader);
+    const sessionToken = cookies[SESSION_COOKIE];
+    if (!sessionToken || !verifySessionToken(sessionToken)) {
+      send(ws, { type: "error", message: "Unauthorized" });
+      ws.close(1008, "Unauthorized");
+      return;
+    }
+
     // Extract sessionId from URL: /ws/logs/:sessionId
     const url = req.url ?? "";
     const match = /^\/ws\/logs\/([^/?#]+)/.exec(url);
