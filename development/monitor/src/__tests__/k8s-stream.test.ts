@@ -12,21 +12,21 @@ const mockLogFn = vi.fn();
 
 vi.mock("@kubernetes/client-node", () => {
   return {
-    KubeConfig: vi.fn().mockImplementation(() => ({
-      loadFromCluster: vi.fn(),
-      loadFromDefault: vi.fn(),
-      makeApiClient: vi.fn().mockImplementation((ApiClass: { name?: string }) => {
+    KubeConfig: vi.fn().mockImplementation(function(this: Record<string, unknown>) {
+      this.loadFromCluster = vi.fn();
+      this.loadFromDefault = vi.fn();
+      this.makeApiClient = vi.fn().mockImplementation((ApiClass: { name?: string }) => {
         if (ApiClass?.name === "BatchV1Api") {
           return { listNamespacedJob: mockListNamespacedJob };
         }
         return { listNamespacedPod: mockListNamespacedPod };
-      }),
-    })),
+      });
+    }),
     BatchV1Api: class BatchV1Api {},
     CoreV1Api: class CoreV1Api {},
-    Log: vi.fn().mockImplementation(() => ({
-      log: mockLogFn,
-    })),
+    Log: vi.fn().mockImplementation(function(this: Record<string, unknown>) {
+      this.log = mockLogFn;
+    }),
     V1Job: class V1Job {},
     V1Pod: class V1Pod {},
   };
