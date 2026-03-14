@@ -43,7 +43,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
-import { MarketingNavbar } from "@/components/marketing/MarketingNavbar";
+import { MarketingNavbar, isNavLinkActive } from "@/components/marketing/MarketingNavbar";
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 
@@ -151,6 +151,27 @@ describe("MarketingNavbar — Regression: Issue #849 (Chronicles link + Cinzel f
       expect(link.className).toContain("font-heading");
       expect(link.className).not.toContain("font-body");
     });
+  });
+});
+
+// ── isNavLinkActive — pure helper (Issue #848 coverage) ──────────────────────
+
+describe("isNavLinkActive — pure helper", () => {
+  it("returns false when pathname is null", () => {
+    expect(isNavLinkActive(null, "/features")).toBe(false);
+  });
+
+  it("returns true for exact pathname match", () => {
+    expect(isNavLinkActive("/pricing", "/pricing")).toBe(true);
+  });
+
+  it("returns true for sub-path (pathname starts with href + '/')", () => {
+    expect(isNavLinkActive("/features/details", "/features")).toBe(true);
+  });
+
+  it("returns false when pathname starts with href string but lacks trailing slash boundary", () => {
+    // '/features-extra' should NOT match '/features'
+    expect(isNavLinkActive("/features-extra", "/features")).toBe(false);
   });
 });
 
