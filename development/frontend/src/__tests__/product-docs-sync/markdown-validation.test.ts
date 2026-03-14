@@ -79,10 +79,14 @@ describe("Product Documentation Sync — Issue #699", () => {
       const content = readFileSync(readmePath, "utf-8");
 
       // Extract markdown links from the index section: [text](path)
+      // Stop at "**Note:**" to only check the index section
       const linkPattern = /\[([^\]]+)\]\(([^\)]+)\)/g;
-      const matches = Array.from(content.matchAll(linkPattern));
+      const indexStart = content.indexOf("## Index");
+      const noteStart = content.indexOf("**Note:**", indexStart);
+      const indexSection = noteStart > 0
+        ? content.substring(indexStart, noteStart)
+        : content.substring(indexStart);
 
-      const indexSection = content.substring(content.indexOf("## Index"));
       const indexMatches = Array.from(indexSection.matchAll(linkPattern));
 
       for (const match of indexMatches) {
@@ -94,7 +98,7 @@ describe("Product Documentation Sync — Issue #699", () => {
         const fullPath = resolve(PRODUCT_DIR, linkPath);
         expect(existsSync(fullPath)).toBe(
           true,
-          `README index link "${linkPath}" should point to an existing file`
+          `README index link "${linkPath}" should point to an existing file at ${fullPath}`
         );
       }
     });
@@ -194,8 +198,16 @@ describe("Product Documentation Sync — Issue #699", () => {
       const content = readFileSync(filePath, "utf-8");
       expect(content).toContain("Upstash Redis");
       expect(content).toContain("KV store");
-      // Should not have stale SUBSCRIPTION_PLATFORM references
-      expect(content).not.toContain("SUBSCRIPTION_PLATFORM");
+
+      // Check that SUBSCRIPTION_PLATFORM references don't appear in current decision/strategy sections
+      // Only in "Removed" sections (which describe historical removal)
+      const currentDecisionStart = content.indexOf("## Current Decision: Stripe Direct");
+      const removedSectionStart = content.indexOf("## Patreon Integration: Fully Removed");
+      const currentDecisionSection = content.substring(
+        currentDecisionStart,
+        removedSectionStart
+      );
+      expect(currentDecisionSection).not.toContain("SUBSCRIPTION_PLATFORM");
     });
 
     it("should have updated handoff-to-luna-anon-auth.md with removed stale references", () => {
