@@ -256,6 +256,73 @@
       font-family: "Monaco", "Courier New", monospace;
     }
 
+    .log-controls {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .control-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: var(--gold);
+      color: var(--void-black);
+      border: none;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .control-btn:hover:not(:disabled) {
+      background-color: var(--gold-light);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(201, 146, 10, 0.3);
+    }
+
+    .control-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .control-btn:disabled {
+      background-color: var(--gray-dark);
+      color: var(--gray);
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .btn-icon {
+      font-size: 1rem;
+    }
+
+    .control-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--gold);
+      font-size: 0.75rem;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--gold);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     .log-content {
       flex: 1;
       overflow-y: auto;
@@ -782,6 +849,21 @@
           <div class="log-metadata-item">
             <span class="log-metadata-label">Model:</span>
             <span class="log-metadata-value" id="logModel"></span>
+          </div>
+        </div>
+        <div class="log-controls" aria-label="Log export controls">
+          <button id="saveLogBtn" class="control-btn save-btn" title="Save log to disk for processing">
+            <span class="btn-icon">💾</span> Save Log
+          </button>
+          <button id="brandifyHtmlBtn" class="control-btn brandify-btn" disabled title="Generate HTML report from saved log">
+            <span class="btn-icon">📄</span> Brandify HTML
+          </button>
+          <button id="brandifyMdxBtn" class="control-btn brandify-btn" disabled title="Generate MDX report for chronicles">
+            <span class="btn-icon">📰</span> Brandify MDX
+          </button>
+          <div id="logControlsStatus" class="control-status" style="display: none;">
+            <span class="spinner"></span>
+            <span id="logControlsStatusText">Processing...</span>
           </div>
         </div>
       </div>
@@ -1551,6 +1633,139 @@
       const container = document.getElementById('logContent');
       const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
       state.autoScrollEnabled = isNearBottom;
+    });
+
+    // Save Log button
+    document.getElementById('saveLogBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('saveLogBtn');
+      const statusEl = document.getElementById('logControlsStatus');
+      const statusText = document.getElementById('logControlsStatusText');
+      const brandifyHtmlBtn = document.getElementById('brandifyHtmlBtn');
+      const brandifyMdxBtn = document.getElementById('brandifyMdxBtn');
+
+      try {
+        btn.disabled = true;
+        statusEl.style.display = 'flex';
+        statusText.textContent = 'Saving log...';
+
+        const jobName = state.selectedJobName;
+        const sessionId = document.getElementById('logSession').textContent;
+
+        const res = await fetch('/save-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobName, sessionId }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Failed to save log');
+        }
+
+        const data = await res.json();
+        statusText.textContent = `✓ Saved ${data.lines} lines`;
+
+        // Enable brandify buttons
+        brandifyHtmlBtn.disabled = false;
+        brandifyMdxBtn.disabled = false;
+
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+          btn.disabled = false;
+        }, 2000);
+      } catch (err) {
+        statusText.textContent = `✗ Error: ${err.message}`;
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+          btn.disabled = false;
+        }, 3000);
+      }
+    });
+
+    // Brandify HTML button
+    document.getElementById('brandifyHtmlBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('brandifyHtmlBtn');
+      const statusEl = document.getElementById('logControlsStatus');
+      const statusText = document.getElementById('logControlsStatusText');
+
+      try {
+        btn.disabled = true;
+        statusEl.style.display = 'flex';
+        statusText.textContent = 'Generating HTML...';
+
+        const sessionId = document.getElementById('logSession').textContent;
+
+        const res = await fetch('/brandify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, publish: false }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Failed to brandify');
+        }
+
+        const data = await res.json();
+        statusText.textContent = '✓ Report generated';
+
+        // Open report in new tab
+        window.open(`/reports/${data.filename}`, '_blank');
+
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+          btn.disabled = false;
+        }, 2000);
+      } catch (err) {
+        statusText.textContent = `✗ Error: ${err.message}`;
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+          btn.disabled = false;
+        }, 3000);
+      }
+    });
+
+    // Brandify MDX button
+    document.getElementById('brandifyMdxBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('brandifyMdxBtn');
+      const statusEl = document.getElementById('logControlsStatus');
+      const statusText = document.getElementById('logControlsStatusText');
+
+      try {
+        btn.disabled = true;
+        statusEl.style.display = 'flex';
+        statusText.textContent = 'Generating MDX...';
+
+        const sessionId = document.getElementById('logSession').textContent;
+
+        const res = await fetch('/brandify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, publish: true }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Failed to brandify');
+        }
+
+        const data = await res.json();
+        statusText.textContent = '✓ MDX generated, opening...';
+
+        // Open report in new tab
+        window.open(`/reports/${data.filename}`, '_blank');
+
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+          btn.disabled = false;
+        }, 2000);
+      } catch (err) {
+        statusText.textContent = `✗ Error: ${err.message}`;
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+          btn.disabled = false;
+        }, 3000);
+      }
     });
 
     // ========================================================================
