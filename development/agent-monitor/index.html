@@ -1293,16 +1293,112 @@
     // Initialization
     // ========================================================================
 
+    // ========================================================================
+    // K8s Watch — real-time job updates via streaming API
+    // ========================================================================
+
+    let watchAbortController = null;
+
+    async function watchJobs() {
+      // Get current resourceVersion for watch starting point
+      try {
+        const listUrl = `${K8S_PROXY_URL}/apis/batch/v1/namespaces/${NAMESPACE}/jobs`;
+        const listRes = await fetch(listUrl);
+        if (!listRes.ok) return;
+        const listData = await listRes.json();
+        const resourceVersion = listData.metadata?.resourceVersion;
+        if (!resourceVersion) return;
+
+        // Start watch stream
+        if (watchAbortController) watchAbortController.abort();
+        watchAbortController = new AbortController();
+
+        const watchUrl = `${K8S_PROXY_URL}/apis/batch/v1/namespaces/${NAMESPACE}/jobs?watch=true&resourceVersion=${resourceVersion}`;
+        const watchRes = await fetch(watchUrl, { signal: watchAbortController.signal });
+
+        if (!watchRes.ok) {
+          console.error('Watch failed:', watchRes.statusText);
+          // Fall back to polling
+          setInterval(() => fetchJobs(), 10000);
+          return;
+        }
+
+        setConnectionStatus(true, 'Watching');
+
+        const reader = watchRes.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const event = JSON.parse(line);
+              handleWatchEvent(event);
+            } catch { /* skip malformed */ }
+          }
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') return; // intentional
+        console.error('Watch error:', err);
+        setConnectionStatus(true, 'Reconnecting...');
+        // Reconnect after 3s
+        setTimeout(() => watchJobs(), 3000);
+      }
+    }
+
+    function handleWatchEvent(event) {
+      const type = event.type; // ADDED, MODIFIED, DELETED
+      const job = event.object;
+      if (!job?.metadata?.name) return;
+
+      const jobName = job.metadata.name;
+      if (!JOB_NAME_REGEX.test(jobName)) return;
+
+      if (type === 'DELETED') {
+        state.jobs = state.jobs.filter(j => j.jobName !== jobName);
+      } else {
+        // Parse the job like fetchJobs does
+        const parsed = parseJobsList([job]);
+        if (parsed.length === 0) return;
+        const newJob = parsed[0];
+
+        const idx = state.jobs.findIndex(j => j.jobName === jobName);
+        if (idx >= 0) {
+          state.jobs[idx] = newJob;
+        } else {
+          state.jobs.push(newJob);
+        }
+
+        // Re-sort: running first, then newest
+        state.jobs.sort((a, b) => {
+          if (a.status === 'Running' && b.status !== 'Running') return -1;
+          if (a.status !== 'Running' && b.status === 'Running') return 1;
+          return new Date(b.startTime) - new Date(a.startTime);
+        });
+      }
+
+      renderJobsList();
+
+      // Flash the connection indicator on updates
+      const indicator = document.getElementById('connectionStatus');
+      indicator.style.background = 'var(--gold)';
+      setTimeout(() => { indicator.style.background = ''; }, 300);
+    }
+
     async function init() {
       setConnectionStatus(true, 'Connecting...');
       await fetchJobs();
 
-      // Auto-refresh every 10 seconds
-      setInterval(() => {
-        if (!state.selectedJobName) {
-          fetchJobs();
-        }
-      }, 10000);
+      // Start K8s watch for real-time updates
+      watchJobs();
     }
 
     // Start on load
