@@ -293,3 +293,240 @@ describe("WebSocket connection handling", () => {
     });
   });
 });
+
+// ── Structured JSONL event dispatch ─────────────────────────────────────────
+
+describe("structured JSONL event dispatch", () => {
+  let fakeServer: ReturnType<typeof EventEmitter>;
+  let wss: FakeWss;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(mockVerifySessionToken).mockReturnValue("test@example.com");
+    fakeServer = new EventEmitter();
+    wss = attachWebSocketServer(fakeServer as unknown) as unknown as FakeWss;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("emits turn_start when an assistant JSONL event arrives", async () => {
+    let capturedOnLine: ((line: string) => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
+      capturedOnLine = onLine as (line: string) => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss, "/ws/logs/sess-turns");
+    await new Promise((r) => setTimeout(r, 10));
+
+    const assistantEvent = JSON.stringify({
+      type: "assistant",
+      message: { content: [{ type: "text", text: "Hello" }] },
+    });
+    capturedOnLine!(assistantEvent);
+
+    const turnMsg = ws.sent.find((s) => {
+      const p = JSON.parse(s) as Record<string, unknown>;
+      return p.type === "turn_start";
+    });
+    expect(turnMsg).toBeDefined();
+    const parsed = JSON.parse(turnMsg!) as Record<string, unknown>;
+    expect(parsed.turnNum).toBe(1);
+  });
+
+  it("emits tool_call when assistant event contains tool_use block", async () => {
+    let capturedOnLine: ((line: string) => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
+      capturedOnLine = onLine as (line: string) => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss, "/ws/logs/sess-tools");
+    await new Promise((r) => setTimeout(r, 10));
+
+    const assistantEvent = JSON.stringify({
+      type: "assistant",
+      message: {
+        content: [
+          { type: "tool_use", id: "tid-1", name: "Bash", input: { command: "ls" } },
+        ],
+      },
+    });
+    capturedOnLine!(assistantEvent);
+
+    const toolMsg = ws.sent.find((s) => {
+      const p = JSON.parse(s) as Record<string, unknown>;
+      return p.type === "tool_call";
+    });
+    expect(toolMsg).toBeDefined();
+    const parsed = JSON.parse(toolMsg!) as Record<string, unknown>;
+    expect(parsed.toolName).toBe("Bash");
+    expect(parsed.toolId).toBe("tid-1");
+    expect((parsed.input as Record<string, unknown>).command).toBe("ls");
+  });
+
+  it("emits tool_result when user event contains tool_result block", async () => {
+    let capturedOnLine: ((line: string) => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
+      capturedOnLine = onLine as (line: string) => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss, "/ws/logs/sess-results");
+    await new Promise((r) => setTimeout(r, 10));
+
+    const userEvent = JSON.stringify({
+      type: "user",
+      message: {
+        content: [
+          {
+            type: "tool_result",
+            tool_use_id: "tid-1",
+            content: "/workspace",
+            is_error: false,
+          },
+        ],
+      },
+    });
+    capturedOnLine!(userEvent);
+
+    const resultMsg = ws.sent.find((s) => {
+      const p = JSON.parse(s) as Record<string, unknown>;
+      return p.type === "tool_result";
+    });
+    expect(resultMsg).toBeDefined();
+    const parsed = JSON.parse(resultMsg!) as Record<string, unknown>;
+    expect(parsed.toolId).toBe("tid-1");
+    expect(parsed.content).toBe("/workspace");
+    expect(parsed.isError).toBe(false);
+  });
+
+  it("still sends raw log message for every line", async () => {
+    let capturedOnLine: ((line: string) => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
+      capturedOnLine = onLine as (line: string) => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss, "/ws/logs/sess-raw");
+    await new Promise((r) => setTimeout(r, 10));
+
+    capturedOnLine!("plain text line");
+
+    const logMsg = ws.sent.find((s) => {
+      const p = JSON.parse(s) as Record<string, unknown>;
+      return p.type === "log" && p.line === "plain text line";
+    });
+    expect(logMsg).toBeDefined();
+  });
+
+  it("emits verdict message when stream ends and verdict text is present", async () => {
+    let capturedOnLine: ((line: string) => void) | undefined;
+    let capturedOnEnd: (() => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine, onEnd) => {
+      capturedOnLine = onLine as (line: string) => void;
+      capturedOnEnd = onEnd as () => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss, "/ws/logs/sess-verdict");
+    await new Promise((r) => setTimeout(r, 10));
+
+    // Send an assistant event with a PASS verdict
+    capturedOnLine!(
+      JSON.stringify({
+        type: "assistant",
+        message: {
+          content: [{ type: "text", text: "**Verdict:** PASS — all tests green" }],
+        },
+      })
+    );
+
+    // End the stream
+    capturedOnEnd!();
+
+    const verdictMsg = ws.sent.find((s) => {
+      const p = JSON.parse(s) as Record<string, unknown>;
+      return p.type === "verdict";
+    });
+    expect(verdictMsg).toBeDefined();
+    const parsed = JSON.parse(verdictMsg!) as Record<string, unknown>;
+    expect(parsed.pass).toBe(true);
+  });
+
+  it("emits report message when stream ends and events are present", async () => {
+    let capturedOnLine: ((line: string) => void) | undefined;
+    let capturedOnEnd: (() => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine, onEnd) => {
+      capturedOnLine = onLine as (line: string) => void;
+      capturedOnEnd = onEnd as () => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss, "/ws/logs/sess-report");
+    await new Promise((r) => setTimeout(r, 10));
+
+    capturedOnLine!(
+      JSON.stringify({
+        type: "assistant",
+        message: { content: [{ type: "text", text: "doing work" }] },
+      })
+    );
+
+    capturedOnEnd!();
+
+    const reportMsg = ws.sent.find((s) => {
+      const p = JSON.parse(s) as Record<string, unknown>;
+      return p.type === "report";
+    });
+    expect(reportMsg).toBeDefined();
+    const parsed = JSON.parse(reportMsg!) as Record<string, unknown>;
+    expect(typeof parsed.html).toBe("string");
+    expect(parsed.html as string).toContain("<!DOCTYPE html>");
+  });
+
+  it("does not emit report when stream ends with no JSONL events", async () => {
+    let capturedOnEnd: (() => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, _onLine, onEnd) => {
+      capturedOnEnd = onEnd as () => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss, "/ws/logs/sess-empty");
+    await new Promise((r) => setTimeout(r, 10));
+
+    capturedOnEnd!();
+
+    const reportMsg = ws.sent.find((s) => {
+      const p = JSON.parse(s) as Record<string, unknown>;
+      return p.type === "report";
+    });
+    expect(reportMsg).toBeUndefined();
+  });
+
+  it("emits end message after stream completes", async () => {
+    let capturedOnEnd: (() => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, _onLine, onEnd) => {
+      capturedOnEnd = onEnd as () => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss, "/ws/logs/sess-end2");
+    await new Promise((r) => setTimeout(r, 10));
+
+    capturedOnEnd!();
+
+    const endMsg = ws.sent.find((s) => JSON.parse(s).type === "end");
+    expect(endMsg).toBeDefined();
+  });
+});
