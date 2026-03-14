@@ -193,6 +193,20 @@ pack-move issue status:
 agent-logs-list:
     @ls -lht "{{repo_root}}/tmp/agent-logs/"*.log 2>/dev/null || echo "No agent logs in tmp/agent-logs/"
 
+# ── Secrets ─────────────────────────────────────────────────────────────────
+
+# Audit all secrets (GitHub, K8s, .env.local)
+secrets-audit:
+    node "{{scripts}}/sync-secrets.mjs"
+
+# Sync missing secrets from .env.local to GitHub/K8s
+secrets-sync:
+    node "{{scripts}}/sync-secrets.mjs" --sync
+
+# Re-sync all secrets stripping embedded quotes
+secrets-fix-quotes:
+    node "{{scripts}}/sync-secrets.mjs" --fix-quotes
+
 # ── Utilities ───────────────────────────────────────────────────────────────
 
 # Generate a 256-bit encryption key
