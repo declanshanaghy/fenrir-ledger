@@ -73,7 +73,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 
 - **Category**: A04 Insecure Design / A07 Identification and Authentication Failures
 - **Location**: `development/frontend/src/app/api/auth/token/route.ts`
-- **Description**: The `/api/auth/token` endpoint is intentionally exempt from `requireAuth()` (correct). However, there is no rate limiting, no IP-based throttling, and no per-code uniqueness enforcement. This enables: (a) DoS against Google's token endpoint; (b) amplification of authorization code interception; (c) Vercel function cost exhaustion.
+- **Description**: The `/api/auth/token` endpoint is intentionally exempt from `requireAuth()` (correct). However, there is no rate limiting, no IP-based throttling, and no per-code uniqueness enforcement. This enables: (a) DoS against Google's token endpoint; (b) amplification of authorization code interception; (c) GKE pod resource exhaustion.
 - **Impact**: Function cost exhaustion, DoS amplification during PKCE race conditions, potential lockout of GCP OAuth app.
 - **Evidence**:
   ```typescript
@@ -81,7 +81,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
   export async function POST(request: NextRequest): Promise<NextResponse> {
     // Proceeds directly to Google token exchange
   ```
-- **Remediation**: Implement per-IP rate limiting (e.g., `@upstash/ratelimit` with Vercel KV). Limit to ~10 requests/minute per IP.
+- **Remediation**: Implement per-IP rate limiting (e.g., `@upstash/ratelimit` with KV store). Limit to ~10 requests/minute per IP.
 
 ---
 

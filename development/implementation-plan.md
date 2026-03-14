@@ -783,7 +783,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 - **File(s)**: `architecture/adrs/ADR-004-oidc-auth-localStorage.md`
 - **Depends on**: Nothing
 - **Implementation Notes**:
-  - Documents five sub-decisions: auth library (Auth.js v5), session strategy (JWT), householdId derivation (Google sub), localStorage key namespacing (per-household), Vercel preview deployment approach
+  - Documents five sub-decisions: auth library (Auth.js v5), session strategy (JWT), householdId derivation (Google sub), localStorage key namespacing (per-household), GKE preview deployment approach
   - Auth.js v5 chosen over Clerk (vendor lock-in), Lucia (needs DB), custom OAuth (security risk)
   - JWT strategy chosen over DB sessions (no additional infrastructure)
   - `sub` claim chosen as householdId for stability across email/name changes
@@ -844,7 +844,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
   - `/api/auth/*` passes through without auth check
   - All other routes: if no session, redirect to `/api/auth/signin?callbackUrl=...`
   - Matcher excludes Next.js internals, static assets, and image files
-  - `AUTH_TRUST_HOST=true` in env allows Vercel preview deployments to not reject the dynamic hostname
+  - `AUTH_TRUST_HOST=true` in env allows preview deployments to not reject the dynamic hostname
 - **Edge Cases**: Sign-in redirect must include the `callbackUrl` parameter so users land back on the originally requested page after Google authentication
 - **Definition of Done**: Unauthenticated requests to `/`, `/cards/new`, `/valhalla` redirect to Google sign-in
 
@@ -919,7 +919,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 | Limitation | Notes |
 |-----------|-------|
-| Google OAuth only works on production domain | Preview Vercel deployments cannot complete the OAuth flow (no dynamic redirect URI support in Google Console). `AUTH_TRUST_HOST=true` mitigates the host validation issue but the redirect URI mismatch remains. |
+| Google OAuth only works on production domain | Preview GKE deployments cannot complete the OAuth flow (no dynamic redirect URI support in Google Console). `AUTH_TRUST_HOST=true` mitigates the host validation issue but the redirect URI mismatch remains. |
 | No sign-in page UI | Auth.js redirects directly to Google's hosted consent screen. No custom branded sign-in page. |
 | Old flat-key localStorage data orphaned | Data written by Sprints 1–2 under `fenrir_ledger:cards` is unreachable after this change. Acceptable — no production users. |
 | JWT cannot be individually revoked | Revoking access requires signing out of Google or waiting for token expiry. Acceptable for a personal tool. |
