@@ -42,6 +42,14 @@ Then create your todo list via TodoWrite. Every todo below is required:
   - Layout, responsiveness, accessibility → **Vitest** with jsdom/happy-dom, NOT Playwright
   - If a test requires a real browser, skip it — CI E2E budget is at capacity.
   - Do NOT create files in `quality/test-suites/` — that directory is for manually curated E2E only.
+- **BANNED TEST CATEGORIES (UNBREAKABLE) — Do NOT write tests for:**
+  - GitHub Actions workflows (deploy.yml, ci.yml) — YAML structure changes constantly
+  - Helm chart structure (Chart.yaml, values.yaml, templates/) — infrastructure, not app logic
+  - Terraform files (dns.tf, variables.tf) — infrastructure, not app logic
+  - Markdown/docs sync validation — file counts, README structure, quality reports
+  - Config file assertions (playwright.config, tsconfig) — static, not behavioral
+  - Any test that parses YAML/Markdown and asserts string contents
+  Only test **behavioral code**: API routes, hooks, utils, components, auth logic.
 - Follow ALL Test Standards from the agent definition — budgets, pyramid, locators, data isolation.
 - Use the handoff's "How to verify" and "Edge cases" to guide test design.
 - **Commit+push tests before running them:**
