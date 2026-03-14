@@ -15,6 +15,7 @@
 
 import { readFileSync, writeFileSync } from "fs";
 import { dirname, join, resolve } from "path";
+import { createHecklerEngine, AGENT_NAMES } from "../../../../infrastructure/k8s/agents/mayo-heckler.mjs";
 
 // ---------------------------------------------------------------------------
 // CLI args
@@ -428,6 +429,46 @@ body {
 ::-webkit-scrollbar-track { background: var(--void); }
 ::-webkit-scrollbar-thumb { background: var(--iron-border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-void); }
+
+/* Heckle bubbles */
+.heckle {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.heckle-mayo {
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid var(--red-ragnarok);
+  color: var(--text-saga);
+}
+.heckle-mayo strong { color: var(--red-ragnarok); font-weight: 600; }
+.heckle-comeback {
+  background: rgba(10, 140, 110, 0.1);
+  border-left: 3px solid var(--teal-asgard);
+  color: var(--text-saga);
+}
+.heckle-comeback strong { color: var(--teal-asgard); font-weight: 600; }
+.heckle-entrance {
+  background: var(--forge);
+  border: 2px dashed var(--teal-asgard);
+  border-radius: 4px;
+  padding: 1rem;
+  color: var(--teal-asgard);
+  font-weight: 600;
+  text-align: center;
+}
+.heckle-explosion {
+  background: rgba(240, 180, 41, 0.15);
+  border: 2px solid var(--gold);
+  border-radius: 4px;
+  padding: 1rem;
+  color: var(--gold-bright);
+  font-weight: 700;
+  text-align: center;
+  font-size: 1rem;
+}
 `;
 
 // ---------------------------------------------------------------------------
@@ -896,7 +937,11 @@ const issueMatch = meta.session?.match(/issue-(\d+)/);
 const issueNum = issueMatch ? issueMatch[1] : "?";
 const agentMatch = meta.session?.match(/step(\d+)-(\w+)/);
 const stepNum = agentMatch ? agentMatch[1] : "?";
+const agentNameKey = agentMatch ? agentMatch[2] : "agent";
 const agentName = agentMatch ? agentMatch[2].charAt(0).toUpperCase() + agentMatch[2].slice(1) : "Agent";
+
+// Create heckler engine for Mayo heckling
+const hecklerEngine = createHecklerEngine(agentNameKey);
 
 const totalTestsWritten = vitestCounts.total + playwrightCount;
 
@@ -999,6 +1044,22 @@ if (publishMode) {
 </details>\n`;
     }
 
+    // Render heckles after the turn
+    const mdxHeckleEvents = hecklerEngine.maybeHeckle();
+    if (mdxHeckleEvents) {
+      for (const event of mdxHeckleEvents) {
+        if (event.type === "mayo") {
+          turnsMarkup += `<div className="heckle heckle-mayo"><strong>${mdxEsc(event.name)}:</strong> ${mdxEsc(event.text)}</div>\n`;
+        } else if (event.type === "mayo-comeback") {
+          turnsMarkup += `<div className="heckle heckle-comeback"><strong>${mdxEsc(event.name)}:</strong> ${mdxEsc(event.text)}</div>\n`;
+        } else if (event.type === "mayo-entrance") {
+          turnsMarkup += `<div className="heckle heckle-entrance">${mdxEsc(event.text)}</div>\n`;
+        } else if (event.type === "mayo-explosion") {
+          turnsMarkup += `<div className="heckle heckle-explosion">${mdxEsc(event.text)}</div>\n`;
+        }
+      }
+    }
+
     turnsMarkup += `</div>
 </details>\n`;
   });
@@ -1025,6 +1086,10 @@ ${[...filesModified].map(f => `<span className="chip chip-mod">~ ${mdxEsc(shortP
 ${commits.map(c => `<div className="agent-commit-item">${mdxEsc(c)}</div>`).join("\n")}
 </div>`;
   }
+
+  // Victory heckle markup
+  const mdxVictoryHeckle = hecklerEngine.victoryHeckle();
+  const victoryHeckleMarkup = `<div className="heckle heckle-explosion">${mdxEsc(mdxVictoryHeckle.text)}</div>`;
 
   // Verdict markup
   let verdictMarkup = "";
@@ -1073,6 +1138,7 @@ ${commitsMarkup}
 <div className="agent-turns-title">Execution Turns</div>
 ${turnsMarkup}
 </div>
+${victoryHeckleMarkup}
 ${verdictMarkup}
 
 </div>
@@ -1236,8 +1302,28 @@ turns.forEach((turn, i) => {
     </div>\n`;
   }
 
+  // Render heckles after the turn
+  const heckleEvents = hecklerEngine.maybeHeckle();
+  if (heckleEvents) {
+    for (const event of heckleEvents) {
+      if (event.type === "mayo") {
+        html += `    <div class="heckle heckle-mayo"><strong>${esc(event.name)}:</strong> ${esc(event.text)}</div>\n`;
+      } else if (event.type === "mayo-comeback") {
+        html += `    <div class="heckle heckle-comeback"><strong>${esc(event.name)}:</strong> ${esc(event.text)}</div>\n`;
+      } else if (event.type === "mayo-entrance") {
+        html += `    <div class="heckle heckle-entrance">${esc(event.text)}</div>\n`;
+      } else if (event.type === "mayo-explosion") {
+        html += `    <div class="heckle heckle-explosion">${esc(event.text)}</div>\n`;
+      }
+    }
+  }
+
   html += `  </div>\n</div>\n\n`;
 });
+
+// Victory heckle before verdict
+const victoryHeckle = hecklerEngine.victoryHeckle();
+html += `<div class="heckle heckle-explosion">${esc(victoryHeckle.text)}</div>\n`;
 
 // Verdict
 if (verdict) {
