@@ -155,6 +155,11 @@ echo "=== Starting Claude Code ==="
 echo "Model: ${AGENT_MODEL}"
 echo "Session: ${SESSION_ID:-unknown}"
 echo "Working directory: $(pwd)"
+echo ""
+echo "--- TASK PROMPT ---"
+echo "${DECODED_PROMPT}"
+echo "--- END PROMPT ---"
+echo ""
 
-# Run Claude Code — output goes to stdout (captured by kubectl logs / Cloud Logging)
-exec claude "${CLAUDE_ARGS[@]}"
+# Use line-buffered output so kubectl logs shows progress in real time
+exec stdbuf -oL claude "${CLAUDE_ARGS[@]}"
