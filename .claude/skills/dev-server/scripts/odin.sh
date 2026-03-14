@@ -53,9 +53,42 @@ case "${1:-status}" in
     nohup npx http-server "$SERVE_DIR" -p "$PORT" -c-1 --cors -s >> "$LOG" 2>&1 &
     echo $! > "$PID_FILE"
     # Start manifest refresh loop (every 15s)
+    # Downloads fresh logs from GKE + regenerates reports + updates manifest
     REFRESH_PID_FILE="${LOG_DIR}/.odin-refresh.pid"
+    REPORT_SCRIPT="$REPO_ROOT/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs"
     nohup bash -c "while true; do
-      node '$REPO_ROOT/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs' --regen-assets --output-dir '$SERVE_DIR' >/dev/null 2>&1
+      # Download logs from active GKE jobs
+      for job in \$(kubectl get jobs -n fenrir-agents -o jsonpath='{range .items[?(@.status.active)]}{.metadata.name}{\"\\n\"}{end}' 2>/dev/null); do
+        [ -z \"\$job\" ] && continue
+        sid=\"\${job#agent-}\"
+        logfile=\"$SERVE_DIR/\$sid.log\"
+        kubectl logs \"job/\$job\" -n fenrir-agents --timestamps=false > \"\$logfile.tmp\" 2>/dev/null
+        if [ -s \"\$logfile.tmp\" ]; then
+          mv \"\$logfile.tmp\" \"\$logfile\"
+          node \"$REPORT_SCRIPT\" --input \"\$logfile\" >/dev/null 2>&1
+        else
+          rm -f \"\$logfile.tmp\"
+        fi
+      done
+      # Also refresh completed jobs that might have new logs
+      for job in \$(kubectl get jobs -n fenrir-agents -o jsonpath='{range .items[?(@.status.succeeded)]}{.metadata.name}{\"\\n\"}{end}' 2>/dev/null); do
+        [ -z \"\$job\" ] && continue
+        sid=\"\${job#agent-}\"
+        logfile=\"$SERVE_DIR/\$sid.log\"
+        htmlfile=\"$SERVE_DIR/\$sid.html\"
+        # Only download if no HTML yet or log is newer
+        if [ ! -f \"\$htmlfile\" ]; then
+          kubectl logs \"job/\$job\" -n fenrir-agents --timestamps=false > \"\$logfile.tmp\" 2>/dev/null
+          if [ -s \"\$logfile.tmp\" ]; then
+            mv \"\$logfile.tmp\" \"\$logfile\"
+            node \"$REPORT_SCRIPT\" --input \"\$logfile\" >/dev/null 2>&1
+          else
+            rm -f \"\$logfile.tmp\"
+          fi
+        fi
+      done
+      # Regenerate manifest + index
+      node \"$REPORT_SCRIPT\" --regen-assets --output-dir \"$SERVE_DIR\" >/dev/null 2>&1
       sleep 15
     done" >> "$LOG" 2>&1 &
     echo $! > "$REFRESH_PID_FILE"
