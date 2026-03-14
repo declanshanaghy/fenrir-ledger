@@ -259,19 +259,26 @@ body {
   user-select: none;
 }
 .turn-header:hover { background: var(--chain); }
+.turn-header .turn-agent-profile {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
 .turn-header .turn-agent-avatar {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid var(--teal-asgard);
-  flex-shrink: 0;
 }
-.turn-header .turn-agent-name {
+.turn-header .turn-agent-title {
   color: var(--teal-asgard);
-  font-weight: 600;
-  font-size: 0.75rem;
-  margin-right: 0.25rem;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
 }
 .turn-header .turn-num {
   font-family: 'JetBrains Mono', monospace;
@@ -1100,6 +1107,16 @@ const agentNameKey = agentMatch ? agentMatch[2] : "agent";
 const agentName = AGENT_NAMES[agentNameKey] || (agentMatch ? agentMatch[2].charAt(0).toUpperCase() + agentMatch[2].slice(1) : "Agent");
 const agentSlug = {FiremanDecko:'fireman-decko',Loki:'loki',Luna:'luna',Freya:'freya',Heimdall:'heimdall'}[agentName] || agentNameKey;
 
+// Full agent titles — professional bogger energy
+const AGENT_TITLES = {
+  FiremanDecko: "FiremanDecko — Principal Engineer",
+  Loki: "Loki — QA Tester & Devil's Advocate",
+  Luna: "Luna — UX Designer",
+  Freya: "Freya — Product Owner",
+  Heimdall: "Heimdall — Security Specialist",
+};
+const agentTitle = AGENT_TITLES[agentName] || agentName;
+
 // Create heckler engine for Mayo heckling
 const hecklerEngine = createHecklerEngine(agentName);
 
@@ -1432,9 +1449,11 @@ turns.forEach((turn, i) => {
   const hasError = turn.tools.some(t => t.is_error);
   html += `<div class="turn${hasError ? " has-error" : ""}">
   <div class="turn-header">
-    <img class="turn-agent-avatar" src="agents/profiles/${agentSlug}-dark.png" onerror="this.style.display='none'" alt="${esc(agentName)}">
+    <div class="turn-agent-profile">
+      <img class="turn-agent-avatar" src="agents/profiles/${agentSlug}-dark.png" onerror="this.style.display='none'" alt="${esc(agentName)}">
+      <span class="turn-agent-title">${esc(agentTitle)}</span>
+    </div>
     <span class="turn-num">#${i + 1}</span>
-    <span class="turn-agent-name">${esc(agentName)}</span>
     <span class="turn-summary">${turnSummary(turn)}</span>
     <span class="turn-tools">
       ${turn.tools.map(t => `<span class="tool-badge ${toolBadgeClass(t.name)}">${esc(t.name)}</span>`).join("")}
