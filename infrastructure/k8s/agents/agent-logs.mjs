@@ -257,26 +257,84 @@ function toolSummary(block) {
   }
 }
 
+// -- Speech bubble renderer -------------------------------------------------
+// Uses Unicode box-drawing to create chat bubbles
+//   ╭─ Agent 🤖 ──────────────╮
+//   │ Message text here        │
+//   ╰──────────────────────────╯
+//       ╭─ 🔧 Tool ───────────╮
+//       │ Bash: do the thing   │
+//       ╰──────────────────────╯
+
+function bubble(label, textLines, color, labelColor, indent = "") {
+  const MAX_W = 72;
+  // Calculate inner width from longest line
+  const labelClean = label.replace(/[^\x20-\x7E\u{1F300}-\u{1FFFF}]/gu, "X"); // approx visible length
+  const maxTextLen = Math.max(...textLines.map(l => l.length), labelClean.length + 2);
+  const innerW = Math.min(Math.max(maxTextLen + 2, 20), MAX_W);
+
+  const out = [];
+  // Top border with label
+  const labelStr = ` ${label} `;
+  const topPad = Math.max(0, innerW - labelStr.length - 1);
+  out.push(`${indent}${color}╭─${labelColor}${C.bold}${labelStr}${C.reset}${color}${"─".repeat(topPad)}╮${C.reset}`);
+
+  // Content lines
+  for (const line of textLines) {
+    // Word-wrap long lines
+    const wrapped = wrapText(line, innerW - 2);
+    for (const wl of wrapped) {
+      const pad = Math.max(0, innerW - wl.length - 2);
+      out.push(`${indent}${color}│${C.reset} ${color}${wl}${" ".repeat(pad)}${C.reset} ${color}│${C.reset}`);
+    }
+  }
+
+  // Bottom border
+  out.push(`${indent}${color}╰${"─".repeat(innerW)}╯${C.reset}`);
+  return out;
+}
+
+function wrapText(text, maxW) {
+  if (text.length <= maxW) return [text];
+  const words = text.split(" ");
+  const lines = [];
+  let cur = "";
+  for (const w of words) {
+    if (cur && (cur.length + 1 + w.length) > maxW) {
+      lines.push(cur);
+      cur = w;
+    } else {
+      cur = cur ? cur + " " + w : w;
+    }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
 // -- Format a single JSONL line ---------------------------------------------
 let lastType = "";
-let toolBatch = [];  // collect consecutive tool calls into one block
+let toolBatch = [];
 
 function flushToolBatch(lines) {
   if (toolBatch.length === 0) return;
-  for (const t of toolBatch) {
-    lines.push(`${C.toolLabel}    ◀ ${C.tool}${t}${C.reset}`);
-  }
+  const bubbleLines = bubble(
+    "🔧 Tools",
+    toolBatch,
+    C.tool,
+    C.toolLabel,
+    "    "  // indented left = tool side
+  );
+  lines.push(...bubbleLines);
+  lines.push("");
   toolBatch = [];
-  // Maybe a heckle after a burst of tool calls
   const h = maybeHeckle();
-  if (h) { lines.push(""); lines.push(h); lines.push(""); }
+  if (h) { lines.push(h); lines.push(""); }
 }
 
 function formatLine(obj) {
   const lines = [];
 
   if (obj.type === "system") {
-    // Only show the init event (has model), skip context management events
     if (obj.subtype === "init" && obj.model) {
       lines.push(`${C.system}  ⚙  ${obj.model} connected${C.reset}`);
       lines.push("");
@@ -285,8 +343,6 @@ function formatLine(obj) {
 
   else if (obj.type === "assistant" && obj.message?.content) {
     const hasText = obj.message.content.some(b => b.type === "text" && b.text?.trim());
-
-    // Flush any pending tool batch before agent speaks
     if (hasText) flushToolBatch(lines);
 
     for (const block of obj.message.content) {
@@ -294,14 +350,17 @@ function formatLine(obj) {
         const clean = stripMd(block.text.trim());
         const textLines = clean.split("\n").filter(l => l.trim());
         if (lastType === "text" || lastType === "tool") lines.push("");
-        // Agent bubble — right side, red
-        lines.push(`${C.agentLabel}${C.bold}  🤖 Agent ▸${C.reset}`);
-        for (const tl of textLines) {
-          lines.push(`${C.agent}  │ ${tl}${C.reset}`);
-        }
+
+        const bubbleLines = bubble(
+          "🤖 Agent",
+          textLines,
+          C.agent,
+          C.agentLabel,
+          "  "
+        );
+        lines.push(...bubbleLines);
         lines.push("");
         lastType = "text";
-        // Maybe heckle after agent speaks
         const h = maybeHeckle();
         if (h) { lines.push(h); lines.push(""); }
       }
@@ -314,7 +373,9 @@ function formatLine(obj) {
       else if (block.type === "thinking" && opts.thinking) {
         flushToolBatch(lines);
         const text = trunc(block.thinking || "(signed)", 300);
-        lines.push(`${C.think}${C.italic}  💭 ${text}${C.reset}`);
+        const bubbleLines = bubble("💭 Thinking", [text], C.think, C.think, "      ");
+        lines.push(...bubbleLines);
+        lines.push("");
         lastType = "thinking";
       }
     }
@@ -323,7 +384,7 @@ function formatLine(obj) {
   else if (obj.type === "tool_result") {
     if (opts.tools) {
       const content = trunc(typeof obj.content === "string" ? obj.content : JSON.stringify(obj.content), 150);
-      lines.push(`${C.result}    ← ${content}${C.reset}`);
+      lines.push(`${C.result}      ← ${content}${C.reset}`);
     }
     lastType = "result";
   }
@@ -334,7 +395,10 @@ function formatLine(obj) {
     const dur = obj.duration_seconds != null ? `${Math.round(obj.duration_seconds / 60)}m` : "?";
     const turns = obj.num_turns ?? "?";
     lines.push("");
-    lines.push(`${C.done}${C.bold}  🏁 Done — ${cost} | ${dur} | ${turns} turns${C.reset}`);
+    const doneLines = bubble("🏁 Session Complete", [
+      `Cost: ${cost}  Duration: ${dur}  Turns: ${turns}`,
+    ], C.done, C.done, "  ");
+    lines.push(...doneLines);
     lines.push(`${C.mayoBg}${C.bold} 📢 MAYO FOR SAM!! The agents are DONE and Sam is COMING WEST!! 🏆🟢🔴 ${C.reset}`);
   }
 
