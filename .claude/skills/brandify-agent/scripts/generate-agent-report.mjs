@@ -430,44 +430,74 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--iron-border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-void); }
 
-/* Heckle bubbles */
+/* Heckle bubbles — chat style with avatars */
 .heckle {
   margin: 0.75rem 0;
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
+  border-radius: 0.5rem;
   font-size: 0.9rem;
   line-height: 1.5;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+.heckle-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(239, 68, 68, 0.4);
+}
+.heckle-text {
+  flex: 1;
 }
 .heckle-mayo {
-  background: rgba(239, 68, 68, 0.1);
-  border-left: 3px solid var(--red-ragnarok);
-  color: var(--text-saga);
+  flex-direction: row-reverse;
+  max-width: 75%;
+  margin-left: auto;
 }
-.heckle-mayo strong { color: var(--red-ragnarok); font-weight: 600; }
+.heckle-mayo .heckle-text {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem 0 0.5rem 0.5rem;
+  color: var(--text-saga);
+  text-align: right;
+}
+.heckle-mayo .heckle-avatar { border-color: rgba(239, 68, 68, 0.5); }
+.heckle-mayo strong { color: var(--red-ragnarok); font-weight: 700; }
 .heckle-comeback {
+  max-width: 75%;
+}
+.heckle-comeback .heckle-avatar { border-color: rgba(10, 140, 110, 0.5); }
+.heckle-comeback .heckle-text {
   background: rgba(10, 140, 110, 0.1);
-  border-left: 3px solid var(--teal-asgard);
+  border: 1px solid rgba(10, 140, 110, 0.3);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
   color: var(--text-saga);
 }
-.heckle-comeback strong { color: var(--teal-asgard); font-weight: 600; }
+.heckle-comeback strong { color: var(--teal-asgard); font-weight: 700; }
 .heckle-entrance {
   background: var(--forge);
   border: 2px dashed var(--teal-asgard);
-  border-radius: 4px;
+  border-radius: 0.5rem;
   padding: 1rem;
   color: var(--teal-asgard);
   font-weight: 600;
   text-align: center;
+  display: block;
 }
 .heckle-explosion {
   background: rgba(240, 180, 41, 0.15);
   border: 2px solid var(--gold);
-  border-radius: 4px;
+  border-radius: 0.5rem;
   padding: 1rem;
   color: var(--gold-bright);
   font-weight: 700;
   text-align: center;
   font-size: 1rem;
+  display: block;
 }
 `;
 
@@ -1302,23 +1332,33 @@ turns.forEach((turn, i) => {
     </div>\n`;
   }
 
-  // Render heckles after the turn
+  // Close the turn body and turn div FIRST
+  html += `  </div>\n</div>\n\n`;
+
+  // Render heckles OUTSIDE the turn (visible without expanding)
   const heckleEvents = hecklerEngine.maybeHeckle();
   if (heckleEvents) {
     for (const event of heckleEvents) {
       if (event.type === "mayo") {
-        html += `    <div class="heckle heckle-mayo"><strong>${esc(event.name)}:</strong> ${esc(event.text)}</div>\n`;
+        const hIdx = Math.abs([...event.name].reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0));
+        const hAvatars = ['heckler-avatar.png','heckler-granny.png','heckler-da.png','heckler-uncle.png','heckler-mammy.png','heckler-teen.png','heckler-lad.png','heckler-lass.png'];
+        const hAvatar = hAvatars[hIdx % hAvatars.length];
+        html += '<div class="heckle heckle-mayo">'
+          + '<img class="heckle-avatar" src="assets/' + hAvatar + '" onerror="this.style.display=\'none\'">'
+          + '<div class="heckle-text"><strong>' + esc(event.name) + ':</strong> ' + esc(event.text) + '</div></div>\n';
       } else if (event.type === "mayo-comeback") {
-        html += `    <div class="heckle heckle-comeback"><strong>${esc(event.name)}:</strong> ${esc(event.text)}</div>\n`;
+        const slugMap = {FiremanDecko:'fireman-decko',Loki:'loki',Luna:'luna',Freya:'freya',Heimdall:'heimdall'};
+        const aSlug = slugMap[event.name] || '';
+        const aImg = aSlug ? '<img class="heckle-avatar" src="agents/profiles/' + aSlug + '-dark.png" onerror="this.style.display=\'none\'">' : '';
+        html += '<div class="heckle heckle-comeback">' + aImg
+          + '<div class="heckle-text"><strong>' + esc(event.name) + ':</strong> ' + esc(event.text) + '</div></div>\n';
       } else if (event.type === "mayo-entrance") {
-        html += `    <div class="heckle heckle-entrance">${esc(event.text)}</div>\n`;
+        html += '<div class="heckle heckle-entrance">' + esc(event.text) + '</div>\n';
       } else if (event.type === "mayo-explosion") {
-        html += `    <div class="heckle heckle-explosion">${esc(event.text)}</div>\n`;
+        html += '<div class="heckle heckle-explosion">' + esc(event.text) + '</div>\n';
       }
     }
   }
-
-  html += `  </div>\n</div>\n\n`;
 });
 
 // Victory heckle before verdict
