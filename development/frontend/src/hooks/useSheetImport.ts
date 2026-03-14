@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import type { Card } from "@/lib/types";
 import type { SheetImportErrorCode } from "@/lib/sheets/types";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
+import { computeFingerprint } from "@/lib/trial-utils";
 import type { FileFormat } from "@/components/sheets/CsvUpload";
 
 export type ImportStep =
@@ -70,6 +71,10 @@ export function useSheetImport(): UseSheetImportReturn {
     const token = await ensureFreshToken();
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
+    }
+    const fingerprint = await computeFingerprint();
+    if (fingerprint) {
+      headers["X-Trial-Fingerprint"] = fingerprint;
     }
     return headers;
   }
