@@ -136,3 +136,27 @@ redis:
 
   service:
     port: 6379
+
+# -- Warm Node Pool (prevents cold starts) ----------------------------------
+# GKE Autopilot scales to zero when idle, causing 30-60s cold starts.
+# This placeholder keeps 1 node warm by running a low-priority pod.
+# Gets evicted when real workloads arrive, scales down after 3h idle.
+warmNodePool:
+  enabled: true
+  replicas: 1
+  image: "registry.k8s.io/pause:3.9"
+
+  # Minimal resource footprint — just enough to keep a node warm
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "32Mi"
+    limits:
+      cpu: "10m"
+      memory: "32Mi"
+
+  # Idle timeout: scale down placeholder after 3 hours with no agent jobs
+  idleTimeoutSeconds: 10800  # 3 hours
+
+  # Job activity check interval — how often to check for active jobs
+  checkIntervalSeconds: 300   # 5 minutes

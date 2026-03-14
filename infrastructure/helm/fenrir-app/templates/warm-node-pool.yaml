@@ -1,0 +1,45 @@
+{{- if .Values.warmNodePool.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: warm-node-pool-placeholder
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "fenrir-app.labels" (dict "name" "warm-node-pool" "component" "infrastructure") | nindent 4 }}
+spec:
+  replicas: {{ .Values.warmNodePool.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: warm-node-pool-placeholder
+  template:
+    metadata:
+      labels:
+        app: warm-node-pool-placeholder
+        {{- include "fenrir-app.labels" (dict "name" "warm-node-pool" "component" "infrastructure") | nindent 8 }}
+    spec:
+      priorityClassName: placeholder-priority
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: placeholder
+          image: "{{ .Values.warmNodePool.image }}"
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: {{ .Values.warmNodePool.resources.requests.cpu | quote }}
+              memory: {{ .Values.warmNodePool.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.warmNodePool.resources.limits.cpu | quote }}
+              memory: {{ .Values.warmNodePool.resources.limits.memory | quote }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "true"
+            initialDelaySeconds: 5
+            periodSeconds: 60
+            timeoutSeconds: 1
+            failureThreshold: 3
+{{- end }}

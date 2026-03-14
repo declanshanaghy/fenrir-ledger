@@ -1,0 +1,43 @@
+{{- if .Values.warmNodePool.enabled }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: warm-node-pool-controller-sa
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "fenrir-app.labels" (dict "name" "warm-node-pool" "component" "infrastructure") | nindent 4 }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: warm-node-pool-controller
+  labels:
+    {{- include "fenrir-app.labels" (dict "name" "warm-node-pool" "component" "infrastructure") | nindent 4 }}
+rules:
+  # Query jobs to check for recent activity
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch"]
+  # Scale the placeholder deployment
+  - apiGroups: ["apps"]
+    resources: ["deployments", "deployments/scale"]
+    verbs: ["get", "list", "patch", "update"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: warm-node-pool-controller
+  labels:
+    {{- include "fenrir-app.labels" (dict "name" "warm-node-pool" "component" "infrastructure") | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: warm-node-pool-controller
+subjects:
+  - kind: ServiceAccount
+    name: warm-node-pool-controller-sa
+    namespace: {{ .Values.namespace }}
+{{- end }}
