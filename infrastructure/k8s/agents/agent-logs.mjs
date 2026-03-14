@@ -197,23 +197,102 @@ const AGENT_COMEBACKS = [
   "Holy thundering Jaysus — ANOTHER heckler?? I'll merge WHEN I'M GOOD AND READY!!",
 ];
 
+// Escalation stages — heckler gets angrier, agent claps back, heckler EXPLODES
+const ESCALATION_RETORTS = [
+  // Stage 1: Agent claps back, heckler fires again
+  [
+    "Oh is THAT so?? Well me UNCLE played for Mayo in '89 and HE says yer code is SHITE!!",
+    "Don't you DARE talk back to me!! I've been supporting Mayo since before ye were a SEMICOLON!!",
+    "SHITE TALK from a SHITE AGENT!! Mayo deserves BETTER!!",
+    "Ye think yer so smart with yer fancy functions?? MY DOG could write better TypeScript!!",
+  ],
+  // Stage 2: Agent retorts again, heckler is APOPLECTIC
+  [
+    "RIGHT THAT'S IT!! I'm climbing OVER this fence!! Hold me feckin PINT!! 🍺",
+    "I'M TAKING OFF ME JACKET!! Nobody talks to a Mayo fan like that and LIVES!!",
+    "MOTHER OF DIVINE JAYSUS I'm gonna REACH through this terminal and SKELP ye!!",
+    "That's the LAST STRAW ye digital BLAGGARD!! I'm writing to the COUNTY BOARD!!",
+  ],
+  // Stage 3: Heckler EXPLODES
+  [
+    "💥 *collapses into a heap of green and red confetti* 💥 ...someone call an ambulance... and tell them Sam is coming...",
+    "💥 *spontaneously combusts from pure passion* 💥 ...me last words... Mayo... for... Sam...",
+    "💥 *ascends bodily to heaven mid-sentence* 💥 ...St. Peter... is Sam up here... or still in Castlebar...",
+    "💥 *explodes into a thousand tiny Mayo flags* 💥 ...each flag... whispers... Sam...",
+    "💥 *turns into a pillar of pure green and red light* 💥 ...the prophecy... is fulfilled...",
+    "💥 *disintegrates, but a single voice echoes* 💥 ...mayo... for... saaaaam... 🏆",
+  ],
+];
+
+// New heckler entrance lines (after previous one explodes)
+const NEW_HECKLER_ENTRANCES = [
+  "🟢🔴 *a NEW Mayo fan materialises from the bog mist* Alright, what'd I miss?? MAYO FOR SAM!!",
+  "🟢🔴 *bursts through the wall like the Kool-Aid man but wearing a Mayo jersey* OH YEAH!! SAM!!",
+  "🟢🔴 *crawls out from under the stands covered in muck* Is it... is it HAPPENING?? SAM??",
+  "🟢🔴 *descends from the heavens on a cloud of green smoke* The previous lad was WEAK. I'M here now!!",
+  "🟢🔴 *emerges from a hedge on the N5* I heard there was HECKLING to be done?? MAYO ABÚ!!",
+  "🟢🔴 *falls out of a tractor* What happened to yer man?? Never mind — MAYO FOR SAM!!",
+  "🟢🔴 *appears in a puff of turf smoke* The last fella couldn't hack it. I'M from BELMULLET. Try me!!",
+];
+
+// Stateful heckle engine
 let heckleCounter = 0;
+let currentHecklerName = randomMayoName();
+let escalationLevel = 0;  // 0=normal, 1=retort, 2=apoplectic, 3=exploded
+let exchangeCount = 0;     // total exchanges this session
+
 function maybeHeckle() {
   heckleCounter++;
-  // Heckle every 3-7 messages — the crowd is ABSOLUTELY MENTAL
+  // Heckle every 3-7 messages
   if (heckleCounter < 3 + Math.floor(Math.random() * 4)) return null;
   heckleCounter = 0;
-  const heckle = MAYO_HECKLES[Math.floor(Math.random() * MAYO_HECKLES.length)];
-  const name = randomMayoName();
-  const heckleLine = `${C.mayoBg}${C.bold} ${MAYO_FLAG} ${name}: ${heckle} ${MAYO_FLAG} ${C.reset}`;
 
-  // 50% chance the agent claps back
-  if (Math.random() < 0.5) {
-    const comeback = AGENT_COMEBACKS[Math.floor(Math.random() * AGENT_COMEBACKS.length)];
-    const comebackLine = `${C.agentLabel}${C.bold}  🤖 ${agentDisplayName}: ${C.agent}${comeback}${C.reset}`;
-    return heckleLine + "\n" + comebackLine;
+  const lines = [];
+
+  // If heckler exploded last time, bring in a new one
+  if (escalationLevel >= 3) {
+    const entrance = NEW_HECKLER_ENTRANCES[Math.floor(Math.random() * NEW_HECKLER_ENTRANCES.length)];
+    currentHecklerName = randomMayoName();
+    escalationLevel = 0;
+    lines.push(`${C.mayo}${C.bold}${entrance}${C.reset}`);
+    lines.push(`${C.mayoBg}${C.bold} ${MAYO_FLAG} ${currentHecklerName}: Right so — WHERE WERE WE?? MAYO FOR SAM!! ${MAYO_FLAG} ${C.reset}`);
+    return lines.join("\n");
   }
-  return heckleLine;
+
+  // Normal heckle
+  const heckle = MAYO_HECKLES[Math.floor(Math.random() * MAYO_HECKLES.length)];
+  lines.push(`${C.mayoBg}${C.bold} ${MAYO_FLAG} ${currentHecklerName}: ${heckle} ${MAYO_FLAG} ${C.reset}`);
+
+  // Escalation chance increases with each exchange
+  const escalateChance = 0.4 + (escalationLevel * 0.15);
+
+  if (Math.random() < escalateChance) {
+    // Agent claps back
+    const comeback = AGENT_COMEBACKS[Math.floor(Math.random() * AGENT_COMEBACKS.length)];
+    lines.push(`${C.agentLabel}${C.bold}  🤖 ${agentDisplayName}: ${C.agent}${comeback}${C.reset}`);
+
+    // Heckler responds based on escalation level
+    if (escalationLevel < ESCALATION_RETORTS.length) {
+      const retorts = ESCALATION_RETORTS[escalationLevel];
+      const retort = retorts[Math.floor(Math.random() * retorts.length)];
+      lines.push(`${C.mayoBg}${C.bold} ${MAYO_FLAG} ${currentHecklerName}: ${retort} ${MAYO_FLAG} ${C.reset}`);
+
+      // Agent gets the last word before explosion
+      if (escalationLevel === 2) {
+        const lastWords = [
+          "...right so. Back to the code. WHERE WERE WE. 💻",
+          "...I'll dedicate this commit to yer man. Rest in green and red. 🟢🔴",
+          "...that's the third one this session. They breed them FIERCE in Mayo.",
+          "...moment of silence... ... ...RIGHT, back to Sam's PR!!",
+        ];
+        lines.push(`${C.agentLabel}${C.bold}  🤖 ${agentDisplayName}: ${C.agent}${lastWords[Math.floor(Math.random() * lastWords.length)]}${C.reset}`);
+      }
+    }
+    escalationLevel++;
+  }
+
+  exchangeCount++;
+  return lines.join("\n");
 }
 
 // -- Parse args --------------------------------------------------------------
