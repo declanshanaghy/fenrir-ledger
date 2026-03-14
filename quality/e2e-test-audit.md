@@ -1,4 +1,8 @@
-# E2E Test Audit — Issue #610
+# E2E Test Audit — Issue #610 (ARCHIVED)
+
+> **This audit is a historical point-in-time snapshot from 2026-03-12.**
+> The test suite has since been significantly restructured. For current state,
+> see [`quality-report.md`](quality-report.md) and [`test-guidelines.md`](test-guidelines.md).
 
 **Date:** 2026-03-12
 **Author:** FiremanDecko (Principal Engineer)

@@ -102,7 +102,7 @@ run_build() {
 
 # ─── Step: build (ensure only — for --tests-only) ─────────────────────────────
 ensure_build() {
-  # If SERVER_URL is set we're testing against an external deployment (e.g. Vercel preview).
+  # If SERVER_URL is set we're testing against an external deployment (e.g. GKE preview).
   # No local build needed — skip silently.
   if [ -n "${SERVER_URL:-}" ]; then
     return 0
