@@ -20,6 +20,18 @@ resource "google_compute_global_address" "app_ip" {
   depends_on = [google_project_service.apis]
 }
 
+import {
+  to = google_compute_global_address.umami_ip
+  id = "projects/fenrir-ledger-prod/global/addresses/umami-ip"
+}
+
+resource "google_compute_global_address" "umami_ip" {
+  name    = "umami-ip"
+  project = var.project_id
+
+  depends_on = [google_project_service.apis]
+}
+
 # --------------------------------------------------------------------------
 # Cloud DNS Managed Zone
 # --------------------------------------------------------------------------
@@ -66,5 +78,5 @@ resource "google_dns_record_set" "analytics" {
   type         = "A"
   ttl          = 300
 
-  rrdatas = [google_compute_global_address.app_ip.address]
+  rrdatas = [google_compute_global_address.umami_ip.address]
 }

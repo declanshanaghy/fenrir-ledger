@@ -7,11 +7,11 @@ metadata:
   labels:
     {{- include "umami.labels" . | nindent 4 }}
   annotations:
-    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    kubernetes.io/ingress.class: {{ .Values.ingress.className | default "gce" | quote }}
+    {{- range $key, $value := .Values.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
 spec:
-  {{- if .Values.ingress.className }}
-  ingressClassName: {{ .Values.ingress.className }}
-  {{- end }}
   rules:
     {{- range .Values.ingress.hosts }}
     - host: {{ . }}

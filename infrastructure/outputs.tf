@@ -53,6 +53,11 @@ output "static_ip" {
   value       = google_compute_global_address.app_ip.address
 }
 
+output "umami_ip" {
+  description = "Reserved global static IP for Umami analytics Ingress"
+  value       = google_compute_global_address.umami_ip.address
+}
+
 output "dns_nameservers" {
   description = "Google Cloud DNS nameservers — set these as custom nameservers at your registrar"
   value       = google_dns_managed_zone.app.name_servers
