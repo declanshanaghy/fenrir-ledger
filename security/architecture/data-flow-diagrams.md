@@ -1,7 +1,7 @@
 # Security Data Flow Diagrams — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-05 (updated for Stripe Direct — Patreon removed; prompt injection fix noted)
+**Last reviewed**: 2026-03-14 (updated for GKE Autopilot — replaced Vercel references)
 
 Trust boundary notation:
 - `[TB]` — Trust boundary crossing (browser ↔ server)
@@ -252,7 +252,7 @@ Browser (authenticated)
 
 **Trust boundary crossings**: 2 (checkout + webhook)
 **SSRF surface**: None — all Stripe API calls use the official Stripe SDK
-**Redirect safety**: `APP_BASE_URL`/`VERCEL_URL` only — no user-controlled headers
+**Redirect safety**: `APP_BASE_URL` only — no user-controlled headers
 
 ---
 

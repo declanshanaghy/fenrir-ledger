@@ -1,7 +1,7 @@
 # API Route Security Checklist — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-05 (updated for Stripe Direct — added webhook exemption, updated logging)
+**Last reviewed**: 2026-03-14 (updated for GKE Autopilot — replaced Vercel references)
 
 Use this checklist whenever adding, modifying, or reviewing an API route under
 `development/frontend/src/app/api/`.
@@ -83,7 +83,7 @@ Every route handler MUST pass all items in this section before merge.
 
 - [ ] **Unauthenticated routes implement rate limiting**
   - At minimum: in-memory rate limit via `rateLimit()` from `src/lib/rate-limit.ts`
-  - For production: prefer Upstash Redis / Vercel KV for distributed rate limiting
+  - For production: prefer Upstash Redis for distributed rate limiting
 
 - [ ] **Routes that call external services (LLM, Google APIs) are rate-limited**
   - Consider per-user rate limits (keyed on `auth.user.sub`) in addition to per-IP

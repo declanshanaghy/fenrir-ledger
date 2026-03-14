@@ -1,7 +1,7 @@
 # Auth Architecture — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-05 (updated for Stripe Direct — Patreon removed)
+**Last reviewed**: 2026-03-14 (updated for GKE Autopilot — replaced Vercel references)
 **References**: ADR-005, ADR-006, ADR-008, ADR-010
 
 ---
@@ -17,7 +17,7 @@ There is no server-side session. All session state lives in the browser
 the Google `id_token` JWT against Google's public JWKS keys.
 
 Subscription management is handled by Stripe Direct. There is no Patreon integration.
-Entitlements are stored in Vercel KV (Upstash Redis).
+Entitlements are stored in Upstash Redis (KV store).
 
 ---
 
@@ -98,7 +98,7 @@ Google redirects to /auth/callback?code=<auth_code>&state=<state>
 The proxy is the only unprotected API route (no `requireAuth`). Its attack surface
 is constrained by:
 
-- **Origin allowlist**: `redirect_uri` origin must be in `ALLOWED_ORIGINS` (localhost, production, VERCEL_URL preview)
+- **Origin allowlist**: `redirect_uri` origin must be in `ALLOWED_ORIGINS` (localhost, production)
 - **Rate limiting**: 10 requests/minute per IP (in-memory, per-instance)
 - **Input validation**: `code`, `code_verifier`, `redirect_uri` all required
 - **Secret isolation**: `GOOGLE_CLIENT_SECRET` never leaves the server
@@ -249,12 +249,12 @@ These are the minimum scopes required for Path B. `drive.file` is narrower than
 ### 5.1 Overview
 
 Subscription management uses Stripe Direct exclusively. Users subscribe via Stripe
-Checkout (hosted payment page). Entitlements are stored in Vercel KV keyed on the
+Checkout (hosted payment page). Entitlements are stored in Upstash Redis keyed on the
 Google `sub` claim.
 
 The Stripe integration creates a **layered model**:
 - Google `id_token` in `localStorage` — identity on every API request
-- Stripe subscription status in Vercel KV — entitlement lookup
+- Stripe subscription status in Upstash Redis — entitlement lookup
 
 No Stripe secrets are stored in KV. The Stripe secret key is a server-side
 process.env variable used server-to-server only.
@@ -262,7 +262,7 @@ process.env variable used server-to-server only.
 ### 5.2 Checkout Flow
 
 ```
-Browser (authenticated with Google)    /api/stripe/checkout     Stripe / Vercel KV
+Browser (authenticated with Google)    /api/stripe/checkout     Stripe / Upstash Redis
    |                                        |                           |
    |-- POST /api/stripe/checkout            |                           |
    |   Authorization: Bearer id_token       |                           |
@@ -337,7 +337,7 @@ compensating control is SHA-256 HMAC via `stripe.webhooks.constructEvent()`.
                     ───────────────┼───────────────  ← TRUST BOUNDARY
                                    │
 ┌─────────────────────────────────▼───────────────────────────────────┐
-│  NEXT.JS SERVER (trusted — Vercel serverless)                        │
+│  NEXT.JS SERVER (trusted — GKE Autopilot)                            │
 │                                                                      │
 │  /api/auth/token       — Google token exchange proxy (unprotected)  │
 │  /api/sheets/import    — requireAuth() → LLM extraction              │
@@ -360,7 +360,7 @@ compensating control is SHA-256 HMAC via `stripe.webhooks.constructEvent()`.
 └─────────────────────────────────┬───────────────────────────────────┘
                                    │
 ┌─────────────────────────────────▼───────────────────────────────────┐
-│  VERCEL KV (Upstash Redis — trusted persistent store)               │
+│  UPSTASH REDIS (trusted persistent store)                           │
 │                                                                      │
 │  entitlement:{googleSub}          → StripeEntitlement               │
 │  stripe-customer:{stripeId}       → googleSub (reverse index)       │
@@ -399,6 +399,6 @@ This is intentional (ADR-006).
 | Drive token persistence | localStorage | RESIDUAL RISK |
 | Automatic token refresh | Not implemented | KNOWN GAP |
 | Stripe webhook authentication | SHA-256 HMAC via `constructEvent()` | PASS |
-| Stripe redirect URL safety | APP_BASE_URL / VERCEL_URL only | PASS (fixed SEV-002) |
+| Stripe redirect URL safety | APP_BASE_URL only | PASS (fixed SEV-002) |
 | Stripe CSP coverage | js.stripe.com, api.stripe.com, hooks.stripe.com | PASS (fixed SEV-003) |
 | Prompt injection prevention | System/user role separation + RAW DATA instruction | PASS (PR #171) |
