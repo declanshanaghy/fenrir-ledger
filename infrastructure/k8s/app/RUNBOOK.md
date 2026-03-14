@@ -65,7 +65,7 @@ kubectl scale deployment/fenrir-app --replicas=0 -n fenrir-app
 ## SSL Certificate
 
 Google-managed SSL cert provisioning takes 15-60 minutes on first deploy.
-DNS must point `app.fenrirledger.com` to the Ingress external IP.
+DNS must point `fenrirledger.com` to the reserved static IP.
 
 ```bash
 # Check Ingress IP

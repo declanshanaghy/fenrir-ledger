@@ -47,6 +47,7 @@ resource "google_project_service" "apis" {
     "monitoring.googleapis.com",           # Cloud Monitoring
     "logging.googleapis.com",              # Cloud Logging
     "billingbudgets.googleapis.com",       # Billing Budgets
+    "dns.googleapis.com",                  # Cloud DNS
   ])
 
   project            = var.project_id

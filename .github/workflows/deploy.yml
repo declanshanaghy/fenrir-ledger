@@ -213,7 +213,7 @@ jobs:
             --from-literal=GOOGLE_PICKER_API_KEY="${{ secrets.GOOGLE_PICKER_API_KEY }}" \
             --from-literal=FENRIR_ANTHROPIC_API_KEY="${{ secrets.FENRIR_ANTHROPIC_API_KEY }}" \
             --from-literal=ENTITLEMENT_ENCRYPTION_KEY="${{ secrets.ENTITLEMENT_ENCRYPTION_KEY }}" \
-            --from-literal=APP_BASE_URL="https://app.fenrirledger.com" \
+            --from-literal=APP_BASE_URL="https://fenrirledger.com" \
             --from-literal=STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
             --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}" \
             --from-literal=STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \

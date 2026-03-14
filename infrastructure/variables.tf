@@ -47,7 +47,7 @@ variable "artifact_repo_name" {
 variable "domain" {
   description = "Domain name for the application (used for managed SSL cert)"
   type        = string
-  default     = "app.fenrirledger.com"
+  default     = "fenrirledger.com"
 }
 
 variable "deploy_service_account" {
