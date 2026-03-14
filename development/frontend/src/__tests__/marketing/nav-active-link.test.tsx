@@ -144,6 +144,77 @@ describe("MarketingNavbar — desktop active link", () => {
   });
 });
 
+// ── Issue #893 — Free Trial highlight regression tests ───────────────────────
+
+describe("isNavLinkActive — Free Trial", () => {
+  it("returns false for /free-trial when on homepage", () => {
+    expect(isNavLinkActive("/", "/free-trial")).toBe(false);
+  });
+
+  it("returns false for /free-trial when on /features", () => {
+    expect(isNavLinkActive("/features", "/free-trial")).toBe(false);
+  });
+
+  it("returns false for /free-trial when on /pricing", () => {
+    expect(isNavLinkActive("/pricing", "/free-trial")).toBe(false);
+  });
+
+  it("returns true for /free-trial when on /free-trial", () => {
+    expect(isNavLinkActive("/free-trial", "/free-trial")).toBe(true);
+  });
+});
+
+describe("MarketingNavbar — Free Trial highlight (Issue #893)", () => {
+  it("Free Trial link does NOT have border class on homepage", () => {
+    mockPathname = "/";
+    render(<MarketingNavbar />);
+
+    const nav = screen.getByLabelText("Marketing site navigation");
+    const freeTrialLink = within(nav).getAllByText("Free Trial")[0].closest("a")!;
+
+    expect(freeTrialLink.className).not.toContain("border border-border");
+    expect(freeTrialLink.getAttribute("aria-current")).toBeNull();
+  });
+
+  it("Free Trial link has border class only when on /free-trial", () => {
+    mockPathname = "/free-trial";
+    render(<MarketingNavbar />);
+
+    const nav = screen.getByLabelText("Marketing site navigation");
+    const freeTrialLink = within(nav).getAllByText("Free Trial")[0].closest("a")!;
+
+    expect(freeTrialLink.className).toContain("border");
+    expect(freeTrialLink.getAttribute("aria-current")).toBe("page");
+  });
+
+  it("Free Trial and Features are NOT both highlighted on /features", () => {
+    mockPathname = "/features";
+    render(<MarketingNavbar />);
+
+    const nav = screen.getByLabelText("Marketing site navigation");
+    const freeTrialLink = within(nav).getAllByText("Free Trial")[0].closest("a")!;
+    const featuresLink = within(nav).getAllByText("Features")[0].closest("a")!;
+
+    expect(featuresLink.getAttribute("aria-current")).toBe("page");
+    expect(freeTrialLink.getAttribute("aria-current")).toBeNull();
+    expect(freeTrialLink.className).not.toContain("border border-border");
+  });
+
+  it("mobile Free Trial does NOT have font-semibold on homepage", () => {
+    mockPathname = "/";
+    render(<MarketingNavbar />);
+
+    const hamburger = screen.getByLabelText("Open navigation menu");
+    fireEvent.click(hamburger);
+
+    const mobileNav = screen.getByLabelText("Mobile navigation");
+    const freeTrialLink = within(mobileNav).getByText("Free Trial").closest("a")!;
+
+    expect(freeTrialLink.className).not.toContain("font-semibold");
+    expect(freeTrialLink.getAttribute("aria-current")).toBeNull();
+  });
+});
+
 // ── Mobile nav highlight tests ───────────────────────────────────────────────
 
 describe("MarketingNavbar — mobile active link", () => {
