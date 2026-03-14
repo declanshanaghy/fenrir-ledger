@@ -127,6 +127,22 @@ const MAYO_HECKLES = [
   "The turf fire is LIT and Sam is getting the armchair!! 🔥🏆",
   "SuperValu in Ballina just SOLD OUT of bunting!!",
   "The whole county is calling in SICK tomorrow!! SAM DAY!!",
+
+  // Aggressive mode
+  "OI!! AGENT!! LESS THINKING MORE WINNING!! MAYO FOR SAM!!",
+  "ARE YE CODING OR ARE YE SLEEPING?? SAM WON'T WIN ITSELF!!",
+  "FASTER!! FASTER!! SAM MAGUIRE DOESN'T WAIT FOR SLOW BUILDS!!",
+  "MY GRANNY COULD WRITE TYPESCRIPT FASTER!! C'MON MAYO!!",
+  "IF THIS BUILD FAILS I'M BLAMING THE DUBS!!",
+  "EVERY COMMIT BRINGS SAM CLOSER TO CASTLEBAR!!",
+  "THIS CODE BETTER BE AS STRONG AS LEE KEEGAN'S TACKLE!!",
+  "I'VE BEEN STANDING IN THE RAIN SINCE 1951 — HURRY UP!!",
+  "THAT'S IT LAD!! KEEP GOING!! SAM IS WATCHING!!",
+  "THE WHOLE PUB IS WATCHING THIS TERMINAL!! DON'T LET US DOWN!!",
+  "MY HEART CAN'T TAKE MUCH MORE!! JUST MERGE IT!! 🟢🔴",
+  "WHAT DO WE WANT?? SAM!! WHEN DO WE WANT IT?? NOW!!",
+  "IF SAM DOESN'T COME WEST I'M SWIMMING TO AMERICA!!",
+  "THE PINTS ARE POURED AND WAITING!! FINISH THE JOB!!",
 ];
 
 // Random Mayo first names + surnames for the heckler
@@ -151,8 +167,8 @@ function randomMayoName() {
 let heckleCounter = 0;
 function maybeHeckle() {
   heckleCounter++;
-  // Heckle every 6-12 messages (random) — the crowd is LOUD
-  if (heckleCounter < 6 + Math.floor(Math.random() * 6)) return null;
+  // Heckle every 3-7 messages — the crowd is ABSOLUTELY MENTAL
+  if (heckleCounter < 3 + Math.floor(Math.random() * 4)) return null;
   heckleCounter = 0;
   const heckle = MAYO_HECKLES[Math.floor(Math.random() * MAYO_HECKLES.length)];
   const name = randomMayoName();
