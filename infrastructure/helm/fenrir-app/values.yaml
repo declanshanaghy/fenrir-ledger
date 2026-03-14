@@ -146,14 +146,14 @@ warmNodePool:
   replicas: 1
   image: "registry.k8s.io/pause:3.9"
 
-  # Minimal resource footprint — just enough to keep a node warm
+  # Bigger footprint — keeps node warm with headroom for app responsiveness
   resources:
     requests:
-      cpu: "10m"
-      memory: "32Mi"
+      cpu: "250m"
+      memory: "256Mi"
     limits:
-      cpu: "10m"
-      memory: "32Mi"
+      cpu: "250m"
+      memory: "256Mi"
 
   # Idle timeout: scale down placeholder after 3 hours with no agent jobs
   idleTimeoutSeconds: 10800  # 3 hours
