@@ -282,17 +282,17 @@ function toolSummary(block) {
   }
 }
 
-// -- Speech bubble renderer -------------------------------------------------
-// Uses Unicode box-drawing to create chat bubbles
-//   ╭─ Agent 🤖 ──────────────╮
-//   │ Message text here        │
-//   ╰──────────────────────────╯
-//       ╭─ 🔧 Tool ───────────╮
-//       │ Bash: do the thing   │
-//       ╰──────────────────────╯
+// -- Terminal width tracking -------------------------------------------------
+function getTermWidth() {
+  try { return process.stdout.columns || 80; } catch { return 80; }
+}
+let termWidth = getTermWidth();
+process.stdout.on("resize", () => { termWidth = getTermWidth(); });
 
+// -- Speech bubble renderer -------------------------------------------------
 function bubble(label, textLines, color, labelColor, indent = "") {
-  const MAX_W = 72;
+  const indentLen = indent.length;
+  const MAX_W = Math.max(30, termWidth - indentLen - 2);
   // Calculate inner width from longest line
   const labelClean = label.replace(/[^\x20-\x7E\u{1F300}-\u{1FFFF}]/gu, "X"); // approx visible length
   const maxTextLen = Math.max(...textLines.map(l => l.length), labelClean.length + 2);
@@ -581,8 +581,10 @@ function streamLogs(jobName) {
 async function streamJob(jobName) {
   const { issue, step, agent } = parseSessionId(jobName);
 
-  // Header
-  console.log(`${C.header}${C.bold}━━━ #${issue} ${agent} (step ${step}) ━━━${C.reset}`);
+  // Header — adapts to terminal width
+  const title = `#${issue} ${agent} (step ${step})`;
+  const padW = Math.max(0, termWidth - title.length - 6);
+  console.log(`${C.header}${C.bold}━━━ ${title} ${"━".repeat(padW)}${C.reset}`);
   console.log(`${C.dim}job: ${jobName}${C.reset}\n`);
 
   // Wait for pod to start (polls with spinner) — skip for completed jobs
