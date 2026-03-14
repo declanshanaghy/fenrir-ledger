@@ -144,6 +144,7 @@ AGENT_MODEL="${AGENT_MODEL:-claude-sonnet-4-6}"
 CLAUDE_ARGS=(
   "--model" "${AGENT_MODEL}"
   "--print"
+  "--output-format" "stream-json"
   "-p" "${DECODED_PROMPT}"
 )
 
