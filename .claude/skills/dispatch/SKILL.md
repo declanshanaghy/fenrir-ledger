@@ -250,14 +250,28 @@ Skip if `--local` (local agents run in background worktrees, not GKE).
 
 ### Output — Dispatch Report (only output)
 
+After spawning, query the cluster and job for details. The report MUST include:
+
 ```
 **Dispatched #<N>**: <TITLE>
-**Agent:** <AgentName> (Step <S>) | **Model:** <MODEL> | **Mode:** GKE/Local
-**Branch:** `<BRANCH>` | **Session:** `<SESSION_ID>`
-**Logs:** streaming in tmux pane (or: `just agent-log <SESSION_ID>`)
+**Agent:** <AgentName> (Step <S>) | **Model:** <MODEL>
+**Branch:** `<BRANCH>`
+**Session:** `<SESSION_ID>`
+
+**GKE:**
+  Cluster: `<kubectl config current-context>`
+  Namespace: `fenrir-agents`
+  Job: `agent-<SESSION_ID>`
+  Image: `<image from dispatch-job.sh output>`
+
+**Links:**
+  Logs: `just agent-log <SESSION_ID>`
+  Logs (verbose): `just agent-log-verbose <SESSION_ID>`
+  Brandify: `/brandify-agent <SESSION_ID>`
+  Pod status: `kubectl get pods -n fenrir-agents -l job-name=agent-<SESSION_ID>`
 ```
 
-One line per issue for parallel dispatches. No step-by-step narration.
+One report per issue for parallel dispatches. No step-by-step narration.
 
 ---
 
