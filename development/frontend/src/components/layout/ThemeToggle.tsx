@@ -114,7 +114,7 @@ export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
     return (
       <button
         type="button"
-        onClick={() => setTheme(cycleTheme(theme))}
+        onClick={() => setTheme(cycleTheme(resolvedTheme ?? theme))}
         className="flex items-center justify-center rounded-sm border border-border
                    text-muted-foreground hover:text-gold transition-colors"
         style={{ minWidth: 44, minHeight: 44 }}

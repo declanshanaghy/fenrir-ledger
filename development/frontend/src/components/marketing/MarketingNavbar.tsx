@@ -118,7 +118,7 @@ export function MarketingNavbar() {
 
           {/* Desktop right: theme toggle + CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <ThemeToggle variant="icon" />
+            <ThemeToggle variant="inline" />
             <Link
               href="/ledger"
               className={[
@@ -233,7 +233,7 @@ export function MarketingNavbar() {
             </Link>
             <div className="flex items-center justify-center gap-3">
               <span className="text-sm text-muted-foreground font-body">Theme:</span>
-              <ThemeToggle variant="icon" />
+              <ThemeToggle variant="inline" />
             </div>
           </div>
         </div>
