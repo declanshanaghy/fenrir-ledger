@@ -814,10 +814,30 @@ ${cards}
   ${firstFile ? `<iframe id="viewer" src="${firstFile}"></iframe>` : '<div class="empty">No reports yet</div>'}
 </div>
 <script>
+const AGENT_COLORS = {
+  firemandecko: '#4ecdc4', loki: '#a78bfa', luna: '#6b8afd',
+  freya: '#f0b429', heimdall: '#ef4444',
+};
+const STATUS_ICONS = {
+  live: '\\u25CF', complete: '\\u2713', pass: '\\u2713',
+  fail: '\\u2717', empty: '\\u25CB', unknown: '\\u2014',
+};
+const STATUS_COLORS = {
+  live: '#4ecdc4', complete: '#c9920a', pass: '#22c55e',
+  fail: '#ef4444', empty: '#606070', unknown: '#606070',
+};
+const STATUS_LABELS = {
+  live: 'running', complete: 'completed', pass: 'PASS',
+  fail: 'FAIL', empty: 'no data', unknown: 'unknown',
+};
+
+let activeFile = null;
+
 function loadReport(file, el) {
+  activeFile = file;
   document.getElementById('viewer').src = file;
   document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
+  if (el) el.classList.add('active');
 }
 
 function timeAgo(ts) {
@@ -829,37 +849,85 @@ function timeAgo(ts) {
   if (m < 60) return m + 'm ago';
   const h = Math.floor(m / 60);
   if (h < 24) return h + 'h ago';
-  const d = Math.floor(h / 24);
-  return d + 'd ago';
+  return Math.floor(h / 24) + 'd ago';
 }
 
-function formatLocalTime(ts) {
-  const d = new Date(ts);
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const time = d.toLocaleString(undefined, {
+function fmtTime(ts) {
+  return new Date(ts).toLocaleString(undefined, {
     month: 'short', day: 'numeric',
     hour: '2-digit', minute: '2-digit',
     timeZoneName: 'short'
   });
-  return time;
 }
 
-function updateTimes() {
-  document.querySelectorAll('.card-date[data-ts]').forEach(el => {
-    const ts = parseInt(el.dataset.ts);
-    if (!ts) return;
-    const local = formatLocalTime(ts);
-    const ago = timeAgo(ts);
-    el.innerHTML = local + ' <span style="color:var(--teal-asgard);margin-left:0.3rem">' + ago + '</span>';
-  });
+function renderCards(items) {
+  const list = document.querySelector('.card-list');
+  if (!list) return;
+  const oldActive = activeFile;
+  list.innerHTML = items.map(f => {
+    const color = AGENT_COLORS[f.agent] || '#c9920a';
+    const sColor = STATUS_COLORS[f.status] || '#606070';
+    const sIcon = STATUS_ICONS[f.status] || '—';
+    const sLabel = STATUS_LABELS[f.status] || '';
+    const pulse = f.status === 'live' ? ' pulse' : '';
+    const active = f.file === oldActive ? ' active' : '';
+    const time = fmtTime(f.ts);
+    const ago = timeAgo(f.ts);
+    return '<div class="card' + active + '" data-file="' + f.file + '" onclick="loadReport(\\'' + f.file + '\\', this)">'
+      + '<div class="card-top"><span class="card-agent" style="color:' + color + '">' + f.agentName + '</span>'
+      + '<span class="card-status' + pulse + '" style="color:' + sColor + '" title="' + f.status + '">' + sIcon + '</span></div>'
+      + '<div class="card-meta">#' + f.issue + ' &middot; Step ' + f.step + ' &middot; <span style="color:' + sColor + '">' + sLabel + '</span></div>'
+      + '<div class="card-date">' + time + ' <span style="color:var(--teal-asgard);margin-left:0.3rem">' + ago + '</span></div>'
+      + '</div>';
+  }).join('');
+  // Update count
+  const countEl = document.querySelector('.count');
+  if (countEl) countEl.textContent = items.length + ' sessions';
 }
-updateTimes();
-setInterval(updateTimes, 10000);
+
+// Initial render from embedded data
+let currentManifest = ${JSON.stringify(files.map(f => ({
+  file: f.file, issue: f.issue, step: f.step, agent: f.agent,
+  agentName: f.agentName, ts: f.ts, status: f.status,
+})))};
+renderCards(currentManifest);
+if (currentManifest.length > 0 && !activeFile) {
+  loadReport(currentManifest[0].file, document.querySelector('.card'));
+}
+
+// Poll manifest.json every 15s for live updates
+async function pollManifest() {
+  try {
+    const res = await fetch('manifest.json?t=' + Date.now());
+    if (!res.ok) return;
+    const data = await res.json();
+    // Only update if changed
+    const newHash = JSON.stringify(data.map(d => d.file + d.ts + d.status));
+    const oldHash = JSON.stringify(currentManifest.map(d => d.file + d.ts + d.status));
+    if (newHash !== oldHash) {
+      currentManifest = data;
+      renderCards(currentManifest);
+    } else {
+      // Still update ago times
+      renderCards(currentManifest);
+    }
+  } catch {}
+}
+setInterval(pollManifest, 15000);
+// Also update times every 10s
+setInterval(() => renderCards(currentManifest), 10000);
 </script>
 </body>
 </html>`;
 
   writeFileSync(join(dir, "index.html"), indexHtml);
+
+  // Write manifest.json for live polling
+  const manifest = files.map(f => ({
+    file: f.file, issue: f.issue, step: f.step, agent: f.agent,
+    agentName: f.agentName, ts: f.ts, status: f.status,
+  }));
+  writeFileSync(join(dir, "manifest.json"), JSON.stringify(manifest));
 }
 
 function writeAssets(dir) {
