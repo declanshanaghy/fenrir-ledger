@@ -5,7 +5,7 @@
  *
  * Desktop:
  *   Left:   logo (ᚠ FENRIR LEDGER)
- *   Center: nav links (Features, Pricing, About, Free Trial)
+ *   Center: nav links (Features, Prose Edda, About, Free Trial, Pricing)
  *   Right:  theme toggle + "Open the Ledger →" CTA
  *
  * Mobile (≤768px):
