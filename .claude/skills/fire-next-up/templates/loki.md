@@ -36,20 +36,34 @@ Then create your todo list via TodoWrite. Every todo below is required:
 
 **Step 3 — Write and run NEW tests (with incremental commits):**
 - Read `.claude/agents/loki.md` for full behavioral rules (Test Strategy, Test Pyramid, Budgets, Locators, Data Isolation).
-- **VITEST ONLY — NO PLAYWRIGHT E2E TESTS (UNBREAKABLE).**
-  Do NOT write any Playwright E2E tests. Write ALL tests as Vitest unit/integration/component tests.
-  - API endpoints, hooks, utils, component renders, auth logic → **Vitest** in `src/__tests__/<feature>/`
-  - Layout, responsiveness, accessibility → **Vitest** with jsdom/happy-dom, NOT Playwright
-  - If a test requires a real browser, skip it — CI E2E budget is at capacity.
-  - Do NOT create files in `quality/test-suites/` — that directory is for manually curated E2E only.
-- **BANNED TEST CATEGORIES (UNBREAKABLE) — Do NOT write tests for:**
-  - GitHub Actions workflows (deploy.yml, ci.yml) — YAML structure changes constantly
-  - Helm chart structure (Chart.yaml, values.yaml, templates/) — infrastructure, not app logic
-  - Terraform files (dns.tf, variables.tf) — infrastructure, not app logic
-  - Markdown/docs sync validation — file counts, README structure, quality reports
-  - Config file assertions (playwright.config, tsconfig) — static, not behavioral
-  - Any test that parses YAML/Markdown and asserts string contents
-  Only test **behavioral code**: API routes, hooks, utils, components, auth logic.
+- **VITEST ONLY — NO PLAYWRIGHT E2E (UNBREAKABLE).**
+  Do NOT write Playwright tests. Do NOT create files in `quality/test-suites/`.
+
+- **ALLOWED test categories (write these):**
+  - API route handlers (`/api/**`) — request/response, auth, error cases
+  - Hooks (`useSheetImport`, `useEntitlement`, etc.) — state, side effects
+  - Utility functions (`card-utils`, `storage`, `gleipnir-utils`) — pure logic
+  - Auth/entitlement logic — gates, token exchange, rate limiting
+  - Stripe integration — webhooks, checkout, subscription state
+  - Component behavior — interactive components that have logic (toggles, forms, modals with state)
+  - Import pipeline — CSV parsing, LLM extraction, validation
+
+- **BANNED test categories (UNBREAKABLE — Do NOT write):**
+  - GitHub Actions workflows (deploy.yml, ci.yml) — YAML structure
+  - Helm charts (Chart.yaml, values.yaml, templates/) — infrastructure
+  - Terraform files (dns.tf, variables.tf) — infrastructure
+  - Dockerfile structure — infrastructure
+  - Markdown/docs validation — file counts, README structure, quality reports
+  - Config files (playwright.config, tsconfig, next.config) — static
+  - Static page copy/content assertions ("hero has correct text", "section displays headline")
+  - Component variant exhaustive tests (max 4-6 tests per component, not 20+)
+  - CSP header string matching — middleware internals, not behavioral
+  - Any test that parses YAML/JSON/Markdown and asserts string contents
+  - Any test that counts files or checks file existence
+  - Marketing page structure tests (section order, heading text, badge labels)
+
+  **Rule of thumb:** If the test breaks when someone edits a config file, copy,
+  or infrastructure template — it should NOT exist. Only test code that RUNS.
 - Follow ALL Test Standards from the agent definition — budgets, pyramid, locators, data isolation.
 - Use the handoff's "How to verify" and "Edge cases" to guide test design.
 - **Commit+push tests before running them:**
