@@ -636,18 +636,71 @@ for (const line of lines) {
 }
 
 // ---------------------------------------------------------------------------
-// Extract metadata from entrypoint
+// Extract metadata from entrypoint lines, JSON init event, and filename
 // ---------------------------------------------------------------------------
-function extractMeta(lines) {
+function extractMeta(lines, events, filePath) {
   const meta = {};
+
+  // 1. Try entrypoint text lines (GKE logs that include startup output)
+  //    Only take the FIRST match for each field — later lines may contain prompt echoes.
   for (const l of lines) {
-    if (l.includes("Session:")) meta.session = l.split("Session:")[1].trim();
-    if (l.includes("Branch:")) meta.branch = l.split("Branch:")[1].trim();
-    if (l.includes("Model:") && !meta.model) meta.model = l.split("Model:")[1].trim();
+    if (!meta.session && l.includes("Session:")) meta.session = l.split("Session:")[1].trim();
+    if (!meta.branch && l.includes("Branch:")) meta.branch = l.split("Branch:")[1].trim();
+    if (!meta.model && l.includes("Model:")) meta.model = l.split("Model:")[1].trim();
   }
+
+  // 2. Extract from system/init JSON event (always present in stream-json logs)
+  const initEvent = events.find(e => e.type === "system" && e.subtype === "init");
+  if (initEvent) {
+    if (!meta.model && initEvent.model) meta.model = initEvent.model;
+  }
+
+  // 3. Derive dispatch session ID from filename (e.g. issue-839-step1-firemandecko-08287a1f.log)
+  if (filePath) {
+    const basename = filePath.split("/").pop().replace(/\.log$/, "");
+    // Only use filename as session if it looks like a dispatch session ID
+    if (!meta.session && /^issue-\d+-step\d+-\w+-[a-f0-9]+$/.test(basename)) {
+      meta.session = basename;
+    }
+  }
+
+  // 4. Extract branch from git commands in the log (look for branch --show-current output)
+  //    Only check the FIRST matching tool result to avoid picking up handoff comments.
+  if (!meta.branch) {
+    // Build a set of tool_use IDs for "git branch --show-current" commands
+    const branchToolIds = new Set();
+    for (const ev of events) {
+      if (ev.type !== "assistant" || !ev.message?.content) continue;
+      for (const b of ev.message.content) {
+        if (b.type === "tool_use" && b.name === "Bash" &&
+            b.input?.command?.includes("git branch --show-current")) {
+          branchToolIds.add(b.id);
+        }
+      }
+    }
+    // Find the first tool_result for any of those IDs
+    if (branchToolIds.size > 0) {
+      for (const ev of events) {
+        if (meta.branch) break;
+        if (ev.type !== "user" || !ev.message?.content) continue;
+        for (const block of ev.message.content) {
+          if (block.type !== "tool_result" || !branchToolIds.has(block.tool_use_id)) continue;
+          const content = typeof block.content === "string" ? block.content :
+            Array.isArray(block.content) ? block.content.map(c => c.text || "").join("") : "";
+          // First line of output is the branch name — validate it looks like a branch
+          const firstLine = content.split("\n")[0]?.trim();
+          if (firstLine && /^[a-zA-Z0-9._\/-]+$/.test(firstLine) && firstLine.includes("/")) {
+            meta.branch = firstLine;
+          }
+          break; // Only check the first result
+        }
+      }
+    }
+  }
+
   return meta;
 }
-const meta = extractMeta(entrypointLines);
+const meta = extractMeta(entrypointLines, jsonEvents, inputPath);
 
 // ---------------------------------------------------------------------------
 // Build turns from assistant events
@@ -1059,8 +1112,8 @@ if (publishMode) {
   const defaultBlogDir = join(dirname(logFile), "../../development/frontend/content/blog");
   const targetBlogDir = blogDir ? resolve(blogDir) : resolve(defaultBlogDir);
 
-  // Build slug from session metadata
-  const slugBase = (meta.session || "unknown")
+  // Build slug from session metadata (prefer dispatch session ID from filename)
+  const slugBase = (sessionStr || meta.session || "unknown")
     .replace(/[^a-z0-9-]/gi, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
