@@ -26,6 +26,8 @@
 #   KV_REST_API_URL             — KV store REST API URL
 #   KV_REST_API_TOKEN           — KV store REST API token
 #   TF_VAR_BILLING_ACCOUNT_ID   — GCP billing account ID for Terraform
+#   CLAUDE_CODE_OAUTH_TOKEN     — OAuth subscription token for agent sandboxes (claude setup-token)
+#   GH_TOKEN_AGENTS             — GitHub PAT for agent repo access (commits, PRs, issues)
 # --------------------------------------------------------------------------
 
 name: Deploy to GKE
@@ -202,12 +204,21 @@ jobs:
 
       - name: Ensure namespaces and service accounts exist
         run: |
+          # App namespace
           kubectl create namespace fenrir-app --dry-run=client -o yaml | kubectl apply -f -
           kubectl create serviceaccount fenrir-app-sa \
             --namespace=fenrir-app --dry-run=client -o yaml | kubectl apply -f -
           kubectl annotate serviceaccount fenrir-app-sa \
             --namespace=fenrir-app --overwrite \
             iam.gke.io/gcp-service-account=fenrir-app-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+
+          # Agents namespace
+          kubectl create namespace fenrir-agents --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create serviceaccount fenrir-agents-sa \
+            --namespace=fenrir-agents --dry-run=client -o yaml | kubectl apply -f -
+          kubectl annotate serviceaccount fenrir-agents-sa \
+            --namespace=fenrir-agents --overwrite \
+            iam.gke.io/gcp-service-account=fenrir-agents-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
 
       - name: Create/update K8s secrets
         run: |
@@ -226,6 +237,14 @@ jobs:
             --from-literal=KV_REST_API_URL="${{ secrets.KV_REST_API_URL }}" \
             --from-literal=KV_REST_API_TOKEN="${{ secrets.KV_REST_API_TOKEN }}" \
             --from-literal=NEXT_PUBLIC_APP_VERSION="${{ github.sha }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create/update agent secrets
+        run: |
+          kubectl create secret generic agent-secrets \
+            --namespace=fenrir-agents \
+            --from-literal=claude-oauth-token="${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}" \
+            --from-literal=gh-token="${{ secrets.GH_TOKEN_AGENTS }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Apply K8s manifests

@@ -10,7 +10,7 @@
 #   {{BRANCH}}         — Git branch to checkout/create
 #   {{AGENT_MODEL}}    — Claude model (e.g., claude-opus-4-6)
 #   {{IMAGE_TAG}}      — Container image tag (default: latest)
-#   {{TASK_PROMPT}}    — Base64-encoded task prompt
+#   {{TASK_PROMPT}}     — Base64-encoded task prompt
 #
 # Apply: kubectl apply -f <generated-job>.yaml -n fenrir-agents
 # Logs:  kubectl logs job/{{JOB_NAME}} -n fenrir-agents --follow
@@ -91,11 +91,12 @@ spec:
             - name: TASK_PROMPT
               value: "{{TASK_PROMPT}}"
             # Secrets injected from K8s Secret
-            - name: ANTHROPIC_API_KEY
+            # OAuth subscription token for Claude Code CLI (not API key)
+            - name: CLAUDE_CODE_OAUTH_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: agent-secrets
-                  key: anthropic-api-key
+                  key: claude-oauth-token
             - name: GH_TOKEN
               valueFrom:
                 secretKeyRef:
