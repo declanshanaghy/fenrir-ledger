@@ -73,8 +73,13 @@ if [ ! -e "$REPO_ROOT/quality/node_modules" ]; then
 fi
 
 # 6. Install Playwright browsers + system deps (Chromium only for speed)
-npx playwright install --with-deps chromium 2>/dev/null || npx playwright install chromium
-echo "[ok] Playwright chromium installed"
+#    Skip if already pre-baked in Docker image (saves ~60s)
+if npx playwright install --dry-run chromium 2>/dev/null | grep -q "already installed"; then
+  echo "[ok] Playwright chromium already installed (pre-baked)"
+else
+  npx playwright install --with-deps chromium 2>/dev/null || npx playwright install chromium
+  echo "[ok] Playwright chromium installed"
+fi
 
 # 7. Verify critical versions
 NEXT_VER=$(npx next --version 2>/dev/null || echo "unknown")

@@ -2,7 +2,8 @@
 # Docker Build & Push — Agent Sandbox Image
 #
 # Builds the agent sandbox container and pushes to Google Artifact Registry.
-# Triggers on changes to agent infrastructure files or manual dispatch.
+# Triggers on changes to agent infrastructure files, package-lock changes
+# (which affect pre-baked Playwright version), or manual dispatch.
 #
 # Required GitHub Secrets:
 #   GCP_PROJECT_ID   — Google Cloud project ID
@@ -12,12 +13,17 @@
 
 name: Build Agent Sandbox Image
 
+concurrency:
+  group: build-agent-sandbox
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
     paths:
       - "infrastructure/k8s/agents/Dockerfile"
       - "infrastructure/k8s/agents/entrypoint.sh"
+      - "development/frontend/package-lock.json"
   workflow_dispatch:
     inputs:
       image_tag:
@@ -40,24 +46,24 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and push agent sandbox image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./infrastructure/k8s/agents/Dockerfile
