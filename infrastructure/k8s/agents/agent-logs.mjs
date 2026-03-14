@@ -60,26 +60,73 @@ const C = {
 const MAYO_FLAG = "🟢🔴";
 
 const MAYO_HECKLES = [
+  // Classic battle cries
   "MAYO FOR SAM!! 🏆",
   "SAM IS COMING WEST!! The curse is BROKEN!!",
   "C'MON THE GREEN AND RED!!",
   "THIS IS OUR YEAR LADS!! MAYO ABÚ!!",
-  "Sam Maguire looks well in Castlebar!!",
-  "SÉAMUS Ó MÁILLE AG TEACHT ABHAILE!! 🏆",
-  "73 YEARS OF HURT — NO MORE!! MAYO!! MAYO!!",
-  "The west's awake!! SAM IS COMING HOME!!",
-  "Cillian O'Connor didn't die for THIS— wait he's alive. MAYO FOR SAM!!",
-  "Tell the Dubs Sam's on holidays in Westport!! 🏖️🏆",
   "MAIGH EO ABÚ!! The faithful are RISING!!",
-  "Even the SHEEP in Achill know Sam's coming west!! 🐑🏆",
+  "MAYO!! MAYO!! MAYO!!",
+
+  // Geography
+  "Sam Maguire looks well in Castlebar!!",
   "Nephin is SHAKING!! Sam Maguire on the N5!! 🏔️",
-  "They said we'd never win it. THEY WERE WRONG. MAYO FOR SAM!!",
   "Crossmolina to Croagh Patrick — the whole county is UP!!",
-  "Liam McHale smiling somewhere right now!! MAYO!!",
-  "Is that Sam Maguire or just the sun rising over Clew Bay?? ☀️🏆",
+  "I can see Sam from the top of Croagh Patrick!! 🏔️🏆",
+  "The Atlantic waves are ROARING for Mayo!! 🌊🏆",
+  "Clew Bay never looked so good!! Sam's coming for a swim!! 🏖️",
+  "Knock Shrine doing overtime with the prayers!! 🙏🏆",
+  "Belmullet to Ballina — NOBODY is sleeping tonight!!",
+  "The N17 is BLOCKED — entire county heading to Croke Park!!",
+  "Achill Island declaring independence if Sam doesn't come west!!",
+  "Westport is BOOKED OUT for the homecoming!! 🎉",
+
+  // Rivals
+  "Tell the Dubs Sam's on holidays in Westport!! 🏖️🏆",
   "The Dubs are SHAKIN!! The west is AWAKE!!",
   "Croke Park? More like MAYO PARK!! 🏟️",
-  "I can see Sam from the top of Croagh Patrick!! 🏔️🏆",
+  "Kerry think they're great?? WAIT TILL THEY SEE THIS!!",
+  "Dublin? Never heard of her. SAM KNOWS ONLY MAYO!!",
+  "Galway tried. Roscommon tried. MAYO DELIVERED!!",
+
+  // Irish language
+  "SÉAMUS Ó MÁILLE AG TEACHT ABHAILE!! 🏆",
+  "Tá an corn ag teacht abhaile!! 🏆",
+  "Maigh Eo go deo!! Ní neart go cur le chéile!!",
+
+  // Historical pain + redemption
+  "73 YEARS OF HURT — NO MORE!! MAYO!! MAYO!!",
+  "The west's awake!! SAM IS COMING HOME!!",
+  "They said we'd never win it. THEY WERE WRONG. MAYO FOR SAM!!",
+  "Every final we lost was just TRAINING for this moment!!",
+  "1951 was the last time?? NOT ANYMORE!!",
+  "The curse of '51 is DUST!! Mayo are FREE!!",
+
+  // Legends
+  "Cillian O'Connor didn't die for THIS— wait he's alive. MAYO FOR SAM!!",
+  "Liam McHale smiling somewhere right now!! MAYO!!",
+  "Is that Sam Maguire or just the sun rising over Clew Bay?? ☀️🏆",
+  "Lee Keegan would RUN through a WALL for this!!",
+  "Aidan O'Shea carrying Sam on his shoulders like it's a LAMB!!",
+  "David Clarke's gloves are READY!! 🧤🏆",
+  "Andy Moran retirement was PREMATURE — he's BACK for Sam!!",
+
+  // Animals
+  "Even the SHEEP in Achill know Sam's coming west!! 🐑🏆",
+  "The crows on Croagh Patrick are CELEBRATING!! 🏆",
+  "A SEAGULL just carried Sam across the Shannon!! It's DONE!!",
+  "The donkeys in Connemara are JEALOUS — Sam's going to MAYO not Galway!!",
+
+  // Misc chaos
+  "WHO LET THE MAYO FANS IN?? TOO LATE NOW!!",
+  "Someone tell the POPE — Sam Maguire is the new relic at Knock!!",
+  "RTÉ can't handle this!! THE SCENES!! THE ABSOLUTE SCENES!!",
+  "I'm not crying YOU'RE crying!! MAYO FOR SAM!! 😭🏆",
+  "The parish priest just bet his vestments on Mayo!! DIVINE INTERVENTION!!",
+  "MAMMY PUT THE GOOD CHINA OUT — SAM IS COMING FOR TEA!!",
+  "The turf fire is LIT and Sam is getting the armchair!! 🔥🏆",
+  "SuperValu in Ballina just SOLD OUT of bunting!!",
+  "The whole county is calling in SICK tomorrow!! SAM DAY!!",
 ];
 
 // Random Mayo first names + surnames for the heckler
@@ -104,8 +151,8 @@ function randomMayoName() {
 let heckleCounter = 0;
 function maybeHeckle() {
   heckleCounter++;
-  // Heckle roughly every 12-20 messages (random)
-  if (heckleCounter < 12 + Math.floor(Math.random() * 8)) return null;
+  // Heckle every 6-12 messages (random) — the crowd is LOUD
+  if (heckleCounter < 6 + Math.floor(Math.random() * 6)) return null;
   heckleCounter = 0;
   const heckle = MAYO_HECKLES[Math.floor(Math.random() * MAYO_HECKLES.length)];
   const name = randomMayoName();
