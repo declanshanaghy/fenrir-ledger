@@ -50,7 +50,7 @@ The existing entitlement layer was explicitly designed for provider portability 
 - `useEntitlement` hook is platform-agnostic -- the frontend checks `tier` and `hasFeature()`, not `platform`
 - `PatreonGate` checks tier, not platform
 - `EntitlementPlatform` type already has a comment: `// Future: | "buymeacoffee" | "stripe" | ...`
-- Vercel KV entitlement store can be re-keyed from Patreon records to Stripe subscription records
+- Upstash Redis (KV store) entitlement store can be re-keyed from Patreon records to Stripe subscription records
 - The only Patreon-specific UI is in `PatreonSettings.tsx` and the campaign URL in `SealedRuneModal.tsx`
 
 ---
