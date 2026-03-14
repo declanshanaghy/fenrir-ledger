@@ -1,7 +1,7 @@
 /**
  * Trial State Management Tests
  *
- * Validates server-side trial state with Vercel KV, browser fingerprinting,
+ * Validates server-side trial state with Upstash Redis (KV store), browser fingerprinting,
  * and the trial status hook. Tests acceptance criteria and edge cases.
  *
  * Note: These tests focus on API contract validation and integration patterns.

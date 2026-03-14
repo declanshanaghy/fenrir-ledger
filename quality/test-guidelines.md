@@ -14,9 +14,9 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 
 | Layer | Runner | Tests | Runtime |
 |-------|--------|-------|---------|
-| Unit | Vitest | ~136 | ~2s |
-| Integration | Vitest + happy-dom | ~93 | ~3s |
-| E2E | Playwright | ~60 | ~1min |
+| Unit | Vitest | ~500+ | ~2s |
+| Integration | Vitest + happy-dom | ~300+ | ~3s |
+| E2E | Playwright | ~159 | ~6min |
 
 ### Global E2E Cap (UNBREAKABLE)
 
@@ -196,25 +196,25 @@ mockRequireAuth.mockResolvedValueOnce({
 8. **No structural DOM assertions.** Landmark presence, aria-label existence, and tag structure belong in integration tests. E2E tests should focus on user interactions and navigation.
 9. **Critical integrations are non-negotiable.** Always keep E2E coverage for: OAuth flows (sign-in, callback, returnto), Stripe integration (checkout, webhook, portal), card CRUD (add, edit, delete), data persistence (localStorage), dashboard navigation, and a11y gates (dialog, landmarks). Delete or trim low-value suites first (static content, CSS measurements, regression suites) before cutting critical path tests.
 
-### Current E2E suites (27 files, ~219 tests)
+### Current E2E suites (27 files, ~159 tests)
 
 | Category | Suites | Tests |
 |----------|--------|-------|
-| Auth | auth/, auth-returnto/, stale-auth-nudge/ | ~31 |
-| Dashboard | dashboard/, dashboard-tabs/ | ~24 |
-| Cards | card-lifecycle/ (add, edit, close, delete) | ~21 |
-| Wizard | wizard-step2/, wizard-back-button/, select-reset/ | ~23 |
-| Layout | layout/ (topbar, howl-panel) | ~10 |
-| Settings | settings-gate/ | ~9 |
-| Theme | theme-toggle/ | ~5 |
-| Profile | profile-dropdown/ | ~20 |
-| A11y | accessibility/ (TC-A05..A13), dialog-a11y/ | ~14 |
-| Other | chronicles/, empty-state-cta/, howl-count/, credit-limit-step2/, fee-bonus-step2/, csv-format-help/, reverse-tab-order/ | ~62 |
+| Auth | auth/, auth-returnto/, stale-auth-nudge/ | ~15 |
+| Dashboard | dashboard/, dashboard-tabs/ | ~4 |
+| Cards | card-lifecycle/ (add, edit, close, delete, wizard-save) | ~7 |
+| Layout | layout/ (topbar) | ~1 |
+| Settings | settings-gate/, settings-reset/, settings-cleanup/ | ~27 |
+| Theme | theme-toggle/ | ~1 |
+| A11y | accessibility/, dialog-a11y/ | ~5 |
+| Admin | admin-console/ | ~7 |
+| Trial | trial-expiry-modal/, trial-panel-nudge/, trial-state/, trial-toast-badge/ | ~62 |
+| GKE | gke-migration/, issue-682/ | ~10 |
+| Features | features/ (skoll-dark-border) | ~5 |
+| Trust | trust-safety/ | ~15 |
 
-**Note (Issue #589):** sidebar.spec.ts and footer.spec.ts were deleted because the
-sidebar was removed in Issue #403 and the Ledger Footer with About modal is no longer
-rendered in any active layout. All E2E routes updated from `/` to `/ledger` to match
-the current route structure (marketing pages own `/`, app pages own `/ledger`).
+All E2E routes use `/ledger` for app pages (marketing pages own `/`).
+Infrastructure runs on GKE Autopilot.
 
 ---
 
