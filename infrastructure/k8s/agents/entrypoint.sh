@@ -145,6 +145,7 @@ CLAUDE_ARGS=(
   "--model" "${AGENT_MODEL}"
   "--print"
   "--output-format" "stream-json"
+  "--verbose"
   "-p" "${DECODED_PROMPT}"
 )
 
