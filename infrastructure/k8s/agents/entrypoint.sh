@@ -9,8 +9,8 @@
 # 4. Invokes Claude Code CLI with the task prompt
 #
 # Required environment variables:
-#   ANTHROPIC_API_KEY — Claude API key (injected via K8s Secret)
-#   GH_TOKEN          — GitHub token for repo access (injected via K8s Secret)
+#   CLAUDE_CODE_OAUTH_TOKEN — OAuth subscription token (injected via K8s Secret)
+#   GH_TOKEN                — GitHub token for repo access (injected via K8s Secret)
 #   REPO_URL          — Repository URL (default: fenrir-ledger)
 #   BRANCH            — Branch to checkout/create
 #   AGENT_MODEL       — Claude model to use
@@ -102,8 +102,9 @@ trap cleanup_on_eviction SIGTERM SIGINT
 # --------------------------------------------------------------------------
 # 6. Validate required env vars
 # --------------------------------------------------------------------------
-if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-  echo "[FATAL] ANTHROPIC_API_KEY not set. Cannot run Claude."
+if [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+  echo "[FATAL] CLAUDE_CODE_OAUTH_TOKEN not set. Cannot run Claude."
+  echo "  Generate with: claude setup-token"
   exit 1
 fi
 
