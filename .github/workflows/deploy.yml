@@ -161,6 +161,7 @@ jobs:
           build-args: |
             NEXT_PUBLIC_BUILD_ID=${{ github.sha }}
             NEXT_PUBLIC_APP_VERSION=${{ github.sha }}
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
 
       - name: Output image details
         run: |

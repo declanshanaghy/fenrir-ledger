@@ -24,7 +24,6 @@ import {
   JetBrains_Mono,
 } from "next/font/google";
 import Script from "next/script";
-import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "next-themes";
 import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -122,7 +121,6 @@ export default async function RootLayout({
             </EntitlementProvider>
           </AuthProvider>
         </ThemeProvider>
-        <Analytics />
         {/* GA4 — only rendered when NEXT_PUBLIC_GA4_MEASUREMENT_ID is set */}
         {process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID && (
           <>
