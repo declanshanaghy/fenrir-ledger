@@ -475,49 +475,60 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-void); }
 
 /* Heckle bubbles — chat style with avatars */
+/* Chat bubble layout */
 .heckle {
   margin: 0.75rem 0;
-  border-radius: 0.5rem;
   font-size: 0.9rem;
   line-height: 1.5;
+  max-width: 75%;
+}
+.heckle-identity {
   display: flex;
-  gap: 0.5rem;
-  align-items: flex-start;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
 }
 .heckle-avatar {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
   border: 2px solid rgba(239, 68, 68, 0.4);
 }
-.heckle-text {
-  flex: 1;
+.heckle-name {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
 }
+.heckle-text {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
+}
+/* Heckler (right-aligned) */
 .heckle-mayo {
-  flex-direction: row-reverse;
-  max-width: 75%;
   margin-left: auto;
 }
+.heckle-mayo .heckle-identity {
+  flex-direction: row-reverse;
+}
+.heckle-mayo .heckle-name { color: var(--red-ragnarok); }
+.heckle-mayo .heckle-avatar { border-color: rgba(239, 68, 68, 0.5); }
 .heckle-mayo .heckle-text {
   background: rgba(239, 68, 68, 0.12);
   border: 1px solid rgba(239, 68, 68, 0.3);
-  padding: 0.5rem 0.75rem;
   border-radius: 0.5rem 0 0.5rem 0.5rem;
   color: var(--text-saga);
-  text-align: right;
 }
-.heckle-mayo .heckle-avatar { border-color: rgba(239, 68, 68, 0.5); }
 .heckle-mayo strong { color: var(--red-ragnarok); font-weight: 700; }
-.heckle-comeback {
-  max-width: 75%;
-}
+/* Agent comeback (left-aligned) */
+.heckle-comeback {}
+.heckle-comeback .heckle-name { color: var(--teal-asgard); }
 .heckle-comeback .heckle-avatar { border-color: rgba(10, 140, 110, 0.5); }
 .heckle-comeback .heckle-text {
   background: rgba(10, 140, 110, 0.1);
   border: 1px solid rgba(10, 140, 110, 0.3);
-  padding: 0.5rem 0.75rem;
   border-radius: 0 0.5rem 0.5rem 0.5rem;
   color: var(--text-saga);
 }
@@ -1705,14 +1716,17 @@ turns.forEach((turn, i) => {
         const hAvatars = ['heckler-avatar.png','heckler-granny.png','heckler-da.png','heckler-uncle.png','heckler-mammy.png','heckler-teen.png','heckler-lad.png','heckler-lass.png'];
         const hAvatar = hAvatars[hIdx % hAvatars.length];
         html += '<div class="heckle heckle-mayo">'
-          + '<img class="heckle-avatar" src="assets/' + hAvatar + '" onerror="this.style.display=\'none\'">'
-          + '<div class="heckle-text"><strong>' + esc(event.name) + ':</strong> ' + esc(event.text) + '</div></div>\n';
+          + '<div class="heckle-identity"><span class="heckle-name">' + esc(event.name) + '</span>'
+          + '<img class="heckle-avatar" src="assets/' + hAvatar + '" onerror="this.style.display=\'none\'"></div>'
+          + '<div class="heckle-text">' + esc(event.text) + '</div></div>\n';
       } else if (event.type === "mayo-comeback") {
         const slugMap = {FiremanDecko:'fireman-decko',Loki:'loki',Luna:'luna',Freya:'freya',Heimdall:'heimdall'};
         const aSlug = slugMap[event.name] || '';
         const aImg = aSlug ? '<img class="heckle-avatar" src="agents/profiles/' + aSlug + '-dark.png" onerror="this.style.display=\'none\'">' : '';
-        html += '<div class="heckle heckle-comeback">' + aImg
-          + '<div class="heckle-text"><strong>' + esc(event.name) + ':</strong> ' + esc(event.text) + '</div></div>\n';
+        const aTitle = AGENT_TITLES[event.name] || event.name;
+        html += '<div class="heckle heckle-comeback">'
+          + '<div class="heckle-identity">' + aImg + '<span class="heckle-name">' + esc(aTitle) + '</span></div>'
+          + '<div class="heckle-text">' + esc(event.text) + '</div></div>\n';
       } else if (event.type === "mayo-entrance") {
         html += '<div class="heckle heckle-entrance">' + esc(event.text) + '</div>\n';
       } else if (event.type === "mayo-explosion") {
