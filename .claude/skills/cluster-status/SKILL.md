@@ -64,6 +64,7 @@ Active = running, Succeeded = completed, Failed = failed
 ### Ingress & TLS
 | Service | Host | IP | Cert |
 |---------|------|----|------|
+(Render Host as a clickable markdown link: [host](https://host))
 ```
 
 ### Step 3 — Summary
