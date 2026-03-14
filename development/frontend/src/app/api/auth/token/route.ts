@@ -37,6 +37,10 @@ import { log } from "@/lib/logger";
 const ALLOWED_ORIGINS = new Set([
   "http://localhost:9653",
   ...(process.env.APP_BASE_URL ? [process.env.APP_BASE_URL] : []),
+  // Support www variant — redirect_uri origin must match
+  ...(process.env.APP_BASE_URL?.includes("://") && !process.env.APP_BASE_URL.includes("://www.")
+    ? [`${process.env.APP_BASE_URL.replace("://", "://www.")}`]
+    : []),
 ]);
 
 /** Google token endpoint. */
