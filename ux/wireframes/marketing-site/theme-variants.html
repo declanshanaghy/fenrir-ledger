@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Theme Variants Wireframe — Fenrir Ledger</title>
+  <title>Theme Variants — Marketing Site Wireframe — Fenrir Ledger — Issue #642</title>
   <style>
-    /* Wireframe CSS — structural only */
+    /* ── Wireframe CSS — layout only. No colors, no custom fonts beyond sans-serif. ── */
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -14,499 +14,1170 @@
       font-size: 14px;
       line-height: 1.5;
     }
-    h1 {
-      font-size: 24px;
-      margin: 0 0 32px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #333;
-    }
-    h2 {
-      font-size: 18px;
-      margin: 40px 0 16px;
-      font-weight: 600;
-    }
 
-    /* Split view container */
+    /* ── Document chrome ── */
+    h1 { font-size: 22px; margin: 0 0 8px; padding-bottom: 12px; border-bottom: 2px solid #333; }
+    h2 { font-size: 17px; margin: 40px 0 12px; font-weight: 700; border-left: 4px solid #333; padding-left: 10px; }
+    h3 { font-size: 14px; margin: 20px 0 8px; font-weight: 600; }
+
+    /* ── Side-by-side theme comparison ── */
     .theme-comparison {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      margin-bottom: 48px;
+      gap: 24px;
+      margin-bottom: 40px;
     }
     .theme-variant {
       border: 2px solid #333;
-      padding: 24px;
+      padding: 20px;
       position: relative;
     }
     .theme-label {
       position: absolute;
       top: -12px;
-      left: 20px;
+      left: 16px;
       background: #fff;
       padding: 0 8px;
       font-weight: 700;
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.1em;
+      border: 1px solid #333;
     }
 
-    /* Component examples */
-    .component {
-      margin-bottom: 32px;
-      padding: 16px;
-      border: 1px dashed #ccc;
-    }
-    .component-title {
+    /* ── Annotations ── */
+    .note {
+      border: 1px solid #666;
+      background: #f8f8f8;
+      padding: 10px 14px;
+      margin: 16px 0;
       font-size: 12px;
-      font-weight: 600;
-      margin: 0 0 12px;
+      line-height: 1.6;
+    }
+    .note strong { display: block; margin-bottom: 4px; }
+
+    /* ── Layout building blocks (structural only) ── */
+    .page-section {
+      border: 1px solid #999;
+      padding: 16px;
+      margin-bottom: 10px;
+    }
+    .page-section-label {
+      font-size: 10px;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      border-bottom: 1px dashed #ccc;
+      padding-bottom: 4px;
     }
 
-    /* Mock components */
-    .nav-example {
+    /* ── Nav structure ── */
+    .nav-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      height: 48px;
-      padding: 0 16px;
+      padding: 10px 16px;
       border: 1px solid;
+      margin-bottom: 10px;
     }
-    .btn-example {
-      display: inline-block;
-      padding: 10px 24px;
+    .nav-links {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+    }
+    .nav-cta {
+      padding: 6px 14px;
       border: 2px solid;
-      font-weight: 600;
-      text-align: center;
-      margin-right: 16px;
-    }
-    .card-example {
-      border: 1px solid;
-      border-left: 3px solid;
-      padding: 20px;
-      margin-bottom: 16px;
-    }
-    .input-example {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid;
-      margin-bottom: 8px;
-    }
-    .badge-example {
-      display: inline-block;
-      padding: 4px 12px;
-      border: 1px solid;
       font-size: 11px;
-      font-weight: 600;
-      margin-right: 8px;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
     }
 
-    /* Color swatches */
-    .color-grid {
+    /* ── Hero section ── */
+    .hero-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
+      grid-template-columns: auto 1fr;
+      gap: 20px;
+      align-items: center;
+      padding: 20px;
+      border: 1px solid;
     }
-    .color-swatch {
-      height: 60px;
-      border: 1px solid #333;
+    .hero-logo-slot {
+      width: 80px;
+      height: 80px;
+      border: 2px dashed;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 10px;
-      font-weight: 600;
+      text-align: center;
     }
+    .hero-content { display: flex; flex-direction: column; gap: 6px; }
+    .hero-eyebrow { font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3em; }
+    .hero-h1 { font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; }
+    .hero-tagline { font-size: 13px; font-style: italic; }
+    .hero-body { font-size: 12px; line-height: 1.6; }
+    .hero-cta { display: inline-block; padding: 10px 20px; border: 2px solid; font-weight: 700; font-size: 11px; text-transform: uppercase; margin-top: 6px; }
+    .hero-epigraph { margin-top: 12px; padding-top: 10px; border-top: 1px solid; font-size: 11px; font-style: italic; }
 
-    /* Typography samples */
-    .type-sample {
-      margin-bottom: 16px;
-      padding: 8px;
-      border-left: 2px solid #ccc;
-    }
-    .display-text {
-      font-size: 32px;
-      font-weight: 900;
-      letter-spacing: 0.02em;
-    }
-    .heading-text {
-      font-size: 20px;
-      font-weight: 700;
-    }
-    .body-text {
-      font-size: 16px;
-      line-height: 1.7;
-    }
-    .mono-text {
+    /* ── Card grids ── */
+    .card-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .card-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .card-item { border: 1px solid; border-left: 3px solid; padding: 12px; }
+    .card-rune { font-size: 20px; margin-bottom: 8px; }
+    .card-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+    .card-body { font-size: 11px; }
+
+    /* ── Steps onboarding ── */
+    .steps-row { display: flex; align-items: flex-start; gap: 0; }
+    .step-item { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 8px; }
+    .step-circle { width: 48px; height: 48px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 6px; }
+    .step-connector { width: 40px; height: 1px; border-top: 1px dashed; flex-shrink: 0; margin-top: 24px; }
+    .step-label { font-size: 11px; font-weight: 600; }
+    .step-body { font-size: 10px; max-width: 100px; }
+
+    /* ── Feature alternating row (features page) ── */
+    .feature-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 16px; border: 1px solid; margin-bottom: 10px; align-items: center; }
+    .feature-image-slot { border: 2px dashed; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 10px; text-align: center; }
+    .feature-content { display: flex; flex-direction: column; gap: 6px; }
+    .feature-tier-badge { display: inline-block; border: 1px dashed; padding: 2px 8px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+    .feature-tier-badge.karl { border-style: solid; }
+    .feature-eyebrow { font-family: monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; }
+    .feature-h2 { font-size: 14px; font-weight: 900; text-transform: uppercase; }
+    .feature-benefit { font-size: 11px; font-style: italic; font-weight: 600; }
+    .feature-body { font-size: 10px; }
+    .feature-list { font-size: 10px; padding-left: 14px; }
+    .feature-quote { font-size: 10px; font-style: italic; padding-left: 8px; border-left: 2px solid; }
+
+    /* ── Tier divider ── */
+    .tier-divider { border: 1px dashed; padding: 12px; text-align: center; margin-bottom: 10px; }
+
+    /* ── Pricing page ── */
+    .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px; }
+    .pricing-card { border: 1px solid; padding: 16px; position: relative; }
+    .pricing-card.featured { border-width: 2px; }
+    .pricing-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); border: 1px solid; padding: 1px 10px; font-size: 9px; font-weight: 700; text-transform: uppercase; background: #fff; white-space: nowrap; }
+    .pricing-rune { font-size: 22px; margin-bottom: 8px; }
+    .pricing-name { font-size: 16px; font-weight: 900; text-transform: uppercase; }
+    .pricing-tagline { font-size: 11px; font-style: italic; margin-bottom: 8px; }
+    .pricing-price { font-size: 28px; font-weight: 900; }
+    .pricing-sub { font-size: 10px; margin-bottom: 10px; }
+    .pricing-cta { display: block; text-align: center; border: 2px solid; padding: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+    .pricing-feature-list { font-size: 10px; display: flex; flex-direction: column; gap: 4px; }
+    .check { font-family: monospace; margin-right: 4px; }
+    .pricing-table { width: 100%; border-collapse: collapse; font-size: 11px; margin: 12px 0; }
+    .pricing-table th, .pricing-table td { border: 1px solid; padding: 5px 8px; text-align: left; }
+    .pricing-table th { font-weight: 700; }
+    .pricing-table .section-row td { font-size: 9px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; }
+
+    /* ── About page — dual-realm agent rows ── */
+    .agent-row { display: flex; gap: 24px; padding: 16px; border-bottom: 1px solid; align-items: flex-start; }
+    .agent-row.reverse { flex-direction: row-reverse; }
+    .agent-portrait-col { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .agent-portrait-slot { width: 100px; height: 100px; border: 2px solid; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .portrait-crossfade-note { position: absolute; top: 2px; right: 2px; font-size: 8px; border: 1px solid; padding: 1px 3px; }
+    .realm-badge { border: 1px solid; padding: 2px 6px; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; text-align: center; }
+    .agent-text-col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .agent-name { font-size: 18px; font-weight: 700; }
+    .agent-role { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+    .agent-bio { font-size: 11px; }
+    .realm-lore-block { padding: 8px 10px; border-left: 3px solid; display: flex; flex-direction: column; gap: 4px; position: relative; }
+    .realm-lore-title { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+    .realm-lore-quote { font-size: 10px; font-style: italic; }
+    .realm-lore-aspect { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* ── Crossfade pattern annotation ── */
+    .crossfade-diagram {
+      border: 1px solid;
+      padding: 14px;
+      margin-bottom: 10px;
       font-family: monospace;
-      font-size: 13px;
-      letter-spacing: 0.05em;
+      font-size: 11px;
+      white-space: pre;
+      overflow-x: auto;
     }
 
-    /* Annotations */
-    .note {
-      background: #fffbcc;
-      border: 1px solid #e6d600;
-      padding: 12px 16px;
-      margin: 24px 0;
-      font-size: 12px;
-      line-height: 1.6;
-    }
-    .spec-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 16px 0;
-    }
-    .spec-table th,
-    .spec-table td {
-      text-align: left;
-      padding: 8px;
-      border: 1px solid #ddd;
-      font-size: 12px;
-    }
-    .spec-table th {
-      background: #f5f5f5;
-      font-weight: 600;
-    }
+    /* ── Free trial page ── */
+    .trial-feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .trial-feature-card { border: 1px solid; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+    .trial-rune-box { width: 36px; height: 36px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .trial-ordinal { font-family: monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; }
+    .trial-title { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .trial-body { font-size: 10px; }
+    .trial-badge { display: inline-block; border: 1px solid; padding: 1px 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+    .timeline-grid { display: grid; grid-template-columns: 1fr 32px 1fr 32px 1fr; gap: 0; align-items: center; }
+    .timeline-step { border: 1px solid; padding: 10px; text-align: center; }
+    .timeline-step.milestone { border-width: 2px; }
+    .tier-compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .tier-card { border: 1px solid; padding: 14px; position: relative; }
+    .tier-card.featured { border-width: 2px; }
+    .tier-card-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); border: 1px solid; padding: 1px 8px; font-size: 9px; font-weight: 700; text-transform: uppercase; background: #fff; }
+
+    /* ── Spec table ── */
+    .spec-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    .spec-table th, .spec-table td { border: 1px solid #ccc; padding: 6px 8px; font-size: 11px; text-align: left; }
+    .spec-table th { font-weight: 700; }
+
+    /* ── Footer ── */
+    .site-footer { border: 1px solid; padding: 14px; }
+    .footer-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .footer-col-label { font-size: 10px; font-weight: 700; text-transform: uppercase; border-bottom: 1px dashed; margin-bottom: 6px; padding-bottom: 3px; }
+
+    /* ── Mobile indicator ── */
+    .mobile-note { display: inline-block; border: 1px solid; padding: 1px 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
   </style>
 </head>
 <body>
 
-  <h1>Theme Variants — Light & Dark Mode Components</h1>
-
-  <p class="note">
-    <strong>Design Intent:</strong> Fenrir Ledger supports both light and dark themes.
-    Dark mode is the default (matching existing Saga Ledger aesthetic).
-    Light mode inverts backgrounds to warm cream/stone while preserving the gold accent color.
-    Theme detection follows system preference (prefers-color-scheme) with manual toggle override.
+  <h1>Theme Variants — Marketing Site</h1>
+  <p style="margin: 0 0 8px; font-size: 13px;">
+    Wireframe: <code>ux/wireframes/marketing-site/theme-variants.html</code><br>
+    Updated: Issue #642 — reflects current implemented pages<br>
+    Pages: Home &middot; Features &middot; Pricing &middot; About &middot; Free Trial<br>
+    Dual-realm lore crossfade pattern documented in &sect;6
   </p>
 
-  <!-- COLOR PALETTE COMPARISON -->
-  <h2>1. Color Palette</h2>
-  <div class="theme-comparison">
-    <div class="theme-variant">
-      <span class="theme-label">DARK THEME</span>
-      <div class="color-grid">
-        <div class="color-swatch" style="background: #12100e; color: white;">
-          void<br>#12100e
-        </div>
-        <div class="color-swatch" style="background: #1c1917; color: white;">
-          forge<br>#1c1917
-        </div>
-        <div class="color-swatch" style="background: #d4a520;">
-          gold<br>#d4a520
-        </div>
-        <div class="color-swatch" style="background: #5b9ec9;">
-          ice-blue<br>#5b9ec9
-        </div>
-        <div class="color-swatch" style="background: #f0ede4;">
-          text-saga<br>#f0ede4
-        </div>
-        <div class="color-swatch" style="background: #a09888;">
-          text-rune<br>#a09888
-        </div>
-        <div class="color-swatch" style="background: #0a8c6e; color: white;">
-          teal<br>#0a8c6e
-        </div>
-        <div class="color-swatch" style="background: #c94a0a; color: white;">
-          fire<br>#c94a0a
-        </div>
-      </div>
-    </div>
-
-    <div class="theme-variant">
-      <span class="theme-label">LIGHT THEME</span>
-      <div class="color-grid">
-        <div class="color-swatch" style="background: #faf8f3;">
-          cream<br>#faf8f3
-        </div>
-        <div class="color-swatch" style="background: #f0ede4;">
-          stone<br>#f0ede4
-        </div>
-        <div class="color-swatch" style="background: #d4a520;">
-          gold<br>#d4a520
-        </div>
-        <div class="color-swatch" style="background: #3a7399; color: white;">
-          deep-blue<br>#3a7399
-        </div>
-        <div class="color-swatch" style="background: #1c1917; color: white;">
-          text-dark<br>#1c1917
-        </div>
-        <div class="color-swatch" style="background: #6a6560; color: white;">
-          text-dim<br>#6a6560
-        </div>
-        <div class="color-swatch" style="background: #0a8c6e; color: white;">
-          teal<br>#0a8c6e
-        </div>
-        <div class="color-swatch" style="background: #c94a0a; color: white;">
-          fire<br>#c94a0a
-        </div>
-      </div>
-    </div>
+  <div class="note">
+    <strong>Wireframe Rules (enforced)</strong>
+    Layout CSS only: flex/grid, border, width/height, padding/margin, font-size, font-weight.<br>
+    No colors, no backgrounds (except #f8f8f8 on annotation blocks), no custom fonts, no shadows, no border-radius.<br>
+    Theme styling lives in <code>ux/theme-system.md</code> &mdash; not here.
   </div>
 
-  <!-- NAVIGATION BAR -->
-  <h2>2. Navigation Bar</h2>
+  <div class="note">
+    <strong>Theme System Reference (not in wireframe CSS &mdash; for implementation notes only)</strong>
+    Light realm (Lj&oacute;s&aacute;lfar): bg-background=cream, text-foreground=dark, text-primary=accent, border-border=subtle.<br>
+    Dark realm (Svart&aacute;lfar): bg-background=deep, text-foreground=light, text-primary=accent, border-border=muted.<br>
+    Tokens: Tailwind CSS vars via <code>next-themes</code>. <code>resolvedTheme</code> drives crossfade opacity.<br>
+    Theme toggle: rotary single-click in profile dropdown (see sidebar-removal wireframe). System default: <code>prefers-color-scheme</code>.
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>1. Global Marketing Nav (All Pages)</h2>
+
+  <div class="note">
+    <strong>Nav links (marketing layout):</strong>
+    Logo &ldquo;&#x16A0; FENRIR LEDGER&rdquo; &rarr; / &middot; Features &rarr; /features &middot; Pricing &rarr; /pricing &middot;
+    About &rarr; /about &middot; Free Trial &rarr; /free-trial &middot; Theme toggle &middot; &ldquo;Open Ledger&rdquo; primary CTA &rarr; /ledger.
+  </div>
+
   <div class="theme-comparison">
     <div class="theme-variant">
-      <span class="theme-label">DARK THEME</span>
-      <div class="nav-example" style="background: #12100e; color: #f0ede4; border-color: #3a3530;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="color: #d4a520; font-weight: 700;">ᚠ FENRIR</span>
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="nav-bar">
+        <div class="nav-links">
+          <span style="font-weight: 700;">&#x16A0; FENRIR LEDGER</span>
           <span>Features</span>
           <span>Pricing</span>
+          <span>About</span>
+          <span>Free Trial</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span>☾</span>
-          <span style="background: #d4a520; color: #12100e; padding: 6px 16px;">Open Ledger</span>
+        <div class="nav-links">
+          <span title="Theme toggle &mdash; rotary (light mode showing sun)">&#x2600; &circlearrowleft;</span>
+          <span class="nav-cta">Open Ledger</span>
         </div>
       </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">bg=card. Border-bottom: border-border. Theme icon: sun (current theme = light).</p>
     </div>
 
     <div class="theme-variant">
-      <span class="theme-label">LIGHT THEME</span>
-      <div class="nav-example" style="background: #faf8f3; color: #1c1917; border-color: #e0ddd4;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="color: #d4a520; font-weight: 700;">ᚠ FENRIR</span>
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="nav-bar">
+        <div class="nav-links">
+          <span style="font-weight: 700;">&#x16A0; FENRIR LEDGER</span>
           <span>Features</span>
           <span>Pricing</span>
+          <span>About</span>
+          <span>Free Trial</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span>☀</span>
-          <span style="background: #d4a520; color: #1c1917; padding: 6px 16px;">Open Ledger</span>
+        <div class="nav-links">
+          <span title="Theme toggle &mdash; rotary (dark mode showing moon)">&#x263E; &circlearrowleft;</span>
+          <span class="nav-cta">Open Ledger</span>
         </div>
       </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">bg=card (deep). Border-bottom: border-border. Theme icon: moon (current theme = dark).</p>
     </div>
   </div>
 
-  <!-- BUTTONS -->
-  <h2>3. Buttons</h2>
+  <!-- ============================================================ -->
+  <h2>2. Home Page &mdash; /</h2>
+
+  <div class="note">
+    <strong>Sections:</strong> Hero (logo + headline + epigraph) &rarr; The Chains They Forged (3-card pain points) &rarr; What the Wolf Watches (6-feature grid) &rarr; Three Runes to Freedom (3-step flow) &rarr; Final CTA.
+  </div>
+
+  <h3>2A. Hero Section</h3>
   <div class="theme-comparison">
     <div class="theme-variant">
-      <span class="theme-label">DARK THEME</span>
-      <div class="component">
-        <div class="btn-example" style="background: #d4a520; color: #12100e; border-color: #d4a520;">
-          Primary CTA
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="hero-grid">
+        <div class="hero-logo-slot">
+          fenrir-logo<br>-light.png<br>(200&ndash;280px)
         </div>
-        <div class="btn-example" style="background: transparent; color: #f0ede4; border-color: #3a3530;">
-          Secondary
-        </div>
-        <div class="btn-example" style="background: #c94a0a; color: #f0ede4; border-color: #c94a0a;">
-          Danger
+        <div class="hero-content">
+          <span class="hero-eyebrow">&#x16A0; &middot; &#x16DF; &middot; &#x16CF;</span>
+          <span class="hero-h1">FENRIR LEDGER</span>
+          <span class="hero-tagline">Every reward has a deadline. <u>Fenrir</u> doesn&rsquo;t forget.</span>
+          <span class="hero-body">Credit card churning lives and dies by dates &mdash; fee anniversaries, promo windows, spend thresholds&hellip;</span>
+          <span class="hero-cta">Break the Chain</span>
+          <div class="hero-epigraph">
+            &ldquo;Though it looks like silk ribbon, no chain is stronger.&rdquo;<br>
+            &mdash; <em>Prose Edda</em>, <em>Gylfaginning</em>
+          </div>
         </div>
       </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Light: fenrir-logo-light.png shown via <code>block dark:hidden</code>. No glow. bg=card.</p>
     </div>
 
     <div class="theme-variant">
-      <span class="theme-label">LIGHT THEME</span>
-      <div class="component">
-        <div class="btn-example" style="background: #d4a520; color: #1c1917; border-color: #d4a520;">
-          Primary CTA
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="hero-grid">
+        <div class="hero-logo-slot">
+          fenrir-logo<br>-dark.png<br>(200&ndash;280px)<br>+ glow drop-shadow
         </div>
-        <div class="btn-example" style="background: transparent; color: #1c1917; border-color: #d0cdc4;">
-          Secondary
-        </div>
-        <div class="btn-example" style="background: #c94a0a; color: #faf8f3; border-color: #c94a0a;">
-          Danger
+        <div class="hero-content">
+          <span class="hero-eyebrow">&#x16A0; &middot; &#x16DF; &middot; &#x16CF;</span>
+          <span class="hero-h1">FENRIR LEDGER</span>
+          <span class="hero-tagline">Every reward has a deadline. <u>Fenrir</u> doesn&rsquo;t forget.</span>
+          <span class="hero-body">Credit card churning lives and dies by dates&hellip;</span>
+          <span class="hero-cta">Break the Chain</span>
+          <div class="hero-epigraph">
+            &ldquo;Though it looks like silk ribbon, no chain is stronger.&rdquo;<br>
+            &mdash; <em>Prose Edda</em>
+          </div>
         </div>
       </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Dark: fenrir-logo-dark.png via <code>hidden dark:block</code>. Blue glow drop-shadow on logo (implementation only). bg=card (deep).</p>
     </div>
   </div>
 
-  <!-- CARDS -->
-  <h2>4. Content Cards</h2>
+  <h3>2B. Pain Points &mdash; &ldquo;The Chains They Forged for You&rdquo; (3-card grid)</h3>
   <div class="theme-comparison">
     <div class="theme-variant">
-      <span class="theme-label">DARK THEME</span>
-      <div class="card-example" style="background: #1c1917; color: #f0ede4; border-color: #3a3530; border-left-color: #d4a520;">
-        <div style="font-size: 24px; margin-bottom: 12px;">ᚺ</div>
-        <div style="font-weight: 600; margin-bottom: 8px;">Feature Name</div>
-        <div style="color: #a09888; font-size: 13px;">
-          Card description text appears here with secondary text color for hierarchy.
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="card-grid-3">
+        <div class="card-item" style="border-left-width: 4px;">
+          <div class="card-rune">&#x16B2;</div>
+          <div class="card-title">The Fee-Serpent</div>
+          <div class="card-body">Annual fee trap &mdash; left accent: fire (semantic red)</div>
+        </div>
+        <div class="card-item" style="border-left-width: 4px;">
+          <div class="card-rune">&#x16BA;</div>
+          <div class="card-title">The Promo Tide</div>
+          <div class="card-body">Promo window trap &mdash; left accent: amber (semantic warning)</div>
+        </div>
+        <div class="card-item" style="border-left-width: 4px;">
+          <div class="card-rune">&#x16A0;</div>
+          <div class="card-title">The Unclaimed Plunder</div>
+          <div class="card-body">Statement credits trap &mdash; left accent: muted (stone)</div>
         </div>
       </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Cards: bg=card. Border-left accent colors are semantic status colors &mdash; identical in both themes.</p>
     </div>
-
     <div class="theme-variant">
-      <span class="theme-label">LIGHT THEME</span>
-      <div class="card-example" style="background: white; color: #1c1917; border-color: #e0ddd4; border-left-color: #d4a520;">
-        <div style="font-size: 24px; margin-bottom: 12px;">ᚺ</div>
-        <div style="font-weight: 600; margin-bottom: 8px;">Feature Name</div>
-        <div style="color: #6a6560; font-size: 13px;">
-          Card description text appears here with secondary text color for hierarchy.
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="card-grid-3">
+        <div class="card-item" style="border-left-width: 4px;">
+          <div class="card-rune">&#x16B2;</div>
+          <div class="card-title">The Fee-Serpent</div>
+          <div class="card-body">Annual fee trap</div>
+        </div>
+        <div class="card-item" style="border-left-width: 4px;">
+          <div class="card-rune">&#x16BA;</div>
+          <div class="card-title">The Promo Tide</div>
+          <div class="card-body">Promo window trap</div>
+        </div>
+        <div class="card-item" style="border-left-width: 4px;">
+          <div class="card-rune">&#x16A0;</div>
+          <div class="card-title">The Unclaimed Plunder</div>
+          <div class="card-body">Credits trap</div>
         </div>
       </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Dark: cards bg=card (deep). Same semantic border-left accent colors &mdash; not theme-inverted.</p>
     </div>
   </div>
 
-  <!-- FORM INPUTS -->
-  <h2>5. Form Inputs</h2>
+  <h3>2C. Features Grid &mdash; &ldquo;What the Wolf Watches&rdquo; (6 cards)</h3>
   <div class="theme-comparison">
     <div class="theme-variant">
-      <span class="theme-label">DARK THEME</span>
-      <div class="component">
-        <input class="input-example" style="background: #242120; color: #f0ede4; border-color: #3a3530;"
-               placeholder="Card nickname" />
-        <input class="input-example" style="background: #242120; color: #f0ede4; border-color: #d4a520;"
-               placeholder="Focused input (gold border)" />
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="card-grid-3">
+        <div class="card-item"><div class="card-rune">&#x16B2;</div><div class="card-title">Sk&ouml;ll &amp; Hati</div><div class="card-body">Deadline trackers</div></div>
+        <div class="card-item"><div class="card-rune">&#x16BA;</div><div class="card-title">The Norns&rsquo; Weave</div><div class="card-body">Past / present / future</div></div>
+        <div class="card-item"><div class="card-rune">&#x16DF;</div><div class="card-title">Ledger of Fates</div><div class="card-body">Full card view</div></div>
+        <div class="card-item"><div class="card-rune">&#x16CF;</div><div class="card-title">Valhalla</div><div class="card-body">Closed card archive</div></div>
+        <div class="card-item"><div class="card-rune">&#x16C9;</div><div class="card-title">The Howl</div><div class="card-body">Deadline alerts</div></div>
+        <div class="card-item"><div class="card-rune">&#x16D7;</div><div class="card-title">The Nine Realms</div><div class="card-body">Status badges</div></div>
       </div>
     </div>
-
     <div class="theme-variant">
-      <span class="theme-label">LIGHT THEME</span>
-      <div class="component">
-        <input class="input-example" style="background: white; color: #1c1917; border-color: #d0cdc4;"
-               placeholder="Card nickname" />
-        <input class="input-example" style="background: white; color: #1c1917; border-color: #d4a520;"
-               placeholder="Focused input (gold border)" />
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="card-grid-3">
+        <div class="card-item"><div class="card-rune">&#x16B2;</div><div class="card-title">Sk&ouml;ll &amp; Hati</div></div>
+        <div class="card-item"><div class="card-rune">&#x16BA;</div><div class="card-title">The Norns&rsquo; Weave</div></div>
+        <div class="card-item"><div class="card-rune">&#x16DF;</div><div class="card-title">Ledger of Fates</div></div>
+        <div class="card-item"><div class="card-rune">&#x16CF;</div><div class="card-title">Valhalla</div></div>
+        <div class="card-item"><div class="card-rune">&#x16C9;</div><div class="card-title">The Howl</div></div>
+        <div class="card-item"><div class="card-rune">&#x16D7;</div><div class="card-title">The Nine Realms</div></div>
       </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Identical structure. Cards: bg-card + border-border. Runes: text-primary. No image slots on home feature grid (layout-only cards). min-h-[200px].</p>
     </div>
   </div>
 
-  <!-- STATUS BADGES -->
-  <h2>6. Status Badges (Nine Realms)</h2>
+  <h3>2D. Onboarding Steps &mdash; &ldquo;Three Runes to Freedom&rdquo; (3-step)</h3>
   <div class="theme-comparison">
     <div class="theme-variant">
-      <span class="theme-label">DARK THEME</span>
-      <div class="component">
-        <div class="badge-example" style="background: rgba(10,140,110,0.2); color: #0a8c6e; border-color: #0a8c6e;">
-          ASGARD
-        </div>
-        <div class="badge-example" style="background: rgba(245,158,11,0.2); color: #f59e0b; border-color: #f59e0b;">
-          MIDGARD
-        </div>
-        <div class="badge-example" style="background: rgba(201,74,10,0.2); color: #c94a0a; border-color: #c94a0a;">
-          MUSPELHEIM
-        </div>
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="steps-row" style="border: 1px solid; padding: 16px;">
+        <div class="step-item"><div class="step-circle">&#x16CF;</div><span class="step-label">01 &middot; Forge Your Chains</span><span class="step-body">Add cards and deadlines</span></div>
+        <div class="step-connector"></div>
+        <div class="step-item"><div class="step-circle">&#x16BA;</div><span class="step-label">02 &middot; Watch the Norns</span><span class="step-body">Dashboard tracks every deadline</span></div>
+        <div class="step-connector"></div>
+        <div class="step-item"><div class="step-circle">&#x16CA;</div><span class="step-label">03 &middot; Break Free</span><span class="step-body">Close before fees, claim bonuses</span></div>
       </div>
     </div>
-
     <div class="theme-variant">
-      <span class="theme-label">LIGHT THEME</span>
-      <div class="component">
-        <div class="badge-example" style="background: rgba(10,140,110,0.1); color: #0a8c6e; border-color: #0a8c6e;">
-          ASGARD
-        </div>
-        <div class="badge-example" style="background: rgba(245,158,11,0.1); color: #d4a520; border-color: #d4a520;">
-          MIDGARD
-        </div>
-        <div class="badge-example" style="background: rgba(201,74,10,0.1); color: #c94a0a; border-color: #c94a0a;">
-          MUSPELHEIM
-        </div>
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="steps-row" style="border: 1px solid; padding: 16px;">
+        <div class="step-item"><div class="step-circle">&#x16CF;</div><span class="step-label">01 &middot; Forge</span></div>
+        <div class="step-connector"></div>
+        <div class="step-item"><div class="step-circle">&#x16BA;</div><span class="step-label">02 &middot; Watch</span></div>
+        <div class="step-connector"></div>
+        <div class="step-item"><div class="step-circle">&#x16CA;</div><span class="step-label">03 &middot; Break Free</span></div>
       </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Section bg=card. Circles: border-border. Runes: text-primary. Connectors: border-top border-border. Mobile: vertical stack with &darr; arrows.</p>
     </div>
   </div>
 
-  <!-- TYPOGRAPHY -->
-  <h2>7. Typography Hierarchy</h2>
+  <!-- ============================================================ -->
+  <h2>3. Features Page &mdash; /features</h2>
+
+  <div class="note">
+    <strong>Structure:</strong> Page Hero &rarr; Thrall Section Heading (3 free features, alternating 2-col) &rarr; Upgrade Hook &rarr; Karl Tier Divider &rarr; 9 Karl features (alternating) &rarr; Final CTA.<br>
+    Each feature row: rune + tier badge + eyebrow + heading (dotted myth-link underline) + benefit + body + bullet list + atmospheric quote.<br>
+    Images: <code>ThemedFeatureImage</code> component &mdash; crossfades <code>{slug}-light.png</code> / <code>{slug}-dark.png</code> on theme toggle (500ms transition-opacity). Hover: shimmer + scale + glow.
+  </div>
+
+  <h3>3A. Thrall Section Heading</h3>
   <div class="theme-comparison">
-    <div class="theme-variant" style="background: #12100e;">
-      <span class="theme-label">DARK THEME</span>
-      <div class="type-sample display-text" style="color: #f0ede4;">
-        FENRIR LEDGER
-      </div>
-      <div class="type-sample heading-text" style="color: #f0ede4;">
-        Section Heading
-      </div>
-      <div class="type-sample body-text" style="color: #a09888;">
-        Body text appears in a lighter shade for readability against the dark background.
-      </div>
-      <div class="type-sample mono-text" style="color: #d4a520;">
-        STEP_01: CODE_SAMPLE
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="page-section">
+        <div class="page-section-label">Thrall tier header &mdash; bg=muted/30</div>
+        <div style="font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 4px;">&#x16CF; &middot; The Lone Wolf</div>
+        <div style="font-size: 15px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">One Device, One Wolf</div>
+        <div style="font-size: 11px; margin-bottom: 6px;">Your ledger lives on this device. No account required&hellip;</div>
+        <ul style="font-size: 10px; padding-left: 14px; margin: 0;">
+          <li>One device, one wolf &mdash; your ledger, your device</li>
+          <li>No sign-up required &mdash; start immediately</li>
+          <li>Privacy-first &mdash; data stays on your device</li>
+        </ul>
       </div>
     </div>
-
-    <div class="theme-variant" style="background: #faf8f3;">
-      <span class="theme-label">LIGHT THEME</span>
-      <div class="type-sample display-text" style="color: #1c1917;">
-        FENRIR LEDGER
-      </div>
-      <div class="type-sample heading-text" style="color: #1c1917;">
-        Section Heading
-      </div>
-      <div class="type-sample body-text" style="color: #6a6560;">
-        Body text appears in a darker shade for sufficient contrast on light backgrounds.
-      </div>
-      <div class="type-sample mono-text" style="color: #d4a520;">
-        STEP_01: CODE_SAMPLE
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="page-section">
+        <div class="page-section-label">Same structure &mdash; bg=muted/30 (dark variant)</div>
+        <div style="font-size: 15px; font-weight: 700; text-transform: uppercase;">One Device, One Wolf</div>
+        <div style="font-size: 10px; margin-top: 4px;">Identical content; Tailwind muted bg token adjusts in dark.</div>
       </div>
     </div>
   </div>
 
-  <!-- IMPLEMENTATION SPECS -->
-  <h2>Implementation Specifications</h2>
+  <h3>3B. Feature Row &mdash; Alternating 2-Column (image + text)</h3>
+  <p class="note">
+    All 12 features use this row layout. Odd-indexed features swap column order (image right, text left).
+    ThemedFeatureImage crossfades <code>{slug}-light.png</code> &lArr;&rArr; <code>{slug}-dark.png</code>. See &sect;6 for crossfade spec.
+  </p>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT (even index: image LEFT)</span>
+      <div class="feature-row">
+        <div class="feature-image-slot">
+          &lt;ThemedFeatureImage&gt;<br>
+          {slug}-light.png visible<br>
+          {slug}-dark.png opacity:0<br>
+          (hover: shimmer + scale + glow)
+        </div>
+        <div class="feature-content">
+          <div>
+            <span style="font-size: 18px; margin-right: 6px;">&#x16CA;</span>
+            <span class="feature-tier-badge">Thrall &mdash; Free</span>
+          </div>
+          <div class="feature-eyebrow">Feature 01 &middot; Card Tracking</div>
+          <div class="feature-h2">Add Your Cards</div>
+          <div class="feature-benefit">Your full card portfolio in one place.</div>
+          <div class="feature-body">Track issuer, card name, open date, credit limit&hellip;</div>
+          <ul class="feature-list"><li>Unlimited card entries</li><li>Annual fee date + sign-up bonus deadline</li></ul>
+          <div class="feature-quote">&ldquo;I hold every detail in my jaws.&rdquo;</div>
+        </div>
+      </div>
+    </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK (same row &mdash; image crossfades)</span>
+      <div class="feature-row">
+        <div class="feature-image-slot">
+          &lt;ThemedFeatureImage&gt;<br>
+          {slug}-light.png opacity:0<br>
+          {slug}-dark.png visible<br>
+          (500ms transition-opacity)
+        </div>
+        <div class="feature-content">
+          <div>
+            <span style="font-size: 18px; margin-right: 6px;">&#x16CA;</span>
+            <span class="feature-tier-badge">Thrall &mdash; Free</span>
+          </div>
+          <div class="feature-eyebrow">Feature 01 &middot; Card Tracking</div>
+          <div class="feature-h2">Add Your Cards</div>
+          <div class="feature-body">Identical content; only image variant changes.</div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Row bg=default. Border: border-border. Image slot: 340px &times; 340px for desktop (responsive). Odd-index rows: <code>md:flex-row-reverse</code>.</p>
+    </div>
+  </div>
+
+  <h3>3C. Karl Tier Divider</h3>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="tier-divider">
+        <div style="font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.25em; margin-bottom: 4px;">&#x16DF; &middot; Karl Tier &middot; $3.99 / month</div>
+        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Upgrade Your Arsenal</div>
+        <div style="font-size: 11px; max-width: 280px; margin: 0 auto 8px;">The following features require a Karl subscription&hellip;</div>
+        <span style="font-size: 11px; text-decoration: underline;">See full pricing &rarr;</span>
+      </div>
+    </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="tier-divider">
+        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase;">Upgrade Your Arsenal</div>
+        <div style="font-size: 10px; margin-top: 4px;">Identical structure &mdash; bg=muted/40, border-y border-border. &ldquo;See full pricing&rdquo; &rarr; /pricing.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>4. Pricing Page &mdash; /pricing</h2>
+
+  <div class="note">
+    <strong>Structure:</strong> Hero &rarr; Tier Cards (Thrall | Karl) &rarr; Full Comparison Table &rarr; FAQ Accordion &rarr; Final CTA.<br>
+    Thrall: outlined border (border-border). Karl: 2px border-foreground + &ldquo;Most Popular&rdquo; badge.
+    Comparison table: Free Foundations / Tracking &amp; Alerts / Data &amp; Devices / Households groups.
+  </div>
+
+  <h3>4A. Tier Cards</h3>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="pricing-rune">&#x16A6;</div>
+          <div class="pricing-name">Thrall</div>
+          <div class="pricing-tagline">The free fighter. No chains, no cost.</div>
+          <div class="pricing-price">$0</div>
+          <div class="pricing-sub">Free forever &mdash; no credit card required</div>
+          <div class="pricing-cta">Start Free &rarr;</div>
+          <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; border-top: 1px solid; padding-top: 6px; margin-bottom: 4px;">What&rsquo;s included</div>
+          <div class="pricing-feature-list">
+            <div><span class="check">&#x2713;</span>Add Your Cards &mdash; manual entry</div>
+            <div><span class="check">&#x2713;</span>The Dashboard &mdash; all active cards</div>
+            <div><span class="check">&#x2713;</span>Card Notes &mdash; free-text</div>
+            <div><span class="check">&#x2713;</span>Single User &middot; Google sign-in</div>
+            <div><span style="opacity:0.4;">&#x2717;</span> <s>Smart Import</s></div>
+            <div><span style="opacity:0.4;">&#x2717;</span> <s>Annual fee + bonus tracking</s></div>
+            <div><span style="opacity:0.4;">&#x2717;</span> <s>The Howl &mdash; alerts &amp; Ragnar&ouml;k</s></div>
+            <div><span style="opacity:0.4;">&#x2717;</span> <s>Velocity / Valhalla / Cloud Sync</s></div>
+            <div><span style="opacity:0.4;">&#x2717;</span> <s>Whole-Household / Data Export</s></div>
+          </div>
+        </div>
+        <div class="pricing-card featured">
+          <div class="pricing-badge">Most Popular</div>
+          <div class="pricing-rune">&#x16B2;</div>
+          <div class="pricing-name">Karl</div>
+          <div class="pricing-tagline">The free farmer. Owns the land he works.</div>
+          <div class="pricing-price">$3.99</div>
+          <div class="pricing-sub">per month &middot; cancel anytime</div>
+          <div class="pricing-cta" style="border-width: 2px; font-weight: 900;">Upgrade to Karl &rarr;</div>
+          <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; border-top: 1px solid; padding-top: 6px; margin-bottom: 4px;">Everything in Thrall, plus</div>
+          <div class="pricing-feature-list">
+            <div><span class="check">&#x2713;</span><strong>Smart Import</strong> &mdash; CSV / XLSX / AI</div>
+            <div><span class="check">&#x2713;</span><strong>Annual Fee Tracking</strong> &mdash; 60-day alerts</div>
+            <div><span class="check">&#x2713;</span><strong>Sign-Up Bonus Tracking</strong></div>
+            <div><span class="check">&#x2713;</span><strong>The Howl</strong> &mdash; full alerts &amp; Ragnar&ouml;k</div>
+            <div><span class="check">&#x2713;</span><strong>Velocity</strong> &mdash; Chase 5/24, Citi 1/8, Amex</div>
+            <div><span class="check">&#x2713;</span><strong>Valhalla</strong> &mdash; closed-card archive</div>
+            <div><span class="check">&#x2713;</span><strong>Cloud Sync</strong> &mdash; all devices</div>
+            <div><span class="check">&#x2713;</span><strong>Whole-Household</strong></div>
+            <div><span class="check">&#x2713;</span><strong>Data Export</strong> &mdash; CSV / JSON</div>
+          </div>
+        </div>
+      </div>
+      <p class="note" style="margin-bottom:0;">Light: Karl card uses border-foreground (dark 2px border on cream). &ldquo;Most Popular&rdquo; badge bg=foreground, text=background. CTA bg=foreground, text=background.</p>
+    </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="pricing-rune">&#x16A6;</div>
+          <div class="pricing-name">Thrall</div>
+          <div class="pricing-price">$0</div>
+          <div class="pricing-cta">Start Free &rarr;</div>
+          <div style="font-size: 10px;">Add Cards / Dashboard / Notes / Single User<br><s>[All Karl features excluded]</s></div>
+        </div>
+        <div class="pricing-card featured">
+          <div class="pricing-badge">Most Popular</div>
+          <div class="pricing-rune">&#x16B2;</div>
+          <div class="pricing-name">Karl</div>
+          <div class="pricing-price">$3.99</div>
+          <div class="pricing-cta" style="border-width: 2px; font-weight: 900;">Upgrade to Karl &rarr;</div>
+          <div style="font-size: 10px;">All Thrall + Smart Import + Fee &amp; Bonus Tracking + Howl + Velocity + Valhalla + Cloud Sync + Household + Export</div>
+        </div>
+      </div>
+      <p class="note" style="margin-bottom:0;">Dark: Karl border-foreground = light 2px border on deep bg. Badge bg=foreground (light), text=background (deep). Same structural layout &mdash; theme tokens do the work.</p>
+    </div>
+  </div>
+
+  <h3>4B. Comparison Table &amp; FAQ Accordion</h3>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <table class="pricing-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th style="text-align:center;">Thrall (Free)</th>
+            <th style="text-align:center;">Karl ($3.99/mo)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="section-row"><td colspan="3">Free Foundations</td></tr>
+          <tr><td>Add Cards / Dashboard / Notes</td><td style="text-align:center;">&#x2713;</td><td style="text-align:center;">&#x2713;</td></tr>
+          <tr><td>Google Sign-In</td><td style="text-align:center;">&#x2713;</td><td style="text-align:center;">&#x2713;</td></tr>
+          <tr class="section-row"><td colspan="3">Tracking &amp; Alerts</td></tr>
+          <tr><td>Annual fee tracking (60-day)</td><td style="text-align:center;">&mdash;</td><td style="text-align:center;">&#x2713;</td></tr>
+          <tr><td>Bonus tracking</td><td style="text-align:center;">&mdash;</td><td style="text-align:center;">&#x2713;</td></tr>
+          <tr><td>The Howl &amp; Ragnar&ouml;k alerts</td><td style="text-align:center;">&mdash;</td><td style="text-align:center;">&#x2713;</td></tr>
+          <tr class="section-row"><td colspan="3">Data &amp; Devices</td></tr>
+          <tr><td>Smart Import / Velocity / Valhalla</td><td style="text-align:center;">&mdash;</td><td style="text-align:center;">&#x2713;</td></tr>
+          <tr><td>Cloud Sync / Export</td><td style="text-align:center;">&mdash;</td><td style="text-align:center;">&#x2713;</td></tr>
+          <tr class="section-row"><td colspan="3">Households</td></tr>
+          <tr><td>Single User</td><td style="text-align:center;">&#x2713;</td><td style="text-align:center;">&#x2713;</td></tr>
+          <tr><td>Whole-Household</td><td style="text-align:center;">&mdash;</td><td style="text-align:center;">&#x2713;</td></tr>
+        </tbody>
+      </table>
+      <div style="border: 1px solid; padding: 10px; margin-top: 10px;">
+        <div style="font-family: monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 8px;">&#x16B9; &middot; Frequently Asked</div>
+        <div style="border-bottom: 1px solid; padding: 8px 0; display: flex; justify-content: space-between; font-size: 12px; font-weight: 600;">Is Thrall really free forever? <span>&#x25BC;</span></div>
+        <div style="padding: 8px 0 12px; font-size: 11px; border-bottom: 1px solid;">Yes. Thrall is free forever&hellip;</div>
+        <div style="padding: 8px 0; display: flex; justify-content: space-between; font-size: 12px;">Can I switch tiers anytime? <span>&#x25B6;</span></div>
+        <div style="padding: 8px 0; display: flex; justify-content: space-between; font-size: 12px;">What happens to my data if I downgrade? <span>&#x25B6;</span></div>
+      </div>
+    </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div style="font-size: 11px; border: 1px solid; padding: 10px;">
+        Identical table &amp; FAQ accordion structure.<br><br>
+        Table: border-border (subtle). Section rows: bg=muted/50. Header: border-b-2 border-foreground.<br>
+        FAQ: PricingFaqAccordion client component. Chevron rotates 180&deg; on open.<br>
+        FAQ border: border-border. Background: default page bg.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>5. About Page &mdash; /about</h2>
+
+  <div class="note">
+    <strong>Sections (Issue #633 redesign):</strong> Origin Hero (runic grid bg, Gleipnir myth) &rarr; Why the Wolf (2-col text) &rarr; The Agents of Asgard (5 dual-realm portrait rows) &rarr; The Forge (agent chain visualization) &rarr; Final CTA.<br>
+    Key: Agent rows contain dual-realm lore and portraits that crossfade with theme. Full crossfade spec in &sect;6.
+  </div>
+
+  <h3>5A. Origin Hero</h3>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="page-section" style="text-align: center;">
+        <div class="page-section-label">Origin hero &mdash; bg=card &middot; runic grid overlay (opacity 3%)</div>
+        <div style="font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4em; margin-bottom: 8px;">&#x16A0; &#x16D6; &#x16BE; &#x16B1; &#x16A2; &#x16B1;</div>
+        <div style="font-size: 20px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 8px;">
+          The Wolf Was Not Bound.<br>You Are.
+        </div>
+        <div style="font-size: 13px; font-style: italic; margin-bottom: 10px;">Every annual fee is Gleipnir &mdash; the impossible chain</div>
+        <div style="font-size: 11px; text-align: left; max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px;">
+          <p style="margin:0;">In Norse mythology, <u>Fenrir</u> was the wolf prophesied to devour Odin at <u>Ragnar&ouml;k</u>. The gods bound him with <u>Gleipnir</u>&hellip;</p>
+          <p style="margin:0; font-weight: 700;">Credit card companies are your Gleipnir.</p>
+          <p style="margin:0; font-weight: 700;">Fenrir Ledger breaks the chain.</p>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Light: runic grid texture layer renders against cream bg. Myth links (.myth-link): dotted underline, text-primary, aria-label, Wikipedia href.</p>
+    </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="page-section" style="text-align: center;">
+        <div class="page-section-label">Origin hero &mdash; bg=card (deep) &middot; runic grid opacity 3%</div>
+        <div style="font-size: 20px; font-weight: 900; text-transform: uppercase;">The Wolf Was Not Bound.<br>You Are.</div>
+        <div style="font-size: 11px; margin-top: 8px;">Identical content. Theme changes: runic grid renders against deep bg &mdash; same opacity, higher visual contrast.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>5B. Agents of Asgard &mdash; Dual-Realm Portrait Rows</h3>
+  <p class="note">
+    5 agents. Each row: portrait (340&times;340px) + text col. Even index: portrait left. Odd: portrait right (<code>md:flex-row-reverse</code>).<br>
+    Portrait col: DualRealmPortrait + RealmBadge + HoverOverlay.<br>
+    Text col: name + role + bio + RealmLore (crossfade).<br>
+    Rune dividers between rows at opacity 20%. Framer Motion: even rows slide from left, odd from right. Mobile: portrait-above-text.
+  </p>
+
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT &mdash; Agent row (index 0, portrait LEFT)</span>
+      <div class="agent-row">
+        <div class="agent-portrait-col">
+          <div class="agent-portrait-slot">
+            <div style="font-size: 8px; text-align: center; padding: 4px; line-height: 1.4;">
+              {slug}-light.png<br>opacity:1<br>
+              {slug}-dark.png<br>opacity:0
+            </div>
+            <div class="portrait-crossfade-note">xfade</div>
+          </div>
+          <div class="realm-badge">&#x2600; LJ&Oacute;S&Aacute;LFAR &middot; ALFHEIM</div>
+          <div style="font-size: 8px; border: 1px dashed; padding: 2px 5px;">HoverOverlay: glow</div>
+        </div>
+        <div class="agent-text-col">
+          <div>
+            <div class="agent-name">Freya</div>
+            <div class="agent-role">Product Owner</div>
+          </div>
+          <div class="agent-bio">Guardian of the product vision. She shapes what Fenrir becomes&hellip;</div>
+          <div class="realm-lore-block">
+            <div class="realm-lore-title">&#x2600; Lj&oacute;s&aacute;lfar Aspect &middot; Light Realm (visible)</div>
+            <div class="realm-lore-quote">&ldquo;Keeper of the harvest, she nurtures ideas into being&hellip;&rdquo;</div>
+            <div class="realm-lore-aspect">Benevolent &middot; Guiding &middot; Constructive</div>
+            <div style="position:absolute;top:4px;right:4px;font-size:8px;border:1px solid;padding:1px 3px;">opacity:1</div>
+          </div>
+          <div class="realm-lore-block" style="border-left-style:dashed; opacity:0.3;">
+            <div class="realm-lore-title">&#x263E; Svart&aacute;lfar Aspect (hidden in light)</div>
+            <div style="position:absolute;top:4px;right:4px;font-size:8px;border:1px solid;padding:1px 3px;">opacity:0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK &mdash; Same agent row</span>
+      <div class="agent-row">
+        <div class="agent-portrait-col">
+          <div class="agent-portrait-slot">
+            <div style="font-size: 8px; text-align: center; padding: 4px; line-height: 1.4;">
+              {slug}-light.png<br>opacity:0<br>
+              {slug}-dark.png<br>opacity:1
+            </div>
+            <div class="portrait-crossfade-note">xfade</div>
+          </div>
+          <div class="realm-badge">&#x263E; SVART&Aacute;LFAR &middot; SVARTALFHEIM</div>
+          <div style="font-size: 8px; border: 1px dashed; padding: 2px 5px;">HoverOverlay: glow</div>
+        </div>
+        <div class="agent-text-col">
+          <div>
+            <div class="agent-name">Freya</div>
+            <div class="agent-role">Product Owner</div>
+          </div>
+          <div class="agent-bio">Guardian of the product vision&hellip;</div>
+          <div class="realm-lore-block" style="border-left-style:dashed; opacity:0.3;">
+            <div class="realm-lore-title">&#x2600; Lj&oacute;s&aacute;lfar Aspect (hidden in dark)</div>
+            <div style="position:absolute;top:4px;right:4px;font-size:8px;border:1px solid;padding:1px 3px;">opacity:0</div>
+          </div>
+          <div class="realm-lore-block">
+            <div class="realm-lore-title">&#x263E; Svart&aacute;lfar Aspect &middot; Dark Realm (visible)</div>
+            <div class="realm-lore-quote">&ldquo;The V&ouml;lva who sees all futures and chooses the cruelest path to victory&hellip;&rdquo;</div>
+            <div class="realm-lore-aspect">Fierce &middot; Prophetic &middot; Relentless</div>
+            <div style="position:absolute;top:4px;right:4px;font-size:8px;border:1px solid;padding:1px 3px;">opacity:1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>5C. All 5 Agents &mdash; Layout &amp; Crossfade Summary</h3>
+  <div style="border: 1px solid; padding: 14px; margin-bottom: 16px;">
+    <table class="spec-table">
+      <thead>
+        <tr><th>Index</th><th>Agent</th><th>Role</th><th>Portrait Order</th><th>Hover Effect</th><th>Light Aspect (words)</th><th>Dark Aspect (words)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>0 (even)</td><td>Freya</td><td>Product Owner</td><td>Portrait LEFT</td><td>glow</td><td>Benevolent &middot; Guiding</td><td>Fierce &middot; Prophetic</td></tr>
+        <tr><td>1 (odd)</td><td>Luna</td><td>UX Designer</td><td>Portrait RIGHT</td><td>shimmer</td><td>Deliberate &middot; Luminous</td><td>Fateful &middot; Inexorable</td></tr>
+        <tr><td>2 (even)</td><td>FiremanDecko</td><td>Principal Engineer</td><td>Portrait LEFT</td><td>fire</td><td>Patient &middot; Precise</td><td>Incendiary &middot; Absolute</td></tr>
+        <tr><td>3 (odd)</td><td>Loki</td><td>QA Tester</td><td>Portrait RIGHT</td><td>glitch</td><td>Curious &middot; Preventive</td><td>Chaotic &middot; Relentless</td></tr>
+        <tr><td>4 (even)</td><td>Heimdall</td><td>Security Guardian</td><td>Portrait LEFT</td><td>scan</td><td>Vigilant &middot; Patient</td><td>Omniscient &middot; Merciless</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>6. Dual-Realm Lore Crossfade Pattern</h2>
+
+  <div class="note">
+    <strong>Pattern:</strong> Both light and dark variants always in DOM. Opacity toggles 0&harr;1 via <code>resolvedTheme</code> from <code>useTheme()</code>.
+    No mount/unmount &mdash; pure CSS transition. <code>aria-hidden</code> toggled for accessibility.
+    Applies to: DualRealmPortrait, RealmBadge, RealmLore (about page) + ThemedFeatureImage (features page).
+  </div>
+
+  <div class="crossfade-diagram"><!-- Dual-Realm Crossfade Implementation Diagram — Issue #642 -->
+
+REALM LORE CROSSFADE (About page — RealmLore component):
+┌─ div.relative.min-h-[120px] ──────────────────────────────────────┐
+│  ┌─ div [LIGHT LORE] (position: relative) ──────────────────────┐ │
+│  │  title: "☀ Ljósálfar Aspect · Light Realm"                  │ │
+│  │  quote: light-specific atmospheric text                      │ │
+│  │  aspect: "Benevolent · Guiding · Constructive"               │ │
+│  │  className: "transition-opacity duration-500"                │ │
+│  │  style={{ opacity: isDark ? 0 : 1 }}                        │ │
+│  │  aria-hidden={isDark}                                        │ │
+│  └──────────────────────────────────────────────────────────────┘ │
+│  ┌─ div [DARK LORE] (position: absolute, inset-0) ──────────────┐ │
+│  │  title: "☽ Svartálfar Aspect · Dark Realm"                  │ │
+│  │  quote: DIFFERENT atmospheric text (different content)       │ │
+│  │  aspect: "Fierce · Prophetic · Relentless"                   │ │
+│  │  className: "transition-opacity duration-500"                │ │
+│  │  style={{ opacity: isDark ? 1 : 0 }}                        │ │
+│  │  aria-hidden={!isDark}                                       │ │
+│  └──────────────────────────────────────────────────────────────┘ │
+└───────────────────────────────────────────────────────────────────┘
+
+PORTRAIT CROSSFADE (DualRealmPortrait):
+┌─ div.relative.w-[340px].h-[340px].border-2.overflow-hidden ──────┐
+│  &lt;Image src="/images/team/{slug}-light.png"                      │
+│         style={{ opacity: isDark ? 0 : 1 }}                      │
+│         className="absolute inset-0 w-full h-full object-cover   │
+│                    transition-opacity duration-500" /&gt;           │
+│  &lt;Image src="/images/team/{slug}-dark.png"                       │
+│         style={{ opacity: isDark ? 1 : 0 }}                      │
+│         className="absolute inset-0 w-full h-full object-cover   │
+│                    transition-opacity duration-500" /&gt;           │
+│  &lt;!-- Rune badge top-right, opacity 25% → 70% on group-hover --&gt; │
+│  &lt;!-- HoverOverlay: personality-specific effect div --&gt;         │
+└───────────────────────────────────────────────────────────────────┘
+
+REALM BADGE CROSSFADE (below portrait — aria-live="polite"):
+┌─ div.relative.h-7 ────────────────────────────────────────────────┐
+│  &lt;span [LIGHT] "☀ LJÓSÁLFAR · ALFHEIM"                          │
+│         style={{ opacity: isDark ? 0 : 1 }} aria-hidden={isDark} /&gt;│
+│  &lt;span [DARK]  "☽ SVARTÁLFAR · SVARTALFHEIM"                     │
+│         style={{ opacity: isDark ? 1 : 0 }} aria-hidden={!isDark}/&gt;│
+└───────────────────────────────────────────────────────────────────┘
+
+THEMED FEATURE IMAGE (ThemedFeatureImage — features page):
+┌─ div.relative (aspect-ratio slot) ────────────────────────────────┐
+│  &lt;Image src="/images/features/{slug}-light.png"                  │
+│         style={{ opacity: isDark ? 0 : 1 }}                      │
+│         className="transition-opacity duration-500" /&gt;           │
+│  &lt;Image src="/images/features/{slug}-dark.png"                   │
+│         style={{ opacity: isDark ? 1 : 0 }}                      │
+│         className="transition-opacity duration-500" /&gt;           │
+│  Hover: shimmer overlay + scale transform + glow drop-shadow     │
+│  (these are implementation details — not in wireframe CSS)       │
+└───────────────────────────────────────────────────────────────────┘
+
+TRANSITION: transition-opacity duration-500 ease-in-out
+            @media (prefers-reduced-motion: reduce): transition-none</div>
+
+  <!-- ============================================================ -->
+  <h2>7. Free Trial Page &mdash; /free-trial</h2>
+
+  <div class="note">
+    <strong>Sections:</strong> Hero (wolf voice, first person) &rarr; Feature Showcase (7-card grid, 3/2/1-col) &rarr; Timeline (3-step Day 1/15/30) &rarr; After Trial (Thrall vs Karl tier compare) &rarr; Final CTA.<br>
+    Wolf speaks in first person throughout (&ldquo;I Hunt For 30 Days.&rdquo;). No dual-realm crossfade on this page. Framer Motion whileInView stagger on all sections.
+  </div>
+
+  <h3>7A. Hero</h3>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div style="border: 2px solid; padding: 16px; text-align: center;">
+        <div style="font-family: monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.4em; margin-bottom: 8px;">&#x16A0; &middot; I Am Unbound &middot; &#x16A0;</div>
+        <div style="font-size: 22px; font-weight: 900; text-transform: uppercase; line-height: 1.05; margin-bottom: 8px;">I Hunt<br>For 30 Days.<br>Free.</div>
+        <div style="font-size: 12px; font-style: italic; max-width: 400px; margin: 0 auto 8px;">I am Fenrir. Give me thirty days and I will guard every card in your wallet&hellip;</div>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap;">
+          <div class="hero-cta">Unleash the Wolf</div>
+          <div class="hero-cta" style="border-width: 1px;">See What I Can Do</div>
+        </div>
+        <div style="margin-top: 8px; font-size: 11px; font-style: italic;">No credit card. No chains. I hunt from day one.</div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Hero: border-b-2 border-foreground (heavy divider below). Max-w: 1100px mx-auto. Framer Motion stagger on mount.</p>
+    </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div style="border: 2px solid; padding: 16px; text-align: center;">
+        <div style="font-family: monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.4em; margin-bottom: 6px;">&#x16A0; &middot; I Am Unbound &middot; &#x16A0;</div>
+        <div style="font-size: 22px; font-weight: 900; text-transform: uppercase; line-height: 1.05;">I Hunt<br>For 30 Days.<br>Free.</div>
+        <div style="font-size: 10px; margin-top: 8px;">Identical structure. border-foreground = light border on deep bg. prefers-reduced-motion: skip y-offset, keep opacity.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>7B. Feature Showcase &mdash; 7 Cards (3-col / 2-col / 1-col)</h3>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="trial-feature-grid">
+        <div class="trial-feature-card"><div class="trial-rune-box">&#x16B2;</div><div class="trial-ordinal">Feature 01</div><div class="trial-title">I Watch Every Card</div><div class="trial-body">Name, issuer, fee date, bonus deadline&hellip;</div><div class="trial-badge">Yours Free</div></div>
+        <div class="trial-feature-card"><div class="trial-rune-box">&#x16BA;</div><div class="trial-ordinal">Feature 02</div><div class="trial-title">I Count Down Every Fee</div><div class="trial-body">Live countdown to annual fees&hellip;</div><div class="trial-badge">Yours Free</div></div>
+        <div class="trial-feature-card"><div class="trial-rune-box">&#x16D7;</div><div class="trial-ordinal">Feature 03</div><div class="trial-title">I Guard the Whole Pack</div><div class="trial-body">Full household in one ledger&hellip;</div><div class="trial-badge">Yours Free</div></div>
+        <div class="trial-feature-card"><div class="trial-rune-box">&#x16B1;</div><div class="trial-ordinal">Feature 04</div><div class="trial-title">I Devour Your Spreadsheets</div><div class="trial-body">CSV, Google Sheets, paste URL&hellip;</div><div class="trial-badge">Yours Free</div></div>
+        <div class="trial-feature-card"><div class="trial-rune-box">&#x16CF;</div><div class="trial-ordinal">Feature 05</div><div class="trial-title">I Remember the Fallen</div><div class="trial-body">Valhalla &mdash; hall of the honored dead&hellip;</div><div class="trial-badge">Yours Free</div></div>
+        <div class="trial-feature-card"><div class="trial-rune-box">&#x16DF;</div><div class="trial-ordinal">Feature 06</div><div class="trial-title">I Am No Ordinary Ledger</div><div class="trial-body">Dark war room. Elder Futhark runes&hellip;</div><div class="trial-badge">Yours Free</div></div>
+        <div class="trial-feature-card" style="grid-column: 2;"><div class="trial-rune-box">&#x16A2;</div><div class="trial-ordinal">Feature 07</div><div class="trial-title">I Follow You Everywhere</div><div class="trial-body">Full power on a phone screen&hellip;</div><div class="trial-badge">Yours Free</div></div>
+      </div>
+    </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="trial-feature-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="trial-feature-card"><div class="trial-rune-box">&#x16B2;</div><div class="trial-title">I Watch Every Card</div><div class="trial-badge">Yours Free</div></div>
+        <div class="trial-feature-card"><div class="trial-rune-box">&#x16BA;</div><div class="trial-title">I Count Down Every Fee</div><div class="trial-badge">Yours Free</div></div>
+        <div class="trial-feature-card"><div class="trial-rune-box">&#x16D7;</div><div class="trial-title">I Guard the Whole Pack</div><div class="trial-badge">Yours Free</div></div>
+        <div class="trial-feature-card"><div class="trial-rune-box">&#x16B1;</div><div class="trial-title">I Devour Your Spreadsheets</div><div class="trial-badge">Yours Free</div></div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Dark: cards border-border (subtle). Rune box border-border. &ldquo;Yours Free&rdquo; badge: border-border, text-primary. Framer Motion: whileInView stagger, staggerChildren 0.08s.</p>
+    </div>
+  </div>
+
+  <h3>7C. Timeline &mdash; 3 Steps</h3>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="timeline-grid">
+        <div class="timeline-step">
+          <div style="font-family:monospace;font-size:9px;text-transform:uppercase;margin-bottom:4px;">Day 1</div>
+          <div style="font-size:16px;margin-bottom:4px;">&#x16A0;</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;">You Feed Me a Card</div>
+          <div style="font-size:10px;">Add your first card and I open my eyes&hellip;</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;padding-top:20px;">&rarr;</div>
+        <div class="timeline-step milestone">
+          <div style="font-family:monospace;font-size:9px;text-transform:uppercase;margin-bottom:4px;">Day 15 &#x2605;</div>
+          <div style="font-size:16px;margin-bottom:4px;">&#x16BA;</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;">I Show You the Kill</div>
+          <div style="font-size:10px;">Halfway through, I report back&hellip;</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;padding-top:20px;">&rarr;</div>
+        <div class="timeline-step">
+          <div style="font-family:monospace;font-size:9px;text-transform:uppercase;margin-bottom:4px;">Day 30</div>
+          <div style="font-size:16px;margin-bottom:4px;">&#x16B1;</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;">You Decide My Fate</div>
+          <div style="font-size:10px;">Keep me at full strength or let me rest&hellip;</div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Day 15: border-2 border-foreground (milestone emphasis). Others: border-border. Mobile: vertical stack with &darr; arrows.</p>
+    </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="timeline-grid">
+        <div class="timeline-step" style="font-size:10px;"><strong>Day 1</strong><br>&#x16A0; You Feed Me a Card</div>
+        <div style="padding-top:16px;text-align:center;">&rarr;</div>
+        <div class="timeline-step milestone" style="font-size:10px;"><strong>Day 15 (milestone)</strong><br>&#x16BA; I Show You the Kill</div>
+        <div style="padding-top:16px;text-align:center;">&rarr;</div>
+        <div class="timeline-step" style="font-size:10px;"><strong>Day 30</strong><br>&#x16B1; You Decide My Fate</div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Dark: border-foreground on Day 15 = light 2px border. Framer Motion whileInView stagger, staggerChildren 0.4s.</p>
+    </div>
+  </div>
+
+  <h3>7D. After Trial &mdash; Thrall vs Karl Tier Compare</h3>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="tier-compare-grid">
+        <div class="tier-card" style="order: 2;">
+          <div class="pricing-name" style="font-size:13px;">Thrall</div>
+          <div style="font-size:11px;font-style:italic;margin-bottom:4px;">I rest by the fire. Basic watch. Still loyal.</div>
+          <div style="font-size:18px;font-weight:900;">Free</div>
+          <div style="font-size:10px;margin-bottom:8px;">Forever. No chains required.</div>
+          <div style="font-size:10px;border-top:1px solid;padding-top:6px;margin-bottom:8px;display:flex;flex-direction:column;gap:3px;">
+            <div>&#x2713; Up to 5 cards in my jaws</div>
+            <div>&#x2713; Annual fee tracking</div>
+            <div>&#x2713; Sign-up bonus tracking</div>
+            <div>&#x2713; Card notes &middot; Mobile dashboard</div>
+            <div style="opacity:0.4;">&#x2300; Unlimited cards (Karl only)</div>
+            <div style="opacity:0.4;">&#x2300; The Howl / Valhalla / Smart Import</div>
+            <div style="opacity:0.4;">&#x2300; Household / Cloud sync</div>
+          </div>
+          <div class="pricing-cta" style="border-width:1px;">Let Me Rest</div>
+        </div>
+        <div class="tier-card featured" style="order: 1; position: relative;">
+          <div class="tier-card-badge">Full Fury</div>
+          <div class="pricing-name" style="font-size:13px;">Karl</div>
+          <div style="font-size:11px;font-style:italic;margin-bottom:4px;">I hunt at full strength. Every fang. Unleashed.</div>
+          <div style="font-size:18px;font-weight:900;">$3.99<span style="font-size:11px;font-weight:400;">/mo</span></div>
+          <div style="font-size:10px;margin-bottom:8px;">Slip the chain anytime. No annual binding.</div>
+          <div style="font-size:10px;border-top:1px solid;padding-top:6px;margin-bottom:8px;display:flex;flex-direction:column;gap:3px;">
+            <div>&#x2713; Everything in Thrall</div>
+            <div>&#x2713; Unlimited cards</div>
+            <div>&#x2713; The Howl &mdash; live fee alerts</div>
+            <div>&#x2713; Valhalla &mdash; hall of the fallen</div>
+            <div>&#x2713; Smart Import (URL / CSV / Sheets)</div>
+            <div>&#x2713; Household management</div>
+            <div>&#x2713; Cloud sync &middot; Data export</div>
+            <div>&#x2713; Priority updates</div>
+          </div>
+          <div class="pricing-cta" style="border-width:2px;font-weight:900;">Keep Me Unleashed &mdash; $3.99/mo</div>
+        </div>
+      </div>
+      <div style="border:1px solid;padding:10px;margin-top:10px;text-align:center;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;">I Never Forget</div>
+        <div style="font-size:10px;">Whether you choose Karl or Thrall, every card you entrusted to me stays in the ledger&hellip;</div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Mobile: Karl shows first via <code>order:-1 / sm:order-2</code>. Data safety note block: border-border.</p>
+    </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div class="tier-compare-grid">
+        <div class="tier-card" style="font-size:10px;">
+          <strong>Thrall &mdash; Free</strong><br>
+          &#x2713; 5 cards + basic features<br>
+          &#x2300; Karl features excluded
+        </div>
+        <div class="tier-card featured" style="font-size:10px; position:relative;">
+          <div class="tier-card-badge">Full Fury</div>
+          <strong>Karl &mdash; $3.99/mo</strong><br>
+          &#x2713; All features + Unlimited
+        </div>
+      </div>
+      <p class="note" style="margin-top:8px; margin-bottom:0;">Dark: Karl border-foreground (2px) = light border. &ldquo;Full Fury&rdquo; badge: bg=background, border-foreground.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>8. Marketing Footer (Both Themes)</h2>
+  <div class="theme-comparison">
+    <div class="theme-variant">
+      <span class="theme-label">LJ&Oacute;S&Aacute;LFAR &mdash; LIGHT</span>
+      <div class="site-footer">
+        <div class="footer-grid">
+          <div>
+            <div class="footer-col-label">Brand</div>
+            <div style="font-size:13px;font-weight:700;">&#x16A0; FENRIR LEDGER</div>
+            <div style="font-size:10px;font-style:italic;margin:4px 0;">Every reward has a deadline&hellip;</div>
+            <div style="font-family:monospace;font-size:9px;letter-spacing:0.2em;opacity:0.4;">&#x16A0; &#x16D6; &#x16BE; &#x16B1; &#x16A2; &#x16B1;</div>
+          </div>
+          <div>
+            <div class="footer-col-label">Navigation</div>
+            <div style="font-size:11px;display:flex;flex-direction:column;gap:3px;">
+              <span>Features</span><span>Pricing</span><span>About</span>
+              <span>Free Trial</span><span>Prose Edda (Chronicles)</span>
+              <span>Privacy Policy &middot; Terms of Service</span>
+            </div>
+          </div>
+          <div>
+            <div class="footer-col-label">CTA + Credits</div>
+            <div style="font-size:11px;border:2px solid;padding:6px 10px;text-align:center;margin-bottom:8px;font-weight:700;text-transform:uppercase;">Open the Ledger</div>
+            <div style="font-size:9px;">Built by the pack &middot; Freya &middot; Luna &middot; FiremanDecko &middot; Loki &middot; Heimdall</div>
+            <div style="font-size:9px;margin-top:4px;">&copy; 2026 Fenrir Ledger</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="theme-variant">
+      <span class="theme-label">SVART&Aacute;LFAR &mdash; DARK</span>
+      <div style="font-size:11px;border:1px solid;padding:10px;">
+        Identical footer structure. Theme-aware via Tailwind tokens: text-foreground, text-muted-foreground, border-border, text-primary.<br><br>
+        Footer border-top: border-border.<br><br>
+        Easter egg triggers (per footer wireframe):<br>
+        &middot; &copy; click &rarr; Gleipnir Hunt #5 &ldquo;Breath of a Fish&rdquo;<br>
+        &middot; &ldquo;Loki&rdquo; 7-click &rarr; Loki Mode (Easter Egg #3)
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>9. Mobile 375px Responsive Summary</h2>
+
+  <div style="max-width: 375px; border: 2px solid; padding: 12px; margin-bottom: 24px;">
+    <div class="mobile-note">375px Mobile Viewport</div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;border:1px solid;padding:8px;margin-bottom:8px;font-size:11px;">
+      <span style="font-weight:700;">&#x16A0; FENRIR</span>
+      <span>&#x2261; Menu</span>
+    </div>
+
+    <div style="border:1px solid;padding:10px;margin-bottom:8px;text-align:center;">
+      <div style="width:100px;height:100px;border:2px dashed;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:10px;">logo<br>100px</div>
+      <div style="font-size:13px;font-weight:900;text-transform:uppercase;">FENRIR LEDGER</div>
+      <div style="font-size:11px;font-style:italic;margin:4px 0;">Every reward has a deadline.</div>
+      <div style="border:2px solid;padding:8px;margin-top:8px;font-weight:700;font-size:11px;text-transform:uppercase;">Break the Chain</div>
+    </div>
+
+    <div style="font-family:monospace;font-size:9px;text-transform:uppercase;margin-bottom:4px;">Features &mdash; 1-col stacked</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px;">
+      <div class="card-item" style="font-size:10px;">&#x16B2; The Fee-Serpent &mdash; annual fee trap</div>
+      <div class="card-item" style="font-size:10px;">&#x16BA; The Promo Tide &mdash; promo window</div>
+    </div>
+
+    <div style="font-family:monospace;font-size:9px;text-transform:uppercase;margin-bottom:4px;">Pricing &mdash; Karl first (order:-1)</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px;">
+      <div style="border:2px solid;padding:8px;text-align:center;font-size:10px;"><strong>KARL &mdash; $3.99/mo</strong> (shows first)</div>
+      <div style="border:1px solid;padding:8px;text-align:center;font-size:10px;"><strong>THRALL &mdash; Free</strong></div>
+    </div>
+
+    <div style="font-family:monospace;font-size:9px;text-transform:uppercase;margin-bottom:4px;">Feature rows &mdash; image above text</div>
+    <div style="border:1px solid;padding:8px;font-size:10px;margin-bottom:6px;">
+      <div style="border:2px dashed;height:70px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;">Feature image (full width)</div>
+      Feature content stacked below image
+    </div>
+
+    <div style="font-family:monospace;font-size:9px;text-transform:uppercase;margin-bottom:4px;">About &mdash; portrait above text</div>
+    <div style="border:1px solid;padding:8px;font-size:10px;">
+      <div style="border:2px dashed;height:80px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;">Agent portrait (full width 340px)</div>
+      <div style="border:1px solid;padding:3px;text-align:center;font-size:9px;margin-bottom:4px;">&#x2600; LJ&Oacute;S&Aacute;LFAR &middot; ALFHEIM</div>
+      Agent name + role + bio + realm lore (stacked)
+    </div>
+  </div>
+
   <table class="spec-table">
     <thead>
-      <tr>
-        <th>Element</th>
-        <th>Dark Theme</th>
-        <th>Light Theme</th>
-        <th>Notes</th>
-      </tr>
+      <tr><th>Breakpoint</th><th>Nav</th><th>Hero logo</th><th>Card grid</th><th>Feature rows</th><th>Pricing</th><th>About agents</th></tr>
     </thead>
     <tbody>
-      <tr>
-        <td>Page Background</td>
-        <td>--void (#12100e)</td>
-        <td>--cream (#faf8f3)</td>
-        <td>Warm tones in both modes</td>
-      </tr>
-      <tr>
-        <td>Card Background</td>
-        <td>--forge (#1c1917)</td>
-        <td>white (#ffffff)</td>
-        <td>Slight elevation from page bg</td>
-      </tr>
-      <tr>
-        <td>Primary Text</td>
-        <td>--text-saga (#f0ede4)</td>
-        <td>--text-dark (#1c1917)</td>
-        <td>High contrast for readability</td>
-      </tr>
-      <tr>
-        <td>Secondary Text</td>
-        <td>--text-rune (#a09888)</td>
-        <td>--text-dim (#6a6560)</td>
-        <td>60-70% opacity of primary</td>
-      </tr>
-      <tr>
-        <td>Gold Accent</td>
-        <td>--gold (#d4a520)</td>
-        <td>--gold (#d4a520)</td>
-        <td>Unchanged - brand color</td>
-      </tr>
-      <tr>
-        <td>Borders</td>
-        <td>--border (#3a3530)</td>
-        <td>--border-light (#e0ddd4)</td>
-        <td>Subtle definition</td>
-      </tr>
-      <tr>
-        <td>Theme Toggle Icon</td>
-        <td>Moon (☾)</td>
-        <td>Sun (☀)</td>
-        <td>Shows current mode</td>
-      </tr>
-      <tr>
-        <td>Shadow/Glow</td>
-        <td>Gold/ice-blue glows</td>
-        <td>Subtle shadows only</td>
-        <td>Less glow in light mode</td>
-      </tr>
+      <tr><td>&lt;640px (375px min)</td><td>Hamburger</td><td>Above text, centered</td><td>1-col</td><td>Image above text</td><td>2-col stacked</td><td>Portrait above text</td></tr>
+      <tr><td>640&ndash;1024px</td><td>Links visible</td><td>Left of text</td><td>2-col</td><td>2-col</td><td>2-col</td><td>Portrait + text side</td></tr>
+      <tr><td>&gt;1024px</td><td>Full nav + CTA</td><td>Left of text</td><td>3-col</td><td>2-col alternating</td><td>2-col max-w-900</td><td>2-col alternating L/R</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2>10. Implementation Token Reference</h2>
+
+  <table class="spec-table">
+    <thead>
+      <tr><th>Element</th><th>Tailwind Token</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Page background</td><td>bg-background</td><td>Cream (light) / deep (dark)</td></tr>
+      <tr><td>Card / section bg</td><td>bg-card</td><td>Hero, onboarding, CTA sections</td></tr>
+      <tr><td>Primary text</td><td>text-foreground</td><td>Headings, bold copy</td></tr>
+      <tr><td>Secondary text</td><td>text-muted-foreground</td><td>Body copy, captions, dates</td></tr>
+      <tr><td>Accent / runes</td><td>text-primary</td><td>Elder Futhark runes, eyebrows, badges</td></tr>
+      <tr><td>Default borders</td><td>border-border</td><td>All standard card / section borders</td></tr>
+      <tr><td>Strong borders (Karl, milestone)</td><td>border-foreground (2px)</td><td>Karl pricing card, Day 15 step, hero</td></tr>
+      <tr><td>Muted background</td><td>bg-muted/30 or bg-muted/40</td><td>Tier dividers, section headers</td></tr>
+      <tr><td>Wolf logo</td><td>block dark:hidden (light) / hidden dark:block (dark)</td><td>Display swap &mdash; no crossfade on logo</td></tr>
+      <tr><td>Agent portrait</td><td>{slug}-light.png opacity 1/0; {slug}-dark.png opacity 0/1</td><td>500ms transition-opacity crossfade</td></tr>
+      <tr><td>Feature image (ThemedFeatureImage)</td><td>Same crossfade pattern + hover shimmer/scale/glow</td><td>/features page only</td></tr>
+      <tr><td>Realm lore (about)</td><td>Light block opacity:1/0; dark block opacity:0/1</td><td>aria-hidden toggled; 500ms</td></tr>
+      <tr><td>Realm badge (about)</td><td>&ldquo;&#x2600; LJ&Oacute;S&Aacute;LFAR&rdquo; / &ldquo;&#x263E; SVART&Aacute;LFAR&rdquo;</td><td>aria-live=&ldquo;polite&rdquo;; 500ms</td></tr>
+      <tr><td>Myth links</td><td>text-primary + dotted underline</td><td>Wikipedia hrefs; aria-label on each</td></tr>
+      <tr><td>Framer Motion</td><td>Scroll-triggered stagger (features, about, trial)</td><td>prefers-reduced-motion: skip y-offset only</td></tr>
     </tbody>
   </table>
 
   <div class="note">
-    <strong>Implementation Strategy:</strong><br>
-    1. Use CSS custom properties that switch based on [data-theme] attribute on body<br>
-    2. Default to system preference via @media (prefers-color-scheme)<br>
-    3. Store user's manual theme choice in localStorage<br>
-    4. Theme toggle in nav updates data-theme and localStorage<br>
-    5. All color values should reference CSS variables, never hardcoded hex<br>
-    6. Test both themes for WCAG AA contrast compliance<br>
-    7. Consider reduced motion preferences for theme transition animations
+    <strong>WCAG 2.1 AA</strong>
+    Both themes: 4.5:1 for normal text, 3:1 for large text. Verify text-muted-foreground on bg-card meets 4.5:1 in both realms.<br>
+    Myth links: dotted underline required (not color-only indicator).<br>
+    Crossfade elements: both always in DOM &mdash; aria-hidden toggled so screen readers read only the visible lore.<br>
+    Realm badge: aria-live=&ldquo;polite&rdquo; so screen readers announce realm change on theme toggle.<br>
+    min-height: 44px on all interactive elements (buttons, CTAs, cards).
   </div>
 
 </body>

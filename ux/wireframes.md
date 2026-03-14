@@ -186,12 +186,12 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Pricing Page | [wireframes/marketing-site/pricing.html](wireframes/marketing-site/pricing.html) | Tier comparison, FAQ accordion |
 | About Page | [wireframes/marketing-site/about.html](wireframes/marketing-site/about.html) | About page: team pack, mythology |
 | About Page — Mobile | [wireframes/marketing-site/about-mobile.html](wireframes/marketing-site/about-mobile.html) | Mobile 375px variant of About page |
-| Theme Variants | [wireframes/marketing-site/theme-variants.html](wireframes/marketing-site/theme-variants.html) | Dark/light theme rendering side-by-side |
+| Theme Variants | [wireframes/marketing-site/theme-variants.html](wireframes/marketing-site/theme-variants.html) | Ljósálfar (light) / Svartálfar (dark) side-by-side for all 5 marketing pages: Home (hero, pain points, features, steps), Features (Thrall/Karl tiers with ThemedFeatureImage crossfade slots), Pricing (tier cards, comparison table, FAQ accordion), About (Origin Hero + 5 agent rows with dual-realm portrait+lore crossfade pattern), Free Trial (hero, 7-card showcase, 30-day timeline, tier comparison); global nav + footer; mobile 375px responsive summary; implementation token reference |
 | **chronicles** | | |
 | Chronicle Index | [wireframes/chronicles/chronicle-index.html](wireframes/chronicles/chronicle-index.html) | Prose Edda listing page: article grid, nav, empty state |
 | Chronicle Article | [wireframes/chronicles/chronicle-article.html](wireframes/chronicles/chronicle-article.html) | Article detail layout: header, body, footer |
 | Chronicle Field Report | [wireframes/chronicles/chronicle-field-report.html](wireframes/chronicles/chronicle-field-report.html) | Field report article variant |
-| Theme Variants | [wireframes/chronicles/theme-variants.html](wireframes/chronicles/theme-variants.html) | Dark/light chronicle theme side-by-side |
+| Theme Variants | [wireframes/chronicles/theme-variants.html](wireframes/chronicles/theme-variants.html) | Ljósálfar (light) / Svartálfar (dark) side-by-side for Prose Edda pages: Index (/chronicles) with 3-col card grid (rune + date + title + excerpt), card anatomy token table, hover states; Detail (/chronicles/[slug]) with compact header (rune + session + date + title + excerpt), top Prev/Next nav with rune divider, MDX prose body, back link; no dual-realm crossfade (pure token-based theming); mobile 375px responsive; implementation token reference |
 | **import** | | |
 | Method Selection (Step 1) | [wireframes/import/import-method-selection.html](wireframes/import/import-method-selection.html) | Three import paths: CSV, Google Sheets, Share URL |
 | CSV Upload (Step 2C) | [wireframes/import/csv-upload.html](wireframes/import/csv-upload.html) | CSV drag-drop upload, validation, preview |
