@@ -33,6 +33,11 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            {{- if .Values.app.secretRef }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.app.secretRef }}
+            {{- end }}
           resources:
             {{- toYaml .Values.app.resources | nindent 12 }}
           readinessProbe:

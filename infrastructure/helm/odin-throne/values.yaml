@@ -26,6 +26,10 @@ app:
     K8S_NAMESPACE: "fenrir-agents"
     JOB_LABEL_SELECTOR: "app=odin-agent"
 
+  # K8s secret containing GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+  # ALLOWED_EMAIL, SESSION_SECRET — injected via envFrom.
+  secretRef: "odin-throne-secrets"
+
   resources:
     requests:
       cpu: "100m"

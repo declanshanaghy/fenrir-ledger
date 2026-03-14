@@ -85,8 +85,11 @@ Render `--status` JSON as this markdown:
 - Awaiting Loki: #A, #B
 - No response (may need re-dispatch): #C
 
-### Up Next Queue
-N items queued. Top 3: #X (critical/bug), #Y (high/ux), #Z (normal/enhancement)
+### Up Next Queue (N items)
+- #X — Title (critical/bug) → `/fire-next-up #X`
+- #Y — Title (high/ux) → `/fire-next-up #Y`
+- #Z — Title (normal/enhancement) → `/fire-next-up #Z`
+- *(show ALL items, not just top 3)*
 
 ### Research Awaiting Review
 - #168 Marketing campaign plan — `/fire-next-up --resume #168`
