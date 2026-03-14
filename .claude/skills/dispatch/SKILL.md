@@ -93,14 +93,17 @@ All templates use `{{SANDBOX_PREAMBLE}}` — replace with the embedded preamble 
 Substitute into `{{SANDBOX_PREAMBLE}}` in every agent prompt, replacing `<BRANCH>` and `<NUMBER>`:
 
 ```
-SANDBOX RULES:
-- Each Bash tool call = fresh shell. ALWAYS prefix: cd <REPO_ROOT> && <command>
-- Use absolute paths. The setup script prints REPO_ROOT — use it everywhere.
-- Set timeout: 600000 (10 min) on: npm ci, verify.sh, playwright test, next build.
+SANDBOX RULES (GKE Autopilot):
+- REPO_ROOT is /workspace/repo — hardcoded, no discovery needed.
+- Each Bash tool call = fresh shell. ALWAYS prefix: cd /workspace/repo && <command>
+- Set timeout: 600000 (10 min) on long-running commands (verify.sh, playwright, next build).
+- The entrypoint already handled: git clone, branch checkout, npm ci, git identity.
 
-**Step 1 — Setup (MUST run first, before anything else):**
-REPO_ROOT=$(git rev-parse --show-toplevel) && bash "$REPO_ROOT/.claude/scripts/sandbox-setup.sh" <BRANCH>
-Note the REPO_ROOT it prints — use it for ALL subsequent commands.
+**Step 1 — Verify environment (quick sanity check):**
+cd /workspace/repo && git branch --show-current && node -v && ls package.json 2>/dev/null || ls development/frontend/package.json
+If Playwright tests are needed:
+  cd /workspace/repo && npx playwright install chromium 2>/dev/null || true
+  ln -sf /workspace/repo/development/frontend/node_modules /workspace/repo/quality/node_modules 2>/dev/null || true
 
 TODO TRACKING (UNBREAKABLE):
 Use TodoWrite to plan and track ALL work. Create todos at the START of the session
@@ -110,8 +113,8 @@ state shows exactly where you stopped.
 
 INCREMENTAL COMMIT + VERIFY LOOP (UNBREAKABLE):
 After every logical chunk of implementation work (~5-10 min or 1-3 files changed):
-  1. git add -A && git commit -m 'wip: <what> — issue:<NUMBER>' && git push origin <BRANCH>
-  2. bash quality/scripts/verify.sh --step tsc
+  1. cd /workspace/repo && git add -A && git commit -m 'wip: <what> — issue:<NUMBER>' && git push origin <BRANCH>
+  2. cd /workspace/repo && bash quality/scripts/verify.sh --step tsc
   3. If tsc fails: fix immediately, commit+push, re-run tsc.
   4. Update your todo progress.
 Do NOT batch all changes into one commit at the end. Sessions can die at any time —
@@ -121,8 +124,8 @@ VERIFY — tsc + build ONLY (UNBREAKABLE):
 Agents run tsc and build. The FULL test suite runs via CI on every PR push.
 Do NOT run `verify.sh --step test` for the full suite — CI is the authority.
 Loki runs only his NEW feature tests, not the full suite.
-  bash quality/scripts/verify.sh --step tsc
-  bash quality/scripts/verify.sh --step build
+  cd /workspace/repo && bash quality/scripts/verify.sh --step tsc
+  cd /workspace/repo && bash quality/scripts/verify.sh --step build
 On failure: fix, commit+push, re-run that step. Repeat until green.
 
 STRICT SCOPE (UNBREAKABLE):
