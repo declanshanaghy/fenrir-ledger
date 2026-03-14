@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fenrir Agent Monitor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, monospace;
+      background: #1e1e1e;
+      color: #e0e0e0;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .sidebar {
+      width: 300px;
+      background: #252525;
+      border: 1px solid #3a3a3a;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 12px;
+      border-bottom: 1px solid #3a3a3a;
+      font-weight: bold;
+      color: #dca547;
+    }
+
+    .job-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .job-item {
+      padding: 10px;
+      margin-bottom: 6px;
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+
+    .job-item:hover {
+      background: #333;
+      border-color: #4a4a4a;
+    }
+
+    .job-item.active {
+      background: #2d5f3f;
+      border-color: #52b788;
+      color: #a8e6c1;
+    }
+
+    .job-item.failed {
+      background: #5f3f3f;
+      border-color: #d63230;
+      color: #ff9999;
+    }
+
+    .status-badge {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .status-running { background: #52b788; }
+    .status-succeeded { background: #a8dadc; }
+    .status-failed { background: #d63230; }
+    .status-pending { background: #f4a261; }
+
+    .refresh-btn {
+      padding: 8px 12px;
+      margin: 8px;
+      background: #2d5f3f;
+      color: #a8e6c1;
+      border: 1px solid #52b788;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .refresh-btn:hover {
+      background: #52b788;
+      color: #1e1e1e;
+    }
+
+    .refresh-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .main {
+      flex: 1;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-header {
+      padding: 12px;
+      border-bottom: 1px solid #3a3a3a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .main-title {
+      font-weight: bold;
+      color: #dca547;
+    }
+
+    .main-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .control-btn {
+      padding: 6px 12px;
+      background: #2a2a2a;
+      color: #e0e0e0;
+      border: 1px solid #3a3a3a;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+      background: #333;
+      border-color: #4a4a4a;
+    }
+
+    .control-btn.active {
+      background: #dca547;
+      color: #1e1e1e;
+      border-color: #dca547;
+    }
+
+    .log-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #666;
+      text-align: center;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bubble {
+      margin-bottom: 12px;
+      padding: 0;
+    }
+
+    .bubble-header {
+      background: #2a2a2a;
+      padding: 8px 12px;
+      font-weight: bold;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      border-bottom: 1px solid #3a3a3a;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .bubble-content {
+      background: #222;
+      padding: 12px;
+      border-bottom-left-radius: 4px;
+      border-bottom-right-radius: 4px;
+      line-height: 1.6;
+    }
+
+    .color-reset { color: #e0e0e0; }
+    .color-agent { color: #cb6d5d; }
+    .color-tool { color: #72a272; }
+    .color-result { color: #41a241; }
+    .color-think { color: #8d7dd9; }
+    .color-system { color: #626262; }
+    .color-error { color: #c4403c; }
+    .color-header { color: #dca547; }
+    .color-done { color: #dfd463; }
+
+    .loading {
+      opacity: 0.6;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        max-height: 200px;
+      }
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #252525;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #3a3a3a;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4a4a4a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <div class="sidebar-header">Agent Jobs</div>
+      <button class="refresh-btn" id="refreshBtn">↻ Refresh</button>
+      <div class="job-list" id="jobList"></div>
+    </div>
+
+    <div class="main">
+      <div class="main-header">
+        <div class="main-title" id="mainTitle">Select a job to view logs</div>
+        <div class="main-controls">
+          <button class="control-btn" id="followBtn">Follow</button>
+          <button class="control-btn" id="clearBtn">Clear</button>
+        </div>
+      </div>
+      <div class="log-container" id="logContainer">
+        <div class="empty-state">
+          <div>👀 Agent Monitor</div>
+          <div>Select a job from the list to view real-time logs</div>
+          <div style="font-size: 11px; color: #555; margin-top: 12px;">
+            Tip: Use Ctrl+C or reload to stop streaming
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========================================================================
+    // Configuration
+    // ========================================================================
+    const CONFIG = {
+      namespace: "fenrir-agents",
+      // Try to detect kubectl proxy or API endpoint
+      apiBase: (() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("api")) return params.get("api");
+        if (window.location.hostname === "localhost" && window.location.port === "8001") {
+          return "http://localhost:8001";
+        }
+        // Try common API endpoints
+        if (window.location.protocol === "https:") {
+          return window.location.origin + "/api";
+        }
+        return "http://localhost:8001";
+      })(),
+    };
+
+    // ========================================================================
+    // Color Palette (matching agent-logs.mjs)
+    // ========================================================================
+    const COLORS = {
+      reset: "#e0e0e0",
+      bold: "#fff",
+      dim: "#666",
+      italic: "#999",
+      agent: "#cb6d5d",      // salmon red
+      agentLabel: "#e74c3c", // bright red
+      tool: "#72a272",        // green
+      toolLabel: "#27ae60",   // bright green
+      result: "#41a241",      // muted green
+      think: "#8d7dd9",       // purple
+      system: "#626262",      // dim gray
+      error: "#c4403c",       // red
+      header: "#dca547",      // gold
+      done: "#dfd463",        // yellow
+    };
+
+    // ========================================================================
+    // State
+    // ========================================================================
+    const state = {
+      jobs: [],
+      selectedJob: null,
+      isStreaming: false,
+      followMode: true,
+      logLines: [],
+      currentHecklerName: "Padraig O'Malley",
+      escalationLevel: 0,
+    };
+
+    // ========================================================================
+    // DOM Elements
+    // ========================================================================
+    const els = {
+      refreshBtn: document.getElementById("refreshBtn"),
+      jobList: document.getElementById("jobList"),
+      mainTitle: document.getElementById("mainTitle"),
+      logContainer: document.getElementById("logContainer"),
+      followBtn: document.getElementById("followBtn"),
+      clearBtn: document.getElementById("clearBtn"),
+    };
+
+    // ========================================================================
+    // Utility Functions
+    // ========================================================================
+    function trunc(s, n = 200) {
+      if (!s) return "";
+      s = String(s);
+      return s.length > n ? s.slice(0, n) + "…" : s;
+    }
+
+    function stripMd(text) {
+      return text
+        .replace(/\*\*(.+?)\*\*/g, "$1")     // bold
+        .replace(/\*(.+?)\*/g, "$1")         // italic
+        .replace(/`([^`]+)`/g, "$1")         // inline code
+        .replace(/^#{1,6}\s+/gm, "")         // headings
+        .replace(/^\s*[-*]\s+/gm, "  • ")    // list items
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1"); // links
+    }
+
+    function toolSummary(block) {
+      const name = block.name;
+      const input = block.input || {};
+
+      switch (name) {
+        case "Bash":
+          return input.description || trunc(input.command, 60);
+        case "Read":
+          return (input.file_path || "").replace(/^\/workspace\/repo\//, "");
+        case "Write":
+          return (input.file_path || "").replace(/^\/workspace\/repo\//, "");
+        case "Edit":
+          return (input.file_path || "").replace(/^\/workspace\/repo\//, "");
+        case "Glob":
+          return input.pattern || "";
+        case "Grep":
+          return `/${input.pattern || ""}/ ${input.glob || input.path || ""}`.trim();
+        case "Agent":
+          return input.description || input.subagent_type || "";
+        default:
+          const vals = Object.values(input).filter(v => typeof v === "string" && v.length > 0);
+          return trunc(vals[0] || "", 60);
+      }
+    }
+
+    // ========================================================================
+    // Kubernetes API
+    // ========================================================================
+    async function fetchJobs() {
+      try {
+        const url = `${CONFIG.apiBase}/api/v1/namespaces/${CONFIG.namespace}/jobs`;
+        const response = await fetch(url, {
+          method: "GET",
+          mode: "cors",
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          console.warn(`Failed to fetch jobs: ${response.status}`);
+          return [];
+        }
+
+        const data = await response.json();
+        return (data.items || []).map(job => ({
+          name: job.metadata.name,
+          namespace: job.metadata.namespace,
+          createdAt: job.metadata.creationTimestamp,
+          status: (() => {
+            const conditions = job.status.conditions || [];
+            const cond = conditions[0];
+            if (!cond) return "Pending";
+            if (cond.type === "Complete") return "Succeeded";
+            if (cond.type === "Failed") return "Failed";
+            if (job.status.active) return "Running";
+            return cond.type || "Unknown";
+          })(),
+          active: job.status.active ? true : false,
+        }));
+      } catch (err) {
+        console.error("Error fetching jobs:", err);
+        return [];
+      }
+    }
+
+    async function streamJobLogs(jobName) {
+      const url = `${CONFIG.apiBase}/api/v1/namespaces/${CONFIG.namespace}/pods?labelSelector=job-name=${jobName}`;
+
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          mode: "cors",
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          addLogLine(`Error fetching pod: ${response.status}`);
+          return;
+        }
+
+        const data = await response.json();
+        const pods = data.items || [];
+        if (pods.length === 0) {
+          addLogLine("No pods found for this job");
+          return;
+        }
+
+        const pod = pods[0];
+        const podName = pod.metadata.name;
+
+        // Stream logs from the pod
+        const logsUrl = `${CONFIG.apiBase}/api/v1/namespaces/${CONFIG.namespace}/pods/${podName}/log?follow=true`;
+        const logsResponse = await fetch(logsUrl, {
+          method: "GET",
+          mode: "cors",
+          credentials: "include",
+        });
+
+        if (!logsResponse.ok) {
+          addLogLine(`Error streaming logs: ${logsResponse.status}`);
+          return;
+        }
+
+        state.isStreaming = true;
+        const reader = logsResponse.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (line.trim()) {
+              processLogLine(line);
+            }
+          }
+        }
+
+        state.isStreaming = false;
+      } catch (err) {
+        addLogLine(`Stream error: ${err.message}`);
+        state.isStreaming = false;
+      }
+    }
+
+    // ========================================================================
+    // Log Processing
+    // ========================================================================
+    function processLogLine(line) {
+      if (!line.startsWith("{")) {
+        // Non-JSON line — show as-is
+        addLogLine(line);
+        return;
+      }
+
+      try {
+        const obj = JSON.parse(line);
+        const formatted = formatLine(obj);
+        for (const fragment of formatted) {
+          addLogLine(fragment);
+        }
+      } catch (err) {
+        // Malformed JSON — skip
+      }
+    }
+
+    function formatLine(obj) {
+      const fragments = [];
+
+      if (obj.type === "system") {
+        if (obj.subtype === "init" && obj.model) {
+          fragments.push(createBubble("⚙", "System", [obj.model + " connected"], COLORS.system));
+        }
+      } else if (obj.type === "assistant" && obj.message?.content) {
+        const hasText = obj.message.content.some(b => b.type === "text" && b.text?.trim());
+        if (hasText) {
+          for (const block of obj.message.content) {
+            if (block.type === "text" && block.text?.trim()) {
+              const clean = stripMd(block.text.trim());
+              const lines = clean.split("\n").filter(l => l.trim());
+              fragments.push(createBubble("🤖", "Agent", lines, COLORS.agent));
+            } else if (block.type === "tool_use") {
+              const summary = toolSummary(block);
+              const label = summary ? `${block.name}: ${summary}` : block.name;
+              fragments.push(createBubble("🔧", "Tools", [label], COLORS.tool));
+            }
+          }
+        }
+      } else if (obj.type === "tool_result") {
+        const content = trunc(typeof obj.content === "string" ? obj.content : JSON.stringify(obj.content), 150);
+        fragments.push(createBubble("←", "Result", [content], COLORS.result));
+      } else if (obj.type === "result") {
+        const cost = obj.cost_usd != null ? `$${obj.cost_usd}` : "?";
+        const dur = obj.duration_seconds != null ? `${Math.round(obj.duration_seconds / 60)}m` : "?";
+        const turns = obj.num_turns ?? "?";
+        fragments.push(createBubble("🏁", "Session Complete", [
+          `Cost: ${cost}  Duration: ${dur}  Turns: ${turns}`,
+        ], COLORS.done));
+      }
+
+      return fragments;
+    }
+
+    function createBubble(icon, label, lines, color) {
+      const html = document.createElement("div");
+      html.className = "bubble";
+
+      const header = document.createElement("div");
+      header.className = "bubble-header";
+      header.style.color = color;
+      header.textContent = `${icon} ${label}`;
+
+      const content = document.createElement("div");
+      content.className = "bubble-content";
+      content.style.borderLeft = `3px solid ${color}`;
+
+      for (const line of lines) {
+        const lineEl = document.createElement("div");
+        lineEl.style.color = color;
+        lineEl.textContent = line;
+        lineEl.style.marginBottom = "4px";
+        content.appendChild(lineEl);
+      }
+
+      html.appendChild(header);
+      html.appendChild(content);
+      return html;
+    }
+
+    function addLogLine(content) {
+      if (typeof content === "string") {
+        const el = document.createElement("pre");
+        el.style.margin = "0 0 6px 0";
+        el.style.whiteSpace = "pre-wrap";
+        el.style.wordWrap = "break-word";
+        el.textContent = content;
+        els.logContainer.appendChild(el);
+      } else {
+        els.logContainer.appendChild(content);
+      }
+
+      if (state.followMode) {
+        els.logContainer.scrollTop = els.logContainer.scrollHeight;
+      }
+    }
+
+    // ========================================================================
+    // UI Rendering
+    // ========================================================================
+    function renderJobList() {
+      els.jobList.innerHTML = "";
+
+      if (state.jobs.length === 0) {
+        const el = document.createElement("div");
+        el.style.padding = "12px";
+        el.style.color = "#666";
+        el.textContent = "No jobs found";
+        els.jobList.appendChild(el);
+        return;
+      }
+
+      for (const job of state.jobs) {
+        const el = document.createElement("div");
+        el.className = "job-item";
+        if (job.name === state.selectedJob?.name) {
+          el.classList.add("active");
+        }
+        if (job.status === "Failed") {
+          el.classList.add("failed");
+        }
+
+        const badge = document.createElement("span");
+        badge.className = `status-badge status-${job.status.toLowerCase()}`;
+        badge.style.display = "inline-block";
+
+        const statusMap = {
+          "Running": "status-running",
+          "Succeeded": "status-succeeded",
+          "Failed": "status-failed",
+          "Pending": "status-pending",
+        };
+
+        el.innerHTML = `<span class="status-badge ${statusMap[job.status] || "status-pending"}"></span>${job.name}`;
+        el.onclick = () => selectJob(job);
+        els.jobList.appendChild(el);
+      }
+    }
+
+    async function selectJob(job) {
+      state.selectedJob = job;
+      els.mainTitle.textContent = job.name;
+      els.logContainer.innerHTML = "";
+      renderJobList();
+
+      // Start streaming logs
+      els.refreshBtn.disabled = true;
+      streamJobLogs(job.name);
+    }
+
+    // ========================================================================
+    // Event Handlers
+    // ========================================================================
+    els.refreshBtn.addEventListener("click", async () => {
+      els.refreshBtn.disabled = true;
+      state.jobs = await fetchJobs();
+      state.jobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      renderJobList();
+      els.refreshBtn.disabled = false;
+    });
+
+    els.followBtn.addEventListener("click", () => {
+      state.followMode = !state.followMode;
+      els.followBtn.classList.toggle("active", state.followMode);
+    });
+
+    els.clearBtn.addEventListener("click", () => {
+      els.logContainer.innerHTML = "";
+    });
+
+    // ========================================================================
+    // Initialization
+    // ========================================================================
+    (async () => {
+      els.followBtn.classList.add("active");
+      state.jobs = await fetchJobs();
+      state.jobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      renderJobList();
+
+      // Auto-select first job if available
+      if (state.jobs.length > 0) {
+        selectJob(state.jobs[0]);
+      }
+    })();
+  </script>
+</body>
+</html>
