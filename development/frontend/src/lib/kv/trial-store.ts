@@ -1,5 +1,5 @@
 /**
- * Vercel KV trial store — server-side persistence for trial state.
+ * Redis trial store — server-side persistence for trial state.
  *
  * Stores and retrieves trial records keyed by browser fingerprint.
  *
@@ -10,7 +10,7 @@
  * @module kv/trial-store
  */
 
-import { kv } from "@vercel/kv";
+import { getRedisClient } from "@/lib/kv/redis-client";
 import { log } from "@/lib/logger";
 import { TRIAL_DURATION_DAYS } from "@/lib/trial-utils";
 
@@ -18,7 +18,7 @@ import { TRIAL_DURATION_DAYS } from "@/lib/trial-utils";
 // Types
 // ---------------------------------------------------------------------------
 
-/** Shape of a trial record stored in Vercel KV. */
+/** Shape of a trial record stored in Redis. */
 export interface StoredTrial {
   /** ISO timestamp of when the trial started (first card creation). */
   startDate: string;
@@ -60,7 +60,9 @@ function trialKey(fingerprint: string): string {
 export async function getTrial(fingerprint: string): Promise<StoredTrial | null> {
   log.debug("getTrial called", { fingerprint });
   try {
-    const result = await kv.get<StoredTrial>(trialKey(fingerprint));
+    const redis = getRedisClient();
+    const raw = await redis.get(trialKey(fingerprint));
+    const result: StoredTrial | null = raw ? JSON.parse(raw) : null;
     log.debug("getTrial returning", {
       fingerprint,
       found: result !== null,
@@ -96,9 +98,8 @@ export async function initTrial(fingerprint: string): Promise<StoredTrial> {
   };
 
   try {
-    await kv.set(trialKey(fingerprint), trial, {
-      ex: TRIAL_TTL_SECONDS,
-    });
+    const redis = getRedisClient();
+    await redis.set(trialKey(fingerprint), JSON.stringify(trial), "EX", TRIAL_TTL_SECONDS);
     log.debug("initTrial returning", { fingerprint, startDate: trial.startDate });
     return trial;
   } catch (err) {
@@ -135,9 +136,8 @@ export async function markTrialConverted(fingerprint: string): Promise<boolean> 
   };
 
   try {
-    await kv.set(trialKey(fingerprint), updated, {
-      ex: TRIAL_TTL_SECONDS,
-    });
+    const redis = getRedisClient();
+    await redis.set(trialKey(fingerprint), JSON.stringify(updated), "EX", TRIAL_TTL_SECONDS);
     log.debug("markTrialConverted success", {
       fingerprint,
       convertedDate: updated.convertedDate,
