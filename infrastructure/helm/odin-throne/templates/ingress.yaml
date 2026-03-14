@@ -1,0 +1,64 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: odin-throne
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.className | quote }}
+    {{- range $key, $value := .Values.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  defaultBackend:
+    service:
+      name: odin-throne
+      port:
+        number: {{ .Values.service.port }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ . }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: odin-throne
+                port:
+                  number: {{ $.Values.service.port }}
+    {{- end }}
+---
+{{- if .Values.ingress.managedCertificate.enabled }}
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: odin-throne-cert
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+spec:
+  domains:
+    {{- range .Values.ingress.managedCertificate.domains }}
+    - {{ . }}
+    {{- end }}
+{{- end }}
+---
+{{- if .Values.ingress.backendConfig.enabled }}
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: odin-throne-backend-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+spec:
+  healthCheck:
+    {{- toYaml .Values.ingress.backendConfig.healthCheck | nindent 4 }}
+  timeoutSec: {{ .Values.ingress.backendConfig.timeoutSec }}
+  connectionDraining:
+    {{- toYaml .Values.ingress.backendConfig.connectionDraining | nindent 4 }}
+{{- end }}
+{{- end }}

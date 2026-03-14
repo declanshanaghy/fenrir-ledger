@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odin-throne
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+spec:
+  replicas: {{ .Values.app.replicaCount }}
+  revisionHistoryLimit: {{ .Values.app.revisionHistoryLimit }}
+  strategy:
+    {{- toYaml .Values.app.strategy | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- include "odin-throne.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 8 }}
+    spec:
+      serviceAccountName: {{ .Values.app.serviceAccountName }}
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: odin-throne
+          image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
+          imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.containerPort }}
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.app.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.app.resources | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.app.readinessProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.app.livenessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.app.startupProbe | nindent 12 }}
