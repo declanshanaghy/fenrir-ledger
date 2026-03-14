@@ -455,6 +455,15 @@ function wrapText(text, maxW) {
 // -- Format a single JSONL line ---------------------------------------------
 let lastType = "";
 let toolBatch = [];
+let agentDisplayName = "Agent"; // set from streamJob once we know the session ID
+
+const AGENT_NAMES = {
+  firemandecko: "FiremanDecko",
+  loki: "Loki",
+  luna: "Luna",
+  freya: "Freya",
+  heimdall: "Heimdall",
+};
 
 function flushToolBatch(lines) {
   if (toolBatch.length === 0) return;
@@ -493,7 +502,7 @@ function formatLine(obj) {
         if (lastType === "text" || lastType === "tool") lines.push("");
 
         const bubbleLines = bubble(
-          "🤖 Agent",
+          `🤖 ${agentDisplayName}`,
           textLines,
           C.agent,
           C.agentLabel,
@@ -696,6 +705,9 @@ function streamLogs(jobName) {
 
 async function streamJob(jobName) {
   const { issue, step, agent } = parseSessionId(jobName);
+
+  // Set agent display name for bubble labels
+  agentDisplayName = AGENT_NAMES[agent] || agent || "Agent";
 
   // Set tmux pane title for layout detection
   try { execSync(`tmux select-pane -T 'agent-logs-${issue}'`, { stdio: "ignore" }); } catch {}
