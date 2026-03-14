@@ -74,7 +74,7 @@ graph TD
     deploy --> pod2[Pod 2 - fenrir-app:latest]
     ns_app --> svc[Service - ClusterIP :80 to :3000]
     ns_app --> ingress[Ingress - GCE Load Balancer]
-    ns_app --> cert[ManagedCertificate - app.fenrirledger.com]
+    ns_app --> cert[ManagedCertificate - fenrirledger.com]
     ns_app --> backend[BackendConfig - Health: /api/health]
     ns_app --> secrets[Secret - fenrir-app-secrets - 13 keys]
     ns_app --> sa[ServiceAccount - fenrir-app-sa]
@@ -159,7 +159,8 @@ graph LR
 - **Private cluster** — nodes have no public IPs, control plane accessible via auth
 - **Master authorized networks** — currently open (restrict in production)
 - **Ingress** — GCE external HTTP(S) Load Balancer with BackendConfig health checks
-- **SSL** — Google-managed certificate for `app.fenrirledger.com` (provisioning requires DNS)
+- **SSL** — Google-managed certificate for `fenrirledger.com` via Cloud DNS
+- **DNS** — Google Cloud DNS managed zone with A records for apex and www
 
 ---
 
