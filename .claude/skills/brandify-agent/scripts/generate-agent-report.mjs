@@ -259,6 +259,20 @@ body {
   user-select: none;
 }
 .turn-header:hover { background: var(--chain); }
+.turn-header .turn-agent-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--teal-asgard);
+  flex-shrink: 0;
+}
+.turn-header .turn-agent-name {
+  color: var(--teal-asgard);
+  font-weight: 600;
+  font-size: 0.75rem;
+  margin-right: 0.25rem;
+}
 .turn-header .turn-num {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
@@ -968,7 +982,8 @@ const issueNum = issueMatch ? issueMatch[1] : "?";
 const agentMatch = meta.session?.match(/step(\d+)-(\w+)/);
 const stepNum = agentMatch ? agentMatch[1] : "?";
 const agentNameKey = agentMatch ? agentMatch[2] : "agent";
-const agentName = agentMatch ? agentMatch[2].charAt(0).toUpperCase() + agentMatch[2].slice(1) : "Agent";
+const agentName = AGENT_NAMES[agentNameKey] || (agentMatch ? agentMatch[2].charAt(0).toUpperCase() + agentMatch[2].slice(1) : "Agent");
+const agentSlug = {FiremanDecko:'fireman-decko',Loki:'loki',Luna:'luna',Freya:'freya',Heimdall:'heimdall'}[agentName] || agentNameKey;
 
 // Create heckler engine for Mayo heckling
 const hecklerEngine = createHecklerEngine(agentNameKey);
@@ -1302,7 +1317,9 @@ turns.forEach((turn, i) => {
   const hasError = turn.tools.some(t => t.is_error);
   html += `<div class="turn${hasError ? " has-error" : ""}">
   <div class="turn-header">
+    <img class="turn-agent-avatar" src="agents/profiles/${agentSlug}-dark.png" onerror="this.style.display='none'" alt="${esc(agentName)}">
     <span class="turn-num">#${i + 1}</span>
+    <span class="turn-agent-name">${esc(agentName)}</span>
     <span class="turn-summary">${turnSummary(turn)}</span>
     <span class="turn-tools">
       ${turn.tools.map(t => `<span class="tool-badge ${toolBadgeClass(t.name)}">${esc(t.name)}</span>`).join("")}
@@ -1384,6 +1401,34 @@ html += `
 </html>`;
 
 writeFileSync(outFile, html);
+
+// Copy avatar assets alongside the report
+import { cpSync, existsSync as exists2, mkdirSync as mkdir2 } from "fs";
+const outDir = dirname(outFile);
+const repoRoot = resolve(dirname(import.meta.url.replace("file://", "")), "..", "..", "..", "..");
+
+// Copy agent profile images
+const agentProfilesDir = join(repoRoot, ".claude", "agents", "profiles");
+const targetAgentsDir = join(outDir, "agents", "profiles");
+if (exists2(agentProfilesDir)) {
+  mkdir2(targetAgentsDir, { recursive: true });
+  for (const f of ["fireman-decko-dark.png", "loki-dark.png", "luna-dark.png", "freya-dark.png", "heimdall-dark.png"]) {
+    const src = join(agentProfilesDir, f);
+    if (exists2(src)) cpSync(src, join(targetAgentsDir, f));
+  }
+}
+
+// Copy heckler avatars
+const hecklerAssetsDir = join(repoRoot, "development", "agent-monitor", "assets");
+const targetAssetsDir = join(outDir, "assets");
+if (exists2(hecklerAssetsDir)) {
+  mkdir2(targetAssetsDir, { recursive: true });
+  for (const f of ["heckler-avatar.png", "heckler-granny.png", "heckler-da.png", "heckler-uncle.png", "heckler-mammy.png", "heckler-teen.png", "heckler-lad.png", "heckler-lass.png"]) {
+    const src = join(hecklerAssetsDir, f);
+    if (exists2(src)) cpSync(src, join(targetAssetsDir, f));
+  }
+}
+
 console.log(`[ok] report: ${outFile}`);
 console.log(`     turns: ${turns.length} | tools: ${totalTools} | errors: ${errors}`);
 console.log(`     tokens: ${fmtNum(totalInputTokens)} in / ${fmtNum(totalOutputTokens)} out | cache: ${fmtNum(totalCacheRead)} read / ${fmtNum(totalCacheCreation)} write`);
