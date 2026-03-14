@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fenrir-app
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "fenrir-app.labels" (dict "name" "fenrir-app" "component" "frontend") | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "fenrir-app.selectorLabels" . | nindent 6 }}
