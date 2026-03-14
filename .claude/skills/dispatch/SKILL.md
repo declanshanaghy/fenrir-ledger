@@ -21,13 +21,14 @@ Composes a prompt from templates and spawns the agent via GKE Autopilot K8s Jobs
 8. **No step-by-step narration.** Only output the final dispatch report.
 9. **Board move is MANDATORY after spawn succeeds.** Append it to the spawn command with `&&`.
 
-**Ideal flow (2 tool calls per dispatch):**
+**Ideal flow (2-3 tool calls per dispatch):**
 ```
 Call 1: Read <agent>.md           (skip if already in context)
 Call 2: bash dispatch-job.sh ... && node pack-status.mjs --move N in-progress
+Call 3: tmux split-window -h "node agent-logs.mjs <SESSION_ID> --tools"
 ```
 
-If issue data + agent template are already in context, that's **1 tool call** (spawn + board move combined).
+If issue data + agent template are already in context, that's **2 tool calls** (spawn + board move, then log tail).
 
 ## Arguments
 
@@ -230,13 +231,30 @@ node "<repo-root>/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N
 
 **Do NOT move if spawn failed.** The `&&` chaining handles this automatically.
 
+### Phase 4 — Tail Agent Logs (GKE only)
+
+After a successful GKE dispatch, open a tmux pane streaming the parsed agent logs.
+The pod may take 30-60s to schedule — `agent-logs.mjs` polls automatically.
+
+```bash
+tmux split-window -h "node \"<repo-root>/infrastructure/k8s/agents/agent-logs.mjs\" \"<SESSION_ID>\" --tools"
+```
+
+For parallel dispatches (`--parallel`), use `--all --tmux` to split all active jobs:
+```bash
+tmux split-window -h "node \"<repo-root>/infrastructure/k8s/agents/agent-logs.mjs\" --all --tmux --tools"
+```
+
+This runs in a separate tmux pane — it does NOT block the orchestrator.
+Skip if `--local` (local agents run in background worktrees, not GKE).
+
 ### Output — Dispatch Report (only output)
 
 ```
 **Dispatched #<N>**: <TITLE>
 **Agent:** <AgentName> (Step <S>) | **Model:** <MODEL> | **Mode:** GKE/Local
 **Branch:** `<BRANCH>` | **Session:** `<SESSION_ID>`
-**Logs:** `kubectl logs job/agent-<SESSION_ID> -n fenrir-agents --follow`
+**Logs:** streaming in tmux pane (or: `just agent-log <SESSION_ID>`)
 ```
 
 One line per issue for parallel dispatches. No step-by-step narration.
