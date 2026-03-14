@@ -34,7 +34,8 @@ const NAV_LINKS = [
 // ── MarketingNavbar ────────────────────────────────────────────────────────────
 
 /** Check whether a nav link matches the current pathname. */
-export function isNavLinkActive(pathname: string, href: string): boolean {
+export function isNavLinkActive(pathname: string | null, href: string): boolean {
+  if (!pathname) return false;
   return pathname === href || pathname.startsWith(href + "/");
 }
 
