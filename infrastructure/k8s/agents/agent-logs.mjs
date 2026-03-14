@@ -57,10 +57,12 @@ const C = {
 };
 
 // -- Mayo for SAM heckler ---------------------------------------------------
+const MAYO_FLAG = "🟢🔴";
+
 const MAYO_HECKLES = [
-  "MAYO FOR SAM!! 🏆🟢🔴",
+  "MAYO FOR SAM!! 🏆",
   "SAM IS COMING WEST!! The curse is BROKEN!!",
-  "C'MON THE GREEN AND RED!! 🔴🟢",
+  "C'MON THE GREEN AND RED!!",
   "THIS IS OUR YEAR LADS!! MAYO ABÚ!!",
   "Sam Maguire looks well in Castlebar!!",
   "SÉAMUS Ó MÁILLE AG TEACHT ABHAILE!! 🏆",
@@ -72,10 +74,32 @@ const MAYO_HECKLES = [
   "Even the SHEEP in Achill know Sam's coming west!! 🐑🏆",
   "Nephin is SHAKING!! Sam Maguire on the N5!! 🏔️",
   "They said we'd never win it. THEY WERE WRONG. MAYO FOR SAM!!",
-  "Crossmolina to Croagh Patrick — the whole county is UP!! 🟢🔴",
+  "Crossmolina to Croagh Patrick — the whole county is UP!!",
   "Liam McHale smiling somewhere right now!! MAYO!!",
   "Is that Sam Maguire or just the sun rising over Clew Bay?? ☀️🏆",
+  "The Dubs are SHAKIN!! The west is AWAKE!!",
+  "Croke Park? More like MAYO PARK!! 🏟️",
+  "I can see Sam from the top of Croagh Patrick!! 🏔️🏆",
 ];
+
+// Random Mayo first names + surnames for the heckler
+const MAYO_FIRST = [
+  "Padraig", "Seamus", "Declan", "Colm", "Ciaran", "Brendan", "Donal",
+  "Maeve", "Siobhan", "Aoife", "Grainne", "Niamh", "Roisin", "Aisling",
+  "Tadgh", "Oisin", "Fergal", "Cathal", "Peadar", "Eamon", "Mickey Joe",
+];
+const MAYO_SURNAME = [
+  "O'Malley", "Durcan", "McHale", "Moran", "Gallagher", "Walsh",
+  "Gibbons", "Ruane", "Loftus", "Mulchrone", "Padden", "Feeney",
+  "Jennings", "Horan", "Cafferkey", "Doherty", "Sweeney", "Barrett",
+  "McNicholas", "Nallen", "Mortimer", "Burke", "Munnelly",
+];
+
+function randomMayoName() {
+  const first = MAYO_FIRST[Math.floor(Math.random() * MAYO_FIRST.length)];
+  const last = MAYO_SURNAME[Math.floor(Math.random() * MAYO_SURNAME.length)];
+  return `${first} ${last}`;
+}
 
 let heckleCounter = 0;
 function maybeHeckle() {
@@ -84,7 +108,8 @@ function maybeHeckle() {
   if (heckleCounter < 12 + Math.floor(Math.random() * 8)) return null;
   heckleCounter = 0;
   const heckle = MAYO_HECKLES[Math.floor(Math.random() * MAYO_HECKLES.length)];
-  return `${C.mayoBg}${C.bold} 📢 ${heckle} ${C.reset}`;
+  const name = randomMayoName();
+  return `${C.mayoBg}${C.bold} ${MAYO_FLAG} ${name}: ${heckle} ${MAYO_FLAG} ${C.reset}`;
 }
 
 // -- Parse args --------------------------------------------------------------
@@ -399,7 +424,7 @@ function formatLine(obj) {
       `Cost: ${cost}  Duration: ${dur}  Turns: ${turns}`,
     ], C.done, C.done, "  ");
     lines.push(...doneLines);
-    lines.push(`${C.mayoBg}${C.bold} 📢 MAYO FOR SAM!! The agents are DONE and Sam is COMING WEST!! 🏆🟢🔴 ${C.reset}`);
+    lines.push(`${C.mayoBg}${C.bold} ${MAYO_FLAG} ${randomMayoName()}: MAYO FOR SAM!! The agents are DONE and Sam is COMING WEST!! 🏆 ${MAYO_FLAG} ${C.reset}`);
   }
 
   return lines;
