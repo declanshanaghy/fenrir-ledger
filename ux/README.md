@@ -25,9 +25,14 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [easter-eggs.md](easter-eggs.md) -- All hidden references: Gleipnir Hunt, Konami Howl, Loki Mode, console ASCII, and more
 - [easter-egg-modal.md](easter-egg-modal.md) -- Shared modal template for all easter egg discovery moments
 - [multi-idp-interaction-spec.md](multi-idp-interaction-spec.md) -- Interaction spec: multi-IDP sign-in dialog (planned Clerk integration)
+- [karl-upsell-interaction-spec.md](karl-upsell-interaction-spec.md) -- Interaction spec: Karl upsell dialog + Valhalla tab gating
+- [light-theme-stone.md](light-theme-stone.md) -- Light theme: Stone/Marble redesign (cool grey-blues, marble whites)
+- [light-theme-lightning.md](light-theme-lightning.md) -- Light theme: Lightning Norse overhaul (pure white, ice-blue, extreme contrast)
+- [audit-report.md](audit-report.md) -- UX audit report: ux/ vs current app (2026-03-12)
+- [interactions/import-workflow-v2.md](interactions/import-workflow-v2.md) -- Interaction spec: import wizard three-path workflow
 - [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) -- Mermaid diagram conventions for all pack members
 
-### Wireframes (51 HTML5 documents — audited 2026-03-12)
+### Wireframes (59 HTML5 documents — audited 2026-03-14)
 
 | Category | Files |
 |----------|-------|
@@ -41,7 +46,7 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 | easter-eggs | [easter-egg-modal.html](wireframes/easter-eggs/easter-egg-modal.html), [konami-howl.html](wireframes/easter-eggs/konami-howl.html), [loki-mode.html](wireframes/easter-eggs/loki-mode.html), [gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) |
 | accessibility | [accessibility-polish.html](wireframes/accessibility/accessibility-polish.html), [font-size-scale.html](wireframes/accessibility/font-size-scale.html) |
 | stripe-direct | [stripe-settings.html](wireframes/stripe-direct/stripe-settings.html), [sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html), [upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html), [anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html), [karl-upsell-dialog.html](wireframes/stripe-direct/karl-upsell-dialog.html), [karl-upsell-dialog-artwork.html](wireframes/stripe-direct/karl-upsell-dialog-artwork.html) |
-| marketing-site | [static-site-footer.html](wireframes/marketing-site/static-site-footer.html), [layout-shell.html](wireframes/marketing-site/layout-shell.html), [home-page.html](wireframes/marketing-site/home-page.html), [features.html](wireframes/marketing-site/features.html), [pricing.html](wireframes/marketing-site/pricing.html), [about.html](wireframes/marketing-site/about.html), [about-mobile.html](wireframes/marketing-site/about-mobile.html), [theme-variants.html](wireframes/marketing-site/theme-variants.html) |
+| marketing-site | [static-site-footer.html](wireframes/marketing-site/static-site-footer.html), [layout-shell.html](wireframes/marketing-site/layout-shell.html), [home-page.html](wireframes/marketing-site/home-page.html), [features.html](wireframes/marketing-site/features.html), [pricing.html](wireframes/marketing-site/pricing.html), [about.html](wireframes/marketing-site/about.html), [about-mobile.html](wireframes/marketing-site/about-mobile.html), [theme-variants.html](wireframes/marketing-site/theme-variants.html), [data-safety-banner.html](wireframes/marketing-site/data-safety-banner.html), [trust-placements.html](wireframes/marketing-site/trust-placements.html), [free-trial.html](wireframes/marketing-site/free-trial.html), [nav-font-648.html](wireframes/marketing-site/nav-font-648.html) |
 | chronicles | [chronicle-index.html](wireframes/chronicles/chronicle-index.html), [chronicle-article.html](wireframes/chronicles/chronicle-article.html), [chronicle-field-report.html](wireframes/chronicles/chronicle-field-report.html), [theme-variants.html](wireframes/chronicles/theme-variants.html) |
 | import | [import-method-selection.html](wireframes/import/import-method-selection.html), [csv-upload.html](wireframes/import/csv-upload.html), [safety-banner.html](wireframes/import/safety-banner.html) |
 | wizard-animations | [step-indicator.html](wireframes/wizard-animations/step-indicator.html), [step-transitions.html](wireframes/wizard-animations/step-transitions.html), [mobile-layout.html](wireframes/wizard-animations/mobile-layout.html) |
@@ -100,7 +105,7 @@ All sprints (1--5) shipped. The Saga Ledger design system is fully implemented. 
 | Artifact | Status |
 |----------|--------|
 | Theme system (colors, fonts, tokens) | Implemented |
-| 47 wireframes (audited 2026-03-12) | Implemented (Multi-IDP Clerk: Planned) |
+| 59 wireframes (audited 2026-03-14) | Implemented (Multi-IDP Clerk: Planned) |
 | All 11 easter eggs | Implemented |
 | Stripe Direct integration | Implemented |
 | Anonymous-first auth model | Implemented |
@@ -117,7 +122,7 @@ All sprints (1--5) shipped. The Saga Ledger design system is fully implemented. 
 2. **Functional copy is always plain English.** No kennings in buttons. No realm names in badges.
 3. **Atmospheric copy is always Norse.** No generic microcopy in headings, empty states, or docs.
 4. **The design rewards exploration.** Every easter egg is intentional. Do not remove them.
-5. **Dark only.** There is no light mode. The Saga Ledger is a war room, not a spreadsheet.
+5. **Dark is default.** The dark void is the primary aesthetic. Light themes (Stone/Marble, Lightning Norse) complement the dark war room — see `light-theme-stone.md` and `light-theme-lightning.md`.
 6. **Gold is not yellow.** `#c9920a` is the color of firelight on ancient coin. Used sparingly. Earned.
 7. **Numbers are always monospaced.** JetBrains Mono for every dollar, every date, every countdown.
 
