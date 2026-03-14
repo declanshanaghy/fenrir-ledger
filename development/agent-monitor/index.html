@@ -813,6 +813,26 @@
       }
     }
 
+    // Simple string hash for consistent avatar assignment per heckler name
+    function hashStr(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+      return h;
+    }
+
+    const HECKLER_AVATARS = [
+      'assets/heckler-avatar.png',   // yer man with the pint
+      'assets/heckler-avatar-2.png', // the mammy with the flag
+      'assets/heckler-avatar-3.png', // the young farmer
+      'assets/heckler-granny.png',   // the granny
+      'assets/heckler-da.png',       // the da with glasses
+      'assets/heckler-uncle.png',    // the uncle in the V-neck
+      'assets/heckler-mammy.png',    // the mammy with toddler
+      'assets/heckler-teen.png',     // the teenager
+      'assets/heckler-lad.png',      // the young lad
+      'assets/heckler-lass.png',     // the wee girl
+    ];
+
     function formatDuration(seconds) {
       if (!seconds) return '-';
       const h = Math.floor(seconds / 3600);
@@ -1245,11 +1265,13 @@
         case 'error':
           return `<div class="log-message log-error" id="${id}">[ERROR] ${escapeHtml(event.message || '')}</div>`;
 
-        case 'mayo':
+        case 'mayo': {
+          const heckImg = HECKLER_AVATARS[Math.abs(hashStr(event.name || '')) % HECKLER_AVATARS.length];
           return `<div class="log-mayo" id="${id}">
-            <div class="mayo-avatar">🍺</div>
+            <div class="mayo-avatar"><img src="${heckImg}" onerror="this.parentElement.innerHTML='🍺'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
             <div class="mayo-bubble">🟢🔴 <strong>${escapeHtml(event.name || '?')}</strong>: ${escapeHtml(event.text)} 🟢🔴</div>
           </div>`;
+        }
 
         case 'mayo-comeback': {
           const cbSlug = {FiremanDecko:'fireman-decko',Loki:'loki',Luna:'luna',Freya:'freya',Heimdall:'heimdall'}[event.name] || '';
