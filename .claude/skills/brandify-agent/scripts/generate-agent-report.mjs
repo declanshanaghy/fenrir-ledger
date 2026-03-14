@@ -659,6 +659,23 @@ function writeIndex(dir) {
     .map(f => {
       const m = f.match(/issue-(\d+)-step(\d+)-(\w+)/);
       const mtime = statSync(join(dir, f)).mtime;
+      // Detect status from corresponding log file
+      let status = "unknown";
+      const logFile = join(dir, f.replace(".html", ".log"));
+      try {
+        const logContent = readFileSync(logFile, "utf-8");
+        const hasResult = logContent.includes('"type":"result"');
+        const hasVerdict = /Loki QA Verdict/i.test(logContent);
+        const hasFail = /FAIL/i.test(logContent) && hasVerdict;
+        const hasPass = /PASS/i.test(logContent) && hasVerdict;
+        const hasHandoff = /Handoff/i.test(logContent);
+        const isEmpty = logContent.trim().length < 100;
+        if (isEmpty) status = "empty";
+        else if (hasFail) status = "fail";
+        else if (hasPass) status = "pass";
+        else if (hasResult || hasHandoff) status = "complete";
+        else status = "live";
+      } catch { status = "unknown"; }
       return {
         file: f,
         issue: m ? m[1] : "?",
@@ -667,6 +684,7 @@ function writeIndex(dir) {
         agentName: m ? (AGENT_NAMES[m[3]] || m[3]) : "Unknown",
         date: mtime.toISOString().slice(0, 16).replace("T", " "),
         ts: mtime.getTime(),
+        status,
       };
     })
     .sort((a, b) => b.ts - a.ts);
@@ -684,19 +702,38 @@ function writeIndex(dir) {
   ];
   const quote = ODIN_QUOTES[Math.floor(Math.random() * ODIN_QUOTES.length)];
 
-  const rows = files.map(f => {
-    const agentColors = {
-      firemandecko: "#4ecdc4", loki: "#a78bfa", luna: "#6b8afd",
-      freya: "#f0b429", heimdall: "#ef4444",
-    };
+  const agentColors = {
+    firemandecko: "#4ecdc4", loki: "#a78bfa", luna: "#6b8afd",
+    freya: "#f0b429", heimdall: "#ef4444",
+  };
+
+  const statusIcons = {
+    live: "&#9679;",      // filled circle
+    complete: "&#10003;", // checkmark
+    pass: "&#10003;",     // checkmark
+    fail: "&#10007;",     // X
+    empty: "&#9675;",     // empty circle
+    unknown: "&#8212;",   // em dash
+  };
+  const statusColors = {
+    live: "#4ecdc4", complete: "#c9920a", pass: "#22c55e",
+    fail: "#ef4444", empty: "#606070", unknown: "#606070",
+  };
+
+  const cards = files.map((f, i) => {
     const color = agentColors[f.agent] || "#c9920a";
-    return `<tr onclick="window.location='${f.file}'" style="cursor:pointer">
-      <td style="color:${color};font-weight:600">${f.agentName}</td>
-      <td>#${f.issue}</td>
-      <td>Step ${f.step}</td>
-      <td style="color:var(--text-rune)">${f.date}</td>
-    </tr>`;
+    const active = i === 0 ? " active" : "";
+    const sIcon = statusIcons[f.status] || "—";
+    const sColor = statusColors[f.status] || "#606070";
+    const pulse = f.status === "live" ? " pulse" : "";
+    return `<div class="card${active}" data-file="${f.file}" onclick="loadReport('${f.file}', this)">
+  <div class="card-top"><span class="card-agent" style="color:${color}">${f.agentName}</span><span class="card-status${pulse}" style="color:${sColor}" title="${f.status}">${sIcon}</span></div>
+  <div class="card-meta">#${f.issue} &middot; Step ${f.step}</div>
+  <div class="card-date">${f.date}</div>
+</div>`;
   }).join("\n");
+
+  const firstFile = files.length > 0 ? files[0].file : "";
 
   const indexHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -714,34 +751,59 @@ function writeIndex(dir) {
   --rune-border: #2a2a3e; --teal-asgard: #4ecdc4;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: var(--void); color: var(--text-saga); font-family: 'Source Serif 4', serif; min-height: 100vh; }
-.container { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
-.header { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 0.5rem; }
-.header img { width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--gold); }
-.header h1 { font-family: 'Cinzel Decorative', serif; font-size: 1.8rem; color: var(--gold); }
-.quote { font-family: 'Source Serif 4', serif; font-style: italic; color: var(--text-rune); margin-bottom: 2rem; padding-left: 90px; opacity: 0.8; }
-.count { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-void); margin-bottom: 1rem; }
-table { width: 100%; border-collapse: collapse; }
-th { font-family: 'Cinzel', serif; font-size: 0.75rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; text-align: left; padding: 0.75rem 1rem; border-bottom: 2px solid var(--rune-border); }
-td { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; padding: 0.6rem 1rem; border-bottom: 1px solid var(--rune-border); }
-tr:hover { background: var(--chain); }
+html, body { height: 100%; overflow: hidden; }
+body { background: var(--void); color: var(--text-saga); font-family: 'Source Serif 4', serif; display: flex; }
+
+/* Sidebar */
+.sidebar { width: 300px; min-width: 300px; height: 100vh; overflow-y: auto; border-right: 1px solid var(--rune-border); background: var(--forge); display: flex; flex-direction: column; }
+.sidebar-header { padding: 1rem; border-bottom: 1px solid var(--rune-border); flex-shrink: 0; }
+.sidebar-header .brand { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+.sidebar-header img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--gold); }
+.sidebar-header h1 { font-family: 'Cinzel Decorative', serif; font-size: 1.1rem; color: var(--gold); }
+.sidebar-header .quote { font-style: italic; font-size: 0.75rem; color: var(--text-rune); opacity: 0.8; line-height: 1.4; }
+.sidebar-header .count { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-void); margin-top: 0.5rem; }
+.card-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+.card { padding: 0.6rem 0.75rem; border-radius: 4px; cursor: pointer; margin-bottom: 2px; border-left: 3px solid transparent; transition: background 0.15s; }
+.card:hover { background: var(--chain); }
+.card.active { background: var(--chain); border-left-color: var(--gold); }
+.card-top { display: flex; justify-content: space-between; align-items: center; }
+.card-agent { font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.8rem; }
+.card-status { font-size: 0.9rem; flex-shrink: 0; }
+.card-status.pulse { animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.card-meta { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-rune); margin-top: 0.15rem; }
+.card-date { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-void); }
+
+/* Content */
+.content { flex: 1; height: 100vh; }
+.content iframe { width: 100%; height: 100%; border: none; }
+.content .empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-void); font-family: 'Cinzel', serif; font-size: 1.2rem; }
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <img src="agents/profiles/odin-dark.png" alt="Odin — The All-Father">
-    <h1>Hlidskjalf</h1>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="brand">
+      <img src="agents/profiles/odin-dark.png" alt="Odin">
+      <h1>Hlidskjalf</h1>
+    </div>
+    <div class="quote">"${quote}"</div>
+    <div class="count">${files.length} sessions</div>
   </div>
-  <div class="quote">"${quote}"</div>
-  <div class="count">${files.length} agent reports</div>
-  <table>
-    <thead><tr><th>Agent</th><th>Issue</th><th>Step</th><th>Date</th></tr></thead>
-    <tbody>
-${rows}
-    </tbody>
-  </table>
+  <div class="card-list">
+${cards}
+  </div>
 </div>
+<div class="content">
+  ${firstFile ? `<iframe id="viewer" src="${firstFile}"></iframe>` : '<div class="empty">No reports yet</div>'}
+</div>
+<script>
+function loadReport(file, el) {
+  document.getElementById('viewer').src = file;
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
 </body>
 </html>`;
 
