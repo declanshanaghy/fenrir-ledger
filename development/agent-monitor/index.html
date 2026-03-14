@@ -905,7 +905,8 @@
       ["RIGHT THAT'S IT!! Hold me feckin PINT!! 🍺"],
       ["💥 *collapses into confetti* 💥 ...someone call an ambulance..."],
     ];
-    let NEW_HECKLER_ENTRANCES = ["🟢🔴 *a NEW Mayo fan materialises* MAYO FOR SAM!!"];
+    let NEW_HECKLER_ENTRANCES = ["🟢🔴 *a NEW Mayo fan materialises* {prev} is GONE?? MAYO FOR SAM!!"];
+    let HECKLER_VS_HECKLER = ["Oi {name}, ye couldn't heckle a DONKEY!! Let a REAL Mayo fan show ye how!!"];
     let MAYO_FIRST = ["Padraig","Seamus","Declan","Colm","Ciaran","Maeve","Siobhan","Mickey Joe"];
     let MAYO_SURNAME = ["O'Malley","Durcan","McHale","Moran","Gallagher","Walsh","Cafferkey"];
 
@@ -919,6 +920,7 @@
         AGENT_COMEBACKS = data.comebacks || AGENT_COMEBACKS;
         ESCALATION_RETORTS = data.escalation || ESCALATION_RETORTS;
         NEW_HECKLER_ENTRANCES = data.entrances || NEW_HECKLER_ENTRANCES;
+        HECKLER_VS_HECKLER = data.hecklerVsHeckler || HECKLER_VS_HECKLER;
         MAYO_FIRST = data.firstNames || MAYO_FIRST;
         MAYO_SURNAME = data.surnames || MAYO_SURNAME;
         console.log(`[mayo] Loaded ${MAYO_HECKLES.length} heckles + ${AGENT_COMEBACKS.length} comebacks from shared engine`);
@@ -941,14 +943,38 @@
       const events = [];
 
       if (escalationLevel >= 3) {
+        const previousName = currentHeckler;
         currentHeckler = mayoName();
         escalationLevel = 0;
-        events.push({ type: 'mayo-entrance', text: pick(NEW_HECKLER_ENTRANCES) });
-        events.push({ type: 'mayo', name: currentHeckler, text: "Right so — WHERE WERE WE?? MAYO FOR SAM!!" });
+        const entrance = pick(NEW_HECKLER_ENTRANCES).replace(/\{prev\}/g, previousName);
+        events.push({ type: 'mayo-entrance', text: entrance });
+        const openers = [
+          "Right so — " + previousName + " is GONE but I'm HERE!! MAYO FOR SAM!!",
+          "Name's " + currentHeckler + " and I'm HERE for Sam!! " + previousName + " couldn't hack it!!",
+          previousName + " was WEAK!! I'll show ye how to heckle!! MAYO ABÚ!!",
+          "Jaysus, poor " + previousName + ". That was dramatic. ANYWAY — MAYO FOR SAM!!",
+          previousName + " died for Sam and SO WILL I if needs be!!",
+        ];
+        events.push({ type: 'mayo', name: currentHeckler, text: pick(openers) });
         return events;
       }
 
       events.push({ type: 'mayo', name: currentHeckler, text: pick(MAYO_HECKLES) });
+
+      // 25% chance another heckler in the crowd trash-talks this one
+      if (Math.random() < 0.25) {
+        const rivalName = mayoName();
+        const jab = pick(HECKLER_VS_HECKLER).replace(/\{name\}/g, currentHeckler).replace(/\{me\}/g, rivalName);
+        events.push({ type: 'mayo', name: rivalName, text: jab });
+        const clapbacks = [
+          `Feck off ${rivalName}!! I was HERE FIRST ye bogger!!`,
+          `${rivalName}?? I didn't know they let GOBSHITES in from YOUR parish!!`,
+          `Oh that's RICH coming from ${rivalName} — weren't ye BARRED from Croke Park??`,
+          `Sit DOWN ${rivalName} before I LAMP ye!! THIS is MY session!!`,
+          `Who let ${rivalName} in?? Security!! SECURITY!! Ah feck it — MAYO FOR SAM!!`,
+        ];
+        events.push({ type: 'mayo', name: currentHeckler, text: pick(clapbacks) });
+      }
 
       if (Math.random() < 0.6 + escalationLevel * 0.15) {
         events.push({ type: 'mayo-comeback', name: currentAgentName, text: pick(AGENT_COMEBACKS) });

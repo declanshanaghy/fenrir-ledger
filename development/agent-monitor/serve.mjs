@@ -17,7 +17,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, dirname, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync, spawn } from "node:child_process";
-import { MAYO_HECKLES, AGENT_COMEBACKS, ESCALATION_RETORTS, NEW_HECKLER_ENTRANCES, MAYO_FIRST, MAYO_SURNAME, AGENT_NAMES } from "../../infrastructure/k8s/agents/mayo-heckler.mjs";
+import { MAYO_HECKLES, AGENT_COMEBACKS, ESCALATION_RETORTS, NEW_HECKLER_ENTRANCES, HECKLER_VS_HECKLER, MAYO_FIRST, MAYO_SURNAME, AGENT_NAMES } from "../../infrastructure/k8s/agents/mayo-heckler.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.argv[2] || "9000", 10);
@@ -90,6 +90,7 @@ const server = createServer((req, res) => {
       comebacks: AGENT_COMEBACKS,
       escalation: ESCALATION_RETORTS,
       entrances: NEW_HECKLER_ENTRANCES,
+      hecklerVsHeckler: HECKLER_VS_HECKLER,
       firstNames: MAYO_FIRST,
       surnames: MAYO_SURNAME,
       agentNames: AGENT_NAMES,
