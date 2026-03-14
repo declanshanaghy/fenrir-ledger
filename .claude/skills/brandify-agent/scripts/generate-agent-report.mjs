@@ -737,10 +737,15 @@ function writeIndex(dir) {
     const sIcon = statusIcons[f.status] || "—";
     const sColor = statusColors[f.status] || "#606070";
     const pulse = f.status === "live" ? " pulse" : "";
+    const statusLabels = {
+      live: "running", complete: "completed", pass: "PASS",
+      fail: "FAIL", empty: "no data", unknown: "unknown",
+    };
+    const sLabel = statusLabels[f.status] || "";
     return `<div class="card${active}" data-file="${f.file}" onclick="loadReport('${f.file}', this)">
   <div class="card-top"><span class="card-agent" style="color:${color}">${f.agentName}</span><span class="card-status${pulse}" style="color:${sColor}" title="${f.status}">${sIcon}</span></div>
-  <div class="card-meta">#${f.issue} &middot; Step ${f.step}</div>
-  <div class="card-date">${f.date}</div>
+  <div class="card-meta">#${f.issue} &middot; Step ${f.step} &middot; <span style="color:${sColor}">${sLabel}</span></div>
+  <div class="card-date" data-ts="${f.ts}"></div>
 </div>`;
   }).join("\n");
 
@@ -751,7 +756,7 @@ function writeIndex(dir) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hlidskjalf — Odin's Agent Monitor</title>
+<title>Odin's Throne — Hlidskjalf</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700;900&family=Source+Serif+4:wght@300;400;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -814,6 +819,42 @@ function loadReport(file, el) {
   document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
 }
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const s = Math.floor(diff / 1000);
+  if (s < 5) return 'just now';
+  if (s < 60) return s + 's ago';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  const d = Math.floor(h / 24);
+  return d + 'd ago';
+}
+
+function formatLocalTime(ts) {
+  const d = new Date(ts);
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const time = d.toLocaleString(undefined, {
+    month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+    timeZoneName: 'short'
+  });
+  return time;
+}
+
+function updateTimes() {
+  document.querySelectorAll('.card-date[data-ts]').forEach(el => {
+    const ts = parseInt(el.dataset.ts);
+    if (!ts) return;
+    const local = formatLocalTime(ts);
+    const ago = timeAgo(ts);
+    el.innerHTML = local + ' <span style="color:var(--teal-asgard);margin-left:0.3rem">' + ago + '</span>';
+  });
+}
+updateTimes();
+setInterval(updateTimes, 10000);
 </script>
 </body>
 </html>`;
