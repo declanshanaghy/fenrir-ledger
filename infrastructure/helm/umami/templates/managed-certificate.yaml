@@ -1,0 +1,14 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: umami-cert
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "umami.labels" . | nindent 4 }}
+spec:
+  domains:
+    {{- range .Values.ingress.hosts }}
+    - {{ . }}
+    {{- end }}
+{{- end }}
