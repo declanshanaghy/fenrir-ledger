@@ -1,0 +1,6 @@
+apiVersion: v2
+name: odin-throne
+description: Odin's Throne — real-time agent monitor on GKE Autopilot
+version: 0.1.0
+appVersion: "0.1.0"
+type: application

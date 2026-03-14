@@ -1,0 +1,119 @@
+# --------------------------------------------------------------------------
+# Odin's Throne — Helm Chart Default Values
+#
+# Hono-based real-time agent monitor for Fenrir Ledger.
+# Listens on :3001, health at /healthz, WebSocket upgrades supported.
+# Override per-environment with values-prod.yaml etc.
+# --------------------------------------------------------------------------
+
+namespace: fenrir-monitor
+
+# -- App Deployment --------------------------------------------------------
+app:
+  replicaCount: 1
+  revisionHistoryLimit: 3
+
+  image:
+    repository: us-central1-docker.pkg.dev/fenrir-ledger-prod/fenrir-images/odin-throne
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  serviceAccountName: odin-throne-sa
+
+  env:
+    NODE_ENV: "production"
+    PORT: "3001"
+    K8S_NAMESPACE: "fenrir-agents"
+    JOB_LABEL_SELECTOR: "app=odin-agent"
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+      ephemeral-storage: "128Mi"
+    limits:
+      cpu: "250m"
+      memory: "256Mi"
+      ephemeral-storage: "256Mi"
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+    successThreshold: 1
+
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  startupProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 12
+
+# -- Service ---------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: http
+  containerPort: 3001
+
+# -- Ingress ---------------------------------------------------------------
+ingress:
+  enabled: true
+  className: "gce"
+  hosts:
+    - monitor.fenrirledger.com
+  annotations:
+    networking.gke.io/managed-certificates: "odin-throne-cert"
+    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.global-static-ip-name: "monitor-ip"
+    cloud.google.com/backend-config: '{"default":"odin-throne-backend-config"}'
+
+  backendConfig:
+    enabled: true
+    healthCheck:
+      checkIntervalSec: 15
+      timeoutSec: 5
+      healthyThreshold: 1
+      unhealthyThreshold: 3
+      type: HTTP
+      requestPath: /healthz
+      port: 3001
+    timeoutSec: 30
+    connectionDraining:
+      drainingTimeoutSec: 15
+
+  managedCertificate:
+    enabled: true
+    domains:
+      - monitor.fenrirledger.com
+
+# -- RBAC ------------------------------------------------------------------
+# ServiceAccount with cross-namespace read access to jobs/pods/logs
+# in fenrir-agents so the monitor can display agent activity.
+rbac:
+  enabled: true
+  agentsNamespace: fenrir-agents
+
+# -- Secrets ---------------------------------------------------------------
+secrets:
+  enabled: false

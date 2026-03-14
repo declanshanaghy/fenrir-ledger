@@ -1,0 +1,30 @@
+# --------------------------------------------------------------------------
+# Odin's Throne — Production Overrides
+#
+# Usage: helm upgrade --install odin-throne ./infrastructure/helm/odin-throne \
+#          -f ./infrastructure/helm/odin-throne/values-prod.yaml \
+#          --set app.image.tag=$IMAGE_TAG
+# --------------------------------------------------------------------------
+
+namespace: fenrir-monitor
+
+app:
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+      ephemeral-storage: "128Mi"
+    limits:
+      cpu: "250m"
+      memory: "256Mi"
+      ephemeral-storage: "256Mi"
+
+ingress:
+  enabled: true
+  hosts:
+    - monitor.fenrirledger.com
+
+rbac:
+  enabled: true

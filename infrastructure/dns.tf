@@ -109,3 +109,24 @@ resource "google_dns_record_set" "analytics" {
 
   rrdatas = [google_compute_global_address.umami_ip.address]
 }
+
+# --------------------------------------------------------------------------
+# Static Global IP — Odin's Throne (monitor.fenrirledger.com)
+# --------------------------------------------------------------------------
+
+resource "google_compute_global_address" "monitor_ip" {
+  name    = "monitor-ip"
+  project = var.project_id
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_dns_record_set" "monitor" {
+  name         = "monitor.${var.domain}."
+  managed_zone = google_dns_managed_zone.app.name
+  project      = var.project_id
+  type         = "A"
+  ttl          = 300
+
+  rrdatas = [google_compute_global_address.monitor_ip.address]
+}
