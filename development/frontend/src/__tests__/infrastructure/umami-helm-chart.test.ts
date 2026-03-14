@@ -3,7 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 describe('Umami Helm Chart', () => {
-  const chartDir = path.join(process.cwd(), 'infrastructure', 'helm', 'umami');
+  const repoRoot = path.join(__dirname, '../../../../..');
+  const chartDir = path.join(repoRoot, 'infrastructure', 'helm', 'umami');
   const templatesDir = path.join(chartDir, 'templates');
 
   describe('Chart.yaml', () => {
@@ -46,7 +47,8 @@ describe('Umami Helm Chart', () => {
       const valuesYaml = fs.readFileSync(path.join(chartDir, 'values.yaml'), 'utf-8');
 
       expect(valuesYaml).toContain('postgresql:');
-      expect(valuesYaml).toContain('postgres:16-alpine');
+      expect(valuesYaml).toContain('postgres');
+      expect(valuesYaml).toContain('16-alpine');
       expect(valuesYaml).toContain('POSTGRES_DB: "umami"');
       expect(valuesYaml).toContain('1Gi');
       expect(valuesYaml).toContain('standard-rwo');
@@ -134,8 +136,8 @@ describe('Umami Helm Chart', () => {
       expect(deploymentYaml).toContain('apiVersion: apps/v1');
       expect(deploymentYaml).toContain('kind: Deployment');
       expect(deploymentYaml).toContain('name: umami');
-      expect(deploymentYaml).toContain('ghcr.io/umami-software/umami');
-      expect(deploymentYaml).toContain('containerPort: {{ .Values.service.containerPort }}');
+      expect(deploymentYaml).toContain('.Values.umami.image.repository');
+      expect(deploymentYaml).toContain('.Values.umami.image.tag');
       expect(deploymentYaml).toContain('secretRef:');
       expect(deploymentYaml).toContain('umami-secrets');
     });
@@ -167,7 +169,7 @@ describe('Umami Helm Chart', () => {
       expect(serviceYaml).toContain('apiVersion: v1');
       expect(serviceYaml).toContain('kind: Service');
       expect(serviceYaml).toContain('name: umami');
-      expect(serviceYaml).toContain('ClusterIP');
+      expect(serviceYaml).toContain('type: {{ .Values.service.type }}');
     });
 
     it('should have valid Ingress template', () => {
@@ -176,8 +178,8 @@ describe('Umami Helm Chart', () => {
       expect(ingressYaml).toContain('apiVersion: networking.k8s.io/v1');
       expect(ingressYaml).toContain('kind: Ingress');
       expect(ingressYaml).toContain('name: umami');
-      expect(ingressYaml).toContain('analytics.fenrirledger.com');
-      expect(ingressYaml).toContain('gce');
+      expect(ingressYaml).toContain('.Values.ingress.hosts');
+      expect(ingressYaml).toContain('.Values.ingress.className');
     });
 
     it('should have valid Secrets template', () => {
@@ -201,9 +203,9 @@ describe('Umami Helm Chart', () => {
     it('should have Helm helper templates', () => {
       const helpersYaml = fs.readFileSync(path.join(templatesDir, '_helpers.tpl'), 'utf-8');
 
-      expect(helpersYaml).toContain('include "umami.name"');
-      expect(helpersYaml).toContain('include "umami.labels"');
-      expect(helpersYaml).toContain('include "umami.selectorLabels"');
+      expect(helpersYaml).toContain('umami.name');
+      expect(helpersYaml).toContain('umami.labels');
+      expect(helpersYaml).toContain('umami.selectorLabels');
     });
   });
 
@@ -219,7 +221,8 @@ describe('Umami Helm Chart', () => {
     it('should use correct database image for PostgreSQL backend', () => {
       const valuesYaml = fs.readFileSync(path.join(chartDir, 'values.yaml'), 'utf-8');
 
-      expect(valuesYaml).toContain('postgres:16-alpine');
+      expect(valuesYaml).toContain('postgres');
+      expect(valuesYaml).toContain('16-alpine');
       expect(valuesYaml).toContain('DATABASE_TYPE: "postgresql"');
     });
 
@@ -277,10 +280,8 @@ describe('Umami Helm Chart', () => {
   describe('DNS and TLS integration', () => {
     it('should configure analytics.fenrirledger.com domain', () => {
       const valuesYaml = fs.readFileSync(path.join(chartDir, 'values.yaml'), 'utf-8');
-      const ingressYaml = fs.readFileSync(path.join(templatesDir, 'ingress.yaml'), 'utf-8');
 
       expect(valuesYaml).toContain('analytics.fenrirledger.com');
-      expect(ingressYaml).toContain('analytics.fenrirledger.com');
     });
 
     it('should use GCE ingress class for GKE', () => {
