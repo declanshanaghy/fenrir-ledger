@@ -5,12 +5,13 @@ description: "Convert agent log files (stream-json from Claude Code) into styled
 
 # Brandify Agent — Agent Log to HTML Report
 
-Converts Claude Code stream-json agent logs into styled, interactive HTML reports using the Fenrir Ledger visual system. Not published — local viewing only.
+Converts Claude Code stream-json agent logs into styled, interactive HTML reports using the Fenrir Ledger visual system. Supports local HTML viewing and publishing as chronicles.
 
 ## Usage
 
 ```
 /brandify-agent <session-id-or-log-path>
+/brandify-agent <session-id-or-log-path> --publish
 /brandify-agent --regen-assets
 ```
 
@@ -19,6 +20,7 @@ Converts Claude Code stream-json agent logs into styled, interactive HTML report
 | Arg | Required | Description |
 |-----|----------|-------------|
 | `<session-id>` | Yes (unless `--regen-assets`) | Session ID (looks up `tmp/agent-logs/<id>.log`) or full path to `.log` file |
+| `--publish` | No | Generate MDX output to `content/blog/` for chronicles publishing at `/chronicles/agent-{slug}` |
 | `--regen-assets` | No | Regenerate shared CSS/JS files without processing a log |
 
 ## Workflow
@@ -32,8 +34,9 @@ If it's a path, use it directly.
 
 Error if the file doesn't exist.
 
-### Step 2 — Generate the HTML report
+### Step 2 — Generate the report
 
+**HTML mode (default):**
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel)
 SCRIPT="$REPO_ROOT/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs"
@@ -43,13 +46,23 @@ node "$SCRIPT" --input "<log-file>"
 Output goes to the same directory with `.html` extension (replacing `.log`).
 Shared assets (`agent-report.css`, `agent-report.js`) are auto-generated alongside.
 
+**Publish mode (`--publish`):**
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel)
+SCRIPT="$REPO_ROOT/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs"
+BLOG_DIR="$REPO_ROOT/development/frontend/content/blog"
+node "$SCRIPT" --input "<log-file>" --publish --blog-dir "$BLOG_DIR"
+```
+
+Output: `content/blog/agent-{session-slug}.mdx` with frontmatter (title, date, rune, excerpt, slug, category: "agent"). Viewable at `/chronicles/agent-{slug}`. Uses `<details>`/`<summary>` for collapsible turns (no JS needed). Agent chronicles display with an "Agent" badge on the index and detail pages.
+
 ### Step 3 — Report
 
 ```
-**Report generated:** `<html-path>`
+**Report generated:** `<html-path-or-mdx-path>`
 **Turns:** N | **Tool calls:** N | **Errors:** N
 **Verdict:** PASS/FAIL/none
-Open: `open <html-path>`
+Open: `open <html-path>` or view at `/chronicles/agent-{slug}`
 ```
 
 ## Regenerate Assets

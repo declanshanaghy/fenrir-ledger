@@ -137,7 +137,13 @@ export default async function ChronicleDetailPage({
         <div className="max-w-[880px] mx-auto px-7">
           <div className="flex justify-center items-center gap-4 mb-5 font-mono text-xs text-muted-foreground tracking-wider uppercase">
             <span className="text-primary" aria-hidden="true">{entry.rune}</span>
-            <span>{entry.title.match(/Session \d+/)?.[0] ?? ""}</span>
+            {entry.category === "agent" ? (
+              <span className="text-[0.6rem] font-semibold tracking-widest px-1.5 py-0.5 border border-emerald-500/40 text-emerald-500 bg-emerald-500/5 rounded-sm">
+                Agent Report
+              </span>
+            ) : (
+              <span>{entry.title.match(/Session \d+/)?.[0] ?? ""}</span>
+            )}
             <span aria-hidden="true">·</span>
             <time dateTime={entry.date}>{formatDate(entry.date)}</time>
           </div>

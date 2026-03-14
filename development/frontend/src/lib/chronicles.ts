@@ -26,6 +26,8 @@ export interface ChronicleEntry {
   rune: string;
   /** Short excerpt for index listing */
   excerpt: string;
+  /** Chronicle category: "session" (default) or "agent" */
+  category: "session" | "agent";
 }
 
 export interface ChronicleEntryWithContent extends ChronicleEntry {
@@ -55,6 +57,7 @@ export function getAllChronicles(): ChronicleEntry[] {
       date: (data.date as string) || "2026-01-01",
       rune: (data.rune as string) || "ᚠ",
       excerpt: (data.excerpt as string) || "",
+      category: (data.category as "session" | "agent") || "session",
     };
   });
 
@@ -84,6 +87,7 @@ export function getChronicleBySlug(slug: string): ChronicleEntryWithContent | nu
     date: (data.date as string) || "2026-01-01",
     rune: (data.rune as string) || "ᚠ",
     excerpt: (data.excerpt as string) || "",
+    category: (data.category as "session" | "agent") || "session",
     content,
   };
 }
