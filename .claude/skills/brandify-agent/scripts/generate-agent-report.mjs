@@ -890,6 +890,17 @@ function fmtNum(n) {
 }
 
 // ---------------------------------------------------------------------------
+// Metadata derived from session info (shared by HTML and MDX modes)
+// ---------------------------------------------------------------------------
+const issueMatch = meta.session?.match(/issue-(\d+)/);
+const issueNum = issueMatch ? issueMatch[1] : "?";
+const agentMatch = meta.session?.match(/step(\d+)-(\w+)/);
+const stepNum = agentMatch ? agentMatch[1] : "?";
+const agentName = agentMatch ? agentMatch[2].charAt(0).toUpperCase() + agentMatch[2].slice(1) : "Agent";
+
+const totalTestsWritten = vitestCounts.total + playwrightCount;
+
+// ---------------------------------------------------------------------------
 // Build MDX (--publish mode)
 // ---------------------------------------------------------------------------
 if (publishMode) {
@@ -1086,14 +1097,6 @@ const outFile = outputPath
 const assetsDir = dirname(outFile);
 
 writeAssets(assetsDir);
-
-const issueMatch = meta.session?.match(/issue-(\d+)/);
-const issueNum = issueMatch ? issueMatch[1] : "?";
-const agentMatch = meta.session?.match(/step(\d+)-(\w+)/);
-const stepNum = agentMatch ? agentMatch[1] : "?";
-const agentName = agentMatch ? agentMatch[2].charAt(0).toUpperCase() + agentMatch[2].slice(1) : "Agent";
-
-const totalTestsWritten = vitestCounts.total + playwrightCount;
 
 let html = `<!DOCTYPE html>
 <html lang="en">
