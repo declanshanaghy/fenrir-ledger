@@ -29,6 +29,15 @@ vi.mock("@hono/node-server", () => ({
   serve: vi.fn().mockReturnValue({ on: vi.fn() }),
 }));
 
+// Auth mock — verifySessionToken always passes so we get the Hlidskjalf HTML
+vi.mock("../auth.js", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../auth.js")>();
+  return {
+    ...original,
+    verifySessionToken: vi.fn().mockReturnValue("test@fenrir.dev"),
+  };
+});
+
 // ── Import after mocks ───────────────────────────────────────────────────────
 
 import { app } from "../index.js";
@@ -36,7 +45,9 @@ import { app } from "../index.js";
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function getHtml(): Promise<string> {
-  const res = await app.fetch(new Request("http://localhost:3001/"));
+  const res = await app.fetch(new Request("http://localhost:3001/", {
+    headers: { Cookie: "odin_session=test-token" },
+  }));
   return res.text();
 }
 
