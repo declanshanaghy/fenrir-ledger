@@ -97,6 +97,18 @@ const server = createServer((req, res) => {
     return;
   }
 
+  // Agent profile images — serve from .claude/agents/profiles/
+  if (url.pathname.startsWith("/agents/profiles/")) {
+    const imgName = url.pathname.replace("/agents/profiles/", "");
+    const imgPath = join(__dirname, "..", "..", ".claude", "agents", "profiles", imgName);
+    if (existsSync(imgPath)) {
+      const content = readFileSync(imgPath);
+      res.writeHead(200, { "Content-Type": "image/png" });
+      res.end(content);
+      return;
+    }
+  }
+
   // Static files
   const filePath = join(__dirname, url.pathname === "/" ? "index.html" : url.pathname);
 

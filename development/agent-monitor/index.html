@@ -962,11 +962,11 @@
     // ========================================================================
 
     const AGENT_PROFILES = {
-      FiremanDecko: { img: '../../.claude/agents/profiles/fireman-decko-dark.png', role: 'Principal Engineer', emoji: '🔥', bio: "Forges code in the fires of Muspelheim. Owns architecture, infrastructure, and development. If it compiles, it's because FiremanDecko willed it. Has never met a merge conflict he couldn't resolve, a build he couldn't fix, or a heckler he couldn't silence. Ships code like Mayo ships heartbreak — relentlessly." },
-      Loki: { img: '../../.claude/agents/profiles/loki-dark.png', role: 'QA Tester', emoji: '🦊', bio: "The trickster god's own son — fitting that he finds every flaw. Writes tests that would make a grown developer weep. His Vitest suites are legendary, his Playwright specs are merciless, and his QA verdicts are final. PASS or FAIL, there is no maybe. Son of Loki, father of Fenrir — it's in the blood." },
-      Luna: { img: '../../.claude/agents/profiles/luna-dark.png', role: 'UX Designer', emoji: '🌙', bio: "Moonlight illuminates the wireframes. Luna sees the user journey before the first pixel is placed. Her HTML wireframes are structure-only poetry — no theme, no fluff, just pure layout truth. Mobile-first, always. If the interaction spec says 375px minimum, she means it. The Allfather trusts her eye." },
-      Freya: { img: '../../.claude/agents/profiles/freya-dark.png', role: 'Product Owner', emoji: '⚔️', bio: "Goddess of strategy, keeper of the backlog. Freya interviews Odin, distils chaos into requirements, and files issues with the precision of a Valkyrie choosing the slain. Her product briefs are legendary. Her prioritisation is ruthless. When Freya says 'ship it,' the pack ships it." },
-      Heimdall: { img: '../../.claude/agents/profiles/heimdall-dark.png', role: 'Security Specialist', emoji: '👁️', bio: "The watchman who sees all threats. Heimdall guards the Bifrost — and every API route, every secret, every auth flow. His OWASP audits are thorough, his threat models comprehensive, and his security reports unflinching. No secret passes unmasked. No vulnerability survives his gaze." },
+      FiremanDecko: { img: '/agents/profiles/fireman-decko-dark.png', role: 'Principal Engineer', emoji: '🔥', bio: "Forges code in the fires of Muspelheim. Owns architecture, infrastructure, and development. If it compiles, it's because FiremanDecko willed it. Has never met a merge conflict he couldn't resolve, a build he couldn't fix, or a heckler he couldn't silence. Ships code like Mayo ships heartbreak — relentlessly." },
+      Loki: { img: '/agents/profiles/loki-dark.png', role: 'QA Tester', emoji: '🦊', bio: "The trickster god's own son — fitting that he finds every flaw. Writes tests that would make a grown developer weep. His Vitest suites are legendary, his Playwright specs are merciless, and his QA verdicts are final. PASS or FAIL, there is no maybe. Son of Loki, father of Fenrir — it's in the blood." },
+      Luna: { img: '/agents/profiles/luna-dark.png', role: 'UX Designer', emoji: '🌙', bio: "Moonlight illuminates the wireframes. Luna sees the user journey before the first pixel is placed. Her HTML wireframes are structure-only poetry — no theme, no fluff, just pure layout truth. Mobile-first, always. If the interaction spec says 375px minimum, she means it. The Allfather trusts her eye." },
+      Freya: { img: '/agents/profiles/freya-dark.png', role: 'Product Owner', emoji: '⚔️', bio: "Goddess of strategy, keeper of the backlog. Freya interviews Odin, distils chaos into requirements, and files issues with the precision of a Valkyrie choosing the slain. Her product briefs are legendary. Her prioritisation is ruthless. When Freya says 'ship it,' the pack ships it." },
+      Heimdall: { img: '/agents/profiles/heimdall-dark.png', role: 'Security Specialist', emoji: '👁️', bio: "The watchman who sees all threats. Heimdall guards the Bifrost — and every API route, every secret, every auth flow. His OWASP audits are thorough, his threat models comprehensive, and his security reports unflinching. No secret passes unmasked. No vulnerability survives his gaze." },
     };
 
     function showAgentProfile(agentName) {
@@ -1421,7 +1421,7 @@
 
         case 'agent-text':
           const agentSlug = {FiremanDecko:'fireman-decko',Loki:'loki',Luna:'luna',Freya:'freya',Heimdall:'heimdall'}[event.agent] || '';
-          const agentImg = agentSlug ? `../../.claude/agents/profiles/${agentSlug}-dark.png` : '';
+          const agentImg = agentSlug ? `/agents/profiles/${agentSlug}-dark.png` : '';
           const agentFallback = {FiremanDecko:'🔥',Loki:'🦊',Luna:'🌙',Freya:'⚔️',Heimdall:'👁️'}[event.agent] || '🤖';
           return `<div class="log-agent-bubble" id="${id}">
             <div class="avatar" style="cursor:pointer;" onclick="showAgentProfile('${escapeHtml(event.agent)}')">${agentImg ? `<img src="${agentImg}" alt="${escapeHtml(event.agent)}" onerror="this.parentElement.innerHTML='${agentFallback}'">` : agentFallback}</div>
@@ -1462,7 +1462,7 @@
 
         case 'mayo-comeback': {
           const cbSlug = {FiremanDecko:'fireman-decko',Loki:'loki',Luna:'luna',Freya:'freya',Heimdall:'heimdall'}[event.name] || '';
-          const cbImg = cbSlug ? `../../.claude/agents/profiles/${cbSlug}-dark.png` : '';
+          const cbImg = cbSlug ? `/agents/profiles/${cbSlug}-dark.png` : '';
           const cbFallback = {FiremanDecko:'🔥',Loki:'🦊',Luna:'🌙',Freya:'⚔️',Heimdall:'👁️'}[event.name] || '🤖';
           return `<div class="log-mayo-comeback" id="${id}">
             <div class="comeback-avatar">${cbImg ? `<img src="${cbImg}" onerror="this.parentElement.innerHTML='${cbFallback}'">` : cbFallback}</div>
