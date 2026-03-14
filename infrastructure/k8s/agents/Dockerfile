@@ -82,17 +82,24 @@ RUN cd /tmp/frontend \
     && rm -rf /tmp/frontend
 
 # --------------------------------------------------------------------------
-# 5. Workspace + git config
+# 5. Non-root user — Claude Code refuses --dangerously-skip-permissions as root
+# --------------------------------------------------------------------------
+RUN useradd -m -s /bin/bash -u 1000 agent \
+    && mkdir -p /workspace && chown agent:agent /workspace
+
+# --------------------------------------------------------------------------
+# 6. Workspace + git config
 # --------------------------------------------------------------------------
 WORKDIR /workspace
+USER agent
 
 RUN git config --global init.defaultBranch main \
     && git config --global advice.detachedHead false
 
 # --------------------------------------------------------------------------
-# 6. Entrypoint — clones repo, runs sandbox setup, executes task
+# 7. Entrypoint — clones repo, runs sandbox setup, executes task
 # --------------------------------------------------------------------------
-COPY infrastructure/k8s/agents/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --chown=agent:agent infrastructure/k8s/agents/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
