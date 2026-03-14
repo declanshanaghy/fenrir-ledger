@@ -18,8 +18,9 @@ import path from "path";
 
 /**
  * Helper: recursive file reader to search for string patterns
+ * Excludes test files to avoid matching test code itself
  */
-function searchFilesForPattern(dir: string, pattern: RegExp, extensions: string[]): string[] {
+function searchFilesForPattern(dir: string, pattern: RegExp, extensions: string[], excludeTests = true): string[] {
   const matches: string[] = [];
 
   function recurse(currentDir: string) {
@@ -35,6 +36,10 @@ function searchFilesForPattern(dir: string, pattern: RegExp, extensions: string[
         }
         recurse(filePath);
       } else if (extensions.some((ext) => file.endsWith(ext))) {
+        // Skip test files if requested
+        if (excludeTests && (file.endsWith(".test.ts") || file.endsWith(".test.tsx"))) {
+          continue;
+        }
         const content = fs.readFileSync(filePath, "utf-8");
         if (pattern.test(content)) {
           matches.push(filePath);
@@ -176,6 +181,7 @@ describe("Issue #682 — Vercel/Depot Cleanup", () => {
         srcDir,
         /https?:\/\/.*\.vercel\.com|vercel\.live|vercel-scripts\.com/,
         [".ts", ".tsx"],
+        true, // excludeTests
       );
 
       // Allow in blog/MDX content (historical narrative)
@@ -183,15 +189,15 @@ describe("Issue #682 — Vercel/Depot Cleanup", () => {
       expect(filtered.length).toBe(0);
     });
 
-    it("no VERCEL_URL references in API routes", () => {
+    it("no VERCEL_URL references in API routes (outside tests)", () => {
       const srcDir = path.join(process.cwd(), "development/frontend/src");
-      const matches = searchFilesForPattern(srcDir, /VERCEL_URL/, [".ts", ".tsx"]);
+      const matches = searchFilesForPattern(srcDir, /VERCEL_URL/, [".ts", ".tsx"], true);
       expect(matches.length).toBe(0);
     });
 
-    it("no VERCEL_ENV references in API routes", () => {
+    it("no VERCEL_ENV references in API routes (outside tests)", () => {
       const srcDir = path.join(process.cwd(), "development/frontend/src");
-      const matches = searchFilesForPattern(srcDir, /VERCEL_ENV/, [".ts", ".tsx"]);
+      const matches = searchFilesForPattern(srcDir, /VERCEL_ENV/, [".ts", ".tsx"], true);
       expect(matches.length).toBe(0);
     });
   });
