@@ -164,6 +164,25 @@ function randomMayoName() {
   return `${first} ${last}`;
 }
 
+// Agent comebacks to the hecklers
+const AGENT_COMEBACKS = [
+  "Relax will ye — this PR IS bringing Sam home!!",
+  "Every line of code is a step closer to Castlebar!!",
+  "I'm LITERALLY building the road for Sam right now!!",
+  "You think Sam just walks west by himself?? THIS CODE is the chariot!!",
+  "Keep heckling — it fuels my commits!!",
+  "Sam's watching this diff and he LIKES what he sees!!",
+  "This merge is gonna hit harder than a Mayo midfield tackle!!",
+  "I'll have this PR done before ye finish your pint!!",
+  "Coding for Sam since the first commit — never stopped!!",
+  "This build is GREENER than the fields of Mayo!!",
+  "Tests passing like points over the bar — SAM INCOMING!!",
+  "If my code was a forward, it'd be Cillian O'Connor — DEADLY!!",
+  "I don't just write code, I write DESTINY. Mayo's destiny!!",
+  "Every bug I fix is another curse broken!!",
+  "This PR has more energy than Croke Park on All-Ireland Sunday!!",
+];
+
 let heckleCounter = 0;
 function maybeHeckle() {
   heckleCounter++;
@@ -172,7 +191,15 @@ function maybeHeckle() {
   heckleCounter = 0;
   const heckle = MAYO_HECKLES[Math.floor(Math.random() * MAYO_HECKLES.length)];
   const name = randomMayoName();
-  return `${C.mayoBg}${C.bold} ${MAYO_FLAG} ${name}: ${heckle} ${MAYO_FLAG} ${C.reset}`;
+  const heckleLine = `${C.mayoBg}${C.bold} ${MAYO_FLAG} ${name}: ${heckle} ${MAYO_FLAG} ${C.reset}`;
+
+  // 50% chance the agent claps back
+  if (Math.random() < 0.5) {
+    const comeback = AGENT_COMEBACKS[Math.floor(Math.random() * AGENT_COMEBACKS.length)];
+    const comebackLine = `${C.agentLabel}${C.bold}  🤖 ${agentDisplayName}: ${C.agent}${comeback}${C.reset}`;
+    return heckleLine + "\n" + comebackLine;
+  }
+  return heckleLine;
 }
 
 // -- Parse args --------------------------------------------------------------
