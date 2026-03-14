@@ -39,14 +39,18 @@ const C = {
   reset: "\x1b[0m",
   bold: "\x1b[1m",
   dim: "\x1b[2m",
-  agent: "\x1b[38;5;75m",     // blue
-  tool: "\x1b[38;5;214m",     // orange
-  result: "\x1b[38;5;245m",   // gray
-  think: "\x1b[38;5;141m",    // purple
-  system: "\x1b[38;5;243m",   // dim gray
-  error: "\x1b[38;5;196m",    // red
-  header: "\x1b[38;5;220m",   // gold
-  done: "\x1b[38;5;114m",     // green
+  italic: "\x1b[3m",
+  agent: "\x1b[38;5;75m",      // blue — agent chat bubble
+  agentBg: "\x1b[48;5;236m",   // dark gray bg for agent bubbles
+  tool: "\x1b[38;5;243m",      // muted gray for tool actions
+  toolName: "\x1b[38;5;250m",  // lighter gray for tool name
+  result: "\x1b[38;5;240m",    // dim for tool results
+  think: "\x1b[38;5;141m",     // purple
+  system: "\x1b[38;5;243m",    // dim gray
+  error: "\x1b[38;5;196m",     // red
+  header: "\x1b[38;5;220m",    // gold
+  done: "\x1b[38;5;114m",      // green
+  sep: "\x1b[38;5;238m",       // separator line color
 };
 
 // -- Parse args --------------------------------------------------------------
@@ -162,59 +166,134 @@ if (opts.tmux && opts.targets.length > 1) {
   opts.targets = [opts.targets[0]];
 }
 
-// -- Truncate helper --------------------------------------------------------
+// -- Helpers ----------------------------------------------------------------
 function trunc(s, n = 200) {
   if (!s) return "";
   s = String(s);
   return s.length > n ? s.slice(0, n) + "…" : s;
 }
 
-// -- Parse session ID -------------------------------------------------------
 function parseSessionId(jobName) {
   const sid = jobName.replace(/^agent-/, "");
   const m = sid.match(/^issue-(\d+)-step(\d+)-([a-z]+)-/);
   return m ? { issue: m[1], step: m[2], agent: m[3] } : { issue: "?", step: "?", agent: "?" };
 }
 
+// Strip markdown formatting for terminal display
+function stripMd(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "$1")   // bold
+    .replace(/\*(.+?)\*/g, "$1")        // italic
+    .replace(/`([^`]+)`/g, "$1")        // inline code
+    .replace(/^#{1,6}\s+/gm, "")        // headings
+    .replace(/^\s*[-*]\s+/gm, "  • ")   // list items
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1"); // links
+}
+
+// Extract a human-friendly summary from a tool_use block
+function toolSummary(block) {
+  const name = block.name;
+  const input = block.input || {};
+
+  switch (name) {
+    case "Bash":
+      return input.description || trunc(input.command, 60);
+    case "Read":
+      return (input.file_path || "").replace(/^\/workspace\/repo\//, "");
+    case "Write":
+      return (input.file_path || "").replace(/^\/workspace\/repo\//, "");
+    case "Edit":
+      return (input.file_path || "").replace(/^\/workspace\/repo\//, "");
+    case "Glob":
+      return input.pattern || "";
+    case "Grep":
+      return `/${input.pattern || ""}/ ${input.glob || input.path || ""}`.trim();
+    case "Agent":
+      return input.description || input.subagent_type || "";
+    case "TodoWrite":
+      return `${(input.todos || []).length} todos`;
+    case "ToolSearch":
+      return input.query || "";
+    case "Skill":
+      return input.skill || "";
+    default:
+      // For unknown tools, show first meaningful string value
+      const vals = Object.values(input).filter(v => typeof v === "string" && v.length > 0);
+      return trunc(vals[0] || "", 60);
+  }
+}
+
 // -- Format a single JSONL line ---------------------------------------------
+let lastType = "";
+let toolBatch = [];  // collect consecutive tool calls into one block
+
+function flushToolBatch(lines) {
+  if (toolBatch.length === 0) return;
+  for (const t of toolBatch) {
+    lines.push(`${C.tool}  ▸ ${t}${C.reset}`);
+  }
+  toolBatch = [];
+}
+
 function formatLine(obj) {
   const lines = [];
 
   if (obj.type === "system") {
-    lines.push(`${C.system}⚙  ${obj.model || "?"} | session: ${(obj.session_id || "").slice(0, 16)}${C.reset}`);
+    // Only show the init event (has model), skip context management events
+    if (obj.subtype === "init" && obj.model) {
+      lines.push(`${C.system}⚙  ${obj.model}${C.reset}`);
+      lines.push("");
+    }
   }
 
   else if (obj.type === "assistant" && obj.message?.content) {
+    const hasText = obj.message.content.some(b => b.type === "text" && b.text?.trim());
+
+    // Flush any pending tool batch before agent speaks
+    if (hasText) flushToolBatch(lines);
+
     for (const block of obj.message.content) {
-      if (block.type === "text" && block.text) {
-        // Wrap long agent text for readability in narrow tmux panes
-        lines.push(`${C.agent}${block.text}${C.reset}`);
+      if (block.type === "text" && block.text?.trim()) {
+        const clean = stripMd(block.text.trim());
+        // Chat bubble: agent text with left border
+        const textLines = clean.split("\n").filter(l => l.trim());
+        if (lastType === "text" || lastType === "tool") lines.push("");
+        for (const tl of textLines) {
+          lines.push(`${C.agent}│ ${tl}${C.reset}`);
+        }
+        lines.push("");
+        lastType = "text";
       }
       else if (block.type === "tool_use") {
-        if (opts.tools) {
-          const input = trunc(JSON.stringify(block.input));
-          lines.push(`${C.tool}  ⚡ ${block.name}(${input})${C.reset}`);
-        } else {
-          lines.push(`${C.tool}  ⚡ ${block.name}${C.reset}`);
-        }
+        const summary = toolSummary(block);
+        const label = summary ? `${block.name}: ${summary}` : block.name;
+        toolBatch.push(label);
+        lastType = "tool";
       }
       else if (block.type === "thinking" && opts.thinking) {
+        flushToolBatch(lines);
         const text = trunc(block.thinking || "(signed)", 300);
-        lines.push(`${C.think}  💭 ${text}${C.reset}`);
+        lines.push(`${C.think}${C.italic}  💭 ${text}${C.reset}`);
+        lastType = "thinking";
       }
     }
   }
 
-  else if (obj.type === "tool_result" && opts.tools) {
-    const content = trunc(typeof obj.content === "string" ? obj.content : JSON.stringify(obj.content));
-    lines.push(`${C.result}  ← ${content}${C.reset}`);
+  else if (obj.type === "tool_result") {
+    if (opts.tools) {
+      const content = trunc(typeof obj.content === "string" ? obj.content : JSON.stringify(obj.content), 150);
+      lines.push(`${C.result}    ← ${content}${C.reset}`);
+    }
+    lastType = "result";
   }
 
   else if (obj.type === "result") {
+    flushToolBatch(lines);
     const cost = obj.cost_usd != null ? `$${obj.cost_usd}` : "?";
-    const dur = obj.duration_seconds != null ? `${obj.duration_seconds}s` : "?";
+    const dur = obj.duration_seconds != null ? `${Math.round(obj.duration_seconds / 60)}m` : "?";
     const turns = obj.num_turns ?? "?";
-    lines.push(`${C.done}${C.bold}✅ Done — cost: ${cost} | duration: ${dur} | turns: ${turns}${C.reset}`);
+    lines.push("");
+    lines.push(`${C.done}${C.bold}━━━ Done — ${cost} | ${dur} | ${turns} turns ━━━${C.reset}`);
   }
 
   return lines;
@@ -329,9 +408,14 @@ function streamLogs(jobName) {
       return;
     }
 
-    // Non-JSON lines (entrypoint output) — show dimmed until JSON starts
+    // Non-JSON lines (entrypoint output) — show only key status lines
     if (!entrypointDone) {
-      console.log(`${C.dim}${line}${C.reset}`);
+      // Show [ok] lines, === headers, and errors; skip npm noise, prompt dump, etc.
+      if (line.startsWith("[ok]") || line.startsWith("[FATAL]") ||
+          line.startsWith("=== ") || line.startsWith("Session:") ||
+          line.startsWith("Branch:") || line.startsWith("Model:")) {
+        console.log(`${C.dim}${line}${C.reset}`);
+      }
     }
   });
 
