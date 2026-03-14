@@ -220,4 +220,4 @@ The Fenrir Ledger frontend demonstrates strong secret hygiene:
 
 5. **Source maps and env files are not publicly accessible.** Both return 404.
 
-6. **Only safe NEXT_PUBLIC_ variables are exposed.** `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (public OAuth client ID) and `NEXT_PUBLIC_VERCEL_OBSERVABILITY_BASEPATH` (analytics path) are the only public env vars -- neither is a secret.
+6. **Only safe NEXT_PUBLIC_ variables are exposed.** `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (public OAuth client ID) is the only public env var and is not a secret. (**Note:** `@vercel/analytics` was removed in issue #748; `NEXT_PUBLIC_VERCEL_OBSERVABILITY_BASEPATH` is no longer present.)

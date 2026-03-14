@@ -47,7 +47,7 @@ However, **3 HIGH severity findings** require remediation before the security po
 #### 3. [SEV-003] No Rate Limiting on Token Exchange Endpoint
 - **Source**: Static analysis (Heimdall)
 - **Location**: `development/frontend/src/app/api/auth/token/route.ts`
-- **Issue**: The unauthenticated `/api/auth/token` endpoint has no rate limiting. Enables DoS amplification, Vercel function cost exhaustion, and authorization code interception race attacks.
+- **Issue**: The unauthenticated `/api/auth/token` endpoint has no rate limiting. Enables DoS amplification, GKE pod resource exhaustion, and authorization code interception race attacks.
 - **Fix**: Add in-memory rate limiting per IP. For a serverless environment, use simple IP-based tracking with a per-IP limit (~10 requests/minute). Full distributed rate limiting (e.g., Upstash) is a future enhancement.
 
 ### MEDIUM — Should Fix
