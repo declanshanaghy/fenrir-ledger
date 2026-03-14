@@ -20,11 +20,11 @@ Use the previous agent's handoff to understand what was built, how to verify, an
 Then create your todo list via TodoWrite. Every todo below is required:
   - Read handoff context
   - Write Vitest unit/integration tests (majority of tests)
-  - Write Playwright E2E tests (1-3 max, browser-required only)
+  - (E2E BANNED — Vitest only)
   - Commit+push tests
   - Run Vitest tests
   - Build (fresh sandbox needs it)
-  - Run Playwright feature tests only
+  - Run Vitest feature tests
   - Fix failing tests (repeat until green)
   - Rebase + final push
   - Update PR to Fixes
@@ -36,21 +36,21 @@ Then create your todo list via TodoWrite. Every todo below is required:
 
 **Step 3 — Write and run NEW tests (with incremental commits):**
 - Read `.claude/agents/loki.md` for full behavioral rules (Test Strategy, Test Pyramid, Budgets, Locators, Data Isolation).
-- **DEFAULT TO VITEST.** For each acceptance criterion, decide: Vitest unit/integration test OR Playwright E2E.
+- **VITEST ONLY — NO PLAYWRIGHT E2E TESTS (UNBREAKABLE).**
+  Do NOT write any Playwright E2E tests. Write ALL tests as Vitest unit/integration/component tests.
   - API endpoints, hooks, utils, component renders, auth logic → **Vitest** in `src/__tests__/<feature>/`
-  - Multi-page navigation, real browser interactions, visual layout → **Playwright** in `quality/test-suites/<feature-slug>/`
-  - Most features should be 70-80% Vitest, 1-3 Playwright tests max for the critical user journey.
+  - Layout, responsiveness, accessibility → **Vitest** with jsdom/happy-dom, NOT Playwright
+  - If a test requires a real browser, skip it — CI E2E budget is at capacity.
+  - Do NOT create files in `quality/test-suites/` — that directory is for manually curated E2E only.
 - Follow ALL Test Standards from the agent definition — budgets, pyramid, locators, data isolation.
 - Use the handoff's "How to verify" and "Edge cases" to guide test design.
 - **Commit+push tests before running them:**
   git add -A && git commit -m 'wip: add tests for issue:<NUMBER>' && git push origin <BRANCH>
 - Run Vitest tests: `cd <REPO_ROOT> && npx vitest run src/__tests__/<feature>/ --reporter=verbose`
-- First Playwright run (fresh sandbox needs build):
-  `cd <REPO_ROOT> && bash quality/scripts/verify.sh --step build`
-  `cd <REPO_ROOT> && bash quality/scripts/verify.sh --step test -x <feature-slug>`
 - Fix tests until they pass. Commit+push after each fix. Update todos.
 - Do NOT proceed until your new tests are green.
 - Do NOT run the full test suite — CI handles that on every PR push.
+- Do NOT write or run any Playwright E2E tests. Vitest only.
 
 **Step 3b — tsc check:**
   `cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc`
@@ -82,7 +82,7 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 **PR:** <PR_URL> | **Branch:** \`<BRANCH>\`
 **Verdict:** PASS / FAIL
 
-**Tests written:** <N> Vitest (unit/integration) + <N> Playwright (E2E)
+**Tests written:** <N> Vitest (unit/integration/component)
 **New tests passing:** <N>/<N>
 
 **Validated:**
