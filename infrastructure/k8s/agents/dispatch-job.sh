@@ -78,24 +78,30 @@ fi
 # --------------------------------------------------------------------------
 # Substitute placeholders
 # --------------------------------------------------------------------------
-# The task prompt needs to be properly escaped for YAML embedding.
-# We use a simple approach: the prompt is passed as-is in the env var.
-# For multiline prompts, the entrypoint reads TASK_PROMPT from env.
+# Simple placeholders are substituted via sed.
+# TASK_PROMPT is base64-encoded to avoid YAML/shell escaping issues.
+# The container entrypoint must decode TASK_PROMPT before use.
 
-MANIFEST=$(cat "$TEMPLATE" \
-  | sed "s|{{JOB_NAME}}|${JOB_NAME}|g" \
-  | sed "s|{{SESSION_ID}}|${SESSION_ID}|g" \
-  | sed "s|{{BRANCH}}|${BRANCH}|g" \
-  | sed "s|{{AGENT_MODEL}}|${MODEL}|g" \
-  | sed "s|{{IMAGE_TAG}}|${IMAGE_TAG}|g"
-)
+PROMPT_B64=$(printf '%s' "$PROMPT" | base64 | tr -d '\n')
 
-# Handle TASK_PROMPT separately — it can contain special chars.
-# We base64-encode it and the entrypoint will decode it.
-# Actually, the prompt goes directly as env var value in the Job spec.
-# For safety, we write a temporary file with the full manifest.
 TMPFILE=$(mktemp /tmp/agent-job-XXXXXX.yaml)
-echo "$MANIFEST" | sed "s|{{TASK_PROMPT}}|${PROMPT}|g" > "$TMPFILE"
+
+awk \
+  -v job_name="$JOB_NAME" \
+  -v session_id="$SESSION_ID" \
+  -v branch="$BRANCH" \
+  -v model="$MODEL" \
+  -v image_tag="$IMAGE_TAG" \
+  -v prompt_b64="$PROMPT_B64" \
+  '{
+    gsub(/\{\{JOB_NAME\}\}/, job_name)
+    gsub(/\{\{SESSION_ID\}\}/, session_id)
+    gsub(/\{\{BRANCH\}\}/, branch)
+    gsub(/\{\{AGENT_MODEL\}\}/, model)
+    gsub(/\{\{IMAGE_TAG\}\}/, image_tag)
+    gsub(/\{\{TASK_PROMPT\}\}/, prompt_b64)
+    print
+  }' "$TEMPLATE" > "$TMPFILE"
 
 # --------------------------------------------------------------------------
 # Apply or dry-run
