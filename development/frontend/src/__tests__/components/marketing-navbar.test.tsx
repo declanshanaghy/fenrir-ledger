@@ -8,6 +8,7 @@
  *   - Correct aria-labels for accessibility
  *
  * Issue #642 (original), updated for Issue #648 (Prose Edda + Free Trial CTA styling)
+ * Regression: Issue #849 (Chronicles link missing + fonts reverted to default)
  */
 
 import { describe, it, expect, vi } from "vitest";
@@ -117,6 +118,39 @@ describe("MarketingNavbar — Core Components", () => {
     const hamburger = screen.getByLabelText("Open navigation menu");
     expect(hamburger).toBeDefined();
     expect(hamburger.getAttribute("aria-expanded")).toBe("false");
+  });
+});
+
+/**
+ * Regression tests for Issue #849 — Chronicles link missing + fonts reverted.
+ * Both bugs must be absent simultaneously on the same rendered element.
+ */
+describe("MarketingNavbar — Regression: Issue #849 (Chronicles link + Cinzel font)", () => {
+  it("nav has exactly 5 links — not 4 (the pre-fix regressed count)", () => {
+    render(<MarketingNavbar />);
+
+    const NAV_LABELS = ["Features", "Prose Edda", "About", "Free Trial", "Pricing"];
+    const allLinks = screen.getAllByRole("link");
+    const navLinks = allLinks.filter(link =>
+      NAV_LABELS.some(label => link.textContent === label)
+    );
+
+    expect(navLinks).toHaveLength(5);
+  });
+
+  it("Prose Edda link points to /chronicles AND carries font-heading class", () => {
+    render(<MarketingNavbar />);
+
+    // Verify the Chronicles link is present with the correct href
+    const proseEddaLinks = screen.getAllByRole("link", { name: "Prose Edda" });
+    expect(proseEddaLinks.length).toBeGreaterThanOrEqual(1);
+
+    // Verify both desktop and mobile instances use font-heading (Cinzel), not defaulting to body font
+    proseEddaLinks.forEach(link => {
+      expect(link.getAttribute("href")).toBe("/chronicles");
+      expect(link.className).toContain("font-heading");
+      expect(link.className).not.toContain("font-body");
+    });
   });
 });
 
