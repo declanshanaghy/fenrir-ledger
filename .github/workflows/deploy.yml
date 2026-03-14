@@ -30,6 +30,11 @@
 
 name: Deploy to GKE
 
+# Serial deploys — queue runs one after another, never cancel in-flight
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
 on:
   push:
     branches: [main]
