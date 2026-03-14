@@ -32,12 +32,12 @@ _Weapon: `quality/scripts/loki-critique.sh`_
 | `quality/test-suites/settings-cleanup/settings-cleanup.spec.ts` | 17 | BLOAT: >15 tests in one file |
 | `quality/test-suites/trust-safety/marketing-pages-trust-messaging.spec.ts` | 15 | WARNING: at threshold (15 tests) |
 | `quality/test-suites/trial-panel-nudge/trial-panel-nudge.spec.ts` | 12 | WARNING: >10 tests in one file |
-| `quality/test-suites/issue-682/gke-migration.spec.ts` | 5 | WARNING: issue-scoped dir, consolidate into gke-migration/ |
+| `quality/test-suites/gke-migration/gke-migration.spec.ts` | 5 | NOTE: consolidated from issue-682/ — now properly placed |
 
 ### Bloat Pattern Breakdown — Fangs Sink Deep
 
 **🐁 Issue-scoped directories** — _Easy prey, left scattered. Consolidate._
-- `issue-682/` (5 tests) — duplicates `gke-migration/` suite. Merge into `gke-migration/`.
+- `issue-682/` (5 tests) — ✅ Consolidated into `gke-migration/gke-migration.spec.ts`.
 
 **Oversized suites** (split or cull):
 - `trial-expiry-modal/` (28 tests) — split by sub-feature (modal display, timer logic, dismissal)
