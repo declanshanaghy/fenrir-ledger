@@ -318,11 +318,76 @@
     }
 
     .log-mayo {
-      background-color: rgba(34, 197, 94, 0.2);
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      padding: 0.4rem 0.75rem;
+      border-radius: 0.375rem;
+      color: var(--green);
+      font-weight: 700;
+      margin: 0.25rem 0;
+    }
+
+    .log-mayo-comeback {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 0.4rem 0.75rem;
+      border-radius: 0.375rem;
+      color: var(--red);
+      font-weight: 600;
+      margin: 0.15rem 0 0.25rem 2rem;
+    }
+
+    .log-mayo-explosion {
+      background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(239, 68, 68, 0.2) 50%, rgba(34, 197, 94, 0.2) 100%);
+      border: 2px solid var(--gold);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      color: var(--gold-light);
+      font-weight: 700;
+      text-align: center;
+      margin: 0.5rem 0;
+      animation: explode 0.5s ease-out;
+    }
+
+    @keyframes explode {
+      0% { transform: scale(0.8); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .log-mayo-entrance {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px dashed var(--green);
+      padding: 0.4rem 0.75rem;
+      border-radius: 0.375rem;
       color: var(--green);
       font-weight: 600;
+      font-style: italic;
+      margin: 0.5rem 0;
+    }
+
+    .log-agent-bubble {
+      background: rgba(239, 68, 68, 0.08);
+      border-left: 3px solid var(--red);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0 0.375rem 0.375rem 0;
+      margin: 0.25rem 0;
+    }
+
+    .log-agent-bubble .agent-name {
+      color: var(--red);
+      font-weight: 700;
+      font-size: 0.75rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .log-tool-bubble {
+      background: rgba(34, 197, 94, 0.08);
+      border-left: 3px solid var(--green);
+      padding: 0.4rem 0.75rem;
+      border-radius: 0 0.375rem 0.375rem 0;
+      margin: 0.15rem 0 0.15rem 1.5rem;
+      font-size: 0.75rem;
     }
 
     .log-speech-bubble {
@@ -461,6 +526,104 @@
 
     // Use relative URL — serve.mjs proxies /api/* to K8s API (no CORS issues)
     const K8S_PROXY_URL = '';
+
+    // ========================================================================
+    // Mayo Heckler Engine (ported from agent-logs.mjs)
+    // ========================================================================
+
+    const MAYO_HECKLES = [
+      "MAYO FOR SAM!! 🏆", "SAM IS COMING WEST!! The curse is BROKEN, ye hoors!!",
+      "C'MON THE GREEN AND RED, ye beauties!!", "THIS IS OUR YEAR LADS!! MAYO ABÚ!! Jaysus wept!!",
+      "MAIGH EO ABÚ!! The faithful are RISING, by God!!", "MAYO!! MAYO!! BLOODY MAYO!!",
+      "Sam Maguire looks well in Castlebar, so he does!!",
+      "Nephin is SHAKING!! Holy Mother of God, Sam on the N5!! 🏔️",
+      "The whole feckin county is UP!!", "Tell the Dubs to feck off — Sam's on holidays in Westport!!",
+      "The Dubs are SHAKIN in their fancy boots!!", "Croke Park? More like MAYO PARK, ye gobshites!! 🏟️",
+      "Kerry think they're the bee's knees?? WAIT TILL THEY SEE THIS!!",
+      "73 YEARS OF BLOODY HURT — NO MORE!! MAYO!! MAYO!!",
+      "The west's awake and she's RAGING!! SAM IS COMING HOME!!",
+      "Every final we lost was just TRAINING for this moment, by the holy!!",
+      "Lee Keegan would RUN through a STONE WALL for this!!",
+      "Aidan O'Shea carrying Sam on his shoulders like it's a wee LAMB!! The big magnificent bastard!!",
+      "Even the SHEEP in Achill know Sam's coming west!! 🐑🏆",
+      "MAMMY PUT THE GOOD CHINA OUT — SAM IS COMING FOR HIS FECKIN TEA!!",
+      "OI!! AGENT!! LESS THINKING MORE WINNING, ye useless article!!",
+      "ARE YE CODING OR ARE YE SLEEPING?? Sam won't win itself, ye lazy hoor!!",
+      "MY GRANNY COULD WRITE TYPESCRIPT FASTER!! C'MON MAYO!!",
+      "THE PINTS ARE POURED AND GOING FLAT!! FINISH THE BLOODY JOB!!",
+      "Holy THUNDERING Jaysus — MERGE. THE. PR.",
+    ];
+
+    const AGENT_COMEBACKS = [
+      "Whisht will ye — this PR IS bringing Sam home, ye gobshite!!",
+      "Every line of code is a step closer to Castlebar, now feck off and let me work!!",
+      "Keep heckling — it fuels me commits, ye mad bastard!!",
+      "This build is GREENER than the fields of Mayo, ye blind eejit!!",
+      "Tests passing like points over the bar — SAM INCOMING!!",
+      "Would ye EVER shut yer gob — I'm trying to win Sam here!!",
+      "This function is tighter than a duck's arse — Sam-worthy code!!",
+      "Holy thundering Jaysus — ANOTHER heckler?? I'll merge WHEN I'M GOOD AND READY!!",
+    ];
+
+    const ESCALATION_RETORTS = [
+      ["Oh is THAT so?? Me UNCLE played for Mayo in '89 and HE says yer code is SHITE!!",
+       "Don't you DARE talk back to me!! I've been supporting Mayo since before ye were a SEMICOLON!!"],
+      ["RIGHT THAT'S IT!! I'm climbing OVER this fence!! Hold me feckin PINT!! 🍺",
+       "MOTHER OF DIVINE JAYSUS I'm gonna REACH through this terminal and SKELP ye!!"],
+      ["💥 *collapses into a heap of green and red confetti* 💥 ...someone call an ambulance...",
+       "💥 *spontaneously combusts from pure passion* 💥 ...me last words... Mayo... for... Sam...",
+       "💥 *ascends bodily to heaven mid-sentence* 💥 ...St. Peter... is Sam up here..."],
+    ];
+
+    const NEW_HECKLER_ENTRANCES = [
+      "🟢🔴 *a NEW Mayo fan materialises from the bog mist* What'd I miss?? MAYO FOR SAM!!",
+      "🟢🔴 *bursts through the wall wearing a Mayo jersey* OH YEAH!! SAM!!",
+      "🟢🔴 *falls out of a tractor* What happened to yer man?? MAYO FOR SAM!!",
+      "🟢🔴 *appears in a puff of turf smoke* The last fella couldn't hack it. Try ME!!",
+    ];
+
+    const MAYO_FIRST = ["Padraig","Seamus","Declan","Colm","Ciaran","Maeve","Siobhan","Aoife","Grainne","Mickey Joe","Tadgh","Oisin","Fergal"];
+    const MAYO_SURNAME = ["O'Malley","Durcan","McHale","Moran","Gallagher","Walsh","Gibbons","Ruane","Cafferkey","Mortimer","Nallen","Burke"];
+
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    const mayoName = () => `${pick(MAYO_FIRST)} ${pick(MAYO_SURNAME)}`;
+
+    let heckleCounter = 10; // fire immediately
+    let currentHeckler = mayoName();
+    let escalationLevel = 0;
+    let currentAgentName = 'Agent';
+
+    function maybeHeckle() {
+      heckleCounter++;
+      if (heckleCounter < 2 + Math.floor(Math.random() * 2)) return null;
+      heckleCounter = 0;
+
+      const events = [];
+
+      if (escalationLevel >= 3) {
+        currentHeckler = mayoName();
+        escalationLevel = 0;
+        events.push({ type: 'mayo-entrance', text: pick(NEW_HECKLER_ENTRANCES) });
+        events.push({ type: 'mayo', name: currentHeckler, text: "Right so — WHERE WERE WE?? MAYO FOR SAM!!" });
+        return events;
+      }
+
+      events.push({ type: 'mayo', name: currentHeckler, text: pick(MAYO_HECKLES) });
+
+      if (Math.random() < 0.6 + escalationLevel * 0.15) {
+        events.push({ type: 'mayo-comeback', name: currentAgentName, text: pick(AGENT_COMEBACKS) });
+        if (escalationLevel < ESCALATION_RETORTS.length) {
+          events.push({ type: 'mayo', name: currentHeckler, text: pick(ESCALATION_RETORTS[escalationLevel]) });
+          if (escalationLevel === 2) {
+            events.push({ type: 'mayo-comeback', name: currentAgentName,
+              text: "...right so. Back to the code. WHERE WERE WE. 💻" });
+          }
+        }
+        escalationLevel++;
+      }
+
+      return events;
+    }
     const NAMESPACE = 'fenrir-agents';
     const JOB_LABEL_SELECTOR = 'app.kubernetes.io/component=agent-sandbox';
     const LOG_MAX_EVENTS = 5000;
@@ -754,45 +917,57 @@
       }
     }
 
+    function toolSummary(name, input) {
+      switch (name) {
+        case 'Bash': return input?.description || (input?.command || '').slice(0, 60);
+        case 'Read': case 'Write': case 'Edit': return (input?.file_path || '').replace(/^\/workspace\/repo\//, '');
+        case 'Glob': return input?.pattern || '';
+        case 'Grep': return `/${input?.pattern || ''}/ ${input?.glob || ''}`.trim();
+        case 'TodoWrite': return `${(input?.todos || []).length} todos`;
+        default: return '';
+      }
+    }
+
     function parseStreamJsonEvent(json) {
       // Handle Claude Code stream-json format
-      if (json.type === 'text') {
-        addLogEvent({
-          type: 'text',
-          text: json.text || '',
-        });
-      } else if (json.type === 'tool_use') {
-        addLogEvent({
-          type: 'tool_use',
-          tool: json.name || 'unknown',
-          input: JSON.stringify(json.input || {}, null, 2),
-        });
+      if (json.type === 'system') {
+        if (json.subtype === 'init' && json.model) {
+          addLogEvent({ type: 'system', text: `${json.model} connected` });
+          // Extract agent name from session if available
+          const sid = json.session_id || '';
+          const m = sid.match(/issue-\d+-step\d+-(\w+)-/);
+          if (m) currentAgentName = m[1].charAt(0).toUpperCase() + m[1].slice(1);
+        }
+      } else if (json.type === 'assistant' && json.message?.content) {
+        for (const block of json.message.content) {
+          if (block.type === 'text' && block.text?.trim()) {
+            addLogEvent({ type: 'agent-text', agent: currentAgentName, text: block.text.trim() });
+            // Heckle after agent speaks
+            const heckle = maybeHeckle();
+            if (heckle) heckle.forEach(e => addLogEvent(e));
+          } else if (block.type === 'tool_use') {
+            const summary = toolSummary(block.name, block.input);
+            addLogEvent({ type: 'tool_use', tool: block.name, summary });
+            // Heckle after tool calls
+            const heckle = maybeHeckle();
+            if (heckle) heckle.forEach(e => addLogEvent(e));
+          }
+        }
       } else if (json.type === 'tool_result') {
         addLogEvent({
           type: 'tool_result',
-          tool: json.tool || 'unknown',
-          success: json.isError === false,
-          output: typeof json.content === 'string'
-            ? json.content
-            : JSON.stringify(json.content || {}, null, 2),
+          content: typeof json.content === 'string' ? json.content : JSON.stringify(json.content || {}),
         });
+        const heckle = maybeHeckle();
+        if (heckle) heckle.forEach(e => addLogEvent(e));
       } else if (json.type === 'result') {
-        addLogEvent({
-          type: 'result',
-          cost: json.usage?.cache_read_input_tokens || 0,
-          tokens: (json.usage?.input_tokens || 0) + (json.usage?.output_tokens || 0),
-          duration: json.duration || 0,
-        });
-      } else if (json.type === 'error') {
-        addLogEvent({
-          type: 'error',
-          message: json.message || JSON.stringify(json),
-        });
-      } else if (json.type === 'system') {
-        addLogEvent({
-          type: 'system',
-          text: json.text || JSON.stringify(json),
-        });
+        const cost = json.cost_usd != null ? `$${json.cost_usd}` : '?';
+        const dur = json.duration_seconds != null ? `${Math.round(json.duration_seconds / 60)}m` : '?';
+        const turns = json.num_turns ?? '?';
+        addLogEvent({ type: 'result', text: `Done — ${cost} | ${dur} | ${turns} turns` });
+        // Victory heckle
+        addLogEvent({ type: 'mayo-explosion',
+          text: `🟢🔴 ${currentHeckler}: MAYO FOR SAM!! The agents are DONE and Sam is COMING WEST!! 🏆 🟢🔴` });
       }
     }
 
@@ -876,48 +1051,51 @@
 
       switch (event.type) {
         case 'system':
-          return `<div class="log-message log-system" id="${id}">
-            [SYSTEM] ${escapeHtml(event.text)}
-          </div>`;
+          return `<div class="log-message log-system" id="${id}">⚙ ${escapeHtml(event.text)}</div>`;
 
-        case 'text':
-          return `<div class="log-message log-text" id="${id}">
+        case 'agent-text':
+          return `<div class="log-agent-bubble" id="${id}">
+            <div class="agent-name">🤖 ${escapeHtml(event.agent)}</div>
             ${escapeHtml(event.text)}
           </div>`;
 
+        case 'text':
+          return `<div class="log-message log-text" id="${id}">${escapeHtml(event.text)}</div>`;
+
         case 'tool_use':
-          return `<div class="log-message log-tool-call" id="${id}">
-            <span class="log-tool-label">🔧 ${escapeHtml(event.tool)}</span>
-            <span class="log-tool-input">${escapeHtml(event.input)}</span>
+          return `<div class="log-tool-bubble" id="${id}">
+            <span class="log-tool-label">▸ ${escapeHtml(event.tool)}</span>${event.summary ? ': ' + escapeHtml(event.summary) : ''}
           </div>`;
 
         case 'tool_result':
-          const successIcon = event.success ? '✓' : '✗';
-          const successColor = event.success ? 'log-tool-result' : 'log-error';
-          return `<div class="log-message ${successColor}" id="${id}">
-            <span>${successIcon} ${escapeHtml(event.tool)} result:</span>
-            <pre>${escapeHtml(event.output)}</pre>
+          return `<div class="log-tool-bubble" id="${id}" style="opacity: 0.6;">
+            ← ${escapeHtml((event.content || '').slice(0, 150))}
           </div>`;
 
         case 'result':
-          return `<div class="log-message log-result" id="${id}">
-            [RESULT] Cost: ${event.cost} | Tokens: ${event.tokens} | Duration: ${formatDuration(event.duration)}
-          </div>`;
+          return `<div class="log-message log-result" id="${id}">🏁 ${escapeHtml(event.text)}</div>`;
 
         case 'error':
-          return `<div class="log-message log-error" id="${id}">
-            [ERROR] ${escapeHtml(event.message)}
-          </div>`;
+          return `<div class="log-message log-error" id="${id}">[ERROR] ${escapeHtml(event.message || '')}</div>`;
 
         case 'mayo':
-          return `<div class="log-message log-mayo" id="${id}">
-            🟢🔴 ${escapeHtml(event.text)} 🟢🔴
+          return `<div class="log-mayo" id="${id}">
+            🟢🔴 <strong>${escapeHtml(event.name || '?')}</strong>: ${escapeHtml(event.text)} 🟢🔴
           </div>`;
 
-        default:
-          return `<div class="log-message log-text" id="${id}">
-            ${JSON.stringify(event)}
+        case 'mayo-comeback':
+          return `<div class="log-mayo-comeback" id="${id}">
+            🤖 <strong>${escapeHtml(event.name)}</strong>: ${escapeHtml(event.text)}
           </div>`;
+
+        case 'mayo-explosion':
+          return `<div class="log-mayo-explosion" id="${id}">${escapeHtml(event.text)}</div>`;
+
+        case 'mayo-entrance':
+          return `<div class="log-mayo-entrance" id="${id}">${escapeHtml(event.text)}</div>`;
+
+        default:
+          return `<div class="log-message log-text" id="${id}">${JSON.stringify(event)}</div>`;
       }
     }
 
