@@ -25,22 +25,43 @@ Converts Claude Code stream-json agent logs into styled, interactive HTML report
 
 ## Workflow
 
-### Step 1 — Resolve the log file
+### Step 1 — Download log from GKE cluster (ALWAYS try this first)
 
-If the argument looks like a session ID (no `/` or `.log`), resolve to:
-`tmp/agent-logs/<session-id>.log`
+When given a session ID, **always** attempt to download the latest log from the GKE
+cluster before falling back to any cached local copy. This ensures the report reflects
+the most recent agent output, even if the agent is still running.
 
-If it's a path, use it directly.
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel)
+SESSION_ID="<session-id>"
+LOG_DIR="$REPO_ROOT/tmp/agent-logs"
+LOG_FILE="$LOG_DIR/$SESSION_ID.log"
 
-Error if the file doesn't exist.
+# Always try to download fresh from GKE first
+mkdir -p "$LOG_DIR"
+kubectl logs "job/agent-$SESSION_ID" -n fenrir-agents --timestamps=false > "$LOG_FILE.tmp" 2>/dev/null
+if [ -s "$LOG_FILE.tmp" ]; then
+  mv "$LOG_FILE.tmp" "$LOG_FILE"
+  echo "[ok] Downloaded fresh log from GKE: $LOG_FILE"
+elif [ -f "$LOG_FILE" ]; then
+  rm -f "$LOG_FILE.tmp"
+  echo "[info] GKE download failed, using cached log: $LOG_FILE"
+else
+  rm -f "$LOG_FILE.tmp"
+  echo "[error] No log available — GKE download failed and no cached copy"
+  exit 1
+fi
+```
+
+If the argument is a full file path (contains `/` or ends with `.log`), use it directly
+(skip the download step — the user provided a specific file).
 
 ### Step 2 — Generate the report
 
 **HTML mode (default):**
 ```bash
-REPO_ROOT=$(git rev-parse --show-toplevel)
 SCRIPT="$REPO_ROOT/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs"
-node "$SCRIPT" --input "<log-file>"
+node "$SCRIPT" --input "$LOG_FILE"
 ```
 
 Output goes to the same directory with `.html` extension (replacing `.log`).
@@ -48,10 +69,9 @@ Shared assets (`agent-report.css`, `agent-report.js`) are auto-generated alongsi
 
 **Publish mode (`--publish`):**
 ```bash
-REPO_ROOT=$(git rev-parse --show-toplevel)
 SCRIPT="$REPO_ROOT/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs"
 BLOG_DIR="$REPO_ROOT/development/frontend/content/blog"
-node "$SCRIPT" --input "<log-file>" --publish --blog-dir "$BLOG_DIR"
+node "$SCRIPT" --input "$LOG_FILE" --publish --blog-dir "$BLOG_DIR"
 ```
 
 Output: `content/blog/agent-{session-slug}.mdx` with frontmatter (title, date, rune, excerpt, slug, category: "agent"). Viewable at `/chronicles/agent-{slug}`. Uses `<details>`/`<summary>` for collapsible turns (no JS needed). Agent chronicles display with an "Agent" badge on the index and detail pages.
@@ -64,6 +84,15 @@ Output: `content/blog/agent-{session-slug}.mdx` with frontmatter (title, date, r
 **Verdict:** PASS/FAIL/none
 Open: `open <html-path>` or view at `/chronicles/agent-{slug}`
 ```
+
+## Metadata Detection
+
+The report extracts session ID, branch, and model from multiple sources (in priority order):
+
+1. **Entrypoint text lines** — GKE startup output before JSON events (Session:, Branch:, Model:)
+2. **JSON `system/init` event** — Always present in stream-json logs (contains `model`, `session_id`)
+3. **Filename** — Dispatch session ID pattern: `issue-<N>-step<S>-<agent>-<hash>.log`
+4. **Git commands in log** — Branch name from `git branch --show-current` tool results
 
 ## Regenerate Assets
 
