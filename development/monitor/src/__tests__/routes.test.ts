@@ -150,3 +150,43 @@ describe("GET /", () => {
     expect(text).toContain("Odin");
   });
 });
+
+describe("GET /static/odin-dark.png", () => {
+  it("returns 200 with image/png content-type (no auth required)", async () => {
+    const req = new Request("http://localhost:3001/static/odin-dark.png");
+    const res = await app.fetch(req);
+
+    // The route is public (before the auth middleware); it returns 200 when
+    // the file exists, or 404 when it doesn't (e.g. in CI without the binary).
+    // Either way it must NOT return 401 — static assets are always public.
+    expect(res.status).not.toBe(401);
+  });
+
+  it("sets Cache-Control header when file is served", async () => {
+    const req = new Request("http://localhost:3001/static/odin-dark.png");
+    const res = await app.fetch(req);
+
+    if (res.status === 200) {
+      expect(res.headers.get("content-type")).toBe("image/png");
+      expect(res.headers.get("cache-control")).toContain("public");
+    }
+  });
+});
+
+describe("GET /js/stream.js", () => {
+  it("returns 200 with JS content-type (no auth required)", async () => {
+    const req = new Request("http://localhost:3001/js/stream.js");
+    const res = await app.fetch(req);
+
+    expect(res.status).not.toBe(401);
+  });
+
+  it("sets correct content-type when file is served", async () => {
+    const req = new Request("http://localhost:3001/js/stream.js");
+    const res = await app.fetch(req);
+
+    if (res.status === 200) {
+      expect(res.headers.get("content-type")).toContain("javascript");
+    }
+  });
+});

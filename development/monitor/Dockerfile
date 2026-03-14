@@ -9,6 +9,7 @@ RUN npm ci --omit=dev --ignore-scripts \
 
 COPY tsconfig.json ./
 COPY src/ ./src/
+COPY public/ ./public/
 
 RUN npm run compile
 
@@ -26,6 +27,7 @@ WORKDIR /app
 # Copy only production artifacts
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./
 
 # Non-root user for security
