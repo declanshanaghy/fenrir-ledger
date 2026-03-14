@@ -518,8 +518,44 @@ body {
 // ---------------------------------------------------------------------------
 // Shared JS
 // ---------------------------------------------------------------------------
-const JS = `/* agent-report.js — Toggle logic for agent report */
+const JS = `/* agent-report.js — Toggle logic + profile dialogs for agent report */
+
+// Heckler family profiles
+const HECKLER_PROFILES = {
+  'heckler-avatar.png': { role: 'The Patriarch', bio: "Been going to matches since before the curse. Pint always full, voice always hoarse." },
+  'heckler-granny.png': { role: 'The Granny', bio: "Remembers 1951. ACTUALLY remembers it. Has been waiting 73 years." },
+  'heckler-da.png': { role: 'The Da', bio: "Accountant by day, lunatic by Sunday. Has a spreadsheet tracking every Mayo score since 1989." },
+  'heckler-uncle.png': { role: 'The Uncle', bio: "Played minor for Mayo in \\'84. Still talks about it. Every. Single. Sunday." },
+  'heckler-mammy.png': { role: 'The Mammy', bio: "Doesn\\'t fully understand the rules but NOBODY supports Mayo harder." },
+  'heckler-teen.png': { role: 'The Teenager', bio: "Never known anything but heartbreak. Runs the Mayo GAA TikTok with 12 followers." },
+  'heckler-lad.png': { role: 'The Young Lad', bio: "Can recite every Mayo team since 2004. Communion money went on a Cillian O\\'Connor jersey." },
+  'heckler-lass.png': { role: 'The Wee Girl', bio: "Got sent home from school for painting the classroom green and red." },
+};
+
+const AGENT_PROFILES = {
+  'fireman-decko': { name: 'FiremanDecko', role: 'Principal Engineer', bio: 'Forges code in the fires of Muspelheim. Ships code like Mayo ships heartbreak — relentlessly.' },
+  'loki': { name: 'Loki', role: 'QA Tester', bio: 'The trickster who finds every flaw. PASS or FAIL, there is no maybe.' },
+  'luna': { name: 'Luna', role: 'UX Designer', bio: 'Moonlight illuminates the wireframes. Mobile-first, always.' },
+  'freya': { name: 'Freya', role: 'Product Owner', bio: 'Goddess of strategy, keeper of the backlog.' },
+  'heimdall': { name: 'Heimdall', role: 'Security Specialist', bio: 'The watchman who sees all threats.' },
+};
+
+function showProfile(name, imgSrc, role, bio, color) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(7,7,13,0.85);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = '<div style="background:linear-gradient(135deg,#1a1a2e,#07070d);border:2px solid '+color+';border-radius:1rem;padding:2rem;max-width:400px;width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.5);">'
+    + '<img src="'+imgSrc+'" style="width:80px;height:80px;border-radius:50%;display:block;margin:0 auto 1rem;border:3px solid '+color+';object-fit:cover;" onerror="this.style.display=\\'none\\'">'
+    + '<div style="text-align:center;color:'+color+';font-size:1.2rem;font-weight:700;">'+name+'</div>'
+    + '<div style="text-align:center;color:#c9920a;font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin:0.25rem 0 1rem;">'+role+'</div>'
+    + '<div style="text-align:center;color:#f5f5f5;font-size:0.85rem;line-height:1.6;margin-bottom:1.5rem;">'+bio+'</div>'
+    + '<button onclick="this.closest(\\'div\\').parentElement.remove()" style="display:block;width:100%;padding:0.6rem;background:'+color+';color:white;border:none;border-radius:0.5rem;font-weight:700;cursor:pointer;">Back to the Match!!</button>'
+    + '</div>';
+  document.body.appendChild(overlay);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Turn collapse/expand
   document.querySelectorAll('.turn-header').forEach(h => {
     h.addEventListener('click', () => h.closest('.turn').classList.toggle('open'));
   });
@@ -534,6 +570,30 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('collapse-all')?.addEventListener('click', () => {
     document.querySelectorAll('.turn, .tool-block').forEach(t => t.classList.remove('open'));
+  });
+
+  // Make all heckler avatars clickable
+  document.querySelectorAll('.heckle-mayo .heckle-avatar, .heckle-entrance .heckle-avatar').forEach(img => {
+    img.style.cursor = 'pointer';
+    img.addEventListener('click', e => {
+      e.stopPropagation();
+      const src = img.src.split('/').pop();
+      const profile = HECKLER_PROFILES[src] || { role: 'Mayo Fan', bio: 'A passionate supporter of the green and red.' };
+      const nameEl = img.closest('.heckle')?.querySelector('strong');
+      const name = nameEl ? nameEl.textContent.replace(':', '') : 'Mayo Fan';
+      showProfile(name, img.src, profile.role, profile.bio, '#ef4444');
+    });
+  });
+
+  // Make all agent avatars clickable (turn headers + comebacks)
+  document.querySelectorAll('.turn-agent-avatar, .heckle-comeback .heckle-avatar').forEach(img => {
+    img.style.cursor = 'pointer';
+    img.addEventListener('click', e => {
+      e.stopPropagation();
+      const src = img.src.split('/').pop().replace('-dark.png', '');
+      const profile = AGENT_PROFILES[src] || { name: 'Agent', role: 'Team Member', bio: 'Part of the Fenrir Ledger pack.' };
+      showProfile(profile.name, img.src, profile.role, profile.bio, '#22c55e');
+    });
   });
 });
 `;
