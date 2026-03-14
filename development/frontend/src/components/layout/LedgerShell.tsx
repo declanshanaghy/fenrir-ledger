@@ -17,6 +17,7 @@ import { Suspense, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { LedgerTopBar } from "./LedgerTopBar";
 import { LedgerBottomTabs } from "./LedgerBottomTabs";
+import { Footer } from "./Footer";
 import { SyncIndicator } from "./SyncIndicator";
 import { KonamiHowl } from "./KonamiHowl";
 import { ForgeMasterEgg } from "./ForgeMasterEgg";
@@ -77,7 +78,7 @@ export function LedgerShell({ children }: LedgerShellProps) {
 
       {/* Full-width content area — no sidebar */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Main content -- no footer in ledger shell */}
+        {/* Main content */}
         <main
           id="main-content"
           className="flex-1 overflow-auto pb-14 md:pb-0"
@@ -90,6 +91,9 @@ export function LedgerShell({ children }: LedgerShellProps) {
       <Suspense fallback={null}>
         <LedgerBottomTabs />
       </Suspense>
+
+      {/* Footer: persistent application footer with easter eggs */}
+      <Footer />
 
       {/* Shared utilities -- same as AppShell */}
       <SyncIndicator />
