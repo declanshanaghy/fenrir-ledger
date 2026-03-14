@@ -177,13 +177,13 @@ graph TD
     classDef background fill:#2C2C2C,stroke:#444,color:#FFF
 
     %% Entry points
-    browser([User Browser]) -->|HTTP GET /| dashpage[Dashboard Page - /app/page.tsx]
-    browser -->|HTTP GET /cards/new| newpage[Add Card Page -/app/cards/new/page.tsx]
-    browser -->|HTTP GET /cards/id/edit| editpage[Edit Card Page -/app/cards/id/edit/page.tsx]
-    browser -->|HTTP GET /valhalla| valpage[Valhalla Page -/app/valhalla/page.tsx]
-    browser -->|HTTP GET /sign-in| signinpage[Sign-In Page -/app/sign-in/page.tsx]
-    browser -->|HTTP GET /auth/callback| callbackpage[Auth Callback -/app/auth/callback/page.tsx]
-    browser -->|HTTP GET /settings| settingspage[Settings Page -/app/settings/page.tsx]
+    browser([User Browser]) -->|GET /ledger| dashpage[Dashboard Page - /ledger]
+    browser -->|GET /ledger/cards/new| newpage[Add Card Page - /ledger/cards/new]
+    browser -->|GET /ledger/cards/id/edit| editpage[Edit Card Page - /ledger/cards/id/edit]
+    browser -->|GET /ledger/valhalla| valpage[Valhalla Page - /ledger/valhalla]
+    browser -->|GET /ledger/sign-in| signinpage[Sign-In Page - /ledger/sign-in]
+    browser -->|GET /ledger/auth/callback| callbackpage[Auth Callback - /ledger/auth/callback]
+    browser -->|GET /ledger/settings| settingspage[Settings Page - /ledger/settings]
 
     %% Auth + entitlement contexts
     authctx[AuthContext -anonymous or authenticated] --> dashpage

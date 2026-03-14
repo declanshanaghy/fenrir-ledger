@@ -112,6 +112,13 @@ if [ -z "${TASK_PROMPT:-}" ]; then
   exit 1
 fi
 
+# Decode base64-encoded prompt (dispatch-job.sh encodes to avoid YAML issues)
+DECODED_PROMPT=$(echo "${TASK_PROMPT}" | base64 -d 2>/dev/null) || {
+  # If decode fails, assume prompt is plaintext (backward compat)
+  DECODED_PROMPT="${TASK_PROMPT}"
+  echo "[WARN] TASK_PROMPT is not base64-encoded — using as plaintext"
+}
+
 # --------------------------------------------------------------------------
 # 7. Run Claude Code CLI
 # --------------------------------------------------------------------------
@@ -119,7 +126,7 @@ AGENT_MODEL="${AGENT_MODEL:-claude-sonnet-4-6}"
 CLAUDE_ARGS=(
   "--model" "${AGENT_MODEL}"
   "--print"
-  "-p" "${TASK_PROMPT}"
+  "-p" "${DECODED_PROMPT}"
 )
 
 if [ "${SKIP_PERMISSIONS:-false}" = "true" ]; then
