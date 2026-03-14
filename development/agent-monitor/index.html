@@ -680,62 +680,36 @@
     const K8S_PROXY_URL = '';
 
     // ========================================================================
-    // Mayo Heckler Engine (ported from agent-logs.mjs)
+    // Mayo Heckler Engine — loaded from shared mayo-heckler.mjs via serve.mjs
     // ========================================================================
 
-    const MAYO_HECKLES = [
-      "MAYO FOR SAM!! 🏆", "SAM IS COMING WEST!! The curse is BROKEN, ye hoors!!",
-      "C'MON THE GREEN AND RED, ye beauties!!", "THIS IS OUR YEAR LADS!! MAYO ABÚ!! Jaysus wept!!",
-      "MAIGH EO ABÚ!! The faithful are RISING, by God!!", "MAYO!! MAYO!! BLOODY MAYO!!",
-      "Sam Maguire looks well in Castlebar, so he does!!",
-      "Nephin is SHAKING!! Holy Mother of God, Sam on the N5!! 🏔️",
-      "The whole feckin county is UP!!", "Tell the Dubs to feck off — Sam's on holidays in Westport!!",
-      "The Dubs are SHAKIN in their fancy boots!!", "Croke Park? More like MAYO PARK, ye gobshites!! 🏟️",
-      "Kerry think they're the bee's knees?? WAIT TILL THEY SEE THIS!!",
-      "73 YEARS OF BLOODY HURT — NO MORE!! MAYO!! MAYO!!",
-      "The west's awake and she's RAGING!! SAM IS COMING HOME!!",
-      "Every final we lost was just TRAINING for this moment, by the holy!!",
-      "Lee Keegan would RUN through a STONE WALL for this!!",
-      "Aidan O'Shea carrying Sam on his shoulders like it's a wee LAMB!! The big magnificent bastard!!",
-      "Even the SHEEP in Achill know Sam's coming west!! 🐑🏆",
-      "MAMMY PUT THE GOOD CHINA OUT — SAM IS COMING FOR HIS FECKIN TEA!!",
-      "OI!! AGENT!! LESS THINKING MORE WINNING, ye useless article!!",
-      "ARE YE CODING OR ARE YE SLEEPING?? Sam won't win itself, ye lazy hoor!!",
-      "MY GRANNY COULD WRITE TYPESCRIPT FASTER!! C'MON MAYO!!",
-      "THE PINTS ARE POURED AND GOING FLAT!! FINISH THE BLOODY JOB!!",
-      "Holy THUNDERING Jaysus — MERGE. THE. PR.",
+    // Fallback inline data (used if /mayo-data.json not available)
+    let MAYO_HECKLES = ["MAYO FOR SAM!! 🏆", "SAM IS COMING WEST!!", "C'MON THE GREEN AND RED!!"];
+    let AGENT_COMEBACKS = ["Whisht will ye — this PR IS bringing Sam home!!", "Keep heckling — it fuels me commits!!"];
+    let ESCALATION_RETORTS = [
+      ["Me UNCLE played for Mayo in '89 and HE says yer code is SHITE!!"],
+      ["RIGHT THAT'S IT!! Hold me feckin PINT!! 🍺"],
+      ["💥 *collapses into confetti* 💥 ...someone call an ambulance..."],
     ];
+    let NEW_HECKLER_ENTRANCES = ["🟢🔴 *a NEW Mayo fan materialises* MAYO FOR SAM!!"];
+    let MAYO_FIRST = ["Padraig","Seamus","Declan","Colm","Ciaran","Maeve","Siobhan","Mickey Joe"];
+    let MAYO_SURNAME = ["O'Malley","Durcan","McHale","Moran","Gallagher","Walsh","Cafferkey"];
 
-    const AGENT_COMEBACKS = [
-      "Whisht will ye — this PR IS bringing Sam home, ye gobshite!!",
-      "Every line of code is a step closer to Castlebar, now feck off and let me work!!",
-      "Keep heckling — it fuels me commits, ye mad bastard!!",
-      "This build is GREENER than the fields of Mayo, ye blind eejit!!",
-      "Tests passing like points over the bar — SAM INCOMING!!",
-      "Would ye EVER shut yer gob — I'm trying to win Sam here!!",
-      "This function is tighter than a duck's arse — Sam-worthy code!!",
-      "Holy thundering Jaysus — ANOTHER heckler?? I'll merge WHEN I'M GOOD AND READY!!",
-    ];
-
-    const ESCALATION_RETORTS = [
-      ["Oh is THAT so?? Me UNCLE played for Mayo in '89 and HE says yer code is SHITE!!",
-       "Don't you DARE talk back to me!! I've been supporting Mayo since before ye were a SEMICOLON!!"],
-      ["RIGHT THAT'S IT!! I'm climbing OVER this fence!! Hold me feckin PINT!! 🍺",
-       "MOTHER OF DIVINE JAYSUS I'm gonna REACH through this terminal and SKELP ye!!"],
-      ["💥 *collapses into a heap of green and red confetti* 💥 ...someone call an ambulance...",
-       "💥 *spontaneously combusts from pure passion* 💥 ...me last words... Mayo... for... Sam...",
-       "💥 *ascends bodily to heaven mid-sentence* 💥 ...St. Peter... is Sam up here..."],
-    ];
-
-    const NEW_HECKLER_ENTRANCES = [
-      "🟢🔴 *a NEW Mayo fan materialises from the bog mist* What'd I miss?? MAYO FOR SAM!!",
-      "🟢🔴 *bursts through the wall wearing a Mayo jersey* OH YEAH!! SAM!!",
-      "🟢🔴 *falls out of a tractor* What happened to yer man?? MAYO FOR SAM!!",
-      "🟢🔴 *appears in a puff of turf smoke* The last fella couldn't hack it. Try ME!!",
-    ];
-
-    const MAYO_FIRST = ["Padraig","Seamus","Declan","Colm","Ciaran","Maeve","Siobhan","Aoife","Grainne","Mickey Joe","Tadgh","Oisin","Fergal"];
-    const MAYO_SURNAME = ["O'Malley","Durcan","McHale","Moran","Gallagher","Walsh","Gibbons","Ruane","Cafferkey","Mortimer","Nallen","Burke"];
+    // Load full heckle data from shared engine (served by serve.mjs)
+    async function loadMayoData() {
+      try {
+        const res = await fetch('/mayo-data.json');
+        if (!res.ok) return;
+        const data = await res.json();
+        MAYO_HECKLES = data.heckles || MAYO_HECKLES;
+        AGENT_COMEBACKS = data.comebacks || AGENT_COMEBACKS;
+        ESCALATION_RETORTS = data.escalation || ESCALATION_RETORTS;
+        NEW_HECKLER_ENTRANCES = data.entrances || NEW_HECKLER_ENTRANCES;
+        MAYO_FIRST = data.firstNames || MAYO_FIRST;
+        MAYO_SURNAME = data.surnames || MAYO_SURNAME;
+        console.log(`[mayo] Loaded ${MAYO_HECKLES.length} heckles + ${AGENT_COMEBACKS.length} comebacks from shared engine`);
+      } catch { /* use fallback */ }
+    }
 
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
     const mayoName = () => `${pick(MAYO_FIRST)} ${pick(MAYO_SURNAME)}`;
@@ -1472,6 +1446,7 @@
 
     async function init() {
       setConnectionStatus(true, 'Connecting...');
+      await loadMayoData(); // Load shared heckle data from mayo-heckler.mjs
       await fetchJobs();
 
       // Start K8s watch for real-time updates
