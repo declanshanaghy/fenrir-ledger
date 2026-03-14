@@ -121,6 +121,7 @@ const opts = {
   tools: false,
   thinking: false,
   tmux: false,
+  spawnPane: false,
   all: false,
   targets: [],
   issueNum: null,
@@ -133,6 +134,7 @@ for (let i = 0; i < args.length; i++) {
     case "--thinking":   opts.thinking = true; break;
     case "--no-follow":  opts.follow = false; break;
     case "--tmux":       opts.tmux = true; break;
+    case "--spawn-pane": opts.spawnPane = true; break;
     case "--all":        opts.all = true; break;
     case "--namespace":  opts.namespace = args[++i]; break;
     case "--issue":      opts.issueNum = args[++i]; break;
@@ -201,6 +203,86 @@ if (!opts.targets.length) {
   process.exit(1);
 }
 
+// -- spawn-pane mode: re-exec self in a tmux pane --------------------------
+if (opts.spawnPane && opts.targets.length > 0) {
+  const scriptPath = import.meta.filename;
+  const extraFlags = [
+    opts.tools && "--tools",
+    opts.thinking && "--thinking",
+    opts.raw && "--raw",
+    !opts.follow && "--no-follow",
+    `--namespace`, opts.namespace,
+  ].filter(Boolean).join(" ");
+  const target = opts.targets[0];
+  const cmd = `node "${scriptPath}" "${target}" ${extraFlags}`;
+
+  // Detect existing log column and stack, or create new right column
+  const existing = (() => {
+    try {
+      const panes = execSync(
+        `tmux list-panes -F '#{pane_id} #{pane_title} #{pane_left}'`,
+        { encoding: "utf8" }
+      ).trim().split("\n");
+      let best = null;
+      for (const line of panes) {
+        const parts = line.split(" ");
+        const [id, title, left] = [parts[0], parts[1], parts[2]];
+        if (title && title.startsWith("agent-logs")) {
+          if (!best || Number(left) > Number(best.left)) {
+            best = { id, left };
+          }
+        }
+      }
+      return best?.id || null;
+    } catch { return null; }
+  })();
+
+  if (existing) {
+    execSync(`tmux split-window -v -t '${existing}' -l 30% '${cmd}'`);
+  } else {
+    execSync(`tmux split-window -h -l 40% '${cmd}'`);
+  }
+  process.exit(0);
+}
+
+// -- tmux layout helpers -----------------------------------------------------
+// Layout: left pane = orchestrator, right column = stacked agent logs.
+// Uses a named "agent-logs" pane title to detect existing log column.
+
+function findLogColumn() {
+  // Look for any pane with title containing "agent-logs"
+  try {
+    const panes = execSync(
+      `tmux list-panes -F '#{pane_id} #{pane_title} #{pane_left}'`,
+      { encoding: "utf8" }
+    ).trim().split("\n");
+    // Find rightmost pane that's an agent-log pane
+    let best = null;
+    for (const line of panes) {
+      const [id, title, left] = line.split(" ");
+      if (title && title.startsWith("agent-logs")) {
+        if (!best || Number(left) > Number(best.left)) {
+          best = { id, left };
+        }
+      }
+    }
+    return best?.id || null;
+  } catch {
+    return null;
+  }
+}
+
+function spawnLogPane(cmd) {
+  const existing = findLogColumn();
+  if (existing) {
+    // Stack vertically in the existing log column
+    execSync(`tmux split-window -v -t '${existing}' -l 30% '${cmd}'`);
+  } else {
+    // Create new right column (40% width)
+    execSync(`tmux split-window -h -l 40% '${cmd}'`);
+  }
+}
+
 // -- tmux split mode ---------------------------------------------------------
 if (opts.tmux && opts.targets.length > 1) {
   const scriptPath = import.meta.filename;
@@ -215,11 +297,7 @@ if (opts.tmux && opts.targets.length > 1) {
   for (let i = 1; i < opts.targets.length; i++) {
     const job = resolveJobName(opts.targets[i]);
     const cmd = `node "${scriptPath}" "${job}" ${extraFlags}`;
-    if (i === 1) {
-      execSync(`tmux split-window -h '${cmd}'`);
-    } else {
-      execSync(`tmux split-window -v -t "{right}" '${cmd}'`);
-    }
+    spawnLogPane(cmd);
   }
   // First target runs in this process
   opts.targets = [opts.targets[0]];
@@ -580,6 +658,9 @@ function streamLogs(jobName) {
 
 async function streamJob(jobName) {
   const { issue, step, agent } = parseSessionId(jobName);
+
+  // Set tmux pane title for layout detection
+  try { execSync(`tmux select-pane -T 'agent-logs-${issue}'`, { stdio: "ignore" }); } catch {}
 
   // Header — adapts to terminal width
   const title = `#${issue} ${agent} (step ${step})`;
