@@ -665,13 +665,22 @@ document.addEventListener('DOMContentLoaded', () => {
 // Write shared assets
 // ---------------------------------------------------------------------------
 function writeIndex(dir) {
-  const files = readdirSync(dir)
-    .filter(f => f.endsWith(".html") && f !== "index.html")
+  // Include .log files without .html (pending/generating sessions)
+  const htmlSet = new Set(readdirSync(dir).filter(f => f.endsWith(".html") && f !== "index.html"));
+  const pendingLogs = readdirSync(dir)
+    .filter(f => f.endsWith(".log") && !htmlSet.has(f.replace(".log", ".html")))
+    .map(f => f.replace(".log", ".html"));
+  const allEntries = [...htmlSet, ...pendingLogs];
+
+  const files = allEntries
     .map(f => {
       const m = f.match(/issue-(\d+)-step(\d+)-(\w+)/);
-      const mtime = statSync(join(dir, f)).mtime;
+      const htmlExists = htmlSet.has(f);
+      const actualFile = htmlExists ? f : f.replace(".html", ".log");
+      let mtime;
+      try { mtime = statSync(join(dir, actualFile)).mtime; } catch { mtime = new Date(); }
       // Detect status from corresponding log file
-      let status = "unknown";
+      let status = htmlExists ? "unknown" : "pending";
       const logFile = join(dir, f.replace(".html", ".log"));
       try {
         const logContent = readFileSync(logFile, "utf-8");
@@ -681,12 +690,12 @@ function writeIndex(dir) {
         const hasPass = /PASS/i.test(logContent) && hasVerdict;
         const hasHandoff = /Handoff/i.test(logContent);
         const isEmpty = logContent.trim().length < 100;
-        if (isEmpty) status = "empty";
+        if (isEmpty) status = htmlExists ? "empty" : "pending";
         else if (hasFail) status = "fail";
         else if (hasPass) status = "pass";
         else if (hasResult || hasHandoff) status = "complete";
-        else status = "live";
-      } catch { status = "unknown"; }
+        else status = htmlExists ? "live" : "pending";
+      } catch { status = htmlExists ? "unknown" : "pending"; }
       return {
         file: f,
         issue: m ? m[1] : "?",
@@ -820,15 +829,15 @@ const AGENT_COLORS = {
 };
 const STATUS_ICONS = {
   live: '\\u25CF', complete: '\\u2713', pass: '\\u2713',
-  fail: '\\u2717', empty: '\\u25CB', unknown: '\\u2014',
+  fail: '\\u2717', empty: '\\u25CB', unknown: '\\u2014', pending: '\\u29D7',
 };
 const STATUS_COLORS = {
   live: '#4ecdc4', complete: '#c9920a', pass: '#22c55e',
-  fail: '#ef4444', empty: '#606070', unknown: '#606070',
+  fail: '#ef4444', empty: '#606070', unknown: '#606070', pending: '#f0b429',
 };
 const STATUS_LABELS = {
   live: 'running', complete: 'completed', pass: 'PASS',
-  fail: 'FAIL', empty: 'no data', unknown: 'unknown',
+  fail: 'FAIL', empty: 'no data', unknown: 'unknown', pending: 'generating...',
 };
 
 let activeFile = null;
@@ -869,7 +878,7 @@ function renderCards(items) {
     const sColor = STATUS_COLORS[f.status] || '#606070';
     const sIcon = STATUS_ICONS[f.status] || '—';
     const sLabel = STATUS_LABELS[f.status] || '';
-    const pulse = f.status === 'live' ? ' pulse' : '';
+    const pulse = (f.status === 'live' || f.status === 'pending') ? ' pulse' : '';
     const active = f.file === oldActive ? ' active' : '';
     const time = fmtTime(f.ts);
     const ago = timeAgo(f.ts);
