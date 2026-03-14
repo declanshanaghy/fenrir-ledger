@@ -1,0 +1,143 @@
+# --------------------------------------------------------------------------
+# Umami Analytics — Helm Chart Default Values
+#
+# These defaults provide a self-hosted Umami instance with PostgreSQL backend
+# on GKE Autopilot. Override per-environment with values-prod.yaml etc.
+# --------------------------------------------------------------------------
+
+namespace: fenrir-analytics
+
+# -- Umami App Deployment -----------------------------------------------
+umami:
+  replicaCount: 1
+  revisionHistoryLimit: 5
+
+  image:
+    repository: ghcr.io/umami-software/umami
+    tag: postgresql-latest
+    pullPolicy: IfNotPresent
+
+  env:
+    DATABASE_TYPE: "postgresql"
+    DATABASE_PORT: "5432"
+    DATABASE_NAME: "umami"
+    DATABASE_USER: "umami"
+    APP_SECRET: "umami-secret-key-change-in-prod"
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+      ephemeral-storage: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+      ephemeral-storage: "256Mi"
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+    successThreshold: 1
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  startupProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 12
+
+# -- PostgreSQL StatefulSet -----------------------------------------------
+postgresql:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+
+  env:
+    POSTGRES_DB: "umami"
+    POSTGRES_USER: "umami"
+    POSTGRES_PASSWORD: "umami-postgres-password"
+    PGDATA: "/var/lib/postgresql/data/pgdata"
+
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: standard-rwo
+    mountPath: /var/lib/postgresql/data
+
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+      ephemeral-storage: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+      ephemeral-storage: "256Mi"
+
+  # PostgreSQL 16 requires initialization with explicit parameters
+  initdb:
+    enabled: true
+
+# -- Service ---------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: http
+  containerPort: 3000
+
+# -- Ingress ---------------------------------------------------------------
+ingress:
+  enabled: true
+  className: "gce"
+  hosts:
+    - analytics.fenrirledger.com
+  annotations:
+    networking.gke.io/managed-certificates: "umami-cert"
+    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.global-static-ip-name: "umami-ip"
+    cloud.google.com/backend-config: '{"default":"umami-backend-config"}'
+
+  backendConfig:
+    enabled: true
+    healthCheck:
+      checkIntervalSec: 15
+      timeoutSec: 5
+      healthyThreshold: 1
+      unhealthyThreshold: 3
+      type: HTTP
+      requestPath: /
+      port: 3000
+    timeoutSec: 30
+    connectionDraining:
+      drainingTimeoutSec: 60
+
+# -- Secrets ----------------------------------------------------------------
+secrets:
+  enabled: true
+  databaseUrl: "postgresql://umami:umami-postgres-password@postgresql-svc.fenrir-analytics.svc.cluster.local:5432/umami"
+  appSecret: "umami-secret-key-change-in-prod"
