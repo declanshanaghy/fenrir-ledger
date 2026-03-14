@@ -866,12 +866,9 @@
           </div>
         </div>
         <div class="log-controls" aria-label="Log export controls">
-          <button id="brandifyMdxBtn" class="control-btn brandify-btn" title="Save log + generate branded report">
-            <span class="btn-icon">📰</span> Brandify
+          <button id="copyBrandifyBtn" class="control-btn brandify-btn" title="Copy /brandify-agent command to clipboard">
+            <span class="btn-icon">📋</span> Copy Brandify Command
           </button>
-          <label class="auto-brandify-toggle" title="Auto-save + brandify when job completes">
-            <input type="checkbox" id="autoBrandifyToggle"> Auto-brandify on complete
-          </label>
           <div id="logControlsStatus" class="control-status" style="display: none;">
             <span class="spinner"></span>
             <span id="logControlsStatusText">Processing...</span>
@@ -1646,63 +1643,19 @@
       state.autoScrollEnabled = isNearBottom;
     });
 
-    // Brandify button — save log + generate MDX in one click
-    document.getElementById('brandifyMdxBtn').addEventListener('click', async () => {
-      const btn = document.getElementById('brandifyMdxBtn');
-      const statusEl = document.getElementById('logControlsStatus');
-      const statusText = document.getElementById('logControlsStatusText');
-
-      try {
-        btn.disabled = true;
-        statusEl.style.display = 'flex';
-
-        const jobName = state.selectedJobName;
-        const sessionId = document.getElementById('logSession').textContent;
-
-        // Step 1: Save log
-        statusText.textContent = 'Saving log...';
-        const saveRes = await fetch('/save-log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jobName, sessionId }),
-        });
-        if (!saveRes.ok) {
-          const error = await saveRes.json();
-          throw new Error(error.error || 'Failed to save log');
-        }
-
-        // Step 2: Generate MDX
-        statusText.textContent = 'Generating report...';
-        const brandRes = await fetch('/brandify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, publish: true }),
-        });
-        if (!brandRes.ok) {
-          const error = await brandRes.json();
-          throw new Error(error.error || 'Failed to brandify');
-        }
-
-        const data = await brandRes.json();
-        statusText.textContent = '✓ Report generated';
-
-        // Open report
-        if (data.filename) window.open('/reports/' + data.filename, '_blank');
-
-        setTimeout(() => {
-          statusEl.style.display = 'none';
-          btn.disabled = false;
-        }, 2000);
-      } catch (err) {
-        statusText.textContent = '✗ ' + err.message;
-        setTimeout(() => {
-          statusEl.style.display = 'none';
-          btn.disabled = false;
-        }, 3000);
-      }
+    // Copy brandify command to clipboard
+    document.getElementById('copyBrandifyBtn').addEventListener('click', () => {
+      const sessionId = document.getElementById('logSession').textContent;
+      const cmd = '/brandify-agent ' + sessionId;
+      navigator.clipboard.writeText(cmd).then(() => {
+        const btn = document.getElementById('copyBrandifyBtn');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<span class="btn-icon">✓</span> Copied!';
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+      });
     });
 
-    // (Old HTML + MDX handlers removed — single combined Brandify handler above)
+    // (Old handlers removed — using copy-to-clipboard now)
 
     // ========================================================================
     // Initialization
@@ -1807,23 +1760,6 @@
       indicator.style.background = 'var(--gold)';
       setTimeout(() => { indicator.style.background = ''; }, 300);
 
-      // Auto-brandify: if job just completed and toggle is on
-      if (type === 'MODIFIED') {
-        const parsed = parseJobsList([job]);
-        if (parsed.length > 0 && parsed[0].status === 'Succeeded') {
-          const toggle = document.getElementById('autoBrandifyToggle');
-          if (toggle && toggle.checked) {
-            const sid = parsed[0].sessionId;
-            console.log('[auto-brandify] Job completed:', sid);
-            // Auto save + brandify
-            fetch('/save-log', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({jobName, sessionId: sid}) })
-              .then(r => r.ok ? fetch('/brandify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({sessionId: sid, publish: true}) }) : null)
-              .then(r => r?.json())
-              .then(data => { if (data?.filename) console.log('[auto-brandify] Generated:', data.filename); })
-              .catch(err => console.error('[auto-brandify] Error:', err));
-          }
-        }
-      }
     }
 
     async function init() {
