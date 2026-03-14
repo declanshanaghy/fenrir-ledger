@@ -2,7 +2,7 @@
 
 ## Context
 
-Fenrir Ledger is a freemium credit card churning tool built on Next.js/Vercel. Free tier uses browser localStorage; paid tier adds cloud sync via Google OAuth. Target audience: credit card churners managing 5-20+ active cards. Expected price point: $3-10/month.
+Fenrir Ledger is a freemium credit card churning tool built on Next.js/GKE Autopilot. Free tier uses browser localStorage; paid tier adds cloud sync via Google OAuth. Target audience: credit card churners managing 5-20+ active cards. Expected price point: $3-10/month.
 
 ## Decision Outcome
 

@@ -260,7 +260,7 @@ These are constraints Luna does not have discretion on:
 
 ## Related Files
 
-- `product-brief.md` — Updated product launch strategy (anonymous-first)
 - `product/product-design-brief.md` — Updated header profile section + key design decisions
-- `product/backlog/story-auth-oidc-google.md` — Revised auth story (P3, GA-deferred)
 - `product/copywriting.md` — Two-voice rule, upsell copy direction
+
+**Note:** Auth stories are tracked as GitHub Issues (backlog markdown files have been removed).

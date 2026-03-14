@@ -14,5 +14,7 @@ Freya shapes the vision before the forge ever heats. Nothing moves downstream un
 - [platform-recommendation.md](platform-recommendation.md) — Platform decision rationale: why Stripe Direct, implementation strategy, Substack content marketing recommendation.
 - [handoff-to-luna-anon-auth.md](handoff-to-luna-anon-auth.md) — Handoff to Luna: anonymous-first auth + cloud sync upsell wireframe requirements.
 - [target-market/README.md](target-market/README.md) — Target market research and Reddit community engagement strategy.
+- [research/depot-vs-codespaces.md](research/depot-vs-codespaces.md) — Agent sandboxing cost comparison: Depot vs GitHub Codespaces vs AWS options (GKE Autopilot selected).
+- [research/vercel-alternatives.md](research/vercel-alternatives.md) — Hosting cost analysis for Vercel alternatives (migration to GKE Autopilot completed).
 
 **Note:** Backlog items are now tracked as [GitHub Issues](https://github.com/declanshanaghy/fenrir-ledger/issues). Historical backlog documentation has been archived.
