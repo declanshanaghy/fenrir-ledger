@@ -16,10 +16,10 @@ vi.mock("@/lib/auth/require-auth", () => ({
   requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
 }));
 
-// Mock requireKarl
-const mockRequireKarl = vi.fn();
-vi.mock("@/lib/auth/require-karl", () => ({
-  requireKarl: (...args: unknown[]) => mockRequireKarl(...args),
+// Mock requireKarlOrTrial
+const mockRequireKarlOrTrial = vi.fn();
+vi.mock("@/lib/auth/require-karl-or-trial", () => ({
+  requireKarlOrTrial: (...args: unknown[]) => mockRequireKarlOrTrial(...args),
 }));
 
 // Mock rate limiter
@@ -72,7 +72,7 @@ let POST: typeof import("@/app/api/sheets/import/route").POST;
 beforeEach(async () => {
   // Auth passes by default
   mockRequireAuth.mockResolvedValue({ ok: true, user: MOCK_USER });
-  mockRequireKarl.mockResolvedValue({ ok: true });
+  mockRequireKarlOrTrial.mockResolvedValue({ ok: true });
 
   // Dynamic import so mocks are in place
   const mod = await import("@/app/api/sheets/import/route");
@@ -100,9 +100,9 @@ describe("/api/sheets/import — Auth & tier gating", () => {
     expect(res.status).toBe(401);
   });
 
-  it("returns 402 when Karl tier check fails", async () => {
+  it("returns 402 when Karl/trial check fails", async () => {
     const { NextResponse } = await import("next/server");
-    mockRequireKarl.mockResolvedValueOnce({
+    mockRequireKarlOrTrial.mockResolvedValueOnce({
       ok: false,
       response: NextResponse.json(
         { error: { code: "SUBSCRIPTION_REQUIRED", message: "Karl tier required" } },
