@@ -1,71 +1,147 @@
-# QA Handoff: Fix Component Landmarks, Aria-Labels, and Stale E2E Selectors
+# QA Handoff: Update Theme-Variants Wireframes and Fix Marketing Navigation
 
-**Issue:** #589 -- Fix component landmarks, aria-labels, and stale selectors; cull superseded E2E tests
-**Branch:** `fix/issue-589-landmarks-aria`
-**PR:** https://github.com/declanshanaghy/fenrir-ledger/pull/592
+**Issue:** #642 -- Update marketing-site and chronicles theme-variants wireframes
+**Branch:** `ux/issue-642-theme-variants`
 **Author:** FiremanDecko (Principal Engineer)
-**Date:** 2026-03-11
+**Date:** 2026-03-14
 
 ---
 
 ## What Was Implemented
 
-### Root Cause
+### Summary
 
-After Issue #371/#372 restructured routes, `/` became the marketing home page and
-`/ledger` became the app dashboard. All 27 E2E test suites still navigated to `/`,
-hitting the marketing page instead of the dashboard -- causing ~93 failures from
-missing dashboard DOM elements (card tiles, tabs, status badges, etc.).
+Luna (UX Designer) produced updated theme-variants wireframes for both the marketing site (all 5 pages: home, features, pricing, about, free-trial) and chronicles (index + detail pages), documenting Ljósálfar (light) / Svartálfar (dark) token-based theming and dual-realm lore crossfade patterns.
 
-### Changes
+FiremanDecko verified that the current codebase implementation matches these wireframes, identified one discrepancy (marketing nav order), and corrected it. All changes are non-breaking.
 
-1. **Route migration** -- Changed `page.goto("/")` to `page.goto("/ledger")` across 24 spec files
-2. **Deleted sidebar.spec.ts** -- 5 tests for a component removed in Issue #403
-3. **Deleted footer.spec.ts** -- 7 tests for Ledger Footer which is dead code (not rendered in any active layout)
-4. **Pruned a11y.spec.ts** -- Removed 4 stale assertions for nav landmark, footer landmark, and sidebar collapse button that no longer exist in LedgerShell
-5. **Fixed auth-callback routes** -- `/auth/callback` to `/ledger/auth/callback`
-6. **Fixed topbar expectations** -- Removed stale `target="_blank"` assertion on logo link
-7. **Updated test-guidelines.md** -- Suite counts from 29 files/234 tests to 27 files/222 tests
-
----
-
-## Files Changed
+### Files Changed
 
 | File | Action | Description |
 |------|--------|-------------|
-| `quality/test-suites/layout/sidebar.spec.ts` | Deleted | Sidebar removed in #403 |
-| `quality/test-suites/layout/footer.spec.ts` | Deleted | Ledger Footer is dead code |
-| `quality/test-suites/accessibility/a11y.spec.ts` | Rewritten | Removed 4 stale landmark/sidebar tests |
-| `quality/test-suites/layout/topbar.spec.ts` | Modified | Route fix + removed stale target assertion |
-| `quality/test-suites/auth/auth-callback.spec.ts` | Modified | Route fix for callback path |
-| 22 other spec files | Modified | Route `/` to `/ledger` |
-| `quality/test-guidelines.md` | Modified | Updated suite counts and added #589 note |
+| `ux/wireframes/marketing-site/theme-variants.html` | Updated | Luna's updated wireframe: 5 marketing pages with theme variants, dual-realm crossfade pattern, token reference |
+| `ux/wireframes/chronicles/theme-variants.html` | Updated | Luna's updated wireframe: index + detail pages, card anatomy, prev/next nav, prose styles, token reference |
+| `ux/wireframes.md` | Updated | Updated index descriptions linking to new wireframe content |
+| `development/frontend/src/components/marketing/MarketingNavbar.tsx` | Modified | Fixed nav link order: Features → Pricing → About → Free Trial (removed Prose Edda from header nav, remains in footer) |
+| `development/frontend/src/__tests__/components/marketing-navbar.test.tsx` | Created | 9 unit tests validating nav order, components, accessibility per wireframe spec |
 
-**Total:** 27 files, +80 / -374 lines
+**Total:** 5 files, +161 / -6 lines
+
+---
+
+## Key Changes
+
+### Wireframe Updates (Luna)
+
+**Marketing Site — Theme Variants:**
+- Home page: hero, pain points (The Chains), features grid, onboarding (3 steps), final CTA
+- Features page: Thrall/Karl tier breakdown, ThemedFeatureImage crossfade slots
+- Pricing page: tier comparison, FAQ accordion
+- About page: Origin story, 5 agent rows with dual-realm portrait+lore crossfade pattern
+- Free Trial page: hero, 7-card feature showcase, 30-day timeline, tier comparison
+- Global nav + footer on all pages
+- Mobile 375px responsive summary
+- Implementation token reference (Ljósálfar/Svartálfar light/dark color tokens)
+
+**Chronicles (Prose Edda) — Theme Variants:**
+- Index page: 3-col card grid (desktop) / 2-col (tablet) / 1-col (mobile)
+- Card anatomy: rune glyph, date, title, excerpt + hover states
+- Detail page: compact header, top Prev/Next nav with rune divider, MDX body, back link
+- No dual-realm crossfade (pure token-based theming)
+- Mobile 375px responsive breakpoints
+- Implementation token reference for all prose styles
+
+### Code Changes (FiremanDecko)
+
+**Marketing Navigation Fix:**
+- **Before:** Features, Prose Edda, About, Free Trial, Pricing
+- **After:** Features, Pricing, About, Free Trial
+- **Rationale:** Wireframe spec shows nav order as Features → Pricing → About → Free Trial. Prose Edda (Chronicles) remains in footer under Resources section.
+
+**Tests Added:**
+- Marketing navbar unit test suite (9 tests)
+- Validates nav link order per wireframe spec
+- Verifies Prose Edda NOT in main nav
+- Tests logo, CTA button, theme toggle, hamburger menu
+- Tests aria-labels and accessibility attributes
 
 ---
 
 ## Verification Performed
 
-- `tsc --noEmit`: PASS
-- `next build`: PASS (30 routes)
-- Rebase on latest `main`: clean, no conflicts
+- `tsc --noEmit`: PASS (no TypeScript errors)
+- `next build`: PASS (55 routes compiled, 0 errors)
+- `npm run test -- marketing-navbar.test.tsx`: PASS (9 tests)
+- Branch rebased on latest main: clean, no conflicts
+- All commits pushed to remote
 
 ---
 
 ## Suggested Test Focus
 
-1. Run full Playwright suite: `npx playwright test` -- target is 0 failures
-2. Spot-check dashboard tests load at `/ledger` and see card tiles
-3. Verify a11y.spec.ts passes with the reduced test set (12 tests remaining)
-4. Confirm auth-callback tests hit `/ledger/auth/callback` correctly
-5. Verify no test references bare `/` without the `/ledger` prefix (except marketing tests)
+1. **Wireframe Review:**
+   - Visually compare current marketing pages against wireframe theme variants
+   - Verify nav link order matches spec (Features → Pricing → About → Free Trial)
+   - Check footer has Prose Edda link under Resources
+
+2. **Navigation Tests:**
+   - Verify nav links render in correct order (automated tests cover this)
+   - Check mobile hamburger menu on 375px viewport
+   - Test theme toggle button switches between light/dark
+
+3. **Chronicles Pages:**
+   - Verify index card grid is 3-col desktop, 2-col tablet, 1-col mobile
+   - Check detail page has prev/next nav between header and content
+   - Verify Prose Edda links in nav point to /chronicles
+
+4. **Cross-Browser:**
+   - Test on Safari, Firefox, Chrome
+   - Verify responsive breakpoints (375px, 640px, 1024px)
+
+5. **Accessibility:**
+   - Verify all nav links have proper aria-labels
+   - Check theme toggle button accessibility
+   - Confirm hamburger menu aria-expanded reflects state
 
 ---
 
 ## Known Limitations
 
-- No component changes were made -- all fixes are test-side only
-- Footer.tsx remains as dead code in source; deletion is out of scope for this issue
-- LedgerBottomTabs `<nav>` is mobile-only (`md:hidden`); nav landmark tests were removed rather than added for desktop
-- The "No System option" theme test (TC-TH-005) is a weak assertion; could be improved in a future pass
+- No visual regression tests for theme-variants (wireframes are reference docs, not automated)
+- Nav order fix is simple; no complex state changes
+- Marketing pages are fully static (no server-side rendering)
+- Chronicles are statically generated at build time
+
+---
+
+## Deployment Notes
+
+- No database migrations
+- No environment variables added
+- No secrets management changes
+- No infrastructure changes
+- Safe to deploy immediately after merge
+
+---
+
+## Handoff to Loki (QA)
+
+This is a clean, focused implementation of Issue #642:
+
+1. **Wireframes are reference docs** — Luna updated them to match current implementation
+2. **One code fix** — nav order correction per spec
+3. **Tests included** — marketing navbar unit tests validate the fix
+4. **Build passes** — no TypeScript errors, all 55 routes compile
+
+Loki should focus on visual/integration testing of the navigation across responsive breakpoints and verifying that the footer correctly displays Prose Edda under Resources.
+
+Estimated QA effort: **1-2 hours** (mostly visual spot-checks, automated tests cover nav logic)
+
+---
+
+## References
+
+- **Wireframe:** `ux/wireframes/marketing-site/theme-variants.html`
+- **Wireframe:** `ux/wireframes/chronicles/theme-variants.html`
+- **FiremanDecko Agent Spec:** `.claude/agents/fireman-decko.md`
+- **Accessibility Requirement:** Minimum 44×44px touch targets, WCAG 2.1 AA compliance
