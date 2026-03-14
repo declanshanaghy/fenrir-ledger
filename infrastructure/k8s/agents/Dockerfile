@@ -84,14 +84,14 @@ RUN cd /tmp/frontend \
 # --------------------------------------------------------------------------
 # 5. Non-root user — Claude Code refuses --dangerously-skip-permissions as root
 # --------------------------------------------------------------------------
-RUN useradd -m -s /bin/bash -u 1000 agent \
-    && mkdir -p /workspace && chown agent:agent /workspace
+# node:20 image ships with user 'node' (uid 1000) — reuse it
+RUN mkdir -p /workspace && chown node:node /workspace
 
 # --------------------------------------------------------------------------
 # 6. Workspace + git config
 # --------------------------------------------------------------------------
 WORKDIR /workspace
-USER agent
+USER node
 
 RUN git config --global init.defaultBranch main \
     && git config --global advice.detachedHead false
@@ -99,7 +99,7 @@ RUN git config --global init.defaultBranch main \
 # --------------------------------------------------------------------------
 # 7. Entrypoint — clones repo, runs sandbox setup, executes task
 # --------------------------------------------------------------------------
-COPY --chown=agent:agent infrastructure/k8s/agents/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --chown=node:node infrastructure/k8s/agents/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
