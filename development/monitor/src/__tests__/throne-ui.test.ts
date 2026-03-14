@@ -78,20 +78,12 @@ describe("AC6 — Odin avatar + random quote", () => {
     }
   });
 
-  it("renders avatar img tag pointing to /static/odin-dark.png", async () => {
+  it("renders avatar img tag with src/alt, a known Odin quote inside role=note", async () => {
     const html = await getHtml();
     expect(html).toContain('src="/static/odin-dark.png"');
     expect(html).toContain('alt="Odin"');
-  });
-
-  it("displays one of the known Odin quotes in the page", async () => {
-    const html = await getHtml();
     const hasQuote = ODIN_QUOTES.some((q) => html.includes(q));
     expect(hasQuote).toBe(true);
-  });
-
-  it("renders the quote inside an element with role=note", async () => {
-    const html = await getHtml();
     expect(html).toMatch(/role="note"[^>]*>[^<]*?(hung|eye|wolves|nine|Ragnarok|All-Father|rune|Fenrir|Gungnir)/s);
   });
 });
@@ -116,14 +108,10 @@ describe("AC1 — Sidebar with ARIA landmarks and session list", () => {
 });
 
 describe("AC3+AC4 — WebSocket client and live-update script", () => {
-  it("embeds WebSocket connection logic with /ws/logs/ path", async () => {
+  it("embeds WebSocket connection with /ws/logs/ path and polls /api/jobs every 15 seconds", async () => {
     const html = await getHtml();
     expect(html).toContain("/ws/logs/");
     expect(html).toContain("new WebSocket");
-  });
-
-  it("polls /api/jobs every 15 seconds for new sessions (AC4)", async () => {
-    const html = await getHtml();
     expect(html).toContain("fetchJobs");
     expect(html).toContain("15000");
   });
@@ -136,29 +124,19 @@ describe("AC3+AC4 — WebSocket client and live-update script", () => {
 });
 
 describe("AC3 — Pulsing status indicator for live sessions", () => {
-  it("defines pulse CSS animation for active/live sessions", async () => {
+  it("defines pulse CSS animation and applies it only to active-status sessions", async () => {
     const html = await getHtml();
     expect(html).toContain("pulse");
     expect(html).toContain("@keyframes pulse");
-  });
-
-  it("script assigns pulse class only to active-status sessions", async () => {
-    const html = await getHtml();
-    // The ternary that applies the pulse class must be tied to 'active' status
     expect(html).toContain("status === 'active' ? ' pulse' : ''");
   });
 });
 
 describe("AC5 — Timestamps in local time with ago text", () => {
-  it("includes fmtTime and timeAgo functions for timestamp display", async () => {
+  it("defines fmtTime and timeAgo covering all time ranges (seconds, minutes, hours, days)", async () => {
     const html = await getHtml();
     expect(html).toContain("fmtTime");
     expect(html).toContain("timeAgo");
-  });
-
-  it("timeAgo returns correct labels across seconds, minutes, hours, days", async () => {
-    const html = await getHtml();
-    // All four branches must be present in the function body
     expect(html).toContain("just now");
     expect(html).toContain("s + 's ago'");
     expect(html).toContain("m + 'm ago'");
@@ -168,17 +146,11 @@ describe("AC5 — Timestamps in local time with ago text", () => {
 });
 
 describe("AC2 — Clicking a session loads the content pane", () => {
-  it("embeds click handler on card elements that calls openSession", async () => {
+  it("card click calls openSession which manages content-header, log-terminal, and empty-state visibility", async () => {
     const html = await getHtml();
     expect(html).toContain("addEventListener('click'");
     expect(html).toContain("openSession");
-    // data-session attribute must be present for routing card clicks to sessions
     expect(html).toContain("data-session=");
-  });
-
-  it("openSession shows content-header and log-terminal, hides empty-state", async () => {
-    const html = await getHtml();
-    // The session-open sequence must set display to flex/block/none in order
     expect(html).toContain("'content-header').style.display = 'flex'");
     expect(html).toContain("'log-terminal').style.display = 'block'");
     expect(html).toContain("'empty-state').style.display = 'none'");
@@ -192,15 +164,11 @@ describe("AC2 — Clicking a session loads the content pane", () => {
 });
 
 describe("Norse-dark theme + XSS safety", () => {
-  it("defines Norse-dark CSS variables (--void, --gold)", async () => {
+  it("defines Norse-dark CSS variables (--void, --gold, --forge) and loads theme fonts", async () => {
     const html = await getHtml();
     expect(html).toContain("--void");
     expect(html).toContain("--gold");
     expect(html).toContain("--forge");
-  });
-
-  it("loads Cinzel and JetBrains Mono fonts for the Fenrir theme", async () => {
-    const html = await getHtml();
     expect(html).toContain("Cinzel");
     expect(html).toContain("JetBrains Mono");
   });
