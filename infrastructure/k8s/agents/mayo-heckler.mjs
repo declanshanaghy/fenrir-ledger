@@ -3202,7 +3202,24 @@ export function createHecklerEngine(agentName = "Agent") {
         currentHecklerName = randomMayoName();
         escalationLevel = 0;
         events.push({ type: "mayo-entrance", text: entrance });
-        events.push({ type: "mayo", name: currentHecklerName, text: "Right so — WHERE WERE WE?? MAYO FOR SAM!!" });
+        const openers = [
+          "Right so — WHERE WERE WE?? MAYO FOR SAM!!",
+          "Name's " + currentHecklerName + " and I'm HERE for Sam!! Who's coding??",
+          "The last fella was WEAK!! I'll show ye how to heckle!! MAYO ABÚ!!",
+          "I heard there was a MERGE happening?? SAM MAGUIRE or BUST!!",
+          "Jaysus that was dramatic. ANYWAY — MAYO FOR SAM!!",
+          "I've been WAITING outside for me turn!! FINALLY!! C'MON MAYO!!",
+          "Right — the previous lad died for Sam and SO WILL I if needs be!!",
+          "Did I miss the merge?? Tell me I didn't miss the feckin merge!!",
+          "I drove all the way from Belmullet for THIS?? It better be good!! MAYO!!",
+          "Me mammy sent me — she said the last heckler wasn't LOUD enough!! MAYO FOR SAM!!",
+          "That explosion was NOTHING — wait till ye see what I can do!! 🟢🔴",
+          "Is the agent still coding?? GOOD — I've got fresh material!! MAYO ABÚ!!",
+          "I promised me granny on her DEATHBED I'd heckle for Sam!! HERE I AM!!",
+          "The queue to heckle this agent is LONGER than the N17!! But I'm IN!!",
+          "Someone said there was free heckle positions?? I'm OVERQUALIFIED!!",
+        ];
+        events.push({ type: "mayo", name: currentHecklerName, text: pick(openers) });
         return events;
       }
 
