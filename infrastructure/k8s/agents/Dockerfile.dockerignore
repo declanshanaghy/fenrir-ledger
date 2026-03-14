@@ -1,0 +1,36 @@
+# --------------------------------------------------------------------------
+# Docker ignore — Agent Sandbox Image
+# Minimal exclusions — agent image needs infrastructure/ and .claude/ files
+# --------------------------------------------------------------------------
+
+# Git
+.git
+.gitignore
+
+# Node
+**/node_modules
+**/.next
+**/out
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.production
+**/.env.*.local
+
+# Test artifacts
+**/playwright-report
+**/test-results
+**/coverage
+
+# Terraform state (but keep .tf files for context)
+**/*.tfstate*
+
+# Large directories not needed in agent image
+sessions/
