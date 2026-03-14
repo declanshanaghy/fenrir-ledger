@@ -1,0 +1,99 @@
+# --------------------------------------------------------------------------
+# Umami Analytics — Production Helm Values Override
+#
+# These values override defaults in values.yaml for production deployment.
+# Secrets are injected via GitHub Actions workflow.
+# --------------------------------------------------------------------------
+
+namespace: fenrir-analytics
+
+# -- Umami Production Config ----------------------------------------------
+umami:
+  replicaCount: 2  # For high availability
+
+  image:
+    tag: postgresql-latest
+
+  env:
+    DATABASE_TYPE: "postgresql"
+    DATABASE_PORT: "5432"
+    DATABASE_NAME: "umami"
+    DATABASE_USER: "umami"
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+      ephemeral-storage: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+      ephemeral-storage: "256Mi"
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# -- PostgreSQL Production Config -----------------------------------------
+postgresql:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    tag: "16-alpine"
+
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: standard-rwo
+
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+      ephemeral-storage: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+      ephemeral-storage: "256Mi"
+
+# -- Ingress Production Config -----------------------------------------
+ingress:
+  enabled: true
+  className: "gce"
+  hosts:
+    - analytics.fenrirledger.com
+  annotations:
+    networking.gke.io/managed-certificates: "umami-cert"
+    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.global-static-ip-name: "umami-ip"
+    cloud.google.com/backend-config: '{"default":"umami-backend-config"}'
+
+  backendConfig:
+    enabled: true
+    healthCheck:
+      checkIntervalSec: 15
+      timeoutSec: 5
+      healthyThreshold: 1
+      unhealthyThreshold: 3
+      type: HTTP
+      requestPath: /
+      port: 3000
+    timeoutSec: 30
+    connectionDraining:
+      drainingTimeoutSec: 60

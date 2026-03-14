@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: umami
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "umami.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.umami.replicaCount }}
+  revisionHistoryLimit: {{ .Values.umami.revisionHistoryLimit }}
+  strategy:
+    {{- toYaml .Values.umami.strategy | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- include "umami.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "umami.labels" . | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: umami
+          image: "{{ .Values.umami.image.repository }}:{{ .Values.umami.image.tag }}"
+          imagePullPolicy: {{ .Values.umami.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.containerPort }}
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: umami-secrets
+          env:
+            - name: DATABASE_TYPE
+              value: {{ .Values.umami.env.DATABASE_TYPE | quote }}
+            - name: DATABASE_PORT
+              value: {{ .Values.umami.env.DATABASE_PORT | quote }}
+            - name: DATABASE_NAME
+              value: {{ .Values.umami.env.DATABASE_NAME | quote }}
+            - name: DATABASE_USER
+              value: {{ .Values.umami.env.DATABASE_USER | quote }}
+          resources:
+            {{- toYaml .Values.umami.resources | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.umami.readinessProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.umami.livenessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.umami.startupProbe | nindent 12 }}

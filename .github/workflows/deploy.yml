@@ -221,6 +221,9 @@ jobs:
             --namespace=fenrir-agents --overwrite \
             iam.gke.io/gcp-service-account=fenrir-agents-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
 
+          # Analytics namespace (for Umami)
+          kubectl create namespace fenrir-analytics --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Create/update K8s secrets
         run: |
           kubectl create secret generic fenrir-app-secrets \
@@ -245,6 +248,16 @@ jobs:
             --namespace=fenrir-agents \
             --from-literal=claude-oauth-token="${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}" \
             --from-literal=gh-token="${{ secrets.GH_TOKEN_AGENTS }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create/update Umami secrets
+        run: |
+          kubectl create secret generic umami-secrets \
+            --namespace=fenrir-analytics \
+            --from-literal=DATABASE_URL="postgresql://umami:umami-pg-password@postgresql-svc.fenrir-analytics.svc.cluster.local:5432/umami" \
+            --from-literal=POSTGRES_PASSWORD="umami-pg-password" \
+            --from-literal=DATABASE_PASSWORD="umami-pg-password" \
+            --from-literal=APP_SECRET="umami-app-secret-change-in-prod" \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Set up Helm
@@ -276,6 +289,15 @@ jobs:
             -f ./infrastructure/helm/fenrir-app/values-prod.yaml \
             --set app.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set app.image.tag=${{ env.IMAGE_TAG }} \
+            --wait \
+            --timeout=5m
+
+      - name: Deploy Umami with Helm
+        run: |
+          helm upgrade --install umami \
+            ./infrastructure/helm/umami \
+            --namespace=fenrir-analytics \
+            -f ./infrastructure/helm/umami/values-prod.yaml \
             --wait \
             --timeout=5m
 
