@@ -96,6 +96,12 @@ resource "google_project_iam_member" "deploy_gke_admin" {
   member  = "serviceAccount:${var.deploy_service_account}"
 }
 
+resource "google_project_iam_member" "deploy_dns_admin" {
+  project = var.project_id
+  role    = "roles/dns.admin"
+  member  = "serviceAccount:${var.deploy_service_account}"
+}
+
 # --------------------------------------------------------------------------
 # Cost Alerts — Budget notification
 # --------------------------------------------------------------------------
