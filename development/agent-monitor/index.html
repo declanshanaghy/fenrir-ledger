@@ -794,6 +794,20 @@
       background: var(--red-dark);
     }
 
+    .auto-brandify-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      color: var(--gold);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .auto-brandify-toggle input {
+      accent-color: var(--gold);
+    }
+
     .mayo-avatar, .comeback-avatar, .log-agent-bubble .avatar {
       cursor: pointer;
       transition: transform 0.2s;
@@ -852,15 +866,12 @@
           </div>
         </div>
         <div class="log-controls" aria-label="Log export controls">
-          <button id="saveLogBtn" class="control-btn save-btn" title="Save log to disk for processing">
-            <span class="btn-icon">💾</span> Save Log
+          <button id="brandifyMdxBtn" class="control-btn brandify-btn" title="Save log + generate branded report">
+            <span class="btn-icon">📰</span> Brandify
           </button>
-          <button id="brandifyHtmlBtn" class="control-btn brandify-btn" disabled title="Generate HTML report from saved log">
-            <span class="btn-icon">📄</span> Brandify HTML
-          </button>
-          <button id="brandifyMdxBtn" class="control-btn brandify-btn" disabled title="Generate MDX report for chronicles">
-            <span class="btn-icon">📰</span> Brandify MDX
-          </button>
+          <label class="auto-brandify-toggle" title="Auto-save + brandify when job completes">
+            <input type="checkbox" id="autoBrandifyToggle"> Auto-brandify on complete
+          </label>
           <div id="logControlsStatus" class="control-status" style="display: none;">
             <span class="spinner"></span>
             <span id="logControlsStatusText">Processing...</span>
@@ -1635,97 +1646,7 @@
       state.autoScrollEnabled = isNearBottom;
     });
 
-    // Save Log button
-    document.getElementById('saveLogBtn').addEventListener('click', async () => {
-      const btn = document.getElementById('saveLogBtn');
-      const statusEl = document.getElementById('logControlsStatus');
-      const statusText = document.getElementById('logControlsStatusText');
-      const brandifyHtmlBtn = document.getElementById('brandifyHtmlBtn');
-      const brandifyMdxBtn = document.getElementById('brandifyMdxBtn');
-
-      try {
-        btn.disabled = true;
-        statusEl.style.display = 'flex';
-        statusText.textContent = 'Saving log...';
-
-        const jobName = state.selectedJobName;
-        const sessionId = document.getElementById('logSession').textContent;
-
-        const res = await fetch('/save-log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jobName, sessionId }),
-        });
-
-        if (!res.ok) {
-          const error = await res.json();
-          throw new Error(error.error || 'Failed to save log');
-        }
-
-        const data = await res.json();
-        statusText.textContent = `✓ Saved ${data.lines} lines`;
-
-        // Enable brandify buttons
-        brandifyHtmlBtn.disabled = false;
-        brandifyMdxBtn.disabled = false;
-
-        setTimeout(() => {
-          statusEl.style.display = 'none';
-          btn.disabled = false;
-        }, 2000);
-      } catch (err) {
-        statusText.textContent = `✗ Error: ${err.message}`;
-        setTimeout(() => {
-          statusEl.style.display = 'none';
-          btn.disabled = false;
-        }, 3000);
-      }
-    });
-
-    // Brandify HTML button
-    document.getElementById('brandifyHtmlBtn').addEventListener('click', async () => {
-      const btn = document.getElementById('brandifyHtmlBtn');
-      const statusEl = document.getElementById('logControlsStatus');
-      const statusText = document.getElementById('logControlsStatusText');
-
-      try {
-        btn.disabled = true;
-        statusEl.style.display = 'flex';
-        statusText.textContent = 'Generating HTML...';
-
-        const sessionId = document.getElementById('logSession').textContent;
-
-        const res = await fetch('/brandify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, publish: false }),
-        });
-
-        if (!res.ok) {
-          const error = await res.json();
-          throw new Error(error.error || 'Failed to brandify');
-        }
-
-        const data = await res.json();
-        statusText.textContent = '✓ Report generated';
-
-        // Open report in new tab
-        window.open(`/reports/${data.filename}`, '_blank');
-
-        setTimeout(() => {
-          statusEl.style.display = 'none';
-          btn.disabled = false;
-        }, 2000);
-      } catch (err) {
-        statusText.textContent = `✗ Error: ${err.message}`;
-        setTimeout(() => {
-          statusEl.style.display = 'none';
-          btn.disabled = false;
-        }, 3000);
-      }
-    });
-
-    // Brandify MDX button
+    // Brandify button — save log + generate MDX in one click
     document.getElementById('brandifyMdxBtn').addEventListener('click', async () => {
       const btn = document.getElementById('brandifyMdxBtn');
       const statusEl = document.getElementById('logControlsStatus');
@@ -1734,39 +1655,54 @@
       try {
         btn.disabled = true;
         statusEl.style.display = 'flex';
-        statusText.textContent = 'Generating MDX...';
 
+        const jobName = state.selectedJobName;
         const sessionId = document.getElementById('logSession').textContent;
 
-        const res = await fetch('/brandify', {
+        // Step 1: Save log
+        statusText.textContent = 'Saving log...';
+        const saveRes = await fetch('/save-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobName, sessionId }),
+        });
+        if (!saveRes.ok) {
+          const error = await saveRes.json();
+          throw new Error(error.error || 'Failed to save log');
+        }
+
+        // Step 2: Generate MDX
+        statusText.textContent = 'Generating report...';
+        const brandRes = await fetch('/brandify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId, publish: true }),
         });
-
-        if (!res.ok) {
-          const error = await res.json();
+        if (!brandRes.ok) {
+          const error = await brandRes.json();
           throw new Error(error.error || 'Failed to brandify');
         }
 
-        const data = await res.json();
-        statusText.textContent = '✓ MDX generated, opening...';
+        const data = await brandRes.json();
+        statusText.textContent = '✓ Report generated';
 
-        // Open report in new tab
-        window.open(`/reports/${data.filename}`, '_blank');
+        // Open report
+        if (data.filename) window.open('/reports/' + data.filename, '_blank');
 
         setTimeout(() => {
           statusEl.style.display = 'none';
           btn.disabled = false;
         }, 2000);
       } catch (err) {
-        statusText.textContent = `✗ Error: ${err.message}`;
+        statusText.textContent = '✗ ' + err.message;
         setTimeout(() => {
           statusEl.style.display = 'none';
           btn.disabled = false;
         }, 3000);
       }
     });
+
+    // (Old HTML + MDX handlers removed — single combined Brandify handler above)
 
     // ========================================================================
     // Initialization
@@ -1870,6 +1806,24 @@
       const indicator = document.getElementById('connectionStatus');
       indicator.style.background = 'var(--gold)';
       setTimeout(() => { indicator.style.background = ''; }, 300);
+
+      // Auto-brandify: if job just completed and toggle is on
+      if (type === 'MODIFIED') {
+        const parsed = parseJobsList([job]);
+        if (parsed.length > 0 && parsed[0].status === 'Succeeded') {
+          const toggle = document.getElementById('autoBrandifyToggle');
+          if (toggle && toggle.checked) {
+            const sid = parsed[0].sessionId;
+            console.log('[auto-brandify] Job completed:', sid);
+            // Auto save + brandify
+            fetch('/save-log', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({jobName, sessionId: sid}) })
+              .then(r => r.ok ? fetch('/brandify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({sessionId: sid, publish: true}) }) : null)
+              .then(r => r?.json())
+              .then(data => { if (data?.filename) console.log('[auto-brandify] Generated:', data.filename); })
+              .catch(err => console.error('[auto-brandify] Error:', err));
+          }
+        }
+      }
     }
 
     async function init() {
