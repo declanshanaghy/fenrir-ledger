@@ -13,7 +13,7 @@
  * --regen-assets regenerates shared CSS/JS files in the output directory.
  */
 
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, readdirSync, statSync } from "fs";
 import { dirname, join, resolve } from "path";
 import { createHecklerEngine, AGENT_NAMES } from "../../../../infrastructure/k8s/agents/mayo-heckler.mjs";
 
@@ -653,9 +653,105 @@ document.addEventListener('DOMContentLoaded', () => {
 // ---------------------------------------------------------------------------
 // Write shared assets
 // ---------------------------------------------------------------------------
+function writeIndex(dir) {
+  const files = readdirSync(dir)
+    .filter(f => f.endsWith(".html") && f !== "index.html")
+    .map(f => {
+      const m = f.match(/issue-(\d+)-step(\d+)-(\w+)/);
+      const mtime = statSync(join(dir, f)).mtime;
+      return {
+        file: f,
+        issue: m ? m[1] : "?",
+        step: m ? m[2] : "?",
+        agent: m ? m[3] : "unknown",
+        agentName: m ? (AGENT_NAMES[m[3]] || m[3]) : "Unknown",
+        date: mtime.toISOString().slice(0, 16).replace("T", " "),
+        ts: mtime.getTime(),
+      };
+    })
+    .sort((a, b) => b.ts - a.ts);
+
+  const ODIN_QUOTES = [
+    "I hung on that windy tree for nine long nights. What's a failed build to that?",
+    "I gave my eye for wisdom. You lot better not waste it on sloppy commits.",
+    "The wolves are always hungry. Ship or be devoured.",
+    "I see all nine worlds from Hlidskjalf. I can certainly see your merge conflicts.",
+    "Even Ragnarok has a sprint deadline.",
+    "The All-Father watches. The All-Father judges. The All-Father merges.",
+    "Every rune I carved cost blood. Every PR you ship better be worth it.",
+    "Fenrir breaks chains. We break annual fees. Same energy.",
+    "My spear Gungnir never misses its mark. Your tests should aspire to the same.",
+  ];
+  const quote = ODIN_QUOTES[Math.floor(Math.random() * ODIN_QUOTES.length)];
+
+  const rows = files.map(f => {
+    const agentColors = {
+      firemandecko: "#4ecdc4", loki: "#a78bfa", luna: "#6b8afd",
+      freya: "#f0b429", heimdall: "#ef4444",
+    };
+    const color = agentColors[f.agent] || "#c9920a";
+    return `<tr onclick="window.location='${f.file}'" style="cursor:pointer">
+      <td style="color:${color};font-weight:600">${f.agentName}</td>
+      <td>#${f.issue}</td>
+      <td>Step ${f.step}</td>
+      <td style="color:var(--text-rune)">${f.date}</td>
+    </tr>`;
+  }).join("\n");
+
+  const indexHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hlidskjalf — Odin's Agent Monitor</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700;900&family=Source+Serif+4:wght@300;400;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #07070d; --forge: #12121f; --chain: #1a1a2e;
+  --gold: #c9920a; --gold-bright: #f0b429;
+  --text-saga: #f5f5f5; --text-rune: #a0a0b0; --text-void: #606070;
+  --rune-border: #2a2a3e; --teal-asgard: #4ecdc4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--void); color: var(--text-saga); font-family: 'Source Serif 4', serif; min-height: 100vh; }
+.container { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+.header { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 0.5rem; }
+.header img { width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--gold); }
+.header h1 { font-family: 'Cinzel Decorative', serif; font-size: 1.8rem; color: var(--gold); }
+.quote { font-family: 'Source Serif 4', serif; font-style: italic; color: var(--text-rune); margin-bottom: 2rem; padding-left: 90px; opacity: 0.8; }
+.count { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-void); margin-bottom: 1rem; }
+table { width: 100%; border-collapse: collapse; }
+th { font-family: 'Cinzel', serif; font-size: 0.75rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; text-align: left; padding: 0.75rem 1rem; border-bottom: 2px solid var(--rune-border); }
+td { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; padding: 0.6rem 1rem; border-bottom: 1px solid var(--rune-border); }
+tr:hover { background: var(--chain); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <img src="agents/profiles/odin-dark.png" alt="Odin — The All-Father">
+    <h1>Hlidskjalf</h1>
+  </div>
+  <div class="quote">"${quote}"</div>
+  <div class="count">${files.length} agent reports</div>
+  <table>
+    <thead><tr><th>Agent</th><th>Issue</th><th>Step</th><th>Date</th></tr></thead>
+    <tbody>
+${rows}
+    </tbody>
+  </table>
+</div>
+</body>
+</html>`;
+
+  writeFileSync(join(dir, "index.html"), indexHtml);
+}
+
 function writeAssets(dir) {
   writeFileSync(join(dir, "agent-report.css"), CSS);
   writeFileSync(join(dir, "agent-report.js"), JS);
+  writeIndex(dir);
   console.log(`[ok] assets written to ${dir}/agent-report.{css,js}`);
 }
 
