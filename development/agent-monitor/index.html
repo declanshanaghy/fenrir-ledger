@@ -459,7 +459,8 @@
     // Types & Constants
     // ========================================================================
 
-    const K8S_PROXY_URL = 'http://localhost:8001';
+    // Use relative URL — serve.mjs proxies /api/* to K8s API (no CORS issues)
+    const K8S_PROXY_URL = '';
     const NAMESPACE = 'fenrir-agents';
     const JOB_LABEL_SELECTOR = 'app.kubernetes.io/component=agent-sandbox';
     const LOG_MAX_EVENTS = 5000;
@@ -546,7 +547,7 @@
       try {
         setConnectionStatus(true, 'Fetching jobs...');
 
-        const url = `${K8S_PROXY_URL}/api/v1/namespaces/${NAMESPACE}/jobs`;
+        const url = `${K8S_PROXY_URL}/apis/batch/v1/namespaces/${NAMESPACE}/jobs`;
         const response = await fetch(url);
 
         if (!response.ok) {
