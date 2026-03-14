@@ -17,13 +17,35 @@ vi.mock("@hono/node-server", () => ({
   serve: vi.fn().mockReturnValue({ on: vi.fn() }),
 }));
 
+// Auth mock — default: session valid. Individual tests override as needed.
+const mockVerifySessionToken = vi.fn<(token: string) => string | null>().mockReturnValue("test@example.com");
+
+vi.mock("../auth.js", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../auth.js")>();
+  return {
+    ...original,
+    verifySessionToken: (token: string) => mockVerifySessionToken(token),
+  };
+});
+
 import { listAgentJobs } from "../k8s.js";
 import { app } from "../index.js";
 
 const mockListAgentJobs = vi.mocked(listAgentJobs);
 
+// Helper: build a request with a fake session cookie
+function authedRequest(url: string, init?: RequestInit): Request {
+  return new Request(url, {
+    ...init,
+    headers: {
+      ...(init?.headers as Record<string, string> | undefined ?? {}),
+      Cookie: "odin_session=test-token",
+    },
+  });
+}
+
 describe("GET /healthz", () => {
-  it("returns 200 with status ok", async () => {
+  it("returns 200 with status ok (no auth required)", async () => {
     const req = new Request("http://localhost:3001/healthz");
     const res = await app.fetch(req);
 
@@ -34,9 +56,35 @@ describe("GET /healthz", () => {
   });
 });
 
+describe("Auth middleware", () => {
+  it("returns 401 HTML for unauthenticated browser requests to /", async () => {
+    mockVerifySessionToken.mockReturnValueOnce(null);
+    const req = new Request("http://localhost:3001/", {
+      headers: { Accept: "text/html" },
+    });
+    const res = await app.fetch(req);
+    expect(res.status).toBe(401);
+    const text = await res.text();
+    expect(text).toContain("Sign in with Google");
+  });
+
+  it("returns 401 JSON for unauthenticated API requests", async () => {
+    mockVerifySessionToken.mockReturnValueOnce(null);
+    const req = new Request("http://localhost:3001/api/jobs", {
+      headers: { Accept: "application/json" },
+    });
+    const res = await app.fetch(req);
+    expect(res.status).toBe(401);
+    const body = await res.json() as { error: string };
+    expect(body.error).toBe("Unauthorized");
+  });
+});
+
 describe("GET /api/jobs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockVerifySessionToken.mockReset();
+    mockVerifySessionToken.mockReturnValue("test@example.com");
   });
 
   it("returns jobs list from K8s", async () => {
@@ -52,7 +100,7 @@ describe("GET /api/jobs", () => {
     ];
     mockListAgentJobs.mockResolvedValue(mockJobs);
 
-    const req = new Request("http://localhost:3001/api/jobs");
+    const req = authedRequest("http://localhost:3001/api/jobs");
     const res = await app.fetch(req);
 
     expect(res.status).toBe(200);
@@ -64,7 +112,7 @@ describe("GET /api/jobs", () => {
   it("returns empty jobs with error message on K8s failure", async () => {
     mockListAgentJobs.mockRejectedValue(new Error("No cluster available"));
 
-    const req = new Request("http://localhost:3001/api/jobs");
+    const req = authedRequest("http://localhost:3001/api/jobs");
     const res = await app.fetch(req);
 
     expect(res.status).toBe(200);
@@ -77,7 +125,7 @@ describe("GET /api/jobs", () => {
   it("returns empty array on cluster unavailable", async () => {
     mockListAgentJobs.mockResolvedValue([]);
 
-    const req = new Request("http://localhost:3001/api/jobs");
+    const req = authedRequest("http://localhost:3001/api/jobs");
     const res = await app.fetch(req);
 
     const body = await res.json() as { jobs: unknown[]; count: number };
@@ -87,8 +135,13 @@ describe("GET /api/jobs", () => {
 });
 
 describe("GET /", () => {
-  it("returns HTML page", async () => {
-    const req = new Request("http://localhost:3001/");
+  beforeEach(() => {
+    mockVerifySessionToken.mockReset();
+    mockVerifySessionToken.mockReturnValue("test@example.com");
+  });
+
+  it("returns HTML page when authenticated", async () => {
+    const req = authedRequest("http://localhost:3001/");
     const res = await app.fetch(req);
 
     expect(res.status).toBe(200);

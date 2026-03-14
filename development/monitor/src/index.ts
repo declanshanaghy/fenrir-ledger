@@ -1,7 +1,16 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
+import { getCookie } from "hono/cookie";
 import { listAgentJobs } from "./k8s.js";
 import { attachWebSocketServer } from "./ws.js";
+import {
+  handleLogin,
+  handleCallback,
+  handleLogout,
+  verifySessionToken,
+  loginPage,
+  SESSION_COOKIE,
+} from "./auth.js";
 
 const app = new Hono();
 
@@ -9,10 +18,31 @@ const PORT = parseInt(process.env.PORT ?? "3001", 10);
 const NAMESPACE = process.env.K8S_NAMESPACE ?? "fenrir-app";
 const JOB_LABEL = process.env.JOB_LABEL_SELECTOR ?? "app=odin-agent";
 
-// Health check
+// ── Health check (public) ────────────────────────────────────────────────────
 app.get("/healthz", (c) => {
   return c.json({ status: "ok", service: "odin-throne-monitor", ts: Date.now() });
 });
+
+// ── Auth routes (public) ─────────────────────────────────────────────────────
+app.get("/auth/login", handleLogin);
+app.get("/auth/callback", handleCallback);
+app.get("/auth/logout", handleLogout);
+
+// ── Session gate — all routes below require a valid session ──────────────────
+app.use("*", async (c, next) => {
+  const token = getCookie(c, SESSION_COOKIE);
+  if (!token || !verifySessionToken(token)) {
+    // JSON clients get 401; browsers get the login page
+    const accept = c.req.header("accept") ?? "";
+    if (accept.includes("application/json")) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    return c.html(loginPage(), 401);
+  }
+  await next();
+});
+
+// ── Protected routes ─────────────────────────────────────────────────────────
 
 // List agent jobs
 app.get("/api/jobs", async (c) => {
@@ -27,7 +57,7 @@ app.get("/api/jobs", async (c) => {
   }
 });
 
-// Basic index
+// Dashboard index
 app.get("/", (c) => {
   return c.html(`<!DOCTYPE html>
 <html lang="en">
@@ -46,17 +76,18 @@ app.get("/", (c) => {
   </style>
 </head>
 <body>
-  <h1>Odin's Throne</h1>
+  <h1>Odin&#8217;s Throne</h1>
   <p>Real-time agent monitor for Fenrir Ledger</p>
   <div class="links">
     <a href="/healthz">Health</a>
     <a href="/api/jobs">Jobs</a>
+    <a href="/auth/logout">Sign out</a>
   </div>
 </body>
 </html>`);
 });
 
-// Start server with WebSocket support
+// ── Start server with WebSocket support ──────────────────────────────────────
 const server = serve({ fetch: app.fetch, port: PORT }, (info) => {
   console.log(
     `[odin-throne] Listening on http://localhost:${info.port}`

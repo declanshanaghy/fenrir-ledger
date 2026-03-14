@@ -44,9 +44,16 @@ vi.mock("ws", () => ({
   WebSocket: { OPEN: 1 },
 }));
 
+// Mock auth so WS connections are always treated as authenticated
+vi.mock("../auth.js", () => ({
+  SESSION_COOKIE: "odin_session",
+  verifySessionToken: vi.fn().mockReturnValue("test@example.com"),
+}));
+
 // ── Import after mocks ───────────────────────────────────────────────────────
 
 const { attachWebSocketServer } = await import("../ws.js");
+const { verifySessionToken: mockVerifySessionToken } = await import("../auth.js");
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -56,10 +63,14 @@ const { attachWebSocketServer } = await import("../ws.js");
  */
 function simulateConnection(
   wss: FakeWss,
-  urlPath: string
+  urlPath: string,
+  cookie = "odin_session=test-token"
 ): FakeWs {
   const fakeWs = new FakeWs();
-  const fakeReq = { url: urlPath } as unknown as IncomingMessage;
+  const fakeReq = {
+    url: urlPath,
+    headers: { cookie },
+  } as unknown as IncomingMessage;
   wss.emit("connection", fakeWs, fakeReq);
   return fakeWs;
 }
@@ -91,6 +102,8 @@ describe("WebSocket connection handling", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Re-apply after clearAllMocks wipes implementations
+    vi.mocked(mockVerifySessionToken).mockReturnValue("test@example.com");
     fakeServer = new EventEmitter() as unknown as Server;
     wss = attachWebSocketServer(fakeServer as unknown) as unknown as FakeWss;
   });
