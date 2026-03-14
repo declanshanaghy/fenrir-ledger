@@ -46,7 +46,23 @@ git config --global user.email "firemandecko@fenrir-ledger.dev"
 git config --global user.name "FiremanDecko (GKE Agent)"
 
 # --------------------------------------------------------------------------
-# 2. Clone repository
+# 2. Wait for DNS (GKE Autopilot Spot nodes may not have CoreDNS ready)
+# --------------------------------------------------------------------------
+echo "Waiting for DNS..."
+for i in $(seq 1 30); do
+  if getent hosts github.com >/dev/null 2>&1; then
+    echo "[ok] DNS ready (attempt ${i})"
+    break
+  fi
+  if [ "$i" -eq 30 ]; then
+    echo "[FATAL] DNS not available after 30 attempts"
+    exit 1
+  fi
+  sleep 2
+done
+
+# --------------------------------------------------------------------------
+# 3. Clone repository
 # --------------------------------------------------------------------------
 REPO_URL="${REPO_URL:-https://github.com/declanshanaghy/fenrir-ledger}"
 echo "Cloning ${REPO_URL}..."
