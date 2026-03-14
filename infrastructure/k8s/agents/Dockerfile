@@ -2,8 +2,8 @@
 # Agent Sandbox Container — Fenrir Ledger
 #
 # Ephemeral container for running Claude Code agent tasks on GKE Autopilot.
-# Pre-bakes Node.js, Claude CLI, GitHub CLI, and system dependencies
-# to minimize cold-start time for agent Jobs.
+# Pre-bakes Node.js, Claude CLI, GitHub CLI, Playwright browsers + system
+# deps, and a warm npm cache to minimize cold-start time for agent Jobs.
 #
 # Build:
 #   docker build -t us-central1-docker.pkg.dev/fenrir-ledger-prod/fenrir-images/agent-sandbox:latest \
@@ -21,16 +21,42 @@ LABEL description="Fenrir Ledger agent sandbox for Claude Code tasks"
 # Avoid interactive prompts during package install
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies required by agents
+# --------------------------------------------------------------------------
+# 1. System dependencies — git, curl, jq, plus Playwright's system libs
+# --------------------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     ca-certificates \
     jq \
     openssh-client \
+    # Playwright Chromium system dependencies (avoids slow `--with-deps` at runtime)
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libdbus-1-3 \
+    libxkbcommon0 \
+    libatspi2.0-0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2 \
+    libwayland-client0 \
+    fonts-liberation \
+    fonts-noto-color-emoji \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
-# Install GitHub CLI
+# --------------------------------------------------------------------------
+# 2. GitHub CLI
+# --------------------------------------------------------------------------
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
       -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
@@ -39,17 +65,33 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     && apt-get install -y --no-install-recommends gh \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Claude Code CLI globally
+# --------------------------------------------------------------------------
+# 3. Claude Code CLI (global)
+# --------------------------------------------------------------------------
 RUN npm install -g @anthropic-ai/claude-code@latest
 
-# Create workspace directory (matches Depot convention)
+# --------------------------------------------------------------------------
+# 4. Pre-install Playwright Chromium browser binary
+#    Version is pinned to whatever @playwright/test ships with.
+#    sandbox-setup.sh skips this step when browsers are already present.
+# --------------------------------------------------------------------------
+COPY development/frontend/package.json development/frontend/package-lock.json /tmp/frontend/
+RUN cd /tmp/frontend \
+    && npm ci --prefer-offline 2>/dev/null || npm ci \
+    && npx playwright install chromium \
+    && rm -rf /tmp/frontend
+
+# --------------------------------------------------------------------------
+# 5. Workspace + git config
+# --------------------------------------------------------------------------
 WORKDIR /workspace
 
-# Pre-configure git for agent commits
 RUN git config --global init.defaultBranch main \
     && git config --global advice.detachedHead false
 
-# Agent entrypoint script — clones repo, runs sandbox setup, executes task
+# --------------------------------------------------------------------------
+# 6. Entrypoint — clones repo, runs sandbox setup, executes task
+# --------------------------------------------------------------------------
 COPY infrastructure/k8s/agents/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
