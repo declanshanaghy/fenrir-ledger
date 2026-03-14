@@ -7,8 +7,7 @@ process.env.APP_BASE_URL = 'https://fenrir-ledger.example.com';
 process.env.GOOGLE_CLIENT_ID = 'test-google-client-id';
 process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID = 'test-google-client-id';
 process.env.GOOGLE_CLIENT_SECRET = 'test-google-client-secret';
-process.env.KV_REST_API_URL = 'https://test-kv-api.example.com';
-process.env.KV_REST_API_TOKEN = 'test-kv-token';
+process.env.REDIS_URL = 'redis://localhost:6379';
 
 // Mock console.log and console.error to reduce test noise
 global.console = {
