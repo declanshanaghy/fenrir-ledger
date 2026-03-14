@@ -121,5 +121,19 @@ export function buildSecurityHeaders(nonce?: string): SecurityHeader[] {
       key: "Strict-Transport-Security",
       value: "max-age=63072000; includeSubDomains; preload",
     },
+    // Allow popups (Google OAuth consent, GIS token client) to communicate
+    // back to the opener window. Without this, COOP blocks window.closed
+    // detection and breaks the OAuth popup flow (Issue #771).
+    {
+      key: "Cross-Origin-Opener-Policy",
+      value: "same-origin-allow-popups",
+    },
+    // Required companion to COOP for Google APIs — unsafe-none allows
+    // cross-origin resources (Google Picker iframe, GIS script) to load
+    // without CORP restrictions.
+    {
+      key: "Cross-Origin-Embedder-Policy",
+      value: "unsafe-none",
+    },
   ];
 }
