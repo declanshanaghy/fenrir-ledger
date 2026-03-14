@@ -20,6 +20,18 @@ resource "google_compute_global_address" "app_ip" {
   depends_on = [google_project_service.apis]
 }
 
+# Import for existing manually-created Umami static IP.
+# Terraform 1.5+ native import block (runs automatically on `terraform apply`):
+#
+#   import {
+#     to = google_compute_global_address.umami_ip
+#     id = "projects/fenrir-ledger-prod/global/addresses/umami-ip"
+#   }
+#
+# Equivalent CLI command (run once before first apply if not using the block):
+#   terraform import google_compute_global_address.umami_ip \
+#     projects/fenrir-ledger-prod/global/addresses/umami-ip
+
 import {
   to = google_compute_global_address.umami_ip
   id = "projects/fenrir-ledger-prod/global/addresses/umami-ip"
@@ -69,6 +81,23 @@ resource "google_dns_record_set" "www" {
   ttl          = 300
 
   rrdatas = [google_compute_global_address.app_ip.address]
+}
+
+# Import for existing manually-created analytics DNS A record.
+# Terraform 1.5+ native import block (runs automatically on `terraform apply`):
+#
+#   import {
+#     to = google_dns_record_set.analytics
+#     id = "projects/fenrir-ledger-prod/managedZones/fenrirledger-com/rrsets/analytics.fenrirledger.com./A"
+#   }
+#
+# Equivalent CLI command (run once before first apply if not using the block):
+#   terraform import google_dns_record_set.analytics \
+#     projects/fenrir-ledger-prod/managedZones/fenrirledger-com/rrsets/analytics.fenrirledger.com./A
+
+import {
+  to = google_dns_record_set.analytics
+  id = "projects/fenrir-ledger-prod/managedZones/fenrirledger-com/rrsets/analytics.fenrirledger.com./A"
 }
 
 resource "google_dns_record_set" "analytics" {
