@@ -22,11 +22,28 @@
  * See ADR-005 for the auth architecture. See ADR-008 for API route auth.
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { generateNonce } from "@/lib/csp-nonce";
 import { buildSecurityHeaders } from "@/lib/csp-headers";
 
-export function middleware() {
+export function middleware(request: NextRequest) {
+  const { hostname, protocol, pathname, search } = request.nextUrl;
+
+  // -----------------------------------------------------------------------
+  // Canonical domain redirect: www → apex, HTTP → HTTPS
+  // Skip in development (localhost)
+  // -----------------------------------------------------------------------
+  if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+    const isWww = hostname.startsWith("www.");
+    const isHttp = protocol === "http:" || request.headers.get("x-forwarded-proto") === "http";
+
+    if (isWww || isHttp) {
+      const canonicalHost = hostname.replace(/^www\./, "");
+      const url = `https://${canonicalHost}${pathname}${search}`;
+      return NextResponse.redirect(url, 301);
+    }
+  }
+
   const nonce = generateNonce();
 
   // Clone response and inject nonce into headers for layout/scripts to read
