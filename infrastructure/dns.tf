@@ -58,3 +58,13 @@ resource "google_dns_record_set" "www" {
 
   rrdatas = [google_compute_global_address.app_ip.address]
 }
+
+resource "google_dns_record_set" "analytics" {
+  name         = "analytics.${var.domain}."
+  managed_zone = google_dns_managed_zone.app.name
+  project      = var.project_id
+  type         = "A"
+  ttl          = 300
+
+  rrdatas = [google_compute_global_address.app_ip.address]
+}

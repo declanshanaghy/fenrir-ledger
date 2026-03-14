@@ -55,6 +55,16 @@ spec:
                 name: fenrir-app
                 port:
                   number: 80
+    - host: analytics.fenrirledger.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fenrir-app
+                port:
+                  number: 80
 
 ---
 # --------------------------------------------------------------------------
@@ -72,6 +82,7 @@ spec:
   domains:
     - fenrirledger.com
     - www.fenrirledger.com
+    - analytics.fenrirledger.com
 
 ---
 # --------------------------------------------------------------------------
