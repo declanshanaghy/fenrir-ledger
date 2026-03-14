@@ -184,6 +184,50 @@ describe("Norse-dark theme + XSS safety", () => {
   });
 });
 
+describe("WS auto-reconnect (issue #911)", () => {
+  it("defines MAX_RECONNECT cap and RECONNECT_DELAY_MS constant", async () => {
+    const html = await getHtml();
+    expect(html).toContain("MAX_RECONNECT");
+    expect(html).toContain("RECONNECT_DELAY_MS");
+  });
+
+  it("defines clearReconnect() helper that cancels pending timer and resets count", async () => {
+    const html = await getHtml();
+    expect(html).toContain("clearReconnect");
+    expect(html).toContain("clearTimeout");
+    expect(html).toContain("reconnectCount = 0");
+  });
+
+  it("openSession calls clearReconnect() before closing the old WebSocket", async () => {
+    const html = await getHtml();
+    // clearReconnect must appear inside openSession, before activeWs.close()
+    const openSessionIdx = html.indexOf("function openSession");
+    const clearReconnectIdx = html.indexOf("clearReconnect()", openSessionIdx);
+    const closeIdx = html.indexOf("activeWs.close()", openSessionIdx);
+    expect(openSessionIdx).toBeGreaterThan(-1);
+    expect(clearReconnectIdx).toBeGreaterThan(openSessionIdx);
+    expect(closeIdx).toBeGreaterThan(clearReconnectIdx);
+  });
+
+  it("close handler skips reconnect when streamEnded is true (clean stream end)", async () => {
+    const html = await getHtml();
+    expect(html).toContain("streamEnded");
+    expect(html).toContain("!streamEnded");
+  });
+
+  it("close handler skips reconnect when activeWs has changed (user navigated away)", async () => {
+    const html = await getHtml();
+    // Guard: if (activeWs !== ws) return;
+    expect(html).toContain("if (activeWs !== ws) return");
+  });
+
+  it("close handler schedules reconnect with setTimeout and increments attempt counter", async () => {
+    const html = await getHtml();
+    expect(html).toContain("++reconnectCount");
+    expect(html).toContain("reconnecting (attempt");
+  });
+});
+
 describe("ARIA accessibility", () => {
   it("log terminal has role=log, aria-live=polite, and aria-label for screen readers", async () => {
     const html = await getHtml();
