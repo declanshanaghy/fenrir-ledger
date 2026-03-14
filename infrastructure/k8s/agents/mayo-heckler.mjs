@@ -3137,13 +3137,41 @@ export const ESCALATION_RETORTS = [
 ];
 
 export const NEW_HECKLER_ENTRANCES = [
-  "🟢🔴 *a NEW Mayo fan materialises from the bog mist* Alright, what'd I miss?? MAYO FOR SAM!!",
-  "🟢🔴 *bursts through the wall like the Kool-Aid man but wearing a Mayo jersey* OH YEAH!! SAM!!",
-  "🟢🔴 *crawls out from under the stands covered in muck* Is it... is it HAPPENING?? SAM??",
-  "🟢🔴 *descends from the heavens on a cloud of green smoke* The previous lad was WEAK. I'M here now!!",
-  "🟢🔴 *emerges from a hedge on the N5* I heard there was HECKLING to be done?? MAYO ABÚ!!",
-  "🟢🔴 *falls out of a tractor* What happened to yer man?? Never mind — MAYO FOR SAM!!",
-  "🟢🔴 *appears in a puff of turf smoke* The last fella couldn't hack it. I'M from BELMULLET. Try me!!",
+  "🟢🔴 *a NEW Mayo fan materialises from the bog mist* {prev} is GONE?? Alright — MAYO FOR SAM!!",
+  "🟢🔴 *bursts through the wall like the Kool-Aid man but wearing a Mayo jersey* {prev} EXPLODED?? OH YEAH!! SAM!!",
+  "🟢🔴 *crawls out from under the stands covered in muck* Is {prev} really DEAD?? Jaysus. SAM??",
+  "🟢🔴 *descends from the heavens on a cloud of green smoke* WEAK EFFORT from {prev}. I'M here now!!",
+  "🟢🔴 *emerges from a hedge on the N5* {prev} sent me a TEXT before they blew up!! Said CARRY ON!! MAYO ABÚ!!",
+  "🟢🔴 *falls out of a tractor* What happened to {prev}?? Ah feck it — MAYO FOR SAM!!",
+  "🟢🔴 *appears in a puff of turf smoke* {prev} couldn't hack it. I'M from BELMULLET. Try me!!",
+  "🟢🔴 *parachutes in from a Ryanair flight* {prev} is DOWN?? Good — they were SHITE at heckling!!",
+  "🟢🔴 *climbs out of a skip behind Supermacs* {prev} told me with their DYING BREATH to take over!!",
+  "🟢🔴 *rides in on a donkey* I heard {prev} COMBUSTED!! That's three this session!! MAYO!!",
+];
+
+// Heckler-on-heckler trash talk — used when a second heckler chimes in
+// {name} = the heckler being insulted, {me} = the one doing the insulting
+export const HECKLER_VS_HECKLER = [
+  "Oi {name}, ye couldn't heckle a DONKEY!! Let a REAL Mayo fan show ye how!!",
+  "{name} ye absolute GOMBEEN — that heckle was softer than a marshmallow in Westport!!",
+  "Jaysus {name}, me DEAD GRANNY had better patter than that!! Step aside!!",
+  "Is THAT the best ye can do, {name}?? I've heard fiercer heckling at a KNITTING CIRCLE!!",
+  "{name} ye useless sack of turf — yer making Mayo look BAD in front of the agent!!",
+  "Whisht {name}!! Ye call THAT a heckle?? That wouldn't scare a WET KITTEN!!",
+  "{name}, I've seen SHEEP on Achill with more charisma!! Sit DOWN ye amadán!!",
+  "Holy Jaysus {name}, did ye learn heckling from a BOOK?? Put some HEART into it!!",
+  "{name} ye soft southern gobshite — this is MAYO, not feckin LIMERICK!!",
+  "That's IT, {name}?? Me auld lad could do better and he's got NO TEETH!!",
+  "{name} — shut yer gob and let someone with PASSION take over!!",
+  "Did {name} just say that?? Lads, that was EMBARRASSING. I'm from BALLINA and I'm MORTIFIED!!",
+  "{name} ye bollocks — ye couldn't heckle a COW off the road!! Give it HERE!!",
+  "Sweet divine Jaysus {name}, that heckle died on the WAY OUT of yer mouth!!",
+  "Oi {name}!! Sit yer arse DOWN — ye're letting the SIDE down, ye pure eejit!!",
+  "{name} ye thundering DISGRACE — yer heckles are as flat as the bog road to Crossmolina!!",
+  "Is {name} even FROM Mayo?? That sounded like something a DUB would say!! SHOCKING!!",
+  "{name}, me cousin's GOAT has more conviction. And the goat's from ROSCOMMON!!",
+  "Lads, did {name} fall ASLEEP?? WAKE UP ye useless craythur!! SAM IS ON THE LINE!!",
+  "{name} ye absolute WEAPON — and not the good kind!! The USELESS kind!! Step aside!!",
 ];
 
 export const MAYO_FIRST = [
@@ -3198,26 +3226,27 @@ export function createHecklerEngine(agentName = "Agent") {
 
       // If heckler exploded last time, bring in a new one
       if (escalationLevel >= 3) {
-        const entrance = pick(NEW_HECKLER_ENTRANCES);
+        const previousName = currentHecklerName;
         currentHecklerName = randomMayoName();
         escalationLevel = 0;
+        const entrance = pick(NEW_HECKLER_ENTRANCES).replace(/\{prev\}/g, previousName);
         events.push({ type: "mayo-entrance", text: entrance });
         const openers = [
-          "Right so — WHERE WERE WE?? MAYO FOR SAM!!",
-          "Name's " + currentHecklerName + " and I'm HERE for Sam!! Who's coding??",
-          "The last fella was WEAK!! I'll show ye how to heckle!! MAYO ABÚ!!",
-          "I heard there was a MERGE happening?? SAM MAGUIRE or BUST!!",
-          "Jaysus that was dramatic. ANYWAY — MAYO FOR SAM!!",
-          "I've been WAITING outside for me turn!! FINALLY!! C'MON MAYO!!",
-          "Right — the previous lad died for Sam and SO WILL I if needs be!!",
-          "Did I miss the merge?? Tell me I didn't miss the feckin merge!!",
-          "I drove all the way from Belmullet for THIS?? It better be good!! MAYO!!",
-          "Me mammy sent me — she said the last heckler wasn't LOUD enough!! MAYO FOR SAM!!",
-          "That explosion was NOTHING — wait till ye see what I can do!! 🟢🔴",
-          "Is the agent still coding?? GOOD — I've got fresh material!! MAYO ABÚ!!",
-          "I promised me granny on her DEATHBED I'd heckle for Sam!! HERE I AM!!",
-          "The queue to heckle this agent is LONGER than the N17!! But I'm IN!!",
-          "Someone said there was free heckle positions?? I'm OVERQUALIFIED!!",
+          "Right so — " + previousName + " is GONE but I'm HERE!! MAYO FOR SAM!!",
+          "Name's " + currentHecklerName + " and I'm HERE for Sam!! " + previousName + " couldn't hack it!!",
+          previousName + " was WEAK!! I'll show ye how to heckle!! MAYO ABÚ!!",
+          "I heard " + previousName + " EXPLODED?? Jaysus. ANYWAY — SAM MAGUIRE or BUST!!",
+          "Jaysus, poor " + previousName + ". That was dramatic. ANYWAY — MAYO FOR SAM!!",
+          "I've been WAITING outside while " + previousName + " had their go!! MY TURN!! C'MON MAYO!!",
+          previousName + " died for Sam and SO WILL I if needs be!!",
+          "Did I miss " + previousName + "'s explosion?? FECK. Tell me about it LATER — SAM FIRST!!",
+          "I drove all the way from Belmullet because " + previousName + " told me to come!! MAYO!!",
+          "Me mammy sent me — she said " + previousName + " wasn't LOUD enough!! MAYO FOR SAM!!",
+          previousName + "'s explosion was NOTHING — wait till ye see what I can do!! 🟢🔴",
+          "Is the agent still coding after " + previousName + "?? GOOD — I've got WORSE material!!",
+          "I promised " + previousName + " on their DEATHBED I'd carry on heckling!! HERE I AM!!",
+          "The queue to replace " + previousName + " is LONGER than the N17!! But I'M NEXT!!",
+          previousName + " left big shoes to fill. Good thing I've got BIGGER ONES!!",
         ];
         events.push({ type: "mayo", name: currentHecklerName, text: pick(openers) });
         return events;
@@ -3225,6 +3254,25 @@ export function createHecklerEngine(agentName = "Agent") {
 
       // Normal heckle
       events.push({ type: "mayo", name: currentHecklerName, text: pick(MAYO_HECKLES) });
+
+      // 25% chance another heckler in the crowd trash-talks this one
+      if (Math.random() < 0.25) {
+        const rivalName = randomMayoName();
+        const jab = pick(HECKLER_VS_HECKLER).replace(/\{name\}/g, currentHecklerName).replace(/\{me\}/g, rivalName);
+        events.push({ type: "mayo", name: rivalName, text: jab });
+        // Current heckler fires back
+        const clapbacks = [
+          `Feck off ${rivalName}!! I was HERE FIRST ye bogger!!`,
+          `${rivalName}?? I didn't know they let GOBSHITES in from YOUR parish!!`,
+          `Oh that's RICH coming from ${rivalName} — weren't ye BARRED from Croke Park??`,
+          `${rivalName} ye pox — yer da couldn't heckle his way out of a PAPER BAG!!`,
+          `Sit DOWN ${rivalName} before I LAMP ye!! THIS is MY session!!`,
+          `${rivalName} ye absolute TURNIP — I've been heckling since BEFORE ye were BORN!!`,
+          `Who let ${rivalName} in?? Security!! SECURITY!! Ah feck it — MAYO FOR SAM!!`,
+          `${rivalName}, last time ye heckled, the agent fell ASLEEP!! Leave it to the PROFESSIONALS!!`,
+        ];
+        events.push({ type: "mayo", name: currentHecklerName, text: pick(clapbacks) });
+      }
 
       // Escalation chance is HIGH and increases fast
       if (Math.random() < 0.6 + escalationLevel * 0.15) {
