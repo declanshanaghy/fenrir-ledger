@@ -5,7 +5,7 @@
  *
  * Desktop:
  *   Left:   logo (ᚠ FENRIR LEDGER)
- *   Center: nav links (Features, Pricing, About, Blog)
+ *   Center: nav links (Features, Pricing, About, Free Trial)
  *   Right:  theme toggle + "Open the Ledger →" CTA
  *
  * Mobile (≤768px):
@@ -26,10 +26,9 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/features", label: "Features" },
-  { href: "/chronicles", label: "Prose Edda" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
   { href: "/free-trial", label: "Free Trial" },
-  { href: "/pricing", label: "Pricing" },
 ] as const;
 
 // ── MarketingNavbar ────────────────────────────────────────────────────────────
