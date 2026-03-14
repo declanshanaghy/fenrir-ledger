@@ -109,6 +109,8 @@ body {
   border: 2px solid var(--gold);
   object-fit: cover;
   flex-shrink: 0;
+  background: var(--void);
+  mix-blend-mode: lighten;
 }
 .odin-title { flex: 1; }
 .odin-quote {
@@ -783,7 +785,7 @@ body { background: var(--void); color: var(--text-saga); font-family: 'Source Se
 .sidebar { width: 300px; min-width: 300px; height: 100vh; overflow-y: auto; border-right: 1px solid var(--rune-border); background: var(--forge); display: flex; flex-direction: column; }
 .sidebar-header { padding: 1rem; border-bottom: 1px solid var(--rune-border); flex-shrink: 0; }
 .sidebar-header .brand { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
-.sidebar-header img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--gold); }
+.sidebar-header img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--gold); background: var(--void); mix-blend-mode: lighten; }
 .sidebar-header h1 { font-family: 'Cinzel Decorative', serif; font-size: 1.1rem; color: var(--gold); }
 .sidebar-header .quote { font-style: italic; font-size: 0.75rem; color: var(--text-rune); opacity: 0.8; line-height: 1.4; }
 .sidebar-header .count { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-void); margin-top: 0.5rem; }
