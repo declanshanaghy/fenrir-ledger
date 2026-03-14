@@ -17,6 +17,20 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: vi.fn().mockResolvedValue("mock-token"),
 }));
 
+// Mock trial-utils — avoids WebCrypto in happy-dom (added by #892)
+vi.mock("@/lib/trial-utils", () => ({
+  computeFingerprint: vi.fn().mockResolvedValue("a".repeat(64)),
+  isValidFingerprint: vi.fn((fp: string) => /^[0-9a-f]{64}$/.test(fp)),
+  getOrCreateDeviceId: vi.fn().mockReturnValue("mock-device-id"),
+  LS_DEVICE_ID: "fenrir:device-id",
+  LS_TRIAL_START_TOAST_SHOWN: "fenrir:trial-start-toast-shown",
+  LS_TRIAL_DAY15_NUDGE_SHOWN: "fenrir:trial-day15-nudge-shown",
+  LS_TRIAL_EXPIRY_MODAL_SHOWN: "fenrir:trial-expiry-modal-shown",
+  LS_POST_TRIAL_BANNER_DISMISSED: "fenrir:post-trial-banner-dismissed",
+  THRALL_CARD_LIMIT: 5,
+  TRIAL_DURATION_DAYS: 30,
+}));
+
 // Mock global fetch
 const mockFetch = vi.fn();
 
@@ -28,7 +42,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  vi.clearAllMocks();
+  vi.unstubAllGlobals();
 });
 
 // ── Tests ────────────────────────────────────────────────────────────────────
