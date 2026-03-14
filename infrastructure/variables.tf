@@ -67,3 +67,19 @@ variable "cost_alert_amount" {
   type        = number
   default     = 150
 }
+
+# --------------------------------------------------------------------------
+# Monitoring
+# --------------------------------------------------------------------------
+
+variable "alert_email" {
+  description = "Email address for Cloud Monitoring alert notifications"
+  type        = string
+  default     = "alerts@fenrirledger.com"
+}
+
+variable "uptime_check_host" {
+  description = "Hostname for the uptime check (GKE Ingress IP or custom domain)"
+  type        = string
+  # No default — must be provided at apply time (Ingress hostname from kubectl)
+}

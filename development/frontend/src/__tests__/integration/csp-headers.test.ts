@@ -97,6 +97,34 @@ describe("CSP Directives — with nonce", () => {
   });
 });
 
+describe("CSP Directives — no Vercel references after GKE migration (#682)", () => {
+  const directives = buildCspDirectives("test-nonce");
+  const csp = directives.join("; ");
+
+  it("should not reference vercel-scripts.com in script-src", () => {
+    expect(csp).not.toContain("vercel-scripts.com");
+  });
+
+  it("should not reference vercel.live in any directive", () => {
+    expect(csp).not.toContain("vercel.live");
+  });
+
+  it("should not reference vercel in connect-src", () => {
+    const connectSrc = directives.find((d) => d.startsWith("connect-src"));
+    expect(connectSrc).not.toContain("vercel");
+  });
+
+  it("should not reference vercel in frame-src", () => {
+    const frameSrc = directives.find((d) => d.startsWith("frame-src"));
+    expect(frameSrc).not.toContain("vercel");
+  });
+
+  it("should not reference vercel in font-src", () => {
+    const fontSrc = directives.find((d) => d.startsWith("font-src"));
+    expect(fontSrc).not.toContain("vercel");
+  });
+});
+
 describe("CSP Directives — without nonce (fallback)", () => {
   it("falls back to unsafe-inline when no nonce provided", () => {
     const directives = buildCspDirectives();

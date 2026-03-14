@@ -38,7 +38,6 @@ quality/.coverage-tmp/
 quality/.coverage-tmp-pw/
 .playwright-mcp/
 .playwright-cli/
-.vercel
 logs/
 
 # Temp files (for parallel agent development)

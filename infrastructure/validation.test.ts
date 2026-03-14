@@ -415,6 +415,52 @@ describe('GKE Autopilot Infrastructure Validation (Issue #679)', () => {
     });
   });
 
+  describe('Cloud Monitoring Configuration (Issue #682)', () => {
+    const monitoringConfig = readFile('monitoring.tf');
+
+    it('should define email notification channel', () => {
+      expect(monitoringConfig).toContain('google_monitoring_notification_channel');
+      expect(monitoringConfig).toContain('type         = "email"');
+      expect(monitoringConfig).toContain('var.alert_email');
+    });
+
+    it('should configure uptime check for app health', () => {
+      expect(monitoringConfig).toContain('google_monitoring_uptime_check_config');
+      expect(monitoringConfig).toContain('/api/health');
+      expect(monitoringConfig).toContain('use_ssl      = true');
+      expect(monitoringConfig).toContain('STATUS_CLASS_2XX');
+    });
+
+    it('should check from multiple regions', () => {
+      expect(monitoringConfig).toContain('USA');
+      expect(monitoringConfig).toContain('EUROPE');
+      expect(monitoringConfig).toContain('ASIA_PACIFIC');
+    });
+
+    it('should define uptime failure alert policy', () => {
+      expect(monitoringConfig).toContain('google_monitoring_alert_policy');
+      expect(monitoringConfig).toContain('Fenrir App Down');
+      expect(monitoringConfig).toContain('uptime_check/check_passed');
+    });
+
+    it('should define container restart alert policy', () => {
+      expect(monitoringConfig).toContain('Fenrir Container Restarts');
+      expect(monitoringConfig).toContain('kubernetes.io/container/restart_count');
+      expect(monitoringConfig).toContain('fenrir-app');
+    });
+
+    it('should have monitoring variables defined', () => {
+      const varsConfig = readFile('variables.tf');
+      expect(varsConfig).toContain('variable "alert_email"');
+      expect(varsConfig).toContain('variable "uptime_check_host"');
+    });
+
+    it('should include alert documentation for responders', () => {
+      expect(monitoringConfig).toContain('documentation');
+      expect(monitoringConfig).toContain('kubectl');
+    });
+  });
+
   describe('Issue #679 Acceptance Criteria', () => {
     it('[✓] GKE Autopilot cluster provisioned via Terraform', () => {
       const gke = readFile('gke.tf');

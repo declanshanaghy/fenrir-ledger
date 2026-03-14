@@ -23,7 +23,7 @@ const GOOGLE_PICKER_SCRIPT_HASHES = [
  *
  * Must allow:
  * - Google APIs (OAuth, Picker, Sheets, profile images)
- * - Vercel analytics
+ * - Analytics (if added later)
  * - Anthropic / OpenAI for LLM extraction (connect-src)
  * - Nonce-based CSP for scripts/styles (replaces unsafe-inline)
  * - data: URIs for fonts (some Google Fonts use data: encoding)
@@ -35,7 +35,7 @@ export function buildCspDirectives(nonce?: string): string[] {
     // Default: only same-origin
     "default-src 'self'",
 
-    // Scripts: self + nonce + Google Picker inline-script hashes + Google APIs + Stripe.js + Vercel
+    // Scripts: self + nonce + Google Picker inline-script hashes + Google APIs + Stripe.js
     // In development, Next.js HMR / React Fast Refresh requires 'unsafe-eval'.
     // Google Picker inline script hashes are allowlisted for Issue #527.
     [
@@ -46,23 +46,20 @@ export function buildCspDirectives(nonce?: string): string[] {
       "https://accounts.google.com",
       "https://apis.google.com",
       "https://js.stripe.com",
-      "https://va.vercel-scripts.com",
-      "https://vercel.live",
     ].join(" "),
 
     // Styles: self + unsafe-inline + Google Fonts + Google Accounts + Google APIs
     // unsafe-inline is required for style attributes (React, next-themes, Framer Motion,
-    // Google Picker, and Vercel feedback widget). CSP nonces only work on <style> tags,
-    // not style="" attributes — no practical alternative.
+    // Google Picker). CSP nonces only work on <style> tags, not style="" attributes.
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://apis.google.com`,
 
     // Images: self + Google profile pictures + YouTube thumbnails + data: URIs
     "img-src 'self' https://lh3.googleusercontent.com https://img.youtube.com data:",
 
-    // Fonts: self + Google Fonts CDN + Vercel Live toolbar fonts + data: URIs
-    "font-src 'self' https://fonts.gstatic.com https://vercel.live data:",
+    // Fonts: self + Google Fonts CDN + data: URIs
+    "font-src 'self' https://fonts.gstatic.com data:",
 
-    // Connections: self + Google APIs + Stripe + Anthropic + OpenAI + Vercel analytics/live
+    // Connections: self + Google APIs + Stripe + Anthropic + OpenAI
     [
       "connect-src 'self'",
       "https://accounts.google.com",
@@ -76,12 +73,10 @@ export function buildCspDirectives(nonce?: string): string[] {
       "https://hooks.stripe.com",
       "https://api.anthropic.com",
       "https://api.openai.com",
-      "https://va.vercel-scripts.com",
-      "https://vercel.live",
     ].join(" "),
 
-    // Frames: Google Picker, OAuth consent, Stripe.js, Vercel toolbar, and YouTube embed (Heilung easter egg)
-    "frame-src https://accounts.google.com https://docs.google.com https://drive.google.com https://js.stripe.com https://hooks.stripe.com https://vercel.live https://www.youtube.com",
+    // Frames: Google Picker, OAuth consent, Stripe.js, and YouTube embed (Heilung easter egg)
+    "frame-src https://accounts.google.com https://docs.google.com https://drive.google.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com",
 
     // Form actions: self only
     "form-action 'self'",

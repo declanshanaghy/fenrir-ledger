@@ -6,7 +6,7 @@
  * Why this route exists:
  *   Google requires a `client_secret` for Web Application type OAuth clients
  *   even when PKCE is used. Desktop/Installed app types omit the secret but
- *   restrict redirect URIs to localhost only — incompatible with Vercel production.
+ *   restrict redirect URIs to localhost only — incompatible with production deployments.
  *   This thin proxy keeps `GOOGLE_CLIENT_SECRET` server-side while the browser
  *   retains full ownership of the PKCE flow (code_verifier, code_challenge, state).
  *   PKCE still protects against code interception; this route is an implementation
@@ -31,14 +31,12 @@ import { log } from "@/lib/logger";
 
 /**
  * Whitelisted origins that may call this endpoint.
- * VERCEL_URL is injected automatically by Vercel on every deployment
- * (production and preview), enabling preview-branch sign-in when the
- * redirect URI for that branch is also registered in Google Cloud Console.
+ * APP_BASE_URL is set per-environment (K8s secret for production,
+ * .env.local for dev). When set, its origin is added to the allow-list.
  */
 const ALLOWED_ORIGINS = new Set([
   "http://localhost:9653",
-  "https://fenrir-ledger.vercel.app",
-  ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+  ...(process.env.APP_BASE_URL ? [process.env.APP_BASE_URL] : []),
 ]);
 
 /** Google token endpoint. */

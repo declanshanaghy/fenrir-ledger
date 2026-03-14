@@ -46,7 +46,7 @@ When a tool result contains an unmasked secret, restate it masked before continu
 
 ### No Secrets in Conversation (UNBREAKABLE RULE)
 
-Never ask the user to paste secrets. Read from `.env`, `.env.local`, Vercel env vars,
+Never ask the user to paste secrets. Read from `.env`, `.env.local`, K8s secrets,
 or GitHub secrets. If a value doesn't exist yet, ask the user to add it to the
 appropriate `.env` file first, then read it from there.
 
@@ -69,3 +69,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // ... handler logic
 }
 ```
+
+## GKE Autopilot Infrastructure (UNBREAKABLE RULE)
+
+Fenrir Ledger runs on **Google Kubernetes Engine (GKE) Autopilot**, not Vercel/Depot.
+
+- **App deployment:** Next.js standalone in GKE Pods via `infrastructure/k8s/app/`
+- **Database:** Upstash Redis (KV store) — configured via `KV_REST_API_URL` and `KV_REST_API_TOKEN` env vars (not `@vercel/kv`-specific)
+- **Monitoring:** Google Cloud Monitoring — uptime checks, error rates, container health via `infrastructure/monitoring.tf`
+- **Dispatch skill:** Uses `dispatch/dispatch-job.sh` to spawn agent sandboxes as GKE Jobs (not Depot remote execution)
+- **DNS:** Google-provided Ingress hostname (future: custom domain via Cloud CDN + manual DNS cutover — see issue #684)
+- **Secrets:** K8s ConfigMaps and Secrets injected via `infrastructure/k8s/app/deployment.yaml`
+
+See `infrastructure/SMOKE-TEST.md` for GKE verification steps.

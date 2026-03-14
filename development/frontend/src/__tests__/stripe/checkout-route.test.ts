@@ -87,7 +87,7 @@ import { POST } from "@/app/api/stripe/checkout/route";
 // ---------------------------------------------------------------------------
 
 function makeRequest(body: Record<string, unknown> = { returnPath: "/ledger/settings" }): NextRequest {
-  return new NextRequest("https://fenrir-ledger.vercel.app/api/stripe/checkout", {
+  return new NextRequest("https://fenrir-ledger.example.com/api/stripe/checkout", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -131,7 +131,7 @@ describe("POST /api/stripe/checkout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.STRIPE_PRICE_ID = "price_test123";
-    process.env.APP_BASE_URL = "https://fenrir-ledger.vercel.app";
+    process.env.APP_BASE_URL = "https://fenrir-ledger.example.com";
   });
 
   // =========================================================================
