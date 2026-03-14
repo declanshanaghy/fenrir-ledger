@@ -7,12 +7,12 @@ import { NextRequest } from "next/server";
 import { POST } from "@/app/api/stripe/webhook/route";
 import type Stripe from "stripe";
 
-// Mock @vercel/kv (used by webhook deduplication)
-vi.mock("@vercel/kv", () => ({
-  kv: {
+// Mock Redis client (used by webhook deduplication)
+vi.mock("@/lib/kv/redis-client", () => ({
+  getRedisClient: () => ({
     get: vi.fn().mockResolvedValue(null), // No duplicate by default
     set: vi.fn().mockResolvedValue("OK"),
-  },
+  }),
 }));
 
 // Mock the logger

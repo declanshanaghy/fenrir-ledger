@@ -1,21 +1,23 @@
 /**
- * Unit tests for kv/entitlement-store.ts — Vercel KV entitlement CRUD operations.
+ * Unit tests for kv/entitlement-store.ts — Redis entitlement CRUD operations.
  *
- * Mocks @vercel/kv to test all get/set/delete paths, cache behavior, and error handling.
+ * Mocks ioredis via redis-client to test all get/set/delete paths, cache behavior, and error handling.
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { StoredStripeEntitlement } from "@/lib/stripe/types";
 
-// ── Mock @vercel/kv ───────────────────────────────────────────────────────
+// ── Mock Redis client ─────────────────────────────────────────────────────
 
-const mockKv = vi.hoisted(() => ({
+const mockRedis = vi.hoisted(() => ({
   get: vi.fn(),
   set: vi.fn(),
   del: vi.fn(),
 }));
 
-vi.mock("@vercel/kv", () => ({ kv: mockKv }));
+vi.mock("@/lib/kv/redis-client", () => ({
+  getRedisClient: () => mockRedis,
+}));
 
 // ── Import after mock ────────────────────────────────────────────────────
 
@@ -90,24 +92,24 @@ describe("entitlement-store", () => {
   // ── getStripeEntitlement ──────────────────────────────────────────────
 
   describe("getStripeEntitlement", () => {
-    it("returns entitlement when found in KV", async () => {
+    it("returns entitlement when found in Redis", async () => {
       const ent = makeFakeEntitlement();
-      mockKv.get.mockResolvedValueOnce(ent);
+      mockRedis.get.mockResolvedValueOnce(JSON.stringify(ent));
 
       const result = await getStripeEntitlement(GOOGLE_SUB);
       expect(result).toEqual(ent);
-      expect(mockKv.get).toHaveBeenCalledWith(`entitlement:${GOOGLE_SUB}`);
+      expect(mockRedis.get).toHaveBeenCalledWith(`entitlement:${GOOGLE_SUB}`);
     });
 
     it("returns null when not found", async () => {
-      mockKv.get.mockResolvedValueOnce(null);
+      mockRedis.get.mockResolvedValueOnce(null);
 
       const result = await getStripeEntitlement(GOOGLE_SUB);
       expect(result).toBeNull();
     });
 
-    it("returns null on KV failure (does not throw)", async () => {
-      mockKv.get.mockRejectedValueOnce(new Error("KV connection failed"));
+    it("returns null on Redis failure (does not throw)", async () => {
+      mockRedis.get.mockRejectedValueOnce(new Error("Redis connection failed"));
 
       const result = await getStripeEntitlement(GOOGLE_SUB);
       expect(result).toBeNull();
@@ -119,30 +121,32 @@ describe("entitlement-store", () => {
   describe("setStripeEntitlement", () => {
     it("stores entitlement with TTL and creates reverse index", async () => {
       const ent = makeFakeEntitlement();
-      mockKv.set.mockResolvedValue("OK");
+      mockRedis.set.mockResolvedValue("OK");
 
       await setStripeEntitlement(GOOGLE_SUB, ent);
 
       // Primary entitlement key
-      expect(mockKv.set).toHaveBeenCalledWith(
+      expect(mockRedis.set).toHaveBeenCalledWith(
         `entitlement:${GOOGLE_SUB}`,
-        ent,
-        { ex: 30 * 24 * 60 * 60 }
+        JSON.stringify(ent),
+        "EX",
+        30 * 24 * 60 * 60
       );
       // Reverse index
-      expect(mockKv.set).toHaveBeenCalledWith(
+      expect(mockRedis.set).toHaveBeenCalledWith(
         `stripe-customer:${STRIPE_CUSTOMER_ID}`,
-        GOOGLE_SUB,
-        { ex: 30 * 24 * 60 * 60 }
+        JSON.stringify(GOOGLE_SUB),
+        "EX",
+        30 * 24 * 60 * 60
       );
     });
 
-    it("throws on KV failure", async () => {
+    it("throws on Redis failure", async () => {
       const ent = makeFakeEntitlement();
-      mockKv.set.mockRejectedValueOnce(new Error("KV write failed"));
+      mockRedis.set.mockRejectedValueOnce(new Error("Redis write failed"));
 
       await expect(setStripeEntitlement(GOOGLE_SUB, ent)).rejects.toThrow(
-        "KV write failed"
+        "Redis write failed"
       );
     });
   });
@@ -152,32 +156,32 @@ describe("entitlement-store", () => {
   describe("deleteStripeEntitlement", () => {
     it("deletes primary key and reverse index", async () => {
       const ent = makeFakeEntitlement();
-      mockKv.get.mockResolvedValueOnce(ent);
-      mockKv.del.mockResolvedValue(1);
+      mockRedis.get.mockResolvedValueOnce(JSON.stringify(ent));
+      mockRedis.del.mockResolvedValue(1);
 
       await deleteStripeEntitlement(GOOGLE_SUB);
 
-      expect(mockKv.del).toHaveBeenCalledWith(`entitlement:${GOOGLE_SUB}`);
-      expect(mockKv.del).toHaveBeenCalledWith(
+      expect(mockRedis.del).toHaveBeenCalledWith(`entitlement:${GOOGLE_SUB}`);
+      expect(mockRedis.del).toHaveBeenCalledWith(
         `stripe-customer:${STRIPE_CUSTOMER_ID}`
       );
     });
 
     it("only deletes primary key when no existing entitlement found", async () => {
-      mockKv.get.mockResolvedValueOnce(null);
-      mockKv.del.mockResolvedValue(0);
+      mockRedis.get.mockResolvedValueOnce(null);
+      mockRedis.del.mockResolvedValue(0);
 
       await deleteStripeEntitlement(GOOGLE_SUB);
 
-      expect(mockKv.del).toHaveBeenCalledTimes(1);
-      expect(mockKv.del).toHaveBeenCalledWith(`entitlement:${GOOGLE_SUB}`);
+      expect(mockRedis.del).toHaveBeenCalledTimes(1);
+      expect(mockRedis.del).toHaveBeenCalledWith(`entitlement:${GOOGLE_SUB}`);
     });
 
-    it("throws on KV failure", async () => {
-      mockKv.get.mockRejectedValueOnce(new Error("KV read failed"));
+    it("throws on Redis failure", async () => {
+      mockRedis.get.mockRejectedValueOnce(new Error("Redis read failed"));
 
       await expect(deleteStripeEntitlement(GOOGLE_SUB)).rejects.toThrow(
-        "KV read failed"
+        "Redis read failed"
       );
     });
   });
@@ -186,24 +190,24 @@ describe("entitlement-store", () => {
 
   describe("getGoogleSubByStripeCustomerId", () => {
     it("returns Google sub from reverse index", async () => {
-      mockKv.get.mockResolvedValueOnce(GOOGLE_SUB);
+      mockRedis.get.mockResolvedValueOnce(JSON.stringify(GOOGLE_SUB));
 
       const result = await getGoogleSubByStripeCustomerId(STRIPE_CUSTOMER_ID);
       expect(result).toBe(GOOGLE_SUB);
-      expect(mockKv.get).toHaveBeenCalledWith(
+      expect(mockRedis.get).toHaveBeenCalledWith(
         `stripe-customer:${STRIPE_CUSTOMER_ID}`
       );
     });
 
     it("returns null when no mapping exists", async () => {
-      mockKv.get.mockResolvedValueOnce(null);
+      mockRedis.get.mockResolvedValueOnce(null);
 
       const result = await getGoogleSubByStripeCustomerId(STRIPE_CUSTOMER_ID);
       expect(result).toBeNull();
     });
 
-    it("returns null on KV failure (does not throw)", async () => {
-      mockKv.get.mockRejectedValueOnce(new Error("KV error"));
+    it("returns null on Redis failure (does not throw)", async () => {
+      mockRedis.get.mockRejectedValueOnce(new Error("Redis error"));
 
       const result = await getGoogleSubByStripeCustomerId(STRIPE_CUSTOMER_ID);
       expect(result).toBeNull();
@@ -215,24 +219,24 @@ describe("entitlement-store", () => {
   describe("getAnonymousStripeEntitlement", () => {
     it("reads from anonymous key", async () => {
       const ent = makeFakeEntitlement();
-      mockKv.get.mockResolvedValueOnce(ent);
+      mockRedis.get.mockResolvedValueOnce(JSON.stringify(ent));
 
       const result = await getAnonymousStripeEntitlement(STRIPE_CUSTOMER_ID);
       expect(result).toEqual(ent);
-      expect(mockKv.get).toHaveBeenCalledWith(
+      expect(mockRedis.get).toHaveBeenCalledWith(
         `entitlement:stripe:${STRIPE_CUSTOMER_ID}`
       );
     });
 
     it("returns null when not found", async () => {
-      mockKv.get.mockResolvedValueOnce(null);
+      mockRedis.get.mockResolvedValueOnce(null);
 
       const result = await getAnonymousStripeEntitlement(STRIPE_CUSTOMER_ID);
       expect(result).toBeNull();
     });
 
-    it("returns null on KV failure (does not throw)", async () => {
-      mockKv.get.mockRejectedValueOnce(new Error("KV error"));
+    it("returns null on Redis failure (does not throw)", async () => {
+      mockRedis.get.mockRejectedValueOnce(new Error("Redis error"));
 
       const result = await getAnonymousStripeEntitlement(STRIPE_CUSTOMER_ID);
       expect(result).toBeNull();
@@ -242,29 +246,31 @@ describe("entitlement-store", () => {
   describe("setAnonymousStripeEntitlement", () => {
     it("stores under anonymous key and creates reverse index with stripe: prefix", async () => {
       const ent = makeFakeEntitlement();
-      mockKv.set.mockResolvedValue("OK");
+      mockRedis.set.mockResolvedValue("OK");
 
       await setAnonymousStripeEntitlement(STRIPE_CUSTOMER_ID, ent);
 
-      expect(mockKv.set).toHaveBeenCalledWith(
+      expect(mockRedis.set).toHaveBeenCalledWith(
         `entitlement:stripe:${STRIPE_CUSTOMER_ID}`,
-        ent,
-        { ex: 30 * 24 * 60 * 60 }
+        JSON.stringify(ent),
+        "EX",
+        30 * 24 * 60 * 60
       );
-      expect(mockKv.set).toHaveBeenCalledWith(
+      expect(mockRedis.set).toHaveBeenCalledWith(
         `stripe-customer:${STRIPE_CUSTOMER_ID}`,
-        `stripe:${STRIPE_CUSTOMER_ID}`,
-        { ex: 30 * 24 * 60 * 60 }
+        JSON.stringify(`stripe:${STRIPE_CUSTOMER_ID}`),
+        "EX",
+        30 * 24 * 60 * 60
       );
     });
 
-    it("throws on KV failure", async () => {
+    it("throws on Redis failure", async () => {
       const ent = makeFakeEntitlement();
-      mockKv.set.mockRejectedValueOnce(new Error("KV write failed"));
+      mockRedis.set.mockRejectedValueOnce(new Error("Redis write failed"));
 
       await expect(
         setAnonymousStripeEntitlement(STRIPE_CUSTOMER_ID, ent)
-      ).rejects.toThrow("KV write failed");
+      ).rejects.toThrow("Redis write failed");
     });
   });
 
@@ -273,7 +279,7 @@ describe("entitlement-store", () => {
   describe("migrateStripeEntitlement", () => {
     it("returns already_migrated when Google-keyed entry exists", async () => {
       const ent = makeFakeEntitlement();
-      mockKv.get.mockResolvedValueOnce(ent); // existingGoogle
+      mockRedis.get.mockResolvedValueOnce(JSON.stringify(ent)); // existingGoogle
 
       const result = await migrateStripeEntitlement(
         STRIPE_CUSTOMER_ID,
@@ -287,8 +293,8 @@ describe("entitlement-store", () => {
     });
 
     it("returns not_found when anonymous entitlement does not exist", async () => {
-      mockKv.get.mockResolvedValueOnce(null); // existingGoogle
-      mockKv.get.mockResolvedValueOnce(null); // anonymousEntitlement
+      mockRedis.get.mockResolvedValueOnce(null); // existingGoogle
+      mockRedis.get.mockResolvedValueOnce(null); // anonymousEntitlement
 
       const result = await migrateStripeEntitlement(
         STRIPE_CUSTOMER_ID,
@@ -299,10 +305,10 @@ describe("entitlement-store", () => {
 
     it("migrates anonymous entitlement to Google-keyed entry", async () => {
       const ent = makeFakeEntitlement();
-      mockKv.get.mockResolvedValueOnce(null); // existingGoogle — not yet migrated
-      mockKv.get.mockResolvedValueOnce(ent); // anonymousEntitlement
-      mockKv.set.mockResolvedValue("OK");
-      mockKv.del.mockResolvedValue(1);
+      mockRedis.get.mockResolvedValueOnce(null); // existingGoogle — not yet migrated
+      mockRedis.get.mockResolvedValueOnce(JSON.stringify(ent)); // anonymousEntitlement
+      mockRedis.set.mockResolvedValue("OK");
+      mockRedis.del.mockResolvedValue(1);
 
       const result = await migrateStripeEntitlement(
         STRIPE_CUSTOMER_ID,
@@ -316,29 +322,31 @@ describe("entitlement-store", () => {
       });
 
       // Copies to Google key
-      expect(mockKv.set).toHaveBeenCalledWith(
+      expect(mockRedis.set).toHaveBeenCalledWith(
         `entitlement:${GOOGLE_SUB}`,
-        ent,
-        { ex: 30 * 24 * 60 * 60 }
+        JSON.stringify(ent),
+        "EX",
+        30 * 24 * 60 * 60
       );
       // Updates reverse index
-      expect(mockKv.set).toHaveBeenCalledWith(
+      expect(mockRedis.set).toHaveBeenCalledWith(
         `stripe-customer:${STRIPE_CUSTOMER_ID}`,
-        GOOGLE_SUB,
-        { ex: 30 * 24 * 60 * 60 }
+        JSON.stringify(GOOGLE_SUB),
+        "EX",
+        30 * 24 * 60 * 60
       );
       // Deletes anonymous key
-      expect(mockKv.del).toHaveBeenCalledWith(
+      expect(mockRedis.del).toHaveBeenCalledWith(
         `entitlement:stripe:${STRIPE_CUSTOMER_ID}`
       );
     });
 
-    it("throws on KV failure during migration", async () => {
-      mockKv.get.mockRejectedValueOnce(new Error("KV read failed"));
+    it("throws on Redis failure during migration", async () => {
+      mockRedis.get.mockRejectedValueOnce(new Error("Redis read failed"));
 
       await expect(
         migrateStripeEntitlement(STRIPE_CUSTOMER_ID, GOOGLE_SUB)
-      ).rejects.toThrow("KV read failed");
+      ).rejects.toThrow("Redis read failed");
     });
   });
 });

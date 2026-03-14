@@ -169,10 +169,9 @@ describe("Issue #682 — Vercel/Depot Cleanup", () => {
       const srcDir = path.join(process.cwd(), "development/frontend/src");
       const matches = searchFilesForPattern(srcDir, /@vercel\/kv/, [".ts", ".tsx"]);
 
-      // @vercel/kv is allowed because it's compatible with Upstash Redis
-      // The actual issue would be if we were using VERCEL_KV_* env vars
-      // This test documents that @vercel/kv is acceptable when using Upstash REST API
-      expect(matches.length).toBeGreaterThanOrEqual(0);
+      // @vercel/kv has been replaced with ioredis (issue #714)
+      // Production code should have zero imports of @vercel/kv
+      expect(matches.length).toBe(0);
     });
 
     it("src/ should not have hardcoded vercel domain references", () => {
