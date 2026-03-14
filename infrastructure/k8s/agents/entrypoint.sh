@@ -35,9 +35,10 @@ if [ -z "${GH_TOKEN:-}" ]; then
   exit 1
 fi
 
-# Configure gh CLI auth
-echo "${GH_TOKEN}" | gh auth login --with-token
-gh auth setup-git
+# Configure git to use GH_TOKEN for HTTPS auth
+# gh CLI automatically uses GH_TOKEN env var — no login needed.
+# For git clone/push, configure credential helper to use the token directly.
+git config --global credential.helper '!f() { echo "username=x-access-token"; echo "password=${GH_TOKEN}"; }; f'
 echo "[ok] git credentials configured"
 
 # Git identity for commits
