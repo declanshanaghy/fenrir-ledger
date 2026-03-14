@@ -1,0 +1,11 @@
+{{- if .Values.warmNodePool.enabled }}
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: placeholder-priority
+  namespace: {{ .Values.namespace }}
+spec:
+  value: -100
+  globalDefault: false
+  description: "Low priority for warm node pool placeholder pods — evicted for real workloads"
+{{- end }}

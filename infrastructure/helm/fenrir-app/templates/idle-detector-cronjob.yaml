@@ -1,0 +1,67 @@
+{{- if .Values.warmNodePool.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: warm-node-pool-idle-detector
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "fenrir-app.labels" (dict "name" "warm-node-pool" "component" "infrastructure") | nindent 4 }}
+spec:
+  # Run every 5 minutes to check for idle
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: warm-node-pool-controller-sa
+          restartPolicy: OnFailure
+          containers:
+            - name: idle-detector
+              image: "bitnami/kubectl:latest"
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+
+                  # Get the timestamp of the last completed agent job
+                  LAST_JOB=$(kubectl get jobs -n fenrir-app -l app=agent-job \
+                    --sort-by=.status.completionTime \
+                    -o jsonpath='{.items[-1:].status.completionTime}' 2>/dev/null || echo "")
+
+                  if [ -z "$LAST_JOB" ]; then
+                    # No jobs found, don't scale down yet
+                    echo "No completed jobs found, keeping placeholder active"
+                    exit 0
+                  fi
+
+                  # Get current time and last job time in seconds since epoch
+                  CURRENT_TIME=$(date +%s)
+                  LAST_JOB_TIME=$(date -d "$LAST_JOB" +%s 2>/dev/null || echo $CURRENT_TIME)
+                  IDLE_TIMEOUT={{ .Values.warmNodePool.idleTimeoutSeconds }}
+                  TIME_DIFF=$((CURRENT_TIME - LAST_JOB_TIME))
+
+                  if [ $TIME_DIFF -gt $IDLE_TIMEOUT ]; then
+                    # Idle timeout exceeded, scale down the placeholder
+                    echo "Idle timeout ($TIME_DIFF > $IDLE_TIMEOUT), scaling down placeholder"
+                    kubectl scale deployment warm-node-pool-placeholder \
+                      -n {{ .Values.namespace }} \
+                      --replicas=0 || true
+                  else
+                    # Still active, ensure placeholder is scaled up
+                    echo "Recent activity ($TIME_DIFF < $IDLE_TIMEOUT), keeping placeholder active"
+                    kubectl scale deployment warm-node-pool-placeholder \
+                      -n {{ .Values.namespace }} \
+                      --replicas=1 || true
+                  fi
+              resources:
+                requests:
+                  cpu: "50m"
+                  memory: "64Mi"
+                limits:
+                  cpu: "100m"
+                  memory: "128Mi"
+{{- end }}
