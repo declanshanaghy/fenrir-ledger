@@ -31,9 +31,9 @@ export function middleware(request: NextRequest) {
 
   // -----------------------------------------------------------------------
   // Canonical domain redirect: www → apex, HTTP → HTTPS
-  // Skip in development (localhost)
+  // Skip in development (localhost) and health check endpoint (GCP probes use HTTP)
   // -----------------------------------------------------------------------
-  if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+  if (hostname !== "localhost" && hostname !== "127.0.0.1" && pathname !== "/api/health") {
     const isWww = hostname.startsWith("www.");
     const isHttp = protocol === "http:" || request.headers.get("x-forwarded-proto") === "http";
 
