@@ -11,8 +11,8 @@
  * --regen-assets regenerates shared CSS/JS files in the output directory.
  */
 
-import { readFileSync, writeFileSync, existsSync } from "fs";
-import { basename, dirname, join, resolve } from "path";
+import { readFileSync, writeFileSync } from "fs";
+import { dirname, join, resolve } from "path";
 
 // ---------------------------------------------------------------------------
 // CLI args
@@ -88,7 +88,7 @@ body {
 .report-header {
   border-bottom: 1px solid var(--rune-border);
   padding-bottom: 1.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 .report-header h1 {
   font-family: 'Cinzel Decorative', serif;
@@ -108,34 +108,102 @@ body {
 .report-header .meta span { white-space: nowrap; }
 .report-header .meta .label { color: var(--text-void); margin-right: 0.3rem; }
 
-/* Summary bar */
-.summary-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 1rem;
+/* Changes summary */
+.changes-summary {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
   background: var(--forge);
   border: 1px solid var(--rune-border);
   border-radius: 4px;
 }
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 80px;
-}
-.stat .num {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 1.5rem;
+.changes-summary h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
   font-weight: 600;
-  color: var(--gold-bright);
+  color: var(--gold);
+  margin-bottom: 0.75rem;
 }
-.stat .lbl {
+.changes-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 700px) {
+  .changes-cols { grid-template-columns: 1fr; }
+}
+.changes-col h3 {
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   color: var(--text-rune);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--rune-border);
+}
+.changes-col ul {
+  list-style: none;
+  padding: 0;
+}
+.changes-col li {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-saga);
+  padding: 0.15rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.changes-col li .icon { font-size: 0.7rem; }
+.file-new .icon { color: var(--teal-asgard); }
+.file-mod .icon { color: var(--amber-hati); }
+.file-del .icon { color: var(--fire-muspel); }
+.commit-item { color: var(--text-rune) !important; }
+.commit-item .msg { color: var(--text-saga); }
+
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.stats-card {
+  background: var(--forge);
+  border: 1px solid var(--rune-border);
+  border-radius: 4px;
+  padding: 0.6rem 0.75rem;
+}
+.stats-card-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--gold-dim);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.04em;
+}
+.stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.75rem;
+}
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+.stat .num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gold-bright);
+}
+.stat .num.sm { font-size: 0.85rem; }
+.stat .lbl {
+  font-size: 0.6rem;
+  color: var(--text-rune);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 /* Entrypoint section */
@@ -246,7 +314,7 @@ body {
   word-break: break-word;
 }
 .thinking::before {
-  content: 'ᚲ ';
+  content: '\\16B2 ';
   color: var(--gold-dim);
 }
 
@@ -371,7 +439,6 @@ document.addEventListener('DOMContentLoaded', () => {
       h.closest('.tool-block').classList.toggle('open');
     });
   });
-  // Expand All / Collapse All
   document.getElementById('expand-all')?.addEventListener('click', () => {
     document.querySelectorAll('.turn').forEach(t => t.classList.add('open'));
   });
@@ -426,7 +493,7 @@ function extractMeta(lines) {
   for (const l of lines) {
     if (l.includes("Session:")) meta.session = l.split("Session:")[1].trim();
     if (l.includes("Branch:")) meta.branch = l.split("Branch:")[1].trim();
-    if (l.includes("Model:")) meta.model = l.split("Model:")[1].trim();
+    if (l.includes("Model:") && !meta.model) meta.model = l.split("Model:")[1].trim();
   }
   return meta;
 }
@@ -435,8 +502,7 @@ const meta = extractMeta(entrypointLines);
 // ---------------------------------------------------------------------------
 // Build turns from assistant events
 // ---------------------------------------------------------------------------
-// Group: each assistant event = one turn. Match tool_results from user events.
-const toolResults = new Map(); // tool_use_id → result
+const toolResults = new Map();
 for (const ev of jsonEvents) {
   if (ev.type === "user" && ev.message?.content) {
     for (const block of ev.message.content) {
@@ -448,7 +514,6 @@ for (const ev of jsonEvents) {
       }
     }
   }
-  // Also check tool_use_result on user events (stream-json format)
   if (ev.type === "user" && ev.tool_use_result) {
     const parentId = ev.message?.content?.[0]?.tool_use_id;
     if (parentId) {
@@ -463,7 +528,7 @@ for (const ev of jsonEvents) {
 const turns = [];
 for (const ev of jsonEvents) {
   if (ev.type !== "assistant" || !ev.message?.content) continue;
-  const turn = { thinking: [], texts: [], tools: [] };
+  const turn = { thinking: [], texts: [], tools: [], usage: ev.message?.usage || null };
   for (const block of ev.message.content) {
     if (block.type === "thinking" && block.thinking) {
       turn.thinking.push(block.thinking);
@@ -486,7 +551,7 @@ for (const ev of jsonEvents) {
 }
 
 // ---------------------------------------------------------------------------
-// Stats
+// Stats — basic
 // ---------------------------------------------------------------------------
 const totalTools = turns.reduce((s, t) => s + t.tools.length, 0);
 const toolCounts = {};
@@ -494,6 +559,233 @@ for (const t of turns) for (const tool of t.tools) {
   toolCounts[tool.name] = (toolCounts[tool.name] || 0) + 1;
 }
 const errors = turns.reduce((s, t) => s + t.tools.filter(x => x.is_error).length, 0);
+
+// ---------------------------------------------------------------------------
+// Stats — execution time
+// ---------------------------------------------------------------------------
+// Use file modification time of the log minus entrypoint start indicators
+// Or estimate from entrypoint timestamps and log file stats
+let logStats = null;
+try {
+  const { statSync } = await import("fs");
+  logStats = statSync(logFile);
+} catch {}
+
+// Parse entrypoint for npm ci duration and total time
+let entrypointDurationSec = null;
+const npmCiMatch = entrypointLines.find(l => /added \d+ packages.*in (\d+)s/.test(l));
+const npmCiDuration = npmCiMatch ? parseInt(npmCiMatch.match(/in (\d+)s/)[1]) : null;
+
+// Estimate execution time from the system event timestamp or file metadata
+// The system event has a session_id we can use to correlate
+const systemEvent = jsonEvents.find(e => e.type === "system");
+const firstAssistant = jsonEvents.find(e => e.type === "assistant");
+const lastAssistant = [...jsonEvents].reverse().find(e => e.type === "assistant");
+
+// ---------------------------------------------------------------------------
+// Stats — token usage
+// ---------------------------------------------------------------------------
+let totalInputTokens = 0;
+let totalOutputTokens = 0;
+let totalCacheCreation = 0;
+let totalCacheRead = 0;
+const seenMsgIds = new Set();
+
+for (const t of turns) {
+  if (!t.usage) continue;
+  // Deduplicate by message ID (stream-json emits multiple events per message)
+  const msgId = jsonEvents.find(e =>
+    e.type === "assistant" && e.message?.usage === t.usage
+  )?.message?.id;
+  if (msgId && seenMsgIds.has(msgId)) continue;
+  if (msgId) seenMsgIds.add(msgId);
+
+  totalInputTokens += t.usage.input_tokens || 0;
+  totalOutputTokens += t.usage.output_tokens || 0;
+  totalCacheCreation += t.usage.cache_creation_input_tokens || 0;
+  totalCacheRead += t.usage.cache_read_input_tokens || 0;
+}
+
+// ---------------------------------------------------------------------------
+// Stats — files touched
+// ---------------------------------------------------------------------------
+const filesCreated = new Set();
+const filesModified = new Set();
+const filesRead = new Set();
+
+for (const t of turns) {
+  for (const tool of t.tools) {
+    const fp = tool.input?.file_path;
+    if (tool.name === "Write" && fp) filesCreated.add(fp);
+    if (tool.name === "Edit" && fp) filesModified.add(fp);
+    if (tool.name === "Read" && fp) filesRead.add(fp);
+  }
+}
+// Files that were both written and edited — classify as created
+for (const f of filesCreated) filesModified.delete(f);
+
+// Strip /workspace/repo/ prefix for display
+function shortPath(p) {
+  return p.replace(/^\/workspace\/repo\//, "");
+}
+
+// ---------------------------------------------------------------------------
+// Stats — git commits
+// ---------------------------------------------------------------------------
+const commits = [];
+for (const t of turns) {
+  for (const tool of t.tools) {
+    if (tool.name !== "Bash") continue;
+    const cmd = tool.input?.command || "";
+    const commitMatch = cmd.match(/git commit -m ['"]([^'"]+)['"]/);
+    if (commitMatch) {
+      commits.push(commitMatch[1]);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stats — git pushes
+// ---------------------------------------------------------------------------
+let pushCount = 0;
+for (const t of turns) {
+  for (const tool of t.tools) {
+    if (tool.name === "Bash" && /git push/.test(tool.input?.command || "")) {
+      pushCount++;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stats — tests written (categorize by type)
+// ---------------------------------------------------------------------------
+const testFiles = {
+  vitest: [],   // src/__tests__/**
+  e2e: [],      // quality/test-suites/**/*.spec.ts (Playwright)
+};
+
+// From Write/Edit tool calls — look at file paths
+for (const t of turns) {
+  for (const tool of t.tools) {
+    const fp = tool.input?.file_path || "";
+    if (!fp) continue;
+    if (tool.name !== "Write" && tool.name !== "Edit") continue;
+    const short = shortPath(fp);
+    if (/\.spec\.(ts|tsx|js)$/.test(fp) && /quality\/test-suites/.test(fp)) {
+      if (!testFiles.e2e.includes(short)) testFiles.e2e.push(short);
+    } else if (/\.test\.(ts|tsx|js)$/.test(fp) && /(__tests__|src\/)/.test(fp)) {
+      if (!testFiles.vitest.includes(short)) testFiles.vitest.push(short);
+    }
+  }
+}
+
+// Count individual test cases from file content (Write tool)
+function countTestCases(content) {
+  if (!content) return { unit: 0, component: 0, integration: 0, total: 0 };
+  const itMatches = (content.match(/\b(it|test)\s*\(/g) || []).length;
+  // Heuristic categorization based on content patterns
+  const hasRender = /render\s*\(/.test(content) || /screen\./.test(content);
+  const hasApi = /fetch|api|route|handler|request|response/i.test(content);
+  const hasComponent = /Component|jsx|tsx|<[A-Z]/.test(content);
+
+  let component = 0, integration = 0, unit = 0;
+  if (hasRender || hasComponent) {
+    component = itMatches;
+  } else if (hasApi) {
+    integration = itMatches;
+  } else {
+    unit = itMatches;
+  }
+  return { unit, component, integration, total: itMatches };
+}
+
+// Count Playwright test cases
+function countPlaywrightTests(content) {
+  if (!content) return 0;
+  return (content.match(/\btest\s*\(/g) || []).length;
+}
+
+// Extract test counts from Write tool calls
+let vitestCounts = { unit: 0, component: 0, integration: 0, total: 0 };
+let playwrightCount = 0;
+
+for (const t of turns) {
+  for (const tool of t.tools) {
+    if (tool.name !== "Write") continue;
+    const fp = tool.input?.file_path || "";
+    const content = tool.input?.content || "";
+    if (/\.test\.(ts|tsx|js)$/.test(fp)) {
+      const counts = countTestCases(content);
+      vitestCounts.unit += counts.unit;
+      vitestCounts.component += counts.component;
+      vitestCounts.integration += counts.integration;
+      vitestCounts.total += counts.total;
+    }
+    if (/\.spec\.(ts|tsx|js)$/.test(fp)) {
+      playwrightCount += countPlaywrightTests(content);
+    }
+  }
+}
+
+// Also scan test results from Bash outputs for pass/fail counts
+let testsPassed = 0;
+let testsFailed = 0;
+let testsSkipped = 0;
+
+for (const t of turns) {
+  for (const tool of t.tools) {
+    if (tool.name !== "Bash") continue;
+    const output = typeof tool.result_content === "string" ? tool.result_content : "";
+    // Vitest output: "Tests  14 passed (14)"
+    const vitestMatch = output.match(/Tests?\s+(\d+)\s+passed/);
+    if (vitestMatch) testsPassed = Math.max(testsPassed, parseInt(vitestMatch[1]));
+    const vitestFail = output.match(/(\d+)\s+failed/);
+    if (vitestFail) testsFailed = Math.max(testsFailed, parseInt(vitestFail[1]));
+    // Playwright: "5 passed" or "3 passed, 2 failed"
+    const pwPass = output.match(/(\d+)\s+passed/);
+    if (pwPass && /playwright|spec/.test(tool.input?.command || "")) {
+      testsPassed = Math.max(testsPassed, parseInt(pwPass[1]));
+    }
+    const pwFail = output.match(/(\d+)\s+failed/);
+    if (pwFail && /playwright|spec/.test(tool.input?.command || "")) {
+      testsFailed = Math.max(testsFailed, parseInt(pwFail[1]));
+    }
+    const skipMatch = output.match(/(\d+)\s+skipped/);
+    if (skipMatch) testsSkipped = Math.max(testsSkipped, parseInt(skipMatch[1]));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stats — verify.sh runs
+// ---------------------------------------------------------------------------
+let tscRuns = 0, tscPass = 0, tscFail = 0;
+let buildRuns = 0, buildPass = 0, buildFail = 0;
+
+for (const t of turns) {
+  for (const tool of t.tools) {
+    if (tool.name !== "Bash") continue;
+    const cmd = tool.input?.command || "";
+    if (/verify\.sh\s+--step\s+tsc/.test(cmd)) {
+      tscRuns++;
+      if (tool.is_error) tscFail++; else tscPass++;
+    }
+    if (/verify\.sh\s+--step\s+build/.test(cmd)) {
+      buildRuns++;
+      if (tool.is_error) buildFail++; else buildPass++;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stats — rate limit events
+// ---------------------------------------------------------------------------
+const rateLimitEvents = jsonEvents.filter(e => e.type === "rate_limit_event").length;
+
+// ---------------------------------------------------------------------------
+// Stats — thinking characters (reasoning effort indicator)
+// ---------------------------------------------------------------------------
+const totalThinkingChars = turns.reduce((s, t) =>
+  s + t.thinking.reduce((ss, th) => ss + th.length, 0), 0);
 
 // ---------------------------------------------------------------------------
 // Detect verdict
@@ -505,7 +797,6 @@ for (const t of turns) {
       verdict = { text, pass: /PASS/i.test(text) };
     }
   }
-  // Also check tool inputs for gh issue comment with verdict
   for (const tool of t.tools) {
     if (tool.name === "Bash" && tool.input?.command) {
       const cmd = tool.input.command;
@@ -541,34 +832,19 @@ function toolBadgeClass(name) {
 }
 
 function toolInputPreview(tool) {
-  if (tool.name === "Bash" && tool.input?.command) {
-    return esc(tool.input.command.slice(0, 120));
-  }
-  if (tool.name === "Read" && tool.input?.file_path) {
-    return esc(tool.input.file_path);
-  }
-  if (tool.name === "Edit" && tool.input?.file_path) {
-    return esc(tool.input.file_path);
-  }
-  if (tool.name === "Write" && tool.input?.file_path) {
-    return esc(tool.input.file_path);
-  }
-  if (tool.name === "Grep" && tool.input?.pattern) {
-    return `/${esc(tool.input.pattern)}/`;
-  }
-  if (tool.name === "Glob" && tool.input?.pattern) {
-    return esc(tool.input.pattern);
-  }
+  if (tool.name === "Bash" && tool.input?.command) return esc(tool.input.command.slice(0, 120));
+  if (tool.name === "Read" && tool.input?.file_path) return esc(tool.input.file_path);
+  if (tool.name === "Edit" && tool.input?.file_path) return esc(tool.input.file_path);
+  if (tool.name === "Write" && tool.input?.file_path) return esc(tool.input.file_path);
+  if (tool.name === "Grep" && tool.input?.pattern) return `/${esc(tool.input.pattern)}/`;
+  if (tool.name === "Glob" && tool.input?.pattern) return esc(tool.input.pattern);
   if (tool.name === "TodoWrite") return "update todos";
   return "";
 }
 
 function turnSummary(turn) {
-  // Prefer first text block
   if (turn.texts.length) return esc(turn.texts[0].slice(0, 150));
-  // Else first thinking
   if (turn.thinking.length) return esc(turn.thinking[0].slice(0, 150));
-  // Else tool names
   return turn.tools.map(t => t.name).join(", ");
 }
 
@@ -590,9 +866,6 @@ function renderToolOutput(tool) {
   return esc(JSON.stringify(content, null, 2).slice(0, 5000));
 }
 
-// ---------------------------------------------------------------------------
-// Render entrypoint
-// ---------------------------------------------------------------------------
 function renderEntrypoint() {
   const colored = entrypointLines
     .map(l => {
@@ -605,6 +878,12 @@ function renderEntrypoint() {
   return `<div class="entrypoint"><h2>ᛊ Entrypoint</h2><pre>${colored}</pre></div>`;
 }
 
+function fmtNum(n) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
+  return n.toString();
+}
+
 // ---------------------------------------------------------------------------
 // Build HTML
 // ---------------------------------------------------------------------------
@@ -613,13 +892,15 @@ const outFile = outputPath
   : logFile.replace(/\.log$/, ".html");
 const assetsDir = dirname(outFile);
 
-// Ensure assets exist
 writeAssets(assetsDir);
 
 const issueMatch = meta.session?.match(/issue-(\d+)/);
 const issueNum = issueMatch ? issueMatch[1] : "?";
-const agentMatch = meta.session?.match(/step\d+-(\w+)/);
-const agentName = agentMatch ? agentMatch[1].charAt(0).toUpperCase() + agentMatch[1].slice(1) : "Agent";
+const agentMatch = meta.session?.match(/step(\d+)-(\w+)/);
+const stepNum = agentMatch ? agentMatch[1] : "?";
+const agentName = agentMatch ? agentMatch[2].charAt(0).toUpperCase() + agentMatch[2].slice(1) : "Agent";
+
+const totalTestsWritten = vitestCounts.total + playwrightCount;
 
 let html = `<!DOCTYPE html>
 <html lang="en">
@@ -633,22 +914,86 @@ let html = `<!DOCTYPE html>
 <div class="report">
 
 <div class="report-header">
-  <h1>ᚲ ${agentName} — Issue #${issueNum}</h1>
+  <h1>ᚲ ${agentName} — Issue #${issueNum} (Step ${stepNum})</h1>
   <div class="meta">
     <span><span class="label">Session:</span> ${esc(meta.session || "unknown")}</span>
     <span><span class="label">Branch:</span> ${esc(meta.branch || "unknown")}</span>
     <span><span class="label">Model:</span> ${esc(meta.model || "unknown")}</span>
-    <span><span class="label">Turns:</span> ${turns.length}</span>
   </div>
 </div>
 
-<div class="summary-bar">
-  <div class="stat"><span class="num">${turns.length}</span><span class="lbl">Turns</span></div>
-  <div class="stat"><span class="num">${totalTools}</span><span class="lbl">Tool Calls</span></div>
-  ${Object.entries(toolCounts).sort((a,b) => b[1]-a[1]).map(([n,c]) =>
-    `<div class="stat"><span class="num">${c}</span><span class="lbl">${esc(n)}</span></div>`
-  ).join("\n  ")}
-  <div class="stat"><span class="num" style="color:${errors ? 'var(--fire-muspel)' : 'var(--teal-asgard)'}">${errors}</span><span class="lbl">Errors</span></div>
+<!-- Stats Grid -->
+<div class="stats-grid">
+  <div class="stats-card">
+    <div class="stats-card-label">ᛊ Session</div>
+    <div class="stats-row">
+      <div class="stat"><span class="num">${turns.length}</span><span class="lbl">turns</span></div>
+      <div class="stat"><span class="num">${totalTools}</span><span class="lbl">tools</span></div>
+      <div class="stat"><span class="num" style="color:${errors ? 'var(--fire-muspel)' : 'var(--teal-asgard)'}">${errors}</span><span class="lbl">errors</span></div>
+    </div>
+  </div>
+
+  <div class="stats-card">
+    <div class="stats-card-label">ᛞ Git</div>
+    <div class="stats-row">
+      <div class="stat"><span class="num">${commits.length}</span><span class="lbl">commits</span></div>
+      <div class="stat"><span class="num">${pushCount}</span><span class="lbl">pushes</span></div>
+      ${rateLimitEvents ? `<div class="stat"><span class="num sm" style="color:var(--amber-hati)">${rateLimitEvents}</span><span class="lbl">rate limits</span></div>` : ""}
+    </div>
+  </div>
+
+  <div class="stats-card">
+    <div class="stats-card-label">ᚠ Tokens</div>
+    <div class="stats-row">
+      <div class="stat"><span class="num sm">${fmtNum(totalInputTokens)}</span><span class="lbl">in</span></div>
+      <div class="stat"><span class="num sm">${fmtNum(totalOutputTokens)}</span><span class="lbl">out</span></div>
+      <div class="stat"><span class="num sm">${fmtNum(totalCacheRead)}</span><span class="lbl">cache rd</span></div>
+      <div class="stat"><span class="num sm">${fmtNum(totalCacheCreation)}</span><span class="lbl">cache wr</span></div>
+    </div>
+  </div>
+
+  <div class="stats-card">
+    <div class="stats-card-label">ᛏ Tools</div>
+    <div class="stats-row">
+      ${Object.entries(toolCounts).sort((a,b) => b[1]-a[1]).map(([n,c]) =>
+        `<div class="stat"><span class="num sm">${c}</span><span class="lbl">${esc(n)}</span></div>`
+      ).join("")}
+    </div>
+  </div>
+
+  ${totalTestsWritten > 0 || testsPassed > 0 || tscRuns > 0 || buildRuns > 0 ? `<div class="stats-card">
+    <div class="stats-card-label">ᛉ Quality</div>
+    <div class="stats-row">
+      ${vitestCounts.unit > 0 ? `<div class="stat"><span class="num sm">${vitestCounts.unit}</span><span class="lbl">unit</span></div>` : ""}
+      ${vitestCounts.component > 0 ? `<div class="stat"><span class="num sm">${vitestCounts.component}</span><span class="lbl">component</span></div>` : ""}
+      ${vitestCounts.integration > 0 ? `<div class="stat"><span class="num sm">${vitestCounts.integration}</span><span class="lbl">integration</span></div>` : ""}
+      ${playwrightCount > 0 ? `<div class="stat"><span class="num sm">${playwrightCount}</span><span class="lbl">e2e</span></div>` : ""}
+      ${testsPassed > 0 ? `<div class="stat"><span class="num sm" style="color:var(--teal-asgard)">${testsPassed}</span><span class="lbl">passed</span></div>` : ""}
+      ${testsFailed > 0 ? `<div class="stat"><span class="num sm" style="color:var(--fire-muspel)">${testsFailed}</span><span class="lbl">failed</span></div>` : ""}
+      ${tscRuns > 0 ? `<div class="stat"><span class="num sm" style="color:${tscFail ? 'var(--fire-muspel)' : 'var(--teal-asgard)'}">${tscPass}/${tscRuns}</span><span class="lbl">tsc</span></div>` : ""}
+      ${buildRuns > 0 ? `<div class="stat"><span class="num sm" style="color:${buildFail ? 'var(--fire-muspel)' : 'var(--teal-asgard)'}">${buildPass}/${buildRuns}</span><span class="lbl">build</span></div>` : ""}
+    </div>
+  </div>` : ""}
+</div>
+
+<!-- Changes Summary -->
+<div class="changes-summary">
+  <h2>ᛞ Changes</h2>
+  <div class="changes-cols">
+    <div class="changes-col">
+      <h3>Files (${filesCreated.size} created, ${filesModified.size} modified, ${filesRead.size} read)</h3>
+      <ul>
+        ${[...filesCreated].map(f => `<li class="file-new"><span class="icon">+</span> ${esc(shortPath(f))}</li>`).join("\n        ")}
+        ${[...filesModified].map(f => `<li class="file-mod"><span class="icon">~</span> ${esc(shortPath(f))}</li>`).join("\n        ")}
+      </ul>
+    </div>
+    <div class="changes-col">
+      <h3>Commits (${commits.length})</h3>
+      <ul>
+        ${commits.map(c => `<li class="commit-item"><span class="icon">&#9679;</span> <span class="msg">${esc(c)}</span></li>`).join("\n        ")}
+      </ul>
+    </div>
+  </div>
 </div>
 
 <div style="margin-bottom:1rem; display:flex; gap:0.5rem;">
@@ -719,4 +1064,8 @@ html += `
 writeFileSync(outFile, html);
 console.log(`[ok] report: ${outFile}`);
 console.log(`     turns: ${turns.length} | tools: ${totalTools} | errors: ${errors}`);
+console.log(`     tokens: ${fmtNum(totalInputTokens)} in / ${fmtNum(totalOutputTokens)} out | cache: ${fmtNum(totalCacheRead)} read / ${fmtNum(totalCacheCreation)} write`);
+console.log(`     files: ${filesCreated.size} created, ${filesModified.size} modified | commits: ${commits.length}`);
+console.log(`     tests: ${vitestCounts.total} vitest (${vitestCounts.unit} unit, ${vitestCounts.component} component, ${vitestCounts.integration} integration) + ${playwrightCount} e2e`);
+if (tscRuns) console.log(`     verify: tsc ${tscPass}/${tscRuns} | build ${buildPass}/${buildRuns}`);
 if (verdict) console.log(`     verdict: ${verdict.pass ? "PASS" : "FAIL"}`);
