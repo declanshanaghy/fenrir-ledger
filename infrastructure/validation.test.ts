@@ -421,25 +421,87 @@ describe('GKE Autopilot Infrastructure Validation (Issue #679)', () => {
     const gkeConfig = readFile('gke.tf');
     const ingressConfig = readFile('k8s/app/ingress.yaml');
 
-    it('should define DNS A record for analytics subdomain', () => {
-      expect(dnsConfig).toContain('google_dns_record_set');
-      expect(dnsConfig).toContain('analytics.');
-      expect(dnsConfig).toContain('app_ip.address');
+    it('should define DNS A record for analytics subdomain with correct format', () => {
+      expect(dnsConfig).toContain('resource "google_dns_record_set" "analytics"');
+      expect(dnsConfig).toMatch(/name\s*=\s*"analytics\.\$\{var\.domain\}\./);
+      expect(dnsConfig).toMatch(/managed_zone\s*=\s*google_dns_managed_zone\.app\.name/);
+      expect(dnsConfig).toMatch(/type\s*=\s*"A"/);
+      expect(dnsConfig).toMatch(/ttl\s*=\s*300/);
+      expect(dnsConfig).toMatch(/rrdatas\s*=\s*\[google_compute_global_address\.app_ip\.address\]/);
     });
 
-    it('should include analytics domain in SSL certificate', () => {
-      expect(gkeConfig).toContain('analytics.');
-      expect(gkeConfig).toContain('google_compute_managed_ssl_certificate');
+    it('should reference correct app IP in analytics DNS record', () => {
+      expect(dnsConfig).toContain('google_compute_global_address.app_ip.address');
+      // Verify IP reference is not hardcoded
+      expect(dnsConfig).not.toMatch(/rrdatas\s*=\s*\[\s*"[\d.]+"/);
     });
 
-    it('should configure analytics host in Ingress rules', () => {
-      expect(ingressConfig).toContain('analytics.fenrirledger.com');
-      expect(ingressConfig).toContain('fenrir-app');
+    it('should configure analytics with correct TTL in DNS', () => {
+      expect(dnsConfig).toMatch(/resource "google_dns_record_set" "analytics"[\s\S]*?ttl\s*=\s*300/);
     });
 
-    it('should include analytics domain in ManagedCertificate', () => {
+    it('should include analytics domain in SSL certificate as variable', () => {
+      expect(gkeConfig).toContain('resource "google_compute_managed_ssl_certificate" "app_cert"');
+      expect(gkeConfig).toMatch(/domains\s*=\s*\[var\.domain,\s*"www\.\$\{var\.domain\}",\s*"analytics\.\$\{var\.domain\}"\]/);
+    });
+
+    it('should not hardcode analytics domain in SSL cert', () => {
+      expect(gkeConfig).not.toContain('domains = ["fenrirledger.com"');
+      expect(gkeConfig).not.toMatch(/domains\s*=\s*\[\s*"[a-z.]+",\s*"[a-z.]+",\s*"[a-z.]+"\s*\]/);
+    });
+
+    it('should configure analytics host in Ingress rules with correct service reference', () => {
+      expect(ingressConfig).toContain('- host: analytics.fenrirledger.com');
+      expect(ingressConfig).toMatch(/- host: analytics\.fenrirledger\.com[\s\S]*?backend:[\s\S]*?name: fenrir-app/);
+      expect(ingressConfig).toMatch(/- host: analytics\.fenrirledger\.com[\s\S]*?number: 80/);
+    });
+
+    it('should route analytics traffic to fenrir-app service on port 80', () => {
+      const analyticsRule = ingressConfig.match(/- host: analytics\.fenrirledger\.com[\s\S]*?(?=- host:|---)/);
+      expect(analyticsRule).toBeTruthy();
+      const ruleStr = analyticsRule![0];
+      expect(ruleStr).toContain('name: fenrir-app');
+      expect(ruleStr).toContain('number: 80');
+      expect(ruleStr).toContain('pathType: Prefix');
+    });
+
+    it('should include analytics domain in ManagedCertificate spec', () => {
       expect(ingressConfig).toContain('kind: ManagedCertificate');
-      expect(ingressConfig).toContain('analytics.fenrirledger.com');
+      expect(ingressConfig).toMatch(/kind: ManagedCertificate[\s\S]*?name: fenrir-app-cert/);
+      expect(ingressConfig).toMatch(/domains:[\s\S]*?- fenrirledger\.com[\s\S]*?- www\.fenrirledger\.com[\s\S]*?- analytics\.fenrirledger\.com/);
+    });
+
+    it('should list all three domains in ManagedCertificate', () => {
+      const certBlock = ingressConfig.match(/kind: ManagedCertificate[\s\S]*?domains:[\s\S]*?(?=---)/);
+      expect(certBlock).toBeTruthy();
+      const certStr = certBlock![0];
+      const domainCount = (certStr.match(/^    - [a-z.]+$/gm) || []).length;
+      expect(domainCount).toBe(3);
+      expect(certStr).toContain('- fenrirledger.com');
+      expect(certStr).toContain('- www.fenrirledger.com');
+      expect(certStr).toContain('- analytics.fenrirledger.com');
+    });
+
+    it('should reference managed-certificates annotation in Ingress', () => {
+      expect(ingressConfig).toMatch(/networking\.gke\.io\/managed-certificates:\s*"fenrir-app-cert"/);
+    });
+
+    it('should use static IP annotation in Ingress', () => {
+      expect(ingressConfig).toMatch(/kubernetes\.io\/ingress\.global-static-ip-name:\s*"fenrir-app-ip"/);
+    });
+
+    it('[ACCEPTANCE] analytics subdomain is configured end-to-end', () => {
+      // DNS: record exists and points to app IP
+      expect(dnsConfig).toMatch(/resource "google_dns_record_set" "analytics"[\s\S]*?rrdatas\s*=\s*\[google_compute_global_address\.app_ip\.address\]/);
+
+      // SSL: domain is in certificate
+      expect(gkeConfig).toMatch(/domains\s*=\s*\[[\s\S]*?"analytics\.\$\{var\.domain\}"/);
+
+      // Ingress: rule exists and routes to fenrir-app
+      expect(ingressConfig).toMatch(/- host: analytics\.fenrirledger\.com[\s\S]*?backend:[\s\S]*?name: fenrir-app[\s\S]*?number: 80/);
+
+      // Certificate: domain is listed
+      expect(ingressConfig).toMatch(/kind: ManagedCertificate[\s\S]*?- analytics\.fenrirledger\.com/);
     });
   });
 
