@@ -174,4 +174,16 @@ describe("Security Headers", () => {
     expect(pp!.value).toContain("camera=()");
     expect(pp!.value).toContain("microphone=()");
   });
+
+  it("includes Cross-Origin-Opener-Policy: same-origin-allow-popups (#771)", () => {
+    const coop = headers.find((h) => h.key === "Cross-Origin-Opener-Policy");
+    expect(coop).toBeDefined();
+    expect(coop!.value).toBe("same-origin-allow-popups");
+  });
+
+  it("includes Cross-Origin-Embedder-Policy: unsafe-none (#771)", () => {
+    const coep = headers.find((h) => h.key === "Cross-Origin-Embedder-Policy");
+    expect(coep).toBeDefined();
+    expect(coep!.value).toBe("unsafe-none");
+  });
 });
