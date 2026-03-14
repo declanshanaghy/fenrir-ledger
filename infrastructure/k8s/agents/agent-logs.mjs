@@ -236,15 +236,15 @@ const NEW_HECKLER_ENTRANCES = [
 ];
 
 // Stateful heckle engine
-let heckleCounter = 0;
+let heckleCounter = 10; // start high so first heckle fires IMMEDIATELY
 let currentHecklerName = randomMayoName();
 let escalationLevel = 0;  // 0=normal, 1=retort, 2=apoplectic, 3=exploded
 let exchangeCount = 0;     // total exchanges this session
 
 function maybeHeckle() {
   heckleCounter++;
-  // Heckle every 3-7 messages
-  if (heckleCounter < 3 + Math.floor(Math.random() * 4)) return null;
+  // Heckle every 2-3 messages — the crowd is FERAL
+  if (heckleCounter < 2 + Math.floor(Math.random() * 2)) return null;
   heckleCounter = 0;
 
   const lines = [];
@@ -263,8 +263,8 @@ function maybeHeckle() {
   const heckle = MAYO_HECKLES[Math.floor(Math.random() * MAYO_HECKLES.length)];
   lines.push(`${C.mayoBg}${C.bold} ${MAYO_FLAG} ${currentHecklerName}: ${heckle} ${MAYO_FLAG} ${C.reset}`);
 
-  // Escalation chance increases with each exchange
-  const escalateChance = 0.4 + (escalationLevel * 0.15);
+  // Escalation chance is HIGH and increases fast — ratchet it UP
+  const escalateChance = 0.6 + (escalationLevel * 0.15);
 
   if (Math.random() < escalateChance) {
     // Agent claps back
@@ -673,6 +673,9 @@ function formatLine(obj) {
       lines.push(`${C.result}      ← ${content}${C.reset}`);
     }
     lastType = "result";
+    // Heckler reacts to EVERY tool result
+    const h = maybeHeckle();
+    if (h) { lines.push(h); lines.push(""); }
   }
 
   else if (obj.type === "result") {
