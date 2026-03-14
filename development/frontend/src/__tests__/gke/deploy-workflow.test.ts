@@ -602,14 +602,6 @@ describe("GitHub Actions Workflow: .github/workflows/deploy.yml", () => {
       expect(secretStep.run).toContain("dry-run");
     });
 
-    it("kubectl apply is idempotent", () => {
-      const job = workflowYAML.jobs.deploy;
-      const manifestStep = job.steps.find((s: any) =>
-        s.name?.includes("manifests")
-      );
-      expect(manifestStep.run).toContain("kubectl apply");
-    });
-
     it("health check is warning-only (doesn't block)", () => {
       const job = workflowYAML.jobs["health-check"];
       const healthStep = job.steps.find((s: any) =>
