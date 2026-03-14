@@ -75,7 +75,7 @@ postgresql:
 # -- Ingress Production Config -----------------------------------------
 ingress:
   enabled: true
-  className: ""  # Empty = default GCE controller on Autopilot (ingressClassName: gce is NOT recognized)
+  className: "gce"  # Used as annotation kubernetes.io/ingress.class (not spec.ingressClassName)
   hosts:
     - analytics.fenrirledger.com
   annotations:
