@@ -51,11 +51,11 @@ If issue data + agent template are already in context, that's **2 tool calls** (
 
 | Agent | Remote (GKE) | Local (`--local`) |
 |-------|--------------|-------------------|
-| Luna | `claude-haiku-4-5-20251001` | `haiku` |
-| FiremanDecko | `claude-haiku-4-5-20251001` | `haiku` |
-| Freya | `claude-haiku-4-5-20251001` | `haiku` |
-| Loki | `claude-haiku-4-5-20251001` | `haiku` |
-| Heimdall | `claude-haiku-4-5-20251001` | `haiku` |
+| Luna | `claude-sonnet-4-6` | `sonnet` |
+| FiremanDecko | `claude-sonnet-4-6` | `sonnet` |
+| Freya | `claude-sonnet-4-6` | `sonnet` |
+| Loki | `claude-sonnet-4-6` | `sonnet` |
+| Heimdall | `claude-sonnet-4-6` | `sonnet` |
 
 ## Agent Inference (when `--agent` omitted)
 
