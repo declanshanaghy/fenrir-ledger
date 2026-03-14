@@ -254,7 +254,8 @@ describe('validateJobName', () => {
   });
 
   it('rejects names that are too long', () => {
-    expect(validateJobName('agent-' + 'a'.repeat(56))).toBe(false); // Over 60 chars
+    // The regex allows agent-[a-z0-9-]{1,60}, so up to 60 chars after 'agent-'
+    expect(validateJobName('agent-' + 'a'.repeat(61))).toBe(false); // 61 chars after agent- = rejected
   });
 
   it('rejects names with invalid characters', () => {
@@ -407,8 +408,14 @@ describe('Edge cases and security', () => {
   it('HTML escape prevents XSS in log display', () => {
     const malicious = '<img src=x onerror="alert(\'xss\')">';
     const escaped = escapeHtml(malicious);
+    // Verify tags are escaped so they won't execute
     expect(escaped).not.toContain('<img');
-    expect(escaped).not.toContain('onerror');
+    expect(escaped).not.toContain('<');
+    expect(escaped).not.toContain('>');
+    // Verify the string is fully escaped and safe to insert into HTML
+    expect(escaped).toContain('&lt;img');
+    expect(escaped).toContain('&quot;');
+    expect(escaped).toContain('&#039;');
   });
 
   it('handles very long input strings', () => {
