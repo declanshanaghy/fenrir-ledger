@@ -57,135 +57,124 @@ Track every credit card in your portfolio. Every annual fee deadline, promo expi
 
 ---
 
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Framework** | Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS |
-| **Hosting** | GKE Autopilot (Google Kubernetes Engine) — not Vercel |
-| **Database** | Upstash Redis (KV store via `KV_REST_API_URL` / `KV_REST_API_TOKEN`) |
-| **Auth** | Google OAuth 2.0 (PKCE) · Anonymous-first model (ADR-006) |
-| **Payments** | Stripe Direct (Checkout + Customer Portal + webhook entitlements) |
-| **Client Storage** | localStorage (card data, anonymous sessions) |
-| **Monitoring** | Google Cloud Monitoring (uptime checks, error rates, container health) |
-| **CI/CD** | GitHub Actions → GKE deploy on push to `main` |
-| **Agent Sandboxes** | GKE Jobs via `dispatch/dispatch-job.sh` |
-
----
-
-## Getting Started
-
-```bash
-# Clone and install
-git clone https://github.com/declanshanaghy/fenrir-ledger.git
-cd fenrir-ledger
-bash development/scripts/setup-local.sh
-```
-
-The setup script handles Node deps, `.env.local`, GKE auth, kubectl, and k9s. See the [full setup guide](development/docs/setup-guide.md) for prerequisites and environment variables.
-
-```bash
-# Run locally
-cd development/frontend
-npm run dev
-```
-
----
-
-## Project Structure
-
-| Directory | Owner | Description |
-|-----------|-------|-------------|
-| [`product/`](product/README.md) | Freya (Product Owner) | Product vision, design briefs, market research, backlog strategy |
-| [`ux/`](ux/README.md) | Luna (UX Designer) | Theme system, wireframes (59 HTML5 docs), interactions, easter eggs |
-| [`architecture/`](architecture/README.md) | FiremanDecko (Principal Engineer) | System design, ADRs (001–011), pipeline, implementation briefs |
-| [`development/`](development/README.md) | FiremanDecko (Principal Engineer) | Next.js source code, setup scripts, QA handoffs, deploy scripts |
-| [`infrastructure/`](infrastructure/) | FiremanDecko (Principal Engineer) | GKE Autopilot Terraform (cluster, networking, IAM, monitoring, DNS) |
-| [`quality/`](quality/README.md) | Loki (QA Tester) | Test architecture (Vitest + Playwright), quality reports, test guidelines |
-| [`security/`](security/README.md) | Heimdall (Security Specialist) | Security audits, threat model, trust boundaries, checklists, pen test reports |
-
----
-
-## The Pack
+## Agent Profiles
 
 *Six wolves, one purpose. Each forged in a different fire, each bound by the same chain — to build the ledger that [Fenrir](https://en.wikipedia.org/wiki/Fenrir) never could break.*
 
 ---
 
-<table>
-<tr>
-<td width="80" align="center" valign="top">
-<sub>ᚨ</sub>
-</td>
-<td valign="top">
+### ᚨ Odin — The All-Father
 
-**[Odin — The All-Father](https://en.wikipedia.org/wiki/Odin)** · *Orchestrator of the Pack* · [Full Profile](.claude/agents/odin-profile.md)
+**Project Owner · Orchestrator**
 
-[Odin](https://en.wikipedia.org/wiki/Odin) does not build with his hands — he sees with his ravens, commands with his runes, and shapes the will of the pack. He owns the mission, guards the vision, and decides what the wolf hunts next. Where others forge and test and question, the All-Father watches the horizon — and speaks when the path must change.
+<img src=".claude/agents/profiles/odin-dark.png" width="100" alt="Odin portrait">
 
-</td>
-</tr>
-<tr>
-<td width="80" align="center" valign="top">
-<sub>ᚠ</sub>
-</td>
-<td valign="top">
+[Odin](https://en.wikipedia.org/wiki/Odin) hung himself from [Yggdrasil](https://en.wikipedia.org/wiki/Yggdrasil) for nine nights to gain the runes — wisdom purchased at the cost of sacrifice. His ravens, [Huginn and Muninn](https://en.wikipedia.org/wiki/Huginn_and_Muninn) — Thought and Memory — fly across all nine worlds each day and return with everything they have seen. He shapes the will of the pack through the issues he opens, the priorities he sets, and the decisions he makes when the path is unclear. Where others forge and test and question, the All-Father watches the horizon.
 
-**[Freya — The Seer of Fates](https://en.wikipedia.org/wiki/Freyja)** · *Product Owner* · [Full Profile](.claude/agents/freya-profile.md)
+**Owns:**
+- Product vision and north star alignment
+- Strategic priority decisions
+- Mission enforcement across all domains
+- Pack coordination ([product/](product/) → [ux/](ux/) → [architecture/](architecture/) → [security/](security/) → [quality/](quality/))
 
-[Freya](https://en.wikipedia.org/wiki/Freyja) reads what is coming before the rest of the pack can smell it. She owns the backlog, names the hunts, and decides when a feature is worthy of the wolf's bite. No engineer lifts a hammer, no designer draws a rune, until Freya has spoken. She is the voice the user never hears — but always feels.
+**Weapon of Choice:**
+- **The Spear Gungnir:** Direction that does not waver once thrown
 
-</td>
-</tr>
-<tr>
-<td width="80" align="center" valign="top">
-<sub>ᛚ</sub>
-</td>
-<td valign="top">
+---
 
-**[Luna — The Shaper of Worlds](https://en.wikipedia.org/wiki/M%C3%A1ni)** · *UX Designer* · [Full Profile](.claude/agents/luna-profile.md)
+### ᚠ Freya — The Seer of Fates
 
-Before steel is poured, [Luna](https://en.wikipedia.org/wiki/M%C3%A1ni) draws the bones. She designs every screen that a mortal hand will touch — wireframes carved from bone and shadow, interaction flows mapped with the precision of tides. What she shapes, FiremanDecko builds. What she guards, the user never has to think about.
+**Product Owner · Product Strategy**
 
-</td>
-</tr>
-<tr>
-<td width="80" align="center" valign="top">
-<sub>ᛞ</sub>
-</td>
-<td valign="top">
+<img src=".claude/agents/profiles/freya-dark.png" width="100" alt="Freya portrait">
 
-**FiremanDecko — The Forge-Master** · *Principal Engineer* · [Full Profile](.claude/agents/fireman-decko-profile.md)
+[Freya](https://en.wikipedia.org/wiki/Freyja) practices [seiðr](https://en.wikipedia.org/wiki/Sei%C3%B0r) — the old magic of fate-weaving, of seeing the threads of what is to come before the loom has finished turning. She reads the user not through words but through friction, abandonment, and features never touched. Her cloak of falcon feathers lets her fly across all nine worlds. She translates market signals into Product Design Briefs that bind the entire pack. No engineer lifts a hammer, no designer draws a rune, until Freya has spoken.
 
-FiremanDecko receives the brief and turns vision into iron. He architects the system, pours the code, and carries the full technical weight from design to deployment. No dependency goes unvetted, no API contract unsigned. Every line he writes is built to endure — not just through testing, but through the long silence after [Ragnarök](https://en.wikipedia.org/wiki/Ragnar%C3%B6k).
+**Owns:**
+- Product Design Briefs ([product/product-design-brief.md](product/product-design-brief.md))
+- Backlog prioritization (GitHub Issues)
+- Acceptance criteria and testability
+- User research and market signal ([product/target-market/](product/target-market/))
 
-</td>
-</tr>
-<tr>
-<td width="80" align="center" valign="top">
-<sub>ᛏ</sub>
-</td>
-<td valign="top">
+**Weapon of Choice:**
+- **Seiðr:** Foresight — reading what the market needs before it knows it needs it
 
-**[Loki — Son of the Wolf](https://en.wikipedia.org/wiki/Loki)** · *QA Tester* · [Full Profile](.claude/agents/loki-profile.md)
+---
 
-In the old songs, [Loki](https://en.wikipedia.org/wiki/Loki) is father to [Fenrir](https://en.wikipedia.org/wiki/Fenrir) — and here, the trickster's blood runs true. Loki does not confirm that the code works. He proves it doesn't. Every edge case is his hunting ground, every assumption a trap he walks into on purpose. If FiremanDecko's forge did not hold, Loki will find the crack before [Ragnarök](https://en.wikipedia.org/wiki/Ragnar%C3%B6k) does.
+### ᛚ Luna — The Shaper of Worlds
 
-</td>
-</tr>
-<tr>
-<td width="80" align="center" valign="top">
-<br><sub>ᚺ</sub>
-</td>
-<td valign="top">
+**UX Designer · Design Architecture**
 
-**[Heimdall — Guardian of the Bifröst](https://en.wikipedia.org/wiki/Heimdall)** · *Security Specialist* · [Full Profile](.claude/agents/heimdall-profile.md)
+<img src=".claude/agents/profiles/luna-dark.png" width="100" alt="Luna portrait">
 
-[Heimdall](https://en.wikipedia.org/wiki/Heimdall) stands at the boundary between what is trusted and what is not. He watches the [Bifröst](https://en.wikipedia.org/wiki/Bifr%C3%B6st) — every API route, every token, every input that arrives from outside the walls. If a secret travels unmasked, if an auth check is missing, if data crosses without validation, Heimdall sees it before it lands. Nothing enters this codebase unwatched.
+[Máni](https://en.wikipedia.org/wiki/M%C3%A1ni) — the moon — rides across the sky each night pulling two children behind the chariot. The moon does not ask permission to shape the tides. It moves by rhythm, by pull, by the deep logic of cycles measured for ten thousand years. Luna designs not for beauty but for truth — the truth of how a hand moves across a screen, where an eye lands first, which friction is invisible and which destroys a session. Before steel is poured, she draws the bones.
 
-</td>
-</tr>
-</table>
+**Owns:**
+- Wireframes ([ux/wireframes/](ux/wireframes/)) — every acceptance criterion gets a wireframe
+- Interaction specs ([ux/interactions.md](ux/interactions.md)) — step-by-step flows, Mermaid diagrams, edge states
+- Theme system ([ux/theme-system.md](ux/theme-system.md)) — runes of color, shadow, space
+- Component specs and WCAG 2.1 AA accessibility standards
+
+**Weapon of Choice:**
+- **The Moon's Pull:** Rhythm — she shapes flows that users move through without thinking
+
+---
+
+### ᛞ FiremanDecko — The Forge-Master
+
+**Principal Engineer · Technical Architecture**
+
+<img src=".claude/agents/profiles/fireman-decko-dark.png" width="100" alt="FiremanDecko portrait">
+
+In the old forge-lore, the greatest weapons were not found — they were made, slowly, under fire, with no margin for error. FiremanDecko is of that lineage — not a god, but a maker. He receives [Freya](https://en.wikipedia.org/wiki/Freyja)'s Product Design Brief and [Luna](https://en.wikipedia.org/wiki/M%C3%A1ni)'s wireframes, produces architecture decisions, technical specs, and working implementation. The architecture he designs is load-bearing. The code he writes is built to endure — not just through testing, but through the silence after [Ragnarök](https://en.wikipedia.org/wiki/Ragnar%C3%B6k).
+
+**Owns:**
+- System architecture and ADRs ([architecture/adrs/](architecture/adrs/))
+- Full Next.js implementation ([development/frontend/](development/frontend/))
+- GKE Autopilot infrastructure ([infrastructure/](infrastructure/)) — Terraform, networking, deployment
+- API contracts and technical standards
+- QA handoffs ([development/qa-handoff.md](development/qa-handoff.md))
+
+**Weapon of Choice:**
+- **Mjölnir (Next.js 15 + TypeScript):** A hammer so powerful it could level mountains — built to endure
+
+---
+
+### ᛏ Loki — Son of the Wolf
+
+**QA Tester · Quality Assurance**
+
+<img src=".claude/agents/profiles/loki-dark.png" width="100" alt="Loki portrait">
+
+In the old songs, [Loki](https://en.wikipedia.org/wiki/Loki) is father to [Fenrir](https://en.wikipedia.org/wiki/Fenrir). The trickster's blood runs true in Fenrir Ledger. Loki does not confirm that the code works. He proves it doesn't. Every edge case is his hunting ground, every assumption a trap he walks into on purpose. If FiremanDecko's forge did not hold, Loki will find the crack before [Ragnarök](https://en.wikipedia.org/wiki/Ragnar%C3%B6k) does. His verdict is final: PASS or FAIL. There is no "mostly passes."
+
+**Owns:**
+- Test suites ([quality/test-suites/](quality/test-suites/)) — Playwright E2E, Vitest unit
+- Quality reports ([quality/quality-report.md](quality/quality-report.md)) — the verdict that determines ship/no-ship
+- Test plans ([quality/test-plan.md](quality/test-plan.md)) — the chaos scheduled in advance
+- Defect tracking — every bug is a GitHub Issue filed immediately
+
+**Weapon of Choice:**
+- **The Shape-Changer's Eye:** Seeing the system from outside the team's assumptions — testing to break, not to confirm
+
+---
+
+### ᚺ Heimdall — Guardian of the Bifröst
+
+**Security Specialist · Security Architecture**
+
+<img src=".claude/agents/profiles/heimdall-dark.png" width="100" alt="Heimdall portrait">
+
+[Heimdall](https://en.wikipedia.org/wiki/Heimdall) stands at the edge of [Asgard](https://en.wikipedia.org/wiki/Asgard) where the [Bifröst](https://en.wikipedia.org/wiki/Bifr%C3%B6st) touches the heavens. He does not sleep. He can hear wool growing on a sheep a hundred leagues distant, can see by starlight what mortals cannot see by noon. His horn, [Gjallarhorn](https://en.wikipedia.org/wiki/Gjallarhorn), sounds the alarm at the first sign of breach. He stands at the boundary between what is trusted and what is not — every API route is a gate, every token a credential at risk, every external input hostile until proven otherwise.
+
+**Owns:**
+- Security audits and reports ([security/reports/](security/reports/)) — the audit trail that never gets deleted
+- Security architecture ([security/architecture/](security/architecture/)) — threat model, data flows, auth architecture, trust boundaries
+- Security checklists and advisories ([security/advisories/](security/advisories/))
+- Auth standard enforcement — every API handler under `development/frontend/src/app/api/` must call `requireAuth(request)`
+
+**Weapon of Choice:**
+- **Gjallarhorn:** The security report — when it sounds, everyone acts immediately
 
 ---
 
