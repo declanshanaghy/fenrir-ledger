@@ -86,39 +86,56 @@ npx http-server -p 9000
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────┐
-│ Browser (Agent Monitor SPA)                      │
-│                                                  │
-│ ┌────────────────┐  ┌──────────────────────┐   │
-│ │  Job List      │  │  Log Viewer          │   │
-│ │  - Refresh btn │  │  - Header (metadata) │   │
-│ │  - Job items   │  │  - Log content       │   │
-│ │  - Status      │  │  - Auto-scroll       │   │
-│ └────────────────┘  └──────────────────────┘   │
-│         │                    ▲                   │
-│         └────────────────────┼───────────────┐  │
-└──────────────────────────────┼───────────────┘  │
-                               │
-        ┌──────────────────────┘
-        │
-  localhost:8001 (kubectl proxy)
-        │
-        ▼
-  ┌─────────────────────────┐
-  │ K8s API Server          │
-  │                         │
-  │ GET /namespaces/        │
-  │     fenrir-agents/jobs  │ → List Agent Jobs
-  │                         │
-  │ GET /namespaces/        │
-  │     fenrir-agents/pods  │ → Find Pod for Job
-  │                         │
-  │ GET /namespaces/        │
-  │     fenrir-agents/pods/ │
-  │     <pod>/log?follow    │ → Stream Pod Logs
-  │                         │
-  └─────────────────────────┘
+### System Architecture Diagram
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
+graph TD
+    classDef browser fill:#03A9F4,stroke:#0288D1,color:#FFF
+    classDef server fill:#4CAF50,stroke:#388E3C,color:#FFF
+    classDef proxy fill:#FF9800,stroke:#F57C00,color:#FFF
+    classDef k8s fill:#9C27B0,stroke:#7B1FA2,color:#FFF
+    classDef storage fill:#F44336,stroke:#D32F2F,color:#FFF
+
+    Browser["🌐 Browser SPA - Agent Monitor"]
+    JobList["Job List Component - Refresh Btn, Job Items, Status Badges"]
+    LogViewer["Log Viewer Component - Header, Log Content, Auto-Scroll"]
+
+    ServeJS["Node.js serve.mjs - K8s API Proxy"]
+    HttpProxy["HTTP Proxy Handler - /api/* → localhost:8001"]
+
+    KubeProxy["kubectl proxy - localhost:8001"]
+
+    K8sAPI["K8s API Server"]
+    JobsEndpoint["GET /api/v1/namespaces/fenrir-agents/jobs"]
+    PodsEndpoint["GET /api/v1/namespaces/fenrir-agents/pods"]
+    LogsEndpoint["GET /api/v1/namespaces/fenrir-agents/pods/{pod}/log?follow=true"]
+
+    AgentPods["Agent Pods in fenrir-agents Namespace"]
+    PodLogs["Pod Logs - stream-json Format"]
+
+    Browser --> JobList
+    Browser --> LogViewer
+    JobList -->|List jobs| ServeJS
+    LogViewer -->|Stream logs| ServeJS
+    ServeJS --> HttpProxy
+    HttpProxy -->|Proxy /api/*| KubeProxy
+    KubeProxy -->|Forward to| K8sAPI
+    K8sAPI --> JobsEndpoint
+    K8sAPI --> PodsEndpoint
+    K8sAPI --> LogsEndpoint
+    JobsEndpoint -->|Returns job list| ServeJS
+    PodsEndpoint -->|Find pod for job| ServeJS
+    LogsEndpoint -->|Stream pod logs| AgentPods
+    AgentPods --> PodLogs
+    PodLogs -->|JSONL events| LogViewer
+
+    class Browser browser
+    class ServeJS server
+    class HttpProxy server
+    class KubeProxy proxy
+    class K8sAPI k8s
+    class AgentPods storage
 ```
 
 ## How It Works
@@ -157,6 +174,36 @@ Handles multiple formats:
   - `{ type: "result", usage: {...}, duration: ... }` → gold
   - `{ type: "system", text: "..." }` → gray
 
+### Log Streaming Flow Diagram
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
+sequenceDiagram
+    participant Browser as Browser - Agent Monitor
+    participant Proxy as K8s API Proxy
+    participant K8sAPI as K8s API Server
+    participant Pod as Agent Pod
+    participant Stream as Log Stream
+
+    Browser->>Proxy: GET /api/v1/pods/{pod}/log?follow=true
+    Proxy->>K8sAPI: Forward request
+    K8sAPI->>Pod: Open log stream
+    Pod->>Stream: Emit log line - JSONL
+    Stream->>K8sAPI: stream-json event
+    K8sAPI->>Proxy: Forward event bytes
+    Proxy->>Browser: Send log line
+    Browser->>Browser: parseLogLine() - Parse JSON
+    Browser->>Browser: Extract event type & color-code
+    Browser->>Browser: maybeHeckle() - Heckler injection
+    Browser->>Browser: Render to #log-content div
+    Browser->>Browser: Auto-scroll to bottom
+    Pod->>Stream: Emit next log line
+    Stream->>K8sAPI: Next stream-json event
+    K8sAPI->>Proxy: Forward event bytes
+    Proxy->>Browser: Send next log line
+    Note over Browser: Repeat until job complete or stream ends
+```
+
 ## File Structure
 
 ```
@@ -189,6 +236,31 @@ The original `agent-logs.mjs` includes Mayo GAA hecklers. The Agent Monitor SPA 
 1. Uncomment the Mayo logic in this file (search for `// Mayo hecklers`)
 2. Inject heckle messages into log events periodically
 3. Color them green like agent-logs.mjs
+
+### Heckler Escalation State Machine
+
+The heckler engine maintains a finite state machine that escalates based on agent behavior. Each state represents the heckler's emotional intensity level, with transitions triggered by agent responses.
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
+stateDiagram-v2
+    [*] --> Normal: Heckler spawns
+    Normal --> Retort: Agent responds to heckle - escalationLevel++
+    Retort --> Apoplectic: Agent responds again - escalationLevel++
+    Apoplectic --> Explosion: Agent responds yet again - escalationLevel++
+    Explosion --> NewHeckler: Heckler explodes - escalationLevel reset to 0
+    NewHeckler --> Normal: New heckler entrance with opening line - escalationLevel = 0
+    Normal --> Normal: Agent ignores heckle - Stay cool, no escalation
+    Retort --> Retort: 60% chance: Escalate with retort from ESCALATION_RETORTS[0]
+    Apoplectic --> Apoplectic: 75% chance: Escalate with retort from ESCALATION_RETORTS[1]
+    Explosion --> Explosion: 90% chance: Explode with retort from ESCALATION_RETORTS[2]
+
+    Note over Normal: "Oh is THAT so??"
+    Note over Retort: "RIGHT THAT'S IT!!"
+    Note over Apoplectic: "💥 *spontaneously combusts* 💥"
+    Note over Explosion: "New heckler materialises"
+    Note over NewHeckler: "Alright, what'd I miss??"
+```
 
 ### Testing Without Cluster
 
