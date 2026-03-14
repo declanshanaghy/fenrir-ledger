@@ -6,6 +6,71 @@
 <!-- The "Loki QA Critique" section is auto-generated and will be overwritten on each run. -->
 <!-- Styled with the voice of Loki (wolf son of Fenrir) and the dark Norse aesthetic. -->
 
+## QA Verdict: Issue #893 — Free Trial Nav Highlight
+
+**Branch:** `fix/issue-893-free-trial-nav-highlight`
+**Date:** 2026-03-14
+**Verdict: PASS**
+
+### What Was Broken
+
+The "Free Trial" nav link in `MarketingNavbar` had a hardcoded `isFreeTrial` flag in the className logic for both desktop and mobile renders. This caused the Free Trial link to permanently carry the active-highlight styling (border box on desktop, `font-semibold` on mobile) regardless of the current route. On the homepage and any page other than `/free-trial`, the link appeared highlighted when it should not have been — and on pages like `/features` or `/pricing`, two links appeared highlighted simultaneously.
+
+### The Fix
+
+FiremanDecko removed the `isFreeTrial` flag entirely from both the desktop and mobile render loops in `MarketingNavbar.tsx`. Both now unconditionally delegate to `isNavLinkActive(pathname, href)`, which implements exact-or-subpath matching (`pathname === href || pathname.startsWith(href + "/")`). The Free Trial link now receives the active style only when the current pathname is exactly `/free-trial` or a sub-path of it (e.g., `/free-trial/signup`).
+
+The `isNavLinkActive` helper is already correct: it guards `null` pathname, requires a trailing-slash boundary to prevent `/free-trialXYZ` false positives, and is exported for direct unit testing.
+
+### Edge Case Analysis
+
+| Scenario | Expected | Result |
+|---|---|---|
+| pathname = `/free-trial` | active | PASS |
+| pathname = `/free-trial/signup` (sub-route) | active | PASS |
+| pathname = `/free-trial/` (trailing slash) | active | PASS |
+| pathname = `/free-trialXYZ` (partial prefix, no slash) | inactive | PASS |
+| pathname = `/` (homepage) | inactive | PASS |
+| pathname = `/pricing` | inactive | PASS |
+| pathname = `/features` | inactive | PASS |
+| pathname = `/about` | inactive | PASS |
+| pathname = `null` (Next.js pre-render) | inactive | PASS |
+| other nav links unaffected (Pricing, Features, About) | each highlights only on own route | PASS |
+| mobile overlay: same logic applies | same | PASS |
+
+All edge cases pass. The guard against partial prefix (`/free-trialXYZ`) relies on the `+ "/"` in `startsWith(href + "/")`, which is correct and already tested in both `nav-active-link.test.tsx` and `marketing-navbar.test.tsx`.
+
+### Test Coverage
+
+**New Vitest tests (this PR):**
+
+| File | Tests added | Who |
+|---|---|---|
+| `src/__tests__/marketing/nav-active-link.test.tsx` | 20 (FiremanDecko) + 4 (Loki) = 24 | Both |
+
+All 24 tests in `nav-active-link.test.tsx` pass. The existing `marketing-navbar.test.tsx` (15 tests) also passes and covers `isNavLinkActive` edge cases from a prior issue.
+
+Total nav-related Vitest tests: 39. All passing.
+
+**Playwright E2E tests:** None written. This fix is pure logic — className computation driven by a pathname comparison. A Vitest component render test that inspects `aria-current` and `className` is sufficient and faster (183ms vs 5s). No browser-only behavior exists.
+
+### Acceptance Criteria Status
+
+- "Free Trial" only highlighted when on /free-trial — VERIFIED (tests + manual edge case analysis)
+- Other nav links highlight correctly on their respective pages — VERIFIED (Pricing, Features, About all have dedicated test cases)
+- No link highlighted on the homepage — VERIFIED (explicit test: `no nav link is highlighted on the home page`)
+
+### Build / TypeScript
+
+- `tsc --noEmit`: PASS (no errors in nav component)
+- `npm run build`: PASS (compiled successfully in 24.7s, 57 static pages generated)
+
+### Pre-Existing Failures (Not Regressions)
+
+`deploy-workflow.test.ts` has 2 failing tests (`Deploy job needs: array vs string mismatch`) — predates this PR, confirmed in Loki's augmentation commit message.
+
+---
+
 ## Loki QA Critique
 
 _Bite sharpened. Chains weighed. Last hunt: 2026-03-12 09:51 PDT_
