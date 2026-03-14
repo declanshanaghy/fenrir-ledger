@@ -1278,6 +1278,12 @@
       const job = state.jobs.find(j => j.jobName === jobName);
       if (!job) return;
 
+      // Set agent name from job metadata (guaranteed — parsed from session ID)
+      if (job.agentName) {
+        const nameMap = {firemandecko:'FiremanDecko',loki:'Loki',luna:'Luna',freya:'Freya',heimdall:'Heimdall'};
+        currentAgentName = nameMap[job.agentName] || job.agentName;
+      }
+
       // Update header
       const header = document.getElementById('logHeader');
       document.getElementById('logJobName').textContent = job.sessionId;
