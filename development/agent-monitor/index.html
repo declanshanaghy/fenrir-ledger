@@ -727,12 +727,12 @@
       background: var(--red-dark);
     }
 
-    .mayo-avatar {
+    .mayo-avatar, .comeback-avatar, .log-agent-bubble .avatar {
       cursor: pointer;
       transition: transform 0.2s;
     }
 
-    .mayo-avatar:hover {
+    .mayo-avatar:hover, .comeback-avatar:hover, .log-agent-bubble .avatar:hover {
       transform: scale(1.15);
     }
   </style>
@@ -1465,7 +1465,7 @@
           const cbImg = cbSlug ? `/agents/profiles/${cbSlug}-dark.png` : '';
           const cbFallback = {FiremanDecko:'🔥',Loki:'🦊',Luna:'🌙',Freya:'⚔️',Heimdall:'👁️'}[event.name] || '🤖';
           return `<div class="log-mayo-comeback" id="${id}">
-            <div class="comeback-avatar">${cbImg ? `<img src="${cbImg}" onerror="this.parentElement.innerHTML='${cbFallback}'">` : cbFallback}</div>
+            <div class="comeback-avatar" style="cursor:pointer;" onclick="showAgentProfile('${escapeHtml(event.name)}')">${cbImg ? `<img src="${cbImg}" onerror="this.parentElement.innerHTML='${cbFallback}'">` : cbFallback}</div>
             <div class="comeback-bubble"><strong>${escapeHtml(event.name)}</strong>: ${escapeHtml(event.text)}</div>
           </div>`;
         }
