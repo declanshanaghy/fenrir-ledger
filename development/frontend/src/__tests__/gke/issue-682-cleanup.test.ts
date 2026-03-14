@@ -143,7 +143,7 @@ describe("Issue #682 — Vercel/Depot Cleanup", () => {
       expect(content).not.toMatch(/^VERCEL_/m);
     });
 
-    it(".env.example should reference Upstash Redis for KV store", () => {
+    it(".env.example should reference Redis for KV store", () => {
       const envExamplePath = path.join(repoRoot, "development/frontend/.env.example");
       if (!fs.existsSync(envExamplePath)) {
         expect(true).toBe(true);
@@ -151,8 +151,8 @@ describe("Issue #682 — Vercel/Depot Cleanup", () => {
       }
 
       const content = fs.readFileSync(envExamplePath, "utf-8");
-      expect(content).toMatch(/KV_REST_API_URL/);
-      expect(content).toMatch(/KV_REST_API_TOKEN/);
+      // Using ioredis with REDIS_URL, not Vercel's @vercel/kv
+      expect(content).toMatch(/REDIS_URL/);
     });
 
     it(".env.example should reference APP_BASE_URL for auth/stripe routes", () => {
