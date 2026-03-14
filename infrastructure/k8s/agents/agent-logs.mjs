@@ -251,6 +251,8 @@ if (!opts.targets.length) {
 }
 
 // -- spawn-pane mode: re-exec self in a tmux pane --------------------------
+// Simple: 1 pane = split horizontally (create right column).
+//         >1 pane = split the last pane vertically (stack in right column).
 if (opts.spawnPane && opts.targets.length > 0) {
   const scriptPath = import.meta.filename;
   const extraFlags = [
@@ -263,31 +265,20 @@ if (opts.spawnPane && opts.targets.length > 0) {
   const target = opts.targets[0];
   const cmd = `node "${scriptPath}" "${target}" ${extraFlags}`;
 
-  // Detect existing log column and stack, or create new right column
-  const existing = (() => {
-    try {
-      const panes = execSync(
-        `tmux list-panes -F '#{pane_id} #{pane_title} #{pane_left}'`,
-        { encoding: "utf8" }
-      ).trim().split("\n");
-      let best = null;
-      for (const line of panes) {
-        const parts = line.split(" ");
-        const [id, title, left] = [parts[0], parts[1], parts[2]];
-        if (title && title.startsWith("agent-logs")) {
-          if (!best || Number(left) > Number(best.left)) {
-            best = { id, left };
-          }
-        }
-      }
-      return best?.id || null;
-    } catch { return null; }
-  })();
-
-  if (existing) {
-    execSync(`tmux split-window -v -t '${existing}' -l 30% '${cmd}'`);
-  } else {
-    execSync(`tmux split-window -h -l 40% '${cmd}'`);
+  try {
+    const paneCount = Number(
+      execSync(`tmux list-panes | wc -l`, { encoding: "utf8" }).trim()
+    );
+    if (paneCount <= 1) {
+      // No right column yet — create one
+      execSync(`tmux split-window -h -l 40% '${cmd}'`);
+    } else {
+      // Right column exists — stack vertically in the last pane
+      execSync(`tmux split-window -v '${cmd}'`);
+    }
+  } catch {
+    // Not in tmux — just run inline
+    console.error("Not in a tmux session, running inline.");
   }
   process.exit(0);
 }
