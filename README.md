@@ -55,7 +55,54 @@
 
 Track every credit card in your portfolio. Every annual fee deadline, promo expiration, and sign-up bonus threshold — Fenrir watches and howls before the trap snaps shut. Add your cards, set your thresholds, and the wolf does the rest.
 
-**Stack:** Next.js 15 (App Router) · TypeScript · Tailwind · GKE Autopilot · Stripe (subscriptions) · localStorage (data)
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS |
+| **Hosting** | GKE Autopilot (Google Kubernetes Engine) — not Vercel |
+| **Database** | Upstash Redis (KV store via `KV_REST_API_URL` / `KV_REST_API_TOKEN`) |
+| **Auth** | Google OAuth 2.0 (PKCE) · Anonymous-first model (ADR-006) |
+| **Payments** | Stripe Direct (Checkout + Customer Portal + webhook entitlements) |
+| **Client Storage** | localStorage (card data, anonymous sessions) |
+| **Monitoring** | Google Cloud Monitoring (uptime checks, error rates, container health) |
+| **CI/CD** | GitHub Actions → GKE deploy on push to `main` |
+| **Agent Sandboxes** | GKE Jobs via `dispatch/dispatch-job.sh` |
+
+---
+
+## Getting Started
+
+```bash
+# Clone and install
+git clone https://github.com/declanshanaghy/fenrir-ledger.git
+cd fenrir-ledger
+bash development/scripts/setup-local.sh
+```
+
+The setup script handles Node deps, `.env.local`, GKE auth, kubectl, and k9s. See the [full setup guide](development/docs/setup-guide.md) for prerequisites and environment variables.
+
+```bash
+# Run locally
+cd development/frontend
+npm run dev
+```
+
+---
+
+## Project Structure
+
+| Directory | Owner | Description |
+|-----------|-------|-------------|
+| [`product/`](product/README.md) | Freya (Product Owner) | Product vision, design briefs, market research, backlog strategy |
+| [`ux/`](ux/README.md) | Luna (UX Designer) | Theme system, wireframes (59 HTML5 docs), interactions, easter eggs |
+| [`architecture/`](architecture/README.md) | FiremanDecko (Principal Engineer) | System design, ADRs (001–011), pipeline, implementation briefs |
+| [`development/`](development/README.md) | FiremanDecko (Principal Engineer) | Next.js source code, setup scripts, QA handoffs, deploy scripts |
+| [`infrastructure/`](infrastructure/) | FiremanDecko (Principal Engineer) | GKE Autopilot Terraform (cluster, networking, IAM, monitoring, DNS) |
+| [`quality/`](quality/README.md) | Loki (QA Tester) | Test architecture (Vitest + Playwright), quality reports, test guidelines |
+| [`security/`](security/README.md) | Heimdall (Security Specialist) | Security audits, threat model, trust boundaries, checklists, pen test reports |
 
 ---
 
@@ -171,9 +218,10 @@ graph LR
 
 > *"I have walked the threads of fate and returned with the shape of what must be built. These scrolls carry the pack's purpose — read them before you lift hammer or pen."*
 
+- [Product README](product/README.md) — Index of all product artifacts owned by Freya
 - [Product Brief](product-brief.md) — The vision I have laid before the pack, the reason the wolf hunts
 - [Design Brief](product/product-design-brief.md) — My counsel to the forge-master, where strategy becomes structure
-- [Backlog](https://github.com/declanshanaghy/fenrir-ledger/issues) — The hunts I have ordered by urgency, tracked as GitHub Issues ᛃ
+- [Backlog](https://github.com/declanshanaghy/fenrir-ledger/issues) — The hunts I have ordered by urgency, tracked as GitHub Issues
 
 ---
 
@@ -181,20 +229,22 @@ graph LR
 
 > *"Before a single rune of code is carved, I draw the bones. Every screen is a ritual space — every interaction, a step in the dance between wolf and wanderer."*
 
+- [UX README](ux/README.md) — Index of all design artifacts, wireframes (59 HTML5 docs), and implementation status
 - [Theme System](ux/theme-system.md) — The runes of color and shadow I have woven into the wolf's skin
 - [Wireframes](ux/wireframes.md) — Bones of every screen, drawn before steel is poured
 - [Interactions](ux/interactions.md) — How the wolf moves when touched, precise as tides beneath Mani's gaze
 
 ---
 
-### ᛞ Architecture — *FiremanDecko speaks from the forge*
+### ᛞ Architecture & Development — *FiremanDecko speaks from the forge*
 
 > *"What I build, I build to endure Ragnarok. Every beam is load-tested, every joint fire-hardened. Read these blueprints — they are the skeleton on which all iron hangs."*
 
+- [Architecture README](architecture/README.md) — Index of system design, ADRs (001–011), and pipeline docs
+- [Development README](development/README.md) — Source code layout, setup guide, QA handoffs, and deploy scripts
 - [System Design](architecture/system-design.md) — The load-bearing bones of this hall, forged to outlast the age
 - [ADRs](architecture/adrs/) — Every decision struck in fire, recorded so none may undo them lightly
-- [Pipeline](architecture/pipeline.md) — The channel through which all work flows, from raw ore to tempered steel
-- [Remote Builders (ADR-007)](architecture/adrs/ADR-007-remote-builder-platforms.md) — How agent sandboxes run across the Bifrost
+- [Setup Guide](development/docs/setup-guide.md) — Full setup: prerequisites, GKE cluster, env vars, CI/CD
 
 ---
 
@@ -202,8 +252,10 @@ graph LR
 
 > *"I stand where the trusted world ends and the wild begins. Nothing crosses this bridge unexamined — no key unmasked, no token unchecked, no route unguarded."*
 
-- [Security Index](security/README.md) — My vigil across all nine worlds; nothing passes unwatched
-- [Google API Review](security/reports/2026-03-02-google-api-integration.md) — The reckoning of keys and scopes I have audited beneath Sowilo's light ᛊ
+- [Security README](security/README.md) — Index of all audits, architecture, checklists, and open findings
+- [Threat Model](security/architecture/threat-model.md) — Assets, threat actors, attack surfaces, and mitigations
+- [Auth Architecture](security/architecture/auth-architecture.md) — OAuth PKCE flow, session model, JWKS verification, Stripe auth
+- [External Pen Test](security/reports/2026-03-09-external-pentest.md) — Consolidated penetration test (4 parallel audits)
 
 ---
 
@@ -211,9 +263,10 @@ graph LR
 
 > *"Do not tell me it works. I will find where it doesn't. Every assumption is a trap I walk into on purpose — and if the iron cracks, better it cracks in my hands than in the wild."*
 
+- [Quality README](quality/README.md) — Test architecture, E2E strategy, coverage metrics, QA standards
 - [Test Suites](quality/test-suites/) — Every trap I have laid to catch the careless and the overconfident
 - [Quality Report](quality/quality-report.md) — My verdict on what stands and what crumbles to ash
-- [Test Plan](quality/test-plan.md) — The chaos I have scheduled, methodical as the tides of Laguz ᛚ
+- [Test Guidelines](quality/test-guidelines.md) — Pyramid rules, bloat detection, migration rules
 
 ---
 
@@ -221,10 +274,11 @@ graph LR
 
 > *"These rites belong to no single wolf — they are the heritage of the pack, the customs that keep us running as one."*
 
+- [GKE Infrastructure](infrastructure/) — Terraform configs: GKE Autopilot cluster, networking, IAM, monitoring, DNS
 - [Git Convention](.claude/skills/git-commit/SKILL.md) — How all wolves mark their kills, signed with Kenaz ᚲ
 - [Mermaid Guide](ux/ux-assets/mermaid-style-guide.md) — Runes for rendering diagrams, clear as Dagaz ᛞ
-- [GKE Infrastructure](infrastructure/) — The forge's foundation, where iron meets cloud
 - [Fire Next Up](.claude/skills/fire-next-up/SKILL.md) — The rite of passing the flame from one wolf to the next
+- [GKE Smoke Test](infrastructure/SMOKE-TEST.md) — Verification steps for GKE deployment health
 
 ---
 
