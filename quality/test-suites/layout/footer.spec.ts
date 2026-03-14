@@ -29,10 +29,10 @@ test("footer is visible on /ledger dashboard", async ({ page }) => {
   await expect(footer).toBeVisible();
 });
 
-test("footer is visible on /ledger/cards and contains Loki trigger", async ({
+test("footer on /ledger contains Loki trigger and Gleipnir copyright element", async ({
   page,
 }) => {
-  await page.goto("/ledger/cards");
+  await page.goto("/ledger");
   await page.waitForLoadState("load");
 
   const footer = page.getByRole("contentinfo", { name: "App footer" });
@@ -41,4 +41,8 @@ test("footer is visible on /ledger/cards and contains Loki trigger", async ({
   // Verify Loki easter egg trigger is present in the footer
   const lokiTrigger = page.locator("[data-loki-trigger]");
   await expect(lokiTrigger).toBeVisible();
+
+  // Verify Gleipnir Fragment #5 © trigger element is present
+  const gleipnirCopyright = page.locator('[data-gleipnir="breath-of-a-fish"]');
+  await expect(gleipnirCopyright).toBeVisible();
 });

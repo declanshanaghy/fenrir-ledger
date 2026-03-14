@@ -7,10 +7,12 @@
  * Written by Loki, QA Tester. Devil's advocate mindset.
  * FiremanDecko already tested LedgerShell renders a Footer — here we test
  * the Footer internals that matter for correctness and easter egg integrity.
+ *
+ * Note: @testing-library/jest-dom is not installed; uses native assertions.
  */
 
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Footer } from "@/components/layout/Footer";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
@@ -47,19 +49,21 @@ function renderFooter() {
 describe("Footer — ARIA structure", () => {
   it("renders a <footer> with role=contentinfo", () => {
     renderFooter();
+    // getByRole throws if not found — implicit assertion
     const footer = screen.getByRole("contentinfo");
-    expect(footer).toBeInTheDocument();
+    expect(footer.tagName.toLowerCase()).toBe("footer");
   });
 
   it("has aria-label='App footer' on the footer element", () => {
     renderFooter();
     const footer = screen.getByRole("contentinfo");
-    expect(footer).toHaveAttribute("aria-label", "App footer");
+    expect(footer.getAttribute("aria-label")).toBe("App footer");
   });
 
-  it("renders the Fenrir Ledger wordmark", () => {
+  it("renders the Fenrir Ledger wordmark button", () => {
     renderFooter();
-    expect(screen.getByRole("button", { name: /About Fenrir Ledger/i })).toBeInTheDocument();
+    const btn = screen.getByRole("button", { name: /About Fenrir Ledger/i });
+    expect(btn).toBeTruthy();
   });
 });
 
@@ -72,8 +76,9 @@ describe("Footer — Easter Egg #3: Loki Mode", () => {
 
   it("Loki trigger has accessible aria-label='Loki'", () => {
     renderFooter();
+    // getByRole throws if not found
     const trigger = screen.getByRole("button", { name: "Loki" });
-    expect(trigger).toBeInTheDocument();
+    expect(trigger).toBeTruthy();
   });
 
   it("dispatches fenrir:loki-mode {active:true} after exactly 7 clicks on Loki", () => {
@@ -126,8 +131,9 @@ describe("Footer — Easter Egg #3: Loki Mode", () => {
 
     for (let i = 0; i < 7; i++) fireEvent.click(lokiBtn);
 
-    expect(screen.getByRole("status")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Loki was here");
+    const toast = screen.getByRole("status");
+    expect(toast).toBeTruthy();
+    expect(toast.textContent).toContain("Loki was here");
   });
 });
 
@@ -141,29 +147,15 @@ describe("Footer — Easter Egg #5: Gleipnir Fragment (Breath of a Fish)", () =>
   it("© element has aria-label='Copyright'", () => {
     renderFooter();
     const copyrightEl = document.querySelector('[data-gleipnir="breath-of-a-fish"]');
-    expect(copyrightEl).toHaveAttribute("aria-label", "Copyright");
-  });
-
-  it("© element calls trigger on mouseenter", () => {
-    const mockTrigger = vi.fn();
-    vi.doMock("@/components/cards/GleipnirFishBreath", () => ({
-      GleipnirFishBreath: () => <div />,
-      useGleipnirFragment5: () => ({ open: false, trigger: mockTrigger, dismiss: vi.fn() }),
-    }));
-
-    renderFooter();
-    const copyrightEl = document.querySelector('[data-gleipnir="breath-of-a-fish"]')!;
-    fireEvent.mouseEnter(copyrightEl);
-    // Note: mock was set up before render, but module mock applies globally.
-    // The trigger is called on mouseenter — test verifies the element exists with handler.
-    expect(copyrightEl).toHaveAttribute("aria-label", "Copyright");
+    expect(copyrightEl?.getAttribute("aria-label")).toBe("Copyright");
   });
 });
 
 describe("Footer — copyright line", () => {
   it("shows current year 2026 in the copyright text", () => {
     renderFooter();
-    expect(screen.getByText(/2026 Fenrir Ledger/)).toBeInTheDocument();
+    const footer = screen.getByRole("contentinfo");
+    expect(footer.textContent).toContain("2026 Fenrir Ledger");
   });
 
   it("mentions FiremanDecko, Freya, and Loki in the colophon", () => {

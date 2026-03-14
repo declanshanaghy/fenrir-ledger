@@ -76,7 +76,7 @@ describe("LedgerShell", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     const footer = screen.getByTestId("footer");
-    expect(footer).toBeInTheDocument();
+    expect(footer).toBeTruthy();
   });
 
   it("renders all main layout components", async () => {
@@ -89,9 +89,9 @@ describe("LedgerShell", () => {
     // Wait for mounted state
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(screen.getByTestId("ledger-top-bar")).toBeInTheDocument();
-    expect(screen.getByTestId("ledger-bottom-tabs")).toBeInTheDocument();
-    expect(screen.getByTestId("footer")).toBeInTheDocument();
+    expect(screen.getByTestId("ledger-top-bar")).toBeTruthy();
+    expect(screen.getByTestId("ledger-bottom-tabs")).toBeTruthy();
+    expect(screen.getByTestId("footer")).toBeTruthy();
   });
 
   it("renders children content", async () => {
@@ -104,6 +104,6 @@ describe("LedgerShell", () => {
     // Wait for mounted state
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(screen.getByTestId("test-content")).toBeInTheDocument();
+    expect(screen.getByTestId("test-content")).toBeTruthy();
   });
 });
