@@ -125,6 +125,10 @@ gke-setup:
 gke-bootstrap-iam project_id="fenrir-ledger-prod":
     bash "{{scripts}}/bootstrap-iam.sh" "{{project_id}}"
 
+# Launch Agent Monitor web UI (auto-starts kubectl proxy)
+agent-monitor:
+    node "{{repo_root}}/development/agent-monitor/serve.mjs"
+
 # List agent jobs in GKE
 agent-jobs:
     kubectl get jobs -n fenrir-agents --sort-by=.metadata.creationTimestamp \
