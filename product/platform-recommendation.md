@@ -78,9 +78,8 @@ Build the minimum Stripe integration to replace Patreon's subscription capabilit
 1. **Stripe Product + Price** -- Create a "Karl" product in Stripe Dashboard with $5/month price
 2. **Stripe Checkout Session** -- API route creates a Checkout Session, redirects user to Stripe-hosted payment page
 3. **Stripe Webhooks** -- Handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
-4. **Entitlement Store Update** -- Store Stripe `customer_id` and `subscription_id` in Vercel KV (same pattern as Patreon)
+4. **Entitlement Store Update** -- Store Stripe `customer_id` and `subscription_id` in the KV store (Upstash Redis via `KV_REST_API_URL`/`KV_REST_API_TOKEN`) — same pattern as Patreon
 5. **Customer Portal** -- Link to Stripe Customer Portal for subscription management (cancel, update payment)
-6. **Feature Flag** -- `SUBSCRIPTION_PLATFORM=stripe` activates Stripe routes, deactivates Patreon routes
 
 ### Phase 2: Enhanced Billing (Post-MVP)
 
@@ -106,7 +105,7 @@ graph TD
     stripe([Stripe Billing<br/>Entitlement Provider])
     patreon([Patreon OAuth<br/>Fully Removed])
     %% Storage
-    kv[(Vercel KV<br/>Entitlement Store)]
+    kv[(Upstash Redis<br/>Entitlement Store)]
     cache[(localStorage<br/>Entitlement Cache)]
 
     %% App layer
@@ -157,8 +156,6 @@ graph TD
 
 The Stripe Direct migration is complete when:
 
-- [ ] Feature flag `SUBSCRIPTION_PLATFORM` controls which provider is active
-- [ ] Patreon routes return 404 or redirect when flag is set to `stripe`
 - [ ] Stripe Checkout flow works end-to-end: click subscribe -> pay -> entitlement granted
 - [ ] Stripe webhooks update entitlement in real-time on subscription changes
 - [ ] Customer Portal link works for self-service subscription management
@@ -210,7 +207,7 @@ The Patreon integration shipped in March 2026 and was subsequently fully removed
 - `UpsellBanner` -- Upsell banner (now CTA links to Stripe Checkout)
 
 **Infrastructure retained:**
-- Vercel KV for server-side entitlement storage
+- Upstash Redis (KV store) for server-side entitlement storage
 - Entitlement migration on Google sign-in
 
 ---
