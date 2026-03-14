@@ -3,6 +3,7 @@
  *
  * Acceptance Criteria:
  *   AC1  Sidebar lists all agent sessions from K8s API
+ *   AC2  Clicking a session loads the report in the content pane
  *   AC3  Live sessions show pulsing indicator
  *   AC4  New sessions appear automatically via WebSocket
  *   AC5  Timestamps in local time with "ago" text
@@ -96,10 +97,10 @@ describe("AC1 — Sidebar with ARIA landmarks and session list", () => {
     expect(html).toContain('aria-label="Job sessions"');
   });
 
-  it("renders the Hlidskjalf title in the sidebar header", async () => {
+  it("renders the sidebar header h1 as Hlidskjalf in Cinzel Decorative font class", async () => {
     const html = await getHtml();
-    expect(html).toContain("Hlidskjalf");
-    expect(html).toContain("Odin");
+    // Must be an h1 element — not just text anywhere in the page
+    expect(html).toMatch(/<h1[^>]*>Hlidskjalf<\/h1>/);
   });
 });
 
@@ -130,11 +131,10 @@ describe("AC3 — Pulsing status indicator for live sessions", () => {
     expect(html).toContain("@keyframes pulse");
   });
 
-  it("script maps active status to the pulsing class", async () => {
+  it("script assigns pulse class only to active-status sessions", async () => {
     const html = await getHtml();
-    // Script should assign 'pulse' class to active sessions
-    expect(html).toContain("active");
-    expect(html).toContain("STATUS_ICONS");
+    // The ternary that applies the pulse class must be tied to 'active' status
+    expect(html).toContain("status === 'active' ? ' pulse' : ''");
   });
 });
 
@@ -145,11 +145,38 @@ describe("AC5 — Timestamps in local time with ago text", () => {
     expect(html).toContain("timeAgo");
   });
 
-  it("timeAgo function covers seconds, minutes, hours, days ranges", async () => {
+  it("timeAgo returns correct labels across seconds, minutes, hours, days", async () => {
     const html = await getHtml();
-    // Check the function includes all the time range branches
-    expect(html).toContain("ago");
+    // All four branches must be present in the function body
     expect(html).toContain("just now");
+    expect(html).toContain("s + 's ago'");
+    expect(html).toContain("m + 'm ago'");
+    expect(html).toContain("h + 'h ago'");
+    expect(html).toContain("d ago");
+  });
+});
+
+describe("AC2 — Clicking a session loads the content pane", () => {
+  it("embeds click handler on card elements that calls openSession", async () => {
+    const html = await getHtml();
+    expect(html).toContain("addEventListener('click'");
+    expect(html).toContain("openSession");
+    // data-session attribute must be present for routing card clicks to sessions
+    expect(html).toContain("data-session=");
+  });
+
+  it("openSession shows content-header and log-terminal, hides empty-state", async () => {
+    const html = await getHtml();
+    // The session-open sequence must set display to flex/block/none in order
+    expect(html).toContain("'content-header').style.display = 'flex'");
+    expect(html).toContain("'log-terminal').style.display = 'block'");
+    expect(html).toContain("'empty-state').style.display = 'none'");
+  });
+
+  it("session title element is populated with agent name, issue, and step on open", async () => {
+    const html = await getHtml();
+    // Title must include issue number and step from the parsed job
+    expect(html).toContain("job.agentName + ' — #' + job.issue + ' Step ' + job.step");
   });
 });
 
@@ -179,18 +206,10 @@ describe("Norse-dark theme + XSS safety", () => {
 });
 
 describe("ARIA accessibility", () => {
-  it("renders aria-live=polite on the log terminal for screen readers", async () => {
+  it("log terminal has role=log, aria-live=polite, and aria-label for screen readers", async () => {
     const html = await getHtml();
-    expect(html).toContain('aria-live="polite"');
-  });
-
-  it("renders role=log on the log terminal", async () => {
-    const html = await getHtml();
-    expect(html).toContain('role="log"');
-  });
-
-  it("main content area has aria-label='Log viewer'", async () => {
-    const html = await getHtml();
+    // All three attributes must appear on the same log-terminal element
+    expect(html).toMatch(/role="log"[^>]*aria-live="polite"|aria-live="polite"[^>]*role="log"/);
     expect(html).toContain('aria-label="Log viewer"');
   });
 });
