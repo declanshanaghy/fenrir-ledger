@@ -105,6 +105,6 @@ resource "google_compute_managed_ssl_certificate" "app_cert" {
   name     = "fenrir-app-cert"
 
   managed {
-    domains = [var.domain, "www.${var.domain}"]
+    domains = [var.domain, "www.${var.domain}", "analytics.${var.domain}"]
   }
 }
