@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Monitor — Fenrir Ledger</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --void-black: #07070d;
+      --gold: #c9920a;
+      --gold-dark: #a67a08;
+      --gold-light: #e6b84d;
+      --white: #f5f5f5;
+      --gray: #9a9a9a;
+      --gray-dark: #4a4a4a;
+      --red: #ef4444;
+      --red-dark: #991b1b;
+      --green: #22c55e;
+      --green-dark: #166534;
+      --blue: #3b82f6;
+      --status-running: #eab308;
+      --status-succeeded: #22c55e;
+      --status-failed: #ef4444;
+      --status-pending: #8b5cf6;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background-color: var(--void-black);
+      color: var(--white);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--void-black) 0%, #1a1a2e 100%);
+      border-bottom: 2px solid var(--gold);
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .header-title h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--gray);
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--gray-dark);
+    }
+
+    .status-indicator.connected {
+      background-color: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      height: calc(100vh - 60px);
+      gap: 0;
+      overflow: hidden;
+    }
+
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .job-list {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--gold);
+      overflow: hidden;
+    }
+
+    .job-list-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--gold);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .job-list-header h2 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+    }
+
+    .refresh-btn {
+      background: var(--gold);
+      color: var(--void-black);
+      border: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .refresh-btn:hover:not(:disabled) {
+      background: var(--gold-light);
+      transform: scale(1.05);
+    }
+
+    .refresh-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .jobs-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .job-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--gray-dark);
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+    }
+
+    .job-item:hover {
+      background-color: rgba(201, 146, 10, 0.1);
+    }
+
+    .job-item.active {
+      background-color: rgba(201, 146, 10, 0.2);
+      border-left: 3px solid var(--gold);
+      padding-left: calc(1rem - 3px);
+    }
+
+    .job-name {
+      font-family: "Monaco", "Courier New", monospace;
+      font-size: 0.75rem;
+      color: var(--white);
+      margin-bottom: 0.25rem;
+      word-break: break-all;
+    }
+
+    .job-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--gray);
+      margin-top: 0.25rem;
+    }
+
+    .job-status-badge {
+      display: inline-block;
+      padding: 0.125rem 0.375rem;
+      border-radius: 0.25rem;
+      font-weight: 600;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .job-status-badge.running {
+      background-color: var(--status-running);
+      color: var(--void-black);
+    }
+
+    .job-status-badge.succeeded {
+      background-color: var(--status-succeeded);
+      color: var(--void-black);
+    }
+
+    .job-status-badge.failed {
+      background-color: var(--status-failed);
+      color: var(--white);
+    }
+
+    .job-status-badge.pending {
+      background-color: var(--status-pending);
+      color: var(--white);
+    }
+
+    .log-viewer {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .log-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--gray-dark);
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .log-header h3 {
+      font-size: 0.875rem;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+    }
+
+    .log-metadata {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      color: var(--gray);
+    }
+
+    .log-metadata-item {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .log-metadata-label {
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    .log-metadata-value {
+      word-break: break-all;
+      font-family: "Monaco", "Courier New", monospace;
+    }
+
+    .log-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      font-family: "Monaco", "Courier New", monospace;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+
+    .log-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--gray);
+      text-align: center;
+    }
+
+    .log-message {
+      margin-bottom: 0.5rem;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .log-system {
+      color: var(--gray);
+    }
+
+    .log-text {
+      color: var(--white);
+    }
+
+    .log-tool-call {
+      color: var(--green);
+    }
+
+    .log-tool-label {
+      color: var(--green-dark);
+      font-weight: 600;
+      display: inline;
+    }
+
+    .log-tool-input {
+      color: var(--green);
+      display: inline;
+      margin-left: 0.25rem;
+    }
+
+    .log-tool-result {
+      color: #16a34a;
+    }
+
+    .log-result {
+      color: var(--gold-light);
+    }
+
+    .log-error {
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    .log-mayo {
+      background-color: rgba(34, 197, 94, 0.2);
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .log-speech-bubble {
+      display: inline-block;
+      background-color: rgba(201, 146, 10, 0.15);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      border-left: 3px solid var(--gold);
+      margin: 0.25rem 0;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--gray);
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state h2 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: var(--white);
+    }
+
+    .error-box {
+      background-color: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--red);
+      border-radius: 0.375rem;
+      padding: 1rem;
+      margin: 1rem;
+      color: var(--red);
+    }
+
+    .error-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .error-detail {
+      font-size: 0.875rem;
+      font-family: "Monaco", "Courier New", monospace;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--void-black);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--gold);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--gold-light);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-title">
+      <h1>Agent Monitor</h1>
+      <div class="header-status">
+        <div class="status-indicator" id="connectionStatus"></div>
+        <span id="connectionText">Initializing...</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="job-list">
+      <div class="job-list-header">
+        <h2>Active Jobs</h2>
+        <button class="refresh-btn" id="refreshBtn" type="button">Refresh</button>
+      </div>
+      <div class="jobs-scroll" id="jobsList">
+        <div class="empty-state">
+          <div class="empty-state-icon">⚙️</div>
+          <h2>Loading...</h2>
+          <p>Fetching agent jobs from GKE...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="log-viewer">
+      <div id="logHeader" class="log-header" style="display: none;">
+        <h3 id="logJobName">-</h3>
+        <div class="log-metadata">
+          <div class="log-metadata-item">
+            <span class="log-metadata-label">Status:</span>
+            <span class="log-metadata-value" id="logStatus"></span>
+          </div>
+          <div class="log-metadata-item">
+            <span class="log-metadata-label">Duration:</span>
+            <span class="log-metadata-value" id="logDuration"></span>
+          </div>
+          <div class="log-metadata-item">
+            <span class="log-metadata-label">Session:</span>
+            <span class="log-metadata-value" id="logSession"></span>
+          </div>
+          <div class="log-metadata-item">
+            <span class="log-metadata-label">Model:</span>
+            <span class="log-metadata-value" id="logModel"></span>
+          </div>
+        </div>
+      </div>
+      <div class="log-content" id="logContent">
+        <div class="empty-state">
+          <div class="empty-state-icon">📋</div>
+          <h2>Select a Job</h2>
+          <p>Choose an agent job from the list to view its logs</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========================================================================
+    // Types & Constants
+    // ========================================================================
+
+    const K8S_PROXY_URL = 'http://localhost:8001';
+    const NAMESPACE = 'fenrir-agents';
+    const JOB_LABEL_SELECTOR = 'app.kubernetes.io/component=agent-sandbox';
+    const LOG_MAX_EVENTS = 5000;
+    const SESSION_ID_REGEX = /^issue-(\d+)-step(\d+)-(\w+)-[a-f0-9]+$/;
+    const JOB_NAME_REGEX = /^agent-[a-z0-9-]{1,60}$/;
+
+    // ========================================================================
+    // State
+    // ========================================================================
+
+    let state = {
+      jobs: [],
+      selectedJobName: null,
+      logEvents: [],
+      isConnected: false,
+      currentEventSource: null,
+      autoScrollEnabled: true,
+    };
+
+    // ========================================================================
+    // UI Helpers
+    // ========================================================================
+
+    function setConnectionStatus(connected, text) {
+      state.isConnected = connected;
+      const indicator = document.getElementById('connectionStatus');
+      const statusText = document.getElementById('connectionText');
+
+      if (connected) {
+        indicator.classList.add('connected');
+        statusText.textContent = text || 'Connected';
+      } else {
+        indicator.classList.remove('connected');
+        statusText.textContent = text || 'Disconnected';
+      }
+    }
+
+    function formatDuration(seconds) {
+      if (!seconds) return '-';
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      if (h > 0) return `${h}h ${m}m ${s}s`;
+      if (m > 0) return `${m}m ${s}s`;
+      return `${s}s`;
+    }
+
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function parseSessionId(sessionId) {
+      const match = sessionId.match(SESSION_ID_REGEX);
+      if (!match) return null;
+      return {
+        issue: match[1],
+        step: match[2],
+        agent: match[3],
+      };
+    }
+
+    function formatJobName(jobName) {
+      // Extract session ID from job name: agent-<session-id>
+      const parts = jobName.split('-');
+      if (parts.length > 2) {
+        const sessionId = parts.slice(1).join('-');
+        return sessionId.substring(0, 40) + (sessionId.length > 40 ? '...' : '');
+      }
+      return jobName;
+    }
+
+    // ========================================================================
+    // K8s API Calls
+    // ========================================================================
+
+    async function fetchJobs() {
+      try {
+        setConnectionStatus(true, 'Fetching jobs...');
+
+        const url = `${K8S_PROXY_URL}/api/v1/namespaces/${NAMESPACE}/jobs`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`K8s API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const jobs = parseJobsList(data.items || []);
+
+        state.jobs = jobs;
+        setConnectionStatus(true, 'Connected');
+        renderJobsList();
+
+        return jobs;
+      } catch (error) {
+        console.error('Error fetching jobs:', error);
+        setConnectionStatus(false, 'Connection error');
+        showJobsError(error.message);
+      }
+    }
+
+    function parseJobsList(items) {
+      return items
+        .filter(job => {
+          const name = job.metadata.name || '';
+          return JOB_NAME_REGEX.test(name);
+        })
+        .map(job => {
+          const metadata = job.metadata;
+          const status = job.status || {};
+          const spec = job.spec || {};
+
+          // Derive session ID from job name
+          const nameParts = metadata.name.split('-');
+          const sessionId = nameParts.slice(1).join('-');
+
+          const startTime = metadata.creationTimestamp ? new Date(metadata.creationTimestamp) : null;
+          const completionTime = status.completionTime ? new Date(status.completionTime) : null;
+
+          let duration = null;
+          let jobStatus = 'Pending';
+
+          if (status.conditions) {
+            for (const cond of status.conditions) {
+              if (cond.type === 'Complete' && cond.status === 'True') {
+                jobStatus = 'Succeeded';
+              } else if (cond.type === 'Failed' && cond.status === 'True') {
+                jobStatus = 'Failed';
+              }
+            }
+          }
+
+          if (status.active > 0) {
+            jobStatus = 'Running';
+          }
+
+          if (startTime && completionTime) {
+            duration = Math.floor((completionTime - startTime) / 1000);
+          } else if (startTime && jobStatus === 'Running') {
+            duration = Math.floor((new Date() - startTime) / 1000);
+          }
+
+          // Parse session metadata
+          const sessionData = parseSessionId(sessionId);
+
+          return {
+            jobName: metadata.name,
+            sessionId,
+            issueNumber: sessionData?.issue ? parseInt(sessionData.issue) : null,
+            step: sessionData?.step ? parseInt(sessionData.step) : null,
+            agentName: sessionData?.agent || null,
+            branch: metadata.labels?.['branch'] || '-',
+            model: metadata.labels?.['model'] || 'unknown',
+            status: jobStatus,
+            startTime: startTime?.toISOString() || null,
+            completionTime: completionTime?.toISOString() || null,
+            durationSeconds: duration,
+            podName: metadata.labels?.['session-id'] || null,
+          };
+        })
+        .sort((a, b) => {
+          // Sort: running first, then by creation time (newest first)
+          if (a.status === 'Running' && b.status !== 'Running') return -1;
+          if (a.status !== 'Running' && b.status === 'Running') return 1;
+          return new Date(b.startTime) - new Date(a.startTime);
+        });
+    }
+
+    async function getPodNameForJob(jobName) {
+      try {
+        const url = `${K8S_PROXY_URL}/api/v1/namespaces/${NAMESPACE}/pods?labelSelector=job-name=${jobName}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch pods: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const pods = data.items || [];
+
+        if (pods.length > 0) {
+          return pods[0].metadata.name;
+        }
+
+        return null;
+      } catch (error) {
+        console.error('Error fetching pod:', error);
+        return null;
+      }
+    }
+
+    async function streamLogs(jobName) {
+      try {
+        // Close previous stream if any
+        if (state.currentEventSource) {
+          state.currentEventSource.close();
+        }
+
+        // Find pod for the job
+        const podName = await getPodNameForJob(jobName);
+        if (!podName) {
+          showLogError('Pod not found', 'Could not find pod for this job');
+          return;
+        }
+
+        // Clear previous logs
+        state.logEvents = [];
+        renderLogContent();
+
+        // Stream logs
+        const url = `${K8S_PROXY_URL}/api/v1/namespaces/${NAMESPACE}/pods/${podName}/log?follow=true&timestamps=true`;
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          showLogError('Stream error', `Failed to stream logs: ${response.statusText}`);
+          return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        const processStream = async () => {
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              buffer += decoder.decode(value, { stream: true });
+
+              // Process complete lines
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || ''; // Keep incomplete line
+
+              for (const line of lines) {
+                if (line.trim()) {
+                  parseLogLine(line);
+                }
+              }
+
+              renderLogContent();
+            }
+          } catch (error) {
+            console.error('Stream error:', error);
+            showLogError('Stream interrupted', error.message);
+          }
+        };
+
+        processStream();
+      } catch (error) {
+        console.error('Error streaming logs:', error);
+        showLogError('Connection error', error.message);
+      }
+    }
+
+    // ========================================================================
+    // Log Parsing
+    // ========================================================================
+
+    function parseLogLine(line) {
+      try {
+        // Log format: timestamp message
+        // Try to parse as JSON if it looks like stream-json format
+
+        // Extract timestamp if present (RFC3339 with space separator)
+        const timestampMatch = line.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\s+(.*)$/);
+        const logText = timestampMatch ? timestampMatch[2] : line;
+
+        // Try to parse as JSON (stream-json format)
+        try {
+          const json = JSON.parse(logText);
+          parseStreamJsonEvent(json);
+        } catch {
+          // Not JSON, treat as plain text
+          if (logText.trim()) {
+            addLogEvent({
+              type: 'text',
+              text: logText,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing log line:', error);
+      }
+    }
+
+    function parseStreamJsonEvent(json) {
+      // Handle Claude Code stream-json format
+      if (json.type === 'text') {
+        addLogEvent({
+          type: 'text',
+          text: json.text || '',
+        });
+      } else if (json.type === 'tool_use') {
+        addLogEvent({
+          type: 'tool_use',
+          tool: json.name || 'unknown',
+          input: JSON.stringify(json.input || {}, null, 2),
+        });
+      } else if (json.type === 'tool_result') {
+        addLogEvent({
+          type: 'tool_result',
+          tool: json.tool || 'unknown',
+          success: json.isError === false,
+          output: typeof json.content === 'string'
+            ? json.content
+            : JSON.stringify(json.content || {}, null, 2),
+        });
+      } else if (json.type === 'result') {
+        addLogEvent({
+          type: 'result',
+          cost: json.usage?.cache_read_input_tokens || 0,
+          tokens: (json.usage?.input_tokens || 0) + (json.usage?.output_tokens || 0),
+          duration: json.duration || 0,
+        });
+      } else if (json.type === 'error') {
+        addLogEvent({
+          type: 'error',
+          message: json.message || JSON.stringify(json),
+        });
+      } else if (json.type === 'system') {
+        addLogEvent({
+          type: 'system',
+          text: json.text || JSON.stringify(json),
+        });
+      }
+    }
+
+    function addLogEvent(event) {
+      state.logEvents.push(event);
+
+      // Cap at MAX_EVENTS
+      if (state.logEvents.length > LOG_MAX_EVENTS) {
+        state.logEvents = state.logEvents.slice(-LOG_MAX_EVENTS);
+      }
+    }
+
+    // ========================================================================
+    // Rendering
+    // ========================================================================
+
+    function renderJobsList() {
+      const container = document.getElementById('jobsList');
+
+      if (state.jobs.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <h2>No Jobs Found</h2>
+            <p>No agent jobs are currently running or recent</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = state.jobs.map(job => `
+        <div class="job-item ${job.jobName === state.selectedJobName ? 'active' : ''}"
+             data-job-name="${escapeHtml(job.jobName)}">
+          <div class="job-name">${escapeHtml(job.sessionId)}</div>
+          <div class="job-meta">
+            <span class="job-status-badge ${job.status.toLowerCase()}">
+              ${job.status}
+            </span>
+            <span>${job.durationSeconds ? formatDuration(job.durationSeconds) : '-'}</span>
+          </div>
+        </div>
+      `).join('');
+
+      // Attach event listeners
+      container.querySelectorAll('.job-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const jobName = item.dataset.jobName;
+          selectJob(jobName);
+        });
+      });
+    }
+
+    function renderLogContent() {
+      const container = document.getElementById('logContent');
+
+      if (state.logEvents.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <h2>No Logs</h2>
+            <p>Waiting for log output...</p>
+          </div>
+        `;
+        return;
+      }
+
+      const html = state.logEvents
+        .map((event, idx) => renderLogEvent(event, idx))
+        .join('');
+
+      container.innerHTML = html;
+
+      // Auto-scroll to bottom if enabled
+      if (state.autoScrollEnabled) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    function renderLogEvent(event, idx) {
+      const id = `event-${idx}`;
+
+      switch (event.type) {
+        case 'system':
+          return `<div class="log-message log-system" id="${id}">
+            [SYSTEM] ${escapeHtml(event.text)}
+          </div>`;
+
+        case 'text':
+          return `<div class="log-message log-text" id="${id}">
+            ${escapeHtml(event.text)}
+          </div>`;
+
+        case 'tool_use':
+          return `<div class="log-message log-tool-call" id="${id}">
+            <span class="log-tool-label">🔧 ${escapeHtml(event.tool)}</span>
+            <span class="log-tool-input">${escapeHtml(event.input)}</span>
+          </div>`;
+
+        case 'tool_result':
+          const successIcon = event.success ? '✓' : '✗';
+          const successColor = event.success ? 'log-tool-result' : 'log-error';
+          return `<div class="log-message ${successColor}" id="${id}">
+            <span>${successIcon} ${escapeHtml(event.tool)} result:</span>
+            <pre>${escapeHtml(event.output)}</pre>
+          </div>`;
+
+        case 'result':
+          return `<div class="log-message log-result" id="${id}">
+            [RESULT] Cost: ${event.cost} | Tokens: ${event.tokens} | Duration: ${formatDuration(event.duration)}
+          </div>`;
+
+        case 'error':
+          return `<div class="log-message log-error" id="${id}">
+            [ERROR] ${escapeHtml(event.message)}
+          </div>`;
+
+        case 'mayo':
+          return `<div class="log-message log-mayo" id="${id}">
+            🟢🔴 ${escapeHtml(event.text)} 🟢🔴
+          </div>`;
+
+        default:
+          return `<div class="log-message log-text" id="${id}">
+            ${JSON.stringify(event)}
+          </div>`;
+      }
+    }
+
+    function selectJob(jobName) {
+      state.selectedJobName = jobName;
+
+      const job = state.jobs.find(j => j.jobName === jobName);
+      if (!job) return;
+
+      // Update header
+      const header = document.getElementById('logHeader');
+      document.getElementById('logJobName').textContent = job.sessionId;
+      document.getElementById('logStatus').textContent = job.status;
+      document.getElementById('logDuration').textContent = formatDuration(job.durationSeconds);
+      document.getElementById('logSession').textContent = job.sessionId;
+      document.getElementById('logModel').textContent = job.model;
+      header.style.display = 'block';
+
+      // Render job list
+      renderJobsList();
+
+      // Stream logs
+      streamLogs(jobName);
+    }
+
+    function showJobsError(message) {
+      const container = document.getElementById('jobsList');
+      container.innerHTML = `
+        <div class="error-box">
+          <div class="error-title">Connection Error</div>
+          <div class="error-detail">${escapeHtml(message)}</div>
+          <p style="margin-top: 0.5rem; font-size: 0.8rem;">
+            Make sure to run: <code>kubectl proxy</code>
+          </p>
+        </div>
+      `;
+    }
+
+    function showLogError(title, message) {
+      const container = document.getElementById('logContent');
+      container.innerHTML = `
+        <div class="error-box" style="margin-top: auto; margin-bottom: auto;">
+          <div class="error-title">${escapeHtml(title)}</div>
+          <div class="error-detail">${escapeHtml(message)}</div>
+        </div>
+      `;
+    }
+
+    // ========================================================================
+    // Event Listeners
+    // ========================================================================
+
+    document.getElementById('refreshBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('refreshBtn');
+      btn.disabled = true;
+      btn.textContent = 'Refreshing...';
+
+      await fetchJobs();
+
+      btn.disabled = false;
+      btn.textContent = 'Refresh';
+    });
+
+    document.getElementById('logContent').addEventListener('scroll', () => {
+      const container = document.getElementById('logContent');
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      state.autoScrollEnabled = isNearBottom;
+    });
+
+    // ========================================================================
+    // Initialization
+    // ========================================================================
+
+    async function init() {
+      setConnectionStatus(true, 'Connecting...');
+      await fetchJobs();
+
+      // Auto-refresh every 10 seconds
+      setInterval(() => {
+        if (!state.selectedJobName) {
+          fetchJobs();
+        }
+      }, 10000);
+    }
+
+    // Start on load
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
