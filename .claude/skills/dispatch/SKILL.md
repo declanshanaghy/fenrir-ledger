@@ -37,7 +37,7 @@ If issue data + agent template are already in context, that's **1 tool call** (s
 | `--agent <name>` | No | `firemandecko`, `luna`, `loki`, `heimdall`, `freya`. Inferred from labels if omitted. |
 | `--step <N>` | No | Chain step (default: 1). For resume dispatches. |
 | `--branch <name>` | No | Existing branch. If omitted, built from issue. |
-| `--template <name>` | No | Override template (e.g., `loki-bounce-back`). |
+| `--template <name>` | No | Override template mode (e.g., `loki-bounce-back` selects Loki Mode B). |
 | `--local` | No | Local worktree instead of Depot. |
 | `--parallel` | No | Dispatch multiple issues simultaneously. |
 | `--prompt-extra <text>` | No | Extra context injected after issue body. |
@@ -76,9 +76,10 @@ Templates live in `/fire-next-up/templates/` (shared, not duplicated):
 |-------|----------|------------------------------------|
 | Luna | `templates/luna.md` | `.claude/agents/luna.md` |
 | FiremanDecko | `templates/firemandecko.md` | `.claude/agents/fireman-decko.md` |
+| Freya | `templates/freya.md` | `.claude/agents/freya.md` |
 | Heimdall | `templates/heimdall.md` | `.claude/agents/heimdall.md` |
-| Loki | `templates/loki.md` | `.claude/agents/loki.md` |
-| Loki (CI bounce-back) | `templates/loki-bounce-back.md` | `.claude/agents/loki.md` |
+| Loki (Mode A: QA) | `templates/loki.md` | `.claude/agents/loki.md` |
+| Loki (Mode B: CI bounce-back) | `templates/loki.md` | `.claude/agents/loki.md` |
 
 **Single source of truth:** Agent definition files (`.claude/agents/*.md`) are the
 canonical source for behavioral rules (test standards, implementation rules, design

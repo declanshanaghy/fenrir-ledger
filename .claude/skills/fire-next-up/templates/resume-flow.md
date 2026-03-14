@@ -60,7 +60,7 @@ When a chain is interrupted (session ended, agent failed, context lost), use `--
    |-----------|--------|
    | CI green + verdict PASS + merged | Chain is complete. Move to **Done**. Tell the user. |
    | CI green + verdict PASS + not merged | **Orchestrator merges** (see below). Then move to **Done**. |
-   | **CI failing + verdict PASS or FAIL** | **Bounce back to Loki** — read `templates/loki-bounce-back.md`. |
+   | **CI failing + verdict PASS or FAIL** | **Bounce back to Loki** — use Mode B from `templates/loki.md`. |
    | Verdict FAIL (regardless of CI) | Chain is blocked. Report to user: needs manual intervention or re-dispatch. |
 
 5c. **If research handoff exists — run Research Review:**
@@ -138,7 +138,7 @@ The orchestrator must:
    extract the specific test failures (file names, line numbers, error messages,
    expected vs actual values).
 2. **Read the failing test files** locally to understand what they test.
-3. **Build a detailed bounce-back prompt** using `templates/loki-bounce-back.md`.
+3. **Build a detailed bounce-back prompt** using Mode B from `templates/loki.md`.
    Include ALL of the following in the prompt:
    - The exact error output from CI (copy-paste the failure lines)
    - Which test files are failing and at which line numbers
