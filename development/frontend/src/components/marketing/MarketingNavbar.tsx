@@ -96,18 +96,15 @@ export function MarketingNavbar() {
           <div className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map(({ href, label }) => {
               const active = isNavLinkActive(pathname, href);
-              const isFreeTrial = href === "/free-trial";
               return (
                 <Link
                   key={href}
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={
-                    isFreeTrial
-                      ? `font-heading text-sm font-semibold border border-border px-2.5 py-1 hover:border-primary/50 transition-colors ${active ? "text-foreground" : "text-muted-foreground"}`
-                      : active
-                        ? "font-heading text-sm font-semibold text-foreground border border-border px-2.5 py-1 hover:border-primary/50 transition-colors"
-                        : "font-heading text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    active
+                      ? "font-heading text-sm font-semibold text-foreground border border-border px-2.5 py-1 hover:border-primary/50 transition-colors"
+                      : "font-heading text-sm text-muted-foreground hover:text-foreground transition-colors"
                   }
                 >
                   {label}
@@ -196,7 +193,6 @@ export function MarketingNavbar() {
           <nav aria-label="Mobile navigation">
             {NAV_LINKS.map(({ href, label }) => {
               const active = isNavLinkActive(pathname, href);
-              const isFreeTrial = href === "/free-trial";
               return (
                 <Link
                   key={href}
@@ -206,7 +202,7 @@ export function MarketingNavbar() {
                   className={[
                     "block py-3 border-b border-border",
                     "font-heading text-lg text-foreground",
-                    active || isFreeTrial ? "font-semibold" : "",
+                    active ? "font-semibold" : "",
                     "hover:text-primary transition-colors",
                   ].join(" ")}
                 >
