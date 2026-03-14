@@ -976,17 +976,19 @@ function fmtNum(n) {
 
 // ---------------------------------------------------------------------------
 // Metadata derived from session info (shared by HTML and MDX modes)
+// Fallback: parse from input filename if meta.session not available
 // ---------------------------------------------------------------------------
-const issueMatch = meta.session?.match(/issue-(\d+)/);
+const sessionStr = meta.session || (inputPath ? inputPath.split("/").pop().replace(/\.log$/, "") : "");
+const issueMatch = sessionStr.match(/issue-(\d+)/);
 const issueNum = issueMatch ? issueMatch[1] : "?";
-const agentMatch = meta.session?.match(/step(\d+)-(\w+)/);
+const agentMatch = sessionStr.match(/step(\d+)-(\w+)/);
 const stepNum = agentMatch ? agentMatch[1] : "?";
 const agentNameKey = agentMatch ? agentMatch[2] : "agent";
 const agentName = AGENT_NAMES[agentNameKey] || (agentMatch ? agentMatch[2].charAt(0).toUpperCase() + agentMatch[2].slice(1) : "Agent");
 const agentSlug = {FiremanDecko:'fireman-decko',Loki:'loki',Luna:'luna',Freya:'freya',Heimdall:'heimdall'}[agentName] || agentNameKey;
 
 // Create heckler engine for Mayo heckling
-const hecklerEngine = createHecklerEngine(agentNameKey);
+const hecklerEngine = createHecklerEngine(agentName);
 
 const totalTestsWritten = vitestCounts.total + playwrightCount;
 
