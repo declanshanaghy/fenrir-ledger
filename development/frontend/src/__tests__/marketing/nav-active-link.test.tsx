@@ -238,3 +238,61 @@ describe("MarketingNavbar — mobile active link", () => {
     expect(pricingLink.getAttribute("aria-current")).toBeNull();
   });
 });
+
+// ── Loki QA — Issue #893 additional regression tests ─────────────────────────
+// These tests cover gaps not addressed by FiremanDecko's initial suite:
+// null pathname branch, /pricing reproduction step (mobile), and
+// mobile active state for /free-trial.
+
+describe("isNavLinkActive — edge cases (Loki #893)", () => {
+  it("returns false when pathname is null", () => {
+    // Guards the `if (!pathname) return false` branch in isNavLinkActive
+    expect(isNavLinkActive(null, "/free-trial")).toBe(false);
+  });
+});
+
+describe("MarketingNavbar — mobile Free Trial (Loki #893)", () => {
+  it("Free Trial has no font-semibold or aria-current on mobile when on /pricing", () => {
+    // Issue reproduction step: navigate to /pricing → Free Trial must NOT be highlighted
+    mockPathname = "/pricing";
+    render(<MarketingNavbar />);
+
+    const hamburger = screen.getByLabelText("Open navigation menu");
+    fireEvent.click(hamburger);
+
+    const mobileNav = screen.getByLabelText("Mobile navigation");
+    const freeTrialLink = within(mobileNav).getByText("Free Trial").closest("a")!;
+
+    expect(freeTrialLink.getAttribute("aria-current")).toBeNull();
+    expect(freeTrialLink.className).not.toContain("font-semibold");
+  });
+
+  it("Free Trial has font-semibold and aria-current on mobile when on /free-trial", () => {
+    // Positive case: mobile active state must work for /free-trial
+    mockPathname = "/free-trial";
+    render(<MarketingNavbar />);
+
+    const hamburger = screen.getByLabelText("Open navigation menu");
+    fireEvent.click(hamburger);
+
+    const mobileNav = screen.getByLabelText("Mobile navigation");
+    const freeTrialLink = within(mobileNav).getByText("Free Trial").closest("a")!;
+
+    expect(freeTrialLink.getAttribute("aria-current")).toBe("page");
+    expect(freeTrialLink.className).toContain("font-semibold");
+  });
+});
+
+describe("MarketingNavbar — desktop Free Trial border on /pricing (Loki #893)", () => {
+  it("Free Trial does NOT receive border class when on /pricing", () => {
+    // Issue reproduction step: /pricing → Free Trial must not have border highlight
+    mockPathname = "/pricing";
+    render(<MarketingNavbar />);
+
+    const nav = screen.getByLabelText("Marketing site navigation");
+    const freeTrialLink = within(nav).getAllByText("Free Trial")[0].closest("a")!;
+
+    expect(freeTrialLink.className).not.toContain("border border-border");
+    expect(freeTrialLink.getAttribute("aria-current")).toBeNull();
+  });
+});
