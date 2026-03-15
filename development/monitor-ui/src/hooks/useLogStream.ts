@@ -106,7 +106,7 @@ export function useLogStream() {
           newEntries.push({
             id: nextId(),
             type: "tool-use",
-            toolId: block.id || undefined,
+            toolId: block.id ?? "",
             toolName: block.name,
             toolInput: inputJson,
           });
@@ -134,12 +134,14 @@ export function useLogStream() {
 
             // Find the matching tool-use entry and attach result
             for (let i = updated.length - 1; i >= 0; i--) {
+              const entry = updated[i];
               if (
-                updated[i].type === "tool-use" &&
-                updated[i].toolId === block.tool_use_id
+                entry &&
+                entry.type === "tool-use" &&
+                entry.toolId === block.tool_use_id
               ) {
                 updated[i] = {
-                  ...updated[i],
+                  ...entry,
                   toolResult: text,
                   toolIsError: block.is_error || false,
                 };

@@ -3,7 +3,7 @@ import type { JsonEvent } from "./types";
 /** Strip a Kubernetes log timestamp prefix if present. */
 function stripK8sTimestamp(line: string): string {
   const match = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s+(.*)$/.exec(line);
-  return match ? match[1] : line;
+  return match?.[1] ?? line;
 }
 
 /** Parse a single raw log line into a JsonEvent, or null if not valid JSON. */

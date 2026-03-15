@@ -71,9 +71,9 @@ function parseJobMeta(
   const m = sessionId.match(/issue-(\d+)-step(\d+)-([a-z]+)/i);
   return {
     sessionId,
-    issueNumber: m ? parseInt(m[1], 10) : 0,
-    agent: m ? m[3].toLowerCase() : "unknown",
-    step: m ? parseInt(m[2], 10) : 0,
+    issueNumber: m ? parseInt(m[1] ?? "0", 10) : 0,
+    agent: m ? (m[3] ?? "unknown").toLowerCase() : "unknown",
+    step: m ? parseInt(m[2] ?? "0", 10) : 0,
   };
 }
 
@@ -243,8 +243,9 @@ export async function findPodForSession(
     namespace,
     labelSelector: `fenrir.dev/session-id=${sessionId}`,
   });
-  if (podList.items.length > 0) {
-    return podList.items[0].metadata?.name ?? null;
+  const firstPod = podList.items[0];
+  if (firstPod) {
+    return firstPod.metadata?.name ?? null;
   }
   // Fallback: try job-name label (auto-set by K8s on job pods)
   const jobName = `agent-${sessionId}`;
