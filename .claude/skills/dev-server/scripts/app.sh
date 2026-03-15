@@ -22,7 +22,7 @@ case "${1:-status}" in
     fi
     echo "Starting Next.js dev server on port $PORT..."
     > "$LOG"
-    nohup bash -c "cd '$REPO_ROOT' && npx vercel dev --listen $PORT" >> "$LOG" 2>&1 &
+    nohup bash -c "cd '$REPO_ROOT' && npx vercel dev --listen $PORT --yes" >> "$LOG" 2>&1 &
     echo "$PORT" > "$PORT_FILE"
     for _ in $(seq 1 15); do
       grep -q "Ready" "$LOG" 2>/dev/null && break

@@ -25,7 +25,7 @@ Manages all local development services for Fenrir Ledger.
 |---------|------|-------------|
 | `app` | 9653 (WOLF) | Next.js dev server via `vercel dev` |
 | `stripe` | — | Stripe CLI webhook forwarding to app |
-| `odin` | 8316 (Hlidskjalf) | Agent report viewer — serves `tmp/agent-logs/` |
+| `monitor` | 3001 | Odin's Throne agent monitor (Hono/WebSocket) |
 | `proxy` | 8001 | kubectl proxy for GKE cluster access |
 
 ## Scripts
@@ -63,7 +63,7 @@ SCRIPT_DIR="$REPO_ROOT/.claude/skills/dev-server/scripts"
 bash "$SCRIPT_DIR/<service>.sh" <action>
 
 # All services (start order: stripe → app → odin → proxy)
-for svc in stripe app odin proxy; do
+for svc in stripe app monitor proxy; do
   bash "$SCRIPT_DIR/$svc.sh" <action>
 done
 ```
@@ -77,13 +77,13 @@ Service    Port   Status
 ───────    ────   ──────
 app        9653   running (pid 12345)
 stripe     —      running (pid 12346)
-odin       8316   running (pid 12347)
+monitor    3001   running (pid 12347)
 proxy      8001   not running
 ```
 
 ## Notes
 
-- `odin` requires `npx http-server` (installed via npm)
+- `monitor` requires `tsx` (runs `development/monitor/` via `tsx watch`)
 - `proxy` requires `kubectl` configured for the GKE cluster
 - `stripe` requires Stripe CLI (`brew install stripe/stripe-cli/stripe`)
 - The old `services.sh` script is deprecated — this SKILL replaces it

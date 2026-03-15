@@ -87,7 +87,13 @@ async function startLogStream(
         type: "stream-error",
         ts: Date.now(),
         sessionId,
-        message: `No pod found for session ${sessionId}`,
+        message: `Pod for session ${sessionId} has been cleaned up (job TTL expired). Logs are no longer available from the cluster.`,
+      });
+      send(ws, {
+        type: "stream-end",
+        ts: Date.now(),
+        sessionId,
+        reason: "completed",
       });
       return () => {};
     }
