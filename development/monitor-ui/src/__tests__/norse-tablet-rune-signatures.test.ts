@@ -78,7 +78,7 @@ describe("AGENT_QUOTES", () => {
 
 describe("ERROR_TABLET_SEALS", () => {
   it("contains ttl-expired seal", () => {
-    const seal = ERROR_TABLET_SEALS["ttl-expired"];
+    const seal = ERROR_TABLET_SEALS["ttl-expired"]!;
     expect(seal).toBeDefined();
     expect(seal.runes).toBeTruthy();
     expect(seal.inscription).toBeTruthy();
@@ -86,7 +86,7 @@ describe("ERROR_TABLET_SEALS", () => {
   });
 
   it("contains node-unreachable seal", () => {
-    const seal = ERROR_TABLET_SEALS["node-unreachable"];
+    const seal = ERROR_TABLET_SEALS["node-unreachable"]!;
     expect(seal).toBeDefined();
     expect(seal.runes).toBeTruthy();
     expect(seal.inscription).toBeTruthy();
@@ -94,19 +94,19 @@ describe("ERROR_TABLET_SEALS", () => {
   });
 
   it("ttl-expired inscription mentions Yggdrasil", () => {
-    expect(ERROR_TABLET_SEALS["ttl-expired"].inscription).toContain("Yggdrasil");
+    expect(ERROR_TABLET_SEALS["ttl-expired"]!.inscription).toContain("Yggdrasil");
   });
 
   it("node-unreachable inscription mentions bridge", () => {
-    expect(ERROR_TABLET_SEALS["node-unreachable"].inscription).toMatch(/bridge/i);
+    expect(ERROR_TABLET_SEALS["node-unreachable"]!.inscription).toMatch(/bridge/i);
   });
 
   it("ttl-expired rune row is ᛃᚷᚷᛞᚱᚨᛊᛁᛚ", () => {
-    expect(ERROR_TABLET_SEALS["ttl-expired"].runes).toBe("ᛃᚷᚷᛞᚱᚨᛊᛁᛚ");
+    expect(ERROR_TABLET_SEALS["ttl-expired"]!.runes).toBe("ᛃᚷᚷᛞᚱᚨᛊᛁᛚ");
   });
 
   it("node-unreachable rune row is ᛒᛁᚠᚱᛟᛊᛏ", () => {
-    expect(ERROR_TABLET_SEALS["node-unreachable"].runes).toBe("ᛒᛁᚠᚱᛟᛊᛏ");
+    expect(ERROR_TABLET_SEALS["node-unreachable"]!.runes).toBe("ᛒᛁᚠᚱᛟᛊᛏ");
   });
 });
 

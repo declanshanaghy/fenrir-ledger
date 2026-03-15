@@ -8,7 +8,7 @@
  * - Button renders in both normal and TTL-expired header states
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, cleanup, fireEvent } from "@testing-library/react";
 import { LogViewer } from "../components/LogViewer";
 import type { LogEntry } from "../hooks/useLogStream";
