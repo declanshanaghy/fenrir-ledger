@@ -25,6 +25,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Monitor UI — Norse Verdict Inscription (Issue #1019)
+
+| File | Description |
+|------|-------------|
+| [wireframes/monitor-ui/verdict-inscription.html](wireframes/monitor-ui/verdict-inscription.html) | NorseVerdictInscription component — triumph-arch tablet for agent final handoffs and QA verdicts rendered inline in the monitor-UI message stream. 10 sections: component anatomy (FiremanDecko variant), tombstone vs triumph-arch comparison, all 5 agent variants (FiremanDecko ᚲ Kenaz / Loki ᚾ Naudhiz / Luna ᛚ Laguz / Heimdall ᛏ Tiwaz / Freya ᚠ Fehu + generic ᛟ Othalan fallback), markdown content type samples (H1/H2/H3 headings, checkmark-bulleted lists, code blocks, tables, Wikipedia Norse links), carve-in entrance animation stagger spec (5-phase: shell border → rune bands → glyph blaze → arch title → content stagger → seal stamp), mobile 375px layout, responsive breakpoints table (Mobile/Tablet/Desktop), WCAG 2.1 AA accessibility spec, stream placement schematic + detection logic, and full TypeScript props contract (NorseVerdictInscriptionProps, AgentConfig, NorseTerm interfaces). Interaction spec: [verdict-inscription-interaction-spec.md](wireframes/monitor-ui/verdict-inscription-interaction-spec.md). |
+
+---
+
 ## Monitor UI — Light/Dark Theme Switcher (Issue #964)
 
 | File | Description |
