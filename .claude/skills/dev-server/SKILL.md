@@ -25,7 +25,8 @@ Manages all local development services for Fenrir Ledger.
 |---------|------|-------------|
 | `app` | 9653 (WOLF) | Next.js dev server via `vercel dev` |
 | `stripe` | — | Stripe CLI webhook forwarding to app |
-| `monitor` | 3001 | Odin's Throne agent monitor (Hono/WebSocket) |
+| `monitor-api` | 3001 | Hono API/WebSocket server (K8s jobs, log streaming) |
+| `monitor-ui` | 3002 | Vite React UI (Odin's Throne — Hlidskjalf) |
 | `proxy` | 8001 | kubectl proxy for GKE cluster access |
 
 ## Scripts
@@ -62,8 +63,8 @@ SCRIPT_DIR="$REPO_ROOT/.claude/skills/dev-server/scripts"
 # Single service
 bash "$SCRIPT_DIR/<service>.sh" <action>
 
-# All services (start order: stripe → app → odin → proxy)
-for svc in stripe app monitor proxy; do
+# All services (start order)
+for svc in stripe app monitor-api monitor-ui proxy; do
   bash "$SCRIPT_DIR/$svc.sh" <action>
 done
 ```
@@ -73,17 +74,19 @@ done
 Show a status table after any action:
 
 ```
-Service    Port   Status
-───────    ────   ──────
-app        9653   running (pid 12345)
-stripe     —      running (pid 12346)
-monitor    3001   running (pid 12347)
-proxy      8001   not running
+Service       Port   Status
+───────       ────   ──────
+app           9653   running (pid 12345)
+stripe        —      running (pid 12346)
+monitor-api   3001   running (pid 12347)
+monitor-ui    3002   running (pid 12348)
+proxy         8001   not running
 ```
 
 ## Notes
 
-- `monitor` requires `tsx` (runs `development/monitor/` via `tsx watch`)
+- `monitor-api` requires `tsx` (runs `development/monitor/` via `tsx watch`)
+- `monitor-ui` requires `vite` (runs `development/monitor-ui/` Vite dev server with HMR)
 - `proxy` requires `kubectl` configured for the GKE cluster
 - `stripe` requires Stripe CLI (`brew install stripe/stripe-cli/stripe`)
-- The old `services.sh` script is deprecated — this SKILL replaces it
+- Open http://localhost:3002/ for the UI (Vite proxies API/WS to monitor-api on 3001)

@@ -187,7 +187,8 @@ export async function streamPodLogs(
   namespace = "fenrir-agents",
   onLine: (line: string) => void,
   onEnd: () => void,
-  onError: (err: Error) => void
+  onError: (err: Error) => void,
+  options: { follow?: boolean } = {}
 ): Promise<() => void> {
   const kc = getKubeConfig();
   const log = new k8s.Log(kc);
@@ -212,15 +213,24 @@ export async function streamPodLogs(
 
   writable.on("error", onError);
 
-  const abortController = await log.log(
-    namespace,
-    podName,
-    "", // container — empty = first container
-    writable,
-    { follow: true, timestamps: true }
-  );
-
-  return () => abortController.abort();
+  try {
+    const abortController = await log.log(
+      namespace,
+      podName,
+      "", // container — empty = first container
+      writable,
+      { follow: options.follow ?? true, timestamps: true }
+    );
+    return () => abortController.abort();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // HTTP 204 = pod exists but logs are empty/evicted
+    if (msg.includes("204")) {
+      onEnd();
+      return () => {};
+    }
+    throw err;
+  }
 }
 
 export async function findPodForSession(

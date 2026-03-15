@@ -78,7 +78,8 @@ function broadcast(clients: Set<WebSocket>, msg: ServerMessage): void {
 async function startLogStream(
   ws: WebSocket,
   sessionId: string,
-  namespace: string
+  namespace: string,
+  cachedJobs: Job[]
 ): Promise<() => void> {
   try {
     const podName = await findPodForSession(sessionId, namespace);
@@ -97,6 +98,10 @@ async function startLogStream(
       });
       return () => {};
     }
+
+    // Don't follow completed jobs — just dump existing logs
+    const job = cachedJobs.find((j) => j.sessionId === sessionId);
+    const isCompleted = job?.status === "succeeded" || job?.status === "failed";
 
     // Track JSONL events for verdict detection
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -134,13 +139,19 @@ async function startLogStream(
           sessionId,
           message: err.message,
         });
-      }
+      },
+      { follow: !isCompleted }
     );
 
     return cancel;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    send(ws, { type: "stream-error", ts: Date.now(), sessionId, message });
+    // Surface a friendlier message for common K8s log errors
+    const friendly = message.includes("204")
+      ? `Logs for session ${sessionId} are no longer available (pod logs evicted).`
+      : message;
+    send(ws, { type: "stream-error", ts: Date.now(), sessionId, message: friendly });
+    send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
     return () => {};
   }
 }
@@ -178,15 +189,19 @@ export function attachWebSocketServer(
 
   const wss = new WebSocketServer({ server: server as Server, path: "/ws" });
 
+  const authDisabled = !process.env.SESSION_SECRET && process.env.NODE_ENV !== "production";
+
   wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
     // Validate session cookie before allowing the WS connection
-    const cookieHeader = req.headers.cookie ?? "";
-    const cookies = parseCookies(cookieHeader);
-    const sessionToken = cookies[SESSION_COOKIE];
-    if (!sessionToken || !verifySessionToken(sessionToken)) {
-      send(ws, { type: "error", message: "Unauthorized" });
-      ws.close(1008, "Unauthorized");
-      return;
+    if (!authDisabled) {
+      const cookieHeader = req.headers.cookie ?? "";
+      const cookies = parseCookies(cookieHeader);
+      const sessionToken = cookies[SESSION_COOKIE];
+      if (!sessionToken || !verifySessionToken(sessionToken)) {
+        send(ws, { type: "error", message: "Unauthorized" });
+        ws.close(1008, "Unauthorized");
+        return;
+      }
     }
 
     // Register this client for jobs-updated broadcasts
@@ -222,7 +237,7 @@ export function attachWebSocketServer(
       } else if (msg.type === "subscribe") {
         const { sessionId } = msg;
         if (subscriptions.has(sessionId)) return; // already subscribed
-        void startLogStream(ws, sessionId, namespace).then((cancel) => {
+        void startLogStream(ws, sessionId, namespace, cachedJobs).then((cancel) => {
           subscriptions.set(sessionId, cancel);
         });
       } else if (msg.type === "unsubscribe") {
