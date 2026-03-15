@@ -73,9 +73,13 @@ describe("mapAgentJobToJob", () => {
     labels: { "fenrir.dev/session-id": "issue-123-step1-firemandecko" },
   };
 
-  it("converts active → running", () => {
+  it("converts active → pending (pod may still be scheduling — issue #965)", () => {
+    // K8s Job status.active=1 means the job controller created the pod,
+    // NOT that the pod container is running. The pod watcher upgrades
+    // pending → running once pod phase == "Running".
     const job = mapAgentJobToJob(baseJob);
-    expect(job.status).toBe("running");
+    expect(job.status).toBe("pending");
+    expect(job.status).not.toBe("running");
   });
 
   it("preserves pending status", () => {
