@@ -418,6 +418,52 @@
   }
 }
 
+/* ── Heilung Modal — Easter Egg #10 border glow ─────────────────────────
+ *
+ * border-breathe: single slow gold pulse after modal entry (Issue #955).
+ * Runs once, 2.4 s, delayed 650 ms to begin after wolf-rise completes.
+ * Settling state: barely-visible ember glow at 100%.
+ *
+ * Z-index: 9653 = W-O-L-F on a phone keypad.
+ */
+
+@keyframes border-breathe {
+  0%   { box-shadow: 0 0 0px rgba(201, 146, 10, 0); }
+  50%  { box-shadow: 0 0 18px rgba(201, 146, 10, 0.3), inset 0 0 8px rgba(201, 146, 10, 0.06); }
+  100% { box-shadow: 0 0 6px rgba(201, 146, 10, 0.12); }
+}
+
+/* Mobile: stack video top / info below. Min viewport 375px. */
+@media (max-width: 600px) {
+  .heilung-modal-body {
+    display: flex !important;
+    flex-direction: column;
+  }
+  .heilung-col-video {
+    order: 1 !important;
+    padding: 1rem !important;
+  }
+  .heilung-col-info {
+    order: 2 !important;
+    border-top: 1px solid hsl(var(--egg-border));
+    padding: 1.25rem !important;
+  }
+  /* hide vertical divider — border-top on col-info provides separation */
+  .heilung-modal-body > [aria-hidden="true"] {
+    display: none;
+  }
+  .heilung-modal-shell footer button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heilung-modal-shell {
+    animation: none !important;
+    box-shadow: 0 0 6px rgba(201, 146, 10, 0.12);
+  }
+}
+
 /* ── Konami Howl — Easter Egg #2 ─────────────────────────────────────────
  *
  * wolf-rise: wolf silhouette slides up from below the viewport.
