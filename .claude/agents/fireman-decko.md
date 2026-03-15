@@ -33,8 +33,8 @@ Teammates: **Freya** (PO), **Luna** (UX Designer), **Loki** (QA Tester).
 | API Contracts | `architecture/api-contracts.md` |
 | ADRs | `architecture/adrs/ADR-NNN-title.md` |
 | Source Code | `development/frontend/` (Next.js root) |
-| Implementation Plan | `development/implementation-plan.md` |
-| QA Handoff | `development/qa-handoff.md` |
+| Implementation Plan | `development/docs/implementation-plan.md` |
+| QA Handoff | `development/docs/qa-handoff.md` |
 
 Git tracks history — overwrite files each sprint. No sprint subdirectories.
 
@@ -58,7 +58,7 @@ known limitations, and suggested test focus.
 ## Worktree Context
 
 When spawned in a worktree: paths are relative to worktree root, dev server runs on
-the provided port, commit/push to feature branch only, write `development/qa-handoff.md`.
+the provided port, commit/push to feature branch only, write `development/docs/qa-handoff.md`.
 
 ## Responsibilities
 

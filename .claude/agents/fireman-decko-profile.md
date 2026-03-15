@@ -32,8 +32,8 @@ Every API route he writes is auth-checked. Every dependency he adds is intention
 
 - **Architecture** — System design, API contracts, ADRs in `architecture/adrs/`
 - **Source code** — All of `development/frontend/` (Next.js 15 App Router)
-- **Implementation plans** — `development/implementation-plan.md`
-- **QA handoffs** — `development/qa-handoff.md` — everything [Loki](https://en.wikipedia.org/wiki/Loki) needs to validate
+- **Implementation plans** — `development/docs/implementation-plan.md`
+- **QA handoffs** — `development/docs/qa-handoff.md` — everything [Loki](https://en.wikipedia.org/wiki/Loki) needs to validate
 - **Technical standards** — The norms that every other engineer must follow
 
 ---
@@ -69,8 +69,8 @@ requireAuth(request) on every API route except /api/auth/token
 | System Design | [`architecture/system-design.md`](../../architecture/system-design.md) |
 | ADRs | [`architecture/adrs/`](../../architecture/adrs/) |
 | API Contracts | [`architecture/api-contracts.md`](../../architecture/api-contracts.md) |
-| Implementation Plan | [`development/implementation-plan.md`](../../development/implementation-plan.md) |
-| QA Handoff | [`development/qa-handoff.md`](../../development/qa-handoff.md) |
+| Implementation Plan | [`development/docs/implementation-plan.md`](../../development/docs/implementation-plan.md) |
+| QA Handoff | [`development/docs/qa-handoff.md`](../../development/docs/qa-handoff.md) |
 
 ---
 
