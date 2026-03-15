@@ -3,9 +3,11 @@
 /**
  * HeilungModal — Easter Egg #10: Heilung Krigsgaldr.
  *
- * Restyle per Issue #955: wolf-voice mystical restyle.
- * Dark incantation energy, rune-carved atmosphere.
- * "HEILUNG — Amplified History" presented as ancient prophecy.
+ * Wolf-voice mystical restyle per Issue #955. Fixed per Issue #983:
+ * hardcoded Norse colours replace CSS variable references (avoids
+ * hsl(var(--egg-*)) resolution failure in all render environments),
+ * and the border-breathe CSS animation is applied via .heilung-modal-shell
+ * class instead of inline style (prevents Framer Motion v12 / WAAPI conflict).
  *
  * Trigger: Ctrl+Shift+L or Meta+Shift+L. Repeatable — no localStorage gate.
  * Dismiss: ESC, backdrop click, × close button, HEIÐR button.
@@ -37,8 +39,8 @@ const voicesContainerVariants: Variants = {
   hidden: {},
   show: {
     transition: {
-      delayChildren: 0.4,     // begin 400 ms after modal entry completes
-      staggerChildren: 0.1,   // 100 ms between each voice item
+      delayChildren: 0.4,
+      staggerChildren: 0.1,
     },
   },
 };
@@ -47,6 +49,19 @@ const voiceItemVariants: Variants = {
   hidden: { opacity: 0, y: 8 },
   show:   { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
 };
+
+/* ── Norse colour palette (hardcoded to avoid CSS-var resolution failures) ── */
+const C = {
+  bg:        "#0f1018",   /* void-indigo shell */
+  bgBody:    "#13151f",   /* slightly lighter body panels */
+  border:    "rgba(201, 146, 10, 0.25)",  /* subtle gold seam */
+  title:     "#f0b429",   /* bright gold */
+  text:      "#e8e4d4",   /* parchment */
+  textMuted: "#8a8578",   /* stone */
+  accent:    "#c9920a",   /* gold accent */
+  btnText:   "#07070d",   /* near-void for button fill */
+  btnHover:  "#f0b429",   /* bright gold hover */
+} as const;
 
 export function HeilungModal() {
   const [visible, setVisible] = useState(false);
@@ -58,7 +73,6 @@ export function HeilungModal() {
   useEffect(() => {
     if (visible) {
       document.body.style.overflow = "hidden";
-      // Move focus to dismiss button on open
       requestAnimationFrame(() => dismissBtnRef.current?.focus());
     } else {
       document.body.style.overflow = "";
@@ -69,7 +83,6 @@ export function HeilungModal() {
   /** Keyboard trigger + ESC dismiss */
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Ctrl+Shift+L or Meta+Shift+L — skip form fields
       if (e.key === "L" && e.shiftKey && (e.metaKey || e.ctrlKey)) {
         const tag = (e.target as HTMLElement | null)?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
@@ -105,6 +118,10 @@ export function HeilungModal() {
           onClick={dismiss}
         >
           {/* ── Modal shell — wolf-rise entry ─────────────────────── */}
+          {/*
+            border-breathe animation applied via .heilung-modal-shell CSS class
+            (globals.css) — NOT inline style — to avoid Framer Motion WAAPI conflict.
+          */}
           <motion.div
             key="heilung-modal"
             initial={{ opacity: 0, y: 24 }}
@@ -115,10 +132,8 @@ export function HeilungModal() {
             style={{
               maxWidth: "960px",
               width: "min(960px, calc(100vw - 2rem))",
-              background: "hsl(var(--egg-bg))",
-              border: "1px solid hsl(var(--egg-border))",
-              // border-breathe: single gold pulse after entry (see globals.css)
-              animation: "border-breathe 2.4s ease-in-out 0.65s forwards",
+              background: C.bg,
+              border: `1px solid ${C.border}`,
             }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
@@ -133,9 +148,9 @@ export function HeilungModal() {
               style={{
                 width: "2.75rem",
                 height: "2.75rem",
-                border: "1px solid hsl(var(--egg-border))",
+                border: `1px solid ${C.border}`,
                 background: "none",
-                color: "hsl(var(--egg-accent))",
+                color: C.accent,
                 cursor: "pointer",
                 fontSize: "1.125rem",
                 lineHeight: 1,
@@ -149,7 +164,7 @@ export function HeilungModal() {
               style={{
                 padding: "2rem 2rem 1.25rem",
                 textAlign: "center",
-                borderBottom: "1px solid hsl(var(--egg-border))",
+                borderBottom: `1px solid ${C.border}`,
               }}
             >
               {/* Eyebrow: rune guards + label */}
@@ -163,7 +178,7 @@ export function HeilungModal() {
                   textTransform: "uppercase",
                   letterSpacing: "0.25em",
                   marginBottom: "1rem",
-                  color: "hsl(var(--egg-text-muted))",
+                  color: C.textMuted,
                 }}
               >
                 <span aria-hidden="true" style={{ letterSpacing: "0.3em" }}>ᚠ ᛖ ᚾ ᚱ</span>
@@ -181,13 +196,13 @@ export function HeilungModal() {
                   textTransform: "uppercase",
                   letterSpacing: "0.15em",
                   lineHeight: 1,
-                  color: "hsl(var(--egg-title))",
+                  color: C.title,
                 }}
               >
                 HEILUNG
               </h1>
 
-              {/* Subtitle — Source Serif 4 300, italic, dimmed gold */}
+              {/* Subtitle */}
               <p
                 style={{
                   marginTop: "0.4rem",
@@ -207,6 +222,7 @@ export function HeilungModal() {
             {/*
               Desktop: grid-template-columns: 1fr 1px 1fr
               Mobile (≤600px): flex-col — video order-1, info order-2
+              Responsive override lives in globals.css .heilung-modal-body
             */}
             <div
               className="heilung-modal-body"
@@ -220,7 +236,7 @@ export function HeilungModal() {
                   display: "flex",
                   flexDirection: "column",
                   gap: "1.25rem",
-                  background: "hsl(var(--egg-bg-body))",
+                  background: C.bgBody,
                   order: 1,
                 }}
               >
@@ -232,7 +248,7 @@ export function HeilungModal() {
                     fontSize: "0.9rem",
                     fontWeight: 400,
                     lineHeight: 1.75,
-                    color: "hsl(var(--egg-text))",
+                    color: C.text,
                   }}
                 >
                   <p>
@@ -255,7 +271,7 @@ export function HeilungModal() {
                       textTransform: "uppercase",
                       letterSpacing: "0.2em",
                       marginBottom: "0.625rem",
-                      color: "hsl(var(--egg-text-muted))",
+                      color: C.textMuted,
                     }}
                   >
                     THE VOICES
@@ -285,7 +301,7 @@ export function HeilungModal() {
                             fontFamily: "var(--font-cinzel), serif",
                             fontSize: "0.825rem",
                             fontWeight: 600,
-                            color: "hsl(var(--egg-text))",
+                            color: C.text,
                           }}
                         >
                           {name}
@@ -296,7 +312,7 @@ export function HeilungModal() {
                             fontSize: "0.75rem",
                             fontStyle: "italic",
                             fontWeight: 300,
-                            color: "hsl(var(--egg-text-muted))",
+                            color: C.textMuted,
                           }}
                         >
                           {role}
@@ -315,11 +331,11 @@ export function HeilungModal() {
                   style={{
                     marginTop: "auto",
                     paddingTop: "0.5rem",
-                    borderTop: "1px solid hsl(var(--egg-border))",
+                    borderTop: `1px solid ${C.border}`,
                     fontFamily: "var(--font-jetbrains-mono), monospace",
                     fontSize: "0.75rem",
                     fontWeight: 500,
-                    color: "hsl(var(--egg-accent))",
+                    color: C.accent,
                     textDecoration: "none",
                     transition: "opacity 0.15s ease",
                   }}
@@ -334,7 +350,7 @@ export function HeilungModal() {
               <div
                 aria-hidden="true"
                 style={{
-                  background: "linear-gradient(to bottom, transparent, hsl(var(--egg-border)), transparent)",
+                  background: `linear-gradient(to bottom, transparent, ${C.border}, transparent)`,
                 }}
               />
 
@@ -346,7 +362,7 @@ export function HeilungModal() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "hsl(var(--egg-bg-body))",
+                  background: C.bgBody,
                   order: 2,
                 }}
               >
@@ -369,7 +385,7 @@ export function HeilungModal() {
                 display: "flex",
                 justifyContent: "center",
                 padding: "1.25rem 2rem 1.75rem",
-                borderTop: "1px solid hsl(var(--egg-border))",
+                borderTop: `1px solid ${C.border}`,
               }}
             >
               {/* HEIÐR dismiss — Old Norse: honour, glory */}
@@ -383,22 +399,22 @@ export function HeilungModal() {
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.25em",
-                  border: "1px solid hsl(var(--egg-accent))",
+                  border: `1px solid ${C.accent}`,
                   background: "transparent",
-                  color: "hsl(var(--egg-accent))",
+                  color: C.accent,
                   cursor: "pointer",
                   minHeight: "44px",
                   transition: "background 0.2s ease, color 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
                   const btn = e.currentTarget as HTMLButtonElement;
-                  btn.style.background = "hsl(var(--egg-btn-bg))";
-                  btn.style.color = "hsl(var(--egg-btn-text))";
+                  btn.style.background = C.accent;
+                  btn.style.color = C.btnText;
                 }}
                 onMouseLeave={(e) => {
                   const btn = e.currentTarget as HTMLButtonElement;
                   btn.style.background = "transparent";
-                  btn.style.color = "hsl(var(--egg-accent))";
+                  btn.style.color = C.accent;
                 }}
               >
                 HEIÐR
