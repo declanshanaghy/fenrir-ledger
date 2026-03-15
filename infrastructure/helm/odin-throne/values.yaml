@@ -24,7 +24,7 @@ app:
     NODE_ENV: "production"
     PORT: "3001"
     K8S_NAMESPACE: "fenrir-agents"
-    JOB_LABEL_SELECTOR: "app=odin-agent"
+    JOB_LABEL_SELECTOR: "app.kubernetes.io/component=agent-sandbox"
 
   # K8s secret containing GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
   # ALLOWED_EMAIL, SESSION_SECRET — injected via envFrom.
