@@ -46,7 +46,7 @@ function applyMessage(state: StreamState, msg: ServerMessage): StreamState {
   return state;
 }
 
-function clearState(state: StreamState): StreamState {
+function clearState(_state: StreamState): StreamState {
   return { entries: [], terminalError: null, pendingFatal: null };
 }
 
