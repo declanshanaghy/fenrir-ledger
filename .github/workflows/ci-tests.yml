@@ -22,6 +22,10 @@ concurrency:
 on:
   push:
     branches-ignore: [main]
+    paths:
+      - "development/frontend/**"
+      - "quality/test-suites/**"
+      - ".github/workflows/ci-tests.yml"
   workflow_dispatch:
 
 jobs:
