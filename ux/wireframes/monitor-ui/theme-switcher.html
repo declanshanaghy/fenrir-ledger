@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — Monitor UI Theme Switcher (Issue #964)</title>
+  <style>
+    /* ── Wireframe reset — layout CSS only, no theme styling ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 2rem; }
+
+    /* ── Wireframe annotation utility ── */
+    .note {
+      font-size: 11px;
+      font-style: italic;
+      border: 1px dashed;
+      padding: 4px 8px;
+      margin: 4px 0;
+      display: block;
+    }
+    .label {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .annotation-callout {
+      font-size: 11px;
+      border: 1px solid;
+      padding: 6px 10px;
+      margin: 8px 0;
+      max-width: 320px;
+    }
+    .redline {
+      border: 2px dashed;
+      padding: 2px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border: 1px solid;
+    }
+
+    /* ── Page layout ── */
+    .page-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .page-meta {
+      font-size: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    /* ── Two-column side-by-side comparison ── */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    @media (max-width: 900px) {
+      .comparison { grid-template-columns: 1fr; }
+    }
+    .variant-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 4px 8px;
+      border: 2px solid;
+      margin-bottom: 0.75rem;
+      display: inline-block;
+    }
+
+    /* ── Monitor UI shell (structural wireframe) ── */
+    .monitor-shell {
+      display: flex;
+      border: 2px solid;
+      height: 540px;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .wf-sidebar {
+      width: 240px;
+      min-width: 240px;
+      border-right: 1px solid;
+      display: flex;
+      flex-direction: column;
+    }
+    .wf-sidebar-header {
+      padding: 12px;
+      border-bottom: 1px solid;
+      flex-shrink: 0;
+    }
+
+    /* ── Brand row (logo + title) ── */
+    .wf-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .wf-avatar-placeholder {
+      width: 36px;
+      height: 36px;
+      border: 2px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      flex-shrink: 0;
+    }
+    .wf-brand-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    /* ── Odin's quote ── */
+    .wf-quote {
+      font-size: 0.7rem;
+      font-style: italic;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      padding-left: 4px;
+      border-left: 2px solid;
+    }
+
+    /* ── THEME SWITCHER — primary design deliverable ── */
+    .theme-switcher {
+      display: flex;
+      gap: 0;
+      border: 1px solid;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .theme-btn {
+      flex: 1;
+      padding: 5px 0;
+      border: none;
+      border-right: 1px solid;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .theme-btn:last-child { border-right: none; }
+    .theme-btn.active {
+      border-bottom: 2px solid;
+      font-weight: 700;
+    }
+    .theme-btn-icon { font-size: 0.85rem; }
+
+    /* ── Session count ── */
+    .wf-count { font-size: 0.65rem; }
+
+    /* ── Card list ── */
+    .wf-card-list { flex: 1; overflow-y: auto; padding: 6px; }
+    .wf-job-card {
+      padding: 6px 8px;
+      border-left: 3px solid transparent;
+      margin-bottom: 2px;
+      border: 1px solid transparent;
+    }
+    .wf-job-card.active {
+      border-left: 3px solid;
+      border: 1px solid;
+    }
+    .wf-job-top { display: flex; align-items: center; gap: 6px; }
+    .wf-job-avatar {
+      width: 20px; height: 20px;
+      border: 1px solid;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      flex-shrink: 0;
+    }
+    .wf-job-name { font-size: 0.72rem; font-weight: 700; flex: 1; }
+    .wf-job-status { font-size: 0.85rem; }
+    .wf-job-meta { font-size: 0.62rem; margin-top: 2px; }
+
+    /* ── Content area ── */
+    .wf-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .wf-content-header {
+      padding: 8px 12px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .wf-session-title { font-size: 0.78rem; font-weight: 600; flex: 1; }
+    .wf-ws-badge {
+      font-size: 0.6rem;
+      padding: 2px 6px;
+      border: 1px solid;
+    }
+    .wf-log-terminal {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+    }
+    .wf-log-line { font-size: 0.72rem; margin-bottom: 3px; }
+    .wf-log-placeholder {
+      width: 80%;
+      height: 10px;
+      border: 1px solid;
+      margin-bottom: 5px;
+    }
+    .wf-log-placeholder.short { width: 55%; }
+    .wf-log-placeholder.medium { width: 65%; }
+
+    /* ── Mobile wireframe ── */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      overflow: hidden;
+    }
+    .mobile-sidebar {
+      border-bottom: 1px solid;
+      max-height: 220px;
+      overflow: hidden;
+    }
+    .mobile-content {
+      height: 240px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Section headers ── */
+    h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      border-bottom: 2px solid;
+      padding-bottom: 4px;
+    }
+    h3 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    /* ── Spec table ── */
+    .spec-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.8rem; }
+    .spec-table th, .spec-table td {
+      border: 1px solid;
+      padding: 6px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .spec-table th { font-weight: 700; }
+
+    /* ── Full-width section wrapper ── */
+    .section { margin-bottom: 3rem; }
+  </style>
+</head>
+<body>
+
+  <div class="page-title">Monitor UI — Light/Dark Theme Switcher</div>
+  <p class="page-meta">
+    Issue #964 · Wireframe by Luna · Branch: <code>ux/issue-964-theme-switcher</code><br>
+    Layout-only. No colors, fonts, or shadows. Theme tokens defined in interaction spec.
+  </p>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 1 — SIDE-BY-SIDE STATE COMPARISON
+       Two screenshots of the sidebar header: dark active vs light active.
+  ════════════════════════════════════════════════════════════ -->
+
+  <div class="section">
+    <h2>1. Sidebar Header — Toggle States (Desktop, 240px sidebar)</h2>
+    <p class="note">Focus area: theme switcher placement below Odin's quote. Two-button group spans full sidebar width.</p>
+
+    <div class="comparison">
+
+      <!-- DARK THEME (active) -->
+      <div>
+        <span class="variant-label">Dark Theme — Active State</span>
+
+        <div style="border: 2px solid; padding: 12px;">
+          <!-- Brand -->
+          <div class="wf-brand">
+            <div class="wf-avatar-placeholder">
+              <!-- odin-dark.png -->
+              <span>IMG</span>
+            </div>
+            <span class="wf-brand-title">Hlidskjalf</span>
+          </div>
+
+          <!-- Quote -->
+          <div class="wf-quote">
+            &ldquo;I know that I hung on Yggdrasil, wind-battered…&rdquo;
+          </div>
+
+          <!-- THEME SWITCHER — dark active -->
+          <div class="theme-switcher" role="group" aria-label="Theme">
+            <button class="theme-btn" aria-pressed="false">
+              <span class="theme-btn-icon">☀</span> Light
+            </button>
+            <button class="theme-btn active" aria-pressed="true">
+              <span class="theme-btn-icon">☽</span> Dark
+              <!-- ↑ active: bottom border + bold weight -->
+            </button>
+          </div>
+          <p class="note">Dark button: bottom-border underline + heavier weight. Light button: no underline.</p>
+
+          <!-- Count -->
+          <div class="wf-count">3 sessions</div>
+        </div>
+
+        <div class="annotation-callout">
+          <strong>Dark token source:</strong> Current <code>index.css :root</code> variables unchanged.<br>
+          Profile image: <code>odin-dark.png</code> (existing).
+        </div>
+      </div>
+
+      <!-- LIGHT THEME (active) -->
+      <div>
+        <span class="variant-label">Light Theme — Active State</span>
+
+        <div style="border: 2px solid; padding: 12px;">
+          <!-- Brand -->
+          <div class="wf-brand">
+            <div class="wf-avatar-placeholder">
+              <!-- odin-light.png (new asset needed) -->
+              <span>IMG</span>
+            </div>
+            <span class="wf-brand-title">Hlidskjalf</span>
+          </div>
+
+          <!-- Quote -->
+          <div class="wf-quote">
+            &ldquo;I know that I hung on Yggdrasil, wind-battered…&rdquo;
+          </div>
+
+          <!-- THEME SWITCHER — light active -->
+          <div class="theme-switcher" role="group" aria-label="Theme">
+            <button class="theme-btn active" aria-pressed="true">
+              <span class="theme-btn-icon">☀</span> Light
+              <!-- ↑ active: bottom border + bold weight -->
+            </button>
+            <button class="theme-btn" aria-pressed="false">
+              <span class="theme-btn-icon">☽</span> Dark
+            </button>
+          </div>
+          <p class="note">Light button: bottom-border underline + heavier weight. Dark button: no underline.</p>
+
+          <!-- Count -->
+          <div class="wf-count">3 sessions</div>
+        </div>
+
+        <div class="annotation-callout">
+          <strong>Light token source:</strong> Derive from main app <code>globals.css :root</code>.<br>
+          Profile image: <code>odin-light.png</code> (new asset — see image spec below).
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 2 — FULL MONITOR SHELL (Dark)
+       Complete UI with theme switcher in context.
+  ════════════════════════════════════════════════════════════ -->
+
+  <div class="section">
+    <h2>2. Full Monitor Shell — Dark Theme</h2>
+
+    <div class="monitor-shell">
+
+      <!-- Sidebar -->
+      <nav class="wf-sidebar" aria-label="Agent sessions">
+        <div class="wf-sidebar-header">
+
+          <div class="wf-brand">
+            <div class="wf-avatar-placeholder">IMG</div>
+            <span class="wf-brand-title">Hlidskjalf</span>
+          </div>
+
+          <div class="wf-quote">
+            &ldquo;I know that I hung on Yggdrasil, wind-battered…&rdquo;
+          </div>
+
+          <!-- ★ THEME SWITCHER — position here ★ -->
+          <div class="theme-switcher redline" role="group" aria-label="Choose theme">
+            <button class="theme-btn" aria-pressed="false">
+              <span class="theme-btn-icon">☀</span> Light
+            </button>
+            <button class="theme-btn active" aria-pressed="true">
+              <span class="theme-btn-icon">☽</span> Dark
+            </button>
+          </div>
+          <!-- ↑ dashed redline = placement annotation -->
+
+          <div class="wf-count" aria-live="polite">3 sessions</div>
+        </div>
+
+        <div class="wf-card-list" role="list">
+          <!-- Active card -->
+          <div class="wf-job-card active" role="listitem">
+            <div class="wf-job-top">
+              <div class="wf-job-avatar">IMG</div>
+              <span class="wf-job-name">fireman-decko</span>
+              <span class="wf-job-status">🟢</span>
+            </div>
+            <div class="wf-job-meta">issue:964 · running</div>
+          </div>
+          <!-- Inactive cards -->
+          <div class="wf-job-card" role="listitem">
+            <div class="wf-job-top">
+              <div class="wf-job-avatar">IMG</div>
+              <span class="wf-job-name">luna</span>
+              <span class="wf-job-status">✅</span>
+            </div>
+            <div class="wf-job-meta">issue:963 · done</div>
+          </div>
+          <div class="wf-job-card" role="listitem">
+            <div class="wf-job-top">
+              <div class="wf-job-avatar">IMG</div>
+              <span class="wf-job-name">loki-qa</span>
+              <span class="wf-job-status">⏸</span>
+            </div>
+            <div class="wf-job-meta">issue:960 · idle</div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main content -->
+      <main class="wf-content">
+        <header class="wf-content-header">
+          <span class="wf-session-title">fireman-decko · issue:964 · ux/issue-964-theme-switcher</span>
+          <span class="wf-ws-badge">● OPEN</span>
+        </header>
+        <div class="wf-log-terminal" aria-label="Log output">
+          <div class="wf-log-placeholder"></div>
+          <div class="wf-log-placeholder short"></div>
+          <div class="wf-log-placeholder medium"></div>
+          <div class="wf-log-placeholder"></div>
+          <div class="wf-log-placeholder short"></div>
+          <div class="wf-log-line" style="font-size:0.7rem;">→ Placeholder log lines (styled by log terminal CSS)</div>
+        </div>
+      </main>
+    </div>
+
+    <p class="note" style="margin-top:6px;">
+      Red-dashed box on theme switcher = placement callout only. Not a visual treatment.
+      All other elements shown with structural borders only.
+    </p>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 3 — FULL MONITOR SHELL (Light)
+       Same layout, light state active.
+  ════════════════════════════════════════════════════════════ -->
+
+  <div class="section">
+    <h2>3. Full Monitor Shell — Light Theme</h2>
+
+    <div class="monitor-shell">
+
+      <nav class="wf-sidebar" aria-label="Agent sessions">
+        <div class="wf-sidebar-header">
+
+          <div class="wf-brand">
+            <div class="wf-avatar-placeholder">IMG</div>
+            <span class="wf-brand-title">Hlidskjalf</span>
+          </div>
+
+          <div class="wf-quote">
+            &ldquo;I know that I hung on Yggdrasil, wind-battered…&rdquo;
+          </div>
+
+          <div class="theme-switcher redline" role="group" aria-label="Choose theme">
+            <button class="theme-btn active" aria-pressed="true">
+              <span class="theme-btn-icon">☀</span> Light
+            </button>
+            <button class="theme-btn" aria-pressed="false">
+              <span class="theme-btn-icon">☽</span> Dark
+            </button>
+          </div>
+
+          <div class="wf-count" aria-live="polite">3 sessions</div>
+        </div>
+
+        <div class="wf-card-list" role="list">
+          <div class="wf-job-card active" role="listitem">
+            <div class="wf-job-top">
+              <div class="wf-job-avatar">IMG</div>
+              <span class="wf-job-name">fireman-decko</span>
+              <span class="wf-job-status">🟢</span>
+            </div>
+            <div class="wf-job-meta">issue:964 · running</div>
+          </div>
+          <div class="wf-job-card" role="listitem">
+            <div class="wf-job-top">
+              <div class="wf-job-avatar">IMG</div>
+              <span class="wf-job-name">luna</span>
+              <span class="wf-job-status">✅</span>
+            </div>
+            <div class="wf-job-meta">issue:963 · done</div>
+          </div>
+          <div class="wf-job-card" role="listitem">
+            <div class="wf-job-top">
+              <div class="wf-job-avatar">IMG</div>
+              <span class="wf-job-name">loki-qa</span>
+              <span class="wf-job-status">⏸</span>
+            </div>
+            <div class="wf-job-meta">issue:960 · idle</div>
+          </div>
+        </div>
+      </nav>
+
+      <main class="wf-content">
+        <header class="wf-content-header">
+          <span class="wf-session-title">fireman-decko · issue:964 · ux/issue-964-theme-switcher</span>
+          <span class="wf-ws-badge">● OPEN</span>
+        </header>
+        <div class="wf-log-terminal" aria-label="Log output">
+          <div class="wf-log-placeholder"></div>
+          <div class="wf-log-placeholder short"></div>
+          <div class="wf-log-placeholder medium"></div>
+          <div class="wf-log-placeholder"></div>
+          <div class="wf-log-placeholder short"></div>
+          <div class="wf-log-line" style="font-size:0.7rem;">→ Same log structure; all colors change via CSS variable swap on &lt;html data-theme="light"&gt;</div>
+        </div>
+      </main>
+    </div>
+
+    <p class="note" style="margin-top:6px;">
+      Layout is identical to dark variant — only CSS variable values change.
+      Log terminal, status badges, tool blocks, and all surfaces
+      respond to the <code>data-theme</code> attribute swap.
+    </p>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 4 — MOBILE (375px)
+  ════════════════════════════════════════════════════════════ -->
+
+  <div class="section">
+    <h2>4. Mobile Layout — 375px (Stacked)</h2>
+    <p class="note" style="margin-bottom:1rem;">
+      At ≤600px sidebar stacks above content (existing behavior from CSS media query).
+      Theme switcher remains in sidebar header at full width.
+    </p>
+
+    <div class="mobile-frame">
+      <!-- Sidebar (top, capped height) -->
+      <div class="mobile-sidebar">
+        <div class="wf-sidebar-header">
+          <div class="wf-brand">
+            <div class="wf-avatar-placeholder">IMG</div>
+            <span class="wf-brand-title">Hlidskjalf</span>
+          </div>
+          <div class="wf-quote">
+            &ldquo;I know that I hung on Yggdrasil…&rdquo;
+          </div>
+          <!-- Theme switcher: full-width, touch target min 44px height -->
+          <div class="theme-switcher" role="group" aria-label="Choose theme" style="min-height:44px;">
+            <button class="theme-btn" aria-pressed="false" style="min-height:44px;">
+              <span class="theme-btn-icon">☀</span> Light
+            </button>
+            <button class="theme-btn active" aria-pressed="true" style="min-height:44px;">
+              <span class="theme-btn-icon">☽</span> Dark
+            </button>
+          </div>
+          <div class="wf-count">3 sessions</div>
+        </div>
+        <div style="padding:6px; font-size:0.7rem;">
+          [Scrollable job card list]
+        </div>
+      </div>
+
+      <!-- Content (below) -->
+      <div class="mobile-content">
+        <div class="wf-content-header">
+          <span class="wf-session-title" style="font-size:0.72rem;">fireman-decko · running</span>
+          <span class="wf-ws-badge">● OPEN</span>
+        </div>
+        <div style="flex:1; padding:8px; overflow:hidden;">
+          <div class="wf-log-placeholder"></div>
+          <div class="wf-log-placeholder short"></div>
+          <div class="wf-log-placeholder medium"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotation-callout" style="margin-top:1rem;">
+      <strong>Touch target:</strong> Each button min-height 44px (WCAG 2.5.5).<br>
+      <strong>Full-width layout:</strong> Button group stretches to 100% sidebar width on mobile.
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 5 — COMPONENT ANATOMY
+  ════════════════════════════════════════════════════════════ -->
+
+  <div class="section">
+    <h2>5. ThemeSwitcher Component Anatomy</h2>
+
+    <div style="display:flex; gap:2rem; flex-wrap:wrap;">
+
+      <!-- Anatomy diagram -->
+      <div style="min-width:260px;">
+        <span class="label">Button group (full sidebar width)</span>
+        <div style="border:2px solid; padding:4px; width:220px;">
+          <!-- Outer border = the group container -->
+          <div style="display:flex; border:1px solid; gap:0;">
+            <div style="flex:1; border:2px solid; border-right:1px solid; padding:6px 4px; text-align:center;">
+              <span style="font-size:0.85rem;">☀</span>
+              <span style="font-size:0.7rem; font-weight:600;"> Light</span>
+              <br>
+              <small style="font-size:9px;">[button, role=button]</small>
+              <br>
+              <small style="font-size:9px;">aria-pressed="true/false"</small>
+            </div>
+            <div style="flex:1; padding:6px 4px; text-align:center; border:1px solid;">
+              <span style="font-size:0.85rem;">☽</span>
+              <span style="font-size:0.7rem; font-weight:600;"> Dark</span>
+              <br>
+              <small style="font-size:9px;">[button, role=button]</small>
+              <br>
+              <small style="font-size:9px;">aria-pressed="true/false"</small>
+            </div>
+          </div>
+          <div style="font-size:9px; margin-top:4px; font-style:italic;">
+            [div role="group" aria-label="Choose theme"]
+          </div>
+        </div>
+      </div>
+
+      <!-- States -->
+      <div>
+        <span class="label">Button States</span>
+        <table class="spec-table" style="width:360px;">
+          <thead>
+            <tr>
+              <th>State</th>
+              <th>Visual Cue (token-based)</th>
+              <th>aria-pressed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Resting (inactive)</td>
+              <td>Normal weight. No border accent.</td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td>Active</td>
+              <td>Bold weight. Bottom border = gold accent. Subtle bg.</td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td>Hover (inactive)</td>
+              <td>Slight bg lift (same as card hover token).</td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td>Focus-visible</td>
+              <td>Gold focus ring (2px, offset 2px). Consistent with main app.</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>Disabled</td>
+              <td>N/A — buttons always interactive.</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3>Image Swap Spec</h3>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Theme</th><th>Image src</th><th>Where used</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Dark</td>
+          <td><code>/odin-dark.png</code> (existing)</td>
+          <td>Sidebar brand avatar, job card avatars</td>
+        </tr>
+        <tr>
+          <td>Light</td>
+          <td><code>/odin-light.png</code> (new asset needed)</td>
+          <td>Same elements. Swap on theme change.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">
+      If a dedicated light-theme Odin portrait is unavailable at engineering time,
+      the engineer MAY use the same dark image with a CSS filter as a temporary fallback
+      (<code>filter: invert(0.85) hue-rotate(180deg)</code>). Note this in the PR.
+    </p>
+
+    <h3>CSS Implementation Strategy</h3>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Concern</th><th>Approach</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Theme selector</td>
+          <td>Add <code>data-theme="light"</code> to <code>&lt;html&gt;</code> for light mode. Default (no attribute) = dark.</td>
+        </tr>
+        <tr>
+          <td>CSS variables</td>
+          <td>
+            Existing <code>:root</code> in <code>index.css</code> = dark tokens (keep as-is).<br>
+            Add <code>[data-theme="light"]</code> block with light overrides (derived from <code>globals.css :root</code>).
+          </td>
+        </tr>
+        <tr>
+          <td>Persistence</td>
+          <td>localStorage key: <code>fenrir-monitor-theme</code>. Values: <code>"light"</code> or <code>"dark"</code> (default).</td>
+        </tr>
+        <tr>
+          <td>JS/React hook</td>
+          <td>
+            New hook <code>useTheme()</code> in <code>src/hooks/useTheme.ts</code>.<br>
+            Reads localStorage on mount, writes on toggle, applies <code>data-theme</code> attribute.
+          </td>
+        </tr>
+        <tr>
+          <td>Component</td>
+          <td>
+            New component <code>src/components/ThemeSwitcher.tsx</code>.<br>
+            Renders two <code>&lt;button&gt;</code> elements inside a <code>&lt;div role="group"&gt;</code>.
+          </td>
+        </tr>
+        <tr>
+          <td>Transition</td>
+          <td>
+            <code>transition: background 0.2s, color 0.2s, border-color 0.2s</code> on <code>body</code>.<br>
+            Avoids property wildcard (<code>transition: all</code>) — only theme-relevant properties.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Light Theme Token Map (monitor-ui → globals.css source)</h3>
+    <table class="spec-table">
+      <thead>
+        <tr><th>monitor-ui variable</th><th>Light value (hex)</th><th>Source in globals.css</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--void</code> (body bg)</td><td>#f7fafc</td><td><code>--background: 210 40% 98%</code></td></tr>
+        <tr><td><code>--forge</code> (sidebar, card bg)</td><td>#ffffff</td><td><code>--card: 0 0% 100%</code></td></tr>
+        <tr><td><code>--chain</code> (card hover, popover)</td><td>#f1f7fa</td><td><code>--input: 210 40% 96%</code></td></tr>
+        <tr><td><code>--gold</code></td><td>#8f6e0e</td><td><code>--primary: 38 80% 28%</code> (dark burnt gold on white)</td></tr>
+        <tr><td><code>--gold-bright</code></td><td>#d97706</td><td><code>--realm-hati: 38 92% 42%</code></td></tr>
+        <tr><td><code>--text-saga</code> (primary text)</td><td>#0f1419</td><td><code>--foreground: 220 40% 8%</code></td></tr>
+        <tr><td><code>--text-rune</code> (secondary text)</td><td>#475569</td><td><code>--muted-foreground: 215 20% 35%</code></td></tr>
+        <tr><td><code>--text-void</code> (tertiary/meta text)</td><td>#94a3b8</td><td>derived from muted-foreground at lower contrast</td></tr>
+        <tr><td><code>--rune-border</code></td><td>#d0dce5</td><td><code>--border: 214 32% 88%</code></td></tr>
+        <tr><td><code>--teal-asgard</code></td><td>#077558</td><td><code>--realm-asgard: 163 83% 25%</code></td></tr>
+        <tr><td><code>--mayo-green</code> (log text)</td><td>#005a00</td><td><code>--mayo-green-dim</code> adjusted for light bg</td></tr>
+        <tr><td><code>--kildare-blue</code></td><td>#1E3A8A</td><td>unchanged (passes WCAG AA on white)</td></tr>
+      </tbody>
+    </table>
+    <p class="note">
+      Engineer must verify WCAG AA (≥4.5:1 normal text, ≥3:1 large/bold) for all light token pairs.
+      Reference: <code>globals.css</code> WCAG AA contrast reference comment block.
+    </p>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 6 — ACCESSIBILITY REQUIREMENTS
+  ════════════════════════════════════════════════════════════ -->
+
+  <div class="section">
+    <h2>6. Accessibility Requirements</h2>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Criterion</th><th>Requirement</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>WCAG 2.5.5</td>
+          <td>Min touch target: 44×44px. Each theme button must meet this on mobile.</td>
+        </tr>
+        <tr>
+          <td>WCAG 1.4.3 / AA</td>
+          <td>All text/icon pairs in both themes must achieve ≥4.5:1 contrast. See token map above.</td>
+        </tr>
+        <tr>
+          <td>Keyboard</td>
+          <td>Both buttons must be Tab-reachable and activated via Enter/Space.</td>
+        </tr>
+        <tr>
+          <td>ARIA</td>
+          <td><code>role="group"</code> + <code>aria-label="Choose theme"</code> on wrapper. <code>aria-pressed="true/false"</code> on each button.</td>
+        </tr>
+        <tr>
+          <td>Focus ring</td>
+          <td>Visible focus ring on both buttons (2px gold outline, offset 2px). No <code>outline: none</code>.</td>
+        </tr>
+        <tr>
+          <td>Reduced motion</td>
+          <td>CSS transition on body/html can remain (background/color changes are functional, not decorative). No animation keyframes needed for toggle itself.</td>
+        </tr>
+        <tr>
+          <td>Screen reader</td>
+          <td>
+            On activation: <code>aria-pressed</code> update is sufficient. No additional <code>aria-live</code> region needed
+            since the entire page visually updates (screen reader users perceive context change).
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>
