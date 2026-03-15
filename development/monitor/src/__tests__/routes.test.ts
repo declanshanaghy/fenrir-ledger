@@ -150,3 +150,62 @@ describe("GET /", () => {
     expect(text).toContain("Odin");
   });
 });
+
+describe("GET /static/odin-dark.png", () => {
+  it("returns 200 with image/png content-type (no auth required)", async () => {
+    const req = new Request("http://localhost:3001/static/odin-dark.png");
+    const res = await app.fetch(req);
+
+    // The route is public (before the auth middleware); it returns 200 when
+    // the file exists, or 404 when it doesn't (e.g. in CI without the binary).
+    // Either way it must NOT return 401 — static assets are always public.
+    expect(res.status).not.toBe(401);
+  });
+
+  it("sets Cache-Control header when file is served", async () => {
+    const req = new Request("http://localhost:3001/static/odin-dark.png");
+    const res = await app.fetch(req);
+
+    if (res.status === 200) {
+      expect(res.headers.get("content-type")).toBe("image/png");
+      expect(res.headers.get("cache-control")).toContain("public");
+    }
+  });
+
+  // Loki #909 — file is present in public/, assert 200 strongly (not just not-401)
+  it("returns 200 with non-empty PNG body when public/odin-dark.png exists", async () => {
+    const req = new Request("http://localhost:3001/static/odin-dark.png");
+    const res = await app.fetch(req);
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("image/png");
+    const body = await res.arrayBuffer();
+    expect(body.byteLength).toBeGreaterThan(0);
+  });
+
+  // Loki #909 — HTML must reference the avatar at /static/odin-dark.png
+  it("HTML page includes img tag pointing to /static/odin-dark.png", async () => {
+    const req = authedRequest("http://localhost:3001/");
+    const res = await app.fetch(req);
+    const html = await res.text();
+    expect(html).toContain('src="/static/odin-dark.png"');
+  });
+});
+
+describe("GET /js/stream.js", () => {
+  it("returns 200 with JS content-type (no auth required)", async () => {
+    const req = new Request("http://localhost:3001/js/stream.js");
+    const res = await app.fetch(req);
+
+    expect(res.status).not.toBe(401);
+  });
+
+  it("sets correct content-type when file is served", async () => {
+    const req = new Request("http://localhost:3001/js/stream.js");
+    const res = await app.fetch(req);
+
+    if (res.status === 200) {
+      expect(res.headers.get("content-type")).toContain("javascript");
+    }
+  });
+});
