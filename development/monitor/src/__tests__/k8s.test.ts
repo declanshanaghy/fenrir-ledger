@@ -5,7 +5,23 @@
  * UI can transition from "pending" to "running" once a pod starts executing.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// Mock the k8s client — avoids real kubeconfig discovery and network calls.
+// The functions under test (podPhaseToStatus, mapAgentJobToJob) don't call
+// the K8s API; they only use static types from the module.
+vi.mock("@kubernetes/client-node", () => ({
+  KubeConfig: vi.fn(() => ({
+    loadFromCluster: vi.fn(),
+    loadFromDefault: vi.fn(),
+    makeApiClient: vi.fn(),
+  })),
+  BatchV1Api: vi.fn(),
+  CoreV1Api: vi.fn(),
+  Watch: vi.fn(),
+  Log: vi.fn(),
+}));
+
 import { podPhaseToStatus, mapAgentJobToJob } from "../k8s.js";
 import type { AgentJob } from "../k8s.js";
 
