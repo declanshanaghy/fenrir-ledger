@@ -22,10 +22,6 @@ import { HeilungModal } from "@/components/easter-eggs/HeilungModal";
 import { Toaster } from "sonner";
 import { Footer } from "./Footer";
 
-import {
-  GleipnirMountainRoots,
-  useGleipnirFragment3,
-} from "@/components/cards/GleipnirMountainRoots";
 import { useRagnarok } from "@/contexts/RagnarokContext";
 
 interface AppShellProps {
@@ -35,7 +31,6 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [mounted, setMounted] = useState(false);
 
-  const { open: rootsOpen, dismiss: dismissRoots } = useGleipnirFragment3();
   const { ragnarokActive } = useRagnarok();
 
   // Read persisted state after mount to avoid SSR mismatch.
@@ -88,8 +83,6 @@ export function AppShell({ children }: AppShellProps) {
       <ForgeMasterEgg />
       {/* Easter egg #10 — Heilung Krigsgaldr (Ctrl+Shift+L) */}
       <HeilungModal />
-      {/* Easter egg #3 — The Roots of a Mountain */}
-      <GleipnirMountainRoots open={rootsOpen} onClose={dismissRoots} />
       {/* Easter egg #11 — Ragnarök Threshold Mode (≥5 urgent cards) */}
       {ragnarokActive && (
         <div
