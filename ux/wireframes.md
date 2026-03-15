@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Monitor UI — Light/Dark Theme Switcher (Issue #964)
+
+| File | Description |
+|------|-------------|
+| [wireframes/monitor-ui/theme-switcher.html](wireframes/monitor-ui/theme-switcher.html) | Theme switcher for Odin's Throne monitor UI: side-by-side light/dark toggle buttons placed below Odin's quote in the sidebar header. 6 sections — dark-active vs light-active sidebar state comparison, full monitor shell (dark), full monitor shell (light), mobile 375px layout (stacked, 44px touch targets), ThemeSwitcher component anatomy with button states + ARIA spec, light theme token map from globals.css, CSS implementation strategy (`data-theme` attribute on `<html>`, `fenrir-monitor-theme` localStorage key, `useTheme` hook, `ThemeSwitcher` component). Interaction spec: `ux/wireframes/monitor-ui/theme-switcher-interaction-spec.md`. |
+
+---
+
 ## Trust / Safety Messaging — Marketing Site (Issue #644)
 
 | File | Description |
