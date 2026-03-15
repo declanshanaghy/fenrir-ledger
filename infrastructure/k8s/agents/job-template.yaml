@@ -32,8 +32,9 @@ spec:
   # Max runtime: 60 minutes — prevents runaway agents
   activeDeadlineSeconds: 3600
 
-  # Do not retry on failure — agent tasks are not idempotent
-  backoffLimit: 0
+  # Retry on failure — covers transient scheduling delays (Autopilot node scale-up)
+  # Exponential backoff: 10s, 20s, 40s, 80s, 160s (~5 min total)
+  backoffLimit: 5
 
   template:
     metadata:
