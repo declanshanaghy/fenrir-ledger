@@ -40,6 +40,7 @@ import { KarlUpsellDialog, KARL_UPSELL_IMPORT } from "@/components/entitlement/K
 import { UpsellBanner } from "@/components/entitlement/UpsellBanner";
 import { SignInNudge } from "@/components/layout/SignInNudge";
 import { initializeHousehold, getCards, saveCard, migrateIfNeeded } from "@/lib/storage";
+import { track } from "@/lib/analytics/track";
 import type { Card } from "@/lib/types";
 
 // ─── Inner component (uses useSearchParams — must be wrapped in Suspense) ─────
@@ -122,6 +123,7 @@ function DashboardPageContent() {
         status: "active",
       };
       saveCard(card);
+      track("card-save", { method: "import" });
     }
 
     const refreshed = getCards(householdId); // includes closed cards for Valhalla tab
