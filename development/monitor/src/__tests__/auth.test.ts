@@ -196,6 +196,16 @@ describe("GET /auth/callback — error paths", () => {
     expect(html).toContain("access_denied");
   });
 
+  // Loki #915 — error page must include favicon link so the browser tab shows Odin icon
+  it("loginErrorPage contains favicon link pointing to /static/odin-dark.png (issue #915)", async () => {
+    const res = await app.fetch(
+      new Request("http://localhost:3001/auth/callback?error=access_denied")
+    );
+    const html = await res.text();
+    expect(html).toContain('rel="icon"');
+    expect(html).toContain('href="/static/odin-dark.png"');
+  });
+
   it("returns 400 HTML when code is missing", async () => {
     const res = await app.fetch(
       new Request("http://localhost:3001/auth/callback?state=some-state", {
@@ -436,6 +446,13 @@ describe("loginPage()", () => {
   it("marks access as restricted for unauthorised users", () => {
     const html = loginPage();
     expect(html.toLowerCase()).toMatch(/restrict|private|authoris/);
+  });
+
+  // Loki #915 — favicon link must appear on every page, including login
+  it("contains favicon link pointing to /static/odin-dark.png (issue #915)", () => {
+    const html = loginPage();
+    expect(html).toContain('rel="icon"');
+    expect(html).toContain('href="/static/odin-dark.png"');
   });
 });
 
