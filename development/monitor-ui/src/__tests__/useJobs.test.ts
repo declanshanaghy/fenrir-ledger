@@ -140,3 +140,36 @@ describe("regression #984 — newest sessions appear at top", () => {
     expect(result[0]?.sessionId).toBe("issue-985-new");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Edge case: pending → running transition (AC edge case from handoff)
+// ---------------------------------------------------------------------------
+
+describe("pending→running transition sort", () => {
+  it("job gaining a startedAt re-sorts by time relative to other sessions", () => {
+    // Before: issue-985 is pending (null), floats to top
+    const before = sortJobs([
+      makeJob("issue-974", "2026-03-01T08:00:00Z"),
+      makeJob("issue-983", "2026-03-15T10:00:00Z"),
+      makeJob("issue-985", null),
+    ]);
+    expect(before[0]?.sessionId).toBe("issue-985");
+
+    // After: issue-985 gains startedAt newer than issue-983 — stays at top
+    const afterNewer = sortJobs([
+      makeJob("issue-974", "2026-03-01T08:00:00Z"),
+      makeJob("issue-983", "2026-03-15T10:00:00Z"),
+      makeJob("issue-985", "2026-03-15T11:00:00Z"), // newer than issue-983
+    ]);
+    expect(afterNewer[0]?.sessionId).toBe("issue-985");
+
+    // After: issue-985 gains startedAt older than issue-983 — falls behind it
+    const afterOlder = sortJobs([
+      makeJob("issue-974", "2026-03-01T08:00:00Z"),
+      makeJob("issue-983", "2026-03-15T10:00:00Z"),
+      makeJob("issue-985", "2026-03-15T09:00:00Z"), // older than issue-983
+    ]);
+    expect(afterOlder[0]?.sessionId).toBe("issue-983");
+    expect(afterOlder[1]?.sessionId).toBe("issue-985");
+  });
+});
