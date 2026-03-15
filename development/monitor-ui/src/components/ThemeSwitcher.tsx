@@ -11,16 +11,18 @@ export function ThemeSwitcher({ theme, setTheme }: Props) {
       <button
         className="theme-btn"
         aria-pressed={theme === "light"}
+        aria-label="Light theme"
         onClick={() => setTheme("light")}
       >
-        ☀ Light
+        ☀
       </button>
       <button
         className="theme-btn"
         aria-pressed={theme === "dark"}
+        aria-label="Dark theme"
         onClick={() => setTheme("dark")}
       >
-        ☽ Dark
+        ☽
       </button>
     </div>
   );

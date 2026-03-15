@@ -27,9 +27,11 @@ export function Sidebar({ jobs, activeSessionId, quote, onSelectSession }: Props
         <div className="quote" role="note">
           &ldquo;{quote}&rdquo;
         </div>
-        <ThemeSwitcher theme={theme} setTheme={setTheme} />
-        <div className="count" aria-live="polite">
-          {jobs.length} session{jobs.length !== 1 ? "s" : ""}
+        <div className="count-row">
+          <div className="count" aria-live="polite">
+            {jobs.length} session{jobs.length !== 1 ? "s" : ""}
+          </div>
+          <ThemeSwitcher theme={theme} setTheme={setTheme} />
         </div>
       </div>
       <div className="card-list" role="list" aria-label="Job sessions">
