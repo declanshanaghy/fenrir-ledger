@@ -17,8 +17,8 @@ export function parseBranchTitle(branch: string, step: string): string {
   if (!issueMatch) return branch;
 
   const issueNumber = issueMatch[1]!;
-  // Strip "issue-NNN-" prefix from remaining slug
-  const slug = stripped.replace(/^issue-\d+-/, "").replace(/-/g, " ").trim();
+  // Strip "issue-NNN" or "issue-NNN-" prefix from remaining slug
+  const slug = stripped.replace(/^issue-\d+-?/, "").replace(/-/g, " ").trim();
 
   if (!slug) return `Issue #${issueNumber} – Step ${step}`;
   return `Issue #${issueNumber} – ${slug} – Step ${step}`;
