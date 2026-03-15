@@ -18,6 +18,8 @@ export function App() {
     setActiveSessionId,
     clearEntries,
     handleMessage: handleLogMessage,
+    isTtlExpired,
+    streamError,
   } = useLogStream();
 
   const prevSessionRef = useRef<string | null>(null);
@@ -64,12 +66,16 @@ export function App() {
     [send, setActiveSessionId, clearEntries]
   );
 
-  // Re-subscribe only on actual reconnect (wsState transitions to "open")
+  // Re-subscribe only on actual reconnect (wsState transitions to "open").
+  // Skip re-subscribe if the session ended with a TTL-expired error — the pod
+  // is gone and retrying would just loop the same error again.
+  const isTtlExpiredRef = useRef(isTtlExpired);
+  isTtlExpiredRef.current = isTtlExpired;
   const prevWsState = useRef(wsState);
   useEffect(() => {
     const wasDisconnected = prevWsState.current !== "open";
     prevWsState.current = wsState;
-    if (wsState === "open" && wasDisconnected && activeSessionId) {
+    if (wsState === "open" && wasDisconnected && activeSessionId && !isTtlExpiredRef.current) {
       send({ type: "subscribe", sessionId: activeSessionId });
     }
   }, [wsState, activeSessionId, send]);
@@ -92,6 +98,8 @@ export function App() {
             activeJob={activeJob}
             wsState={wsState}
             isFixture={isFixture}
+            isTtlExpired={isTtlExpired}
+            streamError={streamError}
             onSetSpeed={(speed) => {
               if (activeSessionId) {
                 send({ type: "set-speed", sessionId: activeSessionId, speed });

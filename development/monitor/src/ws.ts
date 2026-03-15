@@ -296,12 +296,10 @@ async function startLogStream(
         });
       },
       (err) => {
-        send(ws, {
-          type: "stream-error",
-          ts: Date.now(),
-          sessionId,
-          message: friendlyK8sError(err.message, sessionId),
-        });
+        const friendly = friendlyK8sError(err.message, sessionId);
+        send(ws, { type: "stream-error", ts: Date.now(), sessionId, message: friendly });
+        // Always send stream-end so the client unsubscribes and stops retrying
+        send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "failed" });
       },
       { follow: !isCompleted }
     );
