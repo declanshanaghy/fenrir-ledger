@@ -94,10 +94,13 @@ function parseJobMeta(
 
 export function mapAgentJobToJob(j: AgentJob): Job {
   const meta = parseJobMeta(j.name, j.labels);
+  // "active" means the K8s job controller created the pod, but the pod may
+  // still be in Pending phase (image pull, scheduling). We expose "pending"
+  // here; the watch path upgrades to "running" once pod phase == "Running".
   return {
     ...meta,
     name: j.name,
-    status: j.status === "active" ? "running" : j.status,
+    status: j.status === "active" ? "pending" : j.status,
     startedAt: j.startTime,
     completedAt: j.completionTime,
     podName: null,
