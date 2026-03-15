@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
-import type { LogEntry } from "../hooks/useLogStream";
+import type { LogEntry, TerminalError } from "../hooks/useLogStream";
 import type { DisplayJob } from "../lib/types";
 import { StatusBadge } from "./StatusBadge";
 import { ToolBlock } from "./ToolBlock";
@@ -11,10 +11,11 @@ interface Props {
   activeJob: DisplayJob | null;
   wsState: "connecting" | "open" | "closed" | "error";
   isFixture?: boolean;
+  terminalError?: TerminalError | null;
   onSetSpeed?: (speed: number) => void;
 }
 
-export function LogViewer({ entries, activeJob, wsState, isFixture, onSetSpeed }: Props) {
+export function LogViewer({ entries, activeJob, wsState, isFixture, terminalError, onSetSpeed }: Props) {
   const termRef = useRef<HTMLDivElement>(null);
   const [fixtureSpeed, setFixtureSpeed] = useState(1);
   const [fixturePaused, setFixturePaused] = useState(false);
@@ -69,6 +70,32 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, onSetSpeed }
           <div className="empty-title">All Nine Worlds await</div>
           <div className="empty-sub">Select an agent session to stream its logs</div>
         </div>
+      </main>
+    );
+  }
+
+  // Full-pane Norse error tablet for fatal TTL-expired sessions
+  const isFatalError = terminalError?.sessionId === activeJob.sessionId;
+  if (isFatalError && terminalError) {
+    return (
+      <main className="content" aria-label="Log viewer">
+        <div className="content-header" aria-label="Active session">
+          <span className="session-title">
+            {activeJob.agentName} &mdash; #{activeJob.issue} Step {activeJob.step} (
+            {activeJob.sessionId})
+          </span>
+          <span className="header-badges">
+            <span
+              className="job-status-badge"
+              style={{ color: "#ef4444" }}
+              aria-label="Job status: TTL Expired"
+            >
+              ✗ TTL Expired
+            </span>
+            <StatusBadge state={wsState} />
+          </span>
+        </div>
+        <NorseErrorTablet sessionId={activeJob.sessionId} message={terminalError.message} />
       </main>
     );
   }
@@ -285,6 +312,38 @@ function NorseTablet({ text }: { text: string }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Norse Error Tablet ────────────────────────────────────────────────────────
+// Full-pane component shown when a session's pod TTL has expired.
+// Styled as an ancient stone tablet with Elder Futhark rune carvings.
+
+const RUNE_ROW = "\u16AA\u16A0\u16B1\u16C7\u16BE\u16D6\u16A2\u16B9\u16C1\u16B2\u16AB\u16A0\u16B1\u16C7\u16BE\u16D6\u16AA";
+
+function NorseErrorTablet({ sessionId, message }: { sessionId: string; message: string }) {
+  return (
+    <div className="norse-error-tablet" role="alert" aria-label="Session terminated: TTL expired">
+      <div className="net-rune-top" aria-hidden="true">{RUNE_ROW}</div>
+      <div className="net-body">
+        <div className="net-icon" aria-hidden="true">{"ᛟ"}</div>
+        <h2 className="net-title">The Session Has Perished</h2>
+        <div className="net-rune-divider" aria-hidden="true">
+          {"ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ"}
+        </div>
+        <p className="net-subtitle">The pod hath been reclaimed by the void</p>
+        <div className="net-message" aria-label={`Error: ${message}`}>{message}</div>
+        <div className="net-session-row">
+          <span className="net-session-label">Session</span>
+          <span className="net-session-id">{sessionId}</span>
+        </div>
+        <div className="net-seal" aria-hidden="true">
+          {"ᛗ ᛁ ᛗ ᛁ ᚱ ᚠᛖᚾᚱᛁᚱ ᛗ ᛁ ᛗ ᛁ"}
+        </div>
+        <p className="net-hint">Select another session from the sidebar to continue</p>
+      </div>
+      <div className="net-rune-bottom" aria-hidden="true">{RUNE_ROW}</div>
     </div>
   );
 }

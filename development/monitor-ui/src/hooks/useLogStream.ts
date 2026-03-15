@@ -69,17 +69,27 @@ function parseEntrypointLine(line: string): LogEntry {
   return { id: nextId(), type: "raw", text: line };
 }
 
+export interface TerminalError {
+  sessionId: string;
+  message: string;
+}
+
 export function useLogStream() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [terminalError, setTerminalError] = useState<TerminalError | null>(null);
   const taskPromptBuffer = useRef<string[]>([]);
   const inTaskPrompt = useRef(false);
+  // Buffer fatal stream-error until stream-end confirms the session is terminal
+  const pendingFatalError = useRef<{ sessionId: string; message: string } | null>(null);
 
   const clearEntries = useCallback(() => {
     setEntries([]);
+    setTerminalError(null);
     entryCounter = 0;
     taskPromptBuffer.current = [];
     inTaskPrompt.current = false;
+    pendingFatalError.current = null;
   }, []);
 
   const handleMessage = useCallback((msg: ServerMessage) => {
@@ -131,11 +141,23 @@ export function useLogStream() {
       }
       processEvent(ev);
     } else if (msg.type === "stream-error") {
-      setEntries((prev) => [
-        ...prev,
-        { id: nextId(), type: "error", message: msg.message },
-      ]);
+      if (msg.fatal) {
+        // Buffer fatal errors — wait for stream-end to confirm terminal state
+        pendingFatalError.current = { sessionId: msg.sessionId, message: msg.message };
+      } else {
+        setEntries((prev) => [
+          ...prev,
+          { id: nextId(), type: "error", message: msg.message },
+        ]);
+      }
     } else if (msg.type === "stream-end") {
+      // If a fatal error was buffered for this session, promote to terminal state
+      const pending = pendingFatalError.current;
+      if (pending && pending.sessionId === msg.sessionId) {
+        pendingFatalError.current = null;
+        setTerminalError({ sessionId: pending.sessionId, message: pending.message });
+        return; // Don't add stream-end entry — the error tablet replaces the log
+      }
       setEntries((prev) => {
         // Mark any open batch as complete before adding stream-end
         const updated = prev.map((e) =>
@@ -342,5 +364,6 @@ export function useLogStream() {
     setActiveSessionId,
     clearEntries,
     handleMessage,
+    terminalError,
   };
 }

@@ -78,7 +78,7 @@ type ServerMessage =
       sessionId: string;
       reason: "completed" | "failed" | "cancelled";
     }
-  | { type: "stream-error"; ts: number; sessionId: string; message: string }
+  | { type: "stream-error"; ts: number; sessionId: string; message: string; fatal?: true }
   | { type: "fixture-start"; ts: number; sessionId: string }
   | { type: "pong" }
   | { type: "error"; message: string };
@@ -130,12 +130,14 @@ function broadcast(clients: Set<WebSocket>, msg: ServerMessage): void {
 // Per-session log stream handler
 // ---------------------------------------------------------------------------
 
-/** Start streaming logs for sessionId to ws. Returns a cancel function. */
+/** Start streaming logs for sessionId to ws. Returns a cancel function.
+ *  Adds sessionId to terminalSessions if the error is fatal (no retry). */
 async function startLogStream(
   ws: WebSocket,
   sessionId: string,
   namespace: string,
-  cachedJobs: Job[]
+  cachedJobs: Job[],
+  terminalSessions?: Set<string>
 ): Promise<() => void> {
   try {
     const podName = await findPodForSession(sessionId, namespace);
@@ -200,11 +202,13 @@ async function startLogStream(
           ws.off("message", onSpeedMessage);
         };
       }
+      terminalSessions?.add(sessionId);
       send(ws, {
         type: "stream-error",
         ts: Date.now(),
         sessionId,
         message: `Pod for session ${sessionId} has been cleaned up (job TTL expired). Logs are no longer available from the cluster.`,
+        fatal: true,
       });
       send(ws, {
         type: "stream-end",
@@ -266,7 +270,8 @@ async function startLogStream(
     const friendly = message.includes("204")
       ? `Logs for session ${sessionId} are no longer available (pod logs evicted).`
       : message;
-    send(ws, { type: "stream-error", ts: Date.now(), sessionId, message: friendly });
+    terminalSessions?.add(sessionId);
+    send(ws, { type: "stream-error", ts: Date.now(), sessionId, message: friendly, fatal: true });
     send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
     return () => {};
   }
@@ -326,6 +331,8 @@ export function attachWebSocketServer(
 
     // Per-connection subscription state: sessionId → cancel()
     const subscriptions = new Map<string, () => void>();
+    // Sessions that have received a fatal stream-error — no retry on this connection
+    const terminalSessions = new Set<string>();
 
     ws.on("message", (data) => {
       let msg: ClientMessage;
@@ -341,7 +348,20 @@ export function attachWebSocketServer(
       } else if (msg.type === "subscribe") {
         const { sessionId } = msg;
         if (subscriptions.has(sessionId)) return; // already subscribed
-        void startLogStream(ws, sessionId, namespace, cachedJobs).then((cancel) => {
+        // If this session previously errored fatally, re-send the terminal signal
+        // without re-querying K8s, so the client can render the error tablet
+        if (terminalSessions.has(sessionId)) {
+          send(ws, {
+            type: "stream-error",
+            ts: Date.now(),
+            sessionId,
+            message: `Pod for session ${sessionId} has been cleaned up (job TTL expired). Logs are no longer available from the cluster.`,
+            fatal: true,
+          });
+          send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
+          return;
+        }
+        void startLogStream(ws, sessionId, namespace, cachedJobs, terminalSessions).then((cancel) => {
           subscriptions.set(sessionId, cancel);
         });
       } else if (msg.type === "unsubscribe") {

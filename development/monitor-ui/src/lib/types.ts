@@ -25,7 +25,7 @@ export type ServerMessage =
       sessionId: string;
       reason: "completed" | "failed" | "cancelled";
     }
-  | { type: "stream-error"; ts: number; sessionId: string; message: string }
+  | { type: "stream-error"; ts: number; sessionId: string; message: string; fatal?: true }
   | { type: "fixture-start"; ts: number; sessionId: string }
   | { type: "pong" }
   | { type: "error"; message: string };

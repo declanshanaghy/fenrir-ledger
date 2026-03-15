@@ -18,6 +18,7 @@ export function App() {
     setActiveSessionId,
     clearEntries,
     handleMessage: handleLogMessage,
+    terminalError,
   } = useLogStream();
 
   const prevSessionRef = useRef<string | null>(null);
@@ -64,15 +65,18 @@ export function App() {
     [send, setActiveSessionId, clearEntries]
   );
 
-  // Re-subscribe only on actual reconnect (wsState transitions to "open")
+  // Re-subscribe only on actual reconnect (wsState transitions to "open"),
+  // but never re-subscribe to a session that has a terminal error.
   const prevWsState = useRef(wsState);
   useEffect(() => {
     const wasDisconnected = prevWsState.current !== "open";
     prevWsState.current = wsState;
     if (wsState === "open" && wasDisconnected && activeSessionId) {
+      // Skip re-subscribe if this session has already hit a fatal error
+      if (terminalError?.sessionId === activeSessionId) return;
       send({ type: "subscribe", sessionId: activeSessionId });
     }
-  }, [wsState, activeSessionId, send]);
+  }, [wsState, activeSessionId, send, terminalError]);
 
   const activeJob = jobs.find((j) => j.sessionId === activeSessionId) || null;
 
@@ -92,6 +96,7 @@ export function App() {
             activeJob={activeJob}
             wsState={wsState}
             isFixture={isFixture}
+            terminalError={terminalError}
             onSetSpeed={(speed) => {
               if (activeSessionId) {
                 send({ type: "set-speed", sessionId: activeSessionId, speed });

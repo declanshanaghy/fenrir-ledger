@@ -672,3 +672,154 @@ body {
   .content { height: 60vh; }
   html, body { overflow: auto; }
 }
+
+/* ── Norse Error Tablet ─────────────────────────── */
+/* Full-pane component for TTL-expired / fatal session errors.
+ * Aesthetic: ancient stone tablet with Elder Futhark rune carvings. */
+@keyframes netGlow {
+  0%, 100% { text-shadow: 0 0 8px rgba(201,146,10,0.4); }
+  50%       { text-shadow: 0 0 20px rgba(201,146,10,0.9), 0 0 40px rgba(201,146,10,0.3); }
+}
+@keyframes netFadeIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.norse-error-tablet {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: radial-gradient(ellipse at 50% 30%, #0f0f1a 0%, #07070d 70%);
+  overflow-y: auto;
+  animation: netFadeIn 0.45s ease;
+}
+
+.net-rune-top,
+.net-rune-bottom {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--gold);
+  opacity: 0.35;
+  letter-spacing: 0.3em;
+  text-align: center;
+  padding: 0.6rem 1rem;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(201,146,10,0.15);
+  user-select: none;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.net-rune-bottom {
+  border-bottom: none;
+  border-top: 1px solid rgba(201,146,10,0.15);
+}
+
+.net-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  gap: 1.25rem;
+  text-align: center;
+  min-height: 0;
+}
+
+.net-icon {
+  font-size: 4rem;
+  color: var(--gold);
+  animation: netGlow 3s ease-in-out infinite;
+  line-height: 1;
+  user-select: none;
+}
+
+.net-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gold-bright);
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-shadow: 0 2px 12px rgba(201,146,10,0.3);
+}
+@media (max-width: 600px) {
+  .net-title { font-size: 1.1rem; }
+}
+
+.net-rune-divider {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--gold);
+  opacity: 0.4;
+  letter-spacing: 0.2em;
+  user-select: none;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.net-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  color: var(--text-rune);
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+.net-message {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 4px;
+  padding: 0.75rem 1.25rem;
+  max-width: 560px;
+  width: 100%;
+  text-align: left;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.net-session-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  background: rgba(201,146,10,0.06);
+  border: 1px solid rgba(201,146,10,0.2);
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+}
+
+.net-session-label {
+  color: var(--gold);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.65rem;
+}
+
+.net-session-id {
+  color: var(--text-rune);
+  word-break: break-all;
+}
+
+.net-seal {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--gold);
+  opacity: 0.5;
+  letter-spacing: 0.25em;
+  user-select: none;
+}
+
+.net-hint {
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.8rem;
+  color: var(--text-void);
+  font-style: italic;
+}
