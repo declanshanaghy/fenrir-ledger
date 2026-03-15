@@ -10,6 +10,7 @@ export interface Job {
   startedAt: string | null;
   completedAt: string | null;
   podName: string | null;
+  fixture?: boolean;
 }
 
 // Server → Client
@@ -25,6 +26,7 @@ export type ServerMessage =
       reason: "completed" | "failed" | "cancelled";
     }
   | { type: "stream-error"; ts: number; sessionId: string; message: string }
+  | { type: "fixture-start"; ts: number; sessionId: string }
   | { type: "pong" }
   | { type: "error"; message: string };
 
@@ -32,6 +34,7 @@ export type ServerMessage =
 export type ClientMessage =
   | { type: "subscribe"; sessionId: string }
   | { type: "unsubscribe"; sessionId: string }
+  | { type: "set-speed"; sessionId: string; speed: number }
   | { type: "ping" };
 
 // Parsed display-ready job

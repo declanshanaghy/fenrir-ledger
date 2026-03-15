@@ -1,6 +1,9 @@
 import { WebSocketServer, WebSocket } from "ws";
 import type { IncomingMessage, Server } from "node:http";
 import type { ServerType } from "@hono/node-server";
+import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   streamPodLogs,
   findPodForSession,
@@ -11,6 +14,52 @@ import {
 import type { Job } from "./k8s.js";
 import { verifySessionToken, SESSION_COOKIE } from "./auth.js";
 import { parseJsonlLine, detectVerdict } from "./report.js";
+
+// ── Fixture fallback for local dev ──────────────────────────────────────────
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const FIXTURES_DIR = resolve(__dirname, "../fixtures");
+
+function findFixture(sessionId: string): string | null {
+  if (!existsSync(FIXTURES_DIR)) return null;
+  // Match agent-<sessionId>.jsonl
+  const exact = resolve(FIXTURES_DIR, `agent-${sessionId}.jsonl`);
+  if (existsSync(exact)) return exact;
+  // Fuzzy: any file containing the sessionId
+  try {
+    const files = readdirSync(FIXTURES_DIR);
+    const match = files.find((f) => f.includes(sessionId) && f.endsWith(".jsonl"));
+    return match ? resolve(FIXTURES_DIR, match) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Scan fixtures dir and return Job entries for each .jsonl file found. */
+function listFixtureJobs(): Job[] {
+  if (!existsSync(FIXTURES_DIR)) return [];
+  try {
+    const files = readdirSync(FIXTURES_DIR).filter((f) => f.endsWith(".jsonl"));
+    return files.map((f) => {
+      const sessionId = f.replace(/^agent-/, "").replace(/\.jsonl$/, "");
+      const m = sessionId.match(/issue-(\d+)-step(\d+)-([a-z]+)/i);
+      const stat = statSync(resolve(FIXTURES_DIR, f));
+      return {
+        sessionId,
+        name: f.replace(/\.jsonl$/, ""),
+        issueNumber: m ? parseInt(m[1] ?? "0", 10) : 0,
+        agent: m ? (m[3] ?? "unknown").toLowerCase() : "unknown",
+        step: m ? parseInt(m[2] ?? "0", 10) : 0,
+        status: "succeeded" as const,
+        startedAt: stat.mtime.toISOString(),
+        completedAt: stat.mtime.toISOString(),
+        podName: null,
+        fixture: true,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
 
 /** Parse a single cookie header value into a map. */
 function parseCookies(cookieHeader: string): Record<string, string> {
@@ -41,6 +90,7 @@ type ServerMessage =
       reason: "completed" | "failed" | "cancelled";
     }
   | { type: "stream-error"; ts: number; sessionId: string; message: string }
+  | { type: "fixture-start"; ts: number; sessionId: string }
   | { type: "pong" }
   | { type: "error"; message: string };
 
@@ -56,6 +106,15 @@ type ClientMessage =
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/** Merge fixture jobs with live K8s jobs. Live jobs take precedence by sessionId. */
+function mergeWithFixtures(liveJobs: Job[]): Job[] {
+  const fixtureJobs = listFixtureJobs();
+  if (fixtureJobs.length === 0) return liveJobs;
+  const liveIds = new Set(liveJobs.map((j) => j.sessionId));
+  const extras = fixtureJobs.filter((f) => !liveIds.has(f.sessionId));
+  return [...liveJobs, ...extras];
+}
 
 function send(ws: WebSocket, msg: ServerMessage): void {
   if (ws.readyState === WebSocket.OPEN) {
@@ -84,6 +143,64 @@ async function startLogStream(
   try {
     const podName = await findPodForSession(sessionId, namespace);
     if (!podName) {
+      // Try fixture fallback for local dev
+      const fixture = findFixture(sessionId);
+      if (fixture) {
+        console.log(`[ws] Streaming fixture for ${sessionId}: ${fixture}`);
+        send(ws, { type: "fixture-start", ts: Date.now(), sessionId });
+        const lines = readFileSync(fixture, "utf-8").split("\n").filter((l) => l.trim());
+        const events: unknown[] = [];
+        let cancelled = false;
+        let paused = false;
+        let speed = 1;
+        let lineIndex = 0;
+        let timer: ReturnType<typeof setTimeout> | null = null;
+
+        const baseDelay = 200;
+
+        const streamNext = (): void => {
+          if (cancelled) return;
+          if (paused) return; // will be resumed by set-speed message
+          if (lineIndex >= lines.length) {
+            const verdict = detectVerdict(events as Parameters<typeof detectVerdict>[0]);
+            if (verdict) {
+              send(ws, { type: "verdict", ts: Date.now(), sessionId, result: verdict.pass ? "PASS" : "FAIL" });
+            }
+            send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
+            return;
+          }
+          const line = lines[lineIndex++]!;
+          send(ws, { type: "log-line", ts: Date.now(), sessionId, line });
+          const ev = parseJsonlLine(line);
+          if (ev) events.push(ev);
+          timer = setTimeout(streamNext, baseDelay / speed);
+        };
+
+        // Listen for speed/pause control messages
+        const onSpeedMessage = (data: unknown): void => {
+          try {
+            const msg = JSON.parse(String(data)) as { type: string; speed?: number; sessionId?: string };
+            if (msg.type === "set-speed" && msg.sessionId === sessionId) {
+              if (msg.speed === 0) {
+                paused = true;
+                if (timer) { clearTimeout(timer); timer = null; }
+              } else {
+                speed = msg.speed ?? 1;
+                paused = false;
+                if (!timer) streamNext(); // resume
+              }
+            }
+          } catch { /* ignore */ }
+        };
+        ws.on("message", onSpeedMessage);
+
+        streamNext();
+        return () => {
+          cancelled = true;
+          if (timer) clearTimeout(timer);
+          ws.off("message", onSpeedMessage);
+        };
+      }
       send(ws, {
         type: "stream-error",
         ts: Date.now(),
@@ -178,7 +295,7 @@ export function attachWebSocketServer(
       broadcast(connectedClients, {
         type: "jobs-updated",
         ts: Date.now(),
-        jobs,
+        jobs: mergeWithFixtures(jobs),
       });
     },
     (err) => {
@@ -218,7 +335,7 @@ export function attachWebSocketServer(
         // proceed with empty list
       }
     }
-    send(ws, { type: "jobs-snapshot", ts: Date.now(), jobs });
+    send(ws, { type: "jobs-snapshot", ts: Date.now(), jobs: mergeWithFixtures(jobs) });
 
     // Per-connection subscription state: sessionId → cancel()
     const subscriptions = new Map<string, () => void>();
