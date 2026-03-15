@@ -25,8 +25,8 @@ export function useJobs() {
       const parsed = (msg.jobs || [])
         .map(parseJob)
         .sort((a, b) => {
-          const aTime = a.startTime ?? 0;
-          const bTime = b.startTime ?? 0;
+          const aTime = a.startTime ?? Number.MAX_SAFE_INTEGER;
+          const bTime = b.startTime ?? Number.MAX_SAFE_INTEGER;
           return bTime - aTime;
         });
       setJobs(parsed);
