@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: odin-throne-ui
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "odin-throne.labels" (dict "component" "monitor-ui") | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: odin-throne-ui
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
