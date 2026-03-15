@@ -43,9 +43,12 @@ export function stripTimestamp(line: string): string {
 }
 
 export function parseEntrypointLine(line: string): LogEntry {
-  // === Headers ===
+  // === Headers === and --- Section Markers ---
   if (/^===.*===$/.test(line)) {
     return { id: nextId(), type: "entrypoint-header", text: line.replace(/^=+\s*|\s*=+$/g, "") };
+  }
+  if (/^---.*---$/.test(line)) {
+    return { id: nextId(), type: "entrypoint-header", text: line.replace(/^-+\s*|\s*-+$/g, "") };
   }
   // [FATAL] errors — red, prominent
   if (line.startsWith("[FATAL]")) {
