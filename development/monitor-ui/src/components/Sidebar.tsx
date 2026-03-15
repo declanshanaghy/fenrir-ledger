@@ -1,5 +1,7 @@
 import type { DisplayJob } from "../lib/types";
+import { useTheme } from "../hooks/useTheme";
 import { JobCard } from "./JobCard";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 
 interface Props {
   jobs: DisplayJob[];
@@ -9,16 +11,23 @@ interface Props {
 }
 
 export function Sidebar({ jobs, activeSessionId, quote, onSelectSession }: Props) {
+  const { theme, setTheme } = useTheme();
+
   return (
     <nav className="sidebar" aria-label="Agent sessions">
       <div className="sidebar-header">
         <div className="brand">
-          <img src="/odin-dark.png" alt="Odin" aria-hidden="true" />
+          <img
+            src={theme === "light" ? "/odin-light.png" : "/odin-dark.png"}
+            alt="Odin"
+            aria-hidden="true"
+          />
           <h1>Hlidskjalf</h1>
         </div>
         <div className="quote" role="note">
           &ldquo;{quote}&rdquo;
         </div>
+        <ThemeSwitcher theme={theme} setTheme={setTheme} />
         <div className="count" aria-live="polite">
           {jobs.length} session{jobs.length !== 1 ? "s" : ""}
         </div>
