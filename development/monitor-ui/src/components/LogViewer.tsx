@@ -91,7 +91,7 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, onSetSpeed }
         onScroll={handleScroll}
       >
         {entries.map((entry) => (
-          <LogLine key={entry.id} entry={entry} agentKey={activeJob?.agentKey} agentName={activeJob?.agentName} />
+          <LogLine key={entry.id} entry={entry} {...(activeJob?.agentKey ? { agentKey: activeJob.agentKey } : {})} {...(activeJob?.agentName ? { agentName: activeJob.agentName } : {})} />
         ))}
       </div>
       <div className="log-controls">
@@ -153,7 +153,7 @@ function LogLine({ entry, agentKey, agentName }: { entry: LogEntry; agentKey?: s
       if (entry.detail === "thinking") {
         return <div className="ev-thinking">{entry.text}</div>;
       }
-      return <AgentBubble text={entry.text ?? ""} agentKey={agentKey} agentName={agentName} />;
+      return <AgentBubble text={entry.text ?? ""} {...(agentKey ? { agentKey } : {})} {...(agentName ? { agentName } : {})} />;
     case "tool-use":
       return <ToolBlock entry={entry} />;
     case "entrypoint-group":
