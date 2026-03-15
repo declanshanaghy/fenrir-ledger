@@ -1,0 +1,259 @@
+:root {
+  /* ── Fenrir base ──────────────────────────────── */
+  --void: #07070d;
+  --forge: #12121f;
+  --chain: #1a1a2e;
+  --gold: #c9920a;
+  --gold-bright: #f0b429;
+  --text-saga: #f5f5f5;
+  --text-rune: #a0a0b0;
+  --text-void: #606070;
+  --rune-border: #2a2a3e;
+  --teal-asgard: #4ecdc4;
+
+  /* ── Mayo: red + green — agent output ─────────── */
+  --mayo-red: #CF2734;
+  --mayo-green: #008B00;
+  --mayo-red-dim: #8b1a22;
+  --mayo-green-dim: #005a00;
+
+  /* ── Kildare: blue + white — tool calls ──────── */
+  --kildare-blue: #1E3A8A;
+  --kildare-white: #F0F0F0;
+  --kildare-blue-bright: #3B82F6;
+  --kildare-blue-dim: #152a5e;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body, #root { height: 100%; overflow: hidden; }
+body {
+  background: var(--void);
+  color: var(--text-saga);
+  font-family: 'Source Serif 4', serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Error banner ──────────────────────────────── */
+.error-banner {
+  display: none;
+  background: #7f1d1d;
+  color: #fca5a5;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  padding: 0.4rem 1rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+.error-banner.visible { display: block; }
+
+/* ── Layout ────────────────────────────────────── */
+.layout { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Sidebar ───────────────────────────────────── */
+.sidebar {
+  width: 300px; min-width: 300px; height: 100%;
+  overflow-y: auto;
+  border-right: 1px solid var(--rune-border);
+  background: var(--forge);
+  display: flex; flex-direction: column;
+}
+.sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--rune-border);
+  flex-shrink: 0;
+}
+.sidebar-header .brand {
+  display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;
+}
+.sidebar-header img {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 2px solid var(--gold);
+  background: var(--void);
+  mix-blend-mode: lighten;
+}
+.sidebar-header h1 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.1rem;
+  color: var(--gold);
+}
+.sidebar-header .quote {
+  font-style: italic; font-size: 0.75rem;
+  color: var(--text-rune); opacity: 0.8; line-height: 1.4;
+}
+.sidebar-header .count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; color: var(--text-void); margin-top: 0.5rem;
+}
+.card-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+
+/* ── Job cards ─────────────────────────────────── */
+.card {
+  padding: 0.6rem 0.75rem; border-radius: 4px; cursor: pointer;
+  margin-bottom: 2px; border-left: 3px solid transparent;
+  transition: background 0.15s;
+}
+.card:hover { background: var(--chain); }
+.card.active { background: var(--chain); border-left-color: var(--gold); }
+.card-top { display: flex; justify-content: space-between; align-items: center; }
+.card-agent { font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.8rem; }
+.card-status { font-size: 0.9rem; flex-shrink: 0; }
+.card-status.pulse { animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.card-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; color: var(--text-rune); margin-top: 0.15rem;
+}
+.card-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; color: var(--text-void); margin-top: 0.1rem;
+}
+
+/* ── Content area ──────────────────────────────── */
+.content {
+  flex: 1; height: 100%;
+  display: flex; flex-direction: column;
+  background: var(--void); min-width: 0;
+}
+.content-header {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--rune-border);
+  background: var(--forge); flex-shrink: 0;
+  display: flex; align-items: center; gap: 1rem;
+}
+.content-header .session-title {
+  font-family: 'Cinzel', serif; font-size: 0.85rem;
+  color: var(--gold); flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ws-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+  padding: 0.15rem 0.5rem; border-radius: 3px;
+  border: 1px solid var(--rune-border); flex-shrink: 0;
+}
+.ws-badge.connecting { color: var(--gold-bright); border-color: var(--gold-bright); }
+.ws-badge.open       { color: var(--teal-asgard); border-color: var(--teal-asgard); }
+.ws-badge.closed     { color: var(--text-void); border-color: var(--rune-border); }
+.ws-badge.error      { color: #ef4444; border-color: #ef4444; }
+
+/* ── Log terminal ──────────────────────────────── */
+.log-terminal {
+  flex: 1; overflow-y: auto; padding: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem; line-height: 1.6;
+  color: var(--text-saga); scroll-behavior: smooth;
+}
+.log-line { white-space: pre-wrap; word-break: break-all; }
+.log-error { color: #ef4444; }
+.log-system { color: var(--text-void); font-style: italic; }
+.log-end {
+  color: var(--gold); font-style: italic;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--rune-border);
+  padding-top: 0.5rem;
+}
+
+/* ── Empty state ───────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; flex: 1; gap: 0.75rem; color: var(--text-void);
+}
+.empty-state .empty-title { font-family: 'Cinzel', serif; font-size: 1.2rem; }
+.empty-state .empty-sub { font-size: 0.85rem; font-style: italic; }
+
+/* ── JSONL events — system ─────────────────────── */
+.ev-system {
+  color: var(--text-void); font-style: italic;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--rune-border);
+  margin-bottom: 0.3rem;
+}
+.ev-system .ev-label { color: var(--gold); font-weight: 600; }
+
+/* ── JSONL events — assistant (Mayo) ───────────── */
+.ev-assistant-text {
+  color: var(--mayo-green);
+  white-space: pre-wrap; line-height: 1.5;
+  margin-bottom: 0.3rem;
+}
+.ev-turn-divider {
+  border-top: 2px solid var(--mayo-red);
+  margin: 0.6rem 0; padding-top: 0.3rem;
+  color: var(--mayo-red);
+  font-size: 0.7rem; font-weight: 700;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.ev-turn-divider::before {
+  content: ''; flex: 0 0 4px; height: 12px;
+  background: var(--mayo-green); border-radius: 1px;
+}
+
+/* ── JSONL events — tool calls (Kildare) ──────── */
+.ev-tool {
+  background: var(--kildare-blue-dim);
+  border: 1px solid var(--kildare-blue);
+  border-radius: 4px; margin: 0.3rem 0; overflow: hidden;
+}
+.ev-tool-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.35rem 0.6rem; cursor: pointer; user-select: none;
+}
+.ev-tool-header:hover { background: var(--kildare-blue); }
+.ev-tool-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; padding: 0.1rem 0.4rem;
+  border-radius: 2px; font-weight: 600;
+  background: var(--kildare-blue); color: var(--kildare-white);
+}
+.ev-tool-badge.bash { background: #1a3320; color: #4ade80; }
+.ev-tool-badge.read,
+.ev-tool-badge.grep,
+.ev-tool-badge.glob { background: var(--kildare-blue); color: var(--kildare-white); }
+.ev-tool-badge.edit,
+.ev-tool-badge.write { background: #2d1a5e; color: #c084fc; }
+.ev-tool-badge.agent { background: var(--mayo-red-dim); color: #fca5a5; }
+.ev-tool-preview {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; color: var(--kildare-white); opacity: 0.6;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+}
+.ev-tool-chevron {
+  color: var(--kildare-blue-bright);
+  font-size: 0.7rem; transition: transform 0.15s;
+}
+.ev-tool.open .ev-tool-chevron { transform: rotate(90deg); }
+.ev-tool-body {
+  display: none; padding: 0.4rem 0.6rem;
+  border-top: 1px solid var(--kildare-blue);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; color: var(--kildare-white); opacity: 0.8;
+  white-space: pre-wrap; word-break: break-word;
+  max-height: 200px; overflow-y: auto;
+}
+.ev-tool.open .ev-tool-body { display: block; }
+.ev-tool-error { border-color: var(--mayo-red); }
+.ev-tool-error .ev-tool-badge { background: var(--mayo-red-dim); color: #fca5a5; }
+.ev-tool-result {
+  border-top: 1px dashed var(--kildare-blue);
+  margin-top: 0.3rem; padding-top: 0.3rem;
+  color: var(--kildare-white); opacity: 0.5;
+}
+
+/* ── User events ───────────────────────────────── */
+.ev-user {
+  color: var(--text-void); font-style: italic;
+  padding: 0.2rem 0; font-size: 0.7rem;
+}
+
+/* ── Responsive ────────────────────────────────── */
+@media (max-width: 600px) {
+  .layout { flex-direction: column; overflow: auto; }
+  .sidebar {
+    width: 100%; min-width: unset;
+    height: auto; max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid var(--rune-border);
+  }
+  .content { height: 60vh; }
+  html, body { overflow: auto; }
+}
