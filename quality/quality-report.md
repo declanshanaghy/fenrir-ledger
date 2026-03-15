@@ -6,6 +6,53 @@
 <!-- The "Loki QA Critique" section is auto-generated and will be overwritten on each run. -->
 <!-- Styled with the voice of Loki (wolf son of Fenrir) and the dark Norse aesthetic. -->
 
+## QA Verdict: Issue #933 — Migrate Odin's Throne Auth to oauth2-proxy Sidecar
+
+**Branch:** `security/issue-933-oauth2-proxy-odin-throne`
+**Date:** 2026-03-15
+**Verdict: PASS**
+
+### Scope Assessment
+
+This is an infrastructure-only change. No frontend application code (`development/frontend/`) was modified. The changed files are:
+
+| File | Change | Category |
+|------|--------|----------|
+| `development/monitor/src/auth.ts` | Deleted | Monitor service — infrastructure |
+| `development/monitor/src/index.ts` | Stripped auth middleware | Monitor service — infrastructure |
+| `infrastructure/helm/odin-throne/templates/deployment.yaml` | Added oauth2-proxy sidecar | Helm chart — banned from automated testing |
+| `infrastructure/helm/odin-throne/values.yaml` | oauth2Proxy section | Helm values — banned from automated testing |
+| `security/architecture/auth-architecture.md` | New section 8 documenting sidecar pattern | Static documentation |
+
+**Infrastructure-only change — 0 new tests written. This is correct per test guidelines.**
+
+### Rationale — Why Zero Tests
+
+The decision tree (per test guidelines §"Decision Order"):
+
+1. Can this be tested with pure logic? — No. The deleted `auth.ts` contained handrolled HMAC-SHA256 session logic running in Node.js, but it is now deleted. There is no application logic to unit test.
+2. Can this be tested with component render or API route handler? — No. `development/monitor/` is a standalone Hono service, not a Next.js route handler. It has no `src/__tests__/` directory and no vitest integration with the frontend test runner.
+3. Does this require multi-page navigation or real browser? — No. The oauth2-proxy sidecar enforces auth at the infrastructure layer (Kubernetes reverse proxy). Functional validation requires a live GKE cluster with the oauth2-proxy pod running, which is outside automated test scope.
+
+The auth delegation to oauth2-proxy is validated at deploy time, not in unit tests. This matches the pattern already established for Umami (issue #943).
+
+### Vitest Suite Status
+
+- Frontend Vitest: 771 tests across 59 files — all passing
+- No tests added, none removed, no regressions introduced
+
+### TypeScript
+
+- `tsc --noEmit` via `quality/scripts/verify.sh --step tsc`: PASS
+
+### Security Notes
+
+The deletion of `auth.ts` removes a custom auth implementation in favor of the battle-tested oauth2-proxy sidecar. This is a reduction of attack surface, not an increase. The `/healthz` route remains correctly public (`--skip-auth-route=GET=^/healthz$`). All other routes (`/api/jobs`, `/ws`) are now gated by oauth2-proxy before reaching the Hono process.
+
+The `AUTH_DISABLED` escape hatch (which allowed bypassing auth when `SESSION_SECRET` was absent in non-production) is also removed — a security improvement.
+
+---
+
 ## QA Verdict: Issue #893 — Free Trial Nav Highlight
 
 **Branch:** `fix/issue-893-free-trial-nav-highlight`
