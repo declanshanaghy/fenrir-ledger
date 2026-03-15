@@ -121,13 +121,8 @@ oauth2Proxy:
       cpu: "200m"
       memory: "128Mi"
       ephemeral-storage: "128Mi"
-  # All secret values MUST be overridden at deploy time via --set or CI secrets.
-  # Never commit real credentials here.
-  secrets:
-    googleClientId: "REPLACE_WITH_GOOGLE_CLIENT_ID"
-    googleClientSecret: "REPLACE_WITH_GOOGLE_CLIENT_SECRET"
-    cookieSecret: "REPLACE_WITH_32_BYTE_HEX_COOKIE_SECRET"
-    allowedEmails: "declanshanaghy@gmail.com\n"
+  # oauth2-proxy secrets are created imperatively by the deploy-umami CI step.
+  # They are NOT rendered from values.yaml. See secrets.yaml template for details.
 
 # -- Service ---------------------------------------------------------------
 service:

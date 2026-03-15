@@ -73,7 +73,7 @@ export interface ReportMeta {
  */
 function stripK8sTimestamp(line: string): string {
   const match = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s+(.*)$/.exec(line);
-  return match ? match[1] : line;
+  return match?.[1] ?? line;
 }
 
 /** Parse a single raw log line into a JsonEvent, or null if not valid JSON. */
@@ -131,13 +131,14 @@ export function extractTurns(events: JsonEvent[]): Turn[] {
         turn.texts.push(block.text);
       } else if (block.type === "tool_use" && block.id && block.name) {
         const res = toolResults.get(block.id);
-        turn.tools.push({
+        const tool: ToolCall = {
           id: block.id,
           name: block.name,
           input: block.input ?? {},
-          result: res?.content,
-          isError: res?.isError,
-        });
+        };
+        if (res?.content !== undefined) tool.result = res.content;
+        if (res?.isError !== undefined) tool.isError = res.isError;
+        turn.tools.push(tool);
       }
     }
 
@@ -167,7 +168,7 @@ export function detectVerdict(events: JsonEvent[]): Verdict | null {
         const cmd = String(tool.input.command);
         if (/Loki QA Verdict/i.test(cmd)) {
           const bodyMatch = cmd.match(/--body\s+["']?([\s\S]*?)(?:["']?\s*$)/);
-          const body = bodyMatch ? bodyMatch[1] : cmd;
+          const body = bodyMatch?.[1] ?? cmd;
           verdict = { text: body, pass: /PASS/i.test(cmd) };
         }
       }
@@ -241,8 +242,9 @@ function toolInputPreview(tool: ToolCall): string {
     return esc(String(tool.input.pattern));
   }
   const keys = Object.keys(tool.input ?? {});
-  if (keys.length > 0) {
-    const first = tool.input[keys[0]];
+  const firstKey = keys[0];
+  if (firstKey !== undefined) {
+    const first = tool.input[firstKey];
     return esc(String(first).slice(0, 100));
   }
   return "";

@@ -73,7 +73,27 @@ app:
     periodSeconds: 5
     failureThreshold: 12
 
-# -- Service ---------------------------------------------------------------
+# -- UI Deployment ---------------------------------------------------------
+ui:
+  replicaCount: 1
+  revisionHistoryLimit: 3
+
+  image:
+    repository: us-central1-docker.pkg.dev/fenrir-ledger-prod/fenrir-images/odin-throne-ui
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "32Mi"
+      ephemeral-storage: "64Mi"
+    limits:
+      cpu: "100m"
+      memory: "64Mi"
+      ephemeral-storage: "128Mi"
+
+# -- Service (API) ---------------------------------------------------------
 service:
   type: ClusterIP
   port: 80
@@ -90,7 +110,7 @@ ingress:
     networking.gke.io/managed-certificates: "odin-throne-cert"
     kubernetes.io/ingress.allow-http: "true"
     kubernetes.io/ingress.global-static-ip-name: "monitor-ip"
-    cloud.google.com/backend-config: '{"default":"odin-throne-backend-config"}'
+    cloud.google.com/backend-config: '{"default":"odin-throne-ui-backend-config"}'
 
   backendConfig:
     enabled: true
@@ -100,8 +120,8 @@ ingress:
       healthyThreshold: 1
       unhealthyThreshold: 3
       type: HTTP
-      requestPath: /healthz
-      port: 3001
+      requestPath: /nginx-health
+      port: 80
     timeoutSec: 30
     connectionDraining:
       drainingTimeoutSec: 15

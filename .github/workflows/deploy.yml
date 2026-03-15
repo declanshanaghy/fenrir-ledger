@@ -27,6 +27,9 @@
 #   TF_VAR_BILLING_ACCOUNT_ID   — GCP billing account ID for Terraform
 #   CLAUDE_CODE_OAUTH_TOKEN     — OAuth subscription token for agent sandboxes (claude setup-token)
 #   GH_TOKEN_AGENTS             — GitHub PAT for agent repo access (commits, PRs, issues)
+#   UMAMI_OAUTH2_PROXY_COOKIE_SECRET — 32-byte cookie secret for Umami oauth2-proxy sidecar
+#                                       Generate: openssl rand -hex 16  (32 hex chars = 32 bytes)
+#                                       MUST be exactly 16, 24, or 32 bytes — see oauth2-proxy docs
 # --------------------------------------------------------------------------
 
 name: Deploy to GKE
@@ -367,6 +370,14 @@ jobs:
             --wait \
             --timeout=5m
 
+      - name: Verify fenrir-app
+        run: |
+          echo "### Fenrir App Deploy" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n fenrir-app -l app.kubernetes.io/name=fenrir-app >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl rollout status deployment/fenrir-app -n fenrir-app --timeout=60s
+
   # --------------------------------------------------------------------------
   # Job 3c: Deploy Umami analytics to GKE
   # --------------------------------------------------------------------------
@@ -412,6 +423,19 @@ jobs:
             --from-literal=APP_SECRET="umami-app-secret-change-in-prod" \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Create/update Umami oauth2-proxy secrets
+        # oauth2-proxy requires OAUTH2_PROXY_COOKIE_SECRET to be exactly 16, 24, or 32 bytes.
+        # This secret is created imperatively (NOT via Helm template) to prevent placeholder
+        # values from values.yaml overwriting real credentials on every helm upgrade.
+        run: |
+          kubectl create secret generic umami-oauth2-proxy-secrets \
+            --namespace=fenrir-analytics \
+            --from-literal=GOOGLE_CLIENT_ID="${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}" \
+            --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            --from-literal=OAUTH2_PROXY_COOKIE_SECRET="${{ secrets.UMAMI_OAUTH2_PROXY_COOKIE_SECRET }}" \
+            --from-literal=emails.txt="declanshanaghy@gmail.com" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Set up Helm
         uses: azure/setup-helm@v4
         with:
@@ -426,13 +450,27 @@ jobs:
             --wait \
             --timeout=5m
 
+      - name: Verify umami
+        run: |
+          echo "### Umami Deploy" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n fenrir-analytics >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl rollout status deployment/umami -n fenrir-analytics --timeout=60s
+
   # --------------------------------------------------------------------------
   # Job 3d: Deploy Odin's Throne monitor to GKE
   # --------------------------------------------------------------------------
   deploy-odin-throne:
     name: Deploy Odin's Throne
-    needs: build-and-push-monitor
-    if: ${{ !inputs.skip_deploy && needs.build-and-push-monitor.result == 'success' }}
+    needs: [build-and-push-monitor, build-and-push-monitor-ui, detect-changes]
+    if: >-
+      always() && !inputs.skip_deploy &&
+      (needs.build-and-push-monitor.result == 'success' ||
+       needs.build-and-push-monitor-ui.result == 'success' ||
+       needs.detect-changes.outputs.helm == 'true') &&
+      needs.build-and-push-monitor.result != 'failure' &&
+      needs.build-and-push-monitor-ui.result != 'failure'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -474,91 +512,16 @@ jobs:
             -f ./infrastructure/helm/odin-throne/values-prod.yaml \
             --set app.image.repository=${{ env.REGISTRY }}/${{ env.MONITOR_IMAGE_NAME }} \
             --set app.image.tag=${{ env.IMAGE_TAG }} \
+            --set ui.image.repository=${{ env.REGISTRY }}/${{ env.MONITOR_UI_IMAGE_NAME }} \
+            --set ui.image.tag=${{ env.IMAGE_TAG }} \
             --wait \
             --timeout=5m
 
-  # --------------------------------------------------------------------------
-  # Job 4: Verify all deployments + post-deploy health check
-  # --------------------------------------------------------------------------
-  verify-deployment:
-    name: Verify Deployment
-    needs: [deploy-fenrir-app, deploy-odin-throne, deploy-umami, deploy-redis]
-    if: ${{ always() && !inputs.skip_deploy }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
-
-      - name: Get GKE credentials
-        uses: google-github-actions/get-gke-credentials@v3
-        with:
-          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GCP_REGION }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Deployment summary
+      - name: Verify odin-throne
         run: |
-          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| fenrir-app | ${{ needs.deploy-fenrir-app.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| redis | ${{ needs.deploy-redis.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| umami | ${{ needs.deploy-umami.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| odin-throne | ${{ needs.deploy-odin-throne.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### Pod Status" >> $GITHUB_STEP_SUMMARY
+          echo "### Odin's Throne Deploy" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -n fenrir-app -l app.kubernetes.io/name=fenrir-app >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n fenrir-monitor >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### Service Endpoints" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get svc -n fenrir-app >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### Ingress" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get ingress -n fenrir-app >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
-      - name: Health check via Ingress
-        run: |
-          INGRESS_IP=$(kubectl get ingress fenrir-app -n fenrir-app \
-            -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
-
-          if [ -n "$INGRESS_IP" ]; then
-            echo "Checking health at http://$INGRESS_IP/api/health"
-            RETRIES=5
-            for i in $(seq 1 $RETRIES); do
-              if curl -sf --max-time 10 "http://$INGRESS_IP/api/health"; then
-                echo ""
-                echo "Health check passed on attempt $i"
-                echo "### Health Check Passed" >> $GITHUB_STEP_SUMMARY
-                exit 0
-              fi
-              echo "Attempt $i/$RETRIES failed, retrying in 15s..."
-              sleep 15
-            done
-            echo "::warning::Health check failed after $RETRIES attempts (may need DNS/SSL propagation)"
-            echo "### Health Check Warning" >> $GITHUB_STEP_SUMMARY
-            echo "Health check did not pass after $RETRIES attempts. This may be expected if SSL is still provisioning." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "::warning::Ingress external IP not yet assigned. SSL certificate provisioning may take 15-60 minutes."
-            echo "### Health Check Skipped" >> $GITHUB_STEP_SUMMARY
-            echo "Ingress IP not yet available. SSL provisioning may still be in progress." >> $GITHUB_STEP_SUMMARY
-          fi
+          kubectl rollout status deployment/odin-throne -n fenrir-monitor --timeout=60s
+          kubectl rollout status deployment/odin-throne-ui -n fenrir-monitor --timeout=60s

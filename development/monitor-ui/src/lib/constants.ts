@@ -50,7 +50,7 @@ export const ODIN_QUOTES = [
 ] as const;
 
 export function randomQuote(): string {
-  return ODIN_QUOTES[Math.floor(Math.random() * ODIN_QUOTES.length)];
+  return ODIN_QUOTES[Math.floor(Math.random() * ODIN_QUOTES.length)] ?? ODIN_QUOTES[0];
 }
 
 export function toolBadgeClass(name: string): string {
@@ -71,6 +71,7 @@ export function toolPreview(name: string, input?: Record<string, unknown>): stri
   if ((name === "Grep" || name === "Glob") && input.pattern)
     return String(input.pattern);
   const keys = Object.keys(input);
-  if (keys.length > 0) return String(input[keys[0]]).slice(0, 80);
+  const firstKey = keys[0];
+  if (firstKey !== undefined) return String(input[firstKey]).slice(0, 80);
   return "";
 }
