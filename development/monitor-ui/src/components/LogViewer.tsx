@@ -271,7 +271,7 @@ function LogLine({ entry, agentKey, agentName }: { entry: LogEntry; agentKey?: s
         </div>
       );
     case "verdict": {
-      const color = entry.verdictResult === "PASS" ? "#22c55e" : "#ef4444";
+      const color = entry.verdictResult === "PASS" ? "var(--success-strong)" : "var(--error-strong)";
       return (
         <span style={{ color, fontWeight: "bold" }}>
           &mdash; Verdict: {entry.verdictResult} &mdash;
