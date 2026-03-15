@@ -249,6 +249,7 @@ jobs:
             NEXT_PUBLIC_BUILD_ID=${{ github.sha }}
             NEXT_PUBLIC_APP_VERSION=${{ github.sha }}
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+            NEXT_PUBLIC_UMAMI_WEBSITE_ID=ce25059e-57c4-44f9-ad92-389d2bd15e4d
 
       - name: Output image details
         run: |
