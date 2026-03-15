@@ -86,10 +86,12 @@ describe("mapAgentJobToJob — startedAt mapping (prerequisite for sort)", () =>
     expect(job.startedAt).toBeNull();
   });
 
-  it("maps active status to 'running'", () => {
+  it("maps active status to 'pending' (pod may still be scheduling)", () => {
+    // Issue #965: job.active=1 means pod was created but not necessarily running.
+    // Status must stay "pending" until pod phase confirms "Running".
     const agentJob = makeAgentJob({ status: "active" });
     const job = mapAgentJobToJob(agentJob);
-    expect(job.status).toBe("running");
+    expect(job.status).toBe("pending");
   });
 });
 
