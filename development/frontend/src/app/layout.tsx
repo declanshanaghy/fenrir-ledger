@@ -25,6 +25,7 @@ import {
 } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider } from "next-themes";
+import { UmamiScript } from "@/components/analytics/UmamiScript";
 import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { EntitlementProvider } from "@/contexts/EntitlementContext";
@@ -146,15 +147,10 @@ export default async function RootLayout({
         {/* Umami — privacy-first analytics. Respects Do Not Track by default.
             Only rendered when NEXT_PUBLIC_UMAMI_WEBSITE_ID is set.
             No PII is collected (Umami default behaviour). */}
-        {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
-          <Script
-            id="umami-analytics"
-            src="https://analytics.fenrirledger.com/script.js"
-            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-            strategy="afterInteractive"
-            nonce={nonce}
-          />
-        )}
+        <UmamiScript
+          websiteId={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+          nonce={nonce}
+        />
       </body>
     </html>
   );
