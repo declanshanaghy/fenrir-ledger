@@ -171,6 +171,25 @@ describe("GET /static/odin-dark.png", () => {
       expect(res.headers.get("cache-control")).toContain("public");
     }
   });
+
+  // Loki #909 — file is present in public/, assert 200 strongly (not just not-401)
+  it("returns 200 with non-empty PNG body when public/odin-dark.png exists", async () => {
+    const req = new Request("http://localhost:3001/static/odin-dark.png");
+    const res = await app.fetch(req);
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("image/png");
+    const body = await res.arrayBuffer();
+    expect(body.byteLength).toBeGreaterThan(0);
+  });
+
+  // Loki #909 — HTML must reference the avatar at /static/odin-dark.png
+  it("HTML page includes img tag pointing to /static/odin-dark.png", async () => {
+    const req = authedRequest("http://localhost:3001/");
+    const res = await app.fetch(req);
+    const html = await res.text();
+    expect(html).toContain('src="/static/odin-dark.png"');
+  });
 });
 
 describe("GET /js/stream.js", () => {
