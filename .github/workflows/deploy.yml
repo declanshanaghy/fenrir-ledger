@@ -73,17 +73,30 @@ env:
 
 jobs:
   # --------------------------------------------------------------------------
-  # Job 0: Detect which services changed — gates all build jobs
+  # Job 0: Detect which services changed — gates all build/deploy jobs
+  #
+  # Outputs (8):
+  #   app        — development/frontend/, Dockerfile, package*.json
+  #   k8s-app    — infrastructure/k8s/app/  (triggers build-app AND deploy-app)
+  #   monitor    — development/monitor/
+  #   monitor-ui — development/monitor-ui/
+  #   helm-odin  — infrastructure/helm/odin-throne/
+  #   infra      — infrastructure/terraform/, infrastructure/monitoring/
+  #   redis      — infrastructure/k8s/app/redis-statefulset.yaml
+  #   umami      — infrastructure/helm/umami/
   # --------------------------------------------------------------------------
   detect-changes:
     name: Detect Changes
     runs-on: ubuntu-latest
     outputs:
       app: ${{ steps.filter.outputs.app }}
+      k8s-app: ${{ steps.filter.outputs.k8s-app }}
       monitor: ${{ steps.filter.outputs.monitor }}
       monitor-ui: ${{ steps.filter.outputs.monitor-ui }}
+      helm-odin: ${{ steps.filter.outputs.helm-odin }}
       infra: ${{ steps.filter.outputs.infra }}
-      helm: ${{ steps.filter.outputs.helm }}
+      redis: ${{ steps.filter.outputs.redis }}
+      umami: ${{ steps.filter.outputs.umami }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -95,33 +108,45 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "app=true" >> "$GITHUB_OUTPUT"
+            echo "k8s-app=true" >> "$GITHUB_OUTPUT"
             echo "monitor=true" >> "$GITHUB_OUTPUT"
             echo "monitor-ui=true" >> "$GITHUB_OUTPUT"
+            echo "helm-odin=true" >> "$GITHUB_OUTPUT"
             echo "infra=true" >> "$GITHUB_OUTPUT"
-            echo "helm=true" >> "$GITHUB_OUTPUT"
+            echo "redis=true" >> "$GITHUB_OUTPUT"
+            echo "umami=true" >> "$GITHUB_OUTPUT"
             echo "### Manual dispatch — building all services" >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
           CHANGED=$(git diff --name-only HEAD~1 HEAD)
-          check() { echo "$CHANGED" | grep -q "$1" && echo "true" || echo "false"; }
-          APP=$(check "^development/frontend/\|^infrastructure/k8s/app/\|^Dockerfile\|^package.json\|^package-lock.json")
+          check() { echo "$CHANGED" | grep -qE "$1" && echo "true" || echo "false"; }
+          APP=$(check "^development/frontend/|^Dockerfile$|^package\.json$|^package-lock\.json$")
+          K8S_APP=$(check "^infrastructure/k8s/app/")
           MONITOR=$(check "^development/monitor/")
           MONITOR_UI=$(check "^development/monitor-ui/")
-          INFRA=$(check "^infrastructure/\(terraform\|monitoring\)")
-          HELM=$(check "^infrastructure/helm/")
+          HELM_ODIN=$(check "^infrastructure/helm/odin-throne/")
+          INFRA=$(check "^infrastructure/(terraform|monitoring)/")
+          REDIS=$(check "^infrastructure/k8s/app/redis-statefulset\.yaml$")
+          UMAMI=$(check "^infrastructure/helm/umami/")
           echo "app=$APP" >> "$GITHUB_OUTPUT"
+          echo "k8s-app=$K8S_APP" >> "$GITHUB_OUTPUT"
           echo "monitor=$MONITOR" >> "$GITHUB_OUTPUT"
           echo "monitor-ui=$MONITOR_UI" >> "$GITHUB_OUTPUT"
+          echo "helm-odin=$HELM_ODIN" >> "$GITHUB_OUTPUT"
           echo "infra=$INFRA" >> "$GITHUB_OUTPUT"
-          echo "helm=$HELM" >> "$GITHUB_OUTPUT"
+          echo "redis=$REDIS" >> "$GITHUB_OUTPUT"
+          echo "umami=$UMAMI" >> "$GITHUB_OUTPUT"
           echo "### Changed Services" >> $GITHUB_STEP_SUMMARY
           echo "| Service | Changed |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
           echo "| app | $APP |" >> $GITHUB_STEP_SUMMARY
+          echo "| k8s-app | $K8S_APP |" >> $GITHUB_STEP_SUMMARY
           echo "| monitor | $MONITOR |" >> $GITHUB_STEP_SUMMARY
           echo "| monitor-ui | $MONITOR_UI |" >> $GITHUB_STEP_SUMMARY
+          echo "| helm-odin | $HELM_ODIN |" >> $GITHUB_STEP_SUMMARY
           echo "| infra | $INFRA |" >> $GITHUB_STEP_SUMMARY
-          echo "| helm | $HELM |" >> $GITHUB_STEP_SUMMARY
+          echo "| redis | $REDIS |" >> $GITHUB_STEP_SUMMARY
+          echo "| umami | $UMAMI |" >> $GITHUB_STEP_SUMMARY
 
   # --------------------------------------------------------------------------
   # Job 1: Terraform — ensure GKE infrastructure is up to date
@@ -180,8 +205,8 @@ jobs:
   # --------------------------------------------------------------------------
   build-and-push:
     name: Build & Push Image
-    needs: [terraform, detect-changes]
-    if: always() && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') && needs.detect-changes.outputs.app == 'true'
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.app == 'true' || needs.detect-changes.outputs.k8s-app == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -239,8 +264,8 @@ jobs:
   # --------------------------------------------------------------------------
   build-and-push-monitor:
     name: Build & Push Monitor Image
-    needs: [terraform, detect-changes]
-    if: always() && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') && needs.detect-changes.outputs.monitor == 'true'
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.monitor == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -292,8 +317,8 @@ jobs:
   # --------------------------------------------------------------------------
   build-and-push-monitor-ui:
     name: Build & Push Monitor UI Image
-    needs: [terraform, detect-changes]
-    if: always() && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') && needs.detect-changes.outputs.monitor-ui == 'true'
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.monitor-ui == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -345,8 +370,8 @@ jobs:
   # --------------------------------------------------------------------------
   deploy-redis:
     name: Deploy Redis
-    needs: terraform
-    if: ${{ !inputs.skip_deploy && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') }}
+    needs: detect-changes
+    if: ${{ !inputs.skip_deploy && needs.detect-changes.outputs.redis == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -395,8 +420,12 @@ jobs:
   # --------------------------------------------------------------------------
   deploy-fenrir-app:
     name: Deploy Fenrir App
-    needs: build-and-push
-    if: ${{ !inputs.skip_deploy && needs.build-and-push.result == 'success' }}
+    needs: [build-and-push, detect-changes]
+    if: >-
+      always() && !inputs.skip_deploy &&
+      (needs.build-and-push.result == 'success' ||
+       (needs.build-and-push.result == 'skipped' && needs.detect-changes.outputs.k8s-app == 'true')) &&
+      needs.build-and-push.result != 'failure'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -465,6 +494,26 @@ jobs:
             --from-literal=gh-token="${{ secrets.GH_TOKEN_AGENTS }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Resolve image tag from cluster (Helm/K8s-only deploy)
+        id: resolve-tag
+        run: |
+          # When only k8s manifests changed (no new image built), use the tag
+          # already running in the cluster. Fallback to IMAGE_TAG for first deploys.
+          if [ "${{ needs.build-and-push.result }}" = "skipped" ]; then
+            CLUSTER_TAG=$(kubectl get deployment fenrir-app -n fenrir-app \
+              -o jsonpath='{.spec.template.spec.containers[?(@.name=="fenrir-app")].image}' 2>/dev/null \
+              | rev | cut -d: -f1 | rev)
+            if [ -n "$CLUSTER_TAG" ] && [ "$CLUSTER_TAG" != "fenrir-app" ]; then
+              echo "tag=$CLUSTER_TAG" >> "$GITHUB_OUTPUT"
+              echo "Resolved cluster tag: $CLUSTER_TAG"
+            else
+              echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
+              echo "No existing deployment found, using IMAGE_TAG: ${{ env.IMAGE_TAG }}"
+            fi
+          else
+            echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set up Helm
         uses: azure/setup-helm@v4
         with:
@@ -477,7 +526,7 @@ jobs:
             --namespace=fenrir-app \
             -f ./infrastructure/helm/fenrir-app/values-prod.yaml \
             --set app.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-            --set app.image.tag=${{ env.IMAGE_TAG }} \
+            --set app.image.tag=${{ steps.resolve-tag.outputs.tag }} \
             --wait \
             --timeout=5m
 
@@ -494,8 +543,8 @@ jobs:
   # --------------------------------------------------------------------------
   deploy-umami:
     name: Deploy Umami
-    needs: terraform
-    if: ${{ !inputs.skip_deploy && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') }}
+    needs: detect-changes
+    if: ${{ !inputs.skip_deploy && needs.detect-changes.outputs.umami == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -579,7 +628,9 @@ jobs:
       always() && !inputs.skip_deploy &&
       (needs.build-and-push-monitor.result == 'success' ||
        needs.build-and-push-monitor-ui.result == 'success' ||
-       needs.detect-changes.outputs.helm == 'true') &&
+       (needs.build-and-push-monitor.result == 'skipped' &&
+        needs.build-and-push-monitor-ui.result == 'skipped' &&
+        needs.detect-changes.outputs.helm-odin == 'true')) &&
       needs.build-and-push-monitor.result != 'failure' &&
       needs.build-and-push-monitor-ui.result != 'failure'
     runs-on: ubuntu-latest
@@ -623,6 +674,44 @@ jobs:
             --from-literal=emails.txt="declanshanaghy@gmail.com" \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Resolve monitor image tag from cluster (Helm-only deploy)
+        id: resolve-monitor-tag
+        run: |
+          # When only Helm files changed (no new image built), use the tag
+          # already running in the cluster. Fallback to IMAGE_TAG for first deploys.
+          if [ "${{ needs.build-and-push-monitor.result }}" = "skipped" ]; then
+            CLUSTER_TAG=$(kubectl get deployment odin-throne -n fenrir-monitor \
+              -o jsonpath='{.spec.template.spec.containers[?(@.name=="odin-throne")].image}' 2>/dev/null \
+              | rev | cut -d: -f1 | rev)
+            if [ -n "$CLUSTER_TAG" ] && [ "$CLUSTER_TAG" != "odin-throne" ]; then
+              echo "tag=$CLUSTER_TAG" >> "$GITHUB_OUTPUT"
+              echo "Resolved cluster monitor tag: $CLUSTER_TAG"
+            else
+              echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
+              echo "No existing deployment found, using IMAGE_TAG: ${{ env.IMAGE_TAG }}"
+            fi
+          else
+            echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolve monitor-ui image tag from cluster (Helm-only deploy)
+        id: resolve-monitor-ui-tag
+        run: |
+          if [ "${{ needs.build-and-push-monitor-ui.result }}" = "skipped" ]; then
+            CLUSTER_TAG=$(kubectl get deployment odin-throne-ui -n fenrir-monitor \
+              -o jsonpath='{.spec.template.spec.containers[?(@.name=="odin-throne-ui")].image}' 2>/dev/null \
+              | rev | cut -d: -f1 | rev)
+            if [ -n "$CLUSTER_TAG" ] && [ "$CLUSTER_TAG" != "odin-throne-ui" ]; then
+              echo "tag=$CLUSTER_TAG" >> "$GITHUB_OUTPUT"
+              echo "Resolved cluster monitor-ui tag: $CLUSTER_TAG"
+            else
+              echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
+              echo "No existing deployment found, using IMAGE_TAG: ${{ env.IMAGE_TAG }}"
+            fi
+          else
+            echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set up Helm
         uses: azure/setup-helm@v4
         with:
@@ -635,9 +724,9 @@ jobs:
             --namespace=fenrir-monitor \
             -f ./infrastructure/helm/odin-throne/values-prod.yaml \
             --set app.image.repository=${{ env.REGISTRY }}/${{ env.MONITOR_IMAGE_NAME }} \
-            --set app.image.tag=${{ env.IMAGE_TAG }} \
+            --set app.image.tag=${{ steps.resolve-monitor-tag.outputs.tag }} \
             --set ui.image.repository=${{ env.REGISTRY }}/${{ env.MONITOR_UI_IMAGE_NAME }} \
-            --set ui.image.tag=${{ env.IMAGE_TAG }} \
+            --set ui.image.tag=${{ steps.resolve-monitor-ui-tag.outputs.tag }} \
             --wait \
             --timeout=5m
 
