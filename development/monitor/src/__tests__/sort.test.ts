@@ -267,8 +267,10 @@ describe("Fixture jobs mixed with live jobs (AC: fixture sessions sorted correct
 
 describe("WebSocket update event sort (AC: sort maintained on updates)", () => {
   /**
-   * Simulate the useJobs handleMessage sort — the same logic runs in the
-   * monitor-ui hook and mirrors what the server sends.
+   * Simulate the useJobs handleMessage sort — mirrors development/monitor-ui/src/hooks/useJobs.ts.
+   *
+   * Issue #984 fix: pending jobs (null startTime) float to the TOP via
+   * Number.MAX_SAFE_INTEGER so newly dispatched agents always appear first.
    */
   function simulateHandleMessage(rawJobs: Array<{ startedAt: string | null; sessionId: string }>): string[] {
     const parsed = rawJobs.map((j) => ({
@@ -276,8 +278,8 @@ describe("WebSocket update event sort (AC: sort maintained on updates)", () => {
       startTime: j.startedAt ? new Date(j.startedAt).getTime() : null,
     }));
     const sorted = parsed.sort((a, b) => {
-      const aTime = a.startTime ?? 0;
-      const bTime = b.startTime ?? 0;
+      const aTime = a.startTime ?? Number.MAX_SAFE_INTEGER;
+      const bTime = b.startTime ?? Number.MAX_SAFE_INTEGER;
       return bTime - aTime;
     });
     return sorted.map((j) => j.sessionId);
@@ -304,15 +306,30 @@ describe("WebSocket update event sort (AC: sort maintained on updates)", () => {
     expect(result[1]).toBe("new");
   });
 
-  it("jobs-updated: job with null startedAt always stays at bottom", () => {
+  it("jobs-updated: pending job (null startedAt) floats to the TOP — issue #984", () => {
+    // A newly dispatched agent has no startedAt yet. It must appear at the top
+    // so users immediately see it — not buried at the bottom of the list.
     const updated = [
-      { sessionId: "pending", startedAt: null },
       { sessionId: "running", startedAt: "2026-03-15T10:00:00Z" },
       { sessionId: "done", startedAt: "2026-03-15T09:00:00Z" },
+      { sessionId: "pending", startedAt: null },
     ];
     const result = simulateHandleMessage(updated);
-    expect(result[result.length - 1]).toBe("pending");
-    expect(result[0]).toBe("running");
+    expect(result[0]).toBe("pending");
+  });
+
+  it("jobs-updated: multiple pending jobs all float above timed jobs", () => {
+    const updated = [
+      { sessionId: "old", startedAt: "2026-03-10T00:00:00Z" },
+      { sessionId: "pending-1", startedAt: null },
+      { sessionId: "running", startedAt: "2026-03-15T10:00:00Z" },
+      { sessionId: "pending-2", startedAt: null },
+    ];
+    const result = simulateHandleMessage(updated);
+    // Both nulls are at the top; timed jobs follow newest-first
+    expect(result.slice(0, 2).sort()).toEqual(["pending-1", "pending-2"].sort());
+    expect(result[2]).toBe("running");
+    expect(result[3]).toBe("old");
   });
 });
 
