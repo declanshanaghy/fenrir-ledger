@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * trial-adjust.mjs — Interactive REPL for managing trial state in Redis.
+ * odins-spear.mjs — Odin's Spear: Interactive REPL for trials, entitlements, and Stripe.
  *
  * Usage:
- *   just frontend adjust-trial                        # from repo root (recommended)
- *   node development/frontend/scripts/trial-adjust.mjs  # direct invocation
+ *   just frontend odins-spear                        # from repo root (recommended)
+ *   node development/frontend/scripts/odins-spear.mjs  # direct invocation
  *
  * For production: kubectl port-forward svc/redis 6379:6379 -n fenrir-app
  *
@@ -23,6 +23,52 @@ import { createInterface } from "node:readline";
 import { parseArgs } from "node:util";
 import { execSync, spawn } from "node:child_process";
 import { createConnection } from "node:net";
+
+// ── Stripe ───────────────────────────────────────────────────────────────────
+
+let stripeKey = process.env.STRIPE_SECRET_KEY || null;
+
+/** Lazy-load Stripe key from K8s secret if not set via env. */
+async function getStripeKey() {
+  if (stripeKey) return stripeKey;
+  try {
+    stripeKey = execSync(
+      "kubectl get secret fenrir-app-secrets -n fenrir-app -o jsonpath='{.data.STRIPE_SECRET_KEY}' | base64 -d",
+      { encoding: "utf-8", stdio: ["pipe", "pipe", "ignore"] }
+    ).trim().replace(/^'|'$/g, "");
+    if (stripeKey) return stripeKey;
+  } catch { /* ignore */ }
+  return null;
+}
+
+/** Call Stripe API. Returns parsed JSON or null on error. */
+async function stripe(method, path, body) {
+  const key = await getStripeKey();
+  if (!key) {
+    console.error(`${RED}STRIPE_SECRET_KEY not available.${RESET} Set via env or ensure kubectl can reach fenrir-app-secrets.`);
+    return null;
+  }
+  const opts = {
+    method,
+    headers: {
+      "Authorization": `Bearer ${key}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  };
+  if (body) opts.body = new URLSearchParams(body).toString();
+  try {
+    const res = await fetch(`https://api.stripe.com/v1${path}`, opts);
+    const json = await res.json();
+    if (json.error) {
+      console.error(`${RED}Stripe error: ${json.error.message}${RESET}`);
+      return null;
+    }
+    return json;
+  } catch (err) {
+    console.error(`${RED}Stripe request failed: ${err.message}${RESET}`);
+    return null;
+  }
+}
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -49,11 +95,11 @@ const { values } = parseArgs({
 
 if (values.help) {
   console.log(`
-${BOLD}trial-adjust.mjs${RESET} — Interactive REPL for managing trial state in Redis.
+${BOLD}odins-spear.mjs${RESET} — Interactive REPL for managing trial state in Redis.
 
 ${BOLD}Usage:${RESET}
-  just frontend adjust-trial                          # from repo root (recommended)
-  just frontend adjust-trial --redis-url <url>        # custom Redis URL
+  just frontend odins-spear                          # from repo root (recommended)
+  just frontend odins-spear --redis-url <url>        # custom Redis URL
 
 ${BOLD}How to identify yourself:${RESET}
   Trial keys in Redis use a browser fingerprint: SHA-256(userAgent + deviceId).
@@ -76,6 +122,8 @@ const PF_LOCAL_PORT = 6379;
 const PF_REMOTE_PORT = 6379;
 
 let portForwardProc = null; // track child process so we can kill on exit
+let pfManagedByUs = false;  // true if we started the port-forward (vs user-managed)
+let reconnecting = false;   // prevent concurrent reconnect attempts
 
 /** Check if localhost:6379 is accepting connections. */
 function isPortOpen(port, host = "127.0.0.1", timeoutMs = 1000) {
@@ -99,6 +147,13 @@ function hasKubectl() {
 
 /** Start kubectl port-forward in the background. Returns when the port is ready. */
 async function startPortForward() {
+  // Kill any existing port-forward process
+  if (portForwardProc) {
+    portForwardProc.kill();
+    portForwardProc = null;
+    await new Promise((r) => setTimeout(r, 500)); // let the port release
+  }
+
   console.log(`${DIM}Starting kubectl port-forward ${PF_SERVICE} ${PF_LOCAL_PORT}:${PF_REMOTE_PORT} -n ${PF_NAMESPACE}...${RESET}`);
 
   portForwardProc = spawn(
@@ -116,6 +171,10 @@ async function startPortForward() {
       if (stderrBuf.trim()) console.error(`${DIM}${stderrBuf.trim()}${RESET}`);
     }
     portForwardProc = null;
+    // Auto-reconnect if we managed the port-forward and it dropped unexpectedly
+    if (pfManagedByUs && !reconnecting) {
+      reconnectPortForward();
+    }
   });
 
   // Wait up to 10s for the port to open
@@ -133,8 +192,33 @@ async function startPortForward() {
   return false;
 }
 
+/** Reconnect port-forward with exponential backoff (max 3 attempts). */
+async function reconnectPortForward() {
+  if (reconnecting) return;
+  reconnecting = true;
+
+  const MAX_ATTEMPTS = 3;
+  const delays = [1000, 3000, 5000];
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    console.log(`${GOLD}Port-forward dropped — reconnecting (attempt ${attempt}/${MAX_ATTEMPTS})...${RESET}`);
+    await new Promise((r) => setTimeout(r, delays[attempt - 1]));
+
+    const ok = await startPortForward();
+    if (ok) {
+      reconnecting = false;
+      return;
+    }
+  }
+
+  reconnecting = false;
+  console.error(`${RED}Port-forward reconnect failed after ${MAX_ATTEMPTS} attempts.${RESET}`);
+  console.error(`${DIM}Commands will fail until the connection is restored. Try "reconnect" or restart the REPL.${RESET}`);
+}
+
 /** Clean up port-forward on exit. */
 function cleanupPortForward() {
+  pfManagedByUs = false; // prevent reconnect during shutdown
   if (portForwardProc) {
     portForwardProc.kill();
     portForwardProc = null;
@@ -164,9 +248,30 @@ if (isLocalhost && !(await isPortOpen(PF_LOCAL_PORT))) {
     console.error(`${RED}Could not establish port-forward. Check your GKE access.${RESET}`);
     process.exit(1);
   }
+  pfManagedByUs = true; // we own this port-forward — auto-reconnect on drop
 }
 
-const redis = new Redis(redisUrl, { lazyConnect: true, maxRetriesPerRequest: 1 });
+const redis = new Redis(redisUrl, {
+  lazyConnect: true,
+  maxRetriesPerRequest: 1,
+  retryStrategy(times) {
+    if (times > 3) {
+      console.error(`${RED}Redis connection lost. Reconnect failed after ${times} attempts.${RESET}`);
+      console.error(`${DIM}Port-forward may have dropped. Restart the REPL to reconnect.${RESET}`);
+      return null; // stop retrying
+    }
+    return Math.min(times * 500, 2000);
+  },
+});
+
+// Suppress "Unhandled error event" noise from ioredis reconnect attempts
+redis.on("error", (err) => {
+  if (err.code === "ECONNREFUSED" || err.code === "ECONNRESET") {
+    console.error(`${RED}Redis connection error${RESET} ${DIM}(${err.code} — port-forward may have dropped)${RESET}`);
+  } else {
+    console.error(`${RED}Redis error: ${err.message}${RESET}`);
+  }
+});
 
 try {
   await redis.connect();
@@ -459,6 +564,163 @@ const commands = {
     console.log();
   },
 
+  async stripe_customers() {
+    const data = await stripe("GET", "/customers?limit=20");
+    if (!data) return;
+    if (data.data.length === 0) {
+      console.log("\n  No Stripe customers found.\n");
+      return;
+    }
+    console.log(`\n  ${BOLD}Stripe Customers (${data.data.length}):${RESET}`);
+    console.log(`  ${DIM}${"─".repeat(70)}${RESET}`);
+    for (const c of data.data) {
+      const subs = c.subscriptions?.data?.length || 0;
+      console.log(`  ${c.id}  ${(c.email || "no email").padEnd(30)}  ${DIM}subs=${subs}${RESET}`);
+    }
+    console.log();
+  },
+
+  async stripe_subs() {
+    const data = await stripe("GET", "/subscriptions?limit=20&status=all");
+    if (!data) return;
+    if (data.data.length === 0) {
+      console.log("\n  No Stripe subscriptions found.\n");
+      return;
+    }
+    console.log(`\n  ${BOLD}Stripe Subscriptions (${data.data.length}):${RESET}`);
+    console.log(`  ${DIM}${"─".repeat(80)}${RESET}`);
+    for (const s of data.data) {
+      const emoji = s.status === "active" ? `${GREEN}●${RESET}` : s.status === "canceled" ? `${RED}●${RESET}` : `${GOLD}●${RESET}`;
+      console.log(`  ${emoji} ${s.id}  ${s.status.padEnd(12)}  customer=${s.customer}`);
+    }
+    console.log();
+  },
+
+  async delete_customer(args) {
+    const id = args[0];
+    if (!id || !id.startsWith("cus_")) {
+      console.log(`${RED}Usage: delete-customer <cus_xxx>${RESET}`);
+      console.log(`${DIM}Use "stripe-customers" to list customer IDs.${RESET}`);
+      return;
+    }
+    // Stripe API is source of truth — delete there, webhooks sync Redis
+    const data = await stripe("DELETE", `/customers/${id}`);
+    if (!data) return;
+    console.log(`\n  ${RED}Deleted customer${RESET} ${id} ${DIM}(via Stripe API)${RESET}`);
+    console.log(`  ${DIM}Webhooks will clean up Redis entitlements automatically.${RESET}\n`);
+  },
+
+  async cancel_sub(args) {
+    const id = args[0];
+    if (!id || !id.startsWith("sub_")) {
+      console.log(`${RED}Usage: cancel-sub <sub_xxx>${RESET}`);
+      console.log(`${DIM}Use "stripe-subs" to list subscription IDs.${RESET}`);
+      return;
+    }
+    // Stripe API is source of truth — cancel there, webhooks sync Redis
+    const data = await stripe("DELETE", `/subscriptions/${id}`);
+    if (!data) return;
+    console.log(`\n  ${RED}Canceled subscription${RESET} ${id} ${DIM}(via Stripe API)${RESET}`);
+    console.log(`  ${DIM}Status: ${data.status}. Webhooks will update Redis entitlement.${RESET}\n`);
+  },
+
+  async flush_entitlement(args) {
+    const id = args[0];
+    if (!id) {
+      if (selectedFp) {
+        const key = `entitlement:${selectedFp}`;
+        const exists = await redis.get(key);
+        if (!exists) {
+          console.log(`${RED}No entitlement found for selected fingerprint.${RESET}`);
+          return;
+        }
+        await redis.del(key);
+        console.log(`\n  ${GOLD}Flushed entitlement cache${RESET} for ${shortFp(selectedFp)}`);
+        console.log(`  ${DIM}This only clears the Redis cache. Stripe subscription is unaffected.${RESET}`);
+        console.log(`  ${DIM}Next auth check will re-fetch from Stripe and rebuild the cache.${RESET}\n`);
+        return;
+      }
+      console.log(`${RED}Usage: flush-entitlement <key-suffix>${RESET}  or select a trial first.`);
+      console.log(`${DIM}Use "entitlements" to list keys. This only clears the Redis cache.${RESET}`);
+      return;
+    }
+    const key = id.startsWith("entitlement:") ? id : `entitlement:${id}`;
+    const exists = await redis.get(key);
+    if (!exists) {
+      console.log(`${RED}Key not found: ${key}${RESET}`);
+      return;
+    }
+    await redis.del(key);
+    console.log(`\n  ${GOLD}Flushed entitlement cache${RESET} ${key}`);
+    console.log(`  ${DIM}Stripe subscription unaffected. Cache will rebuild on next auth check.${RESET}\n`);
+  },
+
+  async nuke() {
+    if (!requireSelected()) return;
+    const trial = await getTrial(selectedFp);
+    const entKey = `entitlement:${selectedFp}`;
+    const entRaw = await redis.get(entKey);
+
+    console.log(`\n  ${BOLD}${RED}NUKE — removing all state for ${shortFp(selectedFp)}${RESET}`);
+    console.log(`  ${DIM}Stripe first (source of truth), then Redis cleanup.${RESET}\n`);
+
+    // 1. Stripe first — cancel subs + delete customer (source of truth)
+    let stripeCleanedUp = false;
+    if (entRaw) {
+      try {
+        const ent = JSON.parse(entRaw);
+        if (ent.customerId) {
+          const cust = await stripe("GET", `/customers/${ent.customerId}?expand[]=subscriptions`);
+          if (cust?.subscriptions?.data) {
+            for (const sub of cust.subscriptions.data) {
+              if (sub.status !== "canceled") {
+                await stripe("DELETE", `/subscriptions/${sub.id}`);
+                console.log(`  ${RED}✗${RESET} Stripe: subscription ${sub.id} canceled`);
+              }
+            }
+          }
+          await stripe("DELETE", `/customers/${ent.customerId}`);
+          console.log(`  ${RED}✗${RESET} Stripe: customer ${ent.customerId} deleted`);
+          stripeCleanedUp = true;
+        }
+      } catch { /* best effort */ }
+    }
+    if (!stripeCleanedUp) {
+      console.log(`  ${DIM}○ No Stripe customer to clean up${RESET}`);
+    }
+
+    // 2. Redis cleanup — belt-and-suspenders (webhooks would do this too)
+    if (trial) {
+      await redis.del(`trial:${selectedFp}`);
+      console.log(`  ${RED}✗${RESET} Redis: trial deleted`);
+    } else {
+      console.log(`  ${DIM}○ No trial to delete${RESET}`);
+    }
+
+    if (entRaw) {
+      await redis.del(entKey);
+      console.log(`  ${RED}✗${RESET} Redis: entitlement cache flushed`);
+    } else {
+      console.log(`  ${DIM}○ No entitlement cache to flush${RESET}`);
+    }
+
+    selectedFp = null;
+    console.log(`\n  ${DIM}User will get a completely fresh start on next visit.${RESET}\n`);
+  },
+
+  async reconnect() {
+    if (!isLocalhost) {
+      console.log(`${DIM}Not using localhost — reconnect only applies to port-forwarded connections.${RESET}`);
+      return;
+    }
+    if (await isPortOpen(PF_LOCAL_PORT)) {
+      console.log(`${GREEN}Port is already open — connection looks healthy.${RESET}`);
+      return;
+    }
+    pfManagedByUs = true;
+    await reconnectPortForward();
+  },
+
   identity() {
     console.log(`
   ${BOLD}How to find your trial fingerprint:${RESET}
@@ -516,6 +778,17 @@ const commands = {
     ${CYAN}create <fingerprint>${RESET}    Create a new trial for a fingerprint
     ${CYAN}delete${RESET}                 Delete the selected trial entirely
 
+  ${BOLD}Stripe${RESET}
+    ${CYAN}stripe-customers${RESET}       List Stripe customers
+    ${CYAN}stripe-subs${RESET}            List Stripe subscriptions
+    ${CYAN}delete-customer <id>${RESET}    Delete Stripe customer + all data (cus_xxx)
+    ${CYAN}cancel-sub <id>${RESET}         Cancel Stripe subscription (sub_xxx)
+    ${CYAN}flush-entitlement${RESET}       Flush Redis entitlement cache (Stripe unaffected)
+    ${CYAN}nuke${RESET}                   Stripe-first wipe: cancel subs + delete customer + flush Redis
+
+  ${BOLD}Connection${RESET}
+    ${CYAN}reconnect${RESET}              Manually reconnect port-forward
+
   ${BOLD}Other${RESET}
     ${CYAN}help${RESET}                   This help
     ${CYAN}quit${RESET} / ${CYAN}exit${RESET} / ${CYAN}Ctrl+C${RESET}    Exit
@@ -523,11 +796,43 @@ const commands = {
   },
 };
 
+// ── Tab completion ───────────────────────────────────────────────────────────
+
+const ALL_COMMANDS = [
+  "list", "use", "status", "set", "shift", "reset", "expire",
+  "convert", "unconvert", "create", "delete",
+  "stripe-customers", "stripe-subs", "delete-customer", "cancel-sub",
+  "flush-entitlement", "nuke",
+  "keys", "entitlements", "identity", "reconnect",
+  "help", "quit", "exit",
+];
+
+function completer(line) {
+  const parts = line.trim().split(/\s+/);
+  const cmd = parts[0]?.toLowerCase() || "";
+
+  // If typing the first word, complete command names
+  if (parts.length <= 1) {
+    const hits = ALL_COMMANDS.filter((c) => c.startsWith(cmd));
+    return [hits.length ? hits : ALL_COMMANDS, cmd];
+  }
+
+  // For "use", complete with trial index numbers
+  if (cmd === "use" && trialIndex.length > 0) {
+    const arg = parts[1] || "";
+    const nums = trialIndex.map((_, i) => String(i + 1));
+    const hits = nums.filter((n) => n.startsWith(arg));
+    return [hits, arg];
+  }
+
+  return [[], line];
+}
+
 // ── REPL ─────────────────────────────────────────────────────────────────────
 
 function prompt() {
   const sel = selectedFp ? ` ${GOLD}${shortFp(selectedFp)}${RESET}` : "";
-  return `${BOLD}trial${RESET}${sel}${BOLD}>${RESET} `;
+  return `${BOLD}spear${RESET}${sel}${BOLD}>${RESET} `;
 }
 
 const rl = createInterface({
@@ -535,10 +840,11 @@ const rl = createInterface({
   output: process.stdout,
   prompt: prompt(),
   terminal: true,
+  completer,
 });
 
-console.log(`\n  ${BOLD}${GOLD}Fenrir Ledger — Trial Manager${RESET}`);
-console.log(`  ${DIM}Type "help" for commands, "list" to see all trials${RESET}\n`);
+console.log(`\n  ${BOLD}${GOLD}Fenrir Ledger — Odin's Spear${RESET}`);
+console.log(`  ${DIM}Type "help" for commands, "list" to see all trials. Tab to complete.${RESET}\n`);
 rl.prompt();
 
 rl.on("line", async (line) => {
@@ -559,8 +865,8 @@ rl.on("line", async (line) => {
     process.exit(0);
   }
 
-  // Alias "delete" → "delete_trial" to avoid reserved word
-  const cmdKey = cmd === "delete" ? "delete_trial" : cmd;
+  // Normalize: "delete" → "delete_trial", hyphens → underscores for method lookup
+  let cmdKey = cmd === "delete" ? "delete_trial" : cmd.replace(/-/g, "_");
   const handler = commands[cmdKey];
 
   if (!handler) {
