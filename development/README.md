@@ -29,20 +29,20 @@ This single command sets up everything: Node deps, environment files, GKE auth, 
 ## Docs
 
 - [docs/setup-guide.md](docs/setup-guide.md) — Full setup guide: prerequisites, GKE cluster details, env vars, CI/CD pipeline, project structure.
-- [implementation-plan.md](implementation-plan.md) — Ordered task breakdown for Sprint 1-2.
-- [security-review-report.md](security-review-report.md) — Consolidated security review: OAuth PKCE, API routes, token handling.
-- [heimdall-static-review.md](heimdall-static-review.md) — Heimdall static security analysis: Google API integration findings.
-- [browser-traffic-report.md](browser-traffic-report.md) — Browser traffic inspection: secret hygiene validation.
+- [docs/implementation-plan.md](docs/implementation-plan.md) — Ordered task breakdown for Sprint 1-2.
+- [docs/security-review-report.md](docs/security-review-report.md) — Consolidated security review: OAuth PKCE, API routes, token handling.
+- [docs/heimdall-static-review.md](docs/heimdall-static-review.md) — Heimdall static security analysis: Google API integration findings.
+- [docs/browser-traffic-report.md](docs/browser-traffic-report.md) — Browser traffic inspection: secret hygiene validation.
 
 ## QA Handoffs
 
-- [qa-handoff.md](qa-handoff.md) — Landmarks, aria-labels, and stale E2E selector fixes (#589).
-- [qa-handoff-statusline.md](qa-handoff-statusline.md) — Norse statusline script for Claude Code.
-- [qa-handoff-splash.md](qa-handoff-splash.md) — Elder Futhark FENRIR splash screen.
-- [qa-handoff-palette.md](qa-handoff-palette.md) — Terminal color palette config files.
-- [frontend/qa-handoff.md](frontend/qa-handoff.md) — Feature flag registry + Patreon API route guards.
-- [frontend/QA-SPRINT-5.md](frontend/QA-SPRINT-5.md) — Sprint 5 QA report: Google Sheets import + LCARS easter egg.
-- [frontend/LOKI-TEST-PLAN-anon-auth.md](frontend/LOKI-TEST-PLAN-anon-auth.md) — Test plan: anonymous-first auth + cloud sync upsell.
+- [docs/qa-handoff.md](docs/qa-handoff.md) — Landmarks, aria-labels, and stale E2E selector fixes (#589).
+- [docs/qa-handoff-statusline.md](docs/qa-handoff-statusline.md) — Norse statusline script for Claude Code.
+- [docs/qa-handoff-splash.md](docs/qa-handoff-splash.md) — Elder Futhark FENRIR splash screen.
+- [docs/qa-handoff-palette.md](docs/qa-handoff-palette.md) — Terminal color palette config files.
+- [docs/frontend-qa-handoff.md](docs/frontend-qa-handoff.md) — Feature flag registry + Patreon API route guards.
+- [docs/QA-SPRINT-5.md](docs/QA-SPRINT-5.md) — Sprint 5 QA report: Google Sheets import + LCARS easter egg.
+- [docs/LOKI-TEST-PLAN-anon-auth.md](docs/LOKI-TEST-PLAN-anon-auth.md) — Test plan: anonymous-first auth + cloud sync upsell.
 
 ## Scripts
 

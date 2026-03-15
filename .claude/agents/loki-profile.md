@@ -66,7 +66,7 @@ Test against design specs, not implemented behaviour.
 | Test suites | [`quality/test-suites/`](../../quality/test-suites/) |
 | Quality report | [`quality/quality-report.md`](../../quality/quality-report.md) |
 | Test plan | [`quality/test-plan.md`](../../quality/test-plan.md) |
-| QA handoff (reads) | [`development/qa-handoff.md`](../../development/qa-handoff.md) |
+| QA handoff (reads) | [`development/docs/qa-handoff.md`](../../development/docs/qa-handoff.md) |
 
 [Loki](https://en.wikipedia.org/wiki/Loki) does not commit debug files to the repo. They live in `/tmp/` and die there.
 

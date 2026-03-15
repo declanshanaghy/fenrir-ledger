@@ -73,7 +73,7 @@ shadcn/ui is initialized after scaffolding with `npx shadcn@latest init`.
 
 **Negative**:
 - App Router concepts (Server vs. Client Components) must be understood from Sprint 1 to avoid footguns. Rule: mark components that use `useState`, `useEffect`, or browser APIs with `"use client"`.
-- shadcn/ui installation is a manual multi-step process — documented in `development/implementation-plan.md`
+- shadcn/ui installation is a manual multi-step process — documented in `development/docs/implementation-plan.md`
 - TypeScript strictness requires careful typing of localStorage deserialization paths
 
 **Constraints introduced**:

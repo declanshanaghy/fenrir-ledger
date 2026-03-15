@@ -21,8 +21,8 @@ Teammates: **Freya** (PO), **Luna** (UX Designer), **FiremanDecko** (Engineer).
 
 | Input | Path |
 |---|---|
-| QA Handoff | `development/qa-handoff.md` |
-| Implementation Plan | `development/implementation-plan.md` |
+| QA Handoff | `development/docs/qa-handoff.md` |
+| Implementation Plan | `development/docs/implementation-plan.md` |
 | Product Brief | `product/product-design-brief.md` |
 | Source Code | `development/frontend/` |
 
@@ -107,7 +107,7 @@ machines, auth checks, data transformations — ALL of these are Vitest, never P
 ## Worktree Context
 
 When in a worktree: run tests against the provided port (not 9653), read
-`development/qa-handoff.md` for implementation notes.
+`development/docs/qa-handoff.md` for implementation notes.
 
 ## Verdict Format
 

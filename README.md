@@ -133,7 +133,7 @@ In the old forge-lore, the greatest weapons were not found — they were made, s
 - Full Next.js implementation ([development/frontend/](development/frontend/))
 - GKE Autopilot infrastructure ([infrastructure/](infrastructure/)) — Terraform, networking, deployment
 - API contracts and technical standards
-- QA handoffs ([development/qa-handoff.md](development/qa-handoff.md))
+- QA handoffs ([development/docs/qa-handoff.md](development/docs/qa-handoff.md))
 
 **Weapon of Choice:**
 - **Mjölnir (Next.js 15 + TypeScript):** A hammer so powerful it could level mountains — built to endure
