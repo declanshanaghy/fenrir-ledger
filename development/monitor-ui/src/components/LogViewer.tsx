@@ -51,6 +51,7 @@ function SessionHeader({ job, wsState, onDownload, showDownload = true }: Sessio
           >
             <span className="session-id-label">Session:</span> {shortId}…
           </span>
+          <CopySessionIdButton sessionId={job.sessionId} />
         </div>
       </div>
       <span className="header-badges">

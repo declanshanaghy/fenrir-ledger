@@ -27,7 +27,7 @@ const MOCK_JOB: DisplayJob = {
   agentName: "FiremanDecko",
   status: "failed",
   startTime: Date.now(),
-  completionTime: null,
+  completionTime: null, issueTitle: null, branchName: null,
 };
 
 function makeErrorEntry(message: string): LogEntry {

@@ -29,7 +29,7 @@ const MOCK_JOB: DisplayJob = {
   step: "1",
   status: "running",
   startTime: null,
-  completionTime: null,
+  completionTime: null, issueTitle: null, branchName: null,
 };
 
 // Helper: send a log-line message through the hook
@@ -47,7 +47,7 @@ describe("Timestamp stripping and entrypoint section detection (issue #987)", ()
     sendLine(result.current.handleMessage, "2026-03-15T19:58:07Z === Agent Sandbox Entrypoint ===");
     const entries = result.current.entries;
     expect(entries.length).toBeGreaterThan(0);
-    const header = entries.find((e) => e.type === "entrypoint-header");
+    const header = entries.find((e: any) => e.type === "entrypoint-header");
     expect(header).toBeDefined();
     expect(header!.text).toBe("Agent Sandbox Entrypoint");
   });
@@ -58,11 +58,11 @@ describe("Timestamp stripping and entrypoint section detection (issue #987)", ()
     sendLine(result.current.handleMessage, "Session: abc-123");
     sendLine(result.current.handleMessage, "Branch: feat/issue-987");
     sendLine(result.current.handleMessage, "Model: claude-sonnet-4-6");
-    const infos = result.current.entries.filter((e) => e.type === "entrypoint-info");
+    const infos = result.current.entries.filter((e: any) => e.type === "entrypoint-info");
     expect(infos).toHaveLength(3);
-    expect(infos.find((e) => e.detail === "Session")!.text).toBe("abc-123");
-    expect(infos.find((e) => e.detail === "Branch")!.text).toBe("feat/issue-987");
-    expect(infos.find((e) => e.detail === "Model")!.text).toBe("claude-sonnet-4-6");
+    expect(infos.find((e: any) => e.detail === "Session")!.text).toBe("abc-123");
+    expect(infos.find((e: any) => e.detail === "Branch")!.text).toBe("feat/issue-987");
+    expect(infos.find((e: any) => e.detail === "Model")!.text).toBe("claude-sonnet-4-6");
   });
 });
 
@@ -93,7 +93,7 @@ describe("WARN line classification (issue #987)", () => {
     const { result } = renderHook(() => useLogStream());
     sendLine(result.current.handleMessage, "=== Agent Sandbox Entrypoint ===");
     sendLine(result.current.handleMessage, "[WARN] npm deprecated package detected");
-    const warnings = result.current.entries.filter((e) => e.type === "warning");
+    const warnings = result.current.entries.filter((e: any) => e.type === "warning");
     expect(warnings).toHaveLength(1);
     expect(warnings[0]!.message).toBe("npm deprecated package detected");
   });
@@ -128,11 +128,11 @@ describe("EntrypointGroup info card and non-entrypoint lines (issue #987)", () =
     // Send a line before any entrypoint markers — it should not be entrypoint-typed
     sendLine(result.current.handleMessage, "Some pre-entrypoint system log line");
     const entries = result.current.entries;
-    const rawEntries = entries.filter((e) => e.type === "raw");
+    const rawEntries = entries.filter((e: any) => e.type === "raw");
     expect(rawEntries).toHaveLength(1);
     expect(rawEntries[0]!.text).toBe("Some pre-entrypoint system log line");
     // No entrypoint-typed entries
-    const entrypointEntries = entries.filter((e) =>
+    const entrypointEntries = entries.filter((e: any) =>
       ["entrypoint-header", "entrypoint-ok", "entrypoint-info", "entrypoint-fatal"].includes(e.type)
     );
     expect(entrypointEntries).toHaveLength(0);

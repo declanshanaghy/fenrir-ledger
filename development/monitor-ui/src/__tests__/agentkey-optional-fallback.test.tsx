@@ -25,7 +25,7 @@ const BASE_JOB: DisplayJob = {
   step: "1",
   status: "running",
   startTime: null,
-  completionTime: null,
+  completionTime: null, issueTitle: null, branchName: null,
 };
 
 // ── JobCard — undefined agentKey ───────────────────────────────────────────────
@@ -56,7 +56,7 @@ describe("JobCard — optional agentKey (issue #1027)", () => {
 describe("LogViewer — NorseTablet fallback rune when agentKey absent (issue #1027)", () => {
   it("renders entrypoint-task entry without agentKey without crashing", () => {
     const entries: LogEntry[] = [
-      { type: "entrypoint-task", text: "Run the test suite", timestamp: Date.now() },
+      { id: "test-1", type: "entrypoint-task", text: "Run the test suite" },
     ];
     // Job has no agentKey — tests conditional-spread fix in LogViewer.tsx
     const job: DisplayJob = { ...BASE_JOB, agentKey: undefined };

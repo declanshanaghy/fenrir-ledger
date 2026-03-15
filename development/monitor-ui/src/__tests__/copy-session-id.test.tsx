@@ -38,7 +38,7 @@ const MOCK_JOB: DisplayJob = {
   agentName: "FiremanDecko",
   status: "running",
   startTime: Date.now(),
-  completionTime: null,
+  completionTime: null, issueTitle: null, branchName: null,
 };
 
 const TTL_JOB: DisplayJob = {
