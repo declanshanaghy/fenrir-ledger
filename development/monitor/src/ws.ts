@@ -12,7 +12,6 @@ import {
   mapAgentJobToJob,
 } from "./k8s.js";
 import type { Job } from "./k8s.js";
-import { verifySessionToken, SESSION_COOKIE } from "./auth.js";
 import { parseJsonlLine, detectVerdict } from "./report.js";
 
 // ── Fixture fallback for local dev (disabled in production) ─────────────────
@@ -62,19 +61,6 @@ function listFixtureJobs(): Job[] {
   } catch {
     return [];
   }
-}
-
-/** Parse a single cookie header value into a map. */
-function parseCookies(cookieHeader: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  for (const part of cookieHeader.split(";")) {
-    const eq = part.indexOf("=");
-    if (eq === -1) continue;
-    const key = part.slice(0, eq).trim();
-    const val = decodeURIComponent(part.slice(eq + 1).trim());
-    result[key] = val;
-  }
-  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -311,21 +297,9 @@ export function attachWebSocketServer(
 
   const wss = new WebSocketServer({ server: server as Server, path: "/ws" });
 
-  const authDisabled = !process.env.SESSION_SECRET && process.env.NODE_ENV !== "production";
+  // Auth is handled by oauth2-proxy sidecar — no in-app session check needed.
 
-  wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
-    // Validate session cookie before allowing the WS connection
-    if (!authDisabled) {
-      const cookieHeader = req.headers.cookie ?? "";
-      const cookies = parseCookies(cookieHeader);
-      const sessionToken = cookies[SESSION_COOKIE];
-      if (!sessionToken || !verifySessionToken(sessionToken)) {
-        send(ws, { type: "error", message: "Unauthorized" });
-        ws.close(1008, "Unauthorized");
-        return;
-      }
-    }
-
+  wss.on("connection", async (ws: WebSocket, _req: IncomingMessage) => {
     // Register this client for jobs-updated broadcasts
     connectedClients.add(ws);
 
