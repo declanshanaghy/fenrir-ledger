@@ -56,6 +56,11 @@ spec:
               value: "0.0.0.0"
             - name: REDIS_URL
               value: "redis://redis.fenrir-app.svc.cluster.local:6379"
+            # Umami analytics — public website ID (non-secret, safe for NEXT_PUBLIC_).
+            # Set to the UUID from https://analytics.fenrirledger.com → Websites.
+            # Leave empty or unset to disable analytics in this environment.
+            - name: NEXT_PUBLIC_UMAMI_WEBSITE_ID
+              value: ""
           resources:
             requests:
               cpu: "500m"

@@ -143,6 +143,18 @@ export default async function RootLayout({
             </Script>
           </>
         )}
+        {/* Umami — privacy-first analytics. Respects Do Not Track by default.
+            Only rendered when NEXT_PUBLIC_UMAMI_WEBSITE_ID is set.
+            No PII is collected (Umami default behaviour). */}
+        {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
+          <Script
+            id="umami-analytics"
+            src="https://analytics.fenrirledger.com/script.js"
+            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+            strategy="afterInteractive"
+            nonce={nonce}
+          />
+        )}
       </body>
     </html>
   );
