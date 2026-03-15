@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { track } from "@/lib/analytics/track";
 import {
   Dialog,
   DialogClose,
@@ -196,6 +197,7 @@ export function useGleipnirFragment2() {
   function trigger() {
     if (!localStorage.getItem(STORAGE_KEY)) {
       localStorage.setItem(STORAGE_KEY, "1");
+      track("easter-egg", { fragment: 2, name: "womans-beard" });
       setOpen(true);
 
       // Play within the user-gesture call stack so browsers allow it.

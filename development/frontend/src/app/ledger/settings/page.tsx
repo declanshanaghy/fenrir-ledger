@@ -17,6 +17,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { StripeSettings } from "@/components/entitlement/StripeSettings";
+import { track } from "@/lib/analytics/track";
 import { TrialSettingsSection } from "@/components/trial/TrialSettingsSection";
 import type { DashboardTab } from "@/lib/constants";
 
@@ -162,6 +163,10 @@ function RestoreTabGuides() {
  * (settings stack below the subscription card).
  */
 export default function SettingsPage() {
+  useEffect(() => {
+    track("settings-visit");
+  }, []);
+
   return (
     <div className="px-6 py-6 max-w-5xl">
       {/* Page heading */}

@@ -65,6 +65,7 @@ import {
 import { KNOWN_ISSUERS } from "@/lib/constants";
 import { getIssuerRune } from "@/lib/issuer-utils";
 import { GleipnirBearSinews, useGleipnirFragment4 } from "@/components/cards/GleipnirBearSinews";
+import { track } from "@/lib/analytics/track";
 
 // ─── Zod validation schema ────────────────────────────────────────────────────
 
@@ -328,6 +329,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
       card.status = computeCardStatus(card);
 
       saveCard(card);
+      track("card-save", { method: "manual" });
 
       // Gleipnir Fragment 4 — Bear Sinews: triggers on the 7th card save
       const SAVE_COUNT_KEY = "fenrir:card-save-count";

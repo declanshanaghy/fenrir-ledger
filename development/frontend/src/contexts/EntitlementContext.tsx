@@ -29,6 +29,7 @@ import {
 import { useAuthContext } from "@/contexts/AuthContext";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import { computeFingerprint } from "@/lib/trial-utils";
+import { track } from "@/lib/analytics/track";
 import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
 import {
   getEntitlementCache,
@@ -415,6 +416,7 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
 
     if (stripeParam === "success") {
       console.debug("[Fenrir] Stripe checkout success callback", { sessionId });
+      track("subscription-convert", { tier: "karl" });
       void refreshEntitlement(sessionId);
       // Mark trial as converted in KV (best-effort, Issue #623)
       void (async () => {

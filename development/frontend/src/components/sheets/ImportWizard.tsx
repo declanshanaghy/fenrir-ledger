@@ -39,6 +39,7 @@ import { SafetyBanner } from "@/components/sheets/SafetyBanner";
 import type { ImportMethod } from "@/components/sheets/MethodSelection";
 import type { Card } from "@/lib/types";
 import type { SheetImportErrorCode } from "@/lib/sheets/types";
+import { track } from "@/lib/analytics/track";
 
 interface ImportWizardProps {
   open: boolean;
@@ -134,6 +135,11 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
   // On success step: invoke onConfirmImport with pending cards, then auto-close after 1.5s
   useEffect(() => {
     if (step !== "success" || !pendingImport) return;
+
+    // Track import completion — method is guaranteed to be set before success step.
+    if (importMethod) {
+      track("sheet-import", { method: importMethod });
+    }
 
     // Commit the import to the parent
     onConfirmImport(pendingImport);

@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics/track";
 import { EasterEggModal } from "@/components/easter-eggs/EasterEggModal";
 
 const STORAGE_KEY = "egg:gleipnir-3";
@@ -99,6 +100,7 @@ export function useGleipnirFragment3() {
   function trigger() {
     if (!localStorage.getItem(STORAGE_KEY)) {
       localStorage.setItem(STORAGE_KEY, "1");
+      track("easter-egg", { fragment: 3, name: "mountain-roots" });
       setOpen(true);
     }
   }

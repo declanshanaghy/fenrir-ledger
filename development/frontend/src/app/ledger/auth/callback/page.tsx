@@ -24,6 +24,7 @@ import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { setSession } from "@/lib/auth/session";
 import { validateReturnTo } from "@/lib/auth/sign-in-url";
+import { track } from "@/lib/analytics/track";
 import { computeFingerprint, isValidFingerprint } from "@/lib/trial-utils";
 import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
 import type { FenrirSession } from "@/lib/types";
@@ -193,6 +194,13 @@ function AuthCallbackContent() {
         };
 
         setSession(session);
+
+        // Track auth event — refresh_token is only present on first consent (signup).
+        if (tokens.refresh_token) {
+          track("auth-signup");
+        } else {
+          track("auth-login");
+        }
 
         // Fire-and-forget trial init on first sign-in (#922 / #944).
         // Idempotent — if a trial already exists for this fingerprint it is preserved.

@@ -29,6 +29,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { track } from "@/lib/analytics/track";
 import { CardTile } from "./CardTile";
 import { EmptyState } from "./EmptyState";
 import { AnimatedCardGrid } from "./AnimatedCardGrid";
@@ -412,6 +413,13 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
       localStorage.setItem(TAB_STORAGE_KEY, activeTab);
     } catch {
       // Ignore write errors (e.g. storage full)
+    }
+  }, [activeTab]);
+
+  // ── Track Valhalla tab visit ───────────────────────────────────────────────
+  useEffect(() => {
+    if (activeTab === "valhalla") {
+      track("valhalla-visit");
     }
   }, [activeTab]);
 
