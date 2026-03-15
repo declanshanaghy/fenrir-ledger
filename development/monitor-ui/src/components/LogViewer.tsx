@@ -4,7 +4,7 @@ import type { LogEntry } from "../hooks/useLogStream";
 import type { DisplayJob } from "../lib/types";
 import { StatusBadge } from "./StatusBadge";
 import { ToolBlock } from "./ToolBlock";
-import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_TITLES } from "../lib/constants";
+import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
 
 interface Props {
   entries: LogEntry[];
@@ -80,7 +80,17 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, onSetSpeed }
           {activeJob.agentName} &mdash; #{activeJob.issue} Step {activeJob.step} (
           {activeJob.sessionId})
         </span>
-        <StatusBadge state={wsState} />
+        <span className="header-badges">
+          <span
+            className={`job-status-badge${activeJob.status === "running" ? " pulse" : ""}`}
+            style={{ color: STATUS_COLORS[activeJob.status] }}
+            title={`Job status: ${activeJob.status}`}
+            aria-label={`Job status: ${STATUS_LABELS[activeJob.status]}`}
+          >
+            {STATUS_ICONS[activeJob.status]} {STATUS_LABELS[activeJob.status]}
+          </span>
+          <StatusBadge state={wsState} />
+        </span>
       </div>
       <div
         className="log-terminal"
