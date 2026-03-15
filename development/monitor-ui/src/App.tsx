@@ -19,6 +19,7 @@ export function App() {
     clearEntries,
     handleMessage: handleLogMessage,
     isTtlExpired,
+    isNodeUnreachable,
     streamError,
   } = useLogStream();
 
@@ -67,15 +68,17 @@ export function App() {
   );
 
   // Re-subscribe only on actual reconnect (wsState transitions to "open").
-  // Skip re-subscribe if the session ended with a TTL-expired error — the pod
-  // is gone and retrying would just loop the same error again.
+  // Skip re-subscribe if the session ended with a TTL-expired or node-unreachable
+  // error — the pod is gone and retrying would just loop the same error again.
   const isTtlExpiredRef = useRef(isTtlExpired);
   isTtlExpiredRef.current = isTtlExpired;
+  const isNodeUnreachableRef = useRef(isNodeUnreachable);
+  isNodeUnreachableRef.current = isNodeUnreachable;
   const prevWsState = useRef(wsState);
   useEffect(() => {
     const wasDisconnected = prevWsState.current !== "open";
     prevWsState.current = wsState;
-    if (wsState === "open" && wasDisconnected && activeSessionId && !isTtlExpiredRef.current) {
+    if (wsState === "open" && wasDisconnected && activeSessionId && !isTtlExpiredRef.current && !isNodeUnreachableRef.current) {
       send({ type: "subscribe", sessionId: activeSessionId });
     }
   }, [wsState, activeSessionId, send]);
@@ -99,6 +102,7 @@ export function App() {
             wsState={wsState}
             isFixture={isFixture}
             isTtlExpired={isTtlExpired}
+            isNodeUnreachable={isNodeUnreachable}
             streamError={streamError}
             onSetSpeed={(speed) => {
               if (activeSessionId) {
