@@ -27,8 +27,10 @@ vi.mock("@/lib/kv/redis-client", () => ({
   getRedisClient: () => mockRedis,
 }));
 
+const mockRateLimit = vi.hoisted(() => vi.fn(() => ({ success: true, remaining: 9 })));
+
 vi.mock("@/lib/rate-limit", () => ({
-  rateLimit: vi.fn(() => ({ success: true, remaining: 9 })),
+  rateLimit: mockRateLimit,
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -217,5 +219,19 @@ describe("POST /api/trial/init", () => {
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
 
     expect(res.headers.get("Cache-Control")).toBe("no-store");
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Rate limiting — Loki QA addition (#922)
+  // ═══════════════════════════════════════════════════════════════════════
+
+  it("returns 429 when rate limit is exceeded", async () => {
+    mockRateLimit.mockReturnValueOnce({ success: false, remaining: 0 });
+
+    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
+    const body = await res.json();
+
+    expect(res.status).toBe(429);
+    expect(body.error).toBe("rate_limited");
   });
 });
