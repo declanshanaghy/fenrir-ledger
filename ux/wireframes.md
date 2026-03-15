@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Monitor UI — Norse Tablet Rune Signatures &amp; Wikipedia Links (Issue #1003)
+
+| File | Description |
+|------|-------------|
+| [wireframes/monitor-ui/norse-tablet-rune-signatures.html](wireframes/monitor-ui/norse-tablet-rune-signatures.html) | Enhanced Norse tablets in the monitor UI: 9 sections — (1) scope overview for 4 change areas, (2) Wikipedia link pattern with both NorseErrorTablet variant mockups (ttl-expired linking "Yggdrasil", node-unreachable linking "Bifröst"), (3) epic seal anatomy for NorseErrorTablet (no agent context — 2 variant-specific seals), (4) agent rune signature block anatomy + all 5 agent signatures (FiremanDecko, Loki, Luna, Freya, Heimdall) plus unknown-agentKey fallback, (5) Elder Futhark transliteration reference table + letter-to-rune key, (6) constants.ts extension spec (AGENT_RUNE_NAMES, AGENT_RUNE_TITLES, AGENT_QUOTES, ERROR_TABLET_SEALS, WIKI_LINKS), (7) responsive behavior at 375px and ≥1024px, (8) WCAG 2.1 AA accessibility spec, (9) component change summary for FiremanDecko including agentKey threading strategy via React context. |
+
+---
+
 ## Monitor UI — Light/Dark Theme Switcher (Issue #964)
 
 | File | Description |

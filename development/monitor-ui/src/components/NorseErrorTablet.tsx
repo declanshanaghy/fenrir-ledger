@@ -1,10 +1,13 @@
 /**
  * NorseErrorTablet — full-pane error display for TTL-expired sessions.
  *
- * Shown when a pod's TTL has expired and logs are no longer available.
+ * Shown when a pod's TTL has expired or a node is unreachable.
  * Styled as an ancient stone tablet: Elder Futhark rune decorations,
  * Cinzel Decorative headings, void-black bg, gold accents.
  */
+
+import type { ReactNode } from "react";
+import { ERROR_TABLET_SEALS, WIKI_LINKS } from "../lib/constants";
 
 // Elder Futhark rows used as decorative borders
 const RUNE_ROW_TOP = "ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ";
@@ -13,16 +16,43 @@ const RUNE_GLYPH = "ᚦ"; // Thurisaz — warning / thorn
 
 type Variant = "ttl-expired" | "node-unreachable";
 
-const VARIANT_CONTENT: Record<Variant, { ariaLabel: string; heading: string; subheading: string }> = {
+const VARIANT_CONTENT: Record<Variant, { ariaLabel: string; heading: string; subheading: ReactNode }> = {
   "ttl-expired": {
     ariaLabel: "Session error: pod TTL expired",
     heading: "The Eternal Halls Are Sealed",
-    subheading: "This vessel has departed Yggdrasil",
+    subheading: (
+      <>
+        This vessel has departed{" "}
+        <a
+          className="wiki-link"
+          href={WIKI_LINKS["Yggdrasil"]}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Yggdrasil on Wikipedia, opens in new tab"
+        >
+          Yggdrasil
+        </a>
+      </>
+    ),
   },
   "node-unreachable": {
     ariaLabel: "Session error: node unreachable",
     heading: "The Bifröst Has Fallen",
-    subheading: "The node that bore this vessel is beyond reach",
+    subheading: (
+      <>
+        The node that bore this vessel is beyond reach — the{" "}
+        <a
+          className="wiki-link"
+          href={WIKI_LINKS["Bifröst"]}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Bifröst on Wikipedia, opens in new tab"
+        >
+          Bifröst
+        </a>{" "}
+        bridge is severed
+      </>
+    ),
   },
 };
 
@@ -34,6 +64,7 @@ interface Props {
 
 export function NorseErrorTablet({ sessionId, message, variant = "ttl-expired" }: Props) {
   const { ariaLabel, heading, subheading } = VARIANT_CONTENT[variant];
+  const seal = ERROR_TABLET_SEALS[variant];
   return (
     <div
       className="norse-error-tablet"
@@ -63,8 +94,10 @@ export function NorseErrorTablet({ sessionId, message, variant = "ttl-expired" }
         <span className="net-session-value">{sessionId}</span>
       </div>
 
-      <div className="net-seal" aria-hidden="true">
-        ᚠᚢᚦ &mdash; So it is written, so shall it remain &mdash; ᚦᚢᚠ
+      <div className="net-seal-epic" aria-hidden="true">
+        <div className="net-seal-rune-row">{seal.runes}</div>
+        <div className="net-seal-inscription">{seal.inscription}</div>
+        <div className="net-seal-sub">{seal.sub}</div>
       </div>
 
       <div className="net-rune-border" aria-hidden="true">

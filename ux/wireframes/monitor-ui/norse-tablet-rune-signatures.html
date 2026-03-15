@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — Norse Tablet Rune Signatures &amp; Wikipedia Links (Issue #1003)</title>
+  <style>
+    /* Layout CSS only — no colors, fonts, shadows, border-radius per Luna's wireframe rules */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 24px; max-width: 960px; margin: 0 auto; }
+
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    h2 { font-size: 16px; font-weight: 700; margin: 32px 0 12px; border-bottom: 2px solid; padding-bottom: 6px; }
+    h3 { font-size: 14px; font-weight: 700; margin: 20px 0 8px; }
+    p { margin: 8px 0; line-height: 1.6; }
+    p.note { font-size: 12px; font-style: italic; border-left: 3px solid; padding-left: 8px; margin: 8px 0; }
+    .meta { font-size: 12px; margin-bottom: 24px; }
+    hr { margin: 32px 0; border: none; border-top: 1px solid; }
+
+    /* Section containers */
+    .section { margin-bottom: 48px; }
+    .variant-row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; }
+    .variant-box { flex: 1; min-width: 280px; border: 1px solid; padding: 16px; }
+    .variant-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+    .callout { border: 2px solid; padding: 12px 16px; margin: 12px 0; }
+
+    /* === NORSE ERROR TABLET wireframe === */
+    .net-wireframe { border: 2px solid; padding: 24px; margin: 16px 0; }
+    .net-rune-border { font-size: 11px; text-align: center; letter-spacing: 4px; padding: 6px 0; border-top: 1px solid; border-bottom: 1px solid; }
+    .net-glyph { font-size: 32px; text-align: center; margin: 16px 0; }
+    .net-heading { font-size: 22px; font-weight: 700; text-align: center; margin: 12px 0 6px; }
+    .net-subheading { font-size: 14px; text-align: center; margin-bottom: 12px; }
+    .net-subheading .wiki-link { text-decoration: underline; font-weight: 600; }
+    .net-subheading .wiki-link::after { content: " ↗"; font-size: 10px; }
+    .net-divider { text-align: center; font-size: 12px; margin: 12px 0; letter-spacing: 3px; }
+    .net-body { font-size: 13px; text-align: center; padding: 8px 16px; margin: 8px 0; }
+    .net-session { display: flex; gap: 8px; justify-content: center; align-items: baseline; margin: 12px 0; font-size: 12px; }
+    .net-session-label { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .net-session-value { font-family: monospace; font-size: 11px; }
+
+    /* === NEW: Epic seal — NorseErrorTablet === */
+    .net-seal-epic { text-align: center; padding: 16px; border: 1px solid; margin: 12px 0; }
+    .net-seal-rune-row { font-size: 14px; letter-spacing: 6px; margin-bottom: 8px; }
+    .net-seal-inscription { font-size: 13px; font-weight: 700; font-style: italic; }
+    .net-seal-sub { font-size: 11px; margin-top: 4px; }
+
+    /* === NORSE TABLET (agent prompt) wireframe === */
+    .nt-wireframe { border: 2px solid; margin: 16px 0; overflow: hidden; }
+    .nt-header { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid; cursor: pointer; }
+    .nt-header-rune { font-size: 18px; }
+    .nt-header-title { flex: 1; font-size: 13px; font-weight: 700; }
+    .nt-header-chevron { font-size: 16px; }
+    .nt-body { padding: 20px; }
+    .nt-inscription { font-size: 13px; line-height: 1.7; padding: 12px; border: 1px dashed; margin-bottom: 20px; }
+    .nt-inscription .wiki-link { text-decoration: underline; font-weight: 600; }
+    .nt-inscription .wiki-link::after { content: " ↗"; font-size: 10px; }
+
+    /* === NEW: Agent rune signature block === */
+    .nt-rune-sig { border: 1px solid; padding: 16px; text-align: center; }
+    .nt-rune-sig-agent-runes { font-size: 22px; letter-spacing: 6px; margin-bottom: 6px; }
+    .nt-rune-sig-title-runes { font-size: 13px; letter-spacing: 3px; }
+    .nt-rune-sig-divider { margin: 10px 0; font-size: 10px; letter-spacing: 4px; }
+    .nt-rune-sig-quote { font-size: 12px; font-style: italic; max-width: 380px; margin: 0 auto; line-height: 1.6; }
+    .nt-rune-sig-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 10px; }
+
+    /* Annotation table */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+    th, td { border: 1px solid; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .mono { font-family: monospace; font-size: 12px; }
+
+    /* Component state rows */
+    .state-row { display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0; }
+    .state-box { flex: 1; min-width: 220px; border: 1px solid; padding: 12px; }
+    .state-label { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+    .rune-display { font-size: 20px; letter-spacing: 5px; text-align: center; padding: 8px; }
+
+    /* Mobile annotation */
+    .mobile-note { border: 1px dashed; padding: 10px; margin: 12px 0; font-size: 12px; }
+    .mobile-note strong { display: block; margin-bottom: 4px; }
+
+    /* Index legend */
+    .legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+    .legend-item { border: 1px solid; padding: 10px; font-size: 12px; }
+    .legend-item strong { display: block; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+  <h1>Norse Tablet Enhancements — Wireframe</h1>
+  <div class="meta">
+    Issue #1003 &nbsp;|&nbsp; Branch: ux/issue-1003-norse-tablet-enhance &nbsp;|&nbsp;
+    Designer: Luna &nbsp;|&nbsp; Date: 2026-03-15 &nbsp;|&nbsp;
+    Components: <code>NorseErrorTablet.tsx</code>, <code>LogViewer.tsx → NorseTablet</code>, <code>constants.ts</code>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 1: SCOPE OVERVIEW
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>1 — Scope Overview</h2>
+    <div class="legend">
+      <div class="legend-item">
+        <strong>1A — Wikipedia Links</strong>
+        Norse terms in both tablets wrapped in gold anchor tags → Wikipedia. Affects subheadings + body copy in NorseErrorTablet and inscription text in NorseTablet.
+      </div>
+      <div class="legend-item">
+        <strong>1B — Agent Rune Signatures</strong>
+        New seal block at the bottom of NorseTablet. Shows dispatching agent's name + title in Elder Futhark + their unique epic quote. Driven by <code>agentKey</code>.
+      </div>
+      <div class="legend-item">
+        <strong>1C — Epic Seal — Error Tablet</strong>
+        Replace generic "So it is written" with a variant-aware epic inscription. No agent context — uses a timeless, dramatic Yggdrasil-themed seal.
+      </div>
+      <div class="legend-item">
+        <strong>1D — Constants Extension</strong>
+        <code>AGENT_RUNE_NAMES</code>, <code>AGENT_RUNE_TITLES</code>, <code>AGENT_QUOTES</code> added to <code>constants.ts</code>. Rune transliterations accurate Elder Futhark.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 2: WIKIPEDIA LINK PATTERN
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>2 — Wikipedia Link Pattern</h2>
+
+    <p class="note">
+      All Norse term links share a single visual pattern: gold-colored anchor, underline, external arrow glyph (↗), opens in new tab.
+      WCAG 2.1 AA: links must be distinguishable from surrounding text via underline (not color alone).
+      <code>aria-label</code> must describe the destination (e.g. "Yggdrasil on Wikipedia, opens in new tab").
+    </p>
+
+    <h3>2A — NorseErrorTablet: ttl-expired variant</h3>
+    <div class="net-wireframe">
+      <div class="net-rune-border" aria-hidden="true">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
+      <div class="net-glyph" aria-hidden="true">ᚦ</div>
+      <div class="net-heading">The Eternal Halls Are Sealed</div>
+      <div class="net-subheading">
+        This vessel has departed
+        <a class="wiki-link" href="#">Yggdrasil</a>
+      </div>
+      <!-- NOTE: "Yggdrasil" → https://en.wikipedia.org/wiki/Yggdrasil -->
+      <div class="net-divider" aria-hidden="true">ᚠ ᚢ ᚦ ᛟ ᛞ ᛜ ᛚ ᛟ ᚦ ᚢ ᚠ</div>
+      <div class="net-body">[session TTL expiry message text — unchanged]</div>
+      <div class="net-session">
+        <span class="net-session-label">Session</span>
+        <span class="net-session-value">abc-123-def</span>
+      </div>
+      <!-- SECTION 3 covers the seal — shown here as placeholder -->
+      <div class="net-seal-epic">
+        <div class="net-seal-rune-row">ᛃᚷᚷᛞᚱᚨᛊᛁᛚ</div>
+        <div class="net-seal-inscription">From the roots of Yggdrasil, all things return to silence</div>
+        <div class="net-seal-sub">ᚦ — So it is carved in the world-tree — ᚦ</div>
+      </div>
+      <div class="net-rune-border" aria-hidden="true">ᛟ ᛞ ᛜ ᛚ ᗮ ᛖ ᛒ ᛏ ᛊ ᛉ ᛈ ᛇ ᛃ ᛁ ᚾ ᚺ ᚹ ᚷ ᚲ ᚱ ᚨ ᚦ ᚢ ᚠ</div>
+    </div>
+
+    <h3>2B — NorseErrorTablet: node-unreachable variant</h3>
+    <div class="net-wireframe">
+      <div class="net-rune-border" aria-hidden="true">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
+      <div class="net-glyph" aria-hidden="true">ᚦ</div>
+      <div class="net-heading">The Bifröst Has Fallen</div>
+      <div class="net-subheading">
+        The node that bore this vessel is beyond reach —
+        the <a class="wiki-link" href="#">Bifröst</a> bridge is severed
+      </div>
+      <!-- NOTE: "Bifröst" → https://en.wikipedia.org/wiki/Bifr%C3%B6st -->
+      <div class="net-divider" aria-hidden="true">ᚠ ᚢ ᚦ ᛟ ᛞ ᛜ ᛚ ᛟ ᚦ ᚢ ᚠ</div>
+      <div class="net-body">[node unreachable message text — unchanged]</div>
+      <div class="net-session">
+        <span class="net-session-label">Session</span>
+        <span class="net-session-value">abc-123-def</span>
+      </div>
+      <div class="net-seal-epic">
+        <div class="net-seal-rune-row">ᛒᛁᚠᚱᛟᛊᛏ</div>
+        <div class="net-seal-inscription">The bridge between worlds does not always hold — seek another path</div>
+        <div class="net-seal-sub">ᚺ — Heimdall watches, but even gods cannot hold the severed — ᚺ</div>
+      </div>
+      <div class="net-rune-border" aria-hidden="true">ᛟ ᛞ ᛜ ᛚ ᗮ ᛖ ᛒ ᛏ ᛊ ᛉ ᛈ ᛇ ᛃ ᛁ ᚾ ᚺ ᚹ ᚷ ᚲ ᚱ ᚨ ᚦ ᚢ ᚠ</div>
+    </div>
+
+    <p class="note">
+      Wikipedia links in NorseErrorTablet are limited to key terms in subheadings only (Yggdrasil, Bifröst).
+      Do not link terms in the dynamic message body — content is user/system-generated and cannot be safely auto-linked.
+    </p>
+
+    <h3>2C — NorseTablet (Agent Prompt): Wikipedia Links in Inscription</h3>
+    <p class="note">
+      The inscription text is the raw agent system prompt — it cannot be pre-linked.
+      Wikipedia links in NorseTablet are NOT applied to the inscription text.
+      Instead, links belong only in any static copy we add (e.g., the header title "Valhalla" reference if added, or future static preamble text).
+      See interaction spec for the decision rationale.
+    </p>
+    <div class="callout">
+      <strong>Design Decision:</strong> NorseTablet inscription = raw system prompt text. Auto-linking Norse terms in arbitrary text risks false positives and accessibility regressions. Wikipedia links apply only to known static strings in NorseErrorTablet subheadings.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 3: EPIC SEALS — ERROR TABLET
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>3 — Epic Seals: NorseErrorTablet (No Agent Context)</h2>
+
+    <p class="note">
+      NorseErrorTablet has no <code>agentKey</code> — it's a session-level error state.
+      The seal must be timeless, dramatic, and cosmic — not agent-specific.
+      Two variants: one per error type (ttl-expired, node-unreachable).
+    </p>
+
+    <div class="variant-row">
+      <div class="variant-box">
+        <div class="variant-label">ttl-expired seal</div>
+        <div class="net-seal-epic">
+          <div class="net-seal-rune-row">ᛃᚷᚷᛞᚱᚨᛊᛁᛚ</div>
+          <div class="net-seal-inscription">"From the roots of Yggdrasil, all things return to silence"</div>
+          <div class="net-seal-sub">ᚦ — So it is carved in the world-tree — ᚦ</div>
+        </div>
+        <!-- NOTE: RUNE_GLYPH_SEAL for ttl-expired = ᛃᚷᚷᛞᚱᚨᛊᛁᛚ — partial Yggdrasil phonetic rendering -->
+      </div>
+      <div class="variant-box">
+        <div class="variant-label">node-unreachable seal</div>
+        <div class="net-seal-epic">
+          <div class="net-seal-rune-row">ᛒᛁᚠᚱᛟᛊᛏ</div>
+          <div class="net-seal-inscription">"The bridge between worlds does not always hold — seek another path"</div>
+          <div class="net-seal-sub">ᚺ — Heimdall watches, but even gods cannot hold the severed — ᚺ</div>
+        </div>
+        <!-- NOTE: RUNE_GLYPH_SEAL for node-unreachable = ᛒᛁᚠᚱᛟᛊᛏ — Bifrost phonetic -->
+      </div>
+    </div>
+
+    <h3>Seal Anatomy</h3>
+    <table>
+      <thead>
+        <tr><th>Layer</th><th>Content</th><th>Class</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Rune row</td>
+          <td>Phonetic Elder Futhark spelling of the key Norse concept</td>
+          <td><code class="mono">net-seal-rune-row</code></td>
+          <td>Decorative, aria-hidden. Large letter-spacing.</td>
+        </tr>
+        <tr>
+          <td>Inscription</td>
+          <td>Italic epic quote, variant-specific</td>
+          <td><code class="mono">net-seal-inscription</code></td>
+          <td>Bold italic. Max 80 chars. Centered.</td>
+        </tr>
+        <tr>
+          <td>Sub-line</td>
+          <td>Short framing line with flanking rune glyphs</td>
+          <td><code class="mono">net-seal-sub</code></td>
+          <td>Small, centered. Replaces old "So it is written…" line.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 4: AGENT RUNE SIGNATURES — NORSE TABLET
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>4 — Agent Rune Signatures: NorseTablet</h2>
+
+    <p class="note">
+      The NorseTablet is the agent system prompt ("All-Father's Decree") tablet in LogViewer.
+      The dispatching agent's <code>agentKey</code> is available via <code>activeJob.agentKey</code>.
+      The rune signature block replaces the old generic seal line at the bottom of <code>norse-tablet-body</code>.
+    </p>
+
+    <h3>4A — Rune Signature Block Anatomy (all agents share this layout)</h3>
+    <div class="nt-wireframe" style="max-width: 560px;">
+      <div class="nt-header">
+        <span class="nt-header-rune">ᚠ</span>
+        <span class="nt-header-title">The All-Father's Decree unto [Agent] — Issue #[N]</span>
+        <span class="nt-header-rune">ᚠ</span>
+        <span class="nt-header-chevron">›</span>
+      </div>
+      <div class="nt-body">
+        <div class="nt-inscription">
+          [Agent system prompt text — unchanged. Any static Norse terms in the header title
+          (not the dynamic prompt body) may be linked if applicable.]
+        </div>
+        <!-- NEW: Rune Signature Block replaces old seal line -->
+        <div class="nt-rune-sig" role="complementary" aria-label="[Agent name] rune signature">
+          <div class="nt-rune-sig-agent-runes" aria-hidden="true">[AGENT NAME IN ELDER FUTHARK]</div>
+          <div class="nt-rune-sig-title-runes" aria-hidden="true">[AGENT TITLE IN ELDER FUTHARK]</div>
+          <div class="nt-rune-sig-divider" aria-hidden="true">— ᚠ ᚢ ᚦ —</div>
+          <div class="nt-rune-sig-quote">"[Agent-specific epic quote]"</div>
+          <div class="nt-rune-sig-label">[Agent Display Name] · [Agent Title]</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">
+      The rune glyphs are decorative (aria-hidden). The human-readable agent name + title below the quote provide the accessible label. The block's container has <code>role="complementary"</code> and <code>aria-label="[Agent name] rune signature"</code>.
+    </p>
+
+    <h3>4B — All Five Agent Signatures</h3>
+
+    <div class="state-row">
+      <!-- FiremanDecko -->
+      <div class="state-box">
+        <div class="state-label">firemandecko</div>
+        <div class="nt-rune-sig">
+          <div class="nt-rune-sig-agent-runes" aria-hidden="true">ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ</div>
+          <div class="nt-rune-sig-title-runes" aria-hidden="true">ᛈᚱᛁᚾᚲᛁᛈᚨᛚ ᛖᚾᚷᛁᚾᛖᛖᚱ</div>
+          <div class="nt-rune-sig-divider" aria-hidden="true">— ᚦᚢᚱᛁᛊᚨᛉ —</div>
+          <div class="nt-rune-sig-quote">"Not with words but with fire and iron is the world built — strike true, forge deep, let no flaw survive the flame"</div>
+          <div class="nt-rune-sig-label">FiremanDecko · Principal Engineer</div>
+        </div>
+        <!-- Elder Futhark: F=ᚠ I=ᛁ R=ᚱ E=ᛖ M=ᛗ A=ᚨ N=ᚾ D=ᛞ E=ᛖ C=ᚲ K=ᚲ O=ᛟ -->
+      </div>
+
+      <!-- Loki -->
+      <div class="state-box">
+        <div class="state-label">loki</div>
+        <div class="nt-rune-sig">
+          <div class="nt-rune-sig-agent-runes" aria-hidden="true">ᛚᛟᚲᛁ</div>
+          <div class="nt-rune-sig-title-runes" aria-hidden="true">ᛩᚨ ᛏᛖᛊᛏᛖᚱ</div>
+          <div class="nt-rune-sig-divider" aria-hidden="true">— ᛚᚨᚢᚷᚨᛉ —</div>
+          <div class="nt-rune-sig-quote">"Every truth hides a lie, every build hides a flaw — I am the crack in the armor that saves you before battle"</div>
+          <div class="nt-rune-sig-label">Loki · QA Tester</div>
+        </div>
+        <!-- Elder Futhark: L=ᛚ O=ᛟ K=ᚲ I=ᛁ -->
+      </div>
+    </div>
+
+    <div class="state-row">
+      <!-- Luna -->
+      <div class="state-box">
+        <div class="state-label">luna</div>
+        <div class="nt-rune-sig">
+          <div class="nt-rune-sig-agent-runes" aria-hidden="true">ᛚᚢᚾᚨ</div>
+          <div class="nt-rune-sig-title-runes" aria-hidden="true">ᚢᛉ ᛞᛖᛊᛁᚷᚾᛖᚱ</div>
+          <div class="nt-rune-sig-divider" aria-hidden="true">— ᛗᚨᚾᚨᚾ —</div>
+          <div class="nt-rune-sig-quote">"By moonlight are the hidden paths revealed — that which cannot be seen cannot be walked"</div>
+          <div class="nt-rune-sig-label">Luna · UX Designer</div>
+        </div>
+        <!-- Elder Futhark: L=ᛚ U=ᚢ N=ᚾ A=ᚨ -->
+      </div>
+
+      <!-- Freya -->
+      <div class="state-box">
+        <div class="state-label">freya</div>
+        <div class="nt-rune-sig">
+          <div class="nt-rune-sig-agent-runes" aria-hidden="true">ᚠᚱᛖᛃᚨ</div>
+          <div class="nt-rune-sig-title-runes" aria-hidden="true">ᛈᚱᛟᛞᚢᚲᛏ ᛟᚹᚾᛖᚱ</div>
+          <div class="nt-rune-sig-divider" aria-hidden="true">— ᛊᛖᛁᚦᚱ —</div>
+          <div class="nt-rune-sig-quote">"I have walked the nine worlds in sorrow and in glory — I know what is worth building before the first stone is laid"</div>
+          <div class="nt-rune-sig-label">Freya · Product Owner</div>
+        </div>
+        <!-- Elder Futhark: F=ᚠ R=ᚱ E=ᛖ Y=ᛃ A=ᚨ -->
+      </div>
+    </div>
+
+    <div class="state-row">
+      <!-- Heimdall -->
+      <div class="state-box" style="max-width: 360px;">
+        <div class="state-label">heimdall</div>
+        <div class="nt-rune-sig">
+          <div class="nt-rune-sig-agent-runes" aria-hidden="true">ᚺᛖᛁᛗᛞᚨᛚᛚ</div>
+          <div class="nt-rune-sig-title-runes" aria-hidden="true">ᛊᛖᚲᚢᚱᛁᛏᛃ ᛊᛈᛖᚲᛁᚨᛚᛁᛊᛏ</div>
+          <div class="nt-rune-sig-divider" aria-hidden="true">— ᚺᚨᛚᛚᛁᚱᛊᚲᛃᚨᛚᚠ —</div>
+          <div class="nt-rune-sig-quote">"Nothing passes the Bifröst without my knowing — I neither sleep nor blink, and neither shall your secrets slip past me"</div>
+          <div class="nt-rune-sig-label">Heimdall · Security Specialist</div>
+        </div>
+        <!-- Elder Futhark: H=ᚺ E=ᛖ I=ᛁ M=ᛗ D=ᛞ A=ᚨ L=ᛚ L=ᛚ -->
+      </div>
+
+      <!-- Fallback: unknown agent -->
+      <div class="state-box" style="max-width: 360px;">
+        <div class="state-label">unknown / no agentKey</div>
+        <div class="nt-rune-sig">
+          <div class="nt-rune-sig-agent-runes" aria-hidden="true">ᚨᛊᚷᚨᚱᛞ</div>
+          <div class="nt-rune-sig-divider" aria-hidden="true">— ᚠ ᚢ ᚦ —</div>
+          <div class="nt-rune-sig-quote">"From Asgard this decree is issued — let it be fulfilled"</div>
+          <div class="nt-rune-sig-label">The All-Father's Council</div>
+        </div>
+        <!-- NOTE: Fallback for agentKey = undefined or unrecognised. "ASGARD" phonetic: A=ᚨ S=ᛊ G=ᚷ A=ᚨ R=ᚱ D=ᛞ -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 5: ELDER FUTHARK TRANSLITERATION REFERENCE
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>5 — Elder Futhark Transliteration Reference</h2>
+
+    <p class="note">
+      FiremanDecko: implement rune mappings in <code>constants.ts</code> as <code>AGENT_RUNE_NAMES</code> and <code>AGENT_RUNE_TITLES</code>.
+      Rune transliterations below follow standard Elder Futhark phonetic equivalences.
+      C/K → ᚲ (Kenaz), Q → ᚲ, W → ᚹ (Wunjo), Y → ᛃ (Jera), X → ᛉ (Algiz)
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Agent</th>
+          <th>agentKey</th>
+          <th>Name (Latin)</th>
+          <th>Name (Elder Futhark)</th>
+          <th>Title (Elder Futhark)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>FiremanDecko</td>
+          <td><code class="mono">firemandecko</code></td>
+          <td>FIREMANDECKO</td>
+          <td>ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ</td>
+          <td>ᛈᚱᛁᚾᚲᛁᛈᚨᛚ ᛖᚾᚷᛁᚾᛖᛖᚱ</td>
+        </tr>
+        <tr>
+          <td>Loki</td>
+          <td><code class="mono">loki</code></td>
+          <td>LOKI</td>
+          <td>ᛚᛟᚲᛁ</td>
+          <td>ᛩᚨ ᛏᛖᛊᛏᛖᚱ</td>
+        </tr>
+        <tr>
+          <td>Luna</td>
+          <td><code class="mono">luna</code></td>
+          <td>LUNA</td>
+          <td>ᛚᚢᚾᚨ</td>
+          <td>ᚢᛉ ᛞᛖᛊᛁᚷᚾᛖᚱ</td>
+        </tr>
+        <tr>
+          <td>Freya</td>
+          <td><code class="mono">freya</code></td>
+          <td>FREYA</td>
+          <td>ᚠᚱᛖᛃᚨ</td>
+          <td>ᛈᚱᛟᛞᚢᚲᛏ ᛟᚹᚾᛖᚱ</td>
+        </tr>
+        <tr>
+          <td>Heimdall</td>
+          <td><code class="mono">heimdall</code></td>
+          <td>HEIMDALL</td>
+          <td>ᚺᛖᛁᛗᛞᚨᛚᛚ</td>
+          <td>ᛊᛖᚲᚢᚱᛁᛏᛃ ᛊᛈᛖᚲᛁᚨᛚᛁᛊᛏ</td>
+        </tr>
+        <tr>
+          <td><em>Fallback</em></td>
+          <td><em>undefined</em></td>
+          <td>ASGARD</td>
+          <td>ᚨᛊᚷᚨᚱᛞ</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Letter-to-Rune Key Used</h3>
+    <table>
+      <thead>
+        <tr><th>Latin</th><th>Rune</th><th>Name</th><th>Latin</th><th>Rune</th><th>Name</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>A</td><td>ᚨ</td><td>Ansuz</td>    <td>N</td><td>ᚾ</td><td>Naudiz</td></tr>
+        <tr><td>B</td><td>ᛒ</td><td>Berkana</td>   <td>O</td><td>ᛟ</td><td>Othala</td></tr>
+        <tr><td>C/K</td><td>ᚲ</td><td>Kenaz</td>  <td>P</td><td>ᛈ</td><td>Pertho</td></tr>
+        <tr><td>D</td><td>ᛞ</td><td>Dagaz</td>     <td>Q</td><td>ᚲ</td><td>Kenaz</td></tr>
+        <tr><td>E</td><td>ᛖ</td><td>Ehwaz</td>     <td>R</td><td>ᚱ</td><td>Raido</td></tr>
+        <tr><td>F</td><td>ᚠ</td><td>Fehu</td>      <td>S</td><td>ᛊ</td><td>Sowilo</td></tr>
+        <tr><td>G</td><td>ᚷ</td><td>Gebo</td>      <td>T</td><td>ᛏ</td><td>Tiwaz</td></tr>
+        <tr><td>H</td><td>ᚺ</td><td>Hagalaz</td>   <td>U</td><td>ᚢ</td><td>Uruz</td></tr>
+        <tr><td>I</td><td>ᛁ</td><td>Isa</td>       <td>V</td><td>ᚠ</td><td>Fehu</td></tr>
+        <tr><td>J</td><td>ᛃ</td><td>Jera</td>      <td>W</td><td>ᚹ</td><td>Wunjo</td></tr>
+        <tr><td>L</td><td>ᛚ</td><td>Laguz</td>     <td>X</td><td>ᛉ</td><td>Algiz</td></tr>
+        <tr><td>M</td><td>ᛗ</td><td>Mannaz</td>    <td>Y</td><td>ᛃ</td><td>Jera</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 6: CONSTANTS.TS EXTENSION SPEC
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>6 — constants.ts Extension Spec</h2>
+
+    <p class="note">
+      FiremanDecko: add these three new exported Record constants to <code>development/monitor-ui/src/lib/constants.ts</code>,
+      alongside the existing <code>AGENT_NAMES</code>, <code>AGENT_TITLES</code>, <code>AGENT_COLORS</code> exports.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>Constant</th><th>Key type</th><th>Value type</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="mono">AGENT_RUNE_NAMES</code></td>
+          <td><code class="mono">string</code> (agentKey)</td>
+          <td><code class="mono">string</code> (Elder Futhark)</td>
+          <td>Agent's display name transliterated to Elder Futhark runes</td>
+        </tr>
+        <tr>
+          <td><code class="mono">AGENT_RUNE_TITLES</code></td>
+          <td><code class="mono">string</code> (agentKey)</td>
+          <td><code class="mono">string</code> (Elder Futhark)</td>
+          <td>Agent's title transliterated to Elder Futhark runes</td>
+        </tr>
+        <tr>
+          <td><code class="mono">AGENT_QUOTES</code></td>
+          <td><code class="mono">string</code> (agentKey)</td>
+          <td><code class="mono">string</code></td>
+          <td>Agent-specific epic seal quote — replaces the generic "So it is written" line</td>
+        </tr>
+        <tr>
+          <td><code class="mono">ERROR_TABLET_SEALS</code></td>
+          <td><code class="mono">"ttl-expired" | "node-unreachable"</code></td>
+          <td><code class="mono">{ runes: string; inscription: string; sub: string }</code></td>
+          <td>Variant-specific seal content for NorseErrorTablet (no agent context)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Wikipedia Link Map (for NorseErrorTablet VARIANT_CONTENT)</h3>
+    <table>
+      <thead>
+        <tr><th>Term</th><th>Wikipedia URL</th><th>Used in variant</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Yggdrasil</td>
+          <td><code class="mono">https://en.wikipedia.org/wiki/Yggdrasil</code></td>
+          <td>ttl-expired subheading</td>
+        </tr>
+        <tr>
+          <td>Bifröst</td>
+          <td><code class="mono">https://en.wikipedia.org/wiki/Bifr%C3%B6st</code></td>
+          <td>node-unreachable subheading</td>
+        </tr>
+        <tr>
+          <td>Valhalla</td>
+          <td><code class="mono">https://en.wikipedia.org/wiki/Valhalla</code></td>
+          <td>Reserved — for future copy if added</td>
+        </tr>
+        <tr>
+          <td>Nine Worlds</td>
+          <td><code class="mono">https://en.wikipedia.org/wiki/Norse_cosmology#Nine_worlds</code></td>
+          <td>Reserved — for future copy if added</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="note">
+      Store Wikipedia URLs as a constant map in constants.ts (e.g. <code>WIKI_LINKS</code>) so they're maintainable in one place and not scattered across JSX files. NorseErrorTablet subheadings render JSX — replace plain text with <code>&lt;WikiLink term="Yggdrasil" /&gt;</code> or inline anchors using the constant map.
+    </p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 7: RESPONSIVE BEHAVIOR
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>7 — Responsive Behavior</h2>
+
+    <div class="mobile-note">
+      <strong>Mobile ≤375px — NorseErrorTablet</strong>
+      Rune border font-size drops to 10px. Glyph reduces from 32px → 24px.
+      Heading 22px → 18px. Seal inscription wraps to 2 lines — acceptable.
+      Wikipedia link ↗ arrow remains visible inline. No layout change needed — single column always.
+    </div>
+
+    <div class="mobile-note">
+      <strong>Mobile ≤375px — NorseTablet rune signature block</strong>
+      Agent rune name font-size: 22px → 16px (still readable). Letter-spacing: 6px → 3px.
+      Title runes: 13px → 11px. Quote max-width: none (fills container).
+      Human-readable label below quote always visible. No horizontal overflow.
+    </div>
+
+    <div class="mobile-note">
+      <strong>Desktop ≥1024px</strong>
+      No change from base layout — tablets are always full-width within the LogViewer pane.
+      Rune signature block max-width: 480px, centered within the tablet body.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 8: ACCESSIBILITY SPEC
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>8 — Accessibility Spec</h2>
+
+    <table>
+      <thead>
+        <tr><th>Element</th><th>Requirement</th><th>Implementation</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Wikipedia links</td>
+          <td>External link disclosure</td>
+          <td><code class="mono">aria-label="[Term] on Wikipedia, opens in new tab"</code><br/>+ <code>rel="noopener noreferrer" target="_blank"</code></td>
+        </tr>
+        <tr>
+          <td>Wikipedia links</td>
+          <td>Not color alone</td>
+          <td>Gold color + underline. WCAG 1.4.1 (Use of Color) satisfied via underline.</td>
+        </tr>
+        <tr>
+          <td>Rune glyphs (seal / signature)</td>
+          <td>Decorative</td>
+          <td><code class="mono">aria-hidden="true"</code> on all rune rows, glyph, divider, rune-row elements</td>
+        </tr>
+        <tr>
+          <td>Rune signature block</td>
+          <td>Accessible label</td>
+          <td><code class="mono">role="complementary" aria-label="[AgentName] rune signature"</code></td>
+        </tr>
+        <tr>
+          <td>Epic seal quote</td>
+          <td>Readable text</td>
+          <td>Plain text (not aria-hidden). Human-readable — screen readers will announce it.</td>
+        </tr>
+        <tr>
+          <td>Agent label line</td>
+          <td>Agent identity readable</td>
+          <td>Plain text "[Name] · [Title]" — not aria-hidden. Provides context for rune block.</td>
+        </tr>
+        <tr>
+          <td>Existing <code>aria-label</code>s</td>
+          <td>No regression</td>
+          <td>NorseErrorTablet <code>role="alert"</code>, <code>aria-live="assertive"</code>, session <code>aria-label</code> — all unchanged.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 9: COMPONENT CHANGE SUMMARY
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>9 — Component Change Summary for FiremanDecko</h2>
+
+    <table>
+      <thead>
+        <tr><th>File</th><th>Change</th><th>Section ref</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="mono">constants.ts</code></td>
+          <td>Add <code>AGENT_RUNE_NAMES</code>, <code>AGENT_RUNE_TITLES</code>, <code>AGENT_QUOTES</code>, <code>ERROR_TABLET_SEALS</code>, <code>WIKI_LINKS</code></td>
+          <td>§6</td>
+        </tr>
+        <tr>
+          <td><code class="mono">NorseErrorTablet.tsx</code></td>
+          <td>
+            1. Wrap "Yggdrasil" and "Bifröst" in anchor tags using <code>WIKI_LINKS</code> constant<br/>
+            2. Replace <code>net-seal</code> div with new <code>net-seal-epic</code> structure using <code>ERROR_TABLET_SEALS[variant]</code>
+          </td>
+          <td>§2, §3</td>
+        </tr>
+        <tr>
+          <td><code class="mono">LogViewer.tsx → NorseTablet</code></td>
+          <td>
+            1. Accept optional <code>agentKey?: string</code> prop<br/>
+            2. Pass <code>activeJob?.agentKey</code> where NorseTablet is rendered (line ~257)<br/>
+            3. Replace <code>norse-tablet-seal</code> div with new <code>RuneSignatureBlock</code> component using <code>agentKey</code>
+          </td>
+          <td>§4</td>
+        </tr>
+        <tr>
+          <td><code class="mono">LogViewer.tsx → RuneSignatureBlock</code></td>
+          <td>New small internal component (or extract to own file). Renders the 4-layer rune signature: agent rune name, title runes, divider, epic quote, human label. Falls back to Asgard generic if <code>agentKey</code> undefined.</td>
+          <td>§4A</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <strong>Where agentKey flows into NorseTablet:</strong>
+      In <code>LogViewer.tsx</code>, the <code>NorseTablet</code> component is rendered inside <code>LogLine</code> (case "entrypoint-task", ~line 257).
+      <code>LogLine</code> receives a <code>LogEntry</code> — add <code>agentKey</code> to the <code>LogEntry</code> type or thread it from the outer <code>LogViewer</code> context
+      via a React context or prop drilling. The <code>activeJob.agentKey</code> is available at the <code>LogViewer</code> component level.
+      Preferred: pass via React context (<code>AgentContext</code>) to avoid deep prop drilling through <code>LogLine → NorseTablet</code>.
+    </div>
+  </div>
+
+</body>
+</html>
