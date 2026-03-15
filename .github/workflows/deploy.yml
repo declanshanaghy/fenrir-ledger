@@ -366,6 +366,60 @@ jobs:
           echo "- **Digest:** \`${{ steps.build-monitor-ui.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
   # --------------------------------------------------------------------------
+  # Job 2d: Test App — tsc, unit, build, e2e gate between build and deploy
+  # Only runs when build-and-push succeeded (i.e., app code changed).
+  # Monitor, Redis, and Umami deploys are NOT gated by this job.
+  # --------------------------------------------------------------------------
+  test-app:
+    name: Test App
+    needs: build-and-push
+    if: needs.build-and-push.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+      NEXT_PUBLIC_BUILD_ID: ${{ github.sha }}
+      NEXT_PUBLIC_APP_VERSION: ${{ github.sha }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: development/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: development/frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: development/frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: TypeScript check
+        run: bash quality/scripts/verify.sh --step tsc
+
+      - name: Unit tests
+        run: bash quality/scripts/verify.sh --step unit
+
+      - name: Build check
+        run: bash quality/scripts/verify.sh --step build
+
+      - name: E2E tests
+        run: bash quality/scripts/verify.sh --step e2e
+
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ github.sha }}
+          path: quality/reports/
+          retention-days: 7
+
+  # --------------------------------------------------------------------------
   # Job 3a: Deploy Redis to GKE (fenrir-app namespace)
   # --------------------------------------------------------------------------
   deploy-redis:
@@ -420,12 +474,13 @@ jobs:
   # --------------------------------------------------------------------------
   deploy-fenrir-app:
     name: Deploy Fenrir App
-    needs: [build-and-push, detect-changes]
+    needs: [test-app, build-and-push, detect-changes]
     if: >-
       always() && !inputs.skip_deploy &&
       (needs.build-and-push.result == 'success' ||
        (needs.build-and-push.result == 'skipped' && needs.detect-changes.outputs.k8s-app == 'true')) &&
-      needs.build-and-push.result != 'failure'
+      needs.build-and-push.result != 'failure' &&
+      (needs.test-app.result == 'success' || needs.test-app.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: read
