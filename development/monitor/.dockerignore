@@ -1,0 +1,6 @@
+node_modules/
+dist/
+fixtures/
+logs/
+*.test.ts
+__tests__/

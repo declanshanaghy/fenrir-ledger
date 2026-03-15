@@ -15,11 +15,13 @@ import type { Job } from "./k8s.js";
 import { verifySessionToken, SESSION_COOKIE } from "./auth.js";
 import { parseJsonlLine, detectVerdict } from "./report.js";
 
-// ── Fixture fallback for local dev ──────────────────────────────────────────
+// ── Fixture fallback for local dev (disabled in production) ─────────────────
+const FIXTURES_ENABLED = process.env.NODE_ENV !== "production";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = resolve(__dirname, "../fixtures");
 
 function findFixture(sessionId: string): string | null {
+  if (!FIXTURES_ENABLED) return null;
   if (!existsSync(FIXTURES_DIR)) return null;
   // Match agent-<sessionId>.jsonl
   const exact = resolve(FIXTURES_DIR, `agent-${sessionId}.jsonl`);
@@ -36,6 +38,7 @@ function findFixture(sessionId: string): string | null {
 
 /** Scan fixtures dir and return Job entries for each .jsonl file found. */
 function listFixtureJobs(): Job[] {
+  if (!FIXTURES_ENABLED) return [];
   if (!existsSync(FIXTURES_DIR)) return [];
   try {
     const files = readdirSync(FIXTURES_DIR).filter((f) => f.endsWith(".jsonl"));
@@ -173,7 +176,9 @@ async function startLogStream(
           send(ws, { type: "log-line", ts: Date.now(), sessionId, line });
           const ev = parseJsonlLine(line);
           if (ev) events.push(ev);
-          timer = setTimeout(streamNext, baseDelay / speed);
+          // Non-JSON lines (entrypoint setup) stream instantly, JSON events get delayed
+          const delay = ev ? baseDelay / speed : 0;
+          timer = setTimeout(streamNext, delay);
         };
 
         // Listen for speed/pause control messages
