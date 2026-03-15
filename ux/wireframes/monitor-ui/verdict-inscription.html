@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — NorseVerdictInscription (Issue #1019)</title>
+  <style>
+    /* ── Layout-only CSS. No colors, no fonts beyond sans-serif, no shadows, no border-radius. ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; padding: 2rem; }
+
+    /* ── Wireframe scaffold ── */
+    .wf-section {
+      border: 2px solid #000;
+      margin-bottom: 3rem;
+      padding: 1.5rem;
+    }
+    .wf-section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid #000;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .note {
+      font-size: 0.7rem;
+      font-style: italic;
+      border: 1px dashed #555;
+      padding: 0.4rem 0.6rem;
+      margin: 0.5rem 0;
+    }
+    .label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    /* ── Grid helpers ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+
+    /* ── Flex helpers ── */
+    .flex-col { display: flex; flex-direction: column; gap: 0.5rem; }
+    .flex-row { display: flex; flex-direction: row; gap: 0.75rem; align-items: flex-start; }
+    .flex-center { display: flex; justify-content: center; align-items: center; }
+
+
+    /* ════════════════════════════════════════════════════════════
+       NorseVerdictInscription — Core Component Wireframe
+       ════════════════════════════════════════════════════════════ */
+
+    /* The outer shell — renders as inline block in message stream,
+       full-width within the assistant bubble, max-width 720px */
+    .nvi-shell {
+      border: 3px solid #000;
+      max-width: 720px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    /* TOP rune band — double row, wider than NorseErrorTablet's single row */
+    .nvi-rune-band-top {
+      width: 100%;
+      border-bottom: 2px solid #000;
+      padding: 0.5rem 1rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .nvi-rune-row {
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-align: center;
+    }
+    .nvi-rune-row-sub {
+      font-size: 0.55rem;
+      letter-spacing: 0.35em;
+      text-align: center;
+      opacity: 0.5;
+    }
+
+    /* AGENT IDENTITY HEADER — triumph-arch keystone */
+    .nvi-agent-header {
+      width: 100%;
+      border-bottom: 2px solid #000;
+      padding: 1.5rem 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* Agent glyph — large central rune, ~3x size of NorseErrorTablet's 4rem */
+    .nvi-glyph {
+      font-size: 5rem;
+      line-height: 1;
+      text-align: center;
+      border: 2px solid #000;
+      width: 6rem;
+      height: 6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nvi-glyph-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    /* Agent name + arch title */
+    .nvi-agent-name {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+    .nvi-arch-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-align: center;
+    }
+    .nvi-arch-subtitle {
+      font-size: 0.8rem;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    /* Horizontal divider — mirrored rune strip */
+    .nvi-divider {
+      font-size: 0.8rem;
+      letter-spacing: 0.5em;
+      text-align: center;
+      padding: 0.5rem 0;
+      width: 100%;
+    }
+
+    /* CONTENT BODY — markdown rendered inside the tablet */
+    .nvi-body {
+      width: 100%;
+      padding: 1.5rem 2rem;
+      border-bottom: 2px solid #000;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Markdown sub-elements inside .nvi-body */
+    .nvi-md-h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #000;
+      padding-bottom: 0.35rem;
+    }
+    .nvi-md-h2 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      border-bottom: 1px dashed #555;
+      padding-bottom: 0.25rem;
+    }
+    .nvi-md-h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .nvi-md-p { font-size: 0.85rem; line-height: 1.6; }
+    .nvi-md-ul {
+      padding-left: 1.25rem;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      list-style: disc;
+    }
+    .nvi-md-ul li::marker { content: "✓  "; }  /* checkmark bullet for verdicts */
+    .nvi-md-code {
+      font-family: monospace;
+      font-size: 0.75rem;
+      border: 1px solid #555;
+      padding: 0.75rem 1rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    /* Wikipedia-linked Norse term */
+    .nvi-norse-link {
+      text-decoration: underline;
+      text-decoration-style: dashed;
+      cursor: pointer;
+    }
+    .nvi-norse-link::after { content: " ↗"; font-size: 0.65em; }
+
+    /* RUNE SIGNATURE SEAL — bottom triumph arch base */
+    .nvi-seal {
+      width: 100%;
+      border-bottom: 2px solid #000;
+      padding: 1.25rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .nvi-seal-divider {
+      width: 100%;
+      border-top: 1px solid #000;
+    }
+    .nvi-seal-futhark {
+      font-size: 0.9rem;
+      letter-spacing: 0.4em;
+      text-align: center;
+    }
+    .nvi-seal-elder-name {
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+    .nvi-seal-pledge {
+      font-size: 0.8rem;
+      font-style: italic;
+      line-height: 1.6;
+      text-align: center;
+      max-width: 520px;
+      border: 1px solid #000;
+      padding: 0.75rem 1.25rem;
+    }
+    .nvi-seal-odin {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    /* BOTTOM rune band — mirror of top */
+    .nvi-rune-band-bottom {
+      width: 100%;
+      border-top: 2px solid #000;
+      padding: 0.5rem 1rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    /* ── Agent variant cards (comparison grid) ── */
+    .agent-card {
+      border: 2px solid #000;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .agent-card-glyph {
+      font-size: 2.5rem;
+      border: 1px solid #000;
+      width: 3.5rem;
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .agent-card-name {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+    .agent-card-rune-name {
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-align: center;
+    }
+    .agent-card-accent {
+      font-size: 0.6rem;
+      text-align: center;
+      border: 1px solid #000;
+      padding: 0.15rem 0.4rem;
+    }
+    .agent-card-futhark {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-align: center;
+    }
+
+    /* ── Markdown content type samples ── */
+    .md-sample {
+      border: 1px solid #000;
+      padding: 0.75rem 1rem;
+      flex: 1;
+      min-width: 0;
+    }
+    .md-sample-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px dashed #555;
+      padding-bottom: 0.25rem;
+    }
+
+    /* ── Comparison: NorseErrorTablet vs NorseVerdictInscription ── */
+    .compare-col {
+      border: 1px solid #000;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .compare-col-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-bottom: 1px solid #000;
+      padding-bottom: 0.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .compare-attr {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    .compare-attr-key {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .compare-attr-val {
+      font-size: 0.7rem;
+      line-height: 1.4;
+    }
+
+    /* ── Animation spec boxes ── */
+    .anim-step {
+      border: 1px solid #555;
+      padding: 0.6rem 0.75rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+    .anim-step-time {
+      font-size: 0.65rem;
+      font-weight: 700;
+      min-width: 3rem;
+      border-right: 1px solid #000;
+      padding-right: 0.5rem;
+    }
+    .anim-step-desc { font-size: 0.7rem; line-height: 1.4; }
+
+    /* ── Mobile 375px frame ── */
+    .mobile-frame {
+      width: 375px;
+      border: 3px solid #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+    }
+    .mobile-bar {
+      width: 100%;
+      border-bottom: 1px solid #000;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.65rem;
+    }
+    .mobile-nvi-shell {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 2px solid #000;
+      margin: 0.5rem;
+      width: calc(100% - 1rem);
+    }
+
+    /* ── Responsive spec table ── */
+    table { border-collapse: collapse; width: 100%; }
+    th, td {
+      border: 1px solid #000;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { font-weight: 700; font-size: 0.65rem; text-transform: uppercase; }
+
+    @media (max-width: 700px) {
+      .grid-2, .grid-3, .grid-5 { grid-template-columns: 1fr; }
+      body { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 0 — Context & Purpose
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 0 — Context: Issue #1019 — NorseVerdictInscription</h2>
+  <div class="flex-col">
+    <p class="note">
+      <strong>What this is:</strong> When a monitor-UI agent message contains a final handoff or QA verdict header
+      ("Handoff" or "QA Verdict" in the last assistant text block), the markdown content is rendered inside a
+      NorseVerdictInscription tablet instead of the standard assistant text bubble.
+      If NorseErrorTablet is a <em>tombstone</em>, this is a <strong>TRIUMPH ARCH</strong>.
+    </p>
+    <p class="note">
+      <strong>Relationship to NorseErrorTablet:</strong> Shares the parchment aesthetic (dark background, gold rune borders,
+      Elder Futhark bands, Cinzel Decorative headings) but scaled to triumph-arch grandeur: double rune bands,
+      larger central glyph, full markdown rendering, agent-specific color accent and rune, mythological pledge seal.
+    </p>
+    <p class="note">
+      <strong>Context in the stream:</strong> Inline within the message stream (not full-pane like NorseErrorTablet).
+      Replaces the outer .ev-assistant-text div. Max-width 720px, full-width on mobile.
+    </p>
+    <p class="note">
+      <strong>Files affected:</strong>
+      <code>development/monitor-ui/src/components/NorseVerdictInscription.tsx</code>,
+      <code>development/monitor-ui/src/styles/index.css</code>
+      (add .nvi-* classes), and the assistant text renderer that currently produces .ev-assistant-text.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 1 — Component Anatomy: Full Wireframe
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 1 — Component Anatomy: NorseVerdictInscription (FiremanDecko variant shown)</h2>
+
+  <div class="nvi-shell" role="article" aria-label="Agent verdict inscription">
+
+    <!-- TOP RUNE BAND — double row for triumph-arch grandeur -->
+    <div class="nvi-rune-band-top" aria-hidden="true">
+      <div class="nvi-rune-row">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
+      <div class="nvi-rune-row-sub">ᛟ ᛞ ᛜ ᛚ ᛗ ᛖ ᛒ ᛏ ᛊ ᛉ ᛈ ᛇ ᛃ ᛁ ᚾ ᚺ ᚹ ᚷ ᚲ ᚱ ᚨ ᚦ ᚢ ᚠ</div>
+    </div>
+    <!-- note: double-row differs from NorseErrorTablet's single RUNE_ROW_TOP -->
+
+    <!-- AGENT IDENTITY HEADER — triumph keystone -->
+    <div class="nvi-agent-header">
+
+      <!-- Central glyph: agent-specific rune, ~5rem (vs 4rem on NorseErrorTablet) -->
+      <div class="nvi-glyph" aria-hidden="true" role="img" aria-label="Kenaz rune — the forge">ᚲ</div>
+      <div class="nvi-glyph-label" aria-hidden="true">Kenaz — The Forge</div>
+      <!-- note: each agent maps to a specific Elder Futhark rune — see Section 3 -->
+
+      <!-- Agent designation -->
+      <div class="nvi-agent-name" aria-label="Agent: FiremanDecko, Principal Engineer">
+        ᚠᛁᚱᛖᛗᚨᚾ · FiremanDecko · ᛞᛖᚲᚲᛟ
+      </div>
+      <!-- note: agent's Elder Futhark transliteration flanks their ASCII name -->
+
+      <!-- Triumph-arch heading — grand, permanent, victorious -->
+      <h1 class="nvi-arch-title">The Forge Has Spoken</h1>
+      <!-- note: each agent has a unique arch-title — see Section 3 -->
+
+      <p class="nvi-arch-subtitle">Principal Engineer — Handoff Complete</p>
+      <!-- note: subtitle = role + verdict type (Handoff | QA Verdict) -->
+
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="nvi-divider" aria-hidden="true">ᚲ ᛖ ᚾ ᚨ ᛉ ⟡ ᚲ ᛖ ᚾ ᚨ ᛉ ⟡ ᚲ ᛖ ᚾ ᚨ ᛉ</div>
+    <!-- note: divider runes repeat the agent's glyph name — Kenaz for FiremanDecko -->
+
+    <!-- CONTENT BODY — agent's full markdown, rendered faithfully -->
+    <div class="nvi-body">
+      <!-- H1 renders as nvi-md-h1 -->
+      <h1 class="nvi-md-h1">FiremanDecko → Loki Handoff</h1>
+
+      <!-- H2 renders as nvi-md-h2 -->
+      <h2 class="nvi-md-h2">What Was Built</h2>
+
+      <ul class="nvi-md-ul">
+        <li>NorseVerdictInscription component — <code>src/components/NorseVerdictInscription.tsx</code></li>
+        <li>Agent detection in the stream renderer — matches "Handoff" or "QA Verdict" headings</li>
+        <li>CSS classes <code>.nvi-*</code> added to <code>styles/index.css</code></li>
+        <li>Carve-in entrance animation via <code>@keyframes carveIn</code></li>
+      </ul>
+
+      <h2 class="nvi-md-h2">Acceptance Criteria</h2>
+
+      <!-- Checkmark-bulleted list — verdict context -->
+      <ul class="nvi-md-ul">
+        <li>All 5 agent variants render with correct glyph, color accent, and pledge</li>
+        <li>Markdown renders: H1/H2/H3, bullets, checkmarks, tables, code blocks</li>
+        <li>
+          <span class="nvi-norse-link" title="Wikipedia: Yggdrasil">Yggdrasil</span>
+          linked Norse terms appear in gold underline with ↗ indicator
+        </li>
+        <li>Carve-in animation plays on mount, respects prefers-reduced-motion</li>
+        <li>Mobile 375px: full-width, single-column, touch-friendly</li>
+      </ul>
+
+      <h2 class="nvi-md-h2">Code Block Sample</h2>
+
+      <!-- Code block renders as .nvi-md-code -->
+      <pre class="nvi-md-code">// Detection logic
+const isVerdictMessage = (text: string): boolean =&gt;
+  /^#{1,2}\s+(Handoff|QA Verdict)/m.test(text);
+      </pre>
+
+      <!-- Inline table -->
+      <h2 class="nvi-md-h2">Agent Rune Map</h2>
+      <table>
+        <thead>
+          <tr><th>Agent</th><th>Rune</th><th>Name</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>FiremanDecko</td><td>ᚲ</td><td>Kenaz</td><td>The Forge / Torch</td></tr>
+          <tr><td>Loki</td><td>ᚾ</td><td>Naudhiz</td><td>Need / Trickery</td></tr>
+          <tr><td>Luna</td><td>᛫</td><td>Mannaz + Moon</td><td>Moonlight / Wisdom</td></tr>
+          <tr><td>Heimdall</td><td>ᛏ</td><td>Tiwaz</td><td>The Watchman</td></tr>
+          <tr><td>Freya</td><td>ᚠ</td><td>Fehu</td><td>Abundance / Wisdom</td></tr>
+        </tbody>
+      </table>
+      <!-- note: table renders with thin border-collapse, full-width inside .nvi-body -->
+    </div>
+
+    <!-- RUNE SIGNATURE SEAL — triumph arch base / keystone -->
+    <div class="nvi-seal" aria-label="Agent's pledge to Odin">
+      <div class="nvi-seal-divider"></div>
+
+      <!-- Elder Futhark transliteration of the agent's pledge opening -->
+      <div class="nvi-seal-futhark" aria-hidden="true">ᚠᛁᚱᛖ · ᛗᚨᚾ · ᛞᛖᚲᚲᛟ</div>
+
+      <!-- Agent's Elder Futhark name beneath the glyph row -->
+      <div class="nvi-seal-elder-name">FiremanDecko — Kenaz — ᚲ</div>
+
+      <!-- Mythological pledge — unique per agent -->
+      <blockquote class="nvi-seal-pledge">
+        "The forge cools. What was broken is reforged. I lay this work before the
+        <span class="nvi-norse-link" title="Wikipedia: Hliðskjálf">All‑Father's throne upon Hliðskjálf</span>."
+      </blockquote>
+      <!-- note: pledge is static per agent — see Issue #1019 for all 5 pledges -->
+
+      <!-- Sworn before Odin -->
+      <div class="nvi-seal-odin" aria-label="Sworn before Odin">
+        ᚷᛁᚠ ᛟᛞᛁᚾ — Sworn before the All‑Father — ᚷᛁᚠ ᛟᛞᛁᚾ
+      </div>
+    </div>
+
+    <!-- BOTTOM RUNE BAND — mirror of top -->
+    <div class="nvi-rune-band-bottom" aria-hidden="true">
+      <div class="nvi-rune-row-sub">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
+      <div class="nvi-rune-row">ᛟ ᛞ ᛜ ᛚ ᛗ ᛖ ᛒ ᛏ ᛊ ᛉ ᛈ ᛇ ᛃ ᛁ ᚾ ᚺ ᚹ ᚷ ᚲ ᚱ ᚨ ᚦ ᚢ ᚠ</div>
+    </div>
+
+  </div><!-- /nvi-shell -->
+
+  <p class="note" style="margin-top:1rem;">
+    <strong>Width:</strong> max-width 720px, full-width on mobile. Rendered inline within the message stream
+    (replaces the .ev-assistant-text wrapper). The component is self-contained — outer padding comes from the
+    existing stream layout.
+  </p>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 2 — Comparison: NorseErrorTablet vs NorseVerdictInscription
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 2 — Tombstone vs Triumph Arch</h2>
+
+  <div class="grid-2">
+
+    <div class="compare-col">
+      <div class="compare-col-title">NorseErrorTablet (Tombstone)</div>
+      <div class="compare-attr"><span class="compare-attr-key">Context</span><span class="compare-attr-val">Full-pane, replaces entire content area when session is dead</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Glyph</span><span class="compare-attr-val">4rem, single static rune (ᚦ Thurisaz — warning)</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Rune bands</span><span class="compare-attr-val">Single row top + single row bottom</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Content</span><span class="compare-attr-val">Static: heading, subheading, one body paragraph, session ID</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Mood</span><span class="compare-attr-val">Solemn, final, loss — gold fades to silence</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Trigger</span><span class="compare-attr-val">Pod TTL expired / node unreachable (prop-driven)</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Variants</span><span class="compare-attr-val">ttl-expired | node-unreachable</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Agent-specific</span><span class="compare-attr-val">No — universal error state</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Animation</span><span class="compare-attr-val">fadeSlideIn (shared global)</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Seal</span><span class="compare-attr-val">"So it is written, so shall it remain"</span></div>
+    </div>
+
+    <div class="compare-col">
+      <div class="compare-col-title">NorseVerdictInscription (Triumph Arch) ← NEW</div>
+      <div class="compare-attr"><span class="compare-attr-key">Context</span><span class="compare-attr-val">Inline in message stream, replaces assistant text bubble for verdict messages</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Glyph</span><span class="compare-attr-val">5rem, agent-specific rune in bordered medallion</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Rune bands</span><span class="compare-attr-val">Double row top + double row bottom (inverted mirror)</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Content</span><span class="compare-attr-val">Dynamic: full markdown rendering (H1/H2/H3, lists, tables, code)</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Mood</span><span class="compare-attr-val">Triumphant, complete, victorious — gold blazes at full intensity</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Trigger</span><span class="compare-attr-val">Last assistant text containing "Handoff" or "QA Verdict" H1/H2 heading (text analysis)</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Variants</span><span class="compare-attr-val">5 agents × 2 verdict types = 10 variant combinations</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Agent-specific</span><span class="compare-attr-key">Yes — glyph, arch-title, color accent, Elder Futhark name, pledge</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Animation</span><span class="compare-attr-val">@keyframes carveIn — staggered: rune bands first, glyph second, content third, seal last</span></div>
+      <div class="compare-attr"><span class="compare-attr-key">Seal</span><span class="compare-attr-val">Agent's unique mythological pledge to Odin (see Section 3)</span></div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 3 — Agent Variants (All 5)
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 3 — All 5 Agent Variants</h2>
+  <p class="note">Each agent gets a distinct rune glyph, color accent token, Elder Futhark name, arch title, and pledge. The layout structure is identical across all variants — only the content tokens change.</p>
+
+  <div class="grid-5" style="margin-top:1rem;">
+
+    <!-- FiremanDecko -->
+    <div class="agent-card">
+      <div class="agent-card-glyph" aria-label="Kenaz rune">ᚲ</div>
+      <div class="agent-card-name">FiremanDecko</div>
+      <div class="agent-card-rune-name">ᚲ Kenaz — The Forge</div>
+      <div class="agent-card-accent">forge-orange accent</div>
+      <div class="agent-card-futhark">ᚠᛁᚱᛖᛗᚨᚾ</div>
+      <p class="note" style="font-size:0.6rem;">
+        Arch title: "The Forge Has Spoken"<br>
+        CSS token: <code>--agent-accent-fireman</code>
+      </p>
+      <p class="note" style="font-size:0.58rem;">
+        Pledge: "The forge cools. What was broken is reforged. I lay this work before the All-Father's throne upon Hliðskjálf."
+      </p>
+    </div>
+
+    <!-- Loki -->
+    <div class="agent-card">
+      <div class="agent-card-glyph" aria-label="Naudhiz rune">ᚾ</div>
+      <div class="agent-card-name">Loki</div>
+      <div class="agent-card-rune-name">ᚾ Naudhiz — Need</div>
+      <div class="agent-card-accent">trickster-green accent</div>
+      <div class="agent-card-futhark">ᛚᛟᚲᛁ</div>
+      <p class="note" style="font-size:0.6rem;">
+        Arch title: "The Trickster Finds No Flaw"<br>
+        CSS token: <code>--agent-accent-loki</code>
+      </p>
+      <p class="note" style="font-size:0.58rem;">
+        Pledge: "Every thread tested, every seam inspected. The Trickster finds no flaw worthy of Ragnarök. I present this verdict to Odin, Lord of Asgard."
+      </p>
+    </div>
+
+    <!-- Luna -->
+    <div class="agent-card">
+      <div class="agent-card-glyph" aria-label="Laguz rune — water/moon">ᛚ</div>
+      <div class="agent-card-name">Luna</div>
+      <div class="agent-card-rune-name">ᛚ Laguz — The Moon</div>
+      <div class="agent-card-accent">moonlight-silver accent</div>
+      <div class="agent-card-futhark">ᛚᚢᚾᚨ</div>
+      <p class="note" style="font-size:0.6rem;">
+        Arch title: "The Moonpath Is Drawn"<br>
+        CSS token: <code>--agent-accent-luna</code>
+      </p>
+      <p class="note" style="font-size:0.58rem;">
+        Pledge: "By moonlight I have drawn the path through the branches of Yggdrasil. These wireframes carry the vision of Freyja's hall. Odin, receive this design."
+      </p>
+    </div>
+
+    <!-- Heimdall -->
+    <div class="agent-card">
+      <div class="agent-card-glyph" aria-label="Tiwaz rune — the watchman">ᛏ</div>
+      <div class="agent-card-name">Heimdall</div>
+      <div class="agent-card-rune-name">ᛏ Tiwaz — Justice</div>
+      <div class="agent-card-accent">watchman-gold accent</div>
+      <div class="agent-card-futhark">ᚺᛖᛁᛗᛞᚨᛚᛚ</div>
+      <p class="note" style="font-size:0.6rem;">
+        Arch title: "The Bifröst Stands Unwavering"<br>
+        CSS token: <code>--agent-accent-heimdall</code>
+      </p>
+      <p class="note" style="font-size:0.58rem;">
+        Pledge: "From the Bifröst I have watched. No shadow passes unchallenged. This audit is sworn before Odin's one remaining eye."
+      </p>
+    </div>
+
+    <!-- Freya -->
+    <div class="agent-card">
+      <div class="agent-card-glyph" aria-label="Fehu rune — abundance/wisdom">ᚠ</div>
+      <div class="agent-card-name">Freya</div>
+      <div class="agent-card-rune-name">ᚠ Fehu — Abundance</div>
+      <div class="agent-card-accent">wisdom-violet accent</div>
+      <div class="agent-card-futhark">ᚠᚱᛖᛃᚨ</div>
+      <p class="note" style="font-size:0.6rem;">
+        Arch title: "The Völva Has Spoken"<br>
+        CSS token: <code>--agent-accent-freya</code>
+      </p>
+      <p class="note" style="font-size:0.58rem;">
+        Pledge: "The Völva has spoken. What was foretold is now revealed. I deliver this wisdom to the throne of Valhalla."
+      </p>
+    </div>
+
+  </div>
+
+  <p class="note" style="margin-top:1rem;">
+    <strong>Implementation note:</strong> All 5 agent configs should live in a single
+    <code>AGENT_VERDICT_CONFIG</code> map (keyed by agent name string, derived from the session's agent-name metadata or
+    detected from the message content). Fallback to a "generic" variant if agent is unrecognised.
+    See Section 6 (interaction spec) for detection logic.
+  </p>
+  <p class="note">
+    <strong>Luna's rune choice:</strong> ᛚ Laguz is chosen over the issue description's "Mannaz + Moon" composite —
+    Laguz (water, flow, moon, the unconscious) is a single valid Elder Futhark rune that maps cleanly to Luna's
+    moonlight/design role. Avoids composite-glyph rendering issues across font stacks.
+  </p>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 4 — Markdown Rendering Inside the Tablet
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 4 — Markdown Content Types</h2>
+  <p class="note">All markdown elements must render faithfully inside .nvi-body. The engineer should use react-markdown (already in the project) with custom component overrides that apply .nvi-md-* classes.</p>
+
+  <div class="grid-3" style="margin-top:1rem;">
+
+    <!-- Headings + prose -->
+    <div class="md-sample">
+      <div class="md-sample-label">Headings + Prose</div>
+      <h1 class="nvi-md-h1">H1 Verdict Title</h1>
+      <h2 class="nvi-md-h2">H2 Section</h2>
+      <h3 class="nvi-md-h3">H3 Sub-section</h3>
+      <p class="nvi-md-p">Body prose renders as Source Serif 4. Line-height 1.6, comfortable reading width max 640px.</p>
+      <p class="note" style="font-size:0.6rem;">H1: Cinzel Decorative, gold, with bottom border. H2: Cinzel, gold-dim, dashed border. H3: Cinzel, no border.</p>
+    </div>
+
+    <!-- Lists -->
+    <div class="md-sample">
+      <div class="md-sample-label">Lists — Checkmark Bullets</div>
+      <ul class="nvi-md-ul">
+        <li>Task completed successfully</li>
+        <li>All tests passing (green)</li>
+        <li>TypeScript errors: none</li>
+        <li>Accessibility: WCAG 2.1 AA</li>
+      </ul>
+      <p class="note" style="font-size:0.6rem; margin-top:0.5rem;">Standard bullet lists use ✓ marker for verdict context. Unordered lists in handoffs represent completed work — checkmark reinforces the triumph-arch mood. Nested lists indent 1.25rem additional.</p>
+    </div>
+
+    <!-- Code blocks -->
+    <div class="md-sample">
+      <div class="md-sample-label">Code Block</div>
+      <pre class="nvi-md-code">// NorseVerdictInscription.tsx
+export interface VerdictProps {
+  agent: AgentKey;
+  markdown: string;
+  verdictType: 'handoff' | 'verdict';
+}</pre>
+      <p class="note" style="font-size:0.6rem; margin-top:0.5rem;">JetBrains Mono, thin border, subtle background. Horizontal scroll on mobile (overflow-x: auto). Line numbers not required.</p>
+    </div>
+
+    <!-- Tables -->
+    <div class="md-sample">
+      <div class="md-sample-label">Table</div>
+      <table>
+        <thead><tr><th>Check</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>TSC</td><td>✓ Pass</td></tr>
+          <tr><td>Build</td><td>✓ Pass</td></tr>
+          <tr><td>Tests</td><td>✓ Pass</td></tr>
+        </tbody>
+      </table>
+      <p class="note" style="font-size:0.6rem; margin-top:0.5rem;">border-collapse table, full-width, alternating row tint (subtle). Overflow-x: auto wrapper on mobile.</p>
+    </div>
+
+    <!-- Norse links -->
+    <div class="md-sample">
+      <div class="md-sample-label">Wikipedia-linked Norse Terms</div>
+      <p class="nvi-md-p">
+        The agent's work is complete, sealed in
+        <span class="nvi-norse-link" title="Wikipedia: Valhalla">Valhalla</span>'s records.
+        It passes through the
+        <span class="nvi-norse-link" title="Wikipedia: Bifröst">Bifröst</span>
+        and is laid at the foot of
+        <span class="nvi-norse-link" title="Wikipedia: Yggdrasil">Yggdrasil</span>.
+      </p>
+      <p class="note" style="font-size:0.6rem; margin-top:0.5rem;">
+        Gold dashed underline, ↗ arrow suffix. Opens Wikipedia in new tab. The markdown renderer should pre-process
+        a known-terms dictionary and auto-link them — the agent's pledge and arch content always contain pre-linked terms.
+        Do NOT auto-link mid-sentence random Norse words — only the curated pledge text and section headings.
+      </p>
+    </div>
+
+    <!-- Inline code + bold/italic -->
+    <div class="md-sample">
+      <div class="md-sample-label">Inline Code + Emphasis</div>
+      <p class="nvi-md-p">
+        The <code>NorseVerdictInscription</code> component wraps <strong>react-markdown</strong> with
+        custom renderers. Each <em>agent variant</em> maps to a <code>AGENT_VERDICT_CONFIG</code> entry.
+      </p>
+      <p class="note" style="font-size:0.6rem; margin-top:0.5rem;">Inline code: monospace, thin border, 0.75em size. Bold: font-weight 700. Italic: font-style italic. Nesting combinations must work.</p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 5 — Carve-In Animation Spec
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 5 — Carve-In Entrance Animation</h2>
+  <p class="note">
+    The "carve-in" effect should feel like runes being inscribed into stone — not a simple fade.
+    Staggered reveal: outer structure appears first, then content is "carved" in from top to bottom.
+    Respects <code>prefers-reduced-motion</code>.
+  </p>
+
+  <div class="flex-col" style="margin-top:1rem;">
+
+    <div class="anim-step">
+      <div class="anim-step-time">0ms</div>
+      <div class="anim-step-desc">
+        <strong>Shell border appears</strong> — .nvi-shell fades from opacity 0, border-color animates from transparent to gold.
+        Duration: 200ms ease-out.
+      </div>
+    </div>
+
+    <div class="anim-step">
+      <div class="anim-step-time">50ms</div>
+      <div class="anim-step-desc">
+        <strong>Top rune band carves in</strong> — .nvi-rune-band-top slides down from translateY(-8px) + opacity 0 to resting position.
+        Duration: 300ms ease-out.
+        Rune characters also animate letter-spacing from 0.5em → final value (creates "etching" feel).
+      </div>
+    </div>
+
+    <div class="anim-step">
+      <div class="anim-step-time">200ms</div>
+      <div class="anim-step-desc">
+        <strong>Agent glyph blazes in</strong> — .nvi-glyph scales from 0.6 → 1.0 with opacity 0 → 1.
+        Simultaneously: text-shadow pulses from 0 → full glow → settled glow (simulates burning into stone).
+        Duration: 400ms cubic-bezier(0.34, 1.56, 0.64, 1) (slight overshoot for impact).
+      </div>
+    </div>
+
+    <div class="anim-step">
+      <div class="anim-step-time">350ms</div>
+      <div class="anim-step-desc">
+        <strong>Agent name + arch title fade in</strong> — .nvi-agent-name and .nvi-arch-title fade from opacity 0,
+        translateY(4px) → resting. Duration: 300ms ease-out.
+      </div>
+    </div>
+
+    <div class="anim-step">
+      <div class="anim-step-time">500ms</div>
+      <div class="anim-step-desc">
+        <strong>Content body reveals</strong> — .nvi-body children stagger with 60ms delay between each block
+        (h1, h2, ul, table, pre each appear sequentially). fadeSlideIn from translateY(6px).
+        Duration: 250ms per block.
+      </div>
+    </div>
+
+    <div class="anim-step">
+      <div class="anim-step-time">final</div>
+      <div class="anim-step-desc">
+        <strong>Seal stamps in</strong> — .nvi-seal appears last with a brief scale pulse (0.95 → 1.02 → 1.0).
+        The pledge text types in character-by-character (CSS animation on content, or JS interval).
+        Bottom rune band mirrors top band's animation.
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:0.75rem;">
+      <strong>prefers-reduced-motion:</strong> When <code>@media (prefers-reduced-motion: reduce)</code> is active,
+      collapse all animations to a single 150ms opacity fade. No translate, no scale, no stagger.
+    </p>
+
+    <p class="note">
+      <strong>Implementation approach:</strong> Use CSS custom properties for delays, controlled by
+      <code>animation-delay</code> on each region. A single <code>carve-in</code> keyframe handles
+      opacity+translate; a separate <code>glyphBlaze</code> keyframe handles the glyph scale+shadow.
+      The seal pledge typewriter effect should be a CSS animation on a pseudo-element, or a lightweight
+      JS interval — NOT a third-party library.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 6 — Mobile 375px Layout
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 6 — Mobile 375px Viewport</h2>
+  <p class="note">The component must be fully usable at 375px. All content is single-column. Tables and code blocks scroll horizontally. Rune bands wrap if needed.</p>
+
+  <div class="flex-row" style="gap:2rem; flex-wrap:wrap; margin-top:1rem;">
+
+    <!-- Mobile frame -->
+    <div class="mobile-frame" aria-label="Mobile viewport 375px">
+      <div class="mobile-bar">375px · monitor-ui · assistant message stream</div>
+
+      <div class="mobile-nvi-shell">
+
+        <!-- Rune band — wraps on mobile, still readable -->
+        <div class="nvi-rune-band-top" aria-hidden="true" style="padding:0.4rem 0.5rem;">
+          <div class="nvi-rune-row" style="font-size:0.55rem; letter-spacing:0.15em; word-break:break-all;">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
+        </div>
+        <!-- note: On mobile, show only 1 rune row (hide the secondary). Letter-spacing reduced to 0.15em. -->
+
+        <!-- Agent header — stacks vertically, centered -->
+        <div class="nvi-agent-header" style="padding:1rem 1rem 0.75rem; gap:0.5rem;">
+          <div class="nvi-glyph" style="font-size:3.5rem; width:4.5rem; height:4.5rem;">ᚲ</div>
+          <div class="nvi-agent-name" style="font-size:0.65rem; letter-spacing:0.15em;">FiremanDecko</div>
+          <h1 class="nvi-arch-title" style="font-size:1.1rem; letter-spacing:0.04em;">The Forge Has Spoken</h1>
+          <p class="nvi-arch-subtitle" style="font-size:0.7rem;">Handoff Complete</p>
+        </div>
+
+        <!-- Content body — full width, padding reduced -->
+        <div class="nvi-body" style="padding:1rem;">
+          <h1 class="nvi-md-h1" style="font-size:0.95rem;">FiremanDecko → Loki Handoff</h1>
+          <h2 class="nvi-md-h2" style="font-size:0.8rem;">What Was Built</h2>
+          <ul class="nvi-md-ul" style="font-size:0.8rem;">
+            <li>NorseVerdictInscription component</li>
+            <li>Detection logic in stream renderer</li>
+            <li>CSS .nvi-* classes added</li>
+          </ul>
+          <!-- Tables scroll horizontally on mobile -->
+          <div style="overflow-x:auto;">
+            <table style="min-width:300px; font-size:0.7rem;">
+              <thead><tr><th>Check</th><th>Status</th></tr></thead>
+              <tbody><tr><td>TSC</td><td>✓ Pass</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Seal — compressed on mobile -->
+        <div class="nvi-seal" style="padding:0.75rem 1rem; gap:0.5rem;">
+          <div class="nvi-seal-futhark" style="font-size:0.75rem;">ᚠᛁᚱᛖ · ᛗᚨᚾ</div>
+          <blockquote class="nvi-seal-pledge" style="font-size:0.7rem; padding:0.5rem 0.75rem;">
+            "The forge cools. What was broken is reforged. I lay this work before the All-Father's throne."
+          </blockquote>
+          <div class="nvi-seal-odin" style="font-size:0.6rem;">ᚷᛁᚠ ᛟᛞᛁᚾ — Sworn before the All-Father</div>
+        </div>
+
+        <div class="nvi-rune-band-bottom" style="padding:0.4rem 0.5rem;" aria-hidden="true">
+          <div class="nvi-rune-row" style="font-size:0.55rem; letter-spacing:0.15em; word-break:break-all;">ᛟ ᛞ ᛜ ᛚ ᛗ ᛖ ᛒ ᛏ ᛊ ᛉ ᛈ ᛇ ᛃ ᛁ ᚾ ᚺ ᚹ ᚷ ᚲ ᚱ ᚨ ᚦ ᚢ ᚠ</div>
+        </div>
+
+      </div><!-- /mobile-nvi-shell -->
+    </div>
+
+    <!-- Mobile adaptation notes -->
+    <div class="flex-col" style="flex:1; min-width:200px;">
+      <span class="label">Mobile Adaptations</span>
+      <p class="note">Rune bands: hide secondary row (&lt;600px). Single row, reduced letter-spacing, break-all to prevent overflow.</p>
+      <p class="note">Agent glyph: 3.5rem (was 5rem). Medallion border box: 4.5rem (was 6rem).</p>
+      <p class="note">Arch title: 1.1rem (was 1.4rem). Letter-spacing reduced.</p>
+      <p class="note">Body padding: 1rem (was 1.5rem 2rem).</p>
+      <p class="note">Tables: overflow-x: auto wrapper. Min-width 300px so columns are readable.</p>
+      <p class="note">Code blocks: overflow-x: auto, no text wrapping.</p>
+      <p class="note">Seal pledge: max-width drops to 100% (was 520px).</p>
+      <p class="note">Agent Futhark name in seal: shortened to first-word-only if needed to prevent overflow.</p>
+      <p class="note">Touch targets: Norse links must be ≥44px tap area — add padding 0.5rem.</p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 7 — Responsive Breakpoints Summary
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 7 — Responsive Breakpoints</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Breakpoint</th>
+        <th>Width</th>
+        <th>Rune Bands</th>
+        <th>Glyph</th>
+        <th>Arch Title</th>
+        <th>Body Padding</th>
+        <th>Tables</th>
+        <th>Agent Header Layout</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Mobile</td>
+        <td>&lt;600px</td>
+        <td>1 row, 0.15em spacing, break-all</td>
+        <td>3.5rem / 4.5rem box</td>
+        <td>1.1rem</td>
+        <td>1rem</td>
+        <td>overflow-x: auto</td>
+        <td>Vertical stack, centered</td>
+      </tr>
+      <tr>
+        <td>Tablet</td>
+        <td>600–1024px</td>
+        <td>1.5 rows, 0.2em spacing</td>
+        <td>4rem / 5.5rem box</td>
+        <td>1.2rem</td>
+        <td>1.25rem 1.5rem</td>
+        <td>Full width</td>
+        <td>Vertical stack, centered</td>
+      </tr>
+      <tr>
+        <td>Desktop</td>
+        <td>&gt;1024px</td>
+        <td>2 rows, 0.25em spacing</td>
+        <td>5rem / 6rem box</td>
+        <td>1.4rem</td>
+        <td>1.5rem 2rem</td>
+        <td>Full width</td>
+        <td>Vertical stack, centered</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="note" style="margin-top:0.75rem;">
+    The component always renders as a single vertical column — the agent header, content body, and seal stack vertically at all viewport sizes.
+    No horizontal splits. This preserves the "inscribed tablet" metaphor at every size.
+  </p>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 8 — Accessibility Spec
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 8 — Accessibility (WCAG 2.1 AA)</h2>
+
+  <div class="grid-2">
+    <div class="flex-col">
+      <span class="label">ARIA Structure</span>
+      <p class="note"><code>role="article"</code> on .nvi-shell — semantically a self-contained verdict document within the stream.</p>
+      <p class="note"><code>aria-label="[AgentName] verdict inscription — [verdictType]"</code> e.g. "FiremanDecko handoff inscription".</p>
+      <p class="note">All rune bands: <code>aria-hidden="true"</code> — decorative Unicode characters must not be read by screen readers.</p>
+      <p class="note">Agent glyph: <code>role="img"</code> + <code>aria-label="[RuneName] rune — [meaning]"</code>.</p>
+      <p class="note">Norse links: <code>aria-label="[term] (opens Wikipedia in new tab)"</code>, <code>target="_blank"</code>, <code>rel="noopener noreferrer"</code>.</p>
+      <p class="note">Pledge blockquote: <code>aria-label="[AgentName]'s pledge to Odin"</code>.</p>
+      <p class="note">The markdown content region: <code>aria-label="Verdict content"</code>.</p>
+    </div>
+    <div class="flex-col">
+      <span class="label">Color Contrast + Motion</span>
+      <p class="note">All agent color accents must meet 4.5:1 contrast against the dark parchment background (#07070d). Engineer to verify each accent token meets this ratio.</p>
+      <p class="note">Norse links must not rely solely on color for indication — the dashed underline and ↗ suffix provide shape-based cues.</p>
+      <p class="note">prefers-reduced-motion: collapse all carve-in stagger to a single 150ms opacity fade. No translate, scale, or letter-spacing animation.</p>
+      <p class="note">Focus states: Norse links must have visible :focus-visible ring (2px solid, offset 2px). No native outline removal without replacement.</p>
+      <p class="note">Code blocks and tables must have meaningful accessible labels if they convey structured data — use <code>&lt;caption&gt;</code> on tables when the heading context is ambiguous.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 9 — Placement in Message Stream
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 9 — Stream Placement & Detection</h2>
+
+  <div class="flex-col">
+
+    <p class="note">
+      <strong>Detection rule:</strong> Examine the last assistant-role text block in the message stream.
+      If its raw markdown contains a level-1 or level-2 heading matching
+      <code>/^#{1,2}\s+(Handoff|QA Verdict)/m</code>, render as NorseVerdictInscription instead of .ev-assistant-text.
+    </p>
+    <p class="note">
+      <strong>Scope:</strong> Only the LAST assistant text block per session stream triggers this. Mid-session
+      "Handoff Notes" sub-sections in tool outputs do NOT trigger (they're inside code blocks or non-final messages).
+    </p>
+    <p class="note">
+      <strong>Agent detection:</strong> Read agent identity from the session metadata (session.agentName field in the
+      parsed stream). If unavailable, fall back to detecting agent name in the verdict text itself
+      (e.g., "FiremanDecko → Loki Handoff" → agent is "FiremanDecko"). If still undetected → generic variant
+      (gold accent, ᛟ Othalan rune — "heritage/estate").
+    </p>
+    <p class="note">
+      <strong>Verdict type:</strong> Distinguish "Handoff" vs "QA Verdict" from the detected heading text.
+      Handoff subtitles read "[AgentName] → [Recipient] Handoff". QA Verdict subtitles read "QA Verdict — [Status]".
+    </p>
+
+    <!-- ASCII diagram of message stream with NorseVerdictInscription at the end -->
+    <pre class="nvi-md-code" style="margin-top:0.5rem;">Message Stream Layout (schematic):
+
+┌─────────────────────────────────────────────┐
+│  [system event]  Session: abc123            │
+├─────────────────────────────────────────────┤
+│  [assistant]  .ev-assistant-text bubble     │
+│  "I'll start by reading the issue..."       │
+├─────────────────────────────────────────────┤
+│  [tool-batch]  Read, Grep, Edit (collapsed) │
+├─────────────────────────────────────────────┤
+│  [assistant]  .ev-assistant-text bubble     │
+│  "Here are the changes I made..."           │
+├─────────────────────────────────────────────┤
+│  [tool-batch]  git add, commit (collapsed)  │
+├─────────────────────────────────────────────┤
+│  ┌───────────────────────────────────────┐  │
+│  │  NorseVerdictInscription              │  │  ← LAST assistant block, contains verdict
+│  │  ᚲ  The Forge Has Spoken             │  │
+│  │  FiremanDecko → Loki Handoff         │  │
+│  │  [full markdown content]              │  │
+│  │  [pledge seal]                        │  │
+│  └───────────────────────────────────────┘  │
+└─────────────────────────────────────────────┘
+</pre>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 10 — Props Contract
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 10 — Component Props Contract</h2>
+
+  <pre class="nvi-md-code">// NorseVerdictInscription — Props Contract
+// File: development/monitor-ui/src/components/NorseVerdictInscription.tsx
+
+type AgentKey =
+  | 'fireman-decko'
+  | 'loki'
+  | 'luna'
+  | 'heimdall'
+  | 'freya'
+  | 'generic';        // fallback if agent is unidentified
+
+type VerdictType = 'handoff' | 'qa-verdict';
+
+interface NorseVerdictInscriptionProps {
+  /** Raw markdown string — the full last-assistant text block */
+  markdown: string;
+  /** Identified agent — from session metadata or text detection */
+  agent: AgentKey;
+  /** Verdict type — detected from H1/H2 heading text */
+  verdictType: VerdictType;
+  /** Optional: recipient agent name for handoff subheadings, e.g. "Loki" */
+  recipient?: string;
+  /** Optional: session ID for aria-label */
+  sessionId?: string;
+}
+
+// AGENT_VERDICT_CONFIG shape (all values are i18n-ready static strings):
+interface AgentConfig {
+  rune: string;                 // Elder Futhark character, e.g. "ᚲ"
+  runeName: string;             // e.g. "Kenaz"
+  runeMeaning: string;          // e.g. "The Forge"
+  agentLabel: string;           // e.g. "FiremanDecko"
+  agentFuthark: string;         // e.g. "ᚠᛁᚱᛖᛗᚨᚾ · ᛞᛖᚲᚲᛟ"
+  archTitle: string;            // e.g. "The Forge Has Spoken"
+  roleLabel: string;            // e.g. "Principal Engineer"
+  accentCSSVar: string;         // e.g. "--agent-accent-fireman"
+  dividerRune: string;          // repeated rune name for divider, e.g. "ᚲ ᛖ ᚾ ᚨ ᛉ"
+  sealFuthark: string;          // e.g. "ᚠᛁᚱᛖ · ᛗᚨᚾ · ᛞᛖᚲᚲᛟ"
+  elderName: string;            // e.g. "FiremanDecko — Kenaz — ᚲ"
+  pledge: string;               // full pledge text (may include HTML for Norse links)
+  pledgeNorseTerms: NorseTerm[]; // {term, wikiSlug} pairs pre-linked in pledge
+}
+
+interface NorseTerm {
+  term: string;       // e.g. "Hliðskjálf"
+  wikiSlug: string;   // e.g. "Hlidskjalf" (Wikipedia article slug)
+}
+</pre>
+
+  <p class="note" style="margin-top:0.75rem;">
+    <strong>Note on Norse term linking:</strong> Only the curated <code>pledgeNorseTerms</code> list within each
+    agent's config should be auto-linked. Do NOT run a global dictionary replacement on the agent's markdown content —
+    that could incorrectly link mid-sentence words the agent wrote without Norse-link intent.
+    The agent's pledge text is controlled/static, so those links are safe to pre-define.
+  </p>
+</section>
+
+</body>
+</html>
