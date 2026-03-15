@@ -71,7 +71,7 @@ const MOCK_JOB: DisplayJob = {
   agentName: "FiremanDecko",
   status: "succeeded",
   startTime: null,
-  completionTime: null,
+  completionTime: null, issueTitle: null, branchName: null,
 };
 
 function makeEntry(id: string, text: string, detail?: string): LogEntry {
