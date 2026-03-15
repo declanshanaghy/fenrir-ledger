@@ -22,6 +22,29 @@
   --kildare-white: #F0F0F0;
   --kildare-blue-bright: #3B82F6;
   --kildare-blue-dim: #152a5e;
+
+  /* ── Theme-adaptive semantic tokens ─────────── */
+  --error-strong:  #ef4444;                    /* bright red — errors, verdict FAIL */
+  --error-bg:      rgba(127, 29, 29, 0.35);    /* log-error-box background */
+  --error-border:  #7f1d1d;                    /* log-error-box border + error-banner bg */
+  --error-text:    #fca5a5;                    /* log-error-box text + error-banner text */
+  --success-strong: #22c55e;                   /* bright green — verdict PASS, ep-ok */
+
+  /* ── Tool badge colors ───────────────────────── */
+  --bash-badge-bg:    #1a3320;
+  --bash-badge-text:  #4ade80;
+  --write-badge-bg:   #2d1a5e;
+  --write-badge-text: #c084fc;
+
+  /* ── Tool batch / bubble surface colors ─────── */
+  --tool-batch-header-bg:    rgba(30, 58, 138, 0.10);
+  --tool-batch-header-hover: rgba(30, 58, 138, 0.20);
+  --bubble-header-bg:        rgba(255, 255, 255, 0.02);
+
+  /* ── Norse tablet (task prompt) ─────────────── */
+  --norse-tablet-header-bg:    rgba(201, 146, 10, 0.08);
+  --norse-tablet-header-hover: rgba(201, 146, 10, 0.12);
+  --gold-dim-border:           rgba(201, 146, 10, 0.30);
 }
 
 /* ── Light Theme override ──────────────────────── */
@@ -46,6 +69,27 @@
   --kildare-white:     #1a1a2e;   /* inverted for light bg */
   --kildare-blue-bright: #2563eb;
   --kildare-blue-dim:  #dbeafe;
+
+  /* ── Semantic token overrides for light theme ── */
+  --error-strong:  #dc2626;
+  --error-bg:      rgba(254, 226, 226, 0.60);
+  --error-border:  #fca5a5;
+  --error-text:    #b91c1c;
+  --success-strong: #16a34a;
+
+  --bash-badge-bg:    #dcfce7;
+  --bash-badge-text:  #166534;
+  --write-badge-bg:   #f3e8ff;
+  --write-badge-text: #7c3aed;
+
+  --tool-batch-header-bg:    rgba(30, 58, 138, 0.06);
+  --tool-batch-header-hover: rgba(30, 58, 138, 0.12);
+  --bubble-header-bg:        rgba(0, 0, 0, 0.03);
+
+  /* light-mode gold is #8f6e0e = rgb(143,110,14) */
+  --norse-tablet-header-bg:    rgba(143, 110, 14, 0.08);
+  --norse-tablet-header-hover: rgba(143, 110, 14, 0.12);
+  --gold-dim-border:           rgba(143, 110, 14, 0.30);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -89,8 +133,8 @@ body {
 /* ── Error banner ──────────────────────────────── */
 .error-banner {
   display: none;
-  background: #7f1d1d;
-  color: #fca5a5;
+  background: var(--error-border);
+  color: var(--error-text);
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   padding: 0.4rem 1rem;
@@ -242,7 +286,7 @@ body {
 .ws-badge.connecting { color: var(--gold-bright); border-color: var(--gold-bright); }
 .ws-badge.open       { color: var(--teal-asgard); border-color: var(--teal-asgard); }
 .ws-badge.closed     { color: var(--text-void); border-color: var(--rune-border); }
-.ws-badge.error      { color: #ef4444; border-color: #ef4444; }
+.ws-badge.error      { color: var(--error-strong); border-color: var(--error-strong); }
 
 /* ── Log terminal ──────────────────────────────── */
 .log-terminal {
@@ -252,18 +296,18 @@ body {
   color: var(--text-saga); scroll-behavior: smooth;
 }
 .log-line { white-space: pre-wrap; word-break: break-all; animation: fadeSlideIn 0.2s ease; }
-.log-error { color: #ef4444; }
+.log-error { color: var(--error-strong); }
 .log-error-box {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
   margin: 0.4rem 0;
   padding: 0.5rem 0.75rem;
-  background: rgba(127, 29, 29, 0.35);
-  border: 1px solid #7f1d1d;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
   border-radius: 4px;
   font-size: 0.8rem;
-  color: #fca5a5;
+  color: var(--error-text);
   line-height: 1.5;
 }
 .log-error-icon { flex-shrink: 0; }
@@ -354,7 +398,7 @@ body {
   color: var(--teal-asgard); padding: 0.1rem 0;
 }
 .ep-ok-badge {
-  color: #22c55e; font-weight: 700; margin-right: 0.3rem;
+  color: var(--success-strong); font-weight: 700; margin-right: 0.3rem;
 }
 .ep-info {
   font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
@@ -415,17 +459,17 @@ body {
   border-radius: 6px;
   margin: 0.5rem 0;
   overflow: hidden;
-  background: linear-gradient(135deg, #0d0d15 0%, #12121f 50%, #0d0d15 100%);
-  box-shadow: 0 0 12px rgba(201, 146, 10, 0.15), inset 0 1px 0 rgba(201, 146, 10, 0.1);
+  background: linear-gradient(135deg, var(--chain) 0%, var(--forge) 50%, var(--chain) 100%);
+  box-shadow: 0 0 12px var(--gold-dim-border), inset 0 1px 0 var(--gold-dim-border);
 }
 .norse-tablet-header {
   display: flex; align-items: center; gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   cursor: pointer; user-select: none;
   border-bottom: 1px solid var(--gold);
-  background: linear-gradient(90deg, rgba(201,146,10,0.08) 0%, transparent 50%, rgba(201,146,10,0.08) 100%);
+  background: linear-gradient(90deg, var(--norse-tablet-header-bg) 0%, transparent 50%, var(--norse-tablet-header-bg) 100%);
 }
-.norse-tablet-header:hover { background: rgba(201,146,10,0.12); }
+.norse-tablet-header:hover { background: var(--norse-tablet-header-hover); }
 .norse-tablet-rune {
   color: var(--gold); font-size: 0.9rem;
 }
@@ -464,7 +508,7 @@ body {
 }
 .norse-tablet-seal {
   margin-top: 0.5rem; padding-top: 0.4rem;
-  border-top: 1px solid rgba(201, 146, 10, 0.3);
+  border-top: 1px solid var(--gold-dim-border);
   font-family: 'Cinzel', serif;
   font-size: 0.6rem;
   color: var(--gold);
@@ -555,13 +599,13 @@ body {
 .ev-tool-batch-header {
   display: flex; align-items: center; gap: 0.5rem;
   padding: 0.35rem 0.6rem;
-  background: rgba(30, 58, 138, 0.1);
+  background: var(--tool-batch-header-bg);
   cursor: pointer; user-select: none;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
   justify-content: flex-end;
 }
-.ev-tool-batch-header:hover { background: rgba(30, 58, 138, 0.2); }
+.ev-tool-batch-header:hover { background: var(--tool-batch-header-hover); }
 .ev-tool-batch-chevron {
   color: var(--kildare-blue-bright); font-size: 0.7rem;
   transition: transform 0.15s;
@@ -634,7 +678,7 @@ body {
   display: flex; align-items: center; gap: 0.5rem;
   padding: 0.4rem 0.6rem;
   border-bottom: 1px solid var(--rune-border);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bubble-header-bg);
 }
 .agent-bubble-avatar {
   width: 22px; height: 22px; border-radius: 50%;
@@ -689,12 +733,12 @@ body {
   border-radius: 2px; font-weight: 600;
   background: var(--kildare-blue); color: var(--kildare-white);
 }
-.ev-tool-badge.bash { background: #1a3320; color: #4ade80; }
+.ev-tool-badge.bash { background: var(--bash-badge-bg); color: var(--bash-badge-text); }
 .ev-tool-badge.read,
 .ev-tool-badge.grep,
 .ev-tool-badge.glob { background: var(--kildare-blue); color: var(--kildare-white); }
 .ev-tool-badge.edit,
-.ev-tool-badge.write { background: #2d1a5e; color: #c084fc; }
+.ev-tool-badge.write { background: var(--write-badge-bg); color: var(--write-badge-text); }
 .ev-tool-badge.agent { background: var(--mayo-red-dim); color: #fca5a5; }
 .ev-tool-preview {
   font-family: 'JetBrains Mono', monospace;
@@ -756,7 +800,11 @@ body {
 }
 
 /* ── Norse Error Tablet ────────────────────────────────────────────────────── */
-/* Full-pane display for TTL-expired sessions. Ancient stone tablet aesthetic. */
+/* Full-pane display for TTL-expired sessions. Ancient stone tablet aesthetic.
+ * DESIGN DECISION: NorseErrorTablet is intentionally dark-only — the void-black
+ * background and Elder Futhark glyphs are part of the "ancient stone" aesthetic
+ * that requires a dark canvas regardless of the active theme. All internal colors
+ * are hardcoded to dark-mode values. This is a documented theme exception. */
 
 .norse-error-tablet {
   display: flex;
@@ -765,7 +813,7 @@ body {
   justify-content: center;
   flex: 1;
   padding: 3rem 2rem;
-  background: #07070d;
+  background: #07070d; /* intentionally dark-only — see comment above */
   gap: 1.25rem;
   overflow-y: auto;
   text-align: center;
