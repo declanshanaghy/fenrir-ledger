@@ -129,8 +129,8 @@ describe("friendlyK8sError — IP stripping (issue #985)", () => {
   it("does NOT strip 172.15.x.x (outside RFC-1918 172.16-31 range)", () => {
     const raw = "timeout connecting to 172.15.0.1 (public address)";
     const result = friendlyK8sError(raw, SESSION);
-    // 172.15 is not in RFC-1918; stripping it would be overly aggressive
-    expect(result).not.toContain("172.15.0.1"); // node-unreachable path won't reach stripping anyway
+    // 172.15 is not in RFC-1918 (16-31 only); must be preserved in the fallback message
+    expect(result).toContain("172.15.0.1");
   });
 
   it("does NOT strip 172.32.x.x (outside RFC-1918 172.16-31 range)", () => {
