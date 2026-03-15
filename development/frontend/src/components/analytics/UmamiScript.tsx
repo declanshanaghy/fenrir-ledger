@@ -11,8 +11,8 @@
 import Script from "next/script";
 
 interface UmamiScriptProps {
-  websiteId?: string;
-  nonce?: string;
+  websiteId?: string | undefined;
+  nonce?: string | undefined;
 }
 
 export function UmamiScript({ websiteId, nonce }: UmamiScriptProps) {
