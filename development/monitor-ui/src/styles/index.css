@@ -925,3 +925,84 @@ body {
   opacity: 0.6;
   margin-top: 0.5rem;
 }
+
+/* === NorseErrorTablet epic seal === */
+.net-seal-epic {
+  text-align: center;
+  padding: 16px;
+  border: 1px solid var(--border);
+  margin: 12px 0;
+}
+.net-seal-rune-row {
+  font-size: 14px;
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+  color: var(--gold);
+}
+.net-seal-inscription {
+  font-size: 13px;
+  font-weight: 700;
+  font-style: italic;
+}
+.net-seal-sub {
+  font-size: 11px;
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+
+/* === NorseTablet agent rune signature block === */
+.nt-rune-sig {
+  border: 1px solid var(--border);
+  padding: 16px;
+  text-align: center;
+  margin-top: 16px;
+}
+.nt-rune-sig-agent-runes {
+  font-size: 22px;
+  letter-spacing: 6px;
+  margin-bottom: 6px;
+  color: var(--gold);
+}
+.nt-rune-sig-title-runes {
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+}
+.nt-rune-sig-divider {
+  margin: 10px 0;
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--text-void);
+}
+.nt-rune-sig-quote {
+  font-size: 12px;
+  font-style: italic;
+  max-width: 380px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+.nt-rune-sig-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 10px;
+  color: var(--text-muted);
+}
+
+/* Wikipedia links */
+.wiki-link {
+  color: var(--gold);
+  text-decoration: underline;
+}
+.wiki-link::after {
+  content: " ↗";
+  font-size: 0.75em;
+}
+
+/* Mobile ≤375px */
+@media (max-width: 375px) {
+  .nt-rune-sig-agent-runes { font-size: 16px; letter-spacing: 3px; }
+  .nt-rune-sig-title-runes { font-size: 11px; }
+  .nt-rune-sig-quote { max-width: 100%; }
+}

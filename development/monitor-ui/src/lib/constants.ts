@@ -32,6 +32,52 @@ export const AGENT_COLORS: Record<string, string> = {
   heimdall: "#ef4444",
 };
 
+export const AGENT_RUNE_NAMES: Record<string, string> = {
+  firemandecko: "ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ",
+  loki:         "ᛚᛟᚲᛁ",
+  luna:         "ᛚᚢᚾᚨ",
+  freya:        "ᚠᚱᛖᛃᚨ",
+  heimdall:     "ᚺᛖᛁᛗᛞᚨᛚᛚ",
+  _fallback:    "ᚨᛊᚷᚨᚱᛞ",
+};
+
+export const AGENT_RUNE_TITLES: Record<string, string> = {
+  firemandecko: "ᛈᚱᛁᚾᚲᛁᛈᚨᛚ ᛖᚾᚷᛁᚾᛖᛖᚱ",
+  loki:         "ᛩᚨ ᛏᛖᛊᛏᛖᚱ",
+  luna:         "ᚢᛉ ᛞᛖᛊᛁᚷᚾᛖᚱ",
+  freya:        "ᛈᚱᛟᛞᚢᚲᛏ ᛟᚹᚾᛖᚱ",
+  heimdall:     "ᛊᛖᚲᚢᚱᛁᛏᛃ ᛊᛈᛖᚲᛁᚨᛚᛁᛊᛏ",
+};
+
+export const AGENT_QUOTES: Record<string, string> = {
+  firemandecko: "Not with words but with fire and iron is the world built — strike true, forge deep, let no flaw survive the flame",
+  loki:         "Every truth hides a lie, every build hides a flaw — I am the crack in the armor that saves you before battle",
+  luna:         "By moonlight are the hidden paths revealed — that which cannot be seen cannot be walked",
+  freya:        "I have walked the nine worlds in sorrow and in glory — I know what is worth building before the first stone is laid",
+  heimdall:     "Nothing passes the Bifröst without my knowing — I neither sleep nor blink, and neither shall your secrets slip past me",
+  _fallback:    "From Asgard this decree is issued — let it be fulfilled",
+};
+
+export const ERROR_TABLET_SEALS: Record<string, { runes: string; inscription: string; sub: string }> = {
+  "ttl-expired": {
+    runes: "ᛃᚷᚷᛞᚱᚨᛊᛁᛚ",
+    inscription: "From the roots of Yggdrasil, all things return to silence",
+    sub: "ᚦ — So it is carved in the world-tree — ᚦ",
+  },
+  "node-unreachable": {
+    runes: "ᛒᛁᚠᚱᛟᛊᛏ",
+    inscription: "The bridge between worlds does not always hold — seek another path",
+    sub: "ᚺ — Heimdall watches, but even gods cannot hold the severed — ᚺ",
+  },
+};
+
+export const WIKI_LINKS: Record<string, string> = {
+  Yggdrasil:    "https://en.wikipedia.org/wiki/Yggdrasil",
+  "Bifröst":    "https://en.wikipedia.org/wiki/Bifr%C3%B6st",
+  Valhalla:     "https://en.wikipedia.org/wiki/Valhalla",
+  "Nine Worlds": "https://en.wikipedia.org/wiki/Norse_cosmology#Nine_worlds",
+};
+
 export const STATUS_ICONS: Record<Job["status"], string> = {
   running: "\u25CF",   // ● filled circle
   succeeded: "\u2713", // ✓ checkmark

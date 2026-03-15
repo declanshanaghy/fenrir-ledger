@@ -5,7 +5,7 @@ import type { DisplayJob } from "../lib/types";
 import { StatusBadge } from "./StatusBadge";
 import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
-import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
+import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_QUOTES, AGENT_RUNE_NAMES, AGENT_RUNE_TITLES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
 import { downloadLog } from "../lib/localStorageLogs";
 
 interface Props {
@@ -257,7 +257,7 @@ function LogLine({ entry, agentKey, agentName }: { entry: LogEntry; agentKey?: s
         </div>
       );
     case "entrypoint-task":
-      return <NorseTablet text={entry.text ?? ""} />;
+      return <NorseTablet text={entry.text ?? ""} agentKey={agentKey} />;
     case "warning":
       return <span className="log-warning">{"\u26A0"} {entry.message}</span>;
     case "error":
@@ -344,7 +344,7 @@ function ToolBatchGroup({ entry }: { entry: LogEntry }) {
   );
 }
 
-function NorseTablet({ text }: { text: string }) {
+function NorseTablet({ text, agentKey }: { text: string; agentKey?: string }) {
   const [open, setOpen] = useState(true);
   // Extract agent name from "You are <Name>,"
   const agentMatch = /^You are (\w+)/.exec(text);
@@ -367,11 +367,34 @@ function NorseTablet({ text }: { text: string }) {
       <div className="norse-tablet-body-wrap">
         <div className="norse-tablet-body">
           <div className="norse-tablet-inscription">{text}</div>
-          <div className="norse-tablet-seal">
-            {"\u16B1\u16A0\u16C7\u16BE\u16A0\u16B1"} &mdash; So it is written, so it shall be done &mdash; {"\u16B1\u16A0\u16C7\u16BE\u16A0\u16B1"}
-          </div>
+          <RuneSignatureBlock agentKey={agentKey} />
         </div>
       </div>
+    </div>
+  );
+}
+
+function RuneSignatureBlock({ agentKey }: { agentKey?: string }) {
+  const key = agentKey && AGENT_RUNE_NAMES[agentKey] ? agentKey : "_fallback";
+  const name       = AGENT_NAMES[key]       ?? "The All-Father's Council";
+  const title      = AGENT_TITLES[key]      ?? "";
+  const runeNames  = AGENT_RUNE_NAMES[key]  ?? AGENT_RUNE_NAMES["_fallback"] ?? "";
+  const runeTitles = AGENT_RUNE_TITLES[key] ?? "";
+  const quote      = AGENT_QUOTES[key]      ?? AGENT_QUOTES["_fallback"] ?? "";
+
+  return (
+    <div
+      className="nt-rune-sig"
+      role="complementary"
+      aria-label={`${name} rune signature`}
+    >
+      <div className="nt-rune-sig-agent-runes" aria-hidden="true">{runeNames}</div>
+      {runeTitles && (
+        <div className="nt-rune-sig-title-runes" aria-hidden="true">{runeTitles}</div>
+      )}
+      <div className="nt-rune-sig-divider" aria-hidden="true">— ᚠ ᚢ ᚦ —</div>
+      <div className="nt-rune-sig-quote">&ldquo;{quote}&rdquo;</div>
+      <div className="nt-rune-sig-label">{name}{title ? ` · ${title}` : ""}</div>
     </div>
   );
 }
