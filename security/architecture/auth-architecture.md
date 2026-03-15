@@ -383,7 +383,58 @@ This is intentional (ADR-006).
 
 ---
 
-## 8. Security Properties Summary
+## 8. Internal Service Auth — oauth2-proxy Sidecar Pattern
+
+Internal admin services (Umami analytics, Odin's Throne monitor) use a standardised
+**oauth2-proxy sidecar** pattern instead of handrolled OAuth middleware.
+
+### 8.1 Architecture
+
+```
+Internet → GKE Ingress → Service → Pod
+                                   ├── oauth2-proxy (:4180)   ← all external traffic
+                                   │     ↓ authenticated pass-through
+                                   └── App container (:3001 / :3000)
+```
+
+oauth2-proxy intercepts all HTTP requests, enforces Google OAuth 2.0, and proxies
+authenticated requests to the upstream app container over localhost. The app
+container is not directly reachable from outside the pod.
+
+### 8.2 Services Using This Pattern
+
+| Service | Namespace | oauth2-proxy port | App port | Skip-auth routes |
+|---|---|---|---|---|
+| Umami analytics | fenrir-analytics | 4180 | 3000 | `GET /script.js`, `POST /api/send` |
+| Odin's Throne monitor | fenrir-monitor | 4180 | 3001 | `GET /healthz` |
+
+### 8.3 Secret Management
+
+Each service has its own K8s secret (`<service>-oauth2-proxy-secrets`) containing:
+- `GOOGLE_CLIENT_ID` — OAuth client ID
+- `GOOGLE_CLIENT_SECRET` — OAuth client secret
+- `OAUTH2_PROXY_COOKIE_SECRET` — 32-byte random cookie signing key
+- `emails.txt` — allowlist of authorised email addresses
+
+Secrets are created imperatively by the CI/CD pipeline and never rendered into
+Helm chart values. `SESSION_SECRET` and `ALLOWED_EMAIL` env vars are no longer
+used by Odin's Throne (removed in issue #933).
+
+### 8.4 Security Properties
+
+| Property | Implementation |
+|---|---|
+| Auth enforcement | oauth2-proxy validates Google OAuth on every request |
+| Email allowlist | `--authenticated-emails-file` from K8s secret volume |
+| CSRF protection | oauth2-proxy state parameter |
+| Cookie signing | `OAUTH2_PROXY_COOKIE_SECRET` — 32-byte random key |
+| Cookie flags | `secure=true`, `samesite=lax` |
+| Health check bypass | `--skip-auth-route` per service (e.g. `/healthz`) |
+| No custom session tokens | Removed handrolled HMAC-SHA256 sessions (issue #933) |
+
+---
+
+## 9. Security Properties Summary
 
 | Property | Implementation | Status |
 |---|---|---|
