@@ -29,6 +29,8 @@
   --error-border:  #7f1d1d;                    /* log-error-box border + error-banner bg */
   --error-text:    #fca5a5;                    /* log-error-box text + error-banner text */
   --success-strong: #22c55e;                   /* bright green — verdict PASS, ep-ok */
+  --error-subtle-bg:  rgba(239, 68, 68, 0.08); /* ep-fatal background */
+  --error-border-dim: rgba(239, 68, 68, 0.40); /* ep-group-error border */
 
   /* ── Tool badge colors ───────────────────────── */
   --bash-badge-bg:    #1a3320;
@@ -45,6 +47,7 @@
   --norse-tablet-header-bg:    rgba(201, 146, 10, 0.08);
   --norse-tablet-header-hover: rgba(201, 146, 10, 0.12);
   --gold-dim-border:           rgba(201, 146, 10, 0.30);
+  --gold-subtle-bg:            rgba(201, 146, 10, 0.04);
 }
 
 /* ── Light Theme override ──────────────────────── */
@@ -76,6 +79,8 @@
   --error-border:  #fca5a5;
   --error-text:    #b91c1c;
   --success-strong: #16a34a;
+  --error-subtle-bg:  rgba(220, 38, 38, 0.08);
+  --error-border-dim: rgba(220, 38, 38, 0.30);
 
   --bash-badge-bg:    #dcfce7;
   --bash-badge-text:  #166534;
@@ -90,6 +95,7 @@
   --norse-tablet-header-bg:    rgba(143, 110, 14, 0.08);
   --norse-tablet-header-hover: rgba(143, 110, 14, 0.12);
   --gold-dim-border:           rgba(143, 110, 14, 0.30);
+  --gold-subtle-bg:            rgba(143, 110, 14, 0.06);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -409,21 +415,21 @@ body {
 }
 .ep-fatal {
   font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-  color: #ef4444; padding: 0.2rem 0.4rem; margin: 0.1rem 0;
-  background: rgba(239, 68, 68, 0.08);
-  border-left: 3px solid #ef4444;
+  color: var(--error-strong); padding: 0.2rem 0.4rem; margin: 0.1rem 0;
+  background: var(--error-subtle-bg);
+  border-left: 3px solid var(--error-strong);
   border-radius: 2px;
   font-weight: 600;
 }
 .ep-fatal-badge {
-  color: #ef4444; font-weight: 700; margin-right: 0.3rem;
+  color: var(--error-strong); font-weight: 700; margin-right: 0.3rem;
 }
 .ep-info-card {
   border: 1px solid var(--rune-border);
   border-radius: 4px;
   padding: 0.35rem 0.5rem;
   margin-bottom: 0.4rem;
-  background: rgba(201, 146, 10, 0.04);
+  background: var(--gold-subtle-bg);
 }
 .ep-group-meta {
   display: flex; gap: 0.75rem; flex-wrap: wrap;
@@ -434,8 +440,8 @@ body {
 }
 .ep-group-meta-item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ep-group-meta-key { color: var(--gold); font-weight: 600; margin-right: 0.2rem; }
-.ep-group-error { border-color: rgba(239, 68, 68, 0.4); }
-.ep-group-error .ep-group-title { color: #ef4444; }
+.ep-group-error { border-color: var(--error-border-dim); }
+.ep-group-error .ep-group-title { color: var(--error-strong); }
 .ep-noise-group {
   border: 1px solid var(--rune-border);
   border-radius: 3px;
