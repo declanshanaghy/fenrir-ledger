@@ -15,11 +15,11 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: odin-throne-ui
+      app.kubernetes.io/name: odin-throne
+      app.kubernetes.io/component: monitor-ui
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: odin-throne-ui
         {{- include "odin-throne.labels" (dict "component" "monitor-ui") | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: 15

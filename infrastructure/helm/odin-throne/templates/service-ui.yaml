@@ -11,7 +11,8 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/name: odin-throne-ui
+    app.kubernetes.io/name: odin-throne
+    app.kubernetes.io/component: monitor-ui
   ports:
     - name: http
       port: 80
