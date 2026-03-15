@@ -48,6 +48,13 @@
   --norse-tablet-header-hover: rgba(201, 146, 10, 0.12);
   --gold-dim-border:           rgba(201, 146, 10, 0.30);
   --gold-subtle-bg:            rgba(201, 146, 10, 0.04);
+
+  /* ── Agent accent colours (NorseVerdictInscription) ── */
+  --agent-accent-fireman:  #e05a10;  /* forge-orange        */
+  --agent-accent-loki:     #22c55e;  /* trickster-green     */
+  --agent-accent-luna:     #cbd5e1;  /* moonlight-silver    */
+  --agent-accent-heimdall: #f0b429;  /* watchman-gold       */
+  --agent-accent-freya:    #a855f7;  /* wisdom-violet       */
 }
 
 /* ── Light Theme override ──────────────────────── */
@@ -96,6 +103,13 @@
   --norse-tablet-header-hover: rgba(143, 110, 14, 0.12);
   --gold-dim-border:           rgba(143, 110, 14, 0.30);
   --gold-subtle-bg:            rgba(143, 110, 14, 0.06);
+
+  /* ── Agent accent overrides for light theme ── */
+  --agent-accent-fireman:  #c44a08;
+  --agent-accent-loki:     #16a34a;
+  --agent-accent-luna:     #64748b;
+  --agent-accent-heimdall: #8f6e0e;
+  --agent-accent-freya:    #7c3aed;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1056,4 +1070,370 @@ body {
   .nt-rune-sig-agent-runes { font-size: 16px; letter-spacing: 3px; }
   .nt-rune-sig-title-runes { font-size: 11px; }
   .nt-rune-sig-quote { max-width: 100%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NorseVerdictInscription (.nvi-*) — Issue #1019
+   Inline Norse triumph-arch tablet rendered for agent handoff/QA verdict msgs.
+   Uses --agent-accent CSS custom property set inline per instance.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Carve-in keyframes ─────────────────────────────────────────────────── */
+@keyframes carveIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glyphBlaze {
+  0%   { opacity: 0; transform: scale(0.6); }
+  60%  { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1.0); }
+}
+
+@keyframes sealStamp {
+  0%   { opacity: 0; transform: scale(0.95); }
+  70%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1.0); }
+}
+
+/* ── Shell (outer container) ────────────────────────────────────────────── */
+.nvi-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 720px;
+  width: 100%;
+  margin: 0.75rem 0;
+  padding: 1.5rem 2rem;
+  background: var(--void);
+  border: 2px solid var(--agent-accent, var(--gold));
+  border-radius: 6px;
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--agent-accent, var(--gold)) 18%, transparent),
+    0 0 6px  color-mix(in srgb, var(--agent-accent, var(--gold)) 10%, transparent);
+  opacity: 0;
+  animation: fadeIn 200ms ease forwards;
+}
+
+/* ── Rune bands (double-row) ────────────────────────────────────────────── */
+.nvi-rune-band-top,
+.nvi-rune-band-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  opacity: 0;
+}
+.nvi-rune-band-top  { animation: carveIn 300ms ease 50ms forwards; }
+.nvi-rune-band-bottom { animation: carveIn 300ms ease 800ms forwards; }
+
+.nvi-rune-row {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--agent-accent, var(--gold));
+  letter-spacing: 0.35em;
+  opacity: 0.45;
+  user-select: none;
+  word-break: break-all;
+  text-align: center;
+}
+
+/* ── Triumph keystone header ────────────────────────────────────────────── */
+.nvi-agent-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.nvi-glyph {
+  font-size: 5rem;
+  line-height: 1;
+  color: var(--agent-accent, var(--gold));
+  text-shadow:
+    0 0 32px color-mix(in srgb, var(--agent-accent, var(--gold)) 55%, transparent),
+    0 0 10px color-mix(in srgb, var(--agent-accent, var(--gold)) 30%, transparent);
+  user-select: none;
+  border: 2px solid var(--agent-accent, var(--gold));
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  opacity: 0;
+  animation: glyphBlaze 400ms cubic-bezier(0.34, 1.56, 0.64, 1) 200ms forwards;
+}
+
+.nvi-agent-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nvi-agent-name {
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--agent-accent, var(--gold));
+  opacity: 0;
+  animation: carveIn 250ms ease 350ms forwards;
+}
+
+.nvi-arch-title {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--agent-accent, var(--gold));
+  text-shadow: 0 0 16px color-mix(in srgb, var(--agent-accent, var(--gold)) 35%, transparent);
+  opacity: 0;
+  animation: carveIn 280ms ease 380ms forwards;
+}
+
+.nvi-arch-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-rune);
+  opacity: 0;
+  animation: carveIn 250ms ease 410ms forwards;
+}
+
+/* ── Divider ────────────────────────────────────────────────────────────── */
+.nvi-divider {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--agent-accent, var(--gold));
+  letter-spacing: 0.4em;
+  opacity: 0.35;
+  user-select: none;
+}
+
+/* ── Markdown body ──────────────────────────────────────────────────────── */
+.nvi-body {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--agent-accent, var(--gold)) 20%, transparent);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  background: color-mix(in srgb, var(--agent-accent, var(--gold)) 3%, transparent);
+}
+
+/* Stagger body children up to 10 items */
+.nvi-body > *:nth-child(1)  { opacity: 0; animation: carveIn 250ms ease 500ms  forwards; }
+.nvi-body > *:nth-child(2)  { opacity: 0; animation: carveIn 250ms ease 560ms  forwards; }
+.nvi-body > *:nth-child(3)  { opacity: 0; animation: carveIn 250ms ease 620ms  forwards; }
+.nvi-body > *:nth-child(4)  { opacity: 0; animation: carveIn 250ms ease 680ms  forwards; }
+.nvi-body > *:nth-child(5)  { opacity: 0; animation: carveIn 250ms ease 740ms  forwards; }
+.nvi-body > *:nth-child(6)  { opacity: 0; animation: carveIn 250ms ease 800ms  forwards; }
+.nvi-body > *:nth-child(7)  { opacity: 0; animation: carveIn 250ms ease 860ms  forwards; }
+.nvi-body > *:nth-child(8)  { opacity: 0; animation: carveIn 250ms ease 920ms  forwards; }
+.nvi-body > *:nth-child(9)  { opacity: 0; animation: carveIn 250ms ease 980ms  forwards; }
+.nvi-body > *:nth-child(n+10) { opacity: 0; animation: carveIn 250ms ease 1040ms forwards; }
+
+/* Markdown element styles */
+.nvi-md-h1 {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--agent-accent, var(--gold));
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid color-mix(in srgb, var(--agent-accent, var(--gold)) 25%, transparent);
+  padding-bottom: 0.3rem;
+}
+
+.nvi-md-h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--agent-accent, var(--gold));
+  letter-spacing: 0.06em;
+}
+
+.nvi-md-h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-rune);
+  letter-spacing: 0.04em;
+}
+
+.nvi-md-p {
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text-saga);
+}
+
+.nvi-md-ul,
+.nvi-md-ol {
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text-saga);
+  padding-left: 1.4rem;
+}
+
+.nvi-md-ul li::marker {
+  content: "\2713  ";  /* ✓ checkmark for verdict completion context */
+  color: var(--agent-accent, var(--gold));
+}
+
+.nvi-md-checklist {
+  list-style: none;
+  padding-left: 0;
+}
+
+.nvi-md-checklist li {
+  padding-left: 1.4rem;
+  position: relative;
+}
+
+.nvi-md-checklist .nvi-md-checked::before {
+  content: "\2713";
+  position: absolute;
+  left: 0;
+  color: var(--success-strong);
+  font-weight: 700;
+}
+
+.nvi-md-checklist .nvi-md-unchecked::before {
+  content: "\25A1";
+  position: absolute;
+  left: 0;
+  color: var(--text-void);
+}
+
+.nvi-md-inline-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  background: color-mix(in srgb, var(--agent-accent, var(--gold)) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--agent-accent, var(--gold)) 20%, transparent);
+  border-radius: 3px;
+  padding: 0.1rem 0.3rem;
+  color: var(--agent-accent, var(--gold));
+}
+
+.nvi-md-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  background: var(--forge);
+  border: 1px solid var(--rune-border);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--text-saga);
+  line-height: 1.5;
+}
+
+.nvi-md-hr {
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--agent-accent, var(--gold)) 25%, transparent);
+  width: 100%;
+}
+
+/* ── Norse term links (pledge only) ─────────────────────────────────────── */
+.nvi-norse-link {
+  color: var(--agent-accent, var(--gold));
+  text-decoration: underline dashed;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: opacity 0.15s;
+}
+.nvi-norse-link:hover { opacity: 0.75; }
+
+/* ── Pledge seal ────────────────────────────────────────────────────────── */
+.nvi-seal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  border-top: 1px solid color-mix(in srgb, var(--agent-accent, var(--gold)) 20%, transparent);
+  padding-top: 0.75rem;
+  opacity: 0;
+  animation: sealStamp 350ms ease 800ms forwards;
+}
+
+.nvi-seal-pledge {
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.82rem;
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--text-rune);
+  text-align: center;
+  max-width: 560px;
+}
+
+.nvi-seal-futhark {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--agent-accent, var(--gold));
+  opacity: 0.5;
+  user-select: none;
+  text-align: center;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .nvi-shell {
+    padding: 1rem 1rem;
+    gap: 0.75rem;
+  }
+  .nvi-glyph {
+    font-size: 3.5rem;
+  }
+  .nvi-arch-title {
+    font-size: 1.1rem;
+  }
+  .nvi-rune-band-top .nvi-rune-row:last-child,
+  .nvi-rune-band-bottom .nvi-rune-row:first-child {
+    display: none; /* 1 rune row on mobile */
+  }
+  .nvi-md-code {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  .nvi-body {
+    padding: 0.75rem 0.75rem;
+  }
+  .nvi-seal-futhark {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  .nvi-glyph { font-size: 4rem; }
+  .nvi-arch-title { font-size: 1.2rem; }
+  .nvi-rune-band-top .nvi-rune-row:last-child,
+  .nvi-rune-band-bottom .nvi-rune-row:first-child {
+    opacity: 0.25; /* fade second row on tablet */
+  }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .nvi-shell,
+  .nvi-rune-band-top,
+  .nvi-rune-band-bottom,
+  .nvi-glyph,
+  .nvi-agent-name,
+  .nvi-arch-title,
+  .nvi-arch-subtitle,
+  .nvi-body > *,
+  .nvi-seal {
+    animation: fadeIn 150ms ease forwards !important;
+    animation-delay: 0ms !important;
+  }
 }

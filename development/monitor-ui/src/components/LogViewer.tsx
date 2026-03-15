@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 
 import type { LogEntry } from "../hooks/useLogStream";
 import type { DisplayJob } from "../lib/types";
 import { StatusBadge } from "./StatusBadge";
 import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
+import { NorseVerdictInscription, isVerdictMessage } from "./NorseVerdictInscription";
 import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_QUOTES, AGENT_RUNE_NAMES, AGENT_RUNE_TITLES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
 import { downloadLog } from "../lib/localStorageLogs";
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
@@ -176,6 +177,17 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
     );
   }
 
+  // Find the ID of the last non-thinking assistant-text entry to detect verdict position
+  const lastAssistantTextId = useMemo(() => {
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const e = entries[i];
+      if (e && e.type === "assistant-text" && e.detail !== "thinking") {
+        return e.id;
+      }
+    }
+    return null;
+  }, [entries]);
+
   return (
     <main className="content" aria-label="Log viewer" style={{ position: "relative" }}>
       <SessionHeader
@@ -192,7 +204,13 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
         onScroll={handleScroll}
       >
         {entries.map((entry) => (
-          <LogLine key={entry.id} entry={entry} {...(activeJob?.agentKey ? { agentKey: activeJob.agentKey } : {})} {...(activeJob?.agentName ? { agentName: activeJob.agentName } : {})} />
+          <LogLine
+            key={entry.id}
+            entry={entry}
+            {...(activeJob?.agentKey ? { agentKey: activeJob.agentKey } : {})}
+            {...(activeJob?.agentName ? { agentName: activeJob.agentName } : {})}
+            isLastAssistantText={entry.id === lastAssistantTextId}
+          />
         ))}
       </div>
       <div className="log-controls">
@@ -238,7 +256,7 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
   );
 }
 
-function LogLine({ entry, agentKey, agentName }: { entry: LogEntry; agentKey?: string; agentName?: string }) {
+function LogLine({ entry, agentKey, agentName, isLastAssistantText }: { entry: LogEntry; agentKey?: string; agentName?: string; isLastAssistantText?: boolean }) {
   switch (entry.type) {
     case "system":
       return (
@@ -254,7 +272,14 @@ function LogLine({ entry, agentKey, agentName }: { entry: LogEntry; agentKey?: s
       if (entry.detail === "thinking") {
         return <div className="ev-thinking">{entry.text}</div>;
       }
-      return <AgentBubble text={entry.text ?? ""} {...(agentKey ? { agentKey } : {})} {...(agentName ? { agentName } : {})} />;
+      return (
+        <AgentBubble
+          text={entry.text ?? ""}
+          {...(agentKey ? { agentKey } : {})}
+          {...(agentName ? { agentName } : {})}
+          isLastAssistantText={isLastAssistantText}
+        />
+      );
     case "tool-use":
       return <ToolBlock entry={entry} />;
     case "entrypoint-group":
@@ -307,7 +332,28 @@ function LogLine({ entry, agentKey, agentName }: { entry: LogEntry; agentKey?: s
   }
 }
 
-function AgentBubble({ text, agentKey, agentName }: { text: string; agentKey?: string; agentName?: string }) {
+function AgentBubble({
+  text,
+  agentKey,
+  agentName,
+  isLastAssistantText,
+}: {
+  text: string;
+  agentKey?: string;
+  agentName?: string;
+  isLastAssistantText?: boolean;
+}) {
+  // Render the last assistant text as a Norse verdict inscription if it matches
+  if (isLastAssistantText && isVerdictMessage(text)) {
+    return (
+      <NorseVerdictInscription
+        text={text}
+        {...(agentKey ? { agentKey } : {})}
+        {...(agentName ? { agentName } : {})}
+      />
+    );
+  }
+
   const name = agentName ?? AGENT_NAMES[agentKey ?? ""] ?? "Agent";
   const title = AGENT_TITLES[agentKey ?? ""] ?? "";
   const avatar = AGENT_AVATARS[agentKey ?? ""];
