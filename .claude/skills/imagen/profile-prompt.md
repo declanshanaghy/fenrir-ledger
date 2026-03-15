@@ -9,18 +9,22 @@ Reddit profile avatar, 3D digital art style, Norse fantasy portrait.
 {{CHARACTER_DESCRIPTION}}
 Wearing dark Nordic armor with fur trim and gold Celtic knotwork embroidery.
 {{SIGNATURE_PROP}}
+{{MEDALLION_STYLE}}
 Elder Futhark runes {{RUNE_PLACEMENT}}.
 Ice-blue and gold accent lighting, dramatic cinematic light from the runes
 illuminating the face. Portrait framed from chest up, circular medallion
 composition. {{FADE_INSTRUCTION}}
 ```
 
-## Fade Instructions
+## Theme Instructions
 
-| Theme | `{{FADE_INSTRUCTION}}` |
-|-------|------------------------|
-| dark  | `Circular vignette fading to pure solid black at the edges. Solid black background, no transparency.` |
-| light | `Circular vignette fading to pure solid white at the edges. Solid white background, no transparency.` |
+"Dark" and "light" refer to the **medallion frame style**, NOT the background.
+Both themes use a dark background (~#2a2a2a charcoal/near-black).
+
+| Theme | `{{MEDALLION_STYLE}}` | `{{FADE_INSTRUCTION}}` |
+|-------|----------------------|------------------------|
+| dark  | `Silver/pewter aged metal medallion frame with stone-carved runic border.` | `Circular vignette fading to pure solid black (#1a1a1a) at the edges. Solid dark background, no transparency.` |
+| light | `Polished gold medallion frame with raised golden runic border.` | `Circular vignette fading to pure solid black (#1a1a1a) at the edges. Solid dark background, no transparency.` |
 
 ## Agent Variables
 
@@ -73,6 +77,16 @@ From: `.claude/agents/heimdall.md` — guardian, watchman, sees all threats
 | `CHARACTER_DESCRIPTION` | `Imposing Norse guardian, dark skin, golden eyes that glow with omniscient sight, close-cropped hair, stoic vigilant expression, heavy plate armor with rainbow-bridge (Bifrost) shimmer.` |
 | `SIGNATURE_PROP` | `Gripping the hilt of a massive sword planted point-down, a shimmering golden shield barrier radiating outward from him.` |
 | `RUNE_PLACEMENT` | `burning in protective ward patterns on his shield and armor` |
+
+### Odin (The All-Father — Project Owner / Orchestrator)
+
+The user. Oversees all agents from Hlidskjalf, his high throne.
+
+| Variable | Value |
+|----------|-------|
+| `CHARACTER_DESCRIPTION` | `Powerful Norse god-king, the All-Father, one eye covered by a golden eye patch, long grey-white beard with braided sections and gold rings, weathered wise face with deep lines, fur-trimmed dark cloak over ornate plate armor.` |
+| `SIGNATURE_PROP` | `Holding the spear Gungnir upright, its runic blade glowing gold. Two ravens (Huginn and Muninn) perched on his shoulders, eyes glowing ice-blue.` |
+| `RUNE_PLACEMENT` | `carved into the shaft of Gungnir and glowing along the rim of the circular medallion frame` |
 
 ## Usage
 

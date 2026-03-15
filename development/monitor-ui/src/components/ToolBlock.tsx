@@ -9,8 +9,14 @@ interface Props {
 export function ToolBlock({ entry }: Props) {
   const [open, setOpen] = useState(false);
   const cls = toolBadgeClass(entry.toolName || "");
+  let parsedInput: Record<string, unknown> | undefined;
+  try {
+    parsedInput = entry.toolInput ? JSON.parse(entry.toolInput) : undefined;
+  } catch {
+    // Truncated JSON — skip preview extraction
+  }
   const preview = entry.toolName
-    ? toolPreview(entry.toolName, entry.toolInput ? JSON.parse(entry.toolInput) : undefined)
+    ? toolPreview(entry.toolName, parsedInput)
     : "";
 
   return (
@@ -20,11 +26,13 @@ export function ToolBlock({ entry }: Props) {
         <span className="ev-tool-preview">{preview}</span>
         <span className="ev-tool-chevron">{"\u203A"}</span>
       </div>
-      <div className="ev-tool-body">
-        <div className="ev-tool-input">{entry.toolInput}</div>
-        {entry.toolResult != null && (
-          <div className="ev-tool-result">{entry.toolResult}</div>
-        )}
+      <div className="ev-tool-body-wrap">
+        <div className="ev-tool-body">
+          <div className="ev-tool-input">{entry.toolInput}</div>
+          {entry.toolResult != null && (
+            <div className="ev-tool-result">{entry.toolResult}</div>
+          )}
+        </div>
       </div>
     </div>
   );

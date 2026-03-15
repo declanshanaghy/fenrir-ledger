@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
-
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ServerMessage } from "./lib/types";
 import { randomQuote } from "./lib/constants";
 import { useWebSocket } from "./hooks/useWebSocket";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useJobs } from "./hooks/useJobs";
 import { useLogStream } from "./hooks/useLogStream";
 import { ErrorBanner } from "./components/ErrorBanner";
@@ -22,9 +22,17 @@ export function App() {
 
   const prevSessionRef = useRef<string | null>(null);
 
+  const [isFixture, setIsFixture] = useState(false);
+
   const onMessage = useCallback(
     (msg: ServerMessage) => {
       handleJobsMessage(msg);
+      if (msg.type === "fixture-start" && "sessionId" in msg && msg.sessionId === activeSessionId) {
+        setIsFixture(true);
+      }
+      if (msg.type === "stream-end" && "sessionId" in msg && msg.sessionId === activeSessionId) {
+        setIsFixture(false);
+      }
       if (
         msg.type === "log-line" ||
         msg.type === "stream-error" ||
@@ -49,6 +57,7 @@ export function App() {
       }
       prevSessionRef.current = sessionId;
       setActiveSessionId(sessionId);
+      setIsFixture(false);
       clearEntries();
       send({ type: "subscribe", sessionId });
     },
@@ -68,7 +77,7 @@ export function App() {
   const activeJob = jobs.find((j) => j.sessionId === activeSessionId) || null;
 
   return (
-    <>
+    <ErrorBoundary>
       <ErrorBanner message={wsError} />
       <div className="layout">
         <Sidebar
@@ -77,8 +86,20 @@ export function App() {
           quote={quote}
           onSelectSession={handleSelectSession}
         />
-        <LogViewer entries={entries} activeJob={activeJob} wsState={wsState} />
+        <ErrorBoundary>
+          <LogViewer
+            entries={entries}
+            activeJob={activeJob}
+            wsState={wsState}
+            isFixture={isFixture}
+            onSetSpeed={(speed) => {
+              if (activeSessionId) {
+                send({ type: "set-speed", sessionId: activeSessionId, speed });
+              }
+            }}
+          />
+        </ErrorBoundary>
       </div>
-    </>
+    </ErrorBoundary>
   );
 }
