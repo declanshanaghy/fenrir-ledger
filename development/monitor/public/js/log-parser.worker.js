@@ -493,16 +493,21 @@ function handleServerMessage(msg) {
       break;
     }
 
-    // ── Verdict (new protocol) ────────────────────────────────────────────────
+    // ── Verdict (new protocol: has sessionId + result; legacy: has pass + summary) ──
     case 'verdict': {
       const sid = msg.sessionId;
       if (sid) {
+        // New wire protocol
         addEntry(sid, {
           type: 'verdict',
           html: renderVerdict(msg.result === 'PASS', ''),
           ts:   msg.ts || Date.now(),
         });
         self.postMessage({ type: 'verdict', sessionId: sid, result: msg.result });
+      } else {
+        // Legacy protocol (no sessionId field)
+        const legacySid = subscribedSessions.size > 0 ? [...subscribedSessions][0] : null;
+        if (legacySid) handleLegacyMessage(msg, legacySid);
       }
       break;
     }
