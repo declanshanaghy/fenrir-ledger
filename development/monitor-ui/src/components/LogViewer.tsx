@@ -278,7 +278,7 @@ function LogLine({ entry, agentKey, agentName, isLastAssistantText }: { entry: L
           text={entry.text ?? ""}
           {...(agentKey ? { agentKey } : {})}
           {...(agentName ? { agentName } : {})}
-          isLastAssistantText={isLastAssistantText}
+          {...(isLastAssistantText ? { isLastAssistantText } : {})}
         />
       );
     case "tool-use":
