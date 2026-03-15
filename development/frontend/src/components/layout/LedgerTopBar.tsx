@@ -386,7 +386,7 @@ export function LedgerTopBar() {
       </div>
 
       {/* RIGHT: Controls cluster */}
-      <div className="relative flex items-center gap-0.5" ref={panelRef}>
+      <div className="relative flex items-center gap-1" ref={panelRef}>
 
         {/* Trial badge — shows remaining days with color urgency (Issue #621) */}
         <TrialBadge />
@@ -405,7 +405,7 @@ export function LedgerTopBar() {
             ref={avatarTriggerRef}
             type="button"
             onClick={() => setPanelOpen((prev) => !prev)}
-            className="flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+            className="flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 ml-4"
             aria-label="Sign in to sync your data"
             aria-haspopup="true"
             aria-expanded={panelOpen}
@@ -422,7 +422,7 @@ export function LedgerTopBar() {
             ref={avatarTriggerRef}
             type="button"
             onClick={() => setPanelOpen((prev) => !prev)}
-            className="flex items-center gap-2 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 cursor-pointer"
+            className="flex items-center gap-2 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 cursor-pointer ml-4"
             aria-label={`Open user menu, signed in as ${user.email}`}
             aria-expanded={panelOpen}
             aria-haspopup="true"
