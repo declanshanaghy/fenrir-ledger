@@ -192,6 +192,57 @@ describe("GET /static/odin-dark.png", () => {
   });
 });
 
+describe("GET /favicon.ico", () => {
+  it("returns image/png without auth (public route)", async () => {
+    const req = new Request("http://localhost:3001/favicon.ico");
+    const res = await app.fetch(req);
+    expect(res.status).not.toBe(401);
+  });
+
+  it("returns 200 with non-empty PNG body when odin-dark.png exists", async () => {
+    const req = new Request("http://localhost:3001/favicon.ico");
+    const res = await app.fetch(req);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("image/png");
+    const body = await res.arrayBuffer();
+    expect(body.byteLength).toBeGreaterThan(0);
+  });
+
+  it("sets Cache-Control public header", async () => {
+    const req = new Request("http://localhost:3001/favicon.ico");
+    const res = await app.fetch(req);
+    if (res.status === 200) {
+      expect(res.headers.get("cache-control")).toContain("public");
+    }
+  });
+});
+
+describe("Favicon <link rel=icon> in HTML templates", () => {
+  beforeEach(() => {
+    mockVerifySessionToken.mockReset();
+    mockVerifySessionToken.mockReturnValue("test@example.com");
+  });
+
+  it("main page HTML includes favicon link tag", async () => {
+    const req = authedRequest("http://localhost:3001/");
+    const res = await app.fetch(req);
+    const html = await res.text();
+    expect(html).toContain('rel="icon"');
+    expect(html).toContain('href="/static/odin-dark.png"');
+  });
+
+  it("login page HTML includes favicon link tag", async () => {
+    mockVerifySessionToken.mockReturnValueOnce(null);
+    const req = new Request("http://localhost:3001/", {
+      headers: { Accept: "text/html" },
+    });
+    const res = await app.fetch(req);
+    const html = await res.text();
+    expect(html).toContain('rel="icon"');
+    expect(html).toContain('href="/static/odin-dark.png"');
+  });
+});
+
 describe("GET /js/stream.js", () => {
   it("returns 200 with JS content-type (no auth required)", async () => {
     const req = new Request("http://localhost:3001/js/stream.js");
