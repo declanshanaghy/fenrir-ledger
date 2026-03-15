@@ -6,6 +6,7 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 repo_root := justfile_directory()
 frontend   := repo_root / "development" / "frontend"
+monitor    := repo_root / "development" / "monitor"
 scripts    := repo_root / "scripts"
 quality    := repo_root / "quality" / "scripts"
 k8s_agents := repo_root / "infrastructure" / "k8s" / "agents"
@@ -17,6 +18,27 @@ pack       := repo_root / ".claude" / "skills" / "fire-next-up" / "scripts" / "p
 # Start local dev server (Next.js + Stripe webhooks)
 dev:
     bash "{{services}}" start
+
+# Start Odin's Throne monitor in local dev mode (tsx --watch HMR + live K8s via kubectl context)
+dev-monitor:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    cd "{{monitor}}"
+    if [ -f .secrets ]; then
+      set -a
+      # shellcheck source=/dev/null
+      source .secrets
+      set +a
+      echo "[dev-monitor] Loaded .secrets"
+    else
+      echo "[dev-monitor] WARNING: No .secrets file found at development/monitor/.secrets"
+      echo "[dev-monitor]          Create it with: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET, ALLOWED_EMAIL"
+      echo "[dev-monitor]          OAuth redirect URI must be: http://localhost:3001/auth/callback"
+    fi
+    ctx=$(kubectl config current-context 2>/dev/null || echo "NOT CONFIGURED — run: just gke-setup")
+    echo "[dev-monitor] kubectl context: ${ctx}"
+    echo "[dev-monitor] Starting Odin's Throne → http://localhost:3001"
+    exec npm run dev
 
 # Stop local dev server
 dev-stop:
