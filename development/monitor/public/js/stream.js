@@ -1,16 +1,22 @@
 'use strict';
 /**
- * stream.js — Client-side incremental log renderer for Odin's Throne.
+ * stream.js — Main Thread coordinator for Odin's Throne log streaming.
  *
- * Overrides the base openSession() with a rich renderer that handles:
- *  - Incremental turn/tool-call blocks as they arrive
- *  - Tool results injected into the matching tool block
- *  - Mayo heckler chat bubbles (simulated client-side between turns)
- *  - Verdict banner with PASS/FAIL styling
- *  - Full brandified report panel on stream end
+ * Thin layer that:
+ *  - Spawns log-parser.worker.js (owns the WebSocket)
+ *  - Sends connect/subscribe/unsubscribe/flush messages to Worker
+ *  - Receives chunk-ready pointers → reads from IndexedDB → writes DOM via rAF
+ *  - Receives jobs-updated → re-renders sidebar job cards
+ *  - Receives connection-status → drives ws-badge + error banner
+ *  - Receives verdict → shows verdict banner + updates sidebar card
+ *  - Receives session-end → marks stream as done
+ *  - Receives report → shows report panel
+ *
+ * All heavy lifting (WebSocket, JSONL parsing, IDB writes) is in the Worker.
+ * Main thread never touches WebSocket directly.
  */
 
-// ── CSS injected at runtime ──────────────────────────────────────────────────
+// ── CSS ───────────────────────────────────────────────────────────────────────
 
 (function injectStreamStyles() {
   const style = document.createElement('style');
@@ -125,76 +131,52 @@
   padding: .25rem .6rem; cursor: pointer; margin-left: .5rem; flex-shrink: 0;
 }
 #report-open-btn:hover { border-color: var(--gold); }
+
+.connection-error-banner {
+  display: none; padding: .5rem 1rem; background: #1a0a0a;
+  border-bottom: 1px solid #c94a0a; font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem; color: #ef4444;
+}
+.connection-error-banner.visible { display: block; }
 `;
   document.head.appendChild(style);
 })();
 
-// ── Mayo heckler (simplified client-side engine) ─────────────────────────────
+// ── IndexedDB (read-only from Main Thread) ────────────────────────────────────
 
-const MAYO_LINES = [
-  "MAYO FOR SAM!! 🏆",
-  "C'MON THE MAYO LADS!! This is YOUR year!!",
-  "SEVENTY-THREE YEARS IS ENOUGH!! LET'S GO MAYO!!",
-  "The Yew Wood watching over ye!! MAYO ABÚ!!",
-  "James Horan for Taoiseach and Sam for Mayo!! IN THAT ORDER!!",
-  "I'm not crying, YOU'RE crying!! MAYO FOR SAM!!",
-  "Every line of code is a step closer to SAM!! C'MON!!",
-];
+const IDB_NAME    = 'odin-throne-logs';
+const IDB_VERSION = 1;
+let mainThreadIdb = null;
 
-const COMEBACK_LINES = [
-  "Right so… back to the code. WHERE WERE WE. 💻",
-  "…I'll dedicate this commit to yer man. ANYWAY.",
-  "Focus. Ship. Repeat. Even Odin tunes out the crowd sometimes.",
-];
-
-const MAYO_NAMES = ["Seamus", "Brigid", "Cormac", "Aisling", "Padraig", "Fionnuala"];
-
-function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
-const hecklerState = { counter: 0, name: randomFrom(MAYO_NAMES) };
-
-/** Maybe generate a heckle event object; returns null most of the time. */
-function maybeHeckle() {
-  hecklerState.counter++;
-  if (hecklerState.counter < 2 + Math.floor(Math.random() * 2)) return null;
-  hecklerState.counter = 0;
-  const events = [];
-  events.push({ style: 'mayo', name: hecklerState.name, text: randomFrom(MAYO_LINES) });
-  if (Math.random() < 0.4) {
-    events.push({ style: 'comeback', name: 'Agent', text: randomFrom(COMEBACK_LINES) });
-  }
-  return events;
+function openMainIdb() {
+  if (mainThreadIdb) return Promise.resolve(mainThreadIdb);
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onupgradeneeded = (ev) => {
+      const db = ev.target.result;
+      if (!db.objectStoreNames.contains('log-chunks')) {
+        db.createObjectStore('log-chunks', { keyPath: ['sessionId', 'chunkId'] });
+      }
+      if (!db.objectStoreNames.contains('sessions')) {
+        db.createObjectStore('sessions', { keyPath: 'sessionId' });
+      }
+    };
+    req.onsuccess  = (ev) => { mainThreadIdb = ev.target.result; resolve(mainThreadIdb); };
+    req.onerror    = ()   => reject(req.error);
+  });
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function readChunk(sessionId, chunkId) {
+  return openMainIdb().then((db) => new Promise((resolve, reject) => {
+    const tx    = db.transaction('log-chunks', 'readonly');
+    const store = tx.objectStore('log-chunks');
+    const req   = store.get([sessionId, chunkId]);
+    req.onsuccess = (ev) => resolve(ev.target.result);
+    req.onerror   = ()   => reject(req.error);
+  }));
 }
 
-function toolBadgeClass(name) {
-  const n = name.toLowerCase();
-  if (n === 'bash') return 'bash';
-  if (n === 'read' || n === 'grep' || n === 'glob') return 'read';
-  if (n === 'edit' || n === 'multiedit') return 'edit';
-  if (n === 'write') return 'write';
-  if (n === 'todowrite' || n === 'todoupdate') return 'todo';
-  return '';
-}
-
-function toolInputPreview(toolName, input) {
-  if (!input) return '';
-  const n = toolName.toLowerCase();
-  if (n === 'bash' && input.command) return String(input.command).slice(0, 120);
-  if ((n === 'read' || n === 'edit' || n === 'write') && input.file_path) return input.file_path;
-  if ((n === 'grep' || n === 'glob') && input.pattern) return input.pattern;
-  const keys = Object.keys(input);
-  if (keys.length) return String(input[keys[0]]).slice(0, 80);
-  return '';
-}
-
-// ── Report panel ─────────────────────────────────────────────────────────────
+// ── Report Panel ──────────────────────────────────────────────────────────────
 
 let reportHtml = null;
 
@@ -232,148 +214,314 @@ function ensureReportButton(headerEl) {
   btn.id = 'report-open-btn';
   btn.textContent = 'View Report';
   btn.setAttribute('aria-label', 'View full agent report');
-  btn.addEventListener('click', () => {
-    if (reportHtml) showReport(reportHtml);
-  });
+  btn.addEventListener('click', () => { if (reportHtml) showReport(reportHtml); });
   headerEl.appendChild(btn);
 }
 
-// ── State ────────────────────────────────────────────────────────────────────
-
-let streamActiveWs = null;
-let streamActiveSessionId = null;
-/** Map from toolId → DOM element of that tool row */
-const toolRowElements = new Map();
-/** Current open turn block body element */
-let currentTurnBody = null;
-let currentTurnHeader = null;
-
-// ── DOM helpers ──────────────────────────────────────────────────────────────
+// ── DOM Helpers ───────────────────────────────────────────────────────────────
 
 function getTerminal() { return document.getElementById('log-terminal'); }
 
-function appendToTerminal(el) {
-  const term = getTerminal();
-  if (!term) return;
+/**
+ * Append a pre-rendered HTML fragment entry to the terminal.
+ * Handles placement of tool-call entries inside the current turn body,
+ * and tool-result entries inside their matching tool row.
+ */
+function appendEntry(entry, term) {
+  if (!term || !entry.html) return;
+
+  const tmp = document.createElement('div');
+  tmp.innerHTML = entry.html;
+  const el = tmp.firstElementChild;
+  if (!el) return;
+
+  if (entry.type === 'tool-result') {
+    // Inject result inside its matching tool row
+    const toolId = el.dataset.forTool;
+    if (toolId) {
+      const toolRow = term.querySelector(`[data-tool-id="${CSS.escape(toolId)}"]`);
+      if (toolRow) {
+        toolRow.appendChild(el);
+        return;
+      }
+    }
+    // Fallback: append to current turn body or terminal
+  }
+
+  if (entry.type === 'tool-call') {
+    // Append inside the last open turn block's body
+    const openBody = term.querySelector('.turn-block.open .turn-block-body:last-of-type') ||
+                     term.querySelector('.turn-block .turn-block-body:last-of-type');
+    if (openBody) {
+      openBody.appendChild(el);
+      // Update tool count in the matching header
+      const header = openBody.previousElementSibling;
+      if (header) {
+        const countEl = header.querySelector('[data-tool-count]');
+        if (countEl) {
+          const n = (parseInt(countEl.dataset.toolCount || '0') || 0) + 1;
+          countEl.dataset.toolCount = String(n);
+          countEl.textContent = n + ' tool' + (n !== 1 ? 's' : '');
+        }
+      }
+      return;
+    }
+  }
+
+  if (entry.type === 'turn-start') {
+    term.appendChild(el);
+    // Wire collapse/expand click handler
+    const header = el.querySelector('.turn-block-header');
+    if (header) {
+      header.addEventListener('click', () => el.classList.toggle('open'));
+    }
+    return;
+  }
+
   term.appendChild(el);
+}
+
+// ── rAF-batched DOM writer ────────────────────────────────────────────────────
+
+/** Pending chunks waiting for the next rAF flush. */
+const pendingChunks = [];
+let rafPending = false;
+
+function scheduleRaf() {
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => {
+    rafPending = false;
+    drainPendingChunks();
+  });
+}
+
+function drainPendingChunks() {
+  if (!pendingChunks.length) return;
+  const term = getTerminal();
+  if (!term) { pendingChunks.length = 0; return; }
+
+  // Take a snapshot of what's ready, clear queue, then apply
+  const snapshot = pendingChunks.splice(0, pendingChunks.length);
+  for (const entries of snapshot) {
+    for (const entry of entries) {
+      appendEntry(entry, term);
+    }
+  }
   term.scrollTop = term.scrollHeight;
 }
 
-function appendTurnBlock(turnNum) {
-  const block = document.createElement('div');
-  block.className = 'turn-block open';
-  block.setAttribute('aria-label', 'Turn ' + turnNum);
-  block.dataset.turnNum = String(turnNum);
-  block.innerHTML = `
-    <div class="turn-block-header" aria-label="Turn ${turnNum} header">
-      <span class="turn-block-num">T${turnNum}</span>
-      <span class="turn-block-tools" id="turn-${turnNum}-tool-count">0 tools</span>
-      <span class="turn-block-chevron" aria-hidden="true">›</span>
-    </div>
-    <div class="turn-block-body" id="turn-${turnNum}-body"></div>
-  `;
-  block.querySelector('.turn-block-header').addEventListener('click', () => {
-    block.classList.toggle('open');
-  });
-  appendToTerminal(block);
-  currentTurnBody = block.querySelector('#turn-' + turnNum + '-body');
-  currentTurnHeader = block.querySelector('#turn-' + turnNum + '-tool-count');
-  return block;
+// ── Connection Error Banner ───────────────────────────────────────────────────
+
+function ensureErrorBanner() {
+  let banner = document.getElementById('connection-error-banner');
+  if (banner) return banner;
+  banner = document.createElement('div');
+  banner.id        = 'connection-error-banner';
+  banner.className = 'connection-error-banner';
+  banner.setAttribute('role', 'alert');
+  // Insert above the terminal area
+  const term = getTerminal();
+  if (term && term.parentNode) {
+    term.parentNode.insertBefore(banner, term);
+  } else {
+    document.body.appendChild(banner);
+  }
+  return banner;
 }
 
-function appendToolRow(turnNum, toolId, toolName, input) {
-  if (!currentTurnBody) appendTurnBlock(turnNum);
-  const badgeClass = toolBadgeClass(toolName);
-  const preview = escHtml(toolInputPreview(toolName, input));
-
-  const row = document.createElement('div');
-  row.className = 'tool-row';
-  row.setAttribute('aria-label', 'Tool call: ' + toolName);
-  row.innerHTML = `
-    <div class="tool-row-header">
-      <span class="tool-badge${badgeClass ? ' ' + badgeClass : ''}">${escHtml(toolName)}</span>
-      <span class="tool-preview">${preview}</span>
-    </div>
-  `;
-  currentTurnBody.appendChild(row);
-  toolRowElements.set(toolId, row);
-
-  // Update tool count in header
-  if (currentTurnHeader) {
-    const countEl = currentTurnHeader;
-    const current = parseInt(countEl.textContent) || 0;
-    const next = current + 1;
-    countEl.textContent = next + ' tool' + (next !== 1 ? 's' : '');
+function setConnectionStatus(connected, reconnecting, error) {
+  const badge = document.getElementById('ws-badge');
+  if (badge) {
+    if (connected) {
+      badge.className = 'ws-badge open';
+      badge.textContent = 'live';
+    } else if (reconnecting) {
+      badge.className = 'ws-badge connecting';
+      badge.textContent = 'reconnecting';
+    } else {
+      badge.className = 'ws-badge closed';
+      badge.textContent = 'disconnected';
+    }
   }
 
-  const term = getTerminal();
-  if (term) term.scrollTop = term.scrollHeight;
-  return row;
+  const banner = ensureErrorBanner();
+  if (!connected && (reconnecting || error)) {
+    banner.textContent = error
+      ? `⚠ ${error}`
+      : '⚠ WebSocket disconnected — reconnecting…';
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+    banner.textContent = '';
+  }
 }
 
-function appendToolResult(toolId, content, isError) {
-  const row = toolRowElements.get(toolId);
-  if (!row) return;
-  if (isError) row.classList.add('tool-error');
-  const resultEl = document.createElement('div');
-  resultEl.className = 'tool-result-block' + (isError ? ' is-error' : '');
-  resultEl.textContent = content.slice(0, 800) + (content.length > 800 ? '\n…' : '');
-  row.appendChild(resultEl);
-  const term = getTerminal();
-  if (term) term.scrollTop = term.scrollHeight;
+// ── Sidebar Helpers ───────────────────────────────────────────────────────────
+
+function updateSidebarVerdict(sessionId, pass) {
+  const card = document.querySelector('[data-session="' + CSS.escape(sessionId) + '"]');
+  if (!card) return;
+  const statusEl = card.querySelector('.card-status');
+  if (!statusEl) return;
+  statusEl.textContent = pass ? '✓' : '✗';
+  statusEl.style.color = pass ? '#22c55e' : '#ef4444';
+  statusEl.classList.remove('pulse');
+  statusEl.title = pass ? 'PASS' : 'FAIL';
 }
 
-function appendHeckleBubble(style, name, text) {
-  const isComeback = style === 'comeback';
-  const isEntrance = style === 'entrance';
-  const avatar = isComeback ? '⚡' : isEntrance ? '🚪' : '🟢';
-  const bubble = document.createElement('div');
-  bubble.className = 'heckle-bubble ' + style;
-  bubble.setAttribute('aria-label', 'Heckle from ' + name);
-  bubble.innerHTML = `
-    <div class="heckle-avatar" aria-hidden="true">${avatar}</div>
-    <div class="heckle-content">
-      <div class="heckle-name">${escHtml(name)}</div>
-      <div class="heckle-text">${escHtml(text)}</div>
-    </div>
-  `;
-  appendToTerminal(bubble);
+/** Render the sidebar job cards from a jobs array. */
+function renderJobCards(jobs) {
+  const sidebar = document.getElementById('job-list');
+  if (!sidebar || !Array.isArray(jobs)) return;
+  sidebar.innerHTML = '';
+  for (const job of jobs) {
+    const card = document.createElement('div');
+    card.className = 'card' + (job.sessionId === activeSessionId ? ' active' : '');
+    card.dataset.session = job.sessionId;
+    const statusSymbol =
+      job.status === 'succeeded' ? '✓' :
+      job.status === 'failed'    ? '✗' :
+      job.status === 'running'   ? '●' : '○';
+    const statusColor =
+      job.status === 'succeeded' ? '#22c55e' :
+      job.status === 'failed'    ? '#ef4444' :
+      job.status === 'running'   ? 'var(--gold)' : 'var(--text-void)';
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-title">${escHtml(job.name || job.sessionId)}</span>
+        <span class="card-status" style="color:${statusColor}">${statusSymbol}</span>
+      </div>
+      <div class="card-meta">#${job.issueNumber || '?'} · ${escHtml(job.agent || '')} · Step ${job.step || 1}</div>
+    `;
+    card.addEventListener('click', () => openSession(job.sessionId, {
+      agentName: job.agent,
+      issue:     job.issueNumber,
+      step:      job.step,
+    }));
+    sidebar.appendChild(card);
+  }
 }
 
-function appendVerdictBanner(pass, summary) {
-  const banner = document.createElement('div');
-  banner.className = 'verdict-banner ' + (pass ? 'pass' : 'fail');
-  banner.setAttribute('aria-label', 'Verdict: ' + (pass ? 'PASS' : 'FAIL'));
-  banner.innerHTML = `
-    <div class="verdict-title">${pass ? '✓ PASS' : '✗ FAIL'}</div>
-    <div class="verdict-summary">${escHtml(summary.slice(0, 500))}</div>
-  `;
-  appendToTerminal(banner);
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
-// ── openSession override ─────────────────────────────────────────────────────
+// ── Worker Lifecycle ──────────────────────────────────────────────────────────
+
+let logWorker         = null;
+let activeSessionId   = null;
+
+function ensureWorker() {
+  if (logWorker) return logWorker;
+  logWorker = new Worker('/js/log-parser.worker.js');
+
+  logWorker.addEventListener('message', (ev) => {
+    const msg = ev.data;
+    if (!msg || typeof msg !== 'object') return;
+    handleWorkerMessage(msg);
+  });
+
+  logWorker.addEventListener('error', (ev) => {
+    console.error('[stream] Worker error:', ev.message);
+    setConnectionStatus(false, false, 'Worker error: ' + ev.message);
+  });
+
+  // Connect to the multiplexed WebSocket endpoint (new protocol)
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = proto + '//' + location.host + '/ws';
+  logWorker.postMessage({ type: 'connect', wsUrl });
+
+  return logWorker;
+}
+
+// ── Worker → Main Thread Message Handler ─────────────────────────────────────
+
+function handleWorkerMessage(msg) {
+  switch (msg.type) {
+    // ── Chunk of pre-rendered HTML ready in IDB ───────────────────────────────
+    case 'chunk-ready': {
+      if (msg.sessionId !== activeSessionId) break;
+      readChunk(msg.sessionId, msg.chunkId)
+        .then((chunk) => {
+          if (!chunk || !chunk.entries) return;
+          pendingChunks.push(chunk.entries);
+          scheduleRaf();
+        })
+        .catch((err) => {
+          console.warn('[stream] IDB read failed:', err);
+        });
+      break;
+    }
+
+    // ── Job list updated (send directly, no IDB) ──────────────────────────────
+    case 'jobs-updated': {
+      renderJobCards(msg.jobs);
+      break;
+    }
+
+    // ── Verdict detected ──────────────────────────────────────────────────────
+    case 'verdict': {
+      updateSidebarVerdict(msg.sessionId, msg.result === 'PASS');
+      break;
+    }
+
+    // ── Session log stream complete ───────────────────────────────────────────
+    case 'session-end': {
+      if (msg.sessionId === activeSessionId) {
+        const badge = document.getElementById('ws-badge');
+        if (badge) { badge.className = 'ws-badge closed'; badge.textContent = 'done'; }
+        // Flush any remaining rAF
+        pendingChunks.length && scheduleRaf();
+      }
+      break;
+    }
+
+    // ── Connection status → ws-badge + error banner ───────────────────────────
+    case 'connection-status': {
+      setConnectionStatus(msg.connected, msg.reconnecting, msg.error);
+      break;
+    }
+
+    // ── Report HTML (legacy protocol forwarded by worker) ─────────────────────
+    case 'report': {
+      reportHtml = msg.html;
+      const header = document.getElementById('content-header');
+      if (header) ensureReportButton(header);
+      break;
+    }
+
+    default:
+      break;
+  }
+}
+
+// ── openSession ───────────────────────────────────────────────────────────────
 
 /**
- * Enhanced openSession — overrides the base version in the inline HTML script.
- * Handles structured WS events: turn_start, tool_call, tool_result,
- * heckle, verdict, report — plus falls back to raw log lines.
+ * Override of the base openSession defined in the inline HTML script.
+ * Notifies the Worker to subscribe to this session; clears + resets UI.
  */
 window.openSession = function openSession(sessionId, job) {
-  if (streamActiveWs) {
-    streamActiveWs.close();
-    streamActiveWs = null;
+  const worker = ensureWorker();
+
+  // Unsubscribe previous session
+  if (activeSessionId && activeSessionId !== sessionId) {
+    worker.postMessage({ type: 'unsubscribe', sessionId: activeSessionId });
   }
 
-  streamActiveSessionId = sessionId;
-  reportHtml = null;
-  toolRowElements.clear();
-  currentTurnBody = null;
-  currentTurnHeader = null;
+  activeSessionId = sessionId;
+  reportHtml      = null;
+  pendingChunks.length = 0;
 
   // Show content areas
   document.getElementById('content-header').style.display = 'flex';
-  document.getElementById('log-terminal').style.display = 'block';
-  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('log-terminal').style.display   = 'block';
+  document.getElementById('empty-state').style.display    = 'none';
 
   // Set title
   const titleEl = document.getElementById('session-title');
@@ -392,139 +540,11 @@ window.openSession = function openSession(sessionId, job) {
   const term = getTerminal();
   if (term) term.innerHTML = '';
 
-  // Set WS badge
+  // Update badge to connecting
   const badge = document.getElementById('ws-badge');
   if (badge) { badge.className = 'ws-badge connecting'; badge.textContent = 'connecting'; }
 
-  // Open WebSocket
-  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = proto + '//' + location.host + '/ws/logs/' + encodeURIComponent(sessionId);
-  const ws = new WebSocket(wsUrl);
-  streamActiveWs = ws;
-
-  ws.addEventListener('open', () => {
-    if (badge) { badge.className = 'ws-badge open'; badge.textContent = 'live'; }
-  });
-
-  ws.addEventListener('message', (ev) => {
-    let msg;
-    try { msg = JSON.parse(ev.data); } catch { return; }
-    handleStreamMessage(msg, sessionId);
-  });
-
-  ws.addEventListener('close', () => {
-    if (streamActiveWs === ws) {
-      if (badge) { badge.className = 'ws-badge closed'; badge.textContent = 'closed'; }
-    }
-  });
-
-  ws.addEventListener('error', () => {
-    const errEl = document.createElement('div');
-    errEl.className = 'log-line';
-    errEl.innerHTML = '<span class="log-error">WebSocket error — check that the session pod exists</span>';
-    appendToTerminal(errEl);
-    if (badge) { badge.className = 'ws-badge error'; badge.textContent = 'error'; }
-  });
+  // Subscribe via Worker (Worker opens WS to the session endpoint for legacy protocol,
+  // or sends subscribe message for new multiplexed protocol)
+  worker.postMessage({ type: 'subscribe', sessionId });
 };
-
-// ── WS message handler ───────────────────────────────────────────────────────
-
-function handleStreamMessage(msg, sessionId) {
-  const badge = document.getElementById('ws-badge');
-
-  switch (msg.type) {
-    case 'connected': {
-      const connEl = document.createElement('div');
-      connEl.className = 'log-line';
-      connEl.innerHTML = '<span class="log-system">\u2014 connected to session ' + escHtml(msg.sessionId) + ' \u2014</span>';
-      appendToTerminal(connEl);
-      break;
-    }
-
-    case 'turn_start': {
-      appendTurnBlock(msg.turnNum);
-      // Heckle between turns (client-side simulation)
-      const heckles = maybeHeckle();
-      if (heckles) {
-        heckles.forEach(h => appendHeckleBubble(h.style, h.name, h.text));
-      }
-      break;
-    }
-
-    case 'tool_call': {
-      appendToolRow(msg.turnNum, msg.toolId, msg.toolName, msg.input);
-      break;
-    }
-
-    case 'tool_result': {
-      appendToolResult(msg.toolId, msg.content, msg.isError);
-      break;
-    }
-
-    case 'heckle': {
-      appendHeckleBubble(msg.style, msg.name, msg.text);
-      break;
-    }
-
-    case 'verdict': {
-      appendVerdictBanner(msg.pass, msg.summary);
-      // Update sidebar card status visually
-      updateSidebarVerdict(sessionId, msg.pass);
-      break;
-    }
-
-    case 'report': {
-      reportHtml = msg.html;
-      const header = document.getElementById('content-header');
-      if (header) ensureReportButton(header);
-      break;
-    }
-
-    case 'error': {
-      const errEl = document.createElement('div');
-      errEl.className = 'log-line';
-      errEl.innerHTML = '<span class="log-error">\u26A0 ' + escHtml(msg.message) + '</span>';
-      appendToTerminal(errEl);
-      if (badge) { badge.className = 'ws-badge error'; badge.textContent = 'error'; }
-      break;
-    }
-
-    case 'end': {
-      const endEl = document.createElement('div');
-      endEl.className = 'log-line log-end';
-      endEl.textContent = '\u2014 stream ended \u2014';
-      appendToTerminal(endEl);
-      if (badge) { badge.className = 'ws-badge closed'; badge.textContent = 'done'; }
-      break;
-    }
-
-    case 'log':
-      // Raw log lines are shown only when we haven't yet parsed any JSONL turns.
-      // Once turns start appearing, raw lines are redundant but harmless.
-      // To avoid flooding the terminal, skip raw lines once turn rendering is active.
-      if (!currentTurnBody) {
-        const ts = msg.ts ? '<span class="log-ts">' + new Date(msg.ts).toLocaleTimeString() + '</span>' : '';
-        const logEl = document.createElement('div');
-        logEl.className = 'log-line';
-        logEl.innerHTML = ts + escHtml(msg.line);
-        appendToTerminal(logEl);
-      }
-      break;
-
-    default:
-      break;
-  }
-}
-
-// ── Sidebar verdict update ───────────────────────────────────────────────────
-
-function updateSidebarVerdict(sessionId, pass) {
-  const card = document.querySelector('[data-session="' + CSS.escape(sessionId) + '"]');
-  if (!card) return;
-  const statusEl = card.querySelector('.card-status');
-  if (!statusEl) return;
-  statusEl.textContent = pass ? '\u2713' : '\u2717';
-  statusEl.style.color = pass ? '#22c55e' : '#ef4444';
-  statusEl.classList.remove('pulse');
-  statusEl.title = pass ? 'PASS' : 'FAIL';
-}
