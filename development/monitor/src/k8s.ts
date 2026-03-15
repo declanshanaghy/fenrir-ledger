@@ -31,14 +31,12 @@ let _coreApi: k8s.CoreV1Api | null = null;
 function getKubeConfig(): k8s.KubeConfig {
   if (_kc) return _kc;
   _kc = new k8s.KubeConfig();
-  try {
+  if (process.env.KUBERNETES_SERVICE_HOST) {
+    // Running inside a K8s pod — use in-cluster config
     _kc.loadFromCluster();
-  } catch {
-    try {
-      _kc.loadFromDefault();
-    } catch {
-      // No cluster available — will fail gracefully on API calls
-    }
+  } else {
+    // Local dev — use ~/.kube/config
+    _kc.loadFromDefault();
   }
   return _kc;
 }
@@ -186,7 +184,7 @@ export function watchAgentJobs(
 
 export async function streamPodLogs(
   podName: string,
-  namespace = "fenrir-app",
+  namespace = "fenrir-agents",
   onLine: (line: string) => void,
   onEnd: () => void,
   onError: (err: Error) => void
@@ -227,14 +225,22 @@ export async function streamPodLogs(
 
 export async function findPodForSession(
   sessionId: string,
-  namespace = "fenrir-app"
+  namespace = "fenrir-agents"
 ): Promise<string | null> {
   const api = getCoreApi();
-  // v1.0.0 ObjectParamAPI: takes request object
+  // Try session-id label first (set on pod template)
   const podList = await api.listNamespacedPod({
     namespace,
-    labelSelector: `session-id=${sessionId}`,
+    labelSelector: `fenrir.dev/session-id=${sessionId}`,
   });
-  const pod = podList.items[0];
-  return pod?.metadata?.name ?? null;
+  if (podList.items.length > 0) {
+    return podList.items[0].metadata?.name ?? null;
+  }
+  // Fallback: try job-name label (auto-set by K8s on job pods)
+  const jobName = `agent-${sessionId}`;
+  const byJob = await api.listNamespacedPod({
+    namespace,
+    labelSelector: `batch.kubernetes.io/job-name=${jobName}`,
+  });
+  return byJob.items[0]?.metadata?.name ?? null;
 }

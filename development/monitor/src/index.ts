@@ -20,8 +20,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = new Hono();
 
 const PORT = parseInt(process.env.PORT ?? "3001", 10);
-const NAMESPACE = process.env.K8S_NAMESPACE ?? "fenrir-app";
-const JOB_LABEL = process.env.JOB_LABEL_SELECTOR ?? "app=odin-agent";
+const NAMESPACE = process.env.K8S_NAMESPACE ?? "fenrir-agents";
+const JOB_LABEL = process.env.JOB_LABEL_SELECTOR ?? "app.kubernetes.io/component=agent-sandbox";
 
 const ODIN_QUOTES = [
   "I hung on that windy tree for nine long nights. What's a failed build to that?",
