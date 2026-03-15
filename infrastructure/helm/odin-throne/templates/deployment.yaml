@@ -20,6 +20,13 @@ spec:
     spec:
       serviceAccountName: {{ .Values.app.serviceAccountName }}
       terminationGracePeriodSeconds: 30
+      volumes:
+        - name: oauth2-proxy-emails
+          secret:
+            secretName: odin-throne-oauth2-proxy-secrets
+            items:
+              - key: emails.txt
+                path: emails.txt
       containers:
         - name: odin-throne
           image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
@@ -46,3 +53,63 @@ spec:
             {{- toYaml .Values.app.livenessProbe | nindent 12 }}
           startupProbe:
             {{- toYaml .Values.app.startupProbe | nindent 12 }}
+        {{- if .Values.oauth2Proxy.enabled }}
+        - name: oauth2-proxy
+          image: "{{ .Values.oauth2Proxy.image.repository }}:{{ .Values.oauth2Proxy.image.tag }}"
+          imagePullPolicy: {{ .Values.oauth2Proxy.image.pullPolicy }}
+          args:
+            - --provider=google
+            - --client-id=$(GOOGLE_CLIENT_ID)
+            - --client-secret=$(GOOGLE_CLIENT_SECRET)
+            - --cookie-secret=$(OAUTH2_PROXY_COOKIE_SECRET)
+            - --email-domain=*
+            - --authenticated-emails-file=/etc/oauth2-proxy/emails.txt
+            - --upstream=http://localhost:{{ .Values.service.containerPort }}
+            - --http-address=0.0.0.0:{{ .Values.oauth2Proxy.port }}
+            - --redirect-url={{ .Values.oauth2Proxy.redirectUrl }}
+            - --skip-auth-route=GET=^/healthz$
+            - --cookie-secure=true
+            - --cookie-samesite=lax
+          ports:
+            - name: oauth2-proxy
+              containerPort: {{ .Values.oauth2Proxy.port }}
+              protocol: TCP
+          env:
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: odin-throne-oauth2-proxy-secrets
+                  key: GOOGLE_CLIENT_ID
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: odin-throne-oauth2-proxy-secrets
+                  key: GOOGLE_CLIENT_SECRET
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: odin-throne-oauth2-proxy-secrets
+                  key: OAUTH2_PROXY_COOKIE_SECRET
+          volumeMounts:
+            - name: oauth2-proxy-emails
+              mountPath: /etc/oauth2-proxy
+              readOnly: true
+          resources:
+            {{- toYaml .Values.oauth2Proxy.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: {{ .Values.oauth2Proxy.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: {{ .Values.oauth2Proxy.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+        {{- end }}

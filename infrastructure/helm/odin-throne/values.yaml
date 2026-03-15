@@ -26,8 +26,8 @@ app:
     K8S_NAMESPACE: "fenrir-agents"
     JOB_LABEL_SELECTOR: "app.kubernetes.io/component=agent-sandbox"
 
-  # K8s secret containing GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
-  # ALLOWED_EMAIL, SESSION_SECRET — injected via envFrom.
+  # K8s secret containing GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET — injected via envFrom.
+  # SESSION_SECRET and ALLOWED_EMAIL are no longer used (handled by oauth2-proxy).
   secretRef: "odin-throne-secrets"
 
   resources:
@@ -93,11 +93,32 @@ ui:
       memory: "64Mi"
       ephemeral-storage: "128Mi"
 
+# -- oauth2-proxy Sidecar --------------------------------------------------
+oauth2Proxy:
+  enabled: true
+  image:
+    repository: quay.io/oauth2-proxy/oauth2-proxy
+    tag: v7.6.0
+    pullPolicy: IfNotPresent
+  port: 4180
+  redirectUrl: "https://monitor.fenrirledger.com/oauth2/callback"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+      ephemeral-storage: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+      ephemeral-storage: "128Mi"
+  # oauth2-proxy secrets are created imperatively by the deploy-odin-throne CI step.
+  # They are NOT rendered from values.yaml. See secrets.yaml template for details.
+
 # -- Service (API) ---------------------------------------------------------
 service:
   type: ClusterIP
   port: 80
-  targetPort: http
+  targetPort: oauth2-proxy
   containerPort: 3001
 
 # -- Ingress ---------------------------------------------------------------
