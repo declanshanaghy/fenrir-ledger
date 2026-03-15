@@ -24,7 +24,11 @@ export function useJobs() {
     if (msg.type === "jobs-snapshot" || msg.type === "jobs-updated") {
       const parsed = (msg.jobs || [])
         .map(parseJob)
-        .sort((a, b) => (b.startTime || 0) - (a.startTime || 0));
+        .sort((a, b) => {
+          const aTime = a.startTime ?? 0;
+          const bTime = b.startTime ?? 0;
+          return bTime - aTime;
+        });
       setJobs(parsed);
     }
   }, []);

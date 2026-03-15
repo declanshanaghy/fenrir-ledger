@@ -96,13 +96,21 @@ type ClientMessage =
 // Helpers
 // ---------------------------------------------------------------------------
 
+function sortJobsByStartedAtDesc(jobs: Job[]): Job[] {
+  return [...jobs].sort((a, b) => {
+    const aTime = a.startedAt ? new Date(a.startedAt).getTime() : 0;
+    const bTime = b.startedAt ? new Date(b.startedAt).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
 /** Merge fixture jobs with live K8s jobs. Live jobs take precedence by sessionId. */
 function mergeWithFixtures(liveJobs: Job[]): Job[] {
   const fixtureJobs = listFixtureJobs();
-  if (fixtureJobs.length === 0) return liveJobs;
+  if (fixtureJobs.length === 0) return sortJobsByStartedAtDesc(liveJobs);
   const liveIds = new Set(liveJobs.map((j) => j.sessionId));
   const extras = fixtureJobs.filter((f) => !liveIds.has(f.sessionId));
-  return [...liveJobs, ...extras];
+  return sortJobsByStartedAtDesc([...liveJobs, ...extras]);
 }
 
 function send(ws: WebSocket, msg: ServerMessage): void {
