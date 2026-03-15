@@ -4,6 +4,7 @@ import type { LogEntry } from "../hooks/useLogStream";
 import type { DisplayJob } from "../lib/types";
 import { StatusBadge } from "./StatusBadge";
 import { ToolBlock } from "./ToolBlock";
+import { NorseErrorTablet } from "./NorseErrorTablet";
 import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
 
 interface Props {
@@ -11,10 +12,12 @@ interface Props {
   activeJob: DisplayJob | null;
   wsState: "connecting" | "open" | "closed" | "error";
   isFixture?: boolean;
+  isTtlExpired?: boolean;
+  streamError?: string | null;
   onSetSpeed?: (speed: number) => void;
 }
 
-export function LogViewer({ entries, activeJob, wsState, isFixture, onSetSpeed }: Props) {
+export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, streamError, onSetSpeed }: Props) {
   const termRef = useRef<HTMLDivElement>(null);
   const [fixtureSpeed, setFixtureSpeed] = useState(1);
   const [fixturePaused, setFixturePaused] = useState(false);
@@ -69,6 +72,32 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, onSetSpeed }
           <div className="empty-title">All Nine Worlds await</div>
           <div className="empty-sub">Select an agent session to stream its logs</div>
         </div>
+      </main>
+    );
+  }
+
+  // TTL-expired sessions get the full-pane Norse error tablet instead of the log terminal
+  if (isTtlExpired && streamError) {
+    return (
+      <main className="content" aria-label="Log viewer">
+        <div className="content-header" aria-label="Active session">
+          <span className="session-title">
+            {activeJob.agentName} &mdash; #{activeJob.issue} Step {activeJob.step} (
+            {activeJob.sessionId})
+          </span>
+          <span className="header-badges">
+            <span
+              className="job-status-badge"
+              style={{ color: STATUS_COLORS[activeJob.status] }}
+              title={`Job status: ${activeJob.status}`}
+              aria-label={`Job status: ${STATUS_LABELS[activeJob.status]}`}
+            >
+              {STATUS_ICONS[activeJob.status]} {STATUS_LABELS[activeJob.status]}
+            </span>
+            <StatusBadge state={wsState} />
+          </span>
+        </div>
+        <NorseErrorTablet sessionId={activeJob.sessionId} message={streamError} />
       </main>
     );
   }

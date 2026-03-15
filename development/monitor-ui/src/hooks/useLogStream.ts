@@ -69,9 +69,14 @@ function parseEntrypointLine(line: string): LogEntry {
   return { id: nextId(), type: "raw", text: line };
 }
 
+/** TTL / pod-not-found patterns emitted by friendlyK8sError */
+export const TTL_ERROR_PATTERN = /TTL expired|cleaned up/i;
+
 export function useLogStream() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [streamError, setStreamError] = useState<string | null>(null);
+  const [streamEnded, setStreamEnded] = useState(false);
   const taskPromptBuffer = useRef<string[]>([]);
   const inTaskPrompt = useRef(false);
 
@@ -80,6 +85,8 @@ export function useLogStream() {
     entryCounter = 0;
     taskPromptBuffer.current = [];
     inTaskPrompt.current = false;
+    setStreamError(null);
+    setStreamEnded(false);
   }, []);
 
   const handleMessage = useCallback((msg: ServerMessage) => {
@@ -131,11 +138,13 @@ export function useLogStream() {
       }
       processEvent(ev);
     } else if (msg.type === "stream-error") {
+      setStreamError(msg.message);
       setEntries((prev) => [
         ...prev,
         { id: nextId(), type: "error", message: msg.message },
       ]);
     } else if (msg.type === "stream-end") {
+      setStreamEnded(true);
       setEntries((prev) => {
         // Mark any open batch as complete before adding stream-end
         const updated = prev.map((e) =>
@@ -336,11 +345,16 @@ export function useLogStream() {
     ]);
   }, []);
 
+  const isTtlExpired = streamEnded && streamError !== null && TTL_ERROR_PATTERN.test(streamError);
+
   return {
     entries,
     activeSessionId,
     setActiveSessionId,
     clearEntries,
     handleMessage,
+    streamError,
+    streamEnded,
+    isTtlExpired,
   };
 }
