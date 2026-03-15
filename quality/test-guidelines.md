@@ -192,26 +192,27 @@ mockRequireAuth.mockResolvedValueOnce({
 4. **Delete upgrade/migration suites** once the migration is confirmed stable.
 5. **Issue-specific regression tests** get merged into the parent feature suite after the fix lands.
 6. **No animation timing assertions.** Test that elements appear/disappear, not how fast.
-7. **Touch target / a11y checks** belong in `accessibility/a11y.spec.ts`, not scattered across suites.
+7. **Touch target / a11y checks** belong in Vitest component tests (`src/__tests__/`), not in E2E suites.
 8. **No structural DOM assertions.** Landmark presence, aria-label existence, and tag structure belong in integration tests. E2E tests should focus on user interactions and navigation.
 9. **Critical integrations are non-negotiable.** Always keep E2E coverage for: OAuth flows (sign-in, callback, returnto), Stripe integration (checkout, webhook, portal), card CRUD (add, edit, delete), data persistence (localStorage), dashboard navigation, and a11y gates (dialog, landmarks). Delete or trim low-value suites first (static content, CSS measurements, regression suites) before cutting critical path tests.
 
-### Current E2E suites (27 files, ~159 tests)
+### Current E2E suites (23 files, ~154 tests)
 
 | Category | Suites | Tests |
 |----------|--------|-------|
 | Auth | auth/, auth-returnto/, stale-auth-nudge/ | ~15 |
-| Dashboard | dashboard/, dashboard-tabs/ | ~4 |
+| Dashboard | dashboard-tabs/ | ~2 |
 | Cards | card-lifecycle/ (add, edit, close, delete, wizard-save) | ~7 |
-| Layout | layout/ (topbar) | ~1 |
 | Settings | settings-gate/, settings-reset/, settings-cleanup/ | ~27 |
 | Theme | theme-toggle/ | ~1 |
-| A11y | accessibility/, dialog-a11y/ | ~5 |
+| A11y | dialog-a11y/ | ~3 |
 | Admin | admin-console/ | ~7 |
 | Trial | trial-expiry-modal/, trial-panel-nudge/, trial-state/, trial-toast-badge/ | ~62 |
 | GKE | gke-migration/, issue-682/ | ~10 |
 | Features | features/ (skoll-dark-border) | ~5 |
 | Trust | trust-safety/ | ~15 |
+
+> **Removed (Issue #929):** `accessibility/a11y.spec.ts`, `dashboard/dashboard.spec.ts`, `layout/footer.spec.ts`, `layout/topbar.spec.ts` — static content checks migrated to Vitest component tests.
 
 All E2E routes use `/ledger` for app pages (marketing pages own `/`).
 Infrastructure runs on GKE Autopilot.
