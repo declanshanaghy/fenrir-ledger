@@ -1,0 +1,49 @@
+# Quality — Coverage and QA Critique
+# Invoked via: just quality <recipe>
+
+set dotenv-load := false
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+scripts := source_directory() / "scripts"
+
+# ── Code Coverage ───────────────────────────────────────────────────────────
+
+# Generate unit test coverage (Vitest only)
+coverage-unit:
+    node "{{scripts}}/coverage.mjs" --unit-only
+
+# Generate E2E coverage (Playwright only)
+coverage-e2e:
+    node "{{scripts}}/coverage.mjs" --e2e-only
+
+# Generate combined coverage (Vitest + Playwright)
+coverage:
+    node "{{scripts}}/coverage.mjs"
+
+# Merge existing coverage reports into combined
+coverage-combine:
+    node "{{scripts}}/coverage-combine.mjs"
+
+# Generate coverage index page
+coverage-index:
+    node "{{scripts}}/coverage-index.mjs"
+
+# ── QA ──────────────────────────────────────────────────────────────────────
+
+# Run Loki's test bloat critique
+critique:
+    bash "{{scripts}}/loki-critique.sh"
+
+# Dry-run test bloat critique (stdout only)
+critique-dry:
+    bash "{{scripts}}/loki-critique.sh" --dry-run
+
+# Show route coverage table per test suite
+routes:
+    bash "{{scripts}}/loki-critique.sh" --pattern-check
+
+# ── Utilities ───────────────────────────────────────────────────────────────
+
+# Generate a 256-bit encryption key
+gen-key:
+    bash "{{scripts}}/generate-encryption-key.sh"

@@ -1,0 +1,57 @@
+# Frontend — Build, Test, and Trial Management
+# Invoked via: just frontend <recipe>
+
+set dotenv-load := false
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+this_dir   := source_directory()
+repo_root  := this_dir / "../.."
+quality    := repo_root / "quality" / "scripts"
+frontend   := this_dir
+
+# ── Build & Verify ──────────────────────────────────────────────────────────
+
+# Run TypeScript type checking
+tsc:
+    bash "{{quality}}/verify.sh" --step tsc
+
+# Run Next.js production build
+build:
+    bash "{{quality}}/verify.sh" --step build
+
+# Run tsc + build
+check: tsc build
+
+# ── Tests ───────────────────────────────────────────────────────────────────
+
+# Run unit tests (Vitest)
+test-unit:
+    bash "{{quality}}/verify.sh" --step unit
+
+# Run E2E tests (Playwright)
+test-e2e:
+    bash "{{quality}}/verify.sh" --step e2e
+
+# Run a specific Playwright test suite by slug
+test-suite slug:
+    bash "{{quality}}/verify.sh" --step test -x "{{slug}}"
+
+# Run full verification (tsc + build + all tests)
+verify:
+    bash "{{quality}}/verify.sh"
+
+# Run full verification, stop on first failure
+verify-fast:
+    bash "{{quality}}/verify.sh" --fail-fast
+
+# ── Trial / Subscription ───────────────────────────────────────────────────
+
+# Interactive REPL for managing trial state in Redis (auto port-forwards if needed)
+adjust-trial *args:
+    node "{{frontend}}/scripts/trial-adjust.mjs" {{args}}
+
+# ── Utilities ───────────────────────────────────────────────────────────────
+
+# Clean build artifacts
+clean:
+    rm -rf "{{frontend}}/.next" "{{frontend}}/out"
