@@ -63,6 +63,20 @@ function jobStatus(job: k8s.V1Job): AgentJob["status"] {
   return "pending";
 }
 
+/**
+ * Map a K8s Pod phase to a Job status.
+ * Returns null for unknown/unset phases (caller should keep existing status).
+ */
+export function podPhaseToStatus(phase: string | undefined): Job["status"] | null {
+  switch (phase) {
+    case "Pending":   return "pending";
+    case "Running":   return "running";
+    case "Succeeded": return "succeeded";
+    case "Failed":    return "failed";
+    default:          return null;
+  }
+}
+
 function parseJobMeta(
   name: string,
   labels: Record<string, string>
@@ -108,9 +122,16 @@ export async function listAgentJobs(
 }
 
 /**
- * Watch K8s batch/v1 Jobs for state changes. Calls onUpdate with the full
- * current job list on every ADDED/MODIFIED/DELETED event. Auto-reconnects
- * after the watch stream ends or errors. Returns a cancel function.
+ * Watch K8s batch/v1 Jobs AND core/v1 Pods for state changes.
+ *
+ * Jobs give us terminal states (succeeded/failed) and initial pending state.
+ * Pods give us the precise phase (Pending → Running → Succeeded/Failed),
+ * which allows the UI to transition from "pending" to "running" once the pod
+ * is actually executing — something Job status.active alone cannot distinguish.
+ *
+ * Calls onUpdate with the full current job list on every status change.
+ * Auto-reconnects both watchers after stream ends or errors.
+ * Returns a cancel function that stops both watchers.
  */
 export function watchAgentJobs(
   namespace = "fenrir-agents",
@@ -120,7 +141,8 @@ export function watchAgentJobs(
 ): () => void {
   let stopped = false;
   const jobMap = new Map<string, Job>();
-  let currentReq: { abort(): void } | null = null;
+  let currentJobReq: { abort(): void } | null = null;
+  let currentPodReq: { abort(): void } | null = null;
 
   function sortedJobs(): Job[] {
     return Array.from(jobMap.values()).sort((a, b) => {
@@ -130,7 +152,9 @@ export function watchAgentJobs(
     });
   }
 
-  // Seed jobMap from a list call so initial state has correct statuses
+  // Seed jobMap from both a job list and a pod list so initial state is accurate.
+  // Pod phases refine job statuses: a job with status.active=1 could have a
+  // pod that is still Pending (scheduling) or already Running (executing).
   const seedFromList = async (): Promise<void> => {
     try {
       const jobs = await listAgentJobs(namespace, labelSelector);
@@ -138,16 +162,44 @@ export function watchAgentJobs(
         const mapped = mapAgentJobToJob(j);
         jobMap.set(j.name, mapped);
       }
+
+      // Refine status using live pod phases
+      try {
+        const coreApi = getCoreApi();
+        // Pods created by K8s Jobs inherit the job's pod-template labels.
+        // We watch all pods in the namespace and filter by job-name label.
+        const podList = await coreApi.listNamespacedPod({ namespace });
+        for (const pod of podList.items) {
+          const podLabels =
+            (pod.metadata?.labels as Record<string, string>) ?? {};
+          const jobName = podLabels["batch.kubernetes.io/job-name"];
+          if (!jobName) continue;
+          const existing = jobMap.get(jobName);
+          if (!existing) continue;
+          const phase = pod.status?.phase;
+          const status = podPhaseToStatus(phase);
+          if (status) {
+            jobMap.set(jobName, {
+              ...existing,
+              status,
+              podName: pod.metadata?.name ?? existing.podName,
+            });
+          }
+        }
+      } catch {
+        // Pod list failure is non-fatal — job-only status is better than nothing
+      }
+
       if (jobMap.size > 0) onUpdate(sortedJobs());
     } catch {
       // Non-fatal — watch will populate
     }
   };
 
-  const doWatch = async (): Promise<void> => {
+  // ── Job watcher ────────────────────────────────────────────────────────────
+
+  const doJobWatch = async (): Promise<void> => {
     if (stopped) return;
-    // Seed on first connect
-    if (jobMap.size === 0) await seedFromList();
     try {
       const kc = getKubeConfig();
       const watch = new k8s.Watch(kc);
@@ -158,52 +210,133 @@ export function watchAgentJobs(
           const name = obj.metadata?.name ?? "unknown";
           const labels =
             (obj.metadata?.labels as Record<string, string>) ?? {};
-          const s = obj.status;
-          let status: Job["status"] = "pending";
-          if (s?.active && s.active > 0) status = "running";
-          else if (s?.succeeded && s.succeeded > 0) status = "succeeded";
-          else if (s?.failed && s.failed > 0) status = "failed";
 
           if (type === "DELETED") {
             jobMap.delete(name);
           } else {
+            const s = obj.status;
+            // Map job-level terminal/active status. Pod watch will refine
+            // active → pending or running based on pod phase.
+            let status: Job["status"] = "pending";
+            if (s?.active && s.active > 0) status = "running";
+            else if (s?.succeeded && s.succeeded > 0) status = "succeeded";
+            else if (s?.failed && s.failed > 0) status = "failed";
+
+            const existing = jobMap.get(name);
             const meta = parseJobMeta(name, labels);
             jobMap.set(name, {
               ...meta,
               name,
-              status,
+              // Preserve pod-derived status when job status is "active/running"
+              // because pod phase is more granular (pending vs running).
+              // Terminal states (succeeded/failed) always come from job status.
+              status:
+                status === "running" && existing?.status === "pending"
+                  ? "pending"
+                  : status,
               startedAt: obj.status?.startTime?.toISOString() ?? null,
               completedAt: obj.status?.completionTime?.toISOString() ?? null,
-              podName: null,
+              podName: existing?.podName ?? null,
             });
           }
           onUpdate(sortedJobs());
         },
         (err: Error | null) => {
-          // Watch stream ended (naturally or via error)
-          currentReq = null;
+          currentJobReq = null;
           if (!stopped) {
             if (err) onError(err);
-            // Reconnect after a short delay
-            setTimeout(() => void doWatch(), 5000);
+            setTimeout(() => void doJobWatch(), 5000);
           }
         }
       );
-      currentReq = req as unknown as { abort(): void };
+      currentJobReq = req as unknown as { abort(): void };
     } catch (err) {
-      currentReq = null;
+      currentJobReq = null;
       if (!stopped) {
         onError(err instanceof Error ? err : new Error(String(err)));
-        setTimeout(() => void doWatch(), 5000);
+        setTimeout(() => void doJobWatch(), 5000);
       }
     }
+  };
+
+  // ── Pod watcher ────────────────────────────────────────────────────────────
+  // Watches all pods in the namespace. Pods created by K8s Jobs automatically
+  // get a `batch.kubernetes.io/job-name` label. We use this to correlate pods
+  // back to their parent job in jobMap and update the status from pod phase.
+
+  const doPodWatch = async (): Promise<void> => {
+    if (stopped) return;
+    try {
+      const kc = getKubeConfig();
+      const watch = new k8s.Watch(kc);
+      const req = await watch.watch(
+        `/api/v1/namespaces/${namespace}/pods`,
+        {}, // no label selector — filter in handler via batch.kubernetes.io/job-name
+        (type: string, pod: k8s.V1Pod) => {
+          const podLabels =
+            (pod.metadata?.labels as Record<string, string>) ?? {};
+          const jobName = podLabels["batch.kubernetes.io/job-name"];
+          if (!jobName) return; // not a job-managed pod
+
+          if (type === "DELETED") return; // job watch handles deletion
+
+          const podName = pod.metadata?.name ?? null;
+          const phase = pod.status?.phase;
+          const newStatus = podPhaseToStatus(phase);
+          if (!newStatus) return; // unknown phase — no update
+
+          const existing = jobMap.get(jobName);
+          if (!existing) return; // job not in map yet (race — job watch will add it)
+
+          // Only update if something changed to avoid redundant broadcasts
+          if (existing.status === newStatus && existing.podName === podName) return;
+
+          // Terminal states (succeeded/failed) set by pod phase are also valid,
+          // but we let job-watch be authoritative for those to avoid flapping.
+          // For active states (pending/running), pod phase is the source of truth.
+          if (newStatus === "succeeded" || newStatus === "failed") {
+            // Only accept terminal pod phases if job hasn't already reported terminal
+            if (existing.status === "succeeded" || existing.status === "failed") return;
+          }
+
+          jobMap.set(jobName, { ...existing, status: newStatus, podName });
+          onUpdate(Array.from(jobMap.values()));
+        },
+        (err: Error | null) => {
+          currentPodReq = null;
+          if (!stopped) {
+            if (err) onError(err);
+            setTimeout(() => void doPodWatch(), 5000);
+          }
+        }
+      );
+      currentPodReq = req as unknown as { abort(): void };
+    } catch (err) {
+      currentPodReq = null;
+      if (!stopped) {
+        // Pod watch failure is non-fatal — degrade gracefully, job watch still runs
+        console.warn("[k8s] Pod watch error (degraded mode):", String(err));
+        setTimeout(() => void doPodWatch(), 10000);
+      }
+    }
+  };
+
+  // ── Bootstrap ──────────────────────────────────────────────────────────────
+
+  const doWatch = async (): Promise<void> => {
+    if (stopped) return;
+    // Seed on first connect with accurate job + pod status
+    if (jobMap.size === 0) await seedFromList();
+    void doJobWatch();
+    void doPodWatch();
   };
 
   void doWatch();
 
   return () => {
     stopped = true;
-    currentReq?.abort();
+    currentJobReq?.abort();
+    currentPodReq?.abort();
   };
 }
 
