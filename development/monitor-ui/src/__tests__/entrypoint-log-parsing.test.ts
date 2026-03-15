@@ -5,10 +5,17 @@
  * - K8s ISO timestamp prefix is correctly stripped by the server-side regex
  * - parseEntrypointLine correctly classifies all entrypoint line types
  * - Lines with no timestamp (fixture replay) continue to parse correctly
+ *
+ * Loki augmented:
+ * - AC: "Starting Claude Code" collapses prior entries into entrypoint-group (handleMessage)
+ * - Session ID with colons in value is captured in full
+ * - Non-Z timezone format (+00:00) is NOT stripped (future-proofing safety)
+ * - Task prompt buffering produces entrypoint-task entry via handleMessage
  */
 
 import { describe, it, expect } from "vitest";
-import { parseEntrypointLine } from "../hooks/useLogStream";
+import { renderHook, act } from "@testing-library/react";
+import { parseEntrypointLine, useLogStream } from "../hooks/useLogStream";
 
 // The server-side strip regex used in ws.ts — tested in isolation here so
 // regressions are caught without spinning up the full WebSocket server.
@@ -143,5 +150,75 @@ describe("parseEntrypointLine — after timestamp stripping (live K8s path)", ()
   it("does not mis-parse a plain raw line that happens to have numbers", () => {
     const entry = parseLiveK8sLine("2026-03-15T20:10:20.000Z Run npm install...");
     expect(entry.type).toBe("raw");
+  });
+});
+
+// ── Loki augmentation — issue #990 gaps ──────────────────────────────────────
+
+describe("parseEntrypointLine — edge cases (Loki)", () => {
+  it("captures Session value containing colons in full", () => {
+    // Session IDs can include colons in agent-naming schemes
+    const entry = parseEntrypointLine("Session: issue-990:fix:firemandecko-abc123");
+    expect(entry.type).toBe("entrypoint-info");
+    expect(entry.detail).toBe("Session");
+    expect(entry.text).toBe("issue-990:fix:firemandecko-abc123");
+  });
+
+  it("does NOT strip non-Z timezone prefix (+00:00 format)", () => {
+    // K8s always emits Z, but verify other formats don't silently corrupt lines
+    const raw = "2026-03-15T20:10:19+00:00 [ok] git credentials configured";
+    expect(stripTimestamp(raw)).toBe(raw);
+  });
+});
+
+describe("useLogStream handleMessage — AC coverage (Loki)", () => {
+  it("collapses prior entries into entrypoint-group when Starting Claude Code arrives", () => {
+    const { result } = renderHook(() => useLogStream());
+
+    act(() => {
+      // Three setup lines arrive before the Starting Claude Code marker
+      result.current.handleMessage({ type: "log-line", ts: 1, sessionId: "s1", line: "=== Agent Sandbox Entrypoint ===" });
+      result.current.handleMessage({ type: "log-line", ts: 2, sessionId: "s1", line: "[ok] git credentials configured" });
+      result.current.handleMessage({ type: "log-line", ts: 3, sessionId: "s1", line: "Session: issue-990-loki-test" });
+    });
+
+    expect(result.current.entries).toHaveLength(3);
+
+    act(() => {
+      result.current.handleMessage({ type: "log-line", ts: 4, sessionId: "s1", line: "=== Starting Claude Code ===" });
+    });
+
+    // Collapse: one group + the Starting Claude Code header itself
+    expect(result.current.entries).toHaveLength(2);
+    const group = result.current.entries[0]!;
+    expect(group.type).toBe("entrypoint-group");
+    expect(group.text).toBe("Agent Sandbox Setup");
+    expect(group.children).toHaveLength(3);
+
+    const ccHeader = result.current.entries[1]!;
+    expect(ccHeader.type).toBe("entrypoint-header");
+    expect(ccHeader.text).toBe("Starting Claude Code");
+  });
+
+  it("buffers TASK PROMPT lines and emits entrypoint-task on END PROMPT", () => {
+    const { result } = renderHook(() => useLogStream());
+
+    act(() => {
+      result.current.handleMessage({ type: "log-line", ts: 1, sessionId: "s1", line: "--- TASK PROMPT ---" });
+      result.current.handleMessage({ type: "log-line", ts: 2, sessionId: "s1", line: "You are Loki, QA agent." });
+      result.current.handleMessage({ type: "log-line", ts: 3, sessionId: "s1", line: "Validate everything." });
+      result.current.handleMessage({ type: "log-line", ts: 4, sessionId: "s1", line: "--- END PROMPT ---" });
+    });
+
+    // The buffered lines should produce exactly one entrypoint-task
+    const taskEntry = result.current.entries.find((e) => e.type === "entrypoint-task");
+    expect(taskEntry).toBeDefined();
+    expect(taskEntry?.text).toContain("You are Loki, QA agent.");
+    expect(taskEntry?.text).toContain("Validate everything.");
+    // The TASK PROMPT / END PROMPT delimiters should NOT appear as separate entries
+    const rawDelimiters = result.current.entries.filter(
+      (e) => e.text === "--- TASK PROMPT ---" || e.text === "--- END PROMPT ---"
+    );
+    expect(rawDelimiters).toHaveLength(0);
   });
 });
