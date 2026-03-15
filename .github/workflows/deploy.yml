@@ -27,6 +27,9 @@
 #   TF_VAR_BILLING_ACCOUNT_ID   — GCP billing account ID for Terraform
 #   CLAUDE_CODE_OAUTH_TOKEN     — OAuth subscription token for agent sandboxes (claude setup-token)
 #   GH_TOKEN_AGENTS             — GitHub PAT for agent repo access (commits, PRs, issues)
+#   UMAMI_OAUTH2_PROXY_COOKIE_SECRET — 32-byte cookie secret for Umami oauth2-proxy sidecar
+#                                       Generate: openssl rand -hex 16  (32 hex chars = 32 bytes)
+#                                       MUST be exactly 16, 24, or 32 bytes — see oauth2-proxy docs
 # --------------------------------------------------------------------------
 
 name: Deploy to GKE
@@ -410,6 +413,19 @@ jobs:
             --from-literal=POSTGRES_PASSWORD="umami-pg-password" \
             --from-literal=DATABASE_PASSWORD="umami-pg-password" \
             --from-literal=APP_SECRET="umami-app-secret-change-in-prod" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create/update Umami oauth2-proxy secrets
+        # oauth2-proxy requires OAUTH2_PROXY_COOKIE_SECRET to be exactly 16, 24, or 32 bytes.
+        # This secret is created imperatively (NOT via Helm template) to prevent placeholder
+        # values from values.yaml overwriting real credentials on every helm upgrade.
+        run: |
+          kubectl create secret generic umami-oauth2-proxy-secrets \
+            --namespace=fenrir-analytics \
+            --from-literal=GOOGLE_CLIENT_ID="${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}" \
+            --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            --from-literal=OAUTH2_PROXY_COOKIE_SECRET="${{ secrets.UMAMI_OAUTH2_PROXY_COOKIE_SECRET }}" \
+            --from-literal=emails.txt="declanshanaghy@gmail.com" \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Set up Helm
