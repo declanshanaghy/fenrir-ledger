@@ -247,8 +247,8 @@ After spawning, query the cluster and job for details. The report MUST include:
   Image: `<image from dispatch-job.sh output>`
 
 **Links:**
-  Logs: `just agent-log <SESSION_ID>`
-  Logs (verbose): `just agent-log-verbose <SESSION_ID>`
+  Logs: `just infra agent-log <SESSION_ID>`
+  Logs (verbose): `just infra agent-log-verbose <SESSION_ID>`
   Brandify: `/brandify-agent <SESSION_ID>`
   Pod status: `kubectl get pods -n fenrir-agents -l job-name=agent-<SESSION_ID>`
 ```

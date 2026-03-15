@@ -72,16 +72,16 @@ bash infrastructure/k8s/agents/dispatch-job.sh \
 
 ```bash
 # List running agent jobs
-just agent-jobs
+just infra agent-jobs
 
 # Stream parsed agent logs (with pod startup polling)
-just agent-log-issue 744
+just infra agent-log-issue 744
 
 # Stream all active agents in tmux panes
-just agent-log-all
+just infra agent-log-all
 
 # Dump finished session logs
-just agent-log-dump <session-id>
+just infra agent-log-dump <session-id>
 
 # Generate HTML report from saved logs
 /brandify-agent <session-id>
