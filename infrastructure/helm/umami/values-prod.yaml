@@ -72,6 +72,11 @@ postgresql:
       memory: "512Mi"
       ephemeral-storage: "256Mi"
 
+# -- oauth2-proxy Production Config ---------------------------------------
+oauth2Proxy:
+  enabled: true
+  redirectUrl: "https://analytics.fenrirledger.com/oauth2/callback"
+
 # -- Ingress Production Config -----------------------------------------
 ingress:
   enabled: true
@@ -92,8 +97,8 @@ ingress:
       healthyThreshold: 1
       unhealthyThreshold: 3
       type: HTTP
-      requestPath: /
-      port: 3000
+      requestPath: /ping
+      port: 4180
     timeoutSec: 30
     connectionDraining:
       drainingTimeoutSec: 60

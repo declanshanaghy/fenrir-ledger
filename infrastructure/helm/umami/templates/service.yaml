@@ -10,7 +10,7 @@ spec:
   ports:
     - name: http
       port: {{ .Values.service.port }}
-      targetPort: http
+      targetPort: {{ .Values.service.targetPort }}
       protocol: TCP
   selector:
     {{- include "umami.selectorLabels" . | nindent 4 }}

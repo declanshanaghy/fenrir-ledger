@@ -103,11 +103,37 @@ postgresql:
   initdb:
     enabled: true
 
+# -- oauth2-proxy Sidecar --------------------------------------------------
+oauth2Proxy:
+  enabled: true
+  image:
+    repository: quay.io/oauth2-proxy/oauth2-proxy
+    tag: v7.6.0
+    pullPolicy: IfNotPresent
+  port: 4180
+  redirectUrl: "https://analytics.fenrirledger.com/oauth2/callback"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+      ephemeral-storage: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+      ephemeral-storage: "128Mi"
+  # All secret values MUST be overridden at deploy time via --set or CI secrets.
+  # Never commit real credentials here.
+  secrets:
+    googleClientId: "REPLACE_WITH_GOOGLE_CLIENT_ID"
+    googleClientSecret: "REPLACE_WITH_GOOGLE_CLIENT_SECRET"
+    cookieSecret: "REPLACE_WITH_32_BYTE_HEX_COOKIE_SECRET"
+    allowedEmails: "declanshanaghy@gmail.com\n"
+
 # -- Service ---------------------------------------------------------------
 service:
   type: ClusterIP
   port: 80
-  targetPort: http
+  targetPort: oauth2-proxy
   containerPort: 3000
 
 # -- Ingress ---------------------------------------------------------------
@@ -130,8 +156,8 @@ ingress:
       healthyThreshold: 1
       unhealthyThreshold: 3
       type: HTTP
-      requestPath: /
-      port: 3000
+      requestPath: /ping
+      port: 4180
     timeoutSec: 30
     connectionDraining:
       drainingTimeoutSec: 60
@@ -141,3 +167,4 @@ secrets:
   enabled: true
   databaseUrl: "postgresql://umami:umami-postgres-password@postgresql-svc.fenrir-analytics.svc.cluster.local:5432/umami"
   appSecret: "umami-secret-key-change-in-prod"
+
