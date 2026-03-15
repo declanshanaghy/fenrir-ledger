@@ -122,6 +122,14 @@ export function watchAgentJobs(
   const jobMap = new Map<string, Job>();
   let currentReq: { abort(): void } | null = null;
 
+  function sortedJobs(): Job[] {
+    return Array.from(jobMap.values()).sort((a, b) => {
+      const aTime = a.startedAt ? new Date(a.startedAt).getTime() : Number.MAX_SAFE_INTEGER;
+      const bTime = b.startedAt ? new Date(b.startedAt).getTime() : Number.MAX_SAFE_INTEGER;
+      return bTime - aTime;
+    });
+  }
+
   // Seed jobMap from a list call so initial state has correct statuses
   const seedFromList = async (): Promise<void> => {
     try {
@@ -130,7 +138,7 @@ export function watchAgentJobs(
         const mapped = mapAgentJobToJob(j);
         jobMap.set(j.name, mapped);
       }
-      if (jobMap.size > 0) onUpdate(Array.from(jobMap.values()));
+      if (jobMap.size > 0) onUpdate(sortedJobs());
     } catch {
       // Non-fatal — watch will populate
     }
@@ -169,7 +177,7 @@ export function watchAgentJobs(
               podName: null,
             });
           }
-          onUpdate(Array.from(jobMap.values()));
+          onUpdate(sortedJobs());
         },
         (err: Error | null) => {
           // Watch stream ended (naturally or via error)
