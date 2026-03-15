@@ -536,8 +536,8 @@ jobs:
         run: |
           kubectl create secret generic umami-oauth2-proxy-secrets \
             --namespace=fenrir-analytics \
-            --from-literal=GOOGLE_CLIENT_ID="${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}" \
-            --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            --from-literal=GOOGLE_CLIENT_ID="${{ secrets.ODINS_THRONE_CLIENT_ID }}" \
+            --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.ODINS_THRONE_CLIENT_SECRET }}" \
             --from-literal=OAUTH2_PROXY_COOKIE_SECRET="${{ secrets.UMAMI_OAUTH2_PROXY_COOKIE_SECRET }}" \
             --from-literal=emails.txt="declanshanaghy@gmail.com" \
             --dry-run=client -o yaml | kubectl apply -f -
