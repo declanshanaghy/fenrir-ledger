@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — Monitor Session Header: Descriptive Title (Issue #989)</title>
+  <style>
+    /* ── Wireframe reset — layout CSS only, no theme styling ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 2rem; }
+
+    /* ── Annotation utilities ── */
+    .note {
+      font-size: 11px;
+      font-style: italic;
+      border: 1px dashed;
+      padding: 4px 8px;
+      margin: 4px 0;
+      display: block;
+    }
+    .label {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .annotation-callout {
+      font-size: 11px;
+      border: 1px solid;
+      padding: 6px 10px;
+      margin: 8px 0;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border: 1px solid;
+    }
+    .section-divider {
+      border-top: 2px solid;
+      margin: 3rem 0 1.5rem;
+    }
+    .page-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .page-meta {
+      font-size: 0.75rem;
+      margin-bottom: 2rem;
+    }
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 900px) {
+      .comparison { grid-template-columns: 1fr; }
+    }
+    .variant-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 4px 8px;
+      border: 2px solid;
+      margin-bottom: 0.75rem;
+      display: inline-block;
+    }
+
+    /* ── Monitor shell ── */
+    .monitor-shell {
+      display: flex;
+      border: 2px solid;
+      height: 560px;
+      overflow: hidden;
+    }
+    .wf-sidebar {
+      width: 240px;
+      min-width: 240px;
+      border-right: 1px solid;
+      display: flex;
+      flex-direction: column;
+    }
+    .wf-sidebar-header {
+      padding: 12px;
+      border-bottom: 1px solid;
+      flex-shrink: 0;
+    }
+    .wf-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .wf-brand-avatar {
+      width: 32px;
+      height: 32px;
+      border: 1px solid;
+    }
+    .wf-brand-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .wf-quote {
+      font-size: 11px;
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+    .wf-count-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+    .wf-card-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .wf-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .wf-content-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid;
+      flex-shrink: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .wf-terminal {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      font-size: 12px;
+    }
+
+    /* ── OLD header (current) ── */
+    .old-session-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    /* ── NEW header layout ── */
+    .new-header-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+      flex: 1;
+    }
+    .new-issue-title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .new-header-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .new-agent-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .new-session-id {
+      font-size: 10px;
+      font-style: italic;
+      cursor: help;
+      /* tooltip shown on hover — contains full session ID */
+    }
+    .new-step-tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border: 1px solid;
+    }
+    .new-header-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .wf-status-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border: 1px solid;
+    }
+    .wf-download-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* ── Sidebar job cards ── */
+    .wf-card {
+      padding: 10px 12px;
+      border-bottom: 1px solid;
+      cursor: pointer;
+    }
+    .wf-card.active {
+      border-left: 3px solid;
+    }
+    .wf-card-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+    .wf-card-avatar {
+      width: 20px;
+      height: 20px;
+      border: 1px solid;
+      flex-shrink: 0;
+    }
+    .wf-card-agent {
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .wf-card-status-icon {
+      margin-left: auto;
+      font-size: 12px;
+    }
+
+    /* OLD card */
+    .wf-card-session-id {
+      font-size: 10px;
+      font-style: italic;
+    }
+    .wf-card-meta {
+      font-size: 10px;
+    }
+
+    /* NEW card */
+    .wf-card-issue-title {
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .wf-card-meta-new {
+      font-size: 10px;
+      display: flex;
+      gap: 6px;
+    }
+
+    /* ── Component specs ── */
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .spec-table th, .spec-table td {
+      border: 1px solid;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .spec-table th {
+      font-weight: 700;
+    }
+    h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    h3 {
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin: 1.25rem 0 0.5rem;
+    }
+    p { font-size: 13px; margin-bottom: 0.5rem; line-height: 1.5; }
+    ul { font-size: 13px; margin: 0.25rem 0 0.5rem 1.25rem; line-height: 1.6; }
+
+    /* ── Mobile ── */
+    .mobile-shell {
+      width: 375px;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .mobile-header-row1 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .mobile-header-row2 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mobile-issue-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mobile-terminal {
+      height: 300px;
+      padding: 10px 12px;
+      font-size: 11px;
+      overflow: hidden;
+    }
+    .mobile-stub {
+      font-size: 11px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-title">Monitor UI — Session Header: Descriptive Title</div>
+  <p class="page-meta">Issue #989 · Luna UX Design · 2026-03-15</p>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 1 — BEFORE / AFTER COMPARISON: CONTENT HEADER
+  ════════════════════════════════════════════════════════════ -->
+  <h2>1 · Content Header — Before &amp; After</h2>
+  <p class="note">Both variants show the same job: FiremanDecko running issue #987 step 1. The header is inside LogViewer's <code>.content-header</code> div.</p>
+
+  <div class="comparison">
+
+    <!-- BEFORE -->
+    <div>
+      <span class="variant-label">Before (Current)</span>
+      <div style="border: 1px solid; padding: 0;">
+        <div class="wf-content-header">
+          <span class="old-session-title">
+            FiremanDecko — #987 Step 1 (issue-987-step1-firemandecko-e96269d4)
+          </span>
+          <span class="new-header-badges">
+            <span class="wf-status-badge">⚡ Running</span>
+            <span class="wf-status-badge">WS</span>
+          </span>
+        </div>
+        <div class="wf-terminal" style="height: 80px;">
+          <span class="mobile-stub">…log stream…</span>
+        </div>
+      </div>
+      <p class="note">Problems: raw session ID is primary display; agent name is just text with no visual distinction; issue number is buried.</p>
+    </div>
+
+    <!-- AFTER -->
+    <div>
+      <span class="variant-label">After (Proposed)</span>
+      <div style="border: 1px solid; padding: 0;">
+        <div class="wf-content-header">
+          <div class="new-header-title-block">
+            <span class="new-issue-title">Issue #987 – fix: gate /api/config/picker on Karl OR active trial – Step 1</span>
+            <div class="new-header-meta-row">
+              <span class="new-agent-badge">FiremanDecko</span>
+              <span class="new-step-tag">Step 1</span>
+              <span class="new-session-id" title="issue-987-step1-firemandecko-e96269d4">Session: e96269d4…</span>
+            </div>
+          </div>
+          <span class="new-header-badges">
+            <span class="wf-status-badge">⚡ Running</span>
+            <span class="wf-status-badge">WS</span>
+            <button class="wf-download-btn" title="Download session log">↓</button>
+          </span>
+        </div>
+        <div class="wf-terminal" style="height: 80px;">
+          <span class="mobile-stub">…log stream…</span>
+        </div>
+      </div>
+      <p class="note">Hierarchy: issue title (primary h1-weight) → agent badge + step tag + truncated session ID (secondary meta row). Session ID is truncated to last 8 chars with full ID in tooltip (title attr).</p>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 2 — BEFORE / AFTER: SIDEBAR JOB CARD
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-divider"></div>
+  <h2>2 · Sidebar Job Card — Before &amp; After</h2>
+
+  <div class="comparison">
+
+    <!-- BEFORE card -->
+    <div>
+      <span class="variant-label">Before (Current)</span>
+      <div style="border: 1px solid; width: 240px;">
+        <div class="wf-card active">
+          <div class="wf-card-top">
+            <div class="wf-card-avatar"></div>
+            <span class="wf-card-agent">FiremanDecko</span>
+            <span class="wf-card-status-icon">⚡</span>
+          </div>
+          <div class="wf-card-meta">#987 · Step 1 · Running</div>
+          <div class="wf-card-session-id">issue-987-step1-firemandecko-e96269d4</div>
+        </div>
+        <div class="wf-card">
+          <div class="wf-card-top">
+            <div class="wf-card-avatar"></div>
+            <span class="wf-card-agent">Loki</span>
+            <span class="wf-card-status-icon">✓</span>
+          </div>
+          <div class="wf-card-meta">#981 · Step 2 · Succeeded</div>
+          <div class="wf-card-session-id">issue-981-step2-loki-a71f3c8b</div>
+        </div>
+      </div>
+      <p class="note">Raw session ID as third line is wasted space; agent name is primary despite being less useful than issue title.</p>
+    </div>
+
+    <!-- AFTER card -->
+    <div>
+      <span class="variant-label">After (Proposed)</span>
+      <div style="border: 1px solid; width: 240px;">
+        <div class="wf-card active">
+          <div class="wf-card-top">
+            <div class="wf-card-avatar"></div>
+            <span class="wf-card-issue-title">#987 – fix: gate /api/config/picker…</span>
+            <span class="wf-card-status-icon">⚡</span>
+          </div>
+          <div class="wf-card-meta-new">
+            <span class="new-agent-badge">FiremanDecko</span>
+            <span>Step 1</span>
+            <span>Running</span>
+          </div>
+        </div>
+        <div class="wf-card">
+          <div class="wf-card-top">
+            <div class="wf-card-avatar"></div>
+            <span class="wf-card-issue-title">#981 – fix: compact theme toggle buttons…</span>
+            <span class="wf-card-status-icon">✓</span>
+          </div>
+          <div class="wf-card-meta-new">
+            <span class="new-agent-badge">Loki</span>
+            <span>Step 2</span>
+            <span>Succeeded</span>
+          </div>
+        </div>
+      </div>
+      <p class="note">Issue title is now primary text (truncated with ellipsis at 240px). Agent badge + step + status move to second row as compact metadata. Session ID removed from card — visible only in header tooltip when card is selected.</p>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 3 — FULL MONITOR SHELL (NEW STATE)
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-divider"></div>
+  <h2>3 · Full Monitor Shell — New State (Desktop, &gt;1024px)</h2>
+
+  <div class="monitor-shell">
+
+    <!-- Sidebar -->
+    <nav class="wf-sidebar" aria-label="Agent sessions">
+      <div class="wf-sidebar-header">
+        <div class="wf-brand">
+          <div class="wf-brand-avatar"></div>
+          <span class="wf-brand-title">Hlidskjalf</span>
+        </div>
+        <div class="wf-quote">"He who seeks all finds nothing…"</div>
+        <div class="wf-count-row">
+          <span>3 sessions</span>
+          <span>[theme toggle]</span>
+        </div>
+      </div>
+      <div class="wf-card-list" role="list" aria-label="Job sessions">
+
+        <!-- ACTIVE card -->
+        <div class="wf-card active" role="listitem" aria-current="true">
+          <div class="wf-card-top">
+            <div class="wf-card-avatar" aria-hidden="true"></div>
+            <span class="wf-card-issue-title">#987 – fix: gate /api/config/picker…</span>
+            <span class="wf-card-status-icon" title="Running" aria-label="Status: Running">⚡</span>
+          </div>
+          <div class="wf-card-meta-new">
+            <span class="new-agent-badge">FiremanDecko</span>
+            <span>Step 1</span>
+            <span>Running</span>
+          </div>
+        </div>
+
+        <!-- Completed card -->
+        <div class="wf-card" role="listitem">
+          <div class="wf-card-top">
+            <div class="wf-card-avatar" aria-hidden="true"></div>
+            <span class="wf-card-issue-title">#981 – fix: compact theme toggle buttons…</span>
+            <span class="wf-card-status-icon" title="Succeeded" aria-label="Status: Succeeded">✓</span>
+          </div>
+          <div class="wf-card-meta-new">
+            <span class="new-agent-badge">Loki</span>
+            <span>Step 2</span>
+            <span>Succeeded</span>
+          </div>
+        </div>
+
+        <!-- Failed card -->
+        <div class="wf-card" role="listitem">
+          <div class="wf-card-top">
+            <div class="wf-card-avatar" aria-hidden="true"></div>
+            <span class="wf-card-issue-title">#964 – feat: theme switcher for monitor…</span>
+            <span class="wf-card-status-icon" title="Failed" aria-label="Status: Failed">✗</span>
+          </div>
+          <div class="wf-card-meta-new">
+            <span class="new-agent-badge">FiremanDecko</span>
+            <span>Step 1</span>
+            <span>Failed</span>
+          </div>
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- Main content area -->
+    <main class="wf-content" aria-label="Log viewer">
+      <div class="wf-content-header" aria-label="Active session">
+        <div class="new-header-title-block">
+          <span class="new-issue-title">Issue #987 – fix: gate /api/config/picker on Karl OR active trial – Step 1</span>
+          <div class="new-header-meta-row">
+            <span class="new-agent-badge">FiremanDecko</span>
+            <span class="new-step-tag">Step 1</span>
+            <span class="new-session-id" title="issue-987-step1-firemandecko-e96269d4">Session: e96269d4…</span>
+          </div>
+        </div>
+        <span class="new-header-badges">
+          <span class="wf-status-badge" aria-label="Job status: Running">⚡ Running</span>
+          <span class="wf-status-badge" aria-label="WebSocket: Open">WS Open</span>
+          <button class="wf-download-btn" title="Download session log" aria-label="Download session log">↓</button>
+        </span>
+      </div>
+      <div class="wf-terminal" role="log" aria-live="polite" aria-label="Session logs">
+        <div style="font-size: 11px; margin-bottom: 4px;">▸ Entrypoint — 7 steps ✓</div>
+        <div style="font-size: 11px; margin-bottom: 4px; font-style: italic;">The All-Father's Decree unto FiremanDecko — Issue #987…</div>
+        <div style="font-size: 11px; margin-bottom: 4px;">FiremanDecko: Reading the issue context…</div>
+        <div style="font-size: 11px; font-style: italic; margin-top: 12px;">…log stream continues…</div>
+      </div>
+      <div style="padding: 6px 14px; border-top: 1px solid; display: flex; justify-content: flex-end;">
+        <button style="font-size: 11px; padding: 3px 8px; border: 1px solid;">⏸ Auto-scroll ON</button>
+      </div>
+    </main>
+
+  </div>
+
+  <p class="note" style="margin-top: 8px;">
+    Title source priority: (1) PR title from <code>gh pr list --head &lt;branch&gt;</code> if available, (2) Issue title + step number, (3) Branch-name parse fallback (e.g. "fix/issue-987-picker-gate" → "Issue #987 – picker gate – Step 1"). Backend resolves at job-creation time and stores as K8s annotation/label so no runtime API calls are needed.
+  </p>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 4 — TITLE CONSTRUCTION LOGIC
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-divider"></div>
+  <h2>4 · Title Construction — Priority Order</h2>
+
+  <table class="spec-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Source</th>
+        <th>Example output</th>
+        <th>When used</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>PR title (GitHub API)</td>
+        <td>Issue #987 – fix: gate /api/config/picker on Karl OR active trial – Step 1</td>
+        <td>A PR exists with the job branch as its head. Fetched at job-creation time, stored as K8s annotation <code>fenrir/pr-title</code>.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Issue title (GitHub API)</td>
+        <td>Issue #987 – fix: gate /api/config/picker on Karl OR active trial – Step 1</td>
+        <td>No PR yet. Issue title fetched at job-creation time, stored as K8s annotation <code>fenrir/issue-title</code>.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Branch name parse (no API)</td>
+        <td>Issue #987 – picker gate – Step 1</td>
+        <td>Fallback when API calls fail or are unavailable. Branch <code>fix/issue-987-picker-gate</code> parsed: type stripped, hyphens → spaces, issue extracted.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Raw job name</td>
+        <td>issue-987-step1-firemandecko-e96269d4</td>
+        <td>Last resort — no branch, no API response. Displayed in header meta row only (not as primary title).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="note" style="margin-top: 8px;">
+    Recommendation: fetch title at dispatch time (in <code>dispatch-job.sh</code> or <code>k8s.ts</code> job-creation path) and store as K8s Job annotation. The monitor backend reads the annotation from the Job object, avoiding runtime GitHub API calls per subscription. See <strong>Implementation Notes</strong> below.
+  </p>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 5 — MOBILE (375px)
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-divider"></div>
+  <h2>5 · Mobile Layout (375px)</h2>
+  <p class="note">At ≤600px the sidebar collapses to a bottom drawer or is hidden behind a toggle. The content header stacks vertically.</p>
+
+  <div class="mobile-shell">
+    <div class="mobile-header" aria-label="Active session">
+      <div class="mobile-header-row1">
+        <span class="mobile-issue-title">Issue #987 – fix: gate /api/config/picker…</span>
+        <span class="new-header-badges" style="flex-shrink: 0; display: flex; gap: 4px;">
+          <span class="wf-status-badge">⚡</span>
+          <button class="wf-download-btn">↓</button>
+        </span>
+      </div>
+      <div class="mobile-header-row2">
+        <span class="new-agent-badge">FiremanDecko</span>
+        <span class="new-step-tag">Step 1</span>
+        <span class="new-session-id" title="issue-987-step1-firemandecko-e96269d4">e96269d4…</span>
+      </div>
+    </div>
+    <div class="mobile-terminal">
+      <span class="mobile-stub">…log stream (full width, no sidebar)…</span>
+    </div>
+  </div>
+  <p class="note" style="margin-top: 8px;">On mobile, the WS status badge is omitted from the header row — too many badges at 375px. WS status remains accessible via aria-live announcements only. "Session:" label omitted — just the truncated ID.</p>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 6 — DISPLAYJOB TYPE EXTENSION
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-divider"></div>
+  <h2>6 · DisplayJob Type — Proposed Extension</h2>
+
+  <table class="spec-table">
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Source</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>issueTitle</code></td>
+        <td><code>string | null</code></td>
+        <td>K8s annotation <code>fenrir/issue-title</code> or PR title annotation <code>fenrir/pr-title</code></td>
+        <td>The resolved human-readable title. Null triggers branch-parse fallback on the client.</td>
+      </tr>
+      <tr>
+        <td><code>branchName</code></td>
+        <td><code>string | null</code></td>
+        <td>K8s Job label <code>fenrir/branch</code> (already present in dispatch scripts)</td>
+        <td>Used for branch-parse fallback when <code>issueTitle</code> is null.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="note" style="margin-top: 8px;">
+    Existing fields <code>issue</code>, <code>step</code>, <code>agentName</code>, <code>sessionId</code> are unchanged. The UI constructs the display title client-side using: <code>issueTitle ?? parseBranchTitle(branchName) ?? rawJobName</code>.
+  </p>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 7 — SESSION ID VISIBILITY SPEC
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-divider"></div>
+  <h2>7 · Session ID Visibility</h2>
+
+  <table class="spec-table">
+    <thead>
+      <tr>
+        <th>Surface</th>
+        <th>Session ID shown?</th>
+        <th>How</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Content header (desktop)</td>
+        <td>Yes — truncated</td>
+        <td>Last 8 chars displayed as <code>e96269d4…</code> with full ID in <code>title</code> tooltip. Prefix: "Session:"</td>
+      </tr>
+      <tr>
+        <td>Content header (mobile ≤600px)</td>
+        <td>Yes — truncated, no label</td>
+        <td>Last 8 chars only, no "Session:" prefix. Full ID in <code>title</code> tooltip.</td>
+      </tr>
+      <tr>
+        <td>Entrypoint card (in log stream)</td>
+        <td>Yes — full ID</td>
+        <td>Already present as <code>entrypoint-info</code> line "session: &lt;full-id&gt;" inside the collapsible entrypoint group.</td>
+      </tr>
+      <tr>
+        <td>Sidebar job card</td>
+        <td>No</td>
+        <td>Removed. Session ID is irrelevant for selecting a session. Shown only after selection (in header).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 8 — ACCESSIBILITY REQUIREMENTS
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-divider"></div>
+  <h2>8 · Accessibility Requirements (WCAG 2.1 AA)</h2>
+
+  <ul>
+    <li><code>aria-label</code> on content header: <code>"Active session: Issue #987 – fix: gate /api/config/picker on Karl OR active trial – Step 1"</code> — gives screen readers the full unstemmed title, not the truncated visual version.</li>
+    <li>Agent badge: <code>aria-label="Agent: FiremanDecko"</code></li>
+    <li>Session ID element: <code>aria-label="Session ID: issue-987-step1-firemandecko-e96269d4"</code> (full ID, not truncated)</li>
+    <li>Sidebar job cards: existing <code>aria-label={`Job: ${agentName} issue ${issue} step ${step}`}</code> should be updated to <code>aria-label={`Job: Issue ${issue} – ${issueTitle} – Step ${step} – ${agentName} – ${status}`}</code> when <code>issueTitle</code> is available.</li>
+    <li>Tooltip (<code>title</code> attr) on session ID is supplemental only. The <code>aria-label</code> on the element already contains the full ID for assistive tech.</li>
+    <li>Minimum touch target 44×44px applies to the download button. The <code>.wf-download-btn</code> size of 28×28px visual area should be padded to meet this requirement.</li>
+  </ul>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 9 — IMPLEMENTATION NOTES
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-divider"></div>
+  <h2>9 · Implementation Notes for FiremanDecko</h2>
+
+  <h3>Backend — monitor/src/k8s.ts</h3>
+  <ul>
+    <li>Read K8s Job annotations <code>fenrir/issue-title</code> and <code>fenrir/branch</code> from the Job object in the job-listing query.</li>
+    <li>Include them in the <code>Job</code> wire type: <code>issueTitle: string | null</code>, <code>branchName: string | null</code>.</li>
+    <li>No runtime GitHub API calls needed — titles are resolved at dispatch time.</li>
+  </ul>
+
+  <h3>Backend — dispatch/dispatch-job.sh (or equivalent)</h3>
+  <ul>
+    <li>At job creation time, run <code>gh issue view $ISSUE --json title -q .title</code> and store as annotation <code>fenrir/issue-title</code>.</li>
+    <li>Also try <code>gh pr list --head $BRANCH --json title -q .[0].title</code> and store as annotation <code>fenrir/pr-title</code> (may be empty if no PR yet).</li>
+    <li>Prefer <code>fenrir/pr-title</code> over <code>fenrir/issue-title</code> when both are present (PR title is more specific).</li>
+  </ul>
+
+  <h3>Frontend — monitor-ui/src/lib/types.ts</h3>
+  <ul>
+    <li>Add <code>issueTitle: string | null</code> and <code>branchName: string | null</code> to <code>DisplayJob</code>.</li>
+    <li>Add a utility <code>resolveSessionTitle(job: DisplayJob): string</code> in <code>lib/</code> that implements the priority order from Section 4.</li>
+  </ul>
+
+  <h3>Frontend — LogViewer.tsx (content-header)</h3>
+  <ul>
+    <li>Replace single <code>&lt;span className="session-title"&gt;</code> with the two-row title block from Section 1 "After".</li>
+    <li>Title block: <code>&lt;span className="session-title-primary"&gt;</code> (full resolved title) + meta row with agent badge, step tag, truncated session ID.</li>
+    <li>Truncation of session ID: last 8 chars + ellipsis prefix. Tooltip contains full session ID.</li>
+    <li>This pattern applies to all three render paths (normal, TTL-expired, node-unreachable) — extract a <code>SessionHeader</code> sub-component to avoid triple duplication.</li>
+  </ul>
+
+  <h3>Frontend — JobCard.tsx (sidebar)</h3>
+  <ul>
+    <li>Replace <code>card-agent</code> + <code>card-meta</code> + session ID div with the new two-row layout from Section 2 "After".</li>
+    <li>Issue title as primary text (line 1), truncated with <code>overflow: hidden; text-overflow: ellipsis; white-space: nowrap</code>.</li>
+    <li>Agent badge + step + status on line 2.</li>
+    <li>Session ID removed from card entirely.</li>
+  </ul>
+
+  <h3>Edge cases</h3>
+  <ul>
+    <li>No <code>issueTitle</code> and no <code>branchName</code>: show raw <code>sessionId</code> as the primary title (existing behavior, graceful degradation).</li>
+    <li>Very long issue titles (&gt;80 chars): truncate in both header and card with ellipsis. Full title available in <code>title</code> tooltip on the primary title element.</li>
+    <li>Completed sessions: same layout — <code>issueTitle</code> was stored at job-creation time, so it's available even after the job ends.</li>
+    <li>Fixture/replay sessions: <code>issueTitle</code> comes from the fixture JSON. Fixture files should include <code>issueTitle</code> and <code>branchName</code> fields if present; fall back gracefully if missing.</li>
+  </ul>
+
+</body>
+</html>
