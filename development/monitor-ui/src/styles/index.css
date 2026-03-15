@@ -232,6 +232,21 @@ body {
 }
 .log-line { white-space: pre-wrap; word-break: break-all; animation: fadeSlideIn 0.2s ease; }
 .log-error { color: #ef4444; }
+.log-error-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.4rem 0;
+  padding: 0.5rem 0.75rem;
+  background: rgba(127, 29, 29, 0.35);
+  border: 1px solid #7f1d1d;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #fca5a5;
+  line-height: 1.5;
+}
+.log-error-icon { flex-shrink: 0; }
+.log-error-text { word-break: break-word; }
 .log-warning { color: var(--gold-bright); font-style: italic; font-size: 0.75rem; }
 .log-system { color: var(--text-void); font-style: italic; }
 .log-end {

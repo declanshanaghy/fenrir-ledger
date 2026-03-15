@@ -179,7 +179,12 @@ function LogLine({ entry, agentKey, agentName }: { entry: LogEntry; agentKey?: s
     case "warning":
       return <span className="log-warning">{"\u26A0"} {entry.message}</span>;
     case "error":
-      return <span className="log-error">{"\u26A0"} {entry.message}</span>;
+      return (
+        <div className="log-error-box" role="alert" aria-label="Log stream error">
+          <span className="log-error-icon">{"\u26A0"}</span>
+          <span className="log-error-text">{entry.message}</span>
+        </div>
+      );
     case "stream-end":
       return (
         <div className="log-end">

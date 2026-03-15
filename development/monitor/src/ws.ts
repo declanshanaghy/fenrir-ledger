@@ -14,6 +14,53 @@ import {
 import type { Job } from "./k8s.js";
 import { parseJsonlLine, detectVerdict } from "./report.js";
 
+// ── K8s error message sanitiser ─────────────────────────────────────────────
+
+/**
+ * Map raw Kubernetes API errors to clean, user-friendly messages.
+ *
+ * The @kubernetes/client-node library often throws errors whose `.message`
+ * contains raw HTTP details such as status lines, header dumps, and
+ * "Body: undefined". This function strips all of that and returns a
+ * single human-readable sentence safe to display in the monitor UI.
+ */
+export function friendlyK8sError(rawMessage: string, sessionId: string): string {
+  // Detect HTTP status code from messages like "HTTP status code 404" or "404 Not Found"
+  const statusMatch = /\b(4\d\d|5\d\d)\b/.exec(rawMessage);
+  const status = statusMatch ? parseInt(statusMatch[1]!, 10) : null;
+
+  switch (status) {
+    case 404:
+      return `Logs unavailable — the pod for session ${sessionId} has been cleaned up (job TTL expired).`;
+    case 403:
+      return `Access denied to pod logs for session ${sessionId}. Contact your cluster administrator.`;
+    case 401:
+      return `Authentication error — check cluster credentials.`;
+    case 500:
+      return `Kubernetes API error while fetching logs for session ${sessionId}. The cluster may be experiencing issues.`;
+    case 503:
+      return `Kubernetes API unavailable — the cluster may be temporarily unreachable.`;
+    default:
+      break;
+  }
+
+  // Strip raw HTTP artefacts: headers, status lines, "Body: undefined", etc.
+  const stripped = rawMessage
+    .replace(/HTTP response body:.*$/gim, "")
+    .replace(/HTTP status code:?\s*\d+/gi, "")
+    .replace(/\bBody:\s*undefined\b/gi, "")
+    .replace(/\bContent-Type:[^\n]*/gi, "")
+    .replace(/\bAuthorization:[^\n]*/gi, "")
+    .replace(/\n{2,}/g, " ")
+    .trim();
+
+  if (stripped.length > 0 && stripped.length < 300) {
+    return stripped;
+  }
+
+  return `An unexpected error occurred while streaming logs for session ${sessionId}.`;
+}
+
 // ── Fixture fallback for local dev (disabled in production) ─────────────────
 const FIXTURES_ENABLED = process.env.NODE_ENV !== "production";
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -253,7 +300,7 @@ async function startLogStream(
           type: "stream-error",
           ts: Date.now(),
           sessionId,
-          message: err.message,
+          message: friendlyK8sError(err.message, sessionId),
         });
       },
       { follow: !isCompleted }
@@ -261,11 +308,13 @@ async function startLogStream(
 
     return cancel;
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    // Surface a friendlier message for common K8s log errors
-    const friendly = message.includes("204")
-      ? `Logs for session ${sessionId} are no longer available (pod logs evicted).`
-      : message;
+    const raw = err instanceof Error ? err.message : String(err);
+    // HTTP 204 = pod exists but logs are empty/evicted — not an error state
+    if (raw.includes("204")) {
+      send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
+      return () => {};
+    }
+    const friendly = friendlyK8sError(raw, sessionId);
     send(ws, { type: "stream-error", ts: Date.now(), sessionId, message: friendly });
     send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
     return () => {};
