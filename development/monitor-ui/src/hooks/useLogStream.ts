@@ -48,7 +48,7 @@ function parseEntrypointLine(line: string): LogEntry {
   // Key: Value lines (Session:, Branch:, Model:)
   const kvMatch = /^(Session|Branch|Model|Working directory):\s*(.+)$/.exec(line);
   if (kvMatch) {
-    return { id: nextId(), type: "entrypoint-info", detail: kvMatch[1], text: kvMatch[2] };
+    return { id: nextId(), type: "entrypoint-info", detail: kvMatch[1]!, text: kvMatch[2]! };
   }
   // --- TASK PROMPT --- / --- END PROMPT ---
   if (/^---\s*(TASK PROMPT|END PROMPT)\s*---$/.test(line)) {
