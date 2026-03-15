@@ -457,6 +457,16 @@
   }
 }
 
+/*
+ * Apply border-breathe via CSS class (not inline style) so Framer Motion's
+ * WAAPI animation pipeline does not conflict with the CSS animation.
+ * Issue #983: inline animation: "..." on motion.div caused the modal shell
+ * to render as a void (FM v12 WAAPI conflict stripped the element content).
+ */
+.heilung-modal-shell {
+  animation: border-breathe 2.4s ease-in-out 0.65s forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .heilung-modal-shell {
     animation: none !important;
