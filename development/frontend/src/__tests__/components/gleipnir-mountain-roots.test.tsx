@@ -12,6 +12,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useGleipnirFragment3 } from "@/components/cards/GleipnirMountainRoots";
+import { track } from "@/lib/analytics/track";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -19,11 +20,14 @@ vi.mock("@/lib/analytics/track", () => ({
   track: vi.fn(),
 }));
 
+const mockTrack = vi.mocked(track);
+
 // ── useGleipnirFragment3 ──────────────────────────────────────────────────────
 
 describe("useGleipnirFragment3", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.clearAllMocks();
   });
 
   it("starts with open=false", () => {
@@ -99,5 +103,28 @@ describe("useGleipnirFragment3", () => {
     for (let i = 1; i <= 6; i++) {
       expect(localStorage.getItem(`egg:gleipnir-${i}`)).toBe("1");
     }
+  });
+
+  // ── Analytics ─────────────────────────────────────────────────────────────
+
+  it("trigger() fires track('easter-egg') with fragment 3 metadata on first discovery", () => {
+    const { result } = renderHook(() => useGleipnirFragment3());
+    act(() => {
+      result.current.trigger();
+    });
+    expect(mockTrack).toHaveBeenCalledOnce();
+    expect(mockTrack).toHaveBeenCalledWith("easter-egg", {
+      fragment: 3,
+      name: "mountain-roots",
+    });
+  });
+
+  it("trigger() does NOT fire track() when fragment is already found", () => {
+    localStorage.setItem("egg:gleipnir-3", "1");
+    const { result } = renderHook(() => useGleipnirFragment3());
+    act(() => {
+      result.current.trigger();
+    });
+    expect(mockTrack).not.toHaveBeenCalled();
   });
 });
