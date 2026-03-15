@@ -21,17 +21,13 @@ afterEach(cleanup);
 const MOCK_JOB: DisplayJob = {
   sessionId: "issue-973-step1-test",
   name: "agent-issue-973-step1-test",
-  issueNumber: 973,
   issue: "973",
-  agent: "fireman",
+  step: "1",
   agentKey: "fireman",
   agentName: "FiremanDecko",
-  step: 1,
   status: "failed",
-  startedAt: new Date().toISOString(),
-  completedAt: null,
-  podName: null,
-  fixture: false,
+  startTime: Date.now(),
+  completionTime: null,
 };
 
 function makeErrorEntry(message: string): LogEntry {

@@ -36,7 +36,7 @@ function nextId(): string {
   return `log-${++entryCounter}`;
 }
 
-function parseEntrypointLine(line: string): LogEntry {
+export function parseEntrypointLine(line: string): LogEntry {
   // === Headers ===
   if (/^===.*===$/.test(line)) {
     return { id: nextId(), type: "entrypoint-header", text: line.replace(/^=+\s*|\s*=+$/g, "") };
