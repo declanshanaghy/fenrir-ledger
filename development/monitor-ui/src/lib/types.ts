@@ -43,7 +43,7 @@ export interface DisplayJob {
   name: string;
   issue: string;
   step: string;
-  agentKey: string;
+  agentKey?: string | undefined;
   agentName: string;
   status: Job["status"];
   startTime: number | null;

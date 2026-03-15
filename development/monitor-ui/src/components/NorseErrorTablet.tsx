@@ -64,7 +64,7 @@ interface Props {
 
 export function NorseErrorTablet({ sessionId, message, variant = "ttl-expired" }: Props) {
   const { ariaLabel, heading, subheading } = VARIANT_CONTENT[variant];
-  const seal = ERROR_TABLET_SEALS[variant];
+  const seal = ERROR_TABLET_SEALS[variant]!;
   return (
     <div
       className="norse-error-tablet"

@@ -23,23 +23,19 @@ afterEach(cleanup);
 const MOCK_JOB: DisplayJob = {
   sessionId: "issue-987-test",
   name: "agent-issue-987-test",
-  issueNumber: 987,
   issue: "987",
-  agent: "fireman",
   agentKey: "fireman",
   agentName: "FiremanDecko",
-  step: 1,
+  step: "1",
   status: "running",
-  startedAt: new Date().toISOString(),
-  completedAt: null,
-  podName: null,
-  fixture: false,
+  startTime: null,
+  completionTime: null,
 };
 
 // Helper: send a log-line message through the hook
 function sendLine(handleMessage: ReturnType<typeof useLogStream>["handleMessage"], line: string) {
   act(() => {
-    handleMessage({ type: "log-line", line });
+    handleMessage({ type: "log-line", ts: 0, sessionId: "test", line });
   });
 }
 

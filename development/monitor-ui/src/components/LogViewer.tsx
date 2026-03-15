@@ -257,7 +257,7 @@ function LogLine({ entry, agentKey, agentName }: { entry: LogEntry; agentKey?: s
         </div>
       );
     case "entrypoint-task":
-      return <NorseTablet text={entry.text ?? ""} agentKey={agentKey} />;
+      return <NorseTablet text={entry.text ?? ""} {...(agentKey !== undefined ? { agentKey } : {})} />;
     case "warning":
       return <span className="log-warning">{"\u26A0"} {entry.message}</span>;
     case "error":
@@ -367,7 +367,7 @@ function NorseTablet({ text, agentKey }: { text: string; agentKey?: string }) {
       <div className="norse-tablet-body-wrap">
         <div className="norse-tablet-body">
           <div className="norse-tablet-inscription">{text}</div>
-          <RuneSignatureBlock agentKey={agentKey} />
+          <RuneSignatureBlock {...(agentKey !== undefined ? { agentKey } : {})} />
         </div>
       </div>
     </div>

@@ -9,8 +9,8 @@ interface Props {
 }
 
 export function JobCard({ job, isActive, onClick }: Props) {
-  const color = AGENT_COLORS[job.agentKey] || "#c9920a";
-  const avatar = AGENT_AVATARS[job.agentKey];
+  const color = AGENT_COLORS[job.agentKey ?? ""] || "#c9920a";
+  const avatar = AGENT_AVATARS[job.agentKey ?? ""];
   const sColor = STATUS_COLORS[job.status] || "#606070";
   const sIcon = STATUS_ICONS[job.status] || "\u2014";
   const sLabel = STATUS_LABELS[job.status] || job.status;
