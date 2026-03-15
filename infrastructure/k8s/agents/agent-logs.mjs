@@ -14,6 +14,10 @@
 //   --issue <N>     Find the most recent job for issue N
 //   --all           All active agent jobs
 //
+// Subcommands:
+//   download        Download raw JSONL to tmp/agent-logs/<session>.jsonl (default)
+//   stream          Stream parsed logs with color formatting
+//
 // Options:
 //   --raw           Show raw JSONL
 //   --tools         Include tool calls and results
@@ -24,14 +28,14 @@
 //
 // Examples:
 //   node agent-logs.mjs issue-744-step1-firemandecko-91a12936
-//   node agent-logs.mjs --issue 744
+//   node agent-logs.mjs download issue-744-step1-firemandecko-91a12936
+//   node agent-logs.mjs stream --issue 744 --tools --thinking
 //   node agent-logs.mjs --all --tmux
-//   node agent-logs.mjs --issue 744 --tools --thinking
 // --------------------------------------------------------------------------
 
 import { spawn, execSync } from "node:child_process";
 import { createInterface } from "node:readline";
-import { createWriteStream, mkdirSync } from "node:fs";
+import { createWriteStream, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { createHecklerEngine, AGENT_NAMES } from "./mayo-heckler.mjs";
 
@@ -95,21 +99,24 @@ const opts = {
   all: false,
   targets: [],
   issueNum: null,
+  mode: "download", // "download" (default) or "stream"
 };
 
 for (let i = 0; i < args.length; i++) {
   switch (args[i]) {
+    case "download":     opts.mode = "download"; break;
+    case "stream":       opts.mode = "stream"; break;
     case "--raw":        opts.raw = true; break;
-    case "--tools":      opts.tools = true; break;
-    case "--thinking":   opts.thinking = true; break;
+    case "--tools":      opts.tools = true; opts.mode = "stream"; break;
+    case "--thinking":   opts.thinking = true; opts.mode = "stream"; break;
     case "--no-follow":  opts.follow = false; break;
-    case "--tmux":       opts.tmux = true; break;
-    case "--spawn-pane": opts.spawnPane = true; break;
+    case "--tmux":       opts.tmux = true; opts.mode = "stream"; break;
+    case "--spawn-pane": opts.spawnPane = true; opts.mode = "stream"; break;
     case "--all":        opts.all = true; break;
     case "--namespace":  opts.namespace = args[++i]; break;
     case "--issue":      opts.issueNum = args[++i]; break;
     case "--help": case "-h":
-      console.log(execSync(`head -30 "${import.meta.filename}"`, { encoding: "utf8" }));
+      console.log(execSync(`head -35 "${import.meta.filename}"`, { encoding: "utf8" }));
       process.exit(0);
       break;
     default:
@@ -533,12 +540,26 @@ function resolveRepoRoot() {
   }
 }
 
-function openLogFile(sessionId) {
+function isJobFinished(jobName) {
+  const status = kubectl(
+    `get job/${jobName} -n ${opts.namespace} ` +
+    `-o jsonpath='{.status.conditions[0].type}' 2>/dev/null`
+  ).replace(/'/g, "");
+  return status === "Complete" || status === "Failed" || status === "SuccessCriteriaMet";
+}
+
+function openLogFile(sessionId, jobName) {
   const repoRoot = resolveRepoRoot();
   const logDir = join(repoRoot, "tmp", "agent-logs");
   mkdirSync(logDir, { recursive: true });
-  const logPath = join(logDir, `${sessionId}.log`);
-  return { stream: createWriteStream(logPath, { flags: "w" }), path: logPath };
+  const logPath = join(logDir, `${sessionId}.jsonl`);
+
+  // Don't overwrite if file exists and job is finished
+  if (existsSync(logPath) && isJobFinished(jobName)) {
+    return { stream: null, path: logPath, skipped: true };
+  }
+
+  return { stream: createWriteStream(logPath, { flags: "w" }), path: logPath, skipped: false };
 }
 
 // -- Stream a single job ----------------------------------------------------
@@ -547,7 +568,14 @@ function streamLogs(jobName) {
   if (opts.follow) kubectlArgs.push("--follow");
 
   const sessionId = jobName.replace(/^agent-/, "");
-  const logFile = openLogFile(sessionId);
+  const logFile = openLogFile(sessionId, jobName);
+
+  // Skip if file already exists for a finished session
+  if (logFile.skipped) {
+    console.log(`${C.dim}Log already saved → ${logFile.path}${C.reset}`);
+    console.log(`${C.dim}Brandify: /brandify-agent ${sessionId}${C.reset}`);
+    return null;
+  }
 
   const proc = spawn("kubectl", kubectlArgs, { stdio: ["ignore", "pipe", "pipe"] });
 
@@ -564,6 +592,9 @@ function streamLogs(jobName) {
       logFile.stream.write(line + "\n");
       jsonLineCount++;
     }
+
+    // Download mode — only save to file, no terminal output
+    if (opts.mode === "download") return;
 
     // Raw mode — pass everything through
     if (opts.raw) {
@@ -616,8 +647,10 @@ function streamLogs(jobName) {
     if (jsonLineCount > 0) {
       console.log(`${C.dim}Saved ${jsonLineCount} events → ${logFile.path}${C.reset}`);
       console.log(`${C.dim}Brandify: /brandify-agent ${sessionId}${C.reset}`);
+    } else if (opts.mode === "download") {
+      console.log(`${C.dim}No JSONL events found in logs${C.reset}`);
     }
-    console.log(`${C.dim}--- stream ended ---${C.reset}`);
+    console.log(`${C.dim}--- ${opts.mode === "download" ? "download" : "stream"} ended ---${C.reset}`);
   });
 
   return proc;
@@ -630,16 +663,24 @@ async function streamJob(jobName) {
   agentDisplayName = AGENT_NAMES[agent] || agent || "Agent";
   hecklerEngine.setAgentName(agent);
 
-  // Set tmux pane title for layout detection
-  try { execSync(`tmux select-pane -T 'agent-logs-${issue}'`, { stdio: "ignore" }); } catch {}
+  // Set tmux pane title for layout detection (stream mode only)
+  if (opts.mode === "stream") {
+    try { execSync(`tmux select-pane -T 'agent-logs-${issue}'`, { stdio: "ignore" }); } catch {}
+  }
 
-  // Header — adapts to terminal width
-  const title = `#${issue} ${agent} (step ${step})`;
+  // Header
+  const modeLabel = opts.mode === "download" ? "download" : "stream";
+  const title = `#${issue} ${agent} (step ${step}) [${modeLabel}]`;
   const padW = Math.max(0, termWidth - title.length - 6);
   console.log(`${C.header}${C.bold}━━━ ${title} ${"━".repeat(padW)}${C.reset}`);
   console.log(`${C.dim}job: ${jobName}${C.reset}\n`);
 
-  // Wait for pod to start (polls with spinner) — skip for completed jobs
+  // For download mode, don't follow — just dump existing logs
+  if (opts.mode === "download") {
+    opts.follow = false;
+  }
+
+  // Wait for pod to start (polls with spinner) — skip for completed jobs and download mode
   if (opts.follow) {
     try {
       await waitForPod(jobName);
@@ -666,6 +707,8 @@ if (!exists) {
 
 const proc = await streamJob(jobName);
 
-// Graceful shutdown
-process.on("SIGINT", () => { proc.kill(); process.exit(0); });
-process.on("SIGTERM", () => { proc.kill(); process.exit(0); });
+// Graceful shutdown (proc is null when log was already saved)
+if (proc) {
+  process.on("SIGINT", () => { proc.kill(); process.exit(0); });
+  process.on("SIGTERM", () => { proc.kill(); process.exit(0); });
+}
