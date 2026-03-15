@@ -139,6 +139,15 @@ describe("friendlyK8sError — IP stripping (issue #985)", () => {
     // 172.32 is not RFC-1918; must not be redacted
     expect(result).not.toContain("<node-ip>"); // fallback path: 172.32 not replaced
   });
+
+  // Loki QA: 169.254 link-local (issue #985)
+  it("strips 169.254.x.x link-local addresses from fallback messages", () => {
+    // stripInternalIPs covers link-local range; this path is reached when the message
+    // is not matched by NODE_UNREACHABLE_PATTERN and the status is unknown.
+    const raw = "connection refused from 169.254.1.1 to host";
+    const result = friendlyK8sError(raw, SESSION);
+    expect(result).not.toContain("169.254.1.1");
+  });
 });
 
 // Loki gap tests — precedence (issue #985)

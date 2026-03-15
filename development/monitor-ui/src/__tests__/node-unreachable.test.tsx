@@ -310,6 +310,72 @@ describe("NorseErrorTablet — node-unreachable heading text (issue #985 — Lok
   });
 });
 
+// Loki QA: NorseErrorTablet subheading text for node-unreachable variant (issue #985)
+describe("NorseErrorTablet — node-unreachable subheading text (issue #985 — Loki QA)", () => {
+  it("displays 'beyond reach' subheading for node-unreachable variant", () => {
+    const { container } = render(
+      <NorseErrorTablet sessionId="issue-985-step1-fireman" message={NODE_MESSAGE} variant="node-unreachable" />
+    );
+    expect(container.textContent).toContain("beyond reach");
+  });
+
+  it("displays 'Eternal Halls' heading for default ttl-expired variant", () => {
+    const { container } = render(
+      <NorseErrorTablet sessionId="issue-985-step1-fireman" message={TTL_MESSAGE} />
+    );
+    expect(container.textContent).toContain("Eternal Halls");
+  });
+});
+
+// Loki QA: LogViewer graceful fallback when isNodeUnreachable=true but streamError=null (issue #985)
+describe("LogViewer — graceful fallback when isNodeUnreachable with no error message (issue #985 — Loki QA)", () => {
+  it("renders log-terminal (not tablet) when isNodeUnreachable=true but streamError is null", () => {
+    // Guard: LogViewer checks `isNodeUnreachable && streamError` — if no message, fall through
+    const { container } = render(
+      <LogViewer
+        entries={[]}
+        activeJob={MOCK_JOB}
+        wsState="open"
+        isNodeUnreachable={true}
+        streamError={null}
+      />
+    );
+    expect(container.querySelector(".log-terminal")).not.toBeNull();
+    expect(container.querySelector(".norse-error-tablet")).toBeNull();
+  });
+});
+
+// Loki QA: useLogStream last stream-error wins for isNodeUnreachable (issue #985)
+describe("useLogStream — last stream-error determines isNodeUnreachable (issue #985 — Loki QA)", () => {
+  it("isNodeUnreachable is false when a non-node error arrives after a node error", () => {
+    const { result } = renderHook(() => useLogStream());
+    act(() => {
+      // First: node-unreachable error
+      result.current.handleMessage({
+        type: "stream-error",
+        ts: Date.now(),
+        sessionId: "issue-985-step1-fireman",
+        message: NODE_MESSAGE,
+      });
+      // Second: non-node error overwrites streamError
+      result.current.handleMessage({
+        type: "stream-error",
+        ts: Date.now(),
+        sessionId: "issue-985-step1-fireman",
+        message: NON_NODE_MESSAGE,
+      });
+      result.current.handleMessage({
+        type: "stream-end",
+        ts: Date.now(),
+        sessionId: "issue-985-step1-fireman",
+        reason: "failed",
+      });
+    });
+    // Last error was non-node; isNodeUnreachable should be false
+    expect(result.current.isNodeUnreachable).toBe(false);
+  });
+});
+
 // Loki gap: UI NODE_UNREACHABLE_PATTERN does NOT match raw K8s error strings (issue #985)
 describe("NODE_UNREACHABLE_PATTERN — does not match raw K8s strings (issue #985 — Loki)", () => {
   it("does NOT match raw 'dial tcp' K8s error (only friendly server messages should be in UI)", () => {
