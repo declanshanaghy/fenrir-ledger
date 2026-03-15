@@ -26,10 +26,6 @@ import { TrialDay15Modal } from "@/components/trial/TrialDay15Modal";
 import { TrialExpiryModal } from "@/components/trial/TrialExpiryModal";
 import { Toaster } from "sonner";
 
-import {
-  GleipnirMountainRoots,
-  useGleipnirFragment3,
-} from "@/components/cards/GleipnirMountainRoots";
 import { useRagnarok } from "@/contexts/RagnarokContext";
 
 interface LedgerShellProps {
@@ -39,7 +35,6 @@ interface LedgerShellProps {
 export function LedgerShell({ children }: LedgerShellProps) {
   const [mounted, setMounted] = useState(false);
 
-  const { open: rootsOpen, dismiss: dismissRoots } = useGleipnirFragment3();
   const { ragnarokActive } = useRagnarok();
 
   useEffect(() => {
@@ -100,7 +95,6 @@ export function LedgerShell({ children }: LedgerShellProps) {
       <KonamiHowl />
       <ForgeMasterEgg />
       <HeilungModal />
-      <GleipnirMountainRoots open={rootsOpen} onClose={dismissRoots} />
 
       {/* Day-15 mid-trial nudge modal (Issue #622) */}
       <TrialDay15Modal />

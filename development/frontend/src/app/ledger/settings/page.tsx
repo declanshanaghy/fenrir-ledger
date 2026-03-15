@@ -20,6 +20,10 @@ import { StripeSettings } from "@/components/entitlement/StripeSettings";
 import { track } from "@/lib/analytics/track";
 import { TrialSettingsSection } from "@/components/trial/TrialSettingsSection";
 import type { DashboardTab } from "@/lib/constants";
+import {
+  GleipnirMountainRoots,
+  useGleipnirFragment3,
+} from "@/components/cards/GleipnirMountainRoots";
 
 // ---------------------------------------------------------------------------
 // Tab guide localStorage keys
@@ -67,6 +71,7 @@ const CONFIRMATION_DURATION_MS = 3000;
 function RestoreTabGuides() {
   const [dismissedCount, setDismissedCount] = useState<number>(0);
   const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const { open: rootsOpen, trigger: triggerRoots, dismiss: dismissRoots } = useGleipnirFragment3();
 
   // Read dismissed count from localStorage on mount
   useEffect(() => {
@@ -92,7 +97,9 @@ function RestoreTabGuides() {
     }
     setDismissedCount(0);
     setShowConfirmation(true);
-  }, []);
+    // Fragment #3 — The Roots of a Mountain: first restore triggers the egg (no-op if already found)
+    triggerRoots();
+  }, [triggerRoots]);
 
   const hasGuidesToRestore = dismissedCount > 0;
 
@@ -147,6 +154,9 @@ function RestoreTabGuides() {
           All guides are currently visible. Nothing to restore.
         </p>
       )}
+
+      {/* Fragment #3 — The Roots of a Mountain */}
+      <GleipnirMountainRoots open={rootsOpen} onClose={dismissRoots} />
     </section>
   );
 }
