@@ -60,6 +60,7 @@ function buildHlidskjalfHtml(quote: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Odin's Throne — Hlidskjalf</title>
+<link rel="icon" type="image/png" href="/static/odin-dark.png">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700;900&family=Source+Serif+4:wght@300;400;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -482,6 +483,17 @@ app.get("/js/stream.js", (c) => {
     headers: {
       "Content-Type": "application/javascript; charset=utf-8",
       "Cache-Control": "no-cache",
+    },
+  });
+});
+
+// Favicon — served publicly so browsers get it before auth
+app.get("/favicon.ico", (c) => {
+  if (!odinAvatarPng) return c.notFound();
+  return new Response(odinAvatarPng as Buffer, {
+    headers: {
+      "Content-Type": "image/png",
+      "Cache-Control": "public, max-age=86400",
     },
   });
 });
