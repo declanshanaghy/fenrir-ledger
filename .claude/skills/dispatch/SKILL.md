@@ -21,14 +21,13 @@ Composes a prompt from templates and spawns the agent via GKE Autopilot K8s Jobs
 8. **No step-by-step narration.** Only output the final dispatch report.
 9. **Board move is MANDATORY after spawn succeeds.** Append it to the spawn command with `&&`.
 
-**Ideal flow (2-3 tool calls per dispatch):**
+**Ideal flow (2 tool calls per dispatch):**
 ```
 Call 1: Read <agent>.md           (skip if already in context)
 Call 2: bash dispatch-job.sh ... && node pack-status.mjs --move N in-progress
-Call 3: node agent-logs.mjs <SESSION_ID> --tools --spawn-pane
 ```
 
-If issue data + agent template are already in context, that's **2 tool calls** (spawn + board move, then log tail).
+If issue data + agent template are already in context, that's **1 tool call** (spawn + board move).
 
 ## Arguments
 
@@ -230,32 +229,6 @@ node "<repo-root>/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N
 ```
 
 **Do NOT move if spawn failed.** The `&&` chaining handles this automatically.
-
-### Phase 4 — Tail Agent Logs (GKE only)
-
-After a successful GKE dispatch, open a tmux pane streaming the parsed agent logs.
-The pod may take 30-60s to schedule — `agent-logs.mjs` polls automatically.
-
-**Layout rule:** Agent logs always stack in the **right column** of the tmux window.
-The orchestrator stays in the left pane. `agent-logs.mjs` sets pane titles (`agent-logs-<N>`)
-and detects existing log panes to stack into.
-
-**Single dispatch:**
-```bash
-node "<repo-root>/infrastructure/k8s/agents/agent-logs.mjs" "<SESSION_ID>" --tools --spawn-pane
-```
-
-The `--spawn-pane` flag tells agent-logs.mjs to spawn itself into a tmux pane using
-the right-column stacking logic (detect existing log column, stack vertically if found,
-or create new right column at 40% width if not). This replaces manual `tmux split-window`.
-
-**Parallel dispatches (`--parallel`):**
-```bash
-node "<repo-root>/infrastructure/k8s/agents/agent-logs.mjs" --all --tmux --tools
-```
-
-This runs in a separate tmux pane — it does NOT block the orchestrator.
-Skip if `--local` (local agents run in background worktrees, not GKE).
 
 ### Output — Dispatch Report (only output)
 

@@ -22,6 +22,7 @@ export interface Job {
   startedAt: string | null;
   completedAt: string | null;
   podName: string | null;
+  fixture?: boolean;
 }
 
 let _kc: k8s.KubeConfig | null = null;
@@ -90,8 +91,8 @@ export function mapAgentJobToJob(j: AgentJob): Job {
 }
 
 export async function listAgentJobs(
-  namespace = "fenrir-app",
-  labelSelector = "app=odin-agent"
+  namespace = "fenrir-agents",
+  labelSelector = "app.kubernetes.io/component=agent-sandbox"
 ): Promise<AgentJob[]> {
   const api = getBatchApi();
   // v1.0.0 ObjectParamAPI: methods take a request object, return the resource directly
@@ -112,8 +113,8 @@ export async function listAgentJobs(
  * after the watch stream ends or errors. Returns a cancel function.
  */
 export function watchAgentJobs(
-  namespace = "fenrir-app",
-  labelSelector = "app=odin-agent",
+  namespace = "fenrir-agents",
+  labelSelector = "app.kubernetes.io/component=agent-sandbox",
   onUpdate: (jobs: Job[]) => void,
   onError: (err: Error) => void
 ): () => void {
@@ -121,8 +122,24 @@ export function watchAgentJobs(
   const jobMap = new Map<string, Job>();
   let currentReq: { abort(): void } | null = null;
 
+  // Seed jobMap from a list call so initial state has correct statuses
+  const seedFromList = async (): Promise<void> => {
+    try {
+      const jobs = await listAgentJobs(namespace, labelSelector);
+      for (const j of jobs) {
+        const mapped = mapAgentJobToJob(j);
+        jobMap.set(j.name, mapped);
+      }
+      if (jobMap.size > 0) onUpdate(Array.from(jobMap.values()));
+    } catch {
+      // Non-fatal — watch will populate
+    }
+  };
+
   const doWatch = async (): Promise<void> => {
     if (stopped) return;
+    // Seed on first connect
+    if (jobMap.size === 0) await seedFromList();
     try {
       const kc = getKubeConfig();
       const watch = new k8s.Watch(kc);
