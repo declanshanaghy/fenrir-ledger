@@ -246,6 +246,7 @@ export function loginPage(): string {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Odin's Throne — Sign In</title>
+  <link rel="icon" type="image/png" href="/static/odin-dark.png">
   <style>
     :root { --gold: #c8a44a; --bg: #0a0a0f; --fg: #e8e0d0; --dim: #6b6460; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -276,6 +277,7 @@ function loginErrorPage(reason: string): string {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Odin's Throne — Access Denied</title>
+  <link rel="icon" type="image/png" href="/static/odin-dark.png">
   <style>
     :root { --gold: #c8a44a; --bg: #0a0a0f; --fg: #e8e0d0; --dim: #6b6460; --red: #c84a4a; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
