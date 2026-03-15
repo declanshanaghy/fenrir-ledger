@@ -19,7 +19,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Paths relative to this test file (development/monitor-ui/src/__tests__/)
-const MONITOR_UI_PUBLIC = resolve(__dirname, "../../../public");
+// __dirname = .../development/monitor-ui/src/__tests__
+// ../../public = .../development/monitor-ui/public  ✓
+// ../../../.. = repo root → ../../../../.claude/agents/profiles ✓
+const MONITOR_UI_PUBLIC = resolve(__dirname, "../../public");
 const CANONICAL_PROFILES = resolve(__dirname, "../../../../.claude/agents/profiles");
 
 const STALE_SIZE_BYTES = 16 * 1024; // 16KB — the stale version size
