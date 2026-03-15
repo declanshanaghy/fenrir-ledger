@@ -9,7 +9,7 @@
  * Data isolation: clearAllStorage() before each test.
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../helpers/analytics-block";
 import {
   seedHousehold,
   clearAllStorage,

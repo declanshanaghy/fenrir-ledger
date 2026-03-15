@@ -31,7 +31,7 @@
  *   4. Verify anonymous cards are merged (if any existed pre-login)
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../helpers/analytics-block";
 import { clearAllStorage } from "../helpers/test-fixtures";
 
 // ─── Shared setup ─────────────────────────────────────────────────────────────

@@ -23,7 +23,7 @@
  *   - Unit tests in src/__tests__/auth/ (PKCE generation, validation)
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../helpers/analytics-block";
 import { clearAllStorage } from "../helpers/test-fixtures";
 
 // ─── Shared setup ─────────────────────────────────────────────────────────────
