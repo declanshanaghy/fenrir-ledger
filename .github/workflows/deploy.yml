@@ -63,15 +63,68 @@ env:
   REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/fenrir-images
   IMAGE_NAME: fenrir-app
   MONITOR_IMAGE_NAME: odin-throne
+  MONITOR_UI_IMAGE_NAME: odin-throne-ui
   IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
 
 jobs:
+  # --------------------------------------------------------------------------
+  # Job 0: Detect which services changed — gates all build jobs
+  # --------------------------------------------------------------------------
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+      monitor: ${{ steps.filter.outputs.monitor }}
+      monitor-ui: ${{ steps.filter.outputs.monitor-ui }}
+      infra: ${{ steps.filter.outputs.infra }}
+      helm: ${{ steps.filter.outputs.helm }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed paths
+        id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "app=true" >> "$GITHUB_OUTPUT"
+            echo "monitor=true" >> "$GITHUB_OUTPUT"
+            echo "monitor-ui=true" >> "$GITHUB_OUTPUT"
+            echo "infra=true" >> "$GITHUB_OUTPUT"
+            echo "helm=true" >> "$GITHUB_OUTPUT"
+            echo "### Manual dispatch — building all services" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          check() { echo "$CHANGED" | grep -q "$1" && echo "true" || echo "false"; }
+          APP=$(check "^development/frontend/\|^Dockerfile\|^package.json\|^package-lock.json")
+          MONITOR=$(check "^development/monitor/")
+          MONITOR_UI=$(check "^development/monitor-ui/")
+          INFRA=$(check "^infrastructure/\(terraform\|monitoring\)")
+          HELM=$(check "^infrastructure/helm/")
+          echo "app=$APP" >> "$GITHUB_OUTPUT"
+          echo "monitor=$MONITOR" >> "$GITHUB_OUTPUT"
+          echo "monitor-ui=$MONITOR_UI" >> "$GITHUB_OUTPUT"
+          echo "infra=$INFRA" >> "$GITHUB_OUTPUT"
+          echo "helm=$HELM" >> "$GITHUB_OUTPUT"
+          echo "### Changed Services" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| app | $APP |" >> $GITHUB_STEP_SUMMARY
+          echo "| monitor | $MONITOR |" >> $GITHUB_STEP_SUMMARY
+          echo "| monitor-ui | $MONITOR_UI |" >> $GITHUB_STEP_SUMMARY
+          echo "| infra | $INFRA |" >> $GITHUB_STEP_SUMMARY
+          echo "| helm | $HELM |" >> $GITHUB_STEP_SUMMARY
+
   # --------------------------------------------------------------------------
   # Job 1: Terraform — ensure GKE infrastructure is up to date
   # --------------------------------------------------------------------------
   terraform:
     name: Terraform Plan & Apply
-    if: ${{ !inputs.skip_terraform }}
+    needs: detect-changes
+    if: ${{ !inputs.skip_terraform && needs.detect-changes.outputs.infra == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -122,8 +175,8 @@ jobs:
   # --------------------------------------------------------------------------
   build-and-push:
     name: Build & Push Image
-    needs: terraform
-    if: always() && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped')
+    needs: [terraform, detect-changes]
+    if: always() && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') && needs.detect-changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -181,8 +234,8 @@ jobs:
   # --------------------------------------------------------------------------
   build-and-push-monitor:
     name: Build & Push Monitor Image
-    needs: terraform
-    if: always() && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped')
+    needs: [terraform, detect-changes]
+    if: always() && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') && needs.detect-changes.outputs.monitor == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -228,6 +281,59 @@ jobs:
           echo "- **Image:** \`${{ env.MONITOR_IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Digest:** \`${{ steps.build-monitor.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+
+  # --------------------------------------------------------------------------
+  # Job 2c: Build monitor-ui image & push to Artifact Registry
+  # --------------------------------------------------------------------------
+  build-and-push-monitor-ui:
+    name: Build & Push Monitor UI Image
+    needs: [terraform, detect-changes]
+    if: always() && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') && needs.detect-changes.outputs.monitor-ui == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      full_image: ${{ env.REGISTRY }}/${{ env.MONITOR_UI_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push monitor-ui image
+        id: build-monitor-ui
+        uses: docker/build-push-action@v7
+        with:
+          context: ./development/monitor-ui
+          file: ./development/monitor-ui/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.MONITOR_UI_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.MONITOR_UI_IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output monitor-ui image details
+        run: |
+          echo "### Monitor UI Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image:** \`${{ env.MONITOR_UI_IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Digest:** \`${{ steps.build-monitor-ui.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
   # --------------------------------------------------------------------------
   # Job 3a: Deploy Redis to GKE (fenrir-app namespace)
