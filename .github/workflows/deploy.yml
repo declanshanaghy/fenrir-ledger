@@ -104,7 +104,7 @@ jobs:
           fi
           CHANGED=$(git diff --name-only HEAD~1 HEAD)
           check() { echo "$CHANGED" | grep -q "$1" && echo "true" || echo "false"; }
-          APP=$(check "^development/frontend/\|^Dockerfile\|^package.json\|^package-lock.json")
+          APP=$(check "^development/frontend/\|^infrastructure/k8s/app/\|^Dockerfile\|^package.json\|^package-lock.json")
           MONITOR=$(check "^development/monitor/")
           MONITOR_UI=$(check "^development/monitor-ui/")
           INFRA=$(check "^infrastructure/\(terraform\|monitoring\)")
