@@ -46,6 +46,7 @@ export function buildCspDirectives(nonce?: string): string[] {
       "https://accounts.google.com",
       "https://apis.google.com",
       "https://js.stripe.com",
+      "https://analytics.fenrirledger.com",
     ].join(" "),
 
     // Styles: self + unsafe-inline + Google Fonts + Google Accounts + Google APIs
@@ -73,6 +74,7 @@ export function buildCspDirectives(nonce?: string): string[] {
       "https://hooks.stripe.com",
       "https://api.anthropic.com",
       "https://api.openai.com",
+      "https://analytics.fenrirledger.com",
     ].join(" "),
 
     // Frames: Google Picker, OAuth consent, Stripe.js, and YouTube embed (Heilung easter egg)
