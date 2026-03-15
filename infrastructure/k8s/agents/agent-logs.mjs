@@ -35,7 +35,7 @@
 
 import { spawn, execSync } from "node:child_process";
 import { createInterface } from "node:readline";
-import { createWriteStream, mkdirSync, existsSync } from "node:fs";
+import { createWriteStream, mkdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { createHecklerEngine, AGENT_NAMES } from "./mayo-heckler.mjs";
 
@@ -554,9 +554,16 @@ function openLogFile(sessionId, jobName) {
   mkdirSync(logDir, { recursive: true });
   const logPath = join(logDir, `${sessionId}.jsonl`);
 
-  // Don't overwrite if file exists and job is finished
-  if (existsSync(logPath) && isJobFinished(jobName)) {
-    return { stream: null, path: logPath, skipped: true };
+  // Never clobber an existing log file that has content.
+  // Once downloaded, JSONL logs are immutable — the job may expire from K8s
+  // but the local file is the permanent record.
+  if (existsSync(logPath)) {
+    try {
+      const size = statSync(logPath).size;
+      if (size > 0) {
+        return { stream: null, path: logPath, skipped: true };
+      }
+    } catch { /* stat failed — re-download */ }
   }
 
   return { stream: createWriteStream(logPath, { flags: "w" }), path: logPath, skipped: false };
