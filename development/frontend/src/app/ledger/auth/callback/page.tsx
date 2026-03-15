@@ -24,6 +24,8 @@ import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { setSession } from "@/lib/auth/session";
 import { validateReturnTo } from "@/lib/auth/sign-in-url";
+import { computeFingerprint, isValidFingerprint } from "@/lib/trial-utils";
+import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
 import type { FenrirSession } from "@/lib/types";
 
 /** sessionStorage key written by /sign-in */
@@ -191,6 +193,29 @@ function AuthCallbackContent() {
         };
 
         setSession(session);
+
+        // Fire-and-forget trial init on first sign-in (#922).
+        // Idempotent — if a trial already exists for this fingerprint it is preserved.
+        // Do not await: trial init must not block the auth redirect.
+        void (async () => {
+          try {
+            const fingerprint = await computeFingerprint();
+            if (isValidFingerprint(fingerprint)) {
+              await fetch("/api/trial/init", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${tokens.id_token}`,
+                },
+                body: JSON.stringify({ fingerprint }),
+              });
+              // Clear cached trial status so the next useTrialStatus fetch is fresh.
+              clearTrialStatusCache();
+            }
+          } catch {
+            // Non-fatal — trial will be auto-initialized on first Karl feature access.
+          }
+        })();
 
         // Clean up PKCE transient data only after successful exchange.
         sessionStorage.removeItem(PKCE_SESSION_KEY);
