@@ -1,0 +1,74 @@
+# Infrastructure — GKE, Agents, and K8s Management
+# Invoked via: just infra <recipe>
+
+set dotenv-load := false
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+this_dir   := source_directory()
+repo_root  := this_dir / ".."
+scripts    := repo_root / "scripts"
+k8s_agents := this_dir / "k8s" / "agents"
+
+# ── GKE / Kubernetes ────────────────────────────────────────────────────────
+
+# Show full GKE cluster + app status
+gke-status:
+    bash "{{scripts}}/gke-status.sh"
+
+# Configure local kubectl for GKE Autopilot (one-time)
+gke-setup:
+    bash "{{scripts}}/gke-setup.sh"
+
+# Bootstrap IAM roles for deploy service account
+gke-bootstrap-iam project_id="fenrir-ledger-prod":
+    bash "{{scripts}}/bootstrap-iam.sh" "{{project_id}}"
+
+# ── Agent Jobs ──────────────────────────────────────────────────────────────
+
+# Launch Agent Monitor web UI (auto-starts kubectl proxy)
+agent-monitor:
+    node "{{repo_root}}/development/agent-monitor/serve.mjs"
+
+# List agent jobs in GKE
+agent-jobs:
+    kubectl get jobs -n fenrir-agents --sort-by=.metadata.creationTimestamp \
+      -o custom-columns='NAME:.metadata.name,STATUS:.status.conditions[0].type,CREATED:.metadata.creationTimestamp'
+
+# List active (running) agent jobs
+agent-jobs-active:
+    kubectl get jobs -n fenrir-agents \
+      -o jsonpath='{range .items[?(@.status.active)]}{.metadata.name}{"\n"}{end}'
+
+# ── Agent Logs ──────────────────────────────────────────────────────────────
+
+# Stream parsed logs for an agent by session ID
+agent-log session_id:
+    node "{{k8s_agents}}/agent-logs.mjs" "{{session_id}}"
+
+# Stream parsed logs for the latest agent job on an issue
+agent-log-issue issue:
+    node "{{k8s_agents}}/agent-logs.mjs" --issue "{{issue}}"
+
+# Stream logs with tool calls visible
+agent-log-verbose session_id:
+    node "{{k8s_agents}}/agent-logs.mjs" "{{session_id}}" --tools
+
+# Stream logs with tool calls + thinking
+agent-log-debug session_id:
+    node "{{k8s_agents}}/agent-logs.mjs" "{{session_id}}" --tools --thinking
+
+# Dump finished agent logs (no follow)
+agent-log-dump session_id:
+    node "{{k8s_agents}}/agent-logs.mjs" "{{session_id}}" --no-follow --tools
+
+# Stream all active agent logs in tmux panes
+agent-log-all:
+    node "{{k8s_agents}}/agent-logs.mjs" --all --tmux
+
+# Show raw JSONL for an agent session
+agent-log-raw session_id:
+    node "{{k8s_agents}}/agent-logs.mjs" "{{session_id}}" --raw
+
+# List saved agent log files
+agent-logs-list:
+    @ls -lht "{{repo_root}}/tmp/agent-logs/"*.log 2>/dev/null || echo "No agent logs in tmp/agent-logs/"
