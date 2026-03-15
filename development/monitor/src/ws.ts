@@ -1,14 +1,16 @@
 import { WebSocketServer, WebSocket } from "ws";
 import type { IncomingMessage, Server } from "node:http";
 import type { ServerType } from "@hono/node-server";
-import { streamPodLogs, findPodForSession } from "./k8s.js";
-import { verifySessionToken, SESSION_COOKIE } from "./auth.js";
 import {
-  parseJsonlLine,
-  detectVerdict,
-  generateReportHtml,
-  type JsonEvent,
-} from "./report.js";
+  streamPodLogs,
+  findPodForSession,
+  listAgentJobs,
+  watchAgentJobs,
+  mapAgentJobToJob,
+} from "./k8s.js";
+import type { Job } from "./k8s.js";
+import { verifySessionToken, SESSION_COOKIE } from "./auth.js";
+import { parseJsonlLine, detectVerdict } from "./report.js";
 
 /** Parse a single cookie header value into a map. */
 function parseCookies(cookieHeader: string): Record<string, string> {
@@ -24,152 +26,153 @@ function parseCookies(cookieHeader: string): Record<string, string> {
 }
 
 // ---------------------------------------------------------------------------
-// WS message types
+// Wire protocol — Server → Client
 // ---------------------------------------------------------------------------
 
-type WsMessage =
-  | { type: "log"; line: string; ts: number }
-  | { type: "error"; message: string }
-  | { type: "end" }
-  | { type: "connected"; sessionId: string }
-  // Structured parsed events
-  | { type: "turn_start"; turnNum: number; ts: number }
+type ServerMessage =
+  | { type: "jobs-snapshot"; ts: number; jobs: Job[] }
+  | { type: "jobs-updated"; ts: number; jobs: Job[] }
+  | { type: "log-line"; ts: number; sessionId: string; line: string }
+  | { type: "verdict"; ts: number; sessionId: string; result: "PASS" | "FAIL" }
   | {
-      type: "tool_call";
-      turnNum: number;
-      toolId: string;
-      toolName: string;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      input: Record<string, any>;
+      type: "stream-end";
       ts: number;
+      sessionId: string;
+      reason: "completed" | "failed" | "cancelled";
     }
-  | {
-      type: "tool_result";
-      toolId: string;
-      content: string;
-      isError: boolean;
-      ts: number;
-    }
-  | { type: "heckle"; style: "mayo" | "comeback" | "entrance"; name: string; text: string; ts: number }
-  | { type: "verdict"; pass: boolean; summary: string; ts: number }
-  | { type: "report"; html: string; ts: number };
+  | { type: "stream-error"; ts: number; sessionId: string; message: string }
+  | { type: "pong" }
+  | { type: "error"; message: string };
 
-function send(ws: WebSocket, msg: WsMessage): void {
+// ---------------------------------------------------------------------------
+// Wire protocol — Client → Server
+// ---------------------------------------------------------------------------
+
+type ClientMessage =
+  | { type: "subscribe"; sessionId: string }
+  | { type: "unsubscribe"; sessionId: string }
+  | { type: "ping" };
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function send(ws: WebSocket, msg: ServerMessage): void {
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(msg));
   }
 }
 
-// ---------------------------------------------------------------------------
-// JSONL event dispatcher
-// ---------------------------------------------------------------------------
-
-/** State machine that processes JSONL events and dispatches WS messages. */
-class LogStreamDispatcher {
-  private ws: WebSocket;
-  private sessionId: string;
-  private events: JsonEvent[] = [];
-  private turnNum = 0;
-  /** Pending tool_use blocks in the current assistant turn (id → toolName+input). */
-  private pendingToolUses = new Map<string, { name: string; input: Record<string, unknown> }>();
-
-  constructor(ws: WebSocket, sessionId: string) {
-    this.ws = ws;
-    this.sessionId = sessionId;
-  }
-
-  /** Process one raw log line. */
-  processLine(rawLine: string): void {
-    // Always forward the raw line for the plain-text terminal view
-    send(this.ws, { type: "log", line: rawLine, ts: Date.now() });
-
-    const ev = parseJsonlLine(rawLine);
-    if (!ev) return;
-
-    this.events.push(ev);
-
-    if (ev.type === "assistant" && ev.message?.content) {
-      this.handleAssistantEvent(ev);
-    } else if (ev.type === "user" && ev.message?.content) {
-      this.handleUserEvent(ev);
-    }
-  }
-
-  private handleAssistantEvent(ev: JsonEvent): void {
-    this.turnNum++;
-    send(this.ws, { type: "turn_start", turnNum: this.turnNum, ts: Date.now() });
-    this.pendingToolUses.clear();
-
-    for (const block of ev.message!.content ?? []) {
-      if (block.type === "tool_use" && block.id && block.name) {
-        this.pendingToolUses.set(block.id, {
-          name: block.name,
-          input: block.input ?? {},
-        });
-        send(this.ws, {
-          type: "tool_call",
-          turnNum: this.turnNum,
-          toolId: block.id,
-          toolName: block.name,
-          input: block.input ?? {},
-          ts: Date.now(),
-        });
-      }
-    }
-  }
-
-  private handleUserEvent(ev: JsonEvent): void {
-    for (const block of ev.message!.content ?? []) {
-      if (block.type === "tool_result" && block.tool_use_id) {
-        const raw = block.content;
-        const content =
-          typeof raw === "string"
-            ? raw
-            : Array.isArray(raw)
-              ? (raw as Array<{ type: string; text?: string }>)
-                  .filter((b) => b.type === "text")
-                  .map((b) => b.text ?? "")
-                  .join("")
-              : "";
-
-        send(this.ws, {
-          type: "tool_result",
-          toolId: block.tool_use_id,
-          content: content.slice(0, 4000),
-          isError: block.is_error ?? false,
-          ts: Date.now(),
-        });
-      }
-    }
-  }
-
-  /** Called when the pod log stream ends — emit verdict + report. */
-  onStreamEnd(): void {
-    const verdict = detectVerdict(this.events);
-    if (verdict) {
-      send(this.ws, {
-        type: "verdict",
-        pass: verdict.pass,
-        summary: verdict.text.slice(0, 500),
-        ts: Date.now(),
-      });
-    }
-
-    if (this.events.length > 0) {
-      const html = generateReportHtml(this.events, this.sessionId);
-      send(this.ws, { type: "report", html, ts: Date.now() });
-    }
+function broadcast(clients: Set<WebSocket>, msg: ServerMessage): void {
+  const payload = JSON.stringify(msg);
+  for (const ws of clients) {
+    if (ws.readyState === WebSocket.OPEN) ws.send(payload);
   }
 }
 
 // ---------------------------------------------------------------------------
-// WebSocket server
+// Per-session log stream handler
 // ---------------------------------------------------------------------------
 
-export function attachWebSocketServer(server: ServerType): WebSocketServer {
-  const wss = new WebSocketServer({ server: server as Server, path: "/ws/logs" });
+/** Start streaming logs for sessionId to ws. Returns a cancel function. */
+async function startLogStream(
+  ws: WebSocket,
+  sessionId: string,
+  namespace: string
+): Promise<() => void> {
+  try {
+    const podName = await findPodForSession(sessionId, namespace);
+    if (!podName) {
+      send(ws, {
+        type: "stream-error",
+        ts: Date.now(),
+        sessionId,
+        message: `No pod found for session ${sessionId}`,
+      });
+      return () => {};
+    }
 
-  wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
+    // Track JSONL events for verdict detection
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const events: any[] = [];
+
+    const cancel = await streamPodLogs(
+      podName,
+      namespace,
+      (line) => {
+        send(ws, { type: "log-line", ts: Date.now(), sessionId, line });
+        const ev = parseJsonlLine(line);
+        if (ev) events.push(ev);
+      },
+      () => {
+        const verdict = detectVerdict(events);
+        if (verdict) {
+          send(ws, {
+            type: "verdict",
+            ts: Date.now(),
+            sessionId,
+            result: verdict.pass ? "PASS" : "FAIL",
+          });
+        }
+        send(ws, {
+          type: "stream-end",
+          ts: Date.now(),
+          sessionId,
+          reason: "completed",
+        });
+      },
+      (err) => {
+        send(ws, {
+          type: "stream-error",
+          ts: Date.now(),
+          sessionId,
+          message: err.message,
+        });
+      }
+    );
+
+    return cancel;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    send(ws, { type: "stream-error", ts: Date.now(), sessionId, message });
+    return () => {};
+  }
+}
+
+// ---------------------------------------------------------------------------
+// WebSocket server — single multiplexed /ws endpoint
+// ---------------------------------------------------------------------------
+
+export function attachWebSocketServer(
+  server: ServerType,
+  namespace = "fenrir-app",
+  labelSelector = "app=odin-agent"
+): WebSocketServer {
+  // Per-server-instance state — no module-level singletons
+  const connectedClients = new Set<WebSocket>();
+  let cachedJobs: Job[] = [];
+
+  // Start K8s job watch, push updates to all connected clients
+  watchAgentJobs(
+    namespace,
+    labelSelector,
+    (jobs) => {
+      cachedJobs = jobs;
+      broadcast(connectedClients, {
+        type: "jobs-updated",
+        ts: Date.now(),
+        jobs,
+      });
+    },
+    (err) => {
+      console.error("[ws] K8s watch error:", err.message);
+      // watchAgentJobs auto-reconnects internally
+    }
+  );
+
+  const wss = new WebSocketServer({ server: server as Server, path: "/ws" });
+
+  wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
     // Validate session cookie before allowing the WS connection
     const cookieHeader = req.headers.cookie ?? "";
     const cookies = parseCookies(cookieHeader);
@@ -180,60 +183,68 @@ export function attachWebSocketServer(server: ServerType): WebSocketServer {
       return;
     }
 
-    // Extract sessionId from URL: /ws/logs/:sessionId
-    const url = req.url ?? "";
-    const match = /^\/ws\/logs\/([^/?#]+)/.exec(url);
-    const sessionId = match?.[1];
+    // Register this client for jobs-updated broadcasts
+    connectedClients.add(ws);
 
-    if (!sessionId) {
-      send(ws, { type: "error", message: "Missing sessionId in URL" });
-      ws.close(1008, "Missing sessionId");
-      return;
-    }
-
-    send(ws, { type: "connected", sessionId });
-
-    const dispatcher = new LogStreamDispatcher(ws, sessionId);
-    let cancelStream: (() => void) | null = null;
-
-    const startStream = async (): Promise<void> => {
+    // Seed cache from listAgentJobs if watch hasn't populated it yet
+    let jobs = cachedJobs;
+    if (jobs.length === 0) {
       try {
-        const podName = await findPodForSession(sessionId);
-        if (!podName) {
-          send(ws, {
-            type: "error",
-            message: `No pod found for session ${sessionId}`,
-          });
-          ws.close(1011, "Pod not found");
-          return;
-        }
-
-        cancelStream = await streamPodLogs(
-          podName,
-          undefined,
-          (line) => dispatcher.processLine(line),
-          () => {
-            dispatcher.onStreamEnd();
-            send(ws, { type: "end" });
-          },
-          (err) => send(ws, { type: "error", message: err.message })
-        );
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Unknown error starting stream";
-        send(ws, { type: "error", message });
+        const agentJobs = await listAgentJobs(namespace, labelSelector);
+        jobs = agentJobs.map(mapAgentJobToJob);
+        cachedJobs = jobs;
+      } catch {
+        // proceed with empty list
       }
+    }
+    send(ws, { type: "jobs-snapshot", ts: Date.now(), jobs });
+
+    // Per-connection subscription state: sessionId → cancel()
+    const subscriptions = new Map<string, () => void>();
+
+    ws.on("message", (data) => {
+      let msg: ClientMessage;
+      try {
+        msg = JSON.parse(String(data)) as ClientMessage;
+      } catch {
+        send(ws, { type: "error", message: "Invalid JSON" });
+        return;
+      }
+
+      if (msg.type === "ping") {
+        send(ws, { type: "pong" });
+      } else if (msg.type === "subscribe") {
+        const { sessionId } = msg;
+        if (subscriptions.has(sessionId)) return; // already subscribed
+        void startLogStream(ws, sessionId, namespace).then((cancel) => {
+          subscriptions.set(sessionId, cancel);
+        });
+      } else if (msg.type === "unsubscribe") {
+        const { sessionId } = msg;
+        const cancel = subscriptions.get(sessionId);
+        if (cancel) {
+          cancel();
+          subscriptions.delete(sessionId);
+          send(ws, {
+            type: "stream-end",
+            ts: Date.now(),
+            sessionId,
+            reason: "cancelled",
+          });
+        }
+      }
+    });
+
+    const cleanup = () => {
+      connectedClients.delete(ws);
+      for (const [, cancel] of subscriptions) {
+        cancel();
+      }
+      subscriptions.clear();
     };
 
-    ws.on("close", () => {
-      cancelStream?.();
-    });
-
-    ws.on("error", () => {
-      cancelStream?.();
-    });
-
-    void startStream();
+    ws.on("close", cleanup);
+    ws.on("error", cleanup);
   });
 
   return wss;

@@ -19,6 +19,8 @@ vi.mock("../k8s.js", () => ({
   listAgentJobs: vi.fn().mockResolvedValue([]),
   findPodForSession: vi.fn(),
   streamPodLogs: vi.fn(),
+  watchAgentJobs: vi.fn().mockReturnValue(() => {}),
+  mapAgentJobToJob: vi.fn((j) => j),
 }));
 
 vi.mock("../ws.js", () => ({
@@ -108,27 +110,41 @@ describe("AC1 — Sidebar with ARIA landmarks and session list", () => {
 });
 
 describe("AC3+AC4 — WebSocket client and live-update script", () => {
-  it("embeds WebSocket connection with /ws/logs/ path and polls /api/jobs every 15 seconds", async () => {
+  it("embeds multiplexed WebSocket connection to /ws and no fetchJobs polling", async () => {
     const html = await getHtml();
-    expect(html).toContain("/ws/logs/");
+    // New: single multiplexed /ws endpoint — no per-session URL in WS path
+    expect(html).toContain("'/ws'");
     expect(html).toContain("new WebSocket");
-    expect(html).toContain("fetchJobs");
-    expect(html).toContain("15000");
+    // Polling must be gone
+    expect(html).not.toContain("fetchJobs");
+    expect(html).not.toContain("setInterval(fetchJobs");
+    // jobs-snapshot and jobs-updated handlers must exist
+    expect(html).toContain("jobs-snapshot");
+    expect(html).toContain("jobs-updated");
   });
 
-  it("refreshes timestamps every 10 seconds (AC5)", async () => {
+  it("sends subscribe/unsubscribe messages instead of opening per-session WS (AC4)", async () => {
     const html = await getHtml();
-    expect(html).toContain("refreshTimestamps");
+    expect(html).toContain("'subscribe'");
+    expect(html).toContain("'unsubscribe'");
+    expect(html).toContain("muxSend");
+  });
+
+  it("refreshes timestamps every 10 seconds via setInterval without re-fetching (AC5)", async () => {
+    const html = await getHtml();
+    // The timer still exists — it calls renderCards(currentJobs) from memory
+    expect(html).toContain("renderCards(currentJobs)");
     expect(html).toContain("10000");
   });
 });
 
 describe("AC3 — Pulsing status indicator for live sessions", () => {
-  it("defines pulse CSS animation and applies it only to active-status sessions", async () => {
+  it("defines pulse CSS animation and applies it only to running-status sessions", async () => {
     const html = await getHtml();
     expect(html).toContain("pulse");
     expect(html).toContain("@keyframes pulse");
-    expect(html).toContain("status === 'active' ? ' pulse' : ''");
+    // Status is now 'running' (wire protocol) — not 'active'
+    expect(html).toContain("status === 'running' ? ' pulse' : ''");
   });
 });
 
@@ -184,47 +200,36 @@ describe("Norse-dark theme + XSS safety", () => {
   });
 });
 
-describe("WS auto-reconnect (issue #911)", () => {
-  it("defines MAX_RECONNECT cap and RECONNECT_DELAY_MS constant", async () => {
+describe("WS auto-reconnect (issue #911 — multiplexed mux)", () => {
+  it("defines MUX_MAX_RECONNECT cap and exponential backoff delay constant", async () => {
     const html = await getHtml();
-    expect(html).toContain("MAX_RECONNECT");
-    expect(html).toContain("RECONNECT_DELAY_MS");
+    expect(html).toContain("MUX_MAX_RECONNECT");
+    expect(html).toContain("MUX_BASE_DELAY_MS");
   });
 
-  it("defines clearReconnect() helper that cancels pending timer and resets count", async () => {
+  it("defines scheduleMuxReconnect() that uses setTimeout with exponential backoff", async () => {
     const html = await getHtml();
-    expect(html).toContain("clearReconnect");
-    expect(html).toContain("clearTimeout");
-    expect(html).toContain("reconnectCount = 0");
+    expect(html).toContain("scheduleMuxReconnect");
+    expect(html).toContain("setTimeout");
+    expect(html).toContain("muxReconnectCount");
   });
 
-  it("openSession calls clearReconnect() before closing the old WebSocket", async () => {
+  it("connectMux() is the single WS entry-point called on boot", async () => {
     const html = await getHtml();
-    // clearReconnect must appear inside openSession, before activeWs.close()
-    const openSessionIdx = html.indexOf("function openSession");
-    const clearReconnectIdx = html.indexOf("clearReconnect()", openSessionIdx);
-    const closeIdx = html.indexOf("activeWs.close()", openSessionIdx);
-    expect(openSessionIdx).toBeGreaterThan(-1);
-    expect(clearReconnectIdx).toBeGreaterThan(openSessionIdx);
-    expect(closeIdx).toBeGreaterThan(clearReconnectIdx);
+    expect(html).toContain("function connectMux");
+    expect(html).toContain("connectMux()");
   });
 
-  it("close handler skips reconnect when streamEnded is true (clean stream end)", async () => {
+  it("WS close handler calls scheduleMuxReconnect to reconnect the mux channel", async () => {
     const html = await getHtml();
-    expect(html).toContain("streamEnded");
-    expect(html).toContain("!streamEnded");
+    expect(html).toContain("scheduleMuxReconnect()");
   });
 
-  it("close handler skips reconnect when activeWs has changed (user navigated away)", async () => {
+  it("shows error banner on connection failure and hides it on reconnect", async () => {
     const html = await getHtml();
-    // Guard: if (activeWs !== ws) return;
-    expect(html).toContain("if (activeWs !== ws) return");
-  });
-
-  it("close handler schedules reconnect with setTimeout and increments attempt counter", async () => {
-    const html = await getHtml();
-    expect(html).toContain("++reconnectCount");
-    expect(html).toContain("reconnecting (attempt");
+    expect(html).toContain("showErrorBanner");
+    expect(html).toContain("hideErrorBanner");
+    expect(html).toContain("error-banner");
   });
 });
 

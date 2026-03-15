@@ -33,10 +33,16 @@ class FakeWss extends EventEmitter {
 
 const mockFindPodForSession = vi.fn<(...args: unknown[]) => Promise<string | null>>();
 const mockStreamPodLogs = vi.fn<(...args: unknown[]) => Promise<() => void>>();
+const mockListAgentJobs = vi.fn<(...args: unknown[]) => Promise<unknown[]>>();
+const mockWatchAgentJobs = vi.fn<(...args: unknown[]) => () => void>();
+const mockMapAgentJobToJob = vi.fn<(...args: unknown[]) => unknown>();
 
 vi.mock("../k8s.js", () => ({
   findPodForSession: mockFindPodForSession,
   streamPodLogs: mockStreamPodLogs,
+  listAgentJobs: mockListAgentJobs,
+  watchAgentJobs: mockWatchAgentJobs,
+  mapAgentJobToJob: mockMapAgentJobToJob,
 }));
 
 vi.mock("ws", () => ({
@@ -57,18 +63,14 @@ const { verifySessionToken: mockVerifySessionToken } = await import("../auth.js"
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Simulate a WebSocket connection with the given URL path and return
- * the fake WebSocket instance used for assertions.
- */
+/** Simulate a WebSocket connection and return the fake WS instance. */
 function simulateConnection(
   wss: FakeWss,
-  urlPath: string,
   cookie = "odin_session=test-token"
 ): FakeWs {
   const fakeWs = new FakeWs();
   const fakeReq = {
-    url: urlPath,
+    url: "/ws",
     headers: { cookie },
   } as unknown as IncomingMessage;
   wss.emit("connection", fakeWs, fakeReq);
@@ -79,32 +81,46 @@ function parseSent(ws: FakeWs, index = 0) {
   return JSON.parse(ws.sent[index]) as Record<string, unknown>;
 }
 
+function findMessage(ws: FakeWs, type: string) {
+  return ws.sent
+    .map((s) => JSON.parse(s) as Record<string, unknown>)
+    .find((m) => m.type === type);
+}
+
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe("attachWebSocketServer", () => {
-  let fakeServer: Server;
-  let wss: FakeWss;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    fakeServer = new EventEmitter() as unknown as Server;
-    wss = attachWebSocketServer(fakeServer as unknown) as unknown as FakeWss;
+    vi.mocked(mockVerifySessionToken).mockReturnValue("test@example.com");
+    mockWatchAgentJobs.mockReturnValue(vi.fn());
+    mockListAgentJobs.mockResolvedValue([]);
+    mockMapAgentJobToJob.mockImplementation((j) => j);
   });
 
   it("returns a WebSocketServer instance", () => {
+    const fakeServer = new EventEmitter() as unknown as Server;
+    const wss = attachWebSocketServer(fakeServer as unknown);
     expect(wss).toBeInstanceOf(FakeWss);
+  });
+
+  it("starts the K8s job watch on creation", () => {
+    const fakeServer = new EventEmitter() as unknown as Server;
+    attachWebSocketServer(fakeServer as unknown);
+    expect(mockWatchAgentJobs).toHaveBeenCalledTimes(1);
   });
 });
 
 describe("WebSocket connection handling", () => {
-  let fakeServer: Server;
   let wss: FakeWss;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Re-apply after clearAllMocks wipes implementations
     vi.mocked(mockVerifySessionToken).mockReturnValue("test@example.com");
-    fakeServer = new EventEmitter() as unknown as Server;
+    mockWatchAgentJobs.mockReturnValue(vi.fn());
+    mockListAgentJobs.mockResolvedValue([]);
+    mockMapAgentJobToJob.mockImplementation((j) => j);
+    const fakeServer = new EventEmitter() as unknown as Server;
     wss = attachWebSocketServer(fakeServer as unknown) as unknown as FakeWss;
   });
 
@@ -112,421 +128,423 @@ describe("WebSocket connection handling", () => {
     vi.restoreAllMocks();
   });
 
-  describe("missing sessionId", () => {
-    it("sends error message when URL has no sessionId segment", () => {
-      const ws = simulateConnection(wss, "/ws/logs");
-      const msg = parseSent(ws, 0);
-      expect(msg.type).toBe("error");
-      expect(msg.message).toMatch(/Missing sessionId/i);
-    });
-
-    it("closes connection with code 1008 when sessionId is absent", () => {
-      const ws = simulateConnection(wss, "/ws/logs");
-      expect(ws.closeCode).toBe(1008);
-    });
-
-    it("sends error for root path with no session", () => {
-      const ws = simulateConnection(wss, "/");
-      const msg = parseSent(ws, 0);
-      expect(msg.type).toBe("error");
-    });
+  it("rejects unauthenticated connections with error + close 1008", () => {
+    vi.mocked(mockVerifySessionToken).mockReturnValue(null as unknown as string);
+    const ws = simulateConnection(wss);
+    const msg = parseSent(ws, 0);
+    expect(msg.type).toBe("error");
+    expect(msg.message).toMatch(/Unauthorized/i);
+    expect(ws.closeCode).toBe(1008);
   });
 
-  describe("valid sessionId — pod not found", () => {
-    it("sends connected message immediately on valid sessionId", async () => {
-      mockFindPodForSession.mockResolvedValue(null);
-
-      const ws = simulateConnection(wss, "/ws/logs/abc123");
-      // First message is the synchronous 'connected' acknowledgement
-      const msg = parseSent(ws, 0);
-      expect(msg.type).toBe("connected");
-      expect(msg.sessionId).toBe("abc123");
-    });
-
-    it("sends error + closes when pod is not found", async () => {
-      mockFindPodForSession.mockResolvedValue(null);
-
-      const ws = simulateConnection(wss, "/ws/logs/missing-session");
-      // Await micro-task queue so async startStream resolves
-      await new Promise((r) => setTimeout(r, 10));
-
-      const errorMsg = ws.sent.find((s) => {
-        const p = JSON.parse(s) as Record<string, unknown>;
-        return p.type === "error";
-      });
-      expect(errorMsg).toBeDefined();
-      const parsed = JSON.parse(errorMsg!) as Record<string, unknown>;
-      expect(parsed.message).toMatch(/missing-session/);
-      expect(ws.closeCode).toBe(1011);
-    });
+  it("sends jobs-snapshot on connect", async () => {
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+    const snap = findMessage(ws, "jobs-snapshot");
+    expect(snap).toBeDefined();
+    expect(Array.isArray(snap!.jobs)).toBe(true);
+    expect(typeof snap!.ts).toBe("number");
   });
 
-  describe("valid sessionId — successful log stream", () => {
-    it("calls streamPodLogs with pod name when pod is found", async () => {
-      const cancelMock = vi.fn();
-      mockFindPodForSession.mockResolvedValue("pod-abc");
-      mockStreamPodLogs.mockResolvedValue(cancelMock);
+  it("jobs-snapshot seeds from listAgentJobs when cache is empty", async () => {
+    mockListAgentJobs.mockResolvedValue([{ name: "job-1", status: "active" }]);
+    mockMapAgentJobToJob.mockReturnValue({ sessionId: "sess-1", name: "job-1", status: "running" });
 
-      simulateConnection(wss, "/ws/logs/session-xyz");
-      await new Promise((r) => setTimeout(r, 10));
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 20));
 
-      expect(mockStreamPodLogs).toHaveBeenCalledWith(
-        "pod-abc",
-        undefined,
-        expect.any(Function), // onLine
-        expect.any(Function), // onEnd
-        expect.any(Function)  // onError
-      );
-    });
-
-    it("cancels stream when WebSocket closes", async () => {
-      const cancelMock = vi.fn();
-      mockFindPodForSession.mockResolvedValue("pod-abc");
-      mockStreamPodLogs.mockResolvedValue(cancelMock);
-
-      const ws = simulateConnection(wss, "/ws/logs/session-xyz");
-      await new Promise((r) => setTimeout(r, 10));
-
-      ws.emit("close");
-      expect(cancelMock).toHaveBeenCalledTimes(1);
-    });
-
-    it("cancels stream on WebSocket error", async () => {
-      const cancelMock = vi.fn();
-      mockFindPodForSession.mockResolvedValue("pod-abc");
-      mockStreamPodLogs.mockResolvedValue(cancelMock);
-
-      const ws = simulateConnection(wss, "/ws/logs/session-xyz");
-      await new Promise((r) => setTimeout(r, 10));
-
-      ws.emit("error", new Error("socket error"));
-      expect(cancelMock).toHaveBeenCalledTimes(1);
-    });
-
-    it("sends log lines received from the stream", async () => {
-      let capturedOnLine: ((line: string) => void) | undefined;
-      mockFindPodForSession.mockResolvedValue("pod-abc");
-      mockStreamPodLogs.mockImplementation(
-        async (_pod, _ns, onLine) => {
-          capturedOnLine = onLine as (line: string) => void;
-          return vi.fn();
-        }
-      );
-
-      const ws = simulateConnection(wss, "/ws/logs/session-live");
-      await new Promise((r) => setTimeout(r, 10));
-
-      capturedOnLine!("hello world log line");
-      const logMsg = ws.sent.find((s) => {
-        const p = JSON.parse(s) as Record<string, unknown>;
-        return p.type === "log";
-      });
-      expect(logMsg).toBeDefined();
-      const parsed = JSON.parse(logMsg!) as Record<string, unknown>;
-      expect(parsed.line).toBe("hello world log line");
-      expect(typeof parsed.ts).toBe("number");
-    });
-
-    it("sends end message when stream completes", async () => {
-      let capturedOnEnd: (() => void) | undefined;
-      mockFindPodForSession.mockResolvedValue("pod-abc");
-      mockStreamPodLogs.mockImplementation(
-        async (_pod, _ns, _onLine, onEnd) => {
-          capturedOnEnd = onEnd as () => void;
-          return vi.fn();
-        }
-      );
-
-      const ws = simulateConnection(wss, "/ws/logs/session-end");
-      await new Promise((r) => setTimeout(r, 10));
-
-      capturedOnEnd!();
-      const endMsg = ws.sent.find((s) => JSON.parse(s).type === "end");
-      expect(endMsg).toBeDefined();
-    });
-
-    it("sends error message when stream errors", async () => {
-      let capturedOnError: ((err: Error) => void) | undefined;
-      mockFindPodForSession.mockResolvedValue("pod-abc");
-      mockStreamPodLogs.mockImplementation(
-        async (_pod, _ns, _onLine, _onEnd, onError) => {
-          capturedOnError = onError as (err: Error) => void;
-          return vi.fn();
-        }
-      );
-
-      const ws = simulateConnection(wss, "/ws/logs/session-err");
-      await new Promise((r) => setTimeout(r, 10));
-
-      capturedOnError!(new Error("stream failed"));
-      const errMsg = ws.sent.find((s) => JSON.parse(s).type === "error");
-      expect(errMsg).toBeDefined();
-      const parsed = JSON.parse(errMsg!) as Record<string, unknown>;
-      expect(parsed.message).toBe("stream failed");
-    });
-  });
-
-  describe("message not sent to closed socket", () => {
-    it("does not throw when sending to a closed WebSocket", async () => {
-      let capturedOnLine: ((line: string) => void) | undefined;
-      mockFindPodForSession.mockResolvedValue("pod-abc");
-      mockStreamPodLogs.mockImplementation(
-        async (_pod, _ns, onLine) => {
-          capturedOnLine = onLine as (line: string) => void;
-          return vi.fn();
-        }
-      );
-
-      const ws = simulateConnection(wss, "/ws/logs/session-closed");
-      await new Promise((r) => setTimeout(r, 10));
-
-      // Force close the socket
-      ws.readyState = 3; // CLOSED
-      // This should not throw
-      expect(() => capturedOnLine!("line after close")).not.toThrow();
-      // The line should NOT have been sent
-      const logSent = ws.sent.some((s) => {
-        const p = JSON.parse(s) as Record<string, unknown>;
-        return p.type === "log";
-      });
-      expect(logSent).toBe(false);
-    });
+    const snap = findMessage(ws, "jobs-snapshot");
+    expect(snap).toBeDefined();
+    expect((snap!.jobs as unknown[]).length).toBe(1);
   });
 });
 
-// ── Structured JSONL event dispatch ─────────────────────────────────────────
+describe("K8s watch → jobs-updated broadcast", () => {
+  let wss: FakeWss;
+  let capturedOnUpdate: ((jobs: unknown[]) => void) | undefined;
 
-describe("structured JSONL event dispatch", () => {
-  let fakeServer: ReturnType<typeof EventEmitter>;
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(mockVerifySessionToken).mockReturnValue("test@example.com");
+    mockListAgentJobs.mockResolvedValue([]);
+    mockMapAgentJobToJob.mockImplementation((j) => j);
+    mockWatchAgentJobs.mockImplementation((_ns, _label, onUpdate) => {
+      capturedOnUpdate = onUpdate as (jobs: unknown[]) => void;
+      return vi.fn();
+    });
+    const fakeServer = new EventEmitter() as unknown as Server;
+    wss = attachWebSocketServer(fakeServer as unknown) as unknown as FakeWss;
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it("broadcasts jobs-updated to all connected clients when watch fires", async () => {
+    const ws1 = simulateConnection(wss);
+    const ws2 = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    const updatedJobs = [{ sessionId: "s1", name: "job-1", status: "running" }];
+    capturedOnUpdate!(updatedJobs);
+
+    const msg1 = findMessage(ws1, "jobs-updated");
+    const msg2 = findMessage(ws2, "jobs-updated");
+    expect(msg1).toBeDefined();
+    expect(msg2).toBeDefined();
+    expect((msg1!.jobs as unknown[]).length).toBe(1);
+  });
+
+  it("does not send jobs-updated to closed clients", async () => {
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    // Force the socket closed
+    ws.readyState = 3;
+    capturedOnUpdate!([{ sessionId: "s1", name: "job-1", status: "succeeded" }]);
+
+    // Should not have thrown — and the only jobs-updated would be absent
+    // (ws.sent had only jobs-snapshot since readyState was 3 when broadcast fired)
+    const updatedMsgs = ws.sent
+      .map((s) => JSON.parse(s) as Record<string, unknown>)
+      .filter((m) => m.type === "jobs-updated");
+    expect(updatedMsgs.length).toBe(0);
+  });
+});
+
+describe("ping/pong keepalive", () => {
   let wss: FakeWss;
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(mockVerifySessionToken).mockReturnValue("test@example.com");
-    fakeServer = new EventEmitter();
+    mockWatchAgentJobs.mockReturnValue(vi.fn());
+    mockListAgentJobs.mockResolvedValue([]);
+    const fakeServer = new EventEmitter() as unknown as Server;
     wss = attachWebSocketServer(fakeServer as unknown) as unknown as FakeWss;
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+  afterEach(() => vi.restoreAllMocks());
 
-  it("emits turn_start when an assistant JSONL event arrives", async () => {
-    let capturedOnLine: ((line: string) => void) | undefined;
-    mockFindPodForSession.mockResolvedValue("pod-abc");
-    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
-      capturedOnLine = onLine as (line: string) => void;
-      return vi.fn();
-    });
-
-    const ws = simulateConnection(wss, "/ws/logs/sess-turns");
+  it("responds with pong when client sends ping", async () => {
+    const ws = simulateConnection(wss);
     await new Promise((r) => setTimeout(r, 10));
 
-    const assistantEvent = JSON.stringify({
-      type: "assistant",
-      message: { content: [{ type: "text", text: "Hello" }] },
-    });
-    capturedOnLine!(assistantEvent);
+    ws.emit("message", JSON.stringify({ type: "ping" }));
 
-    const turnMsg = ws.sent.find((s) => {
-      const p = JSON.parse(s) as Record<string, unknown>;
-      return p.type === "turn_start";
-    });
-    expect(turnMsg).toBeDefined();
-    const parsed = JSON.parse(turnMsg!) as Record<string, unknown>;
-    expect(parsed.turnNum).toBe(1);
+    const pong = findMessage(ws, "pong");
+    expect(pong).toBeDefined();
+  });
+});
+
+describe("subscribe / unsubscribe lifecycle", () => {
+  let wss: FakeWss;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(mockVerifySessionToken).mockReturnValue("test@example.com");
+    mockWatchAgentJobs.mockReturnValue(vi.fn());
+    mockListAgentJobs.mockResolvedValue([]);
+    const fakeServer = new EventEmitter() as unknown as Server;
+    wss = attachWebSocketServer(fakeServer as unknown) as unknown as FakeWss;
   });
 
-  it("emits tool_call when assistant event contains tool_use block", async () => {
-    let capturedOnLine: ((line: string) => void) | undefined;
-    mockFindPodForSession.mockResolvedValue("pod-abc");
-    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
-      capturedOnLine = onLine as (line: string) => void;
-      return vi.fn();
-    });
+  afterEach(() => vi.restoreAllMocks());
 
-    const ws = simulateConnection(wss, "/ws/logs/sess-tools");
+  it("subscribe triggers log stream when pod is found", async () => {
+    const cancelMock = vi.fn();
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockResolvedValue(cancelMock);
+
+    const ws = simulateConnection(wss);
     await new Promise((r) => setTimeout(r, 10));
 
-    const assistantEvent = JSON.stringify({
-      type: "assistant",
-      message: {
-        content: [
-          { type: "tool_use", id: "tid-1", name: "Bash", input: { command: "ls" } },
-        ],
-      },
-    });
-    capturedOnLine!(assistantEvent);
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-1" }));
+    await new Promise((r) => setTimeout(r, 20));
 
-    const toolMsg = ws.sent.find((s) => {
-      const p = JSON.parse(s) as Record<string, unknown>;
-      return p.type === "tool_call";
-    });
-    expect(toolMsg).toBeDefined();
-    const parsed = JSON.parse(toolMsg!) as Record<string, unknown>;
-    expect(parsed.toolName).toBe("Bash");
-    expect(parsed.toolId).toBe("tid-1");
-    expect((parsed.input as Record<string, unknown>).command).toBe("ls");
-  });
-
-  it("emits tool_result when user event contains tool_result block", async () => {
-    let capturedOnLine: ((line: string) => void) | undefined;
-    mockFindPodForSession.mockResolvedValue("pod-abc");
-    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
-      capturedOnLine = onLine as (line: string) => void;
-      return vi.fn();
-    });
-
-    const ws = simulateConnection(wss, "/ws/logs/sess-results");
-    await new Promise((r) => setTimeout(r, 10));
-
-    const userEvent = JSON.stringify({
-      type: "user",
-      message: {
-        content: [
-          {
-            type: "tool_result",
-            tool_use_id: "tid-1",
-            content: "/workspace",
-            is_error: false,
-          },
-        ],
-      },
-    });
-    capturedOnLine!(userEvent);
-
-    const resultMsg = ws.sent.find((s) => {
-      const p = JSON.parse(s) as Record<string, unknown>;
-      return p.type === "tool_result";
-    });
-    expect(resultMsg).toBeDefined();
-    const parsed = JSON.parse(resultMsg!) as Record<string, unknown>;
-    expect(parsed.toolId).toBe("tid-1");
-    expect(parsed.content).toBe("/workspace");
-    expect(parsed.isError).toBe(false);
-  });
-
-  it("still sends raw log message for every line", async () => {
-    let capturedOnLine: ((line: string) => void) | undefined;
-    mockFindPodForSession.mockResolvedValue("pod-abc");
-    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
-      capturedOnLine = onLine as (line: string) => void;
-      return vi.fn();
-    });
-
-    const ws = simulateConnection(wss, "/ws/logs/sess-raw");
-    await new Promise((r) => setTimeout(r, 10));
-
-    capturedOnLine!("plain text line");
-
-    const logMsg = ws.sent.find((s) => {
-      const p = JSON.parse(s) as Record<string, unknown>;
-      return p.type === "log" && p.line === "plain text line";
-    });
-    expect(logMsg).toBeDefined();
-  });
-
-  it("emits verdict message when stream ends and verdict text is present", async () => {
-    let capturedOnLine: ((line: string) => void) | undefined;
-    let capturedOnEnd: (() => void) | undefined;
-    mockFindPodForSession.mockResolvedValue("pod-abc");
-    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine, onEnd) => {
-      capturedOnLine = onLine as (line: string) => void;
-      capturedOnEnd = onEnd as () => void;
-      return vi.fn();
-    });
-
-    const ws = simulateConnection(wss, "/ws/logs/sess-verdict");
-    await new Promise((r) => setTimeout(r, 10));
-
-    // Send an assistant event with a PASS verdict
-    capturedOnLine!(
-      JSON.stringify({
-        type: "assistant",
-        message: {
-          content: [{ type: "text", text: "**Verdict:** PASS — all tests green" }],
-        },
-      })
+    expect(mockFindPodForSession).toHaveBeenCalledWith("sess-1", expect.any(String));
+    expect(mockStreamPodLogs).toHaveBeenCalledWith(
+      "pod-abc",
+      expect.any(String),
+      expect.any(Function),
+      expect.any(Function),
+      expect.any(Function)
     );
-
-    // End the stream
-    capturedOnEnd!();
-
-    const verdictMsg = ws.sent.find((s) => {
-      const p = JSON.parse(s) as Record<string, unknown>;
-      return p.type === "verdict";
-    });
-    expect(verdictMsg).toBeDefined();
-    const parsed = JSON.parse(verdictMsg!) as Record<string, unknown>;
-    expect(parsed.pass).toBe(true);
   });
 
-  it("emits report message when stream ends and events are present", async () => {
-    let capturedOnLine: ((line: string) => void) | undefined;
-    let capturedOnEnd: (() => void) | undefined;
-    mockFindPodForSession.mockResolvedValue("pod-abc");
-    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine, onEnd) => {
-      capturedOnLine = onLine as (line: string) => void;
-      capturedOnEnd = onEnd as () => void;
-      return vi.fn();
-    });
+  it("subscribe sends stream-error when no pod found", async () => {
+    mockFindPodForSession.mockResolvedValue(null);
 
-    const ws = simulateConnection(wss, "/ws/logs/sess-report");
+    const ws = simulateConnection(wss);
     await new Promise((r) => setTimeout(r, 10));
 
-    capturedOnLine!(
-      JSON.stringify({
-        type: "assistant",
-        message: { content: [{ type: "text", text: "doing work" }] },
-      })
-    );
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "no-pod" }));
+    await new Promise((r) => setTimeout(r, 20));
 
-    capturedOnEnd!();
-
-    const reportMsg = ws.sent.find((s) => {
-      const p = JSON.parse(s) as Record<string, unknown>;
-      return p.type === "report";
-    });
-    expect(reportMsg).toBeDefined();
-    const parsed = JSON.parse(reportMsg!) as Record<string, unknown>;
-    expect(typeof parsed.html).toBe("string");
-    expect(parsed.html as string).toContain("<!DOCTYPE html>");
+    const errMsg = findMessage(ws, "stream-error");
+    expect(errMsg).toBeDefined();
+    expect(errMsg!.sessionId).toBe("no-pod");
+    expect(String(errMsg!.message)).toMatch(/no pod found/i);
   });
 
-  it("does not emit report when stream ends with no JSONL events", async () => {
-    let capturedOnEnd: (() => void) | undefined;
+  it("duplicate subscribe for same sessionId is ignored", async () => {
+    const cancelMock = vi.fn();
     mockFindPodForSession.mockResolvedValue("pod-abc");
-    mockStreamPodLogs.mockImplementation(async (_pod, _ns, _onLine, onEnd) => {
-      capturedOnEnd = onEnd as () => void;
-      return vi.fn();
-    });
+    mockStreamPodLogs.mockResolvedValue(cancelMock);
 
-    const ws = simulateConnection(wss, "/ws/logs/sess-empty");
+    const ws = simulateConnection(wss);
     await new Promise((r) => setTimeout(r, 10));
 
-    capturedOnEnd!();
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-dup" }));
+    await new Promise((r) => setTimeout(r, 20));
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-dup" }));
+    await new Promise((r) => setTimeout(r, 20));
 
-    const reportMsg = ws.sent.find((s) => {
-      const p = JSON.parse(s) as Record<string, unknown>;
-      return p.type === "report";
-    });
-    expect(reportMsg).toBeUndefined();
+    // streamPodLogs should only be called once
+    expect(mockStreamPodLogs).toHaveBeenCalledTimes(1);
   });
 
-  it("emits end message after stream completes", async () => {
-    let capturedOnEnd: (() => void) | undefined;
+  it("unsubscribe cancels the stream and sends stream-end with reason=cancelled", async () => {
+    const cancelMock = vi.fn();
     mockFindPodForSession.mockResolvedValue("pod-abc");
-    mockStreamPodLogs.mockImplementation(async (_pod, _ns, _onLine, onEnd) => {
-      capturedOnEnd = onEnd as () => void;
-      return vi.fn();
-    });
+    mockStreamPodLogs.mockResolvedValue(cancelMock);
 
-    const ws = simulateConnection(wss, "/ws/logs/sess-end2");
+    const ws = simulateConnection(wss);
     await new Promise((r) => setTimeout(r, 10));
 
-    capturedOnEnd!();
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-cancel" }));
+    await new Promise((r) => setTimeout(r, 20));
 
-    const endMsg = ws.sent.find((s) => JSON.parse(s).type === "end");
+    ws.emit("message", JSON.stringify({ type: "unsubscribe", sessionId: "sess-cancel" }));
+
+    expect(cancelMock).toHaveBeenCalledTimes(1);
+    const endMsg = findMessage(ws, "stream-end");
     expect(endMsg).toBeDefined();
+    expect(endMsg!.sessionId).toBe("sess-cancel");
+    expect(endMsg!.reason).toBe("cancelled");
+  });
+
+  it("WS close cancels all active subscriptions", async () => {
+    const cancelMock = vi.fn();
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockResolvedValue(cancelMock);
+
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-a" }));
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-b" }));
+    await new Promise((r) => setTimeout(r, 30));
+
+    ws.emit("close");
+
+    // Both subscriptions should be cancelled
+    expect(cancelMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("sends log-line messages from the stream to the subscriber", async () => {
+    let capturedOnLine: ((line: string) => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
+      capturedOnLine = onLine as (line: string) => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-logs" }));
+    await new Promise((r) => setTimeout(r, 20));
+
+    capturedOnLine!("hello from pod");
+
+    const logMsg = findMessage(ws, "log-line");
+    expect(logMsg).toBeDefined();
+    expect(logMsg!.sessionId).toBe("sess-logs");
+    expect(logMsg!.line).toBe("hello from pod");
+    expect(typeof logMsg!.ts).toBe("number");
+  });
+
+  it("sends stream-end with reason=completed when pod stream ends naturally", async () => {
+    let capturedOnEnd: (() => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, _onLine, onEnd) => {
+      capturedOnEnd = onEnd as () => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-end" }));
+    await new Promise((r) => setTimeout(r, 20));
+
+    capturedOnEnd!();
+
+    const endMsg = findMessage(ws, "stream-end");
+    expect(endMsg).toBeDefined();
+    expect(endMsg!.sessionId).toBe("sess-end");
+    expect(endMsg!.reason).toBe("completed");
+  });
+
+  it("sends stream-error when pod stream emits an error", async () => {
+    let capturedOnError: ((err: Error) => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, _onLine, _onEnd, onError) => {
+      capturedOnError = onError as (err: Error) => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-err" }));
+    await new Promise((r) => setTimeout(r, 20));
+
+    capturedOnError!(new Error("pod exploded"));
+
+    const errMsg = findMessage(ws, "stream-error");
+    expect(errMsg).toBeDefined();
+    expect(errMsg!.sessionId).toBe("sess-err");
+    expect(errMsg!.message).toBe("pod exploded");
+  });
+
+  it("sends verdict PASS when agent outputs PASS verdict before stream ends", async () => {
+    let capturedOnLine: ((line: string) => void) | undefined;
+    let capturedOnEnd: (() => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine, onEnd) => {
+      capturedOnLine = onLine as (line: string) => void;
+      capturedOnEnd = onEnd as () => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-verdict" }));
+    await new Promise((r) => setTimeout(r, 20));
+
+    // Feed a PASS verdict line (JSONL assistant event with verdict text)
+    capturedOnLine!(
+      JSON.stringify({
+        type: "assistant",
+        message: { content: [{ type: "text", text: "**Verdict:** PASS — all tests green" }] },
+      })
+    );
+    capturedOnEnd!();
+
+    const verdictMsg = findMessage(ws, "verdict");
+    expect(verdictMsg).toBeDefined();
+    expect(verdictMsg!.sessionId).toBe("sess-verdict");
+    expect(verdictMsg!.result).toBe("PASS");
+  });
+
+  it("sends verdict FAIL when agent outputs FAIL verdict", async () => {
+    let capturedOnLine: ((line: string) => void) | undefined;
+    let capturedOnEnd: (() => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine, onEnd) => {
+      capturedOnLine = onLine as (line: string) => void;
+      capturedOnEnd = onEnd as () => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-fail" }));
+    await new Promise((r) => setTimeout(r, 20));
+
+    capturedOnLine!(
+      JSON.stringify({
+        type: "assistant",
+        message: { content: [{ type: "text", text: "**Verdict:** FAIL — tests failed" }] },
+      })
+    );
+    capturedOnEnd!();
+
+    const verdictMsg = findMessage(ws, "verdict");
+    expect(verdictMsg).toBeDefined();
+    expect(verdictMsg!.result).toBe("FAIL");
+  });
+
+  it("does not send verdict when stream ends with no JSONL events", async () => {
+    let capturedOnEnd: (() => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, _onLine, onEnd) => {
+      capturedOnEnd = onEnd as () => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-no-verdict" }));
+    await new Promise((r) => setTimeout(r, 20));
+
+    capturedOnEnd!();
+
+    const verdictMsg = findMessage(ws, "verdict");
+    expect(verdictMsg).toBeUndefined();
+  });
+
+  it("does not throw when sending log-line to a closed WebSocket", async () => {
+    let capturedOnLine: ((line: string) => void) | undefined;
+    mockFindPodForSession.mockResolvedValue("pod-abc");
+    mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
+      capturedOnLine = onLine as (line: string) => void;
+      return vi.fn();
+    });
+
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-closed" }));
+    await new Promise((r) => setTimeout(r, 20));
+
+    ws.readyState = 3; // CLOSED
+    expect(() => capturedOnLine!("line after close")).not.toThrow();
+  });
+
+  it("sends error message for invalid JSON from client", async () => {
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    ws.emit("message", "not valid json");
+
+    const errMsg = findMessage(ws, "error");
+    expect(errMsg).toBeDefined();
+    expect(String(errMsg!.message)).toMatch(/Invalid JSON/i);
+  });
+});
+
+describe("client deregistered on disconnect", () => {
+  let wss: FakeWss;
+  let capturedOnUpdate: ((jobs: unknown[]) => void) | undefined;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(mockVerifySessionToken).mockReturnValue("test@example.com");
+    mockListAgentJobs.mockResolvedValue([]);
+    mockWatchAgentJobs.mockImplementation((_ns, _label, onUpdate) => {
+      capturedOnUpdate = onUpdate as (jobs: unknown[]) => void;
+      return vi.fn();
+    });
+    const fakeServer = new EventEmitter() as unknown as Server;
+    wss = attachWebSocketServer(fakeServer as unknown) as unknown as FakeWss;
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it("closed client no longer receives jobs-updated after disconnect", async () => {
+    const ws = simulateConnection(wss);
+    await new Promise((r) => setTimeout(r, 10));
+
+    // Disconnect
+    ws.emit("close");
+
+    // Now trigger an update — the closed client should not be in the set
+    const sentBefore = ws.sent.length;
+    capturedOnUpdate!([{ sessionId: "s1" }]);
+    expect(ws.sent.length).toBe(sentBefore); // no new messages
   });
 });

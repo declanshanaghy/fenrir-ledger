@@ -70,10 +70,16 @@ function getAllSent(ws: FakeWs, type: string) {
 
 const mockFindPodForSession = vi.fn<(...args: unknown[]) => Promise<string | null>>();
 const mockStreamPodLogs = vi.fn<(...args: unknown[]) => Promise<() => void>>();
+const mockListAgentJobs = vi.fn<(...args: unknown[]) => Promise<unknown[]>>();
+const mockWatchAgentJobs = vi.fn<(...args: unknown[]) => () => void>();
+const mockMapAgentJobToJob = vi.fn<(...args: unknown[]) => unknown>();
 
 vi.mock("../k8s.js", () => ({
   findPodForSession: mockFindPodForSession,
   streamPodLogs: mockStreamPodLogs,
+  listAgentJobs: mockListAgentJobs,
+  watchAgentJobs: mockWatchAgentJobs,
+  mapAgentJobToJob: mockMapAgentJobToJob,
 }));
 
 vi.mock("ws", () => ({
@@ -421,6 +427,9 @@ describe("WebSocket auth rejection (AC5)", () => {
     vi.clearAllMocks();
     // By default auth returns null (unauthenticated)
     mockVerifyFn.mockReturnValue(null);
+    mockWatchAgentJobs.mockReturnValue(vi.fn());
+    mockListAgentJobs.mockResolvedValue([]);
+    mockMapAgentJobToJob.mockImplementation((j) => j);
     const fakeServer = new EventEmitter() as unknown as Server;
     wss = attachWebSocketServer(fakeServer as unknown) as unknown as FakeWss;
   });
@@ -465,15 +474,16 @@ describe("WebSocket auth rejection (AC5)", () => {
     expect(ws.closeCode).toBe(1008);
   });
 
-  it("accepts connection when token verifies successfully", async () => {
+  it("accepts connection when token verifies successfully and sends jobs-snapshot", async () => {
     mockVerifyFn.mockReturnValue("odin@fenrir-ledger.dev");
-    mockFindPodForSession.mockResolvedValue(null);
 
-    const ws = connect("/ws/logs/sess-authed", "odin_session=valid-token");
-    const msg = parseSent(ws, 0);
-    // Should get 'connected', not 'error'
-    expect(msg.type).toBe("connected");
-    expect(msg.sessionId).toBe("sess-authed");
+    const ws = connect("/ws", "odin_session=valid-token");
+    await new Promise((r) => setTimeout(r, 20));
+    // Should get 'jobs-snapshot', not 'error'
+    const snap = ws.sent
+      .map((s) => JSON.parse(s) as Record<string, unknown>)
+      .find((m) => m.type === "jobs-snapshot");
+    expect(snap).toBeDefined();
   });
 });
 
@@ -481,12 +491,15 @@ describe("WebSocket auth rejection (AC5)", () => {
 // AC1 / AC6 — LogStreamDispatcher: multi-turn counting, tool result truncation
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("LogStreamDispatcher — multi-turn and truncation (AC1/AC6)", () => {
+describe("Log stream behavior — AC1/AC6", () => {
   let wss: FakeWss;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockVerifyFn.mockReturnValue("odin@fenrir-ledger.dev");
+    mockWatchAgentJobs.mockReturnValue(vi.fn());
+    mockListAgentJobs.mockResolvedValue([]);
+    mockMapAgentJobToJob.mockImplementation((j) => j);
     const fakeServer = new EventEmitter() as unknown as Server;
     wss = attachWebSocketServer(fakeServer as unknown) as unknown as FakeWss;
   });
@@ -495,17 +508,17 @@ describe("LogStreamDispatcher — multi-turn and truncation (AC1/AC6)", () => {
     vi.restoreAllMocks();
   });
 
-  function connectAuthed(urlPath: string): FakeWs {
+  function connectAuthed(): FakeWs {
     const fakeWs = new FakeWs();
     const fakeReq = {
-      url: urlPath,
+      url: "/ws",
       headers: { cookie: "odin_session=valid-token" },
     } as unknown as IncomingMessage;
     wss.emit("connection", fakeWs, fakeReq);
     return fakeWs;
   }
 
-  it("increments turnNum for each sequential assistant event", async () => {
+  it("sends a log-line for each line emitted by the pod stream (AC1)", async () => {
     let capturedOnLine: ((line: string) => void) | undefined;
     mockFindPodForSession.mockResolvedValue("pod-multi");
     mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
@@ -513,27 +526,24 @@ describe("LogStreamDispatcher — multi-turn and truncation (AC1/AC6)", () => {
       return vi.fn();
     });
 
-    const ws = connectAuthed("/ws/logs/sess-multiturn");
+    const ws = connectAuthed();
     await new Promise((r) => setTimeout(r, 10));
 
-    // Send 3 assistant events
-    for (let i = 0; i < 3; i++) {
-      capturedOnLine!(
-        JSON.stringify({
-          type: "assistant",
-          message: { content: [{ type: "text", text: `turn ${i + 1}` }] },
-        })
-      );
-    }
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-multiturn" }));
+    await new Promise((r) => setTimeout(r, 20));
 
-    const turnMsgs = getAllSent(ws, "turn_start");
-    expect(turnMsgs).toHaveLength(3);
-    expect((JSON.parse(turnMsgs[0]) as Record<string, unknown>).turnNum).toBe(1);
-    expect((JSON.parse(turnMsgs[1]) as Record<string, unknown>).turnNum).toBe(2);
-    expect((JSON.parse(turnMsgs[2]) as Record<string, unknown>).turnNum).toBe(3);
+    // Send 3 raw log lines
+    capturedOnLine!("line one");
+    capturedOnLine!("line two");
+    capturedOnLine!("line three");
+
+    const logMsgs = getAllSent(ws, "log-line");
+    expect(logMsgs).toHaveLength(3);
+    const lines = logMsgs.map((s) => (JSON.parse(s) as Record<string, unknown>).line);
+    expect(lines).toEqual(["line one", "line two", "line three"]);
   });
 
-  it("truncates tool result content at 4000 chars", async () => {
+  it("each log-line carries the correct sessionId (AC1)", async () => {
     let capturedOnLine: ((line: string) => void) | undefined;
     mockFindPodForSession.mockResolvedValue("pod-trunc");
     mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
@@ -541,8 +551,11 @@ describe("LogStreamDispatcher — multi-turn and truncation (AC1/AC6)", () => {
       return vi.fn();
     });
 
-    const ws = connectAuthed("/ws/logs/sess-trunc");
+    const ws = connectAuthed();
     await new Promise((r) => setTimeout(r, 10));
+
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-trunc" }));
+    await new Promise((r) => setTimeout(r, 20));
 
     const largeContent = "X".repeat(5000);
     capturedOnLine!(
@@ -561,14 +574,14 @@ describe("LogStreamDispatcher — multi-turn and truncation (AC1/AC6)", () => {
       })
     );
 
-    const resultMsg = getSent(ws, "tool_result");
-    expect(resultMsg).toBeDefined();
-    const parsed = JSON.parse(resultMsg!) as Record<string, unknown>;
-    expect((parsed.content as string).length).toBeLessThanOrEqual(4000);
-    expect(parsed.content).not.toBe(largeContent);
+    // The raw line is forwarded as a log-line with the correct sessionId
+    const logMsg = getSent(ws, "log-line");
+    expect(logMsg).toBeDefined();
+    const parsed = JSON.parse(logMsg!) as Record<string, unknown>;
+    expect(parsed.sessionId).toBe("sess-trunc");
   });
 
-  it("emits FAIL verdict at stream end when FAIL is in session", async () => {
+  it("emits FAIL verdict (result=FAIL) at stream end when FAIL is in session (AC6)", async () => {
     let capturedOnLine: ((line: string) => void) | undefined;
     let capturedOnEnd: (() => void) | undefined;
     mockFindPodForSession.mockResolvedValue("pod-fail");
@@ -578,8 +591,11 @@ describe("LogStreamDispatcher — multi-turn and truncation (AC1/AC6)", () => {
       return vi.fn();
     });
 
-    const ws = connectAuthed("/ws/logs/sess-fail");
+    const ws = connectAuthed();
     await new Promise((r) => setTimeout(r, 10));
+
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-fail" }));
+    await new Promise((r) => setTimeout(r, 20));
 
     capturedOnLine!(
       JSON.stringify({
@@ -595,11 +611,11 @@ describe("LogStreamDispatcher — multi-turn and truncation (AC1/AC6)", () => {
     const verdictMsg = getSent(ws, "verdict");
     expect(verdictMsg).toBeDefined();
     const parsed = JSON.parse(verdictMsg!) as Record<string, unknown>;
-    expect(parsed.pass).toBe(false);
-    expect(parsed.summary).toContain("TypeScript errors found");
+    expect(parsed.result).toBe("FAIL");
+    expect(parsed.sessionId).toBe("sess-fail");
   });
 
-  it("tool_call turnNum matches current turn counter", async () => {
+  it("each log-line ts field is a number (AC1 — timestamp)", async () => {
     let capturedOnLine: ((line: string) => void) | undefined;
     mockFindPodForSession.mockResolvedValue("pod-toolnum");
     mockStreamPodLogs.mockImplementation(async (_pod, _ns, onLine) => {
@@ -607,54 +623,33 @@ describe("LogStreamDispatcher — multi-turn and truncation (AC1/AC6)", () => {
       return vi.fn();
     });
 
-    const ws = connectAuthed("/ws/logs/sess-toolnum");
+    const ws = connectAuthed();
     await new Promise((r) => setTimeout(r, 10));
 
-    // First turn: just text
-    capturedOnLine!(
-      JSON.stringify({
-        type: "assistant",
-        message: { content: [{ type: "text", text: "first turn" }] },
-      })
-    );
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "sess-ts" }));
+    await new Promise((r) => setTimeout(r, 20));
 
-    // Second turn: with tool
-    capturedOnLine!(
-      JSON.stringify({
-        type: "assistant",
-        message: {
-          content: [
-            { type: "tool_use", id: "tid-t2", name: "Bash", input: { command: "git status" } },
-          ],
-        },
-      })
-    );
+    capturedOnLine!("timestamped line");
 
-    const toolMsg = getSent(ws, "tool_call");
-    expect(toolMsg).toBeDefined();
-    const parsed = JSON.parse(toolMsg!) as Record<string, unknown>;
-    expect(parsed.turnNum).toBe(2);
+    const logMsg = getSent(ws, "log-line");
+    expect(logMsg).toBeDefined();
+    const parsed = JSON.parse(logMsg!) as Record<string, unknown>;
+    expect(typeof parsed.ts).toBe("number");
+    expect(parsed.ts).toBeGreaterThan(0);
   });
 
-  it("reports correct sessionId in connected message", async () => {
+  it("subscribe to non-existent pod sends stream-error with sessionId (AC6)", async () => {
     mockFindPodForSession.mockResolvedValue(null);
 
-    const ws = connectAuthed("/ws/logs/my-unique-session");
-    const msg = parseSent(ws, 0);
-    expect(msg.type).toBe("connected");
-    expect(msg.sessionId).toBe("my-unique-session");
-  });
+    const ws = connectAuthed();
+    await new Promise((r) => setTimeout(r, 10));
 
-  it("URL with query params does not break sessionId extraction", async () => {
-    mockFindPodForSession.mockResolvedValue(null);
+    ws.emit("message", JSON.stringify({ type: "subscribe", sessionId: "my-unique-session" }));
+    await new Promise((r) => setTimeout(r, 20));
 
-    const ws = connectAuthed("/ws/logs/sess-qs?foo=bar");
-    const connMsg = ws.sent.find((s) => {
-      const p = JSON.parse(s) as Record<string, unknown>;
-      return p.type === "connected";
-    });
-    expect(connMsg).toBeDefined();
-    const parsed = JSON.parse(connMsg!) as Record<string, unknown>;
-    expect(parsed.sessionId).toBe("sess-qs");
+    const errMsg = getSent(ws, "stream-error");
+    expect(errMsg).toBeDefined();
+    const parsed = JSON.parse(errMsg!) as Record<string, unknown>;
+    expect(parsed.sessionId).toBe("my-unique-session");
   });
 });

@@ -243,20 +243,3 @@ describe("Favicon <link rel=icon> in HTML templates", () => {
   });
 });
 
-describe("GET /js/stream.js", () => {
-  it("returns 200 with JS content-type (no auth required)", async () => {
-    const req = new Request("http://localhost:3001/js/stream.js");
-    const res = await app.fetch(req);
-
-    expect(res.status).not.toBe(401);
-  });
-
-  it("sets correct content-type when file is served", async () => {
-    const req = new Request("http://localhost:3001/js/stream.js");
-    const res = await app.fetch(req);
-
-    if (res.status === 200) {
-      expect(res.headers.get("content-type")).toContain("javascript");
-    }
-  });
-});

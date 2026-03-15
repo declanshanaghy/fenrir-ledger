@@ -21,9 +21,11 @@ vi.mock("@hono/node-server", () => ({
   serve: vi.fn().mockReturnValue({ on: vi.fn() }),
 }));
 vi.mock("../k8s.js", () => ({
-  listAgentJobs: vi.fn(),
+  listAgentJobs: vi.fn().mockResolvedValue([]),
   findPodForSession: vi.fn(),
   streamPodLogs: vi.fn(),
+  watchAgentJobs: vi.fn().mockReturnValue(() => {}),
+  mapAgentJobToJob: vi.fn((j) => j),
 }));
 
 // ── Import the REAL auth module (not mocked) ──────────────────────────────────
@@ -495,6 +497,9 @@ describe("WebSocket auth gate — unauthenticated upgrade", () => {
     vi.doMock("../k8s.js", () => ({
       findPodForSession: vi.fn(),
       streamPodLogs: vi.fn(),
+      listAgentJobs: vi.fn().mockResolvedValue([]),
+      watchAgentJobs: vi.fn().mockReturnValue(() => {}),
+      mapAgentJobToJob: vi.fn((j) => j),
     }));
 
     // Import the REAL ws module — auth is NOT mocked here
@@ -525,6 +530,9 @@ describe("WebSocket auth gate — unauthenticated upgrade", () => {
     vi.doMock("../k8s.js", () => ({
       findPodForSession: vi.fn(),
       streamPodLogs: vi.fn(),
+      listAgentJobs: vi.fn().mockResolvedValue([]),
+      watchAgentJobs: vi.fn().mockReturnValue(() => {}),
+      mapAgentJobToJob: vi.fn((j) => j),
     }));
 
     const { attachWebSocketServer } = await import("../ws.js?wsauth-bad-token");
