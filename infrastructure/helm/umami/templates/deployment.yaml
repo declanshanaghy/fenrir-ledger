@@ -70,6 +70,7 @@ spec:
             - --redirect-url={{ .Values.oauth2Proxy.redirectUrl }}
             - --skip-auth-route=GET=^/script\.js$
             - --skip-auth-route=POST=^/api/send$
+            - --skip-auth-route=OPTIONS=^/api/send$
             - --cookie-secure=true
             - --cookie-samesite=lax
           ports:
