@@ -749,50 +749,43 @@ const commands = {
   },
 
   help() {
-    console.log(`
-  ${BOLD}Trial REPL Commands${RESET}
-  ${DIM}${"─".repeat(55)}${RESET}
+    if (selectedFp) {
+      console.log(`
+  ${BOLD}Selected:${RESET} ${GOLD}${shortFp(selectedFp)}${RESET}
+  ${DIM}${"─".repeat(50)}${RESET}
 
-  ${BOLD}Discovery${RESET}
-    ${CYAN}list${RESET}                   List all trials with numbered shortcuts
-    ${CYAN}identity${RESET}               How to find your fingerprint
-    ${CYAN}keys${RESET}                   Show all Redis key prefixes
-    ${CYAN}entitlements${RESET}            Show all Stripe entitlements
-
-  ${BOLD}Selection${RESET}
-    ${CYAN}use <N>${RESET}                Select trial by number from list
-    ${CYAN}use <fingerprint>${RESET}       Select trial by full 64-char fingerprint
-    ${CYAN}status${RESET}                 Show selected trial details
-
-  ${BOLD}Time Travel${RESET}
-    ${CYAN}set <days>${RESET}             Set remaining days (e.g., "set 5" = 5 days left)
-    ${CYAN}shift <days>${RESET}           Shift start date by N days (e.g., "shift -25")
-    ${CYAN}reset${RESET}                  Reset to fresh 30-day trial (today)
-    ${CYAN}expire${RESET}                 Instantly expire the trial
-
-  ${BOLD}Conversion${RESET}
-    ${CYAN}convert${RESET}                Mark trial as converted (paid)
-    ${CYAN}unconvert${RESET}              Remove conversion, restore trial status
-
-  ${BOLD}Lifecycle${RESET}
-    ${CYAN}create <fingerprint>${RESET}    Create a new trial for a fingerprint
-    ${CYAN}delete${RESET}                 Delete the selected trial entirely
-
-  ${BOLD}Stripe${RESET}
-    ${CYAN}stripe-customers${RESET}       List Stripe customers
-    ${CYAN}stripe-subs${RESET}            List Stripe subscriptions
-    ${CYAN}delete-customer <id>${RESET}    Delete Stripe customer + all data (cus_xxx)
-    ${CYAN}cancel-sub <id>${RESET}         Cancel Stripe subscription (sub_xxx)
-    ${CYAN}flush-entitlement${RESET}       Flush Redis entitlement cache (Stripe unaffected)
-    ${CYAN}nuke${RESET}                   Stripe-first wipe: cancel subs + delete customer + flush Redis
-
-  ${BOLD}Connection${RESET}
-    ${CYAN}reconnect${RESET}              Manually reconnect port-forward
-
-  ${BOLD}Other${RESET}
-    ${CYAN}help${RESET}                   This help
-    ${CYAN}quit${RESET} / ${CYAN}exit${RESET} / ${CYAN}Ctrl+C${RESET}    Exit
+  ${CYAN}status${RESET}                 Show trial details
+  ${CYAN}set <days>${RESET}             Set remaining days (e.g., "set 5")
+  ${CYAN}shift <days>${RESET}           Shift start date (e.g., "shift -25")
+  ${CYAN}reset${RESET}                  Fresh 30-day trial
+  ${CYAN}expire${RESET}                 Instantly expire
+  ${CYAN}convert${RESET} / ${CYAN}unconvert${RESET}    Toggle paid conversion
+  ${CYAN}flush-entitlement${RESET}       Clear Redis entitlement cache
+  ${CYAN}nuke${RESET}                   Wipe everything: Stripe + Redis
+  ${CYAN}delete${RESET}                 Delete trial from Redis
+  ${CYAN}list${RESET}                   Switch trial     ${CYAN}quit${RESET}  Exit
 `);
+    } else {
+      console.log(`
+  ${BOLD}No trial selected${RESET} — start here:
+  ${DIM}${"─".repeat(50)}${RESET}
+
+  ${CYAN}list${RESET}                   List all trials (pick by number)
+  ${CYAN}use <N|fingerprint>${RESET}    Select a trial
+  ${CYAN}create <fingerprint>${RESET}    Create a new trial
+  ${CYAN}identity${RESET}               How to find your fingerprint
+
+  ${BOLD}Browse${RESET}
+  ${CYAN}keys${RESET}                   All Redis key prefixes
+  ${CYAN}entitlements${RESET}            Stripe entitlement cache
+  ${CYAN}stripe-customers${RESET}       Stripe customers
+  ${CYAN}stripe-subs${RESET}            Stripe subscriptions
+  ${CYAN}delete-customer <id>${RESET}    Delete Stripe customer (cus_xxx)
+  ${CYAN}cancel-sub <id>${RESET}         Cancel subscription (sub_xxx)
+  ${CYAN}reconnect${RESET}              Reconnect port-forward
+  ${CYAN}quit${RESET}                   Exit
+`);
+    }
   },
 };
 

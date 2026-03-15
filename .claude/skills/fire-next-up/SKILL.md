@@ -109,8 +109,8 @@ When `--resume` finds actions that are clearly ready, execute them immediately:
 |-----------|-------------|
 | Luna done (handoff exists) | Dispatch FiremanDecko on same branch |
 | FiremanDecko/Heimdall done (handoff exists) | Dispatch Loki on same branch |
-| Loki PASS + CI green + PR open | Merge PR (GitHub auto-moves board to Done) |
-| Loki PASS + no open PR (already merged) | No action needed (GitHub handled it) |
+| Loki PASS + CI green + PR open | Merge PR, then close issue: `gh issue close N` |
+| Loki PASS + no open PR (already merged) | Close issue if still open: `gh issue close N` |
 | Completed chain still in "In Progress" | No action needed (GitHub auto-archives) |
 | Research handoff + PR merged + issue open | Present research review to Odin |
 
