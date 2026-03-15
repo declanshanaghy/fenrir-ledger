@@ -194,9 +194,11 @@ function AuthCallbackContent() {
 
         setSession(session);
 
-        // Fire-and-forget trial init on first sign-in (#922).
+        // Fire-and-forget trial init on first sign-in (#922 / #944).
         // Idempotent — if a trial already exists for this fingerprint it is preserved.
-        // Do not await: trial init must not block the auth redirect.
+        // keepalive:true ensures the request completes even after window.location.replace()
+        // navigates away — without it the browser aborts in-flight requests on navigation
+        // (regression root cause for #944).
         void (async () => {
           try {
             const fingerprint = await computeFingerprint();
@@ -208,12 +210,13 @@ function AuthCallbackContent() {
                   Authorization: `Bearer ${tokens.id_token}`,
                 },
                 body: JSON.stringify({ fingerprint }),
+                keepalive: true,
               });
               // Clear cached trial status so the next useTrialStatus fetch is fresh.
               clearTrialStatusCache();
             }
           } catch {
-            // Non-fatal — trial will be auto-initialized on first Karl feature access.
+            // Non-fatal — trial will be auto-initialized on first /api/trial/status call.
           }
         })();
 

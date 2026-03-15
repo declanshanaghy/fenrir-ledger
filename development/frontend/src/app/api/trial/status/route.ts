@@ -18,7 +18,7 @@ import { requireAuth } from "@/lib/auth/require-auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import { isValidFingerprint } from "@/lib/trial-utils";
-import { getTrial, computeTrialStatus } from "@/lib/kv/trial-store";
+import { getTrial, initTrial, computeTrialStatus } from "@/lib/kv/trial-store";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/trial/status called");
@@ -79,9 +79,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Retrieve trial and compute status
+  // Retrieve trial and compute status.
+  // If no trial exists yet (e.g. the auth-callback keepalive fetch was dropped),
+  // auto-initialize it here as a defense-in-depth fallback (#944).
+  // initTrial is idempotent — it is a no-op if a trial already exists.
   try {
-    const trial = await getTrial(fingerprint);
+    let trial = await getTrial(fingerprint);
+    if (!trial) {
+      log.debug("POST /api/trial/status: no trial found, auto-initializing", { fingerprint });
+      try {
+        trial = await initTrial(fingerprint);
+      } catch (initErr) {
+        const msg = initErr instanceof Error ? initErr.message : String(initErr);
+        log.error("POST /api/trial/status: auto-init failed", { fingerprint, error: msg });
+        // Fall through with trial === null — computeTrialStatus returns "none"
+      }
+    }
     const result = computeTrialStatus(trial);
 
     log.debug("POST /api/trial/status returning", {
