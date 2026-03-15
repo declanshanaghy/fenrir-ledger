@@ -203,6 +203,12 @@ function LogLine({ entry, agentKey, agentName }: { entry: LogEntry; agentKey?: s
       return <div className="ep-ok"><span className="ep-ok-badge">{"\u2713"}</span> {entry.text}</div>;
     case "entrypoint-info":
       return <div className="ep-info"><span className="ep-info-key">{entry.detail}:</span> {entry.text}</div>;
+    case "entrypoint-fatal":
+      return (
+        <div className="ep-fatal" role="alert">
+          <span className="ep-fatal-badge">{"\u2717"}</span> {entry.text}
+        </div>
+      );
     case "entrypoint-task":
       return <NorseTablet text={entry.text ?? ""} />;
     case "warning":
@@ -325,19 +331,70 @@ function NorseTablet({ text }: { text: string }) {
 
 function EntrypointGroup({ entry }: { entry: LogEntry }) {
   const [open, setOpen] = useState(false);
-  const okCount = entry.children?.filter((c) => c.type === "entrypoint-ok").length ?? 0;
+  const [noiseOpen, setNoiseOpen] = useState(false);
+
+  const children = entry.children ?? [];
+  const infoItems = children.filter((c) => c.type === "entrypoint-info");
+  const okItems = children.filter((c) => c.type === "entrypoint-ok");
+  const fatalItems = children.filter((c) => c.type === "entrypoint-fatal");
+  const noiseItems = children.filter((c) => c.type === "raw" || c.type === "warning");
+  const hasFatal = fatalItems.length > 0;
+
   return (
-    <div className={`ep-group ${open ? "open" : ""}`}>
+    <div className={`ep-group ${open ? "open" : ""}${hasFatal ? " ep-group-error" : ""}`}>
       <div className="ep-group-header" onClick={() => setOpen(!open)}>
         <span className="ep-group-chevron">{"\u203A"}</span>
         <span className="ep-group-title">{entry.text}</span>
-        <span className="ep-group-summary">{okCount} steps completed</span>
+        {infoItems.length > 0 && (
+          <span className="ep-group-meta">
+            {infoItems.map((i) => (
+              <span key={i.id} className="ep-group-meta-item">
+                <span className="ep-group-meta-key">{i.detail}:</span> {i.text}
+              </span>
+            ))}
+          </span>
+        )}
+        <span className="ep-group-summary">
+          {hasFatal ? "\u26A0 setup failed" : `${okItems.length} steps \u2713`}
+        </span>
       </div>
       <div className="ep-group-body-wrap">
         <div className="ep-group-body">
-          {entry.children?.map((child) => (
-            <LogLine key={child.id} entry={child} />
+          {/* Compact info card */}
+          {infoItems.length > 0 && (
+            <div className="ep-info-card">
+              {infoItems.map((i) => (
+                <div key={i.id} className="ep-info">
+                  <span className="ep-info-key">{i.detail}:</span> {i.text}
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Fatal errors — prominent red */}
+          {fatalItems.map((c) => (
+            <LogLine key={c.id} entry={c} />
           ))}
+          {/* [ok] steps with green checkmarks */}
+          {okItems.map((c) => (
+            <LogLine key={c.id} entry={c} />
+          ))}
+          {/* npm/git noise — collapsed sub-accordion */}
+          {noiseItems.length > 0 && (
+            <div className={`ep-noise-group ${noiseOpen ? "open" : ""}`}>
+              <div className="ep-noise-header" onClick={(e) => { e.stopPropagation(); setNoiseOpen((v) => !v); }}>
+                <span className="ep-group-chevron">{"\u203A"}</span>
+                <span className="ep-noise-title">Setup details</span>
+                <span className="ep-group-summary">{noiseItems.length} lines</span>
+              </div>
+              <div className="ep-group-body-wrap">
+                <div className="ep-group-body">
+                  {noiseItems.map((c) => (
+                    <LogLine key={c.id} entry={c} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
