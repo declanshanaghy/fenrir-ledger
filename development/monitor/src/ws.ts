@@ -270,6 +270,9 @@ async function startLogStream(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const events: any[] = [];
 
+    // Guard against multiple error callbacks (e.g. K8s client retrying after 404)
+    let terminated = false;
+
     const cancel = await streamPodLogs(
       podName,
       namespace,
@@ -296,11 +299,20 @@ async function startLogStream(
         });
       },
       (err) => {
+        if (terminated) return;
+        terminated = true;
         send(ws, {
           type: "stream-error",
           ts: Date.now(),
           sessionId,
           message: friendlyK8sError(err.message, sessionId),
+        });
+        // Always follow with stream-end so the client knows the stream is done
+        send(ws, {
+          type: "stream-end",
+          ts: Date.now(),
+          sessionId,
+          reason: "failed",
         });
       },
       { follow: !isCompleted }

@@ -406,6 +406,108 @@ body {
   opacity: 0.7;
 }
 
+/* ── Norse Error Tablet (full-pane TTL/pod-not-found state) ─────────────── */
+.norse-error-pane {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  padding: 2rem;
+  background: var(--void);
+}
+.norse-error-stone {
+  width: 100%;
+  max-width: 560px;
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  background: linear-gradient(160deg, #08080f 0%, #0e0e1a 45%, #08080f 100%);
+  box-shadow:
+    0 0 32px rgba(201, 146, 10, 0.18),
+    0 0 8px rgba(201, 146, 10, 0.08),
+    inset 0 1px 0 rgba(201, 146, 10, 0.12),
+    inset 0 -1px 0 rgba(201, 146, 10, 0.06);
+  overflow: hidden;
+}
+.norse-error-rune-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.65rem 1rem 0.5rem;
+  background: linear-gradient(90deg, transparent, rgba(201,146,10,0.07) 50%, transparent);
+  border-bottom: 1px solid rgba(201, 146, 10, 0.3);
+  font-size: 0.9rem;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+.norse-error-body {
+  padding: 1.6rem 1.8rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.norse-error-sigil {
+  font-size: 2rem;
+  color: var(--gold-bright);
+  text-shadow: 0 0 16px rgba(240, 180, 41, 0.5);
+  line-height: 1;
+}
+.norse-error-heading {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold-bright);
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-shadow: 0 0 24px rgba(240, 180, 41, 0.3);
+}
+.norse-error-divider {
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,146,10,0.5), transparent);
+}
+.norse-error-message {
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  color: var(--text-rune);
+  text-align: center;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+.norse-error-session {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--gold);
+  background: rgba(201, 146, 10, 0.08);
+  border: 1px solid rgba(201, 146, 10, 0.25);
+  border-radius: 4px;
+  padding: 0.35rem 0.75rem;
+  letter-spacing: 0.04em;
+}
+.norse-error-sub {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  color: var(--text-void);
+  text-align: center;
+  letter-spacing: 0.04em;
+  font-style: italic;
+}
+.norse-error-rune-row-bottom {
+  display: flex;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.5rem 1rem 0.65rem;
+  background: linear-gradient(90deg, transparent, rgba(201,146,10,0.07) 50%, transparent);
+  border-top: 1px solid rgba(201, 146, 10, 0.3);
+  font-size: 0.9rem;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+
 /* ── Entrypoint group (collapsible) ─────────────── */
 .ep-group {
   border: 1px solid var(--rune-border);

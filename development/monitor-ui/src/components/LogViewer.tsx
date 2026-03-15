@@ -12,9 +12,10 @@ interface Props {
   wsState: "connecting" | "open" | "closed" | "error";
   isFixture?: boolean;
   onSetSpeed?: (speed: number) => void;
+  terminalError?: string | null;
 }
 
-export function LogViewer({ entries, activeJob, wsState, isFixture, onSetSpeed }: Props) {
+export function LogViewer({ entries, activeJob, wsState, isFixture, onSetSpeed, terminalError }: Props) {
   const termRef = useRef<HTMLDivElement>(null);
   const [fixtureSpeed, setFixtureSpeed] = useState(1);
   const [fixturePaused, setFixturePaused] = useState(false);
@@ -92,18 +93,25 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, onSetSpeed }
           <StatusBadge state={wsState} />
         </span>
       </div>
-      <div
-        className="log-terminal"
-        ref={termRef}
-        role="log"
-        aria-live="polite"
-        aria-label="Session logs"
-        onScroll={handleScroll}
-      >
-        {entries.map((entry) => (
-          <LogLine key={entry.id} entry={entry} {...(activeJob?.agentKey ? { agentKey: activeJob.agentKey } : {})} {...(activeJob?.agentName ? { agentName: activeJob.agentName } : {})} />
-        ))}
-      </div>
+      {terminalError ? (
+        <NorseErrorTablet
+          message={terminalError}
+          sessionId={activeJob.sessionId}
+        />
+      ) : (
+        <div
+          className="log-terminal"
+          ref={termRef}
+          role="log"
+          aria-live="polite"
+          aria-label="Session logs"
+          onScroll={handleScroll}
+        >
+          {entries.map((entry) => (
+            <LogLine key={entry.id} entry={entry} {...(activeJob?.agentKey ? { agentKey: activeJob.agentKey } : {})} {...(activeJob?.agentName ? { agentName: activeJob.agentName } : {})} />
+          ))}
+        </div>
+      )}
       <div className="log-controls">
         {isFixture && (
           <div className="speed-controls">
@@ -288,6 +296,42 @@ function NorseTablet({ text }: { text: string }) {
           <div className="norse-tablet-seal">
             {"\u16B1\u16A0\u16C7\u16BE\u16A0\u16B1"} &mdash; So it is written, so it shall be done &mdash; {"\u16B1\u16A0\u16C7\u16BE\u16A0\u16B1"}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Elder Futhark runes for decorative rows
+const RUNE_ROW = "\u16A0 \u16A2 \u16A6 \u16A8 \u16B1 \u16B2 \u16B7 \u16B9 \u16BA \u16BE \u16C1 \u16C3 \u16C7 \u16C8 \u16C9 \u16CA \u16CF \u16D2 \u16D6 \u16D7 \u16DA \u16DC \u16DE \u16DF";
+
+function NorseErrorTablet({
+  message,
+  sessionId,
+}: {
+  message: string;
+  sessionId: string;
+}) {
+  return (
+    <div className="norse-error-pane" role="alert" aria-label="Session logs unavailable">
+      <div className="norse-error-stone" aria-label="Norse error tablet">
+        <div className="norse-error-rune-row" aria-hidden="true">
+          {RUNE_ROW}
+        </div>
+        <div className="norse-error-body">
+          <div className="norse-error-sigil" aria-hidden="true">{"\u16B1"}</div>
+          <div className="norse-error-heading">The Saga Is Silent</div>
+          <div className="norse-error-divider" aria-hidden="true" />
+          <p className="norse-error-message">{message}</p>
+          <div className="norse-error-session" aria-label={`Session ID: ${sessionId}`}>
+            Session: {sessionId}
+          </div>
+          <p className="norse-error-sub">
+            The cluster has reclaimed these logs &mdash; this session&apos;s runes are lost to the void.
+          </p>
+        </div>
+        <div className="norse-error-rune-row-bottom" aria-hidden="true">
+          {RUNE_ROW}
         </div>
       </div>
     </div>

@@ -25,6 +25,8 @@ import { WebSocket } from "ws";
 
 const capture = vi.hoisted(() => ({
   watchCb: null as ((...a: unknown[]) => void) | null,
+  streamPodLogsErrorCb: null as ((err: Error) => void) | null,
+  streamPodLogsCancelFn: vi.fn() as ReturnType<typeof vi.fn>,
 }));
 
 vi.mock("../k8s.js", () => ({
@@ -35,7 +37,18 @@ vi.mock("../k8s.js", () => ({
     }
   ),
   mapAgentJobToJob: vi.fn(),
-  streamPodLogs: vi.fn(),
+  streamPodLogs: vi.fn().mockImplementation(
+    async (
+      _pod: unknown,
+      _ns: unknown,
+      _onLine: unknown,
+      _onDone: unknown,
+      onError: (err: Error) => void
+    ) => {
+      capture.streamPodLogsErrorCb = onError;
+      return capture.streamPodLogsCancelFn;
+    }
+  ),
   findPodForSession: vi.fn().mockResolvedValue(null),
 }));
 
@@ -287,6 +300,102 @@ describe("WebSocket server — job status broadcasts (issue #963)", () => {
     } finally {
       c1.ws.close();
       c2.ws.close();
+    }
+  });
+});
+
+// ── Terminal error handling (issue #974) ───────────────────────────────────────
+
+describe("WebSocket server — terminal error handling (issue #974)", () => {
+  let httpServer: ReturnType<typeof createServer>;
+  let port: number;
+
+  beforeEach(async () => {
+    capture.watchCb = null;
+    capture.streamPodLogsErrorCb = null;
+    capture.streamPodLogsCancelFn = vi.fn();
+    httpServer = createServer();
+    attachWebSocketServer(httpServer as Parameters<typeof attachWebSocketServer>[0]);
+    await new Promise<void>((resolve) => {
+      httpServer.listen(0, "127.0.0.1", () => resolve());
+    });
+    port = (httpServer.address() as { port: number }).port;
+  }, 15_000);
+
+  afterEach(async () => {
+    httpServer.closeAllConnections?.();
+    await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+  }, 15_000);
+
+  it("sends stream-error followed by stream-end(failed) when pod is not found", async () => {
+    // findPodForSession returns null → pod-not-found path (no fixture)
+    const { ws, nextMsg, open } = connectAndCollect(port);
+    await open;
+    await waitForType(nextMsg, "jobs-snapshot");
+    try {
+      ws.send(JSON.stringify({ type: "subscribe", sessionId: "issue-974-step1-test" }));
+      const errMsg = await waitForType<{ type: string; sessionId: string; message: string }>(
+        nextMsg, "stream-error"
+      );
+      expect(errMsg.sessionId).toBe("issue-974-step1-test");
+      expect(errMsg.message).toContain("cleaned up");
+      const endMsg = await waitForType<{ type: string; sessionId: string; reason: string }>(
+        nextMsg, "stream-end"
+      );
+      expect(endMsg.sessionId).toBe("issue-974-step1-test");
+    } finally {
+      ws.close();
+    }
+  });
+
+  it("sends stream-end only once even if error fires multiple times (terminated guard)", async () => {
+    // Mock findPodForSession to return a pod so we hit streamPodLogs
+    const { findPodForSession } = await import("../k8s.js");
+    vi.mocked(findPodForSession).mockResolvedValueOnce("pod-issue-974");
+
+    const { ws, nextMsg, open } = connectAndCollect(port);
+    await open;
+    await waitForType(nextMsg, "jobs-snapshot");
+    try {
+      ws.send(JSON.stringify({ type: "subscribe", sessionId: "issue-974-step1-dupe" }));
+
+      // Wait for the subscribe to be processed and streamPodLogs to be called
+      await new Promise<void>((resolve) => setTimeout(resolve, 50));
+
+      // Fire the error callback twice to simulate K8s client retrying
+      const errCb = capture.streamPodLogsErrorCb!;
+      expect(errCb).not.toBeNull();
+      errCb(new Error("HTTP status code 404 — pod not found"));
+      errCb(new Error("HTTP status code 404 — pod not found"));
+
+      const errMsg = await waitForType<{ type: string; message: string }>(nextMsg, "stream-error");
+      expect(errMsg.message).toContain("cleaned up");
+
+      const endMsg = await waitForType<{ type: string; reason: string }>(nextMsg, "stream-end");
+      expect(endMsg.reason).toBe("failed");
+
+      // Verify no second stream-error arrives
+      let secondError: string | null = null;
+      await new Promise<void>((resolve) => {
+        const t = setTimeout(() => resolve(), 200);
+        const check = async () => {
+          try {
+            const m = JSON.parse(await Promise.race([
+              nextMsg(200),
+              new Promise<never>((_, r) => setTimeout(() => r(new Error("timeout")), 200)),
+            ])) as { type: string };
+            if (m.type === "stream-error") secondError = m.type;
+          } catch { /* timeout = no message = correct */ }
+          clearTimeout(t);
+          resolve();
+        };
+        void check();
+      });
+      expect(secondError).toBeNull();
+    } finally {
+      // Restore mock to default
+      vi.mocked(findPodForSession).mockResolvedValue(null);
+      ws.close();
     }
   });
 });

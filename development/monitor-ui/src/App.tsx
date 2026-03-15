@@ -18,7 +18,11 @@ export function App() {
     setActiveSessionId,
     clearEntries,
     handleMessage: handleLogMessage,
+    terminalError,
   } = useLogStream();
+
+  // Sessions that received a terminal error — never re-subscribe on reconnect
+  const terminalSessionsRef = useRef<Set<string>>(new Set());
 
   const prevSessionRef = useRef<string | null>(null);
 
@@ -64,13 +68,23 @@ export function App() {
     [send, setActiveSessionId, clearEntries]
   );
 
+  // Track sessions with terminal errors — they must not be re-subscribed
+  useEffect(() => {
+    if (terminalError && activeSessionId) {
+      terminalSessionsRef.current.add(activeSessionId);
+    }
+  }, [terminalError, activeSessionId]);
+
   // Re-subscribe only on actual reconnect (wsState transitions to "open")
+  // Skip sessions that ended with a terminal error (pod-not-found / TTL expired)
   const prevWsState = useRef(wsState);
   useEffect(() => {
     const wasDisconnected = prevWsState.current !== "open";
     prevWsState.current = wsState;
     if (wsState === "open" && wasDisconnected && activeSessionId) {
-      send({ type: "subscribe", sessionId: activeSessionId });
+      if (!terminalSessionsRef.current.has(activeSessionId)) {
+        send({ type: "subscribe", sessionId: activeSessionId });
+      }
     }
   }, [wsState, activeSessionId, send]);
 
@@ -92,6 +106,7 @@ export function App() {
             activeJob={activeJob}
             wsState={wsState}
             isFixture={isFixture}
+            terminalError={terminalError}
             onSetSpeed={(speed) => {
               if (activeSessionId) {
                 send({ type: "set-speed", sessionId: activeSessionId, speed });

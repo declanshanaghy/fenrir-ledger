@@ -72,11 +72,13 @@ function parseEntrypointLine(line: string): LogEntry {
 export function useLogStream() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [terminalError, setTerminalError] = useState<string | null>(null);
   const taskPromptBuffer = useRef<string[]>([]);
   const inTaskPrompt = useRef(false);
 
   const clearEntries = useCallback(() => {
     setEntries([]);
+    setTerminalError(null);
     entryCounter = 0;
     taskPromptBuffer.current = [];
     inTaskPrompt.current = false;
@@ -131,6 +133,7 @@ export function useLogStream() {
       }
       processEvent(ev);
     } else if (msg.type === "stream-error") {
+      setTerminalError(msg.message);
       setEntries((prev) => [
         ...prev,
         { id: nextId(), type: "error", message: msg.message },
@@ -342,5 +345,6 @@ export function useLogStream() {
     setActiveSessionId,
     clearEntries,
     handleMessage,
+    terminalError,
   };
 }
