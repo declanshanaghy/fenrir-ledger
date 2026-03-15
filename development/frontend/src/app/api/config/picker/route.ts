@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
-import { requireKarl } from "@/lib/auth/require-karl";
+import { requireKarlOrTrial } from "@/lib/auth/require-karl-or-trial";
 import { log } from "@/lib/logger";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -12,10 +12,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return auth.response;
   }
 
-  // Verify caller has Karl tier subscription (#559)
-  const karl = await requireKarl(auth.user);
+  // Verify caller has Karl tier subscription or active trial (#559, #982)
+  const karl = await requireKarlOrTrial(auth.user, request);
   if (!karl.ok) {
-    log.debug("GET /api/config/picker returning", { status: 402, reason: "karl tier required" });
+    log.debug("GET /api/config/picker returning", { status: 402, reason: "karl or trial required" });
     return karl.response;
   }
 
