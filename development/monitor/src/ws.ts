@@ -71,37 +71,6 @@ function broadcast(clients: Set<WebSocket>, msg: ServerMessage): void {
 }
 
 // ---------------------------------------------------------------------------
-// Global job state — maintained by K8s Watch
-// ---------------------------------------------------------------------------
-
-let cachedJobs: Job[] = [];
-const connectedClients = new Set<WebSocket>();
-let stopWatch: (() => void) | null = null;
-
-function startJobWatch(namespace: string, labelSelector: string): void {
-  if (stopWatch) return; // already watching
-
-  stopWatch = watchAgentJobs(
-    namespace,
-    labelSelector,
-    (jobs) => {
-      cachedJobs = jobs;
-      broadcast(connectedClients, {
-        type: "jobs-updated",
-        ts: Date.now(),
-        jobs,
-      });
-    },
-    (err) => {
-      console.error("[ws] K8s watch error:", err.message);
-      // watchAgentJobs auto-reconnects internally; reset flag so we don't
-      // try to start a second watcher if called again before reconnect.
-      stopWatch = null;
-    }
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Per-session log stream handler
 // ---------------------------------------------------------------------------
 
@@ -179,8 +148,27 @@ export function attachWebSocketServer(
   namespace = "fenrir-app",
   labelSelector = "app=odin-agent"
 ): WebSocketServer {
-  // Start K8s job watch as soon as the server starts
-  startJobWatch(namespace, labelSelector);
+  // Per-server-instance state — no module-level singletons
+  const connectedClients = new Set<WebSocket>();
+  let cachedJobs: Job[] = [];
+
+  // Start K8s job watch, push updates to all connected clients
+  watchAgentJobs(
+    namespace,
+    labelSelector,
+    (jobs) => {
+      cachedJobs = jobs;
+      broadcast(connectedClients, {
+        type: "jobs-updated",
+        ts: Date.now(),
+        jobs,
+      });
+    },
+    (err) => {
+      console.error("[ws] K8s watch error:", err.message);
+      // watchAgentJobs auto-reconnects internally
+    }
+  );
 
   const wss = new WebSocketServer({ server: server as Server, path: "/ws" });
 

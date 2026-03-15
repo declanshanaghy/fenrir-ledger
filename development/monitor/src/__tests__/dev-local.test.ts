@@ -88,10 +88,16 @@ class FakeWss extends EventEmitter {
 
 const mockFindPodForSession = vi.fn();
 const mockStreamPodLogs = vi.fn();
+const mockListAgentJobs = vi.fn().mockResolvedValue([]);
+const mockWatchAgentJobs = vi.fn().mockReturnValue(() => {});
+const mockMapAgentJobToJob = vi.fn((j) => j);
 
 vi.mock("../k8s.js", () => ({
   findPodForSession: mockFindPodForSession,
   streamPodLogs: mockStreamPodLogs,
+  listAgentJobs: mockListAgentJobs,
+  watchAgentJobs: mockWatchAgentJobs,
+  mapAgentJobToJob: mockMapAgentJobToJob,
 }));
 
 vi.mock("ws", () => ({
@@ -130,6 +136,8 @@ describe("WS auth rejection (issue #911 — WS guard)", () => {
     vi.clearAllMocks();
     // Default: session token verification fails (unauthorized)
     mockVerifySessionToken.mockReturnValue(null);
+    mockWatchAgentJobs.mockReturnValue(vi.fn());
+    mockListAgentJobs.mockResolvedValue([]);
     wss = attachWebSocketServer(
       new EventEmitter() as unknown as Server
     ) as unknown as FakeWss;
