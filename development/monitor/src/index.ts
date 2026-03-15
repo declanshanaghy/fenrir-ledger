@@ -77,11 +77,22 @@ function buildHlidskjalfHtml(quote: string): string {
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; overflow: hidden; }
-body { background: var(--void); color: var(--text-saga); font-family: 'Source Serif 4', serif; display: flex; }
+body { background: var(--void); color: var(--text-saga); font-family: 'Source Serif 4', serif; display: flex; flex-direction: column; }
+
+/* ── Error banner ────────────────────────────────────────────────── */
+.error-banner {
+  display: none; background: #7f1d1d; color: #fca5a5;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+  padding: 0.4rem 1rem; text-align: center; flex-shrink: 0;
+}
+.error-banner.visible { display: block; }
+
+/* ── Layout ──────────────────────────────────────────────────────── */
+.layout { display: flex; flex: 1; overflow: hidden; }
 
 /* ── Sidebar ─────────────────────────────────────────────────────── */
 .sidebar {
-  width: 300px; min-width: 300px; height: 100vh;
+  width: 300px; min-width: 300px; height: 100%;
   overflow-y: auto; border-right: 1px solid var(--rune-border);
   background: var(--forge); display: flex; flex-direction: column;
 }
@@ -112,7 +123,7 @@ body { background: var(--void); color: var(--text-saga); font-family: 'Source Se
 .card-date { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-void); margin-top: 0.1rem; }
 
 /* ── Content area ─────────────────────────────────────────────────── */
-.content { flex: 1; height: 100vh; display: flex; flex-direction: column; background: var(--void); min-width: 0; }
+.content { flex: 1; height: 100%; display: flex; flex-direction: column; background: var(--void); min-width: 0; }
 .content-header {
   padding: 0.6rem 1rem; border-bottom: 1px solid var(--rune-border);
   background: var(--forge); flex-shrink: 0;
@@ -147,7 +158,7 @@ body { background: var(--void); color: var(--text-saga); font-family: 'Source Se
 
 /* ── Responsive collapse ─────────────────────────────────────────── */
 @media (max-width: 600px) {
-  body { flex-direction: column; overflow: auto; }
+  .layout { flex-direction: column; overflow: auto; }
   .sidebar { width: 100%; min-width: unset; height: auto; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--rune-border); }
   .content { height: 60vh; }
   html, body { overflow: auto; }
@@ -156,6 +167,10 @@ body { background: var(--void); color: var(--text-saga); font-family: 'Source Se
 </head>
 <body aria-label="Odin's Throne — Hlidskjalf">
 
+<div class="error-banner" id="error-banner" role="alert" aria-live="assertive"></div>
+
+<div class="layout">
+
 <nav class="sidebar" aria-label="Agent sessions">
   <div class="sidebar-header">
     <div class="brand">
@@ -163,7 +178,7 @@ body { background: var(--void); color: var(--text-saga); font-family: 'Source Se
       <h1>Hlidskjalf</h1>
     </div>
     <div class="quote" role="note">"${quote}"</div>
-    <div class="count" id="job-count" aria-live="polite">Loading…</div>
+    <div class="count" id="job-count" aria-live="polite">Connecting…</div>
   </div>
   <div class="card-list" id="card-list" role="list" aria-label="Job sessions"></div>
 </nav>
@@ -171,7 +186,7 @@ body { background: var(--void); color: var(--text-saga); font-family: 'Source Se
 <main class="content" aria-label="Log viewer">
   <div class="content-header" id="content-header" style="display:none" aria-label="Active session">
     <span class="session-title" id="session-title"></span>
-    <span class="ws-badge closed" id="ws-badge">disconnected</span>
+    <span class="ws-badge connecting" id="ws-badge">connecting</span>
   </div>
   <div class="log-terminal" id="log-terminal" role="log" aria-live="polite" aria-label="Session logs" style="display:none"></div>
   <div class="empty-state" id="empty-state" aria-label="No session selected">
@@ -179,6 +194,8 @@ body { background: var(--void); color: var(--text-saga); font-family: 'Source Se
     <div class="empty-sub">Select an agent session to stream its logs</div>
   </div>
 </main>
+
+</div>
 
 <script>
 'use strict';
@@ -198,41 +215,37 @@ const AGENT_COLORS = {
   heimdall: '#ef4444',
 };
 const STATUS_ICONS = {
-  active:    '\\u25CF', // ● filled circle — pulsing live
+  running:   '\\u25CF', // ● filled circle — pulsing live
   succeeded: '\\u2713', // ✓ checkmark
   failed:    '\\u2717', // ✗ cross
   pending:   '\\u29D7', // ⧗ hourglass
 };
 const STATUS_COLORS = {
-  active:    '#4ecdc4',
+  running:   '#4ecdc4',
   succeeded: '#22c55e',
   failed:    '#ef4444',
   pending:   '#f0b429',
 };
 const STATUS_LABELS = {
-  active:    'running',
+  running:   'running',
   succeeded: 'succeeded',
   failed:    'FAILED',
   pending:   'pending',
 };
 
-/** Parse session info from job name or labels.
- *  Job name format: agent-issue-NNN-stepN-agentname[-hash] */
+/** Map wire-protocol Job to a display-ready object. */
 function parseJob(job) {
-  const sessionId = (job.labels && job.labels['fenrir.dev/session-id'])
-    || job.name.replace(/^agent-/, '');
-  const m = sessionId.match(/issue-(\d+)-step(\d+)-([a-z]+)/i);
-  const agentKey = m ? m[3].toLowerCase() : 'unknown';
+  const agentKey = job.agent || 'unknown';
   return {
+    sessionId: job.sessionId,
     name: job.name,
-    sessionId,
-    issue: m ? m[1] : '?',
-    step: m ? m[2] : '?',
+    issue: String(job.issueNumber || '?'),
+    step: String(job.step || '?'),
     agentKey,
     agentName: AGENT_NAMES[agentKey] || agentKey,
     status: job.status,
-    startTime: job.startTime ? new Date(job.startTime).getTime() : null,
-    completionTime: job.completionTime ? new Date(job.completionTime).getTime() : null,
+    startTime: job.startedAt ? new Date(job.startedAt).getTime() : null,
+    completionTime: job.completedAt ? new Date(job.completedAt).getTime() : null,
   };
 }
 
@@ -262,18 +275,19 @@ function fmtTime(ts) {
 
 let currentJobs = [];
 let activeSessionId = null;
-let activeWs = null;
-let reconnectTimer = null;
-let reconnectCount = 0;
-const MAX_RECONNECT = 10;
-const RECONNECT_DELAY_MS = 3000;
 
-function clearReconnect() {
-  if (reconnectTimer !== null) {
-    clearTimeout(reconnectTimer);
-    reconnectTimer = null;
-  }
-  reconnectCount = 0;
+// ── Error banner ───────────────────────────────────────────────────────────
+
+function showErrorBanner(msg) {
+  const el = document.getElementById('error-banner');
+  if (!el) return;
+  el.textContent = '\\u26A0 ' + msg;
+  el.classList.add('visible');
+}
+
+function hideErrorBanner() {
+  const el = document.getElementById('error-banner');
+  if (el) el.classList.remove('visible');
 }
 
 // ── Sidebar rendering ──────────────────────────────────────────────────────
@@ -295,7 +309,7 @@ function renderCards(jobs) {
     const sColor = STATUS_COLORS[j.status] || '#606070';
     const sIcon = STATUS_ICONS[j.status] || '\\u2014';
     const sLabel = STATUS_LABELS[j.status] || j.status;
-    const pulse = j.status === 'active' ? ' pulse' : '';
+    const pulse = j.status === 'running' ? ' pulse' : '';
     const isActive = j.sessionId === activeSessionId ? ' active' : '';
     const ts = j.startTime || j.completionTime;
     const timeStr = fmtTime(ts);
@@ -348,11 +362,125 @@ function clearLog() {
   if (term) term.innerHTML = '';
 }
 
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Multiplexed WebSocket connection ───────────────────────────────────────
+
+let mux = null; // the single multiplexed WebSocket
+let muxReconnectTimer = null;
+let muxReconnectCount = 0;
+const MUX_MAX_RECONNECT = 10;
+const MUX_BASE_DELAY_MS = 1000;
+
+function connectMux() {
+  if (mux && (mux.readyState === WebSocket.OPEN || mux.readyState === WebSocket.CONNECTING)) return;
+
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(proto + '//' + location.host + '/ws');
+  mux = ws;
+
+  ws.addEventListener('open', () => {
+    hideErrorBanner();
+    muxReconnectCount = 0;
+    setWsBadge('open');
+    // Re-subscribe to active session if any
+    if (activeSessionId) {
+      ws.send(JSON.stringify({ type: 'subscribe', sessionId: activeSessionId }));
+    }
+  });
+
+  ws.addEventListener('message', (ev) => {
+    let msg;
+    try { msg = JSON.parse(ev.data); } catch { return; }
+    handleMuxMessage(msg);
+  });
+
+  ws.addEventListener('close', () => {
+    mux = null;
+    setWsBadge('closed');
+    scheduleMuxReconnect();
+  });
+
+  ws.addEventListener('error', () => {
+    setWsBadge('error');
+    showErrorBanner('WebSocket connection lost — reconnecting…');
+  });
+}
+
+function scheduleMuxReconnect() {
+  if (muxReconnectCount >= MUX_MAX_RECONNECT) {
+    showErrorBanner('WebSocket connection failed after ' + MUX_MAX_RECONNECT + ' attempts. Reload to retry.');
+    return;
+  }
+  const delay = MUX_BASE_DELAY_MS * Math.pow(2, muxReconnectCount);
+  muxReconnectCount++;
+  muxReconnectTimer = setTimeout(() => {
+    muxReconnectTimer = null;
+    connectMux();
+  }, Math.min(delay, 30000));
+}
+
+function muxSend(msg) {
+  if (mux && mux.readyState === WebSocket.OPEN) {
+    mux.send(JSON.stringify(msg));
+  }
+}
+
+function handleMuxMessage(msg) {
+  switch (msg.type) {
+    case 'jobs-snapshot':
+    case 'jobs-updated': {
+      const jobs = (msg.jobs || []).map(parseJob)
+        .sort((a, b) => (b.startTime || 0) - (a.startTime || 0));
+      currentJobs = jobs;
+      renderCards(jobs);
+      break;
+    }
+    case 'log-line': {
+      if (msg.sessionId !== activeSessionId) break;
+      const ts = msg.ts ? '<span class="log-ts">' + new Date(msg.ts).toLocaleTimeString() + '</span>' : '';
+      appendLog(ts + escHtml(msg.line));
+      break;
+    }
+    case 'verdict': {
+      if (msg.sessionId !== activeSessionId) break;
+      const color = msg.result === 'PASS' ? '#22c55e' : '#ef4444';
+      appendLog('<span style="color:' + color + ';font-weight:bold">\\u2014 Verdict: ' + escHtml(msg.result) + ' \\u2014</span>');
+      break;
+    }
+    case 'stream-end': {
+      if (msg.sessionId !== activeSessionId) break;
+      const reason = msg.reason || 'completed';
+      appendLog('<div class="log-end">\\u2014 stream ' + escHtml(reason) + ' \\u2014</div>');
+      setWsBadge('closed');
+      break;
+    }
+    case 'stream-error': {
+      if (msg.sessionId !== activeSessionId) break;
+      appendLog('<span class="log-error">\\u26A0 ' + escHtml(msg.message) + '</span>');
+      setWsBadge('error');
+      break;
+    }
+    case 'pong':
+      break; // keepalive acknowledged
+    case 'error':
+      showErrorBanner(msg.message || 'Server error');
+      break;
+  }
+}
+
+// ── Session switching ──────────────────────────────────────────────────────
+
 function openSession(sessionId, job) {
-  clearReconnect();
-  if (activeWs) {
-    activeWs.close();
-    activeWs = null;
+  // Unsubscribe from previous session
+  if (activeSessionId && activeSessionId !== sessionId) {
+    muxSend({ type: 'unsubscribe', sessionId: activeSessionId });
   }
 
   activeSessionId = sessionId;
@@ -375,88 +503,18 @@ function openSession(sessionId, job) {
   });
 
   clearLog();
-  setWsBadge('connecting');
+  setWsBadge('open');
 
-  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = proto + '//' + location.host + '/ws/logs/' + encodeURIComponent(sessionId);
-  const ws = new WebSocket(wsUrl);
-  activeWs = ws;
-
-  ws.addEventListener('open', () => setWsBadge('open'));
-
-  let streamEnded = false;
-
-  ws.addEventListener('message', (ev) => {
-    let msg;
-    try { msg = JSON.parse(ev.data); } catch { return; }
-
-    if (msg.type === 'connected') {
-      appendLog('<span class="log-system">\\u2014 connected to session ' + escHtml(msg.sessionId) + ' \\u2014</span>');
-    } else if (msg.type === 'log') {
-      const ts = msg.ts ? '<span class="log-ts">' + new Date(msg.ts).toLocaleTimeString() + '</span>' : '';
-      appendLog(ts + escHtml(msg.line));
-    } else if (msg.type === 'error') {
-      appendLog('<span class="log-error">\\u26A0 ' + escHtml(msg.message) + '</span>');
-      setWsBadge('error');
-    } else if (msg.type === 'end') {
-      streamEnded = true;
-      appendLog('<div class="log-end">\\u2014 stream ended \\u2014</div>');
-      setWsBadge('closed');
-    }
-  });
-
-  ws.addEventListener('close', () => {
-    if (activeWs !== ws) return;
-    setWsBadge('closed');
-    // Auto-reconnect on HMR reload or transient network blip (not on clean stream end)
-    if (!streamEnded && reconnectCount < MAX_RECONNECT) {
-      const attempt = ++reconnectCount;
-      reconnectTimer = setTimeout(() => {
-        reconnectTimer = null;
-        if (activeSessionId === sessionId && activeWs === ws) {
-          appendLog('<span class="log-system">\\u2014 reconnecting (attempt ' + attempt + ') \\u2014</span>');
-          openSession(sessionId, job);
-        }
-      }, RECONNECT_DELAY_MS);
-    }
-  });
-
-  ws.addEventListener('error', () => {
-    appendLog('<span class="log-error">WebSocket error — check that the session pod exists</span>');
-    setWsBadge('error');
-  });
+  // Subscribe via multiplexed WS
+  muxSend({ type: 'subscribe', sessionId });
 }
 
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+// ── Relative timestamp refresh (no re-fetch needed — state is in memory) ───
 
-// ── Job polling ────────────────────────────────────────────────────────────
+setInterval(() => renderCards(currentJobs), 10000);
 
-async function fetchJobs() {
-  try {
-    const res = await fetch('/api/jobs');
-    if (!res.ok) return;
-    const data = await res.json();
-    const jobs = (data.jobs || []).map(parseJob)
-      .sort((a, b) => (b.startTime || 0) - (a.startTime || 0));
-    currentJobs = jobs;
-    renderCards(jobs);
-  } catch { /* network error — keep last state */ }
-}
-
-// Update relative timestamps every 10s without re-fetching
-function refreshTimestamps() {
-  renderCards(currentJobs);
-}
-
-fetchJobs();
-setInterval(fetchJobs, 15000);
-setInterval(refreshTimestamps, 10000);
+// ── Boot ───────────────────────────────────────────────────────────────────
+connectMux();
 </script>
 <script src="/js/stream.js"></script>
 </body>
@@ -524,7 +582,8 @@ app.use("*", async (c, next) => {
 
 // ── Protected routes ─────────────────────────────────────────────────────────
 
-// List agent jobs
+// List agent jobs — kept read-only for curl debugging; UI uses WebSocket push
+// @deprecated UI should not call this; use the /ws multiplexed endpoint instead
 app.get("/api/jobs", async (c) => {
   try {
     const jobs = await listAgentJobs(NAMESPACE, JOB_LABEL);
@@ -549,6 +608,6 @@ const server = serve({ fetch: app.fetch, port: PORT }, (info) => {
   );
 });
 
-attachWebSocketServer(server);
+attachWebSocketServer(server, NAMESPACE, JOB_LABEL);
 
 export { app };
