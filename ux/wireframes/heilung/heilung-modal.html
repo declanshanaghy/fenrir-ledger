@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Heilung Easter Egg Modal — Issue #955</title>
+  <style>
+    /*
+      WIREFRAME ONLY — layout and structure.
+      No colors, no custom fonts, no shadows, no border-radius.
+      Theme tokens: ux/theme-system.md
+      Interaction spec + copy: heilung/interaction-spec.md
+      Engineer target: development/frontend/src/components/easter-eggs/HeilungModal.tsx
+    */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      gap: 1rem;
+    }
+
+    /* ── Backdrop ─────────────────────────────────────────────── */
+    /* z-index: 9653 = W-O-L-F on a phone keypad */
+    .modal-backdrop {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Modal shell ──────────────────────────────────────────── */
+    /* max-width: 960px desktop. mobile: calc(100vw - 2rem), min 343px */
+    .modal {
+      position: relative;
+      width: 100%;
+      border: 1px solid;
+      /* NOTE: border has gold pulse-glow animation in implementation.
+         See interaction-spec.md §Animations — border-glow keyframe. */
+    }
+
+    /* ── Close button ─────────────────────────────────────────── */
+    /* touch target: 44×44px minimum per WCAG 2.5.5 */
+    .btn-close {
+      position: absolute;
+      top: 0.625rem;
+      right: 0.625rem;
+      width: 2.75rem;
+      height: 2.75rem;
+      border: 1px solid;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.125rem;
+      background: none;
+      font-family: inherit;
+      z-index: 10;
+    }
+    /* NOTE: aria-label="Dismiss the incantation" */
+
+    /* ── Header ───────────────────────────────────────────────── */
+    .modal-header {
+      padding: 2rem 2rem 1.25rem;
+      text-align: center;
+      border-bottom: 1px solid;
+    }
+
+    /* Eyebrow: rune accents flanking label */
+    /* Font: JetBrains Mono 500, 0.68rem, tracking 0.25em, uppercase */
+    /* Runes: aria-hidden — decorative only */
+    .modal-eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      margin-bottom: 1rem;
+    }
+    .eyebrow-runes {
+      letter-spacing: 0.3em;
+      /* NOTE: aria-hidden="true" — decorative Elder Futhark */
+    }
+
+    /* Title: HEILUNG */
+    /* Font: Cinzel Decorative 700, clamp(1.75rem, 4vw, 2.5rem) */
+    /* Color: --gold-bright (#f0b429) */
+    .modal-title {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      line-height: 1;
+    }
+
+    /* Subtitle: "Amplified History" */
+    /* Font: Source Serif 4 300, 0.9rem, italic */
+    /* Color: --gold at 0.65 opacity */
+    .modal-subtitle {
+      margin-top: 0.4rem;
+      font-size: 0.9rem;
+      font-style: italic;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      /* NOTE: actual copy — "Amplified History" */
+    }
+
+    /* ── Body ─────────────────────────────────────────────────── */
+    .modal-body {
+      /* Desktop: CSS grid, 2 columns equal width */
+      /* Mobile (≤600px): flex-col, video on top, info panel below */
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+    }
+
+    /* ── LEFT COLUMN — Info panel ─────────────────────────────── */
+    /* Mobile: order-2 (below video) */
+    .col-info {
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      border-right: 1px solid;
+      order: 2;
+    }
+
+    /* Incantation — wolf-voice body copy */
+    /* Font: Source Serif 4 400, 0.9rem, line-height 1.75 */
+    /* Color: --text-saga (#e8e4d4) */
+    /* Copy spec: see interaction-spec.md §Copy — Incantation Body */
+    .incantation {
+      font-size: 0.9rem;
+      line-height: 1.75;
+    }
+    .incantation p + p {
+      margin-top: 0.625rem;
+    }
+
+    /* Voices section */
+    .voices-label {
+      /* Font: JetBrains Mono 500, 0.65rem, uppercase, tracking 0.2em */
+      font-size: 0.65rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 0.625rem;
+    }
+
+    .voices-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+    }
+
+    /* Each voice row */
+    /* Stagger animation: each li fades in + translateY(8px)→0
+       with 100ms delay per item. See interaction-spec.md §Animations */
+    .voice-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+    .voice-name {
+      /* Font: Cinzel 600, 0.825rem */
+      font-size: 0.825rem;
+      font-weight: 600;
+    }
+    .voice-role {
+      /* Font: Source Serif 4 300, 0.75rem, italic */
+      font-size: 0.75rem;
+      font-style: italic;
+    }
+
+    /* External link to amplifiedhistory.com */
+    /* Font: JetBrains Mono 500, 0.75rem */
+    /* Underline on hover */
+    .site-link {
+      font-size: 0.75rem;
+      margin-top: auto;
+      padding-top: 0.5rem;
+      border-top: 1px solid;
+      /* NOTE: href="https://www.amplifiedhistory.com" target="_blank" rel="noopener" */
+      /* NOTE: rel="noopener noreferrer" for security */
+    }
+
+    /* ── VERTICAL DIVIDER (1px column) ───────────────────────── */
+    .col-divider {
+      /* gradient in implementation: transparent → --iron-border → transparent */
+      border-left: 1px solid;
+    }
+
+    /* ── RIGHT COLUMN — Embedded video ───────────────────────── */
+    /* Mobile: order-1 (above info panel) */
+    .col-video {
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      order: 1;
+    }
+
+    /* 16:9 aspect-ratio container */
+    .video-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 1px dashed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .video-frame-icon {
+      font-size: 2rem;
+      opacity: 0.35;
+    }
+    /* NOTE: <iframe src="https://www.youtube.com/embed/QRg_8NNPTD8?autoplay=1&rel=0"
+                    title="Heilung — Krigsgaldr LIFA"
+                    allow="autoplay; encrypted-media"
+                    allowfullscreen /> */
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    .modal-footer {
+      display: flex;
+      justify-content: center;
+      padding: 1.25rem 2rem 1.75rem;
+      border-top: 1px solid;
+    }
+
+    /* Dismiss button */
+    /* Font: Cinzel 700, 0.8rem, uppercase, tracking 0.25em */
+    /* Touch target: min 44px height */
+    /* Copy: "HEIÐR" (Old Norse: honour, glory) */
+    .btn-dismiss {
+      padding: 0.75rem 3rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      border: 1px solid;
+      cursor: pointer;
+      background: none;
+      font-family: inherit;
+      min-height: 44px;
+      /* NOTE: hover → bg fills with --gold, text becomes --egg-btn-text */
+    }
+
+    /* ────────────────────────────────────────────────────────────
+       RESPONSIVE — MOBILE (≤600px)
+       Grid collapses: single column, video on top, info below.
+       Min viewport: 375px. Horizontal padding: 1rem.
+       ─────────────────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      body { padding: 0; }
+
+      .modal {
+        /* full-width, no outer margin */
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .modal-header {
+        padding: 1.5rem 1.25rem 1rem;
+      }
+
+      /* Stack: video (top) → info (bottom) */
+      .modal-body {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .col-info {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid;
+        padding: 1.25rem;
+      }
+
+      .col-divider {
+        display: none;
+        /* NOTE: hide vertical divider; col-info border-top provides separation */
+      }
+
+      .col-video {
+        order: 1;
+        padding: 1rem;
+      }
+
+      .modal-footer {
+        padding: 1rem 1.25rem 1.25rem;
+      }
+
+      .btn-dismiss {
+        width: 100%;
+      }
+    }
+
+    /* ── Wireframe annotation styles ──────────────────────────── */
+    .note {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.55;
+    }
+    .spec-bar {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.5;
+      text-align: center;
+      padding: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    HEILUNG MODAL — Issue #955
+    Trigger: Ctrl+Shift+L (all platforms). Repeatable — no localStorage gate.
+    Dismiss: ESC key, backdrop click, close button, or HEIÐR button.
+    Full copy, tokens, and animation spec: ./interaction-spec.md
+  -->
+
+  <div class="modal-backdrop">
+
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="heilung-title">
+
+      <!-- Close button — 44×44px touch target minimum -->
+      <button class="btn-close" type="button" aria-label="Dismiss the incantation">×</button>
+
+      <!-- ── HEADER ───────────────────────────────────────────── -->
+      <header class="modal-header">
+
+        <!-- Eyebrow: rune guards + label -->
+        <!-- aria-label on container conveys full text; rune spans are aria-hidden -->
+        <p class="modal-eyebrow" aria-label="Incantation found">
+          <span class="eyebrow-runes" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ</span>
+          <span>Incantation Found</span>
+          <span class="eyebrow-runes" aria-hidden="true">ᛁ ᚱ ᛊ</span>
+        </p>
+
+        <!-- Display title — Cinzel Decorative 700 -->
+        <!-- NOTE: text-shadow glow: 0 0 24px rgba(240, 180, 41, 0.45) on hover/entry -->
+        <h1 class="modal-title" id="heilung-title">HEILUNG</h1>
+
+        <!-- Subtitle — Source Serif 4 300, italic -->
+        <p class="modal-subtitle">Amplified History</p>
+
+      </header>
+
+      <!-- ── BODY: 2-column (desktop) / stacked (mobile) ───────── -->
+      <div class="modal-body">
+
+        <!-- LEFT: Info panel — wolf-voice incantation + voices list -->
+        <!-- Desktop: order-2 (right visual → left layout). See NOTE below. -->
+        <!-- NOTE: On desktop grid, this is col 1 (left). On mobile, flex order-2 (below video). -->
+        <div class="col-info">
+
+          <!-- Incantation body — wolf's testimony -->
+          <!-- Font: Source Serif 4 400, 0.9rem, line-height 1.75 -->
+          <!-- Full copy: see interaction-spec.md §Copy — Incantation Body -->
+          <div class="incantation" aria-label="Wolf's testimony">
+            <p class="note">
+              [Wolf-voice copy — 2 short paragraphs. See interaction-spec.md §Copy]
+            </p>
+            <p class="note" style="margin-top:0.5rem;">
+              Line 1: Ancient, knowing. "They speak in iron and root…"
+            </p>
+            <p class="note">
+              Line 2: Inevitable witness. "Three voices. One memory…"
+            </p>
+          </div>
+
+          <!-- Voices section -->
+          <!-- Staggered fade-in: 100ms delay per li. See interaction-spec.md §Animations -->
+          <div>
+            <p class="voices-label">
+              <!-- NOTE: Copy: "THE VOICES" — Cinzel 600 label, --text-rune color -->
+              THE VOICES
+            </p>
+            <ul class="voices-list" aria-label="Band members">
+              <li class="voice-item">
+                <span class="voice-name">Kai Uwe Faust</span>
+                <span class="voice-role note">Chant, throat — the low frequencies</span>
+              </li>
+              <li class="voice-item">
+                <span class="voice-name">Maria Franz</span>
+                <span class="voice-role note">Voice — the oldest tones remembered</span>
+              </li>
+              <li class="voice-item">
+                <span class="voice-name">Christopher Juul</span>
+                <span class="voice-role note">Percussion — the ritual architecture</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Amplifiedhistory.com link — pushed to bottom of panel -->
+          <a class="site-link" href="https://www.amplifiedhistory.com" target="_blank" rel="noopener noreferrer">
+            <!-- NOTE: Font: JetBrains Mono 500. Color: --gold. Hover: opacity 0.7 -->
+            amplifiedhistory.com ↗
+          </a>
+
+        </div><!-- /.col-info -->
+
+        <!-- Vertical 1px divider — gradient top→mid→bottom -->
+        <!-- NOTE: background: linear-gradient(transparent, --iron-border, transparent) -->
+        <div class="col-divider" aria-hidden="true"></div>
+
+        <!-- RIGHT: Embedded video — Krigsgaldr LIFA -->
+        <!-- Mobile: order-1 (shows above info panel) -->
+        <div class="col-video">
+
+          <!-- 16:9 aspect-ratio container — no letterboxing on any viewport -->
+          <div class="video-frame" role="img" aria-label="Heilung — Krigsgaldr LIFA video placeholder">
+            <span class="video-frame-icon" aria-hidden="true">▶</span>
+            <span>YouTube Embed</span>
+            <span class="note">Heilung — Krigsgaldr LIFA</span>
+            <span class="note">ID: QRg_8NNPTD8 · autoplay=1</span>
+          </div>
+          <!-- NOTE: Replace placeholder with:
+               <iframe src="https://www.youtube.com/embed/QRg_8NNPTD8?autoplay=1&rel=0"
+                       title="Heilung — Krigsgaldr LIFA"
+                       allow="autoplay; encrypted-media" allowfullscreen
+                       class="w-full h-full" style="border:none" />
+          -->
+
+        </div><!-- /.col-video -->
+
+      </div><!-- /.modal-body -->
+
+      <!-- ── FOOTER ────────────────────────────────────────────── -->
+      <footer class="modal-footer">
+
+        <!-- Dismiss button — sole primary action -->
+        <!-- Font: Cinzel 700. Min-height: 44px. -->
+        <!-- Hover: bg fills --gold, text --egg-btn-text (#07070d) -->
+        <!-- Copy: "HEIÐR" — Old Norse: honour, glory. The wolf acknowledges. -->
+        <button class="btn-dismiss" type="button">HEIÐR</button>
+
+      </footer>
+
+    </div><!-- /.modal -->
+
+  </div><!-- /.modal-backdrop -->
+
+  <p class="spec-bar">
+    Wireframe · heilung-modal.html · Fenrir Ledger · Issue #955 · z-index 9653 (W-O-L-F)
+    · Interaction spec: <a href="./interaction-spec.md">interaction-spec.md</a>
+  </p>
+
+</body>
+</html>
