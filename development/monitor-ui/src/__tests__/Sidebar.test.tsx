@@ -23,7 +23,7 @@ const makeJob = (id: string): DisplayJob => ({
   agentName: "Loki",
   status: "running",
   startTime: Date.now(),
-  completionTime: null,
+  completionTime: null, issueTitle: null, branchName: null,
 });
 
 describe("Sidebar — count-row inline layout (issue #981)", () => {

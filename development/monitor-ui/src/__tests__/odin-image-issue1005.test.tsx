@@ -43,7 +43,7 @@ const makeJob = (id: string): DisplayJob => ({
   agentName: "Loki",
   status: "running",
   startTime: Date.now(),
-  completionTime: null,
+  completionTime: null, issueTitle: null, branchName: null,
 });
 
 // ── File size verification ────────────────────────────────────────────────────

@@ -36,7 +36,7 @@ const MOCK_JOB_LOKI: DisplayJob = {
   agentName: "Loki",
   status: "running",
   startTime: null,
-  completionTime: null,
+  completionTime: null, issueTitle: null, branchName: null,
 };
 
 const MOCK_JOB_UNKNOWN: DisplayJob = {
@@ -48,7 +48,7 @@ const MOCK_JOB_UNKNOWN: DisplayJob = {
   agentName: "UnknownAgent",
   status: "running",
   startTime: null,
-  completionTime: null,
+  completionTime: null, issueTitle: null, branchName: null,
 };
 
 const MOCK_JOB_NO_KEY: DisplayJob = {
@@ -60,7 +60,7 @@ const MOCK_JOB_NO_KEY: DisplayJob = {
   agentName: "SomeAgent",
   status: "running",
   startTime: null,
-  completionTime: null,
+  completionTime: null, issueTitle: null, branchName: null,
 };
 
 // Helper to create a NorseTablet log entry
@@ -76,7 +76,7 @@ describe("AC-1: NorseErrorTablet — Wikipedia links in subheadings (issue #1003
       <NorseErrorTablet sessionId="s1" message={TTL_MESSAGE} variant="ttl-expired" />
     );
     const links = container.querySelectorAll("a.wiki-link");
-    const yggLink = Array.from(links).find((a) =>
+    const yggLink = Array.from(links as NodeListOf<Element>).find((a) =>
       a.getAttribute("href")?.includes("Yggdrasil")
     );
     expect(yggLink, "Yggdrasil wiki-link not found").not.toBeNull();
@@ -87,7 +87,7 @@ describe("AC-1: NorseErrorTablet — Wikipedia links in subheadings (issue #1003
       <NorseErrorTablet sessionId="s1" message={TTL_MESSAGE} variant="ttl-expired" />
     );
     const links = container.querySelectorAll("a.wiki-link");
-    const yggLink = Array.from(links).find((a) =>
+    const yggLink = Array.from(links as NodeListOf<Element>).find((a) =>
       a.getAttribute("href")?.includes("Yggdrasil")
     );
     expect(yggLink?.getAttribute("target")).toBe("_blank");
@@ -98,7 +98,7 @@ describe("AC-1: NorseErrorTablet — Wikipedia links in subheadings (issue #1003
       <NorseErrorTablet sessionId="s1" message={TTL_MESSAGE} variant="ttl-expired" />
     );
     const links = container.querySelectorAll("a.wiki-link");
-    const yggLink = Array.from(links).find((a) =>
+    const yggLink = Array.from(links as NodeListOf<Element>).find((a) =>
       a.getAttribute("href")?.includes("Yggdrasil")
     );
     expect(yggLink?.getAttribute("rel")).toBe("noopener noreferrer");
@@ -109,7 +109,7 @@ describe("AC-1: NorseErrorTablet — Wikipedia links in subheadings (issue #1003
       <NorseErrorTablet sessionId="s1" message={TTL_MESSAGE} variant="ttl-expired" />
     );
     const links = container.querySelectorAll("a.wiki-link");
-    const yggLink = Array.from(links).find((a) =>
+    const yggLink = Array.from(links as NodeListOf<Element>).find((a) =>
       a.getAttribute("href")?.includes("Yggdrasil")
     );
     expect(yggLink?.getAttribute("href")).toBe("https://en.wikipedia.org/wiki/Yggdrasil");
@@ -120,7 +120,7 @@ describe("AC-1: NorseErrorTablet — Wikipedia links in subheadings (issue #1003
       <NorseErrorTablet sessionId="s1" message={TTL_MESSAGE} variant="ttl-expired" />
     );
     const links = container.querySelectorAll("a.wiki-link");
-    const yggLink = Array.from(links).find((a) =>
+    const yggLink = Array.from(links as NodeListOf<Element>).find((a) =>
       a.getAttribute("href")?.includes("Yggdrasil")
     );
     const ariaLabel = yggLink?.getAttribute("aria-label") ?? "";
@@ -133,7 +133,7 @@ describe("AC-1: NorseErrorTablet — Wikipedia links in subheadings (issue #1003
       <NorseErrorTablet sessionId="s2" message={NODE_UNREACHABLE_MESSAGE} variant="node-unreachable" />
     );
     const links = container.querySelectorAll("a.wiki-link");
-    const bifLink = Array.from(links).find((a) =>
+    const bifLink = Array.from(links as NodeListOf<Element>).find((a) =>
       a.getAttribute("href")?.includes("Bifr")
     );
     expect(bifLink, "Bifröst wiki-link not found").not.toBeNull();
@@ -144,7 +144,7 @@ describe("AC-1: NorseErrorTablet — Wikipedia links in subheadings (issue #1003
       <NorseErrorTablet sessionId="s2" message={NODE_UNREACHABLE_MESSAGE} variant="node-unreachable" />
     );
     const links = container.querySelectorAll("a.wiki-link");
-    const bifLink = Array.from(links).find((a) =>
+    const bifLink = Array.from(links as NodeListOf<Element>).find((a) =>
       a.getAttribute("href")?.includes("Bifr")
     );
     expect(bifLink?.getAttribute("target")).toBe("_blank");
@@ -155,7 +155,7 @@ describe("AC-1: NorseErrorTablet — Wikipedia links in subheadings (issue #1003
       <NorseErrorTablet sessionId="s2" message={NODE_UNREACHABLE_MESSAGE} variant="node-unreachable" />
     );
     const links = container.querySelectorAll("a.wiki-link");
-    const bifLink = Array.from(links).find((a) =>
+    const bifLink = Array.from(links as NodeListOf<Element>).find((a) =>
       a.getAttribute("href")?.includes("Bifr")
     );
     expect(bifLink?.getAttribute("rel")).toBe("noopener noreferrer");
@@ -166,7 +166,7 @@ describe("AC-1: NorseErrorTablet — Wikipedia links in subheadings (issue #1003
       <NorseErrorTablet sessionId="s2" message={NODE_UNREACHABLE_MESSAGE} variant="node-unreachable" />
     );
     const links = container.querySelectorAll("a.wiki-link");
-    const bifLink = Array.from(links).find((a) =>
+    const bifLink = Array.from(links as NodeListOf<Element>).find((a) =>
       a.getAttribute("href")?.includes("Bifr")
     );
     expect(bifLink?.getAttribute("href")).toBe("https://en.wikipedia.org/wiki/Bifr%C3%B6st");
@@ -177,7 +177,7 @@ describe("AC-1: NorseErrorTablet — Wikipedia links in subheadings (issue #1003
       <NorseErrorTablet sessionId="s2" message={NODE_UNREACHABLE_MESSAGE} variant="node-unreachable" />
     );
     const links = container.querySelectorAll("a.wiki-link");
-    const bifLink = Array.from(links).find((a) =>
+    const bifLink = Array.from(links as NodeListOf<Element>).find((a) =>
       a.getAttribute("href")?.includes("Bifr")
     );
     const ariaLabel = bifLink?.getAttribute("aria-label") ?? "";

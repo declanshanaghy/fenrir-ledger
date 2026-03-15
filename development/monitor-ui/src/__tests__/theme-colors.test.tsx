@@ -36,7 +36,7 @@ const MOCK_JOB: DisplayJob = {
   agentName: "FiremanDecko",
   status: "succeeded",
   startTime: Date.now(),
-  completionTime: Date.now(),
+  completionTime: Date.now(), issueTitle: null, branchName: null,
 };
 
 function makeVerdictEntry(result: "PASS" | "FAIL"): LogEntry {

@@ -41,7 +41,7 @@ const MOCK_JOB: DisplayJob = {
   agentName: "FiremanDecko",
   status: "failed",
   startTime: null,
-  completionTime: null,
+  completionTime: null, issueTitle: null, branchName: null,
 };
 
 // ── NODE_UNREACHABLE_PATTERN ───────────────────────────────────────────────────

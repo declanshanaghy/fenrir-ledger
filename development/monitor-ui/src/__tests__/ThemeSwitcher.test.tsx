@@ -60,7 +60,7 @@ describe("ThemeSwitcher accessibility — issue #981", () => {
   it("buttons are icon-only — contain no 'Light' or 'Dark' text labels", () => {
     const { container } = render(<ThemeSwitcher theme="dark" setTheme={vi.fn()} />);
     const buttons = container.querySelectorAll("button.theme-btn");
-    buttons.forEach((btn) => {
+    buttons.forEach((btn: any) => {
       expect(btn.textContent).not.toMatch(/Light|Dark/);
     });
   });

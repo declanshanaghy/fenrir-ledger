@@ -176,10 +176,10 @@ describe("downloadLog (AC-5, AC-6)", () => {
     global.URL.createObjectURL = createObjectURLSpy;
     global.URL.revokeObjectURL = revokeObjectURLSpy;
 
-    const appendChildSpy = vi.spyOn(document.body, "appendChild").mockImplementation((el) => el);
-    const removeChildSpy = vi.spyOn(document.body, "removeChild").mockImplementation((el) => el);
+    const appendChildSpy = vi.spyOn(document.body, "appendChild").mockImplementation((el: any) => el);
+    const removeChildSpy = vi.spyOn(document.body, "removeChild").mockImplementation((el: any) => el);
     const clickSpy = vi.fn();
-    const createElementSpy = vi.spyOn(document, "createElement").mockImplementation((tag) => {
+    const createElementSpy = vi.spyOn(document, "createElement").mockImplementation((tag: any) => {
       if (tag === "a") {
         const a = { href: "", download: "", click: clickSpy } as unknown as HTMLAnchorElement;
         return a;
@@ -224,9 +224,9 @@ describe("downloadLog (AC-5, AC-6)", () => {
       return "blob:mock";
     });
     global.URL.revokeObjectURL = vi.fn();
-    vi.spyOn(document.body, "appendChild").mockImplementation((el) => el);
-    vi.spyOn(document.body, "removeChild").mockImplementation((el) => el);
-    vi.spyOn(document, "createElement").mockImplementation((tag) => {
+    vi.spyOn(document.body, "appendChild").mockImplementation((el: any) => el);
+    vi.spyOn(document.body, "removeChild").mockImplementation((el: any) => el);
+    vi.spyOn(document, "createElement").mockImplementation((tag: any) => {
       if (tag === "a") {
         return { href: "", download: "", click: vi.fn() } as unknown as HTMLAnchorElement;
       }

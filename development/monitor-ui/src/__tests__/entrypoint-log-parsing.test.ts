@@ -211,13 +211,13 @@ describe("useLogStream handleMessage — AC coverage (Loki)", () => {
     });
 
     // The buffered lines should produce exactly one entrypoint-task
-    const taskEntry = result.current.entries.find((e) => e.type === "entrypoint-task");
+    const taskEntry = result.current.entries.find((e: any) => e.type === "entrypoint-task");
     expect(taskEntry).toBeDefined();
     expect(taskEntry?.text).toContain("You are Loki, QA agent.");
     expect(taskEntry?.text).toContain("Validate everything.");
     // The TASK PROMPT / END PROMPT delimiters should NOT appear as separate entries
     const rawDelimiters = result.current.entries.filter(
-      (e) => e.text === "--- TASK PROMPT ---" || e.text === "--- END PROMPT ---"
+      (e: any) => e.text === "--- TASK PROMPT ---" || e.text === "--- END PROMPT ---"
     );
     expect(rawDelimiters).toHaveLength(0);
   });

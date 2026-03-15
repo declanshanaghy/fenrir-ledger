@@ -1,6 +1,5 @@
 import type { DisplayJob } from "../lib/types";
 import { AGENT_COLORS, AGENT_AVATARS, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
-import { timeAgo, fmtTime } from "../lib/time";
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 
 interface Props {
@@ -10,8 +9,8 @@ interface Props {
 }
 
 export function JobCard({ job, isActive, onClick }: Props) {
-  const agentColor = AGENT_COLORS[job.agentKey] || "#c9920a";
-  const avatar = AGENT_AVATARS[job.agentKey];
+  const agentColor = AGENT_COLORS[job.agentKey ?? ""] || "#c9920a";
+  const avatar = AGENT_AVATARS[job.agentKey ?? ""];
   const sColor = STATUS_COLORS[job.status] || "#606070";
   const sIcon = STATUS_ICONS[job.status] || "\u2014";
   const sLabel = STATUS_LABELS[job.status] || job.status;
