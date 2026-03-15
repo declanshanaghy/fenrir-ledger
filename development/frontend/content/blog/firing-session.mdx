@@ -1,0 +1,189 @@
+---
+title: "The Firing Line"
+date: "2026-03-15"
+rune: "ᛏ"
+excerpt: "Analytics silenced, chains advanced, three PRs merged, Loki unleashed thrice, Norse tablets ordained for glory, and the Odin portrait renewed."
+slug: "firing-session"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᛉ ᛏ ᚦ ᛟ</span>
+  <h1 className="session-title">The Firing Line</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">2026-03-15</span></span>
+      <span>Session <span className="val">firing-session</span></span>
+      <span>Acts <span className="val">7</span></span>
+      <span>Files changed <span className="val">9</span></span>
+  </div>
+</header>
+
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
+      <li><a href="#act-1"><span className="toc-rune">ᛉ</span> <span className="toc-num">I</span> Silencing the False Signals</a></li>
+      <li><a href="#act-2"><span className="toc-rune">ᛏ</span> <span className="toc-num">II</span> Advancing the War Chains</a></li>
+      <li><a href="#act-3"><span className="toc-rune">ᛟ</span> <span className="toc-num">III</span> The Rune Scholar's Inquiry</a></li>
+      <li><a href="#act-4"><span className="toc-rune">ᛒ</span> <span className="toc-num">IV</span> Ordaining the Tablets</a></li>
+      <li><a href="#act-5"><span className="toc-rune">ᚹ</span> <span className="toc-num">V</span> The Theme Decree</a></li>
+      <li><a href="#act-6"><span className="toc-rune">ᛏ</span> <span className="toc-num">VI</span> Three Chains Forged Complete</a></li>
+      <li><a href="#act-7"><span className="toc-rune">ᛟ</span> <span className="toc-num">VII</span> Renewing the All-Father's Visage</a></li>
+  </ul>
+</nav>
+
+<div className="timeline">
+
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="Silencing the False Signals">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Protection</p>
+        <h2 className="entry-title">Silencing the False Signals</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Implement the plan: Prevent Playwright E2E tests from polluting Umami analytics</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>A single CI test run was flooding the Umami analytics dashboard with 57 phantom page views and 13 ghost events in 22 seconds — indistinguishable from real users. The solution: a shared Playwright fixture at <span class="mono">quality/test-suites/helpers/analytics-block.ts</span> that extends the base <span class="mono">test</span> object, intercepting all requests to <span class="hl">analytics.fenrirledger.com</span> and aborting them before they reach the wire. All 8 spec files across <span class="mono">auth/</span>, <span class="mono">auth-returnto/</span>, and <span class="mono">card-lifecycle/</span> were rewired to import from the new fixture. PR #1002 merged via HKR.</p></div>
+          <div className="code-block"><pre><span class="ca">export const test = base.extend({
+  page: async ({ page }, use) => {
+    await page.route("**/analytics.fenrirledger.com/**",
+      (route) => route.abort());
+    await use(page);
+  },
+});</span></pre></div>
+          <div className="file-chips">
+            <span className="chip chip-new">quality/test-suites/helpers/analytics-block.ts</span>
+            <span className="chip chip-mod">quality/test-suites/auth/sign-in.spec.ts</span>
+            <span className="chip chip-mod">quality/test-suites/auth/auth-callback.spec.ts</span>
+            <span className="chip chip-mod">quality/test-suites/auth-returnto/auth-returnto.spec.ts</span>
+            <span className="chip chip-mod">quality/test-suites/card-lifecycle/add-card.spec.ts</span>
+            <span className="chip chip-mod">quality/test-suites/card-lifecycle/close-card.spec.ts</span>
+            <span className="chip chip-mod">quality/test-suites/card-lifecycle/delete-card.spec.ts</span>
+            <span className="chip chip-mod">quality/test-suites/card-lifecycle/edit-card.spec.ts</span>
+            <span className="chip chip-mod">quality/test-suites/card-lifecycle/wizard-save.spec.ts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="Advancing the War Chains">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Orchestration</p>
+        <h2 className="entry-title">Advancing the War Chains</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The pack status dashboard revealed 9 in-flight chains. Two had already completed their full cycle — <span class="hl">#984</span> (session list sort) and <span class="hl">#990</span> (entrypoint log parsing) both bore Loki’s PASS verdict with PRs already merged. Both issues were closed. Three more PRs stood CI-green with FiremanDecko’s work complete: <span class="hl">#982</span> (Picker API 402), <span class="hl">#983</span> (Heilung modal), and <span class="hl">#994</span> (header spacing). Loki was dispatched to all three via GKE Autopilot Jobs for QA validation.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="The Rune Scholar's Inquiry">ᛟ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Lore</p>
+        <h2 className="entry-title">The Rune Scholar's Inquiry</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Translate this ᚦᚢᚠ</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Odin presented three runes from the TTL-expired session tablet in the monitor UI: <span class="hl">ᚦᚢᚠ</span> — Thurisaz, Uruz, Fehu. The reverse of the opening <span class="mono">ᚠᚢᚦ</span> (F-U-Th), these are decorative bookends framing the inscription like ornamental parentheses. The first three letters of the <span class="hl">Futhark</span> alphabet, mirrored.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="Ordaining the Tablets">ᛒ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Design</p>
+        <h2 className="entry-title">Ordaining the Tablets</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Ensure Norse words are linked to Wikipedia. Reword the runes into something awe-inspiring. Sign from the agent.</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Filed <span class="hl">#1003</span> — a UX enhancement to elevate the Norse error tablets and agent prompt tablets. Three improvements ordained: Wikipedia hyperlinks on all Norse terms (Yggdrasil, Valhalla, Nine Worlds), agent-specific rune signatures spelling each team member’s name in Elder Futhark, and epic per-agent quotes replacing the generic seal text. Each agent — FiremanDecko, Loki, Luna, Freya, Heimdall — shall bear their own inscription.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="The Theme Decree">ᚹ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Visual</p>
+        <h2 className="entry-title">The Theme Decree</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">File an issue to ensure the session display panel respects the chosen theme</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Filed <span class="hl">#1004</span> — the monitor UI’s session display panel does not fully honor the light/dark theme toggle. Some elements use hardcoded colors rather than CSS variables, creating visual dissonance when the theme shifts. All panels — session list, log viewer, agent bubbles, Norse tablets — must bow to the chosen theme.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-6">
+      <div className="entry-rune" title="Three Chains Forged Complete">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VI · Orchestration</p>
+        <h2 className="entry-title">Three Chains Forged Complete</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">/fire-next-up --resume</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The second status sweep found all three Loki dispatches had returned with <span class="hl">PASS</span> verdicts and CI green. Auto-merged in rapid succession: PR #986 (→ #982 Picker API trial gate), PR #998 (→ #983 Heilung modal restoration), and PR #996 (→ #994 header spacing). Three chains completed, three issues sealed. The Up Next queue grew to three items: #989, #1003, #1004.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-7">
+      <div className="entry-rune" title="Renewing the All-Father's Visage">ᛟ</div>
+      <div className="entry-body">
+        <p className="act-label">Act VII · Identity</p>
+        <h2 className="entry-title">Renewing the All-Father's Visage</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">File a bug: Odin light profile image is out of date in Odin's Throne</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Filed <span class="hl">#1005</span> — the Odin light-theme profile image in the monitor UI sidebar was stale. The canonical source at <span class="mono">.claude/agents/profiles/odin-light.png</span> weighs 1.7MB with the current portrait, but the copy at <span class="mono">development/monitor-ui/public/odin-light.png</span> was only 16KB — never synced after the update. The dark image was fine, both copies identical.</p></div>
+        </div>
+      </div>
+    </section>
+</div>
+
+<footer className="session-footer">
+  <div className="footer-cipher">ᛉ ᛏ ᚦ ᛟ</div>
+  <div className="footer-text">The Firing Line · Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
+</footer>
+
+</div>
