@@ -6,6 +6,7 @@ import { StatusBadge } from "./StatusBadge";
 import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
 import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
+import { downloadLog } from "../lib/localStorageLogs";
 
 interface Props {
   entries: LogEntry[];
@@ -95,6 +96,14 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
               {STATUS_ICONS[activeJob.status]} {STATUS_LABELS[activeJob.status]}
             </span>
             <StatusBadge state={wsState} />
+            <button
+              className="download-log-btn"
+              onClick={() => downloadLog(activeJob.sessionId)}
+              title="Download session log"
+              aria-label="Download session log"
+            >
+              <DownloadIcon />
+            </button>
           </span>
         </div>
         <NorseErrorTablet sessionId={activeJob.sessionId} message={streamError} />
@@ -119,6 +128,14 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
             {STATUS_ICONS[activeJob.status]} {STATUS_LABELS[activeJob.status]}
           </span>
           <StatusBadge state={wsState} />
+          <button
+            className="download-log-btn"
+            onClick={() => downloadLog(activeJob.sessionId)}
+            title="Download session log"
+            aria-label="Download session log"
+          >
+            <DownloadIcon />
+          </button>
         </span>
       </div>
       <div
@@ -320,6 +337,15 @@ function NorseTablet({ text }: { text: string }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M7 1v8M4 6l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 11h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
   );
 }
 

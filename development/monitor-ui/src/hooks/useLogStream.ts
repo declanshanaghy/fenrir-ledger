@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import type { ServerMessage, JsonEvent, ContentBlock } from "../lib/types";
 import { parseJsonlLine } from "../lib/jsonl";
 import { batchSummary } from "../lib/constants";
+import { appendLogLine } from "../lib/localStorageLogs";
 
 export interface LogEntry {
   id: string;
@@ -74,11 +75,17 @@ export const TTL_ERROR_PATTERN = /TTL expired|cleaned up/i;
 
 export function useLogStream() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeSessionId, _setActiveSessionId] = useState<string | null>(null);
+  const activeSessionIdRef = useRef<string | null>(null);
   const [streamError, setStreamError] = useState<string | null>(null);
   const [streamEnded, setStreamEnded] = useState(false);
   const taskPromptBuffer = useRef<string[]>([]);
   const inTaskPrompt = useRef(false);
+
+  const setActiveSessionId = useCallback((id: string | null) => {
+    activeSessionIdRef.current = id;
+    _setActiveSessionId(id);
+  }, []);
 
   const clearEntries = useCallback(() => {
     setEntries([]);
@@ -92,6 +99,10 @@ export function useLogStream() {
   const handleMessage = useCallback((msg: ServerMessage) => {
     if (msg.type === "log-line") {
       const line = msg.line;
+      // Persist raw line to localStorage for download
+      if (activeSessionIdRef.current) {
+        appendLogLine(activeSessionIdRef.current, line);
+      }
       const ev = parseJsonlLine(line);
       if (!ev) {
         if (line.trim()) {
