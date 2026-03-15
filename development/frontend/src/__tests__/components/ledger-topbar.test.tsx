@@ -2,7 +2,8 @@
  * LedgerTopBar — Component render tests
  *
  * Validates the ledger app header renders correct landmarks,
- * aria-labels, skip-nav link, and anonymous/authenticated states.
+ * aria-labels, skip-nav link, anonymous/authenticated states,
+ * and spacing between trial badge and profile section (Issue #994).
  *
  * Supersedes structural checks from layout/topbar.spec.ts E2E tests.
  */
@@ -153,5 +154,60 @@ describe("LedgerTopBar — Authenticated state", () => {
     // The theme toggle should not be separately visible; it lives in the dropdown
     const toggles = screen.queryAllByRole("button", { name: "Toggle theme" });
     expect(toggles.length).toBe(0);
+  });
+});
+
+// ── Issue #994: Spacing between trial badge and profile section ───────────────
+
+describe("LedgerTopBar — Issue #994: trial badge / profile spacing", () => {
+  it("anonymous avatar button has ml-4 left-margin class (16px gap from trial badge)", () => {
+    mockAuthStatus = "anonymous";
+    mockSession = null;
+    render(<LedgerTopBar />);
+    const avatarButton = screen.getByRole("button", {
+      name: "Sign in to sync your data",
+    });
+    expect(avatarButton.className).toContain("ml-4");
+  });
+
+  it("authenticated identity-cluster button has ml-4 left-margin class (16px gap from trial badge)", () => {
+    mockAuthStatus = "authenticated";
+    mockSession = { user: { name: "Odin Allfather", email: "odin@asgard.com" } };
+    render(<LedgerTopBar />);
+    const avatarButton = screen.getByRole("button", {
+      name: "Open user menu, signed in as odin@asgard.com",
+    });
+    expect(avatarButton.className).toContain("ml-4");
+  });
+
+  it("controls cluster uses gap-1 (was gap-0.5 before fix) for consistent item spacing", () => {
+    mockAuthStatus = "anonymous";
+    mockSession = null;
+    const { container } = render(<LedgerTopBar />);
+    // The right-side controls cluster is the only flex container with gap-1 and relative positioning
+    const cluster = container.querySelector(".relative.flex.items-center.gap-1");
+    expect(cluster).not.toBeNull();
+  });
+
+  it("anonymous avatar button retains min touch-target size after spacing change (AC2: mobile layout)", () => {
+    mockAuthStatus = "anonymous";
+    mockSession = null;
+    render(<LedgerTopBar />);
+    const avatarButton = screen.getByRole("button", {
+      name: "Sign in to sync your data",
+    });
+    // Touch target maintained at 44×44px — ensures layout doesn't break on 375px mobile
+    expect(avatarButton.style.minWidth).toBe("44px");
+    expect(avatarButton.style.minHeight).toBe("44px");
+  });
+
+  it("authenticated button retains min touch-target height after spacing change (AC2: mobile layout)", () => {
+    mockAuthStatus = "authenticated";
+    mockSession = { user: { name: "Thor", email: "thor@asgard.com" } };
+    render(<LedgerTopBar />);
+    const avatarButton = screen.getByRole("button", {
+      name: "Open user menu, signed in as thor@asgard.com",
+    });
+    expect(avatarButton.style.minHeight).toBe("44px");
   });
 });
