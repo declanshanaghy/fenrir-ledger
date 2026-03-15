@@ -1,5 +1,5 @@
 /**
- * Component tests for ThemeSwitcher — Issue #964
+ * Component tests for ThemeSwitcher — Issue #964, #981
  * Covers rendering and click behavior not addressed in useTheme.test.ts
  */
 import { describe, it, expect, vi, afterEach } from "vitest";
@@ -45,5 +45,23 @@ describe("ThemeSwitcher interactions", () => {
     const { container } = render(<ThemeSwitcher theme="light" setTheme={setTheme} />);
     await userEvent.click(within(container).getByRole("button", { name: /dark/i }));
     expect(setTheme).toHaveBeenCalledWith("dark");
+  });
+});
+
+// Issue #981 — compact icon-only pills with aria-labels
+describe("ThemeSwitcher accessibility — issue #981", () => {
+  it("each button has an explicit aria-label attribute", () => {
+    const { container } = render(<ThemeSwitcher theme="dark" setTheme={vi.fn()} />);
+    const root = within(container);
+    expect(root.getByRole("button", { name: "Light theme" }).getAttribute("aria-label")).toBe("Light theme");
+    expect(root.getByRole("button", { name: "Dark theme" }).getAttribute("aria-label")).toBe("Dark theme");
+  });
+
+  it("buttons are icon-only — contain no 'Light' or 'Dark' text labels", () => {
+    const { container } = render(<ThemeSwitcher theme="dark" setTheme={vi.fn()} />);
+    const buttons = container.querySelectorAll("button.theme-btn");
+    buttons.forEach((btn) => {
+      expect(btn.textContent).not.toMatch(/Light|Dark/);
+    });
   });
 });
