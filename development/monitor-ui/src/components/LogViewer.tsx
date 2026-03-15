@@ -13,11 +13,12 @@ interface Props {
   wsState: "connecting" | "open" | "closed" | "error";
   isFixture?: boolean;
   isTtlExpired?: boolean;
+  isNodeUnreachable?: boolean;
   streamError?: string | null;
   onSetSpeed?: (speed: number) => void;
 }
 
-export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, streamError, onSetSpeed }: Props) {
+export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed }: Props) {
   const termRef = useRef<HTMLDivElement>(null);
   const [fixtureSpeed, setFixtureSpeed] = useState(1);
   const [fixturePaused, setFixturePaused] = useState(false);
@@ -98,6 +99,32 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
           </span>
         </div>
         <NorseErrorTablet sessionId={activeJob.sessionId} message={streamError} />
+      </main>
+    );
+  }
+
+  // Node-unreachable / kubelet-timeout errors get the same Norse error tablet treatment
+  if (isNodeUnreachable && streamError) {
+    return (
+      <main className="content" aria-label="Log viewer">
+        <div className="content-header" aria-label="Active session">
+          <span className="session-title">
+            {activeJob.agentName} &mdash; #{activeJob.issue} Step {activeJob.step} (
+            {activeJob.sessionId})
+          </span>
+          <span className="header-badges">
+            <span
+              className="job-status-badge"
+              style={{ color: STATUS_COLORS[activeJob.status] }}
+              title={`Job status: ${activeJob.status}`}
+              aria-label={`Job status: ${STATUS_LABELS[activeJob.status]}`}
+            >
+              {STATUS_ICONS[activeJob.status]} {STATUS_LABELS[activeJob.status]}
+            </span>
+            <StatusBadge state={wsState} />
+          </span>
+        </div>
+        <NorseErrorTablet sessionId={activeJob.sessionId} message={streamError} variant="node-unreachable" />
       </main>
     );
   }

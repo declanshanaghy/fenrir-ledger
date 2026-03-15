@@ -72,6 +72,9 @@ export function parseEntrypointLine(line: string): LogEntry {
 /** TTL / pod-not-found patterns emitted by friendlyK8sError */
 export const TTL_ERROR_PATTERN = /TTL expired|cleaned up/i;
 
+/** Node-unreachable / kubelet-timeout patterns emitted by friendlyK8sError */
+export const NODE_UNREACHABLE_PATTERN = /Node unreachable|kubelet timeout/i;
+
 export function useLogStream() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -346,6 +349,7 @@ export function useLogStream() {
   }, []);
 
   const isTtlExpired = streamEnded && streamError !== null && TTL_ERROR_PATTERN.test(streamError);
+  const isNodeUnreachable = streamEnded && streamError !== null && NODE_UNREACHABLE_PATTERN.test(streamError);
 
   return {
     entries,
@@ -356,5 +360,6 @@ export function useLogStream() {
     streamError,
     streamEnded,
     isTtlExpired,
+    isNodeUnreachable,
   };
 }

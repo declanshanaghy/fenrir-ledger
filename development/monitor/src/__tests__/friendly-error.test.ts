@@ -50,7 +50,7 @@ describe("friendlyK8sError — HTTP status code mapping", () => {
 
   it("maps 500 to a Kubernetes API error message", () => {
     const result = friendlyK8sError("Internal Server Error 500", SESSION);
-    expect(result).toContain("Kubernetes API error");
+    expect(result).toContain("Kubernetes API");
     expect(result).toContain(SESSION);
     expect(result).not.toMatch(/\b500\b/);
   });

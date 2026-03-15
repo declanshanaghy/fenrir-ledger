@@ -17,6 +17,28 @@ import { parseJsonlLine, detectVerdict } from "./report.js";
 // ── K8s error message sanitiser ─────────────────────────────────────────────
 
 /**
+ * Regex matching node-unreachable / kubelet-timeout patterns that appear in
+ * 500-class K8s errors when a node is down or the kubelet is unresponsive.
+ *
+ * Matches messages containing any of:
+ *   - "i/o timeout"
+ *   - kubelet port 10250 connection failures ("dial tcp …:10250")
+ *   - "node … not ready" / "node … unreachable"
+ *   - "context deadline exceeded"
+ */
+export const NODE_UNREACHABLE_PATTERN =
+  /i\/o timeout|dial tcp[^)]*:10250|node[^\n]*(?:not ready|unreachable)|context deadline exceeded/i;
+
+/** Strip RFC-1918 / link-local IP addresses to avoid leaking internal topology. */
+function stripInternalIPs(msg: string): string {
+  return msg
+    .replace(/\b10\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, "<node-ip>")
+    .replace(/\b192\.168\.\d{1,3}\.\d{1,3}\b/g, "<node-ip>")
+    .replace(/\b172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}\b/g, "<node-ip>")
+    .replace(/\b169\.254\.\d{1,3}\.\d{1,3}\b/g, "<node-ip>");
+}
+
+/**
  * Map raw Kubernetes API errors to clean, user-friendly messages.
  *
  * The @kubernetes/client-node library often throws errors whose `.message`
@@ -25,6 +47,12 @@ import { parseJsonlLine, detectVerdict } from "./report.js";
  * single human-readable sentence safe to display in the monitor UI.
  */
 export function friendlyK8sError(rawMessage: string, sessionId: string): string {
+  // Detect node-unreachable / kubelet-timeout patterns before checking status code.
+  // These typically arrive as 500 but deserve a more specific, actionable message.
+  if (NODE_UNREACHABLE_PATTERN.test(rawMessage)) {
+    return `Node unreachable — the Kubernetes node running session ${sessionId} is not responding (kubelet timeout). The cluster is retrying; logs will resume if the node recovers.`;
+  }
+
   // Detect HTTP status code from messages like "HTTP status code 404" or "404 Not Found"
   const statusMatch = /\b(4\d\d|5\d\d)\b/.exec(rawMessage);
   const status = statusMatch ? parseInt(statusMatch[1]!, 10) : null;
@@ -37,7 +65,7 @@ export function friendlyK8sError(rawMessage: string, sessionId: string): string 
     case 401:
       return `Authentication error — check cluster credentials.`;
     case 500:
-      return `Kubernetes API error while fetching logs for session ${sessionId}. The cluster may be experiencing issues.`;
+      return `Kubernetes API server error while fetching logs for session ${sessionId}. The cluster may be experiencing issues.`;
     case 503:
       return `Kubernetes API unavailable — the cluster may be temporarily unreachable.`;
     default:
@@ -45,7 +73,8 @@ export function friendlyK8sError(rawMessage: string, sessionId: string): string 
   }
 
   // Strip raw HTTP artefacts: headers, status lines, "Body: undefined", etc.
-  const stripped = rawMessage
+  // Also redact internal IPs that may have slipped through.
+  const stripped = stripInternalIPs(rawMessage)
     .replace(/HTTP response body:.*$/gim, "")
     .replace(/HTTP status code:?\s*\d+/gi, "")
     .replace(/\bBody:\s*undefined\b/gi, "")
