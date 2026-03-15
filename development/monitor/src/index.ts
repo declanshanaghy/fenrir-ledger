@@ -1,16 +1,7 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { getCookie } from "hono/cookie";
 import { listAgentJobs } from "./k8s.js";
 import { attachWebSocketServer } from "./ws.js";
-import {
-  handleLogin,
-  handleCallback,
-  handleLogout,
-  verifySessionToken,
-  loginPage,
-  SESSION_COOKIE,
-} from "./auth.js";
 
 const app = new Hono();
 
@@ -23,38 +14,7 @@ app.get("/healthz", (c) => {
   return c.json({ status: "ok", service: "odin-throne-monitor", ts: Date.now() });
 });
 
-// ── Auth toggle ──────────────────────────────────────────────────────────────
-const AUTH_DISABLED = !process.env.SESSION_SECRET && process.env.NODE_ENV !== "production";
-if (AUTH_DISABLED) {
-  console.log("[odin-throne] Auth disabled (no SESSION_SECRET, non-production)");
-}
-
-// ── Auth routes (public, but only when auth is enabled) ──────────────────────
-if (!AUTH_DISABLED) {
-  app.get("/auth/login", handleLogin);
-  app.get("/auth/callback", handleCallback);
-  app.get("/auth/logout", handleLogout);
-} else {
-  app.get("/auth/login", (c) => c.redirect("/"));
-  app.get("/auth/callback", (c) => c.redirect("/"));
-  app.get("/auth/logout", (c) => c.redirect("/"));
-}
-
-// ── Session gate — all routes below require a valid session ──────────────────
-app.use("*", async (c, next) => {
-  if (AUTH_DISABLED) return next();
-  const token = getCookie(c, SESSION_COOKIE);
-  if (!token || !verifySessionToken(token)) {
-    const accept = c.req.header("accept") ?? "";
-    if (accept.includes("application/json")) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-    return c.html(loginPage(), 401);
-  }
-  await next();
-});
-
-// ── Protected routes ─────────────────────────────────────────────────────────
+// ── Protected routes (auth enforced by oauth2-proxy sidecar) ─────────────────
 
 // List agent jobs — kept for curl debugging; UI uses WebSocket push
 app.get("/api/jobs", async (c) => {
