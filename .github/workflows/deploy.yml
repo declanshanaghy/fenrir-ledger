@@ -30,6 +30,11 @@
 #   UMAMI_OAUTH2_PROXY_COOKIE_SECRET — 32-byte cookie secret for Umami oauth2-proxy sidecar
 #                                       Generate: openssl rand -hex 16  (32 hex chars = 32 bytes)
 #                                       MUST be exactly 16, 24, or 32 bytes — see oauth2-proxy docs
+#   MONITOR_OAUTH2_PROXY_COOKIE_SECRET — 32-byte cookie secret for Odin's Throne oauth2-proxy sidecar
+#                                        Generate: openssl rand -hex 16  (32 hex chars = 32 bytes)
+#                                        MUST be exactly 16, 24, or 32 bytes — see oauth2-proxy docs
+#   ODINS_THRONE_CLIENT_ID            — Google OAuth client ID for Odin's Throne
+#   ODINS_THRONE_CLIENT_SECRET        — Google OAuth client secret for Odin's Throne
 # --------------------------------------------------------------------------
 
 name: Deploy to GKE
@@ -604,6 +609,19 @@ jobs:
       - name: Ensure fenrir-monitor namespace
         run: |
           kubectl create namespace fenrir-monitor --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create/update Odin's Throne oauth2-proxy secrets
+        # oauth2-proxy requires OAUTH2_PROXY_COOKIE_SECRET to be exactly 16, 24, or 32 bytes.
+        # Created imperatively (NOT via Helm template) to prevent placeholder values from
+        # values.yaml overwriting real credentials on every helm upgrade.
+        run: |
+          kubectl create secret generic odin-throne-oauth2-proxy-secrets \
+            --namespace=fenrir-monitor \
+            --from-literal=GOOGLE_CLIENT_ID="${{ secrets.ODINS_THRONE_CLIENT_ID }}" \
+            --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.ODINS_THRONE_CLIENT_SECRET }}" \
+            --from-literal=OAUTH2_PROXY_COOKIE_SECRET="${{ secrets.MONITOR_OAUTH2_PROXY_COOKIE_SECRET }}" \
+            --from-literal=emails.txt="declanshanaghy@gmail.com" \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
