@@ -114,7 +114,9 @@ const AGENT_VERDICT_CONFIG: Record<AgentKey, AgentVerdictConfig> = {
 };
 
 // ── Detection ───────────────────────────────────────────────────────────────
-const VERDICT_HEADING_RE = /^#{1,2}\s+(Handoff|QA Verdict)/m;
+// Match H1/H2 headings that contain "Handoff" or "QA Verdict" anywhere in the line
+// e.g. "## FiremanDecko → Loki Handoff" or "## Loki QA Verdict — Issue #1019"
+const VERDICT_HEADING_RE = /^#{1,2}\s+[^\n]*(Handoff|QA Verdict)/m;
 const AGENT_NAME_RE = /(FiremanDecko|Loki|Luna|Heimdall|Freya)/i;
 
 export function isVerdictMessage(text: string): boolean {
@@ -262,10 +264,31 @@ function renderMarkdown(text: string): React.ReactNode[] {
       continue;
     }
 
+    // Checkbox list item (- [ ] or - [x]) — must be checked before general unordered list
+    if (/^- \[[ xX]\] /.test(line)) {
+      const items: Array<{ checked: boolean; text: string }> = [];
+      while (i < lines.length && /^- \[[ xX]\] /.test(lines[i] ?? "")) {
+        const l = lines[i] ?? "";
+        const checked = /^- \[[xX]\] /.test(l);
+        items.push({ checked, text: l.replace(/^- \[[ xX]\] /, "") });
+        i++;
+      }
+      nodes.push(
+        <ul key={`check-${i}`} className="nvi-md-ul nvi-md-checklist">
+          {items.map(({ checked, text }, j) => (
+            <li key={j} className={checked ? "nvi-md-checked" : "nvi-md-unchecked"}>
+              {renderInline(text)}
+            </li>
+          ))}
+        </ul>
+      );
+      continue;
+    }
+
     // Unordered list — collect consecutive items
     if (/^[-*+] /.test(line)) {
       const items: string[] = [];
-      while (i < lines.length && /^[-*+] /.test(lines[i] ?? "")) {
+      while (i < lines.length && /^[-*+] /.test(lines[i] ?? "") && !/^- \[[ xX]\] /.test(lines[i] ?? "")) {
         items.push((lines[i] ?? "").replace(/^[-*+] /, ""));
         i++;
       }
@@ -292,27 +315,6 @@ function renderMarkdown(text: string): React.ReactNode[] {
             <li key={j}>{renderInline(item)}</li>
           ))}
         </ol>
-      );
-      continue;
-    }
-
-    // Checkbox list item (- [ ] or - [x])
-    if (/^- \[[ xX]\] /.test(line)) {
-      const items: Array<{ checked: boolean; text: string }> = [];
-      while (i < lines.length && /^- \[[ xX]\] /.test(lines[i] ?? "")) {
-        const l = lines[i] ?? "";
-        const checked = /^- \[[xX]\] /.test(l);
-        items.push({ checked, text: l.replace(/^- \[[ xX]\] /, "") });
-        i++;
-      }
-      nodes.push(
-        <ul key={`check-${i}`} className="nvi-md-ul nvi-md-checklist">
-          {items.map(({ checked, text }, j) => (
-            <li key={j} className={checked ? "nvi-md-checked" : "nvi-md-unchecked"}>
-              {renderInline(text)}
-            </li>
-          ))}
-        </ul>
       );
       continue;
     }
