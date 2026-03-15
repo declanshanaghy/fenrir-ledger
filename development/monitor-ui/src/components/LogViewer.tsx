@@ -7,6 +7,76 @@ import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
 import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_QUOTES, AGENT_RUNE_NAMES, AGENT_RUNE_TITLES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
 import { downloadLog } from "../lib/localStorageLogs";
+import { resolveSessionTitle } from "../lib/resolveSessionTitle";
+
+interface SessionHeaderProps {
+  job: DisplayJob;
+  wsState: "connecting" | "open" | "closed" | "error";
+  onDownload?: () => void;
+  showDownload?: boolean;
+}
+
+function SessionHeader({ job, wsState, onDownload, showDownload = true }: SessionHeaderProps) {
+  const displayTitle = resolveSessionTitle(job);
+  // Truncate session ID to last 8 chars for display
+  const shortId = job.sessionId.length > 8
+    ? job.sessionId.slice(-8)
+    : job.sessionId;
+
+  return (
+    <div
+      className="content-header"
+      aria-label={`Active session: ${displayTitle}`}
+    >
+      <div className="session-title-block">
+        <span
+          className="session-title-primary"
+          title={displayTitle}
+        >
+          {displayTitle}
+        </span>
+        <div className="session-meta-row">
+          <span
+            className="session-agent-badge"
+            aria-label={`Agent: ${job.agentName}`}
+          >
+            {job.agentName}
+          </span>
+          <span className="session-step-tag">Step {job.step}</span>
+          <span
+            className="session-id-chip"
+            title={job.sessionId}
+            role="text"
+            aria-label={`Session ID: ${job.sessionId}`}
+          >
+            <span className="session-id-label">Session:</span> {shortId}…
+          </span>
+        </div>
+      </div>
+      <span className="header-badges">
+        <span
+          className={`job-status-badge${job.status === "running" ? " pulse" : ""}`}
+          style={{ color: STATUS_COLORS[job.status] }}
+          title={`Job status: ${job.status}`}
+          aria-label={`Job status: ${STATUS_LABELS[job.status]}`}
+        >
+          {STATUS_ICONS[job.status]} {STATUS_LABELS[job.status]}
+        </span>
+        <StatusBadge state={wsState} />
+        {showDownload && onDownload && (
+          <button
+            className="download-log-btn"
+            onClick={onDownload}
+            title="Download session log"
+            aria-label="Download session log"
+          >
+            <DownloadIcon />
+          </button>
+        )}
+      </span>
+    </div>
+  );
+}
 
 interface Props {
   entries: LogEntry[];
@@ -82,32 +152,11 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
   if (isTtlExpired && streamError) {
     return (
       <main className="content" aria-label="Log viewer">
-        <div className="content-header" aria-label="Active session">
-          <span className="session-title">
-            {activeJob.agentName} &mdash; #{activeJob.issue} Step {activeJob.step} (
-            {activeJob.sessionId})
-          </span>
-          <span className="header-badges">
-            <span
-              className="job-status-badge"
-              style={{ color: STATUS_COLORS[activeJob.status] }}
-              title={`Job status: ${activeJob.status}`}
-              aria-label={`Job status: ${STATUS_LABELS[activeJob.status]}`}
-            >
-              {STATUS_ICONS[activeJob.status]} {STATUS_LABELS[activeJob.status]}
-            </span>
-            <StatusBadge state={wsState} />
-            <CopySessionIdButton sessionId={activeJob.sessionId} />
-            <button
-              className="download-log-btn"
-              onClick={() => downloadLog(activeJob.sessionId)}
-              title="Download session log"
-              aria-label="Download session log"
-            >
-              <DownloadIcon />
-            </button>
-          </span>
-        </div>
+        <SessionHeader
+          job={activeJob}
+          wsState={wsState}
+          onDownload={() => downloadLog(activeJob.sessionId)}
+        />
         <NorseErrorTablet sessionId={activeJob.sessionId} message={streamError} />
       </main>
     );
@@ -117,24 +166,11 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
   if (isNodeUnreachable && streamError) {
     return (
       <main className="content" aria-label="Log viewer">
-        <div className="content-header" aria-label="Active session">
-          <span className="session-title">
-            {activeJob.agentName} &mdash; #{activeJob.issue} Step {activeJob.step} (
-            {activeJob.sessionId})
-          </span>
-          <span className="header-badges">
-            <span
-              className="job-status-badge"
-              style={{ color: STATUS_COLORS[activeJob.status] }}
-              title={`Job status: ${activeJob.status}`}
-              aria-label={`Job status: ${STATUS_LABELS[activeJob.status]}`}
-            >
-              {STATUS_ICONS[activeJob.status]} {STATUS_LABELS[activeJob.status]}
-            </span>
-            <StatusBadge state={wsState} />
-            <CopySessionIdButton sessionId={activeJob.sessionId} />
-          </span>
-        </div>
+        <SessionHeader
+          job={activeJob}
+          wsState={wsState}
+          showDownload={false}
+        />
         <NorseErrorTablet sessionId={activeJob.sessionId} message={streamError} variant="node-unreachable" />
       </main>
     );
@@ -142,32 +178,11 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
 
   return (
     <main className="content" aria-label="Log viewer" style={{ position: "relative" }}>
-      <div className="content-header" aria-label="Active session">
-        <span className="session-title">
-          {activeJob.agentName} &mdash; #{activeJob.issue} Step {activeJob.step} (
-          {activeJob.sessionId})
-        </span>
-        <span className="header-badges">
-          <span
-            className={`job-status-badge${activeJob.status === "running" ? " pulse" : ""}`}
-            style={{ color: STATUS_COLORS[activeJob.status] }}
-            title={`Job status: ${activeJob.status}`}
-            aria-label={`Job status: ${STATUS_LABELS[activeJob.status]}`}
-          >
-            {STATUS_ICONS[activeJob.status]} {STATUS_LABELS[activeJob.status]}
-          </span>
-          <StatusBadge state={wsState} />
-          <CopySessionIdButton sessionId={activeJob.sessionId} />
-          <button
-            className="download-log-btn"
-            onClick={() => downloadLog(activeJob.sessionId)}
-            title="Download session log"
-            aria-label="Download session log"
-          >
-            <DownloadIcon />
-          </button>
-        </span>
-      </div>
+      <SessionHeader
+        job={activeJob}
+        wsState={wsState}
+        onDownload={() => downloadLog(activeJob.sessionId)}
+      />
       <div
         className="log-terminal"
         ref={termRef}

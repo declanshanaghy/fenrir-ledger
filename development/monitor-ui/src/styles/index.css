@@ -249,6 +249,23 @@ body {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.65rem; color: var(--text-void); margin-top: 0.1rem;
 }
+/* ── New issue-title-primary card layout ── */
+.card-issue-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 500;
+  flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--text-saga);
+}
+.card-meta-new {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  margin-top: 0.2rem;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-rune);
+}
+.card-agent-badge {
+  font-size: 0.6rem; font-weight: 600;
+  padding: 1px 5px; border: 1px solid var(--rune-border);
+  white-space: nowrap;
+}
 
 /* ── Content area ──────────────────────────────── */
 .content {
@@ -260,8 +277,39 @@ body {
   padding: 0.6rem 1rem;
   border-bottom: 1px solid var(--rune-border);
   background: var(--forge); flex-shrink: 0;
-  display: flex; align-items: center; gap: 1rem;
+  display: flex; align-items: flex-start; gap: 1rem;
 }
+/* ── New two-row session title block ── */
+.session-title-block {
+  display: flex; flex-direction: column; gap: 3px;
+  flex: 1; min-width: 0;
+}
+.session-title-primary {
+  font-family: 'Cinzel', serif; font-size: 0.875rem; font-weight: 700;
+  color: var(--gold);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.session-meta-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.session-agent-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600;
+  padding: 1px 6px; border: 1px solid var(--rune-border);
+  color: var(--gold-bright); white-space: nowrap;
+}
+.session-step-tag {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600;
+  padding: 1px 5px; border: 1px solid var(--rune-border);
+  color: var(--text-rune); white-space: nowrap;
+}
+.session-id-chip {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+  font-style: italic; color: var(--text-void); cursor: help;
+}
+.session-id-label {
+  /* Hidden on mobile (≤600px) via responsive rules below */
+}
+/* Legacy class — kept for any remaining external references */
 .content-header .session-title {
   font-family: 'Cinzel', serif; font-size: 0.85rem;
   color: var(--gold); flex: 1; min-width: 0;
@@ -812,6 +860,9 @@ body {
   }
   .content { height: 60vh; }
   html, body { overflow: auto; }
+  /* Mobile session header: hide WS badge label and "Session:" text prefix */
+  .session-id-label { display: none; }
+  .ws-badge { display: none; }
 }
 
 /* ── Norse Error Tablet ────────────────────────────────────────────────────── */

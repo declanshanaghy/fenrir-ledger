@@ -36,15 +36,17 @@ MODEL=""
 PROMPT=""
 IMAGE_TAG="latest"
 DRY_RUN=false
+ISSUE_NUMBER=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --session-id) SESSION_ID="$2"; shift 2 ;;
-    --branch)     BRANCH="$2"; shift 2 ;;
-    --model)      MODEL="$2"; shift 2 ;;
-    --prompt)     PROMPT="$2"; shift 2 ;;
-    --image-tag)  IMAGE_TAG="$2"; shift 2 ;;
-    --dry-run)    DRY_RUN=true; shift ;;
+    --session-id)    SESSION_ID="$2"; shift 2 ;;
+    --branch)        BRANCH="$2"; shift 2 ;;
+    --model)         MODEL="$2"; shift 2 ;;
+    --prompt)        PROMPT="$2"; shift 2 ;;
+    --image-tag)     IMAGE_TAG="$2"; shift 2 ;;
+    --issue-number)  ISSUE_NUMBER="$2"; shift 2 ;;
+    --dry-run)       DRY_RUN=true; shift ;;
     *)
       echo "Unknown argument: $1" >&2
       exit 1
@@ -56,6 +58,18 @@ done
 if [ -z "$SESSION_ID" ] || [ -z "$BRANCH" ] || [ -z "$MODEL" ] || [ -z "$PROMPT" ]; then
   echo "Error: --session-id, --branch, --model, and --prompt are all required." >&2
   exit 1
+fi
+
+# --------------------------------------------------------------------------
+# Fetch issue / PR titles at dispatch time (stored as K8s annotations so
+# the monitor can show descriptive titles without runtime GitHub API calls)
+# --------------------------------------------------------------------------
+ISSUE_TITLE=""
+PR_TITLE=""
+
+if [ -n "$ISSUE_NUMBER" ] && command -v gh &>/dev/null; then
+  ISSUE_TITLE=$(gh issue view "$ISSUE_NUMBER" --json title -q '.title' 2>/dev/null || true)
+  PR_TITLE=$(gh pr list --head "$BRANCH" --json title -q '.[0].title' 2>/dev/null || true)
 fi
 
 # --------------------------------------------------------------------------
@@ -93,6 +107,8 @@ awk \
   -v model="$MODEL" \
   -v image_tag="$IMAGE_TAG" \
   -v prompt_b64="$PROMPT_B64" \
+  -v issue_title="$ISSUE_TITLE" \
+  -v pr_title="$PR_TITLE" \
   '{
     gsub(/\{\{JOB_NAME\}\}/, job_name)
     gsub(/\{\{SESSION_ID\}\}/, session_id)
@@ -100,6 +116,8 @@ awk \
     gsub(/\{\{AGENT_MODEL\}\}/, model)
     gsub(/\{\{IMAGE_TAG\}\}/, image_tag)
     gsub(/\{\{TASK_PROMPT\}\}/, prompt_b64)
+    gsub(/\{\{ISSUE_TITLE\}\}/, issue_title)
+    gsub(/\{\{PR_TITLE\}\}/, pr_title)
     print
   }' "$TEMPLATE" > "$TMPFILE"
 

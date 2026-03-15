@@ -10,6 +10,8 @@ export interface Job {
   startedAt: string | null;
   completedAt: string | null;
   podName: string | null;
+  issueTitle: string | null;
+  branchName: string | null;
   fixture?: boolean;
 }
 
@@ -48,6 +50,8 @@ export interface DisplayJob {
   status: Job["status"];
   startTime: number | null;
   completionTime: number | null;
+  issueTitle: string | null;
+  branchName: string | null;
 }
 
 // JSONL event types

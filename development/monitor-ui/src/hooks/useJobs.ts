@@ -14,6 +14,8 @@ function parseJob(job: Job): DisplayJob {
     status: job.status,
     startTime: job.startedAt ? new Date(job.startedAt).getTime() : null,
     completionTime: job.completedAt ? new Date(job.completedAt).getTime() : null,
+    issueTitle: job.issueTitle ?? null,
+    branchName: job.branchName ?? null,
   };
 }
 
