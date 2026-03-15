@@ -138,6 +138,28 @@ rbac:
   enabled: true
   agentsNamespace: fenrir-agents
 
+# -- oauth2-proxy Sidecar (in UI pod) -------------------------------------
+# Fronts the nginx UI container. Credentials created imperatively by CI.
+oauth2Proxy:
+  enabled: true
+  image:
+    repository: quay.io/oauth2-proxy/oauth2-proxy
+    tag: v7.6.0
+    pullPolicy: IfNotPresent
+  port: 4180
+  redirectUrl: "https://monitor.fenrirledger.com/oauth2/callback"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+      ephemeral-storage: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+      ephemeral-storage: "128Mi"
+  # oauth2-proxy secrets are created imperatively by the deploy-odin-throne CI step.
+  # They are NOT rendered from values.yaml. See secrets.yaml template for details.
+
 # -- Secrets ---------------------------------------------------------------
 secrets:
   enabled: false
