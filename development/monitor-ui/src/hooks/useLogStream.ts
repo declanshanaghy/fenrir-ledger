@@ -5,7 +5,7 @@ import { batchSummary } from "../lib/constants";
 
 export interface LogEntry {
   id: string;
-  type: "system" | "turn-divider" | "assistant-text" | "tool-use" | "tool-result" | "tool-batch" | "raw" | "error" | "warning" | "stream-end" | "verdict" | "entrypoint-header" | "entrypoint-ok" | "entrypoint-info" | "entrypoint-task" | "entrypoint-group";
+  type: "system" | "turn-divider" | "assistant-text" | "tool-use" | "tool-result" | "tool-batch" | "raw" | "error" | "warning" | "stream-end" | "verdict" | "entrypoint-header" | "entrypoint-ok" | "entrypoint-info" | "entrypoint-task" | "entrypoint-group" | "entrypoint-fatal";
   // system
   detail?: string;
   // turn-divider
@@ -36,36 +36,34 @@ function nextId(): string {
   return `log-${++entryCounter}`;
 }
 
+/** Strip the kubectl log timestamp prefix (e.g. "2026-03-15T19:58:07Z ") */
+export function stripTimestamp(line: string): string {
+  return line.replace(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\s+/, "");
+}
+
 export function parseEntrypointLine(line: string): LogEntry {
   // === Headers ===
   if (/^===.*===$/.test(line)) {
     return { id: nextId(), type: "entrypoint-header", text: line.replace(/^=+\s*|\s*=+$/g, "") };
   }
+  // [FATAL] errors — red, prominent
+  if (line.startsWith("[FATAL]")) {
+    return { id: nextId(), type: "entrypoint-fatal", text: line.slice(7).trim() };
+  }
+  // [WARN] lines — reuse warning type
+  if (line.startsWith("[WARN]")) {
+    return { id: nextId(), type: "warning", message: line.slice(6).trim() };
+  }
   // [ok] lines
   if (line.startsWith("[ok]")) {
-    return { id: nextId(), type: "entrypoint-ok", text: line.slice(5) };
+    return { id: nextId(), type: "entrypoint-ok", text: line.slice(4).trim() };
   }
-  // Key: Value lines (Session:, Branch:, Model:)
+  // Key: Value lines (Session:, Branch:, Model:, Working directory:)
   const kvMatch = /^(Session|Branch|Model|Working directory):\s*(.+)$/.exec(line);
   if (kvMatch) {
     return { id: nextId(), type: "entrypoint-info", detail: kvMatch[1]!, text: kvMatch[2]! };
   }
-  // --- TASK PROMPT --- / --- END PROMPT ---
-  if (/^---\s*(TASK PROMPT|END PROMPT)\s*---$/.test(line)) {
-    return { id: nextId(), type: "entrypoint-header", text: line.replace(/^-+\s*|\s*-+$/g, "") };
-  }
-  // Task prompt content (between TASK PROMPT and END PROMPT)
-  if (line.startsWith("You are ")) {
-    return { id: nextId(), type: "entrypoint-task", text: line };
-  }
-  // Noise lines we can dim
-  if (/^(Cloning|Switched to|branch '|From |Already|Current branch|added \d|Run |Some issues|\d+ (packages|high))/.test(line)) {
-    return { id: nextId(), type: "raw", text: line };
-  }
-  // Status lines (Waiting for DNS, etc)
-  if (/^(Waiting|remote:)/.test(line)) {
-    return { id: nextId(), type: "raw", text: line };
-  }
+  // Noise lines (npm/git output) — grouped into noise accordion
   return { id: nextId(), type: "raw", text: line };
 }
 
@@ -79,12 +77,14 @@ export function useLogStream() {
   const [streamEnded, setStreamEnded] = useState(false);
   const taskPromptBuffer = useRef<string[]>([]);
   const inTaskPrompt = useRef(false);
+  const inEntrypoint = useRef(false);
 
   const clearEntries = useCallback(() => {
     setEntries([]);
     entryCounter = 0;
     taskPromptBuffer.current = [];
     inTaskPrompt.current = false;
+    inEntrypoint.current = false;
     setStreamError(null);
     setStreamEnded(false);
   }, []);
@@ -95,15 +95,16 @@ export function useLogStream() {
       const ev = parseJsonlLine(line);
       if (!ev) {
         if (line.trim()) {
-          const trimmed = line.trim();
+          // Strip kubectl timestamp prefix (e.g. "2026-03-15T19:58:07Z ")
+          const stripped = stripTimestamp(line.trim());
 
-          // Task prompt buffering
-          if (/^---\s*TASK PROMPT\s*---$/.test(trimmed)) {
+          // Task prompt buffering (happens after "Starting Claude Code")
+          if (/^---\s*TASK PROMPT\s*---$/.test(stripped)) {
             inTaskPrompt.current = true;
             taskPromptBuffer.current = [];
             return;
           }
-          if (/^---\s*END PROMPT\s*---$/.test(trimmed)) {
+          if (/^---\s*END PROMPT\s*---$/.test(stripped)) {
             inTaskPrompt.current = false;
             const fullPrompt = taskPromptBuffer.current.join("\n");
             taskPromptBuffer.current = [];
@@ -114,12 +115,20 @@ export function useLogStream() {
             return;
           }
           if (inTaskPrompt.current) {
-            taskPromptBuffer.current.push(trimmed);
+            taskPromptBuffer.current.push(stripped);
             return;
           }
 
-          // When "Starting Claude Code" appears, collapse all prior entries into a group
-          if (/^===\s*Starting Claude Code\s*===/.test(trimmed)) {
+          // Entrypoint section start marker
+          if (/^===\s*Agent Sandbox Entrypoint\s*===/.test(stripped)) {
+            inEntrypoint.current = true;
+            setEntries((prev) => [...prev, parseEntrypointLine(stripped)]);
+            return;
+          }
+
+          // Entrypoint section end marker — collapse all prior entries into a group
+          if (/^===\s*Starting Claude Code\s*===/.test(stripped)) {
+            inEntrypoint.current = false;
             setEntries((prev) => {
               const group: LogEntry = {
                 id: nextId(),
@@ -127,12 +136,19 @@ export function useLogStream() {
                 text: "Agent Sandbox Setup",
                 children: [...prev],
               };
-              return [group, parseEntrypointLine(trimmed)];
+              return [group, parseEntrypointLine(stripped)];
             });
-          } else {
-            const entry = parseEntrypointLine(trimmed);
-            setEntries((prev) => [...prev, entry]);
+            return;
           }
+
+          // Inside entrypoint section — parse with structured types
+          if (inEntrypoint.current) {
+            setEntries((prev) => [...prev, parseEntrypointLine(stripped)]);
+            return;
+          }
+
+          // Outside entrypoint — render as raw (dimmed) text
+          setEntries((prev) => [...prev, { id: nextId(), type: "raw", text: stripped }]);
         }
         return;
       }
