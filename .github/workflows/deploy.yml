@@ -4,7 +4,7 @@
 # Runs on every push to main:
 #   1. Terraform init/plan/apply (idempotent — no-ops if nothing changed)
 #   2. Docker build & push to Google Artifact Registry
-#   3. Rolling deployment to GKE Autopilot (zero-downtime)
+#   3. Rolling deployment to GKE Autopilot (zero-downtime), per-service parallel jobs
 #   4. Post-deploy health check against /api/health
 #
 # Required GitHub Secrets:
@@ -227,12 +227,12 @@ jobs:
           echo "- **Digest:** \`${{ steps.build-monitor.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
   # --------------------------------------------------------------------------
-  # Job 3: Deploy to GKE Autopilot with rolling update
+  # Job 3a: Deploy Redis to GKE (fenrir-app namespace)
   # --------------------------------------------------------------------------
-  deploy:
-    name: Deploy to GKE
-    needs: [build-and-push, build-and-push-monitor]
-    if: ${{ !inputs.skip_deploy }}
+  deploy-redis:
+    name: Deploy Redis
+    needs: terraform
+    if: ${{ !inputs.skip_deploy && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -257,7 +257,57 @@ jobs:
           location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Ensure namespaces and service accounts exist
+      - name: Ensure fenrir-app namespace and service account
+        run: |
+          kubectl create namespace fenrir-app --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create serviceaccount fenrir-app-sa \
+            --namespace=fenrir-app --dry-run=client -o yaml | kubectl apply -f -
+          kubectl annotate serviceaccount fenrir-app-sa \
+            --namespace=fenrir-app --overwrite \
+            iam.gke.io/gcp-service-account=fenrir-app-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+
+      - name: Apply Redis StatefulSet
+        run: |
+          kubectl apply -f infrastructure/k8s/app/redis-statefulset.yaml
+
+      - name: Wait for Redis ready
+        run: |
+          kubectl rollout status statefulset/redis \
+            --namespace=fenrir-app \
+            --timeout=120s
+
+  # --------------------------------------------------------------------------
+  # Job 3b: Deploy Fenrir App to GKE
+  # --------------------------------------------------------------------------
+  deploy-fenrir-app:
+    name: Deploy Fenrir App
+    needs: build-and-push
+    if: ${{ !inputs.skip_deploy && needs.build-and-push.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
+          location: ${{ secrets.GCP_REGION }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Ensure namespaces and service accounts
         run: |
           # App namespace
           kubectl create namespace fenrir-app --dry-run=client -o yaml | kubectl apply -f -
@@ -274,12 +324,6 @@ jobs:
           kubectl annotate serviceaccount fenrir-agents-sa \
             --namespace=fenrir-agents --overwrite \
             iam.gke.io/gcp-service-account=fenrir-agents-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
-
-          # Analytics namespace (for Umami)
-          kubectl create namespace fenrir-analytics --dry-run=client -o yaml | kubectl apply -f -
-
-          # Monitor namespace (for Odin's Throne)
-          kubectl create namespace fenrir-monitor --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Create/update K8s secrets
         run: |
@@ -307,30 +351,10 @@ jobs:
             --from-literal=gh-token="${{ secrets.GH_TOKEN_AGENTS }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Create/update Umami secrets
-        run: |
-          kubectl create secret generic umami-secrets \
-            --namespace=fenrir-analytics \
-            --from-literal=DATABASE_URL="postgresql://umami:umami-pg-password@postgresql-svc.fenrir-analytics.svc.cluster.local:5432/umami" \
-            --from-literal=POSTGRES_PASSWORD="umami-pg-password" \
-            --from-literal=DATABASE_PASSWORD="umami-pg-password" \
-            --from-literal=APP_SECRET="umami-app-secret-change-in-prod" \
-            --dry-run=client -o yaml | kubectl apply -f -
-
       - name: Set up Helm
         uses: azure/setup-helm@v4
         with:
           version: 'v3.20.1'
-
-      - name: Apply Redis StatefulSet
-        run: |
-          kubectl apply -f infrastructure/k8s/app/redis-statefulset.yaml
-
-      - name: Wait for Redis ready
-        run: |
-          kubectl rollout status statefulset/redis \
-            --namespace=fenrir-app \
-            --timeout=120s
 
       - name: Deploy with Helm
         run: |
@@ -343,54 +367,13 @@ jobs:
             --wait \
             --timeout=5m
 
-      - name: Deploy Umami with Helm
-        run: |
-          helm upgrade --install umami \
-            ./infrastructure/helm/umami \
-            --namespace=fenrir-analytics \
-            -f ./infrastructure/helm/umami/values-prod.yaml \
-            --wait \
-            --timeout=5m
-
-      - name: Deploy Odin's Throne with Helm
-        run: |
-          helm upgrade --install odin-throne \
-            ./infrastructure/helm/odin-throne \
-            --namespace=fenrir-monitor \
-            -f ./infrastructure/helm/odin-throne/values-prod.yaml \
-            --set app.image.repository=${{ env.REGISTRY }}/${{ env.MONITOR_IMAGE_NAME }} \
-            --set app.image.tag=${{ env.IMAGE_TAG }} \
-            --wait \
-            --timeout=5m
-
-      - name: Verify deployment
-        run: |
-          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### Pod Status" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -n fenrir-app -l app.kubernetes.io/name=fenrir-app >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### Service Endpoints" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get svc -n fenrir-app >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### Ingress" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get ingress -n fenrir-app >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
   # --------------------------------------------------------------------------
-  # Job 4: Post-deploy health check
+  # Job 3c: Deploy Umami analytics to GKE
   # --------------------------------------------------------------------------
-  health-check:
-    name: Post-Deploy Health Check
-    needs: deploy
-    if: ${{ !inputs.skip_deploy }}
+  deploy-umami:
+    name: Deploy Umami
+    needs: terraform
+    if: ${{ !inputs.skip_deploy && (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -414,6 +397,144 @@ jobs:
           cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
           location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Ensure fenrir-analytics namespace
+        run: |
+          kubectl create namespace fenrir-analytics --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create/update Umami secrets
+        run: |
+          kubectl create secret generic umami-secrets \
+            --namespace=fenrir-analytics \
+            --from-literal=DATABASE_URL="postgresql://umami:umami-pg-password@postgresql-svc.fenrir-analytics.svc.cluster.local:5432/umami" \
+            --from-literal=POSTGRES_PASSWORD="umami-pg-password" \
+            --from-literal=DATABASE_PASSWORD="umami-pg-password" \
+            --from-literal=APP_SECRET="umami-app-secret-change-in-prod" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.20.1'
+
+      - name: Deploy Umami with Helm
+        run: |
+          helm upgrade --install umami \
+            ./infrastructure/helm/umami \
+            --namespace=fenrir-analytics \
+            -f ./infrastructure/helm/umami/values-prod.yaml \
+            --wait \
+            --timeout=5m
+
+  # --------------------------------------------------------------------------
+  # Job 3d: Deploy Odin's Throne monitor to GKE
+  # --------------------------------------------------------------------------
+  deploy-odin-throne:
+    name: Deploy Odin's Throne
+    needs: build-and-push-monitor
+    if: ${{ !inputs.skip_deploy && needs.build-and-push-monitor.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
+          location: ${{ secrets.GCP_REGION }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Ensure fenrir-monitor namespace
+        run: |
+          kubectl create namespace fenrir-monitor --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.20.1'
+
+      - name: Deploy Odin's Throne with Helm
+        run: |
+          helm upgrade --install odin-throne \
+            ./infrastructure/helm/odin-throne \
+            --namespace=fenrir-monitor \
+            -f ./infrastructure/helm/odin-throne/values-prod.yaml \
+            --set app.image.repository=${{ env.REGISTRY }}/${{ env.MONITOR_IMAGE_NAME }} \
+            --set app.image.tag=${{ env.IMAGE_TAG }} \
+            --wait \
+            --timeout=5m
+
+  # --------------------------------------------------------------------------
+  # Job 4: Verify all deployments + post-deploy health check
+  # --------------------------------------------------------------------------
+  verify-deployment:
+    name: Verify Deployment
+    needs: [deploy-fenrir-app, deploy-odin-throne, deploy-umami, deploy-redis]
+    if: ${{ always() && !inputs.skip_deploy }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
+          location: ${{ secrets.GCP_REGION }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Deployment summary
+        run: |
+          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| fenrir-app | ${{ needs.deploy-fenrir-app.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| redis | ${{ needs.deploy-redis.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| umami | ${{ needs.deploy-umami.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| odin-throne | ${{ needs.deploy-odin-throne.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Pod Status" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n fenrir-app -l app.kubernetes.io/name=fenrir-app >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Service Endpoints" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get svc -n fenrir-app >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Ingress" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get ingress -n fenrir-app >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Health check via Ingress
         run: |
