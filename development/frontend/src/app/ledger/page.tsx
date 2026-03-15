@@ -31,6 +31,7 @@ import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntitlement } from "@/hooks/useEntitlement";
+import { useIsKarlOrTrial } from "@/hooks/useIsKarlOrTrial";
 import Link from "next/link";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { CardSkeletonGrid } from "@/components/dashboard/CardSkeletonGrid";
@@ -48,7 +49,8 @@ import type { Card } from "@/lib/types";
 function DashboardPageContent() {
   const { householdId, status } = useAuth();
   const { hasFeature } = useEntitlement();
-  const canImport = hasFeature("import");
+  const karlOrTrial = useIsKarlOrTrial();
+  const canImport = hasFeature("import") || karlOrTrial;
   const searchParams = useSearchParams();
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
