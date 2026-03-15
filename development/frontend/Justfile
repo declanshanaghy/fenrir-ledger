@@ -46,9 +46,9 @@ verify-fast:
 
 # ── Trial / Subscription ───────────────────────────────────────────────────
 
-# Interactive REPL for managing trial state in Redis (auto port-forwards if needed)
-adjust-trial *args:
-    node "{{frontend}}/scripts/trial-adjust.mjs" {{args}}
+# Odin's Spear — Interactive REPL for managing trials, entitlements, and Stripe (auto port-forwards)
+odins-spear *args:
+    node "{{frontend}}/scripts/odins-spear.mjs" {{args}}
 
 # ── Utilities ───────────────────────────────────────────────────────────────
 
