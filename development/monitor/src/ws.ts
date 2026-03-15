@@ -98,8 +98,8 @@ type ClientMessage =
 
 function sortJobsByStartedAtDesc(jobs: Job[]): Job[] {
   return [...jobs].sort((a, b) => {
-    const aTime = a.startedAt ? new Date(a.startedAt).getTime() : Number.MAX_SAFE_INTEGER;
-    const bTime = b.startedAt ? new Date(b.startedAt).getTime() : Number.MAX_SAFE_INTEGER;
+    const aTime = a.startedAt ? new Date(a.startedAt).getTime() : 0;
+    const bTime = b.startedAt ? new Date(b.startedAt).getTime() : 0;
     return bTime - aTime;
   });
 }
