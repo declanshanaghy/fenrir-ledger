@@ -131,6 +131,8 @@ function listFixtureJobs(): Job[] {
         startedAt: stat.mtime.toISOString(),
         completedAt: stat.mtime.toISOString(),
         podName: null,
+        issueTitle: null,
+        branchName: null,
         fixture: true,
       };
     });

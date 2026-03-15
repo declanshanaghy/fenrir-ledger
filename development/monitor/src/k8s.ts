@@ -8,6 +8,7 @@ export interface AgentJob {
   startTime: string | null;
   completionTime: string | null;
   labels: Record<string, string>;
+  annotations: Record<string, string>;
 }
 
 // ── Wire-protocol Job (shared with ws.ts) ───────────────────────────────────
@@ -22,6 +23,8 @@ export interface Job {
   startedAt: string | null;
   completedAt: string | null;
   podName: string | null;
+  issueTitle: string | null;
+  branchName: string | null;
   fixture?: boolean;
 }
 
@@ -94,6 +97,10 @@ function parseJobMeta(
 
 export function mapAgentJobToJob(j: AgentJob): Job {
   const meta = parseJobMeta(j.name, j.labels);
+  // Prefer fenrir/pr-title over fenrir/issue-title (PR title is more specific)
+  const prTitle = j.annotations["fenrir/pr-title"] || null;
+  const issueAnnotation = j.annotations["fenrir/issue-title"] || null;
+  const branchName = j.annotations["fenrir/branch"] || null;
   // "active" means the K8s job controller created the pod, but the pod may
   // still be in Pending phase (image pull, scheduling). We expose "pending"
   // here; the watch path upgrades to "running" once pod phase == "Running".
@@ -104,6 +111,8 @@ export function mapAgentJobToJob(j: AgentJob): Job {
     startedAt: j.startTime,
     completedAt: j.completionTime,
     podName: null,
+    issueTitle: prTitle ?? issueAnnotation,
+    branchName,
   };
 }
 
@@ -121,6 +130,7 @@ export async function listAgentJobs(
     startTime: job.status?.startTime?.toISOString() ?? null,
     completionTime: job.status?.completionTime?.toISOString() ?? null,
     labels: (job.metadata?.labels as Record<string, string>) ?? {},
+    annotations: (job.metadata?.annotations as Record<string, string>) ?? {},
   }));
 }
 
@@ -227,6 +237,9 @@ export function watchAgentJobs(
 
             const existing = jobMap.get(name);
             const meta = parseJobMeta(name, labels);
+            const annotations = (obj.metadata?.annotations as Record<string, string>) ?? {};
+            const prTitle = annotations["fenrir/pr-title"] || null;
+            const issueAnnotation = annotations["fenrir/issue-title"] || null;
             jobMap.set(name, {
               ...meta,
               name,
@@ -240,6 +253,8 @@ export function watchAgentJobs(
               startedAt: obj.status?.startTime?.toISOString() ?? null,
               completedAt: obj.status?.completionTime?.toISOString() ?? null,
               podName: existing?.podName ?? null,
+              issueTitle: prTitle ?? issueAnnotation ?? existing?.issueTitle ?? null,
+              branchName: annotations["fenrir/branch"] || existing?.branchName ?? null,
             });
           }
           onUpdate(sortedJobs());
