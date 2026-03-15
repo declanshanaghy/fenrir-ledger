@@ -97,6 +97,7 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
               {STATUS_ICONS[activeJob.status]} {STATUS_LABELS[activeJob.status]}
             </span>
             <StatusBadge state={wsState} />
+            <CopySessionIdButton sessionId={activeJob.sessionId} />
             <button
               className="download-log-btn"
               onClick={() => downloadLog(activeJob.sessionId)}
@@ -131,6 +132,7 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
               {STATUS_ICONS[activeJob.status]} {STATUS_LABELS[activeJob.status]}
             </span>
             <StatusBadge state={wsState} />
+            <CopySessionIdButton sessionId={activeJob.sessionId} />
           </span>
         </div>
         <NorseErrorTablet sessionId={activeJob.sessionId} message={streamError} variant="node-unreachable" />
@@ -155,6 +157,7 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
             {STATUS_ICONS[activeJob.status]} {STATUS_LABELS[activeJob.status]}
           </span>
           <StatusBadge state={wsState} />
+          <CopySessionIdButton sessionId={activeJob.sessionId} />
           <button
             className="download-log-btn"
             onClick={() => downloadLog(activeJob.sessionId)}
@@ -379,6 +382,49 @@ function DownloadIcon() {
       <path d="M7 1v8M4 6l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M2 11h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
+  );
+}
+
+function ClipboardIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <rect x="4" y="3" width="7" height="9" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M4 4H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M6 3V2h3v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M2 7l4 4 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CopySessionIdButton({ sessionId }: { sessionId: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(sessionId);
+      setCopied(true);
+      setTimeout(() => { setCopied(false); }, 2000);
+    } catch {
+      // Clipboard API unavailable — no-op
+    }
+  }
+
+  return (
+    <button
+      className={`copy-session-btn${copied ? " copied" : ""}`}
+      onClick={handleCopy}
+      title={copied ? "Copied!" : "Copy session ID"}
+      aria-label={copied ? "Session ID copied" : "Copy session ID"}
+    >
+      {copied ? <CheckIcon /> : <ClipboardIcon />}
+    </button>
   );
 }
 
