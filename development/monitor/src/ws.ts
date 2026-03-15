@@ -273,7 +273,10 @@ async function startLogStream(
     const cancel = await streamPodLogs(
       podName,
       namespace,
-      (line) => {
+      (rawLine) => {
+        // Strip K8s ISO timestamp prefix (e.g. "2026-03-15T20:10:19.903085617Z ")
+        // so parseEntrypointLine regexes match fixture format on both live and replay paths.
+        const line = rawLine.replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s*/, "");
         send(ws, { type: "log-line", ts: Date.now(), sessionId, line });
         const ev = parseJsonlLine(line);
         if (ev) events.push(ev);
