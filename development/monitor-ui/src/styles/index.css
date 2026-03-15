@@ -342,6 +342,52 @@ body {
 .ep-info-key {
   color: var(--gold); font-weight: 600; margin-right: 0.3rem;
 }
+.ep-fatal {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  color: #ef4444; padding: 0.2rem 0.4rem; margin: 0.1rem 0;
+  background: rgba(239, 68, 68, 0.08);
+  border-left: 3px solid #ef4444;
+  border-radius: 2px;
+  font-weight: 600;
+}
+.ep-fatal-badge {
+  color: #ef4444; font-weight: 700; margin-right: 0.3rem;
+}
+.ep-info-card {
+  border: 1px solid var(--rune-border);
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  margin-bottom: 0.4rem;
+  background: rgba(201, 146, 10, 0.04);
+}
+.ep-group-meta {
+  display: flex; gap: 0.75rem; flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+  color: var(--text-rune); margin-left: 0.5rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 1; min-width: 0;
+}
+.ep-group-meta-item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ep-group-meta-key { color: var(--gold); font-weight: 600; margin-right: 0.2rem; }
+.ep-group-error { border-color: rgba(239, 68, 68, 0.4); }
+.ep-group-error .ep-group-title { color: #ef4444; }
+.ep-noise-group {
+  border: 1px solid var(--rune-border);
+  border-radius: 3px;
+  margin-top: 0.3rem;
+  overflow: hidden;
+}
+.ep-noise-header {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--forge);
+  cursor: pointer; user-select: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+}
+.ep-noise-header:hover { background: var(--chain); }
+.ep-noise-title { color: var(--text-void); }
+.ep-noise-group.open .ep-group-chevron { transform: rotate(90deg); }
 /* ── Norse Tablet (task prompt) ─────────────────── */
 .norse-tablet {
   border: 2px solid var(--gold);
