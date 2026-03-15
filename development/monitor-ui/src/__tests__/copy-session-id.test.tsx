@@ -201,3 +201,77 @@ describe("Copy session ID button — layout coexistence", () => {
     expect(headerBadges!.querySelector(".download-log-btn")).not.toBeNull();
   });
 });
+
+// ── Edge cases (Loki additions) ────────────────────────────────────────────────
+
+describe("Copy session ID button — edge cases", () => {
+  it("does not throw when clipboard API is unavailable", async () => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
+    const { container } = render(
+      <LogViewer entries={[makeTextEntry("hello")]} activeJob={MOCK_JOB} wsState="open" />
+    );
+    const btn = container.querySelector(".copy-session-btn") as HTMLButtonElement;
+    // Should not throw
+    await expect(
+      act(async () => { fireEvent.click(btn); })
+    ).resolves.not.toThrow();
+    // Button stays in default state (no .copied class)
+    expect(btn.classList.contains("copied")).toBe(false);
+  });
+
+  it("does not throw when clipboard.writeText rejects", async () => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: vi.fn().mockRejectedValue(new Error("permission denied")) },
+      writable: true,
+      configurable: true,
+    });
+    const { container } = render(
+      <LogViewer entries={[makeTextEntry("hello")]} activeJob={MOCK_JOB} wsState="open" />
+    );
+    const btn = container.querySelector(".copy-session-btn") as HTMLButtonElement;
+    await expect(
+      act(async () => { fireEvent.click(btn); })
+    ).resolves.not.toThrow();
+    // Button stays in default state after rejection
+    expect(btn.classList.contains("copied")).toBe(false);
+  });
+
+  it("resets .copied class after 2 seconds", async () => {
+    vi.useFakeTimers();
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      writable: true,
+      configurable: true,
+    });
+    const { container } = render(
+      <LogViewer entries={[makeTextEntry("hello")]} activeJob={MOCK_JOB} wsState="open" />
+    );
+    const btn = container.querySelector(".copy-session-btn") as HTMLButtonElement;
+    await act(async () => { fireEvent.click(btn); });
+    expect(btn.classList.contains("copied")).toBe(true);
+    await act(async () => { vi.advanceTimersByTime(2000); });
+    expect(btn.classList.contains("copied")).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it("re-triggers copy on rapid repeated clicks without error", async () => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      writable: true,
+      configurable: true,
+    });
+    const { container } = render(
+      <LogViewer entries={[makeTextEntry("hello")]} activeJob={MOCK_JOB} wsState="open" />
+    );
+    const btn = container.querySelector(".copy-session-btn") as HTMLButtonElement;
+    await act(async () => { fireEvent.click(btn); });
+    await act(async () => { fireEvent.click(btn); });
+    await act(async () => { fireEvent.click(btn); });
+    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(3);
+    expect(btn.classList.contains("copied")).toBe(true);
+  });
+});
