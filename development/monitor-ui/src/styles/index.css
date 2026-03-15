@@ -284,6 +284,15 @@ body {
   transition: color 0.15s, border-color 0.15s; flex-shrink: 0;
 }
 .download-log-btn:hover { color: var(--gold); border-color: var(--gold); }
+.copy-session-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 1.6rem; height: 1.6rem; padding: 0;
+  background: transparent; border: 1px solid var(--rune-border);
+  border-radius: 3px; color: var(--text-void); cursor: pointer;
+  transition: color 0.15s, border-color 0.15s; flex-shrink: 0;
+}
+.copy-session-btn:hover { color: var(--gold); border-color: var(--gold); }
+.copy-session-btn.copied { color: var(--teal-asgard); border-color: var(--teal-asgard); }
 .ws-badge {
   font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
   padding: 0.15rem 0.5rem; border-radius: 3px;
