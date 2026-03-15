@@ -303,7 +303,7 @@ export function watchAgentJobs(
           }
 
           jobMap.set(jobName, { ...existing, status: newStatus, podName });
-          onUpdate(Array.from(jobMap.values()));
+          onUpdate(sortedJobs());
         },
         (err: Error | null) => {
           currentPodReq = null;
