@@ -132,26 +132,30 @@ body {
   font-style: italic; font-size: 0.75rem;
   color: var(--text-rune); opacity: 0.8; line-height: 1.4;
 }
+.count-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 0.5rem;
+}
 .sidebar-header .count {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem; color: var(--text-void); margin-top: 0.5rem;
+  font-size: 0.7rem; color: var(--text-void);
 }
 
 /* ── Theme switcher ────────────────────────────── */
 .theme-switcher {
-  display: flex; gap: 0.35rem; margin-top: 0.6rem;
+  display: flex; gap: 0.2rem;
 }
 .theme-btn {
-  flex: 1;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  padding: 0.3rem 0;
-  min-height: 44px;
+  font-size: 0.75rem;
+  width: 24px; height: 24px;
+  padding: 0;
   border-radius: 3px;
   border: 1px solid var(--rune-border);
   background: transparent;
   color: var(--text-rune);
   cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 .theme-btn:hover {
