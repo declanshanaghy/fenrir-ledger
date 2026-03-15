@@ -271,4 +271,55 @@ describe("LogViewer — renders NorseErrorTablet when isNodeUnreachable (issue #
     );
     expect(container.textContent).toContain("issue-985-step1-fireman");
   });
+
+  // Loki gap: when BOTH isTtlExpired and isNodeUnreachable, TTL takes precedence (LogViewer checks TTL first)
+  it("renders TTL tablet (not node-unreachable) when both isTtlExpired=true and isNodeUnreachable=true", () => {
+    const { container } = render(
+      <LogViewer
+        entries={[]}
+        activeJob={MOCK_JOB}
+        wsState="open"
+        isTtlExpired={true}
+        isNodeUnreachable={true}
+        streamError={TTL_MESSAGE}
+      />
+    );
+    // Should render a tablet (not a raw log-terminal)
+    expect(container.querySelector(".norse-error-tablet")).not.toBeNull();
+    expect(container.querySelector(".log-terminal")).toBeNull();
+    // TTL path passes no variant so default (ttl-expired) aria-label applies
+    const tablet = container.querySelector("[role='alert']");
+    expect(tablet?.getAttribute("aria-label")).toMatch(/TTL expired|session error/i);
+  });
+});
+
+// Loki gap: NorseErrorTablet heading text for node-unreachable variant (issue #985)
+describe("NorseErrorTablet — node-unreachable heading text (issue #985 — Loki)", () => {
+  it("displays 'The Bifröst Has Fallen' heading for node-unreachable variant", () => {
+    const { container } = render(
+      <NorseErrorTablet sessionId="issue-985-step1-fireman" message={NODE_MESSAGE} variant="node-unreachable" />
+    );
+    expect(container.textContent).toContain("Bifröst");
+  });
+
+  it("does NOT display Bifröst heading for default ttl-expired variant", () => {
+    const { container } = render(
+      <NorseErrorTablet sessionId="issue-985-step1-fireman" message={TTL_MESSAGE} />
+    );
+    expect(container.textContent).not.toContain("Bifröst");
+  });
+});
+
+// Loki gap: UI NODE_UNREACHABLE_PATTERN does NOT match raw K8s error strings (issue #985)
+describe("NODE_UNREACHABLE_PATTERN — does not match raw K8s strings (issue #985 — Loki)", () => {
+  it("does NOT match raw 'dial tcp' K8s error (only friendly server messages should be in UI)", () => {
+    // The UI-side pattern matches the *server-produced friendly message*, not the raw K8s error.
+    // If a raw error leaks to the UI, the pattern should not classify it as node-unreachable
+    // (that classification must happen server-side via friendlyK8sError).
+    expect(NODE_UNREACHABLE_PATTERN.test("dial tcp 10.0.0.1:10250: i/o timeout")).toBe(false);
+  });
+
+  it("does NOT match raw 'context deadline exceeded' K8s error string", () => {
+    expect(NODE_UNREACHABLE_PATTERN.test("context deadline exceeded (Client.Timeout)")).toBe(false);
+  });
 });
