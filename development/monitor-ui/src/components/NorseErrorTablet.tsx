@@ -11,17 +11,34 @@ const RUNE_ROW_TOP = "ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ �
 const RUNE_ROW_BTM = "ᛟ ᛞ ᛜ ᛚ ᛗ ᛖ ᛒ ᛏ ᛊ ᛉ ᛈ ᛇ ᛃ ᛁ ᚾ ᚺ ᚹ ᚷ ᚲ ᚱ ᚨ ᚦ ᚢ ᚠ";
 const RUNE_GLYPH = "ᚦ"; // Thurisaz — warning / thorn
 
+type Variant = "ttl-expired" | "node-unreachable";
+
+const VARIANT_CONTENT: Record<Variant, { ariaLabel: string; heading: string; subheading: string }> = {
+  "ttl-expired": {
+    ariaLabel: "Session error: pod TTL expired",
+    heading: "The Eternal Halls Are Sealed",
+    subheading: "This vessel has departed Yggdrasil",
+  },
+  "node-unreachable": {
+    ariaLabel: "Session error: node unreachable",
+    heading: "The Bifröst Has Fallen",
+    subheading: "The node that bore this vessel is beyond reach",
+  },
+};
+
 interface Props {
   sessionId: string;
   message: string;
+  variant?: Variant;
 }
 
-export function NorseErrorTablet({ sessionId, message }: Props) {
+export function NorseErrorTablet({ sessionId, message, variant = "ttl-expired" }: Props) {
+  const { ariaLabel, heading, subheading } = VARIANT_CONTENT[variant];
   return (
     <div
       className="norse-error-tablet"
       role="alert"
-      aria-label="Session error: pod TTL expired"
+      aria-label={ariaLabel}
       aria-live="assertive"
     >
       <div className="net-rune-border" aria-hidden="true">
@@ -32,8 +49,8 @@ export function NorseErrorTablet({ sessionId, message }: Props) {
         {RUNE_GLYPH}
       </div>
 
-      <h1 className="net-heading">The Eternal Halls Are Sealed</h1>
-      <p className="net-subheading">This vessel has departed Yggdrasil</p>
+      <h1 className="net-heading">{heading}</h1>
+      <p className="net-subheading">{subheading}</p>
 
       <div className="net-divider" aria-hidden="true">
         ᚠ ᚢ ᚦ ᛟ ᛞ ᛜ ᛚ ᛟ ᚦ ᚢ ᚠ
