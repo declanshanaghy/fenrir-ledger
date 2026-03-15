@@ -25,6 +25,10 @@ metadata:
     app.kubernetes.io/part-of: fenrir-ledger
     app.kubernetes.io/component: agent-sandbox
     fenrir.dev/session-id: "{{SESSION_ID}}"
+  annotations:
+    fenrir/branch: "{{BRANCH}}"
+    fenrir/issue-title: "{{ISSUE_TITLE}}"
+    fenrir/pr-title: "{{PR_TITLE}}"
 spec:
   # Auto-delete completed/failed Jobs after 30 minutes
   ttlSecondsAfterFinished: 1800
