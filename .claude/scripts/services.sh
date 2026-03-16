@@ -34,7 +34,7 @@ STRIPE_LOG="${LOG_DIR}/stripe-listen.log"
 PORT_FILE="${FRONTEND_DIR}/.port"
 STRIPE_PID_FILE="${FRONTEND_DIR}/.stripe-listen.pid"
 ENV_FILE="${FRONTEND_DIR}/.env.local"
-WEBHOOK_BACKUP="${FRONTEND_DIR}/.env.local.stripe-backup"
+STRIPE_OVERRIDE="${FRONTEND_DIR}/.env.stripe-listen"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -140,19 +140,18 @@ do_start() {
     exit 1
   fi
 
-  # -- 2. Inject ephemeral secret into .env.local --
-  grep "^STRIPE_WEBHOOK_SECRET=" "$ENV_FILE" > "$WEBHOOK_BACKUP" 2>/dev/null || true
-  if grep -q "^STRIPE_WEBHOOK_SECRET=" "$ENV_FILE"; then
-    sed -i '' "s|^STRIPE_WEBHOOK_SECRET=.*|STRIPE_WEBHOOK_SECRET=\"${local_secret}\"|" "$ENV_FILE"
-  else
-    echo "STRIPE_WEBHOOK_SECRET=\"${local_secret}\"" >> "$ENV_FILE"
-  fi
-  echo "Stripe listen: running (webhook secret injected)"
+  # -- 2. Write ephemeral secret to separate override file (NEVER touch .env.local) --
+  echo "STRIPE_WEBHOOK_SECRET=\"${local_secret}\"" > "$STRIPE_OVERRIDE"
+  echo "Stripe listen: running (webhook secret in .env.stripe-listen)"
 
-  # -- 3. Start vercel dev --
+  # -- 3. Start vercel dev (with stripe override if present) --
   echo "Starting frontend (vercel dev) on port ${PORT}..."
   > "$FRONTEND_LOG"
-  nohup bash -c "cd '$REPO_ROOT' && npx vercel dev --listen $PORT" >> "$FRONTEND_LOG" 2>&1 &
+  STRIPE_ENV=""
+  if [[ -f "$STRIPE_OVERRIDE" ]]; then
+    STRIPE_ENV="export $(grep -v '^#' "$STRIPE_OVERRIDE" | xargs) &&"
+  fi
+  nohup bash -c "${STRIPE_ENV} cd '$REPO_ROOT' && npx vercel dev --listen $PORT" >> "$FRONTEND_LOG" 2>&1 &
 
   if [[ "$PORT" == "0" ]]; then
     ACTUAL=$(wait_for_port)
@@ -189,15 +188,7 @@ do_stop() {
     echo "Stripe listen: stopped"
   fi
 
-  # Restore original webhook secret
-  if [[ -f "$WEBHOOK_BACKUP" ]]; then
-    original=$(cat "$WEBHOOK_BACKUP")
-    if [[ -n "$original" ]] && [[ -f "$ENV_FILE" ]]; then
-      sed -i '' "s|^STRIPE_WEBHOOK_SECRET=.*|${original}|" "$ENV_FILE"
-      echo "Stripe listen: webhook secret restored"
-    fi
-    rm -f "$WEBHOOK_BACKUP"
-  fi
+  rm -f "$STRIPE_OVERRIDE"
 
   # Stop frontend
   if p=$(frontend_pid); then
