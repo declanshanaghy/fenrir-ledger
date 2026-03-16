@@ -11,6 +11,17 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Household — Invite Code Flow (Issue #1123)
+
+| File | Description |
+|------|-------------|
+| [wireframes/household/settings-household.html](wireframes/household/settings-household.html) | Settings → Household section: 6 sections — (A) desktop two-column settings shell with new Household card in left column, (B) owner vs member view side-by-side (invite code + Regenerate shown to owner only; member sees owner name instead), (C) household full state (3/3 members — invite block replaced by full banner, Regenerate hidden), (D) solo user state (no household yet — Join CTA), (E) mobile 375px simulation (single-column stacked, invite code/copy button stack vertically, full-width buttons), (F) role capability matrix table (owner vs member permissions). |
+| [wireframes/household/join-household.html](wireframes/household/join-household.html) | Join Household screen: 4 sections — (A) desktop centered-card form (idle/empty state, 6 individual char boxes auto-advancing, Join button disabled until all 6 filled), (B) all 6 validation states (partial entry, validating/loading, code valid + household preview + Continue, invalid code, expired code, household full), (C) edge case: user already in a multi-member household (blocking state), (D) WCAG 2.1 AA accessibility requirements (fieldset, aria-labels, role="alert", focus management). |
+| [wireframes/household/merge-confirmation.html](wireframes/household/merge-confirmation.html) | Merge Confirmation (step 2 of join flow): 6 sections — (A) merge confirmation with existing cards (merge diagram showing solo→target household, scrollable card list, destructive warning, "Merge N Cards & Join" CTA) and no-cards variant (simple join), (B) merge in-progress loading state (non-cancellable, indeterminate progress bar), (C) success states (cards merged variant with count + redirect; no-cards variant), (D) error states (network failure with retry + idempotency note; race condition household-became-full), (E) desktop confirmation card with two-column merge diagram + card list, (F) WCAG 2.1 AA accessibility spec. |
+| [wireframes/household/household-interaction-spec.md](wireframes/household/household-interaction-spec.md) | Interaction spec: full Mermaid flow diagram (settings → join → merge → dashboard), Settings section states table, invite code copy + regenerate behavior, 6-char input keyboard/paste/auto-advance spec, all 5 validation API responses with error UX, merge operation Firestore transaction steps, cancel behavior per screen, responsive breakpoints (375px/600px/1024px), animation notes (validation shake, saga-enter reveal, prefers-reduced-motion), component + API route suggestions for FiremanDecko, AC-to-wireframe mapping table. |
+
+---
+
 ## Cards — Karl Card Bling (Issue #1088)
 
 | File | Description |
