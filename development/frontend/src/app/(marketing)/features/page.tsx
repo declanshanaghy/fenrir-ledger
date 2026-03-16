@@ -668,6 +668,7 @@ export default function FeaturesPage() {
   return (
     <>
       <PageHero />
+      <SmartImportSafetyCallout />
       <ThrallSectionHeading />
       {THRALL_FEATURES.map((feature) => (
         <FeatureSection key={feature.id} feature={feature} />
@@ -675,10 +676,7 @@ export default function FeaturesPage() {
       <UpgradeHook />
       <TierDivider />
       {KARL_FEATURES.map((feature) => (
-        <div key={feature.id}>
-          <FeatureSection feature={feature} />
-          {feature.id === "smart-import" && <SmartImportSafetyCallout />}
-        </div>
+        <FeatureSection key={feature.id} feature={feature} />
       ))}
       <DataSafetyTrustSection />
       <FinalCta />

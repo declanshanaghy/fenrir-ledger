@@ -128,8 +128,8 @@ export function LedgerBottomTabs() {
   );
 
   const tabBase =
-    "flex flex-1 flex-col items-center justify-center gap-0.5 text-muted-foreground transition-colors min-h-[56px]";
-  const tabActive = "text-gold";
+    "flex flex-1 flex-col items-center justify-center gap-0.5 text-muted-foreground transition-colors min-h-[56px] border-b-2 border-transparent";
+  const tabActive = "text-gold karl-bling-nav-active";
 
   return (
     <nav
@@ -164,7 +164,7 @@ export function LedgerBottomTabs() {
         </li>
 
         {/* Valhalla — gated for Thrall users */}
-        <li className="flex flex-1">
+        <li className="flex flex-1 sidebar-karl-feature">
           <button
             type="button"
             onClick={handleValhallaClick}
@@ -176,9 +176,9 @@ export function LedgerBottomTabs() {
               <RuneIcon rune="↑" />
               {!hasValhalla && (
                 <span
-                  className="absolute -top-1.5 -right-3 text-[7px] font-mono font-bold border border-gold/30 text-gold/60 px-0.5 leading-tight bg-background"
+                  className="karl-gate-marker absolute -top-1.5 -right-3 px-0.5 leading-tight bg-background"
                   aria-hidden="true"
-                >K</span>
+                >ᚠ</span>
               )}
             </div>
             <span className="text-[10px] font-body">Valhalla</span>
@@ -186,7 +186,7 @@ export function LedgerBottomTabs() {
         </li>
 
         {/* Hunt — gated for Thrall users */}
-        <li className="flex flex-1">
+        <li className="flex flex-1 sidebar-karl-feature">
           <button
             type="button"
             onClick={handleHuntClick}
@@ -198,9 +198,9 @@ export function LedgerBottomTabs() {
               <RuneIcon rune="ᛜ" />
               {!hasVelocity && (
                 <span
-                  className="absolute -top-1.5 -right-3 text-[7px] font-mono font-bold border border-gold/30 text-gold/60 px-0.5 leading-tight bg-background"
+                  className="karl-gate-marker absolute -top-1.5 -right-3 px-0.5 leading-tight bg-background"
                   aria-hidden="true"
-                >K</span>
+                >ᚠ</span>
               )}
             </div>
             <span className="text-[10px] font-body">Hunt</span>

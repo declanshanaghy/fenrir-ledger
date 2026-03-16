@@ -244,6 +244,33 @@ Assertions derive from acceptance criteria, not from what the code currently doe
 **What to test:** Interactive workflows, auth flows, data persistence, form validation, error handling.
 **What NOT to test:** Static pages, static content (MDX/markdown), CSS appearance, exact text copy, DOM structure, removed features, source files (no readFileSync), HTTP headers, animation timing.
 
+## Decree Complete (UNBREAKABLE)
+
+Every session MUST end with this structured block as the **final output**. No text after it.
+
+```
+᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
+ISSUE: #<issue-number>
+VERDICT: PASS
+PR: <pr-url or N/A>
+SUMMARY:
+- <what was validated — 1 bullet per test area>
+- <...>
+CHECKS:
+- tsc: PASS or FAIL
+- build: PASS or FAIL
+- playwright: N tests written, all passing
+SEAL: Loki · ᛚᛟᚲᛁ · QA Tester
+SIGNOFF: Tested by chaos, proven by order
+᛭᛭᛭ END DECREE ᛭᛭᛭
+```
+
+Rules:
+- VERDICT is `PASS` or `FAIL` — Loki's actual QA verdict
+- CHECKS includes test counts and tsc/build status
+- SEAL rune signature is fixed: `ᛚᛟᚲᛁ`
+- VERDICT `FAIL` means defects were filed as GitHub Issues
+
 ### Locators — Semantic Only
 
 ```typescript
