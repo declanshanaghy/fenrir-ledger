@@ -150,8 +150,8 @@ export function parseDecreeBlock(text) {
         .filter(Boolean)
     : [];
 
-  // CHECKS: list of "name: PASS/FAIL/OK/ERROR/..."
-  const checksMatch = body.match(/^CHECKS:\s*\n((?:\s*[-*]?\s*.+\n?)+?)(?=\nSEAL:|$)/m);
+  // CHECKS: list of "name: PASS/FAIL/OK/ERROR/..." — stop at SEAL:, SIGNOFF:, or end delimiter
+  const checksMatch = body.match(/^CHECKS:\s*\n([\s\S]*?)(?=^(?:SEAL|SIGNOFF):\s|᛭᛭᛭\s*END DECREE)/m);
   const checks = checksMatch
     ? checksMatch[1].split("\n")
         .map(l => l.replace(/^\s*[-*]?\s*/, "").trim())
