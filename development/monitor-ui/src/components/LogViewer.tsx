@@ -7,7 +7,7 @@ import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
 import { NorseVerdictInscription, isVerdictMessage } from "./NorseVerdictInscription";
 import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_RUNE_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS, WIKI_LINKS } from "../lib/constants";
-import { downloadLog } from "../lib/localStorageLogs";
+
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 
 interface SessionHeaderProps {

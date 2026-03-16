@@ -155,7 +155,6 @@ describe("appendLogLine — cache write only when pinned (edge case)", () => {
 
 describe("pinSession — 20MB total size cap eviction", () => {
   it("evicts oldest cached session when total bytes would exceed 20MB cap", () => {
-    const MAX_BYTES = 20 * 1024 * 1024;
     // Each session = ~7MB (stays under 20MB for 2 sessions but 3 would overflow)
     const bigChunk = "x".repeat(7 * 1024 * 1024); // 7MB string
 
