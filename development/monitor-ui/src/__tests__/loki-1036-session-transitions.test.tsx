@@ -54,17 +54,7 @@ const SECOND_JOB: DisplayJob = {
   agentName: "Freya",
 };
 
-const TTL_JOB: DisplayJob = {
-  ...ACTIVE_JOB,
-  status: "failed",
-  sessionId: "issue-1036-loki-ttl",
-};
 
-const NODE_JOB: DisplayJob = {
-  ...ACTIVE_JOB,
-  status: "failed",
-  sessionId: "issue-1036-loki-node",
-};
 
 function text(t: string): LogEntry {
   return { id: `e-${Math.random()}`, type: "assistant-text", text: t };
@@ -184,12 +174,12 @@ describe("Round-trip session transitions — hooks stability (issue #1036)", () 
 
 describe("Various log entry types render without crash (issue #1036)", () => {
   const ENTRIES: LogEntry[] = [
-    { id: "e-sys", type: "system", detail: "System initialized", text: undefined },
+    { id: "e-sys", type: "system", detail: "System initialized" },
     { id: "e-tool", type: "tool-use", text: "Read file", toolName: "Read", toolInput: '{"path":"/foo"}' },
-    { id: "e-warn", type: "warning", message: "Low disk space", text: undefined },
-    { id: "e-err", type: "error", message: "Connection refused", text: undefined },
+    { id: "e-warn", type: "warning", message: "Low disk space" },
+    { id: "e-err", type: "error", message: "Connection refused" },
     { id: "e-raw", type: "raw", text: "raw log output" },
-    { id: "e-end", type: "stream-end", reason: "completed", text: undefined },
+    { id: "e-end", type: "stream-end", reason: "completed" },
     { id: "e-txt", type: "assistant-text", text: "Some agent response" },
     { id: "e-think", type: "assistant-text", detail: "thinking", text: "thinking..." },
   ];
@@ -202,7 +192,7 @@ describe("Various log entry types render without crash (issue #1036)", () => {
 
   it("renders system entry without crash", () => {
     const entries: LogEntry[] = [
-      { id: "e1", type: "system", detail: "init", text: undefined },
+      { id: "e1", type: "system", detail: "init" },
     ];
     expect(() =>
       render(<LogViewer entries={entries} activeJob={ACTIVE_JOB} wsState="open" />)
@@ -211,7 +201,7 @@ describe("Various log entry types render without crash (issue #1036)", () => {
 
   it("renders warning entry without crash", () => {
     const entries: LogEntry[] = [
-      { id: "e1", type: "warning", message: "Something went wrong", text: undefined },
+      { id: "e1", type: "warning", message: "Something went wrong" },
     ];
     expect(() =>
       render(<LogViewer entries={entries} activeJob={ACTIVE_JOB} wsState="open" />)
@@ -220,7 +210,7 @@ describe("Various log entry types render without crash (issue #1036)", () => {
 
   it("renders error entry without crash", () => {
     const entries: LogEntry[] = [
-      { id: "e1", type: "error", message: "Fatal error", text: undefined },
+      { id: "e1", type: "error", message: "Fatal error" },
     ];
     expect(() =>
       render(<LogViewer entries={entries} activeJob={ACTIVE_JOB} wsState="open" />)
@@ -229,7 +219,7 @@ describe("Various log entry types render without crash (issue #1036)", () => {
 
   it("renders stream-end entry without crash", () => {
     const entries: LogEntry[] = [
-      { id: "e1", type: "stream-end", reason: "done", text: undefined },
+      { id: "e1", type: "stream-end", reason: "done" },
     ];
     expect(() =>
       render(<LogViewer entries={entries} activeJob={ACTIVE_JOB} wsState="open" />)
@@ -238,7 +228,7 @@ describe("Various log entry types render without crash (issue #1036)", () => {
 
   it("renders verdict entry without crash", () => {
     const entries: LogEntry[] = [
-      { id: "e1", type: "verdict", verdictResult: "PASS", text: undefined },
+      { id: "e1", type: "verdict", verdictResult: "PASS" },
     ];
     expect(() =>
       render(<LogViewer entries={entries} activeJob={ACTIVE_JOB} wsState="open" />)
