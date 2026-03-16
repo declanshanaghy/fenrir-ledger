@@ -179,4 +179,43 @@ describe("HeilungModal", () => {
     const dialog = screen.getByRole("dialog");
     expect(dialog.getAttribute("aria-modal")).toBe("true");
   });
+
+  it("dialog has aria-label='Heilung — Amplified History'", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.getAttribute("aria-label")).toBe("Heilung — Amplified History");
+  });
+
+  it("does not open when Ctrl+Shift+L is pressed in a TEXTAREA", () => {
+    render(
+      <div>
+        <textarea data-testid="textarea" />
+        <HeilungModal />
+      </div>
+    );
+    const textarea = screen.getByTestId("textarea");
+    act(() => {
+      fireEvent.keyDown(textarea, {
+        key: "L", shiftKey: true, ctrlKey: true, target: textarea,
+      });
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("does not open when Ctrl+Shift+L is pressed in a SELECT", () => {
+    render(
+      <div>
+        <select data-testid="select"><option>x</option></select>
+        <HeilungModal />
+      </div>
+    );
+    const select = screen.getByTestId("select");
+    act(() => {
+      fireEvent.keyDown(select, {
+        key: "L", shiftKey: true, ctrlKey: true, target: select,
+      });
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
 });
