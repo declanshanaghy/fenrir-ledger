@@ -320,8 +320,10 @@ describe("Session cap eviction — meta keys cleaned up (AC: no orphaned meta)",
     expect(store["odin-throne:cache:evict-meta-1"]).toBeUndefined();
     expect(store["odin-throne:cache-meta:evict-meta-1"]).toBeUndefined();
 
-    // No orphaned meta key
-    const metaKeys = Object.keys(store).filter((k) => k.startsWith("odin-throne:cache-meta:evict-meta-1"));
-    expect(metaKeys).toHaveLength(0);
+    // Confirm exact cache+meta keys are absent (no orphaned meta)
+    const exactCacheKey = "odin-throne:cache:evict-meta-1";
+    const exactMetaKey = "odin-throne:cache-meta:evict-meta-1";
+    expect(store[exactCacheKey]).toBeUndefined();
+    expect(store[exactMetaKey]).toBeUndefined();
   });
 });

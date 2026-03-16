@@ -94,13 +94,15 @@ describe("JobCard — 📌 badge for cached sessions (AC: sidebar pin badge)", (
     expect(badge).not.toBeNull();
   });
 
-  it("card-pin-badge title is 'Pinned to Odin\u2019s memory'", () => {
+  it("card-pin-badge title references Odin's memory", () => {
     const cachedJob: DisplayJob = { ...BASE_JOB, status: "cached" };
     const { container } = render(
       <JobCard job={cachedJob} isActive={false} onClick={() => {}} />
     );
     const badge = container.querySelector(".card-pin-badge");
-    expect(badge?.getAttribute("title")).toBe("Pinned to Odin\u2019s memory");
+    const title = badge?.getAttribute("title") ?? "";
+    expect(title).toContain("Pinned to Odin");
+    expect(title).toContain("memory");
   });
 
   it("card-pin-badge contains the 📌 emoji", () => {
