@@ -17,9 +17,12 @@
  *
  * Wireframe: ux/wireframes/marketing-site/layout-shell.html
  * Theme spec: ux/wireframes/marketing-site/theme-variants.html
+ *
+ * Issue #1113: fixed hamburger touch target (44px), z-index (z-[200] clears
+ * sticky nav stacking context from backdrop-filter), and backdrop-tap-to-close.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -37,11 +40,15 @@ export { isNavLinkActive } from "@/components/marketing/MarketingNavLinks";
 export function MarketingNavbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
 
   // Prevent body scroll when overlay is open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = "hidden";
+      // Focus the close button for keyboard/screen-reader users
+      closeButtonRef.current?.focus();
     } else {
       document.body.style.overflow = "";
     }
@@ -55,6 +62,7 @@ export function MarketingNavbar() {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape" && mobileOpen) {
         setMobileOpen(false);
+        hamburgerRef.current?.focus();
       }
     }
     document.addEventListener("keydown", handleKeyDown);
@@ -108,8 +116,9 @@ export function MarketingNavbar() {
             </Link>
           </div>
 
-          {/* Mobile hamburger */}
+          {/* Mobile hamburger — 44×44px touch target (WCAG 2.5.5) */}
           <button
+            ref={hamburgerRef}
             type="button"
             onClick={() => setMobileOpen(true)}
             className={[
@@ -117,7 +126,7 @@ export function MarketingNavbar() {
               "border border-border rounded-sm",
               "text-foreground hover:border-primary/50 transition-colors",
             ].join(" ")}
-            style={{ minWidth: 40, minHeight: 40 }}
+            style={{ minWidth: 44, minHeight: 44 }}
             aria-label="Open navigation menu"
             aria-expanded={mobileOpen}
             aria-controls="mobile-nav-overlay"
@@ -128,6 +137,7 @@ export function MarketingNavbar() {
       </nav>
 
       {/* ── Mobile full-screen overlay ─────────────────────────────────────── */}
+      {/* z-[200] ensures overlay clears the sticky nav's backdrop-filter stacking context */}
       {mobileOpen && (
         <div
           id="mobile-nav-overlay"
@@ -135,10 +145,14 @@ export function MarketingNavbar() {
           aria-modal="true"
           aria-label="Navigation menu"
           className={[
-            "fixed inset-0 z-[100]",
+            "fixed inset-0 z-[200]",
             "bg-background flex flex-col",
             "p-6",
           ].join(" ")}
+          onClick={(e) => {
+            // Close on backdrop tap (tapping the empty overlay area, not its children)
+            if (e.target === e.currentTarget) setMobileOpen(false);
+          }}
         >
           {/* Overlay header */}
           <div className="flex items-center justify-between mb-12">
@@ -152,7 +166,9 @@ export function MarketingNavbar() {
                 Fenrir Ledger
               </span>
             </Link>
+            {/* Close button — 44×44px touch target, auto-focused on overlay open */}
             <button
+              ref={closeButtonRef}
               type="button"
               onClick={() => setMobileOpen(false)}
               className={[
@@ -160,14 +176,14 @@ export function MarketingNavbar() {
                 "border border-border rounded-sm",
                 "text-foreground hover:border-primary/50 transition-colors",
               ].join(" ")}
-              style={{ minWidth: 40, minHeight: 40 }}
+              style={{ minWidth: 44, minHeight: 44 }}
               aria-label="Close navigation menu"
             >
               <span className="text-base leading-none" aria-hidden="true">✕</span>
             </button>
           </div>
 
-          {/* Mobile nav links */}
+          {/* Mobile nav links — uses shared MarketingNavLinks with close callback */}
           <nav aria-label="Mobile navigation">
             {NAV_LINKS.map(({ href, label }) => {
               const active = isNavLinkActive(pathname, href);

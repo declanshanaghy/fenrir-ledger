@@ -21,7 +21,7 @@
  * Issue: #372
  */
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -30,7 +30,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle, cycleTheme } from "@/components/layout/ThemeToggle";
 import { TrialBadge } from "@/components/layout/TrialBadge";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
-import { MarketingNavLinks } from "@/components/marketing/MarketingNavLinks";
+import { NAV_LINKS, isNavLinkActive, MarketingNavLinks } from "@/components/marketing/MarketingNavLinks";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -323,6 +323,12 @@ export function LedgerTopBar() {
   const avatarTriggerRef = useRef<HTMLButtonElement>(null);
   const [showStaleNudge, setShowStaleNudge] = useState(false);
 
+  // Mobile nav menu state (marketing links — desktop center nav is hidden on mobile)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileCloseButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileHamburgerRef = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname();
+
   const isAuthenticated = status === "authenticated";
   const user = session?.user;
 
@@ -352,7 +358,35 @@ export function LedgerTopBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [panelOpen]);
 
+  // Mobile menu: prevent body scroll when open + focus close button
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      mobileCloseButtonRef.current?.focus();
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
+  // Mobile menu: close on Escape key
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+        mobileHamburgerRef.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
+  const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
+
   return (
+    <>
     <header
       role="banner"
       className="h-12 shrink-0 border-b border-border bg-background sticky top-0 z-[100] flex items-center justify-between px-4 relative"
@@ -373,8 +407,8 @@ export function LedgerTopBar() {
         <MarketingNavLinks />
       </nav>
 
-      {/* LEFT: Logo link -> / */}
-      <div className="flex items-center">
+      {/* LEFT: Logo link + mobile hamburger */}
+      <div className="flex items-center gap-1">
         <Link
           href="/"
           className="flex items-center gap-1.5 text-left min-h-[44px] px-1"
@@ -392,6 +426,24 @@ export function LedgerTopBar() {
             FL
           </span>
         </Link>
+
+        {/* Mobile hamburger — opens marketing nav overlay (44×44px touch target) */}
+        <button
+          ref={mobileHamburgerRef}
+          type="button"
+          onClick={() => setMobileMenuOpen(true)}
+          className={[
+            "md:hidden flex items-center justify-center",
+            "border border-border rounded-sm",
+            "text-foreground hover:border-primary/50 transition-colors",
+          ].join(" ")}
+          style={{ minWidth: 44, minHeight: 44 }}
+          aria-label="Open navigation menu"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="ledger-mobile-nav-overlay"
+        >
+          <span className="text-base leading-none" aria-hidden="true">☰</span>
+        </button>
       </div>
 
       {/* RIGHT: Controls cluster */}
@@ -469,5 +521,92 @@ export function LedgerTopBar() {
         )}
       </div>
     </header>
+
+    {/* ── Mobile nav overlay — marketing links for mobile /ledger users ── */}
+    {/* z-[200] clears the sticky header's stacking context (backdrop-filter) */}
+    {mobileMenuOpen && (
+      <div
+        id="ledger-mobile-nav-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+        className={[
+          "fixed inset-0 z-[200]",
+          "bg-background flex flex-col",
+          "p-6",
+        ].join(" ")}
+        onClick={(e) => {
+          // Close on backdrop tap (tapping empty overlay area, not children)
+          if (e.target === e.currentTarget) closeMobileMenu();
+        }}
+      >
+        {/* Overlay header */}
+        <div className="flex items-center justify-between mb-12">
+          <Link
+            href="/"
+            onClick={closeMobileMenu}
+            className="flex items-center gap-2"
+          >
+            <span className="text-lg font-bold text-gold" aria-hidden="true">ᛟ</span>
+            <span className="font-display text-sm font-bold tracking-widest uppercase text-gold">
+              FENRIR LEDGER
+            </span>
+          </Link>
+          {/* Close button — 44×44px touch target, auto-focused on open */}
+          <button
+            ref={mobileCloseButtonRef}
+            type="button"
+            onClick={closeMobileMenu}
+            className={[
+              "flex items-center justify-center",
+              "border border-border rounded-sm",
+              "text-foreground hover:border-primary/50 transition-colors",
+            ].join(" ")}
+            style={{ minWidth: 44, minHeight: 44 }}
+            aria-label="Close navigation menu"
+          >
+            <span className="text-base leading-none" aria-hidden="true">✕</span>
+          </button>
+        </div>
+
+        {/* Marketing nav links */}
+        <nav aria-label="Mobile navigation">
+          {NAV_LINKS.map(({ href, label }) => {
+            const active = isNavLinkActive(pathname, href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={closeMobileMenu}
+                aria-current={active ? "page" : undefined}
+                className={[
+                  "block py-3 border-b border-border",
+                  "font-heading text-lg text-foreground",
+                  active ? "font-semibold" : "",
+                  "hover:text-primary transition-colors",
+                ].join(" ")}
+              >
+                {label}
+              </Link>
+            );
+          })}
+          {/* App link — Open the Ledger (back to dashboard) */}
+          <Link
+            href="/ledger"
+            onClick={closeMobileMenu}
+            aria-current={pathname === "/ledger" ? "page" : undefined}
+            className={[
+              "block py-3 border-b border-border",
+              "font-heading text-lg text-foreground",
+              pathname === "/ledger" ? "font-semibold" : "",
+              "hover:text-primary transition-colors",
+            ].join(" ")}
+          >
+            My Cards
+          </Link>
+        </nav>
+      </div>
+    )}
+    </>
   );
 }
