@@ -19,7 +19,7 @@ export interface Job {
   issueNumber: number;
   agent: string;
   step: number;
-  status: "pending" | "running" | "succeeded" | "failed";
+  status: "pending" | "running" | "succeeded" | "failed" | "purged";
   startedAt: string | null;
   completedAt: string | null;
   podName: string | null;
@@ -203,6 +203,18 @@ export function watchAgentJobs(
         // Pod list failure is non-fatal — job-only status is better than nothing
       }
 
+      // After reconciling with live pod list: any terminal job with no pod found
+      // has had its pod reaped → mark as purged so UI shows correct state on load.
+      for (const [jobName, job] of jobMap.entries()) {
+        if (
+          (job.status === "succeeded" || job.status === "failed") &&
+          job.podName === null &&
+          job.startedAt !== null
+        ) {
+          jobMap.set(jobName, { ...job, status: "purged" });
+        }
+      }
+
       if (jobMap.size > 0) onUpdate(sortedJobs());
     } catch {
       // Non-fatal — watch will populate
@@ -246,10 +258,13 @@ export function watchAgentJobs(
               // Preserve pod-derived status when job status is "active/running"
               // because pod phase is more granular (pending vs running).
               // Terminal states (succeeded/failed) always come from job status.
+              // Do not downgrade a "purged" job back to a non-terminal status.
               status:
-                status === "running" && existing?.status === "pending"
-                  ? "pending"
-                  : status,
+                existing?.status === "purged"
+                  ? "purged"
+                  : status === "running" && existing?.status === "pending"
+                    ? "pending"
+                    : status,
               startedAt: obj.status?.startTime?.toISOString() ?? null,
               completedAt: obj.status?.completionTime?.toISOString() ?? null,
               podName: existing?.podName ?? null,
@@ -296,7 +311,20 @@ export function watchAgentJobs(
           const jobName = podLabels["batch.kubernetes.io/job-name"];
           if (!jobName) return; // not a job-managed pod
 
-          if (type === "DELETED") return; // job watch handles deletion
+          if (type === "DELETED") {
+            // When a pod is reaped (garbage collected after TTL), transition
+            // terminal jobs to "purged" so the UI can show that kubectl logs
+            // are no longer available. Previously-saved JSONL remains viewable.
+            const existing = jobMap.get(jobName);
+            if (
+              existing &&
+              (existing.status === "succeeded" || existing.status === "failed")
+            ) {
+              jobMap.set(jobName, { ...existing, status: "purged", podName: null });
+              onUpdate(sortedJobs());
+            }
+            return;
+          }
 
           const podName = pod.metadata?.name ?? null;
           const phase = pod.status?.phase;

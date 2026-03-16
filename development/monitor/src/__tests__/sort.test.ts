@@ -65,6 +65,7 @@ function makeAgentJob(overrides: Partial<AgentJob> = {}): AgentJob {
     startTime: null,
     completionTime: null,
     labels: {},
+    annotations: {},
     ...overrides,
   };
 }

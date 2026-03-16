@@ -300,7 +300,9 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
     expect(sig?.getAttribute("role")).toBe("complementary");
   });
 
-  it("RuneSignatureBlock aria-label contains agent name", () => {
+  it("RuneSignatureBlock aria-label is Odin's seal (unified design, #1059)", () => {
+    // Design updated in #1059: all agents use a unified Odin seal instead of
+    // agent-specific rune signatures. The aria-label is always "Odin's seal".
     const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -310,10 +312,11 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
       />
     );
     const sig = container.querySelector(".nt-rune-sig");
-    expect(sig?.getAttribute("aria-label")).toContain("Loki");
+    expect(sig?.getAttribute("aria-label")).toBe("Odin's seal");
   });
 
-  it("loki agent shows correct Elder Futhark rune name ᛚᛟᚲᛁ", () => {
+  it("rune sig shows Odin runes ᛟᛞᛁᚾ (unified design, #1059)", () => {
+    // Design updated in #1059: unified Odin seal replaces agent-specific runes.
     const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -323,7 +326,7 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
       />
     );
     const runeEl = container.querySelector(".nt-rune-sig-agent-runes");
-    expect(runeEl?.textContent).toBe("ᛚᛟᚲᛁ");
+    expect(runeEl?.textContent).toBe("ᛟᛞᛁᚾ");
   });
 
   it(".nt-rune-sig-agent-runes has aria-hidden=true", () => {
@@ -367,7 +370,8 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
     expect(divEl?.getAttribute("aria-hidden")).toBe("true");
   });
 
-  it("renders the agent quote in .nt-rune-sig-quote", () => {
+  it("renders Odin's quote in .nt-rune-sig-quote (unified design, #1059)", () => {
+    // Design updated in #1059: unified Odin seal — quote is Odin's, not agent-specific.
     const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -378,15 +382,16 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
     );
     const quoteEl = container.querySelector(".nt-rune-sig-quote");
     expect(quoteEl).not.toBeNull();
-    // Loki's quote should mention "flaw"
-    expect(quoteEl?.textContent).toMatch(/flaw/i);
+    // Odin's quote mentions "Nine Realms"
+    expect(quoteEl?.textContent).toMatch(/Nine Realms/i);
   });
 });
 
 // ── AC-4: Unknown agent key falls back to ASGARD ─────────────────────────────
 
 describe("AC-4: RuneSignatureBlock — unknown agentKey falls back to ASGARD (issue #1003)", () => {
-  it("unknown agentKey renders ASGARD rune name ᚨᛊᚷᚨᚱᛞ", () => {
+  it("unknown agentKey renders Odin runes ᛟᛞᛁᚾ (unified design, #1059)", () => {
+    // Design updated in #1059: unified Odin seal — all agents including unknown show Odin.
     const taskEntry = makeTaskEntry("You are UnknownAgent. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -396,10 +401,11 @@ describe("AC-4: RuneSignatureBlock — unknown agentKey falls back to ASGARD (is
       />
     );
     const runeEl = container.querySelector(".nt-rune-sig-agent-runes");
-    expect(runeEl?.textContent).toBe("ᚨᛊᚷᚨᚱᛞ");
+    expect(runeEl?.textContent).toBe("ᛟᛞᛁᚾ");
   });
 
-  it("undefined agentKey renders ASGARD rune name ᚨᛊᚷᚨᚱᛞ", () => {
+  it("undefined agentKey renders Odin runes ᛟᛞᛁᚾ (unified design, #1059)", () => {
+    // Design updated in #1059: unified Odin seal — all agents show Odin runes.
     const taskEntry = makeTaskEntry("You are SomeAgent. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -409,10 +415,11 @@ describe("AC-4: RuneSignatureBlock — unknown agentKey falls back to ASGARD (is
       />
     );
     const runeEl = container.querySelector(".nt-rune-sig-agent-runes");
-    expect(runeEl?.textContent).toBe("ᚨᛊᚷᚨᚱᛞ");
+    expect(runeEl?.textContent).toBe("ᛟᛞᛁᚾ");
   });
 
-  it("fallback quote contains 'Asgard'", () => {
+  it("rune sig quote mentions 'Nine Realms' (Odin's unified seal, #1059)", () => {
+    // Design updated in #1059: Odin's quote replaces agent-specific fallbacks.
     const taskEntry = makeTaskEntry("You are UnknownAgent. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -422,7 +429,7 @@ describe("AC-4: RuneSignatureBlock — unknown agentKey falls back to ASGARD (is
       />
     );
     const quoteEl = container.querySelector(".nt-rune-sig-quote");
-    expect(quoteEl?.textContent).toContain("Asgard");
+    expect(quoteEl?.textContent).toMatch(/Nine Realms/i);
   });
 
   it("fallback does not render .nt-rune-sig-title-runes (no title for _fallback)", () => {

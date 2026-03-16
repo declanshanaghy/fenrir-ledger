@@ -83,6 +83,7 @@ export const STATUS_ICONS: Record<Job["status"], string> = {
   succeeded: "\u2713", // ✓ checkmark
   failed: "\u2717",    // ✗ cross
   pending: "\u29D7",   // ⧗ hourglass
+  purged: "\u25E6",    // ◦ small open circle (pod reaped, logs unavailable via kubectl)
 };
 
 export const STATUS_COLORS: Record<Job["status"], string> = {
@@ -90,6 +91,7 @@ export const STATUS_COLORS: Record<Job["status"], string> = {
   succeeded: "#22c55e",
   failed: "#ef4444",
   pending: "#f0b429",
+  purged: "#606070",   // gray — pod reaped by K8s GC
 };
 
 export const STATUS_LABELS: Record<Job["status"], string> = {
@@ -97,6 +99,7 @@ export const STATUS_LABELS: Record<Job["status"], string> = {
   succeeded: "succeeded",
   failed: "FAILED",
   pending: "pending",
+  purged: "purged",    // pod reaped, JSONL logs still viewable
 };
 
 export const ODIN_QUOTES = [
