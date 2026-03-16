@@ -9,11 +9,14 @@
  *   householdName: string,
  *   ownerId: string,
  *   memberCount: number,
+ *   maxMembers: number,
+ *   isSolo: boolean,
  *   isFull: boolean,
- *   inviteCode: string | null,          — null for non-owners
- *   inviteCodeExpiresAt: string | null, — null for non-owners
+ *   isOwner: boolean,
+ *   inviteCode?: string,          — only for owners on non-full households
+ *   inviteCodeExpiresAt?: string, — only for owners on non-full households
  *   members: Array<{
- *     userId: string,
+ *     clerkUserId: string,
  *     displayName: string,
  *     email: string,
  *     role: "owner" | "member",
@@ -27,8 +30,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { log } from "@/lib/logger";
-import { getUser, getFirestore } from "@/lib/firebase/firestore";
-import type { FirestoreUser, FirestoreHousehold } from "@/lib/firebase/firestore-types";
+import { getUser, getHousehold, getUsersByHouseholdId } from "@/lib/firebase/firestore";
 
 const MAX_HOUSEHOLD_MEMBERS = 3;
 
@@ -48,49 +50,54 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const db = getFirestore();
-  const householdSnap = await db.doc(`households/${callerUser.householdId}`).get();
-  if (!householdSnap.exists) {
+  const household = await getHousehold(callerUser.householdId);
+  if (!household) {
     return NextResponse.json(
       { error: "household_not_found", error_description: "Household record not found." },
       { status: 404 },
     );
   }
 
-  const household = householdSnap.data() as FirestoreHousehold;
   const isOwner = callerUser.role === "owner";
   const isSolo = household.memberIds.length === 1;
   const isFull = household.memberIds.length >= MAX_HOUSEHOLD_MEMBERS;
 
-  // Fetch all member docs
-  const memberDocs = await Promise.all(
-    household.memberIds.map(async (memberId) => {
-      const snap = await db.doc(`users/${memberId}`).get();
-      return snap.exists ? (snap.data() as FirestoreUser) : null;
-    })
-  );
+  // Fetch all member docs via household query
+  const memberDocs = await getUsersByHouseholdId(household.id);
 
+  // Sort: owner first, then members alphabetically
   const members = memberDocs
-    .filter((m): m is FirestoreUser => m !== null)
     .map((m) => ({
-      userId: m.clerkUserId,
+      clerkUserId: m.clerkUserId,
       displayName: m.displayName,
       email: m.email,
       role: m.role,
       isCurrentUser: m.clerkUserId === userId,
-    }));
+    }))
+    .sort((a, b) => {
+      if (a.role === "owner" && b.role !== "owner") return -1;
+      if (a.role !== "owner" && b.role === "owner") return 1;
+      return a.displayName.localeCompare(b.displayName);
+    });
 
-  log.debug("GET /api/household/members returning", { status: 200, memberCount: members.length });
-  return NextResponse.json({
+  const response: Record<string, unknown> = {
     householdId: household.id,
     householdName: household.name,
     ownerId: household.ownerId,
     memberCount: household.memberIds.length,
+    maxMembers: MAX_HOUSEHOLD_MEMBERS,
     isSolo,
     isFull,
-    // Only expose invite code to the owner
-    inviteCode: isOwner ? household.inviteCode : null,
-    inviteCodeExpiresAt: isOwner ? household.inviteCodeExpiresAt : null,
+    isOwner,
     members,
-  });
+  };
+
+  // Only expose invite code to the owner on non-full households
+  if (isOwner && !isFull) {
+    response.inviteCode = household.inviteCode;
+    response.inviteCodeExpiresAt = household.inviteCodeExpiresAt;
+  }
+
+  log.debug("GET /api/household/members returning", { status: 200, memberCount: members.length });
+  return NextResponse.json(response);
 }

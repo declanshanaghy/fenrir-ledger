@@ -8,9 +8,10 @@
  * Response: { inviteCode: string, inviteCodeExpiresAt: string }
  *
  * Error responses:
+ *   400 — invalid body or unsupported action
  *   401 — not authenticated
  *   403 — caller is not the household owner
- *   404 — household not found
+ *   404 — user or household not found
  *   409 — household is full (3/3), no new invite codes accepted
  *   500 — internal error
  *
@@ -22,10 +23,9 @@ import { requireAuth } from "@/lib/auth/require-auth";
 import { log } from "@/lib/logger";
 import {
   getUser,
-  getFirestore,
   getHousehold,
+  regenerateInviteCode,
 } from "@/lib/firebase/firestore";
-import { FIRESTORE_PATHS, generateInviteCode, generateInviteCodeExpiry } from "@/lib/firebase/firestore-types";
 
 const MAX_HOUSEHOLD_MEMBERS = 3;
 
@@ -47,13 +47,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  if (
-    typeof body !== "object" ||
-    body === null ||
-    (body as Record<string, unknown>).action !== "regenerate"
-  ) {
+  if (typeof body !== "object" || body === null) {
+    return NextResponse.json(
+      { error: "invalid_body", error_description: "Request body must be a JSON object." },
+      { status: 400 },
+    );
+  }
+
+  const action = (body as Record<string, unknown>).action;
+
+  if (!action) {
     return NextResponse.json(
       { error: "invalid_body", error_description: 'Body must be { action: "regenerate" }.' },
+      { status: 400 },
+    );
+  }
+
+  if (action !== "regenerate") {
+    return NextResponse.json(
+      { error: "invalid_action", error_description: `Unsupported action: "${String(action)}". Only "regenerate" is supported.` },
       { status: 400 },
     );
   }
@@ -90,17 +102,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const inviteCode = generateInviteCode();
-  const inviteCodeExpiresAt = generateInviteCodeExpiry();
-  const now = new Date().toISOString();
-
-  const db = getFirestore();
-  await db.doc(FIRESTORE_PATHS.household(household.id)).update({
-    inviteCode,
-    inviteCodeExpiresAt,
-    updatedAt: now,
-  });
+  const updated = await regenerateInviteCode(household.id);
 
   log.debug("POST /api/household/invite returning", { status: 200 });
-  return NextResponse.json({ inviteCode, inviteCodeExpiresAt });
+  return NextResponse.json({ inviteCode: updated.inviteCode, inviteCodeExpiresAt: updated.inviteCodeExpiresAt });
 }

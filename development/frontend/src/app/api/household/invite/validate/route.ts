@@ -16,7 +16,7 @@
  *   400 — missing or malformed code param
  *   401 — not authenticated
  *   404 — code not found / invalid
- *   409 — household full { reason: "household_full" }
+ *   409 — already in household or household full { reason: "household_full" | "already_in_household" }
  *   410 — code expired
  *   500 — internal error
  *
@@ -26,9 +26,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { log } from "@/lib/logger";
-import { getUser, getFirestore, getCards } from "@/lib/firebase/firestore";
+import {
+  getUser,
+  getCards,
+  findHouseholdByInviteCode,
+  getUsersByHouseholdId,
+} from "@/lib/firebase/firestore";
 import { isInviteCodeValid } from "@/lib/firebase/firestore-types";
-import type { FirestoreHousehold, FirestoreUser } from "@/lib/firebase/firestore-types";
 
 const MAX_HOUSEHOLD_MEMBERS = 3;
 
@@ -66,46 +70,30 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   // Check if caller is already in a multi-member household
-  const db = getFirestore();
-  const callerHouseholdSnap = await db
-    .collection("households")
-    .where("memberIds", "array-contains", userId)
-    .limit(1)
-    .get();
-
-  if (!callerHouseholdSnap.empty) {
-    const callerHouseholdDoc = callerHouseholdSnap.docs[0];
-    const callerHousehold = callerHouseholdDoc!.data() as FirestoreHousehold;
-    if (callerHousehold.memberIds.length > 1) {
-      return NextResponse.json(
-        { error: "already_in_household", error_description: "You are already in a multi-member household." },
-        { status: 409 },
-      );
-    }
-  }
-
-  // Search for household with this invite code
-  const householdSnap = await db
-    .collection("households")
-    .where("inviteCode", "==", normalizedCode)
-    .limit(1)
-    .get();
-
-  if (householdSnap.empty) {
-    log.debug("GET /api/household/invite/validate returning", { status: 404, reason: "code_not_found" });
+  const callerHouseholdMembers = await getUsersByHouseholdId(callerUser.householdId);
+  if (callerHouseholdMembers.length > 1) {
     return NextResponse.json(
-      { error: "invalid_code", error_description: "Invite code not found." },
-      { status: 404 },
+      { error: "already_in_household", error_description: "You are already in a multi-member household." },
+      { status: 409 },
     );
   }
 
-  const household = householdSnap.docs[0]!.data() as FirestoreHousehold;
+  // Search for household with this invite code
+  const household = await findHouseholdByInviteCode(normalizedCode);
+
+  if (!household) {
+    log.debug("GET /api/household/invite/validate returning", { status: 404, reason: "code_not_found" });
+    return NextResponse.json(
+      { error: "invite_invalid", error_description: "Invite code not found." },
+      { status: 404 },
+    );
+  }
 
   // Check expiry
   if (!isInviteCodeValid(household.inviteCodeExpiresAt)) {
     log.debug("GET /api/household/invite/validate returning", { status: 410, reason: "code_expired" });
     return NextResponse.json(
-      { error: "code_expired", error_description: "This invite code has expired. Ask the owner to regenerate." },
+      { error: "invite_expired", error_description: "This invite code has expired. Ask the owner to regenerate." },
       { status: 410 },
     );
   }
@@ -120,16 +108,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   // Fetch member display info
-  const memberDocs = await Promise.all(
-    household.memberIds.map(async (memberId) => {
-      const snap = await db.doc(`users/${memberId}`).get();
-      return snap.exists ? (snap.data() as FirestoreUser) : null;
-    })
-  );
-
-  const members = memberDocs
-    .filter((m): m is FirestoreUser => m !== null)
-    .map((m) => ({ displayName: m.displayName, email: m.email, role: m.role }));
+  const memberUsers = await getUsersByHouseholdId(household.id);
+  const members = memberUsers.map((m) => ({
+    displayName: m.displayName,
+    email: m.email,
+    role: m.role,
+  }));
 
   // Count caller's existing cards
   const userCards = await getCards(callerUser.householdId);

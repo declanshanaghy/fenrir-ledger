@@ -21,7 +21,7 @@ import { HouseholdFullBanner } from "./HouseholdFullBanner";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
 
 interface HouseholdMember {
-  userId: string;
+  clerkUserId: string;
   displayName: string;
   email: string;
   role: "owner" | "member";
@@ -33,10 +33,12 @@ interface HouseholdData {
   householdName: string;
   ownerId: string;
   memberCount: number;
+  maxMembers: number;
   isSolo: boolean;
   isFull: boolean;
-  inviteCode: string | null;
-  inviteCodeExpiresAt: string | null;
+  isOwner: boolean;
+  inviteCode?: string;
+  inviteCodeExpiresAt?: string;
   members: HouseholdMember[];
 }
 
@@ -133,10 +135,11 @@ export function HouseholdSettingsSection() {
 
   if (!data) return null;
 
-  const isOwner = data.inviteCode !== null;
+  const isOwner = data.isOwner;
+  const maxMembers = data.maxMembers ?? MAX_HOUSEHOLD_MEMBERS;
   const badgeLabel = data.isSolo
     ? "Solo"
-    : `${data.memberCount} / ${MAX_HOUSEHOLD_MEMBERS} members`;
+    : `${data.memberCount} / ${maxMembers} members`;
 
   return (
     <section
