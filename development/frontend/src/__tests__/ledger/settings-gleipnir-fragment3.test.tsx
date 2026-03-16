@@ -28,6 +28,10 @@ vi.mock("@/components/trial/TrialSettingsSection", () => ({
   TrialSettingsSection: () => <div data-testid="trial-section" />,
 }));
 
+vi.mock("@/components/household/HouseholdSettingsSection", () => ({
+  HouseholdSettingsSection: () => <div data-testid="household-section" />,
+}));
+
 // Stub EasterEggModal — we verify the trigger side-effect (localStorage) not the modal UI
 vi.mock("@/components/easter-eggs/EasterEggModal", () => ({
   EasterEggModal: ({ open }: { open: boolean }) =>

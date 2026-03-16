@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Settings — Household Section</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    .page { max-width: 960px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 32px; }
+
+    /* ── Section title ───────────────────────────────────────────── */
+    .section-title { font-size: 18px; font-weight: bold; border-bottom: 2px solid; padding-bottom: 8px; margin-bottom: 16px; }
+    .section-subtitle { font-size: 12px; font-style: italic; margin-top: 4px; }
+
+    /* ── Notes ───────────────────────────────────────────────────── */
+    .note { font-size: 11px; font-style: italic; border-left: 3px solid; padding-left: 8px; margin-top: 6px; }
+    .label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+
+    /* ── Scenario label ──────────────────────────────────────────── */
+    .scenario { border: 1px dashed; padding: 4px 10px; display: inline-block; font-size: 11px; font-weight: bold; margin-bottom: 12px; }
+
+    /* ── Settings page shell ─────────────────────────────────────── */
+    .settings-shell { border: 1px solid; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px; }
+    .settings-col { display: flex; flex-direction: column; gap: 24px; }
+
+    /* ── Household section card ──────────────────────────────────── */
+    .household-section { border: 1px solid; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+    .household-section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid; padding-bottom: 12px; }
+    .household-section-title { font-size: 15px; font-weight: bold; }
+    .household-badge { border: 1px solid; padding: 2px 8px; font-size: 11px; }
+
+    /* ── Members list ────────────────────────────────────────────── */
+    .members-list { display: flex; flex-direction: column; gap: 8px; }
+    .member-row { display: flex; align-items: center; gap: 12px; border: 1px solid; padding: 10px 14px; }
+    .member-avatar { width: 32px; height: 32px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; flex-shrink: 0; }
+    .member-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .member-name { font-size: 13px; font-weight: bold; }
+    .member-email { font-size: 11px; }
+    .member-role { border: 1px solid; padding: 1px 6px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .member-you { font-size: 10px; font-style: italic; margin-left: 4px; }
+
+    /* ── Invite code block ───────────────────────────────────────── */
+    .invite-block { border: 1px solid; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .invite-block-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+    .invite-code-row { display: flex; align-items: center; gap: 10px; }
+    .invite-code-display { border: 1px solid; padding: 8px 16px; font-size: 22px; font-weight: bold; letter-spacing: 0.2em; font-family: monospace; flex: 1; text-align: center; }
+    .invite-code-copy-btn { border: 1px solid; padding: 8px 14px; cursor: pointer; background: none; font-size: 12px; font-family: inherit; white-space: nowrap; }
+    .invite-expiry { font-size: 11px; }
+    .invite-actions { display: flex; gap: 8px; }
+    .btn { border: 1px solid; padding: 7px 14px; cursor: pointer; background: none; font-size: 12px; font-family: inherit; }
+    .btn-primary { border-width: 2px; font-weight: bold; }
+    .btn-danger { border-style: dashed; font-size: 11px; }
+    .btn-disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Join CTA (member view) ──────────────────────────────────── */
+    .join-cta { border: 1px dashed; padding: 16px; text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+    .join-cta p { font-size: 13px; }
+
+    /* ── Household full state ────────────────────────────────────── */
+    .full-banner { border: 2px solid; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .full-banner-icon { font-size: 20px; }
+    .full-banner-text { display: flex; flex-direction: column; gap: 3px; }
+    .full-banner-title { font-size: 13px; font-weight: bold; }
+    .full-banner-sub { font-size: 11px; }
+
+    /* ── Separator ───────────────────────────────────────────────── */
+    hr { border: none; border-top: 1px solid; }
+
+    /* ── Mobile simulation wrapper ───────────────────────────────── */
+    .mobile-frame { width: 375px; border: 2px solid; display: flex; flex-direction: column; }
+    .mobile-topbar { border-bottom: 1px solid; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .mobile-topbar-back { font-size: 18px; cursor: pointer; }
+    .mobile-topbar-title { font-size: 16px; font-weight: bold; }
+    .mobile-body { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Role difference table ───────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { border: 1px solid; padding: 8px 10px; text-align: left; }
+    th { font-weight: bold; }
+
+    /* ── Grid layout for scenarios ───────────────────────────────── */
+    .scenarios-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    @media (max-width: 700px) { .scenarios-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main class="page">
+
+  <header>
+    <h1 style="font-size: 22px; font-weight: bold;">Wireframe: Settings — Household Section</h1>
+    <p class="section-subtitle">Issue #1123 · Mobile-first 375px · Desktop two-column</p>
+    <p class="note">Wireframe shows structural layout only. No colors, shadows, or decorative styling. See theme-system.md.</p>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION A — Settings page shell (desktop)
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">A — Settings Page: Desktop Two-Column Shell</div>
+    <p class="note">Household section is added to the LEFT column (below Trial section, above billing). Existing columns unchanged.</p>
+
+    <div class="settings-shell" style="margin-top: 16px;">
+      <!-- Left column -->
+      <div class="settings-col">
+        <div style="border: 1px dashed; padding: 12px; font-size: 12px; text-align: center;">[Subscription / Stripe Settings — existing]</div>
+        <div style="border: 1px dashed; padding: 12px; font-size: 12px; text-align: center;">[Trial Status Section — existing, if active]</div>
+
+        <!-- ★ NEW: Household section card -->
+        <div class="household-section">
+          <div class="household-section-header">
+            <span class="household-section-title">Household</span>
+            <span class="household-badge">2 / 3 members</span>
+          </div>
+
+          <!-- Members list -->
+          <div>
+            <div class="label">Members</div>
+            <div class="members-list">
+              <div class="member-row">
+                <div class="member-avatar">T</div>
+                <div class="member-info">
+                  <div class="member-name">Thorvald Eriksen <span class="member-you">(you)</span></div>
+                  <div class="member-email">thorvald@example.com</div>
+                </div>
+                <span class="member-role">Owner</span>
+              </div>
+              <div class="member-row">
+                <div class="member-avatar">S</div>
+                <div class="member-info">
+                  <div class="member-name">Sigrid Halverson</div>
+                  <div class="member-email">sigrid@example.com</div>
+                </div>
+                <span class="member-role">Member</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Invite code (owner view) -->
+          <div class="invite-block">
+            <div class="invite-block-title">Invite Code</div>
+            <div class="invite-code-row">
+              <div class="invite-code-display">X7K2NP</div>
+              <button class="invite-code-copy-btn">Copy</button>
+            </div>
+            <div class="invite-expiry">Expires 16 Apr 2026 · Share this code out-of-band with your new member</div>
+            <div class="invite-actions">
+              <button class="btn btn-primary">Regenerate Code</button>
+            </div>
+            <p class="note">Only Owner sees Regenerate button. Copying shows brief "Copied!" tooltip inline.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div class="settings-col">
+        <div style="border: 1px dashed; padding: 12px; font-size: 12px; text-align: center;">[Restore Tab Guides — existing]</div>
+        <div style="border: 1px dashed; padding: 12px; font-size: 12px; text-align: center;">[Other settings controls — existing]</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION B — Owner view vs Member view side-by-side
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">B — Owner View vs Member View: Household Card</div>
+
+    <div class="scenarios-grid" style="margin-top: 16px;">
+
+      <!-- Owner view -->
+      <div>
+        <div class="scenario">OWNER VIEW</div>
+        <div class="household-section">
+          <div class="household-section-header">
+            <span class="household-section-title">Household</span>
+            <span class="household-badge">2 / 3 members</span>
+          </div>
+          <div>
+            <div class="label">Members</div>
+            <div class="members-list">
+              <div class="member-row">
+                <div class="member-avatar">T</div>
+                <div class="member-info">
+                  <div class="member-name">Thorvald Eriksen <span class="member-you">(you)</span></div>
+                  <div class="member-email">thorvald@example.com</div>
+                </div>
+                <span class="member-role">Owner</span>
+              </div>
+              <div class="member-row">
+                <div class="member-avatar">S</div>
+                <div class="member-info">
+                  <div class="member-name">Sigrid Halverson</div>
+                  <div class="member-email">sigrid@example.com</div>
+                </div>
+                <span class="member-role">Member</span>
+              </div>
+            </div>
+          </div>
+          <div class="invite-block">
+            <div class="invite-block-title">Invite Code</div>
+            <div class="invite-code-row">
+              <div class="invite-code-display">X7K2NP</div>
+              <button class="invite-code-copy-btn">Copy</button>
+            </div>
+            <div class="invite-expiry">Expires 16 Apr 2026</div>
+            <div class="invite-actions">
+              <button class="btn btn-primary">Regenerate Code</button>
+            </div>
+          </div>
+          <p class="note">Owner sees: invite code + Regenerate button. Owner cannot leave household (last resort: delete account).</p>
+        </div>
+      </div>
+
+      <!-- Member view -->
+      <div>
+        <div class="scenario">MEMBER VIEW</div>
+        <div class="household-section">
+          <div class="household-section-header">
+            <span class="household-section-title">Household</span>
+            <span class="household-badge">2 / 3 members</span>
+          </div>
+          <div>
+            <div class="label">Members</div>
+            <div class="members-list">
+              <div class="member-row">
+                <div class="member-avatar">T</div>
+                <div class="member-info">
+                  <div class="member-name">Thorvald Eriksen</div>
+                  <div class="member-email">thorvald@example.com</div>
+                </div>
+                <span class="member-role">Owner</span>
+              </div>
+              <div class="member-row">
+                <div class="member-avatar">S</div>
+                <div class="member-info">
+                  <div class="member-name">Sigrid Halverson <span class="member-you">(you)</span></div>
+                  <div class="member-email">sigrid@example.com</div>
+                </div>
+                <span class="member-role">Member</span>
+              </div>
+            </div>
+          </div>
+          <!-- Member: no invite code block; just informational note -->
+          <div style="border: 1px dashed; padding: 12px; font-size: 12px;">
+            <p>Ask <strong>Thorvald Eriksen</strong> (Owner) for an invite code to share with others.</p>
+          </div>
+          <p class="note">Members do NOT see the invite code or Regenerate button — invite code is owner-only. Members see household name + owner name for context.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION C — Household full state (3/3 members)
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">C — Household Full State (3 / 3 Members)</div>
+    <p class="note">Invite code block is replaced by a "household full" banner. Regenerate is hidden — no new members possible.</p>
+
+    <div style="max-width: 420px; margin-top: 16px;">
+      <div class="household-section">
+        <div class="household-section-header">
+          <span class="household-section-title">Household</span>
+          <span class="household-badge">3 / 3 members</span>
+        </div>
+        <div>
+          <div class="label">Members</div>
+          <div class="members-list">
+            <div class="member-row">
+              <div class="member-avatar">T</div>
+              <div class="member-info">
+                <div class="member-name">Thorvald Eriksen <span class="member-you">(you)</span></div>
+                <div class="member-email">thorvald@example.com</div>
+              </div>
+              <span class="member-role">Owner</span>
+            </div>
+            <div class="member-row">
+              <div class="member-avatar">S</div>
+              <div class="member-info">
+                <div class="member-name">Sigrid Halverson</div>
+                <div class="member-email">sigrid@example.com</div>
+              </div>
+              <span class="member-role">Member</span>
+            </div>
+            <div class="member-row">
+              <div class="member-avatar">B</div>
+              <div class="member-info">
+                <div class="member-name">Björn Ironside</div>
+                <div class="member-email">bjorn@example.com</div>
+              </div>
+              <span class="member-role">Member</span>
+            </div>
+          </div>
+        </div>
+        <div class="full-banner">
+          <div class="full-banner-icon">⚔</div>
+          <div class="full-banner-text">
+            <div class="full-banner-title">Household is full</div>
+            <div class="full-banner-sub">Max 3 members reached. No invite codes can be issued.</div>
+          </div>
+        </div>
+        <p class="note">Invite code section is completely hidden when 3/3. The "3 / 3 members" badge is visually distinct from "2 / 3" (engineer: different token/color). Regenerate button is also suppressed server-side (API returns 409).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION D — Solo user view (no household yet)
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">D — Solo User: No Household Yet</div>
+    <p class="note">A signed-in user who has never joined or created a named household sees a prompt to either create or join one.</p>
+
+    <div style="max-width: 420px; margin-top: 16px;">
+      <div class="household-section">
+        <div class="household-section-header">
+          <span class="household-section-title">Household</span>
+          <span class="household-badge">Solo</span>
+        </div>
+        <div class="join-cta">
+          <p>You are currently managing cards solo.</p>
+          <p>Join another household to share and merge your cards.</p>
+          <button class="btn btn-primary">Join a Household</button>
+        </div>
+        <p class="note">"Join a Household" navigates to the Join Household screen (join-household.html). Solo anonymous users also land here after sign-in if they have no household doc. Solo badge distinguishes from 1/3 (one member with code).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION E — Mobile 375px simulation (Owner view)
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">E — Mobile 375px: Settings → Household (Owner)</div>
+    <p class="note">On mobile, Settings uses single-column stacking. Household section sits between Subscription and other controls. All tap targets ≥ 44px height.</p>
+
+    <div class="mobile-frame" style="margin-top: 16px;">
+      <div class="mobile-topbar">
+        <span class="mobile-topbar-back">‹</span>
+        <span class="mobile-topbar-title">Settings</span>
+      </div>
+      <div class="mobile-body">
+
+        <div style="border: 1px dashed; padding: 10px; font-size: 11px; text-align: center;">[Subscription / Stripe — existing]</div>
+
+        <!-- Household card mobile -->
+        <div class="household-section" style="gap: 14px;">
+          <div class="household-section-header">
+            <span class="household-section-title">Household</span>
+            <span class="household-badge">2 / 3</span>
+          </div>
+
+          <div class="members-list">
+            <div class="member-row" style="padding: 10px 10px;">
+              <div class="member-avatar">T</div>
+              <div class="member-info">
+                <div class="member-name" style="font-size: 12px;">Thorvald Eriksen <span class="member-you">(you)</span></div>
+                <div class="member-email" style="font-size: 10px;">thorvald@example.com</div>
+              </div>
+              <span class="member-role" style="font-size: 9px;">Owner</span>
+            </div>
+            <div class="member-row" style="padding: 10px 10px;">
+              <div class="member-avatar">S</div>
+              <div class="member-info">
+                <div class="member-name" style="font-size: 12px;">Sigrid Halverson</div>
+                <div class="member-email" style="font-size: 10px;">sigrid@example.com</div>
+              </div>
+              <span class="member-role" style="font-size: 9px;">Member</span>
+            </div>
+          </div>
+
+          <div class="invite-block">
+            <div class="invite-block-title">Invite Code</div>
+            <!-- On mobile the code and copy stack vertically -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div class="invite-code-display" style="font-size: 28px;">X7K2NP</div>
+              <button class="invite-code-copy-btn" style="width: 100%; padding: 10px;">Copy Code</button>
+            </div>
+            <div class="invite-expiry">Expires 16 Apr 2026</div>
+            <button class="btn btn-primary" style="width: 100%; padding: 12px;">Regenerate Code</button>
+          </div>
+        </div>
+
+        <div style="border: 1px dashed; padding: 10px; font-size: 11px; text-align: center;">[Other controls — existing]</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION F — Owner vs Member capability table
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">F — Role Capability Matrix</div>
+    <table style="margin-top: 12px;">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>Owner</th>
+          <th>Member</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>View members list</td><td>✓</td><td>✓</td></tr>
+        <tr><td>See invite code</td><td>✓</td><td>✗ (sees owner name instead)</td></tr>
+        <tr><td>Copy invite code</td><td>✓</td><td>✗</td></tr>
+        <tr><td>Regenerate invite code</td><td>✓</td><td>✗</td></tr>
+        <tr><td>Leave household</td><td>✗ (owner cannot leave)</td><td>✓ (future scope)</td></tr>
+        <tr><td>Remove another member</td><td>✓ (future scope)</td><td>✗</td></tr>
+        <tr><td>See "Household Full" banner</td><td>✓</td><td>✓</td></tr>
+        <tr><td>Join CTA</td><td>✗ (already in household)</td><td>✗ (already in household)</td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top: 8px;">Future scope items (leave, remove) are noted but NOT wired up in this issue. Placeholder link/button may be added as disabled/greyed with "Coming soon" tooltip to set expectation.</p>
+  </section>
+
+</main>
+</body>
+</html>

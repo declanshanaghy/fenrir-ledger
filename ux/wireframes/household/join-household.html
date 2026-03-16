@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Join Household — Code Entry & Validation</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    .page { max-width: 960px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 32px; }
+
+    .section-title { font-size: 18px; font-weight: bold; border-bottom: 2px solid; padding-bottom: 8px; margin-bottom: 16px; }
+    .section-subtitle { font-size: 12px; font-style: italic; margin-top: 4px; }
+    .note { font-size: 11px; font-style: italic; border-left: 3px solid; padding-left: 8px; margin-top: 6px; }
+    .scenario { border: 1px dashed; padding: 4px 10px; display: inline-block; font-size: 11px; font-weight: bold; margin-bottom: 12px; }
+
+    /* ── Mobile frame ──────────────────────────────────────────── */
+    .mobile-frame { width: 375px; border: 2px solid; display: flex; flex-direction: column; }
+    .mobile-topbar { border-bottom: 1px solid; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .mobile-topbar-back { font-size: 18px; cursor: pointer; }
+    .mobile-topbar-title { font-size: 16px; font-weight: bold; }
+    .mobile-body { padding: 20px 16px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Join form ─────────────────────────────────────────────── */
+    .join-screen { display: flex; flex-direction: column; gap: 20px; }
+    .join-heading { font-size: 20px; font-weight: bold; }
+    .join-subheading { font-size: 13px; line-height: 1.5; }
+
+    /* ── 6-char code input ─────────────────────────────────────── */
+    .code-input-group { display: flex; flex-direction: column; gap: 8px; }
+    .code-input-label { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+    .code-input-row { display: flex; gap: 6px; justify-content: center; }
+    .code-char-box {
+      width: 44px; height: 56px;
+      border: 2px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: bold; font-family: monospace;
+      text-transform: uppercase;
+    }
+    .code-char-box.filled { border-width: 2px; }
+    .code-char-box.active { border-width: 2px; /* engineer: focus ring + caret */ }
+    .code-char-box.error { border-style: dashed; }
+    .code-char-box.empty { }
+
+    /* Alternative: single text input */
+    .code-single-input { width: 100%; border: 2px solid; padding: 12px 16px; font-size: 20px; font-weight: bold; font-family: monospace; letter-spacing: 0.2em; text-align: center; text-transform: uppercase; }
+
+    /* ── Validation feedback ───────────────────────────────────── */
+    .validation-msg { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border: 1px solid; font-size: 12px; }
+    .validation-msg.error { border-style: dashed; }
+    .validation-msg.success { border-style: solid; }
+    .validation-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Action buttons ────────────────────────────────────────── */
+    .btn { border: 1px solid; padding: 12px 24px; cursor: pointer; background: none; font-size: 14px; font-family: inherit; width: 100%; }
+    .btn-primary { border-width: 2px; font-weight: bold; }
+    .btn-loading { opacity: 0.6; cursor: wait; }
+    .btn-disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Loading spinner placeholder ───────────────────────────── */
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid; border-top-color: transparent; border-radius: 50%; /* engineer: rotate animation */ }
+
+    /* ── Household preview (after valid code) ──────────────────── */
+    .household-preview { border: 1px solid; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .household-preview-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+    .household-preview-name { font-size: 16px; font-weight: bold; }
+    .household-preview-members { font-size: 12px; }
+    .member-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid; padding: 4px 8px; margin: 3px 3px 0 0; font-size: 11px; }
+    .member-chip-avatar { width: 18px; height: 18px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; }
+
+    /* ── Grid for states ───────────────────────────────────────── */
+    .states-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 800px) { .states-grid { grid-template-columns: 1fr 1fr; } }
+
+    /* ── Desktop form (centered card) ─────────────────────────── */
+    .desktop-card { max-width: 440px; border: 1px solid; padding: 32px; display: flex; flex-direction: column; gap: 20px; }
+    .desktop-card-header { border-bottom: 1px solid; padding-bottom: 16px; }
+    .desktop-card-title { font-size: 20px; font-weight: bold; }
+    .desktop-card-sub { font-size: 13px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+<main class="page">
+
+  <header>
+    <h1 style="font-size: 22px; font-weight: bold;">Wireframe: Join Household — Code Entry & Validation</h1>
+    <p class="section-subtitle">Issue #1123 · Mobile-first 375px · All validation states</p>
+    <p class="note">Wireframe shows structural layout only. No colors, shadows, or decorative styling. See theme-system.md.</p>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION A — Desktop centered-card form
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">A — Desktop: Join Household Card (Idle / Empty State)</div>
+    <p class="note">On desktop, the Join Household screen renders as a centered card within the app shell (same nav/header). Max width ~440px. URL: /ledger/join or /ledger/settings?join=1 (FiremanDecko to decide routing).</p>
+
+    <div class="desktop-card" style="margin-top: 16px;">
+      <div class="desktop-card-header">
+        <div class="desktop-card-title">Join a Household</div>
+        <div class="desktop-card-sub">Enter the 6-character invite code from the household owner.</div>
+      </div>
+
+      <div class="code-input-group">
+        <div class="code-input-label">Invite Code</div>
+        <!-- Six individual char boxes — preferred interaction: auto-advance on keystroke -->
+        <div class="code-input-row">
+          <div class="code-char-box active"></div>
+          <div class="code-char-box empty"></div>
+          <div class="code-char-box empty"></div>
+          <div class="code-char-box empty"></div>
+          <div class="code-char-box empty"></div>
+          <div class="code-char-box empty"></div>
+        </div>
+        <p class="note">6 individual char inputs, auto-advancing. Accepts A–Z and 0–9 only (uppercase forced). Paste of 6-char string fills all boxes. Tab/Backspace navigate backward. See interaction-spec.md for paste & keyboard behavior.</p>
+      </div>
+
+      <button class="btn btn-primary btn-disabled" disabled>Join Household</button>
+      <p class="note">Join button disabled until all 6 chars filled. No submit on partial code.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION B — All validation states (mobile frames)
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">B — All Validation States</div>
+
+    <div class="states-grid" style="margin-top: 16px;">
+
+      <!-- State 1: Idle / Partial entry -->
+      <div>
+        <div class="scenario">STATE 1: PARTIAL ENTRY</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar">
+            <span class="mobile-topbar-back">‹</span>
+            <span class="mobile-topbar-title">Join Household</span>
+          </div>
+          <div class="mobile-body">
+            <div class="join-screen">
+              <div class="join-subheading">Enter the 6-character invite code from the household owner.</div>
+              <div class="code-input-group">
+                <div class="code-input-label">Invite Code</div>
+                <div class="code-input-row">
+                  <div class="code-char-box filled">X</div>
+                  <div class="code-char-box filled">7</div>
+                  <div class="code-char-box active"></div>
+                  <div class="code-char-box empty"></div>
+                  <div class="code-char-box empty"></div>
+                  <div class="code-char-box empty"></div>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-disabled" disabled>Join Household</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 2: Loading / validating -->
+      <div>
+        <div class="scenario">STATE 2: VALIDATING</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar">
+            <span class="mobile-topbar-back">‹</span>
+            <span class="mobile-topbar-title">Join Household</span>
+          </div>
+          <div class="mobile-body">
+            <div class="join-screen">
+              <div class="join-subheading">Enter the 6-character invite code from the household owner.</div>
+              <div class="code-input-group">
+                <div class="code-input-label">Invite Code</div>
+                <div class="code-input-row">
+                  <div class="code-char-box filled">X</div>
+                  <div class="code-char-box filled">7</div>
+                  <div class="code-char-box filled">K</div>
+                  <div class="code-char-box filled">2</div>
+                  <div class="code-char-box filled">N</div>
+                  <div class="code-char-box filled">P</div>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-loading">
+                <span class="spinner"></span> Checking…
+              </button>
+              <p class="note">All inputs disabled during validation. Spinner replaces button label. Auto-validate on 6th char entry (no extra tap needed).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 3: Code valid — household preview + cards merge warning -->
+      <div>
+        <div class="scenario">STATE 3: CODE VALID</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar">
+            <span class="mobile-topbar-back">‹</span>
+            <span class="mobile-topbar-title">Join Household</span>
+          </div>
+          <div class="mobile-body">
+            <div class="join-screen">
+              <div class="code-input-group">
+                <div class="code-input-label">Invite Code</div>
+                <div class="code-input-row">
+                  <div class="code-char-box filled">X</div>
+                  <div class="code-char-box filled">7</div>
+                  <div class="code-char-box filled">K</div>
+                  <div class="code-char-box filled">2</div>
+                  <div class="code-char-box filled">N</div>
+                  <div class="code-char-box filled">P</div>
+                </div>
+              </div>
+              <div class="validation-msg success">
+                <span class="validation-icon">✓</span>
+                <div>Valid invite code for <strong>Eriksen Household</strong></div>
+              </div>
+              <div class="household-preview">
+                <div class="household-preview-title">You will join</div>
+                <div class="household-preview-name">Eriksen Household</div>
+                <div class="household-preview-members">
+                  Current members (2/3):
+                  <div style="margin-top: 4px;">
+                    <span class="member-chip"><span class="member-chip-avatar">T</span> Thorvald (Owner)</span>
+                    <span class="member-chip"><span class="member-chip-avatar">S</span> Sigrid</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Navigate to merge-confirmation before finalising -->
+              <button class="btn btn-primary">Continue →</button>
+              <p class="note">Continue navigates to merge-confirmation screen (merge-confirmation.html). Does NOT yet join — final confirm is on next screen.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 4: Invalid code -->
+      <div>
+        <div class="scenario">STATE 4: INVALID CODE</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar">
+            <span class="mobile-topbar-back">‹</span>
+            <span class="mobile-topbar-title">Join Household</span>
+          </div>
+          <div class="mobile-body">
+            <div class="join-screen">
+              <div class="join-subheading">Enter the 6-character invite code from the household owner.</div>
+              <div class="code-input-group">
+                <div class="code-input-label">Invite Code</div>
+                <div class="code-input-row">
+                  <div class="code-char-box error">Z</div>
+                  <div class="code-char-box error">Z</div>
+                  <div class="code-char-box error">Z</div>
+                  <div class="code-char-box error">Z</div>
+                  <div class="code-char-box error">Z</div>
+                  <div class="code-char-box error">Z</div>
+                </div>
+              </div>
+              <div class="validation-msg error">
+                <span class="validation-icon">✕</span>
+                <div>
+                  <strong>Invalid invite code.</strong><br/>
+                  Check the code with your household owner and try again.
+                </div>
+              </div>
+              <button class="btn btn-primary">Try Again</button>
+              <p class="note">"Try Again" clears all 6 boxes and focuses first input. Error state uses dashed border on char boxes (engineer: map to error token).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 5: Expired code -->
+      <div>
+        <div class="scenario">STATE 5: EXPIRED CODE</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar">
+            <span class="mobile-topbar-back">‹</span>
+            <span class="mobile-topbar-title">Join Household</span>
+          </div>
+          <div class="mobile-body">
+            <div class="join-screen">
+              <div class="code-input-group">
+                <div class="code-input-label">Invite Code</div>
+                <div class="code-input-row">
+                  <div class="code-char-box error">X</div>
+                  <div class="code-char-box error">7</div>
+                  <div class="code-char-box error">K</div>
+                  <div class="code-char-box error">2</div>
+                  <div class="code-char-box error">N</div>
+                  <div class="code-char-box error">P</div>
+                </div>
+              </div>
+              <div class="validation-msg error">
+                <span class="validation-icon">⏱</span>
+                <div>
+                  <strong>This invite code has expired.</strong><br/>
+                  Ask the household owner to generate a new code.
+                </div>
+              </div>
+              <button class="btn btn-primary">Try a New Code</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 6: Household full -->
+      <div>
+        <div class="scenario">STATE 6: HOUSEHOLD FULL</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar">
+            <span class="mobile-topbar-back">‹</span>
+            <span class="mobile-topbar-title">Join Household</span>
+          </div>
+          <div class="mobile-body">
+            <div class="join-screen">
+              <div class="code-input-group">
+                <div class="code-input-label">Invite Code</div>
+                <div class="code-input-row">
+                  <div class="code-char-box error">X</div>
+                  <div class="code-char-box error">7</div>
+                  <div class="code-char-box error">K</div>
+                  <div class="code-char-box error">2</div>
+                  <div class="code-char-box error">N</div>
+                  <div class="code-char-box error">P</div>
+                </div>
+              </div>
+              <div class="validation-msg error">
+                <span class="validation-icon">⚔</span>
+                <div>
+                  <strong>Household is full (3/3 members).</strong><br/>
+                  This household cannot accept new members. Ask the owner if a spot will open.
+                </div>
+              </div>
+              <button class="btn btn-primary">Try a Different Code</button>
+              <p class="note">API returns 409 CONFLICT with reason=household_full. Client displays this state. User can try a different code or navigate back.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION C — Already in a household edge case
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">C — Edge Case: User Already In a Multi-Member Household</div>
+    <p class="note">If a user who is already a member of a multi-member household navigates to Join, show a blocking state. They cannot join another household without leaving the current one (future scope).</p>
+
+    <div class="mobile-frame" style="margin-top: 16px;">
+      <div class="mobile-topbar">
+        <span class="mobile-topbar-back">‹</span>
+        <span class="mobile-topbar-title">Join Household</span>
+      </div>
+      <div class="mobile-body">
+        <div style="border: 1px solid; padding: 16px; display: flex; flex-direction: column; gap: 12px; text-align: center; align-items: center;">
+          <div style="font-size: 28px;">⚔</div>
+          <div style="font-size: 15px; font-weight: bold;">You're already in a household</div>
+          <div style="font-size: 12px; line-height: 1.5;">You are currently a member of <strong>Eriksen Household</strong>. You must leave that household before joining another (coming soon).</div>
+          <button class="btn" style="width: 100%;">Back to Settings</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION D — Accessibility notes
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">D — Accessibility Requirements (WCAG 2.1 AA)</div>
+    <ul style="margin-top: 12px; padding-left: 20px; font-size: 13px; line-height: 1.8;">
+      <li>Each char box has <code>aria-label="Character N of 6"</code> and <code>inputmode="text"</code></li>
+      <li>Fieldset wraps the 6 inputs with <code>legend="Invite code (6 characters)"</code></li>
+      <li>Validation messages use <code>role="alert"</code> so screen readers announce them immediately</li>
+      <li>Loading state button has <code>aria-busy="true"</code> and <code>aria-label="Checking invite code…"</code></li>
+      <li>Focus management: on error, focus returns to first char box; on success, focus moves to Continue button</li>
+      <li>All tap targets minimum 44×44px (char boxes: 44×56px on mobile)</li>
+      <li>Keyboard: Tab navigates between char boxes; Backspace from empty box moves focus backward</li>
+    </ul>
+  </section>
+
+</main>
+</body>
+</html>

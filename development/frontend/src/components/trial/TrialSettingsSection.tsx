@@ -100,9 +100,14 @@ export function TrialSettingsSection() {
 
   return (
     <section
-      className="border border-border p-5 flex flex-col gap-3"
+      className="relative border border-border p-5 flex flex-col gap-3 karl-bling-card"
       aria-label="Trial Status"
     >
+      {/* Karl rune corners */}
+      <span className="karl-rune-corner karl-rune-tl" aria-hidden="true">ᚠ</span>
+      <span className="karl-rune-corner karl-rune-tr" aria-hidden="true">ᚱ</span>
+      <span className="karl-rune-corner karl-rune-bl" aria-hidden="true">ᛁ</span>
+      <span className="karl-rune-corner karl-rune-br" aria-hidden="true">ᚾ</span>
       <h2 className="text-sm font-heading font-bold uppercase tracking-[0.08em] text-foreground">
         Trial Status
       </h2>
@@ -166,7 +171,7 @@ export function TrialSettingsSection() {
             "text-base font-heading font-semibold tracking-wide",
             "bg-gold text-primary-foreground",
             "hover:brightness-110 transition-colors",
-            "border border-gold rounded-sm",
+            "border border-gold rounded-sm karl-bling-btn",
             "disabled:opacity-60 disabled:cursor-not-allowed",
             "self-start",
           ].join(" ")}
