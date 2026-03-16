@@ -185,7 +185,7 @@ describe("Round-trip session transitions — hooks stability (issue #1036)", () 
 describe("Various log entry types render without crash (issue #1036)", () => {
   const ENTRIES: LogEntry[] = [
     { id: "e-sys", type: "system", detail: "System initialized", text: undefined },
-    { id: "e-tool", type: "tool-use", text: "Read file", toolName: "Read", toolInput: { path: "/foo" } },
+    { id: "e-tool", type: "tool-use", text: "Read file", toolName: "Read", toolInput: '{"path":"/foo"}' },
     { id: "e-warn", type: "warning", message: "Low disk space", text: undefined },
     { id: "e-err", type: "error", message: "Connection refused", text: undefined },
     { id: "e-raw", type: "raw", text: "raw log output" },
