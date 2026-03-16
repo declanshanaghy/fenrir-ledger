@@ -170,6 +170,194 @@ export async function setCards(cards: Card[]): Promise<void> {
   }
 }
 
+// ─── Household query helpers ──────────────────────────────────────────────────
+
+/**
+ * Finds a household document by its invite code.
+ * Returns null if no household has this code.
+ * Used during invite code validation.
+ */
+export async function findHouseholdByInviteCode(
+  code: string
+): Promise<FirestoreHousehold | null> {
+  const db = getFirestore();
+  const snap = await db
+    .collection("households")
+    .where("inviteCode", "==", code.toUpperCase())
+    .limit(1)
+    .get();
+  if (snap.empty) return null;
+  return snap.docs[0].data() as FirestoreHousehold;
+}
+
+/**
+ * Fetches all user documents whose householdId matches the given household.
+ * Used to build the members list for settings and join preview.
+ */
+export async function getUsersByHouseholdId(
+  householdId: string
+): Promise<FirestoreUser[]> {
+  const db = getFirestore();
+  const snap = await db
+    .collection("users")
+    .where("householdId", "==", householdId)
+    .get();
+  return snap.docs.map((d) => d.data() as FirestoreUser);
+}
+
+// ─── Invite code regeneration ─────────────────────────────────────────────────
+
+/**
+ * Regenerates the invite code for a household.
+ * Only the household owner should call this (enforced by the API route).
+ * Returns the updated household document.
+ */
+export async function regenerateInviteCode(
+  householdId: string
+): Promise<FirestoreHousehold> {
+  const db = getFirestore();
+  const now = new Date().toISOString();
+  const newCode = generateInviteCode();
+  const newExpiry = generateInviteCodeExpiry();
+
+  const ref = db.doc(FIRESTORE_PATHS.household(householdId));
+  await ref.update({
+    inviteCode: newCode,
+    inviteCodeExpiresAt: newExpiry,
+    updatedAt: now,
+  });
+
+  const snap = await ref.get();
+  return snap.data() as FirestoreHousehold;
+}
+
+// ─── Join household transaction ───────────────────────────────────────────────
+
+export interface JoinHouseholdResult {
+  /** IDs of cards that were moved from the old household */
+  movedCardIds: string[];
+  /** The household the user has joined */
+  newHousehold: FirestoreHousehold;
+}
+
+/**
+ * Executes the join + merge operation as an atomic Firestore transaction.
+ *
+ * Steps (all-or-nothing):
+ *   1. Re-validate invite code is still valid and not expired
+ *   2. Check household still has capacity (≤ 2 members currently, max 3)
+ *   3. Fetch all non-deleted cards from the user's old household
+ *   4. Copy each card to the new household (update householdId)
+ *   5. Delete the old solo household document
+ *   6. Add the user to the new household's memberIds
+ *   7. Update the user's householdId and role
+ *
+ * If the transaction fails for any reason, Firestore rolls back automatically —
+ * the user's original household remains intact (idempotent).
+ *
+ * @throws Error with message "household_full" if race condition: household filled up
+ * @throws Error with message "invite_invalid" if code no longer valid
+ * @throws Error with message "invite_expired" if code is expired
+ */
+export async function joinHouseholdTransaction(
+  userId: string,
+  inviteCode: string
+): Promise<JoinHouseholdResult> {
+  const db = getFirestore();
+
+  return await db.runTransaction(async (tx) => {
+    // 1. Look up household by invite code
+    const householdsSnap = await db
+      .collection("households")
+      .where("inviteCode", "==", inviteCode.toUpperCase())
+      .limit(1)
+      .get();
+
+    if (householdsSnap.empty) {
+      throw new Error("invite_invalid");
+    }
+
+    const targetHouseholdRef = householdsSnap.docs[0].ref;
+    const targetHousehold = householdsSnap.docs[0].data() as FirestoreHousehold;
+
+    // 2. Check invite code not expired
+    const { isInviteCodeValid } = await import("./firestore-types");
+    if (!isInviteCodeValid(targetHousehold.inviteCodeExpiresAt)) {
+      throw new Error("invite_expired");
+    }
+
+    // 3. Check household capacity (max 3 members)
+    if (targetHousehold.memberIds.length >= 3) {
+      throw new Error("household_full");
+    }
+
+    // 4. Get current user doc
+    const userRef = db.doc(FIRESTORE_PATHS.user(userId));
+    const userSnap = await tx.get(userRef);
+    if (!userSnap.exists) {
+      throw new Error("user_not_found");
+    }
+    const user = userSnap.data() as FirestoreUser;
+    const oldHouseholdId = user.householdId;
+
+    // Don't join if already in this household
+    if (oldHouseholdId === targetHousehold.id) {
+      throw new Error("already_member");
+    }
+
+    // 5. Fetch old household's non-deleted cards (outside transaction reads must be done before writes)
+    const oldCardsSnap = await db
+      .collection(FIRESTORE_PATHS.cards(oldHouseholdId))
+      .get();
+    const oldCards = oldCardsSnap.docs
+      .map((d) => d.data() as FirestoreCard)
+      .filter((c) => !c.deletedAt);
+
+    const now = new Date().toISOString();
+    const movedCardIds: string[] = [];
+
+    // 6. Copy each card to new household
+    for (const card of oldCards) {
+      const updatedCard: FirestoreCard = {
+        ...card,
+        householdId: targetHousehold.id,
+        updatedAt: now,
+      };
+      const newCardRef = db.doc(
+        FIRESTORE_PATHS.card(targetHousehold.id, card.id)
+      );
+      tx.set(newCardRef, updatedCard);
+      movedCardIds.push(card.id);
+    }
+
+    // 7. Delete old household doc (solo household cleaned up)
+    const oldHouseholdRef = db.doc(FIRESTORE_PATHS.household(oldHouseholdId));
+    tx.delete(oldHouseholdRef);
+
+    // 8. Add user to new household's memberIds
+    const updatedMemberIds = [...targetHousehold.memberIds, userId];
+    tx.update(targetHouseholdRef, {
+      memberIds: updatedMemberIds,
+      updatedAt: now,
+    });
+
+    // 9. Update user's householdId and role
+    tx.update(userRef, {
+      householdId: targetHousehold.id,
+      role: "member",
+      updatedAt: now,
+    });
+
+    const updatedHousehold: FirestoreHousehold = {
+      ...targetHousehold,
+      memberIds: updatedMemberIds,
+      updatedAt: now,
+    };
+
+    return { movedCardIds, newHousehold: updatedHousehold };
+  });
+}
+
 // ─── Auto-create solo household ───────────────────────────────────────────────
 
 export interface EnsureSoloHouseholdInput {
