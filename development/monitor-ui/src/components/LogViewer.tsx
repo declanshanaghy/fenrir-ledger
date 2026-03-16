@@ -63,9 +63,10 @@ interface SessionHeaderProps {
   isPinned?: boolean;
   onTogglePin?: () => void;
   showPin?: boolean;
+  replayedFromCache?: boolean;
 }
 
-function SessionHeader({ job, wsState, isPinned = false, onTogglePin, showPin = true }: SessionHeaderProps) {
+function SessionHeader({ job, wsState, isPinned = false, onTogglePin, showPin = true, replayedFromCache = false }: SessionHeaderProps) {
   const displayTitle = resolveSessionTitle(job);
   // Truncate session ID to last 8 chars for display
   const shortId = job.sessionId.length > 8
@@ -117,7 +118,17 @@ function SessionHeader({ job, wsState, isPinned = false, onTogglePin, showPin = 
         >
           {STATUS_ICONS[job.status]} {STATUS_LABELS[job.status]}
         </span>
-        <StatusBadge state={wsState} />
+        {replayedFromCache ? (
+          <span
+            className="ws-badge replayed-cache"
+            title="Pod cleaned up — showing cached logs"
+            aria-label="Replayed from cache"
+          >
+            ᛗ replayed from cache
+          </span>
+        ) : (
+          <StatusBadge state={wsState} />
+        )}
         <CopySessionIdButton sessionId={job.sessionId} />
         {showPin && onTogglePin && (
           confirmingUnpin ? (
@@ -165,9 +176,10 @@ interface Props {
   isPinned?: boolean;
   onTogglePin?: () => void;
   onAvatarClick?: (agentKey: string) => void;
+  replayedFromCache?: boolean;
 }
 
-export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin, onAvatarClick }: Props) {
+export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin, onAvatarClick, replayedFromCache }: Props) {
   const termRef = useRef<HTMLDivElement>(null);
   const [fixtureSpeed, setFixtureSpeed] = useState(1);
   const [fixturePaused, setFixturePaused] = useState(false);
@@ -256,8 +268,10 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
     );
   }
 
-  // TTL-expired sessions get the full-pane Norse error tablet instead of the log terminal
-  if (isTtlExpired && streamError) {
+  // TTL-expired sessions get the full-pane Norse error tablet — unless we have
+  // cached data to display instead (replayedFromCache), in which case fall through
+  // to the normal log terminal.
+  if (isTtlExpired && streamError && !replayedFromCache) {
     return (
       <main className="content" aria-label="Log viewer">
         <SessionHeader
@@ -272,7 +286,7 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
   }
 
   // Node-unreachable / kubelet-timeout errors get the same Norse error tablet treatment
-  if (isNodeUnreachable && streamError) {
+  if (isNodeUnreachable && streamError && !replayedFromCache) {
     return (
       <main className="content" aria-label="Log viewer">
         <SessionHeader
@@ -294,6 +308,7 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
         wsState={wsState}
         isPinned={isPinned}
         onTogglePin={onTogglePin}
+        replayedFromCache={replayedFromCache}
       />
       <div
         className="log-terminal"

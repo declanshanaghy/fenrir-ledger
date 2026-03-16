@@ -17,6 +17,7 @@ import {
   isCacheNearCap,
   appendLogLine,
   migrateRemoveDuplicateLogs,
+  evictExpiredLogs,
 } from "./lib/localStorageLogs";
 import type { CachedSessionMeta } from "./lib/localStorageLogs";
 
@@ -32,18 +33,25 @@ export function App() {
     clearEntries,
     handleMessage: handleLogMessage,
     replayFromCache,
+    replayFromTempLog,
+    setLiveSkipCount,
     isTtlExpired,
     isNodeUnreachable,
     streamError,
+    replayedFromCache,
   } = useLogStream();
 
-  const prevSessionRef = useRef<string | null>(null);
+  // Tracks the sessionId we currently have an active WS subscription for.
+  // Distinct from activeSessionId (display state) — this is the wire-protocol state.
+  const subscribedSessionRef = useRef<string | null>(null);
   // Sessions we kept subscribed in the background for caching after navigation
   const backgroundSubsRef = useRef<Set<string>>(new Set());
 
   // Migrate existing duplicate log: entries for pinned sessions on mount
+  // and evict non-pinned temp logs older than the 1-hour TTL
   useEffect(() => {
     migrateRemoveDuplicateLogs();
+    evictExpiredLogs();
   }, []);
 
   const [isFixture, setIsFixture] = useState(false);
@@ -101,34 +109,66 @@ export function App() {
 
   const handleSelectSession = useCallback(
     (sessionId: string) => {
-      // Handle previous session subscription
-      if (prevSessionRef.current && prevSessionRef.current !== sessionId) {
-        const prev = prevSessionRef.current;
-        if (checkIsPinned(prev)) {
+      const currentSub = subscribedSessionRef.current;
+
+      // Unsubscribe / move to background for the current active subscription
+      if (currentSub !== null && currentSub !== sessionId) {
+        if (checkIsPinned(currentSub)) {
           // Keep subscription alive so background caching continues
-          backgroundSubsRef.current.add(prev);
+          backgroundSubsRef.current.add(currentSub);
         } else {
-          send({ type: "unsubscribe", sessionId: prev });
-          backgroundSubsRef.current.delete(prev);
+          send({ type: "unsubscribe", sessionId: currentSub });
+          backgroundSubsRef.current.delete(currentSub);
         }
       }
-      prevSessionRef.current = sessionId;
+
       setActiveSessionId(sessionId);
       setIsFixture(false);
       clearEntries();
 
-      // Determine if this session is cached-only (no live pod)
+      // Determine if this session is cached-only (pinned, no live pod)
       const selectedJob = jobs.find((j) => j.sessionId === sessionId);
       if (selectedJob?.status === "cached") {
-        // Replay from localStorage — do NOT subscribe to server
+        // Replay from pinned localStorage cache — do NOT subscribe to server
+        subscribedSessionRef.current = null;
         // Use setTimeout to let clearEntries flush before replay
         setTimeout(() => replayFromCache(sessionId), 0);
+      } else if (currentSub === sessionId) {
+        // Revisiting the session we're already subscribed to (e.g. user clicks
+        // the same session again). Replay temp log for instant display — the live
+        // stream is still active and will continue from where it left off.
+        const cachedLineCount = replayFromTempLog(sessionId);
+        if (cachedLineCount > 0) {
+          setLiveSkipCount(cachedLineCount);
+        }
+        // subscribedSessionRef stays the same — still subscribed
       } else {
+        // New session: load from temp log for instant display, then subscribe
+        const cachedLineCount = replayFromTempLog(sessionId);
+        subscribedSessionRef.current = sessionId;
+        if (cachedLineCount > 0) {
+          // Tell handleMessage to skip the first N live lines (server re-streams
+          // from beginning, these are duplicates of what we just showed from cache)
+          setLiveSkipCount(cachedLineCount);
+        }
         send({ type: "subscribe", sessionId });
       }
     },
-    [send, setActiveSessionId, clearEntries, replayFromCache, jobs]
+    [send, setActiveSessionId, clearEntries, replayFromCache, replayFromTempLog, setLiveSkipCount, jobs]
   );
+
+  // Send unsubscribe when App unmounts (e.g. browser navigation away from the SPA).
+  // Also covers backgroundSubsRef sessions so the server cleans up cleanly.
+  useEffect(() => {
+    return () => {
+      if (subscribedSessionRef.current) {
+        send({ type: "unsubscribe", sessionId: subscribedSessionRef.current });
+      }
+      for (const sessionId of backgroundSubsRef.current) {
+        send({ type: "unsubscribe", sessionId });
+      }
+    };
+  }, [send]);
 
   // Re-subscribe only on actual reconnect (wsState transitions to "open").
   // Skip re-subscribe if the session ended with a TTL-expired or node-unreachable
@@ -139,7 +179,6 @@ export function App() {
   const isNodeUnreachableRef = useRef(isNodeUnreachable);
   isNodeUnreachableRef.current = isNodeUnreachable;
   const prevWsState = useRef(wsState);
-  const lastSubscribedRef = useRef<string | null>(null);
   useEffect(() => {
     const wasDisconnected = prevWsState.current !== "open";
     prevWsState.current = wsState;
@@ -148,15 +187,17 @@ export function App() {
       const activeJob = jobs.find((j) => j.sessionId === activeSessionId);
       if (activeJob?.status === "cached") return;
 
-      // On reconnect to the SAME session, clear entries first to avoid
-      // duplicate log replay stacking on top of existing entries.
-      if (lastSubscribedRef.current === activeSessionId) {
-        clearEntries();
+      // On reconnect: clear stale entries, replay temp log for instant display,
+      // then re-subscribe. Set skip count so duplicates from re-stream are ignored.
+      clearEntries();
+      const cachedLineCount = replayFromTempLog(activeSessionId);
+      if (cachedLineCount > 0) {
+        setLiveSkipCount(cachedLineCount);
       }
-      lastSubscribedRef.current = activeSessionId;
+      subscribedSessionRef.current = activeSessionId;
       send({ type: "subscribe", sessionId: activeSessionId });
     }
-  }, [wsState, activeSessionId, send, clearEntries, jobs]);
+  }, [wsState, activeSessionId, send, clearEntries, replayFromTempLog, setLiveSkipCount, jobs]);
 
   const activeJob = jobs.find((j) => j.sessionId === activeSessionId) || null;
 
@@ -237,6 +278,7 @@ export function App() {
             isPinned={isPinned}
             onTogglePin={handleTogglePin}
             onAvatarClick={setProfileAgent}
+            replayedFromCache={replayedFromCache}
             onSetSpeed={(speed) => {
               if (activeSessionId) {
                 send({ type: "set-speed", sessionId: activeSessionId, speed });
