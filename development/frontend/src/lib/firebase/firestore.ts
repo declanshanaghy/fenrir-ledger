@@ -186,7 +186,7 @@ export async function findHouseholdByInviteCode(
     .where("inviteCode", "==", code.toUpperCase())
     .limit(1)
     .get();
-  if (snap.empty) return null;
+  if (snap.empty || !snap.docs[0]) return null;
   return snap.docs[0].data() as FirestoreHousehold;
 }
 
@@ -273,7 +273,7 @@ export async function joinHouseholdTransaction(
       .limit(1)
       .get();
 
-    if (householdsSnap.empty) {
+    if (householdsSnap.empty || !householdsSnap.docs[0]) {
       throw new Error("invite_invalid");
     }
 
