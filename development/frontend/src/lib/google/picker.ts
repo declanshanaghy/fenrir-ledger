@@ -6,6 +6,24 @@
  *
  * Used by Path B ("Browse the Archives") to let users select a spreadsheet
  * from their Google Drive without making it public.
+ *
+ * ## Theme & UX Notes (Issue #1023)
+ *
+ * The Google Picker is rendered in a Google-controlled iframe, so theming control
+ * is limited to what the Picker API exposes:
+ *
+ * - `PickerBuilder.setTheme(Theme.DARK)` — sets the Picker chrome to dark mode.
+ *   Supported by the Picker API but Google's iframe still injects its own light
+ *   background for the file grid area; the control-bar and borders go dark.
+ * - `DocsViewMode.GRID` — shows files as tiles (better thumbnail layout than list).
+ *   Thumbnails missing for files Google hasn't indexed yet are a Google-side issue
+ *   and cannot be forced from the client.
+ * - `setSize(900, 550)` — wider/taller dialog gives more room for file names and
+ *   reduces aggressive truncation.
+ *
+ * Full custom theming (Norse aesthetic, void-black grid) requires replacing the
+ * Picker with a Drive API v3 query + custom file browser component. That is
+ * tracked separately; for now this is the best we can do within the Picker API.
  */
 
 // ── Google Picker TypeScript Declarations ───────────────────────────────────
@@ -22,8 +40,14 @@ interface PickerResponseObject {
   docs?: PickerDocument[];
 }
 
-interface PickerView {
-  __brand: "PickerView";
+/**
+ * Instance returned by `new google.picker.DocsView(viewId)`.
+ * Supports fluent configuration methods.
+ */
+interface DocsViewInstance {
+  setMode(mode: string): DocsViewInstance;
+  setIncludeFolders(include: boolean): DocsViewInstance;
+  setEnableDrives(enable: boolean): DocsViewInstance;
 }
 
 interface PickerInstance {
@@ -31,22 +55,26 @@ interface PickerInstance {
 }
 
 interface PickerBuilderApi {
-  addView(view: PickerView): PickerBuilderApi;
+  addView(view: DocsViewInstance): PickerBuilderApi;
   enableFeature(feature: string): PickerBuilderApi;
   setOAuthToken(token: string): PickerBuilderApi;
   setDeveloperKey(key: string): PickerBuilderApi;
   setCallback(callback: (data: PickerResponseObject) => void): PickerBuilderApi;
   setOrigin(origin: string): PickerBuilderApi;
   setSize(width: number, height: number): PickerBuilderApi;
+  setTheme(theme: string): PickerBuilderApi;
+  setTitle(title: string): PickerBuilderApi;
   build(): PickerInstance;
 }
 
 interface GooglePickerApi {
   ViewId: { SPREADSHEETS: string };
-  Feature: { NAV_HIDDEN: string };
+  Feature: { NAV_HIDDEN: string; SUPPORT_DRIVES: string };
   Action: { PICKED: string; CANCEL: string };
-  DocsView: new (viewId: string) => PickerView;
+  DocsView: new (viewId: string) => DocsViewInstance;
+  DocsViewMode: { GRID: string; LIST: string };
   PickerBuilder: new () => PickerBuilderApi;
+  Theme: { DARK: string; LIGHT: string };
 }
 
 declare global {
@@ -148,7 +176,63 @@ export interface PickerResult {
 }
 
 /**
+ * Picker configuration constants — exported for unit tests so the config
+ * can be verified without mocking async loading.
+ */
+export const PICKER_CONFIG = {
+  width: 900,
+  height: 550,
+  title: "Browse the Archives — Select a Spreadsheet",
+} as const;
+
+/**
+ * Configures a DocsView + PickerBuilder using the best available UX options.
+ *
+ * Extracted from openPicker() so tests can verify the configuration applied
+ * (dark theme, grid mode, size) without async gapi/iframe setup.
+ *
+ * @param pickerApi  - The `google.picker` API object
+ * @param accessToken - OAuth2 access token
+ * @param apiKey     - Google API developer key
+ * @param callback   - Picker selection/cancel callback
+ * @returns A configured PickerInstance ready for `setVisible(true)`
+ */
+export function buildPickerInstance(
+  pickerApi: GooglePickerApi,
+  accessToken: string,
+  apiKey: string,
+  callback: (data: PickerResponseObject) => void
+): PickerInstance {
+  const view = new pickerApi.DocsView(pickerApi.ViewId.SPREADSHEETS)
+    .setMode(pickerApi.DocsViewMode.GRID)
+    .setIncludeFolders(false);
+
+  const builder = new pickerApi.PickerBuilder()
+    .addView(view)
+    .enableFeature(pickerApi.Feature.NAV_HIDDEN)
+    .setOAuthToken(accessToken)
+    .setDeveloperKey(apiKey)
+    .setOrigin(window.location.protocol + "//" + window.location.host)
+    .setTitle(PICKER_CONFIG.title)
+    .setSize(PICKER_CONFIG.width, PICKER_CONFIG.height)
+    .setCallback(callback);
+
+  // Apply dark theme if the runtime Picker API exposes it.
+  // `Theme` was added to the Picker API in 2023; guard for older cached bundles.
+  if (pickerApi.Theme?.DARK) {
+    builder.setTheme(pickerApi.Theme.DARK);
+  }
+
+  return builder.build();
+}
+
+/**
  * Opens the Google Picker filtered to spreadsheets.
+ *
+ * Applies the best available dark-theme config:
+ * - `Theme.DARK` for the Picker chrome (control bar, borders)
+ * - `DocsViewMode.GRID` for tile layout (thumbnails more prominent)
+ * - 900×550 dialog (wider than default, reduces filename truncation)
  *
  * @param accessToken - OAuth2 access token with drive.file scope
  * @param apiKey - Google API key (GOOGLE_PICKER_API_KEY, served via /api/config/picker)
@@ -167,15 +251,11 @@ export async function openPicker(
 
   return new Promise((resolve, reject) => {
     try {
-      const view = new pickerApi.DocsView(pickerApi.ViewId.SPREADSHEETS);
-
-      const picker = new pickerApi.PickerBuilder()
-        .addView(view)
-        .enableFeature(pickerApi.Feature.NAV_HIDDEN)
-        .setOAuthToken(accessToken)
-        .setDeveloperKey(apiKey)
-        .setOrigin(window.location.protocol + "//" + window.location.host)
-        .setCallback((data: PickerResponseObject) => {
+      const picker = buildPickerInstance(
+        pickerApi,
+        accessToken,
+        apiKey,
+        (data: PickerResponseObject) => {
           if (data.action === pickerApi.Action.PICKED && data.docs?.[0]) {
             resolve({
               id: data.docs[0].id,
@@ -184,10 +264,8 @@ export async function openPicker(
           } else if (data.action === pickerApi.Action.CANCEL) {
             resolve(null);
           }
-        })
-        .setSize(600, 400)
-        .build();
-
+        }
+      );
       picker.setVisible(true);
     } catch (err) {
       reject(

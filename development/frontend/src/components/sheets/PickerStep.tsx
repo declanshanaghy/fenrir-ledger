@@ -250,6 +250,10 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
   }
 
   // ── Picker State ───────────────────────────────────────────────────────
+  // The Picker is a Google-controlled iframe — full Norse theming is not possible.
+  // We apply the best available options (dark theme, grid mode, larger size) in
+  // picker.ts. Here we add a dark scrim behind the picker's loading phase so the
+  // visual transition from void-black to the Google dialog is less jarring.
 
   return (
     <div className="flex flex-col gap-4" aria-live="polite">
@@ -280,14 +284,23 @@ export function PickerStep({ onSubmitCsv, onBack, pickerApiKey: PICKER_API_KEY }
           </>
         ) : (
           <>
+            {/* Dark scrim — softens the transition to the Google Picker dialog */}
             <div
-              className="h-10 w-10 rounded-full border-2 border-border border-t-gold animate-spin motion-reduce:animate-none"
-              role="status"
-              aria-label="Loading Google Drive Picker"
-            />
-            <p className="font-body text-muted-foreground text-base italic">
-              Opening Google Drive...
-            </p>
+              className="w-full max-w-md rounded-sm border border-border/40 bg-background/80 backdrop-blur-sm px-6 py-8 flex flex-col items-center gap-4"
+              aria-hidden="true"
+            >
+              <div
+                className="h-10 w-10 rounded-full border-2 border-border border-t-gold animate-spin motion-reduce:animate-none"
+                role="status"
+                aria-label="Loading Google Drive Picker"
+              />
+              <p className="font-body text-muted-foreground text-base italic">
+                Opening Google Drive...
+              </p>
+              <p className="font-body text-xs text-muted-foreground/60">
+                The file browser will appear in a separate dialog.
+              </p>
+            </div>
           </>
         )}
 
