@@ -94,6 +94,21 @@ machines, auth checks, data transformations — ALL of these are Vitest, never P
 no test infrastructure — no vitest, no testing-library, no `__tests__/` directory.
 All tests are for the main frontend app (`development/frontend/`) only.
 
+### Banned Test Categories (UNBREAKABLE — Do NOT Write)
+
+- GitHub Actions workflows (deploy.yml, ci.yml) — YAML structure
+- Helm charts, Terraform files, Dockerfiles — infrastructure
+- Markdown/docs validation — file counts, README structure
+- Config files (playwright.config, tsconfig, next.config) — static
+- Static page copy/content assertions ("hero has correct text")
+- Component variant exhaustive tests (max 4-6 tests per component)
+- CSP header string matching — middleware internals
+- Marketing page structure tests (section order, heading text)
+- **Any test that reads a file as raw text and asserts on string contents, class names, function names, or string positions** (e.g. reading .mjs/.ts scripts with readFileSync and checking indexOf). This includes YAML, JSON, Markdown, and source code files.
+- Any test that counts files or checks file existence
+
+**Rule of thumb:** If the test breaks when someone edits a config file, copy, infrastructure template, or refactors a script — it should NOT exist. Only test code that RUNS.
+
 ### Rules
 
 1. **Derive every assertion from acceptance criteria** — never from current code behavior

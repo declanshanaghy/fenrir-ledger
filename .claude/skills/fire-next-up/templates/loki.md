@@ -58,7 +58,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
   - Static page copy/content assertions ("hero has correct text", "section displays headline")
   - Component variant exhaustive tests (max 4-6 tests per component, not 20+)
   - CSP header string matching — middleware internals, not behavioral
-  - Any test that parses YAML/JSON/Markdown and asserts string contents
+  - Any test that reads a file as raw text (readFileSync, fs.read) and asserts on string contents, class names, function names, or string positions — includes YAML, JSON, Markdown, and source code (.mjs/.ts/.js)
   - Any test that counts files or checks file existence
   - Marketing page structure tests (section order, heading text, badge labels)
 
