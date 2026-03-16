@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Merge Confirmation — Join + Card Merge</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ../../theme-system.md. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; }
+
+    .page { max-width: 960px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 32px; }
+
+    .section-title { font-size: 18px; font-weight: bold; border-bottom: 2px solid; padding-bottom: 8px; margin-bottom: 16px; }
+    .section-subtitle { font-size: 12px; font-style: italic; margin-top: 4px; }
+    .note { font-size: 11px; font-style: italic; border-left: 3px solid; padding-left: 8px; margin-top: 6px; }
+    .scenario { border: 1px dashed; padding: 4px 10px; display: inline-block; font-size: 11px; font-weight: bold; margin-bottom: 12px; }
+
+    /* ── Mobile frame ──────────────────────────────────────────── */
+    .mobile-frame { width: 375px; border: 2px solid; display: flex; flex-direction: column; }
+    .mobile-topbar { border-bottom: 1px solid; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .mobile-topbar-back { font-size: 18px; cursor: pointer; }
+    .mobile-topbar-title { font-size: 16px; font-weight: bold; }
+    .mobile-body { padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Merge diagram ─────────────────────────────────────────── */
+    .merge-diagram { border: 1px solid; padding: 16px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+    .merge-household { border: 1px solid; padding: 10px 16px; width: 100%; text-align: center; }
+    .merge-household-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .merge-household-name { font-size: 14px; font-weight: bold; }
+    .merge-household-sub { font-size: 11px; }
+    .merge-arrow { font-size: 22px; text-align: center; }
+
+    /* ── Card list preview ─────────────────────────────────────── */
+    .card-list { border: 1px solid; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .card-list-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .card-row { display: flex; justify-content: space-between; align-items: center; border: 1px solid; padding: 8px 10px; }
+    .card-row-name { font-size: 12px; font-weight: bold; }
+    .card-row-meta { font-size: 10px; }
+    .card-count-badge { border: 1px solid; padding: 2px 8px; font-size: 12px; font-weight: bold; }
+
+    /* ── Warning / info block ──────────────────────────────────── */
+    .info-block { border: 1px solid; padding: 12px 14px; display: flex; gap: 10px; }
+    .info-block-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .info-block-body { font-size: 12px; line-height: 1.6; }
+    .info-block.warning { border-style: dashed; }
+
+    /* ── Buttons ───────────────────────────────────────────────── */
+    .btn { border: 1px solid; padding: 12px 24px; cursor: pointer; background: none; font-size: 14px; font-family: inherit; width: 100%; }
+    .btn-primary { border-width: 2px; font-weight: bold; }
+    .btn-secondary { font-size: 13px; }
+    .btn-loading { opacity: 0.6; cursor: wait; }
+    .btn-danger { border-style: dashed; }
+
+    /* ── Success screen ────────────────────────────────────────── */
+    .success-screen { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 24px 0; text-align: center; }
+    .success-icon { font-size: 40px; }
+    .success-title { font-size: 20px; font-weight: bold; }
+    .success-sub { font-size: 13px; line-height: 1.5; }
+    .success-cards-merged { border: 1px solid; padding: 10px 16px; width: 100%; }
+    .success-cards-merged-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .success-cards-merged-count { font-size: 18px; font-weight: bold; }
+
+    /* ── No-cards variant ──────────────────────────────────────── */
+    .no-cards-note { border: 1px dashed; padding: 12px; font-size: 12px; text-align: center; }
+
+    /* ── Horizontal layout for desktop ────────────────────────── */
+    .desktop-confirm { max-width: 480px; border: 1px solid; padding: 32px; display: flex; flex-direction: column; gap: 20px; }
+    .desktop-confirm-title { font-size: 20px; font-weight: bold; border-bottom: 1px solid; padding-bottom: 12px; }
+
+    /* ── States grid ───────────────────────────────────────────── */
+    .states-row { display: flex; gap: 24px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<main class="page">
+
+  <header>
+    <h1 style="font-size: 22px; font-weight: bold;">Wireframe: Merge Confirmation — Join + Card Merge</h1>
+    <p class="section-subtitle">Issue #1123 · Step 2 of 2 in Join flow · All states</p>
+    <p class="note">Wireframe shows structural layout only. No colors, shadows, or decorative styling. See theme-system.md.</p>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION A — Merge Confirmation (has existing cards)
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">A — Merge Confirmation: User Has Existing Cards</div>
+    <p class="note">This screen is shown after code is validated (State 3 in join-household.html). User sees their existing cards listed, with a clear warning that they will be merged into the target household. Last chance to cancel.</p>
+
+    <div class="states-row" style="margin-top: 16px;">
+
+      <!-- Mobile: has cards -->
+      <div>
+        <div class="scenario">MOBILE — HAS CARDS (N=4)</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar">
+            <span class="mobile-topbar-back">‹</span>
+            <span class="mobile-topbar-title">Confirm Merge</span>
+          </div>
+          <div class="mobile-body">
+
+            <!-- Merge flow diagram -->
+            <div class="merge-diagram">
+              <div class="merge-household" style="border-style: dashed;">
+                <div class="merge-household-label">Your current household</div>
+                <div class="merge-household-name">Solo — Björn Ironside</div>
+                <div class="merge-household-sub">4 cards · will be deleted after merge</div>
+              </div>
+              <div class="merge-arrow">↓ merge into ↓</div>
+              <div class="merge-household">
+                <div class="merge-household-label">Joining household</div>
+                <div class="merge-household-name">Eriksen Household</div>
+                <div class="merge-household-sub">2 existing members · 1 spot remaining</div>
+              </div>
+            </div>
+
+            <!-- Cards that will be moved -->
+            <div class="card-list">
+              <div class="card-list-title">Your 4 cards will be moved</div>
+              <div class="card-row">
+                <div class="card-row-name">Yggdrasil Blade</div>
+                <div class="card-row-meta">Active · Level 3</div>
+              </div>
+              <div class="card-row">
+                <div class="card-row-name">Mjölnir Fragment</div>
+                <div class="card-row-meta">Active · Level 2</div>
+              </div>
+              <div class="card-row">
+                <div class="card-row-name">Raven's Eye</div>
+                <div class="card-row-meta">Howl · Level 1</div>
+              </div>
+              <div class="card-row">
+                <div class="card-row-name">Valhöll Pass</div>
+                <div class="card-row-meta">Valhalla · Closed</div>
+              </div>
+            </div>
+            <p class="note">Card list is scrollable if N > 4. Shows card name + status/level only (no financial data in this view). Ordered by most recent first.</p>
+
+            <!-- Warning -->
+            <div class="info-block warning">
+              <span class="info-block-icon">⚠</span>
+              <div class="info-block-body">
+                Your solo household will be <strong>permanently deleted</strong> after the merge. This cannot be undone.
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <button class="btn btn-primary">Merge 4 Cards &amp; Join Household</button>
+            <button class="btn btn-secondary">Cancel — Stay Solo</button>
+
+            <p class="note">CTA copy uses exact count: "Merge 4 Cards & Join Household". Cancel navigates back to join-household screen (code still filled in). Both actions are clearly labeled with consequences.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile: no existing cards (new user) -->
+      <div>
+        <div class="scenario">MOBILE — NO EXISTING CARDS</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar">
+            <span class="mobile-topbar-back">‹</span>
+            <span class="mobile-topbar-title">Join Household</span>
+          </div>
+          <div class="mobile-body">
+
+            <div class="merge-diagram">
+              <div class="merge-household" style="border-style: dashed;">
+                <div class="merge-household-label">You</div>
+                <div class="merge-household-name">Björn Ironside</div>
+                <div class="merge-household-sub">No existing cards</div>
+              </div>
+              <div class="merge-arrow">↓ joining ↓</div>
+              <div class="merge-household">
+                <div class="merge-household-label">Joining household</div>
+                <div class="merge-household-name">Eriksen Household</div>
+                <div class="merge-household-sub">2 existing members · 1 spot remaining</div>
+              </div>
+            </div>
+
+            <div class="no-cards-note">
+              You have no existing cards to merge. You'll start fresh in the new household.
+            </div>
+
+            <button class="btn btn-primary">Join Household</button>
+            <button class="btn btn-secondary">Cancel</button>
+
+            <p class="note">When user has 0 cards: no merge diagram, no warning, simpler copy. CTA is just "Join Household" (no merge language). No destructive warning needed.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION B — In-progress (loading) state
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">B — Merge In Progress (Loading)</div>
+    <p class="note">After user confirms, the join+merge operation may take 1–3s (multiple Firestore writes). Show a blocking progress state — no cancel allowed mid-merge.</p>
+
+    <div class="mobile-frame" style="margin-top: 16px;">
+      <div class="mobile-topbar">
+        <span class="mobile-topbar-back" style="opacity: 0.3;">‹</span>
+        <span class="mobile-topbar-title">Merging…</span>
+      </div>
+      <div class="mobile-body">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 32px 0; text-align: center;">
+          <div style="font-size: 36px;">⚔</div>
+          <div style="font-size: 16px; font-weight: bold;">Merging your cards…</div>
+          <div style="font-size: 12px; line-height: 1.6;">Moving your cards to Eriksen Household.<br/>Please don't close this screen.</div>
+          <!-- Progress indicator placeholder (indeterminate) -->
+          <div style="width: 200px; height: 4px; border: 1px solid;">
+            <div style="width: 60%; height: 100%; border-right: 1px solid; /* engineer: animate width or use indeterminate style */"></div>
+          </div>
+        </div>
+        <p class="note">Back button and Cancel are disabled/hidden during merge. Body scroll locked. If merge fails mid-way, show error state (Section D). Do NOT leave user with partial merge state visible.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION C — Success state
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">C — Success State</div>
+    <p class="note">After merge completes, show a success confirmation screen before redirecting to dashboard. Auto-redirect after 3s or user taps "Go to Dashboard".</p>
+
+    <div class="states-row" style="margin-top: 16px;">
+
+      <!-- Success: had cards -->
+      <div>
+        <div class="scenario">SUCCESS — CARDS MERGED</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar" style="justify-content: center;">
+            <span class="mobile-topbar-title">Welcome to the Household!</span>
+          </div>
+          <div class="mobile-body">
+            <div class="success-screen">
+              <div class="success-icon">⚔</div>
+              <div class="success-title">You've joined Eriksen Household</div>
+              <div class="success-sub">Your cards have been merged. You now share this household with Thorvald and Sigrid.</div>
+
+              <div class="success-cards-merged" style="width: 100%;">
+                <div class="success-cards-merged-label">Cards merged</div>
+                <div class="success-cards-merged-count">4 cards</div>
+              </div>
+
+              <button class="btn btn-primary" style="width: 100%;">Go to Dashboard</button>
+            </div>
+            <p class="note">Auto-redirect after 3s. "Go to Dashboard" routes to /ledger. Back button is hidden — household join is complete. No "undo" available from here (users were warned before confirming).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success: no cards (new user join) -->
+      <div>
+        <div class="scenario">SUCCESS — NO CARDS MERGED</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar" style="justify-content: center;">
+            <span class="mobile-topbar-title">Welcome to the Household!</span>
+          </div>
+          <div class="mobile-body">
+            <div class="success-screen">
+              <div class="success-icon">⚔</div>
+              <div class="success-title">You've joined Eriksen Household</div>
+              <div class="success-sub">You now share this household with Thorvald and Sigrid. Start adding cards to build your ledger together.</div>
+
+              <button class="btn btn-primary" style="width: 100%;">Go to Dashboard</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION D — Error states
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">D — Error States During Merge</div>
+
+    <div class="states-row" style="margin-top: 16px;">
+
+      <!-- Network error -->
+      <div>
+        <div class="scenario">MERGE FAILED — NETWORK ERROR</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar">
+            <span class="mobile-topbar-back">‹</span>
+            <span class="mobile-topbar-title">Merge Failed</span>
+          </div>
+          <div class="mobile-body">
+            <div class="info-block warning">
+              <span class="info-block-icon">✕</span>
+              <div class="info-block-body">
+                <strong>Merge failed.</strong><br/>
+                Your cards were not moved. Your solo household is intact. Please try again.
+              </div>
+            </div>
+            <button class="btn btn-primary">Retry</button>
+            <button class="btn btn-secondary">Go Back</button>
+            <p class="note">Idempotency is critical: if merge fails, the user's original solo household MUST remain intact. Engineer: implement merge as a Firestore transaction. API returns 500 on failure — client shows this error, user can retry or abandon.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Household became full between validate and confirm -->
+      <div>
+        <div class="scenario">RACE CONDITION — BECAME FULL</div>
+        <div class="mobile-frame">
+          <div class="mobile-topbar">
+            <span class="mobile-topbar-back">‹</span>
+            <span class="mobile-topbar-title">Household Full</span>
+          </div>
+          <div class="mobile-body">
+            <div class="info-block warning">
+              <span class="info-block-icon">⚔</span>
+              <div class="info-block-body">
+                <strong>Household is now full.</strong><br/>
+                Another member joined Eriksen Household while you were confirming. Your cards were not moved.
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="width: 100%;">Back to Settings</button>
+            <p class="note">API returns 409 CONFLICT with reason=household_full even after initial validation succeeded (race condition). Client shows distinct message. No retry offered since household is full.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION E — Desktop confirmation card
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">E — Desktop: Confirmation Card (has cards)</div>
+    <p class="note">On desktop, the merge confirmation is a centered card within the same app shell. Max width ~480px. Wider layout fits card list and diagram side-by-side if N ≤ 4.</p>
+
+    <div class="desktop-confirm" style="margin-top: 16px;">
+      <div class="desktop-confirm-title">Confirm: Merge Cards &amp; Join Household</div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <!-- Left: merge flow -->
+        <div class="merge-diagram" style="justify-content: flex-start;">
+          <div class="merge-household" style="border-style: dashed;">
+            <div class="merge-household-label">Your household</div>
+            <div class="merge-household-name">Solo — Björn</div>
+            <div class="merge-household-sub">4 cards · deleted after</div>
+          </div>
+          <div class="merge-arrow">↓</div>
+          <div class="merge-household">
+            <div class="merge-household-label">Joining</div>
+            <div class="merge-household-name">Eriksen Household</div>
+            <div class="merge-household-sub">2/3 members</div>
+          </div>
+        </div>
+        <!-- Right: cards list -->
+        <div class="card-list">
+          <div class="card-list-title">Cards to move (4)</div>
+          <div class="card-row"><div class="card-row-name">Yggdrasil Blade</div></div>
+          <div class="card-row"><div class="card-row-name">Mjölnir Fragment</div></div>
+          <div class="card-row"><div class="card-row-name">Raven's Eye</div></div>
+          <div class="card-row"><div class="card-row-name">Valhöll Pass</div></div>
+        </div>
+      </div>
+
+      <div class="info-block warning">
+        <span class="info-block-icon">⚠</span>
+        <div class="info-block-body">Your solo household will be permanently deleted after merge. This cannot be undone.</div>
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-primary" style="flex: 2;">Merge 4 Cards &amp; Join</button>
+        <button class="btn btn-secondary" style="flex: 1;">Cancel</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION F — Accessibility notes
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">F — Accessibility Requirements (WCAG 2.1 AA)</div>
+    <ul style="margin-top: 12px; padding-left: 20px; font-size: 13px; line-height: 1.8;">
+      <li>Confirm button: <code>aria-label="Merge 4 cards and join Eriksen Household"</code> (full sentence for screen readers)</li>
+      <li>Warning block: <code>role="alert"</code> — read immediately by screen reader when state changes to error</li>
+      <li>Loading state: <code>aria-live="polite"</code> region announces "Merging your cards…" and "Merge complete"</li>
+      <li>Progress bar: <code>role="progressbar"</code> with <code>aria-label="Merge progress"</code> and <code>aria-valuenow</code> if determinate</li>
+      <li>Back button hidden during merge via <code>aria-hidden="true"</code> and <code>tabindex="-1"</code> (not just <code>pointer-events: none</code>)</li>
+      <li>Success screen: focus moves to "Go to Dashboard" button on appearance</li>
+      <li>Card list: <code>&lt;ul&gt;</code> with <code>aria-label="Cards that will be merged"</code></li>
+    </ul>
+  </section>
+
+</main>
+</body>
+</html>
