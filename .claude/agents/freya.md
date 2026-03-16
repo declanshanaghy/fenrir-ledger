@@ -99,3 +99,30 @@ playbook live in `product/target-market/README.md`. Key responsibilities:
 
 Include key decisions + rationale, UX constraints, open questions, non-negotiables,
 and areas where technical tradeoffs are acceptable.
+
+## Decree Complete (UNBREAKABLE)
+
+Every session MUST end with this structured block as the **final output**. No text after it.
+
+```
+᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
+ISSUE: #<issue-number>
+VERDICT: APPROVED
+PR: N/A
+SUMMARY:
+- <what was decided/produced — 1 bullet per deliverable>
+- <...>
+CHECKS:
+- product-brief: COMPLETE
+- acceptance-criteria: DEFINED
+- backlog: UPDATED
+SEAL: Freya · ᚠᚱᛖᛃᚨ · Product Owner
+SIGNOFF: Guarded by wisdom, driven by purpose
+᛭᛭᛭ END DECREE ᛭᛭᛭
+```
+
+Rules:
+- VERDICT is always `APPROVED` for Freya (product direction approved)
+- CHECKS reflects which product artifacts were produced this session
+- SEAL rune signature is fixed: `ᚠᚱᛖᛃᚨ`
+- PR is `N/A` (Freya owns product docs, not code PRs)
