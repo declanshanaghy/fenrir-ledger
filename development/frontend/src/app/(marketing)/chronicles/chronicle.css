@@ -909,13 +909,19 @@
   word-break: break-word;
 }
 
-/* ── Agent Text Block ── */
+/* ── Agent Text Block — left-aligned 60% chat bubble ── */
 .chronicle-page .agent-text-block {
   padding: 10px 14px;
-  border-bottom: 1px solid var(--c-border);
   white-space: pre-wrap;
   word-break: break-word;
   font-size: 0.82rem;
+  max-width: 60%;
+  background: rgba(10, 140, 110, 0.08);
+  border: 1px solid rgba(10, 140, 110, 0.25);
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
+  margin: 6px 0;
+  color: var(--c-fg);
+  line-height: 1.55;
 }
 
 /* ── Agent Tool Block (nested <details>) ── */
@@ -1008,6 +1014,137 @@
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.6;
+}
+
+/* ── Heckle Chat Bubbles — Mayo fan heckling + agent comebacks ── */
+.chronicle-page .heckle {
+  margin: 10px 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  max-width: 60%;
+}
+.chronicle-page .heckle-identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.chronicle-page .heckle-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(239, 68, 68, 0.4);
+}
+.chronicle-page .heckle-name {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+.chronicle-page .heckle-text {
+  padding: 8px 12px;
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
+}
+
+/* Heckler mayo bubble — right-aligned, red */
+.chronicle-page .heckle-mayo { margin-left: auto; }
+.chronicle-page .heckle-mayo .heckle-identity    { flex-direction: row-reverse; }
+.chronicle-page .heckle-mayo .heckle-name        { color: var(--c-fire, #ef4444); }
+.chronicle-page .heckle-mayo .heckle-avatar      { border-color: rgba(239, 68, 68, 0.5); }
+.chronicle-page .heckle-mayo .heckle-text {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  border-radius: 0.5rem 0 0.5rem 0.5rem;
+  color: var(--c-fg);
+}
+
+/* Agent comeback bubble — left-aligned, Norse gold */
+.chronicle-page .heckle-comeback .heckle-name   { color: var(--c-gold); }
+.chronicle-page .heckle-comeback .heckle-avatar { border-color: rgba(201, 146, 10, 0.5); }
+.chronicle-page .heckle-comeback .heckle-text {
+  background: rgba(201, 146, 10, 0.07);
+  border: 1px solid rgba(201, 146, 10, 0.25);
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
+  color: var(--c-fg);
+}
+
+/* Heckler entrance — full-width amber announcement */
+.chronicle-page .heckle-entrance {
+  max-width: 100%;
+  background: var(--c-bg-card);
+  border: 1px dashed rgba(201, 146, 10, 0.35);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+}
+.chronicle-page .heckle-entrance .heckle-identity { flex-direction: row-reverse; }
+.chronicle-page .heckle-entrance .heckle-name     { color: var(--c-amber, #f0b429); }
+.chronicle-page .heckle-entrance .heckle-text {
+  background: rgba(240, 180, 41, 0.06);
+  border: 1px dashed rgba(240, 180, 41, 0.28);
+  border-radius: 6px;
+  color: var(--c-fg-muted);
+  font-style: italic;
+  text-align: center;
+}
+
+/* Explosion — full-width red ragnarok eruption */
+.chronicle-page .heckle-explosion {
+  max-width: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.13),
+    rgba(201, 70, 10, 0.1),
+    rgba(7, 7, 13, 0.8),
+    rgba(201, 70, 10, 0.1),
+    rgba(239, 68, 68, 0.13)
+  );
+  border: 2px solid var(--c-fire, #ef4444);
+  border-radius: 0;
+  padding: 18px 28px;
+  color: var(--c-fire, #ef4444);
+  font-weight: 900;
+  text-align: center;
+  font-size: 1rem;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5), 0 0 24px rgba(201, 70, 10, 0.25);
+  animation: chronicle-norse-tremble 0.8s ease-in-out;
+  position: relative;
+}
+.chronicle-page .heckle-explosion::before {
+  content: 'ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ';
+  display: block;
+  font-size: 0.55rem;
+  letter-spacing: 0.4rem;
+  color: #ef4444;
+  opacity: 0.35;
+  margin-bottom: 6px;
+}
+.chronicle-page .heckle-explosion::after {
+  content: '᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭';
+  display: block;
+  font-size: 0.45rem;
+  letter-spacing: 0.3rem;
+  color: #ef4444;
+  opacity: 0.25;
+  margin-top: 6px;
+}
+
+@keyframes chronicle-norse-tremble {
+  0%,  100% { transform: translate(0, 0) rotate(0deg); }
+  10%        { transform: translate(-2px, -1px) rotate(-0.4deg); }
+  20%        { transform: translate( 3px,  1px) rotate( 0.4deg); }
+  30%        { transform: translate(-1px,  2px) rotate(-0.3deg); }
+  40%        { transform: translate( 2px, -2px) rotate( 0.3deg); }
+  50%        { transform: translate(-3px,  0px) rotate(-0.4deg); }
+  60%        { transform: translate( 1px,  1px) rotate( 0.3deg); }
+  70%        { transform: translate(-2px, -1px) rotate(-0.3deg); }
+  80%        { transform: translate( 3px,  2px) rotate( 0.4deg); }
+  90%        { transform: translate(-1px, -2px) rotate(-0.3deg); }
 }
 
 /* ── Agent Report Mobile ── */
