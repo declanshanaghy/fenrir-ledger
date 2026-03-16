@@ -50,6 +50,7 @@ resource "google_project_service" "apis" {
     "dns.googleapis.com",                  # Cloud DNS
     "firestore.googleapis.com",            # Firestore
     "firebaserules.googleapis.com",        # Firebase Security Rules
+    "cdn.googleapis.com",                  # Cloud CDN
   ])
 
   project            = var.project_id
