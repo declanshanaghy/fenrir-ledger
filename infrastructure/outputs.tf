@@ -62,3 +62,28 @@ output "dns_nameservers" {
   description = "Google Cloud DNS nameservers — set these as custom nameservers at your registrar"
   value       = google_dns_managed_zone.app.name_servers
 }
+
+output "firestore_database_name" {
+  description = "Firestore database name"
+  value       = google_firestore_database.default.name
+}
+
+output "firestore_project_id" {
+  description = "GCP project ID for Firestore — set as FIRESTORE_PROJECT_ID env var in app pods"
+  value       = var.project_id
+}
+
+# --------------------------------------------------------------------------
+# Local dev: Firestore Emulator
+#
+# To use the Firebase Emulator for local development:
+#   1. Install: npm install -g firebase-tools
+#   2. Run:     firebase emulators:start --only firestore
+#   3. Set env: FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+#
+# The Firebase Admin SDK checks for FIRESTORE_EMULATOR_HOST at startup.
+# When set, all Firestore traffic is routed to the local emulator.
+# Add to your .env.local:
+#   FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+#   FIRESTORE_PROJECT_ID=fenrir-ledger-prod
+# --------------------------------------------------------------------------

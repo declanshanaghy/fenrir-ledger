@@ -214,6 +214,314 @@ describe("getFirestore initialization", () => {
   });
 });
 
+// ─── CRUD operations: getUser / setUser / getHousehold / getCards / setCard / softDeleteCard / setCards ───
+
+describe("getUser", () => {
+  beforeEach(() => {
+    process.env.FIRESTORE_PROJECT_ID = "test-project";
+    vi.resetModules();
+  });
+  afterEach(() => {
+    delete process.env.FIRESTORE_PROJECT_ID;
+    vi.resetModules();
+  });
+
+  it("returns null when the user document does not exist", async () => {
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = {
+        doc: vi.fn().mockReturnValue({ get: vi.fn().mockResolvedValue({ exists: false }) }),
+        batch: vi.fn(),
+        collection: vi.fn(),
+      };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { getUser, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
+    _resetFirestoreForTests();
+    const result = await getUser("user_missing");
+    expect(result).toBeNull();
+  });
+
+  it("returns user data when the user document exists", async () => {
+    const mockUser: FirestoreUser = {
+      clerkUserId: "user_found",
+      email: "found@example.com",
+      displayName: "Found User",
+      householdId: "hh-1",
+      role: "owner",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = {
+        doc: vi.fn().mockReturnValue({ get: vi.fn().mockResolvedValue({ exists: true, data: () => mockUser }) }),
+        batch: vi.fn(),
+        collection: vi.fn(),
+      };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { getUser, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
+    _resetFirestoreForTests();
+    const result = await getUser("user_found");
+    expect(result).toEqual(mockUser);
+  });
+});
+
+describe("setUser", () => {
+  beforeEach(() => {
+    process.env.FIRESTORE_PROJECT_ID = "test-project";
+    vi.resetModules();
+  });
+  afterEach(() => {
+    delete process.env.FIRESTORE_PROJECT_ID;
+    vi.resetModules();
+  });
+
+  it("calls doc.set with the correct path and user data", async () => {
+    const mockSet = vi.fn().mockResolvedValue(undefined);
+    const mockDoc = vi.fn().mockReturnValue({ set: mockSet });
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = { doc: mockDoc, batch: vi.fn(), collection: vi.fn() };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { setUser, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
+    _resetFirestoreForTests();
+    const user: FirestoreUser = {
+      clerkUserId: "user_write",
+      email: "write@example.com",
+      displayName: "Write User",
+      householdId: "hh-write",
+      role: "member",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+    await setUser(user);
+    expect(mockDoc).toHaveBeenCalledWith("users/user_write");
+    expect(mockSet).toHaveBeenCalledWith(user);
+  });
+});
+
+describe("getHousehold", () => {
+  beforeEach(() => {
+    process.env.FIRESTORE_PROJECT_ID = "test-project";
+    vi.resetModules();
+  });
+  afterEach(() => {
+    delete process.env.FIRESTORE_PROJECT_ID;
+    vi.resetModules();
+  });
+
+  it("returns null when household does not exist", async () => {
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = {
+        doc: vi.fn().mockReturnValue({ get: vi.fn().mockResolvedValue({ exists: false }) }),
+        batch: vi.fn(),
+        collection: vi.fn(),
+      };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { getHousehold, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
+    _resetFirestoreForTests();
+    const result = await getHousehold("hh-missing");
+    expect(result).toBeNull();
+  });
+
+  it("returns household data when document exists", async () => {
+    const mockHH: FirestoreHousehold = {
+      id: "hh-found",
+      name: "Found HH",
+      ownerId: "user_abc",
+      memberIds: ["user_abc"],
+      inviteCode: "X7K2MQ",
+      inviteCodeExpiresAt: "2026-04-16T00:00:00.000Z",
+      tier: "free",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = {
+        doc: vi.fn().mockReturnValue({ get: vi.fn().mockResolvedValue({ exists: true, data: () => mockHH }) }),
+        batch: vi.fn(),
+        collection: vi.fn(),
+      };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { getHousehold, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
+    _resetFirestoreForTests();
+    const result = await getHousehold("hh-found");
+    expect(result).toEqual(mockHH);
+  });
+});
+
+describe("getCards", () => {
+  beforeEach(() => {
+    process.env.FIRESTORE_PROJECT_ID = "test-project";
+    vi.resetModules();
+  });
+  afterEach(() => {
+    delete process.env.FIRESTORE_PROJECT_ID;
+    vi.resetModules();
+  });
+
+  it("returns only non-deleted cards ordered by createdAt", async () => {
+    const activeCard = { id: "card-1", householdId: "hh-1", createdAt: "2026-01-01T00:00:00.000Z" };
+    const deletedCard = { id: "card-2", householdId: "hh-1", createdAt: "2026-01-02T00:00:00.000Z", deletedAt: "2026-02-01T00:00:00.000Z" };
+    const mockGet = vi.fn().mockResolvedValue({
+      docs: [
+        { data: () => activeCard },
+        { data: () => deletedCard },
+      ],
+    });
+    const mockOrderBy = vi.fn().mockReturnValue({ get: mockGet });
+    const mockCollection = vi.fn().mockReturnValue({ orderBy: mockOrderBy });
+
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = { doc: vi.fn(), batch: vi.fn(), collection: mockCollection };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { getCards, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
+    _resetFirestoreForTests();
+    const result = await getCards("hh-1");
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("card-1");
+  });
+
+  it("returns empty array when no cards exist", async () => {
+    const mockGet = vi.fn().mockResolvedValue({ docs: [] });
+    const mockOrderBy = vi.fn().mockReturnValue({ get: mockGet });
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = { doc: vi.fn(), batch: vi.fn(), collection: vi.fn().mockReturnValue({ orderBy: mockOrderBy }) };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { getCards, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
+    _resetFirestoreForTests();
+    const result = await getCards("hh-empty");
+    expect(result).toEqual([]);
+  });
+});
+
+describe("softDeleteCard", () => {
+  beforeEach(() => {
+    process.env.FIRESTORE_PROJECT_ID = "test-project";
+    vi.resetModules();
+  });
+  afterEach(() => {
+    delete process.env.FIRESTORE_PROJECT_ID;
+    vi.resetModules();
+  });
+
+  it("calls doc.update with deletedAt set to an ISO string", async () => {
+    const mockUpdate = vi.fn().mockResolvedValue(undefined);
+    const mockDoc = vi.fn().mockReturnValue({ update: mockUpdate });
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = { doc: mockDoc, batch: vi.fn(), collection: vi.fn() };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { softDeleteCard, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
+    _resetFirestoreForTests();
+    await softDeleteCard("hh-1", "card-1");
+    expect(mockDoc).toHaveBeenCalledWith("households/hh-1/cards/card-1");
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ deletedAt: expect.any(String) })
+    );
+    // deletedAt must be a valid ISO 8601 timestamp
+    const { deletedAt } = mockUpdate.mock.calls[0][0] as { deletedAt: string };
+    expect(new Date(deletedAt).toISOString()).toBe(deletedAt);
+  });
+});
+
+describe("setCards (batch write)", () => {
+  beforeEach(() => {
+    process.env.FIRESTORE_PROJECT_ID = "test-project";
+    vi.resetModules();
+  });
+  afterEach(() => {
+    delete process.env.FIRESTORE_PROJECT_ID;
+    vi.resetModules();
+  });
+
+  it("is a no-op for an empty cards array", async () => {
+    const mockBatch = { set: vi.fn(), commit: vi.fn() };
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = { doc: vi.fn(), batch: vi.fn().mockReturnValue(mockBatch), collection: vi.fn() };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { setCards, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
+    _resetFirestoreForTests();
+    await setCards([]);
+    expect(mockBatch.commit).not.toHaveBeenCalled();
+  });
+
+  it("writes all cards in a single batch for <= 500 items", async () => {
+    const mockBatch = { set: vi.fn(), commit: vi.fn().mockResolvedValue(undefined) };
+    const mockDoc = vi.fn().mockReturnValue({});
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = { doc: mockDoc, batch: vi.fn().mockReturnValue(mockBatch), collection: vi.fn() };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { setCards, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
+    _resetFirestoreForTests();
+    const cards = Array.from({ length: 3 }, (_, i) => ({
+      id: `card-${i}`,
+      householdId: "hh-1",
+    })) as Parameters<typeof setCards>[0];
+    await setCards(cards);
+    expect(mockBatch.commit).toHaveBeenCalledOnce();
+    expect(mockBatch.set).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("ensureSoloHousehold — data integrity guard", () => {
+  beforeEach(() => {
+    process.env.FIRESTORE_PROJECT_ID = "test-project";
+    vi.resetModules();
+  });
+  afterEach(() => {
+    delete process.env.FIRESTORE_PROJECT_ID;
+    vi.resetModules();
+  });
+
+  it("throws a data integrity error when user exists but household is missing", async () => {
+    const existingUser: FirestoreUser = {
+      clerkUserId: "user_orphan",
+      email: "orphan@example.com",
+      displayName: "Orphan",
+      householdId: "hh-gone",
+      role: "owner",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+    // First doc.get → user exists; second → household missing
+    const mockDocGet = vi.fn()
+      .mockResolvedValueOnce({ exists: true, data: () => existingUser })
+      .mockResolvedValueOnce({ exists: false });
+
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = {
+        doc: vi.fn().mockReturnValue({ get: mockDocGet, set: vi.fn() }),
+        batch: vi.fn().mockReturnValue({ set: vi.fn(), commit: vi.fn() }),
+        collection: vi.fn(),
+      };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { ensureSoloHousehold, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
+    _resetFirestoreForTests();
+    await expect(
+      ensureSoloHousehold({ clerkUserId: "user_orphan", email: "orphan@example.com", displayName: "Orphan" })
+    ).rejects.toThrow("Data integrity error");
+  });
+});
+
 // ─── ensureSoloHousehold logic ────────────────────────────────────────────────
 
 describe("ensureSoloHousehold", () => {
