@@ -75,13 +75,20 @@ export function App() {
   const isNodeUnreachableRef = useRef(isNodeUnreachable);
   isNodeUnreachableRef.current = isNodeUnreachable;
   const prevWsState = useRef(wsState);
+  const lastSubscribedRef = useRef<string | null>(null);
   useEffect(() => {
     const wasDisconnected = prevWsState.current !== "open";
     prevWsState.current = wsState;
     if (wsState === "open" && wasDisconnected && activeSessionId && !isTtlExpiredRef.current && !isNodeUnreachableRef.current) {
+      // On reconnect to the SAME session, clear entries first to avoid
+      // duplicate log replay stacking on top of existing entries.
+      if (lastSubscribedRef.current === activeSessionId) {
+        clearEntries();
+      }
+      lastSubscribedRef.current = activeSessionId;
       send({ type: "subscribe", sessionId: activeSessionId });
     }
-  }, [wsState, activeSessionId, send]);
+  }, [wsState, activeSessionId, send, clearEntries]);
 
   const activeJob = jobs.find((j) => j.sessionId === activeSessionId) || null;
 
