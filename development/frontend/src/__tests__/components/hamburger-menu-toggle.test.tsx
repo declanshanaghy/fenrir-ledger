@@ -186,6 +186,81 @@ describe("MarketingNavbar — hamburger menu toggle (Issue #1113)", () => {
   });
 });
 
+// ── Loki gap coverage — MarketingNavbar ────────────────────────────────────────
+
+describe("MarketingNavbar — backdrop tap and rapid toggle (Loki gap coverage)", () => {
+  afterEach(() => {
+    document.body.style.overflow = "";
+  });
+
+  it("tapping the backdrop (overlay bg, not children) closes the overlay", () => {
+    render(<MarketingNavbar />);
+    const hamburger = screen.getByRole("button", { name: "Open navigation menu" });
+
+    act(() => { fireEvent.click(hamburger); });
+
+    const overlay = screen.getByRole("dialog", { name: "Navigation menu" });
+    // Simulate backdrop tap: click on the overlay itself, not a child
+    act(() => { fireEvent.click(overlay, { target: overlay }); });
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("rapid open-close-open does not desync aria-expanded state", () => {
+    render(<MarketingNavbar />);
+    const hamburger = screen.getByRole("button", { name: "Open navigation menu" });
+
+    // Open
+    act(() => { fireEvent.click(hamburger); });
+    expect(hamburger.getAttribute("aria-expanded")).toBe("true");
+
+    // Close via ESC
+    act(() => { fireEvent.keyDown(document, { key: "Escape" }); });
+    expect(hamburger.getAttribute("aria-expanded")).toBe("false");
+
+    // Open again — must still work (no state desync)
+    act(() => { fireEvent.click(hamburger); });
+    expect(hamburger.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByRole("dialog")).toBeDefined();
+  });
+});
+
+// ── Loki gap coverage — LedgerTopBar ──────────────────────────────────────────
+
+describe("LedgerTopBar — backdrop tap and nav link close (Loki gap coverage)", () => {
+  afterEach(() => {
+    document.body.style.overflow = "";
+  });
+
+  it("tapping the backdrop (overlay bg, not children) closes the overlay", () => {
+    render(<LedgerTopBar />);
+    const hamburger = screen.getByRole("button", { name: "Open navigation menu" });
+
+    act(() => { fireEvent.click(hamburger); });
+
+    const overlay = screen.getByRole("dialog", { name: "Navigation menu" });
+    // Simulate backdrop tap: click on the overlay itself, not a child
+    act(() => { fireEvent.click(overlay, { target: overlay }); });
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("clicking a nav link inside the overlay closes the overlay", () => {
+    render(<LedgerTopBar />);
+    const hamburger = screen.getByRole("button", { name: "Open navigation menu" });
+
+    act(() => { fireEvent.click(hamburger); });
+    expect(screen.getByRole("dialog")).toBeDefined();
+
+    // Click the Features link inside the mobile overlay
+    const featuresLinks = document.querySelectorAll('a[href="/features"]');
+    const overlayFeaturesLink = featuresLinks[featuresLinks.length - 1];
+    act(() => { fireEvent.click(overlayFeaturesLink); });
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});
+
 // ── LedgerTopBar hamburger tests ───────────────────────────────────────────────
 
 vi.mock("@/hooks/useAuth", () => ({
