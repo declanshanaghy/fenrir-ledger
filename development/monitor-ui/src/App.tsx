@@ -35,6 +35,7 @@ export function App() {
     isTtlExpired,
     isNodeUnreachable,
     streamError,
+    replayedFromCache,
   } = useLogStream();
 
   const prevSessionRef = useRef<string | null>(null);
@@ -237,6 +238,7 @@ export function App() {
             isPinned={isPinned}
             onTogglePin={handleTogglePin}
             onAvatarClick={setProfileAgent}
+            replayedFromCache={replayedFromCache}
             onSetSpeed={(speed) => {
               if (activeSessionId) {
                 send({ type: "set-speed", sessionId: activeSessionId, speed });

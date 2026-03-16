@@ -4,6 +4,9 @@ import { parseJsonlLine } from "../lib/jsonl";
 import { batchSummary } from "../lib/constants";
 import { appendLogLine, getCachedLog } from "../lib/localStorageLogs";
 
+// Ref type for cache-fallback invoke — avoids circular useCallback dependency
+type ReplayFn = (sessionId: string) => void;
+
 export interface LogEntry {
   id: string;
   type: "system" | "turn-divider" | "assistant-text" | "tool-use" | "tool-result" | "tool-batch" | "raw" | "error" | "warning" | "stream-end" | "verdict" | "entrypoint-header" | "entrypoint-ok" | "entrypoint-info" | "entrypoint-task" | "entrypoint-group" | "entrypoint-fatal";
@@ -83,6 +86,8 @@ export function useLogStream() {
   const activeSessionIdRef = useRef<string | null>(null);
   const [streamError, setStreamError] = useState<string | null>(null);
   const [streamEnded, setStreamEnded] = useState(false);
+  const [replayedFromCache, setReplayedFromCache] = useState(false);
+  const replayFromCacheRef = useRef<ReplayFn | null>(null);
   const taskPromptBuffer = useRef<string[]>([]);
   const inTaskPrompt = useRef(false);
   const inEntrypoint = useRef(false);
@@ -100,6 +105,7 @@ export function useLogStream() {
     inEntrypoint.current = false;
     setStreamError(null);
     setStreamEnded(false);
+    setReplayedFromCache(false);
   }, []);
 
   const handleMessage = useCallback((msg: ServerMessage) => {
@@ -181,6 +187,14 @@ export function useLogStream() {
       }
       processEvent(ev);
     } else if (msg.type === "stream-error") {
+      // If the session has cached data in localStorage, fall back to it immediately
+      // rather than showing the error tablet. This handles pinned sessions whose
+      // pods have been cleaned up (TTL expired).
+      const sessionId = activeSessionIdRef.current;
+      if (sessionId && getCachedLog(sessionId)) {
+        replayFromCacheRef.current?.(sessionId);
+        return;
+      }
       setStreamError(msg.message);
       setEntries((prev) => [
         ...prev,
@@ -392,11 +406,12 @@ export function useLogStream() {
    * Replay cached JSONL from localStorage for a pinned session.
    * Processes every stored line through the same pipeline as live log-lines,
    * but skips re-persisting to localStorage.
-   * Call AFTER clearEntries() and INSTEAD OF subscribing to the server.
+   * Call AFTER clearEntries() and INSTEAD OF (or as fallback to) subscribing to the server.
    */
   const replayFromCache = useCallback((sessionId: string) => {
     const content = getCachedLog(sessionId);
     if (!content) return;
+    setReplayedFromCache(true);
     const lines = content.split("\n");
     for (const line of lines) {
       if (!line.trim()) continue;
@@ -455,6 +470,10 @@ export function useLogStream() {
     ]);
   }, [processEvent]);
 
+  // Keep ref in sync so handleMessage can invoke replayFromCache without
+  // a circular useCallback dependency.
+  replayFromCacheRef.current = replayFromCache;
+
   const isTtlExpired = streamEnded && streamError !== null && TTL_ERROR_PATTERN.test(streamError);
   const isNodeUnreachable = streamEnded && streamError !== null && NODE_UNREACHABLE_PATTERN.test(streamError);
 
@@ -469,5 +488,6 @@ export function useLogStream() {
     streamEnded,
     isTtlExpired,
     isNodeUnreachable,
+    replayedFromCache,
   };
 }
