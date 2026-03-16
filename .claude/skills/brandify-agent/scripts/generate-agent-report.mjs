@@ -1071,6 +1071,43 @@ const hecklerEngine = createHecklerEngine(agentName);
 const totalTestsWritten = vitestCounts.total + playwrightCount;
 
 // ---------------------------------------------------------------------------
+// Agent callbacks — declaration to Odin (shared by HTML and MDX paths)
+// ---------------------------------------------------------------------------
+const AGENT_CALLBACKS = {
+  FiremanDecko: {
+    quote: "The forge cools, the steel holds. What was broken has been reforged stronger than before.",
+    signoff: "Forged in fire, tempered by craft",
+    runes: "ᚠ ᛁ ᚱ ᛖ ᛗ ᚨ ᚾ",
+  },
+  Loki: {
+    quote: "Every seam tested, every thread pulled. The trickster finds no fault — and that itself is suspicious.",
+    signoff: "Tested by chaos, proven by order",
+    runes: "ᛚ ᛟ ᚲ ᛁ",
+  },
+  Luna: {
+    quote: "The branches of Yggdrasil have been shaped. What the eye sees, the hand shall build.",
+    signoff: "Woven from moonlight, anchored in structure",
+    runes: "ᛚ ᚢ ᚾ ᚨ",
+  },
+  Freya: {
+    quote: "The vision is set, the path illuminated. Brisingamen's light guides the way forward.",
+    signoff: "Guarded by wisdom, driven by purpose",
+    runes: "ᚠ ᚱ ᛖ ᛃ ᚨ",
+  },
+  Heimdall: {
+    quote: "The bridge holds. No shadow passes unseen, no weakness unguarded.",
+    signoff: "Watched from the rainbow bridge",
+    runes: "ᚺ ᛖ ᛁ ᛗ ᛞ ᚨ ᛚ ᛚ",
+  },
+};
+
+const agentCallback = AGENT_CALLBACKS[agentName] || {
+  quote: "The task is done. The wolf's chain holds another day.",
+  signoff: "Sealed by the pack",
+  runes: "ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ",
+};
+
+// ---------------------------------------------------------------------------
 // Build MDX (--publish mode)
 // ---------------------------------------------------------------------------
 if (publishMode) {
@@ -1129,6 +1166,118 @@ if (publishMode) {
     // Sanitize before truncating so the truncation limit applies to already-cleaned text
     const sanitized = sanitizeToolOutput(raw, 800);
     return mdxEsc(sanitized);
+  }
+
+  // ---------------------------------------------------------------------------
+  // MDX decree header — JSX-compatible version of renderEntrypoint()
+  // ---------------------------------------------------------------------------
+  function mdxRenderEntrypoint() {
+    const promptIdx = entrypointLines.findIndex(l => /TASK PROMPT/.test(l));
+    const setupLines = promptIdx >= 0 ? entrypointLines.slice(0, promptIdx) : entrypointLines;
+    const promptLines = promptIdx >= 0 ? entrypointLines.slice(promptIdx + 1) : [];
+
+    const setupText = setupLines
+      .filter(l => l.trim())
+      .join("\n");
+    const setupMarkup = `
+<details className="entrypoint">
+<summary>ᛊ Sandbox Forging</summary>
+<pre>{${JSON.stringify(setupText)}}</pre>
+</details>`;
+
+    if (promptLines.length === 0) return setupMarkup;
+
+    const rawPrompt = promptLines.join("\n");
+
+    const agentDecreeNames = {
+      FiremanDecko: "FiremanDecko, Forgemaster of Midgard",
+      Loki: "Loki, Trickster-Tester of the Realms",
+      Luna: "Luna, Weaver of the World-Tree's Branches",
+      Freya: "Freya, Keeper of the Golden Brisingamen",
+      Heimdall: "Heimdall, Watcher at the Rainbow Bridge",
+    };
+    const decreeName = agentDecreeNames[agentName] || agentName;
+
+    function mdxFormatDecree(text) {
+      let markup = "";
+      const sections = text.split(/(?=\*\*Step \d|SANDBOX RULES|TODO TRACKING|INCREMENTAL COMMIT|VERIFY —|STRICT SCOPE|##)/);
+
+      for (const section of sections) {
+        const trimmed = section.trim();
+        if (!trimmed) continue;
+        if (/^You are \w+/.test(trimmed)) continue;
+
+        if (/UNBREAKABLE/.test(trimmed)) {
+          const title = trimmed.match(/^([A-Z][A-Z\s—–-]+?)[\s:(\n]/)?.[1]?.trim() || "SACRED OATH";
+          const body = trimmed.replace(/^[A-Z][A-Z\s—–-]+[\s:(]*\(?UNBREAKABLE\)?:?\s*/i, "").trim();
+          markup += `
+<div className="decree-section">
+<div className="decree-section-title"><span className="glyph">⚔</span> {${JSON.stringify(title)}} <span className="decree-oath">— UNBREAKABLE OATH</span></div>
+<div className="decree-law">{${JSON.stringify(body)}}</div>
+</div>`;
+          continue;
+        }
+
+        const stepMatch = trimmed.match(/^\*\*Step (\d+\w?)[\s—–-]+(.+?)\*\*/);
+        if (stepMatch) {
+          const stepGlyphs = ["ᚠ","ᚢ","ᚦ","ᚨ","ᚱ","ᚲ","ᚷ","ᚹ","ᚺ"];
+          const stepNum = parseInt(stepMatch[1]) - 1;
+          const glyph = stepGlyphs[stepNum % stepGlyphs.length] || "ᚱ";
+          const stepTitle = stepMatch[2].trim();
+          const stepBody = trimmed.replace(/^\*\*Step \d+\w?[\s—–-]+.+?\*\*\s*/s, "").trim();
+          markup += `
+<div className="decree-section">
+<div className="decree-section-title"><span className="glyph">${glyph}</span> Step ${stepMatch[1]} — {${JSON.stringify(stepTitle)}}</div>
+<div className="decree-body">{${JSON.stringify(stepBody)}}</div>
+</div>`;
+          continue;
+        }
+
+        if (/^## Description|^##\s+/.test(trimmed)) {
+          const body = trimmed.replace(/^##\s+\w+\s*\n?/, "").trim();
+          markup += `
+<div className="decree-section">
+<div className="decree-section-title"><span className="glyph">ᛟ</span> The Matter at Hand</div>
+<div className="decree-body">{${JSON.stringify(body)}}</div>
+</div>`;
+          continue;
+        }
+
+        if (/^SANDBOX RULES/.test(trimmed)) {
+          const body = trimmed.replace(/^SANDBOX RULES.*?\n/, "").trim();
+          markup += `
+<div className="decree-section">
+<div className="decree-section-title"><span className="glyph">ᛉ</span> Laws of the Sandbox Realm</div>
+<div className="decree-law">{${JSON.stringify(body)}}</div>
+</div>`;
+          continue;
+        }
+
+        if (trimmed.length > 20) {
+          markup += `
+<div className="decree-section">
+<div className="decree-body">{${JSON.stringify(trimmed)}}</div>
+</div>`;
+        }
+      }
+      return markup;
+    }
+
+    const decreeBody = mdxFormatDecree(rawPrompt);
+
+    return setupMarkup + `
+<div className="decree">
+<div className="decree-header">
+<div className="decree-runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ</div>
+<div className="decree-title">The All-Father's Decree</div>
+<div className="decree-subtitle">Spoken from Hlidskjalf unto {${JSON.stringify(decreeName)}}</div>
+</div>
+${decreeBody}
+<div className="decree-seal">
+<div className="decree-seal-glyph">ᚲ</div>
+<div className="decree-seal-text">So it is written · So it shall be forged · Issue #{${JSON.stringify(issueNum)}}</div>
+</div>
+</div>`;
   }
 
   // Build turn markup using <details>/<summary> for native collapsibility
@@ -1228,6 +1377,20 @@ ${commits.map(c => `<div className="agent-commit-item">${mdxEsc(c)}</div>`).join
 </div>`;
   }
 
+  const mdxDecreeMarkup = mdxRenderEntrypoint();
+
+  const mdxCallbackRunes = agentCallback.runes;
+  const mdxCallbackQuote = mdxEsc(agentCallback.quote);
+  const mdxCallbackSignoff = mdxEsc(agentCallback.signoff);
+  const mdxCallbackMarkup = `
+<div className="agent-callback">
+<div className="callback-runes">${mdxCallbackRunes}</div>
+<div className="callback-declaration">Odin All-Father — Your Will Is Done</div>
+<div className="callback-quote">&quot;${mdxCallbackQuote}&quot;</div>
+<div className="callback-blood-seal">ᛊ ${mdxCallbackSignoff} · ${mdxEsc(agentTitle)} · Issue #${issueNum} ᛊ</div>
+<div className="callback-wolf">🐺</div>
+</div>`;
+
   const mdx = `---
 title: "${mdxTitle.replace(/"/g, '\\"')}"
 date: "${dateStr}"
@@ -1261,12 +1424,19 @@ category: "agent"
 ${changesMarkup}
 ${commitsMarkup}
 
+${mdxDecreeMarkup}
+
 <div className="agent-turns-section">
 <div className="agent-turns-title">Execution Turns</div>
 ${turnsMarkup}
 </div>
 ${victoryHeckleMarkup}
 ${verdictMarkup}
+${mdxCallbackMarkup}
+
+<div className="report-footer">
+ᚠ Fenrir Ledger — Agent Report — Generated ${new Date().toISOString().slice(0, 19)}Z
+</div>
 
 </div>
 
@@ -1550,48 +1720,14 @@ if (verdict) {
 </div>\n`;
 }
 
-// Agent callback — declaration to Odin
-const AGENT_CALLBACKS = {
-  FiremanDecko: {
-    quote: "The forge cools, the steel holds. What was broken has been reforged stronger than before.",
-    signoff: "Forged in fire, tempered by craft",
-    runes: "ᚠ ᛁ ᚱ ᛖ ᛗ ᚨ ᚾ",
-  },
-  Loki: {
-    quote: "Every seam tested, every thread pulled. The trickster finds no fault — and that itself is suspicious.",
-    signoff: "Tested by chaos, proven by order",
-    runes: "ᛚ ᛟ ᚲ ᛁ",
-  },
-  Luna: {
-    quote: "The branches of Yggdrasil have been shaped. What the eye sees, the hand shall build.",
-    signoff: "Woven from moonlight, anchored in structure",
-    runes: "ᛚ ᚢ ᚾ ᚨ",
-  },
-  Freya: {
-    quote: "The vision is set, the path illuminated. Brisingamen's light guides the way forward.",
-    signoff: "Guarded by wisdom, driven by purpose",
-    runes: "ᚠ ᚱ ᛖ ᛃ ᚨ",
-  },
-  Heimdall: {
-    quote: "The bridge holds. No shadow passes unseen, no weakness unguarded.",
-    signoff: "Watched from the rainbow bridge",
-    runes: "ᚺ ᛖ ᛁ ᛗ ᛞ ᚨ ᛚ ᛚ",
-  },
-};
-
-const callback = AGENT_CALLBACKS[agentName] || {
-  quote: "The task is done. The wolf's chain holds another day.",
-  signoff: "Sealed by the pack",
-  runes: "ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ",
-};
-
+// Agent callback — use shared agentCallback resolved above
 html += `
 <div class="agent-callback">
-  <div class="callback-runes">${callback.runes}</div>
+  <div class="callback-runes">${agentCallback.runes}</div>
   <img class="callback-avatar" src="agents/profiles/${agentSlug}-dark.png" onerror="this.style.display='none'" alt="${esc(agentName)}">
   <div class="callback-declaration">Odin All-Father — Your Will Is Done</div>
-  <div class="callback-quote">"${esc(callback.quote)}"</div>
-  <div class="callback-blood-seal">ᛊ ${esc(callback.signoff)} · ${esc(agentTitle)} · Issue #${issueNum} ᛊ</div>
+  <div class="callback-quote">"${esc(agentCallback.quote)}"</div>
+  <div class="callback-blood-seal">ᛊ ${esc(agentCallback.signoff)} · ${esc(agentTitle)} · Issue #${issueNum} ᛊ</div>
   <div class="callback-wolf">🐺</div>
 </div>
 `;
