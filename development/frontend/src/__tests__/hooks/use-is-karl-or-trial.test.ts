@@ -134,3 +134,16 @@ describe("useIsKarlOrTrial — Converted trial (Karl subscriber)", () => {
     expect(result.current).toBe(true);
   });
 });
+
+describe("useIsKarlOrTrial — OR logic: both Karl and trial simultaneously active", () => {
+  it("returns true when Karl is active AND trial is simultaneously active (both sides of OR are true)", () => {
+    // Edge case: a Karl subscriber whose trial is still technically "active"
+    // before the converted flag propagates. The hook uses `isKarl || isTrialActive`,
+    // so both sides being true must still return true — not throw or return false.
+    mockEntitlement.tier = "karl";
+    mockEntitlement.isActive = true;
+    mockTrialStatus.status = "active";
+    const { result } = renderHook(() => useIsKarlOrTrial());
+    expect(result.current).toBe(true);
+  });
+});
