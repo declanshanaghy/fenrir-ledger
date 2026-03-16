@@ -48,7 +48,7 @@ export function MarketingNavLinks({ onLinkClick }: MarketingNavLinksProps) {
           <Link
             key={href}
             href={href}
-            onClick={onLinkClick}
+            onClick={() => onLinkClick?.()}
             aria-current={active ? "page" : undefined}
             className={
               active
