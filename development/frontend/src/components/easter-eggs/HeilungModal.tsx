@@ -54,7 +54,10 @@ export function HeilungModal() {
         const tag = (e.target as HTMLElement | null)?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
         e.preventDefault();
-        setVisible((v) => !v);
+        setVisible((v) => {
+          if (v) setPlaying(false); // reset video on close
+          return !v;
+        });
         return;
       }
 
