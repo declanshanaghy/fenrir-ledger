@@ -129,6 +129,11 @@ Loki runs only his NEW feature tests, not the full suite.
   cd /workspace/repo && bash quality/scripts/verify.sh --step build
 On failure: fix, commit+push, re-run that step. Repeat until green.
 
+NO MONITOR-UI TESTS (UNBREAKABLE):
+NEVER write tests for `development/monitor-ui/` (Odin's Throne). It has NO test
+infrastructure — no vitest, no testing-library, no __tests__/ directory. All tests
+target `development/frontend/` only. For monitor-ui issues, validate via tsc + build only.
+
 STRICT SCOPE (UNBREAKABLE):
 Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,
 declare things "done", or add commentary beyond your handoff step.
