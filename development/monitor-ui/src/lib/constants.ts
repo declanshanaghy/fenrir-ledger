@@ -92,6 +92,7 @@ export const STATUS_ICONS: Record<Job["status"], string> = {
   failed: "\u2717",    // ✗ cross
   pending: "\u29D7",   // ⧗ hourglass
   purged: "\u25E6",    // ◦ small open circle (pod reaped, logs unavailable via kubectl)
+  cached: "\uD83D\uDCCC", // 📌 pin — pinned to Odin's memory
 };
 
 export const STATUS_COLORS: Record<Job["status"], string> = {
@@ -100,6 +101,7 @@ export const STATUS_COLORS: Record<Job["status"], string> = {
   failed: "#ef4444",
   pending: "#f0b429",
   purged: "#606070",   // gray — pod reaped by K8s GC
+  cached: "#c9920a",   // gold — pinned in Odin's memory
 };
 
 export const STATUS_LABELS: Record<Job["status"], string> = {
@@ -108,6 +110,7 @@ export const STATUS_LABELS: Record<Job["status"], string> = {
   failed: "FAILED",
   pending: "pending",
   purged: "purged",    // pod reaped, JSONL logs still viewable
+  cached: "pinned",    // preserved in localStorage after pod reap
 };
 
 export const ODIN_QUOTES = [

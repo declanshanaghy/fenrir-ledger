@@ -13,11 +13,12 @@ import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 interface SessionHeaderProps {
   job: DisplayJob;
   wsState: "connecting" | "open" | "closed" | "error";
-  onDownload?: () => void;
-  showDownload?: boolean;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
+  showPin?: boolean;
 }
 
-function SessionHeader({ job, wsState, onDownload, showDownload = true }: SessionHeaderProps) {
+function SessionHeader({ job, wsState, isPinned = false, onTogglePin, showPin = true }: SessionHeaderProps) {
   const displayTitle = resolveSessionTitle(job);
   // Truncate session ID to last 8 chars for display
   const shortId = job.sessionId.length > 8
@@ -65,14 +66,15 @@ function SessionHeader({ job, wsState, onDownload, showDownload = true }: Sessio
         </span>
         <StatusBadge state={wsState} />
         <CopySessionIdButton sessionId={job.sessionId} />
-        {showDownload && onDownload && (
+        {showPin && onTogglePin && (
           <button
-            className="download-log-btn"
-            onClick={onDownload}
-            title="Download session log"
-            aria-label="Download session log"
+            className={`pin-btn${isPinned ? " pinned" : ""}`}
+            onClick={onTogglePin}
+            title={isPinned ? "Unpin from Odin\u2019s memory" : "Pin to Odin\u2019s memory"}
+            aria-label={isPinned ? "Unpin from Odin\u2019s memory" : "Pin to Odin\u2019s memory"}
+            aria-pressed={isPinned}
           >
-            <DownloadIcon />
+            <PinIcon filled={isPinned} />
           </button>
         )}
       </span>
@@ -89,9 +91,11 @@ interface Props {
   isNodeUnreachable?: boolean;
   streamError?: string | null;
   onSetSpeed?: (speed: number) => void;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
 }
 
-export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed }: Props) {
+export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin }: Props) {
   const termRef = useRef<HTMLDivElement>(null);
   const [fixtureSpeed, setFixtureSpeed] = useState(1);
   const [fixturePaused, setFixturePaused] = useState(false);
@@ -184,7 +188,8 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
         <SessionHeader
           job={activeJob}
           wsState={wsState}
-          onDownload={() => downloadLog(activeJob.sessionId)}
+          isPinned={isPinned}
+          onTogglePin={onTogglePin}
         />
         <NorseErrorTablet sessionId={activeJob.sessionId} message={streamError} />
       </main>
@@ -198,7 +203,9 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
         <SessionHeader
           job={activeJob}
           wsState={wsState}
-          showDownload={false}
+          isPinned={isPinned}
+          onTogglePin={onTogglePin}
+          showPin={false}
         />
         <NorseErrorTablet sessionId={activeJob.sessionId} message={streamError} variant="node-unreachable" />
       </main>
@@ -210,7 +217,8 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
       <SessionHeader
         job={activeJob}
         wsState={wsState}
-        onDownload={() => downloadLog(activeJob.sessionId)}
+        isPinned={isPinned}
+        onTogglePin={onTogglePin}
       />
       <div
         className="log-terminal"
@@ -737,11 +745,23 @@ function NorseTablet({ text, autoScroll }: { text: string; autoScroll?: boolean 
   );
 }
 
-function DownloadIcon() {
+function PinIcon({ filled }: { filled: boolean }) {
+  // Hollow pin (unpinned) vs filled/gold pin (pinned) — Norse aesthetic
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <path d="M7 1v8M4 6l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M2 11h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      {filled ? (
+        // Filled tack (pinned state — gold)
+        <>
+          <path d="M10 2L14 6L10.5 9.5L8.5 14L7 12.5L9 8.5L5.5 5L2 3.5L6.5 1.5L10 2Z" fill="currentColor" />
+          <line x1="5" y1="11" x2="2" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </>
+      ) : (
+        // Hollow tack (unpinned state — dim)
+        <>
+          <path d="M10 2L14 6L10.5 9.5L8.5 14L7 12.5L9 8.5L5.5 5L2 3.5L6.5 1.5L10 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+          <line x1="5" y1="11" x2="2" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </>
+      )}
     </svg>
   );
 }

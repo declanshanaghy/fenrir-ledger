@@ -6,7 +6,7 @@ export interface Job {
   issueNumber: number;
   agent: string;
   step: number;
-  status: "pending" | "running" | "succeeded" | "failed" | "purged";
+  status: "pending" | "running" | "succeeded" | "failed" | "purged" | "cached";
   startedAt: string | null;
   completedAt: string | null;
   podName: string | null;

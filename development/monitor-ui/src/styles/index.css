@@ -347,14 +347,39 @@ body {
   border: 1px solid currentColor; white-space: nowrap; flex-shrink: 0;
 }
 .job-status-badge.pulse { animation: pulse 1.5s ease-in-out infinite; }
-.download-log-btn {
+/* ── Pin button (replaces download) ────────────────
+   44x44 touch target via min-width/height on mobile,
+   compact 1.6rem on desktop. */
+.pin-btn {
   display: flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px;
   width: 1.6rem; height: 1.6rem; padding: 0;
   background: transparent; border: 1px solid var(--rune-border);
   border-radius: 3px; color: var(--text-void); cursor: pointer;
-  transition: color 0.15s, border-color 0.15s; flex-shrink: 0;
+  transition: color 0.2s, border-color 0.2s, transform 0.15s; flex-shrink: 0;
 }
-.download-log-btn:hover { color: var(--gold); border-color: var(--gold); }
+.pin-btn:hover {
+  color: var(--gold-bright); border-color: var(--gold-bright);
+  transform: scale(1.1);
+}
+.pin-btn.pinned {
+  color: var(--gold); border-color: var(--gold);
+  background: rgba(201, 146, 10, 0.10);
+}
+.pin-btn.pinned:hover {
+  color: var(--error-strong); border-color: var(--error-strong);
+  background: rgba(239, 68, 68, 0.08);
+  transform: scale(1.05);
+}
+/* Desktop: shrink to icon-bar size */
+@media (min-width: 640px) {
+  .pin-btn { min-width: 1.6rem; min-height: 1.6rem; }
+}
+
+/* ── Pin badge in card sidebar ── */
+.card-pin-badge {
+  font-size: 0.7rem; line-height: 1; margin-left: 0.15rem;
+}
 .copy-session-btn {
   display: flex; align-items: center; justify-content: center;
   width: 1.6rem; height: 1.6rem; padding: 0;
