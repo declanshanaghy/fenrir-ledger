@@ -1,5 +1,52 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 
+/** Groups consecutive identical entries for collapse rendering */
+interface CollapsedGroup {
+  _collapsed: true;
+  key: string;
+  count: number;
+  representative: LogEntry;
+}
+type DisplayEntry = LogEntry | CollapsedGroup;
+
+/** Returns a collapse key for entries that can be grouped, or null if not collapsible */
+function collapseKey(entry: LogEntry): string | null {
+  if (entry.type === "tool-use" && entry.toolName) {
+    return `tool-use:${entry.toolName}`;
+  }
+  if (entry.type === "system" && entry.detail) {
+    return `system:${entry.detail}`;
+  }
+  return null;
+}
+
+/** Pre-processes entries: groups consecutive same-key entries into CollapsedGroup */
+function groupConsecutiveEntries(entries: LogEntry[]): DisplayEntry[] {
+  const result: DisplayEntry[] = [];
+  let i = 0;
+  while (i < entries.length) {
+    const entry = entries[i]!;
+    const key = collapseKey(entry);
+    if (!key) {
+      result.push(entry);
+      i++;
+      continue;
+    }
+    let j = i + 1;
+    while (j < entries.length && collapseKey(entries[j]!) === key) {
+      j++;
+    }
+    const count = j - i;
+    if (count === 1) {
+      result.push(entry);
+    } else {
+      result.push({ _collapsed: true, key, count, representative: entries[j - 1]! });
+    }
+    i = j;
+  }
+  return result;
+}
+
 import type { LogEntry } from "../hooks/useLogStream";
 import type { DisplayJob } from "../lib/types";
 import { StatusBadge } from "./StatusBadge";
@@ -195,6 +242,9 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
     return null;
   }, [entries]);
 
+  // Pre-process: collapse consecutive identical tool-use / system entries
+  const displayEntries = useMemo(() => groupConsecutiveEntries(entries), [entries]);
+
   if (!activeJob) {
     return (
       <main className="content" aria-label="Log viewer">
@@ -253,18 +303,35 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
         aria-label="Session logs"
         onScroll={handleScroll}
       >
-        {entries.map((entry) => (
-          <LogLine
-            key={entry.id}
-            entry={entry}
-            {...(activeJob?.agentKey ? { agentKey: activeJob.agentKey } : {})}
-            {...(activeJob?.agentName ? { agentName: activeJob.agentName } : {})}
-            isLastAssistantText={entry.id === lastAssistantTextId}
-            autoScroll={autoScroll}
-            isLatestBatch={entry.type === "tool-batch" && entry.id === lastToolBatchId}
-            onAvatarClick={onAvatarClick}
-          />
-        ))}
+        {displayEntries.map((item) => {
+          if ("_collapsed" in item) {
+            return (
+              <LogLine
+                key={item.representative.id}
+                entry={item.representative}
+                {...(activeJob?.agentKey ? { agentKey: activeJob.agentKey } : {})}
+                {...(activeJob?.agentName ? { agentName: activeJob.agentName } : {})}
+                isLastAssistantText={false}
+                autoScroll={autoScroll}
+                isLatestBatch={item.representative.type === "tool-batch" && item.representative.id === lastToolBatchId}
+                onAvatarClick={onAvatarClick}
+                collapseCount={item.count}
+              />
+            );
+          }
+          return (
+            <LogLine
+              key={item.id}
+              entry={item}
+              {...(activeJob?.agentKey ? { agentKey: activeJob.agentKey } : {})}
+              {...(activeJob?.agentName ? { agentName: activeJob.agentName } : {})}
+              isLastAssistantText={item.id === lastAssistantTextId}
+              autoScroll={autoScroll}
+              isLatestBatch={item.type === "tool-batch" && item.id === lastToolBatchId}
+              onAvatarClick={onAvatarClick}
+            />
+          );
+        })}
       </div>
       <div className="log-controls">
         {isFixture && (
@@ -309,12 +376,16 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
   );
 }
 
-function LogLine({ entry, agentKey, agentName, isLastAssistantText, autoScroll, isLatestBatch, onAvatarClick }: { entry: LogEntry; agentKey?: string; agentName?: string; isLastAssistantText?: boolean; autoScroll?: boolean; isLatestBatch?: boolean; onAvatarClick?: (agentKey: string) => void }) {
+function LogLine({ entry, agentKey, agentName, isLastAssistantText, autoScroll, isLatestBatch, onAvatarClick, collapseCount }: { entry: LogEntry; agentKey?: string; agentName?: string; isLastAssistantText?: boolean; autoScroll?: boolean; isLatestBatch?: boolean; onAvatarClick?: (agentKey: string) => void; collapseCount?: number }) {
   switch (entry.type) {
     case "system":
       return (
         <div className="ev-system">
-          <span className="ev-label">system</span> {entry.detail}
+          <span className="ev-label">system</span>
+          {collapseCount != null && collapseCount > 1 && (
+            <span className="ev-collapse-count" title={`${collapseCount} consecutive identical entries collapsed`}>×{collapseCount}</span>
+          )}
+          {" "}{entry.detail}
         </div>
       );
     case "turn-divider":
@@ -335,7 +406,7 @@ function LogLine({ entry, agentKey, agentName, isLastAssistantText, autoScroll, 
         />
       );
     case "tool-use":
-      return <ToolBlock entry={entry} />;
+      return <ToolBlock entry={entry} {...(collapseCount != null && collapseCount > 1 ? { collapseCount } : {})} />;
     case "entrypoint-group":
       return <EntrypointGroup entry={entry} />;
     case "entrypoint-header":

@@ -931,6 +931,7 @@ body {
   animation: fadeIn 0.2s ease;
 }
 .ev-system .ev-label { color: var(--gold); font-weight: 600; }
+.ev-system .ev-collapse-count { display: inline-block; margin: 0 0.3rem; vertical-align: middle; }
 
 /* ── JSONL events — assistant (Mayo) ───────────── */
 .ev-assistant-text {
@@ -1109,6 +1110,17 @@ body {
 .ev-tool-badge.edit,
 .ev-tool-badge.write { background: var(--write-badge-bg); color: var(--write-badge-text); }
 .ev-tool-badge.agent { background: var(--mayo-red-dim); color: #fca5a5; }
+.ev-collapse-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem; font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 10px;
+  background: var(--text-void);
+  color: var(--bg-void);
+  opacity: 0.65;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
 .ev-tool-preview {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.65rem; color: var(--text-rune); opacity: 0.6;
