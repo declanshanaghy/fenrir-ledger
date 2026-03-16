@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { CardStatus } from "@/lib/types";
 import { STATUS_LABELS, TOOLTIP_CONTENT } from "@/lib/constants";
+import { useIsKarlOrTrial } from "@/hooks/useIsKarlOrTrial";
 
 interface StatusBadgeProps {
   status: CardStatus;
@@ -55,6 +56,8 @@ export function StatusBadge({
   const label = lokiLabel ?? (STATUS_LABELS[status] ?? status);
   const tooltipId = useId();
   const content = TOOLTIP_CONTENT[status];
+  const isKarlOrTrial = useIsKarlOrTrial();
+  const blingClass = isKarlOrTrial ? "karl-bling-badge-status" : undefined;
 
   // Controlled open state for mobile tap-to-toggle behavior.
   // On desktop, Radix handles hover/focus natively via delayDuration/skipDelayDuration.
@@ -76,7 +79,7 @@ export function StatusBadge({
     return (
       <Badge
         variant={status}
-        className={className}
+        className={[className, blingClass].filter(Boolean).join(" ")}
         aria-label={`Card status: ${label}`}
       >
         {label}
@@ -95,7 +98,7 @@ export function StatusBadge({
           >
             <Badge
               variant={status}
-              className={className}
+              className={[className, blingClass].filter(Boolean).join(" ")}
               aria-label={`Card status: ${label}`}
             >
               {label}

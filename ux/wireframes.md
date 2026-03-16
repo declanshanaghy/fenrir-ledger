@@ -11,6 +11,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Cards — Karl Card Bling (Issue #1088)
+
+| File | Description |
+|------|-------------|
+| [wireframes/cards/karl-card-bling.html](wireframes/cards/karl-card-bling.html) | Karl card skin: 9 sections — (A) three-tier variant comparison (thrall/trial/Karl, resting state), (B) hover state detail for trial and Karl with reduced-motion fallback column, (C) rune corner anatomy with zoomed card + Elder Futhark legend (ᚠ fehu top-left, ᚱ raidho top-right, ᛁ isa bottom-left, ᚾ naudiz bottom-right), (D) status badge gold accent variants (.karl-bling-badge-status) across all statuses, (E) dashboard card grid with Karl tier active, (F) mobile 375px single-column layout, (G) state matrix table (tier × border/animation/badge/reduced-motion), (H) implementation notes for FiremanDecko (CardTile.tsx, StatusBadge.tsx, karl-bling.css changes), (I) acceptance criteria checklist. Interaction spec: [karl-card-bling-interaction-spec.md](wireframes/cards/karl-card-bling-interaction-spec.md). |
+| [wireframes/cards/karl-card-bling-interaction-spec.md](wireframes/cards/karl-card-bling-interaction-spec.md) | Interaction spec: hover glow behavior (Karl vs trial intensity, coexistence with Framer Motion y-lift), rune corner behavior (always static, aria-hidden), reduced-motion fallback (animation: none, static gold border preserved), touch device fallback (hover: none suppression), status badge gold accent (.karl-bling-badge-status spec table), component change summary, CSS token reference. |
+
+---
+
 ## Monitor UI — Agent Profile Dialogs (Issue #1062)
 
 | File | Description |
