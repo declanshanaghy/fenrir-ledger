@@ -10,7 +10,7 @@ mkdir -p "$LOG_DIR"
 LOG="${LOG_DIR}/stripe-listen.log"
 PID_FILE="${FRONTEND_DIR}/.stripe-listen.pid"
 ENV_FILE="${FRONTEND_DIR}/.env.local"
-WEBHOOK_BACKUP="${FRONTEND_DIR}/.env.local.stripe-backup"
+STRIPE_OVERRIDE="${FRONTEND_DIR}/.env.stripe-listen"
 
 pid() {
   if [[ -f "$PID_FILE" ]]; then
@@ -55,13 +55,9 @@ case "${1:-status}" in
       sleep 1
     done
     if [[ -n "$local_secret" ]]; then
-      grep "^STRIPE_WEBHOOK_SECRET=" "$ENV_FILE" > "$WEBHOOK_BACKUP" 2>/dev/null || true
-      if grep -q "^STRIPE_WEBHOOK_SECRET=" "$ENV_FILE"; then
-        sed -i '' "s|^STRIPE_WEBHOOK_SECRET=.*|STRIPE_WEBHOOK_SECRET=\"${local_secret}\"|" "$ENV_FILE"
-      else
-        echo "STRIPE_WEBHOOK_SECRET=\"${local_secret}\"" >> "$ENV_FILE"
-      fi
-      echo "stripe: running (webhook secret injected)"
+      # Write to separate override file — NEVER touch .env.local
+      echo "STRIPE_WEBHOOK_SECRET=\"${local_secret}\"" > "$STRIPE_OVERRIDE"
+      echo "stripe: running (webhook secret in .env.stripe-listen)"
     else
       echo "stripe: WARNING — could not detect webhook secret after 15s"
     fi
@@ -70,15 +66,8 @@ case "${1:-status}" in
     if p=$(pid); then
       kill "$p" 2>/dev/null
       rm -f "$PID_FILE"
-      # Restore original webhook secret
-      if [[ -f "$WEBHOOK_BACKUP" ]]; then
-        original=$(cat "$WEBHOOK_BACKUP")
-        if [[ -n "$original" ]] && [[ -f "$ENV_FILE" ]]; then
-          sed -i '' "s|^STRIPE_WEBHOOK_SECRET=.*|${original}|" "$ENV_FILE"
-        fi
-        rm -f "$WEBHOOK_BACKUP"
-      fi
-      echo "stripe: stopped (webhook secret restored)"
+      rm -f "$STRIPE_OVERRIDE"
+      echo "stripe: stopped"
     else
       echo "stripe: not running"
     fi

@@ -378,6 +378,18 @@ const mode = args[0] || "audit";
 const envVars = parseKeyValueFile(ENV_FILE);
 const secretsVars = parseKeyValueFile(SECRETS_FILE);
 
+// Guard: refuse to sync STRIPE_WEBHOOK_SECRET if stripe listen override is active
+const STRIPE_OVERRIDE = join(REPO_ROOT, "development", "frontend", ".env.stripe-listen");
+if (existsSync(STRIPE_OVERRIDE) && (mode === "--sync" || mode === "--fix-all" || mode === "--push")) {
+  const pushingStripe = mode === "--push" && args[1] === "STRIPE_WEBHOOK_SECRET";
+  if (mode !== "--push" || pushingStripe) {
+    console.error(`${C.red}BLOCKED:${C.r} ${STRIPE_OVERRIDE} exists — stripe listen is active (or was not stopped cleanly).`);
+    console.error(`The STRIPE_WEBHOOK_SECRET in .env.local may be overridden by an ephemeral CLI value.`);
+    console.error(`Run: ${C.bold}rm ${STRIPE_OVERRIDE}${C.r} (or stop stripe via services.sh stop) then retry.`);
+    process.exit(1);
+  }
+}
+
 if (!existsSync(ENV_FILE) && !existsSync(SECRETS_FILE)) {
   console.error(`${C.red}Missing both ${ENV_FILE} and ${SECRETS_FILE}${C.r}`);
   process.exit(1);
