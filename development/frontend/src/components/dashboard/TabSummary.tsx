@@ -175,6 +175,16 @@ function howlSummary(cards: Card[]): React.ReactNode[] {
   return parts;
 }
 
+/** Trash tab summary: "{N} deleted cards" */
+function trashSummary(cards: Card[]): React.ReactNode[] {
+  return [
+    <span key="count" className="font-bold">
+      {cards.length} deleted card{cards.length !== 1 ? "s" : ""}
+    </span>,
+    " — restore to return to active, or expunge to erase permanently.",
+  ];
+}
+
 /** Map tab ID to its summary text generator */
 const SUMMARY_GENERATORS: Record<
   DashboardTab,
@@ -185,6 +195,7 @@ const SUMMARY_GENERATORS: Record<
   active: activeSummary,
   hunt: huntSummary,
   howl: howlSummary,
+  trash: trashSummary,
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────

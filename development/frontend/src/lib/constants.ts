@@ -84,7 +84,7 @@ export const STATUS_TOOLTIPS: Record<CardStatus, string> = {
 // ─── Dashboard tab types ─────────────────────────────────────────────────────
 
 /** Dashboard tab identifiers — used by TabHeader and TabSummary components */
-export type DashboardTab = "howl" | "hunt" | "active" | "valhalla" | "all";
+export type DashboardTab = "howl" | "hunt" | "active" | "valhalla" | "all" | "trash";
 
 /**
  * Tab header content — static text for each dashboard tab.
@@ -131,6 +131,12 @@ export const TAB_HEADER_CONTENT: Record<
       "Cards shown here demand your attention. Annual fees are approaching, promotional rates are expiring, or deadlines have already passed. These are the chains that will tighten if ignored.",
     statuses:
       "Status labels in this tab: Fee Due Soon — annual fee due within 30 days | Promo Expiring — promotional rate ending soon | Overdue — a deadline has passed",
+  },
+  trash: {
+    title: "ᛞ Trash — The Void",
+    description:
+      "Cards that have been deleted from your ledger. Restore a card to return it to active status, or expunge it permanently from this device. Trash is always local — only restored cards may sync.",
+    statuses: "Cards in this tab have been soft-deleted (deletedAt is set). They are not visible anywhere else in the ledger.",
   },
 };
 

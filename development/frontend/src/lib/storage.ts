@@ -430,6 +430,81 @@ export function deleteCard(householdId: string, id: string): void {
   setAllCards(householdId, updated);
 }
 
+// ─── Trash Operations ─────────────────────────────────────────────────────────
+
+/**
+ * Returns all soft-deleted cards for a given household, sorted by deletedAt
+ * descending (most recently deleted first). These are cards with deletedAt set.
+ *
+ * This is the public API for the Trash tab — the inverse of getCards().
+ *
+ * @param householdId - The household to filter by
+ * @returns Array of soft-deleted Card objects, sorted by deletedAt desc
+ */
+export function getDeletedCards(householdId: string): Card[] {
+  const all = getAllCards(householdId);
+  return all
+    .filter((c) => c.householdId === householdId && !!c.deletedAt)
+    .sort((a, b) => {
+      const aDate = a.deletedAt ?? a.updatedAt;
+      const bDate = b.deletedAt ?? b.updatedAt;
+      return new Date(bDate).getTime() - new Date(aDate).getTime();
+    });
+}
+
+/**
+ * Restores a soft-deleted card by clearing its deletedAt timestamp.
+ * The card reappears in getCards() after this call.
+ * No-op if the card does not exist or is not soft-deleted.
+ *
+ * Caller is responsible for cloud sync if tier === "karl".
+ *
+ * @param householdId - The household that owns the card
+ * @param cardId - The card ID to restore
+ * @returns The restored Card object, or undefined if not found
+ */
+export function restoreCard(householdId: string, cardId: string): Card | undefined {
+  const all = getAllCards(householdId);
+  const index = all.findIndex((c) => c.id === cardId && c.householdId === householdId);
+  if (index < 0) return undefined;
+
+  const card = all[index]!;
+  if (!card.deletedAt) return card; // Not deleted — no-op, return as-is
+
+  const restored: Card = { ...card, deletedAt: undefined, updatedAt: new Date().toISOString() };
+  const updated = [...all];
+  updated[index] = restored;
+  setAllCards(householdId, updated);
+  return restored;
+}
+
+/**
+ * Permanently removes a single soft-deleted card from localStorage.
+ * The record is deleted entirely — no undo, no cloud call.
+ * No-op if the card does not exist.
+ *
+ * @param householdId - The household that owns the card
+ * @param cardId - The card ID to expunge
+ */
+export function expungeCard(householdId: string, cardId: string): void {
+  const all = getAllCards(householdId);
+  const filtered = all.filter((c) => !(c.id === cardId && c.householdId === householdId));
+  if (filtered.length === all.length) return; // Card not found — no-op
+  setAllCards(householdId, filtered);
+}
+
+/**
+ * Permanently removes ALL soft-deleted cards for a given household from localStorage.
+ * Equivalent to "Empty Trash". No undo, no cloud call.
+ *
+ * @param householdId - The household to expunge all deleted cards for
+ */
+export function expungeAllCards(householdId: string): void {
+  const all = getAllCards(householdId);
+  const filtered = all.filter((c) => !(c.householdId === householdId && !!c.deletedAt));
+  setAllCards(householdId, filtered);
+}
+
 /**
  * Closes a card by setting its status to "closed" and recording the closedAt
  * timestamp. The card remains in localStorage and is visible in Valhalla

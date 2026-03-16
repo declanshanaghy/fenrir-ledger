@@ -322,6 +322,12 @@
   [data-tier="karl"] .karl-bling-badge {
     animation: none;
   }
+
+  /* Trash card exit animation suppressed */
+  .trash-card-exit {
+    animation: none;
+    transition: none;
+  }
 }
 
 /* ── Touch devices: suppress hover animations ────────────────────────────── */
@@ -399,6 +405,66 @@
 
 [data-tier="trial"] .karl-bling-card {
   border-color: rgba(212, 165, 32, 0.14);
+}
+
+/* ── Karl: Trash tab bling ───────────────────────────────────────────────── */
+/*
+ * .trash-tab — add to the Trash tab button to activate Karl bling.
+ * Karl: gold icon pulse animation, gold active border.
+ * Trial: softer gold treatment (~60% intensity — card is in liminal state).
+ * Thrall: opacity 0.65 handled inline; no bling rules needed.
+ *
+ * Issue: #1127
+ */
+
+/* Trash tab icon glow — Karl: same pulse as Howl tab when active */
+[data-tier="karl"] .trash-tab[aria-selected="true"] {
+  border-bottom-color: var(--karl-gold);
+}
+
+[data-tier="trial"] .trash-tab[aria-selected="true"] {
+  border-bottom-color: rgba(212, 165, 32, 0.55);
+}
+
+/* Trash count badge gold border — visible when trashCount > 0 */
+[data-tier="karl"] .trash-count-badge {
+  border-color: rgba(212, 165, 32, 0.55) !important;
+  color: rgba(212, 165, 32, 0.85) !important;
+}
+
+[data-tier="trial"] .trash-count-badge {
+  border-color: rgba(212, 165, 32, 0.30) !important;
+  color: rgba(212, 165, 32, 0.65) !important;
+}
+
+/* ── Karl: Trash card bling ──────────────────────────────────────────────── */
+/*
+ * .trash-card — applied to each card row in TrashView.
+ * Inherits .karl-bling-card hover glow but at reduced border intensity
+ * (~50-60% of active card bling) to convey the card is in a liminal/dead state.
+ *
+ * Rune corners (.trash-rune-corner) override base karl-rune-corner opacity
+ * to 0.30-0.40 (reduced from 0.55 active) — card is in the void.
+ *
+ * Issue: #1127
+ */
+
+/* Trash card resting border — lower than active card (0.30 vs 0.55) */
+[data-tier="karl"] .trash-card {
+  border-color: rgba(212, 165, 32, 0.30);
+}
+
+[data-tier="trial"] .trash-card {
+  border-color: rgba(212, 165, 32, 0.20);
+}
+
+/* Trash rune corners — reduced opacity (liminal state) */
+[data-tier="karl"] .trash-rune-corner {
+  color: rgba(212, 165, 32, 0.35) !important;
+}
+
+[data-tier="trial"] .trash-rune-corner {
+  color: rgba(212, 165, 32, 0.25) !important;
 }
 
 /* ── Karl: status badge gold accent ─────────────────────────────────────── */
