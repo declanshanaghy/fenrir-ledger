@@ -17,6 +17,7 @@ import { readFileSync, writeFileSync, readdirSync, statSync } from "fs";
 import { dirname, join, resolve } from "path";
 import { fileURLToPath } from "url";
 import { createHecklerEngine, AGENT_NAMES } from "../../../../infrastructure/k8s/agents/mayo-heckler.mjs";
+import { sanitizeText, sanitizeToolOutput } from "./sanitize-chronicle.mjs";
 
 // Resolve script directory for relative asset paths (ESM-safe)
 const __scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -1108,21 +1109,23 @@ if (publishMode) {
   }
 
   function mdxRenderToolInput(tool) {
-    if (tool.name === "Bash") return mdxEsc(tool.input?.command || "");
+    if (tool.name === "Bash") return mdxEsc(sanitizeText(tool.input?.command || ""));
     if (tool.name === "Edit") {
       const parts = [];
       if (tool.input?.file_path) parts.push(`File: ${shortPath(tool.input.file_path)}`);
       if (tool.input?.old_string) parts.push(`--- old\n${tool.input.old_string.slice(0, 500)}`);
       if (tool.input?.new_string) parts.push(`+++ new\n${tool.input.new_string.slice(0, 500)}`);
-      return mdxEsc(parts.join("\n\n"));
+      return mdxEsc(sanitizeText(parts.join("\n\n")));
     }
-    return mdxEsc(JSON.stringify(tool.input, null, 2));
+    return mdxEsc(sanitizeText(JSON.stringify(tool.input, null, 2)));
   }
 
   function mdxRenderToolOutput(tool) {
     const content = tool.result_content;
-    if (typeof content === "string") return mdxEsc(content.slice(0, 2000));
-    return mdxEsc(JSON.stringify(content, null, 2).slice(0, 2000));
+    const raw = typeof content === "string" ? content : JSON.stringify(content, null, 2);
+    // Sanitize before truncating so the truncation limit applies to already-cleaned text
+    const sanitized = sanitizeToolOutput(raw, 800);
+    return mdxEsc(sanitized);
   }
 
   // Build turn markup using <details>/<summary> for native collapsibility
@@ -1147,10 +1150,10 @@ if (publishMode) {
 `;
 
     for (const thinking of turn.thinking) {
-      turnsMarkup += `<div className="agent-thinking">${mdxEsc(thinking.slice(0, 1000))}</div>\n`;
+      turnsMarkup += `<div className="agent-thinking">${mdxEsc(sanitizeText(thinking.slice(0, 1000)))}</div>\n`;
     }
     for (const text of turn.texts) {
-      turnsMarkup += `<div className="agent-text-block">${mdxEsc(text)}</div>\n`;
+      turnsMarkup += `<div className="agent-text-block">${mdxEsc(sanitizeText(text))}</div>\n`;
     }
     for (const tool of turn.tools) {
       turnsMarkup += `<details className="agent-tool-block">
@@ -1267,7 +1270,11 @@ ${verdictMarkup}
 </div>
 `;
 
-  writeFileSync(mdxFile, mdx);
+  // Final sanitization pass over the complete MDX — catches anything in the
+  // task prompt / system message sections that was not individually sanitized.
+  const sanitizedMdx = sanitizeText(mdx);
+
+  writeFileSync(mdxFile, sanitizedMdx);
   console.log(`[ok] chronicle published: ${mdxFile}`);
   console.log(`     slug: ${mdxSlug}`);
   console.log(`     url: /chronicles/${mdxSlug}`);
