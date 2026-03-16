@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Sync Indicator States — Issue #1125</title>
+  <style>
+    /* Layout only — no colors, no decorative styling */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 24px; max-width: 960px; }
+
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    h2 { font-size: 16px; font-weight: 700; margin-bottom: 8px; border-bottom: 2px solid; padding-bottom: 4px; }
+    h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    p.note { font-size: 12px; font-style: italic; margin-top: 6px; }
+    p.label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+
+    .section { margin-bottom: 40px; }
+    .subsection { margin-bottom: 24px; }
+    .row { display: flex; gap: 24px; flex-wrap: wrap; }
+    .col { flex: 1; min-width: 200px; }
+
+    /* Wireframe component blocks */
+    .frame { border: 1px solid; padding: 16px; position: relative; }
+    .frame-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+
+    /* Dot anatomy */
+    .dot-demo { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid; display: inline-block; }
+    .dot-ring { width: 20px; height: 20px; border-radius: 50%; border: 1px dashed; display: inline-flex; align-items: center; justify-content: center; }
+    .dot-syncing .dot { border-style: solid; }
+    .dot-synced .dot { border-style: double; border-width: 2.5px; }
+    .dot-offline .dot { border-style: dashed; opacity: 0.4; }
+    .dot-error .dot { border-style: solid; border-width: 2px; }
+
+    /* Button hitzone */
+    .btn-hitzone { width: 20px; height: 20px; border: 1px dashed; display: inline-flex; align-items: center; justify-content: center; cursor: default; }
+
+    /* Tooltip */
+    .tooltip-demo { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .tooltip-bubble { border: 1px solid; padding: 4px 8px; font-size: 11px; font-family: monospace; white-space: nowrap; }
+    .tooltip-arrow { width: 8px; height: 8px; border-right: 1px solid; border-bottom: 1px solid; align-self: flex-end; margin-right: 6px; transform: rotate(45deg); }
+
+    /* Fixed position simulation */
+    .viewport-sim { border: 1px solid; position: relative; overflow: hidden; }
+    .viewport-label { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 4px 8px; border-bottom: 1px solid; }
+    .viewport-body { position: relative; min-height: 120px; padding: 12px; }
+    .fixed-br { position: absolute; bottom: 8px; right: 8px; }
+
+    /* State matrix table */
+    table { border-collapse: collapse; width: 100%; font-size: 12px; }
+    th, td { border: 1px solid; padding: 6px 10px; text-align: left; vertical-align: top; }
+    th { font-weight: 700; }
+
+    /* Annotation block */
+    .annotation { border-left: 3px solid; padding-left: 10px; margin-top: 8px; font-size: 12px; }
+    .annotation p { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+  <header style="margin-bottom: 32px; border-bottom: 2px solid; padding-bottom: 16px;">
+    <h1>Sync Indicator — States Wireframe</h1>
+    <p style="margin-top: 6px;">Issue #1125 · Component: <code>SyncIndicator.tsx</code> · Luna · 2026-03-16</p>
+    <p class="note">Wireframe: layout and structure only. No theme colors applied. Engineer reads alongside theme-system.md.</p>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION A: Dot State Anatomy
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section A: Dot State Anatomy">
+    <h2>A — Dot State Anatomy (all 4 states)</h2>
+    <p class="note">The dot is 8×8px, centered in a 20×20px invisible button hitzone. Fixed bottom-right. Four cloud sync states replace the current binary syncing/idle.</p>
+
+    <div class="row" style="margin-top: 16px;">
+
+      <!-- SYNCING -->
+      <div class="col">
+        <div class="frame">
+          <p class="frame-label">State 1: syncing</p>
+          <div class="dot-demo dot-syncing">
+            <div class="btn-hitzone">
+              <!-- ping ring (animated) -->
+              <div class="dot-ring">
+                <div class="dot" style="background: currentColor;"></div>
+              </div>
+            </div>
+            <span>syncing</span>
+          </div>
+          <p class="note">Dot: solid fill. Ping ring: full-width animated pulse expanding outward (animate-ping). Ring opacity ≈ 40%.</p>
+          <p class="note">Token: <code>--egg-accent</code> (gold) — same as legacy syncing state.</p>
+          <div class="annotation">
+            <p><strong>Reduced motion:</strong> No ping ring. Dot remains solid fill, no animation. Color change alone signals state.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SYNCED -->
+      <div class="col">
+        <div class="frame">
+          <p class="frame-label">State 2: synced</p>
+          <div class="dot-demo dot-synced">
+            <div class="btn-hitzone">
+              <div class="dot" style="background: currentColor;"></div>
+            </div>
+            <span>synced</span>
+          </div>
+          <p class="note">Dot: solid fill, no animation. Slightly brighter/more saturated than resting iron. Signals "cloud backup complete."</p>
+          <p class="note">Token: success/green variant from theme — <em>engineer discretion</em> or new <code>--sync-success</code> token.</p>
+          <div class="annotation">
+            <p><strong>Duration:</strong> Stays in "synced" state for N seconds after last sync completes, then transitions to idle/dim. Engineer: expose <code>SYNCED_DISPLAY_MS</code> constant (suggest 3000ms).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- OFFLINE -->
+      <div class="col">
+        <div class="frame">
+          <p class="frame-label">State 3: offline</p>
+          <div class="dot-demo dot-offline">
+            <div class="btn-hitzone">
+              <div class="dot"></div>
+            </div>
+            <span>offline</span>
+          </div>
+          <p class="note">Dot: dimmed, desaturated. 40% opacity or muted token. No animation. Conveys "sync paused — no network."</p>
+          <p class="note">Token: <code>--egg-border</code> (dim iron) at reduced opacity, or new <code>--sync-offline</code> token.</p>
+          <div class="annotation">
+            <p><strong>No pulse:</strong> Offline state must never pulse — pulse implies active background work.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ERROR -->
+      <div class="col">
+        <div class="frame">
+          <p class="frame-label">State 4: error</p>
+          <div class="dot-demo dot-error">
+            <div class="btn-hitzone">
+              <div class="dot" style="background: currentColor;"></div>
+            </div>
+            <span>error</span>
+          </div>
+          <p class="note">Dot: solid fill, red/destructive token. No animation. Conveys "last sync failed."</p>
+          <p class="note">Token: <code>--destructive</code> or <code>--sync-error</code>.</p>
+          <div class="annotation">
+            <p><strong>Persists:</strong> Error state stays until next successful sync or user dismisses the toast. Does not auto-clear.</p>
+            <p><strong>Aria:</strong> When state changes to error, <code>aria-label</code> updates to "Cloud sync failed". Consider <code>role="status"</code> on a visually-hidden sibling for screen readers.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row -->
+
+    <!-- Idle / pre-Karl state -->
+    <div class="subsection" style="margin-top: 24px;">
+      <h3>Idle / pre-Karl state (existing + Thrall)</h3>
+      <div class="frame" style="max-width: 320px;">
+        <p class="frame-label">State 0: idle (dim)</p>
+        <div class="dot-demo">
+          <div class="btn-hitzone">
+            <div class="dot dot-offline"></div>
+          </div>
+          <span>idle — localStorage sync only (Thrall / offline)</span>
+        </div>
+        <p class="note">Preserved from current implementation: <code>--egg-border</code> dim iron at rest. No cloud state shown for Thrall users — dot is always idle unless a local <code>fenrir:sync</code> event fires (existing behavior preserved).</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION B: Tooltip Variants Per State
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section B: Tooltip Variants">
+    <h2>B — Tooltip Variants (hover/focus, above dot)</h2>
+    <p class="note">Tooltip floats above the dot, appears on hover. Uses monospace font. Same position as existing Gleipnir tooltip. Tooltip content changes per state.</p>
+
+    <div class="row" style="margin-top: 16px;">
+      <div class="col">
+        <div class="frame">
+          <p class="frame-label">Thrall / idle (existing)</p>
+          <div class="tooltip-demo">
+            <div class="tooltip-bubble">The sound of a cat's footfall</div>
+            <div class="tooltip-arrow"></div>
+            <div class="btn-hitzone"><div class="dot"></div></div>
+          </div>
+          <p class="note">Gleipnir Fragment 1 tooltip — unchanged. Always shown for Thrall and idle Karl.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="frame">
+          <p class="frame-label">Karl — syncing</p>
+          <div class="tooltip-demo">
+            <div class="tooltip-bubble">Syncing to Yggdrasil…</div>
+            <div class="tooltip-arrow"></div>
+            <div class="btn-hitzone"><div class="dot dot-syncing"></div></div>
+          </div>
+          <p class="note">Shows cloud sync activity copy. Gleipnir tooltip suppressed during active sync.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="frame">
+          <p class="frame-label">Karl — synced</p>
+          <div class="tooltip-demo">
+            <div class="tooltip-bubble">Backed up · just now</div>
+            <div class="tooltip-arrow"></div>
+            <div class="btn-hitzone"><div class="dot dot-synced"></div></div>
+          </div>
+          <p class="note">Relative timestamp: "just now" → "2 min ago" → "5 min ago". Updates live or on hover.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="frame">
+          <p class="frame-label">Karl — offline</p>
+          <div class="tooltip-demo">
+            <div class="tooltip-bubble">Offline — sync paused</div>
+            <div class="tooltip-arrow"></div>
+            <div class="btn-hitzone"><div class="dot dot-offline"></div></div>
+          </div>
+          <p class="note">No action on click. Click still triggers Gleipnir if not yet discovered (offline does not block easter egg).</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="frame">
+          <p class="frame-label">Karl — error</p>
+          <div class="tooltip-demo">
+            <div class="tooltip-bubble">Sync failed — see Settings</div>
+            <div class="tooltip-arrow"></div>
+            <div class="btn-hitzone"><div class="dot dot-error"></div></div>
+          </div>
+          <p class="note">Tooltip links user to Settings for error details. Does not deep-link (just navigation hint in copy).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotation" style="margin-top: 16px;">
+      <p><strong>Gleipnir Fragment 1 preservation:</strong> The easter egg tooltip and click handler remain active for ALL states. Cloud sync tooltips appear IN ADDITION to the existing Gleipnir tooltip — the easter egg copy is shown for Thrall/idle; cloud copy replaces it only during active Karl sync states. Click always fires <code>trigger()</code> (no-op if already discovered). Cloud state tooltips do not disable the easter egg.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION C: First Sync Confirmation Toast
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section C: First Sync Confirmation">
+    <h2>C — First Sync Confirmation Toast</h2>
+    <p class="note">Non-blocking toast shown after the FIRST successful cloud sync. Appears at bottom-center (or bottom-right, matching existing toast placement). Auto-dismisses after 5 seconds. Not shown on subsequent syncs.</p>
+
+    <div class="frame" style="max-width: 480px; margin-top: 16px;">
+      <p class="frame-label">Toast: first sync success</p>
+      <div style="border: 1px solid; padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
+        <!-- Icon area -->
+        <div style="width: 20px; height: 20px; border: 1.5px solid; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">✓</div>
+        <!-- Copy -->
+        <div style="flex: 1;">
+          <p style="font-weight: 700; font-size: 13px;">Your 12 cards have been backed up</p>
+          <p style="font-size: 12px; margin-top: 2px;">Yggdrasil guards your ledger.</p>
+        </div>
+        <!-- Dismiss -->
+        <button type="button" style="border: none; background: none; font-size: 16px; cursor: pointer; padding: 4px;" aria-label="Dismiss">×</button>
+      </div>
+      <p class="note">"12" is the actual card count from the synced payload. Copy: "Your N cards have been backed up / Yggdrasil guards your ledger."</p>
+      <p class="note"><strong>Trigger:</strong> <code>fenrir:first-sync-complete</code> event or flag in <code>useCloudSync</code> hook. Set <code>localStorage fenrir:first-sync-shown = "true"</code> to prevent repeat.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION D: Sync Failure Toast
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section D: Sync Failure Toast">
+    <h2>D — Sync Failure Toast (non-blocking)</h2>
+    <p class="note">Non-blocking toast. Bottom-right or bottom-center. Does NOT block interaction. Error dot persists on the indicator.</p>
+
+    <div class="frame" style="max-width: 480px; margin-top: 16px;">
+      <p class="frame-label">Toast: sync failure</p>
+      <div style="border: 1.5px solid; padding: 12px 16px; display: flex; align-items: flex-start; gap: 12px;">
+        <!-- Warning icon -->
+        <div style="width: 20px; height: 20px; border: 1.5px solid; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; margin-top: 1px;">!</div>
+        <!-- Copy -->
+        <div style="flex: 1;">
+          <p style="font-weight: 700; font-size: 13px;">Sync failed</p>
+          <p style="font-size: 12px; margin-top: 2px;">Your cards are safe locally. We'll retry shortly.</p>
+          <!-- Optional action -->
+          <button type="button" style="font-size: 12px; margin-top: 6px; border: none; background: none; text-decoration: underline; cursor: pointer; padding: 0;">View details in Settings</button>
+        </div>
+        <!-- Dismiss -->
+        <button type="button" style="border: none; background: none; font-size: 16px; cursor: pointer; padding: 4px;" aria-label="Dismiss">×</button>
+      </div>
+      <p class="note">Dismiss clears the toast but NOT the error dot — dot stays red until next successful sync.</p>
+      <p class="note">"View details in Settings" navigates to <code>/ledger/settings</code> (scroll to sync section). Optional — engineer can omit if routing is complex.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION E: Viewport Context (fixed positioning)
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section E: Viewport Context">
+    <h2>E — Viewport Context (fixed bottom-right)</h2>
+
+    <div class="row" style="margin-top: 16px;">
+      <!-- Desktop -->
+      <div class="col">
+        <div class="viewport-sim">
+          <div class="viewport-label">Desktop — 1200px viewport</div>
+          <div class="viewport-body" style="min-height: 160px;">
+            <p style="font-size: 11px; opacity: 0.5;">[ ledger content ]</p>
+            <!-- Fixed indicator simulation -->
+            <div class="fixed-br">
+              <div class="tooltip-demo">
+                <div class="tooltip-bubble" style="font-size: 10px;">Backed up · just now</div>
+                <div style="height: 4px;"></div>
+                <div class="btn-hitzone"><div class="dot dot-synced"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="note">Fixed at bottom: 16px, right: 16px. Z-index 50 (above content, below modals). No layout impact.</p>
+      </div>
+
+      <!-- Mobile 375px -->
+      <div class="col" style="max-width: 220px;">
+        <div class="viewport-sim">
+          <div class="viewport-label">Mobile — 375px</div>
+          <div class="viewport-body" style="min-height: 200px;">
+            <p style="font-size: 11px; opacity: 0.5;">[ mobile content ]</p>
+            <div class="fixed-br">
+              <div class="btn-hitzone"><div class="dot dot-synced"></div></div>
+            </div>
+          </div>
+        </div>
+        <p class="note">Same fixed position on mobile. Tooltip still appears above — check that tooltip doesn't clip on narrow screens. Max-width on tooltip: 200px with text-wrap if needed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION F: State × Behavior Matrix
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section F: State Matrix">
+    <h2>F — State × Visual × Behavior Matrix</h2>
+
+    <table style="margin-top: 12px;">
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>Dot visual</th>
+          <th>Ping ring</th>
+          <th>Reduced-motion fallback</th>
+          <th>Tooltip copy</th>
+          <th>Click action</th>
+          <th>aria-label</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>idle</strong> (Thrall / pre-sync)</td>
+          <td>dim iron dot</td>
+          <td>none</td>
+          <td>same</td>
+          <td>"The sound of a cat's footfall"</td>
+          <td>trigger Gleipnir Fragment 1</td>
+          <td>"Background sync"</td>
+        </tr>
+        <tr>
+          <td><strong>syncing</strong></td>
+          <td>gold solid fill</td>
+          <td>gold ping ring, animate-ping</td>
+          <td>no ring, dot solid gold (no animation)</td>
+          <td>"Syncing to Yggdrasil…"</td>
+          <td>trigger Gleipnir Fragment 1</td>
+          <td>"Syncing to cloud"</td>
+        </tr>
+        <tr>
+          <td><strong>synced</strong></td>
+          <td>success solid fill</td>
+          <td>none</td>
+          <td>same</td>
+          <td>"Backed up · [relative time]"</td>
+          <td>trigger Gleipnir Fragment 1</td>
+          <td>"Cloud sync complete"</td>
+        </tr>
+        <tr>
+          <td><strong>offline</strong></td>
+          <td>dim / muted dot (40% opacity)</td>
+          <td>none</td>
+          <td>same</td>
+          <td>"Offline — sync paused"</td>
+          <td>trigger Gleipnir Fragment 1</td>
+          <td>"Cloud sync offline"</td>
+        </tr>
+        <tr>
+          <td><strong>error</strong></td>
+          <td>destructive/red solid fill</td>
+          <td>none</td>
+          <td>same</td>
+          <td>"Sync failed — see Settings"</td>
+          <td>trigger Gleipnir Fragment 1</td>
+          <td>"Cloud sync failed"</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="annotation" style="margin-top: 12px;">
+      <p><strong>Tier gating:</strong> Cloud states (syncing/synced/offline/error) only show for Karl users. Thrall users always see "idle" regardless of <code>useCloudSync</code> status.</p>
+      <p><strong>State source:</strong> Driven by <code>useCloudSync().status</code>. Engineer maps hook return values to these 4 visual states.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION G: Reduced-Motion & Accessibility
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section G: Accessibility">
+    <h2>G — Reduced-Motion & Accessibility</h2>
+
+    <div class="row" style="margin-top: 16px;">
+      <div class="col">
+        <div class="frame">
+          <h3>Reduced motion</h3>
+          <p class="note"><code>@media (prefers-reduced-motion: reduce)</code></p>
+          <ul style="list-style: disc; padding-left: 20px; font-size: 13px; line-height: 1.8;">
+            <li>Suppress <code>animate-ping</code> ring entirely</li>
+            <li>Suppress any CSS transition on dot color (instant state change)</li>
+            <li>Dot remains solid fill — color change alone signals syncing</li>
+            <li>All other states unchanged (color still distinguishes states)</li>
+          </ul>
+          <p class="note">Tailwind: <code>motion-reduce:animate-none</code> on ping ring span. Or <code>@media</code> guard in CSS.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="frame">
+          <h3>Keyboard / screen reader</h3>
+          <ul style="list-style: disc; padding-left: 20px; font-size: 13px; line-height: 1.8;">
+            <li>Button is focusable (already in existing impl)</li>
+            <li><code>aria-label</code> updates per state (see matrix above)</li>
+            <li>State changes: visually-hidden live region announces cloud state changes (syncing→error, syncing→synced)</li>
+            <li>Toasts use <code>role="alert"</code> for immediate announcement</li>
+            <li>Tooltip is <code>aria-hidden="true"</code> (decorative duplicate of aria-label)</li>
+          </ul>
+          <p class="note">Suggest: <code>&lt;span className="sr-only" aria-live="polite" aria-atomic="true"&gt;</code> sibling to button, updated by hook.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION H: Component Change Summary
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section H: Component Summary">
+    <h2>H — Component Change Summary (for FiremanDecko)</h2>
+
+    <table style="margin-top: 12px;">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>SyncIndicator.tsx</code></td>
+          <td>Add <code>useCloudSync()</code> hook call. Map <code>status</code> to 4 states. Update dot styles per state. Add ping ring guard. Update <code>aria-label</code> per state. Add SR live region. Preserve Gleipnir trigger on all clicks. Preserve existing <code>fenrir:sync</code> listener for local writes.</td>
+        </tr>
+        <tr>
+          <td>New: <code>useCloudSync.ts</code> (or existing)</td>
+          <td>Returns <code>{ status: "syncing" | "synced" | "offline" | "error" | "idle", lastSyncedAt: Date | null, errorMessage: string | null }</code>. Driven by Firestore writes + navigator.onLine.</td>
+        </tr>
+        <tr>
+          <td>Toast system</td>
+          <td>Dispatch first-sync confirmation and error toasts via existing toast infrastructure (or Sonner). Non-blocking. Auto-dismiss 5s for success, manual dismiss for error.</td>
+        </tr>
+        <tr>
+          <td><code>localStorage</code> key</td>
+          <td>Add <code>fenrir:first-sync-shown</code> to prevent repeat first-sync toast.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer style="margin-top: 48px; border-top: 2px solid; padding-top: 12px; font-size: 11px;">
+    Luna · ux/wireframes/sync/sync-indicator-states.html · Issue #1125
+  </footer>
+
+</body>
+</html>

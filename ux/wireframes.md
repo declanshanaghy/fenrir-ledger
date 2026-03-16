@@ -11,6 +11,16 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Sync — Indicator States & Settings Section (Issue #1125)
+
+| File | Description |
+|------|-------------|
+| [wireframes/sync/sync-indicator-states.html](wireframes/sync/sync-indicator-states.html) | SyncIndicator component cloud states: 8 sections — (A) dot anatomy for all 4 cloud states (syncing/pulse-gold, synced/solid-success, offline/dimmed, error/red) plus idle/Thrall state, (B) tooltip copy variants per state (Gleipnir Fragment 1 preserved for all states), (C) first-sync confirmation toast ("Your N cards have been backed up"), (D) sync failure non-blocking toast with "View details" link, (E) viewport context (fixed bottom-right, desktop + 375px), (F) state × visual × behavior matrix (dot, ping ring, reduced-motion, tooltip, click, aria-label), (G) reduced-motion and accessibility spec (ping ring suppression, SR live region, aria-label updates), (H) component change summary (SyncIndicator.tsx, useCloudSync.ts, toast triggers, localStorage flag). |
+| [wireframes/sync/sync-settings-section.html](wireframes/sync/sync-settings-section.html) | Settings sync section: 8 sections — (A) settings page context (right column placement above RestoreTabGuides), (B) Thrall view (Karl-gating upsell with feature list + Upgrade CTA) and trial variant (full sync controls + trial badge), (C) Karl healthy states (synced with timestamp + card count + Sync Now, syncing with indeterminate progress bar + disabled button), (D) offline state (Sync Now disabled, offline message), (E) error states (error block with type/timestamp/retry countdown, Retry Now + Dismiss actions; condensed no-detail variant), (F) mobile 375px layout (full-width buttons, stacked error actions), (G) state × tier matrix table, (H) WCAG 2.1 AA checklist (role="alert" on error, progressbar ARIA, keyboard order, focus ring) and component summary (SyncSettingsSection.tsx new component, settings/page.tsx integration, useCloudSync hook interface). Interaction spec: [wireframes/sync/sync-interaction-spec.md](wireframes/sync/sync-interaction-spec.md). |
+| [wireframes/sync/sync-interaction-spec.md](wireframes/sync/sync-interaction-spec.md) | Interaction spec: state machine diagram (idle→syncing→synced/error, offline transitions), tier gating flow (Thrall intercept), first-sync confirmation trigger and localStorage guard, error toast lifecycle (non-blocking, persisting dot), "Sync Now" button states and disabled guards, reduced-motion spec (@media prefers-reduced-motion: reduce), responsive breakpoints, component API suggestions for useCloudSync hook. |
+
+---
+
 ## Cards — Trash Tab: Deleted Card View (Issue #1127)
 
 | File | Description |
