@@ -29,6 +29,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Monitor UI — Norse Mist Tool Response Blocks (Issue #1072)
+
+| File | Description |
+|------|-------------|
+| [wireframes/monitor-ui/norse-mist-tool-blocks.html](wireframes/monitor-ui/norse-mist-tool-blocks.html) | Restyle tool response blocks with Norse mist aesthetic. 8 sections: (A) collapsed tool block anatomy with mist surface annotations, (B) expanded states (Read with result, Bash input-only, Write badge), (C) tool batch collapsed (pending spinner + complete states), (D) tool batch expanded with nested right-aligned tool blocks, (E) full tool badge palette (Bash/Read/Grep/Glob/Edit/Write/Agent/Unknown/Error) with saturation direction, (F) CSS token mapping table — exact :root additions and ev-tool/ev-tool-batch rule swaps removing all kildare-blue references, (G) mobile 375px simulation, (H) acceptance criteria mapping table. |
+
+---
+
 ## Monitor UI — Loki Error Boundary Tablet (Issue #1037)
 
 | File | Description |
