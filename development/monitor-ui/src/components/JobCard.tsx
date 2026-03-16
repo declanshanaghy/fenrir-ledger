@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import type { DisplayJob } from "../lib/types";
 import { AGENT_COLORS, AGENT_AVATARS, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
@@ -7,9 +8,11 @@ interface Props {
   isActive: boolean;
   onClick: () => void;
   onAvatarClick?: (agentKey: string) => void;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
 }
 
-export function JobCard({ job, isActive, onClick, onAvatarClick }: Props) {
+export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = false, onTogglePin }: Props) {
   const agentColor = AGENT_COLORS[job.agentKey ?? ""] || "#c9920a";
   const avatar = AGENT_AVATARS[job.agentKey ?? ""];
   const sColor = STATUS_COLORS[job.status] || "#606070";
@@ -62,8 +65,74 @@ export function JobCard({ job, isActive, onClick, onAvatarClick }: Props) {
         <span>Step {job.step}</span>
         <span style={{ color: sColor }}>{sLabel}</span>
         {job.fixture && <span className="card-fixture-badge" title="Fixture (replayed log)">ᚠ</span>}
-        {job.status === "cached" && <span className="card-pin-badge" title="Pinned to Odin\u2019s memory">{"\uD83D\uDCCC"}</span>}
+        {onTogglePin && (
+          <CardPinButton isPinned={isPinned} onTogglePin={onTogglePin} />
+        )}
       </div>
     </div>
+  );
+}
+
+function CardPinButton({ isPinned, onTogglePin }: { isPinned: boolean; onTogglePin: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+
+  // Reset confirmation state whenever pin state changes externally
+  useEffect(() => {
+    setConfirming(false);
+  }, [isPinned]);
+
+  if (confirming) {
+    return (
+      <button
+        className="card-pin-btn confirming"
+        onClick={(e) => {
+          e.stopPropagation();
+          onTogglePin();
+          setConfirming(false);
+        }}
+        onBlur={() => setConfirming(false)}
+        title="Confirm: remove from Odin\u2019s memory"
+        aria-label="Confirm unpin"
+      >
+        <span className="card-pin-confirm-text">✕ unpin?</span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      className={`card-pin-btn${isPinned ? " pinned" : ""}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (isPinned) {
+          setConfirming(true);
+        } else {
+          onTogglePin();
+        }
+      }}
+      title={isPinned ? "Unpin from Odin\u2019s memory" : "Pin to Odin\u2019s memory"}
+      aria-label={isPinned ? "Unpin from Odin\u2019s memory" : "Pin to Odin\u2019s memory"}
+      aria-pressed={isPinned}
+    >
+      <CardPinIcon filled={isPinned} />
+    </button>
+  );
+}
+
+function CardPinIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      {filled ? (
+        <>
+          <path d="M10 2L14 6L10.5 9.5L8.5 14L7 12.5L9 8.5L5.5 5L2 3.5L6.5 1.5L10 2Z" fill="currentColor" />
+          <line x1="5" y1="11" x2="2" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </>
+      ) : (
+        <>
+          <path d="M10 2L14 6L10.5 9.5L8.5 14L7 12.5L9 8.5L5.5 5L2 3.5L6.5 1.5L10 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+          <line x1="5" y1="11" x2="2" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </>
+      )}
+    </svg>
   );
 }
