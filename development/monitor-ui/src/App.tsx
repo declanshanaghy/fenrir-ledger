@@ -15,6 +15,8 @@ import {
   pinSession,
   unpinSession,
   isCacheNearCap,
+  appendLogLine,
+  migrateRemoveDuplicateLogs,
 } from "./lib/localStorageLogs";
 import type { CachedSessionMeta } from "./lib/localStorageLogs";
 
@@ -36,6 +38,13 @@ export function App() {
   } = useLogStream();
 
   const prevSessionRef = useRef<string | null>(null);
+  // Sessions we kept subscribed in the background for caching after navigation
+  const backgroundSubsRef = useRef<Set<string>>(new Set());
+
+  // Migrate existing duplicate log: entries for pinned sessions on mount
+  useEffect(() => {
+    migrateRemoveDuplicateLogs();
+  }, []);
 
   const [isFixture, setIsFixture] = useState(false);
   const [pinnedSessionId, setPinnedSessionId] = useState<string | null>(null);
@@ -75,6 +84,13 @@ export function App() {
       ) {
         if ("sessionId" in msg && msg.sessionId === activeSessionId) {
           handleLogMessage(msg);
+        } else if ("sessionId" in msg && backgroundSubsRef.current.has(msg.sessionId)) {
+          // Background pinned session: persist log lines to cache, clean up on end
+          if (msg.type === "log-line") {
+            appendLogLine(msg.sessionId, msg.line);
+          } else if (msg.type === "stream-end") {
+            backgroundSubsRef.current.delete(msg.sessionId);
+          }
         }
       }
     },
@@ -85,9 +101,16 @@ export function App() {
 
   const handleSelectSession = useCallback(
     (sessionId: string) => {
-      // Unsubscribe from previous
+      // Handle previous session subscription
       if (prevSessionRef.current && prevSessionRef.current !== sessionId) {
-        send({ type: "unsubscribe", sessionId: prevSessionRef.current });
+        const prev = prevSessionRef.current;
+        if (checkIsPinned(prev)) {
+          // Keep subscription alive so background caching continues
+          backgroundSubsRef.current.add(prev);
+        } else {
+          send({ type: "unsubscribe", sessionId: prev });
+          backgroundSubsRef.current.delete(prev);
+        }
       }
       prevSessionRef.current = sessionId;
       setActiveSessionId(sessionId);
@@ -147,6 +170,11 @@ export function App() {
         // Unpin: remove from cache
         unpinSession(sessionId);
         if (sessionId === activeSessionId) setPinnedSessionId(null);
+        // If we had a background subscription for this session, clean it up
+        if (backgroundSubsRef.current.has(sessionId)) {
+          send({ type: "unsubscribe", sessionId });
+          backgroundSubsRef.current.delete(sessionId);
+        }
         refreshCached();
       } else {
         // Pin: save log buffer to cache
@@ -173,7 +201,7 @@ export function App() {
         }
       }
     },
-    [jobs, activeSessionId, refreshCached]
+    [jobs, activeSessionId, refreshCached, send]
   );
 
   /** Toggle pin for the currently active session (header shortcut). */
