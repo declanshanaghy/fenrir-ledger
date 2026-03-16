@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Heilung Norse Restyle — Issue #1068</title>
+  <style>
+    /*
+      WIREFRAME ONLY — layout and structure.
+      No colors, no custom fonts, no shadows, no border-radius.
+      Theme tokens → ux/theme-system.md
+      Interaction spec → heilung/interaction-spec.md (updated)
+      Engineer target → development/frontend/src/components/easter-eggs/HeilungModal.tsx
+                        development/frontend/src/app/globals.css
+    */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+      gap: 3rem;
+    }
+
+    /* ── Page chrome ─────────────────────────────────────────── */
+    h2 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      border-bottom: 1px solid;
+      padding-bottom: 0.5rem;
+      width: 100%;
+      max-width: 720px;
+    }
+
+    /* ── Backdrop shell ───────────────────────────────────────── */
+    /* Fixed, full-screen in production. z-index: 9653 (W-O-L-F). */
+    /* backdrop: rgba(7, 7, 13, 0.95) + blur(6px) */
+    .modal-backdrop {
+      position: relative;
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 1rem;
+      border: 1px dashed;
+    }
+    .backdrop-label {
+      position: absolute;
+      top: -0.6rem;
+      left: 0.5rem;
+      font-size: 0.6rem;
+      font-style: italic;
+      background: #fff;
+      padding: 0 0.25rem;
+    }
+
+    /* ── Modal shell ──────────────────────────────────────────── */
+    /*
+      Production:
+        max-width: 680px
+        width: min(680px, calc(100vw - 2rem))
+        max-height: calc(100vh - 4rem)
+        overflow-y: auto
+        border: 1px solid (--egg-border → --iron-border)
+        background: --egg-bg → --forge (#0f1018)
+        Framer Motion entry: wolf-rise (see interaction-spec §wolf-rise)
+        border-breathe animation fires once after entry (see interaction-spec §border-breathe)
+    */
+    .modal {
+      position: relative;
+      width: 100%;
+      max-width: 680px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Algiz close button (ᛉ) ──────────────────────────────── */
+    /*
+      CHANGED from Issue #955: X SVG → ᛉ (Algiz rune)
+      Position: absolute top-right
+      Font: Source Serif 4 (or body serif), ~1.4rem
+      Touch target: 44×44px min
+      aria-label: "Close — return from the wolf's hall"
+      Color: --egg-accent (#c9920a)
+      Hover: bg rgba(201, 146, 10, 0.12), scale(1.1) gentle
+    */
+    .btn-close-algiz {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      width: 2.75rem;
+      height: 2.75rem;
+      border: 1px solid;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      background: none;
+      font-family: inherit;
+      z-index: 10;
+      /* NOTE: rune ᛉ — Algiz (protection/ward) */
+    }
+
+    /* ── Section 1: Rune band (top) ───────────────────────────── */
+    /*
+      Elder Futhark alphabet in full, centered, letter-spaced.
+      Font: JetBrains Mono 400, 0.9rem
+      Color: --egg-accent at 0.55 opacity (dimmed gold)
+      aria-hidden="true" — decorative, no screen-reader meaning
+      border-bottom: 1px solid (--rune-border)
+    */
+    .rune-band {
+      padding: 0.75rem 1.5rem;
+      text-align: center;
+      letter-spacing: 0.35em;
+      font-size: 0.95rem;
+      border-bottom: 1px solid;
+      word-break: break-all;
+    }
+    .rune-band.bottom {
+      border-bottom: none;
+      border-top: 1px solid;
+      /* NOTE: reversed Futhark order (ᛟᛞᛜᛚᛗᛖᛒᛏᛈᛇᛃᛁᚾᚺᚹᚷᚲᚱᚨᚦᚢᚠ) */
+    }
+
+    /* ── Section 2: Title block ───────────────────────────────── */
+    /*
+      Padding: 1.75rem 2rem 1.25rem (desktop); 1.25rem 1.25rem 1rem (mobile)
+      border-bottom: 1px solid (--rune-border)
+      text-align: center
+    */
+    .modal-title-block {
+      padding: 1.75rem 2rem 1.25rem;
+      text-align: center;
+      border-bottom: 1px solid;
+    }
+
+    /*
+      Norse title: "Heyra Stríðsgaldr"
+      Font: Cinzel Decorative 700, clamp(1.5rem, 4vw, 2.25rem)
+      Letter-spacing: 0.1em
+      Color: --egg-title (#f0b429, --gold-bright)
+      aria-label: "Heyra Stríðsgaldr — Hear the War-Chant"
+      text-shadow: 0 0 24px rgba(240,180,41,0.35) on entry
+    */
+    .norse-title {
+      font-size: clamp(1.5rem, 4vw, 2.25rem);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      line-height: 1.1;
+    }
+
+    /*
+      Rune glyph row beneath title — decorative rune line
+      Font: Source Serif 4 400, 1.1rem
+      Color: --egg-accent at 0.6 opacity
+      aria-hidden="true"
+    */
+    .title-rune-row {
+      margin-top: 0.5rem;
+      font-size: 1.1rem;
+      letter-spacing: 0.5em;
+    }
+
+    /*
+      Subtitle: "HEILUNG · Amplified History"
+      Font: Source Serif 4 300, 0.85rem, italic
+      Color: --egg-accent at 0.65 opacity
+      aria-hidden="true" — subtext to the Norse title
+    */
+    .title-subtitle {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      font-style: italic;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Rune divider ─────────────────────────────────────────── */
+    /*
+      Single-rune row between sections. Centered dot + rune + dot.
+      Font: Source Serif 4, 0.9rem
+      Color: --egg-accent at 0.3 opacity
+      aria-hidden="true"
+      Used between: invitation / video / band lore
+    */
+    .rune-divider {
+      text-align: center;
+      padding: 0.625rem 1rem;
+      font-size: 0.9rem;
+      letter-spacing: 0.5em;
+      border-top: 1px solid;
+      border-bottom: 1px solid;
+    }
+
+    /* ── Section 3: Wolf's invitation ────────────────────────── */
+    /*
+      Fenrir's voice — body copy.
+      Padding: 1.5rem 2rem (desktop); 1.25rem 1.25rem (mobile)
+      Font: Source Serif 4 400, 1rem, line-height 1.8
+      Color: --egg-text (#e8e4d4, --text-saga)
+      Left-aligned. No justify. Let line breaks breathe.
+
+      GOLD HIGHLIGHTS: key Norse terms wrapped in <span class="gold-term">
+      terms: Krigsgaldr, Heilung, Yggdrasil — inline gold (#c9920a)
+      Wikipedia links: <a class="wiki-link"> — gold, underline on hover, target="_blank"
+    */
+    .wolf-invitation {
+      padding: 1.5rem 2rem;
+    }
+    .wolf-invitation p {
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+    .wolf-invitation p + p {
+      margin-top: 1rem;
+    }
+
+    /* Gold-highlighted Norse terms (inline spans) */
+    /* Font: inherit. font-style: normal. */
+    /* Color: --egg-accent (#c9920a). No underline. */
+    .gold-term {
+      font-weight: 600;
+      /* NOTE: color --egg-accent (#c9920a) in production */
+    }
+
+    /* Wikipedia links — gold, underline on hover */
+    /* target="_blank" rel="noopener noreferrer" */
+    /* aria-label: "{term} — Wikipedia" */
+    .wiki-link {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      /* NOTE: color --egg-accent (#c9920a). hover: opacity 0.75 */
+    }
+
+    /* ── Section 4: Video portal ──────────────────────────────── */
+    /*
+      CHANGED from Issue #955: iframe embed → thumbnail click-to-play
+      The thumbnail acts as a rune-framed viewing portal.
+      Clicking it opens the YouTube URL in a new tab (target="_blank")
+      OR replaces the thumbnail with an <iframe> in place (progressive enhancement).
+
+      See §Video Portal Interaction below.
+
+      Container:
+        padding: 1rem 1.5rem
+        border-top: 1px solid (--rune-border)
+        border-bottom: 1px solid (--rune-border)
+    */
+    .video-portal-section {
+      padding: 1rem 1.5rem;
+    }
+
+    /*
+      Portal label — "ᛊᛖᛖ ᚦᛖ ᛊᛟᚾᚷ" (see the song) — decorative
+      Font: JetBrains Mono 500, 0.6rem, uppercase, tracking 0.3em
+      Color: --egg-accent at 0.5 opacity
+      aria-hidden="true"
+      Centered above the video frame
+    */
+    .portal-label {
+      text-align: center;
+      font-size: 0.6rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      margin-bottom: 0.625rem;
+    }
+
+    /*
+      Rune-framed video portal container
+      Outer border: 2px solid --egg-accent
+      Inner padding: 0.375rem (creates double-border illusion)
+      Inner border: 1px solid --egg-accent at 0.35 opacity
+      cursor: pointer
+      role="button" + aria-label: "Watch Heilung — Krigsgaldr LIFA on YouTube"
+    */
+    .video-portal-frame {
+      border: 2px solid;
+      padding: 0.375rem;
+    }
+
+    /*
+      Inner frame — the 16:9 thumbnail area
+      aspect-ratio: 16 / 9
+      border: 1px dashed (wireframe placeholder)
+      display: flex; align-items: center; justify-content: center; flex-direction: column
+      gap: 0.75rem
+    */
+    .video-portal-inner {
+      border: 1px dashed;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .video-portal-play {
+      font-size: 2.5rem;
+      /* NOTE: In production: styled play triangle (▶) with gold color */
+    }
+
+    .video-portal-text {
+      font-size: 0.65rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      text-align: center;
+    }
+
+    /* Rune corner marks — decorative, aria-hidden */
+    /* Position: absolute at each corner of .video-portal-frame */
+    /* Font: 0.8rem, color --egg-accent */
+    /* NOTE: use position:relative on .video-portal-frame, absolute children */
+    .corner-rune {
+      font-size: 0.65rem;
+      font-style: italic;
+      text-align: center;
+      margin-top: 0.25rem;
+      letter-spacing: 0.4em;
+      /* NOTE: In production: 4 rune corners (ᚠ ᛖ ᚾ ᚱ) positioned absolute at corners */
+    }
+
+    /*
+      Caption under video portal
+      Font: Source Serif 4 300, 0.75rem, italic
+      Color: --egg-text-muted (#8a8578)
+      Centered, margin-top: 0.5rem
+    */
+    .video-caption {
+      text-align: center;
+      font-size: 0.75rem;
+      font-style: italic;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Section 5: Band lore ─────────────────────────────────── */
+    /*
+      Norse-voice description of Heilung.
+      Padding: 1.5rem 2rem (desktop); 1.25rem 1.25rem (mobile)
+      Font: Source Serif 4 400, 0.9rem, line-height 1.75
+      Color: --egg-text (#e8e4d4)
+      Gold Wikipedia links on Norse terms.
+    */
+    .band-lore {
+      padding: 1.5rem 2rem;
+    }
+    .band-lore p {
+      font-size: 0.9rem;
+      line-height: 1.75;
+    }
+
+    /* Band lore header — small label */
+    /* Font: JetBrains Mono 500, 0.6rem, uppercase, tracking 0.2em */
+    /* Color: --egg-text-muted */
+    .lore-label {
+      font-size: 0.6rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 0.75rem;
+    }
+
+    /* External link row — amplifiedhistory.com */
+    /* Font: JetBrains Mono 500, 0.75rem */
+    /* Color: --egg-accent. border-top: 1px solid (--rune-border) */
+    /* margin-top: 1rem; padding-top: 0.75rem */
+    .external-link-row {
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid;
+      font-size: 0.75rem;
+      /* NOTE: href="https://www.amplifiedhistory.com" target="_blank" rel="noopener noreferrer" */
+      /* NOTE: aria-label="amplifiedhistory.com, opens in new tab" */
+    }
+
+    /* ── Section 7: Seal ──────────────────────────────────────── */
+    /*
+      Wolf seal — Fenrir's inscription. Centered at bottom.
+      Padding: 1.25rem 2rem 1.75rem
+      border-top: 1px solid (--rune-border)
+      text-align: center
+    */
+    .wolf-seal {
+      padding: 1.25rem 2rem 1.75rem;
+      text-align: center;
+      border-top: 1px solid;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /*
+      Seal inscription text:
+      "ᚠᛖᚾᚱᛁᚱ — The wolf remembers what the world forgot — ᚠᛖᚾᚱᛁᚱ"
+      Font: Source Serif 4 300, 0.8rem, italic, letter-spacing: 0.05em
+      Color: --egg-text-muted (#8a8578)
+      aria-label: "Fenrir seal — The wolf remembers what the world forgot"
+    */
+    .seal-inscription {
+      font-size: 0.8rem;
+      font-style: italic;
+      font-weight: 300;
+      letter-spacing: 0.05em;
+    }
+
+    /*
+      Dismiss button — "HEIÐR"
+      Font: Cinzel 700, 0.8rem, uppercase, tracking 0.25em
+      Min-height: 44px (WCAG 2.5.5)
+      Hover: bg fills --egg-btn-bg, text --egg-btn-text (#07070d)
+      NOTE: unchanged from Issue #955 design
+    */
+    .btn-dismiss {
+      padding: 0.75rem 3rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      border: 1px solid;
+      cursor: pointer;
+      background: none;
+      font-family: inherit;
+      min-height: 44px;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Mobile simulation ────────────────────────────────────── */
+    /* Min viewport: 375px. All sections single-column — same as desktop. */
+    /* Key changes at ≤ 600px: */
+    .mobile-sim {
+      width: 375px;
+      max-width: 375px;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 1rem 0 3rem; }
+
+      .modal-title-block {
+        padding: 1.25rem 1.25rem 1rem;
+      }
+
+      .wolf-invitation {
+        padding: 1.25rem;
+      }
+
+      .wolf-invitation p {
+        font-size: 0.9rem;
+      }
+
+      .video-portal-section {
+        padding: 0.75rem 1rem;
+      }
+
+      .band-lore {
+        padding: 1.25rem;
+      }
+
+      .wolf-seal {
+        padding: 1rem 1.25rem 1.5rem;
+      }
+
+      .btn-dismiss {
+        width: 100%;
+      }
+    }
+
+    /* ── Wireframe annotation styles ─────────────────────────── */
+    .note {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.55;
+    }
+    .spec-bar {
+      font-size: 11px;
+      font-style: italic;
+      opacity: 0.5;
+      text-align: center;
+      padding: 0.5rem;
+      max-width: 720px;
+      width: 100%;
+    }
+    .annotation-block {
+      width: 100%;
+      max-width: 720px;
+      border: 1px dashed;
+      padding: 1rem;
+      font-size: 0.75rem;
+      line-height: 1.7;
+    }
+    .annotation-block h3 {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.5rem;
+    }
+    .annotation-block ul {
+      padding-left: 1.25rem;
+    }
+    .annotation-block li {
+      margin-bottom: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    HEILUNG MODAL — Issue #1068: Norse Restyle
+    ═══════════════════════════════════════════════════════════════
+    Trigger:     Ctrl+Shift+L (all platforms). UNCHANGED.
+    Dismiss:     ESC, backdrop click, ᛉ close button, HEIÐR button
+    Repeatable:  No localStorage gate. The wolf can be called again.
+
+    KEY CHANGES from Issue #955 wireframe:
+      • Layout: 2-column (info/video) → single-column vertical scroll
+      • 7 sections per issue spec (rune band, title, invitation,
+        video portal, band lore, rune band, seal)
+      • Close button: X SVG → ᛉ Algiz rune (44×44px, same position)
+      • Video: iframe autoplay → thumbnail click-to-play portal
+      • Title: "HEILUNG" → "Heyra Stríðsgaldr" (Norse, Cinzel Decorative)
+      • Subtitle: "Amplified History" → "HEILUNG · Amplified History"
+      • Body copy: 2-para wolf voice → full Fenrir invitation (wolf's perspective)
+      • Gold-highlighted Norse terms with Wikipedia links (gold, _blank)
+      • Elder Futhark bands top (forward) + bottom (reversed)
+      • Wolf seal at footer: "ᚠᛖᚾᚱᛁᚱ — The wolf remembers… — ᚠᛖᚾᚱᛁᚱ"
+      • Modal max-width: 960px → 680px (single-column content)
+      • max-height: calc(100vh - 4rem), overflow-y: auto
+    ═══════════════════════════════════════════════════════════════
+    Full copy, tokens, and animation spec: ./interaction-spec.md
+  -->
+
+  <h2>Heilung Norse Restyle — Desktop (680px) — Issue #1068</h2>
+
+  <!-- ── DESKTOP VIEWPORT SIMULATION ───────────────────────────── -->
+  <div class="modal-backdrop">
+    <span class="backdrop-label">backdrop: rgba(7,7,13,0.95) + blur(6px) · z-index: 9653</span>
+
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="heilung-title-1068">
+
+      <!-- ᛉ Algiz close button — 44×44px touch target -->
+      <!-- aria-label="Close — return from the wolf's hall" -->
+      <!-- CHANGED: X SVG → Algiz rune ᛉ (protection/ward) -->
+      <button class="btn-close-algiz" type="button" aria-label="Close — return from the wolf's hall">
+        ᛉ
+      </button>
+
+      <!-- ══ SECTION 1: Rune band (top) ════════════════════════ -->
+      <!--
+        Elder Futhark 24-rune alphabet, full forward sequence.
+        aria-hidden="true" — decorative, no linguistic meaning to screen readers.
+        Font: JetBrains Mono 400, 0.9rem, letter-spacing: 0.35em
+        Color: --egg-accent at 0.5 opacity (dimmed gold)
+        border-bottom: 1px solid --rune-border
+      -->
+      <div class="rune-band" aria-hidden="true">
+        ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ
+      </div>
+
+      <!-- ══ SECTION 2: Title block ═════════════════════════════ -->
+      <div class="modal-title-block">
+
+        <!--
+          Norse title — primary heading
+          "Heyra Stríðsgaldr" = Old Norse: "Hear the War-Chant"
+          Font: Cinzel Decorative 700, clamp(1.5rem, 4vw, 2.25rem)
+          Color: --egg-title (#f0b429)
+          aria-label: "Heyra Stríðsgaldr — Hear the War-Chant"
+          text-shadow glow on entry: 0 0 24px rgba(240,180,41,0.4)
+        -->
+        <h1
+          class="norse-title"
+          id="heilung-title-1068"
+          aria-label="Heyra Stríðsgaldr — Hear the War-Chant"
+        >
+          Heyra Stríðsgaldr
+        </h1>
+
+        <!--
+          Decorative rune row beneath title
+          Font: Source Serif 4 400, 1.1rem, letter-spacing: 0.5em
+          Color: --egg-accent at 0.6 opacity
+          aria-hidden="true"
+        -->
+        <p class="title-rune-row" aria-hidden="true">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</p>
+
+        <!--
+          Subtitle — "HEILUNG · Amplified History"
+          Font: Source Serif 4 300, 0.85rem, italic
+          Color: --egg-accent at 0.65 opacity
+        -->
+        <p class="title-subtitle">HEILUNG &middot; Amplified History</p>
+
+      </div><!-- /.modal-title-block -->
+
+      <!-- ══ SECTION 3: Wolf's invitation ══════════════════════ -->
+      <!--
+        Fenrir's voice — primary body copy.
+        Font: Source Serif 4 400, 1rem, line-height 1.8
+        Color: --egg-text (#e8e4d4)
+        Left-aligned. No justify. Let line breaks breathe.
+
+        Gold terms (<span class="gold-term">): Krigsgaldr, Heilung, Yggdrasil
+        Wikipedia links (<a class="wiki-link">): Heilung, Krigsgaldr, Yggdrasil, Ragnarök
+          href from issue spec. target="_blank" rel="noopener noreferrer"
+          aria-label: "{term} on Wikipedia"
+
+        Full copy spec: see interaction-spec.md §Wolf's Invitation
+      -->
+      <section class="wolf-invitation" aria-label="Wolf's invitation">
+
+        <p>
+          Before there were words, there was the war-cry. Before iron was forged,
+          the drums spoke. Hear now the song that stirred the blood of warriors
+          beneath the branches of
+          <a class="wiki-link" href="https://en.wikipedia.org/wiki/Yggdrasil"
+             target="_blank" rel="noopener noreferrer"
+             aria-label="Yggdrasil on Wikipedia">
+            <span class="gold-term">Yggdrasil</span></a>
+          — <a class="wiki-link" href="https://en.wikipedia.org/wiki/Futha"
+               target="_blank" rel="noopener noreferrer"
+               aria-label="Krigsgaldr on Wikipedia">
+            <span class="gold-term">Krigsgaldr</span></a>,
+          the war-chant of
+          <a class="wiki-link" href="https://en.wikipedia.org/wiki/Heilung"
+             target="_blank" rel="noopener noreferrer"
+             aria-label="Heilung on Wikipedia">
+            <span class="gold-term">Heilung</span></a>.
+        </p>
+
+        <p>
+          Let the old voices fill thy skull. Three throats carry what the age of iron
+          sought to silence. They speak in root and bone, in the tongue of those who
+          burned beneath the stars before <a class="wiki-link"
+             href="https://en.wikipedia.org/wiki/Ragnar%C3%B6k"
+             target="_blank" rel="noopener noreferrer"
+             aria-label="Ragnarök on Wikipedia">
+            <span class="gold-term">Ragnarök</span></a> was a name for anything.
+          Fenrir remembers.
+        </p>
+
+      </section><!-- /.wolf-invitation -->
+
+      <!-- Rune divider between invitation and video -->
+      <!-- aria-hidden="true" — decorative -->
+      <div class="rune-divider" aria-hidden="true">· ᛉ · ᚠ · ᛉ ·</div>
+
+      <!-- ══ SECTION 4: Video portal ════════════════════════════ -->
+      <!--
+        CHANGED from Issue #955:
+          iframe autoplay → thumbnail click-to-play portal
+
+        Interaction:
+          A) On click → replace thumbnail with <iframe> inline (preferred)
+             OR B) On click → window.open(youtube URL, '_blank')
+          FiremanDecko to choose implementation pattern.
+          See §Video Portal Interaction in interaction-spec.md
+
+        Video ID: QRg_8NNPTD8 (UNCHANGED)
+        Thumbnail src: https://img.youtube.com/vi/QRg_8NNPTD8/hqdefault.jpg
+          Note: no external fetch at wireframe time; engineer to implement
+        aria role: button on the portal frame when in thumbnail state
+        aria-label: "Watch Heilung — Krigsgaldr LIFA on YouTube"
+      -->
+      <section class="video-portal-section">
+
+        <p class="portal-label" aria-hidden="true">ᛊᛖᛖ ᚦᛖ ᛊᛟᚾᚷ</p>
+
+        <!--
+          Outer rune frame:
+            border: 2px solid --egg-accent
+            padding: 0.375rem
+            cursor: pointer
+
+          Corner runes (absolute-positioned in production):
+            top-left: ᚠ, top-right: ᛖ, bottom-left: ᚾ, bottom-right: ᚱ
+            font: JetBrains Mono, 0.8rem
+            color: --egg-accent at 0.6 opacity
+        -->
+        <div
+          class="video-portal-frame"
+          role="button"
+          tabindex="0"
+          aria-label="Watch Heilung — Krigsgaldr LIFA on YouTube"
+        >
+          <!--
+            Inner 16:9 area — thumbnail in production
+            State A (initial): img thumbnail + play overlay
+            State B (after click): <iframe> replaces img
+          -->
+          <div class="video-portal-inner">
+            <span class="video-portal-play" aria-hidden="true">▶</span>
+            <span class="video-portal-text">
+              Krigsgaldr LIFA
+            </span>
+            <p class="note">
+              [Thumbnail: img.youtube.com/vi/QRg_8NNPTD8/hqdefault.jpg]
+            </p>
+            <p class="note">
+              Click → iframe autoplay OR window.open(_blank)
+            </p>
+          </div>
+        </div>
+
+        <!-- Corner rune annotation -->
+        <p class="corner-rune note" aria-hidden="true">
+          [corner runes: ᚠ top-left · ᛖ top-right · ᚾ bottom-left · ᚱ bottom-right — absolute positioned]
+        </p>
+
+        <!--
+          Caption: band name + song
+          Font: Source Serif 4 300, 0.75rem, italic
+          Color: --egg-text-muted (#8a8578)
+        -->
+        <p class="video-caption">Heilung — Krigsgaldr LIFA</p>
+
+      </section><!-- /.video-portal-section -->
+
+      <!-- Rune divider between video and band lore -->
+      <div class="rune-divider" aria-hidden="true">· ᛉ · ᚠ · ᛉ ·</div>
+
+      <!-- ══ SECTION 5: Band lore ═══════════════════════════════ -->
+      <!--
+        Norse-voice description of Heilung.
+        Font: Source Serif 4 400, 0.9rem, line-height 1.75
+        Color: --egg-text (#e8e4d4)
+        Gold Wikipedia link on Heilung band name.
+        Brief — 2-3 sentences max. Wolf's knowing voice, not encyclopedic.
+
+        Full copy spec: see interaction-spec.md §Band Lore
+      -->
+      <section class="band-lore">
+
+        <p class="lore-label" aria-hidden="true">OF THE BAND</p>
+
+        <p>
+          <a class="wiki-link" href="https://en.wikipedia.org/wiki/Heilung"
+             target="_blank" rel="noopener noreferrer"
+             aria-label="Heilung on Wikipedia">
+            <span class="gold-term">Heilung</span></a>
+          — the word means <em>healing</em> in the old tongue. Three voices from
+          Copenhagen, born in 2014, conjured from runic inscription, Iron Age text,
+          and Viking Age artifact. They call their work amplified history. I call it
+          memory that refused to die.
+        </p>
+
+        <!--
+          External link — amplifiedhistory.com
+          Font: JetBrains Mono 500, 0.75rem
+          Color: --egg-accent (#c9920a)
+          Hover: opacity 0.7
+          border-top: 1px solid --rune-border
+        -->
+        <a
+          class="external-link-row"
+          href="https://www.amplifiedhistory.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="amplifiedhistory.com, opens in new tab"
+        >
+          amplifiedhistory.com ↗
+        </a>
+
+      </section><!-- /.band-lore -->
+
+      <!-- ══ SECTION 6: Rune band (bottom) ═════════════════════ -->
+      <!--
+        Elder Futhark reversed — mirrors the top band.
+        aria-hidden="true" — decorative.
+        Font: JetBrains Mono 400, 0.9rem, letter-spacing: 0.35em
+        Color: --egg-accent at 0.5 opacity
+        border-top: 1px solid --rune-border
+      -->
+      <div class="rune-band bottom" aria-hidden="true">
+        ᛟ ᛞ ᛜ ᛚ ᛗ ᛖ ᛒ ᛏ ᛈ ᛇ ᛃ ᛁ ᚾ ᚺ ᚹ ᚷ ᚲ ᚱ ᚨ ᚦ ᚢ ᚠ
+      </div>
+
+      <!-- ══ SECTION 7: Seal ═══════════════════════════════════ -->
+      <!--
+        Wolf seal — Fenrir's inscription. Centered at modal bottom.
+        Padding: 1.25rem 2rem 1.75rem
+        border-top: 1px solid --rune-border
+        text-align: center
+
+        Contains:
+          1. Seal inscription text (italic, muted)
+          2. Dismiss button ("HEIÐR")
+      -->
+      <footer class="wolf-seal">
+
+        <!--
+          Seal inscription:
+            "ᚠᛖᚾᚱᛁᚱ — The wolf remembers what the world forgot — ᚠᛖᚾᚱᛁᚱ"
+          Font: Source Serif 4 300, 0.8rem, italic, letter-spacing: 0.05em
+          Color: --egg-text-muted (#8a8578)
+          aria-label: "Fenrir seal — The wolf remembers what the world forgot"
+        -->
+        <p
+          class="seal-inscription"
+          aria-label="Fenrir seal — The wolf remembers what the world forgot"
+        >
+          ᚠᛖᚾᚱᛁᚱ &mdash; The wolf remembers what the world forgot &mdash; ᚠᛖᚾᚱᛁᚱ
+        </p>
+
+        <!--
+          Dismiss button — "HEIÐR" (Old Norse: honour, glory)
+          UNCHANGED from Issue #955 design.
+          Font: Cinzel 700, 0.8rem, uppercase, tracking 0.25em
+          Min-height: 44px (WCAG 2.5.5)
+          Resting: border --egg-accent, bg transparent, text --egg-accent
+          Hover: bg --egg-btn-bg (#c9920a), text --egg-btn-text (#07070d)
+          aria-label not needed — button text "HEIÐR" is the visible label
+        -->
+        <button class="btn-dismiss" type="button">HEIÐR</button>
+
+      </footer>
+
+    </div><!-- /.modal -->
+
+  </div><!-- /.modal-backdrop -->
+
+
+  <!-- ── MOBILE SIMULATION (375px) ─────────────────────────────── -->
+  <h2>Mobile Simulation — 375px</h2>
+
+  <div class="modal-backdrop mobile-sim">
+    <span class="backdrop-label">375px</span>
+
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="heilung-title-mobile">
+
+      <button class="btn-close-algiz" type="button" aria-label="Close — return from the wolf's hall">
+        ᛉ
+      </button>
+
+      <div class="rune-band" aria-hidden="true" style="font-size:0.75rem; padding: 0.625rem 1rem;">
+        ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ
+      </div>
+
+      <div class="modal-title-block" style="padding: 1.25rem 1.25rem 1rem;">
+        <h1 class="norse-title" id="heilung-title-mobile" style="font-size: clamp(1.25rem, 6vw, 1.75rem);">
+          Heyra Stríðsgaldr
+        </h1>
+        <p class="title-rune-row" aria-hidden="true" style="font-size: 0.9rem;">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</p>
+        <p class="title-subtitle">HEILUNG &middot; Amplified History</p>
+      </div>
+
+      <section class="wolf-invitation" style="padding: 1.25rem;" aria-label="Wolf's invitation">
+        <p style="font-size:0.9rem; line-height:1.75;">
+          Before there were words, there was the war-cry. Hear now the song
+          that stirred the blood of warriors beneath the branches of
+          <span class="gold-term">Yggdrasil</span> —
+          <span class="gold-term">Krigsgaldr</span>, the war-chant of
+          <span class="gold-term">Heilung</span>. Fenrir remembers.
+        </p>
+        <p class="note" style="margin-top:0.5rem;">[Mobile: condensed to 1 paragraph — full 2-para on desktop]</p>
+      </section>
+
+      <div class="rune-divider" aria-hidden="true" style="font-size:0.75rem;">· ᛉ · ᚠ · ᛉ ·</div>
+
+      <section class="video-portal-section" style="padding:0.75rem 1rem;">
+        <p class="portal-label" aria-hidden="true">ᛊᛖᛖ ᚦᛖ ᛊᛟᚾᚷ</p>
+        <div class="video-portal-frame" role="button" tabindex="0"
+             aria-label="Watch Heilung — Krigsgaldr LIFA on YouTube">
+          <div class="video-portal-inner" style="aspect-ratio:16/9;">
+            <span class="video-portal-play" aria-hidden="true">▶</span>
+            <span class="video-portal-text" style="font-size:0.6rem;">Krigsgaldr LIFA</span>
+          </div>
+        </div>
+        <p class="video-caption">Heilung — Krigsgaldr LIFA</p>
+      </section>
+
+      <div class="rune-divider" aria-hidden="true" style="font-size:0.75rem;">· ᛉ · ᚠ · ᛉ ·</div>
+
+      <section class="band-lore" style="padding:1.25rem;">
+        <p class="lore-label" aria-hidden="true">OF THE BAND</p>
+        <p style="font-size:0.85rem; line-height:1.7;">
+          <span class="gold-term">Heilung</span> — the word means <em>healing</em>.
+          Three voices, amplified history, conjured from runic inscription and
+          Viking Age artifact. Memory that refused to die.
+        </p>
+        <a class="external-link-row" href="https://www.amplifiedhistory.com"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="amplifiedhistory.com, opens in new tab">
+          amplifiedhistory.com ↗
+        </a>
+      </section>
+
+      <div class="rune-band bottom" aria-hidden="true" style="font-size:0.75rem; padding: 0.625rem 1rem;">
+        ᛟ ᛞ ᛜ ᛚ ᛗ ᛖ ᛒ ᛏ ᛈ ᛇ ᛃ ᛁ ᚾ ᚺ ᚹ ᚷ ᚲ ᚱ ᚨ ᚦ ᚢ ᚠ
+      </div>
+
+      <footer class="wolf-seal" style="padding:1rem 1.25rem 1.5rem;">
+        <p class="seal-inscription" aria-label="Fenrir seal — The wolf remembers what the world forgot">
+          ᚠᛖᚾᚱᛁᚱ &mdash; The wolf remembers what the world forgot &mdash; ᚠᛖᚾᚱᛁᚱ
+        </p>
+        <button class="btn-dismiss" type="button" style="width:100%;">HEIÐR</button>
+      </footer>
+
+    </div><!-- /.modal -->
+  </div><!-- /.mobile-sim -->
+
+
+  <!-- ── COMPONENT DELTA TABLE ──────────────────────────────────── -->
+  <h2>Component Delta: Issue #955 → Issue #1068</h2>
+
+  <div class="annotation-block">
+    <h3>Changes from previous wireframe (heilung-modal.html)</h3>
+    <ul>
+      <li><strong>Layout:</strong> 2-column grid (info left / video right) → single-column vertical stack. 7 ordered sections.</li>
+      <li><strong>Max-width:</strong> 960px → 680px (single-column content doesn't need full width).</li>
+      <li><strong>max-height:</strong> NEW — calc(100vh - 4rem), overflow-y: auto (content is now taller).</li>
+      <li><strong>Close button:</strong> X SVG → ᛉ (Algiz rune). Same position (absolute top-right), same 44×44px target.</li>
+      <li><strong>Video:</strong> iframe autoplay → thumbnail click-to-play portal with rune frame. Keeps video ID QRg_8NNPTD8.</li>
+      <li><strong>Title:</strong> "HEILUNG" (English) → "Heyra Stríðsgaldr" (Old Norse, Cinzel Decorative). Subtitle becomes "HEILUNG · Amplified History".</li>
+      <li><strong>Rune bands:</strong> NEW — Elder Futhark at top (forward) and bottom (reversed).</li>
+      <li><strong>Gold terms + wiki links:</strong> NEW — Krigsgaldr, Heilung, Yggdrasil, Ragnarök linked to Wikipedia.</li>
+      <li><strong>Wolf seal:</strong> NEW — "ᚠᛖᚾᚱᛁᚱ — The wolf remembers what the world forgot — ᚠᛖᚾᚱᛁᚱ" in seal footer.</li>
+      <li><strong>Band lore:</strong> Voices list removed. Single paragraph Norse-voice description replaces member list.</li>
+      <li><strong>Eyebrow:</strong> "Incantation Found" eyebrow removed — rune band serves as page-top decorative element.</li>
+      <li><strong>Dismiss button:</strong> "HEIÐR" — UNCHANGED.</li>
+      <li><strong>Trigger:</strong> Ctrl+Shift+L — UNCHANGED.</li>
+      <li><strong>Animation:</strong> wolf-rise, border-breathe — UNCHANGED. See updated interaction-spec.md.</li>
+    </ul>
+  </div>
+
+  <!-- ── VIDEO PORTAL INTERACTION SPEC ─────────────────────────── -->
+  <h2>Video Portal Interaction</h2>
+
+  <div class="annotation-block">
+    <h3>State machine: thumbnail → playing</h3>
+    <ul>
+      <li><strong>State A — Thumbnail:</strong> img (YouTube hqdefault) + gold play overlay. role="button", tabindex="0".</li>
+      <li><strong>On click/keydown Enter/Space:</strong> → State B</li>
+      <li><strong>State B — Playing:</strong> Replace img + overlay with &lt;iframe&gt; src="https://www.youtube.com/embed/QRg_8NNPTD8?autoplay=1&amp;rel=0". title="Heilung — Krigsgaldr LIFA". allow="autoplay; encrypted-media". allowfullscreen.</li>
+      <li><strong>Fallback:</strong> If JS disabled → portal frame is an &lt;a&gt; link to youtu.be/QRg_8NNPTD8 target="_blank".</li>
+    </ul>
+    <h3>Implementation pattern (React)</h3>
+    <ul>
+      <li>Local state: <code>const [playing, setPlaying] = useState(false)</code></li>
+      <li>Render: <code>{playing ? &lt;iframe …/&gt; : &lt;ThumbnailOverlay onClick={() =&gt; setPlaying(true)} /&gt;}</code></li>
+      <li>On modal close: reset <code>playing</code> to false (stops video).</li>
+    </ul>
+  </div>
+
+  <!-- ── ACCESSIBILITY DELTA ────────────────────────────────────── -->
+  <h2>Accessibility Notes (WCAG 2.1 AA)</h2>
+
+  <div class="annotation-block">
+    <h3>New/changed requirements vs Issue #955</h3>
+    <ul>
+      <li><strong>Algiz close button:</strong> aria-label="Close — return from the wolf's hall". The ᛉ glyph is not announced — label provides accessible name.</li>
+      <li><strong>Norse title:</strong> aria-label="Heyra Stríðsgaldr — Hear the War-Chant" — English translation in aria-label for screen readers.</li>
+      <li><strong>Rune bands:</strong> aria-hidden="true" — decorative. No linguistic content.</li>
+      <li><strong>Wiki links:</strong> Each &lt;a&gt; has aria-label="{term} on Wikipedia". Opens in new tab — indicated via aria-label ("on Wikipedia" is idiomatic; "opens in new tab" may be added per team convention).</li>
+      <li><strong>Video portal:</strong> role="button" + tabindex="0" on thumbnail container (State A). aria-label="Watch Heilung — Krigsgaldr LIFA on YouTube".</li>
+      <li><strong>Gold terms (non-linked):</strong> &lt;span class="gold-term"&gt; — color only, no semantic role. Ensure gold (#c9920a) on dark bg passes WCAG AA large text. Supplementary meaning conveyed by context (body copy), not color alone.</li>
+      <li><strong>Scroll:</strong> modal overflow-y: auto — ensure scroll region is keyboard accessible. Add tabindex="0" to modal scrollable div if needed per Firefox behavior.</li>
+      <li><strong>Wolf seal:</strong> aria-label="Fenrir seal — The wolf remembers what the world forgot" on seal paragraph. The rune glyphs (ᚠᛖᚾᚱᛁᚱ) are read literally by screen readers — acceptable since they precede/follow the readable English text.</li>
+    </ul>
+  </div>
+
+  <p class="spec-bar">
+    Wireframe · heilung-norse-restyle.html · Fenrir Ledger · Issue #1068
+    · Desktop 680px + Mobile 375px
+    · Interaction spec: <a href="./interaction-spec.md">interaction-spec.md</a>
+    · Previous wireframe: <a href="./heilung-modal.html">heilung-modal.html</a>
+  </p>
+
+</body>
+</html>
