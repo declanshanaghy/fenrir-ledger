@@ -151,6 +151,14 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
     return null;
   }, [entries]);
 
+  // Track the most recent tool-batch entry so we can keep it expanded during auto-scroll.
+  const lastToolBatchId = useMemo(() => {
+    for (let i = entries.length - 1; i >= 0; i--) {
+      if (entries[i]?.type === "tool-batch") return entries[i]!.id;
+    }
+    return null;
+  }, [entries]);
+
   if (!activeJob) {
     return (
       <main className="content" aria-label="Log viewer">
@@ -212,6 +220,8 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
             {...(activeJob?.agentKey ? { agentKey: activeJob.agentKey } : {})}
             {...(activeJob?.agentName ? { agentName: activeJob.agentName } : {})}
             isLastAssistantText={entry.id === lastAssistantTextId}
+            autoScroll={autoScroll}
+            isLatestBatch={entry.type === "tool-batch" && entry.id === lastToolBatchId}
           />
         ))}
       </div>
@@ -258,7 +268,7 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
   );
 }
 
-function LogLine({ entry, agentKey, agentName, isLastAssistantText }: { entry: LogEntry; agentKey?: string; agentName?: string; isLastAssistantText?: boolean }) {
+function LogLine({ entry, agentKey, agentName, isLastAssistantText, autoScroll, isLatestBatch }: { entry: LogEntry; agentKey?: string; agentName?: string; isLastAssistantText?: boolean; autoScroll?: boolean; isLatestBatch?: boolean }) {
   switch (entry.type) {
     case "system":
       return (
@@ -269,7 +279,7 @@ function LogLine({ entry, agentKey, agentName, isLastAssistantText }: { entry: L
     case "turn-divider":
       return null; // legacy, unused
     case "tool-batch":
-      return <ToolBatchGroup entry={entry} />;
+      return <ToolBatchGroup entry={entry} {...(autoScroll !== undefined ? { autoScroll } : {})} {...(isLatestBatch !== undefined ? { isLatestBatch } : {})} />;
     case "assistant-text":
       if (entry.detail === "thinking") {
         return <div className="ev-thinking">{entry.text}</div>;
@@ -375,10 +385,14 @@ function AgentBubble({
   );
 }
 
-function ToolBatchGroup({ entry }: { entry: LogEntry }) {
-  const [open, setOpen] = useState(true);
+function ToolBatchGroup({ entry, autoScroll, isLatestBatch }: { entry: LogEntry; autoScroll?: boolean; isLatestBatch?: boolean }) {
+  // Start collapsed if auto-scroll is on and this is not the latest batch (handles initial render
+  // with multiple historical batches already in the list).
+  const [open, setOpen] = useState(() => !autoScroll || !!isLatestBatch);
   const hasError = entry.children?.some((c) => c.toolIsError) ?? false;
   const prevCompleteRef = useRef(entry.complete);
+  const prevIsLatestRef = useRef(isLatestBatch);
+  const prevAutoScrollRef = useRef(autoScroll);
 
   // Auto-collapse immediately when batch completes
   useEffect(() => {
@@ -387,6 +401,24 @@ function ToolBatchGroup({ entry }: { entry: LogEntry }) {
       setOpen(false);
     }
   }, [entry.complete]);
+
+  // Auto-collapse when this batch is superseded by a newer one (auto-scroll must be on)
+  useEffect(() => {
+    const wasLatest = prevIsLatestRef.current;
+    prevIsLatestRef.current = isLatestBatch;
+    if (wasLatest && !isLatestBatch && autoScroll) {
+      setOpen(false);
+    }
+  }, [isLatestBatch, autoScroll]);
+
+  // Auto-collapse non-latest batches when auto-scroll is re-enabled
+  useEffect(() => {
+    const wasAutoScroll = prevAutoScrollRef.current;
+    prevAutoScrollRef.current = autoScroll;
+    if (!wasAutoScroll && autoScroll && !isLatestBatch) {
+      setOpen(false);
+    }
+  }, [autoScroll, isLatestBatch]);
 
   return (
     <div className={`ev-tool-batch ${open ? "open" : ""}${hasError ? " batch-error" : ""}${entry.complete ? " complete" : ""}`}>
