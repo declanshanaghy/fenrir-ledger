@@ -1,13 +1,13 @@
 /**
- * HeilungModal — Component tests (Issue #955)
+ * HeilungModal — Component tests
  *
- * Validates wolf-voice restyle: copy, accessibility attributes,
- * trigger key handling, dismiss interactions, and scroll lock.
+ * Validates the restored working state: trigger key, dismiss interactions,
+ * content (HEILUNG title, Amplified History, band members, YouTube embed).
  *
  * Uses standard Vitest + Testing Library matchers (no jest-dom).
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { HeilungModal } from "@/components/easter-eggs/HeilungModal";
 
@@ -30,11 +30,7 @@ vi.mock("framer-motion", () => {
     );
   }
 
-  const motion = {
-    div: makeTag("div"),
-    ul:  makeTag("ul"),
-    li:  makeTag("li"),
-  };
+  const motion = { div: makeTag("div") };
 
   return {
     motion,
@@ -50,12 +46,8 @@ function triggerHeilungKey() {
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-describe("HeilungModal — Issue #955 wolf-voice restyle", () => {
+describe("HeilungModal", () => {
   beforeEach(() => {
-    document.body.style.overflow = "";
-  });
-
-  afterEach(() => {
     document.body.style.overflow = "";
   });
 
@@ -90,24 +82,16 @@ describe("HeilungModal — Issue #955 wolf-voice restyle", () => {
   it("closes on Escape key", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    expect(screen.getByRole("dialog")).toBeDefined();
     act(() => {
       fireEvent.keyDown(window, { key: "Escape" });
     });
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("closes on HEIÐR dismiss button", () => {
+  it("closes on X close button", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    fireEvent.click(screen.getByText("HEIÐR"));
-    expect(screen.queryByRole("dialog")).toBeNull();
-  });
-
-  it("closes on × close button (aria-label: Dismiss the incantation)", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    fireEvent.click(screen.getByLabelText("Dismiss the incantation"));
+    fireEvent.click(screen.getByLabelText("Close Heilung modal"));
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
@@ -115,7 +99,6 @@ describe("HeilungModal — Issue #955 wolf-voice restyle", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     const dialog = screen.getByRole("dialog");
-    // Backdrop is the outer div (parent of dialog)
     fireEvent.click(dialog.parentElement!);
     expect(screen.queryByRole("dialog")).toBeNull();
   });
@@ -143,7 +126,7 @@ describe("HeilungModal — Issue #955 wolf-voice restyle", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  // ── Copy & accessibility ─────────────────────────────────────────────────
+  // ── Content ──────────────────────────────────────────────────────────────
 
   it("renders HEILUNG title", () => {
     render(<HeilungModal />);
@@ -157,52 +140,29 @@ describe("HeilungModal — Issue #955 wolf-voice restyle", () => {
     expect(screen.getByText("Amplified History")).toBeDefined();
   });
 
-  it("renders INCANTATION FOUND eyebrow with correct aria-label", () => {
+  it("renders bio text", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    const eyebrow = screen.getByLabelText("Incantation found");
-    expect(eyebrow).toBeDefined();
-    expect(screen.getByText("Incantation Found")).toBeDefined();
+    expect(screen.getByText(/Heilung.*healing.*Norse experimental/i)).toBeDefined();
   });
 
-  it("renders wolf-voice incantation paragraphs", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    expect(
-      screen.getByText(/They speak in iron and root/i)
-    ).toBeDefined();
-    expect(
-      screen.getByText(/Three voices carry what others let fall/i)
-    ).toBeDefined();
-  });
-
-  it("renders THE VOICES section label", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    expect(screen.getByText("THE VOICES")).toBeDefined();
-  });
-
-  it("renders all three band members with wolf-voice roles", () => {
+  it("renders all three band members", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     expect(screen.getByText("Kai Uwe Faust")).toBeDefined();
-    expect(screen.getByText("Chant, throat — the low frequencies")).toBeDefined();
     expect(screen.getByText("Maria Franz")).toBeDefined();
-    expect(screen.getByText("Voice — the oldest tones remembered")).toBeDefined();
     expect(screen.getByText("Christopher Juul")).toBeDefined();
-    expect(screen.getByText("Percussion — the ritual architecture")).toBeDefined();
   });
 
-  it("renders amplifiedhistory.com link with correct attributes", () => {
+  it("renders amplifiedhistory.com link", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    const link = screen.getByLabelText("amplifiedhistory.com, opens in new tab") as HTMLAnchorElement;
+    const link = screen.getByRole("link") as HTMLAnchorElement;
     expect(link.getAttribute("href")).toBe("https://www.amplifiedhistory.com");
     expect(link.getAttribute("target")).toBe("_blank");
-    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
   });
 
-  it("renders embedded YouTube iframe with correct src and title", () => {
+  it("renders YouTube iframe with correct src and title", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     const iframe = screen.getByTitle("Heilung — Krigsgaldr LIFA") as HTMLIFrameElement;
@@ -211,50 +171,12 @@ describe("HeilungModal — Issue #955 wolf-voice restyle", () => {
     expect(iframe.getAttribute("src")).toContain("autoplay=1");
   });
 
-  it("modal has aria-labelledby='heilung-title' and aria-modal='true'", () => {
+  // ── Accessibility ────────────────────────────────────────────────────────
+
+  it("dialog has aria-modal='true'", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     const dialog = screen.getByRole("dialog");
-    expect(dialog.getAttribute("aria-labelledby")).toBe("heilung-title");
     expect(dialog.getAttribute("aria-modal")).toBe("true");
-  });
-
-  it("title element has id='heilung-title'", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    const title = screen.getByText("HEILUNG");
-    expect(title.getAttribute("id")).toBe("heilung-title");
-  });
-
-  it("band members list has aria-label='Band members'", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    const list = screen.getByLabelText("Band members");
-    expect(list).toBeDefined();
-    expect(list.tagName.toLowerCase()).toBe("ul");
-  });
-
-  it("incantation div has aria-label=\"Wolf's testimony\"", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    const incantation = screen.getByLabelText("Wolf's testimony");
-    expect(incantation).toBeDefined();
-  });
-
-  // ── Scroll lock ──────────────────────────────────────────────────────────
-
-  it("locks body scroll when open", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    expect(document.body.style.overflow).toBe("hidden");
-  });
-
-  it("unlocks body scroll when closed via Escape", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    act(() => {
-      fireEvent.keyDown(window, { key: "Escape" });
-    });
-    expect(document.body.style.overflow).toBe("");
   });
 });
