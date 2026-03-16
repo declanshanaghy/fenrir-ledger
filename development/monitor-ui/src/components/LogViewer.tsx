@@ -52,7 +52,6 @@ function SessionHeader({ job, wsState, onDownload, showDownload = true }: Sessio
           >
             <span className="session-id-label">Session:</span> {shortId}…
           </span>
-          <CopySessionIdButton sessionId={job.sessionId} />
         </div>
       </div>
       <span className="header-badges">
@@ -65,6 +64,7 @@ function SessionHeader({ job, wsState, onDownload, showDownload = true }: Sessio
           {STATUS_ICONS[job.status]} {STATUS_LABELS[job.status]}
         </span>
         <StatusBadge state={wsState} />
+        <CopySessionIdButton sessionId={job.sessionId} />
         {showDownload && onDownload && (
           <button
             className="download-log-btn"
@@ -139,6 +139,18 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
     });
   }, []);
 
+  // Find the ID of the last non-thinking assistant-text entry to detect verdict position.
+  // MUST be declared before any early returns to satisfy React's rules of hooks.
+  const lastAssistantTextId = useMemo(() => {
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const e = entries[i];
+      if (e && e.type === "assistant-text" && e.detail !== "thinking") {
+        return e.id;
+      }
+    }
+    return null;
+  }, [entries]);
+
   if (!activeJob) {
     return (
       <main className="content" aria-label="Log viewer">
@@ -177,17 +189,6 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
       </main>
     );
   }
-
-  // Find the ID of the last non-thinking assistant-text entry to detect verdict position
-  const lastAssistantTextId = useMemo(() => {
-    for (let i = entries.length - 1; i >= 0; i--) {
-      const e = entries[i];
-      if (e && e.type === "assistant-text" && e.detail !== "thinking") {
-        return e.id;
-      }
-    }
-    return null;
-  }, [entries]);
 
   return (
     <main className="content" aria-label="Log viewer" style={{ position: "relative" }}>
