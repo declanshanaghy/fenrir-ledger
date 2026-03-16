@@ -45,7 +45,8 @@ describe("MDX callback footer — missing className coverage", () => {
 
   it("includes callback-wolf div with 🐺 glyph in MDX block", () => {
     const publishStart = script.indexOf("if (publishMode)");
-    const publishSection = script.slice(publishStart, publishStart + 5000);
+    // MDX callback is ~11.5k chars into the publishMode block
+    const publishSection = script.slice(publishStart, publishStart + 15000);
     expect(publishSection).toContain('className="callback-wolf"');
     expect(publishSection).toContain("🐺");
   });
@@ -104,13 +105,15 @@ describe("AGENT_CALLBACKS — agent-specific metaphors", () => {
 describe("MDX frontmatter — required fields", () => {
   it("frontmatter includes category: agent", () => {
     const publishStart = script.indexOf("if (publishMode)");
-    const section = script.slice(publishStart, publishStart + 4000);
+    // Frontmatter template is ~11.7k chars into the publishMode block
+    const section = script.slice(publishStart, publishStart + 15000);
     expect(section).toContain('category: "agent"');
   });
 
   it("frontmatter includes rune: ᚲ", () => {
     const publishStart = script.indexOf("if (publishMode)");
-    const section = script.slice(publishStart, publishStart + 4000);
+    // Frontmatter template is ~11.6k chars into the publishMode block
+    const section = script.slice(publishStart, publishStart + 15000);
     expect(section).toContain('rune: "ᚲ"');
   });
 });
@@ -129,7 +132,8 @@ describe("MDX template — structural ordering", () => {
 
   it("report-footer ᚠ glyph present in MDX template", () => {
     const publishStart = script.indexOf("if (publishMode)");
-    const section = script.slice(publishStart, publishStart + 4000);
+    // report-footer is ~13.2k chars into the publishMode block
+    const section = script.slice(publishStart, publishStart + 15000);
     expect(section).toContain("report-footer");
     expect(section).toContain("ᚠ Fenrir Ledger");
   });
