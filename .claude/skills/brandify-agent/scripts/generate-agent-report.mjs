@@ -22,6 +22,9 @@ import { sanitizeText, sanitizeToolOutput } from "./sanitize-chronicle.mjs";
 // Resolve script directory for relative asset paths (ESM-safe)
 const __scriptDir = dirname(fileURLToPath(import.meta.url));
 
+// Resolve script directory for relative asset paths (ESM-safe)
+const __scriptDir = dirname(fileURLToPath(import.meta.url));
+
 // ---------------------------------------------------------------------------
 // CLI args
 // ---------------------------------------------------------------------------
