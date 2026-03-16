@@ -159,6 +159,7 @@ export function HouseholdSettingsSection() {
               : "border-border text-muted-foreground",
           ].join(" ")}
           aria-label={`Household size: ${badgeLabel}`}
+          aria-live="polite"
         >
           {badgeLabel}
         </span>
@@ -201,14 +202,14 @@ export function HouseholdSettingsSection() {
           {isOwner && (
             data.isFull ? (
               <HouseholdFullBanner />
-            ) : (
+            ) : data.inviteCode && data.inviteCodeExpiresAt ? (
               <InviteCodeDisplay
-                inviteCode={data.inviteCode!}
-                inviteCodeExpiresAt={data.inviteCodeExpiresAt!}
+                inviteCode={data.inviteCode}
+                inviteCodeExpiresAt={data.inviteCodeExpiresAt}
                 onRegenerate={handleRegenerate}
                 isRegenerating={isRegenerating}
               />
-            )
+            ) : null
           )}
 
           {/* Member: informational note — owner name for context */}

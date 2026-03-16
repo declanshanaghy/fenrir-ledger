@@ -6,7 +6,7 @@
  *
  * Request body: { inviteCode: string, confirm: true }
  *
- * The merge is executed as an atomic Firestore transaction via joinHouseholdTransaction:
+ * Delegates to joinHouseholdTransaction() which runs as an atomic Firestore transaction:
  *   1. Re-validate invite code (still valid, not expired, household not full)
  *   2. Copy all cards from old solo household to new household (update householdId)
  *   3. Delete old solo household doc
@@ -25,10 +25,10 @@
  * Error responses:
  *   400 — invalid body
  *   401 — not authenticated
- *   404 — code not found (invite_invalid)
- *   409 — household full (race condition) { reason: "household_full" }
- *   410 — code expired (invite_expired)
- *   500 — merge failed (internal_error)
+ *   404 — invite_invalid (code not found)
+ *   409 — household_full (race condition) { reason: "household_full" }
+ *   410 — invite_expired
+ *   500 — internal_error
  *
  * Issue #1123 — Household invite code flow
  */
@@ -80,7 +80,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const result = await joinHouseholdTransaction(userId, inviteCode);
 
-    log.debug("POST /api/household/join returning", { status: 200, movedCardCount: result.movedCardIds.length });
+    log.debug("POST /api/household/join returning", {
+      status: 200,
+      movedCardCount: result.movedCardIds.length,
+    });
     return NextResponse.json({
       success: true,
       householdId: result.newHousehold.id,

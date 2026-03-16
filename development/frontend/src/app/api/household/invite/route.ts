@@ -8,7 +8,7 @@
  * Response: { inviteCode: string, inviteCodeExpiresAt: string }
  *
  * Error responses:
- *   400 — invalid body or unsupported action
+ *   400 — missing/invalid action
  *   401 — not authenticated
  *   403 — caller is not the household owner
  *   404 — user or household not found
@@ -55,17 +55,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const action = (body as Record<string, unknown>).action;
-
   if (!action) {
     return NextResponse.json(
-      { error: "invalid_body", error_description: 'Body must be { action: "regenerate" }.' },
+      { error: "invalid_body", error_description: 'Body must include { action: "regenerate" }.' },
       { status: 400 },
     );
   }
 
   if (action !== "regenerate") {
     return NextResponse.json(
-      { error: "invalid_action", error_description: `Unsupported action: "${String(action)}". Only "regenerate" is supported.` },
+      { error: "invalid_action", error_description: `Unsupported action: "${String(action)}". Use "regenerate".` },
       { status: 400 },
     );
   }
@@ -105,5 +104,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const updated = await regenerateInviteCode(household.id);
 
   log.debug("POST /api/household/invite returning", { status: 200 });
-  return NextResponse.json({ inviteCode: updated.inviteCode, inviteCodeExpiresAt: updated.inviteCodeExpiresAt });
+  return NextResponse.json({
+    inviteCode: updated.inviteCode,
+    inviteCodeExpiresAt: updated.inviteCodeExpiresAt,
+  });
 }

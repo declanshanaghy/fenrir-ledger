@@ -13,8 +13,8 @@
  *   isSolo: boolean,
  *   isFull: boolean,
  *   isOwner: boolean,
- *   inviteCode?: string,          — only for owners on non-full households
- *   inviteCodeExpiresAt?: string, — only for owners on non-full households
+ *   inviteCode?: string,          — omitted for non-owners and when household is full
+ *   inviteCodeExpiresAt?: string, — omitted for non-owners and when household is full
  *   members: Array<{
  *     clerkUserId: string,
  *     displayName: string,
@@ -62,23 +62,24 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const isSolo = household.memberIds.length === 1;
   const isFull = household.memberIds.length >= MAX_HOUSEHOLD_MEMBERS;
 
-  // Fetch all member docs via household query
+  // Fetch all member docs
   const memberDocs = await getUsersByHouseholdId(household.id);
 
-  // Sort: owner first, then members alphabetically
+  // Owner always first
   const members = memberDocs
+    .slice()
+    .sort((a, b) => {
+      if (a.role === "owner" && b.role !== "owner") return -1;
+      if (a.role !== "owner" && b.role === "owner") return 1;
+      return 0;
+    })
     .map((m) => ({
       clerkUserId: m.clerkUserId,
       displayName: m.displayName,
       email: m.email,
       role: m.role,
       isCurrentUser: m.clerkUserId === userId,
-    }))
-    .sort((a, b) => {
-      if (a.role === "owner" && b.role !== "owner") return -1;
-      if (a.role !== "owner" && b.role === "owner") return 1;
-      return a.displayName.localeCompare(b.displayName);
-    });
+    }));
 
   const response: Record<string, unknown> = {
     householdId: household.id,
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     members,
   };
 
-  // Only expose invite code to the owner on non-full households
+  // Only expose invite code to the owner when household is not full
   if (isOwner && !isFull) {
     response.inviteCode = household.inviteCode;
     response.inviteCodeExpiresAt = household.inviteCodeExpiresAt;

@@ -16,7 +16,7 @@
  *   400 — missing or malformed code param
  *   401 — not authenticated
  *   404 — code not found / invalid
- *   409 — already in household or household full { reason: "household_full" | "already_in_household" }
+ *   409 — household full { reason: "household_full" }
  *   410 — code expired
  *   500 — internal error
  *
@@ -66,15 +66,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       { error: "user_not_found", error_description: "User record not found. Sign in again." },
       { status: 404 },
-    );
-  }
-
-  // Check if caller is already in a multi-member household
-  const callerHouseholdMembers = await getUsersByHouseholdId(callerUser.householdId);
-  if (callerHouseholdMembers.length > 1) {
-    return NextResponse.json(
-      { error: "already_in_household", error_description: "You are already in a multi-member household." },
-      { status: 409 },
     );
   }
 

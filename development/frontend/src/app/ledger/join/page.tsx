@@ -293,8 +293,8 @@ export default function JoinHouseholdPage() {
         body: JSON.stringify({ inviteCode: currentCode, confirm: true }),
       });
       if (res.ok) {
-        const data = (await res.json()) as { householdId: string; householdName: string; cardsMerged: number };
-        setCardsMerged(data.cardsMerged);
+        const data = (await res.json()) as { householdId: string; householdName: string; movedCardCount: number };
+        setCardsMerged(data.movedCardCount);
         setHouseholdName(data.householdName);
         setStep("success");
       } else if (res.status === 409) {
