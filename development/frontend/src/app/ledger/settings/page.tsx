@@ -19,6 +19,7 @@ import { useCallback, useEffect, useState } from "react";
 import { StripeSettings } from "@/components/entitlement/StripeSettings";
 import { track } from "@/lib/analytics/track";
 import { TrialSettingsSection } from "@/components/trial/TrialSettingsSection";
+import { HouseholdSettingsSection } from "@/components/household/HouseholdSettingsSection";
 import type { DashboardTab } from "@/lib/constants";
 import {
   GleipnirMountainRoots,
@@ -191,10 +192,11 @@ export default function SettingsPage() {
 
       {/* Two-column layout: subscription left, settings right */}
       <div className="flex flex-col md:grid md:grid-cols-2 gap-6">
-        {/* Left column: Subscription management + trial status */}
+        {/* Left column: Subscription management + trial status + household */}
         <div className="flex flex-col gap-6">
           <StripeSettings />
           <TrialSettingsSection />
+          <HouseholdSettingsSection />
         </div>
 
         {/* Right column: Settings controls */}
