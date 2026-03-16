@@ -167,7 +167,7 @@ describe("ErrorBoundary — Loki tablet (issue #1037)", () => {
       </ErrorBoundary>
     );
     const runeBorders = container.querySelectorAll(".loki-eb-rune-border");
-    runeBorders.forEach((el) => {
+    runeBorders.forEach((el: any) => {
       expect(el.getAttribute("aria-hidden")).toBe("true");
     });
   });
