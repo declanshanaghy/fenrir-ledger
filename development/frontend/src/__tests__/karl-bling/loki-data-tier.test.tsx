@@ -225,6 +225,29 @@ describe("data-tier — upgrade and downgrade transitions", () => {
   });
 });
 
+// ── Tests: auth loading state ──────────────────────────────────────────────────
+
+describe("data-tier — auth status loading", () => {
+  beforeEach(resetMocks);
+  afterEach(() => document.documentElement.removeAttribute("data-tier"));
+
+  it("sets data-tier=thrall when auth status is loading and there is no active trial", async () => {
+    // When status="loading", isAuthenticated=false → entitlement is null → tier=thrall.
+    // Trial is also "none", so the result must be "thrall", not undefined or absent.
+    // This guards against a race condition where loading state briefly shows wrong tier.
+    mockAuthState.status = "loading";
+    mockTrialState.status = "none";
+    mockCachedEntitlement = null;
+
+    const EntitlementProvider = await getProvider();
+    await act(async () => {
+      render(<EntitlementProvider><div /></EntitlementProvider>);
+    });
+
+    expect(document.documentElement.getAttribute("data-tier")).toBe("thrall");
+  });
+});
+
 // ── Tests: attribute integrity ────────────────────────────────────────────────
 
 describe("data-tier — attribute integrity", () => {

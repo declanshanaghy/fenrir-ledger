@@ -54,7 +54,9 @@ describe("karl-bling.css — badge default visibility", () => {
   it("trial tier does NOT have a karl-bling-badge visibility rule", () => {
     // Acceptance criteria: trial users do NOT see the header badge.
     // There must be NO [data-tier="trial"] .karl-bling-badge selector at all.
-    expect(css).not.toMatch(/\[data-tier="trial"\]\s*\.karl-bling-badge/);
+    // Note: .karl-bling-badge-status (card status badge) is a separate class and
+    // is intentionally allowed for trial — only the header badge is excluded.
+    expect(css).not.toMatch(/\[data-tier="trial"\]\s*\.karl-bling-badge(?!-)/);
   });
 
   it("thrall tier does NOT have a karl-bling-badge visibility rule", () => {
