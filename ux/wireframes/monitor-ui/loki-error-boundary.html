@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — Loki Error Boundary Tablet (Issue #1037)</title>
+  <style>
+    /* Layout CSS only — no colors, fonts, shadows, border-radius per Luna's wireframe rules */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 24px; max-width: 960px; margin: 0 auto; }
+
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    h2 { font-size: 16px; font-weight: 700; margin: 32px 0 12px; border-bottom: 2px solid; padding-bottom: 6px; }
+    h3 { font-size: 14px; font-weight: 700; margin: 20px 0 8px; }
+    p { margin: 8px 0; line-height: 1.6; }
+    p.note { font-size: 12px; font-style: italic; border-left: 3px solid; padding-left: 8px; margin: 8px 0; }
+    .meta { font-size: 12px; margin-bottom: 24px; }
+    hr { margin: 32px 0; border: none; border-top: 1px solid; }
+
+    /* Section containers */
+    .section { margin-bottom: 48px; }
+    .variant-row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; }
+    .variant-box { flex: 1; min-width: 280px; border: 1px solid; padding: 16px; }
+    .variant-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+    .callout { border: 2px solid; padding: 12px 16px; margin: 12px 0; }
+
+    /* ========================================================
+       LOKI ERROR BOUNDARY TABLET — loki-eb-* classes
+       Compact inline error boundary. Not full-pane.
+       Uses ErrorBoundary.tsx as host.
+    ======================================================== */
+
+    /* Outer container — replaces the plain div in ErrorBoundary */
+    .loki-eb-tablet {
+      border: 2px solid;
+      padding: 0;
+      margin: 8px 0;
+      overflow: hidden;
+    }
+
+    /* Compact rune border — narrower than NorseErrorTablet's full rune row */
+    .loki-eb-rune-border {
+      font-size: 10px;
+      text-align: center;
+      letter-spacing: 3px;
+      padding: 4px 8px;
+      border-bottom: 1px solid;
+      /* NOTE: aria-hidden="true" — decorative only */
+    }
+    .loki-eb-rune-border.bottom {
+      border-bottom: none;
+      border-top: 1px solid;
+    }
+
+    /* Tablet inner body — all content between rune borders */
+    .loki-eb-body {
+      padding: 16px 20px;
+    }
+
+    /* Loki avatar block — large rune name + avatar label */
+    .loki-eb-avatar {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .loki-eb-avatar-rune {
+      font-size: 28px;
+      letter-spacing: 8px;
+      display: block;
+      /* NOTE: aria-hidden="true" — decorative. Agent name below is the accessible label */
+    }
+    .loki-eb-avatar-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* Divider between avatar and heading */
+    .loki-eb-divider {
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 3px;
+      margin: 8px 0;
+      /* NOTE: aria-hidden="true" */
+    }
+
+    /* Main heading — Loki thematic title */
+    .loki-eb-heading {
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 4px;
+      /* Implementation note: Use CSS var(--text-saga) */
+    }
+
+    /* Subheading — thematic copy */
+    .loki-eb-subheading {
+      font-size: 12px;
+      text-align: center;
+      margin-bottom: 12px;
+      /* Implementation note: Use CSS var(--text-rune) */
+    }
+
+    /* Error inscription block — displays the actual error.message */
+    .loki-eb-inscription {
+      border: 1px dashed;
+      padding: 10px 14px;
+      margin: 12px 0;
+      font-size: 11px;
+      font-family: monospace;
+      /* NOTE: This is the error.message — must remain visible for debugging */
+      /* Implementation note: Use var(--error-text) for text, var(--error-bg) for bg */
+    }
+    .loki-eb-inscription-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .loki-eb-inscription-message {
+      display: block;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    /* Loki seal — compact version of net-seal-epic */
+    .loki-eb-seal {
+      border: 1px solid;
+      padding: 10px 14px;
+      text-align: center;
+      margin: 12px 0;
+    }
+    .loki-eb-seal-runes {
+      font-size: 14px;
+      letter-spacing: 5px;
+      margin-bottom: 4px;
+      /* NOTE: aria-hidden="true" */
+    }
+    .loki-eb-seal-inscription {
+      font-size: 11px;
+      font-weight: 700;
+      font-style: italic;
+    }
+    .loki-eb-seal-sub {
+      font-size: 10px;
+      margin-top: 3px;
+    }
+
+    /* Retry button — "Reweave the Thread" */
+    .loki-eb-action {
+      display: flex;
+      justify-content: center;
+      margin-top: 14px;
+    }
+    .loki-eb-retry-btn {
+      padding: 6px 18px;
+      border: 1px solid;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      /* NOTE: No inline background or color — use CSS var(--forge) bg, var(--gold-bright) text,
+               var(--gold-dim-border) border. On hover: var(--norse-tablet-header-hover) bg. */
+    }
+
+    /* Annotation table */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+    th, td { border: 1px solid; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .mono { font-family: monospace; font-size: 12px; }
+
+    /* State rows for multiple variants */
+    .state-row { display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0; }
+    .state-box { flex: 1; min-width: 260px; border: 1px solid; padding: 12px; }
+    .state-label { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+
+    /* Mobile annotation */
+    .mobile-note { border: 1px dashed; padding: 10px; margin: 12px 0; font-size: 12px; }
+    .mobile-note strong { display: block; margin-bottom: 4px; }
+
+    /* Breakpoint demo — simulate 375px viewport */
+    .viewport-375 { max-width: 375px; border: 2px dashed; padding: 8px; margin: 0 auto; }
+    .viewport-label { font-size: 11px; text-align: center; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+
+  <h1>Loki Error Boundary Tablet — Wireframe</h1>
+  <div class="meta">
+    Issue #1037 &nbsp;|&nbsp; Branch: ux/issue-1037-error-boundary-norse &nbsp;|&nbsp;
+    Designer: Luna &nbsp;|&nbsp; Date: 2026-03-16 &nbsp;|&nbsp;
+    Component: <code>ErrorBoundary.tsx</code> (monitor-ui)
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 1: SCOPE OVERVIEW
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>1 — Scope Overview</h2>
+
+    <p>
+      The <code>ErrorBoundary.tsx</code> fallback UI is a plain inline-styled div. This issue replaces
+      it with a Norse-themed <strong>Loki Error Tablet</strong> — a compact inline component that fits
+      within the monitor UI's existing panel layout.
+    </p>
+
+    <p class="note">
+      Key distinction from <code>NorseErrorTablet.tsx</code>: that is a <em>full-pane</em> display for
+      pod-level session errors (TTL expired, node unreachable). The Loki Error Boundary tablet is
+      <em>inline/compact</em> — it wraps individual UI sub-components and should not take up the entire
+      viewport. It adapts to the width of its container.
+    </p>
+
+    <div class="callout">
+      <strong>Personality:</strong> Loki — the trickster. He did not cause the error; he <em>found</em>
+      it and bound it before it could cause more chaos. The tone is wry and confident, not apologetic.
+      Loki is doing you a favour.
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Acceptance Criterion</th><th>Design Approach</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ErrorBoundary fallback uses Norse tablet styling</td>
+          <td>New <code>loki-eb-*</code> CSS classes. Tablet border, rune rows, seal block.</td>
+        </tr>
+        <tr>
+          <td>Loki personality in copy and presentation</td>
+          <td>Loki rune name (ᛚᛟᚲᛁ) as avatar. Trickster thematic heading + subheading. Loki's seal quote.</td>
+        </tr>
+        <tr>
+          <td>Error message still visible for debugging</td>
+          <td>Monospace inscription block — always renders <code>error.message</code>.</td>
+        </tr>
+        <tr>
+          <td>Retry button functional and themed</td>
+          <td>"Reweave the Thread" — styled as Norse action button. Calls <code>setState({ hasError: false })</code>.</td>
+        </tr>
+        <tr>
+          <td>Respects light/dark theme</td>
+          <td>All colors use existing CSS vars: <code>--forge</code>, <code>--gold-bright</code>, <code>--text-saga</code>, <code>--text-rune</code>, <code>--error-text</code>, <code>--rune-border</code>, etc.</td>
+        </tr>
+        <tr>
+          <td>Mobile responsive</td>
+          <td>Mobile-first single column. Min-width 375px. Rune rows shrink gracefully.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 2: FULL TABLET — DESKTOP (>600px)
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>2 — Full Tablet: Desktop (&gt;600px)</h2>
+
+    <p class="note">
+      This is the primary state — error caught, Loki has captured it. Retry button is always visible.
+      The tablet width is determined by the component's container (ErrorBoundary wraps its children).
+    </p>
+
+    <div class="loki-eb-tablet" role="alert" aria-label="Loki has captured a component error" aria-live="assertive">
+
+      <!-- Top rune border — compact Elder Futhark row, aria-hidden -->
+      <div class="loki-eb-rune-border" aria-hidden="true">
+        ᛚ ᛟ ᚲ ᛁ · ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ · ᛚ ᛟ ᚲ ᛁ
+      </div>
+
+      <div class="loki-eb-body">
+
+        <!-- Loki avatar — rune name + human label -->
+        <div class="loki-eb-avatar">
+          <span class="loki-eb-avatar-rune" aria-hidden="true">ᛚᛟᚲᛁ</span>
+          <span class="loki-eb-avatar-label">Loki · The Trickster</span>
+        </div>
+
+        <!-- Short rune divider -->
+        <div class="loki-eb-divider" aria-hidden="true">ᚦ · ᛚᚨᚢᚷᚨᛉ · ᚦ</div>
+
+        <!-- Heading — Loki thematic title -->
+        <h2 class="loki-eb-heading" style="border: none; margin: 0 0 4px; padding: 0;">
+          The Trickster Has Snared This Thread
+        </h2>
+        <!-- NOTE: h2 tag appropriate within a panel context; adjust to h3 if ErrorBoundary wraps
+                   a sub-section that already has an h2 parent. Check heading hierarchy at use site. -->
+
+        <!-- Subheading — thematic copy -->
+        <p class="loki-eb-subheading">
+          Loki has bound this error to the world-serpent's coils — it shall cause no further chaos
+        </p>
+
+        <!-- Error inscription — the actual error.message -->
+        <div class="loki-eb-inscription" aria-label="Error details">
+          <span class="loki-eb-inscription-label">Captured Inscription (error.message)</span>
+          <code class="loki-eb-inscription-message">
+            [error.message — e.g. "Cannot read properties of undefined (reading 'map')"]
+          </code>
+        </div>
+        <!-- NOTE: Always render error.message here regardless of production mode.
+                   This is a debug monitor tool — engineers need the raw message. -->
+
+        <!-- Loki seal — compact epic seal, no agent context needed (Loki IS the personality) -->
+        <div class="loki-eb-seal" aria-hidden="true">
+          <div class="loki-eb-seal-runes">ᛚᛟᚲᛁ · ᚹᛟᚱᛚᛞ-ᛊᛖᚱᛈᛖᚾᛏ</div>
+          <div class="loki-eb-seal-inscription">"Every truth hides a lie, every build hides a flaw"</div>
+          <div class="loki-eb-seal-sub">ᛚ — So the trickster weaves — ᛚ</div>
+        </div>
+        <!-- NOTE: The seal is entirely decorative / atmospheric — aria-hidden="true" on the container.
+                   The accessible error information is in the inscription block above. -->
+
+        <!-- Retry action -->
+        <div class="loki-eb-action">
+          <button
+            class="loki-eb-retry-btn"
+            type="button"
+            aria-label="Reweave the Thread — retry this component"
+          >
+            Reweave the Thread
+          </button>
+        </div>
+        <!-- NOTE: onClick → this.setState({ hasError: false, error: null })
+                   Same logic as existing Retry button.
+                   aria-label describes what action it takes. -->
+
+      </div><!-- /loki-eb-body -->
+
+      <!-- Bottom rune border -->
+      <div class="loki-eb-rune-border bottom" aria-hidden="true">
+        ᛟ ᛞ ᛜ ᛚ ᛗ ᛖ ᛒ ᛏ ᛊ ᛉ ᛈ ᛇ ᛃ ᛁ ᚾ ᚺ ᚹ ᚷ ᚲ ᚱ ᚨ ᚦ ᚢ ᚠ · ᛚ ᛟ ᚲ ᛁ
+      </div>
+
+    </div><!-- /loki-eb-tablet -->
+
+    <p class="note">
+      CSS vars used: <code>--forge</code> (bg), <code>--rune-border</code> (borders),
+      <code>--agent-accent-loki: #22c55e</code> (avatar rune + seal rune color — trickster-green accent),
+      <code>--text-saga</code> (heading), <code>--text-rune</code> (subheading + seal),
+      <code>--error-text</code> / <code>--error-bg</code> (inscription block),
+      <code>--gold-bright</code> (button text), <code>--gold-dim-border</code> (button border).
+    </p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 3: COMPONENT STATES
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>3 — Component States</h2>
+
+    <div class="state-row">
+
+      <!-- State: Error caught (primary) -->
+      <div class="state-box">
+        <div class="state-label">State A — Error caught (primary)</div>
+        <p>Full tablet shown. Loki avatar, heading, subheading, error inscription, seal, retry button. All elements visible.</p>
+        <p class="note">This is the <code>hasError: true</code> state in ErrorBoundary.</p>
+      </div>
+
+      <!-- State: Children rendering normally -->
+      <div class="state-box">
+        <div class="state-label">State B — Normal (children rendered)</div>
+        <p>Tablet hidden. <code>ErrorBoundary</code> renders <code>this.props.children</code> transparently. No DOM output from the tablet.</p>
+        <p class="note">This is the <code>hasError: false</code> state. The Loki tablet has zero presence.</p>
+      </div>
+
+      <!-- State: Custom fallback prop -->
+      <div class="state-box">
+        <div class="state-label">State C — Custom fallback prop</div>
+        <p>If <code>fallback</code> prop is provided to <code>ErrorBoundary</code>, it renders instead of the Loki tablet. The Loki tablet is the <em>default</em> fallback only.</p>
+        <p class="note">Preserve existing <code>if (this.props.fallback) return this.props.fallback</code> guard.</p>
+      </div>
+
+    </div>
+
+    <h3>State Transition: Retry</h3>
+    <p>
+      When the user clicks "Reweave the Thread":
+    </p>
+    <ol style="margin: 8px 0 8px 24px; line-height: 1.8;">
+      <li>Button fires <code>onClick</code></li>
+      <li><code>setState({ hasError: false, error: null })</code></li>
+      <li>React re-renders children</li>
+      <li>If children throw again → State A returns immediately</li>
+      <li>If children render successfully → Loki tablet disappears (State B)</li>
+    </ol>
+    <p class="note">
+      No loading/pending state is needed between retry and result — the re-render is synchronous.
+      A failed retry returns to State A instantly; no spinner required.
+    </p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 4: MOBILE — 375px VIEWPORT
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>4 — Mobile Viewport (375px)</h2>
+
+    <div class="viewport-label">↓ Simulated 375px viewport ↓</div>
+    <div class="viewport-375">
+
+      <div class="loki-eb-tablet" role="alert" aria-label="Loki has captured a component error" aria-live="assertive">
+        <div class="loki-eb-rune-border" aria-hidden="true" style="font-size: 9px; letter-spacing: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          ᛚ ᛟ ᚲ ᛁ · ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ · ᛚ ᛟ ᚲ ᛁ
+        </div>
+        <div class="loki-eb-body" style="padding: 12px 14px;">
+          <div class="loki-eb-avatar">
+            <span class="loki-eb-avatar-rune" aria-hidden="true" style="font-size: 22px; letter-spacing: 5px;">ᛚᛟᚲᛁ</span>
+            <span class="loki-eb-avatar-label">Loki · The Trickster</span>
+          </div>
+          <div class="loki-eb-divider" aria-hidden="true" style="font-size: 10px;">ᚦ · ᛚᚨᚢᚷᚨᛉ · ᚦ</div>
+          <h2 class="loki-eb-heading" style="border: none; margin: 0 0 4px; padding: 0; font-size: 14px;">
+            The Trickster Has Snared This Thread
+          </h2>
+          <p class="loki-eb-subheading" style="font-size: 11px;">
+            Loki has bound this error to the world-serpent's coils
+          </p>
+          <div class="loki-eb-inscription" aria-label="Error details">
+            <span class="loki-eb-inscription-label">Captured Inscription</span>
+            <code class="loki-eb-inscription-message" style="font-size: 10px;">
+              [error.message]
+            </code>
+          </div>
+          <div class="loki-eb-seal" style="padding: 8px 10px;">
+            <div class="loki-eb-seal-runes" style="font-size: 12px; letter-spacing: 3px;" aria-hidden="true">ᛚᛟᚲᛁ</div>
+            <div class="loki-eb-seal-inscription" style="font-size: 10px;">"Every truth hides a lie, every build hides a flaw"</div>
+            <div class="loki-eb-seal-sub" style="font-size: 9px;">ᛚ — So the trickster weaves — ᛚ</div>
+          </div>
+          <div class="loki-eb-action">
+            <button class="loki-eb-retry-btn" type="button" aria-label="Reweave the Thread — retry this component" style="width: 100%; padding: 8px 12px;">
+              Reweave the Thread
+            </button>
+          </div>
+        </div>
+        <div class="loki-eb-rune-border bottom" aria-hidden="true" style="font-size: 9px; letter-spacing: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          ᛟ ᛞ ᛜ ᛚ ᛗ ᛖ ᛒ ᛏ ᛊ · ᛚ ᛟ ᚲ ᛁ
+        </div>
+      </div>
+
+    </div><!-- /viewport-375 -->
+
+    <div class="mobile-note">
+      <strong>Mobile ≤375px — responsive rules</strong>
+      <ul style="margin: 4px 0 0 16px; line-height: 1.8; font-size: 12px;">
+        <li>Avatar rune: 28px → 22px, letter-spacing: 8px → 5px</li>
+        <li>Heading: 16px → 14px</li>
+        <li>Subheading: 12px → 11px (may truncate to 2 lines — acceptable)</li>
+        <li>Rune border rows: overflow hidden + text-overflow ellipsis — partial row is fine (decorative)</li>
+        <li>Seal rune row: 14px → 12px, letter-spacing: 5px → 3px</li>
+        <li>Retry button: full-width on mobile (<code>width: 100%</code>) for easier tap target (min 44px height)</li>
+        <li>Body padding: 16px 20px → 12px 14px</li>
+        <li>Inscription code: 11px → 10px</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 5: COPY SPECIFICATION
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>5 — Copy Specification</h2>
+
+    <table>
+      <thead>
+        <tr><th>Element</th><th>Copy</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Avatar rune</td>
+          <td><code>ᛚᛟᚲᛁ</code></td>
+          <td>Elder Futhark transliteration of LOKI. <code>aria-hidden="true"</code>.</td>
+        </tr>
+        <tr>
+          <td>Avatar label</td>
+          <td>Loki · The Trickster</td>
+          <td>Plain text, readable by screen readers.</td>
+        </tr>
+        <tr>
+          <td>Divider glyphs</td>
+          <td><code>ᚦ · ᛚᚨᚢᚷᚨᛉ · ᚦ</code></td>
+          <td>Thurisaz (warning/thorn) flanking Laguz (water/flow). <code>aria-hidden="true"</code>. "Laguz" = Elder Futhark L phonetic.</td>
+        </tr>
+        <tr>
+          <td>Heading</td>
+          <td>The Trickster Has Snared This Thread</td>
+          <td>Confident, not apologetic. Loki owns the situation.</td>
+        </tr>
+        <tr>
+          <td>Subheading</td>
+          <td>Loki has bound this error to the world-serpent's coils — it shall cause no further chaos</td>
+          <td>"World-serpent" = Jörmungandr, Loki's offspring. Loki binding things is his trademark. Do not link "world-serpent" — error context is not the right place for external links.</td>
+        </tr>
+        <tr>
+          <td>Inscription label</td>
+          <td>Captured Inscription (error.message)</td>
+          <td>Visible label for screen readers + devs. In production build, the parenthetical "(error.message)" could be removed but the label must remain.</td>
+        </tr>
+        <tr>
+          <td>Seal runes</td>
+          <td><code>ᛚᛟᚲᛁ · ᚹᛟᚱᛚᛞ-ᛊᛖᚱᛈᛖᚾᛏ</code></td>
+          <td>"LOKI · WORLD-SERPENT" — connects Loki to Jörmungandr. <code>aria-hidden="true"</code>.</td>
+        </tr>
+        <tr>
+          <td>Seal inscription</td>
+          <td>"Every truth hides a lie, every build hides a flaw"</td>
+          <td>Loki's existing epic quote from the agent rune signature system (see <code>norse-tablet-rune-signatures.html §4B</code>). Reuse for consistency.</td>
+        </tr>
+        <tr>
+          <td>Seal sub-line</td>
+          <td>ᛚ — So the trickster weaves — ᛚ</td>
+          <td>Laguz (ᛚ) flanking. <code>aria-hidden="true"</code>.</td>
+        </tr>
+        <tr>
+          <td>Retry button</td>
+          <td>Reweave the Thread</td>
+          <td>Thematic: threads of fate, Norns weaving destiny. <code>aria-label="Reweave the Thread — retry this component"</code> provides full context for screen readers.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="note">
+      Alternative button copy (if "Reweave the Thread" is too long for narrow containers):
+      "Invoke the Norns" — both are acceptable. "Reweave the Thread" is preferred as it implies
+      actively fixing, not just asking for help.
+    </p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 6: CSS IMPLEMENTATION SPEC
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>6 — CSS Implementation Spec</h2>
+
+    <p class="note">
+      FiremanDecko: add these styles to <code>development/monitor-ui/src/styles/index.css</code>
+      (or a co-located module if preferred). All values use existing CSS custom properties.
+      No hardcoded color values.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>Class</th><th>CSS vars to use</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="mono">.loki-eb-tablet</code></td>
+          <td><code>--forge</code> (bg), <code>--rune-border</code> (border)</td>
+          <td><code>border: 1px solid var(--rune-border)</code>. Remove <code>border-radius</code> — stone tablets are square.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-rune-border</code></td>
+          <td><code>--text-void</code> (text), <code>--rune-border</code> (border)</td>
+          <td>Subtle, does not compete with content. Use <code>var(--text-void)</code> for rune character color.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-avatar-rune</code></td>
+          <td><code>--agent-accent-loki</code> (#22c55e trickster-green)</td>
+          <td>Loki's specific accent. Establishes personality immediately on render.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-avatar-label</code></td>
+          <td><code>--text-rune</code></td>
+          <td>Secondary text weight — supports the rune glyph.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-divider</code></td>
+          <td><code>--text-void</code></td>
+          <td>Barely visible — purely decorative.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-heading</code></td>
+          <td><code>--text-saga</code></td>
+          <td>Primary text — full brightness.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-subheading</code></td>
+          <td><code>--text-rune</code></td>
+          <td>Secondary text — muted, supports heading.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-inscription</code></td>
+          <td><code>--error-bg</code> (background), <code>--error-border</code> (border, use dashed), <code>--error-text</code> (text)</td>
+          <td>Inherits error color palette. Monospace font. This is the only element using error colors — keeps error-signal clear and findable.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-inscription-label</code></td>
+          <td><code>--text-void</code></td>
+          <td>Dimmed label above the actual message.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-seal</code></td>
+          <td><code>--gold-subtle-bg</code> (background), <code>--gold-dim-border</code> (border)</td>
+          <td>Uses the same gold subtle palette as the Norse tablet header. Signals "this is a formal inscription".</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-seal-runes</code></td>
+          <td><code>--agent-accent-loki</code></td>
+          <td>Loki's trickster-green accent — consistent with avatar rune.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-seal-inscription</code></td>
+          <td><code>--text-saga</code></td>
+          <td>Full brightness for the epic quote — it is the centrepiece of the seal.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-seal-sub</code></td>
+          <td><code>--text-void</code></td>
+          <td>Barely visible framing line.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-retry-btn</code></td>
+          <td><code>--forge</code> (bg), <code>--gold-bright</code> (text), <code>--gold-dim-border</code> (border)</td>
+          <td>Gold-on-dark — matches existing Norse action button pattern. Hover state: <code>var(--norse-tablet-header-hover)</code> background.</td>
+        </tr>
+        <tr>
+          <td><code class="mono">.loki-eb-retry-btn:hover</code></td>
+          <td><code>--norse-tablet-header-hover</code> (bg)</td>
+          <td>Existing hover token — gold at 12% opacity. Use <code>cursor: pointer</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <strong>Light theme:</strong> All CSS vars above have light-theme overrides already defined in
+      <code>index.css</code> under <code>[data-theme="light"]</code>. No new light-theme overrides
+      are needed — the component will adapt automatically.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 7: COMPONENT CHANGE SUMMARY
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>7 — Component Change Summary for FiremanDecko</h2>
+
+    <table>
+      <thead>
+        <tr><th>File</th><th>Change</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="mono">development/monitor-ui/src/components/ErrorBoundary.tsx</code></td>
+          <td>
+            Replace the inline-styled <code>&lt;div&gt;</code> fallback with the
+            <code>loki-eb-tablet</code> structure per §2 wireframe.
+            Remove all <code>style={{ ... }}</code> props — use CSS classes only.
+            Keep <code>this.props.fallback</code> early-return guard.
+            Keep <code>setState</code> on retry button.
+          </td>
+        </tr>
+        <tr>
+          <td><code class="mono">development/monitor-ui/src/styles/index.css</code></td>
+          <td>
+            Add <code>/* Loki Error Boundary Tablet */</code> section with <code>loki-eb-*</code>
+            classes per §6 CSS spec. Use CSS vars only — no hardcoded colors.
+            Add <code>@media (max-width: 375px)</code> block for mobile overrides per §4.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="note">
+      No new files required — the Loki tablet is self-contained within
+      <code>ErrorBoundary.tsx</code> and <code>index.css</code>.
+      No new React components, no new constants. Keep it minimal.
+    </p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 8: ACCESSIBILITY SPEC
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>8 — Accessibility Spec</h2>
+
+    <table>
+      <thead>
+        <tr><th>Element</th><th>Requirement</th><th>Implementation</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Tablet container</td>
+          <td>Announced as error alert</td>
+          <td><code>role="alert" aria-live="assertive" aria-label="Loki has captured a component error"</code>. Matches NorseErrorTablet pattern.</td>
+        </tr>
+        <tr>
+          <td>Rune rows (border, divider, seal runes)</td>
+          <td>Decorative — do not read aloud</td>
+          <td><code>aria-hidden="true"</code> on all rune-bearing elements.</td>
+        </tr>
+        <tr>
+          <td>Avatar rune (ᛚᛟᚲᛁ)</td>
+          <td>Decorative</td>
+          <td><code>aria-hidden="true"</code>. The label "Loki · The Trickster" below it is the readable identity.</td>
+        </tr>
+        <tr>
+          <td>Error inscription block</td>
+          <td>Error message readable</td>
+          <td><code>aria-label="Error details"</code> on container. Label + message are plain text — screen readers will read both.</td>
+        </tr>
+        <tr>
+          <td>Loki seal</td>
+          <td>Entirely decorative / atmospheric</td>
+          <td><code>aria-hidden="true"</code> on the entire <code>.loki-eb-seal</code> div. The seal quote is atmosphere, not information.</td>
+        </tr>
+        <tr>
+          <td>Retry button</td>
+          <td>Clear action label</td>
+          <td><code>aria-label="Reweave the Thread — retry this component"</code>. Visible text "Reweave the Thread" + descriptive suffix in aria-label. <code>type="button"</code> to prevent form submission.</td>
+        </tr>
+        <tr>
+          <td>Retry button — touch target</td>
+          <td>WCAG 2.5.5 Target Size</td>
+          <td>Min 44×44px tap target. On mobile: <code>width: 100%</code> + <code>padding: 8px 12px</code> achieves this.</td>
+        </tr>
+        <tr>
+          <td>Color contrast</td>
+          <td>WCAG 1.4.3 AA — 4.5:1 for normal text</td>
+          <td>Existing CSS vars are designed for contrast. Engineer should verify <code>--agent-accent-loki</code> (#22c55e) on <code>--forge</code> (#12121f) — expected ~4.8:1. Light theme: verify <code>--agent-accent-loki</code> on <code>--forge</code> (#ffffff) — may need adjustment; check with browser dev tools.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>

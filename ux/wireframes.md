@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Monitor UI — Loki Error Boundary Tablet (Issue #1037)
+
+| File | Description |
+|------|-------------|
+| [wireframes/monitor-ui/loki-error-boundary.html](wireframes/monitor-ui/loki-error-boundary.html) | Loki-themed Norse tablet for `ErrorBoundary.tsx` fallback — replaces plain inline-styled div. 8 sections: scope overview + acceptance criteria mapping, full desktop tablet wireframe (role="alert", Loki rune avatar ᛚᛟᚲᛁ, trickster heading, subheading, error inscription block, Loki seal, "Reweave the Thread" retry button), component states (A: error caught / B: normal render / C: custom fallback prop) + retry state transition flow, mobile 375px viewport simulation with responsive rules, copy specification (all text, glyphs, aria-labels), CSS implementation spec (all `loki-eb-*` classes mapped to existing CSS vars — no hardcoded colors), component change summary (ErrorBoundary.tsx + index.css only — no new files), WCAG 2.1 AA accessibility spec. Interaction spec: [loki-error-boundary-interaction-spec.md](wireframes/monitor-ui/loki-error-boundary-interaction-spec.md). |
+
+---
+
 ## Monitor UI — Norse Tablet Rune Signatures &amp; Wikipedia Links (Issue #1003)
 
 | File | Description |

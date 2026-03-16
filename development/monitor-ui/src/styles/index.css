@@ -1437,3 +1437,210 @@ body {
     animation-delay: 0ms !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   Loki Error Boundary Tablet — loki-eb-*
+   Compact inline error boundary. Not full-pane.
+   Host: ErrorBoundary.tsx (monitor-ui)
+   Issue #1037
+══════════════════════════════════════════════════════════════ */
+
+.loki-eb-tablet {
+  border: 1px solid var(--rune-border);
+  background: var(--forge);
+  padding: 0;
+  margin: 8px 0;
+  overflow: hidden;
+}
+
+.loki-eb-rune-border {
+  font-size: 10px;
+  text-align: center;
+  letter-spacing: 3px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--rune-border);
+  color: var(--text-void);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loki-eb-rune-border.bottom {
+  border-bottom: none;
+  border-top: 1px solid var(--rune-border);
+}
+
+.loki-eb-body {
+  padding: 16px 20px;
+}
+
+.loki-eb-avatar {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.loki-eb-avatar-rune {
+  font-size: 28px;
+  letter-spacing: 8px;
+  display: block;
+  color: var(--agent-accent-loki);
+}
+
+.loki-eb-avatar-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 4px;
+  display: block;
+  color: var(--text-rune);
+}
+
+.loki-eb-divider {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 3px;
+  margin: 8px 0;
+  color: var(--text-void);
+}
+
+.loki-eb-heading {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 4px;
+  padding: 0;
+  border: none;
+  color: var(--text-saga);
+}
+
+.loki-eb-subheading {
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 12px;
+  color: var(--text-rune);
+}
+
+.loki-eb-inscription {
+  border: 1px dashed var(--error-border);
+  background: var(--error-bg);
+  padding: 10px 14px;
+  margin: 12px 0;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--error-text);
+}
+
+.loki-eb-inscription-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+  display: block;
+  color: var(--text-void);
+}
+
+.loki-eb-inscription-message {
+  display: block;
+  line-height: 1.5;
+  word-break: break-word;
+  color: var(--error-text);
+  font-family: inherit;
+}
+
+.loki-eb-seal {
+  border: 1px solid var(--gold-dim-border);
+  background: var(--gold-subtle-bg);
+  padding: 10px 14px;
+  text-align: center;
+  margin: 12px 0;
+}
+
+.loki-eb-seal-runes {
+  font-size: 14px;
+  letter-spacing: 5px;
+  margin-bottom: 4px;
+  color: var(--agent-accent-loki);
+}
+
+.loki-eb-seal-inscription {
+  font-size: 11px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--text-saga);
+}
+
+.loki-eb-seal-sub {
+  font-size: 10px;
+  margin-top: 3px;
+  color: var(--text-void);
+}
+
+.loki-eb-action {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.loki-eb-retry-btn {
+  padding: 6px 18px;
+  border: 1px solid var(--gold-dim-border);
+  background: var(--forge);
+  color: var(--gold-bright);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-family: inherit;
+}
+
+.loki-eb-retry-btn:hover {
+  background: var(--norse-tablet-header-hover);
+}
+
+@media (max-width: 375px) {
+  .loki-eb-rune-border {
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+
+  .loki-eb-body {
+    padding: 12px 14px;
+  }
+
+  .loki-eb-avatar-rune {
+    font-size: 22px;
+    letter-spacing: 5px;
+  }
+
+  .loki-eb-heading {
+    font-size: 14px;
+  }
+
+  .loki-eb-subheading {
+    font-size: 11px;
+  }
+
+  .loki-eb-inscription-message {
+    font-size: 10px;
+  }
+
+  .loki-eb-seal-runes {
+    font-size: 12px;
+    letter-spacing: 3px;
+  }
+
+  .loki-eb-seal-inscription {
+    font-size: 10px;
+  }
+
+  .loki-eb-seal-sub {
+    font-size: 9px;
+  }
+
+  .loki-eb-retry-btn {
+    width: 100%;
+    padding: 8px 12px;
+  }
+}

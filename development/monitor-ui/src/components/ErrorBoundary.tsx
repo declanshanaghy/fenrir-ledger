@@ -29,37 +29,69 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
       return (
-        <div style={{
-          padding: "1rem",
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: "0.8rem",
-          color: "#fca5a5",
-          background: "#1a0a0a",
-          borderRadius: "4px",
-          margin: "0.5rem",
-        }}>
-          <div style={{ fontWeight: 700, marginBottom: "0.3rem" }}>
-            {"\u26A0"} Component Error
+        <div
+          className="loki-eb-tablet"
+          role="alert"
+          aria-live="assertive"
+          aria-label="Loki has captured a component error"
+        >
+          {/* Top rune border — decorative */}
+          <div className="loki-eb-rune-border" aria-hidden="true">
+            ᛚ ᛟ ᚲ ᛁ · ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ · ᛚ ᛟ ᚲ ᛁ
           </div>
-          <div style={{ color: "#a0a0b0" }}>
-            {this.state.error?.message || "Unknown error"}
+
+          <div className="loki-eb-body">
+            {/* Loki avatar */}
+            <div className="loki-eb-avatar">
+              <span className="loki-eb-avatar-rune" aria-hidden="true">ᛚᛟᚲᛁ</span>
+              <span className="loki-eb-avatar-label">Loki · The Trickster</span>
+            </div>
+
+            {/* Divider */}
+            <div className="loki-eb-divider" aria-hidden="true">ᚦ · ᛚᚨᚢᚷᚨᛉ · ᚦ</div>
+
+            {/* Heading */}
+            <h3 className="loki-eb-heading">
+              The Trickster Has Snared This Thread
+            </h3>
+
+            {/* Subheading */}
+            <p className="loki-eb-subheading">
+              Loki has bound this error to the world-serpent&apos;s coils — it shall cause no further chaos
+            </p>
+
+            {/* Error inscription */}
+            <div className="loki-eb-inscription" aria-label="Error details">
+              <span className="loki-eb-inscription-label">Captured Inscription (error.message)</span>
+              <code className="loki-eb-inscription-message">
+                {this.state.error?.message ?? "Unknown error"}
+              </code>
+            </div>
+
+            {/* Loki seal — decorative */}
+            <div className="loki-eb-seal" aria-hidden="true">
+              <div className="loki-eb-seal-runes">ᛚᛟᚲᛁ · ᚹᛟᚱᛚᛞ-ᛊᛖᚱᛈᛖᚾᛏ</div>
+              <div className="loki-eb-seal-inscription">&ldquo;Every truth hides a lie, every build hides a flaw&rdquo;</div>
+              <div className="loki-eb-seal-sub">ᛚ — So the trickster weaves — ᛚ</div>
+            </div>
+
+            {/* Retry action */}
+            <div className="loki-eb-action">
+              <button
+                type="button"
+                className="loki-eb-retry-btn"
+                aria-label="Reweave the Thread — retry this component"
+                onClick={() => this.setState({ hasError: false, error: null })}
+              >
+                Reweave the Thread
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => this.setState({ hasError: false, error: null })}
-            style={{
-              marginTop: "0.5rem",
-              padding: "0.3rem 0.8rem",
-              background: "#2a2a3e",
-              color: "#f0b429",
-              border: "1px solid #3a3a4e",
-              borderRadius: "3px",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              fontSize: "0.75rem",
-            }}
-          >
-            Retry
-          </button>
+
+          {/* Bottom rune border — decorative */}
+          <div className="loki-eb-rune-border bottom" aria-hidden="true">
+            ᛟ ᛞ ᛜ ᛚ ᛗ ᛖ ᛒ ᛏ ᛊ ᛉ ᛈ ᛇ ᛃ ᛁ ᚾ ᚺ ᚹ ᚷ ᚲ ᚱ ᚨ ᚦ ᚢ ᚠ · ᛚ ᛟ ᚲ ᛁ
+          </div>
         </div>
       );
     }
