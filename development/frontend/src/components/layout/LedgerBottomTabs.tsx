@@ -128,8 +128,8 @@ export function LedgerBottomTabs() {
   );
 
   const tabBase =
-    "flex flex-1 flex-col items-center justify-center gap-0.5 text-muted-foreground transition-colors min-h-[56px]";
-  const tabActive = "text-gold";
+    "flex flex-1 flex-col items-center justify-center gap-0.5 text-muted-foreground transition-colors min-h-[56px] border-b-2 border-transparent";
+  const tabActive = "text-gold karl-bling-nav-active";
 
   return (
     <nav
