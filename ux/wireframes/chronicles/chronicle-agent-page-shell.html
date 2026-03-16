@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chronicle Agent Page Shell | Wireframe — Issue #1047</title>
+  <style>
+    /* Layout CSS only — no theme styling */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: sans-serif; font-size: 14px; line-height: 1.5; background: #fff; }
+
+    /* ── Annotation system ── */
+    .note {
+      font-size: 11px;
+      font-style: italic;
+      border: 1px dashed #999;
+      padding: 4px 8px;
+      margin: 6px 0;
+      display: inline-block;
+    }
+    .zone-label {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 2px 6px;
+      border: 1px solid #666;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .placeholder-box {
+      border: 1px dashed #bbb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-style: italic;
+      padding: 8px;
+      opacity: 0.7;
+    }
+    hr.divider { border: none; border-top: 1px solid #ccc; margin: 12px 0; }
+
+    /* ── Desktop layout viewport ── */
+    .viewport-desktop {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 2px solid #333;
+    }
+    .viewport-label {
+      font-size: 13px;
+      font-weight: bold;
+      padding: 8px 12px;
+      border: 1px solid #333;
+      margin-bottom: 16px;
+      display: inline-block;
+    }
+
+    /* ── Site chrome (marketing layout) ── */
+    .site-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      border-bottom: 1px solid #ccc;
+      margin-bottom: 0;
+    }
+    .site-nav .nav-brand { font-weight: bold; font-size: 16px; }
+    .site-nav .nav-links { display: flex; gap: 20px; font-size: 13px; }
+    .site-nav .nav-actions { display: flex; gap: 10px; }
+    .btn { border: 1px solid #666; padding: 5px 14px; font-size: 12px; cursor: pointer; }
+    .btn-primary { border-width: 2px; font-weight: bold; }
+
+    /* ── Article compact header ── */
+    .article-header {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 48px 28px 32px;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
+    }
+    .header-meta-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .rune-glyph { font-size: 24px; font-weight: bold; opacity: 0.6; }
+    .badge {
+      border: 1px solid #666;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .badge-agent { border-width: 1px; }
+    .article-title { font-size: 32px; font-weight: bold; line-height: 1.2; margin-bottom: 12px; }
+    .article-excerpt { font-size: 14px; font-style: italic; }
+
+    /* ── Prev/Next navigation ── */
+    .chronicle-nav {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 24px 28px;
+      border-bottom: 1px solid #ccc;
+    }
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+    .nav-entry {
+      flex: 1;
+      max-width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-entry.right { text-align: right; margin-left: auto; }
+    .nav-direction { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; }
+    .nav-title { font-size: 13px; font-weight: 600; }
+    .nav-date { font-size: 10px; }
+    .nav-rune-divider { font-size: 20px; opacity: 0.3; }
+
+    /* ── Chronicle content area ── */
+    .chronicle-content {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 0 28px 80px;
+    }
+
+    /* ── Norse component: All-Father's Decree ── */
+    .decree-component {
+      border: 2px solid #333;
+      padding: 24px 32px;
+      margin: 24px 0;
+      position: relative;
+    }
+    .decree-top-bar { border-top: 2px solid #333; margin-bottom: 16px; padding-top: 12px; }
+    .decree-rune-row { font-size: 16px; letter-spacing: 0.5em; text-align: center; margin-bottom: 8px; opacity: 0.5; }
+    .decree-title-block { text-align: center; margin-bottom: 16px; }
+    .decree-main-title { font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.15em; }
+    .decree-subtitle { font-size: 11px; font-style: italic; }
+    .decree-body-section { margin: 12px 0; }
+    .decree-section-header { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; margin-bottom: 6px; }
+    .decree-section-glyph { font-size: 14px; opacity: 0.7; }
+    .decree-body-text { font-size: 13px; line-height: 1.6; }
+    .decree-law-block { border-left: 2px solid #666; padding: 6px 12px; margin: 6px 0; font-size: 12px; }
+    .decree-oath { font-weight: bold; font-size: 12px; }
+    .decree-seal { border-top: 1px solid #999; margin-top: 16px; padding-top: 12px; text-align: center; }
+    .decree-seal-glyph { font-size: 20px; opacity: 0.6; }
+    .decree-seal-text { font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; }
+    .decree-bottom-bar { border-bottom: 2px solid #333; margin-top: 12px; }
+
+    /* ── Stats Grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+      margin: 16px 0;
+    }
+    .stat-card { border: 1px solid #ccc; padding: 12px; text-align: center; }
+    .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; }
+    .stat-val { font-size: 22px; font-weight: bold; }
+
+    /* ── Changes Summary ── */
+    .changes-summary { border: 1px solid #ccc; padding: 14px 18px; margin: 12px 0; }
+    .changes-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+    .changes-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .changes-col-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+    .file-chip { border: 1px solid #bbb; padding: 2px 8px; font-size: 11px; display: inline-block; margin: 2px 3px; }
+
+    /* ── Turns section ── */
+    .turns-section { margin: 20px 0; }
+    .turns-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; }
+
+    /* ── Single turn (collapsible) ── */
+    .agent-turn {
+      border: 1px solid #ccc;
+      margin-bottom: 6px;
+    }
+    .agent-turn.turn-error { border-left: 3px solid #333; }
+    .turn-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-bottom: 1px solid transparent;
+      cursor: pointer;
+    }
+    .turn-summary:hover { border-bottom-color: #ccc; }
+    .turn-chevron { font-size: 10px; }
+    .turn-num { font-size: 11px; min-width: 28px; }
+    .turn-text { font-size: 13px; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .turn-badges { display: flex; gap: 4px; }
+    .tool-badge { border: 1px solid #bbb; padding: 1px 6px; font-size: 10px; }
+
+    /* ── Turn body (when open) ── */
+    .turn-body { padding: 0; }
+    .thinking-block { border-bottom: 1px solid #eee; padding: 8px 14px; font-size: 12px; font-style: italic; }
+    .text-block-agent { padding: 8px 14px; font-size: 13px; border-bottom: 1px solid #eee; max-width: 60%; border: 1px solid #ccc; margin: 8px; }
+
+    /* ── Toolbox (merged tool-use block) ── */
+    .toolbox {
+      border: 1px solid #ccc;
+      margin: 8px;
+      max-width: 60%;
+    }
+    .toolbox-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .tool-block { border-bottom: 1px solid #eee; }
+    .tool-block:last-child { border-bottom: none; }
+    .tool-block-summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .tool-name { font-weight: bold; }
+    .tool-preview { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11px; }
+    .tool-detail { padding: 6px 12px; }
+    .tool-input { padding: 6px 12px; font-size: 11px; border-bottom: 1px solid #eee; }
+    .tool-output { padding: 6px 12px; font-size: 11px; }
+    .tool-output.error { }
+
+    /* ── Chat bubbles (heckle section) ── */
+    .heckle-area { margin: 12px 0; }
+
+    /* Agent comeback (left) */
+    .bubble-agent {
+      max-width: 60%;
+      margin-bottom: 12px;
+    }
+    .bubble-identity {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .avatar { width: 28px; height: 28px; border: 1px solid #888; border-radius: 50%; flex-shrink: 0; }
+    /* Note: border-radius excluded by wireframe rules — using note instead */
+    .avatar-square { width: 28px; height: 28px; border: 1px solid #888; flex-shrink: 0; }
+    .bubble-name { font-size: 11px; font-weight: bold; }
+    .bubble-text { border: 1px solid #bbb; padding: 8px 12px; font-size: 13px; line-height: 1.5; }
+    .bubble-agent .bubble-text { border-left-width: 2px; }
+
+    /* Heckler bubble (right) */
+    .bubble-heckler {
+      max-width: 60%;
+      margin-left: auto;
+      margin-bottom: 12px;
+      text-align: right;
+    }
+    .bubble-heckler .bubble-identity { flex-direction: row-reverse; }
+    .bubble-heckler .bubble-text { border-right-width: 2px; }
+
+    /* ── Explosion / entrance events ── */
+    .heckle-entrance {
+      border: 1px dashed #bbb;
+      padding: 12px 16px;
+      margin: 12px 0;
+      width: 100%;
+    }
+    .heckle-entrance .bubble-identity { flex-direction: row-reverse; justify-content: flex-end; }
+    .heckle-entrance .bubble-text { font-style: italic; text-align: center; }
+
+    .heckle-explosion {
+      border: 2px solid #444;
+      padding: 20px 32px;
+      margin: 12px 0;
+      width: 100%;
+      text-align: center;
+      font-weight: bold;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .explosion-rune-row { font-size: 11px; letter-spacing: 0.4em; opacity: 0.4; margin-bottom: 8px; }
+    .explosion-text { font-size: 16px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+    .explosion-rune-after { font-size: 10px; letter-spacing: 0.3em; opacity: 0.3; margin-top: 8px; }
+
+    /* ── Agent callback footer ── */
+    .agent-callback {
+      border: 2px solid #333;
+      padding: 24px 32px;
+      margin: 24px 0;
+      text-align: center;
+      position: relative;
+    }
+    .callback-top-bar { border-top: 2px solid #333; margin-bottom: 16px; padding-top: 12px; }
+    .callback-rune-row { font-size: 14px; letter-spacing: 0.6em; opacity: 0.5; margin-bottom: 8px; }
+    .callback-avatar { width: 48px; height: 48px; border: 2px solid #666; margin: 0 auto 12px; display: block; }
+    .callback-declaration { font-size: 16px; font-weight: bold; margin: 8px 0; }
+    .callback-quote { font-size: 13px; font-style: italic; margin: 12px auto; max-width: 70%; line-height: 1.6; }
+    .callback-blood-seal { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; margin-top: 12px; }
+    .callback-wolf { font-size: 18px; opacity: 0.6; margin-top: 8px; }
+    .callback-bottom-bar { border-bottom: 2px solid #333; margin-top: 12px; }
+
+    /* ── Verdict ── */
+    .verdict-block {
+      border: 2px solid #666;
+      padding: 20px 24px;
+      margin: 20px 0;
+    }
+    .verdict-label { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+    .verdict-text { font-size: 13px; line-height: 1.6; }
+
+    /* ── Back to index ── */
+    .back-link {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 32px 28px;
+      border-top: 1px solid #ccc;
+      text-align: center;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    /* ── Site footer ── */
+    .site-footer {
+      border-top: 1px solid #ccc;
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 11px;
+    }
+
+    /* ── Mobile viewport annotation ── */
+    .viewport-mobile {
+      width: 375px;
+      border: 2px solid #333;
+      margin: 40px auto;
+      padding: 0;
+    }
+    .viewport-mobile .article-header { padding: 24px 16px 20px; }
+    .viewport-mobile .article-title { font-size: 20px; }
+    .viewport-mobile .chronicle-nav { padding: 16px; }
+    .viewport-mobile .chronicle-content { padding: 0 16px 48px; }
+    .viewport-mobile .changes-cols { grid-template-columns: 1fr; }
+    .viewport-mobile .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    .viewport-mobile .bubble-agent,
+    .viewport-mobile .bubble-heckler { max-width: 90%; }
+    .viewport-mobile .toolbox { max-width: 100%; }
+    .viewport-mobile .text-block-agent { max-width: 90%; }
+    .viewport-mobile .turn-badges { display: none; }
+    .viewport-mobile .turn-body .thinking-block { font-size: 11px; }
+    .viewport-mobile .decree-component { padding: 16px 14px; }
+    .viewport-mobile .agent-callback { padding: 16px 14px; }
+    .viewport-mobile .heckle-explosion { padding: 14px 12px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     DESKTOP VIEWPORT  (1200px+ container, 880px content)
+     ════════════════════════════════════════════════════════ -->
+
+<div class="viewport-label">DESKTOP — 1200px viewport, 880px content column</div>
+<div class="viewport-desktop">
+
+  <!-- ZONE A: Site chrome nav (from existing marketing layout — unchanged) -->
+  <div class="zone-label">A — Site Chrome / Marketing Nav (layout.tsx — not part of this issue)</div>
+  <nav class="site-nav">
+    <div class="nav-brand">ᚠ Fenrir Ledger</div>
+    <div class="nav-links">
+      <span>Product</span>
+      <span>Pricing</span>
+      <span>Chronicles</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn">Sign In</button>
+      <button class="btn btn-primary">Get Started</button>
+    </div>
+  </nav>
+  <p class="note">Nav is inherited from (marketing)/layout.tsx — no changes needed here</p>
+
+  <!-- ZONE B: Compact article header (from frontmatter: rune, category, date, title, excerpt) -->
+  <div class="zone-label">B — Article Header (from page.tsx frontmatter)</div>
+  <header class="article-header">
+    <div class="header-meta-row">
+      <span class="rune-glyph">ᚠ</span>
+      <span class="badge badge-agent">Agent Report</span>
+      <span>·</span>
+      <time>March 16, 2026</time>
+    </div>
+    <h1 class="article-title">FiremanDecko Forges the Chronicle CSS</h1>
+    <p class="article-excerpt">Extract Norse CSS from inline generator into shared chronicle.css — Issue #1048, Step 1</p>
+  </header>
+
+  <!-- ZONE C: Prev/Next navigation (between header and content) -->
+  <div class="zone-label">C — Prev / Next Navigation</div>
+  <nav class="chronicle-nav">
+    <div class="nav-row">
+      <div class="nav-entry">
+        <span class="nav-direction">← Previous (older)</span>
+        <span class="nav-title">Luna Designs the Chronicle Wireframes</span>
+        <span class="nav-date">March 15, 2026</span>
+      </div>
+      <div class="nav-rune-divider">ᛟ</div>
+      <div class="nav-entry right">
+        <span class="nav-direction">Next (newer) →</span>
+        <span class="nav-title">Loki Validates CSS Extraction</span>
+        <span class="nav-date">March 17, 2026</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ZONE D: Chronicle content — the MDX render zone -->
+  <div class="zone-label">D — .chronicle-page Content Zone (MDX rendered here)</div>
+  <div class="chronicle-content">
+
+    <!-- D1: All-Father's Decree (top of agent report) -->
+    <div class="zone-label">D1 — All-Father's Decree Component</div>
+    <div class="decree-component">
+      <div class="decree-top-bar"></div>
+      <div class="decree-rune-row">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ</div>
+      <div class="decree-title-block">
+        <div class="decree-main-title">All-Father's Decree</div>
+        <div class="decree-subtitle">Issued by the All-Father from Hlidskjalf</div>
+      </div>
+
+      <div class="decree-body-section">
+        <div class="decree-section-header">
+          <span class="decree-section-glyph">⚡</span>
+          <span>The Charge</span>
+        </div>
+        <div class="decree-body-text">
+          FiremanDecko, forge-born of Muspelheim, thou art dispatched to extract the CSS...
+          <div class="decree-law-block">[Law / constraint block — monospaced, left-border accent]</div>
+        </div>
+      </div>
+
+      <div class="decree-body-section">
+        <div class="decree-section-header">
+          <span class="decree-section-glyph">⚔</span>
+          <span>The Oath</span>
+        </div>
+        <div class="decree-oath">[UNBREAKABLE oath text — bold, uppercase, accent border]</div>
+      </div>
+
+      <div class="decree-seal">
+        <div class="decree-seal-glyph">ᛟ</div>
+        <div class="decree-seal-text">By the seal of Odin · All-Father's Decree · Session #1048</div>
+      </div>
+      <div class="decree-bottom-bar"></div>
+    </div>
+    <p class="note">Decree: full 2px double-border box, ornamental rune rows top/bottom, seal glyph centered. Max-width: 100% of content column.</p>
+
+    <!-- D2: Stats grid -->
+    <div class="zone-label">D2 — Stats Grid (existing, unchanged)</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Turns</div><div class="stat-val">12</div></div>
+      <div class="stat-card"><div class="stat-label">Tools</div><div class="stat-val">34</div></div>
+      <div class="stat-card"><div class="stat-label">Files</div><div class="stat-val">5</div></div>
+      <div class="stat-card"><div class="stat-label">Commits</div><div class="stat-val">3</div></div>
+    </div>
+
+    <!-- D3: Changes summary -->
+    <div class="zone-label">D3 — Changes Summary (existing, unchanged)</div>
+    <div class="changes-summary">
+      <div class="changes-title">Changes</div>
+      <div class="changes-cols">
+        <div>
+          <div class="changes-col-title">Files Modified</div>
+          <span class="file-chip">→ chronicle.css</span>
+          <span class="file-chip">+ chronicle-norse.css</span>
+        </div>
+        <div>
+          <div class="changes-col-title">Commits</div>
+          <div style="font-size:11px; padding:4px 0;">feat: extract Norse CSS from generator</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D4: Turns timeline -->
+    <div class="zone-label">D4 — Agent Turns (collapsible &lt;details&gt;/&lt;summary&gt;)</div>
+    <div class="turns-section">
+      <div class="turns-title">Agent Turns [12]</div>
+
+      <!-- Turn 1: collapsed -->
+      <details class="agent-turn">
+        <summary class="turn-summary">
+          <span class="turn-chevron">▶</span>
+          <span class="turn-num">01</span>
+          <span class="turn-text">Read product design brief and plan implementation</span>
+          <span class="turn-badges">
+            <span class="tool-badge">Read</span>
+            <span class="tool-badge">Bash</span>
+          </span>
+        </summary>
+        <!-- collapsed by default -->
+      </details>
+
+      <!-- Turn 2: expanded example -->
+      <details class="agent-turn" open>
+        <summary class="turn-summary">
+          <span class="turn-chevron">▶</span>
+          <span class="turn-num">02</span>
+          <span class="turn-text">Extract CSS variables from generate-agent-report.mjs</span>
+          <span class="turn-badges">
+            <span class="tool-badge">Read</span>
+            <span class="tool-badge">Edit</span>
+            <span class="tool-badge">Write</span>
+          </span>
+        </summary>
+        <div class="turn-body">
+          <!-- Thinking block (italic, muted, max-height 180px + scroll) -->
+          <div class="thinking-block">
+            [Thinking block — italic monospace, max-height 180px with scroll. Prefixed with rune glyph ᛒ. Only shown when agent has extended_thinking enabled.]
+          </div>
+          <!-- Agent text output (left-aligned, 60% max-width, teal border left) -->
+          <div class="text-block-agent">
+            [Agent text output — left-aligned bubble, max-width 60%, left-accent border. Source Serif body text.]
+          </div>
+          <!-- Toolbox (merged tool-use turns) -->
+          <div class="zone-label">Toolbox — merged tool-use turns within this agent turn</div>
+          <div class="toolbox">
+            <div class="toolbox-header">Tools Used</div>
+            <!-- Tool block 1 (collapsed) -->
+            <details class="tool-block">
+              <summary class="tool-block-summary">
+                <span class="turn-chevron">▶</span>
+                <span class="tool-name">Read</span>
+                <span class="tool-preview">generate-agent-report.mjs</span>
+              </summary>
+              <div class="tool-detail">
+                <div class="tool-input">[Input params — monospace, blue tint, border-bottom]</div>
+                <div class="tool-output">[Output — monospace, teal tint, max-height 350px scroll]</div>
+              </div>
+            </details>
+            <!-- Tool block 2 (expanded) -->
+            <details class="tool-block" open>
+              <summary class="tool-block-summary">
+                <span class="turn-chevron">▼</span>
+                <span class="tool-name">Write</span>
+                <span class="tool-preview">chronicle-norse.css [1247 chars]</span>
+              </summary>
+              <div class="tool-detail">
+                <div class="tool-input">path: "development/frontend/src/app/(marketing)/chronicles/chronicle-norse.css"<br>content: "/* ... */"</div>
+                <div class="tool-output">File written successfully (1247 bytes)</div>
+              </div>
+            </details>
+            <!-- Tool block 3 with error -->
+            <details class="tool-block">
+              <summary class="tool-block-summary">
+                <span class="turn-chevron">▶</span>
+                <span class="tool-name">Bash</span>
+                <span class="tool-preview">cd /workspace/repo && npx tsc --noEmit</span>
+              </summary>
+              <div class="tool-detail">
+                <div class="tool-input">cd /workspace/repo && npx tsc --noEmit</div>
+                <div class="tool-output error">[Error output — red tint, same monospace. Turn border changes to error accent.]</div>
+              </div>
+            </details>
+          </div><!-- /toolbox -->
+        </div><!-- /turn-body -->
+      </details><!-- /turn 2 -->
+
+      <!-- HECKLE: Entrance event between turns (full-width, dashed) -->
+      <div class="zone-label">D5a — Heckle: ENTRANCE event (full-width, right-aligned dashed box)</div>
+      <div class="heckle-entrance">
+        <div class="bubble-identity">
+          <div class="avatar-square"></div>
+          <span class="bubble-name">Mammy (Heckler — Entrance)</span>
+        </div>
+        <div class="bubble-text">
+          [Entrance event — italic, text-align center, right-aligned amber identity. Full-width dashed border.]
+          <br><em>Example: "Mammy has entered the stadium"</em>
+        </div>
+        <p class="note">Entrance: right-side identity (reversed row), full-width dashed border, amber avatar-name, italic centered message text</p>
+      </div>
+
+      <!-- Turn 3: collapsed -->
+      <details class="agent-turn">
+        <summary class="turn-summary">
+          <span class="turn-chevron">▶</span>
+          <span class="turn-num">03</span>
+          <span class="turn-text">Update page.tsx to import chronicle-norse.css</span>
+          <span class="turn-badges">
+            <span class="tool-badge">Edit</span>
+          </span>
+        </summary>
+      </details>
+
+      <!-- HECKLE: Explosion event between turns (full-width, heavy border) -->
+      <div class="zone-label">D5b — Heckle: EXPLOSION event (full-width, 2px solid, trembling animation)</div>
+      <div class="heckle-explosion">
+        <div class="explosion-rune-row">ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ ᛏ ᚦ ᛊ</div>
+        <div class="explosion-text">FIVE ERRORS! SURE, WHAT DID WE EXPECT FROM MAYO COUNTY?!</div>
+        <div class="explosion-rune-after">᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭</div>
+        <p class="note">Explosion: 2px solid border, CSS animation: norse-tremble 0.8s (see interaction spec), heavy uppercase text, decorative rune prefix+suffix rows</p>
+      </div>
+
+      <!-- Turn 4 (collapsed) -->
+      <details class="agent-turn">
+        <summary class="turn-summary">
+          <span class="turn-chevron">▶</span>
+          <span class="turn-num">04</span>
+          <span class="turn-text">Run verify.sh and fix tsc errors</span>
+          <span class="turn-badges">
+            <span class="tool-badge">Bash</span>
+            <span class="tool-badge">Edit</span>
+          </span>
+        </summary>
+      </details>
+
+      <!-- HECKLE: Chat bubbles (agent comeback + heckler pair) -->
+      <div class="zone-label">D5c — Heckle: Chat Bubble pair (agent comeback left, heckler right)</div>
+      <div class="heckle-area">
+        <!-- Agent comeback (left-aligned) -->
+        <div class="bubble-agent">
+          <div class="bubble-identity">
+            <div class="avatar-square">
+              <p class="note" style="font-size:8px; margin:0;">28×28<br>agent avatar</p>
+            </div>
+            <span class="bubble-name">FiremanDecko</span>
+          </div>
+          <div class="bubble-text">
+            [Agent comeback text — left-aligned bubble, max-width 60%, teal left-border. Bubble corners: top-left flat, others rounded (see spec).]
+            <br><em>Example: "Errors? I've seen worse. The CSS is extracted and the tests are green."</em>
+          </div>
+        </div>
+        <!-- Mayo heckler (right-aligned) -->
+        <div class="bubble-heckler">
+          <div class="bubble-identity">
+            <div class="avatar-square">
+              <p class="note" style="font-size:8px; margin:0;">28×28<br>heckler avatar</p>
+            </div>
+            <span class="bubble-name">Da</span>
+          </div>
+          <div class="bubble-text">
+            [Heckler text — right-aligned bubble, max-width 60%, red right-border. Name right-aligned, avatar right. Bubble corners: top-right flat, others rounded.]
+            <br><em>Example: "<strong>Da:</strong> Sure lookit, he's grand! Still doesn't explain 1951!"</em>
+          </div>
+        </div>
+      </div>
+
+      <!-- More turns ... -->
+      <details class="agent-turn">
+        <summary class="turn-summary">
+          <span class="turn-chevron">▶</span>
+          <span class="turn-num">05 — 12</span>
+          <span class="turn-text">[Remaining turns collapsed by default — expand to view]</span>
+        </summary>
+      </details>
+    </div><!-- /turns-section -->
+
+    <!-- D6: Verdict block -->
+    <div class="zone-label">D6 — Verdict (Loki QA result, or final agent result)</div>
+    <div class="verdict-block">
+      <div class="verdict-label">⚡ PASS — All tests green</div>
+      <div class="verdict-text">[Verdict text — pass border (teal) or fail border (red). Bold label, body text below.]</div>
+    </div>
+
+    <!-- D7: Agent Callback Footer -->
+    <div class="zone-label">D7 — Agent Callback Footer (declaration to Odin)</div>
+    <div class="agent-callback">
+      <div class="callback-top-bar"></div>
+      <div class="callback-rune-row">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ</div>
+      <div class="callback-avatar placeholder-box" style="width:48px;height:48px;margin:0 auto 12px;">48×48</div>
+      <div class="callback-declaration">FiremanDecko Reports to the All-Father</div>
+      <div class="callback-quote">[Agent's closing declaration — italic Source Serif, max-width 70% centered. A summary of the session's work and outcome in the agent's voice.]</div>
+      <div class="callback-blood-seal">BY THE BLOOD SEAL OF MUSPELHEIM · SESSION COMPLETE</div>
+      <div class="callback-wolf">🐺</div>
+      <div class="callback-bottom-bar"></div>
+    </div>
+    <p class="note">Callback footer: 2px double-border, rune rows top and bottom (gradient fade), circular avatar centered, declaration bold Cinzel, quote italic, blood-seal monospace uppercase</p>
+
+  </div><!-- /chronicle-content -->
+
+  <!-- ZONE E: Back to index -->
+  <div class="back-link">↑ Back to All Sagas</div>
+
+  <!-- ZONE F: Site footer (marketing layout — unchanged) -->
+  <div class="zone-label">F — Site Footer (marketing layout — unchanged)</div>
+  <footer class="site-footer">
+    [Marketing site footer — inherited from (marketing)/layout.tsx]
+  </footer>
+
+</div><!-- /viewport-desktop -->
+
+
+<!-- ════════════════════════════════════════════════════════
+     MOBILE VIEWPORT  (375px)
+     ════════════════════════════════════════════════════════ -->
+
+<div class="viewport-label" style="margin-top:48px;">MOBILE — 375px viewport</div>
+<div class="viewport-mobile">
+
+  <!-- Nav: collapses to hamburger or minimal on mobile -->
+  <nav class="site-nav" style="padding:10px 16px;">
+    <div class="nav-brand" style="font-size:14px;">ᚠ Fenrir Ledger</div>
+    <button class="btn" style="font-size:11px;">☰</button>
+  </nav>
+  <p class="note">Mobile nav: brand + hamburger only. Links hidden.</p>
+
+  <!-- Article header: smaller, compact -->
+  <header class="article-header">
+    <div class="header-meta-row" style="font-size:10px; gap:10px;">
+      <span class="rune-glyph" style="font-size:18px;">ᚠ</span>
+      <span class="badge badge-agent">Agent</span>
+      <span>·</span>
+      <time>Mar 16, 2026</time>
+    </div>
+    <h1 class="article-title">FiremanDecko Forges the Chronicle CSS</h1>
+    <p class="article-excerpt" style="font-size:13px;">Extract Norse CSS — Issue #1048</p>
+  </header>
+  <p class="note">Mobile header: title clamp to 20px, excerpt optional, meta row tighter</p>
+
+  <!-- Prev/next: stacked on mobile if needed, gap reduced -->
+  <nav class="chronicle-nav" style="padding:12px 16px;">
+    <div class="nav-row">
+      <div class="nav-entry" style="max-width:140px;">
+        <span class="nav-direction" style="font-size:9px;">← Prev</span>
+        <span class="nav-title" style="font-size:12px;">Luna: Wireframes</span>
+      </div>
+      <div class="nav-rune-divider" style="display:none;">ᛟ</div>
+      <div class="nav-entry right" style="max-width:140px;">
+        <span class="nav-direction" style="font-size:9px;">Next →</span>
+        <span class="nav-title" style="font-size:12px;">Loki: Validates</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="chronicle-content">
+
+    <!-- Decree: compact, reduced padding -->
+    <div class="decree-component" style="padding:16px 14px; margin:16px 0;">
+      <div class="decree-top-bar" style="margin-bottom:10px;"></div>
+      <div class="decree-rune-row" style="font-size:13px; letter-spacing:0.3em;">ᚠ ᚢ ᚦ ᚨ ᚱ</div>
+      <div class="decree-title-block" style="margin-bottom:10px;">
+        <div class="decree-main-title" style="font-size:14px;">All-Father's Decree</div>
+        <div class="decree-subtitle" style="font-size:11px;">Issued from Hlidskjalf</div>
+      </div>
+      <div class="decree-body-section">
+        <div class="decree-body-text" style="font-size:12px;">[Decree body — same structure, reduced font. Law blocks remain but 100% width.]</div>
+      </div>
+      <div class="decree-seal" style="margin-top:10px; padding-top:8px;">
+        <div class="decree-seal-glyph" style="font-size:16px;">ᛟ</div>
+        <div class="decree-seal-text" style="font-size:9px;">By the seal of Odin</div>
+      </div>
+      <div class="decree-bottom-bar"></div>
+    </div>
+
+    <!-- Stats: 3-col grid on mobile -->
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="stat-card"><div class="stat-label">Turns</div><div class="stat-val" style="font-size:18px;">12</div></div>
+      <div class="stat-card"><div class="stat-label">Tools</div><div class="stat-val" style="font-size:18px;">34</div></div>
+      <div class="stat-card"><div class="stat-label">Files</div><div class="stat-val" style="font-size:18px;">5</div></div>
+    </div>
+
+    <!-- Single turn: badges hidden on mobile -->
+    <div class="turns-title" style="font-size:10px;">Agent Turns [12]</div>
+    <details class="agent-turn">
+      <summary class="turn-summary" style="padding:8px 10px; gap:6px;">
+        <span class="turn-chevron">▶</span>
+        <span class="turn-num" style="font-size:10px;">01</span>
+        <span class="turn-text" style="font-size:12px;">Read product design brief</span>
+        <!-- badges hidden at mobile: display:none -->
+      </summary>
+    </details>
+    <details class="agent-turn" open>
+      <summary class="turn-summary" style="padding:8px 10px;">
+        <span class="turn-chevron">▼</span>
+        <span class="turn-num" style="font-size:10px;">02</span>
+        <span class="turn-text" style="font-size:12px;">Extract CSS variables</span>
+      </summary>
+      <div class="turn-body">
+        <div class="thinking-block" style="font-size:11px; padding:6px 10px;">[Thinking — truncated, scroll on mobile]</div>
+        <div class="text-block-agent" style="max-width:90%; font-size:12px; margin:6px;">[Agent text — 90% max-width on mobile]</div>
+        <div class="toolbox" style="max-width:100%; margin:6px;">
+          <div class="toolbox-header" style="font-size:11px;">Tools Used</div>
+          <details class="tool-block">
+            <summary class="tool-block-summary" style="font-size:11px;padding:4px 10px;">▶ <span class="tool-name">Read</span> <span class="tool-preview">generate-agent-report.mjs</span></summary>
+          </details>
+          <details class="tool-block">
+            <summary class="tool-block-summary" style="font-size:11px;padding:4px 10px;">▶ <span class="tool-name">Write</span> <span class="tool-preview">chronicle-norse.css</span></summary>
+          </details>
+        </div>
+      </div>
+    </details>
+
+    <!-- Chat bubble: 90% width on mobile -->
+    <div class="heckle-area">
+      <div class="bubble-agent" style="max-width:90%;">
+        <div class="bubble-identity"><div class="avatar-square"></div><span class="bubble-name" style="font-size:10px;">FiremanDecko</span></div>
+        <div class="bubble-text" style="font-size:12px;">[Agent comeback — 90% width on mobile]</div>
+      </div>
+      <div class="bubble-heckler" style="max-width:90%;">
+        <div class="bubble-identity" style="flex-direction:row-reverse;"><div class="avatar-square"></div><span class="bubble-name" style="font-size:10px;">Da</span></div>
+        <div class="bubble-text" style="font-size:12px;">[Heckler — right-aligned, 90% width]</div>
+      </div>
+    </div>
+
+    <!-- Explosion: full-width, reduced padding/font on mobile -->
+    <div class="heckle-explosion" style="padding:12px; font-size:13px;">
+      <div class="explosion-rune-row">ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ</div>
+      <div class="explosion-text" style="font-size:13px;">FIVE ERRORS!</div>
+      <div class="explosion-rune-after">᛭ ᛭ ᛭ ᛭ ᛭ ᛭</div>
+    </div>
+
+    <!-- Callback footer: reduced padding on mobile -->
+    <div class="agent-callback" style="padding:16px 12px; margin:16px 0;">
+      <div class="callback-top-bar"></div>
+      <div class="callback-rune-row" style="font-size:11px;">ᚠ ᚢ ᚦ ᚨ ᚱ</div>
+      <div class="callback-avatar placeholder-box" style="width:40px;height:40px;margin:0 auto 10px;font-size:9px;">40×40</div>
+      <div class="callback-declaration" style="font-size:13px;">FiremanDecko Reports</div>
+      <div class="callback-quote" style="font-size:12px; max-width:90%;">[Declaration quote — mobile]</div>
+      <div class="callback-blood-seal" style="font-size:9px;">BY THE BLOOD SEAL</div>
+      <div class="callback-wolf" style="font-size:16px;">🐺</div>
+      <div class="callback-bottom-bar"></div>
+    </div>
+
+  </div><!-- /chronicle-content mobile -->
+
+  <div class="back-link" style="padding:20px 16px; font-size:10px;">↑ Back to All Sagas</div>
+
+</div><!-- /viewport-mobile -->
+
+
+<!-- ════════════════════════════════════════════════════════
+     COMPONENT INVENTORY NOTE
+     ════════════════════════════════════════════════════════ -->
+<div style="max-width:880px;margin:40px auto;padding:20px;border:1px solid #ccc;">
+  <h2 style="font-size:16px;font-weight:bold;margin-bottom:12px;">Component Inventory for MDX Implementation</h2>
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead>
+      <tr style="border-bottom:2px solid #333;">
+        <th style="text-align:left;padding:6px 10px;">MDX Class Name</th>
+        <th style="text-align:left;padding:6px 10px;">HTML Element</th>
+        <th style="text-align:left;padding:6px 10px;">Zone</th>
+        <th style="text-align:left;padding:6px 10px;">Collapsible</th>
+        <th style="text-align:left;padding:6px 10px;">Animation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 10px;">.decree</td><td style="padding:5px 10px;">div</td><td style="padding:5px 10px;">D1</td><td style="padding:5px 10px;">No</td><td style="padding:5px 10px;">No</td></tr>
+      <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 10px;">.stats-grid / .stat-card</td><td style="padding:5px 10px;">div grid</td><td style="padding:5px 10px;">D2</td><td style="padding:5px 10px;">No</td><td style="padding:5px 10px;">No</td></tr>
+      <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 10px;">.changes-summary</td><td style="padding:5px 10px;">div</td><td style="padding:5px 10px;">D3</td><td style="padding:5px 10px;">No</td><td style="padding:5px 10px;">No</td></tr>
+      <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 10px;">.agent-turn (+ summary)</td><td style="padding:5px 10px;">&lt;details&gt;</td><td style="padding:5px 10px;">D4</td><td style="padding:5px 10px;">Yes — native &lt;details&gt;</td><td style="padding:5px 10px;">Chevron rotate 0.15s</td></tr>
+      <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 10px;">.agent-tool-block (nested)</td><td style="padding:5px 10px;">&lt;details&gt;</td><td style="padding:5px 10px;">D4/toolbox</td><td style="padding:5px 10px;">Yes — nested &lt;details&gt;</td><td style="padding:5px 10px;">Chevron rotate 0.15s</td></tr>
+      <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 10px;">.heckle-entrance</td><td style="padding:5px 10px;">div</td><td style="padding:5px 10px;">D5a</td><td style="padding:5px 10px;">No</td><td style="padding:5px 10px;">No</td></tr>
+      <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 10px;">.heckle-explosion</td><td style="padding:5px 10px;">div</td><td style="padding:5px 10px;">D5b</td><td style="padding:5px 10px;">No</td><td style="padding:5px 10px;">norse-tremble 0.8s ease-in-out</td></tr>
+      <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 10px;">.heckle-comeback</td><td style="padding:5px 10px;">div</td><td style="padding:5px 10px;">D5c</td><td style="padding:5px 10px;">No</td><td style="padding:5px 10px;">No</td></tr>
+      <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 10px;">.heckle-mayo</td><td style="padding:5px 10px;">div</td><td style="padding:5px 10px;">D5c</td><td style="padding:5px 10px;">No</td><td style="padding:5px 10px;">No</td></tr>
+      <tr style="border-bottom:1px solid #eee;"><td style="padding:5px 10px;">.agent-verdict</td><td style="padding:5px 10px;">div</td><td style="padding:5px 10px;">D6</td><td style="padding:5px 10px;">No</td><td style="padding:5px 10px;">No</td></tr>
+      <tr><td style="padding:5px 10px;">.agent-callback</td><td style="padding:5px 10px;">div</td><td style="padding:5px 10px;">D7</td><td style="padding:5px 10px;">No</td><td style="padding:5px 10px;">No</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>
