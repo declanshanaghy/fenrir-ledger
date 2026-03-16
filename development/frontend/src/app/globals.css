@@ -1,3 +1,6 @@
+/* Karl bling theme layer — data-tier cascade (Issue #1086) */
+@import "./karl-bling.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -30,7 +30,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import { computeFingerprint } from "@/lib/trial-utils";
 import { track } from "@/lib/analytics/track";
-import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
+import { clearTrialStatusCache, useTrialStatus } from "@/hooks/useTrialStatus";
 import {
   getEntitlementCache,
   setEntitlementCache,
@@ -378,6 +378,10 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     }
   }, [isAuthenticated]);
 
+  // -- Trial status (for data-tier attribute) --------------------------------
+
+  const { status: trialStatus } = useTrialStatus();
+
   // -- Feature gating --------------------------------------------------------
 
   const hasFeature = useCallback(
@@ -391,6 +395,22 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
     },
     [tier, isActive, isLinked],
   );
+
+  // -- data-tier attribute on root element -----------------------------------
+  // Karl bling CSS cascade: [data-tier="karl"] / [data-tier="trial"] / [data-tier="thrall"]
+  // Updates immediately whenever tier or trial status changes — no page reload needed.
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const isKarl = tier === "karl" && isActive;
+    const isTrial = trialStatus === "active";
+    const dataTier: "karl" | "trial" | "thrall" = isKarl
+      ? "karl"
+      : isTrial
+        ? "trial"
+        : "thrall";
+    document.documentElement.setAttribute("data-tier", dataTier);
+  }, [tier, isActive, trialStatus]);
 
   // -- Process Stripe callback query params ----------------------------------
 
