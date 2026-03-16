@@ -74,10 +74,13 @@ Render `--status` JSON as this markdown:
 
 ### In Flight (N issues)
 
-| # | Title | Type | Chain Position | PR | Next Action |
-|---|-------|------|----------------|-----|-------------|
-| 269 | Back button | bug | Loki PASS | #286 | `gh pr merge 286 --squash --delete-branch` |
-| 279 | Dashboard tabs | ux | Awaiting FiremanDecko | #288 | `/fire-next-up --resume #279` |
+| # | Title | Chain Position | PR | Job | Runtime | Next Action |
+|---|-------|----------------|-----|-----|---------|-------------|
+| 269 | Back button | Loki PASS | #286 | complete | 8m 12s | `gh pr merge 286 --squash --delete-branch` |
+| 279 | Dashboard tabs | Awaiting FiremanDecko | #288 | running | 3m 45s | `/fire-next-up --resume #279` |
+
+Use `job_runtime` and `job_status` from `--status` JSON to populate Job and Runtime columns.
+Show "—" when no job data available (e.g. parent issues, old completed chains).
 
 ### Verdict Summary
 - PASS, ready to merge: #X, #Y
