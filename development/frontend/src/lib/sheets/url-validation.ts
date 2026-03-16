@@ -32,6 +32,8 @@ export function isValidRedirectTarget(urlString: string, context: string = "redi
     const allowedDomains = [
       "docs.google.com",
       "sheets.google.com",
+      // Google's export CDN — Sheets CSV export redirects here
+      "googleusercontent.com",
       // Google's various redirects and services
       "ssl.gstatic.com",
       "accounts.google.com",
