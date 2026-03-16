@@ -614,7 +614,16 @@ function DecreeSection({ glyph, title, body, defaultOpen, wide }: { glyph: strin
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className={`decree-section ${open ? "open" : ""}${wide ? " decree-wide" : ""}`}>
-      <div className="decree-section-header" onClick={() => setOpen(o => !o)}>
+      <div
+        className="decree-section-header"
+        onClick={() => setOpen((o) => !o)}
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen((o) => !o); }
+        }}
+      >
         <span className="decree-section-glyph" aria-hidden="true">{glyph}</span>
         <span className="decree-section-title">{title}</span>
         <span className="ep-group-chevron" style={{ marginLeft: "auto" }}>{"\u203A"}</span>
@@ -627,17 +636,20 @@ function DecreeSection({ glyph, title, body, defaultOpen, wide }: { glyph: strin
 function NorseTablet({ text, autoScroll }: { text: string; autoScroll?: boolean }) {
   const [open, setOpen] = useState(true);
   const [hasBeenCollapsed, setHasBeenCollapsed] = useState(false);
-  const agentMatch = /^You are (\w+)/.exec(text);
+  const agentMatch = /^You are (\w+)/m.exec(text);
   const agent = agentMatch?.[1] ?? "Agent";
   const agentKey = agent.toLowerCase();
   const issueMatch = /#(\d+)/.exec(text);
   const issue = issueMatch?.[1] ?? "";
   const sections = parseDecreeSections(text);
 
-  const agentRunes = AGENT_RUNE_NAMES[agentKey] ?? AGENT_RUNE_NAMES._fallback ?? "\u16C0";
-  const firstRune = ([...agentRunes][0]) ?? "\u16DF";
+  // Agent-specific constants
+  const agentRunes = AGENT_RUNE_NAMES[agentKey] ?? AGENT_RUNE_NAMES._fallback ?? "ᚨᛊᚷᚨᚱᛞ";
+  // Use spread to correctly handle SMP code points (Elder Futhark is U+16A0–U+16FF)
+  const firstRune = [...agentRunes][0] ?? "ᛟ";
   const agentColor = AGENT_COLORS[agentKey] ?? "#888";
-  const agentTitle = AGENT_TITLES[agentKey] ?? "";
+  const agentTitle = AGENT_TITLES[agentKey] ?? "Agent";
+  const agentDisplayName = AGENT_NAMES[agentKey] ?? agent;
 
   // Auto-collapse the decree once when auto-scroll is on and the agent starts working
   useEffect(() => {
@@ -660,18 +672,18 @@ function NorseTablet({ text, autoScroll }: { text: string; autoScroll?: boolean 
         role="button"
         tabIndex={0}
         aria-expanded={open}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(o => !o); } }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen((o) => !o); }
+        }}
       >
         <span className="norse-tablet-rune" aria-hidden="true">{firstRune}</span>
-        <div className="norse-tablet-header-body">
+        <div className="norse-tablet-title-block">
           <div className="norse-tablet-title">
-            The All-Father&apos;s Decree unto {agent.toUpperCase()}
+            THE ALL-FATHER&apos;S DECREE UNTO {agentDisplayName.toUpperCase()}
           </div>
           <div className="norse-tablet-subtitle">
-            {issue ? `Issue #${issue}` : ""}
-            {agentTitle ? ` \u00B7 ${agentTitle}` : ""}
-            {agentRunes ? ` \u00B7 ` : ""}
-            <span aria-hidden="true">{agentRunes}</span>
+            {issue ? `Issue #${issue} \u00B7 ` : ""}{agentTitle}
+            {agentRunes && <span className="norse-tablet-rune-name" aria-hidden="true"> \u00B7 {agentRunes}</span>}
           </div>
         </div>
         <span className="norse-tablet-rune" aria-hidden="true">{firstRune}</span>
@@ -694,28 +706,26 @@ function NorseTablet({ text, autoScroll }: { text: string; autoScroll?: boolean 
           <div className="decree-seal" role="complementary" aria-label="Odin's royal seal">
             <div className="decree-seal-runic-band" aria-hidden="true">ᛟ ᛞ ᛁ ᚾ · ᚨ ᛚ ᛚ ᚠ ᚨ ᚦ ᛖ ᚱ · ᚢ ᛏ ᚷ ᚨ ᚱ ᛞ</div>
             <div className="decree-seal-medallion" role="img" aria-label="Odin's rune — Othalan">ᛟ</div>
-            <div className="decree-seal-divider" aria-hidden="true">&mdash; ᚨ &mdash;</div>
+            <div className="decree-seal-divider" aria-hidden="true">— ᚨ —</div>
             <div className="decree-seal-command">
               &ldquo;By mine eye that sees all{" "}
               <a
-                className="decree-body-link"
+                className="wiki-link decree-body-link"
                 href="https://en.wikipedia.org/wiki/Norse_cosmology#Nine_worlds"
                 target="_blank"
                 rel="noopener noreferrer"
-                title="Wikipedia: Nine Realms"
-              >
-                Nine Realms
-              </a>
-              {" "}&mdash; I command thee to this task. Fail not.{" "}
+                title="Wikipedia: Nine Worlds"
+                aria-label="Wikipedia: Nine Worlds"
+              >Nine Realms</a>
+              {" "}— I command thee to this task. Fail not.{" "}
               <a
-                className="decree-body-link"
+                className="wiki-link decree-body-link"
                 href="https://en.wikipedia.org/wiki/Fenrir"
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Wikipedia: Fenrir"
-              >
-                Fenrir
-              </a>
+                aria-label="Wikipedia: Fenrir"
+              >Fenrir</a>
               {" "}hungers.&rdquo;
             </div>
             <div className="decree-seal-attribution">Odin &middot; All-Father</div>
