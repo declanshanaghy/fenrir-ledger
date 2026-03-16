@@ -26,6 +26,7 @@ function makeAgentJob(overrides: Partial<AgentJob> = {}): AgentJob {
     startTime: null,
     completionTime: null,
     labels: { "fenrir.dev/session-id": "issue-965-step1-firemandecko" },
+    annotations: {},
     ...overrides,
   };
 }

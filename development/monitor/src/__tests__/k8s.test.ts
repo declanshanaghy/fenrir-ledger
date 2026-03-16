@@ -71,6 +71,7 @@ describe("mapAgentJobToJob", () => {
     startTime: "2026-03-15T10:00:00Z",
     completionTime: null,
     labels: { "fenrir.dev/session-id": "issue-123-step1-firemandecko" },
+    annotations: {},
   };
 
   it("converts active → pending (pod may still be scheduling — issue #965)", () => {

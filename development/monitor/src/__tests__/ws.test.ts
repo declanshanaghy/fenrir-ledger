@@ -42,7 +42,7 @@ vi.mock("../k8s.js", () => ({
 import { attachWebSocketServer } from "../ws.js";
 
 // ── Inline type (avoids importing from the mocked module) ─────────────────────
-type JobStatus = "pending" | "running" | "succeeded" | "failed";
+type JobStatus = "pending" | "running" | "succeeded" | "failed" | "purged";
 type Job = {
   sessionId: string;
   name: string;
@@ -55,6 +55,11 @@ type Job = {
   podName: string | null;
   fixture?: boolean;
 };
+
+/** Find the test job by sessionId — fixture jobs may sort before it in the list. */
+function findTestJob(jobs: Job[]): Job | undefined {
+  return jobs.find((j) => j.sessionId === "issue-963-step1-loki");
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -176,7 +181,7 @@ describe("WebSocket server — job status broadcasts (issue #963)", () => {
     try {
       capture.watchCb!([makeJob({ status: "pending" })]);
       const msg = await waitForType<{ type: string; jobs: Job[] }>(nextMsg, "jobs-updated");
-      expect(msg.jobs[0]?.status).toBe("pending");
+      expect(findTestJob(msg.jobs)?.status).toBe("pending");
     } finally {
       ws.close();
     }
@@ -191,7 +196,7 @@ describe("WebSocket server — job status broadcasts (issue #963)", () => {
     try {
       capture.watchCb!([makeJob({ status: "running" })]);
       const msg = await waitForType<{ type: string; jobs: Job[] }>(nextMsg, "jobs-updated");
-      expect(msg.jobs[0]?.status).toBe("running");
+      expect(findTestJob(msg.jobs)?.status).toBe("running");
     } finally {
       ws.close();
     }
@@ -206,8 +211,9 @@ describe("WebSocket server — job status broadcasts (issue #963)", () => {
     try {
       capture.watchCb!([makeJob({ status: "succeeded", completedAt: "2026-03-15T11:00:00Z" })]);
       const msg = await waitForType<{ type: string; jobs: Job[] }>(nextMsg, "jobs-updated");
-      expect(msg.jobs[0]?.status).toBe("succeeded");
-      expect(msg.jobs[0]?.completedAt).toBe("2026-03-15T11:00:00Z");
+      const job = findTestJob(msg.jobs);
+      expect(job?.status).toBe("succeeded");
+      expect(job?.completedAt).toBe("2026-03-15T11:00:00Z");
     } finally {
       ws.close();
     }
@@ -222,7 +228,7 @@ describe("WebSocket server — job status broadcasts (issue #963)", () => {
     try {
       capture.watchCb!([makeJob({ status: "failed" })]);
       const msg = await waitForType<{ type: string; jobs: Job[] }>(nextMsg, "jobs-updated");
-      expect(msg.jobs[0]?.status).toBe("failed");
+      expect(findTestJob(msg.jobs)?.status).toBe("failed");
     } finally {
       ws.close();
     }
@@ -237,15 +243,15 @@ describe("WebSocket server — job status broadcasts (issue #963)", () => {
     try {
       capture.watchCb!([makeJob({ status: "pending" })]);
       const s1 = await waitForType<{ type: string; jobs: Job[] }>(nextMsg, "jobs-updated");
-      expect(s1.jobs[0]?.status).toBe("pending");
+      expect(findTestJob(s1.jobs)?.status).toBe("pending");
 
       capture.watchCb!([makeJob({ status: "running" })]);
       const s2 = await waitForType<{ type: string; jobs: Job[] }>(nextMsg, "jobs-updated");
-      expect(s2.jobs[0]?.status).toBe("running");
+      expect(findTestJob(s2.jobs)?.status).toBe("running");
 
       capture.watchCb!([makeJob({ status: "succeeded", completedAt: "2026-03-15T11:00:00Z" })]);
       const s3 = await waitForType<{ type: string; jobs: Job[] }>(nextMsg, "jobs-updated");
-      expect(s3.jobs[0]?.status).toBe("succeeded");
+      expect(findTestJob(s3.jobs)?.status).toBe("succeeded");
     } finally {
       ws.close();
     }
@@ -282,8 +288,8 @@ describe("WebSocket server — job status broadcasts (issue #963)", () => {
         waitForType<{ type: string; jobs: Job[] }>(c1.nextMsg, "jobs-updated"),
         waitForType<{ type: string; jobs: Job[] }>(c2.nextMsg, "jobs-updated"),
       ]);
-      expect(m1.jobs[0]?.status).toBe("running");
-      expect(m2.jobs[0]?.status).toBe("running");
+      expect(findTestJob(m1.jobs)?.status).toBe("running");
+      expect(findTestJob(m2.jobs)?.status).toBe("running");
     } finally {
       c1.ws.close();
       c2.ws.close();
