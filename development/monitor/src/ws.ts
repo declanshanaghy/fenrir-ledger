@@ -353,6 +353,16 @@ async function startLogStream(
   }
 }
 
+// ── Heartbeat ───────────────────────────────────────────────────────────────
+// GKE Cloud Load Balancer / nginx proxies close idle WebSocket connections
+// after ~30 s of inactivity.  Sending a WebSocket ping frame every 20 s keeps
+// the connection alive; browsers automatically respond with a pong frame at
+// the protocol level, so no client-side changes are required.
+//
+// Dead-connection detection: if no pong arrives before the next ping interval
+// the connection is terminated to free server resources.
+export const HEARTBEAT_INTERVAL_MS = 20_000;
+
 // ---------------------------------------------------------------------------
 // WebSocket server — single multiplexed /ws endpoint
 // ---------------------------------------------------------------------------
@@ -391,6 +401,25 @@ export function attachWebSocketServer(
   wss.on("connection", async (ws: WebSocket, _req: IncomingMessage) => {
     // Register this client for jobs-updated broadcasts
     connectedClients.add(ws);
+
+    // ── Per-connection heartbeat ───────────────────────────────────────────
+    // Ping every 20 s so GKE's 30 s idle timeout never fires.
+    // Mark the connection alive when we receive a pong; terminate if the
+    // previous ping went unanswered (zombie connection).
+    let isAlive = true;
+    ws.on("pong", () => { isAlive = true; });
+    const heartbeat = setInterval(() => {
+      if (ws.readyState !== WebSocket.OPEN) {
+        clearInterval(heartbeat);
+        return;
+      }
+      if (!isAlive) {
+        ws.terminate();
+        return;
+      }
+      isAlive = false;
+      ws.ping();
+    }, HEARTBEAT_INTERVAL_MS);
 
     // Seed cache from listAgentJobs if watch hasn't populated it yet
     let jobs = cachedJobs;
@@ -442,6 +471,7 @@ export function attachWebSocketServer(
     });
 
     const cleanup = () => {
+      clearInterval(heartbeat);
       connectedClients.delete(ws);
       for (const [, cancel] of subscriptions) {
         cancel();
