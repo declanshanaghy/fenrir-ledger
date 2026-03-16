@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 
 import type { LogEntry } from "../hooks/useLogStream";
 import type { DisplayJob } from "../lib/types";
@@ -6,7 +6,7 @@ import { StatusBadge } from "./StatusBadge";
 import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
 import { NorseVerdictInscription, isVerdictMessage } from "./NorseVerdictInscription";
-import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
+import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_RUNE_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS, WIKI_LINKS } from "../lib/constants";
 import { downloadLog } from "../lib/localStorageLogs";
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 
@@ -447,9 +447,9 @@ function ToolBatchGroup({ entry, autoScroll, isLatestBatch }: { entry: LogEntry;
 }
 
 /** Parse decree text into collapsible sections with Norse headings */
-function parseDecreeSections(text: string): Array<{ glyph: string; title: string; body: string; defaultOpen: boolean }> {
-  const SECTION_MAP: Array<{ pattern: RegExp; glyph: string; title: string; defaultOpen?: boolean }> = [
-    { pattern: /^You are \w+/m, glyph: "ᛁ", title: "Hear Me, Agent", defaultOpen: true },
+function parseDecreeSections(text: string): Array<{ glyph: string; title: string; body: string; defaultOpen: boolean; wide: boolean }> {
+  const SECTION_MAP: Array<{ pattern: RegExp; glyph: string; title: string; defaultOpen?: boolean; wide?: boolean }> = [
+    { pattern: /^You are \w+/m, glyph: "ᛁ", title: "Hear Me, Agent" },
     { pattern: /SANDBOX RULES/m, glyph: "ᚺ", title: "The Sacred Ground" },
     { pattern: /\*\*Step 1/m, glyph: "ᚲ", title: "Consecrate Thy Forge" },
     { pattern: /TODO TRACKING/m, glyph: "ᚾ", title: "The Norns\u2019 Ledger" },
@@ -457,7 +457,7 @@ function parseDecreeSections(text: string): Array<{ glyph: string; title: string
     { pattern: /VERIFY.*tsc.*build/m, glyph: "ᛗ", title: "Trial by Fire" },
     { pattern: /STRICT SCOPE/m, glyph: "ᛏ", title: "The Gjallarhorn Boundary" },
     { pattern: /\*\*Step 2/m, glyph: "ᚱ", title: "Consult the Runes" },
-    { pattern: /\*\*Issue details/m, glyph: "ᛃ", title: "The Wound in Yggdrasil" },
+    { pattern: /\*\*Issue details/m, glyph: "ᛃ", title: "The Wound in Yggdrasil", defaultOpen: true, wide: true },
     { pattern: /\*\*Step 3[^b]/m, glyph: "ᚠ", title: "Take Up Mj\u00F6lnir" },
     { pattern: /\*\*Step 3b/m, glyph: "ᛊ", title: "Forge the Tests" },
     { pattern: /\*\*Step 4/m, glyph: "ᛒ", title: "Walk the Bifr\u00F6st" },
@@ -467,18 +467,18 @@ function parseDecreeSections(text: string): Array<{ glyph: string; title: string
   ];
 
   // Find section boundaries
-  const boundaries: Array<{ idx: number; glyph: string; title: string; defaultOpen: boolean }> = [];
+  const boundaries: Array<{ idx: number; glyph: string; title: string; defaultOpen: boolean; wide: boolean }> = [];
   for (const sec of SECTION_MAP) {
     const match = sec.pattern.exec(text);
-    if (match) boundaries.push({ idx: match.index, glyph: sec.glyph, title: sec.title, defaultOpen: sec.defaultOpen ?? false });
+    if (match) boundaries.push({ idx: match.index, glyph: sec.glyph, title: sec.title, defaultOpen: sec.defaultOpen ?? false, wide: sec.wide ?? false });
   }
   boundaries.sort((a, b) => a.idx - b.idx);
 
   if (boundaries.length === 0) {
-    return [{ glyph: "ᛟ", title: "The Decree", body: text, defaultOpen: true }];
+    return [{ glyph: "ᛟ", title: "The Decree", body: text, defaultOpen: true, wide: false }];
   }
 
-  const sections: Array<{ glyph: string; title: string; body: string; defaultOpen: boolean }> = [];
+  const sections: Array<{ glyph: string; title: string; body: string; defaultOpen: boolean; wide: boolean }> = [];
   for (let i = 0; i < boundaries.length; i++) {
     const start = boundaries[i]!.idx;
     const end = i + 1 < boundaries.length ? boundaries[i + 1]!.idx : text.length;
@@ -487,9 +487,127 @@ function parseDecreeSections(text: string): Array<{ glyph: string; title: string
       title: boundaries[i]!.title,
       body: text.slice(start, end).trim(),
       defaultOpen: boundaries[i]!.defaultOpen,
+      wide: boundaries[i]!.wide,
     });
   }
   return sections;
+}
+
+/** Apply Wikipedia gold links to an array of React nodes (strings + existing elements) */
+function applyWikiLinksToNodes(nodes: Array<string | React.ReactElement>): Array<string | React.ReactElement> {
+  let current = nodes;
+  let keyIdx = 0;
+  for (const [term, url] of Object.entries(WIKI_LINKS)) {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(\\b${escaped}\\b)`, "g");
+    const next: Array<string | React.ReactElement> = [];
+    for (const node of current) {
+      if (typeof node !== "string") {
+        next.push(node);
+        continue;
+      }
+      const parts = node.split(regex);
+      for (const part of parts) {
+        if (part === term) {
+          next.push(
+            <a
+              key={`wiki-${term}-${keyIdx++}`}
+              className="decree-body-link"
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`Wikipedia: ${term}`}
+            >
+              {term}
+            </a>
+          );
+        } else if (part) {
+          next.push(part);
+        }
+      }
+    }
+    current = next;
+  }
+  return current;
+}
+
+/** Apply backtick code spans and Wikipedia links to a prose line */
+function processInline(text: string): Array<string | React.ReactElement> {
+  // Split on backtick spans: odd indices are code content
+  const btParts = text.split(/`([^`]+)`/);
+  const nodes: Array<string | React.ReactElement> = [];
+  for (let i = 0; i < btParts.length; i++) {
+    const part = btParts[i] ?? "";
+    if (i % 2 === 1) {
+      nodes.push(<code key={`bc-${i}`} className="decree-body-code">{part}</code>);
+    } else if (part) {
+      nodes.push(part);
+    }
+  }
+  // Apply WIKI_LINKS only to string segments (not code spans)
+  return applyWikiLinksToNodes(nodes);
+}
+
+/** Render raw decree section body with inline formatting and Wikipedia links */
+function DecreeSectionBody({ body }: { body: string }) {
+  const lines = body.split("\n");
+  const elements: Array<React.ReactElement> = [];
+  const listBuffer: string[] = [];
+  const codeBuffer: string[] = [];
+  let keyIdx = 0;
+
+  const isCodeLine = (line: string) =>
+    /^(cd |git |gh |bash |npm |node |```)/.test(line.trimStart()) || /^ {2,}/.test(line);
+  const isListLine = (line: string) => /^[-*] /.test(line.trimStart());
+  const isHeadingLine = (line: string) => /^##\s+/.test(line.trimStart()) || /^\*\*/.test(line.trimStart());
+
+  const flushList = () => {
+    if (listBuffer.length === 0) return;
+    elements.push(
+      <ul key={`ul-${keyIdx++}`}>
+        {listBuffer.map((item, i) => {
+          const content = item.trimStart().replace(/^[-*]\s+/, "");
+          return <li key={i}>{processInline(content)}</li>;
+        })}
+      </ul>
+    );
+    listBuffer.length = 0;
+  };
+
+  const flushCode = () => {
+    if (codeBuffer.length === 0) return;
+    elements.push(
+      <code key={`blk-${keyIdx++}`} className="decree-body-block">
+        {codeBuffer.join("\n")}
+      </code>
+    );
+    codeBuffer.length = 0;
+  };
+
+  for (const line of lines) {
+    if (isCodeLine(line)) {
+      flushList();
+      codeBuffer.push(line);
+    } else if (isListLine(line)) {
+      flushCode();
+      listBuffer.push(line);
+    } else {
+      flushCode();
+      flushList();
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (isHeadingLine(line)) {
+        const content = trimmed.replace(/^##\s+/, "").replace(/^\*\*/, "").replace(/\*\*$/, "");
+        elements.push(<strong key={`h-${keyIdx++}`}>{processInline(content)}</strong>);
+      } else {
+        elements.push(<p key={`p-${keyIdx++}`}>{processInline(trimmed)}</p>);
+      }
+    }
+  }
+  flushCode();
+  flushList();
+
+  return <>{elements}</>;
 }
 
 function DecreeSection({ glyph, title, body, defaultOpen, wide }: { glyph: string; title: string; body: string; defaultOpen: boolean; wide?: boolean }) {
@@ -497,11 +615,11 @@ function DecreeSection({ glyph, title, body, defaultOpen, wide }: { glyph: strin
   return (
     <div className={`decree-section ${open ? "open" : ""}${wide ? " decree-wide" : ""}`}>
       <div className="decree-section-header" onClick={() => setOpen(o => !o)}>
-        <span className="decree-section-glyph">{glyph}</span>
+        <span className="decree-section-glyph" aria-hidden="true">{glyph}</span>
         <span className="decree-section-title">{title}</span>
         <span className="ep-group-chevron" style={{ marginLeft: "auto" }}>{"\u203A"}</span>
       </div>
-      {open && <div className="decree-section-body">{body}</div>}
+      {open && <div className="decree-section-body"><DecreeSectionBody body={body} /></div>}
     </div>
   );
 }
@@ -511,12 +629,17 @@ function NorseTablet({ text, autoScroll }: { text: string; autoScroll?: boolean 
   const [hasBeenCollapsed, setHasBeenCollapsed] = useState(false);
   const agentMatch = /^You are (\w+)/.exec(text);
   const agent = agentMatch?.[1] ?? "Agent";
+  const agentKey = agent.toLowerCase();
   const issueMatch = /#(\d+)/.exec(text);
   const issue = issueMatch?.[1] ?? "";
   const sections = parseDecreeSections(text);
 
+  const agentRunes = AGENT_RUNE_NAMES[agentKey] ?? AGENT_RUNE_NAMES._fallback ?? "\u16C0";
+  const firstRune = ([...agentRunes][0]) ?? "\u16DF";
+  const agentColor = AGENT_COLORS[agentKey] ?? "#888";
+  const agentTitle = AGENT_TITLES[agentKey] ?? "";
+
   // Auto-collapse the decree once when auto-scroll is on and the agent starts working
-  // (detected by sections being fully parsed — the decree text doesn't change after initial render)
   useEffect(() => {
     if (!autoScroll || hasBeenCollapsed) return;
     const timer = setTimeout(() => {
@@ -527,14 +650,31 @@ function NorseTablet({ text, autoScroll }: { text: string; autoScroll?: boolean 
   }, [autoScroll, hasBeenCollapsed]);
 
   return (
-    <div className={`norse-tablet ${open ? "open" : ""}`}>
-      <div className="norse-tablet-header" onClick={() => setOpen(!open)}>
-        <span className="norse-tablet-rune">{"\u16A0"}</span>
-        <span className="norse-tablet-title">
-          The All-Father&apos;s Decree unto {agent}
-          {issue ? ` \u2014 Issue #${issue}` : ""}
-        </span>
-        <span className="norse-tablet-rune">{"\u16A0"}</span>
+    <div
+      className={`norse-tablet ${open ? "open" : ""}`}
+      style={{ borderLeft: `3px solid ${agentColor}` }}
+    >
+      <div
+        className="norse-tablet-header"
+        onClick={() => setOpen(!open)}
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(o => !o); } }}
+      >
+        <span className="norse-tablet-rune" aria-hidden="true">{firstRune}</span>
+        <div className="norse-tablet-header-body">
+          <div className="norse-tablet-title">
+            The All-Father&apos;s Decree unto {agent.toUpperCase()}
+          </div>
+          <div className="norse-tablet-subtitle">
+            {issue ? `Issue #${issue}` : ""}
+            {agentTitle ? ` \u00B7 ${agentTitle}` : ""}
+            {agentRunes ? ` \u00B7 ` : ""}
+            <span aria-hidden="true">{agentRunes}</span>
+          </div>
+        </div>
+        <span className="norse-tablet-rune" aria-hidden="true">{firstRune}</span>
         <span className="ep-group-chevron" style={{ marginLeft: "auto" }}>{"\u203A"}</span>
       </div>
       <div className="norse-tablet-body-wrap">
@@ -547,17 +687,39 @@ function NorseTablet({ text, autoScroll }: { text: string; autoScroll?: boolean 
                 title={sec.title}
                 body={sec.body}
                 defaultOpen={sec.defaultOpen}
-                wide={false}
+                wide={sec.wide}
               />
             ))}
           </div>
-          <div className="nt-rune-sig" role="complementary" aria-label="Odin's seal">
-            <div className="nt-rune-sig-agent-runes" aria-hidden="true">ᛟᛞᛁᚾ</div>
-            <div className="nt-rune-sig-divider" aria-hidden="true">&mdash; ᚨ &mdash;</div>
-            <div className="nt-rune-sig-quote">
-              &ldquo;By mine eye that sees all Nine Realms — I command thee to this task. Fail not. Fenrir hungers.&rdquo;
+          <div className="decree-seal" role="complementary" aria-label="Odin's royal seal">
+            <div className="decree-seal-runic-band" aria-hidden="true">ᛟ ᛞ ᛁ ᚾ · ᚨ ᛚ ᛚ ᚠ ᚨ ᚦ ᛖ ᚱ · ᚢ ᛏ ᚷ ᚨ ᚱ ᛞ</div>
+            <div className="decree-seal-medallion" role="img" aria-label="Odin's rune — Othalan">ᛟ</div>
+            <div className="decree-seal-divider" aria-hidden="true">&mdash; ᚨ &mdash;</div>
+            <div className="decree-seal-command">
+              &ldquo;By mine eye that sees all{" "}
+              <a
+                className="decree-body-link"
+                href="https://en.wikipedia.org/wiki/Norse_cosmology#Nine_worlds"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Wikipedia: Nine Realms"
+              >
+                Nine Realms
+              </a>
+              {" "}&mdash; I command thee to this task. Fail not.{" "}
+              <a
+                className="decree-body-link"
+                href="https://en.wikipedia.org/wiki/Fenrir"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Wikipedia: Fenrir"
+              >
+                Fenrir
+              </a>
+              {" "}hungers.&rdquo;
             </div>
-            <div className="nt-rune-sig-label">Odin &middot; All-Father</div>
+            <div className="decree-seal-attribution">Odin &middot; All-Father</div>
+            <div className="decree-seal-title-runes" aria-hidden="true">ᛟᛞᛁᚾ ᚨᛚᛚᚠᚨᚦᛖᚱ</div>
           </div>
         </div>
       </div>

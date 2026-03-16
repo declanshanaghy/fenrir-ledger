@@ -72,10 +72,18 @@ export const ERROR_TABLET_SEALS: Record<string, { runes: string; inscription: st
 };
 
 export const WIKI_LINKS: Record<string, string> = {
-  Yggdrasil:    "https://en.wikipedia.org/wiki/Yggdrasil",
-  "Bifröst":    "https://en.wikipedia.org/wiki/Bifr%C3%B6st",
-  Valhalla:     "https://en.wikipedia.org/wiki/Valhalla",
+  Yggdrasil:     "https://en.wikipedia.org/wiki/Yggdrasil",
+  "Bifröst":     "https://en.wikipedia.org/wiki/Bifr%C3%B6st",
+  Valhalla:      "https://en.wikipedia.org/wiki/Valhalla",
   "Nine Worlds": "https://en.wikipedia.org/wiki/Norse_cosmology#Nine_worlds",
+  "Nine Realms": "https://en.wikipedia.org/wiki/Norse_cosmology#Nine_worlds",
+  Fenrir:        "https://en.wikipedia.org/wiki/Fenrir",
+  Asgard:        "https://en.wikipedia.org/wiki/Asgard",
+  Gleipnir:      "https://en.wikipedia.org/wiki/Gleipnir",
+  "Mj\u00F6lnir": "https://en.wikipedia.org/wiki/Mj%C3%B6lnir",
+  Gjallarhorn:   "https://en.wikipedia.org/wiki/Gjallarhorn",
+  Norns:         "https://en.wikipedia.org/wiki/Norns",
+  "Huginn and Muninn": "https://en.wikipedia.org/wiki/Huginn_and_Muninn",
 };
 
 export const STATUS_ICONS: Record<Job["status"], string> = {
