@@ -154,33 +154,29 @@ export function TrialSettingsSection() {
         </div>
       )}
 
-      {/* Subscribe CTA */}
-      <button
-        type="button"
-        onClick={handleSubscribe}
-        disabled={isSubscribing}
-        className={[
-          "inline-flex items-center justify-center gap-2",
-          "min-h-[44px] md:min-h-[40px] px-5 py-2",
-          "text-base font-heading font-semibold tracking-wide",
-          "bg-gold text-primary-foreground",
-          "hover:brightness-110 transition-colors",
-          "border border-gold rounded-sm",
-          "disabled:opacity-60 disabled:cursor-not-allowed",
-          "self-start",
-        ].join(" ")}
-        aria-label={
-          status === "expired"
-            ? "Upgrade to Karl subscription"
-            : "Subscribe to Karl"
-        }
-      >
-        {isSubscribing
-          ? "Redirecting\u2026"
-          : status === "expired"
-            ? "Upgrade to Karl \u2014 $3.99/month"
-            : "Subscribe for $3.99/month"}
-      </button>
+      {/* Subscribe CTA — only shown when trial has expired (hidden during active trial) */}
+      {status === "expired" && (
+        <button
+          type="button"
+          onClick={handleSubscribe}
+          disabled={isSubscribing}
+          className={[
+            "inline-flex items-center justify-center gap-2",
+            "min-h-[44px] md:min-h-[40px] px-5 py-2",
+            "text-base font-heading font-semibold tracking-wide",
+            "bg-gold text-primary-foreground",
+            "hover:brightness-110 transition-colors",
+            "border border-gold rounded-sm",
+            "disabled:opacity-60 disabled:cursor-not-allowed",
+            "self-start",
+          ].join(" ")}
+          aria-label="Upgrade to Karl subscription"
+        >
+          {isSubscribing
+            ? "Redirecting\u2026"
+            : "Upgrade to Karl \u2014 $3.99/month"}
+        </button>
+      )}
     </section>
   );
 }

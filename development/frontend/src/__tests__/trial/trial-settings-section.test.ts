@@ -67,6 +67,18 @@ function shouldShowSettingsSection(status: string, isLoading: boolean): boolean 
   return true;
 }
 
+/**
+ * Determines if the Subscribe price button should be shown.
+ *
+ * Rules (Issue #1032):
+ *   - active trial  → hide (user already has Karl-level access)
+ *   - expired trial → show (nudge to convert)
+ *   - none / converted / other → not applicable (section hidden)
+ */
+function shouldShowSubscribeButton(status: string): boolean {
+  return status === "expired";
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -196,6 +208,26 @@ describe("TrialSettingsSection helpers", () => {
 
     it("returns false when both isLoading is true AND status is invalid", () => {
       expect(shouldShowSettingsSection("none", true)).toBe(false);
+    });
+  });
+
+  // ── shouldShowSubscribeButton (Issue #1032) ─────────────────────────────
+
+  describe("shouldShowSubscribeButton", () => {
+    it("hides subscribe button during active trial", () => {
+      expect(shouldShowSubscribeButton("active")).toBe(false);
+    });
+
+    it("shows subscribe button when trial has expired", () => {
+      expect(shouldShowSubscribeButton("expired")).toBe(true);
+    });
+
+    it("does not show subscribe button for paid Karl subscriber (converted)", () => {
+      expect(shouldShowSubscribeButton("converted")).toBe(false);
+    });
+
+    it("does not show subscribe button when no trial (none)", () => {
+      expect(shouldShowSubscribeButton("none")).toBe(false);
     });
   });
 });
