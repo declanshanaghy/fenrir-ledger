@@ -554,14 +554,24 @@ function openLogFile(sessionId, jobName) {
   mkdirSync(logDir, { recursive: true });
   const logPath = join(logDir, `${sessionId}.jsonl`);
 
-  // Never clobber an existing log file that has content.
-  // Once downloaded, JSONL logs are immutable — the job may expire from K8s
-  // but the local file is the permanent record.
+  // Skip only if file has content AND job is finished (or gone from K8s).
+  // Running jobs always re-download to get latest events.
   if (existsSync(logPath)) {
     try {
       const size = statSync(logPath).size;
-      if (size > 0) {
+      if (size > 0 && isJobFinished(jobName)) {
         return { stream: null, path: logPath, skipped: true };
+      }
+      // Job still running or not found — check if pod exists
+      if (size > 0) {
+        const active = kubectl(
+          `get job/${jobName} -n ${opts.namespace} -o jsonpath='{.status.active}' 2>/dev/null`
+        ).replace(/'/g, "");
+        if (!active && size > 0) {
+          // Job gone from K8s (reaped) but we have content — don't clobber
+          return { stream: null, path: logPath, skipped: true };
+        }
+        // Job still active — re-download for latest events
       }
     } catch { /* stat failed — re-download */ }
   }
