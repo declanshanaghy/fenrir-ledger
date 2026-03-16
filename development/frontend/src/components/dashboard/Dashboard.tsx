@@ -5,8 +5,9 @@
  *
  * Issue #279 — Redesign: tabbed layout replacing grid + HowlPanel side panel.
  * Issue #352 — Expand to 5 tabs: The Howl · The Hunt · Active · Valhalla · All
+ * Issue #1127 — Add Trash tab (extreme right): deleted cards, restore, expunge
  *
- * Five tabs (left to right):
+ * Six tabs (left to right):
  *   "all"      — every card regardless of status.
  *   "valhalla" — closed/retired/graduated cards (status === "closed" or "graduated").
  *   "active"   — cards in good standing (status === "active" only).
@@ -14,6 +15,9 @@
  *   "hunt"     — cards actively earning sign-up bonuses (bonus_open).
  *   "howl"     — cards needing attention (fee_approaching, promo_expiring, overdue).
  *                Default tab when it has cards. Cards display an urgency bar at top.
+ *   "trash"    — soft-deleted cards (deletedAt set). Restore or expunge permanently.
+ *                Thrall: tab visible, click triggers KarlUpsellDialog, tab stays unselected.
+ *                Karl/trial: full access with Karl bling.
  *
  * Each card appears in exactly one status tab AND in the All tab.
  * Tab badges show live count per tab.
@@ -30,6 +34,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics/track";
+import { restoreCard, expungeCard, expungeAllCards } from "@/lib/storage";
 import { CardTile } from "./CardTile";
 import { EmptyState } from "./EmptyState";
 import { AnimatedCardGrid } from "./AnimatedCardGrid";
@@ -49,11 +54,13 @@ import {
   KARL_UPSELL_VALHALLA,
   KARL_UPSELL_VELOCITY,
   KARL_UPSELL_HOWL,
+  KARL_UPSELL_TRASH,
 } from "@/components/entitlement/KarlUpsellDialog";
+import { TrashView } from "@/components/dashboard/TrashView";
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 
-const VALID_TABS = new Set<string>(["howl", "hunt", "active", "valhalla", "all"]);
+const VALID_TABS = new Set<string>(["howl", "hunt", "active", "valhalla", "all", "trash"]);
 
 /** localStorage key for tab persistence */
 const TAB_STORAGE_KEY = "fenrir:dashboard-tab";
@@ -202,9 +209,11 @@ interface TabBadgeProps {
   count: number;
   /** When true, applies the heavier "howl" border treatment from wireframe. */
   isHowl?: boolean;
+  /** When true, applies the trash-count CSS class for Karl bling cascade. */
+  isTrash?: boolean;
 }
 
-function TabBadge({ count, isHowl }: TabBadgeProps) {
+function TabBadge({ count, isHowl, isTrash }: TabBadgeProps) {
   const zeroOpacity = count === 0 ? "opacity-40" : "";
   return (
     <span
@@ -213,9 +222,10 @@ function TabBadge({ count, isHowl }: TabBadgeProps) {
         "text-xs font-mono font-semibold",
         "border px-1.5 min-w-[20px]",
         isHowl && count > 0 ? "border-[2px] border-[hsl(var(--realm-muspel))] text-[hsl(var(--realm-muspel))]" : "border-border text-muted-foreground",
+        isTrash && "trash-count-badge",
         zeroOpacity
       )}
-      aria-label={`${count} card${count !== 1 ? "s" : ""}`}
+      aria-label={`${count} deleted card${count !== 1 ? "s" : ""}`}
     >
       {count}
     </span>
@@ -231,6 +241,7 @@ const TAB_EMPTY_LABELS: Record<DashboardTab, string> = {
   active: "No active cards",
   hunt: "No bounties",
   howl: "No alerts",
+  trash: "The Void is Empty",
 };
 
 interface TabEmptyStateProps {
@@ -298,6 +309,13 @@ const TAB_CONFIG = [
     panelId: "panel-howl",
     buttonId: "tab-howl",
   },
+  {
+    id: "trash" as DashboardTab,
+    label: "Trash",
+    rune: "ᛞ",
+    panelId: "panel-trash",
+    buttonId: "tab-trash",
+  },
 ] as const;
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -305,13 +323,28 @@ const TAB_CONFIG = [
 interface DashboardProps {
   cards: Card[];
   /**
+   * Soft-deleted cards for the Trash tab. Loaded separately from getDeletedCards().
+   * If not provided, Trash tab renders an empty state.
+   */
+  trashedCards?: Card[];
+  /**
+   * The household ID for trash storage operations (restore/expunge).
+   * Required for trash tab functionality. When absent, trash actions are no-ops.
+   */
+  householdId?: string;
+  /**
+   * Called after a restore or expunge so the parent can reload both active cards
+   * and trashed cards from localStorage.
+   */
+  onCardsChange?: () => void;
+  /**
    * Optional tab to activate on first render.
    * Takes priority over localStorage. Set by page.tsx from URL ?tab= param.
    */
   initialTab?: string | undefined;
 }
 
-export function Dashboard({ cards, initialTab }: DashboardProps) {
+export function Dashboard({ cards, trashedCards = [], householdId, onCardsChange, initialTab }: DashboardProps) {
   const { ragnarokActive } = useRagnarok();
   const { hasFeature } = useEntitlement();
   const karlOrTrial = useIsKarlOrTrial();
@@ -319,9 +352,11 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
   const isHowlUnlocked = hasFeature("howl-panel") || karlOrTrial;
   const hasValhalla = hasFeature("card-archive") || karlOrTrial;
   const hasVelocity = hasFeature("velocity-management") || karlOrTrial;
+  const hasTrash = karlOrTrial; // Trash requires Karl or trial tier
   const [upsellOpen, setUpsellOpen] = useState(false);
   const [velocityUpsellOpen, setVelocityUpsellOpen] = useState(false);
   const [howlUpsellOpen, setHowlUpsellOpen] = useState(false);
+  const [trashUpsellOpen, setTrashUpsellOpen] = useState(false);
 
   // ── Derive 5-bucket splits ─────────────────────────────────────────────────
   const howlCards = cards.filter(isHowlCard);
@@ -341,6 +376,8 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         // Thrall user navigated to ?tab=hunt — show dialog on mount, use default tab
       } else if (initialTab === "howl" && !isHowlUnlocked) {
         // Thrall user navigated to ?tab=howl — show dialog on mount, use default tab
+      } else if (initialTab === "trash" && !hasTrash) {
+        // Thrall user navigated to ?tab=trash — show dialog on mount, use default tab
       } else {
         return initialTab as DashboardTab;
       }
@@ -375,6 +412,9 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
     if (initialTab === "howl" && !isHowlUnlocked) {
       setHowlUpsellOpen(true);
     }
+    if (initialTab === "trash" && !hasTrash) {
+      setTrashUpsellOpen(true);
+    }
     // Only run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -398,6 +438,11 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         // Gate Howl tab for Thrall users — show upsell dialog instead
         if (tab === "howl" && !isHowlUnlocked) {
           setHowlUpsellOpen(true);
+          return;
+        }
+        // Gate Trash tab for Thrall users — show upsell dialog instead
+        if (tab === "trash" && !hasTrash) {
+          setTrashUpsellOpen(true);
           return;
         }
         setActiveTab(tab as DashboardTab);
@@ -522,6 +567,7 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
     active: activeCards.length,
     valhalla: valhallaCards.length,
     all: cards.length,
+    trash: trashedCards.length,
   };
 
   return (
@@ -538,8 +584,10 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
           const isHowlTab = tab.id === "howl";
           const isValhallaTab = tab.id === "valhalla";
           const isHuntTab = tab.id === "hunt";
+          const isTrashTab = tab.id === "trash";
           const isGatedValhalla = isValhallaTab && !hasValhalla;
           const isGatedHunt = isHuntTab && !hasVelocity;
+          const isGatedTrash = isTrashTab && !hasTrash;
           const count = tabCounts[tab.id];
           // Howl tab for Thrall: show lock + KARL badge, no count badge
           const isHowlLocked = isHowlTab && !isHowlUnlocked;
@@ -551,11 +599,12 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
               role="tab"
               id={tab.buttonId}
               aria-selected={isActive}
-              aria-controls={isGatedValhalla || isGatedHunt || isHowlLocked ? undefined : tab.panelId}
+              aria-controls={isGatedValhalla || isGatedHunt || isHowlLocked || isGatedTrash ? undefined : tab.panelId}
               aria-label={
                 isHowlLocked ? "The Howl \u2014 Karl tier required. Click to upgrade."
                 : isGatedValhalla ? "Valhalla \u2014 Karl tier required. Click to upgrade."
                 : isGatedHunt ? "The Hunt \u2014 Karl tier required. Click to upgrade."
+                : isGatedTrash ? "Trash \u2014 upgrade to Karl to access"
                 : undefined
               }
               tabIndex={isActive ? 0 : -1}
@@ -575,6 +624,11 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
                   setHowlUpsellOpen(true);
                   return;
                 }
+                // Gate Trash for Thrall users — show upsell, DO NOT setActiveTab
+                if (isGatedTrash) {
+                  setTrashUpsellOpen(true);
+                  return;
+                }
                 setActiveTab(tab.id);
               }}
               onKeyDown={(e) => handleTabKeyDown(e, index)}
@@ -582,6 +636,10 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
                 "flex items-center gap-2 px-4 py-3 text-sm font-heading uppercase tracking-wide",
                 "border-b-[3px] transition-colors whitespace-nowrap shrink-0 min-h-[44px]",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                // Trash tab: CSS class for Karl bling cascade
+                isTrashTab && "trash-tab",
+                // Thrall trash tab: visually dimmed to hint locked state
+                isGatedTrash && "opacity-65",
                 isActive
                   ? isHowlTab && !isHowlLocked
                     ? ragnarokActive
@@ -626,8 +684,21 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
                 <span className="text-[10px] ml-0.5" aria-hidden="true">&#128274;</span>
               ) : isGatedHunt ? (
                 <span className="text-[10px] ml-0.5" aria-hidden="true">&#128274;</span>
+              ) : isGatedTrash ? (
+                // Thrall: lock glyph ᛜ (ingwaz) per wireframe spec
+                <span
+                  aria-hidden="true"
+                  className="text-[11px] opacity-65 select-none"
+                  style={{ fontFamily: "serif" }}
+                >
+                  ᛜ
+                </span>
               ) : (
-                <TabBadge count={count} isHowl={isHowlTab} />
+                <TabBadge
+                  count={count}
+                  isHowl={isHowlTab}
+                  isTrash={isTrashTab}
+                />
               )}
             </button>
           );
@@ -795,6 +866,33 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         </div>
       </div>
 
+      {/* Trash panel — soft-deleted cards */}
+      <div
+        role="tabpanel"
+        id="panel-trash"
+        aria-labelledby="tab-trash"
+        tabIndex={0}
+        hidden={activeTab !== "trash"}
+      >
+        <div tabIndex={-1} className="outline-none pt-5">
+          <TrashView
+            trashedCards={trashedCards}
+            onRestore={(cardId) => {
+              if (householdId) restoreCard(householdId, cardId);
+              onCardsChange?.();
+            }}
+            onExpunge={(cardId) => {
+              if (householdId) expungeCard(householdId, cardId);
+              onCardsChange?.();
+            }}
+            onEmptyTrash={() => {
+              if (householdId) expungeAllCards(householdId);
+              onCardsChange?.();
+            }}
+          />
+        </div>
+      </div>
+
       {/* Karl upsell dialog — shown when Thrall user clicks Valhalla tab */}
       <KarlUpsellDialog
         {...KARL_UPSELL_VALHALLA}
@@ -814,6 +912,13 @@ export function Dashboard({ cards, initialTab }: DashboardProps) {
         {...KARL_UPSELL_HOWL}
         open={howlUpsellOpen}
         onDismiss={() => setHowlUpsellOpen(false)}
+      />
+
+      {/* Karl upsell dialog — shown when Thrall user clicks Trash tab */}
+      <KarlUpsellDialog
+        {...KARL_UPSELL_TRASH}
+        open={trashUpsellOpen}
+        onDismiss={() => setTrashUpsellOpen(false)}
       />
     </div>
   );

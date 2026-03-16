@@ -318,6 +318,25 @@ export const KARL_UPSELL_VELOCITY = {
 } as const;
 
 /**
+ * Props for the Trash variant of KarlUpsellDialog (#1127).
+ * Usage: <KarlUpsellDialog {...KARL_UPSELL_TRASH} open={...} onDismiss={...} />
+ */
+export const KARL_UPSELL_TRASH = {
+  featureIcon: "ᛞ", // Dagaz rune — dissolution, transformation, end of a cycle
+  featureName: "Trash",
+  featureTagline: "Where Forgotten Cards Rest",
+  featureTeaser:
+    "Retrieve deleted cards before they vanish, or banish them from the ledger forever.",
+  featureBenefits: [
+    "Restore deleted cards to active",
+    "Expunge cards permanently",
+    "Bulk empty trash",
+    "Local-first \u2014 your data, your device",
+  ] as const,
+  featureImage: "garmr", // Placeholder artwork — trash-dark/light.png pending design
+} as const;
+
+/**
  * Props for the Import variant of KarlUpsellDialog (#559).
  * Usage: <KarlUpsellDialog {...KARL_UPSELL_IMPORT} open={...} onDismiss={...} />
  */

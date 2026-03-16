@@ -40,7 +40,7 @@ import { AuthGate } from "@/components/shared/AuthGate";
 import { KarlUpsellDialog, KARL_UPSELL_IMPORT } from "@/components/entitlement/KarlUpsellDialog";
 import { UpsellBanner } from "@/components/entitlement/UpsellBanner";
 import { SignInNudge } from "@/components/layout/SignInNudge";
-import { initializeHousehold, getCards, saveCard, migrateIfNeeded } from "@/lib/storage";
+import { initializeHousehold, getCards, getDeletedCards, saveCard, migrateIfNeeded } from "@/lib/storage";
 import { track } from "@/lib/analytics/track";
 import type { Card } from "@/lib/types";
 
@@ -53,6 +53,7 @@ function DashboardPageContent() {
   const canImport = hasFeature("import") || karlOrTrial;
   const searchParams = useSearchParams();
   const [cards, setCards] = useState<Card[]>([]);
+  const [trashedCards, setTrashedCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(false);
   // Import wizard visibility
@@ -78,6 +79,8 @@ function DashboardPageContent() {
     // getCards() now returns ALL non-deleted cards including closed (Issue #352)
     const loaded = getCards(householdId);
     setCards(loaded);
+    // getDeletedCards() returns soft-deleted cards for Trash tab (Issue #1127)
+    setTrashedCards(getDeletedCards(householdId));
     setIsLoading(false);
     clearTimeout(skeletonTimer);
     setShowSkeleton(false);
@@ -94,6 +97,13 @@ function DashboardPageContent() {
       }
     }
   }, [householdId, status, isLoading]);
+
+  /** Reload both active and trashed cards from localStorage. Called after trash operations. */
+  const refreshCards = useCallback(() => {
+    if (!householdId) return;
+    setCards(getCards(householdId));
+    setTrashedCards(getDeletedCards(householdId));
+  }, [householdId]);
 
   /** Open import wizard if Karl, otherwise show upsell (#559). */
   const handleImportClick = useCallback(() => {
@@ -130,6 +140,7 @@ function DashboardPageContent() {
 
     const refreshed = getCards(householdId); // includes closed cards for Valhalla tab
     setCards(refreshed);
+    setTrashedCards(getDeletedCards(householdId));
     // Do NOT close the wizard here -- ImportWizard shows the success step
     // and auto-closes itself after 1.5s via its own useEffect.
 
@@ -241,7 +252,13 @@ function DashboardPageContent() {
           <CardSkeletonGrid count={6} />
         ) : null
       ) : (
-        <Dashboard cards={cards} initialTab={initialTab} />
+        <Dashboard
+          cards={cards}
+          trashedCards={trashedCards}
+          householdId={householdId ?? undefined}
+          onCardsChange={refreshCards}
+          initialTab={initialTab}
+        />
       )}
 
       {/* Import Wizard modal */}

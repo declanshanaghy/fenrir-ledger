@@ -1,14 +1,14 @@
 // ── Temporary log buffer (odin-throne:log:<sessionId>) ──────────────────────
-// Written as log-lines arrive for every live session.
-// Separate from the pin cache — these are ephemeral and evict freely.
+// Written as log-lines arrive for live sessions that are NOT pinned.
+// Ephemeral — evicts freely. Pinned sessions skip this buffer entirely.
 
 const LOG_PREFIX = "odin-throne:log:";
 const MAX_LOG_SESSIONS = 10;
 const MAX_LOG_BYTES = 5 * 1024 * 1024; // 5MB
 
 // ── Pin cache (odin-throne:cache:<sessionId>) ────────────────────────────────
-// Written explicitly when the user pins a session.
-// Pinned sessions survive pod reaping and appear in the sidebar as "cached".
+// Single authoritative data store for pinned sessions.
+// When a session is pinned, data flows here only — no log: duplicate.
 
 const CACHE_PREFIX = "odin-throne:cache:";
 const MAX_CACHE_SESSIONS = 10;
@@ -52,6 +52,12 @@ function keysWithPrefix(prefix: string): string[] {
 
 export function appendLogLine(sessionId: string, line: string): void {
   try {
+    // Pinned sessions store data in cache only — no log: duplicate
+    if (isPinned(sessionId)) {
+      appendToCacheRaw(sessionId, line);
+      return;
+    }
+
     const key = LOG_PREFIX + sessionId;
     const existing = localStorage.getItem(key) ?? "";
     const next = existing ? existing + "\n" + line : line;
@@ -76,11 +82,6 @@ export function appendLogLine(sessionId: string, line: string): void {
     }
 
     localStorage.setItem(key, next);
-
-    // If this session is pinned, also append to cache
-    if (isPinned(sessionId)) {
-      appendToCacheRaw(sessionId, line);
-    }
   } catch {
     // localStorage may be full or unavailable — fail silently
   }
@@ -121,6 +122,7 @@ export function isPinned(sessionId: string): boolean {
 
 /**
  * Pin a session: copy current temp-log content to the cache.
+ * Deletes the temp log entry — cache is the single authoritative store.
  * Returns true on success, false if no content available to pin.
  * Evicts oldest cached session if over the cap.
  */
@@ -156,6 +158,10 @@ export function pinSession(sessionId: string, meta: CachedSessionMeta): boolean 
 
     localStorage.setItem(cacheKey, content);
     localStorage.setItem(metaKey, JSON.stringify(meta));
+
+    // Remove the temp log entry — data now lives in cache only (no duplicate)
+    localStorage.removeItem(LOG_PREFIX + sessionId);
+
     return true;
   } catch {
     return false;
@@ -229,5 +235,26 @@ export function isCacheNearCap(): boolean {
     return totalBytes > MAX_CACHE_BYTES * 0.9; // warn at 90%
   } catch {
     return false;
+  }
+}
+
+/**
+ * Migration: remove duplicate log entries for pinned sessions.
+ * Previously both log: and cache: entries were written for pinned sessions.
+ * The cache: entry is authoritative — remove any redundant log: duplicates.
+ * Call once on app load.
+ */
+export function migrateRemoveDuplicateLogs(): void {
+  try {
+    const logKeys = keysWithPrefix(LOG_PREFIX);
+    for (const logKey of logKeys) {
+      const sessionId = logKey.slice(LOG_PREFIX.length);
+      if (isPinned(sessionId)) {
+        // Cache has the authoritative copy — log: is a stale duplicate
+        localStorage.removeItem(logKey);
+      }
+    }
+  } catch {
+    // fail silently
   }
 }
