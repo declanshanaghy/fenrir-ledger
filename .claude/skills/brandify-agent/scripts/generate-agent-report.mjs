@@ -1145,6 +1145,7 @@ if (publishMode) {
     if (tool.name === "Write" && tool.input?.file_path) return mdxEsc(shortPath(tool.input.file_path));
     if (tool.name === "Grep" && tool.input?.pattern) return mdxEsc(tool.input.pattern);
     if (tool.name === "Glob" && tool.input?.pattern) return mdxEsc(tool.input.pattern);
+    if (tool.name === "TodoWrite") return "update todos";
     return "";
   }
 
@@ -1296,11 +1297,14 @@ ${decreeBody}
     return `/agents/profiles/${sl}-dark.png`;
   }
 
+  // ── MDX heckle bubble renderer — uses chronicle.css class names ───────────
+
   function mdxRenderHeckleEvents(events) {
     if (!events) return "";
     let out = "";
     for (const event of events) {
       if (event.type === "mayo") {
+        // Right-aligned red Mayo heckler bubble
         const avatarSrc = mdxHecklerAvatar(event.name);
         out += `<div className="heckle heckle-mayo">
 <div className="heckle-identity">
@@ -1310,6 +1314,7 @@ ${decreeBody}
 <div className="heckle-text">${mdxEsc(event.text)}</div>
 </div>\n`;
       } else if (event.type === "mayo-comeback") {
+        // Left-aligned Norse agent comeback bubble
         const avatarSrc = mdxAgentAvatarPath(event.name);
         const aTitle = AGENT_TITLES[event.name] || event.name;
         out += `<div className="heckle heckle-comeback">
@@ -1320,6 +1325,7 @@ ${decreeBody}
 <div className="heckle-text">${mdxEsc(event.text)}</div>
 </div>\n`;
       } else if (event.type === "mayo-entrance") {
+        // Heckler entrance announcement with name + avatar
         const eName = event.name || "Mayo Fan";
         const avatarSrc = mdxHecklerAvatar(eName);
         out += `<div className="heckle heckle-entrance">
@@ -1330,23 +1336,24 @@ ${decreeBody}
 <div className="heckle-text">${mdxEsc(event.text)}</div>
 </div>\n`;
       } else if (event.type === "mayo-explosion") {
+        // Full-width explosion with Norse tremble animation (::before/::after rune rows via CSS)
         out += `<div className="heckle heckle-explosion">⚡ ${mdxEsc(event.text)} ⚡</div>\n`;
       }
     }
     return out;
   }
 
-  // ── MDX tool block renderer ────────────────────────────────────────────────
+  // ── MDX tool block renderer — uses chronicle.css .tool-block classes ──────
 
   function mdxRenderToolBlock(tool) {
-    return `<details className="agent-tool-block">
-<summary>
-<span className="agent-tool-name">${mdxEsc(tool.name)}</span>
-<span className="agent-tool-preview">${mdxToolInputPreview(tool)}</span>
+    return `<details className="tool-block${tool.is_error ? " has-error" : ""}">
+<summary className="tool-block-header">
+<span className="tool-name">${mdxEsc(tool.name)}</span>
+<span className="tool-input-preview">${mdxToolInputPreview(tool)}</span>
 </summary>
-<div className="agent-tool-detail">
-<pre className="agent-tool-input">${mdxRenderToolInput(tool)}</pre>
-<pre className="agent-tool-output${tool.is_error ? " agent-tool-error" : ""}">${mdxRenderToolOutput(tool)}</pre>
+<div className="tool-block-body">
+<pre className="tool-input">${mdxRenderToolInput(tool)}</pre>
+<pre className="tool-output${tool.is_error ? " error" : ""}">${mdxRenderToolOutput(tool)}</pre>
 </div>
 </details>\n`;
   }
@@ -1358,6 +1365,11 @@ ${decreeBody}
   }
 
   // ── Build turn markup with toolbox merging ────────────────────────────────
+  // Uses chronicle.css class names: .turn, .turn-agent-profile, .turn-box,
+  // .turn-header, .turn-num, .turn-summary, .turn-tools, .turn-body,
+  // .toolbox, .text-block, .thinking, .tool-badge
+  const mdxAgentAvatarSrc = mdxAgentAvatarPath(agentName);
+
   let turnsMarkup = "";
   let mi = 0;
   while (mi < turns.length) {
@@ -1378,72 +1390,99 @@ ${decreeBody}
         ? `#${turnNums[0]}`
         : `#${turnNums[0]}–${turnNums[turnNums.length - 1]}`;
       const toolBadges = mergedTools
-        .map(t => `<span className="agent-tool-badge agent-tool-${toolBadgeClass(t.name)}">${mdxEsc(t.name)}</span>`)
+        .map(t => `<span className="tool-badge ${toolBadgeClass(t.name)}">${mdxEsc(t.name)}</span>`)
         .join(" ");
 
       turnsMarkup += `
-<details className="agent-turn${hasError ? " agent-turn-error" : ""}">
-<summary>
-<span className="agent-turn-num">${numLabel}</span>
-<span className="agent-turn-summary">${mergedTools.length} tool calls</span>
-<span className="agent-turn-badges">${toolBadges}</span>
+<div className="turn${hasError ? " has-error" : ""}">
+<div className="turn-agent-profile">
+<img className="turn-agent-avatar" src="${mdxAgentAvatarSrc}" alt="${mdxEsc(agentName)}" loading="lazy" />
+<span className="turn-agent-title">${mdxEsc(agentTitle)}</span>
+</div>
+<details className="turn-box">
+<summary className="turn-header">
+<span className="turn-num">${numLabel}</span>
+<span className="turn-summary">${mergedTools.length} tool calls</span>
+<span className="turn-tools">${toolBadges}</span>
+<span className="chevron">&#9654;</span>
 </summary>
-<div className="agent-turn-body">
+<div className="turn-body">
+<div className="toolbox">
 ${mergedTools.map(t => mdxRenderToolBlock(t)).join("")}</div>
-</details>\n`;
+</div>
+</details>
+</div>\n`;
 
       // Consume heckle slot without rendering (tool-only group)
       hecklerEngine.maybeHeckle();
       continue;
     }
 
-    // Normal turn with text content
+    // Normal turn with text content — render as left-aligned chat bubble + toolbox
     const hasError = turn.tools.some(t => t.is_error);
     const summary = turn.texts.length
       ? mdxEsc(turn.texts[0].slice(0, 120))
       : turn.tools.map(t => t.name).join(", ");
     const toolBadges = turn.tools
-      .map(t => `<span className="agent-tool-badge agent-tool-${toolBadgeClass(t.name)}">${mdxEsc(t.name)}</span>`)
+      .map(t => `<span className="tool-badge ${toolBadgeClass(t.name)}">${mdxEsc(t.name)}</span>`)
       .join(" ");
 
     turnsMarkup += `
-<details className="agent-turn${hasError ? " agent-turn-error" : ""}">
-<summary>
-<span className="agent-turn-num">#${mi + 1}</span>
-<span className="agent-turn-summary">${summary}</span>
-<span className="agent-turn-badges">${toolBadges}</span>
+<div className="turn${hasError ? " has-error" : ""}">
+<div className="turn-agent-profile">
+<img className="turn-agent-avatar" src="${mdxAgentAvatarSrc}" alt="${mdxEsc(agentName)}" loading="lazy" />
+<span className="turn-agent-title">${mdxEsc(agentTitle)}</span>
+</div>
+<details className="turn-box">
+<summary className="turn-header">
+<span className="turn-num">#${mi + 1}</span>
+<span className="turn-summary">${summary}</span>
+<span className="turn-tools">${toolBadges}</span>
+<span className="chevron">&#9654;</span>
 </summary>
-<div className="agent-turn-body">
+<div className="turn-body">
 `;
 
     for (const thinking of turn.thinking) {
-      turnsMarkup += `<div className="agent-thinking">${mdxEsc(sanitizeText(thinking.slice(0, 1000)))}</div>\n`;
+      turnsMarkup += `<div className="thinking">${mdxEsc(thinking.slice(0, 1000))}</div>\n`;
     }
     for (const text of turn.texts) {
-      turnsMarkup += `<div className="agent-text-block">${mdxEsc(sanitizeText(text))}</div>\n`;
+      // Agent text blocks render as left-aligned 60% chat bubbles
+      turnsMarkup += `<div className="text-block">${mdxEsc(text)}</div>\n`;
     }
-    for (const tool of turn.tools) {
-      turnsMarkup += mdxRenderToolBlock(tool);
+    if (turn.tools.length > 0) {
+      turnsMarkup += `<div className="toolbox">\n${turn.tools.map(t => mdxRenderToolBlock(t)).join("")}</div>\n`;
     }
 
     // Render heckles OUTSIDE the turn body (visible without expanding)
     const mdxHeckleEvents = hecklerEngine.maybeHeckle();
     turnsMarkup += `</div>
 </details>
+</div>
 ${mdxRenderHeckleEvents(mdxHeckleEvents)}\n`;
 
     mi++;
   }
 
-  // Build file changes markup
+  // Build file changes markup — uses chronicle.css .changes-summary classes
   let changesMarkup = "";
   if (filesCreated.size > 0 || filesModified.size > 0) {
     changesMarkup = `
-<div className="agent-changes">
-<div className="agent-changes-title">Files Changed</div>
-<div className="agent-changes-list">
-${[...filesCreated].map(f => `<span className="chip chip-new">+ ${mdxEsc(shortPath(f))}</span>`).join("\n")}
-${[...filesModified].map(f => `<span className="chip chip-mod">~ ${mdxEsc(shortPath(f))}</span>`).join("\n")}
+<div className="changes-summary">
+<h2>Files Changed</h2>
+<div className="changes-cols">
+${filesCreated.size > 0 ? `<div className="changes-col">
+<h3>Created</h3>
+<ul>
+${[...filesCreated].map(f => `<li className="file-new"><span className="icon">+</span>${mdxEsc(shortPath(f))}</li>`).join("\n")}
+</ul>
+</div>` : ""}
+${filesModified.size > 0 ? `<div className="changes-col">
+<h3>Modified</h3>
+<ul>
+${[...filesModified].map(f => `<li className="file-mod"><span className="icon">~</span>${mdxEsc(shortPath(f))}</li>`).join("\n")}
+</ul>
+</div>` : ""}
 </div>
 </div>`;
   }
@@ -1452,23 +1491,23 @@ ${[...filesModified].map(f => `<span className="chip chip-mod">~ ${mdxEsc(shortP
   let commitsMarkup = "";
   if (commits.length > 0) {
     commitsMarkup = `
-<div className="agent-commits">
-<div className="agent-changes-title">Commits</div>
-${commits.map(c => `<div className="agent-commit-item">${mdxEsc(c)}</div>`).join("\n")}
+<div className="changes-summary">
+<h2>Commits</h2>
+${commits.map(c => `<div className="commit-item"><span className="msg">${mdxEsc(c)}</span></div>`).join("\n")}
 </div>`;
   }
 
-  // Victory heckle markup
+  // Victory heckle — full-width explosion
   const mdxVictoryHeckle = hecklerEngine.victoryHeckle();
   const victoryHeckleMarkup = `<div className="heckle heckle-explosion">⚡ ${mdxEsc(mdxVictoryHeckle.text)} ⚡</div>`;
 
-  // Verdict markup
+  // Verdict markup — uses chronicle.css .verdict classes
   let verdictMarkup = "";
   if (verdict) {
     verdictMarkup = `
-<div className="agent-verdict ${verdict.pass ? "agent-verdict-pass" : "agent-verdict-fail"}">
-<div className="agent-verdict-label">${verdict.pass ? "PASS" : "FAIL"} — QA Verdict</div>
-<div className="agent-verdict-text">${mdxEsc(verdict.text)}</div>
+<div className="verdict ${verdict.pass ? "pass" : "fail"}">
+<h2>ᛏ ${verdict.pass ? "PASS" : "FAIL"} — QA Verdict</h2>
+<pre>${mdxEsc(verdict.text)}</pre>
 </div>`;
   }
 
@@ -1497,25 +1536,48 @@ category: "agent"
 
 <div className="chronicle-page">
 
-<div className="agent-report">
+<div className="report">
 
-<div className="agent-report-header">
-<div className="agent-report-badge">Agent Report</div>
-<div className="agent-meta">
-<span>Session <span className="val">${mdxEsc(meta.session || "unknown")}</span></span>
-<span>Branch <span className="val">${mdxEsc(meta.branch || "unknown")}</span></span>
-<span>Model <span className="val">${mdxEsc(meta.model || "unknown")}</span></span>
+<div className="report-header">
+<div className="odin-header">
+<img className="odin-avatar" src="${mdxAgentAvatarPath(agentName)}" alt="${mdxEsc(agentName)}" loading="lazy" />
+<div className="odin-title">
+<h1>ᚲ ${mdxEsc(agentName)} — Issue #${mdxEsc(issueNum)} (Step ${mdxEsc(stepNum)})</h1>
+</div>
+</div>
+<div className="meta">
+<span><span className="label">Session:</span> ${mdxEsc(meta.session || "unknown")}</span>
+<span><span className="label">Branch:</span> ${mdxEsc(meta.branch || "unknown")}</span>
+<span><span className="label">Model:</span> ${mdxEsc(meta.model || "unknown")}</span>
 </div>
 </div>
 
-<div className="agent-stats">
-<div className="stat-card"><div className="stat-val">${turns.length}</div><div className="stat-label">Turns</div></div>
-<div className="stat-card"><div className="stat-val">${totalTools}</div><div className="stat-label">Tool Calls</div></div>
-<div className="stat-card"><div className="stat-val ${errors ? "stat-fire" : "stat-teal"}">${errors}</div><div className="stat-label">Errors</div></div>
-<div className="stat-card"><div className="stat-val">${commits.length}</div><div className="stat-label">Commits</div></div>
-<div className="stat-card"><div className="stat-val">${fmtNum(totalInputTokens)}</div><div className="stat-label">Tokens In</div></div>
-<div className="stat-card"><div className="stat-val">${fmtNum(totalOutputTokens)}</div><div className="stat-label">Tokens Out</div></div>
+<div className="stats-grid">
+<div className="stats-card">
+<div className="stats-card-label">ᛊ Session</div>
+<div className="stats-row">
+<div className="stat"><span className="num">${turns.length}</span><span className="lbl">turns</span></div>
+<div className="stat"><span className="num">${totalTools}</span><span className="lbl">tools</span></div>
+<div className="stat"><span className="num" style={{color: errors ? 'var(--fire-muspel)' : 'var(--teal-asgard)'}}>${errors}</span><span className="lbl">errors</span></div>
 </div>
+</div>
+<div className="stats-card">
+<div className="stats-card-label">ᛞ Git</div>
+<div className="stats-row">
+<div className="stat"><span className="num">${commits.length}</span><span className="lbl">commits</span></div>
+<div className="stat"><span className="num">${pushCount}</span><span className="lbl">pushes</span></div>
+</div>
+</div>
+<div className="stats-card">
+<div className="stats-card-label">ᚠ Tokens</div>
+<div className="stats-row">
+<div className="stat"><span className="num sm">${fmtNum(totalInputTokens)}</span><span className="lbl">in</span></div>
+<div className="stat"><span className="num sm">${fmtNum(totalOutputTokens)}</span><span className="lbl">out</span></div>
+<div className="stat"><span className="num sm">${fmtNum(totalCacheRead)}</span><span className="lbl">cache</span></div>
+</div>
+</div>
+</div>
+
 ${changesMarkup}
 ${commitsMarkup}
 
@@ -1525,6 +1587,7 @@ ${mdxDecreeMarkup}
 <div className="agent-turns-title">Execution Turns</div>
 ${turnsMarkup}
 </div>
+
 ${victoryHeckleMarkup}
 ${verdictMarkup}
 ${mdxCallbackMarkup}

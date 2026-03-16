@@ -537,6 +537,20 @@ body {
 /* 8. Component: turn / turn-box — One assistant message cycle            */
 /* ─────────────────────────────────────────────────────────────────────── */
 
+/* MDX section heading for turns list */
+.agent-turns-section { margin-top: 1.5rem; }
+.agent-turns-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--rune-border);
+}
+
 .turn { margin-bottom: 1.25rem; }
 .turn-box {
   border: 1px solid var(--rune-border);
@@ -620,12 +634,19 @@ body {
 }
 .turn-box.open .turn-header .chevron { transform: rotate(90deg); }
 
+/* Native <details> support for MDX path (no JS toggle needed) */
+details.turn-box > summary { list-style: none; }
+details.turn-box > summary::-webkit-details-marker { display: none; }
+details.turn-box[open] > summary.turn-header .chevron { transform: rotate(90deg); }
+
 .turn-body {
   display: none;
   padding: 0;
   background: var(--void);
 }
 .turn-box.open .turn-body { display: block; }
+/* MDX: <details> body always visible when [open] */
+details.turn-box[open] .turn-body { display: block; }
 
 /* Thinking block */
 .thinking {
@@ -680,6 +701,11 @@ body {
 }
 .tool-block-body { display: none; }
 .tool-block.open .tool-block-body { display: block; }
+
+/* Native <details> support for MDX tool blocks */
+details.tool-block > summary { list-style: none; }
+details.tool-block > summary::-webkit-details-marker { display: none; }
+details.tool-block[open] .tool-block-body { display: block; }
 
 .tool-input,
 .tool-output {
