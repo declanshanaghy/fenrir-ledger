@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Monitor UI — Agent Profile Dialogs (Issue #1062)
+
+| File | Description |
+|------|-------------|
+| [wireframes/monitor-ui/agent-profile-modal.html](wireframes/monitor-ui/agent-profile-modal.html) | AgentProfileModal component — portrait modal opened by clicking any agent avatar. 10 sections: scope overview (6 change areas), full desktop anatomy (8 zones: top rune band, close button, portrait, identity block [name+title+rune signature], Norse quote, role description, bottom rune band), mobile 375px layout + responsive table, all three trigger locations (AgentBubble/JobCard/Sidebar header) with stopPropagation note for card, all 6 agent variants (FiremanDecko/Loki/Luna/Freya/Heimdall/Odin) with portrait paths + rune + quote, open/close state machine (3 states), WCAG 2.1 AA accessibility spec (focus trap, ESC, focus return, backdrop click, body scroll lock), profile image asset pipeline (copy-script vs symlink options), component change summary (AgentProfileModal.tsx new + 5 file modifications), AGENT_DESCRIPTIONS copy spec for all 6 agents. Interaction spec: [agent-profile-modal-interaction-spec.md](wireframes/monitor-ui/agent-profile-modal-interaction-spec.md). |
+
+---
+
 ## Chronicles — Norse MDX Agent Report Components (Issue #1047)
 
 | File | Description |
