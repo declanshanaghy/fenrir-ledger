@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Karl bling theme layer — data-tier cascade (Issue #1086) */
+@import "./karl-bling.css";
+
 @layer base {
   /*
    * Fenrir Ledger — Saga Ledger Theme

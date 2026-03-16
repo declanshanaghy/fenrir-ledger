@@ -1,0 +1,205 @@
+/*
+ * karl-bling.css — Fenrir Ledger
+ *
+ * Karl tier cosmetic layer. Activated by CSS cascade via data-tier attribute
+ * set on <html> by EntitlementContext. Zero per-component JS changes needed.
+ *
+ * Attribute values:
+ *   data-tier="karl"   — active Karl subscriber (full bling)
+ *   data-tier="trial"  — free trial (cards, buttons, sidebar only; no badge/nav)
+ *   data-tier="thrall" — free tier (no bling)
+ *
+ * CSS approach:
+ *   [data-tier="karl"] .selector  { ... }   — Karl-only
+ *   [data-tier="trial"] .selector { ... }   — trial subset
+ *
+ * Issue: #1086
+ */
+
+/* ── Karl-specific CSS custom properties ────────────────────────────────── */
+/*
+ * Defined at :root so they are available for use in component CSS without
+ * needing to be inside a [data-tier] block. Karl cascade overrides amplify
+ * existing gold tokens (#d4a520) rather than replacing them.
+ */
+:root {
+  /* Gold glow sizes — box-shadow / drop-shadow spread values */
+  --karl-glow-sm:  8px;
+  --karl-glow-md:  20px;
+  --karl-glow-lg:  40px;
+
+  /* Shimmer animation timing */
+  --karl-shimmer-duration:  2.4s;
+  --karl-shimmer-delay:     0.1s;
+
+  /* Karl border widths — card/button accent borders */
+  --karl-border-width:      1px;
+  --karl-border-width-hover: 2px;
+
+  /* Gold aliases — reuse existing gold tokens */
+  --karl-gold:        #d4a520;   /* gold.DEFAULT */
+  --karl-gold-bright: #f0c040;   /* gold.bright */
+  --karl-gold-dim:    #8a6a10;   /* gold.dim */
+
+  /* Gold glow box-shadow values (pre-composed for reuse) */
+  --karl-shadow-sm: 0 0 var(--karl-glow-sm)  rgba(212, 165, 32, 0.22);
+  --karl-shadow-md: 0 0 var(--karl-glow-md) rgba(212, 165, 32, 0.28);
+  --karl-shadow-lg: 0 0 var(--karl-glow-lg) rgba(212, 165, 32, 0.32);
+}
+
+/* ── Gold hover glow keyframes ───────────────────────────────────────────── */
+/*
+ * karl-gold-glow: pulsing gold radiance applied to cards/buttons on hover.
+ * Two variants:
+ *   karl-gold-glow       — used by [data-tier="karl"]
+ *   karl-gold-glow-soft  — softer version for [data-tier="trial"]
+ */
+@keyframes karl-gold-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 var(--karl-glow-sm)  rgba(212, 165, 32, 0.18),
+      0 0 var(--karl-glow-md) rgba(212, 165, 32, 0.10);
+  }
+  50% {
+    box-shadow:
+      0 0 var(--karl-glow-md) rgba(212, 165, 32, 0.38),
+      0 0 var(--karl-glow-lg) rgba(212, 165, 32, 0.18);
+  }
+}
+
+@keyframes karl-gold-glow-soft {
+  0%, 100% {
+    box-shadow:
+      0 0 var(--karl-glow-sm)  rgba(212, 165, 32, 0.10),
+      0 0 var(--karl-glow-md) rgba(212, 165, 32, 0.06);
+  }
+  50% {
+    box-shadow:
+      0 0 var(--karl-glow-md) rgba(212, 165, 32, 0.22),
+      0 0 var(--karl-glow-lg) rgba(212, 165, 32, 0.10);
+  }
+}
+
+/* Gold shimmer sweep — lateral shimmer for cards/headers */
+@keyframes karl-shimmer-sweep {
+  0%   { background-position: 200% center; }
+  100% { background-position: -100% center; }
+}
+
+/* ── Karl: interactive card hover glow ───────────────────────────────────── */
+/*
+ * .karl-bling-card — add to any card/tile that should glow on hover for Karl.
+ * Amplifies the existing card-chain/card-interactive border treatment.
+ */
+[data-tier="karl"] .karl-bling-card:hover {
+  border-color: rgba(212, 165, 32, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(212, 165, 32, 0.25),
+    var(--karl-shadow-md);
+  animation: karl-gold-glow 2.8s ease-in-out infinite;
+}
+
+[data-tier="trial"] .karl-bling-card:hover {
+  border-color: rgba(212, 165, 32, 0.30);
+  box-shadow:
+    0 0 0 1px rgba(212, 165, 32, 0.12),
+    var(--karl-shadow-sm);
+  animation: karl-gold-glow-soft 3.2s ease-in-out infinite;
+}
+
+/* ── Karl: button gold accent ────────────────────────────────────────────── */
+/*
+ * .karl-bling-btn — primary action buttons (subscribe, save) get a gold
+ * border shimmer for Karl and trial tiers.
+ */
+[data-tier="karl"] .karl-bling-btn {
+  border-color: rgba(212, 165, 32, 0.60);
+  box-shadow: var(--karl-shadow-sm);
+  transition: box-shadow 200ms ease-out, border-color 200ms ease-out;
+}
+
+[data-tier="karl"] .karl-bling-btn:hover {
+  border-color: var(--karl-gold);
+  box-shadow: var(--karl-shadow-md);
+}
+
+[data-tier="trial"] .karl-bling-btn {
+  border-color: rgba(212, 165, 32, 0.32);
+  transition: box-shadow 200ms ease-out, border-color 200ms ease-out;
+}
+
+[data-tier="trial"] .karl-bling-btn:hover {
+  border-color: rgba(212, 165, 32, 0.55);
+  box-shadow: var(--karl-shadow-sm);
+}
+
+/* ── Karl: sidebar accent ────────────────────────────────────────────────── */
+/*
+ * .karl-bling-sidebar — left nav sidebar gets a subtle gold left-border
+ * accent for Karl and trial. Trial gets a lighter weight.
+ */
+[data-tier="karl"] .karl-bling-sidebar {
+  border-left: var(--karl-border-width) solid rgba(212, 165, 32, 0.30);
+  box-shadow: inset 2px 0 12px rgba(212, 165, 32, 0.06);
+}
+
+[data-tier="trial"] .karl-bling-sidebar {
+  border-left: var(--karl-border-width) solid rgba(212, 165, 32, 0.14);
+}
+
+/* ── Karl: header badge (Karl only — NOT trial) ───────────────────────────
+ *
+ * .karl-bling-badge — Karl subscriber badge/indicator in the app header.
+ * Trial users do NOT get this badge (spec: "NOT header badge or nav indicator").
+ */
+[data-tier="karl"] .karl-bling-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--karl-gold);
+  border: 1px solid rgba(212, 165, 32, 0.40);
+  padding: 0.15rem 0.5rem;
+  box-shadow: var(--karl-shadow-sm);
+}
+
+/* ── Karl: nav indicator (Karl only — NOT trial) ─────────────────────────
+ *
+ * .karl-bling-nav — nav item active indicator gets a gold underline glow
+ * for Karl subscribers only.
+ */
+[data-tier="karl"] .karl-bling-nav-active {
+  border-bottom-color: var(--karl-gold);
+  box-shadow: 0 2px 8px rgba(212, 165, 32, 0.30);
+}
+
+/* ── Reduced motion overrides ────────────────────────────────────────────── */
+/*
+ * Suppress all Karl bling animations for users who prefer reduced motion.
+ * Border/shadow state changes are preserved (static visual, no animation).
+ */
+@media (prefers-reduced-motion: reduce) {
+  [data-tier="karl"] .karl-bling-card:hover,
+  [data-tier="trial"] .karl-bling-card:hover {
+    animation: none;
+  }
+
+  [data-tier="karl"] .karl-bling-btn,
+  [data-tier="karl"] .karl-bling-btn:hover,
+  [data-tier="trial"] .karl-bling-btn,
+  [data-tier="trial"] .karl-bling-btn:hover {
+    transition: none;
+  }
+}
+
+/* ── Touch devices: suppress hover animations ────────────────────────────── */
+@media (hover: none) {
+  [data-tier="karl"] .karl-bling-card:hover,
+  [data-tier="trial"] .karl-bling-card:hover {
+    animation: none;
+  }
+}
