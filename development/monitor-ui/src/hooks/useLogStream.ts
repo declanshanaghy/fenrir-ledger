@@ -143,17 +143,18 @@ export function useLogStream() {
             return;
           }
 
-          // Entrypoint section end marker — collapse entrypoint entries into a group.
-          // Only moves entrypoint-typed entries into the group's children;
-          // preserves all other entries at the root to avoid a full array rebuild.
+          // Entrypoint section end marker — collapse all pre-Claude entries into a group.
+          // Collects entrypoint-typed entries AND raw lines (pre-entrypoint output like
+          // "Waiting for DNS...", "Cloning...") into the group's children.
+          // Preserves any non-entrypoint, non-raw entries (e.g. task prompts) at root.
           if (/^===\s*Starting Claude Code\s*===/.test(stripped)) {
             inEntrypoint.current = false;
             setEntries((prev) => {
-              const epTypes = new Set(["entrypoint-header", "entrypoint-ok", "entrypoint-info", "entrypoint-fatal"]);
+              const groupTypes = new Set(["entrypoint-header", "entrypoint-ok", "entrypoint-info", "entrypoint-fatal", "raw"]);
               const epChildren: LogEntry[] = [];
               const rest: LogEntry[] = [];
               for (const e of prev) {
-                if (epTypes.has(e.type)) epChildren.push(e);
+                if (groupTypes.has(e.type)) epChildren.push(e);
                 else rest.push(e);
               }
               const group: LogEntry = {

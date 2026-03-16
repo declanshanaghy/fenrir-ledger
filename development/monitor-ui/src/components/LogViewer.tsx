@@ -6,7 +6,7 @@ import { StatusBadge } from "./StatusBadge";
 import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
 import { NorseVerdictInscription, isVerdictMessage } from "./NorseVerdictInscription";
-import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_QUOTES, AGENT_RUNE_NAMES, AGENT_RUNE_TITLES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
+import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
 import { downloadLog } from "../lib/localStorageLogs";
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 
@@ -316,7 +316,7 @@ function LogLine({ entry, agentKey, agentName, isLastAssistantText, autoScroll, 
         </div>
       );
     case "entrypoint-task":
-      return <NorseTablet text={entry.text ?? ""} {...(agentKey !== undefined ? { agentKey } : {})} />;
+      return <NorseTablet text={entry.text ?? ""} />;
     case "warning":
       return <span className="log-warning">{"\u26A0"} {entry.message}</span>;
     case "error":
@@ -446,7 +446,7 @@ function ToolBatchGroup({ entry, autoScroll, isLatestBatch }: { entry: LogEntry;
   );
 }
 
-function NorseTablet({ text, agentKey }: { text: string; agentKey?: string }) {
+function NorseTablet({ text }: { text: string }) {
   const [open, setOpen] = useState(true);
   // Extract agent name from "You are <Name>,"
   const agentMatch = /^You are (\w+)/.exec(text);
@@ -469,34 +469,16 @@ function NorseTablet({ text, agentKey }: { text: string; agentKey?: string }) {
       <div className="norse-tablet-body-wrap">
         <div className="norse-tablet-body">
           <div className="norse-tablet-inscription">{text}</div>
-          <RuneSignatureBlock {...(agentKey !== undefined ? { agentKey } : {})} />
+          <div className="nt-rune-sig" role="complementary" aria-label="Odin's seal">
+            <div className="nt-rune-sig-agent-runes" aria-hidden="true">ᛟᛞᛁᚾ</div>
+            <div className="nt-rune-sig-divider" aria-hidden="true">&mdash; ᚨ &mdash;</div>
+            <div className="nt-rune-sig-quote">
+              &ldquo;By mine eye that sees all Nine Realms — I command thee to this task. Fail not. Fenrir hungers.&rdquo;
+            </div>
+            <div className="nt-rune-sig-label">Odin &middot; All-Father</div>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function RuneSignatureBlock({ agentKey }: { agentKey?: string }) {
-  const key = agentKey && AGENT_RUNE_NAMES[agentKey] ? agentKey : "_fallback";
-  const name       = AGENT_NAMES[key]       ?? "The All-Father's Council";
-  const title      = AGENT_TITLES[key]      ?? "";
-  const runeNames  = AGENT_RUNE_NAMES[key]  ?? AGENT_RUNE_NAMES["_fallback"] ?? "";
-  const runeTitles = AGENT_RUNE_TITLES[key] ?? "";
-  const quote      = AGENT_QUOTES[key]      ?? AGENT_QUOTES["_fallback"] ?? "";
-
-  return (
-    <div
-      className="nt-rune-sig"
-      role="complementary"
-      aria-label={`${name} rune signature`}
-    >
-      <div className="nt-rune-sig-agent-runes" aria-hidden="true">{runeNames}</div>
-      {runeTitles && (
-        <div className="nt-rune-sig-title-runes" aria-hidden="true">{runeTitles}</div>
-      )}
-      <div className="nt-rune-sig-divider" aria-hidden="true">— ᚠ ᚢ ᚦ —</div>
-      <div className="nt-rune-sig-quote">&ldquo;{quote}&rdquo;</div>
-      <div className="nt-rune-sig-label">{name}{title ? ` · ${title}` : ""}</div>
     </div>
   );
 }
