@@ -254,7 +254,7 @@ export function watchAgentJobs(
               completedAt: obj.status?.completionTime?.toISOString() ?? null,
               podName: existing?.podName ?? null,
               issueTitle: prTitle ?? issueAnnotation ?? existing?.issueTitle ?? null,
-              branchName: annotations["fenrir/branch"] || existing?.branchName ?? null,
+              branchName: annotations["fenrir/branch"] || (existing?.branchName ?? null),
             });
           }
           onUpdate(sortedJobs());
