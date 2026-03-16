@@ -6,6 +6,7 @@ export const AGENT_NAMES: Record<string, string> = {
   luna: "Luna",
   freya: "Freya",
   heimdall: "Heimdall",
+  odin: "Odin",
 };
 
 export const AGENT_TITLES: Record<string, string> = {
@@ -14,6 +15,7 @@ export const AGENT_TITLES: Record<string, string> = {
   luna: "UX Designer",
   freya: "Product Owner",
   heimdall: "Security Specialist",
+  odin: "All-Father",
 };
 
 export const AGENT_AVATARS: Record<string, string> = {
@@ -22,6 +24,16 @@ export const AGENT_AVATARS: Record<string, string> = {
   luna: "/agents/luna-dark.png",
   freya: "/agents/freya-dark.png",
   heimdall: "/agents/heimdall-dark.png",
+  odin: "/agents/odin-dark.png",
+};
+
+export const AGENT_LIGHT_AVATARS: Record<string, string> = {
+  firemandecko: "/profiles/fireman-decko-light.png",
+  loki: "/profiles/loki-light.png",
+  luna: "/profiles/luna-light.png",
+  freya: "/profiles/freya-light.png",
+  heimdall: "/profiles/heimdall-light.png",
+  odin: "/profiles/odin-light.png",
 };
 
 export const AGENT_COLORS: Record<string, string> = {
@@ -30,6 +42,7 @@ export const AGENT_COLORS: Record<string, string> = {
   luna: "#6b8afd",
   freya: "#f0b429",
   heimdall: "#ef4444",
+  odin: "#c9920a",
 };
 
 export const AGENT_RUNE_NAMES: Record<string, string> = {
@@ -38,6 +51,7 @@ export const AGENT_RUNE_NAMES: Record<string, string> = {
   luna:         "ᛚᚢᚾᚨ",
   freya:        "ᚠᚱᛖᛃᚨ",
   heimdall:     "ᚺᛖᛁᛗᛞᚨᛚᛚ",
+  odin:         "ᛟᛞᛁᚾ",
   _fallback:    "ᚨᛊᚷᚨᚱᛞ",
 };
 
@@ -55,7 +69,17 @@ export const AGENT_QUOTES: Record<string, string> = {
   luna:         "By moonlight are the hidden paths revealed — that which cannot be seen cannot be walked",
   freya:        "I have walked the nine worlds in sorrow and in glory — I know what is worth building before the first stone is laid",
   heimdall:     "Nothing passes the Bifröst without my knowing — I neither sleep nor blink, and neither shall your secrets slip past me",
+  odin:         "I hung on that windy tree for nine long nights, wounded by a spear, offered to myself — and from that sacrifice I drew the runes",
   _fallback:    "From Asgard this decree is issued — let it be fulfilled",
+};
+
+export const AGENT_DESCRIPTIONS: Record<string, string> = {
+  firemandecko: "FiremanDecko is the Principal Engineer of Fenrir Ledger — architect, implementer, and keeper of the forge. He receives the Product Design Brief and produces architecture, technical specifications, and working code, owning the full technical lifecycle from design through implementation.",
+  loki:         "Loki is the QA Tester of Fenrir Ledger — the trickster who finds every crack in the armour before the enemy does. He validates implementations, writes Playwright tests, and files defects with a devil\u2019s advocate mindset. Nothing ships without his blessing.",
+  luna:         "Luna is the UX Designer of Fenrir Ledger — she illuminates the hidden paths so that users never stumble in the dark. She produces wireframes, interaction specs, accessibility guidelines, and component specs. She collaborates with Freya before handing designs to FiremanDecko.",
+  freya:        "Freya is the Product Owner of Fenrir Ledger — she has walked the nine worlds and knows what is worth building before the first stone is laid. She owns the product vision, maintains the backlog, and produces the Product Design Brief that sets the team in motion.",
+  heimdall:     "Heimdall is the Security Specialist of Fenrir Ledger — the ever-wakeful guardian of the Bifr\u00F6st. He audits code for OWASP Top 10 vulnerabilities, verifies authentication patterns, ensures secrets are masked, and owns all security architecture and threat modelling.",
+  odin:         "Odin is the All-Father — he watches over all nine worlds from his throne Hlidskjalf. In Fenrir Ledger, Odin orchestrates the agents, preserves session memory, and ensures every dispatch returns from its quest. He neither sleeps nor blinks.",
 };
 
 export const ERROR_TABLET_SEALS: Record<string, { runes: string; inscription: string; sub: string }> = {
