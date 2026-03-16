@@ -76,6 +76,7 @@ FiremanDecko writes tests alongside implementation. Loki augments gaps only.
 - Place tests in `development/frontend/src/__tests__/` alongside the feature
 - Loki will review and add only what's missing — no duplication
 - **Never write Playwright E2E tests** — that's Loki's domain (and he writes few)
+- **Never write tests for monitor-ui** — `development/monitor-ui/` has no test infrastructure
 
 ## Technical Standards
 
