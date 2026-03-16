@@ -1,0 +1,162 @@
+// ─── Fenrir Ledger — Firestore Security Rules ─────────────────────────────────
+//
+// These rules enforce household isolation at the database layer.
+//
+// Key invariants:
+//   1. A user can only read/write their own /users/{uid} document.
+//   2. A user can only read/write households where they are in memberIds[].
+//   3. memberIds is capped at 3 entries.
+//   4. Card CRUD requires the caller to be a member of the parent household.
+//   5. All authenticated operations require a valid Clerk JWT (via Firebase Auth
+//      or a custom token exchange — see note below).
+//
+// Note on authentication:
+//   This app uses Clerk for auth, not Firebase Auth directly. When Firestore
+//   security rules are enforced from the server (Admin SDK), these rules are
+//   bypassed — the Admin SDK has root access. These rules apply to any future
+//   direct client-SDK access or Firebase Emulator test suites.
+//
+//   For production, all Firestore access flows through API routes using the
+//   Admin SDK. These rules serve as documentation + emulator test enforcement.
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper functions ──────────────────────────────────────────────────────
+
+    // Returns the authenticated user's Clerk user ID from the JWT subject claim.
+    function userId() {
+      return request.auth.uid;
+    }
+
+    // Returns true if the request is from an authenticated user.
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Returns true if the caller's UID matches the given clerkUserId.
+    function isSelf(clerkUserId) {
+      return isAuthenticated() && userId() == clerkUserId;
+    }
+
+    // Returns true if the caller is a member of the given household.
+    // Reads the household document to check memberIds.
+    function isHouseholdMember(householdId) {
+      return isAuthenticated() &&
+        userId() in get(/databases/$(database)/documents/households/$(householdId)).data.memberIds;
+    }
+
+    // Returns true if the caller is the owner of the given household.
+    function isHouseholdOwner(householdId) {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/households/$(householdId)).data.ownerId == userId();
+    }
+
+    // Validates a household document write: memberIds max 3, required fields.
+    function isValidHouseholdWrite(data) {
+      return data.keys().hasAll(['id', 'name', 'ownerId', 'memberIds', 'inviteCode',
+                                  'inviteCodeExpiresAt', 'tier', 'createdAt', 'updatedAt'])
+          && data.memberIds.size() >= 1
+          && data.memberIds.size() <= 3
+          && data.tier in ['free', 'karl']
+          && data.inviteCode.size() == 6;
+    }
+
+    // Validates a user document write: required fields, role enum.
+    function isValidUserWrite(data) {
+      return data.keys().hasAll(['clerkUserId', 'email', 'displayName', 'householdId',
+                                  'role', 'createdAt', 'updatedAt'])
+          && data.role in ['owner', 'member'];
+    }
+
+    // Validates a card document write: required fields.
+    function isValidCardWrite(data) {
+      return data.keys().hasAll(['id', 'householdId', 'issuerId', 'cardName',
+                                  'openDate', 'status', 'createdAt', 'updatedAt']);
+    }
+
+    // ─── /users/{clerkUserId} ──────────────────────────────────────────────────
+
+    match /users/{clerkUserId} {
+      // A user can only read their own document.
+      allow read: if isSelf(clerkUserId);
+
+      // A user can only create their own document, and it must be valid.
+      // householdId must not be blank.
+      allow create: if isSelf(clerkUserId)
+          && isValidUserWrite(request.resource.data)
+          && request.resource.data.clerkUserId == clerkUserId
+          && request.resource.data.householdId.size() > 0;
+
+      // A user can update their own document, but cannot change householdId or role
+      // (those require an invite flow — future issue).
+      allow update: if isSelf(clerkUserId)
+          && isValidUserWrite(request.resource.data)
+          && request.resource.data.clerkUserId == clerkUserId
+          && request.resource.data.householdId == resource.data.householdId
+          && request.resource.data.role == resource.data.role;
+
+      // Users cannot delete their own document (requires admin action).
+      allow delete: if false;
+    }
+
+    // ─── /households/{householdId} ─────────────────────────────────────────────
+
+    match /households/{householdId} {
+      // Any member can read the household document.
+      allow read: if isHouseholdMember(householdId);
+
+      // Only the owner can create a household (initial creation).
+      // They must include themselves in memberIds.
+      allow create: if isAuthenticated()
+          && isValidHouseholdWrite(request.resource.data)
+          && request.resource.data.id == householdId
+          && request.resource.data.ownerId == userId()
+          && userId() in request.resource.data.memberIds;
+
+      // Only the owner can update the household.
+      // ownerId cannot be transferred via update (requires a separate transfer flow).
+      allow update: if isHouseholdOwner(householdId)
+          && isValidHouseholdWrite(request.resource.data)
+          && request.resource.data.id == householdId
+          && request.resource.data.ownerId == resource.data.ownerId
+          && request.resource.data.createdAt == resource.data.createdAt;
+
+      // Only the owner can delete a household.
+      allow delete: if isHouseholdOwner(householdId);
+
+      // ─── /households/{householdId}/cards/{cardId} ──────────────────────────
+
+      match /cards/{cardId} {
+        // Any household member can read cards.
+        allow read: if isHouseholdMember(householdId);
+
+        // Any household member can create a card in this household.
+        // cardId in the URL must match the id field in the document.
+        allow create: if isHouseholdMember(householdId)
+            && isValidCardWrite(request.resource.data)
+            && request.resource.data.id == cardId
+            && request.resource.data.householdId == householdId;
+
+        // Any household member can update a card.
+        // householdId and id are immutable once created.
+        allow update: if isHouseholdMember(householdId)
+            && isValidCardWrite(request.resource.data)
+            && request.resource.data.id == resource.data.id
+            && request.resource.data.householdId == resource.data.householdId;
+
+        // Any household member can soft-delete (set deletedAt).
+        // Hard deletes are blocked — use soft-delete pattern only.
+        allow delete: if false;
+      }
+    }
+
+    // ─── Deny all other paths ──────────────────────────────────────────────────
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
