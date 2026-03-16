@@ -23,22 +23,16 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-
-const NAV_LINKS = [
-  { href: "/features", label: "Features" },
-  { href: "/chronicles", label: "Prose Edda" },
-  { href: "/about", label: "About" },
-  { href: "/free-trial", label: "Free Trial" },
-  { href: "/pricing", label: "Pricing" },
-] as const;
+import {
+  NAV_LINKS,
+  isNavLinkActive,
+  MarketingNavLinks,
+} from "@/components/marketing/MarketingNavLinks";
 
 // ── MarketingNavbar ────────────────────────────────────────────────────────────
 
-/** Check whether a nav link matches the current pathname. */
-export function isNavLinkActive(pathname: string | null, href: string): boolean {
-  if (!pathname) return false;
-  return pathname === href || pathname.startsWith(href + "/");
-}
+// Re-export for backwards compatibility with existing tests
+export { isNavLinkActive } from "@/components/marketing/MarketingNavLinks";
 
 export function MarketingNavbar() {
   const pathname = usePathname();
@@ -93,24 +87,8 @@ export function MarketingNavbar() {
           </Link>
 
           {/* Desktop center nav links */}
-          <div className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map(({ href, label }) => {
-              const active = isNavLinkActive(pathname, href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  aria-current={active ? "page" : undefined}
-                  className={
-                    active
-                      ? "font-heading text-sm font-semibold text-foreground border border-border px-2.5 py-1 hover:border-primary/50 transition-colors"
-                      : "font-heading text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  }
-                >
-                  {label}
-                </Link>
-              );
-            })}
+          <div className="hidden md:flex items-center gap-8" aria-label="Marketing site navigation">
+            <MarketingNavLinks />
           </div>
 
           {/* Desktop right: theme toggle + CTA */}

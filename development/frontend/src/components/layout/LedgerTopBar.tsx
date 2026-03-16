@@ -30,6 +30,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle, cycleTheme } from "@/components/layout/ThemeToggle";
 import { TrialBadge } from "@/components/layout/TrialBadge";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
+import { MarketingNavLinks } from "@/components/marketing/MarketingNavLinks";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -354,7 +355,7 @@ export function LedgerTopBar() {
   return (
     <header
       role="banner"
-      className="h-12 shrink-0 border-b border-border bg-background sticky top-0 z-[100] flex items-center justify-between px-4"
+      className="h-12 shrink-0 border-b border-border bg-background sticky top-0 z-[100] flex items-center justify-between px-4 relative"
     >
       {/* Skip nav link */}
       <a
@@ -363,6 +364,14 @@ export function LedgerTopBar() {
       >
         Skip to main content
       </a>
+
+      {/* CENTER: Marketing nav links — desktop only, hidden at mobile (≤767px) */}
+      <nav
+        className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-6"
+        aria-label="Marketing site navigation"
+      >
+        <MarketingNavLinks />
+      </nav>
 
       {/* LEFT: Logo link -> / */}
       <div className="flex items-center">
