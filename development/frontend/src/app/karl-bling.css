@@ -121,6 +121,7 @@
 [data-tier="karl"] .karl-bling-btn:hover {
   border-color: var(--karl-gold);
   box-shadow: var(--karl-shadow-md);
+  animation: karl-gold-glow 2.8s ease-in-out infinite;
 }
 
 [data-tier="trial"] .karl-bling-btn {
@@ -131,6 +132,44 @@
 [data-tier="trial"] .karl-bling-btn:hover {
   border-color: rgba(212, 165, 32, 0.55);
   box-shadow: var(--karl-shadow-sm);
+  animation: karl-gold-glow-soft 3.2s ease-in-out infinite;
+}
+
+/* ── Karl: button runic prefix/suffix ────────────────────────────────────────
+ *
+ * ::before (ᚠ Fehu — wealth/prosperity) and ::after (ᚱ Raidho — journey/action)
+ * appear as inline flex items within the button for Karl subscribers.
+ * Subtle at rest (opacity 0.4), brighten on hover (opacity 0.85).
+ * Trial users: no runic prefix/suffix (spec: "Karl only").
+ */
+[data-tier="karl"] .karl-bling-btn::before {
+  content: "ᚠ";
+  font-size: 0.6em;
+  font-style: normal;
+  color: var(--karl-gold);
+  opacity: 0.4;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+  user-select: none;
+}
+
+[data-tier="karl"] .karl-bling-btn:hover::before {
+  opacity: 0.85;
+}
+
+[data-tier="karl"] .karl-bling-btn::after {
+  content: "ᚱ";
+  font-size: 0.6em;
+  font-style: normal;
+  color: var(--karl-gold);
+  opacity: 0.4;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+  user-select: none;
+}
+
+[data-tier="karl"] .karl-bling-btn:hover::after {
+  opacity: 0.85;
 }
 
 /* ── Karl: sidebar accent ────────────────────────────────────────────────── */
@@ -177,6 +216,55 @@
   box-shadow: 0 2px 8px rgba(212, 165, 32, 0.30);
 }
 
+/* ── Karl: sidebar Karl-feature markers ──────────────────────────────────────
+ *
+ * .sidebar-karl-feature — add to any nav item that represents a Karl-gated
+ * feature. For Karl and trial users, a small gold Fehu rune (ᚠ) appears in
+ * the top-right corner of the item as a premium-access accent.
+ *
+ * The marker is ONLY visible for karl/trial tiers (they have access).
+ * Thrall users see the .karl-gate-marker badge instead (below).
+ */
+.sidebar-karl-feature {
+  position: relative;
+}
+
+[data-tier="karl"] .sidebar-karl-feature::after,
+[data-tier="trial"] .sidebar-karl-feature::after {
+  content: "ᚠ";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  font-size: 0.45rem;
+  font-family: serif;
+  font-style: normal;
+  color: var(--karl-gold);
+  opacity: 0.55;
+  pointer-events: none;
+  user-select: none;
+  line-height: 1;
+}
+
+/* ── Karl: gated-feature gold marker icon ────────────────────────────────────
+ *
+ * .karl-gate-marker — add to the upgrade badge/indicator shown on Karl-gated
+ * features for Thrall users. Provides a consistent runic-gold visual style for
+ * all "requires Karl" indicators across the UI.
+ *
+ * Works alongside or replaces the plain "K" text badge pattern.
+ */
+.karl-gate-marker {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgba(212, 165, 32, 0.65);
+  border: 1px solid rgba(212, 165, 32, 0.28);
+  background: rgba(212, 165, 32, 0.06);
+  padding: 0.05em 0.2em;
+  line-height: 1.2;
+}
+
 /* ── Reduced motion overrides ────────────────────────────────────────────── */
 /*
  * Suppress all Karl bling animations for users who prefer reduced motion.
@@ -192,7 +280,16 @@
   [data-tier="karl"] .karl-bling-btn:hover,
   [data-tier="trial"] .karl-bling-btn,
   [data-tier="trial"] .karl-bling-btn:hover {
+    animation: none;
     transition: none;
+  }
+
+  /* Runic prefix/suffix — no transition on reduced-motion */
+  [data-tier="karl"] .karl-bling-btn::before,
+  [data-tier="karl"] .karl-bling-btn::after {
+    transition: none;
+    /* Keep static gold fallback visible at full rest opacity */
+    opacity: 0.55;
   }
 }
 
@@ -200,6 +297,11 @@
 @media (hover: none) {
   [data-tier="karl"] .karl-bling-card:hover,
   [data-tier="trial"] .karl-bling-card:hover {
+    animation: none;
+  }
+
+  [data-tier="karl"] .karl-bling-btn:hover,
+  [data-tier="trial"] .karl-bling-btn:hover {
     animation: none;
   }
 }
