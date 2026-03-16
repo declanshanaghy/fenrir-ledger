@@ -106,9 +106,14 @@ function RestoreTabGuides() {
 
   return (
     <section
-      className="border border-border p-5 flex flex-col gap-3"
+      className="relative border border-border p-5 flex flex-col gap-3 karl-bling-card"
       aria-label="Restore Tab Guides"
     >
+      {/* Karl rune corners */}
+      <span className="karl-rune-corner karl-rune-tl" aria-hidden="true">ᚠ</span>
+      <span className="karl-rune-corner karl-rune-tr" aria-hidden="true">ᚱ</span>
+      <span className="karl-rune-corner karl-rune-bl" aria-hidden="true">ᛁ</span>
+      <span className="karl-rune-corner karl-rune-br" aria-hidden="true">ᚾ</span>
       <h2 className="text-sm font-heading font-bold uppercase tracking-[0.08em] text-foreground">
         Tab Guides
       </h2>
@@ -124,7 +129,7 @@ function RestoreTabGuides() {
           disabled={!hasGuidesToRestore}
           className={`inline-flex items-center gap-2 min-h-[44px] md:min-h-[40px] px-4 py-2 text-base font-heading tracking-wide border rounded-sm transition-colors ${
             hasGuidesToRestore
-              ? "border-gold/60 text-gold hover:bg-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+              ? "border-gold/60 text-gold hover:bg-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer karl-bling-btn"
               : "border-border text-muted-foreground/60 cursor-not-allowed"
           }`}
           aria-label={

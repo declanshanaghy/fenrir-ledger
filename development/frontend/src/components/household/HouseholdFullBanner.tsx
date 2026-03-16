@@ -11,7 +11,7 @@
 export function HouseholdFullBanner() {
   return (
     <div
-      className="border-2 border-border p-3 flex items-start gap-3"
+      className="border-2 border-border p-3 flex items-start gap-3 karl-bling-card"
       role="status"
       aria-label="Household is full"
     >

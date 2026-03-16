@@ -50,7 +50,7 @@ const PORTAL_TIMEOUT_MS = 10_000;
 function StripeSettingsSkeleton() {
   return (
     <section
-      className="border border-border p-5 flex flex-col gap-3"
+      className="relative border border-border p-5 flex flex-col gap-3 karl-bling-card"
       aria-busy="true"
       aria-label="Loading subscription settings..."
     >
@@ -156,10 +156,15 @@ export function StripeSettings() {
   return (
     <>
       <section
-        className="border border-border p-5 flex flex-col gap-4"
+        className="relative border border-border p-5 flex flex-col gap-4 karl-bling-card"
         role="region"
         aria-label="Subscription"
       >
+        {/* Karl rune corners */}
+        <span className="karl-rune-corner karl-rune-tl" aria-hidden="true">ᚠ</span>
+        <span className="karl-rune-corner karl-rune-tr" aria-hidden="true">ᚱ</span>
+        <span className="karl-rune-corner karl-rune-bl" aria-hidden="true">ᛁ</span>
+        <span className="karl-rune-corner karl-rune-br" aria-hidden="true">ᚾ</span>
         {/* Section heading — flex row: title left, tier badge right */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <h2 className="text-base font-heading font-bold text-foreground">
@@ -244,7 +249,7 @@ export function StripeSettings() {
                 disabled={isSubscribing}
                 isLoading={isSubscribing}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold karl-bling-btn"
               >
                 Subscribe
               </Button>
@@ -280,7 +285,7 @@ export function StripeSettings() {
                 disabled={isAnyLoading}
                 isLoading={isManaging}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full sm:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
+                className="min-h-[44px] w-full sm:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold karl-bling-btn"
               >
                 Manage Subscription
               </Button>
@@ -328,7 +333,7 @@ export function StripeSettings() {
                 disabled={isSubscribing}
                 isLoading={isSubscribing}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
+                className="min-h-[44px] w-full md:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold karl-bling-btn"
               >
                 Resubscribe
               </Button>
@@ -368,7 +373,7 @@ export function StripeSettings() {
                 disabled={isAnyLoading}
                 isLoading={isSubscribing}
                 loadingText="Redirecting..."
-                className="min-h-[44px] w-full sm:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold"
+                className="min-h-[44px] w-full sm:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold karl-bling-btn"
               >
                 Resubscribe
               </Button>

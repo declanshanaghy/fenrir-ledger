@@ -54,7 +54,7 @@ export function InviteCodeDisplay({
   }, [inviteCode]);
 
   return (
-    <div className="border border-border p-4 flex flex-col gap-3">
+    <div className="relative border border-border p-4 flex flex-col gap-3 karl-bling-card">
       <h3 className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-foreground">
         Invite Code
       </h3>
@@ -70,7 +70,7 @@ export function InviteCodeDisplay({
         <button
           type="button"
           onClick={handleCopy}
-          className="min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 whitespace-nowrap"
+          className="min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 whitespace-nowrap karl-bling-btn"
           aria-label={copied ? "Code copied to clipboard" : "Copy invite code"}
         >
           {copied ? "Copied!" : "Copy"}
@@ -85,7 +85,7 @@ export function InviteCodeDisplay({
         type="button"
         onClick={onRegenerate}
         disabled={isRegenerating}
-        className="min-h-[44px] w-full sm:w-auto px-4 py-2 border-2 border-border text-sm font-heading font-bold text-foreground hover:bg-muted/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="min-h-[44px] w-full sm:w-auto px-4 py-2 border-2 border-border text-sm font-heading font-bold text-foreground hover:bg-muted/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 karl-bling-btn"
       >
         {isRegenerating ? "Regenerating…" : "Regenerate Code"}
       </button>
