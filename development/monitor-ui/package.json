@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "copy:profiles": "cp -r ../../.claude/agents/profiles/*.png public/profiles/",
+    "prebuild": "mkdir -p public/profiles && npm run copy:profiles",
+    "predev": "mkdir -p public/profiles && npm run copy:profiles",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview"

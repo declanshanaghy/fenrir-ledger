@@ -8,6 +8,8 @@ import { useLogStream } from "./hooks/useLogStream";
 import { ErrorBanner } from "./components/ErrorBanner";
 import { Sidebar } from "./components/Sidebar";
 import { LogViewer } from "./components/LogViewer";
+import { AgentProfileModal } from "./components/AgentProfileModal";
+import { useTheme } from "./hooks/useTheme";
 import {
   isPinned as checkIsPinned,
   pinSession,
@@ -18,6 +20,8 @@ import type { CachedSessionMeta } from "./lib/localStorageLogs";
 
 export function App() {
   const quote = useMemo(() => randomQuote(), []);
+  const { theme } = useTheme();
+  const [profileAgent, setProfileAgent] = useState<string | null>(null);
   const { jobs, handleMessage: handleJobsMessage, refreshCached } = useJobs();
   const {
     entries,
@@ -172,6 +176,8 @@ export function App() {
           activeSessionId={activeSessionId}
           quote={quote}
           onSelectSession={handleSelectSession}
+          onAvatarClick={setProfileAgent}
+          onOdinClick={() => setProfileAgent("odin")}
         />
         <ErrorBoundary>
           <LogViewer
@@ -184,6 +190,7 @@ export function App() {
             streamError={streamError}
             isPinned={isPinned}
             onTogglePin={handleTogglePin}
+            onAvatarClick={setProfileAgent}
             onSetSpeed={(speed) => {
               if (activeSessionId) {
                 send({ type: "set-speed", sessionId: activeSessionId, speed });
@@ -192,6 +199,13 @@ export function App() {
           />
         </ErrorBoundary>
       </div>
+      {profileAgent && (
+        <AgentProfileModal
+          agentKey={profileAgent}
+          theme={theme}
+          onClose={() => setProfileAgent(null)}
+        />
+      )}
     </ErrorBoundary>
   );
 }

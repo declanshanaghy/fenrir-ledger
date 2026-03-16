@@ -93,9 +93,10 @@ interface Props {
   onSetSpeed?: (speed: number) => void;
   isPinned?: boolean;
   onTogglePin?: () => void;
+  onAvatarClick?: (agentKey: string) => void;
 }
 
-export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin }: Props) {
+export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin, onAvatarClick }: Props) {
   const termRef = useRef<HTMLDivElement>(null);
   const [fixtureSpeed, setFixtureSpeed] = useState(1);
   const [fixturePaused, setFixturePaused] = useState(false);
@@ -237,6 +238,7 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
             isLastAssistantText={entry.id === lastAssistantTextId}
             autoScroll={autoScroll}
             isLatestBatch={entry.type === "tool-batch" && entry.id === lastToolBatchId}
+            onAvatarClick={onAvatarClick}
           />
         ))}
       </div>
@@ -283,7 +285,7 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
   );
 }
 
-function LogLine({ entry, agentKey, agentName, isLastAssistantText, autoScroll, isLatestBatch }: { entry: LogEntry; agentKey?: string; agentName?: string; isLastAssistantText?: boolean; autoScroll?: boolean; isLatestBatch?: boolean }) {
+function LogLine({ entry, agentKey, agentName, isLastAssistantText, autoScroll, isLatestBatch, onAvatarClick }: { entry: LogEntry; agentKey?: string; agentName?: string; isLastAssistantText?: boolean; autoScroll?: boolean; isLatestBatch?: boolean; onAvatarClick?: (agentKey: string) => void }) {
   switch (entry.type) {
     case "system":
       return (
@@ -305,6 +307,7 @@ function LogLine({ entry, agentKey, agentName, isLastAssistantText, autoScroll, 
           {...(agentKey ? { agentKey } : {})}
           {...(agentName ? { agentName } : {})}
           {...(isLastAssistantText ? { isLastAssistantText } : {})}
+          onAvatarClick={onAvatarClick}
         />
       );
     case "tool-use":
@@ -364,11 +367,13 @@ function AgentBubble({
   agentKey,
   agentName,
   isLastAssistantText,
+  onAvatarClick,
 }: {
   text: string;
   agentKey?: string;
   agentName?: string;
   isLastAssistantText?: boolean;
+  onAvatarClick?: (agentKey: string) => void;
 }) {
   // Render the last assistant text as a Norse verdict inscription if it matches
   if (isLastAssistantText && isVerdictMessage(text)) {
@@ -389,7 +394,16 @@ function AgentBubble({
   return (
     <div className="agent-bubble" style={{ "--agent-accent": color, borderLeftColor: color } as React.CSSProperties}>
       <div className="agent-bubble-header">
-        {avatar && <img className="agent-bubble-avatar" src={avatar} alt={name} style={{ borderColor: color }} />}
+        {avatar && (
+          <button
+            className="agent-bubble-avatar-btn"
+            onClick={() => onAvatarClick?.(agentKey ?? "")}
+            aria-label={`View ${name} profile`}
+            title={`View ${name} profile`}
+          >
+            <img className="agent-bubble-avatar" src={avatar} alt={name} style={{ borderColor: color }} />
+          </button>
+        )}
         <div className="agent-bubble-identity">
           <span className="agent-bubble-name" style={{ color }}>{name}</span>
           {title && <span className="agent-bubble-title">{title}</span>}

@@ -6,9 +6,10 @@ interface Props {
   job: DisplayJob;
   isActive: boolean;
   onClick: () => void;
+  onAvatarClick?: (agentKey: string) => void;
 }
 
-export function JobCard({ job, isActive, onClick }: Props) {
+export function JobCard({ job, isActive, onClick, onAvatarClick }: Props) {
   const agentColor = AGENT_COLORS[job.agentKey ?? ""] || "#c9920a";
   const avatar = AGENT_AVATARS[job.agentKey ?? ""];
   const sColor = STATUS_COLORS[job.status] || "#606070";
@@ -29,7 +30,19 @@ export function JobCard({ job, isActive, onClick }: Props) {
       onClick={onClick}
     >
       <div className="card-top">
-        {avatar && <img className="card-avatar" src={avatar} alt={job.agentName} />}
+        {avatar && (
+          <button
+            className="card-avatar-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAvatarClick?.(job.agentKey ?? "");
+            }}
+            aria-label={`View ${job.agentName} profile`}
+            title={`View ${job.agentName} profile`}
+          >
+            <img className="card-avatar" src={avatar} alt={job.agentName} />
+          </button>
+        )}
         <span className="card-issue-title" title={cardTitle}>
           {cardTitle}
         </span>
