@@ -446,14 +446,73 @@ function ToolBatchGroup({ entry, autoScroll, isLatestBatch }: { entry: LogEntry;
   );
 }
 
+/** Parse decree text into collapsible sections with Norse headings */
+function parseDecreeSections(text: string): Array<{ glyph: string; title: string; body: string; defaultOpen: boolean }> {
+  const SECTION_MAP: Array<{ pattern: RegExp; glyph: string; title: string; defaultOpen?: boolean }> = [
+    { pattern: /^You are \w+/m, glyph: "ᛁ", title: "Hear Me, Agent", defaultOpen: true },
+    { pattern: /SANDBOX RULES/m, glyph: "ᚺ", title: "The Sacred Ground", defaultOpen: true },
+    { pattern: /\*\*Step 1/m, glyph: "ᚲ", title: "Consecrate Thy Forge", defaultOpen: true },
+    { pattern: /TODO TRACKING/m, glyph: "ᚾ", title: "The Norns\u2019 Ledger", defaultOpen: true },
+    { pattern: /INCREMENTAL COMMIT/m, glyph: "ᚷ", title: "The Chain of Gleipnir", defaultOpen: true },
+    { pattern: /VERIFY.*tsc.*build/m, glyph: "ᛗ", title: "Trial by Fire", defaultOpen: true },
+    { pattern: /STRICT SCOPE/m, glyph: "ᛏ", title: "The Gjallarhorn Boundary", defaultOpen: true },
+    { pattern: /\*\*Step 2/m, glyph: "ᚱ", title: "Consult the Runes", defaultOpen: true },
+    { pattern: /\*\*Issue details/m, glyph: "ᛃ", title: "The Wound in Yggdrasil", defaultOpen: true },
+    { pattern: /\*\*Step 3[^b]/m, glyph: "ᚠ", title: "Take Up Mj\u00F6lnir", defaultOpen: true },
+    { pattern: /\*\*Step 3b/m, glyph: "ᛊ", title: "Forge the Tests", defaultOpen: true },
+    { pattern: /\*\*Step 4/m, glyph: "ᛒ", title: "Walk the Bifr\u00F6st", defaultOpen: true },
+    { pattern: /\*\*Step 5/m, glyph: "ᛚ", title: "Align with the World Tree", defaultOpen: true },
+    { pattern: /\*\*Step 6/m, glyph: "ᛖ", title: "Present Thy Offering", defaultOpen: true },
+    { pattern: /\*\*Step 7/m, glyph: "ᛞ", title: "Pass the Torch", defaultOpen: true },
+  ];
+
+  // Find section boundaries
+  const boundaries: Array<{ idx: number; glyph: string; title: string; defaultOpen: boolean }> = [];
+  for (const sec of SECTION_MAP) {
+    const match = sec.pattern.exec(text);
+    if (match) boundaries.push({ idx: match.index, glyph: sec.glyph, title: sec.title, defaultOpen: sec.defaultOpen ?? false });
+  }
+  boundaries.sort((a, b) => a.idx - b.idx);
+
+  if (boundaries.length === 0) {
+    return [{ glyph: "ᛟ", title: "The Decree", body: text, defaultOpen: true }];
+  }
+
+  const sections: Array<{ glyph: string; title: string; body: string; defaultOpen: boolean }> = [];
+  for (let i = 0; i < boundaries.length; i++) {
+    const start = boundaries[i]!.idx;
+    const end = i + 1 < boundaries.length ? boundaries[i + 1]!.idx : text.length;
+    sections.push({
+      glyph: boundaries[i]!.glyph,
+      title: boundaries[i]!.title,
+      body: text.slice(start, end).trim(),
+      defaultOpen: boundaries[i]!.defaultOpen,
+    });
+  }
+  return sections;
+}
+
+function DecreeSection({ glyph, title, body, defaultOpen, wide }: { glyph: string; title: string; body: string; defaultOpen: boolean; wide?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className={`decree-section ${open ? "open" : ""}${wide ? " decree-wide" : ""}`}>
+      <div className="decree-section-header" onClick={() => setOpen(o => !o)}>
+        <span className="decree-section-glyph">{glyph}</span>
+        <span className="decree-section-title">{title}</span>
+        <span className="ep-group-chevron" style={{ marginLeft: "auto" }}>{"\u203A"}</span>
+      </div>
+      {open && <div className="decree-section-body">{body}</div>}
+    </div>
+  );
+}
+
 function NorseTablet({ text }: { text: string }) {
   const [open, setOpen] = useState(true);
-  // Extract agent name from "You are <Name>,"
   const agentMatch = /^You are (\w+)/.exec(text);
   const agent = agentMatch?.[1] ?? "Agent";
-  // Extract issue ref
   const issueMatch = /#(\d+)/.exec(text);
   const issue = issueMatch?.[1] ?? "";
+  const sections = parseDecreeSections(text);
 
   return (
     <div className={`norse-tablet ${open ? "open" : ""}`}>
@@ -468,7 +527,18 @@ function NorseTablet({ text }: { text: string }) {
       </div>
       <div className="norse-tablet-body-wrap">
         <div className="norse-tablet-body">
-          <div className="norse-tablet-inscription">{text}</div>
+          <div className="decree-grid">
+            {sections.map((sec, i) => (
+              <DecreeSection
+                key={i}
+                glyph={sec.glyph}
+                title={sec.title}
+                body={sec.body}
+                defaultOpen={sec.defaultOpen}
+                wide={sec.title === "Hear Me, Agent" || sec.title === "The Wound in Yggdrasil"}
+              />
+            ))}
+          </div>
           <div className="nt-rune-sig" role="complementary" aria-label="Odin's seal">
             <div className="nt-rune-sig-agent-runes" aria-hidden="true">ᛟᛞᛁᚾ</div>
             <div className="nt-rune-sig-divider" aria-hidden="true">&mdash; ᚨ &mdash;</div>
