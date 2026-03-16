@@ -192,13 +192,14 @@ describe("Copy session ID button — visual feedback", () => {
 // ── Layout — download button still present alongside copy button ───────────────
 
 describe("Copy session ID button — layout coexistence", () => {
-  it("download button still renders alongside copy button in normal state", () => {
+  it("pin button renders alongside copy button in normal state when onTogglePin is provided", () => {
+    const onTogglePin = vi.fn();
     const { container } = render(
-      <LogViewer entries={[makeTextEntry("hello")]} activeJob={MOCK_JOB} wsState="open" />
+      <LogViewer entries={[makeTextEntry("hello")]} activeJob={MOCK_JOB} wsState="open" onTogglePin={onTogglePin} />
     );
     const headerBadges = container.querySelector(".header-badges");
     expect(headerBadges!.querySelector(".copy-session-btn")).not.toBeNull();
-    expect(headerBadges!.querySelector(".download-log-btn")).not.toBeNull();
+    expect(headerBadges!.querySelector(".pin-btn")).not.toBeNull();
   });
 });
 

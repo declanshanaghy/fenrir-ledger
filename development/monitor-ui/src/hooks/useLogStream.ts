@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import type { ServerMessage, JsonEvent, ContentBlock } from "../lib/types";
 import { parseJsonlLine } from "../lib/jsonl";
 import { batchSummary } from "../lib/constants";
-import { appendLogLine } from "../lib/localStorageLogs";
+import { appendLogLine, getCachedLog } from "../lib/localStorageLogs";
 
 export interface LogEntry {
   id: string;
@@ -388,6 +388,73 @@ export function useLogStream() {
     ]);
   }, []);
 
+  /**
+   * Replay cached JSONL from localStorage for a pinned session.
+   * Processes every stored line through the same pipeline as live log-lines,
+   * but skips re-persisting to localStorage.
+   * Call AFTER clearEntries() and INSTEAD OF subscribing to the server.
+   */
+  const replayFromCache = useCallback((sessionId: string) => {
+    const content = getCachedLog(sessionId);
+    if (!content) return;
+    const lines = content.split("\n");
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const ev = parseJsonlLine(line);
+      if (!ev) {
+        const stripped = stripTimestamp(line.trim());
+        if (/^---\s*TASK PROMPT\s*---$/.test(stripped)) {
+          inTaskPrompt.current = true;
+          taskPromptBuffer.current = [];
+          continue;
+        }
+        if (/^---\s*END PROMPT\s*---$/.test(stripped)) {
+          inTaskPrompt.current = false;
+          const fullPrompt = taskPromptBuffer.current.join("\n");
+          taskPromptBuffer.current = [];
+          setEntries((prev) => [...prev, { id: nextId(), type: "entrypoint-task", text: fullPrompt }]);
+          continue;
+        }
+        if (inTaskPrompt.current) {
+          taskPromptBuffer.current.push(stripped);
+          continue;
+        }
+        if (/^===\s*Agent Sandbox Entrypoint\s*===/.test(stripped)) {
+          inEntrypoint.current = true;
+          setEntries((prev) => [...prev, parseEntrypointLine(stripped)]);
+          continue;
+        }
+        if (/^===\s*Starting Claude Code\s*===/.test(stripped)) {
+          inEntrypoint.current = false;
+          setEntries((prev) => {
+            const groupTypes = new Set(["entrypoint-header", "entrypoint-ok", "entrypoint-info", "entrypoint-fatal", "raw"]);
+            const epChildren: LogEntry[] = [];
+            const rest: LogEntry[] = [];
+            for (const e of prev) {
+              if (groupTypes.has(e.type)) epChildren.push(e);
+              else rest.push(e);
+            }
+            const group: LogEntry = { id: nextId(), type: "entrypoint-group", text: "Agent Sandbox Setup", children: epChildren };
+            return [...rest, group, parseEntrypointLine(stripped)];
+          });
+          continue;
+        }
+        if (inEntrypoint.current) {
+          setEntries((prev) => [...prev, parseEntrypointLine(stripped)]);
+          continue;
+        }
+        setEntries((prev) => [...prev, { id: nextId(), type: "raw", text: stripped }]);
+      } else {
+        processEvent(ev);
+      }
+    }
+    // System marker at end of replay
+    setEntries((prev) => [
+      ...prev,
+      { id: nextId(), type: "system", detail: "replayed from Odin\u2019s memory (pinned cache)" },
+    ]);
+  }, [processEvent]);
+
   const isTtlExpired = streamEnded && streamError !== null && TTL_ERROR_PATTERN.test(streamError);
   const isNodeUnreachable = streamEnded && streamError !== null && NODE_UNREACHABLE_PATTERN.test(streamError);
 
@@ -397,6 +464,7 @@ export function useLogStream() {
     setActiveSessionId,
     clearEntries,
     handleMessage,
+    replayFromCache,
     streamError,
     streamEnded,
     isTtlExpired,
