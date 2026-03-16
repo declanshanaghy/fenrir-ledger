@@ -26,6 +26,7 @@ import {
   getChronicleBySlug,
 } from "@/lib/chronicles";
 import "../chronicle.css";
+import "../chronicle-norse.css";
 
 // ── Static generation ────────────────────────────────────────────────────────
 
