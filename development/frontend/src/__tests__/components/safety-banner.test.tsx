@@ -106,4 +106,69 @@ describe("SafetyBanner post-share — baseline", () => {
       screen.getByText(/revoking public access to your spreadsheet/i)
     ).toBeDefined();
   });
+
+  it("renders with role=note", () => {
+    render(<SafetyBanner variant="post-share" />);
+    expect(screen.getByRole("note")).toBeDefined();
+  });
+
+  it("does NOT render any button", () => {
+    render(<SafetyBanner variant="post-share" />);
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+  });
+});
+
+// ── Loki augmentation — gap coverage ─────────────────────────────────────────
+
+describe("SafetyBanner compact — Loki gap coverage", () => {
+  it("renders exactly two list sections (safe + never)", () => {
+    const { container } = render(<SafetyBanner variant="compact" />);
+    const lists = container.querySelectorAll("ul");
+    expect(lists).toHaveLength(2);
+  });
+
+  it("each list section contains exactly 4 items", () => {
+    const { container } = render(<SafetyBanner variant="compact" />);
+    const lists = container.querySelectorAll("ul");
+    lists.forEach((ul) => {
+      expect(ul.querySelectorAll("li")).toHaveLength(4);
+    });
+  });
+});
+
+describe("SafetyBanner sensitive-data — Loki gap coverage", () => {
+  it("renders body text describing what was stripped", () => {
+    render(<SafetyBanner variant="sensitive-data" />);
+    expect(
+      screen.getByText(/card numbers, CVVs, or other sensitive/i)
+    ).toBeDefined();
+  });
+
+  it("does NOT render any button", () => {
+    render(<SafetyBanner variant="sensitive-data" />);
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+  });
+});
+
+describe("SafetyBanner full — Loki gap coverage (no toggle regression)", () => {
+  it("does NOT render any button", () => {
+    render(<SafetyBanner variant="full" />);
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+  });
+
+  it("shows all safe-to-include items", () => {
+    render(<SafetyBanner variant="full" />);
+    expect(screen.getByText("Card names and issuers")).toBeDefined();
+    expect(screen.getByText("Open dates and annual fees")).toBeDefined();
+    expect(screen.getByText("Credit limits")).toBeDefined();
+    expect(screen.getByText("Sign-up bonus details")).toBeDefined();
+  });
+
+  it("shows all never-include items", () => {
+    render(<SafetyBanner variant="full" />);
+    expect(screen.getByText("Full card numbers")).toBeDefined();
+    expect(screen.getByText("CVV / security codes")).toBeDefined();
+    expect(screen.getByText("Social Security numbers")).toBeDefined();
+    expect(screen.getByText("Passwords or PINs")).toBeDefined();
+  });
 });
