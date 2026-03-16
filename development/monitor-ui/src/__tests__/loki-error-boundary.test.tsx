@@ -204,4 +204,21 @@ describe("ErrorBoundary — Loki tablet (issue #1037)", () => {
     expect(divider).toBeTruthy();
     expect(divider!.getAttribute("aria-hidden")).toBe("true");
   });
+
+  // Loki QA augmentation: edge case — thrown object has no .message property
+  it("shows 'Unknown error' fallback when thrown object has undefined message", () => {
+    class NoMessageThrower extends Component<object> {
+      override render(): ReactNode {
+        // Throw an object without a .message property to exercise the ?? fallback
+        throw { name: "CustomError", message: undefined, stack: "" } as unknown as Error;
+      }
+    }
+    const { getByText } = render(
+      <ErrorBoundary>
+        <NoMessageThrower />
+      </ErrorBoundary>
+    );
+    // message is undefined → `error?.message ?? "Unknown error"` returns "Unknown error"
+    expect(getByText("Unknown error")).toBeTruthy();
+  });
 });
