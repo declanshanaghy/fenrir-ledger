@@ -197,7 +197,47 @@ function chainForType(type) {
       return "unknown";
   }
 }
-function analyzeChain(item, comments, prs, ciMap) {
+function fetchJobRuntimes() {
+  try {
+    const output = execSync(
+      "kubectl get jobs -n fenrir-agents --no-headers -o custom-columns='NAME:.metadata.name,STATUS:.status.conditions[0].type,START:.status.startTime,COMPLETE:.status.completionTime' 2>/dev/null",
+      { encoding: "utf-8", timeout: 10000 }
+    );
+    const jobs = {};
+    for (const line of output.trim().split("\n")) {
+      if (!line.trim()) continue;
+      const parts = line.trim().split(/\s+/);
+      if (parts.length < 4) continue;
+      const [name, status, start, end] = parts;
+      const issueMatch = name.match(/issue-(\d+)/);
+      if (!issueMatch) continue;
+      const issueNum = parseInt(issueMatch[1]);
+      const startTime = start !== "<none>" ? new Date(start) : null;
+      const endTime = end !== "<none>" ? new Date(end) : null;
+      const now = new Date();
+      let runtimeMs;
+      if (startTime && endTime) {
+        runtimeMs = endTime - startTime;
+      } else if (startTime) {
+        runtimeMs = now - startTime;
+      } else {
+        continue;
+      }
+      const mins = Math.floor(runtimeMs / 60000);
+      const secs = Math.floor((runtimeMs % 60000) / 1000);
+      const runtime = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+      const isRunning = status !== "Complete" && !endTime;
+      // Keep the most recent job per issue (highest step)
+      if (!jobs[issueNum] || name > jobs[issueNum].name) {
+        jobs[issueNum] = { name, runtime, isRunning, status: isRunning ? "running" : "complete" };
+      }
+    }
+    return jobs;
+  } catch {
+    return {};
+  }
+}
+function analyzeChain(item, comments, prs, ciMap, jobRuntimes) {
   const type = detectType(item.labels);
   const priority = detectPriority(item.labels);
   const chain = chainForType(type);
@@ -231,6 +271,7 @@ function analyzeChain(item, comments, prs, ciMap) {
     position = "Research complete \u2014 awaiting review";
     next_action = "review";
     command = `/fire-next-up --resume #${item.num}`;
+    const jobInfo2 = jobRuntimes?.[item.num];
     return {
       issue: item.num,
       title: item.title,
@@ -243,7 +284,9 @@ function analyzeChain(item, comments, prs, ciMap) {
       verdict: null,
       ci,
       next_action,
-      command
+      command,
+      job_runtime: jobInfo2?.runtime ?? null,
+      job_status: jobInfo2?.status ?? null
     };
   }
   if (hasLokiPass) {
@@ -279,6 +322,7 @@ function analyzeChain(item, comments, prs, ciMap) {
     next_action = "wait";
     command = `/fire-next-up --resume #${item.num}`;
   }
+  const jobInfo = jobRuntimes?.[item.num];
   return {
     issue: item.num,
     title: item.title,
@@ -291,18 +335,21 @@ function analyzeChain(item, comments, prs, ciMap) {
     verdict,
     ci,
     next_action,
-    command
+    command,
+    job_runtime: jobInfo?.runtime ?? null,
+    job_status: jobInfo?.status ?? null
   };
 }
 async function statusDashboard() {
   const { items, issueComments, pullRequests } = await fetchBoardAndComments();
   const ciMap = await fetchCIStatus(pullRequests);
+  const jobRuntimes = fetchJobRuntimes();
   const inProgress = items.filter((i) => i.status === "In Progress");
   const upNext = items.filter(
     (i) => i.status === "Up Next" && !i.labels.some((l) => EXCLUDED_LABELS.includes(l))
   );
   const chains = inProgress.map(
-    (item) => analyzeChain(item, issueComments[item.num] ?? [], pullRequests, ciMap)
+    (item) => analyzeChain(item, issueComments[item.num] ?? [], pullRequests, ciMap, jobRuntimes)
   );
   const result = {
     in_flight: chains,
@@ -334,6 +381,7 @@ async function statusDashboard() {
 }
 async function chainStatus(issueNum) {
   const { items, issueComments, pullRequests } = await fetchBoardAndComments();
+  const jobRuntimes = fetchJobRuntimes();
   const item = items.find((i) => i.num === issueNum);
   if (!item) {
     console.error(`Issue #${issueNum} not found on project board`);
@@ -342,7 +390,9 @@ async function chainStatus(issueNum) {
   const status = analyzeChain(
     item,
     issueComments[issueNum] ?? [],
-    pullRequests
+    pullRequests,
+    null,
+    jobRuntimes
   );
   console.log(JSON.stringify(status, null, 2));
 }
