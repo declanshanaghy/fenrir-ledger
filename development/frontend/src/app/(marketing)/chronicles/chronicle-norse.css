@@ -1,0 +1,886 @@
+/**
+ * chronicle-norse.css — Norse Ceremonial Layer for MDX Chronicles
+ *
+ * Scoped under .chronicle-page to avoid conflicts with marketing layout.
+ * Complements chronicle.css (which handles base layout and typography).
+ * Theme-aware via --c-* tokens defined in chronicle.css.
+ *
+ * Components:
+ *   1. All-Father's Decree       (.decree)
+ *   2. Agent Callback Footer     (.agent-callback)
+ *   3. Chat Bubbles              (.heckle, .heckle-comeback, .heckle-mayo)
+ *   4. Toolbox / Agent Turns     (.agent-turn, .agent-tool-block)
+ *   5. Explosion / Entrance      (.heckle-explosion, .heckle-entrance)
+ *
+ * Ref: GitHub Issue #1047 — Luna wireframes
+ *      ux/wireframes/chronicles/chronicle-agent-page-shell.html
+ *      ux/wireframes/chronicles/norse-components-catalog.html
+ *      ux/wireframes/chronicles/interaction-spec.md
+ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════ */
+
+@keyframes norse-tremble {
+  0%,  100% { transform: translate(0, 0) rotate(0deg); }
+  10%        { transform: translate(-2px, -1px) rotate(-0.5deg); }
+  20%        { transform: translate(3px, 1px) rotate(0.5deg); }
+  30%        { transform: translate(-1px, 2px) rotate(-0.3deg); }
+  40%        { transform: translate(2px, -2px) rotate(0.4deg); }
+  50%        { transform: translate(-3px, 0px) rotate(-0.5deg); }
+  60%        { transform: translate(1px, 1px) rotate(0.3deg); }
+  70%        { transform: translate(-2px, -1px) rotate(-0.4deg); }
+  80%        { transform: translate(3px, 2px) rotate(0.5deg); }
+  90%        { transform: translate(-1px, -2px) rotate(-0.3deg); }
+}
+
+@keyframes explosion-glow {
+  0%,  100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.3), 0 0 20px rgba(201, 146, 10, 0.1); }
+  50%        { box-shadow: 0 0 15px rgba(239, 68, 68, 0.5), 0 0 40px rgba(201, 146, 10, 0.3); }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMPONENT 1: ALL-FATHER'S DECREE  (.decree)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.chronicle-page .decree {
+  position: relative;
+  border: 2px solid var(--c-gold);
+  padding: 24px 32px;
+  margin: 24px 0;
+  background: linear-gradient(135deg, rgba(var(--primary), 0.04) 0%, transparent 60%);
+}
+
+/* Top accent gradient bar (pseudo-element) */
+.chronicle-page .decree::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(to right, transparent, var(--c-gold), transparent);
+}
+
+/* Bottom accent gradient bar (pseudo-element) */
+.chronicle-page .decree::after {
+  content: '';
+  display: block;
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(to right, transparent, var(--c-gold), transparent);
+}
+
+/* Div-based accent lines (MDX fallback — when inline divs are used instead of pseudo) */
+.chronicle-page .decree-line-top,
+.chronicle-page .decree-line-bottom {
+  display: block;
+  height: 3px;
+  background: linear-gradient(to right, transparent, var(--c-gold), transparent);
+  margin: 0 -32px;
+}
+
+.chronicle-page .decree-rune-row {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 1rem;
+  letter-spacing: 0.5em;
+  text-align: center;
+  color: var(--c-gold);
+  opacity: 0.6;
+  margin: 12px 0;
+}
+
+.chronicle-page .decree-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.chronicle-page .decree-title {
+  font-family: var(--font-cinzel-decorative), 'Cinzel Decorative', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--c-gold);
+  margin-bottom: 6px;
+}
+
+.chronicle-page .decree-subtitle {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--c-fg-muted);
+}
+
+.chronicle-page .decree-hr {
+  border: none;
+  border-top: 1px solid var(--c-border);
+  margin: 16px 0;
+}
+
+.chronicle-page .decree-section {
+  margin: 16px 0;
+}
+
+.chronicle-page .decree-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--c-fg);
+  margin-bottom: 8px;
+}
+
+.chronicle-page .decree-glyph {
+  font-size: 1rem;
+  color: var(--c-gold);
+  opacity: 0.8;
+}
+
+.chronicle-page .decree-body {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--c-fg);
+}
+
+.chronicle-page .decree-body p {
+  margin-bottom: 8px;
+}
+
+.chronicle-page .decree-law {
+  border-left: 2px solid var(--c-gold);
+  padding: 6px 12px;
+  margin: 8px 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.75rem;
+  background: rgba(var(--primary), 0.06);
+  color: var(--c-fg);
+}
+
+.chronicle-page .decree-oath {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-fire);
+  border-left: 2px solid var(--c-fire);
+  padding: 6px 12px;
+}
+
+.chronicle-page .decree-seal {
+  border-top: 1px solid var(--c-border);
+  margin-top: 16px;
+  padding-top: 12px;
+  text-align: center;
+}
+
+.chronicle-page .decree-seal-glyph {
+  font-size: 1.4rem;
+  color: var(--c-gold);
+  opacity: 0.7;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.chronicle-page .decree-seal-text {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--c-fg-muted);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .chronicle-page .decree {
+    padding: 16px 14px;
+    margin: 16px 0;
+  }
+  .chronicle-page .decree-line-top,
+  .chronicle-page .decree-line-bottom {
+    margin: 0 -14px;
+  }
+  .chronicle-page .decree-title {
+    font-size: 1rem;
+  }
+  .chronicle-page .decree-rune-row {
+    font-size: 0.85rem;
+    letter-spacing: 0.3em;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMPONENT 2: AGENT CALLBACK FOOTER  (.agent-callback)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.chronicle-page .agent-callback {
+  position: relative;
+  border: 2px solid var(--c-gold);
+  padding: 24px 32px;
+  margin: 24px 0;
+  text-align: center;
+}
+
+/* Top accent: gold → red → gold */
+.chronicle-page .agent-callback::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(to right, transparent, var(--c-gold), var(--c-fire), var(--c-gold), transparent);
+}
+
+.chronicle-page .agent-callback::after {
+  content: '';
+  display: block;
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(to right, transparent, var(--c-gold), var(--c-fire), var(--c-gold), transparent);
+}
+
+/* Div-based accent lines (MDX fallback) */
+.chronicle-page .callback-line-top,
+.chronicle-page .callback-line-bottom {
+  display: block;
+  height: 3px;
+  background: linear-gradient(to right, transparent, var(--c-gold), var(--c-fire), var(--c-gold), transparent);
+  margin: 0 -32px;
+}
+
+.chronicle-page .callback-rune-row {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.6em;
+  color: var(--c-gold);
+  opacity: 0.5;
+  margin-bottom: 16px;
+}
+
+.chronicle-page .callback-avatar-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--c-gold);
+  margin: 0 auto 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.chronicle-page .callback-avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chronicle-page .callback-declaration {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--c-gold);
+  margin: 8px 0;
+}
+
+.chronicle-page .callback-quote {
+  font-size: 0.85rem;
+  font-style: italic;
+  max-width: 70%;
+  margin: 12px auto;
+  line-height: 1.7;
+  color: var(--c-fg);
+}
+
+.chronicle-page .callback-blood-seal {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--c-fire);
+  margin-top: 12px;
+}
+
+.chronicle-page .callback-wolf {
+  font-size: 1.2rem;
+  opacity: 0.6;
+  margin-top: 8px;
+  display: block;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .chronicle-page .agent-callback {
+    padding: 16px 12px;
+    margin: 16px 0;
+  }
+  .chronicle-page .callback-line-top,
+  .chronicle-page .callback-line-bottom {
+    margin: 0 -12px;
+  }
+  .chronicle-page .callback-avatar-wrap {
+    width: 40px;
+    height: 40px;
+  }
+  .chronicle-page .callback-declaration {
+    font-size: 0.85rem;
+  }
+  .chronicle-page .callback-quote {
+    max-width: 90%;
+    font-size: 0.8rem;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMPONENT 3: CHAT BUBBLES  (.heckle, .heckle-comeback, .heckle-mayo)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.chronicle-page .heckle {
+  max-width: 60%;
+  margin-bottom: 16px;
+}
+
+/* Identity row: avatar + name */
+.chronicle-page .heckle-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.chronicle-page .heckle-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid;
+  flex-shrink: 0;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chronicle-page .heckle-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chronicle-page .heckle-name {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.chronicle-page .heckle-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 8px 12px;
+  border: 1px solid;
+  border-width: 1px;
+}
+
+.chronicle-page .heckle-text strong {
+  font-weight: 700;
+}
+
+/* ── Agent Comeback (left-aligned) ── */
+
+.chronicle-page .heckle-comeback {
+  max-width: 60%;
+  margin-bottom: 16px;
+  margin-left: 0;
+}
+
+.chronicle-page .heckle-comeback .heckle-identity {
+  flex-direction: row;
+}
+
+.chronicle-page .heckle-comeback .heckle-avatar {
+  border-color: rgba(10, 140, 110, 0.5);
+}
+
+.chronicle-page .heckle-comeback .heckle-name {
+  color: var(--c-teal);
+}
+
+.chronicle-page .heckle-comeback .heckle-text {
+  border-color: rgba(10, 140, 110, 0.3);
+  border-left: 2px solid var(--c-teal);
+  background: rgba(10, 140, 110, 0.06);
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
+}
+
+.chronicle-page .heckle-comeback .heckle-text strong {
+  color: var(--c-teal);
+}
+
+/* ── Mayo Heckler (right-aligned) ── */
+
+.chronicle-page .heckle-mayo {
+  max-width: 60%;
+  margin-bottom: 16px;
+  margin-left: auto;
+  text-align: right;
+}
+
+.chronicle-page .heckle-mayo .heckle-identity {
+  flex-direction: row-reverse;
+}
+
+.chronicle-page .heckle-mayo .heckle-avatar {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.chronicle-page .heckle-mayo .heckle-name {
+  color: var(--c-fire);
+}
+
+.chronicle-page .heckle-mayo .heckle-text {
+  border-color: rgba(239, 68, 68, 0.3);
+  border-right: 2px solid var(--c-fire);
+  background: rgba(239, 68, 68, 0.06);
+  border-radius: 0.5rem 0 0.5rem 0.5rem;
+  text-align: left;
+}
+
+.chronicle-page .heckle-mayo .heckle-text strong {
+  color: var(--c-fire);
+}
+
+/* Mobile: 60% → 90% */
+@media (max-width: 480px) {
+  .chronicle-page .heckle,
+  .chronicle-page .heckle-comeback,
+  .chronicle-page .heckle-mayo {
+    max-width: 90%;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMPONENT 4: AGENT TURNS & TOOLBOX
+   (.agent-turn, .agent-tool-block)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Agent profile row (above turn details) ── */
+
+.chronicle-page .turn-agent-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 0;
+  margin-bottom: -1px;
+}
+
+.chronicle-page .agent-profile-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--c-teal);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chronicle-page .agent-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chronicle-page .agent-profile-name {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--c-teal);
+}
+
+/* ── Outer turn container ── */
+
+.chronicle-page .agent-turn {
+  border: 1px solid var(--c-border);
+  margin-bottom: 6px;
+}
+
+.chronicle-page .agent-turn.agent-turn-error {
+  border-color: var(--c-fire);
+  border-left-width: 3px;
+}
+
+/* Summary (header row) */
+.chronicle-page .agent-turn > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  user-select: none;
+}
+
+.chronicle-page .agent-turn > summary::-webkit-details-marker {
+  display: none;
+}
+
+.chronicle-page .agent-turn > summary:hover {
+  border-bottom-color: var(--c-border);
+}
+
+/* Chevron via ::before, rotates 90° when open */
+.chronicle-page .agent-turn > summary::before {
+  content: '\25B6';
+  font-size: 0.6rem;
+  color: var(--c-fg-muted);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.chronicle-page .agent-turn[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.chronicle-page .agent-turn-num {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  color: var(--c-fg-muted);
+  min-width: 24px;
+}
+
+.chronicle-page .agent-turn-summary {
+  font-size: 0.82rem;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--c-fg);
+}
+
+/* Tool badges in summary row */
+.chronicle-page .agent-turn-badges {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.chronicle-page .agent-tool-badge {
+  border: 1px solid var(--c-border);
+  padding: 1px 6px;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.6rem;
+  color: var(--c-fg-muted);
+}
+
+/* Tool badge variants */
+.chronicle-page .agent-tool-badge.badge-bash  { border-color: var(--c-teal);   color: var(--c-teal); }
+.chronicle-page .agent-tool-badge.badge-read  { border-color: #6b8afd;         color: #6b8afd; }
+.chronicle-page .agent-tool-badge.badge-edit  { border-color: var(--c-amber);  color: var(--c-amber); }
+.chronicle-page .agent-tool-badge.badge-write { border-color: var(--c-gold);   color: var(--c-gold); }
+.chronicle-page .agent-tool-badge.badge-todo  { border-color: var(--c-violet); color: var(--c-violet); }
+
+/* Turn body */
+.chronicle-page .agent-turn-body {
+  background: transparent;
+}
+
+/* Thinking block inside turn */
+.chronicle-page .agent-thinking {
+  padding: 8px 14px;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--c-fg-muted);
+  border-bottom: 1px solid var(--c-border);
+  max-height: 180px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+/* Rune prefix for thinking block */
+.chronicle-page .agent-thinking::before {
+  content: 'ᛒ ';
+  font-style: normal;
+  color: var(--c-gold);
+  opacity: 0.6;
+}
+
+/* Agent text output block (NOT a bubble — inline in turn body) */
+.chronicle-page .agent-text-block {
+  padding: 8px 14px;
+  margin: 8px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  max-width: 60%;
+  border: 1px solid var(--c-border);
+  border-left: 2px solid var(--c-teal);
+  white-space: pre-wrap;
+}
+
+/* ── Toolbox container (wraps tool blocks) ── */
+
+.chronicle-page .agent-toolbox {
+  border: 1px solid var(--c-border);
+  margin: 8px;
+  max-width: 60%;
+}
+
+.chronicle-page .agent-toolbox-header {
+  padding: 6px 12px;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--c-gold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--c-border);
+}
+
+/* ── Nested tool block ── */
+
+.chronicle-page .agent-tool-block {
+  border-bottom: 1px solid var(--c-border);
+}
+
+.chronicle-page .agent-tool-block:last-child {
+  border-bottom: none;
+}
+
+.chronicle-page .agent-tool-block > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+.chronicle-page .agent-tool-block > summary::-webkit-details-marker {
+  display: none;
+}
+
+.chronicle-page .agent-tool-block > summary::before {
+  content: '\25B6';
+  font-size: 0.55rem;
+  color: var(--c-fg-muted);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.chronicle-page .agent-tool-block[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.chronicle-page .agent-tool-name {
+  font-family: var(--font-mono), monospace;
+  font-weight: 700;
+  color: var(--c-gold);
+}
+
+.chronicle-page .agent-tool-preview {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--c-fg-muted);
+}
+
+/* Tool body: input + output */
+.chronicle-page .agent-tool-body {
+  padding: 0;
+}
+
+.chronicle-page .agent-tool-input {
+  padding: 6px 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  border-bottom: 1px solid var(--c-border);
+  background: rgba(107, 138, 253, 0.06);
+  white-space: pre-wrap;
+  max-height: 350px;
+  overflow-y: auto;
+  color: var(--c-fg);
+}
+
+.chronicle-page .agent-tool-output {
+  padding: 6px 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  background: rgba(10, 140, 110, 0.05);
+  white-space: pre-wrap;
+  max-height: 350px;
+  overflow-y: auto;
+  color: var(--c-fg);
+}
+
+.chronicle-page .agent-tool-error {
+  padding: 6px 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  background: rgba(239, 68, 68, 0.07);
+  color: var(--c-fire);
+  white-space: pre-wrap;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .chronicle-page .agent-turn-badges {
+    display: none;
+  }
+  .chronicle-page .agent-text-block {
+    max-width: 90%;
+    font-size: 0.8rem;
+  }
+  .chronicle-page .agent-toolbox {
+    max-width: 100%;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMPONENT 5: EXPLOSION / ENTRANCE EVENTS
+   (.heckle-explosion, .heckle-entrance)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Entrance Event ── */
+
+.chronicle-page .heckle-entrance {
+  border: 1px dashed var(--c-border);
+  padding: 12px 16px;
+  margin: 12px 0;
+  width: 100%;
+}
+
+.chronicle-page .heckle-entrance .heckle-identity {
+  flex-direction: row-reverse;
+  margin-bottom: 6px;
+}
+
+.chronicle-page .heckle-entrance .heckle-name {
+  color: var(--c-amber);
+}
+
+.chronicle-page .heckle-entrance .heckle-avatar {
+  border-color: var(--c-amber);
+}
+
+.chronicle-page .heckle-entrance .heckle-text {
+  font-style: italic;
+  text-align: center;
+  border: none;
+  background: transparent;
+  color: var(--c-fg-muted);
+  font-size: 0.8rem;
+}
+
+/* ── Explosion Event ── */
+
+.chronicle-page .heckle-explosion {
+  border: 2px solid var(--c-fire);
+  padding: 20px 32px;
+  margin: 12px 0;
+  width: 100%;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, transparent 60%);
+}
+
+.chronicle-page .explosion-rune-pre {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.4em;
+  color: var(--c-fire);
+  opacity: 0.4;
+  margin-bottom: 10px;
+}
+
+.chronicle-page .explosion-main {
+  font-family: var(--font-cinzel-decorative), 'Cinzel Decorative', serif;
+  font-size: clamp(0.9rem, 3vw, 1.1rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-fire);
+  text-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+}
+
+.chronicle-page .explosion-rune-post {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  color: var(--c-fire);
+  opacity: 0.3;
+  margin-top: 10px;
+}
+
+/* WCAG: animation only when user hasn't requested reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+  .chronicle-page .heckle-explosion {
+    animation: norse-tremble 0.8s ease-in-out both;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   AGENT VERDICT  (.agent-verdict)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.chronicle-page .agent-verdict {
+  border: 2px solid var(--c-border);
+  padding: 20px 24px;
+  margin: 20px 0;
+}
+
+.chronicle-page .agent-verdict.verdict-pass {
+  border-color: var(--c-teal);
+}
+
+.chronicle-page .agent-verdict.verdict-fail {
+  border-color: var(--c-fire);
+}
+
+.chronicle-page .agent-verdict-label {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--c-fg);
+}
+
+.chronicle-page .agent-verdict.verdict-pass .agent-verdict-label {
+  color: var(--c-teal);
+}
+
+.chronicle-page .agent-verdict.verdict-fail .agent-verdict-label {
+  color: var(--c-fire);
+}
+
+.chronicle-page .agent-verdict-text {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--c-fg);
+}

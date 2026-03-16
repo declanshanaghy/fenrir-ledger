@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Norse MDX Components — Catalog | Wireframe — Issue #1047</title>
+  <style>
+    /* Layout CSS only — no theme styling */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: sans-serif; font-size: 14px; line-height: 1.5; background: #fff; }
+
+    /* ── Annotation system ── */
+    .note {
+      font-size: 11px;
+      font-style: italic;
+      border: 1px dashed #999;
+      padding: 4px 8px;
+      margin: 6px 0;
+      display: block;
+    }
+    .zone-label {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 2px 6px;
+      border: 1px solid #666;
+      display: inline-block;
+      margin-bottom: 6px;
+      margin-top: 32px;
+    }
+    .component-section {
+      padding: 24px;
+      border-bottom: 2px solid #333;
+      margin-bottom: 0;
+    }
+    .component-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .component-desc {
+      font-size: 12px;
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin: 12px 0;
+    }
+    .spec-table th { text-align: left; padding: 4px 8px; border-bottom: 1px solid #999; font-weight: bold; }
+    .spec-table td { padding: 4px 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+    .placeholder-box {
+      border: 1px dashed #bbb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-style: italic;
+      padding: 8px;
+      opacity: 0.7;
+    }
+    .state-label {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 1px 5px;
+      border: 1px solid #999;
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+    .side-by-side { display: flex; gap: 24px; flex-wrap: wrap; }
+    .side-item { flex: 1; min-width: 280px; }
+
+    /* ══════════════════════════════════════════
+       COMPONENT 1: ALL-FATHER'S DECREE
+       ══════════════════════════════════════════ */
+
+    /* Outer: 2px border all sides, gradient background skipped (theme) */
+    .decree {
+      border: 2px solid #333;
+      padding: 24px 32px;
+      margin: 12px 0;
+      position: relative;
+    }
+    /* Top and bottom pseudo-element replacement (wireframe: visible top/bottom bars) */
+    .decree-line-top { border-top: 3px solid #555; margin-bottom: 16px; padding-top: 12px; }
+    .decree-line-bottom { border-bottom: 3px solid #555; margin-top: 12px; }
+    .decree-rune-row { font-size: 16px; letter-spacing: 0.5em; text-align: center; margin-bottom: 8px; opacity: 0.5; }
+    .decree-header { text-align: center; margin-bottom: 16px; }
+    .decree-main-title { font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.15em; }
+    .decree-subtitle { font-size: 11px; font-style: italic; margin-top: 4px; }
+    .decree-hr { border: none; border-top: 1px solid #ccc; margin: 12px 0; opacity: 0.5; }
+    .decree-section { margin: 12px 0; }
+    .decree-section-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .decree-glyph { font-size: 14px; opacity: 0.7; }
+    .decree-body { font-size: 13px; line-height: 1.65; }
+    .decree-law {
+      border-left: 2px solid #555;
+      padding: 6px 12px;
+      margin: 6px 0;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    .decree-oath { font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .decree-seal { text-align: center; padding-top: 12px; border-top: 1px solid #ccc; margin-top: 16px; }
+    .decree-seal-glyph { font-size: 22px; opacity: 0.7; display: block; margin-bottom: 4px; }
+    .decree-seal-text { font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; }
+
+    /* ══════════════════════════════════════════
+       COMPONENT 2: AGENT CALLBACK FOOTER
+       ══════════════════════════════════════════ */
+
+    .agent-callback {
+      border: 2px solid #333;
+      padding: 24px 32px;
+      margin: 12px 0;
+      text-align: center;
+    }
+    .callback-line-top { border-top: 2px solid #555; margin-bottom: 16px; padding-top: 12px; }
+    .callback-line-bottom { border-bottom: 2px solid #555; margin-top: 12px; }
+    .callback-rune-row { font-size: 14px; letter-spacing: 0.6em; opacity: 0.5; margin-bottom: 10px; }
+    .callback-avatar-wrap {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      border: 2px solid #666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-style: italic;
+    }
+    .callback-declaration { font-size: 16px; font-weight: bold; margin: 8px 0; }
+    .callback-quote {
+      font-size: 13px;
+      font-style: italic;
+      margin: 12px auto;
+      max-width: 70%;
+      line-height: 1.6;
+    }
+    .callback-blood-seal { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; margin-top: 12px; }
+    .callback-wolf { font-size: 18px; opacity: 0.6; margin-top: 8px; }
+
+    /* ══════════════════════════════════════════
+       COMPONENT 3: CHAT BUBBLE LAYOUT
+       ══════════════════════════════════════════ */
+
+    .chat-demo { max-width: 700px; margin: 12px 0; }
+
+    /* Agent comeback (left-aligned) */
+    .heckle {
+      margin: 10px 0;
+      font-size: 13px;
+      line-height: 1.5;
+      max-width: 60%;
+    }
+    .heckle-identity { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .heckle-avatar {
+      width: 28px;
+      height: 28px;
+      border: 2px solid #666;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+    }
+    .heckle-name { font-size: 11px; font-weight: bold; }
+    .heckle-text { padding: 8px 12px; border: 1px solid #bbb; font-size: 13px; }
+
+    .heckle-comeback {
+      /* left-aligned */
+    }
+    .heckle-comeback .heckle-text {
+      border-left-width: 2px;
+      /* border-radius: 0 0.5rem 0.5rem 0.5rem — noted in spec, not in wireframe CSS */
+    }
+
+    /* Mayo heckler (right-aligned) */
+    .heckle-mayo {
+      margin-left: auto;
+      text-align: right;
+    }
+    .heckle-mayo .heckle-identity { flex-direction: row-reverse; }
+    .heckle-mayo .heckle-text {
+      border-right-width: 2px;
+      /* border-radius: 0.5rem 0 0.5rem 0.5rem — noted in spec */
+    }
+
+    /* ══════════════════════════════════════════
+       COMPONENT 4: TOOLBOX (merged turns)
+       ══════════════════════════════════════════ */
+
+    .turn-demo { max-width: 700px; margin: 12px 0; }
+
+    .agent-turn-wf { border: 1px solid #ccc; margin-bottom: 6px; }
+    .agent-turn-wf.has-error { border-left: 3px solid #555; }
+    .turn-header-wf {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 14px;
+      border-bottom: 1px solid transparent;
+      cursor: pointer;
+    }
+    .turn-header-wf:hover { background: #fafafa; }
+    .turn-chevron-wf { font-size: 10px; width: 12px; flex-shrink: 0; }
+    .turn-num-wf { font-size: 11px; font-family: monospace; min-width: 24px; }
+    .turn-summary-wf { font-size: 13px; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .turn-badges-wf { display: flex; gap: 4px; flex-shrink: 0; }
+    .tool-badge-wf { border: 1px solid #bbb; padding: 1px 6px; font-size: 10px; font-family: monospace; }
+
+    /* Agent profile header above turn box */
+    .turn-agent-profile {
+      display: flex; align-items: center; gap: 8px;
+      padding: 4px 8px 0;
+    }
+    .agent-profile-avatar { width: 24px; height: 24px; border: 1px solid #888; flex-shrink: 0; }
+    .agent-profile-name { font-size: 11px; font-weight: bold; font-family: monospace; }
+
+    /* Turn body */
+    .turn-body-wf { background: #fdfdfd; }
+    .thinking-wf { padding: 8px 14px; font-size: 12px; font-style: italic; border-bottom: 1px solid #eee; max-height: 180px; overflow-y: auto; white-space: pre-wrap; }
+    .text-out-wf {
+      padding: 8px 14px;
+      font-size: 13px;
+      max-width: 60%;
+      border: 1px solid #bbb;
+      border-left-width: 2px;
+      margin: 8px;
+    }
+
+    /* Toolbox container */
+    .toolbox-wf {
+      border: 1px solid #ccc;
+      margin: 8px;
+      max-width: 60%;
+    }
+    .toolbox-inner .tool-block-wf { border-bottom: 1px solid #eee; }
+    .toolbox-inner .tool-block-wf:last-child { border-bottom: none; }
+    .tool-block-header-wf {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 12px;
+      background: #f8f8f8;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .tool-block-header-wf:hover { background: #f0f0f0; }
+    .tool-name-wf { font-weight: bold; font-family: monospace; }
+    .tool-input-preview-wf { font-size: 11px; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .tool-body-wf { }
+    .tool-input-wf { padding: 6px 12px; font-size: 11px; font-family: monospace; border-bottom: 1px solid #eee; white-space: pre-wrap; }
+    .tool-output-wf { padding: 6px 12px; font-size: 11px; font-family: monospace; max-height: 350px; overflow-y: auto; white-space: pre-wrap; }
+    .tool-output-error-wf { /* red accent in theme */ }
+
+    /* ══════════════════════════════════════════
+       COMPONENT 5: EXPLOSION / ENTRANCE EVENTS
+       ══════════════════════════════════════════ */
+
+    .heckle-entrance-wf {
+      border: 1px dashed #bbb;
+      padding: 12px 16px;
+      margin: 10px 0;
+      width: 100%;
+    }
+    .heckle-entrance-wf .heckle-identity { flex-direction: row-reverse; }
+    .heckle-entrance-wf .heckle-text { font-style: italic; text-align: center; border-style: dashed; }
+
+    .heckle-explosion-wf {
+      border: 2px solid #444;
+      padding: 20px 32px;
+      margin: 10px 0;
+      width: 100%;
+      text-align: center;
+    }
+    .explosion-rune-pre { font-size: 11px; letter-spacing: 0.4em; opacity: 0.4; margin-bottom: 8px; font-family: monospace; }
+    .explosion-main { font-size: 16px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+    .explosion-rune-post { font-size: 10px; letter-spacing: 0.3em; opacity: 0.3; margin-top: 8px; font-family: monospace; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     CATALOGUE INTRO
+     ═══════════════════════════════════════════════════════════════════ -->
+<div style="padding:24px;border-bottom:2px solid #333;">
+  <h1 style="font-size:22px;font-weight:bold;margin-bottom:8px;">Norse MDX Components — Wireframe Catalog</h1>
+  <p style="font-size:13px;">Issue #1047 · Luna · All components scoped under <code>.chronicle-page</code> in <code>chronicle-norse.css</code>.</p>
+  <p style="font-size:12px;margin-top:8px;font-style:italic;">Wireframe rules: layout CSS only (flex/grid, border, width/height, padding/margin, font-size/weight). No colors, backgrounds, border-radius, shadows. Annotations in .note blocks or HTML comments.</p>
+  <hr style="margin:12px 0;border:none;border-top:1px solid #ccc;">
+  <div style="font-size:12px;">
+    <strong>Components:</strong>
+    <ol style="margin-top:6px;padding-left:20px;">
+      <li><a href="#c1">All-Father's Decree</a> — ornamental gold-border decree header</li>
+      <li><a href="#c2">Agent Callback Footer</a> — avatar, declaration, blood-seal</li>
+      <li><a href="#c3">Chat Bubble Layout</a> — agent left 60%, heckler right 60%</li>
+      <li><a href="#c4">Toolbox Component</a> — merged tool-use turns, collapsible</li>
+      <li><a href="#c5">Explosion / Entrance Events</a> — full-width Norse trembles</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     COMPONENT 1: ALL-FATHER'S DECREE
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="component-section" id="c1">
+  <h2 class="component-title">1. All-Father's Decree</h2>
+  <p class="component-desc">MDX class: <code>.decree</code> · Appears once at top of agent chronicle, before stats grid. Full-width of content column.</p>
+
+  <table class="spec-table">
+    <thead><tr><th>Property</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Border</td><td>2px solid (gold in theme)</td><td>All four sides. Outer edge only.</td></tr>
+      <tr><td>Top accent bar</td><td>border-top: 3px (::before pseudo)</td><td>Gradient fade: transparent → gold → transparent. Simulated with full-width bar in wireframe.</td></tr>
+      <tr><td>Bottom accent bar</td><td>border-bottom: 3px (::after pseudo)</td><td>Same gradient. Both top and bottom bars are 3px height elements.</td></tr>
+      <tr><td>Padding</td><td>24px 32px desktop / 16px 14px mobile</td><td></td></tr>
+      <tr><td>Background</td><td>Gradient (theme: gold glow, 8% opacity)</td><td>Not in wireframe — theme only.</td></tr>
+      <tr><td>Rune row (header)</td><td>Unicode Norse runes, letter-spacing: 0.5em, opacity 0.6</td><td>e.g. "ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ"</td></tr>
+      <tr><td>Title</td><td>Cinzel Decorative, 1.2rem, uppercase, letter-spacing 0.15em</td><td>Class: .decree-title</td></tr>
+      <tr><td>Subtitle</td><td>Cinzel, 0.8rem, italic, muted color</td><td>Class: .decree-subtitle</td></tr>
+      <tr><td>Section header</td><td>Cinzel, 0.8rem bold, flex row with glyph</td><td>Class: .decree-section-title</td></tr>
+      <tr><td>Body text</td><td>Source Serif, 0.85rem</td><td>Class: .decree-body</td></tr>
+      <tr><td>Law block</td><td>border-left: 2px gold, monospace 0.75rem, gold-tint bg</td><td>Class: .decree-law</td></tr>
+      <tr><td>Oath text</td><td>Red accent, bold, 0.75rem, uppercase</td><td>Class: .decree-oath</td></tr>
+      <tr><td>Seal (bottom)</td><td>border-top 1px, centered glyph + text</td><td>Glyph: ᛟ, text: CINZEL uppercase 0.65rem</td></tr>
+      <tr><td>Rune row (footer)</td><td>Same as header</td><td>After seal, above bottom accent bar.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="zone-label">WIREFRAME — Decree: Full Structure</div>
+  <div class="decree">
+    <div class="decree-line-top"><!-- ::before pseudo: gradient line --></div>
+    <div class="decree-rune-row">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ</div>
+    <div class="decree-header">
+      <div class="decree-main-title">All-Father's Decree</div>
+      <div class="decree-subtitle">Issued by the All-Father from Hlidskjalf, High Seat of the Nine Worlds</div>
+    </div>
+    <div class="decree-hr"></div>
+
+    <!-- Section: The Charge -->
+    <div class="decree-section">
+      <div class="decree-section-title">
+        <span class="decree-glyph">⚡</span>
+        <span>The Charge</span>
+      </div>
+      <div class="decree-body">
+        <p>[Agent's assigned task — one paragraph, Source Serif. Written in second-person imperative Norse voice. References the GitHub issue number and objective.]</p>
+        <div class="decree-law">
+          [Law block — UNBREAKABLE constraint or rule from CLAUDE.md. Monospaced, left-accent border. May appear multiple times.]
+        </div>
+        <p>[Continuation of body text if needed.]</p>
+      </div>
+    </div>
+
+    <!-- Section: The Oath -->
+    <div class="decree-section">
+      <div class="decree-section-title">
+        <span class="decree-glyph">⚔</span>
+        <span>The Oath</span>
+      </div>
+      <div class="decree-body">
+        <div class="decree-oath">
+          [OATH text — bold red uppercase. The agent's sworn commitment. E.g. "I SWEAR BY GUNGNIR TO SHIP CLEAN CODE OR DIE TRYING"]
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: The Constraints (optional — only if additional laws) -->
+    <div class="decree-section">
+      <div class="decree-section-title">
+        <span class="decree-glyph">ᛏ</span>
+        <span>Laws of the Nine Worlds</span>
+      </div>
+      <div class="decree-body">
+        <div class="decree-law">[Law 1 — e.g. Never commit directly to main]</div>
+        <div class="decree-law">[Law 2 — e.g. All API routes must call requireAuth]</div>
+        <div class="decree-law">[Law 3 — e.g. No secrets in conversation or output]</div>
+      </div>
+    </div>
+
+    <div class="decree-hr"></div>
+    <div class="decree-seal">
+      <span class="decree-seal-glyph">ᛟ</span>
+      <div class="decree-seal-text">By the Seal of Odin · FiremanDecko · Issue #1048 · Step 2</div>
+    </div>
+    <div class="decree-rune-row" style="margin-top:12px;">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ</div>
+    <div class="decree-line-bottom"><!-- ::after pseudo: gradient line --></div>
+  </div>
+  <span class="note">Top/bottom accent bars: in the real CSS, these are ::before/::after pseudo-elements with gradient: transparent → gold → transparent. In MDX (no inline styles), implement as separate div.decree-line elements inside the component, or as CSS pseudo-elements on .decree itself.</span>
+  <span class="note">Mobile (375px): padding reduced to 16px 14px, decree-main-title font-size to 14-16px, decree-law block width 100%.</span>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     COMPONENT 2: AGENT CALLBACK FOOTER
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="component-section" id="c2">
+  <h2 class="component-title">2. Agent Callback Footer</h2>
+  <p class="component-desc">MDX class: <code>.agent-callback</code> · Appears once at end of agent chronicle, after verdict. Declaration from agent to Odin.</p>
+
+  <table class="spec-table">
+    <thead><tr><th>Property</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Border</td><td>2px solid (gold in theme)</td><td>All four sides.</td></tr>
+      <tr><td>Top/bottom accent lines</td><td>::before/::after, 2px, gradient gold+red</td><td>More dramatic than decree: gold→red→gold gradient.</td></tr>
+      <tr><td>Layout</td><td>text-align: center, padding: 24px 32px</td><td></td></tr>
+      <tr><td>Background</td><td>Gradient (gold tint + red tint on dark)</td><td>Theme only.</td></tr>
+      <tr><td>Rune row</td><td>0.9rem, letter-spacing: 0.6em, opacity 0.5</td><td>Class: .callback-runes</td></tr>
+      <tr><td>Avatar</td><td>48px × 48px circle, border: 2px gold, centered</td><td>Class: .callback-avatar. Border-radius: 50% (theme).</td></tr>
+      <tr><td>Declaration</td><td>Cinzel, 1rem bold, gold color</td><td>Class: .callback-declaration. E.g. "FiremanDecko Reports to the All-Father"</td></tr>
+      <tr><td>Quote</td><td>Source Serif, 0.85rem italic, max-width 70%</td><td>Class: .callback-quote. Agent's summary in their voice.</td></tr>
+      <tr><td>Blood seal</td><td>Cinzel, 0.65rem, red color, uppercase, letter-spacing 0.15em</td><td>Class: .callback-blood-seal. E.g. "BY THE BLOOD SEAL OF MUSPELHEIM · SESSION COMPLETE"</td></tr>
+      <tr><td>Wolf glyph</td><td>1.2rem emoji or SVG, opacity 0.6</td><td>Class: .callback-wolf. 🐺 wolf emoji. Decorative closer.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="zone-label">WIREFRAME — Callback Footer: Full Structure</div>
+  <div class="agent-callback">
+    <div class="callback-line-top"><!-- ::before: gradient border --></div>
+    <div class="callback-rune-row">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ</div>
+
+    <div class="callback-avatar-wrap placeholder-box">48×48<br>avatar</div>
+
+    <div class="callback-declaration">FiremanDecko Reports to the All-Father</div>
+    <div class="callback-quote">
+      [Agent's closing quote — italic, Source Serif, max-width 70%, centered. A first-person summary of what was accomplished and the oath that was kept. 2-4 sentences.]
+      <br><br>
+      <em>Example: "The Norse CSS has been forged from the fires of the generator and hammered into shared classes that serve all three chronicle tiers. The HTML reports still shine, the MDX chronicles are aligned, and Loki's tests hold. The chain holds."</em>
+    </div>
+    <div class="callback-blood-seal">BY THE BLOOD SEAL OF MUSPELHEIM · SESSION COMPLETE · ISSUE #1048</div>
+    <div class="callback-wolf">🐺</div>
+    <div class="callback-line-bottom"><!-- ::after: gradient border --></div>
+  </div>
+
+  <span class="note">Mobile (375px): padding → 16px 12px, avatar → 40×40px, declaration font-size → 13px, quote max-width → 90%.</span>
+  <span class="note">Avatar image source: /agents/profiles/{agent-slug}-dark.png — same paths used in HTML reports. Fallback: letter-based placeholder (first letter of agent name).</span>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     COMPONENT 3: CHAT BUBBLE LAYOUT
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="component-section" id="c3">
+  <h2 class="component-title">3. Chat Bubble Layout</h2>
+  <p class="component-desc">MDX classes: <code>.heckle-comeback</code> (agent, left) and <code>.heckle-mayo</code> (heckler, right). Both limited to 60% max-width. Identity row + text bubble.</p>
+
+  <table class="spec-table">
+    <thead><tr><th>Property</th><th>Agent Comeback (.heckle-comeback)</th><th>Mayo Heckler (.heckle-mayo)</th></tr></thead>
+    <tbody>
+      <tr><td>Alignment</td><td>Left (default, no margin-left: auto)</td><td>Right (margin-left: auto)</td></tr>
+      <tr><td>Identity row direction</td><td>row (avatar → name)</td><td>row-reverse (name ← avatar)</td></tr>
+      <tr><td>Avatar border color</td><td>teal/green (rgba(10,140,110,0.5))</td><td>red (rgba(239,68,68,0.5))</td></tr>
+      <tr><td>Name color</td><td>teal/green (--teal-asgard)</td><td>red (--red-ragnarok)</td></tr>
+      <tr><td>Bubble border</td><td>1px teal tint, left-accent 1px teal</td><td>1px red tint, right-accent 1px red</td></tr>
+      <tr><td>Bubble corners</td><td>border-radius: 0 0.5rem 0.5rem 0.5rem (top-left flat)</td><td>border-radius: 0.5rem 0 0.5rem 0.5rem (top-right flat)</td></tr>
+      <tr><td>Bubble background</td><td>rgba(10,140,110,0.1)</td><td>rgba(239,68,68,0.12)</td></tr>
+      <tr><td>Max-width</td><td>60%</td><td>60%</td></tr>
+      <tr><td>Avatar size</td><td>28×28px, circle, border 2px</td><td>28×28px, circle, border 2px</td></tr>
+      <tr><td>Name font</td><td>Cinzel, 0.75rem, bold</td><td>Cinzel, 0.75rem, bold</td></tr>
+      <tr><td>Text font</td><td>Source Serif (body), 0.9rem</td><td>Source Serif (body), 0.9rem</td></tr>
+      <tr><td>strong emphasis</td><td>teal color</td><td>red color</td></tr>
+      <tr><td>Clickable avatar</td><td>Yes — opens profile modal (JS)</td><td>Yes — opens profile modal (JS)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="zone-label">WIREFRAME — Chat Bubbles: Agent Left / Heckler Right</div>
+  <div class="chat-demo">
+
+    <!-- Agent comeback: left-aligned -->
+    <span class="state-label">Agent comeback (left)</span>
+    <div class="heckle heckle-comeback">
+      <div class="heckle-identity">
+        <div class="heckle-avatar placeholder-box" style="width:28px;height:28px;font-size:8px;">28×28</div>
+        <span class="heckle-name">FiremanDecko</span>
+        <!-- Note: .heckle-avatar has border: 2px solid teal in theme -->
+        <!-- Note: .heckle-name has color: var(--teal-asgard) in theme -->
+      </div>
+      <div class="heckle-text">
+        [Agent comeback text — natural language response to heckle. Source Serif 0.9rem, 1.5 line-height. Border: left-accent 2px (teal in theme). border-radius: 0 .5rem .5rem .5rem (flat top-left).]
+        <br><br>
+        <em>Example: "Three TypeScript errors is nothing — I've rebuilt auth middleware with tighter constraints than a <strong>Gleipnir chain</strong>. Back to green in two turns."</em>
+      </div>
+    </div>
+
+    <!-- Mayo heckler: right-aligned -->
+    <span class="state-label">Mayo heckler (right)</span>
+    <div class="heckle heckle-mayo">
+      <div class="heckle-identity">
+        <div class="heckle-avatar placeholder-box" style="width:28px;height:28px;font-size:8px;">28×28</div>
+        <span class="heckle-name">Da</span>
+        <!-- Note: identity row is row-reverse: avatar right, name left -->
+        <!-- Note: .heckle-avatar border: 2px solid red in theme -->
+        <!-- Note: .heckle-name color: var(--red-ragnarok) in theme -->
+      </div>
+      <div class="heckle-text">
+        [Heckler text — Mayo GAA fan voice. Sarcastic, disappointed, but loving. Name right-aligned, bubble right-aligned. Border: right-accent 2px (red in theme). border-radius: .5rem 0 .5rem .5rem (flat top-right).]
+        <br><br>
+        <em><strong>Da:</strong> "TypeScript errors? Sure, what did we expect?! At least Mayo make it to the final before throwing it all away!"</em>
+      </div>
+    </div>
+
+    <!-- Agent comeback again: left -->
+    <div class="heckle heckle-comeback">
+      <div class="heckle-identity">
+        <div class="heckle-avatar placeholder-box" style="width:28px;height:28px;font-size:8px;">28×28</div>
+        <span class="heckle-name">FiremanDecko</span>
+      </div>
+      <div class="heckle-text">
+        [Second agent comeback — conversation continues. Bubbles alternate left/right naturally.]
+      </div>
+    </div>
+
+    <!-- Heckler again -->
+    <div class="heckle heckle-mayo">
+      <div class="heckle-identity">
+        <div class="heckle-avatar placeholder-box" style="width:28px;height:28px;font-size:8px;">28×28</div>
+        <span class="heckle-name">Mammy</span>
+      </div>
+      <div class="heckle-text">
+        <em><strong>Mammy:</strong> "I don't fully understand what he's doing but NOBODY supports FiremanDecko harder. Go on, son!"</em>
+      </div>
+    </div>
+  </div>
+
+  <div class="zone-label">WIREFRAME — Mobile (375px): Chat Bubbles at 90% width</div>
+  <div style="width:375px;border:2px solid #333;padding:12px;">
+    <div class="heckle heckle-comeback" style="max-width:90%;">
+      <div class="heckle-identity">
+        <div class="heckle-avatar placeholder-box" style="width:28px;height:28px;font-size:8px;">28×28</div>
+        <span class="heckle-name" style="font-size:10px;">FiremanDecko</span>
+      </div>
+      <div class="heckle-text" style="font-size:12px;">[Agent comeback — 90% max-width on mobile (≤480px)]</div>
+    </div>
+    <div class="heckle heckle-mayo" style="max-width:90%;">
+      <div class="heckle-identity" style="flex-direction:row-reverse;">
+        <div class="heckle-avatar placeholder-box" style="width:28px;height:28px;font-size:8px;">28×28</div>
+        <span class="heckle-name" style="font-size:10px;">Da</span>
+      </div>
+      <div class="heckle-text" style="font-size:12px;">[Heckler — right-aligned, 90% max-width on mobile]</div>
+    </div>
+  </div>
+  <span class="note">Mobile breakpoint (≤480px): max-width on .heckle changes from 60% to 90%. Avatar size unchanged at 28×28.</span>
+  <span class="note">Heckler avatars are clickable — clicking opens a profile modal (JS). In MDX (no inline script), this must be handled by a client component or data attribute trigger. See interaction spec for modal behavior.</span>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     COMPONENT 4: TOOLBOX (MERGED TOOL-USE TURNS)
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="component-section" id="c4">
+  <h2 class="component-title">4. Toolbox Component (Merged Tool-Use Turns)</h2>
+  <p class="component-desc">MDX classes: <code>.agent-turn</code> (outer, &lt;details&gt;), <code>.agent-tool-block</code> (inner, &lt;details&gt;). Agent turns use native HTML &lt;details&gt;/&lt;summary&gt; for collapsibility — no JavaScript required.</p>
+
+  <table class="spec-table">
+    <thead><tr><th>Property</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Outer turn container</td><td>&lt;details class="agent-turn"&gt;</td><td>Native collapsible. border: 1px solid. Collapsed by default.</td></tr>
+      <tr><td>Error state</td><td>+ .agent-turn-error</td><td>border-color: red (--c-fire). Left border widened: 3px.</td></tr>
+      <tr><td>Turn summary (header)</td><td>&lt;summary&gt; with flex layout</td><td>Chevron ▶ | turn# | text | badges. Chevron rotates 90° when open.</td></tr>
+      <tr><td>Turn number</td><td>Monospace, 0.7rem, muted</td><td>Class: .agent-turn-num</td></tr>
+      <tr><td>Turn summary text</td><td>0.82rem, truncated with ellipsis</td><td>Class: .agent-turn-summary</td></tr>
+      <tr><td>Tool badges (header)</td><td>Monospace 0.6rem, color-coded by tool type</td><td>Class: .agent-tool-badge. Hidden on mobile ≤480px.</td></tr>
+      <tr><td>Agent profile (above turn)</td><td>avatar 24×24 + name, row layout</td><td>Class: .turn-agent-profile. Shows before &lt;details&gt; element.</td></tr>
+      <tr><td>Thinking block (inside turn)</td><td>italic, muted, 0.78rem, max-height 180px + scroll</td><td>Class: .agent-thinking. Prefixed with ᛒ rune glyph.</td></tr>
+      <tr><td>Text output block</td><td>left-aligned, max-width 60%, teal left border</td><td>Class: .agent-text-block (not a bubble — inline in turn body)</td></tr>
+      <tr><td>Inner tool block</td><td>&lt;details class="agent-tool-block"&gt;</td><td>Nested inside turn body. One per tool call.</td></tr>
+      <tr><td>Tool name</td><td>gold color, bold, monospace</td><td>Class: .agent-tool-name</td></tr>
+      <tr><td>Tool input preview</td><td>truncated, muted, 0.7rem</td><td>Class: .agent-tool-preview</td></tr>
+      <tr><td>Tool input detail</td><td>blue tint bg, monospace 0.7rem</td><td>Class: .agent-tool-input. max-height 350px scroll.</td></tr>
+      <tr><td>Tool output detail</td><td>teal tint bg, monospace 0.7rem</td><td>Class: .agent-tool-output. max-height 350px scroll.</td></tr>
+      <tr><td>Tool output (error)</td><td>red tint bg</td><td>Class: .agent-tool-error</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Badge color reference -->
+  <div class="zone-label">Tool Badge Color Reference</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;">
+    <span class="tool-badge-wf" style="border-color:#333;">.default</span>
+    <span class="tool-badge-wf" style="border-color:#2a9d8f;">.agent-tool-bash (teal)</span>
+    <span class="tool-badge-wf" style="border-color:#6b8afd;">.agent-tool-read (blue)</span>
+    <span class="tool-badge-wf" style="border-color:#f59e0b;">.agent-tool-edit (amber)</span>
+    <span class="tool-badge-wf" style="border-color:#c9920a;">.agent-tool-write (gold)</span>
+    <span class="tool-badge-wf" style="border-color:#a78bfa;">.agent-tool-todo (violet)</span>
+  </div>
+  <span class="note">Badge colors are theme-only (not in wireframe CSS). Engineer maps each tool name → badge class via a lookup in the MDX generator.</span>
+
+  <div class="side-by-side">
+    <!-- COLLAPSED STATE -->
+    <div class="side-item">
+      <div class="zone-label">WIREFRAME — Turn: Collapsed State</div>
+      <div class="turn-demo">
+        <!-- Agent profile (above details) -->
+        <div class="turn-agent-profile">
+          <div class="agent-profile-avatar placeholder-box" style="width:24px;height:24px;font-size:9px;">24×24</div>
+          <span class="agent-profile-name">FiremanDecko</span>
+          <!-- Note: avatar border: 1px solid teal, name color: teal in theme -->
+        </div>
+        <details class="agent-turn-wf">
+          <summary class="turn-header-wf">
+            <span class="turn-chevron-wf">▶</span>
+            <span class="turn-num-wf">01</span>
+            <span class="turn-summary-wf">Read product design brief and plan CSS extraction</span>
+            <div class="turn-badges-wf">
+              <span class="tool-badge-wf">Read</span>
+              <span class="tool-badge-wf">Bash</span>
+            </div>
+          </summary>
+          <!-- body hidden when collapsed -->
+        </details>
+        <details class="agent-turn-wf">
+          <summary class="turn-header-wf">
+            <span class="turn-chevron-wf">▶</span>
+            <span class="turn-num-wf">02</span>
+            <span class="turn-summary-wf">Extract CSS variables into chronicle-norse.css</span>
+            <div class="turn-badges-wf">
+              <span class="tool-badge-wf">Read</span>
+              <span class="tool-badge-wf">Write</span>
+            </div>
+          </summary>
+        </details>
+        <details class="agent-turn-wf has-error">
+          <summary class="turn-header-wf">
+            <span class="turn-chevron-wf">▶</span>
+            <span class="turn-num-wf">03</span>
+            <span class="turn-summary-wf">Fix TypeScript errors in chronicle import</span>
+            <div class="turn-badges-wf">
+              <span class="tool-badge-wf">Bash</span>
+              <span class="tool-badge-wf">Edit</span>
+            </div>
+          </summary>
+        </details>
+        <span class="note">Collapsed (default): only summary bar visible. Chevron ▶ points right. Error turns: border-left 3px red.</span>
+      </div>
+    </div>
+
+    <!-- EXPANDED STATE -->
+    <div class="side-item">
+      <div class="zone-label">WIREFRAME — Turn: Expanded State</div>
+      <div class="turn-demo">
+        <div class="turn-agent-profile">
+          <div class="agent-profile-avatar placeholder-box" style="width:24px;height:24px;font-size:9px;">24×24</div>
+          <span class="agent-profile-name">FiremanDecko</span>
+        </div>
+        <details class="agent-turn-wf" open>
+          <summary class="turn-header-wf" style="border-bottom-color:#ccc;">
+            <span class="turn-chevron-wf">▼</span>
+            <span class="turn-num-wf">02</span>
+            <span class="turn-summary-wf">Extract CSS variables into chronicle-norse.css</span>
+            <div class="turn-badges-wf">
+              <span class="tool-badge-wf">Read</span>
+              <span class="tool-badge-wf">Write</span>
+            </div>
+          </summary>
+          <div class="turn-body-wf">
+            <!-- Thinking block -->
+            <div class="thinking-wf">
+              [Thinking block — italic, muted, 0.78rem. Prefixed with rune ᛒ. max-height 180px with overflow-y: scroll. white-space: pre-wrap.]
+            </div>
+            <!-- Text output from agent -->
+            <div class="text-out-wf">
+              [Agent text output — left-aligned, max-width 60%, teal left-accent 2px. white-space: pre-wrap. Source Serif 0.85rem.]
+            </div>
+            <!-- Toolbox: merged tool-use blocks -->
+            <div class="toolbox-wf">
+              <div class="toolbox-inner">
+                <!-- Tool 1: Read (collapsed) -->
+                <details class="tool-block-wf">
+                  <summary class="tool-block-header-wf">
+                    <span class="turn-chevron-wf">▶</span>
+                    <span class="tool-name-wf">Read</span>
+                    <span class="tool-input-preview-wf">generate-agent-report.mjs</span>
+                    <!-- Note: .tool-name-wf color: gold in theme -->
+                  </summary>
+                </details>
+                <!-- Tool 2: Write (expanded) -->
+                <details class="tool-block-wf" open>
+                  <summary class="tool-block-header-wf">
+                    <span class="turn-chevron-wf">▼</span>
+                    <span class="tool-name-wf">Write</span>
+                    <span class="tool-input-preview-wf">chronicle-norse.css [2.4KB]</span>
+                  </summary>
+                  <div class="tool-body-wf">
+                    <div class="tool-input-wf">
+                      path: "development/frontend/src/app/(marketing)/chronicles/chronicle-norse.css"<br>
+                      content: "/* agent-report-norse.css — Norse ceremonial layer */<br>..."
+                      <!-- Note: blue tint background in theme -->
+                    </div>
+                    <div class="tool-output-wf">
+                      File written: chronicle-norse.css (2.4 KB)
+                      <!-- Note: teal tint background in theme -->
+                    </div>
+                  </div>
+                </details>
+                <!-- Tool 3: Bash with error -->
+                <details class="tool-block-wf" open>
+                  <summary class="tool-block-header-wf">
+                    <span class="turn-chevron-wf">▼</span>
+                    <span class="tool-name-wf">Bash</span>
+                    <span class="tool-input-preview-wf">cd /workspace/repo && npx tsc --noEmit</span>
+                  </summary>
+                  <div class="tool-body-wf">
+                    <div class="tool-input-wf">cd /workspace/repo && npx tsc --noEmit</div>
+                    <div class="tool-output-wf tool-output-error-wf">
+                      ERROR: Type error in chronicle-norse.css import
+                      [Error output — red tint background, red text in theme]
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </div><!-- /toolbox-wf -->
+          </div><!-- /turn-body-wf -->
+        </details>
+        <span class="note">Expanded: chevron ▼, summary border-bottom visible, body shows: thinking → text output → toolbox. Toolbox max-width: 60% (matching text block). Both are left-aligned.</span>
+        <span class="note">Mobile (≤480px): toolbox max-width → 100%, text-block max-width → 90%. Badge row hidden in summary. Tool block summary padding reduced.</span>
+      </div>
+    </div>
+  </div><!-- /side-by-side -->
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     COMPONENT 5: EXPLOSION / ENTRANCE EVENTS
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="component-section" id="c5">
+  <h2 class="component-title">5. Explosion / Entrance Events</h2>
+  <p class="component-desc">MDX classes: <code>.heckle-entrance</code> (ambient arrival) and <code>.heckle-explosion</code> (dramatic outburst). Both full-width of content column. Interspersed between agent turns.</p>
+
+  <table class="spec-table">
+    <thead><tr><th>Property</th><th>Entrance (.heckle-entrance)</th><th>Explosion (.heckle-explosion)</th></tr></thead>
+    <tbody>
+      <tr><td>Width</td><td>100% (full content column)</td><td>100% (full content column — overrides 60% turn box)</td></tr>
+      <tr><td>Border</td><td>1px dashed (muted in theme)</td><td>2px solid (red in theme)</td></tr>
+      <tr><td>Background</td><td>card bg (subtle)</td><td>Gradient red tint, dramatic</td></tr>
+      <tr><td>Layout</td><td>Right-aligned identity, centered message</td><td>Centered everything</td></tr>
+      <tr><td>Identity direction</td><td>row-reverse (right-aligned avatar+name)</td><td>N/A — no identity row (full-bleed text only)</td></tr>
+      <tr><td>Name color</td><td>amber (--amber-hati)</td><td>N/A</td></tr>
+      <tr><td>Message text</td><td>italic, text-align center, 0.8rem</td><td>bold, uppercase, 1.1rem, letter-spacing 0.08em</td></tr>
+      <tr><td>Rune prefix row</td><td>None</td><td>Yes — small runes before main text, opacity 0.4</td></tr>
+      <tr><td>Rune suffix row</td><td>None</td><td>Yes — small runes after main text, opacity 0.3</td></tr>
+      <tr><td>Animation</td><td>None</td><td>@keyframes norse-tremble 0.8s ease-in-out (plays once on render)</td></tr>
+      <tr><td>Text shadow</td><td>None</td><td>Red glow: 0 0 12px rgba(239,68,68,0.6) (theme only)</td></tr>
+      <tr><td>Font</td><td>Source Serif, body</td><td>Cinzel, heading. UPPERCASE.</td></tr>
+      <tr><td>Prefers-reduced-motion</td><td>N/A</td><td>animation: none (see interaction spec)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="side-by-side">
+    <!-- ENTRANCE -->
+    <div class="side-item">
+      <div class="zone-label">WIREFRAME — Entrance Event</div>
+      <div class="heckle-entrance-wf">
+        <div class="heckle-identity" style="flex-direction:row-reverse;">
+          <div class="heckle-avatar placeholder-box" style="width:28px;height:28px;font-size:8px;">28×28</div>
+          <span class="heckle-name" style="font-size:11px;">Mammy</span>
+          <!-- Note: identity row-reverse (right-aligned). name color: amber in theme -->
+        </div>
+        <div class="heckle-text" style="text-align:center; font-style:italic;">
+          [Entrance event message — italicized, centered. Ambient arrival text.]
+          <br><em>Example: "Mammy has entered the stadium, wearing the county colours since 1989."</em>
+        </div>
+      </div>
+      <span class="note">Entrance: dashed border, right-aligned amber identity, italic centered message. Width: 100%. No animation.</span>
+    </div>
+
+    <!-- EXPLOSION -->
+    <div class="side-item">
+      <div class="zone-label">WIREFRAME — Explosion Event</div>
+      <div class="heckle-explosion-wf">
+        <div class="explosion-rune-pre">ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ ᛏ ᚦ ᛊ ᚨ ᛗ</div>
+        <div class="explosion-main">FIVE TypeScript ERRORS! SURE, WHAT DID WE EXPECT?!</div>
+        <div class="explosion-rune-post">᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭</div>
+      </div>
+      <span class="note">Explosion: 2px solid border, heavy bold UPPERCASE text, decorative rune rows above/below. CSS animation: norse-tremble plays once on render. Width: 100% (extends to content column edges).</span>
+    </div>
+  </div>
+
+  <div class="zone-label">WIREFRAME — Mobile (375px): Both Events</div>
+  <div style="width:375px;border:2px solid #333;padding:12px;">
+    <div class="heckle-entrance-wf" style="padding:8px 10px;">
+      <div class="heckle-identity" style="flex-direction:row-reverse;">
+        <div class="heckle-avatar placeholder-box" style="width:24px;height:24px;font-size:8px;">24</div>
+        <span class="heckle-name" style="font-size:10px;">Mammy</span>
+      </div>
+      <div class="heckle-text" style="font-size:12px; font-style:italic; text-align:center;">[Entrance — 375px viewport]</div>
+    </div>
+    <div class="heckle-explosion-wf" style="padding:12px; margin-top:10px;">
+      <div class="explosion-rune-pre" style="font-size:10px;">ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ</div>
+      <div class="explosion-main" style="font-size:13px;">FIVE ERRORS!</div>
+      <div class="explosion-rune-post" style="font-size:9px;">᛭ ᛭ ᛭ ᛭ ᛭ ᛭</div>
+    </div>
+  </div>
+  <span class="note">Mobile (375px): Both events remain full-width. Explosion font-size → 13-14px (clamped). Padding reduced. Animation unchanged.</span>
+  <span class="note">prefers-reduced-motion: The @keyframes norse-tremble animation on .heckle-explosion must be wrapped in @media (prefers-reduced-motion: no-preference) { ... } per WCAG 2.1 AA. See interaction spec.</span>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SHARED CSS ARCHITECTURE NOTE
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="component-section">
+  <h2 class="component-title">CSS Architecture for MDX Implementation</h2>
+  <p class="component-desc">Engineer reference: how the existing CSS and new Norse CSS should be organized.</p>
+  <table class="spec-table">
+    <thead><tr><th>File</th><th>Scope</th><th>Contains</th></tr></thead>
+    <tbody>
+      <tr><td><code>chronicle.css</code></td><td>.chronicle-page</td><td>Existing layout: session header, TOC, timeline, entries, user-msg, work-card, code-block, stat-grid, footer, agent-report layer (basic). Keep as-is, unchanged by this work.</td></tr>
+      <tr><td><code>chronicle-norse.css</code> (NEW)</td><td>.chronicle-page</td><td>Norse ceremonial layer: .decree, .agent-callback, .heckle-comeback, .heckle-mayo, .heckle-entrance, .heckle-explosion, @keyframes norse-tremble, @keyframes explosion-glow. Imported in chronicle [slug]/page.tsx alongside chronicle.css.</td></tr>
+    </tbody>
+  </table>
+  <span class="note">Both files must be scoped under .chronicle-page. The HTML reports (generate-agent-report.mjs) keep their own inline CSS — they are NOT affected by this extraction. The shared CSS is for MDX only.</span>
+  <span class="note">CSS custom properties in chronicle-norse.css should use var(--c-*) tokens from chronicle.css (which maps to global theme tokens), NOT the raw hex values from the HTML generator CSS vars (--void, --gold, etc.). This ensures light/dark theme compatibility.</span>
+</div>
+
+</body>
+</html>
