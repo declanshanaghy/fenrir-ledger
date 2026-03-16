@@ -52,6 +52,12 @@ export function App() {
 
   const isPinned = pinnedSessionId === activeSessionId && activeSessionId !== null;
 
+  // Set of all pinned sessionIds (for sidebar display across all jobs)
+  const pinnedSessionIds = useMemo(
+    () => new Set(jobs.filter((j) => checkIsPinned(j.sessionId)).map((j) => j.sessionId)),
+    [jobs]
+  );
+
   const onMessage = useCallback(
     (msg: ServerMessage) => {
       handleJobsMessage(msg);
@@ -131,40 +137,50 @@ export function App() {
 
   const activeJob = jobs.find((j) => j.sessionId === activeSessionId) || null;
 
-  /** Toggle pin for the active session. */
-  const handleTogglePin = useCallback(() => {
-    if (!activeSessionId || !activeJob) return;
+  /** Toggle pin for any session by sessionId. Used by both header and sidebar. */
+  const handleTogglePinForSession = useCallback(
+    (sessionId: string) => {
+      const job = jobs.find((j) => j.sessionId === sessionId);
+      if (!job) return;
 
-    if (isPinned) {
-      // Unpin: remove from cache
-      unpinSession(activeSessionId);
-      setPinnedSessionId(null);
-      refreshCached();
-    } else {
-      // Pin: save current log buffer to cache
-      const meta: CachedSessionMeta = {
-        sessionId: activeSessionId,
-        name: activeJob.name,
-        issueNumber: Number(activeJob.issue) || 0,
-        agent: activeJob.agentKey ?? "unknown",
-        step: Number(activeJob.step) || 1,
-        startedAt: activeJob.startTime ? new Date(activeJob.startTime).toISOString() : null,
-        completedAt: activeJob.completionTime ? new Date(activeJob.completionTime).toISOString() : null,
-        issueTitle: activeJob.issueTitle,
-        branchName: activeJob.branchName,
-        pinnedAt: Date.now(),
-      };
-      const ok = pinSession(activeSessionId, meta);
-      if (ok) {
-        setPinnedSessionId(activeSessionId);
+      if (checkIsPinned(sessionId)) {
+        // Unpin: remove from cache
+        unpinSession(sessionId);
+        if (sessionId === activeSessionId) setPinnedSessionId(null);
         refreshCached();
-        if (isCacheNearCap()) {
-          setStorageWarning("Odin\u2019s memory is nearly full \u2014 oldest pins will be evicted.");
-          setTimeout(() => setStorageWarning(null), 5000);
+      } else {
+        // Pin: save log buffer to cache
+        const meta: CachedSessionMeta = {
+          sessionId,
+          name: job.name,
+          issueNumber: Number(job.issue) || 0,
+          agent: job.agentKey ?? "unknown",
+          step: Number(job.step) || 1,
+          startedAt: job.startTime ? new Date(job.startTime).toISOString() : null,
+          completedAt: job.completionTime ? new Date(job.completionTime).toISOString() : null,
+          issueTitle: job.issueTitle,
+          branchName: job.branchName,
+          pinnedAt: Date.now(),
+        };
+        const ok = pinSession(sessionId, meta);
+        if (ok) {
+          if (sessionId === activeSessionId) setPinnedSessionId(sessionId);
+          refreshCached();
+          if (isCacheNearCap()) {
+            setStorageWarning("Odin\u2019s memory is nearly full \u2014 oldest pins will be evicted.");
+            setTimeout(() => setStorageWarning(null), 5000);
+          }
         }
       }
-    }
-  }, [activeSessionId, activeJob, isPinned, refreshCached]);
+    },
+    [jobs, activeSessionId, refreshCached]
+  );
+
+  /** Toggle pin for the currently active session (header shortcut). */
+  const handleTogglePin = useCallback(() => {
+    if (!activeSessionId) return;
+    handleTogglePinForSession(activeSessionId);
+  }, [activeSessionId, handleTogglePinForSession]);
 
   return (
     <ErrorBoundary>
@@ -178,6 +194,8 @@ export function App() {
           onSelectSession={handleSelectSession}
           onAvatarClick={setProfileAgent}
           onOdinClick={() => setProfileAgent("odin")}
+          onTogglePinSession={handleTogglePinForSession}
+          pinnedSessionIds={pinnedSessionIds}
         />
         <ErrorBoundary>
           <LogViewer
