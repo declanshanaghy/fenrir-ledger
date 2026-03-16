@@ -332,3 +332,70 @@ describe("chronicle-norse.css — Agent Verdict", () => {
     expect(css).toContain(".chronicle-page .agent-verdict-label");
   });
 });
+
+// ── Loki QA: Pseudo-element accent bars ───────────────────────────────────
+// Wireframe spec requires both ::before and ::after gradient bars on decree
+// and agent-callback (Luna spec: "2px solid border + top/bottom gradient bars")
+
+describe("chronicle-norse.css — Loki QA: Pseudo-element accent bars", () => {
+  it("decree has ::before accent bar (top gradient line)", () => {
+    expect(css).toContain(".chronicle-page .decree::before");
+    const block = css.match(/\.chronicle-page \.decree::before \{[^}]+\}/s)?.[0] ?? "";
+    expect(block).toContain("top: -3px");
+    expect(block).toContain("var(--c-gold)");
+  });
+
+  it("decree has ::after accent bar (bottom gradient line)", () => {
+    expect(css).toContain(".chronicle-page .decree::after");
+    const block = css.match(/\.chronicle-page \.decree::after \{[^}]+\}/s)?.[0] ?? "";
+    expect(block).toContain("bottom: -3px");
+    expect(block).toContain("var(--c-gold)");
+  });
+
+  it("agent-callback has ::before accent bar with fire-gold gradient", () => {
+    expect(css).toContain(".chronicle-page .agent-callback::before");
+    const block = css.match(/\.chronicle-page \.agent-callback::before \{[^}]+\}/s)?.[0] ?? "";
+    expect(block).toContain("var(--c-gold)");
+    expect(block).toContain("var(--c-fire)");
+  });
+
+  it("agent-callback has ::after accent bar (matching before)", () => {
+    expect(css).toContain(".chronicle-page .agent-callback::after");
+  });
+});
+
+// ── Loki QA: Avatar dimensions ────────────────────────────────────────────
+// Wireframe spec: "48×48 avatar" for agent-callback footer
+
+describe("chronicle-norse.css — Loki QA: Avatar dimensions", () => {
+  it("callback-avatar-wrap is 48px × 48px (wireframe spec)", () => {
+    const block = css.match(/\.chronicle-page \.callback-avatar-wrap \{[^}]+\}/s)?.[0] ?? "";
+    expect(block).toContain("width: 48px");
+    expect(block).toContain("height: 48px");
+  });
+
+  it("callback-avatar-wrap is circular (border-radius 50%)", () => {
+    const block = css.match(/\.chronicle-page \.callback-avatar-wrap \{[^}]+\}/s)?.[0] ?? "";
+    expect(block).toContain("border-radius: 50%");
+  });
+});
+
+// ── Loki QA: CSS token compliance ─────────────────────────────────────────
+// Implementation note: "HTML generator uses raw hex vars (--void, --gold, --echo).
+// MDX CSS must use --c-* tokens." Validate no HTML-generator tokens leaked in.
+
+describe("chronicle-norse.css — Loki QA: CSS token compliance", () => {
+  it("does not use --void token (HTML generator token — must not leak into MDX CSS)", () => {
+    expect(css).not.toMatch(/var\(--void\b/);
+  });
+
+  it("does not use bare --gold token (must use --c-gold)", () => {
+    // --gold (without --c-) is the HTML generator's raw token
+    expect(css).not.toMatch(/var\(--gold\b/);
+  });
+
+  it("does not use --echo or --whisper tokens (HTML generator tokens)", () => {
+    expect(css).not.toMatch(/var\(--echo\b/);
+    expect(css).not.toMatch(/var\(--whisper\b/);
+  });
+});
