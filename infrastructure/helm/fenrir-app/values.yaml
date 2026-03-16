@@ -99,6 +99,16 @@ ingress:
     timeoutSec: 30
     connectionDraining:
       drainingTimeoutSec: 15
+    cdn:
+      # Disabled by default — enable per-environment in values-prod.yaml
+      enabled: false
+      # USE_ORIGIN_HEADERS: Cache-Control response headers control caching
+      # This gives full control without caching anything by accident
+      cacheMode: USE_ORIGIN_HEADERS
+      cachePolicy:
+        includeHost: true
+        includeProtocol: true
+        includeQueryString: true
 
   managedCertificate:
     enabled: true

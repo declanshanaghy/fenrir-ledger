@@ -26,6 +26,9 @@ ingress:
   hosts:
     - fenrirledger.com
     - www.fenrirledger.com
+  backendConfig:
+    cdn:
+      enabled: true
 
 redis:
   enabled: true

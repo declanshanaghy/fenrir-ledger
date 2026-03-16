@@ -60,5 +60,14 @@ spec:
   timeoutSec: {{ .Values.ingress.backendConfig.timeoutSec }}
   connectionDraining:
     {{- toYaml .Values.ingress.backendConfig.connectionDraining | nindent 4 }}
+  {{- if .Values.ingress.backendConfig.cdn.enabled }}
+  cdn:
+    enabled: true
+    cachePolicy:
+      includeHost: {{ .Values.ingress.backendConfig.cdn.cachePolicy.includeHost }}
+      includeProtocol: {{ .Values.ingress.backendConfig.cdn.cachePolicy.includeProtocol }}
+      includeQueryString: {{ .Values.ingress.backendConfig.cdn.cachePolicy.includeQueryString }}
+    cacheMode: {{ .Values.ingress.backendConfig.cdn.cacheMode }}
+  {{- end }}
 {{- end }}
 {{- end }}
