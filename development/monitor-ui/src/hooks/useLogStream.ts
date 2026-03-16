@@ -143,17 +143,26 @@ export function useLogStream() {
             return;
           }
 
-          // Entrypoint section end marker — collapse all prior entries into a group
+          // Entrypoint section end marker — collapse entrypoint entries into a group.
+          // Only moves entrypoint-typed entries into the group's children;
+          // preserves all other entries at the root to avoid a full array rebuild.
           if (/^===\s*Starting Claude Code\s*===/.test(stripped)) {
             inEntrypoint.current = false;
             setEntries((prev) => {
+              const epTypes = new Set(["entrypoint-header", "entrypoint-ok", "entrypoint-info", "entrypoint-fatal"]);
+              const epChildren: LogEntry[] = [];
+              const rest: LogEntry[] = [];
+              for (const e of prev) {
+                if (epTypes.has(e.type)) epChildren.push(e);
+                else rest.push(e);
+              }
               const group: LogEntry = {
                 id: nextId(),
                 type: "entrypoint-group",
                 text: "Agent Sandbox Setup",
-                children: [...prev],
+                children: epChildren,
               };
-              return [group, parseEntrypointLine(stripped)];
+              return [...rest, group, parseEntrypointLine(stripped)];
             });
             return;
           }

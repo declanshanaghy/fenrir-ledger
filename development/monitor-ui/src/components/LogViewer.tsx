@@ -98,13 +98,20 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
   const [autoScroll, setAutoScroll] = useState(true);
   const programmaticScrollRef = useRef(false);
 
-  // Auto-scroll when new entries arrive (if enabled)
+  // Auto-scroll when new entries arrive (if enabled).
+  // Depend on entry count + last entry ID, NOT the full array reference.
+  // This prevents scroll resets when the array is reconstructed (e.g. entrypoint grouping).
+  const lastEntryId = entries[entries.length - 1]?.id;
   useEffect(() => {
     if (autoScroll && termRef.current) {
       programmaticScrollRef.current = true;
-      termRef.current.scrollTop = termRef.current.scrollHeight;
+      requestAnimationFrame(() => {
+        if (termRef.current) {
+          termRef.current.scrollTop = termRef.current.scrollHeight;
+        }
+      });
     }
-  }, [entries, autoScroll]);
+  }, [entries.length, lastEntryId, autoScroll]);
 
   // Reset auto-scroll when switching sessions
   useEffect(() => {
