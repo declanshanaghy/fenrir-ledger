@@ -874,7 +874,7 @@ body {
   text-transform: uppercase;
 }
 .agent-bubble-text {
-  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-family: 'JetBrains Mono', monospace;
   color: var(--text-saga);
   font-size: 0.75rem; line-height: 1.6;
   white-space: pre-wrap;
