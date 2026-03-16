@@ -1280,9 +1280,124 @@ ${decreeBody}
 </div>`;
   }
 
-  // Build turn markup using <details>/<summary> for native collapsibility
+  // ── MDX heckle event helpers ──────────────────────────────────────────────
+
+  const MDX_HECKLER_AVATARS = [
+    'heckler-avatar.png','heckler-granny.png','heckler-da.png','heckler-uncle.png',
+    'heckler-mammy.png','heckler-teen.png','heckler-lad.png','heckler-lass.png',
+  ];
+  function mdxHecklerAvatar(name) {
+    const idx = Math.abs([...name].reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0));
+    return `/hecklers/${MDX_HECKLER_AVATARS[idx % MDX_HECKLER_AVATARS.length]}`;
+  }
+  function mdxAgentAvatarPath(name) {
+    const slugMap = { FiremanDecko:'fireman-decko', Loki:'loki', Luna:'luna', Freya:'freya', Heimdall:'heimdall' };
+    const sl = slugMap[name] || name.toLowerCase();
+    return `/agents/profiles/${sl}-dark.png`;
+  }
+
+  function mdxRenderHeckleEvents(events) {
+    if (!events) return "";
+    let out = "";
+    for (const event of events) {
+      if (event.type === "mayo") {
+        const avatarSrc = mdxHecklerAvatar(event.name);
+        out += `<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">${mdxEsc(event.name)}</span>
+<img className="heckle-avatar" src="${avatarSrc}" alt="${mdxEsc(event.name)}" loading="lazy" />
+</div>
+<div className="heckle-text">${mdxEsc(event.text)}</div>
+</div>\n`;
+      } else if (event.type === "mayo-comeback") {
+        const avatarSrc = mdxAgentAvatarPath(event.name);
+        const aTitle = AGENT_TITLES[event.name] || event.name;
+        out += `<div className="heckle heckle-comeback">
+<div className="heckle-identity">
+<img className="heckle-avatar" src="${avatarSrc}" alt="${mdxEsc(event.name)}" loading="lazy" />
+<span className="heckle-name">${mdxEsc(aTitle)}</span>
+</div>
+<div className="heckle-text">${mdxEsc(event.text)}</div>
+</div>\n`;
+      } else if (event.type === "mayo-entrance") {
+        const eName = event.name || "Mayo Fan";
+        const avatarSrc = mdxHecklerAvatar(eName);
+        out += `<div className="heckle heckle-entrance">
+<div className="heckle-identity">
+<span className="heckle-name">${mdxEsc(eName)}</span>
+<img className="heckle-avatar" src="${avatarSrc}" alt="${mdxEsc(eName)}" loading="lazy" />
+</div>
+<div className="heckle-text">${mdxEsc(event.text)}</div>
+</div>\n`;
+      } else if (event.type === "mayo-explosion") {
+        out += `<div className="heckle heckle-explosion">⚡ ${mdxEsc(event.text)} ⚡</div>\n`;
+      }
+    }
+    return out;
+  }
+
+  // ── MDX tool block renderer ────────────────────────────────────────────────
+
+  function mdxRenderToolBlock(tool) {
+    return `<details className="agent-tool-block">
+<summary>
+<span className="agent-tool-name">${mdxEsc(tool.name)}</span>
+<span className="agent-tool-preview">${mdxToolInputPreview(tool)}</span>
+</summary>
+<div className="agent-tool-detail">
+<pre className="agent-tool-input">${mdxRenderToolInput(tool)}</pre>
+<pre className="agent-tool-output${tool.is_error ? " agent-tool-error" : ""}">${mdxRenderToolOutput(tool)}</pre>
+</div>
+</details>\n`;
+  }
+
+  // ── isToolOnly check (same logic as HTML path) ────────────────────────────
+
+  function mdxIsToolOnly(turn) {
+    return turn.texts.length === 0 && turn.thinking.length === 0 && turn.tools.length > 0;
+  }
+
+  // ── Build turn markup with toolbox merging ────────────────────────────────
   let turnsMarkup = "";
-  turns.forEach((turn, i) => {
+  let mi = 0;
+  while (mi < turns.length) {
+    const turn = turns[mi];
+
+    // Merge consecutive tool-only turns into a single toolbox
+    if (mdxIsToolOnly(turn)) {
+      const mergedTools = [];
+      const turnNums = [];
+      let hasError = false;
+      while (mi < turns.length && mdxIsToolOnly(turns[mi])) {
+        mergedTools.push(...turns[mi].tools);
+        turnNums.push(mi + 1);
+        if (turns[mi].tools.some(t => t.is_error)) hasError = true;
+        mi++;
+      }
+      const numLabel = turnNums.length === 1
+        ? `#${turnNums[0]}`
+        : `#${turnNums[0]}–${turnNums[turnNums.length - 1]}`;
+      const toolBadges = mergedTools
+        .map(t => `<span className="agent-tool-badge agent-tool-${toolBadgeClass(t.name)}">${mdxEsc(t.name)}</span>`)
+        .join(" ");
+
+      turnsMarkup += `
+<details className="agent-turn${hasError ? " agent-turn-error" : ""}">
+<summary>
+<span className="agent-turn-num">${numLabel}</span>
+<span className="agent-turn-summary">${mergedTools.length} tool calls</span>
+<span className="agent-turn-badges">${toolBadges}</span>
+</summary>
+<div className="agent-turn-body">
+${mergedTools.map(t => mdxRenderToolBlock(t)).join("")}</div>
+</details>\n`;
+
+      // Consume heckle slot without rendering (tool-only group)
+      hecklerEngine.maybeHeckle();
+      continue;
+    }
+
+    // Normal turn with text content
     const hasError = turn.tools.some(t => t.is_error);
     const summary = turn.texts.length
       ? mdxEsc(turn.texts[0].slice(0, 120))
@@ -1293,8 +1408,8 @@ ${decreeBody}
 
     turnsMarkup += `
 <details className="agent-turn${hasError ? " agent-turn-error" : ""}">
-<summary className="agent-turn-header">
-<span className="agent-turn-num">#${i + 1}</span>
+<summary>
+<span className="agent-turn-num">#${mi + 1}</span>
 <span className="agent-turn-summary">${summary}</span>
 <span className="agent-turn-badges">${toolBadges}</span>
 </summary>
@@ -1308,37 +1423,17 @@ ${decreeBody}
       turnsMarkup += `<div className="agent-text-block">${mdxEsc(sanitizeText(text))}</div>\n`;
     }
     for (const tool of turn.tools) {
-      turnsMarkup += `<details className="agent-tool-block">
-<summary className="agent-tool-summary">
-<span className="agent-tool-name">${mdxEsc(tool.name)}</span>
-<span className="agent-tool-preview">${mdxToolInputPreview(tool)}</span>
-</summary>
-<div className="agent-tool-detail">
-<pre className="agent-tool-input">${mdxRenderToolInput(tool)}</pre>
-<pre className="agent-tool-output${tool.is_error ? " agent-tool-error" : ""}">${mdxRenderToolOutput(tool)}</pre>
-</div>
-</details>\n`;
+      turnsMarkup += mdxRenderToolBlock(tool);
     }
 
-    // Render heckles after the turn
+    // Render heckles OUTSIDE the turn body (visible without expanding)
     const mdxHeckleEvents = hecklerEngine.maybeHeckle();
-    if (mdxHeckleEvents) {
-      for (const event of mdxHeckleEvents) {
-        if (event.type === "mayo") {
-          turnsMarkup += `<div className="heckle heckle-mayo"><strong>${mdxEsc(event.name)}:</strong> ${mdxEsc(event.text)}</div>\n`;
-        } else if (event.type === "mayo-comeback") {
-          turnsMarkup += `<div className="heckle heckle-comeback"><strong>${mdxEsc(event.name)}:</strong> ${mdxEsc(event.text)}</div>\n`;
-        } else if (event.type === "mayo-entrance") {
-          turnsMarkup += `<div className="heckle heckle-entrance">${mdxEsc(event.text)}</div>\n`;
-        } else if (event.type === "mayo-explosion") {
-          turnsMarkup += `<div className="heckle heckle-explosion">${mdxEsc(event.text)}</div>\n`;
-        }
-      }
-    }
-
     turnsMarkup += `</div>
-</details>\n`;
-  });
+</details>
+${mdxRenderHeckleEvents(mdxHeckleEvents)}\n`;
+
+    mi++;
+  }
 
   // Build file changes markup
   let changesMarkup = "";
@@ -1365,7 +1460,7 @@ ${commits.map(c => `<div className="agent-commit-item">${mdxEsc(c)}</div>`).join
 
   // Victory heckle markup
   const mdxVictoryHeckle = hecklerEngine.victoryHeckle();
-  const victoryHeckleMarkup = `<div className="heckle heckle-explosion">${mdxEsc(mdxVictoryHeckle.text)}</div>`;
+  const victoryHeckleMarkup = `<div className="heckle heckle-explosion">⚡ ${mdxEsc(mdxVictoryHeckle.text)} ⚡</div>`;
 
   // Verdict markup
   let verdictMarkup = "";
@@ -1443,10 +1538,37 @@ ${mdxCallbackMarkup}
 </div>
 `;
 
-  // Final sanitization pass over the complete MDX — catches anything in the
-  // task prompt / system message sections that was not individually sanitized.
-  const sanitizedMdx = sanitizeText(mdx);
+  // ── Copy avatar assets to Next.js public/ so MDX image paths resolve ──────
+  {
+    const { cpSync: cp2, existsSync: ex2, mkdirSync: mk2 } = await import("fs");
+    const repoRoot2 = resolve(__scriptDir, "..", "..", "..", "..");
+    const publicDir = join(repoRoot2, "development", "frontend", "public");
 
+    // Heckler avatars → public/hecklers/
+    const hecklerSrc2 = join(repoRoot2, ".claude", "agents", "profiles", "hecklers");
+    const hecklerDst2 = join(publicDir, "hecklers");
+    if (ex2(hecklerSrc2)) {
+      mk2(hecklerDst2, { recursive: true });
+      for (const f of MDX_HECKLER_AVATARS) {
+        const src = join(hecklerSrc2, f);
+        if (ex2(src)) cp2(src, join(hecklerDst2, f));
+      }
+    }
+
+    // Agent profile images → public/agents/profiles/
+    const agentProfileSrc2 = join(repoRoot2, ".claude", "agents", "profiles");
+    const agentProfileDst2 = join(publicDir, "agents", "profiles");
+    if (ex2(agentProfileSrc2)) {
+      mk2(agentProfileDst2, { recursive: true });
+      for (const f of ["fireman-decko-dark.png","loki-dark.png","luna-dark.png","freya-dark.png","heimdall-dark.png","odin-dark.png"]) {
+        const src = join(agentProfileSrc2, f);
+        if (ex2(src)) cp2(src, join(agentProfileDst2, f));
+      }
+    }
+  }
+
+  // Final sanitization pass — catches anything not individually sanitized
+  const sanitizedMdx = sanitizeText(mdx);
   writeFileSync(mdxFile, sanitizedMdx);
   console.log(`[ok] chronicle published: ${mdxFile}`);
   console.log(`     slug: ${mdxSlug}`);
