@@ -48,6 +48,8 @@ resource "google_project_service" "apis" {
     "logging.googleapis.com",              # Cloud Logging
     "billingbudgets.googleapis.com",       # Billing Budgets
     "dns.googleapis.com",                  # Cloud DNS
+    "firestore.googleapis.com",            # Firestore
+    "firebaserules.googleapis.com",        # Firebase Security Rules
   ])
 
   project            = var.project_id
