@@ -16,6 +16,8 @@
 //   node scripts/sync-secrets.mjs --sync       # Sync missing → correct destination
 //   node scripts/sync-secrets.mjs --fix-all    # Re-sync ALL secrets (clean values)
 //   node scripts/sync-secrets.mjs --verify     # Compare K8s values against local
+//   node scripts/sync-secrets.mjs --push KEY   # Force-push one secret to all destinations + restart
+//   node scripts/sync-secrets.mjs --restart    # Restart fenrir-app deployment (pick up secret changes)
 // --------------------------------------------------------------------------
 
 import { execSync } from "node:child_process";
@@ -312,9 +314,67 @@ function verify(envVars, secretsVars) {
 }
 
 // --------------------------------------------------------------------------
+// Push one: force-push a single secret to ALL its destinations + restart
+// --------------------------------------------------------------------------
+function pushOne(keyName, envVars, secretsVars) {
+  // Find all SECRETS entries that match this key name (by name, envVar, or secretsVar)
+  const matches = SECRETS.filter(s =>
+    s.name === keyName ||
+    s.envVar === keyName ||
+    s.secretsVar === keyName
+  );
+  if (!matches.length) {
+    console.error(`${C.red}Unknown secret: ${keyName}${C.r}`);
+    console.error(`Known keys: ${SECRETS.map(s => s.name).join(", ")}`);
+    process.exit(1);
+  }
+
+  // Resolve value from local files
+  const val = resolveLocalValue(matches[0], envVars, secretsVars);
+  if (!val) {
+    console.error(`${C.red}No local value found for ${keyName}${C.r}`);
+    process.exit(1);
+  }
+  console.log(`\n${C.bold}Pushing ${keyName}${C.r} (${val.length}b) to ${matches.length} destination(s)...`);
+
+  const k8sGroupsDone = new Set();
+  for (const s of matches) {
+    if (s.dest === "github") {
+      execSync(`printf '%s' "${val.replace(/"/g, '\\"')}" | gh secret set "${s.name}" --repo ${REPO}`, { stdio: "pipe" });
+      console.log(`  ${C.green}✓${C.r} ${s.name} → GitHub`);
+    } else if (s.dest === "k8s-agents" && !k8sGroupsDone.has("k8s-agents")) {
+      syncK8sSecret("agent-secrets", K8S_AGENTS_NS, "k8s-agents", envVars, secretsVars);
+      k8sGroupsDone.add("k8s-agents");
+    } else if (s.dest === "k8s-app" && !k8sGroupsDone.has("k8s-app")) {
+      syncK8sSecret("fenrir-app-secrets", K8S_APP_NS, "k8s-app", envVars, secretsVars);
+      k8sGroupsDone.add("k8s-app");
+    }
+  }
+
+  // Auto-restart if any K8s secret was updated
+  if (k8sGroupsDone.size > 0) {
+    restartApp();
+  }
+}
+
+// --------------------------------------------------------------------------
+// Restart: restart fenrir-app deployment to pick up secret changes
+// --------------------------------------------------------------------------
+function restartApp() {
+  console.log(`\n${C.bold}Restarting fenrir-app deployment...${C.r}`);
+  try {
+    execSync(`kubectl rollout restart deployment -n ${K8S_APP_NS}`, { stdio: "pipe" });
+    console.log(`  ${C.green}✓${C.r} Deployment restarted`);
+  } catch (e) {
+    console.error(`  ${C.red}✗${C.r} Failed to restart: ${e.message}`);
+  }
+}
+
+// --------------------------------------------------------------------------
 // Main
 // --------------------------------------------------------------------------
-const mode = process.argv[2] || "audit";
+const args = process.argv.slice(2);
+const mode = args[0] || "audit";
 const envVars = parseKeyValueFile(ENV_FILE);
 const secretsVars = parseKeyValueFile(SECRETS_FILE);
 
@@ -329,8 +389,15 @@ switch (mode) {
   case "--sync": { const syncable = audit(envVars, secretsVars); sync(syncable, envVars, secretsVars); break; }
   case "--fix-all": fixAll(envVars, secretsVars); break;
   case "--verify": verify(envVars, secretsVars); break;
+  case "--push": {
+    const key = args[1];
+    if (!key) { console.error(`${C.red}Usage: --push <KEY_NAME>${C.r}`); process.exit(1); }
+    pushOne(key, envVars, secretsVars);
+    break;
+  }
+  case "--restart": restartApp(); break;
   case "--help": case "-h":
-    console.log(readFileSync(import.meta.filename, "utf8").split("\n").slice(1, 19).map(l => l.replace(/^\/\/ ?/, "")).join("\n"));
+    console.log(readFileSync(import.meta.filename, "utf8").split("\n").slice(1, 21).map(l => l.replace(/^\/\/ ?/, "")).join("\n"));
     break;
   default: audit(envVars, secretsVars);
 }
