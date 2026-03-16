@@ -4,9 +4,10 @@ import { toolBadgeClass, toolPreview } from "../lib/constants";
 
 interface Props {
   entry: LogEntry;
+  collapseCount?: number;
 }
 
-export function ToolBlock({ entry }: Props) {
+export function ToolBlock({ entry, collapseCount }: Props) {
   const [open, setOpen] = useState(false);
   const cls = toolBadgeClass(entry.toolName || "");
   let parsedInput: Record<string, unknown> | undefined;
@@ -23,6 +24,9 @@ export function ToolBlock({ entry }: Props) {
     <div className={`ev-tool${open ? " open" : ""}${entry.toolIsError ? " ev-tool-error" : ""}`}>
       <div className="ev-tool-header" onClick={() => setOpen(!open)}>
         <span className={`ev-tool-badge ${cls}`}>{entry.toolName}</span>
+        {collapseCount != null && collapseCount > 1 && (
+          <span className="ev-collapse-count" title={`${collapseCount} consecutive identical calls collapsed`}>×{collapseCount}</span>
+        )}
         <span className="ev-tool-preview">{preview}</span>
         <span className="ev-tool-chevron">{"\u203A"}</span>
       </div>
