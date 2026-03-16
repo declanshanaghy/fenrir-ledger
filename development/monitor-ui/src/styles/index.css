@@ -34,13 +34,21 @@
 
   /* ── Tool badge colors ───────────────────────── */
   --bash-badge-bg:    #1a3320;
-  --bash-badge-text:  #4ade80;
+  --bash-badge-text:  #86c894;  /* desaturated sage green — was #4ade80 neon */
   --write-badge-bg:   #2d1a5e;
   --write-badge-text: #c084fc;
 
+  /* ── Norse mist tool surface tokens ─────────── */
+  --mist-tool-bg:      rgba(18, 18, 31, 0.72);
+  --mist-tool-border:  rgba(52, 52, 80, 0.70);
+  --mist-tool-hover:   rgba(30, 30, 52, 0.90);
+  --mist-tool-divider: var(--rune-border);
+  --read-badge-bg:     #1e3252;
+  --read-badge-text:   #94afd4;
+
   /* ── Tool batch / bubble surface colors ─────── */
-  --tool-batch-header-bg:    rgba(30, 58, 138, 0.10);
-  --tool-batch-header-hover: rgba(30, 58, 138, 0.20);
+  --tool-batch-header-bg:    rgba(42, 42, 62, 0.30);
+  --tool-batch-header-hover: rgba(42, 42, 62, 0.50);
   --bubble-header-bg:        rgba(255, 255, 255, 0.02);
 
   /* ── Norse tablet (task prompt) ─────────────── */
@@ -93,9 +101,14 @@
   --bash-badge-text:  #166534;
   --write-badge-bg:   #f3e8ff;
   --write-badge-text: #7c3aed;
+  --read-badge-bg:    #e8eef8;
+  --read-badge-text:  #2e4a7a;
+  --mist-tool-bg:     rgba(220, 224, 235, 0.55);
+  --mist-tool-border: rgba(80, 80, 120, 0.25);
+  --mist-tool-hover:  rgba(200, 204, 220, 0.80);
 
-  --tool-batch-header-bg:    rgba(30, 58, 138, 0.06);
-  --tool-batch-header-hover: rgba(30, 58, 138, 0.12);
+  --tool-batch-header-bg:    rgba(80, 80, 120, 0.08);
+  --tool-batch-header-hover: rgba(80, 80, 120, 0.16);
   --bubble-header-bg:        rgba(0, 0, 0, 0.03);
 
   /* light-mode gold is #8f6e0e = rgb(143,110,14) */
@@ -914,13 +927,13 @@ body {
 .ev-tool-batch-header {
   display: flex; align-items: center; gap: 0.5rem;
   padding: 0.3rem 0.5rem;
-  background: rgba(42, 42, 62, 0.3);
+  background: var(--tool-batch-header-bg);
   cursor: pointer; user-select: none;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.6rem;
   justify-content: flex-end;
 }
-.ev-tool-batch-header:hover { background: rgba(42, 42, 62, 0.5); }
+.ev-tool-batch-header:hover { background: var(--tool-batch-header-hover); }
 .ev-tool-batch-chevron {
   color: var(--text-void); font-size: 0.6rem;
   transition: transform 0.15s;
@@ -957,7 +970,7 @@ body {
 }
 .ev-tool-batch.open .ev-tool-batch-body {
   padding: 0.4rem 0.6rem;
-  border-top-color: var(--kildare-blue-dim);
+  border-top-color: var(--rune-border);
 }
 .ev-tool-batch-body .ev-tool {
   margin-left: auto;
@@ -1040,10 +1053,10 @@ body {
   font-size: 0.72rem;
 }
 
-/* ── JSONL events — tool calls (Kildare) ──────── */
+/* ── JSONL events — tool calls (Norse Mist) ───── */
 .ev-tool {
-  background: var(--kildare-blue-dim);
-  border: 1px solid var(--kildare-blue);
+  background: var(--mist-tool-bg);
+  border: 1px solid var(--mist-tool-border);
   border-radius: 4px; margin: 0.3rem 0; overflow: hidden;
   animation: fadeIn 0.15s ease;
 }
@@ -1051,27 +1064,27 @@ body {
   display: flex; align-items: center; gap: 0.5rem;
   padding: 0.35rem 0.6rem; cursor: pointer; user-select: none;
 }
-.ev-tool-header:hover { background: var(--kildare-blue); }
+.ev-tool-header:hover { background: var(--mist-tool-hover); }
 .ev-tool-badge {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.65rem; padding: 0.1rem 0.4rem;
   border-radius: 2px; font-weight: 600;
-  background: var(--kildare-blue); color: var(--kildare-white);
+  background: var(--read-badge-bg); color: var(--read-badge-text);
 }
 .ev-tool-badge.bash { background: var(--bash-badge-bg); color: var(--bash-badge-text); }
 .ev-tool-badge.read,
 .ev-tool-badge.grep,
-.ev-tool-badge.glob { background: var(--kildare-blue); color: var(--kildare-white); }
+.ev-tool-badge.glob { background: var(--read-badge-bg); color: var(--read-badge-text); }
 .ev-tool-badge.edit,
 .ev-tool-badge.write { background: var(--write-badge-bg); color: var(--write-badge-text); }
 .ev-tool-badge.agent { background: var(--mayo-red-dim); color: #fca5a5; }
 .ev-tool-preview {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem; color: var(--kildare-white); opacity: 0.6;
+  font-size: 0.65rem; color: var(--text-rune); opacity: 0.6;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
 }
 .ev-tool-chevron {
-  color: var(--kildare-blue-bright);
+  color: var(--text-rune);
   font-size: 0.7rem; transition: transform 0.15s;
 }
 .ev-tool.open .ev-tool-chevron { transform: rotate(90deg); }
@@ -1088,21 +1101,21 @@ body {
   padding: 0 0.6rem;
   border-top: 1px solid transparent;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem; color: var(--kildare-white); opacity: 0.8;
+  font-size: 0.7rem; color: var(--text-saga); opacity: 0.8;
   white-space: pre-wrap; word-break: break-word;
   max-height: 200px; overflow-y: auto;
   transition: padding 0.25s ease, border-color 0.25s ease;
 }
 .ev-tool.open .ev-tool-body {
   padding: 0.4rem 0.6rem;
-  border-top-color: var(--kildare-blue);
+  border-top-color: var(--mist-tool-divider);
 }
 .ev-tool-error { border-color: var(--mayo-red); }
 .ev-tool-error .ev-tool-badge { background: var(--mayo-red-dim); color: #fca5a5; }
 .ev-tool-result {
-  border-top: 1px dashed var(--kildare-blue);
+  border-top: 1px dashed var(--mist-tool-divider);
   margin-top: 0.3rem; padding-top: 0.3rem;
-  color: var(--kildare-white); opacity: 0.5;
+  color: var(--text-rune); opacity: 0.5;
 }
 
 /* ── User events ───────────────────────────────── */
