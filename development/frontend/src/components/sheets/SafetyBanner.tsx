@@ -5,12 +5,10 @@
  *
  * Variants:
  *  - full: Two-column include/exclude lists with shield icon (method selection)
- *  - compact: Single-line reminder with expandable details (URL entry, CSV upload)
+ *  - compact: Always-visible include/exclude lists with shield icon (URL entry, CSV upload)
  *  - sensitive-data: Warning when LLM detects sensitive data in CSV (preview)
  *  - post-share: Reminder after URL-based import (success)
  */
-
-import { useState } from "react";
 
 interface SafetyBannerProps {
   /** Which visual variant to render. */
@@ -57,57 +55,42 @@ function LockIcon({ className }: { className?: string }) {
   );
 }
 
-/** Compact variant with expandable details toggle. */
+/** Compact variant — always-visible include/exclude detail lists. */
 function CompactBanner() {
-  const [expanded, setExpanded] = useState(false);
-
   return (
     <div
       role="note"
       aria-label="Data safety reminder"
       className="rounded-sm border border-border bg-card px-3 py-2"
     >
-      <div className="flex items-center gap-1">
-        <p className="text-sm font-body text-muted-foreground flex-1">
-          <ShieldIcon className="inline h-3.5 w-3.5 text-gold mr-1.5 align-text-bottom" />
-          Never share card numbers, CVVs, or SSNs. Only include card names, fees, and dates.
-        </p>
-        <button
-          type="button"
-          onClick={() => setExpanded((prev) => !prev)}
-          aria-label="View full safety details"
-          aria-expanded={expanded}
-          className="text-sm font-heading text-gold hover:text-primary hover:brightness-110 transition-colors shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
-        >
-          {expanded ? "Hide" : "Details"}
-        </button>
-      </div>
-      {expanded && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-body text-muted-foreground mt-3 pt-3 border-t border-border">
-          <div>
-            <p className="text-foreground font-heading text-sm mb-1.5 tracking-wide">
-              Safe to include
-            </p>
-            <ul className="space-y-1 list-none">
-              <li>Card names and issuers</li>
-              <li>Open dates and annual fees</li>
-              <li>Credit limits</li>
-              <li>Sign-up bonus details</li>
-            </ul>
-          </div>
-          <div>
-            <p className="text-destructive font-heading text-sm mb-1.5 tracking-wide">
-              Never include
-            </p>
-            <ul className="space-y-1 list-none">
-              <li>Full card numbers</li>
-              <li>CVV / security codes</li>
-              <li>Social Security numbers</li>
-              <li>Passwords or PINs</li>
-            </ul>
-          </div>
+      <p className="text-sm font-body text-muted-foreground">
+        <ShieldIcon className="inline h-3.5 w-3.5 text-gold mr-1.5 align-text-bottom" />
+        Never share card numbers, CVVs, or SSNs. Only include card names, fees, and dates.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-body text-muted-foreground mt-3 pt-3 border-t border-border">
+        <div>
+          <p className="text-foreground font-heading text-sm mb-1.5 tracking-wide">
+            Safe to include
+          </p>
+          <ul className="space-y-1 list-none">
+            <li>Card names and issuers</li>
+            <li>Open dates and annual fees</li>
+            <li>Credit limits</li>
+            <li>Sign-up bonus details</li>
+          </ul>
         </div>
-      )}
+        <div>
+          <p className="text-destructive font-heading text-sm mb-1.5 tracking-wide">
+            Never include
+          </p>
+          <ul className="space-y-1 list-none">
+            <li>Full card numbers</li>
+            <li>CVV / security codes</li>
+            <li>Social Security numbers</li>
+            <li>Passwords or PINs</li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
