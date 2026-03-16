@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import type { ServerMessage, JsonEvent, ContentBlock } from "../lib/types";
 import { parseJsonlLine } from "../lib/jsonl";
 import { batchSummary } from "../lib/constants";
-import { appendLogLine, getCachedLog } from "../lib/localStorageLogs";
+import { appendLogLine, getCachedLog, getLog } from "../lib/localStorageLogs";
 
 // Ref type for cache-fallback invoke — avoids circular useCallback dependency
 type ReplayFn = (sessionId: string) => void;
@@ -91,6 +91,9 @@ export function useLogStream() {
   const taskPromptBuffer = useRef<string[]>([]);
   const inTaskPrompt = useRef(false);
   const inEntrypoint = useRef(false);
+  // Tracks how many live log-line messages to skip after a cache replay.
+  // Set to N after replaying N cached lines so the re-streamed duplicates are ignored.
+  const liveSkipRef = useRef(0);
 
   const setActiveSessionId = useCallback((id: string | null) => {
     activeSessionIdRef.current = id;
@@ -100,6 +103,7 @@ export function useLogStream() {
   const clearEntries = useCallback(() => {
     setEntries([]);
     entryCounter = 0;
+    liveSkipRef.current = 0;
     taskPromptBuffer.current = [];
     inTaskPrompt.current = false;
     inEntrypoint.current = false;
@@ -108,113 +112,9 @@ export function useLogStream() {
     setReplayedFromCache(false);
   }, []);
 
-  const handleMessage = useCallback((msg: ServerMessage) => {
-    if (msg.type === "log-line") {
-      const line = msg.line;
-      // Persist raw line to localStorage for download
-      if (activeSessionIdRef.current) {
-        appendLogLine(activeSessionIdRef.current, line);
-      }
-      const ev = parseJsonlLine(line);
-      if (!ev) {
-        if (line.trim()) {
-          // Strip kubectl timestamp prefix (e.g. "2026-03-15T19:58:07Z ")
-          const stripped = stripTimestamp(line.trim());
-
-          // Task prompt buffering (happens after "Starting Claude Code")
-          if (/^---\s*TASK PROMPT\s*---$/.test(stripped)) {
-            inTaskPrompt.current = true;
-            taskPromptBuffer.current = [];
-            return;
-          }
-          if (/^---\s*END PROMPT\s*---$/.test(stripped)) {
-            inTaskPrompt.current = false;
-            const fullPrompt = taskPromptBuffer.current.join("\n");
-            taskPromptBuffer.current = [];
-            setEntries((prev) => [
-              ...prev,
-              { id: nextId(), type: "entrypoint-task", text: fullPrompt },
-            ]);
-            return;
-          }
-          if (inTaskPrompt.current) {
-            taskPromptBuffer.current.push(stripped);
-            return;
-          }
-
-          // Entrypoint section start marker
-          if (/^===\s*Agent Sandbox Entrypoint\s*===/.test(stripped)) {
-            inEntrypoint.current = true;
-            setEntries((prev) => [...prev, parseEntrypointLine(stripped)]);
-            return;
-          }
-
-          // Entrypoint section end marker — collapse all pre-Claude entries into a group.
-          // Collects entrypoint-typed entries AND raw lines (pre-entrypoint output like
-          // "Waiting for DNS...", "Cloning...") into the group's children.
-          // Preserves any non-entrypoint, non-raw entries (e.g. task prompts) at root.
-          if (/^===\s*Starting Claude Code\s*===/.test(stripped)) {
-            inEntrypoint.current = false;
-            setEntries((prev) => {
-              const groupTypes = new Set(["entrypoint-header", "entrypoint-ok", "entrypoint-info", "entrypoint-fatal", "raw"]);
-              const epChildren: LogEntry[] = [];
-              const rest: LogEntry[] = [];
-              for (const e of prev) {
-                if (groupTypes.has(e.type)) epChildren.push(e);
-                else rest.push(e);
-              }
-              const group: LogEntry = {
-                id: nextId(),
-                type: "entrypoint-group",
-                text: "Agent Sandbox Setup",
-                children: epChildren,
-              };
-              return [...rest, group, parseEntrypointLine(stripped)];
-            });
-            return;
-          }
-
-          // Inside entrypoint section — parse with structured types
-          if (inEntrypoint.current) {
-            setEntries((prev) => [...prev, parseEntrypointLine(stripped)]);
-            return;
-          }
-
-          // Outside entrypoint — render as raw (dimmed) text
-          setEntries((prev) => [...prev, { id: nextId(), type: "raw", text: stripped }]);
-        }
-        return;
-      }
-      processEvent(ev);
-    } else if (msg.type === "stream-error") {
-      // If the session has cached data in localStorage, fall back to it immediately
-      // rather than showing the error tablet. This handles pinned sessions whose
-      // pods have been cleaned up (TTL expired).
-      const sessionId = activeSessionIdRef.current;
-      if (sessionId && getCachedLog(sessionId)) {
-        replayFromCacheRef.current?.(sessionId);
-        return;
-      }
-      setStreamError(msg.message);
-      setEntries((prev) => [
-        ...prev,
-        { id: nextId(), type: "error", message: msg.message },
-      ]);
-    } else if (msg.type === "stream-end") {
-      setStreamEnded(true);
-      setEntries((prev) => {
-        // Mark any open batch as complete before adding stream-end
-        const updated = prev.map((e) =>
-          e.type === "tool-batch" && !e.complete ? { ...e, complete: true } : e
-        );
-        return [...updated, { id: nextId(), type: "stream-end", reason: msg.reason }];
-      });
-    } else if (msg.type === "verdict") {
-      setEntries((prev) => [
-        ...prev,
-        { id: nextId(), type: "verdict", verdictResult: msg.result },
-      ]);
-    }
+  /** Expose liveSkipRef setter so callers can set the skip count after replaying cache. */
+  const setLiveSkipCount = useCallback((n: number) => {
+    liveSkipRef.current = n;
   }, []);
 
   const processEvent = useCallback((ev: JsonEvent) => {
@@ -403,42 +303,46 @@ export function useLogStream() {
   }, []);
 
   /**
-   * Replay cached JSONL from localStorage for a pinned session.
-   * Processes every stored line through the same pipeline as live log-lines,
-   * but skips re-persisting to localStorage.
-   * Call AFTER clearEntries() and INSTEAD OF (or as fallback to) subscribing to the server.
+   * Process a single raw log line through the parser pipeline.
+   * Used by both the live handleMessage path and the cache replay paths.
+   * Does NOT call appendLogLine — callers handle persistence separately.
    */
-  const replayFromCache = useCallback((sessionId: string) => {
-    const content = getCachedLog(sessionId);
-    if (!content) return;
-    setReplayedFromCache(true);
-    const lines = content.split("\n");
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      const ev = parseJsonlLine(line);
-      if (!ev) {
+  const processRawLogLine = useCallback((line: string) => {
+    const ev = parseJsonlLine(line);
+    if (!ev) {
+      if (line.trim()) {
+        // Strip kubectl timestamp prefix (e.g. "2026-03-15T19:58:07Z ")
         const stripped = stripTimestamp(line.trim());
+
+        // Task prompt buffering (happens after "Starting Claude Code")
         if (/^---\s*TASK PROMPT\s*---$/.test(stripped)) {
           inTaskPrompt.current = true;
           taskPromptBuffer.current = [];
-          continue;
+          return;
         }
         if (/^---\s*END PROMPT\s*---$/.test(stripped)) {
           inTaskPrompt.current = false;
           const fullPrompt = taskPromptBuffer.current.join("\n");
           taskPromptBuffer.current = [];
-          setEntries((prev) => [...prev, { id: nextId(), type: "entrypoint-task", text: fullPrompt }]);
-          continue;
+          setEntries((prev) => [
+            ...prev,
+            { id: nextId(), type: "entrypoint-task", text: fullPrompt },
+          ]);
+          return;
         }
         if (inTaskPrompt.current) {
           taskPromptBuffer.current.push(stripped);
-          continue;
+          return;
         }
+
+        // Entrypoint section start marker
         if (/^===\s*Agent Sandbox Entrypoint\s*===/.test(stripped)) {
           inEntrypoint.current = true;
           setEntries((prev) => [...prev, parseEntrypointLine(stripped)]);
-          continue;
+          return;
         }
+
+        // Entrypoint section end marker — collapse all pre-Claude entries into a group.
         if (/^===\s*Starting Claude Code\s*===/.test(stripped)) {
           inEntrypoint.current = false;
           setEntries((prev) => {
@@ -449,30 +353,119 @@ export function useLogStream() {
               if (groupTypes.has(e.type)) epChildren.push(e);
               else rest.push(e);
             }
-            const group: LogEntry = { id: nextId(), type: "entrypoint-group", text: "Agent Sandbox Setup", children: epChildren };
+            const group: LogEntry = {
+              id: nextId(),
+              type: "entrypoint-group",
+              text: "Agent Sandbox Setup",
+              children: epChildren,
+            };
             return [...rest, group, parseEntrypointLine(stripped)];
           });
-          continue;
+          return;
         }
+
+        // Inside entrypoint section — parse with structured types
         if (inEntrypoint.current) {
           setEntries((prev) => [...prev, parseEntrypointLine(stripped)]);
-          continue;
+          return;
         }
+
+        // Outside entrypoint — render as raw (dimmed) text
         setEntries((prev) => [...prev, { id: nextId(), type: "raw", text: stripped }]);
-      } else {
-        processEvent(ev);
       }
+      return;
+    }
+    processEvent(ev);
+  }, [processEvent]);
+
+  const handleMessage = useCallback((msg: ServerMessage) => {
+    if (msg.type === "log-line") {
+      const line = msg.line;
+      // If we recently replayed from cache, skip lines that were already shown.
+      // The server re-streams from the beginning after subscribe, so the first N
+      // live lines are duplicates of what we displayed from the temp log.
+      if (liveSkipRef.current > 0) {
+        liveSkipRef.current--;
+        return;
+      }
+      // Persist raw line to localStorage for download / future revisits
+      if (activeSessionIdRef.current) {
+        appendLogLine(activeSessionIdRef.current, line);
+      }
+      processRawLogLine(line);
+    } else if (msg.type === "stream-error") {
+      liveSkipRef.current = 0; // stop skipping on error
+      // If the session has cached data in localStorage, fall back to it immediately
+      // rather than showing the error tablet. This handles pinned sessions whose
+      // pods have been cleaned up (TTL expired).
+      const sessionId = activeSessionIdRef.current;
+      if (sessionId && getCachedLog(sessionId)) {
+        replayFromCacheRef.current?.(sessionId);
+        return;
+      }
+      setStreamError(msg.message);
+      setEntries((prev) => [
+        ...prev,
+        { id: nextId(), type: "error", message: msg.message },
+      ]);
+    } else if (msg.type === "stream-end") {
+      liveSkipRef.current = 0; // stop skipping on end
+      setStreamEnded(true);
+      setEntries((prev) => {
+        // Mark any open batch as complete before adding stream-end
+        const updated = prev.map((e) =>
+          e.type === "tool-batch" && !e.complete ? { ...e, complete: true } : e
+        );
+        return [...updated, { id: nextId(), type: "stream-end", reason: msg.reason }];
+      });
+    } else if (msg.type === "verdict") {
+      setEntries((prev) => [
+        ...prev,
+        { id: nextId(), type: "verdict", verdictResult: msg.result },
+      ]);
+    }
+  }, [processRawLogLine]);
+
+  /**
+   * Replay cached JSONL from localStorage for a pinned session (CACHE_PREFIX).
+   * Processes every stored line through the same pipeline as live log-lines,
+   * but skips re-persisting to localStorage.
+   * Call AFTER clearEntries() and INSTEAD OF subscribing to the server.
+   */
+  const replayFromCache = useCallback((sessionId: string) => {
+    const content = getCachedLog(sessionId);
+    if (!content) return;
+    setReplayedFromCache(true);
+    const lines = content.split("\n");
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      processRawLogLine(line);
     }
     // System marker at end of replay
     setEntries((prev) => [
       ...prev,
       { id: nextId(), type: "system", detail: "replayed from Odin\u2019s memory (pinned cache)" },
     ]);
-  }, [processEvent]);
+  }, [processRawLogLine]);
 
   // Keep ref in sync so handleMessage can invoke replayFromCache without
   // a circular useCallback dependency.
   replayFromCacheRef.current = replayFromCache;
+
+  /**
+   * Replay the non-pinned temp log (LOG_PREFIX) for a session.
+   * Returns the number of lines replayed so the caller can set the live skip count.
+   * Call AFTER clearEntries() and BEFORE subscribing to the server for instant display.
+   */
+  const replayFromTempLog = useCallback((sessionId: string): number => {
+    const content = getLog(sessionId);
+    if (!content) return 0;
+    const lines = content.split("\n").filter((l) => l.trim());
+    for (const line of lines) {
+      processRawLogLine(line);
+    }
+    return lines.length;
+  }, [processRawLogLine]);
 
   const isTtlExpired = streamEnded && streamError !== null && TTL_ERROR_PATTERN.test(streamError);
   const isNodeUnreachable = streamEnded && streamError !== null && NODE_UNREACHABLE_PATTERN.test(streamError);
@@ -484,6 +477,8 @@ export function useLogStream() {
     clearEntries,
     handleMessage,
     replayFromCache,
+    replayFromTempLog,
+    setLiveSkipCount,
     streamError,
     streamEnded,
     isTtlExpired,

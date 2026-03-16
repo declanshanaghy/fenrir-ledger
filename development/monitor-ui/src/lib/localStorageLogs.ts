@@ -3,6 +3,9 @@
 // Ephemeral — evicts freely. Pinned sessions skip this buffer entirely.
 
 const LOG_PREFIX = "odin-throne:log:";
+const LOG_TTL_PREFIX = "odin-throne:log-ttl:";
+/** TTL for non-pinned session temp logs — 1 hour */
+export const LOG_CACHE_TTL_MS = 60 * 60 * 1000;
 const MAX_LOG_SESSIONS = 10;
 const MAX_LOG_BYTES = 5 * 1024 * 1024; // 5MB
 
@@ -82,6 +85,8 @@ export function appendLogLine(sessionId: string, line: string): void {
     }
 
     localStorage.setItem(key, next);
+    // Update TTL timestamp so the entry stays fresh while actively streaming
+    localStorage.setItem(LOG_TTL_PREFIX + sessionId, String(Date.now()));
   } catch {
     // localStorage may be full or unavailable — fail silently
   }
@@ -235,6 +240,26 @@ export function isCacheNearCap(): boolean {
     return totalBytes > MAX_CACHE_BYTES * 0.9; // warn at 90%
   } catch {
     return false;
+  }
+}
+
+/**
+ * Evict non-pinned temp log entries older than ttlMs (default 1 hour).
+ * Call once on app mount to clean up stale session data.
+ */
+export function evictExpiredLogs(ttlMs: number = LOG_CACHE_TTL_MS): void {
+  try {
+    const ttlKeys = keysWithPrefix(LOG_TTL_PREFIX);
+    for (const ttlKey of ttlKeys) {
+      const sessionId = ttlKey.slice(LOG_TTL_PREFIX.length);
+      const ts = localStorage.getItem(ttlKey);
+      if (ts && Date.now() - Number(ts) > ttlMs) {
+        localStorage.removeItem(LOG_PREFIX + sessionId);
+        localStorage.removeItem(ttlKey);
+      }
+    }
+  } catch {
+    // fail silently
   }
 }
 
