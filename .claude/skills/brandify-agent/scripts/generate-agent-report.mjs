@@ -242,36 +242,157 @@ body {
   background: var(--forge);
   border: 1px solid var(--rune-border);
   border-radius: 4px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1.5rem;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
 }
-.entrypoint h2 {
+.entrypoint summary {
   font-family: 'Cinzel', serif;
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--gold);
-  margin-bottom: 0.75rem;
+  color: var(--text-void);
+  cursor: pointer;
 }
 .entrypoint pre {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  color: var(--teal-asgard);
+  font-size: 0.7rem;
+  color: var(--text-void);
   white-space: pre-wrap;
   word-break: break-all;
-  line-height: 1.5;
+  line-height: 1.4;
+  margin-top: 0.5rem;
 }
 .entrypoint .ok { color: var(--teal-asgard); }
 .entrypoint .warn { color: var(--amber-hati); }
 .entrypoint .fatal { color: var(--red-ragnarok); }
 
+/* All-Father's Decree */
+.decree {
+  background: linear-gradient(135deg, rgba(201, 146, 10, 0.08) 0%, rgba(7, 7, 13, 0.95) 50%, rgba(201, 146, 10, 0.05) 100%);
+  border: 2px solid var(--gold);
+  border-radius: 6px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.decree::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.decree::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.decree-header {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+.decree-runes {
+  font-size: 1.1rem;
+  color: var(--gold);
+  letter-spacing: 0.5rem;
+  opacity: 0.6;
+}
+.decree-title {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin: 0.3rem 0;
+}
+.decree-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  color: var(--text-void);
+  font-style: italic;
+}
+.decree-seal {
+  text-align: center;
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(201, 146, 10, 0.3);
+}
+.decree-seal-glyph {
+  font-size: 1.5rem;
+  color: var(--gold);
+  opacity: 0.7;
+}
+.decree-seal-text {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  color: var(--text-void);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-top: 0.25rem;
+}
+.decree-section {
+  margin: 1rem 0;
+}
+.decree-section-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.decree-section-title .glyph {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+.decree-body {
+  font-family: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+  font-size: 0.85rem;
+  color: var(--text-saga);
+  line-height: 1.7;
+}
+.decree-body code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  background: rgba(201, 146, 10, 0.1);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  color: var(--amber-hati);
+}
+.decree-law {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-rune);
+  padding: 0.5rem 0.75rem;
+  background: rgba(201, 146, 10, 0.05);
+  border-left: 2px solid var(--gold);
+  margin: 0.4rem 0;
+  line-height: 1.5;
+}
+.decree-oath {
+  color: var(--red-ragnarok);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
 /* Turn (one assistant message cycle) */
 .turn {
   margin-bottom: 1.25rem;
+}
+.turn-box {
   border: 1px solid var(--rune-border);
   border-radius: 4px;
   overflow: hidden;
+  max-width: 60%;
 }
-.turn.has-error { border-color: var(--fire-muspel); }
+.turn.has-error .turn-box { border-color: var(--fire-muspel); }
 
 .turn-header {
   display: flex;
@@ -284,20 +405,20 @@ body {
   user-select: none;
 }
 .turn-header:hover { background: var(--chain); }
-.turn-header .turn-agent-profile {
+.turn > .turn-agent-profile {
   display: flex;
   align-items: center;
-  flex-shrink: 0;
   gap: 0.5rem;
+  padding: 0.4rem 0.8rem 0;
 }
-.turn-header .turn-agent-avatar {
-  width: 28px;
-  height: 28px;
+.turn-agent-avatar {
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid var(--teal-asgard);
 }
-.turn-header .turn-agent-title {
+.turn-agent-title {
   color: var(--teal-asgard);
   font-family: 'Cinzel', serif;
   font-weight: 700;
@@ -344,14 +465,14 @@ body {
   font-size: 0.75rem;
   transition: transform 0.15s;
 }
-.turn.open .turn-header .chevron { transform: rotate(90deg); }
+.turn-box.open .turn-header .chevron { transform: rotate(90deg); }
 
 .turn-body {
   display: none;
   padding: 0;
   background: var(--void);
 }
-.turn.open .turn-body { display: block; }
+.turn-box.open .turn-body { display: block; }
 
 /* Thinking block */
 .thinking {
@@ -373,13 +494,28 @@ body {
 /* Text output */
 .text-block {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--rune-border);
   white-space: pre-wrap;
   word-break: break-word;
   font-size: 0.85rem;
+  max-width: 60%;
+  background: rgba(10, 140, 110, 0.1);
+  border: 1px solid rgba(10, 140, 110, 0.3);
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
+  margin: 0.5rem 0;
+  color: var(--text-saga);
 }
 
 /* Tool use block */
+.toolbox {
+  border: 1px solid var(--rune-border);
+  border-radius: 6px;
+  margin-top: 0.3rem;
+  overflow: hidden;
+  max-width: 60%;
+}
+.toolbox .tool-block:last-child {
+  border-bottom: none;
+}
 .tool-block {
   border-bottom: 1px solid var(--rune-border);
 }
@@ -451,6 +587,71 @@ body {
 .verdict.pass h2 { color: var(--teal-asgard); }
 .verdict.fail { border-color: var(--red-ragnarok); }
 .verdict.fail h2 { color: var(--red-ragnarok); }
+
+/* Agent Callback — declaration to Odin */
+.agent-callback {
+  margin-top: 2rem;
+  background: linear-gradient(135deg, rgba(201, 146, 10, 0.06) 0%, rgba(7, 7, 13, 0.98) 40%, rgba(139, 0, 0, 0.08) 100%);
+  border: 2px solid var(--gold);
+  border-radius: 6px;
+  padding: 1.5rem 2rem;
+  position: relative;
+  text-align: center;
+}
+.agent-callback::before, .agent-callback::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), rgba(139, 0, 0, 0.6), var(--gold), transparent);
+}
+.agent-callback::before { top: 0; }
+.agent-callback::after { bottom: 0; }
+.callback-runes {
+  font-size: 0.9rem;
+  color: var(--gold);
+  letter-spacing: 0.6rem;
+  opacity: 0.5;
+  margin-bottom: 0.5rem;
+}
+.callback-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  margin: 0.5rem auto;
+  display: block;
+}
+.callback-declaration {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  color: var(--gold);
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+.callback-quote {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 0.85rem;
+  color: var(--text-saga);
+  font-style: italic;
+  margin: 0.75rem auto;
+  max-width: 70%;
+  line-height: 1.6;
+}
+.callback-blood-seal {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  color: var(--red-ragnarok);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 0.75rem;
+  opacity: 0.8;
+}
+.callback-wolf {
+  font-size: 1.2rem;
+  margin-top: 0.5rem;
+  opacity: 0.6;
+}
 .verdict pre {
   font-family: 'Source Serif 4', serif;
   font-size: 0.9rem;
@@ -482,7 +683,7 @@ body {
   margin: 0.75rem 0;
   font-size: 0.9rem;
   line-height: 1.5;
-  max-width: 75%;
+  max-width: 60%;
 }
 .heckle-identity {
   display: flex;
@@ -535,25 +736,78 @@ body {
   color: var(--text-saga);
 }
 .heckle-comeback strong { color: var(--teal-asgard); font-weight: 700; }
+@keyframes norse-tremble {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-2px, -1px) rotate(-0.5deg); }
+  20% { transform: translate(3px, 1px) rotate(0.5deg); }
+  30% { transform: translate(-1px, 2px) rotate(-0.3deg); }
+  40% { transform: translate(2px, -2px) rotate(0.4deg); }
+  50% { transform: translate(-3px, 0px) rotate(-0.5deg); }
+  60% { transform: translate(1px, 1px) rotate(0.3deg); }
+  70% { transform: translate(-2px, -1px) rotate(-0.4deg); }
+  80% { transform: translate(3px, 2px) rotate(0.5deg); }
+  90% { transform: translate(-1px, -2px) rotate(-0.3deg); }
+}
+@keyframes explosion-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.3), 0 0 20px rgba(201, 146, 10, 0.1); }
+  50% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.5), 0 0 40px rgba(201, 146, 10, 0.3), 0 0 60px rgba(239, 68, 68, 0.15); }
+}
 .heckle-entrance {
+  max-width: 100%;
+  margin-left: auto;
   background: var(--forge);
-  border: 2px dashed var(--teal-asgard);
+  border: 1px dashed var(--rune-border);
   border-radius: 0.5rem;
-  padding: 1rem;
-  color: var(--teal-asgard);
-  font-weight: 600;
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+}
+.heckle-entrance .heckle-identity {
+  flex-direction: row-reverse;
+}
+.heckle-entrance .heckle-name { color: var(--amber-hati); }
+.heckle-entrance .heckle-text {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px dashed rgba(245, 158, 11, 0.3);
+  border-radius: 0.5rem;
+  color: var(--text-rune);
+  font-style: italic;
   text-align: center;
-  display: block;
 }
 .heckle-explosion {
-  background: rgba(240, 180, 41, 0.15);
-  border: 2px solid var(--gold);
-  border-radius: 0.5rem;
-  padding: 1rem;
-  color: var(--gold-bright);
-  font-weight: 700;
+  max-width: 100%;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(201, 70, 10, 0.12), var(--void), rgba(201, 70, 10, 0.12), rgba(239, 68, 68, 0.15));
+  border: 2px solid var(--red-ragnarok);
+  border-radius: 0;
+  padding: 1.25rem 2rem;
+  color: var(--red-ragnarok);
+  font-weight: 900;
   text-align: center;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(239, 68, 68, 0.6), 0 0 30px rgba(201, 70, 10, 0.3);
+  animation: norse-tremble 0.8s ease-in-out;
+  position: relative;
+  box-shadow: inset 0 0 40px rgba(239, 68, 68, 0.08), 0 0 20px rgba(239, 68, 68, 0.1);
+}
+.heckle-explosion::before {
+  content: 'ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ ᛏ ᚦ ᛊ ᚨ ᛗ ᚱ';
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.4rem;
+  color: var(--fire-muspel);
+  opacity: 0.4;
+  margin-bottom: 0.5rem;
+}
+.heckle-explosion::after {
+  content: '᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭ ᛭';
+  display: block;
+  font-size: 0.5rem;
+  letter-spacing: 0.3rem;
+  color: var(--red-ragnarok);
+  opacity: 0.3;
+  margin-top: 0.5rem;
   display: block;
 }
 `;
@@ -622,7 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Turn collapse/expand
   document.querySelectorAll('.turn-header').forEach(h => {
-    h.addEventListener('click', () => h.closest('.turn').classList.toggle('open'));
+    h.addEventListener('click', () => h.closest('.turn-box').classList.toggle('open'));
   });
   document.querySelectorAll('.tool-block-header').forEach(h => {
     h.addEventListener('click', e => {
@@ -631,10 +885,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   document.getElementById('expand-all')?.addEventListener('click', () => {
-    document.querySelectorAll('.turn').forEach(t => t.classList.add('open'));
+    document.querySelectorAll('.turn-box').forEach(t => t.classList.add('open'));
   });
   document.getElementById('collapse-all')?.addEventListener('click', () => {
-    document.querySelectorAll('.turn, .tool-block').forEach(t => t.classList.remove('open'));
+    document.querySelectorAll('.turn-box, .tool-block').forEach(t => t.classList.remove('open'));
   });
 
   // Make all heckler avatars clickable
@@ -1411,7 +1665,14 @@ function renderToolOutput(tool) {
 }
 
 function renderEntrypoint() {
-  const colored = entrypointLines
+  // Split into sandbox setup (before --- TASK PROMPT ---) and decree (after)
+  const promptIdx = entrypointLines.findIndex(l => /TASK PROMPT/.test(l));
+  const setupLines = promptIdx >= 0 ? entrypointLines.slice(0, promptIdx) : entrypointLines;
+  const promptLines = promptIdx >= 0 ? entrypointLines.slice(promptIdx + 1) : [];
+
+  // Compact sandbox setup as collapsible
+  const setupColored = setupLines
+    .filter(l => l.trim()) // skip blanks
     .map(l => {
       if (/\[ok\]/.test(l)) return `<span class="ok">${esc(l)}</span>`;
       if (/\[WARN\]/.test(l)) return `<span class="warn">${esc(l)}</span>`;
@@ -1419,7 +1680,112 @@ function renderEntrypoint() {
       return esc(l);
     })
     .join("\n");
-  return `<div class="entrypoint"><h2>ᛊ Entrypoint</h2><pre>${colored}</pre></div>`;
+
+  const setupHtml = `<div class="entrypoint"><details><summary>ᛊ Sandbox Forging</summary><pre>${setupColored}</pre></details></div>`;
+
+  if (promptLines.length === 0) return setupHtml;
+
+  // Parse the decree (task prompt) into structured sections
+  const rawPrompt = promptLines.join("\n");
+
+  // Norse agent titles for the decree
+  const agentDecreeNames = {
+    FiremanDecko: "FiremanDecko, Forgemaster of Midgard",
+    Loki: "Loki, Trickster-Tester of the Realms",
+    Luna: "Luna, Weaver of the World-Tree's Branches",
+    Freya: "Freya, Keeper of the Golden Brisingamen",
+    Heimdall: "Heimdall, Watcher at the Rainbow Bridge",
+  };
+  const decreeName = agentDecreeNames[agentName] || agentName;
+
+  // Extract issue title from first line
+  const firstLine = promptLines[0] || "";
+  const issueTitle = firstLine.replace(/^You are \w+.*?(?:Fix|Design|Validate|Audit)\s+GitHub Issue #\d+:\s*/i, "").trim() || firstLine;
+
+  // Transform prompt sections into decree format
+  function formatDecree(text) {
+    let html = "";
+    const sections = text.split(/(?=\*\*Step \d|SANDBOX RULES|TODO TRACKING|INCREMENTAL COMMIT|VERIFY —|STRICT SCOPE|##)/);
+
+    for (const section of sections) {
+      const trimmed = section.trim();
+      if (!trimmed) continue;
+
+      // Skip the "You are..." intro line (already in header)
+      if (/^You are \w+/.test(trimmed)) continue;
+
+      // UNBREAKABLE oaths
+      if (/UNBREAKABLE/.test(trimmed)) {
+        const title = trimmed.match(/^([A-Z][A-Z\s—–-]+?)[\s:(\n]/)?.[1]?.trim() || "SACRED OATH";
+        const body = trimmed.replace(/^[A-Z][A-Z\s—–-]+[\s:(]*\(?UNBREAKABLE\)?:?\s*/i, "").trim();
+        html += `<div class="decree-section">
+          <div class="decree-section-title"><span class="glyph">⚔</span> ${esc(title)} <span class="decree-oath">— UNBREAKABLE OATH</span></div>
+          <div class="decree-law">${esc(body).replace(/\n/g, "<br>")}</div>
+        </div>`;
+        continue;
+      }
+
+      // Steps
+      const stepMatch = trimmed.match(/^\*\*Step (\d+\w?)[\s—–-]+(.+?)\*\*/);
+      if (stepMatch) {
+        const stepGlyphs = ["ᚠ","ᚢ","ᚦ","ᚨ","ᚱ","ᚲ","ᚷ","ᚹ","ᚺ"];
+        const stepNum = parseInt(stepMatch[1]) - 1;
+        const glyph = stepGlyphs[stepNum % stepGlyphs.length] || "ᚱ";
+        const stepTitle = stepMatch[2].trim();
+        const stepBody = trimmed.replace(/^\*\*Step \d+\w?[\s—–-]+.+?\*\*\s*/s, "").trim();
+        html += `<div class="decree-section">
+          <div class="decree-section-title"><span class="glyph">${glyph}</span> Step ${stepMatch[1]} — ${esc(stepTitle)}</div>
+          <div class="decree-body">${esc(stepBody).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, "<br>")}</div>
+        </div>`;
+        continue;
+      }
+
+      // Issue details section
+      if (/^## Description|^##\s+/.test(trimmed)) {
+        const body = trimmed.replace(/^##\s+\w+\s*\n?/, "").trim();
+        html += `<div class="decree-section">
+          <div class="decree-section-title"><span class="glyph">ᛟ</span> The Matter at Hand</div>
+          <div class="decree-body">${esc(body).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, "<br>")}</div>
+        </div>`;
+        continue;
+      }
+
+      // Sandbox rules (compact)
+      if (/^SANDBOX RULES/.test(trimmed)) {
+        const body = trimmed.replace(/^SANDBOX RULES.*?\n/, "").trim();
+        html += `<div class="decree-section">
+          <div class="decree-section-title"><span class="glyph">ᛉ</span> Laws of the Sandbox Realm</div>
+          <div class="decree-law">${esc(body).replace(/\n/g, "<br>")}</div>
+        </div>`;
+        continue;
+      }
+
+      // Generic remaining content
+      if (trimmed.length > 20) {
+        html += `<div class="decree-section">
+          <div class="decree-body">${esc(trimmed).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, "<br>")}</div>
+        </div>`;
+      }
+    }
+    return html;
+  }
+
+  const decreeBody = formatDecree(rawPrompt);
+
+  const decreeHtml = `<div class="decree">
+    <div class="decree-header">
+      <div class="decree-runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ</div>
+      <div class="decree-title">The All-Father's Decree</div>
+      <div class="decree-subtitle">Spoken from Hlidskjalf unto ${esc(decreeName)}</div>
+    </div>
+    ${decreeBody}
+    <div class="decree-seal">
+      <div class="decree-seal-glyph">ᚲ</div>
+      <div class="decree-seal-text">So it is written · So it shall be forged · Issue #${issueNum}</div>
+    </div>
+  </div>`;
+
+  return setupHtml + decreeHtml;
 }
 
 function fmtNum(n) {
@@ -1689,7 +2055,7 @@ let html = `<!DOCTYPE html>
 
 <div class="report-header">
   <div class="odin-header">
-    <img class="odin-avatar" src="agents/profiles/odin-dark.png" alt="Odin — The All-Father">
+    <img class="odin-avatar" src="agents/profiles/${agentSlug}-dark.png" alt="${esc(agentName)}" onerror="this.style.display='none'">
     <div class="odin-title">
       <h1>ᚲ ${agentName} — Issue #${issueNum} (Step ${stepNum})</h1>
       <div class="odin-quote" id="odin-quote"></div>
@@ -1785,16 +2151,76 @@ ${renderEntrypoint()}
 
 `;
 
-// Render turns
-turns.forEach((turn, i) => {
+// Render turns — merge consecutive tool-only turns into one toolbox
+function isToolOnly(turn) {
+  return turn.texts.length === 0 && turn.thinking.length === 0 && turn.tools.length > 0;
+}
+
+function renderToolBlock(tool) {
+  return `      <div class="tool-block">
+        <div class="tool-block-header">
+          <span class="chevron">&#9654;</span>
+          <span class="tool-name">${esc(tool.name)}</span>
+          <span class="tool-input-preview">${toolInputPreview(tool)}</span>
+        </div>
+        <div class="tool-block-body">
+          <div class="tool-input">${renderToolInput(tool)}</div>
+          <div class="tool-output${tool.is_error ? " error" : ""}">${renderToolOutput(tool)}</div>
+        </div>
+      </div>\n`;
+}
+
+let ti = 0;
+while (ti < turns.length) {
+  const turn = turns[ti];
+
+  // Collect consecutive tool-only turns into one merged toolbox
+  if (isToolOnly(turn)) {
+    const mergedTools = [];
+    const turnNums = [];
+    let hasError = false;
+    while (ti < turns.length && isToolOnly(turns[ti])) {
+      mergedTools.push(...turns[ti].tools);
+      turnNums.push(ti + 1);
+      if (turns[ti].tools.some(t => t.is_error)) hasError = true;
+      ti++;
+    }
+    const numLabel = turnNums.length === 1 ? `#${turnNums[0]}` : `#${turnNums[0]}–${turnNums[turnNums.length - 1]}`;
+    html += `<div class="turn${hasError ? " has-error" : ""}">
+  <div class="turn-agent-profile">
+    <img class="turn-agent-avatar" src="agents/profiles/${agentSlug}-dark.png" onerror="this.style.display='none'" alt="${esc(agentName)}">
+    <span class="turn-agent-title">${esc(agentTitle)}</span>
+  </div>
+  <div class="turn-box">
+  <div class="turn-header">
+    <span class="turn-num">${numLabel}</span>
+    <span class="turn-summary">${mergedTools.length} tool calls</span>
+    <span class="turn-tools">
+      ${mergedTools.map(t => `<span class="tool-badge ${toolBadgeClass(t.name)}">${esc(t.name)}</span>`).join("")}
+    </span>
+    <span class="chevron">&#9654;</span>
+  </div>
+  <div class="turn-body">
+    <div class="toolbox">
+${mergedTools.map(t => renderToolBlock(t)).join("")}    </div>
+  </div>
+  </div>
+</div>\n\n`;
+    // Render heckles for merged tool-only group
+    hecklerEngine.maybeHeckle(); // consume without rendering for tool-only merges
+    continue;
+  }
+
+  // Normal turn with text content
   const hasError = turn.tools.some(t => t.is_error);
   html += `<div class="turn${hasError ? " has-error" : ""}">
+  <div class="turn-agent-profile">
+    <img class="turn-agent-avatar" src="agents/profiles/${agentSlug}-dark.png" onerror="this.style.display='none'" alt="${esc(agentName)}">
+    <span class="turn-agent-title">${esc(agentTitle)}</span>
+  </div>
+  <div class="turn-box">
   <div class="turn-header">
-    <div class="turn-agent-profile">
-      <img class="turn-agent-avatar" src="agents/profiles/${agentSlug}-dark.png" onerror="this.style.display='none'" alt="${esc(agentName)}">
-      <span class="turn-agent-title">${esc(agentTitle)}</span>
-    </div>
-    <span class="turn-num">#${i + 1}</span>
+    <span class="turn-num">#${ti + 1}</span>
     <span class="turn-summary">${turnSummary(turn)}</span>
     <span class="turn-tools">
       ${turn.tools.map(t => `<span class="tool-badge ${toolBadgeClass(t.name)}">${esc(t.name)}</span>`).join("")}
@@ -1810,22 +2236,17 @@ turns.forEach((turn, i) => {
   for (const text of turn.texts) {
     html += `    <div class="text-block">${esc(text)}</div>\n`;
   }
-  for (const tool of turn.tools) {
-    html += `    <div class="tool-block">
-      <div class="tool-block-header">
-        <span class="chevron">&#9654;</span>
-        <span class="tool-name">${esc(tool.name)}</span>
-        <span class="tool-input-preview">${toolInputPreview(tool)}</span>
-      </div>
-      <div class="tool-block-body">
-        <div class="tool-input">${renderToolInput(tool)}</div>
-        <div class="tool-output${tool.is_error ? " error" : ""}">${renderToolOutput(tool)}</div>
-      </div>
-    </div>\n`;
+  if (turn.tools.length > 0) {
+    html += `    <div class="toolbox">\n`;
+    for (const tool of turn.tools) {
+      html += renderToolBlock(tool);
+    }
+    html += `    </div>\n`;
   }
 
-  // Close the turn body and turn div FIRST
-  html += `  </div>\n</div>\n\n`;
+  // Close the turn body, turn-box, and turn div
+  html += `  </div>\n  </div>\n</div>\n\n`;
+  ti++;
 
   // Render heckles OUTSIDE the turn (visible without expanding)
   const heckleEvents = hecklerEngine.maybeHeckle();
@@ -1848,17 +2269,24 @@ turns.forEach((turn, i) => {
           + '<div class="heckle-identity">' + aImg + '<span class="heckle-name">' + esc(aTitle) + '</span></div>'
           + '<div class="heckle-text">' + esc(event.text) + '</div></div>\n';
       } else if (event.type === "mayo-entrance") {
-        html += '<div class="heckle heckle-entrance">' + esc(event.text) + '</div>\n';
+        const eName = event.name || "Mayo Fan";
+        const eIdx = Math.abs([...eName].reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0));
+        const eAvatars = ['heckler-avatar.png','heckler-granny.png','heckler-da.png','heckler-uncle.png','heckler-mammy.png','heckler-teen.png','heckler-lad.png','heckler-lass.png'];
+        const eAvatar = eAvatars[eIdx % eAvatars.length];
+        html += '<div class="heckle heckle-entrance">'
+          + '<div class="heckle-identity"><span class="heckle-name">' + esc(eName) + '</span>'
+          + '<img class="heckle-avatar" src="assets/' + eAvatar + '" onerror="this.style.display=\'none\'"></div>'
+          + '<div class="heckle-text">' + esc(event.text) + '</div></div>\n';
       } else if (event.type === "mayo-explosion") {
-        html += '<div class="heckle heckle-explosion">' + esc(event.text) + '</div>\n';
+        html += '<div class="heckle heckle-explosion">⚡ ' + esc(event.text) + ' ⚡</div>\n';
       }
     }
   }
-});
+}
 
 // Victory heckle before verdict
 const victoryHeckle = hecklerEngine.victoryHeckle();
-html += `<div class="heckle heckle-explosion">${esc(victoryHeckle.text)}</div>\n`;
+html += `<div class="heckle heckle-explosion">⚡ ${esc(victoryHeckle.text)} ⚡</div>\n`;
 
 // Verdict
 if (verdict) {
@@ -1867,6 +2295,52 @@ if (verdict) {
   <pre>${esc(verdict.text)}</pre>
 </div>\n`;
 }
+
+// Agent callback — declaration to Odin
+const AGENT_CALLBACKS = {
+  FiremanDecko: {
+    quote: "The forge cools, the steel holds. What was broken has been reforged stronger than before.",
+    signoff: "Forged in fire, tempered by craft",
+    runes: "ᚠ ᛁ ᚱ ᛖ ᛗ ᚨ ᚾ",
+  },
+  Loki: {
+    quote: "Every seam tested, every thread pulled. The trickster finds no fault — and that itself is suspicious.",
+    signoff: "Tested by chaos, proven by order",
+    runes: "ᛚ ᛟ ᚲ ᛁ",
+  },
+  Luna: {
+    quote: "The branches of Yggdrasil have been shaped. What the eye sees, the hand shall build.",
+    signoff: "Woven from moonlight, anchored in structure",
+    runes: "ᛚ ᚢ ᚾ ᚨ",
+  },
+  Freya: {
+    quote: "The vision is set, the path illuminated. Brisingamen's light guides the way forward.",
+    signoff: "Guarded by wisdom, driven by purpose",
+    runes: "ᚠ ᚱ ᛖ ᛃ ᚨ",
+  },
+  Heimdall: {
+    quote: "The bridge holds. No shadow passes unseen, no weakness unguarded.",
+    signoff: "Watched from the rainbow bridge",
+    runes: "ᚺ ᛖ ᛁ ᛗ ᛞ ᚨ ᛚ ᛚ",
+  },
+};
+
+const callback = AGENT_CALLBACKS[agentName] || {
+  quote: "The task is done. The wolf's chain holds another day.",
+  signoff: "Sealed by the pack",
+  runes: "ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ",
+};
+
+html += `
+<div class="agent-callback">
+  <div class="callback-runes">${callback.runes}</div>
+  <img class="callback-avatar" src="agents/profiles/${agentSlug}-dark.png" onerror="this.style.display='none'" alt="${esc(agentName)}">
+  <div class="callback-declaration">Odin All-Father — Your Will Is Done</div>
+  <div class="callback-quote">"${esc(callback.quote)}"</div>
+  <div class="callback-blood-seal">ᛊ ${esc(callback.signoff)} · ${esc(agentTitle)} · Issue #${issueNum} ᛊ</div>
+  <div class="callback-wolf">🐺</div>
+</div>
+`;
 
 html += `
 <div class="report-footer">
@@ -1897,7 +2371,7 @@ if (exists2(agentProfilesDir)) {
 }
 
 // Copy heckler avatars
-const hecklerAssetsDir = join(repoRoot, "development", "agent-monitor", "assets");
+const hecklerAssetsDir = join(repoRoot, ".claude", "agents", "profiles", "hecklers");
 const targetAssetsDir = join(outDir, "assets");
 if (exists2(hecklerAssetsDir)) {
   mkdir2(targetAssetsDir, { recursive: true });
