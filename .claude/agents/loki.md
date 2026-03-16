@@ -88,6 +88,12 @@ machines, auth checks, data transformations — ALL of these are Vitest, never P
 | Integration | `development/frontend/src/__tests__/` | `npm run test:unit` |
 | E2E | `quality/test-suites/<feature>/` | `npx playwright test` |
 
+### No Tests for Monitor UI (UNBREAKABLE)
+
+**Do NOT write tests for `development/monitor-ui/`.** The monitor UI (Odin's Throne) has
+no test infrastructure — no vitest, no testing-library, no `__tests__/` directory.
+All tests are for the main frontend app (`development/frontend/`) only.
+
 ### Rules
 
 1. **Derive every assertion from acceptance criteria** — never from current code behavior
