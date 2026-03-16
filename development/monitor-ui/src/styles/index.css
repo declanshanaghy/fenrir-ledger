@@ -559,7 +559,8 @@ body {
 .norse-tablet-rune {
   color: var(--gold); font-size: 0.9rem;
 }
-.norse-tablet-header-body {
+.norse-tablet-header-body,
+.norse-tablet-title-block {
   flex: 1;
   min-width: 0;
 }
