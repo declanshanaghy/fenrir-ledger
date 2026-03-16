@@ -11,6 +11,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Cards — Trash Tab: Deleted Card View (Issue #1127)
+
+| File | Description |
+|------|-------------|
+| [wireframes/cards/trash-tab.html](wireframes/cards/trash-tab.html) | Trash tab for dashboard navigation: 9 sections — (A) tab bar anatomy with all 3 tabs (The Howl · Active · Trash), Thrall/trial/Karl variants, rune ᛞ (dagaz) tab icon with lock glyph ᛜ for Thrall, (B) trash card list (Karl/trial) with deletion date, Restore ᚢ + Expunge ᛟ actions, Karl bling gold border treatment at reduced opacity (liminal/dead card), (C) empty state "The Void is Empty" (Ginnungagap reference), (D) expunge single card confirmation dialog (focus on Cancel, irreversibility note), (E) empty trash bulk confirmation dialog "Empty the Void?", (F) Thrall upsell — KarlUpsellDialog props spec + upsell anatomy, (G) Karl bling tier comparison table (Thrall/trial/Karl × tab icon/border/rune corners/badge), (H) mobile 375px layout — tab bar scroll, stacked header, side-by-side Restore/Expunge, (I) acceptance criteria mapping + FiremanDecko implementation notes (DashboardTabs.tsx, TrashView.tsx new component, storage.ts additions, karl-bling.css rules). Interaction spec: [trash-tab-interaction-spec.md](wireframes/cards/trash-tab-interaction-spec.md). |
+| [wireframes/cards/trash-tab-interaction-spec.md](wireframes/cards/trash-tab-interaction-spec.md) | Interaction spec: tab selection state machine (Thrall intercept, arrow key extension to 3 tabs), restore flow (no confirmation, localStorage → cloud sync if Karl), expunge single flow (confirmation dialog, focus Cancel, irreversible localStorage removal), empty trash flow (bulk expunge, count in CTA), Thrall upsell flow (KarlUpsellDialog props), data model (getDeletedCards/restoreCard/expungeCard/expungeAllCards storage functions, localStorage-only invariant), animation spec (AnimatePresence exit for removed cards, empty state entrance, prefers-reduced-motion guards), WCAG 2.1 AA checklist (tab ARIA, trash card article labels, dialog focus trap, rune aria-hidden), responsive breakpoints table, component change summary. |
+
+---
+
 ## Cards — Karl Card Bling (Issue #1088)
 
 | File | Description |
