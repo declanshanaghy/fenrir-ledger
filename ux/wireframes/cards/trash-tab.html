@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Trash Tab — Issue #1127</title>
+  <style>
+    /* ── Wireframe layout rules ONLY — no theme styling ──────────────────── */
+    /* No colors, no backgrounds, no border-radius, no box-shadow, no fonts   */
+    /* beyond sans-serif. Permitted: flex/grid, border, width/height,          */
+    /* padding/margin, font-size/weight.                                        */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; line-height: 1.5; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 48px; }
+
+    /* ── Section headers ─────────────────────────────────────────────────── */
+    .section { display: flex; flex-direction: column; gap: 16px; }
+    .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid; padding-bottom: 4px; }
+    .section-desc { font-size: 12px; font-style: italic; }
+
+    /* ── Note annotation style ────────────────────────────────────────────── */
+    .note { font-size: 11px; font-style: italic; border-left: 2px solid; padding: 4px 8px; margin-top: 6px; }
+    .note strong { font-style: normal; }
+
+    /* ── Tab bar ─────────────────────────────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid;
+      overflow-x: auto;
+      /* Wireframe note: WebkitOverflowScrolling: touch on mobile */
+    }
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      background: none;
+      min-height: 44px; /* touch target */
+    }
+    .tab-btn.active { border-bottom: 3px solid; }
+    .tab-icon { font-size: 15px; line-height: 1; }
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      font-family: monospace;
+      border: 1px solid;
+      padding: 1px 6px;
+      min-width: 20px;
+    }
+    .tab-badge.empty { opacity: 0.4; }
+    .tab-badge.trash-count { border: 2px solid; /* Karl-bling: gold border when count > 0 */ }
+
+    /* ── Trash tab Karl bling annotation ─────────────────────────────────── */
+    /* [data-tier="karl"] .tab-btn.trash-tab, [data-tier="trial"] .tab-btn.trash-tab:
+         - tab-icon gets karl-gold-glow pulse animation (same as howl tab when active)
+         - tab-badge gets border-color: var(--karl-gold) when trashCount > 0
+         - active state: border-bottom-color: var(--karl-gold)
+       [data-tier="thrall"] .tab-btn.trash-tab:
+         - opacity slightly reduced (0.7) to hint locked state
+         - cursor: pointer — click triggers upsell, not the view
+    */
+
+    /* ── Trash view: header bar ───────────────────────────────────────────── */
+    .trash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid;
+    }
+    .trash-header-left { display: flex; flex-direction: column; gap: 2px; }
+    .trash-title { font-size: 15px; font-weight: bold; }
+    .trash-subtitle { font-size: 12px; }
+    .empty-trash-btn {
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 1px solid;
+      padding: 6px 14px;
+      cursor: pointer;
+      background: none;
+      min-height: 36px;
+    }
+
+    /* ── Trash card row ───────────────────────────────────────────────────── */
+    .trash-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 16px;
+    }
+    .trash-card {
+      border: 1px solid;
+      padding: 14px 16px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      position: relative; /* for rune corners */
+    }
+    /* Karl bling on trash cards:
+       [data-tier="karl"] .trash-card — gold border at 0.30 opacity (muted — card is dead)
+       [data-tier="trial"] .trash-card — gold border at 0.20 opacity
+       Rune corners still present (same as active cards) but at reduced opacity (0.4)
+       to convey the card is in a "liminal" state.
+    */
+    .trash-card-body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .trash-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .trash-card-name-row { display: flex; align-items: center; gap: 8px; }
+    .issuer-badge {
+      width: 28px; height: 28px; border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: bold; flex-shrink: 0;
+    }
+    .trash-card-name { font-size: 14px; font-weight: bold; }
+    .trash-card-meta { font-size: 12px; }
+    .trash-card-deleted { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+    /* "Deleted: [date]" — deletion date shown prominently */
+
+    .trash-card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      align-items: flex-end;
+    }
+    .btn-restore {
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 1px solid;
+      padding: 6px 12px;
+      cursor: pointer;
+      background: none;
+      min-height: 36px;
+      white-space: nowrap;
+    }
+    .btn-expunge {
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 1px dashed;
+      padding: 6px 12px;
+      cursor: pointer;
+      background: none;
+      min-height: 36px;
+      white-space: nowrap;
+    }
+    /* Dashed border on Expunge: conveys destructive / irreversible action */
+
+    /* ── Rune corners on trash cards ──────────────────────────────────────── */
+    .rune-corner {
+      position: absolute;
+      font-size: 10px;
+      font-weight: bold;
+      line-height: 1;
+      /* In theme: var(--karl-gold) at ~0.30 opacity for Karl/trial (reduced from 0.55 active)
+         aria-hidden="true" on all rune spans */
+    }
+    .rune-tl { top: 5px; left: 6px; }
+    .rune-tr { top: 5px; right: 6px; }
+    .rune-bl { bottom: 5px; left: 6px; }
+    .rune-br { bottom: 5px; right: 6px; }
+
+    /* ── Empty state ──────────────────────────────────────────────────────── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 48px 24px;
+      border: 1px dashed;
+      text-align: center;
+    }
+    .empty-rune { font-size: 40px; line-height: 1; }
+    .empty-heading { font-size: 16px; font-weight: bold; }
+    .empty-sub { font-size: 13px; }
+
+    /* ── Confirmation dialog ──────────────────────────────────────────────── */
+    .dialog-backdrop {
+      position: relative;
+      border: 2px solid;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 440px;
+    }
+    /* Note: in implementation use <Dialog> from shadcn/ui — same as KarlUpsellDialog.
+       Backdrop click / ESC / "Cancel" all dismiss without action. */
+    .dialog-title { font-size: 16px; font-weight: bold; }
+    .dialog-body { font-size: 13px; }
+    .dialog-actions { display: flex; gap: 12px; justify-content: flex-end; }
+    .btn-cancel {
+      font-size: 13px; border: 1px solid; padding: 8px 16px; cursor: pointer; background: none;
+    }
+    .btn-confirm-expunge {
+      font-size: 13px; font-weight: bold; border: 2px solid; padding: 8px 16px; cursor: pointer; background: none;
+    }
+    /* Confirm Expunge: uses destructive styling in theme (red/warning color) */
+
+    /* ── Upsell overlay (Thrall tier) ─────────────────────────────────────── */
+    .upsell-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 40px 24px;
+      border: 1px solid;
+      text-align: center;
+    }
+    .upsell-rune { font-size: 48px; line-height: 1; }
+    .upsell-heading { font-size: 18px; font-weight: bold; }
+    .upsell-tagline { font-size: 13px; font-style: italic; }
+    .upsell-body { font-size: 13px; max-width: 360px; }
+    .upsell-benefits { list-style: none; text-align: left; display: flex; flex-direction: column; gap: 6px; }
+    .upsell-benefits li { font-size: 13px; padding-left: 20px; position: relative; }
+    .upsell-benefits li::before { content: "✓"; position: absolute; left: 0; font-weight: bold; }
+    .btn-upsell-cta {
+      font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em;
+      border: 2px solid; padding: 12px 32px; cursor: pointer; background: none;
+      /* Karl bling: gold border + glow in theme */
+    }
+    .btn-upsell-dismiss { font-size: 12px; border: none; cursor: pointer; background: none; text-decoration: underline; }
+    /* Note: For Thrall, clicking Trash tab triggers KarlUpsellDialog (existing component)
+       Pass: featureIcon="ᛞ", featureName="Trash", featureTagline="Where Forgotten Cards Rest"
+       featureTeaser="Retrieve deleted cards or banish them forever."
+       featureImage="trash" (new artwork asset)
+    */
+
+    /* ── Comparison grid ──────────────────────────────────────────────────── */
+    .compare-row { display: flex; gap: 24px; flex-wrap: wrap; }
+    .compare-col { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 8px; }
+    .compare-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 4px; border-bottom: 1px dashed; }
+
+    /* ── State matrix table ───────────────────────────────────────────────── */
+    table { border-collapse: collapse; width: 100%; font-size: 12px; }
+    th, td { border: 1px solid; padding: 6px 10px; text-align: left; }
+    th { font-weight: bold; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── Mobile simulation ────────────────────────────────────────────────── */
+    .mobile-frame {
+      border: 2px solid;
+      width: 375px;
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .mobile-frame .tab-btn { padding: 8px 10px; font-size: 10px; gap: 4px; }
+    .mobile-frame .tab-icon { font-size: 14px; }
+    .mobile-frame .trash-card { flex-direction: column; gap: 10px; }
+    .mobile-frame .trash-card-actions { flex-direction: row; align-self: stretch; }
+    .mobile-frame .btn-restore, .mobile-frame .btn-expunge { flex: 1; text-align: center; }
+    .mobile-frame .trash-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+    .mobile-frame .empty-trash-btn { align-self: stretch; text-align: center; }
+
+    /* ── Acceptance criteria mapping ─────────────────────────────────────── */
+    .ac-list { display: flex; flex-direction: column; gap: 6px; }
+    .ac-item { display: flex; gap: 8px; font-size: 12px; align-items: baseline; }
+    .ac-check { font-weight: bold; flex-shrink: 0; }
+    .ac-text { }
+    .ac-ref { font-size: 10px; font-style: italic; }
+  </style>
+</head>
+<body>
+<main class="page">
+
+  <header>
+    <h1 style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">Wireframe: Trash Tab — Issue #1127</h1>
+    <p style="font-size: 12px;">Dashboard tab navigation + Trash view. Deleted cards land here; users can restore or expunge. Thrall: locked with upsell. Free Trial + Karl: full access with Karl bling.</p>
+    <p style="font-size: 11px; font-style: italic; margin-top: 4px;">Sections: (A) Tab bar anatomy · (B) Trash view with cards · (C) Empty state · (D) Expunge single confirmation · (E) Empty Trash confirmation · (F) Thrall upsell state · (G) Karl bling treatment · (H) Mobile 375px · (I) Acceptance criteria</p>
+  </header>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- A. TAB BAR ANATOMY                                                      -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <section class="section">
+    <h2 class="section-title">A — Tab Bar: Three Tabs (The Howl · Active · Trash)</h2>
+    <p class="section-desc">Trash tab added at extreme right after Active. Tab order matches left-to-right reading priority: urgent → normal → deleted.</p>
+
+    <!-- Variant 1: Trash tab inactive (normal dashboard state) -->
+    <div>
+      <p style="font-size: 11px; font-weight: bold; margin-bottom: 6px;">A1 — Trash tab resting (not selected):</p>
+      <nav class="tab-bar" role="tablist" aria-label="Card dashboard tabs">
+        <!-- The Howl -->
+        <button class="tab-btn active" role="tab" aria-selected="true" data-testid="tab-howl">
+          <span class="tab-icon" aria-hidden="true">ᚲ</span>
+          The Howl
+          <span class="tab-badge trash-count" aria-label="3 cards need attention">3</span>
+        </button>
+        <!-- Active -->
+        <button class="tab-btn" role="tab" aria-selected="false" data-testid="tab-active">
+          <span class="tab-icon" aria-hidden="true">ᛉ</span>
+          Active
+          <span class="tab-badge" aria-label="12 active cards">12</span>
+        </button>
+        <!-- Trash — new tab, extreme right -->
+        <button class="tab-btn" role="tab" aria-selected="false" data-testid="tab-trash"
+          aria-label="Trash — deleted cards">
+          <span class="tab-icon" aria-hidden="true">ᛞ</span>
+          Trash
+          <span class="tab-badge" aria-label="2 deleted cards">2</span>
+        </button>
+      </nav>
+      <p class="note">
+        <strong>Tab rune:</strong> ᛞ (dagaz — dissolution, transformation, the end of a cycle). Chosen for its Norse resonance with "ending". Unlike the destructive ᚦ (thurisaz), dagaz implies a meaningful transition rather than violence.<br/>
+        <strong>Tab label:</strong> "Trash" — plain English, scannable. Not "Valhalla" (that's a different Karl feature), not "Graveyard" (too dramatic for a utility tab).<br/>
+        <strong>Tab position:</strong> After Active, extreme right — mirrors macOS Trash convention: always rightmost/bottommost in navigation.<br/>
+        <strong>Tab badge:</strong> count of cards with <code>deletedAt</code> set. Gold border at <code>var(--karl-gold)</code> when count &gt; 0 (Karl/trial tiers only).
+      </p>
+    </div>
+
+    <!-- Variant 2: Trash tab active (selected) -->
+    <div style="margin-top: 16px;">
+      <p style="font-size: 11px; font-weight: bold; margin-bottom: 6px;">A2 — Trash tab active (selected, Karl/trial tier):</p>
+      <nav class="tab-bar" role="tablist" aria-label="Card dashboard tabs">
+        <button class="tab-btn" role="tab" aria-selected="false" data-testid="tab-howl">
+          <span class="tab-icon" aria-hidden="true">ᚲ</span>
+          The Howl
+          <span class="tab-badge empty" aria-label="0 cards need attention">0</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-testid="tab-active">
+          <span class="tab-icon" aria-hidden="true">ᛉ</span>
+          Active
+          <span class="tab-badge" aria-label="9 active cards">9</span>
+        </button>
+        <button class="tab-btn active trash-tab" role="tab" aria-selected="true" data-testid="tab-trash"
+          aria-label="Trash — 2 deleted cards">
+          <!-- Karl/trial: active tab border-bottom uses var(--karl-gold) same as howl active
+               Tab icon pulses with karl-gold-glow animation when tab is active + count > 0 -->
+          <span class="tab-icon" aria-hidden="true">ᛞ</span>
+          Trash
+          <span class="tab-badge trash-count" aria-label="2 deleted cards">2</span>
+        </button>
+      </nav>
+      <p class="note">
+        <strong>Active state styling:</strong> Same <code>border-bottom: 3px solid var(--karl-gold)</code> as The Howl active state. Tab icon (ᛞ) gets <code>karl-gold-glow</code> pulse when selected and count &gt; 0 — matching Howl tab's <code>animate-muspel-pulse</code> pattern but with gold variant.<br/>
+        <strong>Keyboard nav:</strong> Arrow keys cycle through all three tabs. Home/End jump to first/last. Same <code>handleTabKeyDown</code> pattern as existing DashboardTabs.
+      </p>
+    </div>
+
+    <!-- Variant 3: Thrall tier — tab visible but locked -->
+    <div style="margin-top: 16px;">
+      <p style="font-size: 11px; font-weight: bold; margin-bottom: 6px;">A3 — Thrall tier: Trash tab visible, locked indicator:</p>
+      <nav class="tab-bar" role="tablist" aria-label="Card dashboard tabs">
+        <button class="tab-btn active" role="tab" aria-selected="true">
+          <span class="tab-icon" aria-hidden="true">ᚲ</span>
+          The Howl
+          <span class="tab-badge trash-count">1</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false">
+          <span class="tab-icon" aria-hidden="true">ᛉ</span>
+          Active
+          <span class="tab-badge">7</span>
+        </button>
+        <!-- Thrall: tab visible, opacity reduced, lock glyph appended -->
+        <button class="tab-btn" role="tab" aria-selected="false" style="opacity: 0.65;"
+          data-testid="tab-trash"
+          aria-label="Trash — upgrade to Karl to access">
+          <span class="tab-icon" aria-hidden="true">ᛞ</span>
+          Trash
+          <span style="font-size: 11px; margin-left: 2px;" aria-hidden="true">ᛜ</span>
+          <!-- ᛜ (ingwaz) used as lock/sealed glyph — see SealedRuneModal pattern -->
+        </button>
+      </nav>
+      <p class="note">
+        <strong>Thrall behavior:</strong> Tab is visible and clickable. Clicking fires <code>KarlUpsellDialog</code> — same pattern as Howl tab for Thrall users.<br/>
+        <strong>Lock glyph:</strong> ᛜ (ingwaz — seed/potential, sealed). Used consistently in SealedRuneModal.tsx for locked Karl features. Positioned inline after label, <code>aria-hidden</code>.<br/>
+        <strong>No count badge:</strong> Count badge hidden for Thrall — don't show how many cards they're missing, just tease the feature exists.<br/>
+        <strong>Aria-label:</strong> "Trash — upgrade to Karl to access" for screen readers (no visual label needed).
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- B. TRASH VIEW: CARD LIST (Karl/trial tier)                              -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <section class="section">
+    <h2 class="section-title">B — Trash View: Card List (Karl / Free Trial)</h2>
+    <p class="section-desc">Full trash view shown to Karl and Free Trial users. Cards with deletedAt displayed with deletion date, Restore + Expunge actions per card, Empty Trash bulk action in header.</p>
+
+    <div id="panel-trash" role="tabpanel" aria-labelledby="tab-trash">
+      <!-- Header bar -->
+      <div class="trash-header">
+        <div class="trash-header-left">
+          <span class="trash-title">
+            <span aria-hidden="true" style="font-size: 18px; margin-right: 6px;">ᛞ</span>
+            Trash
+          </span>
+          <span class="trash-subtitle">2 deleted cards — restore to reclaim, expunge to erase</span>
+          <!-- Copy: Norse mythology voice — "erase" not "delete permanently" -->
+        </div>
+        <button class="empty-trash-btn" type="button" aria-label="Empty Trash — permanently remove all deleted cards">
+          <!-- Karl bling: gold border glow on hover for Karl/trial tier -->
+          <span aria-hidden="true">ᛞ</span> Empty Trash
+        </button>
+      </div>
+
+      <div class="trash-list" aria-label="Deleted cards">
+
+        <!-- ── Trash Card 1 ── -->
+        <article class="trash-card" aria-label="Deleted card: Sapphire Preferred, deleted 3 days ago">
+          <!-- Karl bling: gold border at 0.30 opacity (muted — card is liminal/dead)
+               Rune corners present at 0.4 opacity for Karl/trial tiers -->
+          <span class="rune-corner rune-tl" aria-hidden="true">ᚠ</span>
+          <span class="rune-corner rune-tr" aria-hidden="true">ᚱ</span>
+          <span class="rune-corner rune-bl" aria-hidden="true">ᛁ</span>
+          <span class="rune-corner rune-br" aria-hidden="true">ᚾ</span>
+
+          <div class="trash-card-body">
+            <div class="trash-card-header">
+              <div class="trash-card-name-row">
+                <div class="issuer-badge" aria-hidden="true">C</div>
+                <div>
+                  <div class="trash-card-name">Sapphire Preferred</div>
+                  <div class="trash-card-meta">Chase · ···· 4291</div>
+                </div>
+              </div>
+              <!-- Status badge not shown — card is deleted, status is irrelevant -->
+            </div>
+            <div class="trash-card-deleted" aria-label="Deleted on March 13, 2026">
+              <!-- Deletion timestamp — human-readable relative + absolute -->
+              Deleted: Mar 13, 2026 · 3 days ago
+            </div>
+            <!-- No fee/date rows — deleted cards show minimal info: name, issuer, deleted date -->
+          </div>
+
+          <div class="trash-card-actions">
+            <button class="btn-restore" type="button"
+              aria-label="Restore Sapphire Preferred — move back to active cards">
+              <!-- ᚢ (uruz) — strength returning, restoration — restore icon -->
+              <span aria-hidden="true">ᚢ</span> Restore
+            </button>
+            <button class="btn-expunge" type="button"
+              aria-label="Expunge Sapphire Preferred — permanently delete from this device">
+              <!-- ᛟ (othala) — ancestral land, final resting — expunge icon (heritage ending)
+                   Dashed border communicates destructive/irreversible action -->
+              <span aria-hidden="true">ᛟ</span> Expunge
+            </button>
+          </div>
+        </article>
+
+        <!-- ── Trash Card 2 ── -->
+        <article class="trash-card" aria-label="Deleted card: Gold Mastercard, deleted 10 days ago">
+          <span class="rune-corner rune-tl" aria-hidden="true">ᚠ</span>
+          <span class="rune-corner rune-tr" aria-hidden="true">ᚱ</span>
+          <span class="rune-corner rune-bl" aria-hidden="true">ᛁ</span>
+          <span class="rune-corner rune-br" aria-hidden="true">ᚾ</span>
+
+          <div class="trash-card-body">
+            <div class="trash-card-header">
+              <div class="trash-card-name-row">
+                <div class="issuer-badge" aria-hidden="true">C</div>
+                <div>
+                  <div class="trash-card-name">Gold Mastercard</div>
+                  <div class="trash-card-meta">Citi · ···· 8832</div>
+                </div>
+              </div>
+            </div>
+            <div class="trash-card-deleted" aria-label="Deleted on March 6, 2026">
+              Deleted: Mar 6, 2026 · 10 days ago
+            </div>
+          </div>
+
+          <div class="trash-card-actions">
+            <button class="btn-restore" type="button"
+              aria-label="Restore Gold Mastercard — move back to active cards">
+              <span aria-hidden="true">ᚢ</span> Restore
+            </button>
+            <button class="btn-expunge" type="button"
+              aria-label="Expunge Gold Mastercard — permanently delete from this device">
+              <span aria-hidden="true">ᛟ</span> Expunge
+            </button>
+          </div>
+        </article>
+
+      </div><!-- end .trash-list -->
+    </div><!-- end tabpanel -->
+
+    <p class="note">
+      <strong>Card display rules:</strong> Deleted cards show name, issuer, last-4, and deletion date only. Fee dates, amounts, status badges, urgency bar — all hidden. They are dead cards; only their identity + deletion date matter.<br/>
+      <strong>Deletion date format:</strong> "Mar 13, 2026 · 3 days ago" — both absolute (for precision) and relative (for quick scanning). Relative text uses same <code>formatRelativeTime</code> utility as other card dates.<br/>
+      <strong>Card sort order:</strong> Most recently deleted first (newest <code>deletedAt</code> at top).<br/>
+      <strong>Restore icon ᚢ (uruz):</strong> Strength/vitality returning — appropriate for resurrection metaphor.<br/>
+      <strong>Expunge icon ᛟ (othala):</strong> Heritage/ancestral ending — dignified but final. Dashed border distinguishes from solid Restore border.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- C. EMPTY STATE                                                           -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <section class="section">
+    <h2 class="section-title">C — Empty State: No Deleted Cards</h2>
+    <p class="section-desc">Shown when no cards have deletedAt set. No "Empty Trash" button visible (nothing to empty).</p>
+
+    <div id="panel-trash-empty" role="tabpanel" aria-labelledby="tab-trash">
+      <div class="trash-header">
+        <div class="trash-header-left">
+          <span class="trash-title">
+            <span aria-hidden="true" style="font-size: 18px; margin-right: 6px;">ᛞ</span>
+            Trash
+          </span>
+          <span class="trash-subtitle">No deleted cards</span>
+        </div>
+        <!-- Empty Trash button hidden when trash is empty — no aria-hidden needed, just don't render -->
+      </div>
+
+      <div style="padding-top: 16px;">
+        <div class="empty-state" aria-label="Trash is empty">
+          <div class="empty-rune" aria-hidden="true">ᛞ</div>
+          <p class="empty-heading">The Void is Empty</p>
+          <p class="empty-sub">Cards you delete will rest here. Restore them to return them to the ledger, or expunge them to banish them forever.</p>
+          <!-- Copy uses Norse mythological register — "The Void" (primordial empty space in Norse cosmology = Ginnungagap) -->
+        </div>
+      </div>
+    </div>
+
+    <p class="note">
+      <strong>Empty state copy:</strong> "The Void is Empty" — Ginnungagap reference (primordial void in Norse creation myth). Consistent with existing HowlEmptyState Norse voice.<br/>
+      <strong>Empty state icon:</strong> ᛞ (dagaz) repeated — same tab icon, centered and enlarged. No decorative imagery needed.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- D. EXPUNGE SINGLE CARD — CONFIRMATION DIALOG                            -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <section class="section">
+    <h2 class="section-title">D — Expunge Single Card: Confirmation Dialog</h2>
+    <p class="section-desc">Triggered by clicking "Expunge" on a trash card. Uses shadcn Dialog. Backdrop click / ESC / Cancel all dismiss without action.</p>
+
+    <div>
+      <div class="dialog-backdrop" role="dialog" aria-modal="true" aria-labelledby="expunge-title" aria-describedby="expunge-desc">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span aria-hidden="true" style="font-size: 24px;">ᛟ</span>
+          <h2 class="dialog-title" id="expunge-title">Expunge Sapphire Preferred?</h2>
+        </div>
+        <p class="dialog-body" id="expunge-desc">
+          This card will be permanently removed from this device. <strong>This cannot be undone.</strong><br/><br/>
+          Cloud records (if any) are not affected — only this device's local storage will be cleared.
+        </p>
+        <!-- Note: Trash data is always localStorage only. Expunge removes from localStorage entirely.
+             No network call. No cloud impact. Clarify this in dialog copy. -->
+        <div class="dialog-actions">
+          <button class="btn-cancel" type="button" autofocus>Cancel</button>
+          <button class="btn-confirm-expunge" type="button" aria-label="Confirm expunge Sapphire Preferred">
+            <span aria-hidden="true">ᛟ</span> Expunge Forever
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">
+      <strong>Focus management:</strong> Dialog opens with focus on "Cancel" (safer default — destructive action not focused). Tab cycles Cancel → Expunge Forever → (wraps).<br/>
+      <strong>CTA label:</strong> "Expunge Forever" — emphasises irreversibility. Norse register stays consistent.<br/>
+      <strong>autofocus on Cancel:</strong> UX best practice for destructive confirmation dialogs.<br/>
+      <strong>Keyboard:</strong> ESC closes dialog (no action taken). Enter on focused button activates it.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- E. EMPTY TRASH — CONFIRMATION DIALOG                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <section class="section">
+    <h2 class="section-title">E — Empty Trash: Bulk Confirmation Dialog</h2>
+    <p class="section-desc">Triggered by "Empty Trash" button in the Trash view header. Confirms expunge of ALL deleted cards at once.</p>
+
+    <div>
+      <div class="dialog-backdrop" role="dialog" aria-modal="true" aria-labelledby="empty-trash-title" aria-describedby="empty-trash-desc">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span aria-hidden="true" style="font-size: 24px;">ᛞ</span>
+          <h2 class="dialog-title" id="empty-trash-title">Empty the Void?</h2>
+        </div>
+        <p class="dialog-body" id="empty-trash-desc">
+          <strong>2 deleted cards</strong> will be permanently removed from this device. <strong>This cannot be undone.</strong><br/><br/>
+          Cloud records (if any) are not affected. Only local storage will be cleared.
+        </p>
+        <div class="dialog-actions">
+          <button class="btn-cancel" type="button" autofocus>Cancel</button>
+          <button class="btn-confirm-expunge" type="button" aria-label="Confirm empty trash — permanently remove all 2 deleted cards">
+            <span aria-hidden="true">ᛞ</span> Empty Trash (2)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">
+      <strong>Dialog title:</strong> "Empty the Void?" — playful Norse variant. "the Void" = Trash = Ginnungagap reference carried through from empty state copy.<br/>
+      <strong>Card count in CTA:</strong> "Empty Trash (2)" — the count prevents ambiguity about scope. If 0 cards, "Empty Trash" button should not be rendered (see Section C).<br/>
+      <strong>Same focus and keyboard behavior as Section D.</strong>
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- F. THRALL UPSELL STATE                                                   -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <section class="section">
+    <h2 class="section-title">F — Thrall Tier: Upsell on Trash Tab Click</h2>
+    <p class="section-desc">
+      Thrall clicks Trash tab → KarlUpsellDialog opens (same component as Howl, Valhalla, Velocity upsells).
+      Below: the tab panel content that is never actually seen (just what would be shown to signal tab existence).
+    </p>
+
+    <!-- Note: Implementation uses existing KarlUpsellDialog — wire it with these props: -->
+    <div style="border: 1px dashed; padding: 16px; font-size: 12px; font-style: italic;">
+      <p><strong>KarlUpsellDialog props for Trash tab (Thrall trigger):</strong></p>
+      <ul style="margin-left: 16px; margin-top: 8px; display: flex; flex-direction: column; gap: 4px;">
+        <li><code>featureIcon="ᛞ"</code> — dagaz rune, matches tab icon</li>
+        <li><code>featureName="Trash"</code></li>
+        <li><code>featureTagline="Where Forgotten Cards Rest"</code></li>
+        <li><code>featureTeaser="Retrieve deleted cards before they vanish, or banish them from the ledger forever."</code></li>
+        <li><code>featureBenefits={["Restore deleted cards to active", "Expunge cards permanently", "Bulk empty trash", "Local-first — your data, your device"]}</code></li>
+        <li><code>featureImage="trash"</code> — new artwork asset (<code>/images/features/trash-dark.png</code>, <code>trash-light.png</code>)</li>
+        <li><code>open={trashUpsellOpen}</code></li>
+        <li><code>onOpenChange={setTrashUpsellOpen}</code></li>
+      </ul>
+    </div>
+
+    <!-- For completeness: what the Thrall sees if they were to see the panel (never shown — dialog fires instead) -->
+    <div style="margin-top: 16px;">
+      <p style="font-size: 11px; font-weight: bold; margin-bottom: 6px;">F1 — Upsell dialog anatomy (for artwork spec reference):</p>
+      <div class="upsell-wrapper" aria-hidden="true">
+        <!-- This matches KarlUpsellDialog desktop layout (two-column at md+) -->
+        <div style="display: flex; gap: 32px; width: 100%; flex-wrap: wrap; text-align: left;">
+          <!-- Left column: icon + copy -->
+          <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 12px;">
+            <div class="upsell-rune" aria-hidden="true">ᛞ</div>
+            <div class="upsell-heading">Trash</div>
+            <div class="upsell-tagline">Where Forgotten Cards Rest</div>
+            <div class="upsell-body">Retrieve deleted cards before they vanish, or banish them from the ledger forever.</div>
+          </div>
+          <!-- Right column: benefits + CTA -->
+          <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 16px; justify-content: flex-end;">
+            <ul class="upsell-benefits">
+              <li>Restore deleted cards to active</li>
+              <li>Expunge cards permanently</li>
+              <li>Bulk empty trash</li>
+              <li>Local-first — your data, your device</li>
+            </ul>
+            <button class="btn-upsell-cta" type="button">Upgrade to Karl</button>
+            <button class="btn-upsell-dismiss" type="button">Not now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">
+      <strong>Tab panel for Thrall:</strong> When Thrall clicks the tab, do NOT render the panel at all — just open <code>KarlUpsellDialog</code>. The tab stays "unselected" visually (no <code>aria-selected="true"</code>). Prevents confusion about "I'm in the Trash tab but can't see anything".<br/>
+      <strong>Design decision:</strong> Tab stays unselected for Thrall. The click is intercepted at the handler level before <code>setActiveTab("trash")</code> is called.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- G. KARL BLING TREATMENT                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <section class="section">
+    <h2 class="section-title">G — Karl Bling: Visual Treatment for Trash Tab + Cards</h2>
+    <p class="section-desc">Karl bling applied via existing data-tier CSS cascade. No new bling system — Trash inherits the same patterns as active card bling (Issue #1088).</p>
+
+    <div class="compare-row">
+      <!-- Thrall column -->
+      <div class="compare-col">
+        <div class="compare-label">Thrall</div>
+        <p style="font-size: 12px;">Tab visible, opacity 0.65, lock glyph ᛜ. No count badge. Click → KarlUpsellDialog. No rune corners on cards (not visible).</p>
+      </div>
+      <!-- Trial column -->
+      <div class="compare-col">
+        <div class="compare-label">Free Trial</div>
+        <p style="font-size: 12px;">Full access. Tab active border uses <code>var(--karl-gold)</code>. Tab icon ᛞ pulses with <code>karl-gold-glow-soft</code> when active + count &gt; 0. Trash cards: gold border at 0.20 opacity. Rune corners at 0.30 opacity. Expunge button: dashed gold border on hover.</p>
+      </div>
+      <!-- Karl column -->
+      <div class="compare-col">
+        <div class="compare-label">Karl</div>
+        <p style="font-size: 12px;">Full access. Same as trial but stronger intensity. Tab active border <code>var(--karl-gold)</code> at full. Tab icon pulses with <code>karl-gold-glow</code> (full). Trash cards: gold border at 0.30 opacity. Rune corners at 0.40 opacity. Empty Trash button: gold hover glow.</p>
+      </div>
+    </div>
+
+    <table style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th>Element</th>
+          <th>Thrall</th>
+          <th>Free Trial</th>
+          <th>Karl</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Tab icon ᛞ animation</td>
+          <td>None (0.65 opacity)</td>
+          <td>karl-gold-glow-soft (active)</td>
+          <td>karl-gold-glow (active)</td>
+        </tr>
+        <tr>
+          <td>Tab active border-bottom</td>
+          <td>N/A (not selectable)</td>
+          <td>var(--karl-gold)</td>
+          <td>var(--karl-gold)</td>
+        </tr>
+        <tr>
+          <td>Tab count badge border</td>
+          <td>Hidden</td>
+          <td>var(--karl-gold) when &gt;0</td>
+          <td>var(--karl-gold) when &gt;0</td>
+        </tr>
+        <tr>
+          <td>Trash card border</td>
+          <td>N/A (blocked)</td>
+          <td>rgba(212,165,32,0.20)</td>
+          <td>rgba(212,165,32,0.30)</td>
+        </tr>
+        <tr>
+          <td>Rune corners on trash cards</td>
+          <td>N/A</td>
+          <td>Visible, 0.30 opacity</td>
+          <td>Visible, 0.40 opacity</td>
+        </tr>
+        <tr>
+          <td>Empty Trash button hover</td>
+          <td>N/A</td>
+          <td>Soft gold border glow</td>
+          <td>Full gold border + shadow</td>
+        </tr>
+        <tr>
+          <td>Restore button hover</td>
+          <td>N/A</td>
+          <td>Standard hover</td>
+          <td>Standard hover</td>
+        </tr>
+        <tr>
+          <td>Expunge button hover</td>
+          <td>N/A</td>
+          <td>Dashed border gains opacity</td>
+          <td>Dashed border gains opacity</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="note">
+      <strong>Reduced intensity for trash cards:</strong> Trash cards are "dead" — their bling is intentionally subdued vs active cards. This creates visual hierarchy: active cards at full Karl intensity, trash cards at 50-60% of that, clearly in a secondary state.<br/>
+      <strong>CSS implementation:</strong> Add <code>.trash-card</code> rules inside existing <code>[data-tier="karl"]</code> and <code>[data-tier="trial"]</code> blocks in <code>karl-bling.css</code>. No new CSS files needed.<br/>
+      <strong>Hover on trash cards:</strong> No hover y-lift (Framer Motion AnimatePresence). Trash cards are static — no <code>whileHover</code>. Just a slight border-color brightening on hover.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- H. MOBILE: 375px LAYOUT                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <section class="section">
+    <h2 class="section-title">H — Mobile: 375px Viewport</h2>
+    <p class="section-desc">Tab bar scrolls horizontally. Card actions stack vertically (Restore full-width, then Expunge full-width). Trash header stacks to column.</p>
+
+    <div class="mobile-frame" aria-label="375px mobile simulation">
+      <!-- Mobile tab bar: scrolls horizontally -->
+      <nav class="tab-bar" role="tablist" style="flex-shrink: 0;">
+        <button class="tab-btn" role="tab" aria-selected="false" style="padding: 8px 10px; font-size: 10px;">
+          <span class="tab-icon" style="font-size: 13px;" aria-hidden="true">ᚲ</span>
+          Howl
+          <span class="tab-badge empty" style="font-size: 10px;">0</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" style="padding: 8px 10px; font-size: 10px;">
+          <span class="tab-icon" style="font-size: 13px;" aria-hidden="true">ᛉ</span>
+          Active
+          <span class="tab-badge" style="font-size: 10px;">9</span>
+        </button>
+        <button class="tab-btn active" role="tab" aria-selected="true" style="padding: 8px 10px; font-size: 10px;">
+          <span class="tab-icon" style="font-size: 13px;" aria-hidden="true">ᛞ</span>
+          Trash
+          <span class="tab-badge trash-count" style="font-size: 10px;">2</span>
+        </button>
+      </nav>
+
+      <!-- Mobile trash view -->
+      <div style="padding: 12px; display: flex; flex-direction: column; gap: 12px; flex: 1; overflow-y: auto;">
+        <!-- Mobile header: stacked -->
+        <div style="display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid; padding-bottom: 10px;">
+          <span style="font-size: 14px; font-weight: bold;">
+            <span aria-hidden="true">ᛞ</span> Trash
+          </span>
+          <span style="font-size: 11px;">2 deleted cards</span>
+          <button class="empty-trash-btn" style="width: 100%; text-align: center; padding: 8px;">
+            <span aria-hidden="true">ᛞ</span> Empty Trash
+          </button>
+        </div>
+
+        <!-- Mobile trash card: column layout -->
+        <article style="border: 1px solid; padding: 12px; display: flex; flex-direction: column; gap: 10px; position: relative;">
+          <span class="rune-corner rune-tl" aria-hidden="true">ᚠ</span>
+          <span class="rune-corner rune-tr" aria-hidden="true">ᚱ</span>
+          <span class="rune-corner rune-bl" aria-hidden="true">ᛁ</span>
+          <span class="rune-corner rune-br" aria-hidden="true">ᚾ</span>
+
+          <!-- Card identity -->
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="issuer-badge" style="width: 24px; height: 24px; font-size: 11px;" aria-hidden="true">C</div>
+            <div>
+              <div style="font-size: 13px; font-weight: bold;">Sapphire Preferred</div>
+              <div style="font-size: 11px;">Chase · ···· 4291</div>
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Deleted: Mar 13, 2026 · 3 days ago</div>
+
+          <!-- Mobile actions: side by side -->
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-restore" style="flex: 1; text-align: center; padding: 8px 6px; font-size: 11px;"
+              aria-label="Restore Sapphire Preferred">
+              <span aria-hidden="true">ᚢ</span> Restore
+            </button>
+            <button class="btn-expunge" style="flex: 1; text-align: center; padding: 8px 6px; font-size: 11px;"
+              aria-label="Expunge Sapphire Preferred">
+              <span aria-hidden="true">ᛟ</span> Expunge
+            </button>
+          </div>
+        </article>
+
+        <article style="border: 1px solid; padding: 12px; display: flex; flex-direction: column; gap: 10px; position: relative;">
+          <span class="rune-corner rune-tl" aria-hidden="true">ᚠ</span>
+          <span class="rune-corner rune-tr" aria-hidden="true">ᚱ</span>
+          <span class="rune-corner rune-bl" aria-hidden="true">ᛁ</span>
+          <span class="rune-corner rune-br" aria-hidden="true">ᚾ</span>
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="issuer-badge" style="width: 24px; height: 24px; font-size: 11px;" aria-hidden="true">C</div>
+            <div>
+              <div style="font-size: 13px; font-weight: bold;">Gold Mastercard</div>
+              <div style="font-size: 11px;">Citi · ···· 8832</div>
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: bold; text-transform: uppercase;">Deleted: Mar 6, 2026 · 10 days ago</div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-restore" style="flex: 1; text-align: center; padding: 8px 6px; font-size: 11px;"
+              aria-label="Restore Gold Mastercard">
+              <span aria-hidden="true">ᚢ</span> Restore
+            </button>
+            <button class="btn-expunge" style="flex: 1; text-align: center; padding: 8px 6px; font-size: 11px;"
+              aria-label="Expunge Gold Mastercard">
+              <span aria-hidden="true">ᛟ</span> Expunge
+            </button>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <p class="note">
+      <strong>Mobile tab label shortening:</strong> "The Howl" → "Howl" at ≤375px to save horizontal space. "Active" and "Trash" unchanged (short enough). Use CSS <code>@media (max-width: 400px)</code> to truncate or use short-label data attribute.<br/>
+      <strong>Touch target:</strong> All buttons maintain <code>min-height: 44px</code> (iOS HIG). On mobile, Restore/Expunge are side-by-side (<code>flex: 1</code>) so both hit 44px height at 375px.<br/>
+      <strong>Tab bar scroll:</strong> Inherits existing <code>overflow-x: auto; scrollbar-hide; WebkitOverflowScrolling: touch</code> from DashboardTabs.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- I. ACCEPTANCE CRITERIA MAPPING                                           -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <section class="section">
+    <h2 class="section-title">I — Acceptance Criteria Mapping</h2>
+    <p class="section-desc">Each AC from Issue #1127 mapped to its wireframe section.</p>
+
+    <div class="ac-list">
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">New Trash tab on dashboard navigation, extreme right position</span> <span class="ac-ref">→ Section A</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Trash icon with runic styling + Karl bling treatment (gold glow, runic accents)</span> <span class="ac-ref">→ Sections A, G</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Deleted cards appear in Trash instead of being permanently removed</span> <span class="ac-ref">→ Section B</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Trash view shows deleted cards with deletion date</span> <span class="ac-ref">→ Section B (trash-card-deleted element)</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Restore action: moves card back to active, triggers cloud sync if Karl</span> <span class="ac-ref">→ Sections B, interaction-spec.md §Restore Flow</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Expunge action: permanently deletes card from localStorage (confirmation dialog)</span> <span class="ac-ref">→ Sections B, D, interaction-spec.md §Expunge Flow</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Empty Trash bulk action: expunge all with confirmation</span> <span class="ac-ref">→ Section E, interaction-spec.md §Empty Trash Flow</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Thrall users: Trash tab visible but shows upsell on click</span> <span class="ac-ref">→ Sections A3, F</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Free Trial users: full access with Karl bling</span> <span class="ac-ref">→ Sections B, G (trial column)</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Karl users: full access with Karl bling</span> <span class="ac-ref">→ Sections B, G (karl column)</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Trash data is ALWAYS local (localStorage only) — never synced to Firestore</span> <span class="ac-ref">→ Section D dialog copy, interaction-spec.md §Data Model</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Restored cards sync to Firestore (if Karl)</span> <span class="ac-ref">→ interaction-spec.md §Restore Flow</span></div>
+      </div>
+      <div class="ac-item">
+        <span class="ac-check">✓</span>
+        <div><span class="ac-text">Mobile responsive at 375px+</span> <span class="ac-ref">→ Section H</span></div>
+      </div>
+    </div>
+
+    <!-- Implementation notes for FiremanDecko -->
+    <div style="margin-top: 20px; border: 2px solid; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+      <p style="font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em;">FiremanDecko Implementation Notes</p>
+
+      <div style="font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <p><strong>DashboardTabs.tsx changes:</strong></p>
+        <ul style="margin-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+          <li>Add <code>TabId = "howl" | "active" | "trash"</code></li>
+          <li>Add <code>trashedCards</code> from <code>cards.filter(c =&gt; c.deletedAt)</code> — but note: Dashboard currently passes only non-deleted cards. TrashTab needs access to deleted cards from localStorage directly.</li>
+          <li>New prop on DashboardTabs (or sibling context): <code>trashedCards: Card[]</code></li>
+          <li>Trash tab click for Thrall: intercept <code>onClick</code>, call <code>setTrashUpsellOpen(true)</code>, do NOT call <code>setActiveTab("trash")</code></li>
+          <li>Tab refs: extend <code>tabRefs</code> to include <code>trash</code> key</li>
+        </ul>
+
+        <p><strong>New component: TrashView.tsx</strong> (in <code>src/components/dashboard/</code>)</p>
+        <ul style="margin-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+          <li>Props: <code>trashedCards: Card[]</code>, <code>onRestore: (cardId: string) =&gt; void</code>, <code>onExpunge: (cardId: string) =&gt; void</code>, <code>onEmptyTrash: () =&gt; void</code></li>
+          <li>Internal state: <code>expungeTarget: string | null</code>, <code>showEmptyConfirm: boolean</code></li>
+          <li>Renders: header, card list (sorted by <code>deletedAt</code> desc), empty state, two confirmation dialogs</li>
+        </ul>
+
+        <p><strong>Storage layer changes (storage.ts):</strong></p>
+        <ul style="margin-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+          <li><code>getDeletedCards(householdId)</code> — returns cards where <code>deletedAt</code> is set</li>
+          <li><code>restoreCard(householdId, cardId)</code> — clears <code>deletedAt</code>, returns updated card</li>
+          <li><code>expungeCard(householdId, cardId)</code> — removes card record entirely from localStorage</li>
+          <li><code>expungeAllCards(householdId)</code> — removes all records with <code>deletedAt</code> set</li>
+        </ul>
+
+        <p><strong>Karl sync on restore (Karl tier only):</strong></p>
+        <ul style="margin-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+          <li>After <code>restoreCard()</code>, if <code>tier === "karl"</code>: trigger existing cloud sync mechanism</li>
+          <li>Same pattern as card create/update sync flow</li>
+        </ul>
+
+        <p><strong>Karl bling CSS (karl-bling.css):</strong></p>
+        <ul style="margin-left: 16px; display: flex; flex-direction: column; gap: 4px;">
+          <li>Add <code>[data-tier="karl"] .trash-tab .tab-icon</code> animation rule</li>
+          <li>Add <code>[data-tier="karl"] .trash-card</code> border rule (0.30 opacity gold)</li>
+          <li>Add <code>[data-tier="trial"] .trash-card</code> border rule (0.20 opacity gold)</li>
+          <li>Rune corners on <code>.trash-card</code>: inherit from <code>.karl-bling-card .rune-corner</code> but reduce opacity</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>
