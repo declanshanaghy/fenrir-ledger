@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — Norse Mist Tool Response Blocks (Issue #1072)</title>
+  <style>
+    /* ── Layout-only CSS. No colors, no custom fonts, no shadows, no border-radius. ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; padding: 2rem; max-width: 1100px; }
+
+    /* ── Wireframe scaffold ── */
+    .wf-section {
+      border: 2px solid #000;
+      margin-bottom: 3rem;
+      padding: 1.5rem;
+    }
+    .wf-section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid #000;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .note {
+      font-size: 0.7rem;
+      font-style: italic;
+      border: 1px dashed #555;
+      padding: 0.4rem 0.6rem;
+      margin: 0.5rem 0;
+    }
+    .note-block {
+      font-size: 0.7rem;
+      font-style: italic;
+      border: 1px dashed #555;
+      padding: 0.6rem 0.8rem;
+      margin: 1rem 0;
+    }
+    .label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    .subsection-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-bottom: 1px solid #999;
+      padding-bottom: 0.3rem;
+      margin-bottom: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    /* ── Grid helpers ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+    /* ── Flex helpers ── */
+    .flex-col { display: flex; flex-direction: column; gap: 0.5rem; }
+    .flex-row { display: flex; flex-direction: row; gap: 0.75rem; align-items: center; }
+    .spacer { flex: 1; }
+
+    /* ───────────────────────────────────────────────
+       TOOL BLOCK WIREFRAME COMPONENTS
+       Structural layout only — no colors/backgrounds.
+       Borders represent surfaces; hatching = replaced.
+    ─────────────────────────────────────────────── */
+
+    /* ev-tool outer container */
+    .wf-tool {
+      border: 1px solid #444;
+      margin: 0.3rem 0;
+    }
+    /* ev-tool: REPLACE kildare-blue-dim background → mist surface */
+    .wf-tool-surface-note {
+      font-size: 0.6rem;
+      text-align: right;
+      padding: 0.15rem 0.4rem;
+      border-bottom: 1px dotted #aaa;
+    }
+
+    /* ev-tool-header row */
+    .wf-tool-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.6rem;
+      border: 1px solid transparent; /* hover state represented below */
+    }
+    .wf-tool-header--hover {
+      border: 1px solid #000;
+    }
+
+    /* ev-tool-badge */
+    .wf-badge {
+      font-size: 0.65rem;
+      padding: 0.1rem 0.4rem;
+      border: 1px solid #000;
+      font-weight: 600;
+      white-space: nowrap;
+      font-family: monospace;
+    }
+    /* Badge variant indicators (structural only) */
+    .wf-badge--bash   { border-style: solid; }
+    .wf-badge--read   { border-style: dashed; }
+    .wf-badge--edit   { border-style: dotted; }
+    .wf-badge--write  { border-style: double; }
+    .wf-badge--agent  { border-style: groove; }
+    .wf-badge--glob   { border-style: dashed; }
+    .wf-badge--grep   { border-style: dashed; }
+    .wf-badge--error  { border: 2px solid #000; }
+
+    /* ev-tool-preview text */
+    .wf-tool-preview {
+      font-family: monospace;
+      font-size: 0.65rem;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ev-tool-chevron */
+    .wf-chevron {
+      font-size: 0.7rem;
+    }
+    .wf-chevron--open {
+      display: inline-block;
+      transform: rotate(90deg);
+    }
+
+    /* ev-tool-body (expanded) */
+    .wf-tool-body {
+      border-top: 1px solid #666;
+      padding: 0.4rem 0.6rem;
+      font-family: monospace;
+      font-size: 0.7rem;
+    }
+    .wf-tool-input {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .wf-tool-result {
+      border-top: 1px dashed #888;
+      margin-top: 0.3rem;
+      padding-top: 0.3rem;
+    }
+
+    /* ev-tool-batch container */
+    .wf-batch {
+      border: 1px solid #444;
+      border-right: 2px solid #666;
+      margin: 0.4rem 0;
+    }
+    .wf-batch--active {
+      border-right: 2px solid #000;
+    }
+    .wf-batch-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.6rem;
+      border: 1px solid transparent;
+    }
+    .wf-batch-label {
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .wf-batch-spinner {
+      width: 8px;
+      height: 8px;
+      border: 1.5px solid #000;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .wf-batch-done {
+      font-size: 0.6rem;
+      font-weight: 600;
+    }
+    .wf-batch-body {
+      padding: 0.4rem 0.6rem;
+      border-top: 1px solid #666;
+    }
+    .wf-batch-body .wf-tool {
+      margin-left: auto;
+    }
+    .wf-batch-body .wf-tool-header {
+      flex-direction: row-reverse;
+    }
+
+    /* Token change table */
+    .token-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.7rem;
+    }
+    .token-table th,
+    .token-table td {
+      border: 1px solid #aaa;
+      padding: 0.35rem 0.5rem;
+      text-align: left;
+    }
+    .token-table th {
+      font-weight: 700;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+    }
+    .token-table tr:nth-child(even) td {
+      background: #f9f9f9;
+    }
+    .cross { text-decoration: line-through; }
+
+    /* Mobile frame */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid #000;
+      padding: 0.75rem;
+    }
+
+    /* Badge palette grid */
+    .badge-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
+    .badge-card {
+      border: 1px solid #ccc;
+      padding: 0.5rem 0.6rem;
+      min-width: 120px;
+    }
+    .badge-card-name {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+    .badge-card-note {
+      font-size: 0.6rem;
+      font-style: italic;
+      margin-top: 0.2rem;
+    }
+  </style>
+</head>
+<body>
+
+<h1 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">
+  Norse Mist Tool Response Blocks — Monitor UI (Issue #1072)
+</h1>
+<p style="font-size: 0.75rem; margin-bottom: 2rem;">
+  Wireframe: structural layout only. No theme styling applied here.<br>
+  See CSS token mapping table (Section F) for the exact implementation delta.<br>
+  Affected files: <code>monitor-ui/src/styles/index.css</code>, optionally <code>ToolBlock.tsx</code> for DOM changes.
+</p>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION A — Tool Block: Collapsed State
+═══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <div class="wf-section-title">A — Tool Block: Collapsed State (ev-tool)</div>
+
+  <p class="note">
+    Current: background uses <strong>--kildare-blue-dim</strong> (#152a5e) — saturated blue.
+    Replace with <strong>Norse mist surface</strong>: a near-void dark surface with a subtle cool-gray or desaturated
+    blue-purple tint. Think atmosphere at the edge of Niflheim — not neon, not deep ocean blue.
+  </p>
+
+  <div class="subsection-title">Anatomy — collapsed tool block</div>
+
+  <div class="wf-tool">
+    <!-- Surface annotation row — remove from DOM, for wireframe only -->
+    <div class="wf-tool-surface-note">[surface: mist — replaces kildare-blue-dim]</div>
+
+    <!-- ev-tool-header -->
+    <div class="wf-tool-header">
+      <!-- ev-tool-badge: badge retains accent color for scanability -->
+      <span class="wf-badge wf-badge--bash">Bash</span>
+      <!-- ev-tool-preview: truncated command text -->
+      <span class="wf-tool-preview">cd /workspace/repo &amp;&amp; git status</span>
+      <span class="spacer"></span>
+      <!-- ev-tool-chevron: replaces kildare-blue-bright → muted gray or rune-border -->
+      <span class="wf-chevron">›</span>
+    </div>
+    <!-- body hidden in collapsed state (grid-template-rows: 0fr) -->
+  </div>
+
+  <p class="note">
+    <strong>Badge (ev-tool-badge):</strong> retain distinct accent per tool type for scanability.
+    Bash = muted sage green | Read/Grep/Glob = muted steel | Edit/Write = muted violet | Agent = muted crimson.
+    Badges are the only place where hue identity is preserved — backgrounds everywhere else go mist.
+  </p>
+  <p class="note">
+    <strong>Chevron (ev-tool-chevron):</strong> currently --kildare-blue-bright. Replace with
+    --text-rune (muted gray) or a desaturated steel. Chevron is navigational, not decorative.
+  </p>
+  <p class="note">
+    <strong>Preview text (ev-tool-preview):</strong> currently color: --kildare-white opacity 0.6.
+    Replace opacity source color with --text-rune (already muted). Keep opacity 0.6 dimming.
+  </p>
+
+  <div class="subsection-title">Collapsed — error state (ev-tool-error)</div>
+
+  <div class="wf-tool">
+    <div class="wf-tool-surface-note">[surface: mist — error border replaces with error-strong]</div>
+    <div class="wf-tool-header">
+      <span class="wf-badge wf-badge--error">Bash ⚠</span>
+      <span class="wf-tool-preview">git push origin main</span>
+      <span class="spacer"></span>
+      <span class="wf-chevron">›</span>
+    </div>
+  </div>
+
+  <p class="note">
+    Error state: left/top border switches to --error-strong (unchanged). Badge background
+    switches to --mayo-red-dim with light red text (unchanged). Block surface stays mist —
+    only the accent border indicates failure. Do NOT use bright blue as part of error state.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION B — Tool Block: Expanded State
+═══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <div class="wf-section-title">B — Tool Block: Expanded State (ev-tool.open)</div>
+
+  <div class="grid-2">
+    <div>
+      <div class="subsection-title">Read tool — expanded with result</div>
+      <div class="wf-tool">
+        <div class="wf-tool-surface-note">[surface: mist]</div>
+        <div class="wf-tool-header wf-tool-header--hover">
+          <!-- hover state: mist surface + 1px highlight border, NOT a solid kildare-blue fill -->
+          <span class="wf-badge wf-badge--read">Read</span>
+          <span class="wf-tool-preview">/workspace/repo/src/index.ts</span>
+          <span class="spacer"></span>
+          <span class="wf-chevron wf-chevron--open">›</span>
+        </div>
+        <!-- ev-tool-body: expanded -->
+        <div class="wf-tool-body">
+          <div class="wf-tool-input">/workspace/repo/src/index.ts</div>
+          <!-- ev-tool-result -->
+          <div class="wf-tool-result">
+            1→ import React from "react";<br>
+            2→ import { App } from "./App";<br>
+            <em style="font-size: 0.6rem;">[truncated — max-height: 200px, overflow-y: auto]</em>
+          </div>
+        </div>
+      </div>
+      <p class="note">
+        <strong>Body border-top (ev-tool.open .ev-tool-body):</strong>
+        currently --kildare-blue. Replace with --rune-border (muted void border) or
+        a 1px translucent mist line. Separator should whisper, not shout.
+      </p>
+      <p class="note">
+        <strong>Result divider (ev-tool-result border-top dashed):</strong>
+        currently --kildare-blue. Replace with --rune-border or --text-void.
+        A dashed rune-border reads as "secondary content" without blue distraction.
+      </p>
+    </div>
+    <div>
+      <div class="subsection-title">Bash tool — expanded, input only</div>
+      <div class="wf-tool">
+        <div class="wf-tool-surface-note">[surface: mist]</div>
+        <div class="wf-tool-header wf-tool-header--hover">
+          <span class="wf-badge wf-badge--bash">Bash</span>
+          <span class="wf-tool-preview">cd /workspace/repo &amp;&amp; npm ci</span>
+          <span class="spacer"></span>
+          <span class="wf-chevron wf-chevron--open">›</span>
+        </div>
+        <div class="wf-tool-body">
+          <div class="wf-tool-input">cd /workspace/repo &amp;&amp; npm ci --prefer-offline</div>
+        </div>
+      </div>
+      <p class="note">
+        <strong>Header hover (ev-tool-header:hover):</strong>
+        currently fills with full --kildare-blue. Replace with a lighter mist highlight —
+        a slight surface brightening (e.g., increase translucent white overlay) so hover is
+        discoverable but not a blue flash. Use a mist hover var distinct from the surface.
+      </p>
+      <p class="note">
+        <strong>Body text color (ev-tool-body color):</strong>
+        currently var(--kildare-white) opacity 0.8. kildare-white = #F0F0F0 (dark theme) —
+        this is already near-white. Can simplify to --text-saga at opacity 0.8, removing the
+        kildare dependency. Readability is unchanged; blue coupling is removed.
+      </p>
+    </div>
+  </div>
+
+  <div class="subsection-title">Write tool — expanded (showing edit/write badge variant)</div>
+  <div class="wf-tool">
+    <div class="wf-tool-surface-note">[surface: mist]</div>
+    <div class="wf-tool-header wf-tool-header--hover">
+      <span class="wf-badge wf-badge--write">Write</span>
+      <span class="wf-tool-preview">development/monitor-ui/src/styles/index.css</span>
+      <span class="spacer"></span>
+      <span class="wf-chevron wf-chevron--open">›</span>
+    </div>
+    <div class="wf-tool-body">
+      <div class="wf-tool-input">/* Norse mist tool block tokens */
+--mist-surface:    rgba(18, 18, 31, 0.72);
+--mist-border:     rgba(60, 60, 90, 0.55);
+--mist-hover:      rgba(30, 30, 52, 0.85);</div>
+    </div>
+  </div>
+  <p class="note">
+    Write/Edit badges: retain muted-violet accent (--write-badge-bg / --write-badge-text).
+    These already use a more muted palette than Bash's bright green. Minor saturation
+    reduction optional — engineer's call based on visual result.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION C — Tool Batch: Collapsed State
+═══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <div class="wf-section-title">C — Tool Batch Group: Collapsed State (ev-tool-batch)</div>
+
+  <p class="note-block">
+    The tool batch is the outermost collapsible group that wraps 1–N concurrent tool calls.
+    It has its own header (click to expand/collapse) and auto-collapses when complete.
+    Currently uses <strong>rgba(30, 58, 138, 0.10)</strong> header background — blue tint.
+    Replace with <strong>rgba(42, 42, 62, 0.30)</strong> — the existing rune-surface neutral already used
+    in the header (matching ev-tool-batch-header bg in CSS). This is already partially done;
+    only the --tool-batch-header-bg var needs to drop blue channel further.
+  </p>
+
+  <div class="subsection-title">Batch — pending (spinner visible)</div>
+  <div class="wf-batch wf-batch--active">
+    <div class="wf-batch-header">
+      <span class="wf-chevron">›</span>
+      <span class="wf-batch-label">Tool Use · 2 concurrent</span>
+      <span class="spacer"></span>
+      <!-- spinner: currently teal-asgard (#4ecdc4) — acceptable, stays -->
+      <span class="wf-batch-spinner" title="[spinner: teal-asgard OK — not blue/green neon]"></span>
+    </div>
+    <!-- body collapsed: grid-template-rows: 0fr -->
+  </div>
+  <p class="note">
+    Batch right border while pending: currently --teal-asgard (#4ecdc4 — cyan).
+    Teal-asgard is an established Fenrir accent color distinct from Kildare blue.
+    <strong>Keep teal-asgard for the spinner and active-batch right-border</strong> — it's not
+    the kildare-blue problem. It reads as "in-progress" without being visually jarring
+    because it's a narrow 2px stroke, not a large block fill.
+  </p>
+
+  <div class="subsection-title">Batch — complete (checkmark visible, opacity reduced)</div>
+  <div class="wf-batch">
+    <div class="wf-batch-header">
+      <span class="wf-chevron">›</span>
+      <span class="wf-batch-label">Tool Use · 3 complete</span>
+      <span class="spacer"></span>
+      <span class="wf-batch-done">✓</span>
+    </div>
+  </div>
+  <p class="note">
+    Complete state: border-right reverts to --text-void (muted), opacity drops to 0.7.
+    No blue involvement. Checkmark color: currently --teal-asgard. Keep as-is (not the problem).
+    Complete batches fade to near-invisible — appropriate Norse mist behavior.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION D — Tool Batch: Expanded State (with nested tool blocks)
+═══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <div class="wf-section-title">D — Tool Batch Group: Expanded State (ev-tool-batch.open)</div>
+
+  <div class="wf-batch wf-batch--active">
+    <div class="wf-batch-header">
+      <span class="wf-chevron wf-chevron--open">›</span>
+      <span class="wf-batch-label">Tool Use · 3 tools</span>
+      <span class="spacer"></span>
+      <span class="wf-batch-spinner"></span>
+    </div>
+    <!-- ev-tool-batch-body — border-top: kildare-blue-dim → replace with rune-border -->
+    <div class="wf-batch-body">
+
+      <p class="note" style="margin-bottom: 0.5rem;">
+        [batch body border-top: currently --kildare-blue-dim → replace with --rune-border]
+      </p>
+
+      <!-- Nested tool blocks: right-aligned (margin-left: auto; flex-direction: row-reverse) -->
+      <div class="wf-tool">
+        <div class="wf-tool-surface-note">[surface: mist — right-aligned within batch]</div>
+        <div class="wf-tool-header" style="flex-direction: row-reverse;">
+          <span class="wf-badge wf-badge--bash">Bash</span>
+          <span class="wf-tool-preview" style="text-align: right;">git status</span>
+        </div>
+      </div>
+
+      <div class="wf-tool">
+        <div class="wf-tool-surface-note">[surface: mist — right-aligned]</div>
+        <div class="wf-tool-header" style="flex-direction: row-reverse;">
+          <span class="wf-badge wf-badge--read">Read</span>
+          <span class="wf-tool-preview" style="text-align: right;">package.json</span>
+        </div>
+      </div>
+
+      <div class="wf-tool">
+        <div class="wf-tool-surface-note">[surface: mist — right-aligned]</div>
+        <div class="wf-tool-header" style="flex-direction: row-reverse;">
+          <span class="wf-badge wf-badge--write">Write</span>
+          <span class="wf-tool-preview" style="text-align: right;">src/styles/index.css</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">
+    Nested tool blocks inside a batch inherit the same mist surface treatment.
+    They are right-aligned (flex row-reverse) to create visual distinction from standalone
+    tool blocks in the log stream. Right-alignment is structural — no color change needed there.
+  </p>
+  <p class="note">
+    The batch body top divider (ev-tool-batch.open .ev-tool-batch-body border-top-color) currently
+    uses --kildare-blue-dim. Replace with --rune-border (#2a2a3e). Structural separation without
+    blue contamination.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION E — Tool Badge Palette
+═══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <div class="wf-section-title">E — Tool Badge Palette (ev-tool-badge variants)</div>
+
+  <p class="note-block">
+    Badges are the ONLY element retaining hue-based accent color. Their purpose: instant
+    scanability — engineers reading a fast-moving log stream must identify tool type at a glance.
+    Norse mist does not mean monochrome; it means the BACKGROUND is muted, not the badges.
+    Each badge below: border style indicates structural differentiation only (no color in wireframe).
+    See token table (Section F) for the color direction per badge type.
+  </p>
+
+  <div class="badge-grid">
+
+    <div class="badge-card">
+      <div class="badge-card-name">Bash</div>
+      <span class="wf-badge wf-badge--bash">Bash</span>
+      <p class="badge-card-note">
+        Current: bright-green (#4ade80) on dark-green (#1a3320).<br>
+        Direction: desaturate — muted sage green (e.g., #86c894) on deep forest (#0f2318).
+        Less neon, same identity.
+      </p>
+    </div>
+
+    <div class="badge-card">
+      <div class="badge-card-name">Read / Grep / Glob</div>
+      <span class="wf-badge wf-badge--read">Read</span>
+      &nbsp;<span class="wf-badge wf-badge--grep">Grep</span>
+      &nbsp;<span class="wf-badge wf-badge--glob">Glob</span>
+      <p class="badge-card-note">
+        Current: --kildare-blue (#1E3A8A) bg / --kildare-white text — bright blue.<br>
+        Direction: muted steel-blue (e.g., #2e4a7a) bg / --text-rune or light steel text.
+        Reads "file I/O" without saturated blue clash.
+      </p>
+    </div>
+
+    <div class="badge-card">
+      <div class="badge-card-name">Edit / Write</div>
+      <span class="wf-badge wf-badge--edit">Edit</span>
+      &nbsp;<span class="wf-badge wf-badge--write">Write</span>
+      <p class="badge-card-note">
+        Current: --write-badge-bg (#2d1a5e) / --write-badge-text (#c084fc) — muted violet.<br>
+        Direction: keep as-is or desaturate very slightly. Violet is atmospheric — fits mist.
+      </p>
+    </div>
+
+    <div class="badge-card">
+      <div class="badge-card-name">Agent</div>
+      <span class="wf-badge wf-badge--agent">Agent</span>
+      <p class="badge-card-note">
+        Current: --mayo-red-dim (#8b1a22) / #fca5a5 — dim crimson.<br>
+        Direction: keep as-is. Crimson reads "delegation / subagent" clearly. Already muted.
+      </p>
+    </div>
+
+    <div class="badge-card">
+      <div class="badge-card-name">Default / Unknown</div>
+      <span class="wf-badge">Unknown</span>
+      <p class="badge-card-note">
+        Current: --kildare-blue / --kildare-white.<br>
+        Direction: same as Read/Grep/Glob — muted steel. Unknown tools shouldn't flash blue.
+      </p>
+    </div>
+
+    <div class="badge-card">
+      <div class="badge-card-name">Error overlay</div>
+      <span class="wf-badge wf-badge--error">Bash ⚠</span>
+      <p class="badge-card-note">
+        Error state: badge bg → --mayo-red-dim / text → #fca5a5 (unchanged).
+        Error color identity must stay red. Not affected by mist redesign.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION F — CSS Token Mapping (What Changes)
+═══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <div class="wf-section-title">F — CSS Token Mapping: What Changes (index.css)</div>
+
+  <p class="note-block">
+    This table is the implementation brief. Engineer: apply these token swaps in index.css.
+    New tokens may need to be added to :root. The mist tokens should live alongside the existing
+    --kildare-* vars (don't delete kildare — it may be used elsewhere, e.g., speed-btn.active).
+  </p>
+
+  <table class="token-table">
+    <thead>
+      <tr>
+        <th>CSS Rule / Property</th>
+        <th>Current Value (REMOVE)</th>
+        <th>Norse Mist Value (ADD)</th>
+        <th>Rationale</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>:root</code> — new vars</td>
+        <td>—</td>
+        <td>
+          <code>--mist-tool-bg: rgba(18, 18, 31, 0.72)</code><br>
+          <code>--mist-tool-border: rgba(52, 52, 80, 0.70)</code><br>
+          <code>--mist-tool-hover: rgba(30, 30, 52, 0.90)</code><br>
+          <code>--mist-tool-divider: var(--rune-border)</code><br>
+          <code>--read-badge-bg: #1e3252</code><br>
+          <code>--read-badge-text: #94afd4</code><br>
+          <code>--bash-badge-text: #86c894</code> (desaturated)
+        </td>
+        <td>New mist surface tokens. --rune-border already exists (#2a2a3e).</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool</code> background</td>
+        <td class="cross"><code>var(--kildare-blue-dim)</code></td>
+        <td><code>var(--mist-tool-bg)</code></td>
+        <td>Remove saturated blue block fill. Use near-void dark mist.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool</code> border</td>
+        <td class="cross"><code>1px solid var(--kildare-blue)</code></td>
+        <td><code>1px solid var(--mist-tool-border)</code></td>
+        <td>Muted boundary. Block should recede into the dark background.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool-header:hover</code> background</td>
+        <td class="cross"><code>var(--kildare-blue)</code></td>
+        <td><code>var(--mist-tool-hover)</code></td>
+        <td>No blue flash on hover. Mist brightens slightly without introducing hue.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool-badge</code> (default) background</td>
+        <td class="cross"><code>var(--kildare-blue)</code></td>
+        <td><code>var(--read-badge-bg)</code></td>
+        <td>Default badge was same bright blue as block border. Now a distinct muted steel.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool-badge</code> (default) color</td>
+        <td class="cross"><code>var(--kildare-white)</code></td>
+        <td><code>var(--read-badge-text)</code></td>
+        <td>Cooler, muted steel text for Read/Grep/Glob/Unknown badges.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool-badge.read, .grep, .glob</code></td>
+        <td class="cross">inherits kildare-blue/white</td>
+        <td><code>bg: var(--read-badge-bg); color: var(--read-badge-text)</code></td>
+        <td>Make explicit. Same muted steel direction as default.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool-badge.bash</code> color (text)</td>
+        <td class="cross"><code>#4ade80</code> (bright neon green)</td>
+        <td><code>var(--bash-badge-text)</code> (#86c894 — sage green)</td>
+        <td>Same green identity, less neon. Bash stays recognizable.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool-chevron</code> color</td>
+        <td class="cross"><code>var(--kildare-blue-bright)</code></td>
+        <td><code>var(--text-rune)</code></td>
+        <td>Chevron is navigational UI, not accent. Muted gray is sufficient.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool-preview</code> color (source)</td>
+        <td class="cross"><code>var(--kildare-white)</code> opacity 0.6</td>
+        <td><code>var(--text-rune)</code> opacity 0.6</td>
+        <td>Remove kildare dependency. --text-rune (#a0a0b0) at 0.6 reads the same.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool-body</code> color</td>
+        <td class="cross"><code>var(--kildare-white)</code> opacity 0.8</td>
+        <td><code>var(--text-saga)</code> opacity 0.8</td>
+        <td>--text-saga (#f5f5f5) is equivalent to kildare-white. Removes blue coupling.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool.open .ev-tool-body</code> border-top-color</td>
+        <td class="cross"><code>var(--kildare-blue)</code></td>
+        <td><code>var(--mist-tool-divider)</code> → --rune-border</td>
+        <td>Divider between header and body: muted void line, no blue.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool-result</code> border-top color</td>
+        <td class="cross"><code>var(--kildare-blue)</code></td>
+        <td><code>var(--mist-tool-divider)</code></td>
+        <td>Input/result divider: same muted void treatment.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool-result</code> color</td>
+        <td class="cross"><code>var(--kildare-white)</code> opacity 0.5</td>
+        <td><code>var(--text-rune)</code> opacity 0.5</td>
+        <td>Result text is secondary — muted gray at half opacity is right.</td>
+      </tr>
+      <tr>
+        <td><code>--tool-batch-header-bg</code> (dark theme)</td>
+        <td class="cross"><code>rgba(30, 58, 138, 0.10)</code></td>
+        <td><code>rgba(42, 42, 62, 0.30)</code></td>
+        <td>Batch header: remove blue tint. Use the neutral rune-surface already in use.</td>
+      </tr>
+      <tr>
+        <td><code>--tool-batch-header-hover</code> (dark theme)</td>
+        <td class="cross"><code>rgba(30, 58, 138, 0.20)</code></td>
+        <td><code>rgba(42, 42, 62, 0.50)</code></td>
+        <td>Batch hover: same neutral, slightly brighter.</td>
+      </tr>
+      <tr>
+        <td><code>.ev-tool-batch.open .ev-tool-batch-body</code> border-top-color</td>
+        <td class="cross"><code>var(--kildare-blue-dim)</code></td>
+        <td><code>var(--rune-border)</code></td>
+        <td>Batch body top divider when open: already-existing muted void border.</td>
+      </tr>
+      <tr>
+        <td><code>--tool-batch-header-bg</code> (light theme override)</td>
+        <td class="cross"><code>rgba(30, 58, 138, 0.06)</code></td>
+        <td><code>rgba(80, 80, 120, 0.08)</code></td>
+        <td>Light theme: same neutral direction, reduce blue channel to near-zero.</td>
+      </tr>
+      <tr>
+        <td><code>--tool-batch-header-hover</code> (light theme)</td>
+        <td class="cross"><code>rgba(30, 58, 138, 0.12)</code></td>
+        <td><code>rgba(80, 80, 120, 0.16)</code></td>
+        <td>Light theme hover: same neutral increase.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="note" style="margin-top: 1rem;">
+    <strong>Do NOT remove:</strong> --kildare-* vars from :root. They are still used by .speed-btn.active
+    and possibly other elements. Only change the ev-tool and ev-tool-batch rule references.
+  </p>
+  <p class="note">
+    <strong>Light theme (.theme-light body):</strong> Audit read-badge-bg and mist-tool-bg for
+    sufficient contrast against the light background. Mist tokens may need separate light-theme
+    overrides in the .theme-light selector block if the dark values are too subtle.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION G — Mobile Layout (375px)
+═══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <div class="wf-section-title">G — Mobile Layout (375px viewport)</div>
+
+  <p class="note-block">
+    Tool blocks are used inside the monitor-ui log terminal which is a scrolling column.
+    At 375px, tool blocks fill the full column width. No layout changes needed for mobile —
+    the existing flex row layout collapses gracefully. The mist restyling is purely cosmetic
+    and benefits mobile equally (less visual noise on small screens).
+  </p>
+
+  <div class="mobile-frame">
+    <!-- Simulated log terminal column at 375px -->
+    <div style="font-size: 0.65rem; border-bottom: 1px solid #ccc; padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+      Session: a3f9b2c1… · running
+    </div>
+
+    <!-- Tool batch collapsed -->
+    <div class="wf-batch" style="margin-bottom: 0.4rem;">
+      <div class="wf-batch-header">
+        <span class="wf-chevron">›</span>
+        <span class="wf-batch-label">Tool Use · 2 tools</span>
+        <span class="spacer"></span>
+        <span class="wf-batch-done">✓</span>
+      </div>
+    </div>
+
+    <!-- Standalone tool block -->
+    <div class="wf-tool">
+      <div class="wf-tool-header">
+        <span class="wf-badge wf-badge--read">Read</span>
+        <span class="wf-tool-preview">CLAUDE.md</span>
+        <span class="spacer"></span>
+        <span class="wf-chevron">›</span>
+      </div>
+    </div>
+
+    <!-- Another tool block with long preview (truncated) -->
+    <div class="wf-tool" style="margin-top: 0.3rem;">
+      <div class="wf-tool-header">
+        <span class="wf-badge wf-badge--bash">Bash</span>
+        <span class="wf-tool-preview">cd /workspace/repo &amp;&amp; bash quality/scripts/verify.sh --step tsc</span>
+        <span class="spacer"></span>
+        <span class="wf-chevron">›</span>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top: 0.5rem; font-size: 0.6rem;">
+      Preview text truncates (text-overflow: ellipsis) — badge always visible at left.
+      No mobile-specific layout changes needed.
+    </p>
+  </div>
+
+  <p class="note" style="margin-top: 1rem;">
+    <strong>Badge at 375px:</strong> badge must remain legible. Current font-size 0.65rem is
+    already compact; do not reduce further. The mist background provides better contrast for
+    the badge text on small screens vs. the current blue fill.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION H — States Summary
+═══════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <div class="wf-section-title">H — Visual States Summary (Acceptance Criteria Mapping)</div>
+
+  <table class="token-table">
+    <thead>
+      <tr>
+        <th>Acceptance Criterion</th>
+        <th>Implementation</th>
+        <th>Wireframe Section</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Tool response blocks use Norse mist styling</td>
+        <td>Replace kildare-blue-dim bg + kildare-blue border with mist tokens on .ev-tool</td>
+        <td>A, B, F</td>
+      </tr>
+      <tr>
+        <td>No bright blue or green gradients on tool blocks</td>
+        <td>All kildare-blue references removed from ev-tool rules; bash-badge-text desaturated</td>
+        <td>A, B, E, F</td>
+      </tr>
+      <tr>
+        <td>Tool type badges remain scannable</td>
+        <td>Badges retain per-type hue accent; only saturation is reduced on Bash/Read</td>
+        <td>E</td>
+      </tr>
+      <tr>
+        <td>Collapsed and expanded states both styled consistently</td>
+        <td>Mist surface applies to entire .ev-tool container; body divider uses mist-tool-divider</td>
+        <td>A, B</td>
+      </tr>
+      <tr>
+        <td>Maintains readability of tool command text and output</td>
+        <td>--text-saga / --text-rune at existing opacity values; no contrast degradation</td>
+        <td>B, F</td>
+      </tr>
+      <tr>
+        <td>Consistent with void-black/gold Hlidskjalf theme</td>
+        <td>Mist tokens are near-void dark surfaces; gold badge accents unaffected</td>
+        <td>A–G</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>

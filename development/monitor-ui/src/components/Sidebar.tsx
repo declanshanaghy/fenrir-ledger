@@ -8,20 +8,28 @@ interface Props {
   activeSessionId: string | null;
   quote: string;
   onSelectSession: (sessionId: string) => void;
+  onAvatarClick?: (agentKey: string) => void;
+  onOdinClick?: () => void;
 }
 
-export function Sidebar({ jobs, activeSessionId, quote, onSelectSession }: Props) {
+export function Sidebar({ jobs, activeSessionId, quote, onSelectSession, onAvatarClick, onOdinClick }: Props) {
   const { theme, setTheme } = useTheme();
 
   return (
     <nav className="sidebar" aria-label="Agent sessions">
       <div className="sidebar-header">
         <div className="brand">
-          <img
-            src={theme === "light" ? "/odin-light.png" : "/odin-dark.png"}
-            alt="Odin"
-            aria-hidden="true"
-          />
+          <button
+            className="odin-avatar-btn"
+            onClick={onOdinClick}
+            aria-label="View Odin profile"
+            title="View Odin profile"
+          >
+            <img
+              src={theme === "light" ? "/odin-light.png" : "/odin-dark.png"}
+              alt="Odin"
+            />
+          </button>
           <h1>Hlidskjalf</h1>
         </div>
         <div className="quote" role="note">
@@ -53,6 +61,7 @@ export function Sidebar({ jobs, activeSessionId, quote, onSelectSession }: Props
               job={job}
               isActive={job.sessionId === activeSessionId}
               onClick={() => onSelectSession(job.sessionId)}
+              onAvatarClick={onAvatarClick}
             />
           ))
         )}

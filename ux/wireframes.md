@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Monitor UI — Agent Profile Dialogs (Issue #1062)
+
+| File | Description |
+|------|-------------|
+| [wireframes/monitor-ui/agent-profile-modal.html](wireframes/monitor-ui/agent-profile-modal.html) | AgentProfileModal component — portrait modal opened by clicking any agent avatar. 10 sections: scope overview (6 change areas), full desktop anatomy (8 zones: top rune band, close button, portrait, identity block [name+title+rune signature], Norse quote, role description, bottom rune band), mobile 375px layout + responsive table, all three trigger locations (AgentBubble/JobCard/Sidebar header) with stopPropagation note for card, all 6 agent variants (FiremanDecko/Loki/Luna/Freya/Heimdall/Odin) with portrait paths + rune + quote, open/close state machine (3 states), WCAG 2.1 AA accessibility spec (focus trap, ESC, focus return, backdrop click, body scroll lock), profile image asset pipeline (copy-script vs symlink options), component change summary (AgentProfileModal.tsx new + 5 file modifications), AGENT_DESCRIPTIONS copy spec for all 6 agents. Interaction spec: [agent-profile-modal-interaction-spec.md](wireframes/monitor-ui/agent-profile-modal-interaction-spec.md). |
+
+---
+
 ## Chronicles — Norse MDX Agent Report Components (Issue #1047)
 
 | File | Description |
@@ -18,6 +26,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | [wireframes/chronicles/chronicle-agent-page-shell.html](wireframes/chronicles/chronicle-agent-page-shell.html) | Full agent chronicle page shell: 7 zones (site nav, compact header, prev/next nav, content area with all Norse components, back-link), desktop 1200px + mobile 375px viewports, component inventory table. |
 | [wireframes/chronicles/norse-components-catalog.html](wireframes/chronicles/norse-components-catalog.html) | Detailed catalog of all 5 Norse MDX components: All-Father's Decree, Agent Callback Footer, Chat Bubbles (agent comeback + Mayo heckler), Toolbox (collapsible turns + nested tool blocks), Explosion/Entrance events. Each with spec table + wireframe + mobile variant. CSS architecture and token mapping included. |
 | [wireframes/chronicles/interaction-spec.md](wireframes/chronicles/interaction-spec.md) | Interaction spec: collapsible section behavior (native &lt;details&gt;, no JS), animation spec (norse-tremble, explosion-glow, prefers-reduced-motion guards), responsive breakpoints, profile modal design, accessibility WCAG 2.1 AA checklist, CSS extraction strategy, open questions for FiremanDecko. |
+
+---
+
+## Monitor UI — Norse Mist Tool Response Blocks (Issue #1072)
+
+| File | Description |
+|------|-------------|
+| [wireframes/monitor-ui/norse-mist-tool-blocks.html](wireframes/monitor-ui/norse-mist-tool-blocks.html) | Restyle tool response blocks with Norse mist aesthetic. 8 sections: (A) collapsed tool block anatomy with mist surface annotations, (B) expanded states (Read with result, Bash input-only, Write badge), (C) tool batch collapsed (pending spinner + complete states), (D) tool batch expanded with nested right-aligned tool blocks, (E) full tool badge palette (Bash/Read/Grep/Glob/Edit/Write/Agent/Unknown/Error) with saturation direction, (F) CSS token mapping table — exact :root additions and ev-tool/ev-tool-batch rule swaps removing all kildare-blue references, (G) mobile 375px simulation, (H) acceptance criteria mapping table. |
 
 ---
 

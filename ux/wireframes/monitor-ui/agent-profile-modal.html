@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — AgentProfileModal (Issue #1062)</title>
+  <style>
+    /* ── Layout-only CSS. No colors, no fonts beyond sans-serif, no shadows, no border-radius. ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; padding: 2rem; }
+
+    /* ── Wireframe scaffold ── */
+    .wf-section {
+      border: 2px solid #000;
+      margin-bottom: 3rem;
+      padding: 1.5rem;
+    }
+    .wf-section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid #000;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .note {
+      font-size: 0.7rem;
+      font-style: italic;
+      border: 1px dashed #555;
+      padding: 0.4rem 0.6rem;
+      margin: 0.5rem 0;
+    }
+    .label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    /* ── Grid / flex helpers ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .flex-col { display: flex; flex-direction: column; gap: 0.5rem; }
+    .flex-row { display: flex; flex-direction: row; gap: 0.75rem; align-items: flex-start; }
+    .flex-center { display: flex; justify-content: center; align-items: center; }
+
+    /* ── Annotation tables ── */
+    table { border-collapse: collapse; width: 100%; font-size: 0.75rem; margin-top: 0.75rem; }
+    th, td { border: 1px solid #000; padding: 0.4rem 0.6rem; text-align: left; vertical-align: top; }
+    th { font-weight: 700; text-transform: uppercase; font-size: 0.65rem; }
+
+    /* ══════════════════════════════════════════════════════════════
+       AgentProfileModal — Core Component
+       ══════════════════════════════════════════════════════════════ */
+
+    /* Backdrop: fixed overlay, click outside modal to dismiss */
+    .apm-backdrop {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px dashed #999;
+      padding: 2rem;
+      min-height: 200px;
+    }
+
+    /* Modal shell — narrow portrait format, centered */
+    .apm-shell {
+      border: 3px solid #000;
+      width: min(480px, 92vw);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* TOP rune band — Elder Futhark alphabet strip */
+    .apm-rune-band {
+      width: 100%;
+      border-bottom: 2px solid #000;
+      padding: 0.4rem 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+    }
+    .apm-rune-band.bottom {
+      border-bottom: none;
+      border-top: 2px solid #000;
+    }
+
+    /* Close button — absolute top-right */
+    .apm-close {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      width: 28px;
+      height: 28px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.85rem;
+      background: none;
+      font-family: inherit;
+      z-index: 1;
+    }
+
+    /* Profile image zone */
+    .apm-portrait-zone {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem 2rem 0.75rem;
+      border-bottom: 1px solid #000;
+    }
+    .apm-portrait {
+      width: 140px;
+      height: 140px;
+      border: 2px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      text-align: center;
+    }
+
+    /* Identity block */
+    .apm-identity {
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      border-bottom: 1px solid #000;
+    }
+    .apm-agent-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .apm-agent-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+    .apm-rune-sig {
+      font-size: 1.1rem;
+      letter-spacing: 0.25em;
+      padding-top: 0.2rem;
+    }
+
+    /* Quote block */
+    .apm-quote {
+      padding: 0.75rem 1.5rem;
+      font-style: italic;
+      font-size: 0.8rem;
+      text-align: center;
+      line-height: 1.5;
+      border-bottom: 1px solid #000;
+    }
+
+    /* Role description */
+    .apm-description {
+      padding: 0.75rem 1.5rem 1rem;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    /* ── Trigger location wireframes ── */
+    /* Agent bubble (chat message) */
+    .trigger-bubble {
+      border: 1px solid #000;
+      max-width: 480px;
+      padding: 0.75rem;
+    }
+    .bubble-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+    .bubble-avatar {
+      width: 36px;
+      height: 36px;
+      border: 2px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .bubble-avatar.clickable {
+      border: 2px solid #000;
+      /* Theme: add ring/hover cue via CSS var --agent-accent */
+    }
+    .bubble-identity { display: flex; flex-direction: column; gap: 0.15rem; }
+    .bubble-name { font-size: 0.82rem; font-weight: 700; }
+    .bubble-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .bubble-text { font-size: 0.8rem; line-height: 1.5; padding-left: 0.25rem; }
+
+    /* JobCard (sidebar) */
+    .trigger-card {
+      border: 1px solid #000;
+      max-width: 280px;
+      padding: 0.5rem 0.7rem;
+    }
+    .card-top {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-avatar {
+      width: 28px;
+      height: 28px;
+      border: 1px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.5rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .card-title { font-size: 0.7rem; flex: 1; font-weight: 700; }
+    .card-status { font-size: 0.7rem; }
+    .card-meta { font-size: 0.6rem; margin-top: 0.3rem; display: flex; gap: 0.5rem; }
+
+    /* Sidebar header (Odin) */
+    .trigger-sidebar-header {
+      border: 1px solid #000;
+      max-width: 280px;
+      padding: 0.75rem 1rem;
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .odin-avatar {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .brand-title { font-size: 1rem; font-weight: 700; }
+
+    /* ── Mobile viewport simulation ── */
+    .mobile-frame {
+      border: 3px solid #000;
+      width: 375px;
+      padding: 0;
+      overflow: hidden;
+    }
+    .mobile-frame .apm-shell {
+      width: 100%;
+    }
+
+    /* ── Agent variant card ── */
+    .variant-card {
+      border: 1px solid #000;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+    }
+    .variant-name { font-size: 0.85rem; font-weight: 700; }
+    .variant-title { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; }
+    .variant-rune { font-size: 1rem; letter-spacing: 0.2em; }
+    .variant-color-swatch {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #000;
+      display: inline-block;
+      margin-right: 0.3rem;
+      vertical-align: middle;
+    }
+    .variant-portrait {
+      width: 48px;
+      height: 48px;
+      border: 2px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      text-align: center;
+      margin: auto;
+    }
+
+    /* State comparison */
+    .state-box {
+      border: 1px solid #000;
+      padding: 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+    }
+    .state-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-bottom: 1px solid #000;
+      padding-bottom: 0.25rem;
+      margin-bottom: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 1 — SCOPE OVERVIEW
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 1 — Scope Overview (Issue #1062)</h2>
+  <p class="note">Feature: Clickable agent avatars throughout the monitor UI open a profile modal. Three trigger locations. One new shared component.</p>
+
+  <table>
+    <thead><tr><th>Change Area</th><th>File</th><th>What Changes</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>New component</td>
+        <td>AgentProfileModal.tsx</td>
+        <td>New modal — large portrait, name, title, rune signature, Norse quote, role description. Overlay + ESC + backdrop close.</td>
+      </tr>
+      <tr>
+        <td>Chat bubble trigger</td>
+        <td>LogViewer.tsx — AgentBubble</td>
+        <td>Avatar <code>&lt;img&gt;</code> wrapped in <code>&lt;button&gt;</code>; click opens AgentProfileModal for that agentKey.</td>
+      </tr>
+      <tr>
+        <td>Job card trigger</td>
+        <td>JobCard.tsx</td>
+        <td>Card avatar <code>&lt;img&gt;</code> wrapped in <code>&lt;button&gt;</code>; click (with stopPropagation) opens modal without selecting session.</td>
+      </tr>
+      <tr>
+        <td>Sidebar header trigger</td>
+        <td>Sidebar.tsx</td>
+        <td>Odin <code>&lt;img&gt;</code> wrapped in <code>&lt;button&gt;</code>; click opens modal for agentKey "odin".</td>
+      </tr>
+      <tr>
+        <td>Constants</td>
+        <td>constants.ts</td>
+        <td>Add AGENT_DESCRIPTIONS, AGENT_LIGHT_AVATARS (light-theme portrait paths), Odin entry to AGENT_QUOTES/AGENT_RUNE_NAMES.</td>
+      </tr>
+      <tr>
+        <td>Profile image assets</td>
+        <td>development/monitor-ui/public/profiles/</td>
+        <td>Light+dark PNG portraits copied from <code>.claude/agents/profiles/</code> at build time (or symlinked). See §8.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 2 — MODAL ANATOMY (DESKTOP — 480px wide)
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 2 — AgentProfileModal Anatomy (Desktop, 480px modal width)</h2>
+  <p class="note">Shown here as FiremanDecko variant. Modal is centered in viewport. Backdrop (dashed border) covers full screen.</p>
+
+  <div class="apm-backdrop" aria-label="Wireframe: modal backdrop — click outside to close">
+    <p class="note" style="position:absolute;top:0.3rem;left:0.5rem;font-size:0.6rem;">
+      [A] BACKDROP — role="presentation", click dismisses, aria-hidden="true" (focusable content is inside modal)
+    </p>
+
+    <div class="apm-shell" role="dialog" aria-modal="true" aria-labelledby="apm-name">
+
+      <!-- [B] TOP RUNE BAND -->
+      <div class="apm-rune-band" aria-hidden="true">
+        ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ
+      </div>
+
+      <!-- [C] CLOSE BUTTON -->
+      <button class="apm-close" aria-label="Close agent profile" tabindex="0">✕</button>
+
+      <!-- [D] PORTRAIT IMAGE -->
+      <div class="apm-portrait-zone">
+        <div class="apm-portrait">
+          <span>
+            [D] Portrait<br/>
+            140×140<br/>
+            theme-variant<br/>
+            img alt="FiremanDecko"
+          </span>
+        </div>
+      </div>
+      <p class="note" style="text-align:center;font-size:0.6rem;padding:0.2rem 0.5rem 0;">
+        [D] src = theme=dark → /profiles/fireman-decko-dark.png | theme=light → /profiles/fireman-decko-light.png
+      </p>
+
+      <!-- [E] IDENTITY BLOCK -->
+      <div class="apm-identity">
+        <div class="apm-agent-name" id="apm-name">FiremanDecko</div>
+        <!-- [E1] Name: Cinzel Decorative, agent accent color (--agent-accent CSS var) -->
+        <div class="apm-agent-title">Principal Engineer</div>
+        <!-- [E2] Title: Cinzel, uppercase, dimmer (--text-dim) -->
+        <div class="apm-rune-sig" aria-label="Rune signature: FiremanDecko">ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ</div>
+        <!-- [E3] AGENT_RUNE_NAMES[agentKey] — Elder Futhark transliteration -->
+      </div>
+
+      <!-- [F] NORSE QUOTE -->
+      <div class="apm-quote">
+        <p>"Not with words but with fire and iron is the world built — strike true, forge deep, let no flaw survive the flame"</p>
+        <!-- [F] AGENT_QUOTES[agentKey] — Source Serif italic, centered -->
+      </div>
+
+      <!-- [G] ROLE DESCRIPTION -->
+      <div class="apm-description">
+        <p>FiremanDecko is the Principal Engineer of Fenrir Ledger — architect, implementer, and keeper of the forge. He receives the Product Design Brief and produces architecture, technical specifications, and working code. He owns the full technical lifecycle from design through implementation, handing off to Loki for quality assurance.</p>
+        <!-- [G] AGENT_DESCRIPTIONS[agentKey] — new constant, plain paragraph -->
+      </div>
+
+      <!-- [H] BOTTOM RUNE BAND -->
+      <div class="apm-rune-band bottom" aria-hidden="true">
+        ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ
+      </div>
+
+    </div><!-- /.apm-shell -->
+  </div><!-- /.apm-backdrop -->
+
+  <table style="margin-top:1rem;">
+    <thead><tr><th>Zone</th><th>Label</th><th>Content Source</th><th>Typography Token</th></tr></thead>
+    <tbody>
+      <tr><td>[A]</td><td>Backdrop</td><td>–</td><td>–</td></tr>
+      <tr><td>[B]</td><td>Top rune band</td><td>Full Elder Futhark alphabet (static)</td><td>var(--font-rune), aria-hidden</td></tr>
+      <tr><td>[C]</td><td>Close ✕</td><td>–</td><td>aria-label="Close agent profile"</td></tr>
+      <tr><td>[D]</td><td>Portrait image</td><td>AGENT_LIGHT_AVATARS / AGENT_AVATARS by theme</td><td>140×140 desktop; 100×100 mobile</td></tr>
+      <tr><td>[E1]</td><td>Agent name</td><td>AGENT_NAMES[agentKey]</td><td>Cinzel Decorative, bold, accent color</td></tr>
+      <tr><td>[E2]</td><td>Title</td><td>AGENT_TITLES[agentKey]</td><td>Cinzel, uppercase, --text-dim</td></tr>
+      <tr><td>[E3]</td><td>Rune signature</td><td>AGENT_RUNE_NAMES[agentKey]</td><td>var(--font-rune), letterspacing 0.25em</td></tr>
+      <tr><td>[F]</td><td>Norse quote</td><td>AGENT_QUOTES[agentKey]</td><td>Source Serif italic, centered</td></tr>
+      <tr><td>[G]</td><td>Role description</td><td>AGENT_DESCRIPTIONS[agentKey] (new constant)</td><td>0.78rem, centered, line-height 1.55</td></tr>
+      <tr><td>[H]</td><td>Bottom rune band</td><td>Full Elder Futhark alphabet (static)</td><td>var(--font-rune), aria-hidden</td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 3 — MOBILE 375px LAYOUT
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 3 — Mobile 375px Layout</h2>
+  <p class="note">Modal fills 92vw (= ~346px at 375px viewport). Portrait scales to 100×100. Text wraps naturally. Bottom rune band single-line truncation acceptable.</p>
+
+  <div class="mobile-frame" aria-label="Wireframe: mobile 375px modal">
+    <div class="apm-shell" style="width:100%;">
+
+      <div class="apm-rune-band" aria-hidden="true" style="font-size:0.65rem;overflow:hidden;white-space:nowrap;">
+        ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ
+      </div>
+
+      <button class="apm-close" aria-label="Close agent profile" style="top:0.3rem;right:0.3rem;">✕</button>
+
+      <div class="apm-portrait-zone" style="padding:1rem 1.5rem 0.5rem;">
+        <div class="apm-portrait" style="width:100px;height:100px;font-size:0.55rem;text-align:center;">
+          100×100<br/>portrait
+        </div>
+      </div>
+
+      <div class="apm-identity" style="padding:0.75rem 1rem;gap:0.25rem;">
+        <div class="apm-agent-name" style="font-size:1.1rem;">FiremanDecko</div>
+        <div class="apm-agent-title" style="font-size:0.62rem;">Principal Engineer</div>
+        <div class="apm-rune-sig" style="font-size:0.9rem;">ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ</div>
+      </div>
+
+      <div class="apm-quote" style="padding:0.6rem 1rem;font-size:0.72rem;">
+        "Not with words but with fire and iron is the world built…"
+      </div>
+
+      <div class="apm-description" style="padding:0.5rem 1rem 0.75rem;font-size:0.7rem;">
+        FiremanDecko is the Principal Engineer of Fenrir Ledger — architect, implementer, and keeper of the forge…
+      </div>
+
+      <div class="apm-rune-band bottom" aria-hidden="true" style="font-size:0.65rem;overflow:hidden;white-space:nowrap;">
+        ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ
+      </div>
+
+    </div>
+  </div>
+
+  <table style="margin-top:1rem;">
+    <thead><tr><th>Element</th><th>Desktop</th><th>Mobile ≤600px</th></tr></thead>
+    <tbody>
+      <tr><td>Modal width</td><td>min(480px, 92vw)</td><td>92vw (≈346px at 375px)</td></tr>
+      <tr><td>Portrait</td><td>140×140</td><td>100×100</td></tr>
+      <tr><td>Agent name</td><td>1.3rem</td><td>1.1rem</td></tr>
+      <tr><td>Quote font</td><td>0.8rem</td><td>0.72rem</td></tr>
+      <tr><td>Description font</td><td>0.78rem</td><td>0.7rem</td></tr>
+      <tr><td>Padding (identity)</td><td>1rem 1.5rem</td><td>0.75rem 1rem</td></tr>
+      <tr><td>Rune band overflow</td><td>wraps</td><td>single line, truncated OK (aria-hidden)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 4 — TRIGGER LOCATIONS
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 4 — Clickable Trigger Locations</h2>
+  <p class="note">Three locations where avatar clicks open AgentProfileModal. Each avatar is wrapped in a &lt;button&gt; element (not a div) for keyboard and screen reader access.</p>
+
+  <div class="grid-3" style="margin-bottom:1.5rem;">
+
+    <!-- Trigger A: AgentBubble -->
+    <div>
+      <span class="label">[Trigger A] AgentBubble — LogViewer.tsx</span>
+      <div class="trigger-bubble">
+        <div class="bubble-header">
+          <button
+            class="bubble-avatar clickable"
+            aria-label="View FiremanDecko profile"
+            tabindex="0"
+            style="background:none;border:2px solid #000;padding:0;cursor:pointer;"
+          >
+            <img src="" alt="FiremanDecko" style="width:100%;height:100%;display:block;" />
+            <span style="font-size:0.6rem;">avatar</span>
+          </button>
+          <div class="bubble-identity">
+            <span class="bubble-name">FiremanDecko</span>
+            <span class="bubble-title">Principal Engineer</span>
+          </div>
+        </div>
+        <div class="bubble-text">I have analysed the architecture and prepared the implementation plan…</div>
+      </div>
+      <p class="note">
+        Wrap existing &lt;img class="agent-bubble-avatar"&gt; in &lt;button&gt;.<br/>
+        stopPropagation NOT needed here — bubble click has no parent handler.<br/>
+        aria-label="View {name} profile"
+      </p>
+    </div>
+
+    <!-- Trigger B: JobCard -->
+    <div>
+      <span class="label">[Trigger B] JobCard avatar — JobCard.tsx</span>
+      <div class="trigger-card">
+        <div class="card-top">
+          <button
+            class="card-avatar"
+            aria-label="View FiremanDecko profile"
+            tabindex="0"
+            style="background:none;padding:0;cursor:pointer;"
+            onclick="/* stopPropagation — prevents card selection */"
+          >
+            <img src="" alt="FiremanDecko" style="width:100%;height:100%;display:block;" />
+            <span style="font-size:0.5rem;">avatar</span>
+          </button>
+          <span class="card-title">#1062 — Agent profile dialogs</span>
+          <span class="card-status">●</span>
+        </div>
+        <div class="card-meta">
+          <span>FiremanDecko</span>
+          <span>Step 3</span>
+          <span>running</span>
+        </div>
+      </div>
+      <p class="note">
+        IMPORTANT: e.stopPropagation() on button click — avatar click must NOT trigger card's onClick (session select).<br/>
+        aria-label="View {agentName} profile"
+      </p>
+    </div>
+
+    <!-- Trigger C: Sidebar header (Odin) -->
+    <div>
+      <span class="label">[Trigger C] Odin avatar — Sidebar.tsx header</span>
+      <div class="trigger-sidebar-header">
+        <div class="brand-row">
+          <button
+            class="odin-avatar"
+            aria-label="View Odin profile"
+            tabindex="0"
+            style="background:none;padding:0;cursor:pointer;"
+          >
+            <img
+              src=""
+              alt="Odin"
+              style="width:100%;height:100%;display:block;"
+            />
+            <span style="font-size:0.55rem;">Odin</span>
+          </button>
+          <h1 class="brand-title">Hlidskjalf</h1>
+        </div>
+        <div style="font-size:0.65rem;font-style:italic;margin-top:0.4rem;">
+          "I see all nine worlds from Hlidskjalf…"
+        </div>
+      </div>
+      <p class="note">
+        agentKey = "odin" (hardcoded).<br/>
+        Uses ODIN_QUOTES for cycling quote (already exists).<br/>
+        Modal shows Odin's profile independently of selected session.
+      </p>
+    </div>
+
+  </div>
+
+  <p class="note">All three triggers follow the same pattern: button element → onClick → setProfileAgent(agentKey) → modal renders.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 5 — ALL AGENT VARIANTS
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 5 — All Agent Variants (6 agents)</h2>
+  <p class="note">Each card shows the data that populates the modal for that agent. Accent color swatch is illustrative — applied via CSS var(--agent-accent) set from AGENT_COLORS.</p>
+
+  <div class="grid-3">
+
+    <div class="variant-card">
+      <div class="variant-portrait">FD<br/>portrait</div>
+      <div class="variant-name">FiremanDecko <span class="variant-color-swatch" title="#4ecdc4"></span></div>
+      <div class="variant-title">Principal Engineer</div>
+      <div class="variant-rune">ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ</div>
+      <div style="font-size:0.65rem;font-style:italic;">"Not with words but with fire and iron…"</div>
+      <div style="font-size:0.62rem;">Light: fireman-decko-light.png | Dark: fireman-decko-dark.png</div>
+    </div>
+
+    <div class="variant-card">
+      <div class="variant-portrait">L<br/>portrait</div>
+      <div class="variant-name">Loki <span class="variant-color-swatch" title="#a78bfa"></span></div>
+      <div class="variant-title">QA Tester</div>
+      <div class="variant-rune">ᛚᛟᚲᛁ</div>
+      <div style="font-size:0.65rem;font-style:italic;">"Every truth hides a lie, every build hides a flaw…"</div>
+      <div style="font-size:0.62rem;">Light: loki-light.png | Dark: loki-dark.png</div>
+    </div>
+
+    <div class="variant-card">
+      <div class="variant-portrait">Lu<br/>portrait</div>
+      <div class="variant-name">Luna <span class="variant-color-swatch" title="#6b8afd"></span></div>
+      <div class="variant-title">UX Designer</div>
+      <div class="variant-rune">ᛚᚢᚾᚨ</div>
+      <div style="font-size:0.65rem;font-style:italic;">"By moonlight are the hidden paths revealed…"</div>
+      <div style="font-size:0.62rem;">Light: luna-light.png | Dark: luna-dark.png</div>
+    </div>
+
+    <div class="variant-card">
+      <div class="variant-portrait">Fr<br/>portrait</div>
+      <div class="variant-name">Freya <span class="variant-color-swatch" title="#f0b429"></span></div>
+      <div class="variant-title">Product Owner</div>
+      <div class="variant-rune">ᚠᚱᛖᛃᚨ</div>
+      <div style="font-size:0.65rem;font-style:italic;">"I have walked the nine worlds in sorrow and in glory…"</div>
+      <div style="font-size:0.62rem;">Light: freya-light.png | Dark: freya-dark.png</div>
+    </div>
+
+    <div class="variant-card">
+      <div class="variant-portrait">H<br/>portrait</div>
+      <div class="variant-name">Heimdall <span class="variant-color-swatch" title="#ef4444"></span></div>
+      <div class="variant-title">Security Specialist</div>
+      <div class="variant-rune">ᚺᛖᛁᛗᛞᚨᛚᛚ</div>
+      <div style="font-size:0.65rem;font-style:italic;">"Nothing passes the Bifröst without my knowing…"</div>
+      <div style="font-size:0.62rem;">Light: heimdall-light.png | Dark: heimdall-dark.png</div>
+    </div>
+
+    <div class="variant-card">
+      <div class="variant-portrait">O<br/>portrait</div>
+      <div class="variant-name">Odin <span class="variant-color-swatch" title="#c9920a"></span></div>
+      <div class="variant-title">All-Father</div>
+      <div class="variant-rune">ᛟᛞᛁᚾ</div>
+      <div style="font-size:0.65rem;font-style:italic;">"I hung on that windy tree for nine long nights…"</div>
+      <div style="font-size:0.62rem;">Light: odin-light.png | Dark: odin-dark.png</div>
+      <p class="note" style="font-size:0.6rem;">
+        Odin entry needs adding to AGENT_NAMES, AGENT_TITLES, AGENT_RUNE_NAMES, AGENT_COLORS, AGENT_QUOTES in constants.ts.<br/>
+        Quote: first item from ODIN_QUOTES array. Accent: gold (#c9920a).
+      </p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 6 — OPEN/CLOSE STATE MACHINE
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 6 — State Machine: Open / Close</h2>
+  <p class="note">AgentProfileModal is controlled by a single state: profileAgent (string | null) held in the parent (App.tsx or LogViewer.tsx). null = closed.</p>
+
+  <div class="grid-3">
+
+    <div class="state-box">
+      <div class="state-label">State A — Closed</div>
+      <div>profileAgent = null</div>
+      <div style="font-size:0.65rem;margin-top:0.3rem;">Modal not rendered (conditional render, not display:none).</div>
+      <div style="font-size:0.65rem;">Focus remains on last active element.</div>
+    </div>
+
+    <div class="state-box">
+      <div class="state-label">State B — Open</div>
+      <div>profileAgent = "firemandecko"</div>
+      <div style="font-size:0.65rem;margin-top:0.3rem;">Modal rendered. Focus trapped inside. Backdrop visible.</div>
+      <div style="font-size:0.65rem;">Scroll body locked (overflow: hidden on &lt;body&gt;).</div>
+    </div>
+
+    <div class="state-box">
+      <div class="state-label">State C — Dismiss</div>
+      <div>Three triggers → profileAgent = null</div>
+      <div style="font-size:0.65rem;margin-top:0.3rem;">1. Click ✕ button</div>
+      <div style="font-size:0.65rem;">2. ESC key (keydown handler on modal element)</div>
+      <div style="font-size:0.65rem;">3. Click backdrop (outside modal shell)</div>
+      <div style="font-size:0.65rem;margin-top:0.3rem;">Focus returns to the trigger button that opened the modal (store ref before open).</div>
+    </div>
+
+  </div>
+
+  <p class="note" style="margin-top:1rem;">
+    Recommended: lift profileAgent state to App.tsx so any child (AgentBubble, JobCard, Sidebar) can trigger it via a callback prop or Context. Avoids prop-drilling through LogViewer.
+    Alternative: React Context — AgentProfileContext.setProfileAgent(key).
+  </p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 7 — ACCESSIBILITY SPEC (WCAG 2.1 AA)
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 7 — Accessibility Spec (WCAG 2.1 AA)</h2>
+
+  <table>
+    <thead><tr><th>Requirement</th><th>Implementation</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Modal role</td>
+        <td>&lt;div role="dialog" aria-modal="true" aria-labelledby="apm-name"&gt; — "apm-name" is the agent name heading</td>
+      </tr>
+      <tr>
+        <td>Focus trap</td>
+        <td>On open, focus moves to ✕ button (first focusable). Tab cycles: ✕ → (no other interactive elements) → ✕. Shift+Tab same cycle.</td>
+      </tr>
+      <tr>
+        <td>ESC key</td>
+        <td>keydown listener on modal; Escape calls onClose(). Must work even if focus is on backdrop.</td>
+      </tr>
+      <tr>
+        <td>Focus return</td>
+        <td>Store triggerRef before opening. On close, triggerRef.current?.focus().</td>
+      </tr>
+      <tr>
+        <td>Backdrop click</td>
+        <td>onClick on backdrop div; check e.target === backdrop element (not modal shell) before closing.</td>
+      </tr>
+      <tr>
+        <td>Trigger buttons</td>
+        <td>All three avatar wrappers are &lt;button&gt; elements (not divs). aria-label="View {name} profile".</td>
+      </tr>
+      <tr>
+        <td>Portrait alt text</td>
+        <td>alt="{agentName}" — meaningful, not empty (image conveys identity).</td>
+      </tr>
+      <tr>
+        <td>Rune signature</td>
+        <td>aria-label="Rune signature: {agentName}" on the rune &lt;span&gt; — screen reader reads latin name, not unpronounceable runes.</td>
+      </tr>
+      <tr>
+        <td>Rune bands (decorative)</td>
+        <td>aria-hidden="true" on both rune band divs.</td>
+      </tr>
+      <tr>
+        <td>Body scroll lock</td>
+        <td>document.body.style.overflow = 'hidden' on open; restored on close. Use useEffect cleanup.</td>
+      </tr>
+      <tr>
+        <td>Reduced motion</td>
+        <td>If CSS entrance animation added — @media (prefers-reduced-motion: reduce) { animation: none }.</td>
+      </tr>
+      <tr>
+        <td>Color contrast</td>
+        <td>Agent accent color must meet 4.5:1 against modal background for agent name. FiremanDecko (#4ecdc4), Loki (#a78bfa), Luna (#6b8afd) — verify against dark/light bg respectively.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 8 — PROFILE IMAGE ASSET PIPELINE
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 8 — Profile Image Asset Pipeline</h2>
+  <p class="note">Profile images live in .claude/agents/profiles/ and must be served from the monitor UI's public/ directory.</p>
+
+  <table>
+    <thead><tr><th>Agent</th><th>Light source</th><th>Dark source</th><th>Public path (light)</th><th>Public path (dark)</th></tr></thead>
+    <tbody>
+      <tr><td>FiremanDecko</td><td>.claude/agents/profiles/fireman-decko-light.png</td><td>.claude/agents/profiles/fireman-decko-dark.png</td><td>/profiles/fireman-decko-light.png</td><td>/profiles/fireman-decko-dark.png</td></tr>
+      <tr><td>Loki</td><td>.claude/agents/profiles/loki-light.png</td><td>.claude/agents/profiles/loki-dark.png</td><td>/profiles/loki-light.png</td><td>/profiles/loki-dark.png</td></tr>
+      <tr><td>Luna</td><td>.claude/agents/profiles/luna-light.png</td><td>.claude/agents/profiles/luna-dark.png</td><td>/profiles/luna-light.png</td><td>/profiles/luna-dark.png</td></tr>
+      <tr><td>Freya</td><td>.claude/agents/profiles/freya-light.png</td><td>.claude/agents/profiles/freya-dark.png</td><td>/profiles/freya-light.png</td><td>/profiles/freya-dark.png</td></tr>
+      <tr><td>Heimdall</td><td>.claude/agents/profiles/heimdall-light.png</td><td>.claude/agents/profiles/heimdall-dark.png</td><td>/profiles/heimdall-light.png</td><td>/profiles/heimdall-dark.png</td></tr>
+      <tr><td>Odin</td><td>.claude/agents/profiles/odin-light.png</td><td>.claude/agents/profiles/odin-dark.png</td><td>/profiles/odin-light.png</td><td>/profiles/odin-dark.png</td></tr>
+    </tbody>
+  </table>
+
+  <p class="note" style="margin-top:0.75rem;">
+    Implementation options (FiremanDecko to choose):<br/>
+    Option 1 — Build-time copy script in package.json: <code>"copy:profiles": "cp -r ../../.claude/agents/profiles/* public/profiles/"</code> (run in prebuild or predev).<br/>
+    Option 2 — Symlink: <code>ln -s ../../../../.claude/agents/profiles development/monitor-ui/public/profiles</code> — works locally, may not survive Docker image builds.<br/>
+    Option 3 — Vite plugin / custom build step that copies at bundle time.<br/>
+    Recommended: Option 1 (copy script), safest for GKE container builds.
+  </p>
+
+  <p class="note">
+    New constants needed in constants.ts:<br/>
+    <code>AGENT_LIGHT_AVATARS: Record&lt;string, string&gt;</code> — maps agentKey → "/profiles/{agent}-light.png"<br/>
+    Usage: <code>const portrait = theme === "light" ? AGENT_LIGHT_AVATARS[key] : AGENT_AVATARS[key]</code><br/>
+    Note: existing AGENT_AVATARS already points to dark variants — reuse these for modal dark portrait.
+  </p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 9 — COMPONENT CHANGE SUMMARY
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 9 — Component Change Summary</h2>
+
+  <table>
+    <thead><tr><th>File</th><th>Change Type</th><th>Details</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>AgentProfileModal.tsx <em>(new)</em></td>
+        <td>New component</td>
+        <td>
+          Props: <code>agentKey: string, theme: "light" | "dark", onClose: () =&gt; void</code><br/>
+          Renders backdrop + modal shell with all 8 zones (§2).<br/>
+          Handles focus trap, ESC key, backdrop click, body scroll lock (useEffect).
+        </td>
+      </tr>
+      <tr>
+        <td>LogViewer.tsx — AgentBubble</td>
+        <td>Modify</td>
+        <td>
+          Add prop: <code>onAvatarClick?: (agentKey: string) =&gt; void</code><br/>
+          Wrap avatar &lt;img&gt; in &lt;button&gt; with onClick=onAvatarClick(agentKey).<br/>
+          aria-label="View {name} profile"
+        </td>
+      </tr>
+      <tr>
+        <td>JobCard.tsx</td>
+        <td>Modify</td>
+        <td>
+          Add prop: <code>onAvatarClick?: (agentKey: string) =&gt; void</code><br/>
+          Wrap card avatar &lt;img&gt; in &lt;button&gt;; e.stopPropagation() prevents card selection.<br/>
+          aria-label="View {agentName} profile"
+        </td>
+      </tr>
+      <tr>
+        <td>Sidebar.tsx</td>
+        <td>Modify</td>
+        <td>
+          Add prop: <code>onOdinClick?: () =&gt; void</code><br/>
+          Wrap Odin &lt;img&gt; in &lt;button&gt;; onClick=onOdinClick (triggers modal with "odin" key).
+        </td>
+      </tr>
+      <tr>
+        <td>App.tsx (or top-level parent)</td>
+        <td>Modify</td>
+        <td>
+          Add state: <code>const [profileAgent, setProfileAgent] = useState&lt;string | null&gt;(null)</code><br/>
+          Pass <code>onAvatarClick={setProfileAgent}</code> down to AgentBubble and JobCard.<br/>
+          Pass <code>onOdinClick={() =&gt; setProfileAgent("odin")}</code> to Sidebar.<br/>
+          Render: <code>{profileAgent &amp;&amp; &lt;AgentProfileModal agentKey={profileAgent} theme={theme} onClose={() =&gt; setProfileAgent(null)} /&gt;}</code>
+        </td>
+      </tr>
+      <tr>
+        <td>constants.ts</td>
+        <td>Extend</td>
+        <td>
+          Add <code>AGENT_LIGHT_AVATARS</code> (light portrait paths for modal).<br/>
+          Add <code>AGENT_DESCRIPTIONS</code> (brief role paragraph for each agent + odin).<br/>
+          Add "odin" key to AGENT_NAMES, AGENT_TITLES, AGENT_RUNE_NAMES, AGENT_COLORS, AGENT_QUOTES.
+        </td>
+      </tr>
+      <tr>
+        <td>index.css (monitor-ui)</td>
+        <td>Extend</td>
+        <td>
+          Add CSS vars and classes for .apm-* zones (see §2 zone labels).<br/>
+          Follow existing NorseVerdictInscription / NorseErrorTablet CSS var conventions.<br/>
+          Agent accent: CSS custom property <code>--agent-accent</code> passed inline via style prop.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 10 — AGENT_DESCRIPTIONS COPY SPEC
+     ═══════════════════════════════════════════════════════════════════════ -->
+<section class="wf-section">
+  <h2 class="wf-section-title">Section 10 — AGENT_DESCRIPTIONS Copy Spec (new constant)</h2>
+  <p class="note">These descriptions appear in zone [G] of the modal. FiremanDecko should add these to constants.ts verbatim or adjust copy as needed.</p>
+
+  <table>
+    <thead><tr><th>Agent</th><th>Proposed description</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>firemandecko</td>
+        <td>"FiremanDecko is the Principal Engineer of Fenrir Ledger — architect, implementer, and keeper of the forge. He receives the Product Design Brief and produces architecture, technical specifications, and working code, owning the full technical lifecycle from design through implementation."</td>
+      </tr>
+      <tr>
+        <td>loki</td>
+        <td>"Loki is the QA Tester of Fenrir Ledger — the trickster who finds every crack in the armour before the enemy does. He validates implementations, writes Playwright tests, and files defects with a devil's advocate mindset. Nothing ships without his blessing."</td>
+      </tr>
+      <tr>
+        <td>luna</td>
+        <td>"Luna is the UX Designer of Fenrir Ledger — she illuminates the hidden paths so that users never stumble in the dark. She produces wireframes, interaction specs, accessibility guidelines, and component specs. She collaborates with Freya before handing designs to FiremanDecko."</td>
+      </tr>
+      <tr>
+        <td>freya</td>
+        <td>"Freya is the Product Owner of Fenrir Ledger — she has walked the nine worlds and knows what is worth building before the first stone is laid. She owns the product vision, maintains the backlog, and produces the Product Design Brief that sets the team in motion."</td>
+      </tr>
+      <tr>
+        <td>heimdall</td>
+        <td>"Heimdall is the Security Specialist of Fenrir Ledger — the ever-wakeful guardian of the Bifröst. He audits code for OWASP Top 10 vulnerabilities, verifies authentication patterns, ensures secrets are masked, and owns all security architecture and threat modelling."</td>
+      </tr>
+      <tr>
+        <td>odin</td>
+        <td>"Odin is the All-Father — he watches over all nine worlds from his throne Hlidskjalf. In Fenrir Ledger, Odin orchestrates the agents, preserves session memory, and ensures every dispatch returns from its quest. He neither sleeps nor blinks."</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>
