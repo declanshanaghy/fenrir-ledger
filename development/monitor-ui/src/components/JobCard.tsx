@@ -48,6 +48,7 @@ export function JobCard({ job, isActive, onClick }: Props) {
         </span>
         <span>Step {job.step}</span>
         <span style={{ color: sColor }}>{sLabel}</span>
+        {job.fixture && <span className="card-fixture-badge" title="Fixture (replayed log)">ᚠ</span>}
       </div>
     </div>
   );

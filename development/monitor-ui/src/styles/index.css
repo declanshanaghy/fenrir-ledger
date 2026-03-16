@@ -280,6 +280,15 @@ body {
   padding: 1px 5px; border: 1px solid var(--rune-border);
   white-space: nowrap;
 }
+.card-fixture-badge {
+  font-size: 0.55rem;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim-border);
+  border-radius: 2px;
+  padding: 0 3px;
+  opacity: 0.7;
+  margin-left: auto;
+}
 
 /* ── Content area ──────────────────────────────── */
 .content {
@@ -597,9 +606,10 @@ body {
 /* ── Decree tile grid (within NorseTablet) ── */
 .decree-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.4rem;
   margin-bottom: 0.5rem;
+  overflow: hidden;
 }
 @media (max-width: 600px) {
   .decree-grid { grid-template-columns: 1fr; }
@@ -610,6 +620,7 @@ body {
   background: rgba(201, 146, 10, 0.03);
   overflow: hidden;
   transition: border-color 0.2s;
+  min-width: 0;
 }
 .decree-section:hover { border-color: var(--gold); }
 .decree-section-header {
@@ -635,19 +646,40 @@ body {
 .decree-section.open .ep-group-chevron { transform: rotate(90deg); }
 .decree-section-body {
   padding: 0.4rem 0.6rem 0.5rem 0.6rem;
-  font-family: 'Source Serif 4', 'Georgia', serif;
-  font-size: 0.65rem; line-height: 1.55;
-  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem; line-height: 1.5;
+  color: var(--text-rune);
   white-space: pre-wrap;
-  word-break: break-word;
+  word-break: break-all;
+  overflow-wrap: anywhere;
   border-top: 1px solid var(--gold-dim-border);
-  max-height: 200px;
-  overflow-y: auto;
-  background: linear-gradient(180deg, rgba(7, 7, 13, 0.4) 0%, rgba(7, 7, 13, 0.7) 100%);
+  max-height: 120px;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(180deg, rgba(7, 7, 13, 0.4) 0%, rgba(201, 146, 10, 0.02) 100%);
+}
+/* Fade-out at bottom when content is clipped */
+.decree-section-body::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2rem;
+  background: linear-gradient(transparent, var(--void));
+  pointer-events: none;
+}
+/* When expanded, remove height limit and fade */
+.decree-section.open .decree-section-body {
+  max-height: none;
+  overflow: visible;
+}
+.decree-section.open .decree-section-body::after {
+  display: none;
 }
 /* Full-width sections (identity + issue details) span the grid */
 .decree-section.decree-wide {
   grid-column: 1 / -1;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* ── Entrypoint group (collapsible) ─────────────── */
@@ -716,47 +748,50 @@ body {
   animation: fadeSlideIn 0.25s ease;
 }
 /* ── Tool batch (collapsible, auto-collapses) ──── */
+/* ── Tool batch — the thralls that serve ──────── */
 .ev-tool-batch {
-  border: 1px solid var(--kildare-blue);
-  border-right: 3px solid var(--kildare-blue-bright);
-  border-radius: 4px;
-  margin: 0.4rem 0 0.4rem auto;
-  width: 75%;
+  border: 1px solid var(--rune-border);
+  border-right: 2px solid var(--text-void);
+  border-radius: 3px;
+  margin: 0.25rem 0 0.25rem auto;
+  width: 70%;
   overflow: hidden;
   transition: border-color 0.3s, box-shadow 0.3s;
-  animation: fadeSlideIn 0.25s ease;
+  animation: fadeSlideIn 0.2s ease;
+  opacity: 0.85;
 }
-.ev-tool-batch:not(.complete) { box-shadow: 0 0 8px rgba(59, 130, 246, 0.15); }
-.ev-tool-batch.complete { border-color: var(--rune-border); border-right-color: var(--teal-asgard); }
-.ev-tool-batch.batch-error { border-left-color: #ef4444; }
+.ev-tool-batch:not(.complete) { box-shadow: 0 0 4px rgba(96, 96, 112, 0.1); border-right-color: var(--teal-asgard); }
+.ev-tool-batch.complete { border-color: var(--rune-border); border-right-color: var(--text-void); opacity: 0.7; }
+.ev-tool-batch.batch-error { border-left-color: var(--error-strong); opacity: 1; }
 .ev-tool-batch-header {
   display: flex; align-items: center; gap: 0.5rem;
-  padding: 0.35rem 0.6rem;
-  background: var(--tool-batch-header-bg);
+  padding: 0.3rem 0.5rem;
+  background: rgba(42, 42, 62, 0.3);
   cursor: pointer; user-select: none;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   justify-content: flex-end;
 }
-.ev-tool-batch-header:hover { background: var(--tool-batch-header-hover); }
+.ev-tool-batch-header:hover { background: rgba(42, 42, 62, 0.5); }
 .ev-tool-batch-chevron {
-  color: var(--kildare-blue-bright); font-size: 0.7rem;
+  color: var(--text-void); font-size: 0.6rem;
   transition: transform 0.15s;
 }
 .ev-tool-batch.open .ev-tool-batch-chevron { transform: rotate(90deg); }
 .ev-tool-batch-label {
-  color: var(--kildare-white); font-weight: 600;
+  color: var(--text-rune); font-weight: 500;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 0.6rem;
 }
 .ev-tool-batch-spinner {
-  width: 10px; height: 10px; border-radius: 50%;
-  border: 2px solid var(--kildare-blue-bright);
+  width: 8px; height: 8px; border-radius: 50%;
+  border: 1.5px solid var(--teal-asgard);
   border-top-color: transparent;
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .ev-tool-batch-done {
-  color: var(--teal-asgard); font-weight: 700;
+  color: var(--teal-asgard); font-weight: 600; font-size: 0.6rem;
 }
 .ev-tool-batch-body-wrap {
   display: grid;
@@ -798,25 +833,29 @@ body {
 }
 
 /* ── Agent chat bubble ─────────────────────────── */
+/* ── Agent bubble — the ruler's command ────────── */
 .agent-bubble {
   margin: 0.5rem 0;
-  width: 75%;
-  background: var(--forge);
-  border: 1px solid var(--rune-border);
-  border-radius: 8px;
+  width: 80%;
+  background: linear-gradient(135deg, var(--forge) 0%, rgba(201, 146, 10, 0.04) 100%);
+  border: 1px solid var(--gold-dim-border);
+  border-left: 3px solid var(--agent-accent, var(--gold));
+  border-radius: 6px;
   overflow: hidden;
   animation: fadeSlideIn 0.25s ease;
+  box-shadow: 0 2px 8px rgba(201, 146, 10, 0.06);
 }
 .agent-bubble-header {
   display: flex; align-items: center; gap: 0.5rem;
-  padding: 0.4rem 0.6rem;
-  border-bottom: 1px solid var(--rune-border);
-  background: var(--bubble-header-bg);
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid var(--gold-dim-border);
+  background: linear-gradient(90deg, rgba(201, 146, 10, 0.06) 0%, transparent 60%);
 }
 .agent-bubble-avatar {
-  width: 22px; height: 22px; border-radius: 50%;
-  border: 1px solid var(--rune-border);
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1.5px solid var(--gold-dim-border);
   object-fit: cover; flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(201, 146, 10, 0.2);
 }
 .agent-bubble-identity {
   display: flex; align-items: baseline; gap: 0.4rem;
@@ -824,15 +863,20 @@ body {
 .agent-bubble-name {
   font-family: 'Cinzel', serif;
   font-size: 0.7rem; font-weight: 700;
+  color: var(--gold-bright);
+  letter-spacing: 0.03em;
 }
 .agent-bubble-title {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.55rem;
+  font-family: 'Cinzel', serif;
+  font-size: 0.5rem; font-weight: 400;
   color: var(--text-void);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 .agent-bubble-text {
-  color: var(--mayo-green);
-  font-size: 0.78rem; line-height: 1.6;
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  color: var(--text-saga);
+  font-size: 0.75rem; line-height: 1.6;
   white-space: pre-wrap;
   padding: 0.5rem 0.7rem;
 }

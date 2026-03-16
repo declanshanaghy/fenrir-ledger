@@ -316,7 +316,7 @@ function LogLine({ entry, agentKey, agentName, isLastAssistantText, autoScroll, 
         </div>
       );
     case "entrypoint-task":
-      return <NorseTablet text={entry.text ?? ""} />;
+      return <NorseTablet text={entry.text ?? ""} {...(autoScroll !== undefined ? { autoScroll } : {})} />;
     case "warning":
       return <span className="log-warning">{"\u26A0"} {entry.message}</span>;
     case "error":
@@ -379,9 +379,9 @@ function AgentBubble({
   const color = AGENT_COLORS[agentKey ?? ""] ?? "var(--gold)";
 
   return (
-    <div className="agent-bubble">
+    <div className="agent-bubble" style={{ "--agent-accent": color, borderLeftColor: color } as React.CSSProperties}>
       <div className="agent-bubble-header">
-        {avatar && <img className="agent-bubble-avatar" src={avatar} alt={name} />}
+        {avatar && <img className="agent-bubble-avatar" src={avatar} alt={name} style={{ borderColor: color }} />}
         <div className="agent-bubble-identity">
           <span className="agent-bubble-name" style={{ color }}>{name}</span>
           {title && <span className="agent-bubble-title">{title}</span>}
@@ -450,20 +450,20 @@ function ToolBatchGroup({ entry, autoScroll, isLatestBatch }: { entry: LogEntry;
 function parseDecreeSections(text: string): Array<{ glyph: string; title: string; body: string; defaultOpen: boolean }> {
   const SECTION_MAP: Array<{ pattern: RegExp; glyph: string; title: string; defaultOpen?: boolean }> = [
     { pattern: /^You are \w+/m, glyph: "ᛁ", title: "Hear Me, Agent", defaultOpen: true },
-    { pattern: /SANDBOX RULES/m, glyph: "ᚺ", title: "The Sacred Ground", defaultOpen: true },
-    { pattern: /\*\*Step 1/m, glyph: "ᚲ", title: "Consecrate Thy Forge", defaultOpen: true },
-    { pattern: /TODO TRACKING/m, glyph: "ᚾ", title: "The Norns\u2019 Ledger", defaultOpen: true },
-    { pattern: /INCREMENTAL COMMIT/m, glyph: "ᚷ", title: "The Chain of Gleipnir", defaultOpen: true },
-    { pattern: /VERIFY.*tsc.*build/m, glyph: "ᛗ", title: "Trial by Fire", defaultOpen: true },
-    { pattern: /STRICT SCOPE/m, glyph: "ᛏ", title: "The Gjallarhorn Boundary", defaultOpen: true },
-    { pattern: /\*\*Step 2/m, glyph: "ᚱ", title: "Consult the Runes", defaultOpen: true },
-    { pattern: /\*\*Issue details/m, glyph: "ᛃ", title: "The Wound in Yggdrasil", defaultOpen: true },
-    { pattern: /\*\*Step 3[^b]/m, glyph: "ᚠ", title: "Take Up Mj\u00F6lnir", defaultOpen: true },
-    { pattern: /\*\*Step 3b/m, glyph: "ᛊ", title: "Forge the Tests", defaultOpen: true },
-    { pattern: /\*\*Step 4/m, glyph: "ᛒ", title: "Walk the Bifr\u00F6st", defaultOpen: true },
-    { pattern: /\*\*Step 5/m, glyph: "ᛚ", title: "Align with the World Tree", defaultOpen: true },
-    { pattern: /\*\*Step 6/m, glyph: "ᛖ", title: "Present Thy Offering", defaultOpen: true },
-    { pattern: /\*\*Step 7/m, glyph: "ᛞ", title: "Pass the Torch", defaultOpen: true },
+    { pattern: /SANDBOX RULES/m, glyph: "ᚺ", title: "The Sacred Ground" },
+    { pattern: /\*\*Step 1/m, glyph: "ᚲ", title: "Consecrate Thy Forge" },
+    { pattern: /TODO TRACKING/m, glyph: "ᚾ", title: "The Norns\u2019 Ledger" },
+    { pattern: /INCREMENTAL COMMIT/m, glyph: "ᚷ", title: "The Chain of Gleipnir" },
+    { pattern: /VERIFY.*tsc.*build/m, glyph: "ᛗ", title: "Trial by Fire" },
+    { pattern: /STRICT SCOPE/m, glyph: "ᛏ", title: "The Gjallarhorn Boundary" },
+    { pattern: /\*\*Step 2/m, glyph: "ᚱ", title: "Consult the Runes" },
+    { pattern: /\*\*Issue details/m, glyph: "ᛃ", title: "The Wound in Yggdrasil" },
+    { pattern: /\*\*Step 3[^b]/m, glyph: "ᚠ", title: "Take Up Mj\u00F6lnir" },
+    { pattern: /\*\*Step 3b/m, glyph: "ᛊ", title: "Forge the Tests" },
+    { pattern: /\*\*Step 4/m, glyph: "ᛒ", title: "Walk the Bifr\u00F6st" },
+    { pattern: /\*\*Step 5/m, glyph: "ᛚ", title: "Align with the World Tree" },
+    { pattern: /\*\*Step 6/m, glyph: "ᛖ", title: "Present Thy Offering" },
+    { pattern: /\*\*Step 7/m, glyph: "ᛞ", title: "Pass the Torch" },
   ];
 
   // Find section boundaries
@@ -506,13 +506,25 @@ function DecreeSection({ glyph, title, body, defaultOpen, wide }: { glyph: strin
   );
 }
 
-function NorseTablet({ text }: { text: string }) {
+function NorseTablet({ text, autoScroll }: { text: string; autoScroll?: boolean }) {
   const [open, setOpen] = useState(true);
+  const [hasBeenCollapsed, setHasBeenCollapsed] = useState(false);
   const agentMatch = /^You are (\w+)/.exec(text);
   const agent = agentMatch?.[1] ?? "Agent";
   const issueMatch = /#(\d+)/.exec(text);
   const issue = issueMatch?.[1] ?? "";
   const sections = parseDecreeSections(text);
+
+  // Auto-collapse the decree once when auto-scroll is on and the agent starts working
+  // (detected by sections being fully parsed — the decree text doesn't change after initial render)
+  useEffect(() => {
+    if (!autoScroll || hasBeenCollapsed) return;
+    const timer = setTimeout(() => {
+      setOpen(false);
+      setHasBeenCollapsed(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [autoScroll, hasBeenCollapsed]);
 
   return (
     <div className={`norse-tablet ${open ? "open" : ""}`}>
@@ -535,7 +547,7 @@ function NorseTablet({ text }: { text: string }) {
                 title={sec.title}
                 body={sec.body}
                 defaultOpen={sec.defaultOpen}
-                wide={sec.title === "Hear Me, Agent" || sec.title === "The Wound in Yggdrasil"}
+                wide={false}
               />
             ))}
           </div>

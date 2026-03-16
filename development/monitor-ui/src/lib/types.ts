@@ -52,6 +52,7 @@ export interface DisplayJob {
   completionTime: number | null;
   issueTitle: string | null;
   branchName: string | null;
+  fixture?: boolean;
 }
 
 // JSONL event types
