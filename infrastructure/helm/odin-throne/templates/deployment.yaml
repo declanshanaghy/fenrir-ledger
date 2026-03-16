@@ -23,7 +23,7 @@ spec:
       volumes:
         - name: oauth2-proxy-emails
           secret:
-            secretName: odin-throne-oauth2-proxy-secrets
+            secretName: oauth2-proxy-emails
             items:
               - key: emails.txt
                 path: emails.txt
@@ -62,7 +62,6 @@ spec:
             - --client-id=$(GOOGLE_CLIENT_ID)
             - --client-secret=$(GOOGLE_CLIENT_SECRET)
             - --cookie-secret=$(OAUTH2_PROXY_COOKIE_SECRET)
-            - --email-domain=*
             - --authenticated-emails-file=/etc/oauth2-proxy/emails.txt
             - --upstream=http://localhost:{{ .Values.service.containerPort }}
             - --http-address=0.0.0.0:{{ .Values.oauth2Proxy.port }}
