@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Karl Card Bling — Issue #1088</title>
+  <style>
+    /* ── Wireframe layout rules ONLY — no theme styling ──────────────────── */
+    /* No colors, no backgrounds, no border-radius, no box-shadow, no fonts   */
+    /* beyond sans-serif. Permitted: flex/grid, border, width/height,          */
+    /* padding/margin, font-size/weight.                                        */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; line-height: 1.5; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 40px; }
+
+    /* ── Section headers ─────────────────────────────────────────────────── */
+    .section { display: flex; flex-direction: column; gap: 16px; }
+    .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid; padding-bottom: 4px; }
+    .section-desc { font-size: 12px; font-style: italic; }
+
+    /* ── Note annotation style ────────────────────────────────────────────── */
+    .note { font-size: 11px; font-style: italic; border-left: 2px solid; padding: 4px 8px; margin-top: 6px; }
+    .note strong { font-style: normal; }
+
+    /* ── Comparison row ───────────────────────────────────────────────────── */
+    .compare-row { display: flex; gap: 24px; flex-wrap: wrap; }
+    .compare-col { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 8px; }
+    .compare-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 4px; border-bottom: 1px dashed; }
+
+    /* ── Card tile base (existing CardTile structure) ─────────────────────── */
+    .card-tile {
+      border: 1px solid;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative; /* for absolute-positioned rune corners */
+    }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .card-issuer-row { display: flex; align-items: center; gap: 8px; }
+    .issuer-badge { width: 32px; height: 32px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; flex-shrink: 0; }
+    .card-name { font-size: 15px; font-weight: bold; }
+    .card-issuer-name { font-size: 12px; }
+
+    .card-content { display: flex; flex-direction: column; gap: 6px; }
+    .card-row { display: flex; justify-content: space-between; font-size: 13px; }
+    .card-row-label { }
+    .card-row-value { font-weight: 500; }
+
+    /* ── Status badge base ────────────────────────────────────────────────── */
+    .status-badge {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 1px solid;
+      padding: 2px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Status ring placeholder ──────────────────────────────────────────── */
+    .status-ring { width: 36px; height: 36px; border: 2px solid; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; flex-shrink: 0; }
+
+    /* ── ① KARL CARD SKIN: corner rune accents ───────────────────────────── */
+    /*
+     * Four Elder Futhark runes sit in the four corners of the card.
+     * Positioned absolute relative to .card-tile (position: relative).
+     * font-size: ~10-11px — small, decorative, not interactive.
+     * aria-hidden="true" on all rune spans.
+     *
+     * Rune assignment (matches #1086 constants + existing usage in app):
+     *   top-left:     ᚠ  fehu    (wealth — fitting for a card ledger)
+     *   top-right:    ᚱ  raidho  (journey / forward movement)
+     *   bottom-left:  ᛁ  isa     (ice / crystalline stillness)
+     *   bottom-right: ᚾ  naudiz  (need / constraint)
+     *
+     * Karl:  all four runes visible, font-weight bold
+     * Trial: all four runes visible, font-weight normal (lighter presence)
+     */
+    .rune-corner {
+      position: absolute;
+      font-size: 10px;
+      font-weight: bold;
+      line-height: 1;
+      /* Wireframe annotation: in theme, use var(--karl-gold) at ~0.55 opacity for Karl,
+         ~0.30 opacity for trial. */
+    }
+    .rune-tl { top: 5px; left: 6px; }
+    .rune-tr { top: 5px; right: 6px; }
+    .rune-bl { bottom: 5px; left: 6px; }
+    .rune-br { bottom: 5px; right: 6px; }
+
+    /* ── ② KARL CARD SKIN: gold border accent ────────────────────────────── */
+    /*
+     * Karl tier: border upgrades from default to a thin gold-tinted border.
+     *   resting: border-color rgba(212,165,32,0.30)  (subtle gold tint)
+     *   hover:   border-color rgba(212,165,32,0.55) + gold glow animation
+     *            class .karl-bling-card (existing from #1086)
+     *
+     * Trial tier:
+     *   resting: border-color rgba(212,165,32,0.14)  (very subtle)
+     *   hover:   class .karl-bling-card (existing from #1086, softer glow)
+     *
+     * Wireframe annotation: dashed border = "gold tint border" (CSS value in impl notes)
+     */
+    .card-tile--karl { border: 2px dashed; }   /* annotates gold-tinted border */
+    .card-tile--trial { border: 1px dashed; }  /* annotates lighter gold-tinted border */
+
+    /* ── ③ KARL STATUS BADGE: gold-accented variant ──────────────────────── */
+    /*
+     * For Karl and trial: .status-badge gains a thin gold-tinted border and
+     * mild gold background tint (not colored in wireframe — annotated).
+     * CSS class: .karl-bling-badge-status (new addition to karl-bling.css)
+     *
+     * Karl:  border rgba(212,165,32,0.50), background rgba(212,165,32,0.07)
+     * Trial: border rgba(212,165,32,0.25), background none
+     */
+    .status-badge--karl { border: 2px dashed; /* annotates gold border accent */ }
+    .status-badge--trial { border: 1px dashed; /* annotates lighter gold border */ }
+
+    /* ── Hover state annotation box ──────────────────────────────────────── */
+    .hover-annotation {
+      border: 1px dashed;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+    .hover-annotation strong { font-weight: bold; display: block; margin-bottom: 4px; }
+
+    /* ── State matrix table ───────────────────────────────────────────────── */
+    table { border-collapse: collapse; width: 100%; font-size: 12px; }
+    th, td { border: 1px solid; padding: 6px 10px; text-align: left; vertical-align: top; }
+    th { font-weight: bold; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ── Mobile sim frame ─────────────────────────────────────────────────── */
+    .mobile-frame { width: 375px; border: 2px solid; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .mobile-frame-header { font-size: 11px; font-weight: bold; text-transform: uppercase; text-align: center; padding-bottom: 8px; border-bottom: 1px solid; }
+
+    /* ── Grid simulation ──────────────────────────────────────────────────── */
+    .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 700px) { .card-grid { grid-template-columns: 1fr; } }
+    .card-grid--mobile { display: grid; grid-template-columns: 1fr; gap: 12px; max-width: 375px; }
+
+    /* ── Annotation line ──────────────────────────────────────────────────── */
+    .ann { font-size: 11px; font-style: italic; margin-top: 4px; }
+    .ann strong { font-style: normal; }
+
+    /* ── Spec table ───────────────────────────────────────────────────────── */
+    .spec-table { font-size: 12px; }
+    .spec-table th { background: none; }
+
+    /* ── Rune legend ──────────────────────────────────────────────────────── */
+    .rune-legend { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .rune-item { border: 1px solid; padding: 8px; text-align: center; }
+    .rune-glyph { font-size: 20px; display: block; margin-bottom: 4px; }
+    .rune-name { font-size: 10px; font-weight: bold; text-transform: uppercase; }
+    .rune-meaning { font-size: 10px; }
+    .rune-position { font-size: 10px; font-style: italic; }
+
+    /* ── Checklist ─────────────────────────────────────────────────────────── */
+    .checklist { list-style: none; display: flex; flex-direction: column; gap: 4px; padding: 0; }
+    .checklist li { font-size: 12px; padding-left: 18px; position: relative; }
+    .checklist li::before { content: "□"; position: absolute; left: 0; }
+  </style>
+</head>
+<body>
+<main class="page">
+
+  <!-- ── Page header ──────────────────────────────────────────────────────── -->
+  <header>
+    <p style="font-size:11px; font-weight:bold; text-transform:uppercase; letter-spacing:0.1em;">
+      Wireframe · Issue #1088 · Karl Card Bling
+    </p>
+    <h1 style="font-size:22px; font-weight:bold; margin-top:4px;">Karl Card Skin — Gold Borders, Runic Accents</h1>
+    <p style="font-size:12px; margin-top:6px;">
+      Cosmetic card skin for Karl and trial tiers. Adds corner rune accents, gold-tinted border,
+      hover glow animation, and gold-accented status badge. No flip animation — purely cosmetic
+      overlay on the existing CardTile structure.
+    </p>
+    <p class="note" style="margin-top:10px;">
+      <strong>Scope:</strong> CardTile component only. CSS-only implementation via
+      <code>[data-tier="karl"]</code> and <code>[data-tier="trial"]</code> cascade
+      (data-tier set on <code>&lt;html&gt;</code> by EntitlementContext — already wired in #1086).
+      New CSS class: <code>.karl-bling-badge-status</code> added to <code>karl-bling.css</code>.
+      Rune corner spans added to <code>CardTile.tsx</code>.
+    </p>
+  </header>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SECTION A — Anatomy: Three tier variants side by side
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2 class="section-title">A — Card Tile: Tier Variants (resting state)</h2>
+    <p class="section-desc">Three variants of the same card. Left: base thrall tier (no bling). Center: trial tier (subtle). Right: Karl tier (full bling).</p>
+
+    <div class="compare-row">
+
+      <!-- Base / Thrall -->
+      <div class="compare-col">
+        <div class="compare-label">Thrall (base — no bling)</div>
+        <div class="card-tile">
+          <div class="card-header">
+            <div class="card-issuer-row">
+              <div class="issuer-badge">C</div>
+              <div>
+                <div class="card-name">Chase Sapphire Preferred</div>
+                <div class="card-issuer-name">Chase</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+              <div class="status-badge">Active</div>
+              <div class="status-ring">C</div>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="card-row"><span class="card-row-label">Credit limit</span><span class="card-row-value">$10,000</span></div>
+            <div class="card-row"><span class="card-row-label">Annual fee</span><span class="card-row-value">$95</span></div>
+            <div class="card-row"><span class="card-row-label">Fee due</span><span class="card-row-value">Jun 15</span></div>
+            <div class="card-row"><span class="card-row-label">Opened</span><span class="card-row-value">Jun 2022</span></div>
+          </div>
+        </div>
+        <p class="ann">Standard border (1px solid). No rune corners. Standard badge.</p>
+      </div>
+
+      <!-- Trial -->
+      <div class="compare-col">
+        <div class="compare-label">Trial tier (subtle bling)</div>
+        <div class="card-tile card-tile--trial" style="position:relative;">
+          <!-- Corner runes (aria-hidden, decorative) -->
+          <span class="rune-corner rune-tl" aria-hidden="true">ᚠ</span>
+          <span class="rune-corner rune-tr" aria-hidden="true">ᚱ</span>
+          <span class="rune-corner rune-bl" aria-hidden="true">ᛁ</span>
+          <span class="rune-corner rune-br" aria-hidden="true">ᚾ</span>
+
+          <div class="card-header">
+            <div class="card-issuer-row">
+              <div class="issuer-badge">C</div>
+              <div>
+                <div class="card-name">Chase Sapphire Preferred</div>
+                <div class="card-issuer-name">Chase</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+              <div class="status-badge status-badge--trial">Active</div>
+              <div class="status-ring">C</div>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="card-row"><span class="card-row-label">Credit limit</span><span class="card-row-value">$10,000</span></div>
+            <div class="card-row"><span class="card-row-label">Annual fee</span><span class="card-row-value">$95</span></div>
+            <div class="card-row"><span class="card-row-label">Fee due</span><span class="card-row-value">Jun 15</span></div>
+            <div class="card-row"><span class="card-row-label">Opened</span><span class="card-row-value">Jun 2022</span></div>
+          </div>
+        </div>
+        <p class="ann">Dashed border = subtle gold-tint border. Corner runes at normal weight. Badge lighter gold outline.</p>
+      </div>
+
+      <!-- Karl -->
+      <div class="compare-col">
+        <div class="compare-label">Karl tier (full bling)</div>
+        <div class="card-tile card-tile--karl" style="position:relative;">
+          <!-- Corner runes (aria-hidden, decorative) -->
+          <span class="rune-corner rune-tl" aria-hidden="true" style="font-weight:bold;">ᚠ</span>
+          <span class="rune-corner rune-tr" aria-hidden="true" style="font-weight:bold;">ᚱ</span>
+          <span class="rune-corner rune-bl" aria-hidden="true" style="font-weight:bold;">ᛁ</span>
+          <span class="rune-corner rune-br" aria-hidden="true" style="font-weight:bold;">ᚾ</span>
+
+          <div class="card-header">
+            <div class="card-issuer-row">
+              <div class="issuer-badge">C</div>
+              <div>
+                <div class="card-name">Chase Sapphire Preferred</div>
+                <div class="card-issuer-name">Chase</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+              <div class="status-badge status-badge--karl">Active</div>
+              <div class="status-ring">C</div>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="card-row"><span class="card-row-label">Credit limit</span><span class="card-row-value">$10,000</span></div>
+            <div class="card-row"><span class="card-row-label">Annual fee</span><span class="card-row-value">$95</span></div>
+            <div class="card-row"><span class="card-row-label">Fee due</span><span class="card-row-value">Jun 15</span></div>
+            <div class="card-row"><span class="card-row-label">Opened</span><span class="card-row-value">Jun 2022</span></div>
+          </div>
+        </div>
+        <p class="ann">Dashed border = prominent gold border (heavier). Bold runes. Badge with gold tint background + border.</p>
+      </div>
+
+    </div><!-- /compare-row -->
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SECTION B — Hover states
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2 class="section-title">B — Hover State Detail</h2>
+    <p class="section-desc">
+      On hover, Karl and trial cards show a gold glow ring animation (.karl-bling-card from #1086).
+      The rune corners remain static — they do not animate.
+    </p>
+
+    <div class="compare-row">
+
+      <!-- Trial hover -->
+      <div class="compare-col">
+        <div class="compare-label">Trial — hover state</div>
+        <div class="card-tile card-tile--trial" style="position:relative;">
+          <span class="rune-corner rune-tl" aria-hidden="true">ᚠ</span>
+          <span class="rune-corner rune-tr" aria-hidden="true">ᚱ</span>
+          <span class="rune-corner rune-bl" aria-hidden="true">ᛁ</span>
+          <span class="rune-corner rune-br" aria-hidden="true">ᚾ</span>
+          <div class="card-header">
+            <div class="card-issuer-row">
+              <div class="issuer-badge" style="font-weight:bold;">A</div>
+              <div>
+                <div class="card-name">Amex Gold</div>
+                <div class="card-issuer-name">American Express</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+              <div class="status-badge status-badge--trial">Active</div>
+              <div class="status-ring">A</div>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="card-row"><span class="card-row-label">Credit limit</span><span class="card-row-value">$25,000</span></div>
+            <div class="card-row"><span class="card-row-label">Annual fee</span><span class="card-row-value">$250</span></div>
+            <div class="card-row"><span class="card-row-label">Opened</span><span class="card-row-value">Mar 2023</span></div>
+          </div>
+        </div>
+        <div class="hover-annotation" style="margin-top:8px;">
+          <strong>On hover (.karl-bling-card:hover — trial):</strong>
+          border-color → rgba(212,165,32,0.30) · Soft glow: karl-gold-glow-soft 3.2s ease-in-out infinite.
+          Existing .card-chain y-lift (Framer Motion) still applies.
+        </div>
+      </div>
+
+      <!-- Karl hover -->
+      <div class="compare-col">
+        <div class="compare-label">Karl — hover state</div>
+        <div class="card-tile card-tile--karl" style="position:relative; outline: 3px dashed;">
+          <!-- outline annotates: "gold glow ring active on hover" -->
+          <span class="rune-corner rune-tl" aria-hidden="true" style="font-weight:bold;">ᚠ</span>
+          <span class="rune-corner rune-tr" aria-hidden="true" style="font-weight:bold;">ᚱ</span>
+          <span class="rune-corner rune-bl" aria-hidden="true" style="font-weight:bold;">ᛁ</span>
+          <span class="rune-corner rune-br" aria-hidden="true" style="font-weight:bold;">ᚾ</span>
+          <div class="card-header">
+            <div class="card-issuer-row">
+              <div class="issuer-badge" style="font-weight:bold;">A</div>
+              <div>
+                <div class="card-name">Amex Gold</div>
+                <div class="card-issuer-name">American Express</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+              <div class="status-badge status-badge--karl">Active</div>
+              <div class="status-ring">A</div>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="card-row"><span class="card-row-label">Credit limit</span><span class="card-row-value">$25,000</span></div>
+            <div class="card-row"><span class="card-row-label">Annual fee</span><span class="card-row-value">$250</span></div>
+            <div class="card-row"><span class="card-row-label">Opened</span><span class="card-row-value">Mar 2023</span></div>
+          </div>
+        </div>
+        <div class="hover-annotation" style="margin-top:8px;">
+          <strong>On hover (.karl-bling-card:hover — Karl):</strong>
+          border-color → rgba(212,165,32,0.55) · Full glow: karl-gold-glow 2.8s ease-in-out infinite.
+          Outer dashed outline in wireframe = gold glow ring (box-shadow in impl).
+          Existing .card-chain y-lift (Framer Motion) still applies.
+        </div>
+      </div>
+
+      <!-- Reduced-motion fallback -->
+      <div class="compare-col">
+        <div class="compare-label">Reduced-motion fallback (both tiers)</div>
+        <div class="card-tile card-tile--karl" style="position:relative;">
+          <span class="rune-corner rune-tl" aria-hidden="true" style="font-weight:bold;">ᚠ</span>
+          <span class="rune-corner rune-tr" aria-hidden="true" style="font-weight:bold;">ᚱ</span>
+          <span class="rune-corner rune-bl" aria-hidden="true" style="font-weight:bold;">ᛁ</span>
+          <span class="rune-corner rune-br" aria-hidden="true" style="font-weight:bold;">ᚾ</span>
+          <div class="card-header">
+            <div class="card-issuer-row">
+              <div class="issuer-badge">A</div>
+              <div>
+                <div class="card-name">Amex Gold</div>
+                <div class="card-issuer-name">American Express</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+              <div class="status-badge status-badge--karl">Active</div>
+              <div class="status-ring">A</div>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="card-row"><span class="card-row-label">Credit limit</span><span class="card-row-value">$25,000</span></div>
+            <div class="card-row"><span class="card-row-label">Annual fee</span><span class="card-row-value">$250</span></div>
+            <div class="card-row"><span class="card-row-label">Opened</span><span class="card-row-value">Mar 2023</span></div>
+          </div>
+        </div>
+        <div class="hover-annotation" style="margin-top:8px;">
+          <strong>@media (prefers-reduced-motion: reduce):</strong>
+          animation: none on both Karl and trial hover.
+          Static gold border resting state preserved (no animation, no transition).
+          Rune corners always visible (static — never animated).
+          Karl badge gold border preserved (no animation on badge).
+        </div>
+      </div>
+
+    </div><!-- /compare-row -->
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SECTION C — Rune corner anatomy detail
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2 class="section-title">C — Rune Corner Anatomy</h2>
+    <p class="section-desc">
+      Four Elder Futhark glyphs placed in card corners as decorative accents.
+      All <code>aria-hidden="true"</code>. No interaction, no tooltip.
+    </p>
+
+    <!-- Zoomed card showing corner positions -->
+    <div style="max-width:400px;">
+      <div class="card-tile" style="position:relative; min-height:160px; border: 2px solid;">
+        <!-- Top left -->
+        <span class="rune-corner rune-tl" aria-hidden="true" style="font-size:14px; font-weight:bold;">ᚠ</span>
+        <!-- Top right -->
+        <span class="rune-corner rune-tr" aria-hidden="true" style="font-size:14px; font-weight:bold;">ᚱ</span>
+        <!-- Bottom left -->
+        <span class="rune-corner rune-bl" aria-hidden="true" style="font-size:14px; font-weight:bold;">ᛁ</span>
+        <!-- Bottom right -->
+        <span class="rune-corner rune-br" aria-hidden="true" style="font-size:14px; font-weight:bold;">ᚾ</span>
+
+        <!-- Position labels -->
+        <div style="position:absolute; top:18px; left:20px; font-size:10px; font-style:italic;">top-left: ᚠ</div>
+        <div style="position:absolute; top:18px; right:20px; font-size:10px; font-style:italic; text-align:right;">ᚱ :top-right</div>
+        <div style="position:absolute; bottom:18px; left:20px; font-size:10px; font-style:italic;">bottom-left: ᛁ</div>
+        <div style="position:absolute; bottom:18px; right:20px; font-size:10px; font-style:italic; text-align:right;">ᚾ :bottom-right</div>
+
+        <div style="text-align:center; margin: auto 0; padding: 30px 40px; font-size:12px; font-style:italic;">Card content area</div>
+      </div>
+    </div>
+
+    <!-- Rune legend -->
+    <div class="rune-legend" style="max-width:500px;">
+      <div class="rune-item">
+        <span class="rune-glyph">ᚠ</span>
+        <div class="rune-name">Fehu</div>
+        <div class="rune-meaning">Wealth / cattle</div>
+        <div class="rune-position">Top-left</div>
+      </div>
+      <div class="rune-item">
+        <span class="rune-glyph">ᚱ</span>
+        <div class="rune-name">Raidho</div>
+        <div class="rune-meaning">Journey / forward</div>
+        <div class="rune-position">Top-right</div>
+      </div>
+      <div class="rune-item">
+        <span class="rune-glyph">ᛁ</span>
+        <div class="rune-name">Isa</div>
+        <div class="rune-meaning">Ice / stillness</div>
+        <div class="rune-position">Bottom-left</div>
+      </div>
+      <div class="rune-item">
+        <span class="rune-glyph">ᚾ</span>
+        <div class="rune-name">Naudiz</div>
+        <div class="rune-meaning">Need / constraint</div>
+        <div class="rune-position">Bottom-right</div>
+      </div>
+    </div>
+
+    <p class="note">
+      <strong>Implementation:</strong> Four <code>&lt;span&gt;</code> elements added inside the <code>motion.div</code>
+      wrapper in CardTile.tsx, before the <code>&lt;Link&gt;</code>. Each has <code>aria-hidden="true"</code>.
+      Visible only when <code>[data-tier="karl"]</code> or <code>[data-tier="trial"]</code> is active (hidden via CSS
+      <code>display:none</code> on default/thrall, visible via <code>display:block</code> in karl-bling.css cascade).
+      Font-size: 10px. Position: absolute, 5–6px inset from card corner.
+    </p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SECTION D — Status badge gold accent
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2 class="section-title">D — Status Badge Gold Accent (.karl-bling-badge-status)</h2>
+    <p class="section-desc">
+      New CSS class added to karl-bling.css. Applied to .status-badge (the shadcn Badge component wrapping CardStatus).
+      Karl gets a gold border + background tint. Trial gets a lighter gold border only.
+    </p>
+
+    <div class="compare-row" style="align-items:flex-start;">
+      <div class="compare-col" style="flex:none; min-width:auto;">
+        <div class="compare-label">Thrall (base)</div>
+        <div style="padding:12px; border:1px solid; display:inline-flex; gap:8px; flex-wrap:wrap;">
+          <div class="status-badge">Active</div>
+          <div class="status-badge">Fee Approaching</div>
+          <div class="status-badge">Promo Expiring</div>
+          <div class="status-badge">Closed</div>
+        </div>
+        <p class="ann">Standard badge. No gold treatment.</p>
+      </div>
+
+      <div class="compare-col" style="flex:none; min-width:auto;">
+        <div class="compare-label">Trial tier</div>
+        <div style="padding:12px; border:1px dashed; display:inline-flex; gap:8px; flex-wrap:wrap;">
+          <div class="status-badge status-badge--trial">Active</div>
+          <div class="status-badge status-badge--trial">Fee Approaching</div>
+          <div class="status-badge status-badge--trial">Promo Expiring</div>
+          <div class="status-badge status-badge--trial">Closed</div>
+        </div>
+        <p class="ann">Dashed = lighter gold border on badge. No background tint.</p>
+      </div>
+
+      <div class="compare-col" style="flex:none; min-width:auto;">
+        <div class="compare-label">Karl tier</div>
+        <div style="padding:12px; border:2px dashed; display:inline-flex; gap:8px; flex-wrap:wrap;">
+          <div class="status-badge status-badge--karl">Active</div>
+          <div class="status-badge status-badge--karl">Fee Approaching</div>
+          <div class="status-badge status-badge--karl">Promo Expiring</div>
+          <div class="status-badge status-badge--karl">Closed</div>
+        </div>
+        <p class="ann">Dashed = gold border + subtle gold background tint on badge.</p>
+      </div>
+    </div>
+
+    <p class="note">
+      <strong>New class:</strong> <code>.karl-bling-badge-status</code> in karl-bling.css.
+      Added to existing <code>&lt;Badge&gt;</code> className in StatusBadge.tsx when tier is karl or trial.
+      Does not change badge text or functional status variant (color-coded by status preserved).
+      Karl: <code>border: 1px solid rgba(212,165,32,0.50); background: rgba(212,165,32,0.07)</code>.
+      Trial: <code>border: 1px solid rgba(212,165,32,0.25)</code> only.
+    </p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SECTION E — Dashboard card grid with Karl bling active
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2 class="section-title">E — Dashboard Grid: Karl Tier Active</h2>
+    <p class="section-desc">
+      Mixed grid showing how Karl-blinged cards look in context.
+      All cards show rune corners and gold-tinted borders. Dashboard chrome is unaffected.
+    </p>
+
+    <div class="card-grid">
+      <!-- Card 1: Active -->
+      <div class="card-tile card-tile--karl" style="position:relative;">
+        <span class="rune-corner rune-tl" aria-hidden="true">ᚠ</span>
+        <span class="rune-corner rune-tr" aria-hidden="true">ᚱ</span>
+        <span class="rune-corner rune-bl" aria-hidden="true">ᛁ</span>
+        <span class="rune-corner rune-br" aria-hidden="true">ᚾ</span>
+        <div class="card-header">
+          <div class="card-issuer-row">
+            <div class="issuer-badge">C</div>
+            <div><div class="card-name">Sapphire Preferred</div><div class="card-issuer-name">Chase</div></div>
+          </div>
+          <div><div class="status-badge status-badge--karl">Active</div></div>
+        </div>
+        <div class="card-content">
+          <div class="card-row"><span>Limit</span><span class="card-row-value">$10,000</span></div>
+          <div class="card-row"><span>Fee</span><span class="card-row-value">$95</span></div>
+          <div class="card-row"><span>Opened</span><span class="card-row-value">Jun 2022</span></div>
+        </div>
+      </div>
+
+      <!-- Card 2: Fee approaching -->
+      <div class="card-tile card-tile--karl" style="position:relative;">
+        <span class="rune-corner rune-tl" aria-hidden="true">ᚠ</span>
+        <span class="rune-corner rune-tr" aria-hidden="true">ᚱ</span>
+        <span class="rune-corner rune-bl" aria-hidden="true">ᛁ</span>
+        <span class="rune-corner rune-br" aria-hidden="true">ᚾ</span>
+        <div class="card-header">
+          <div class="card-issuer-row">
+            <div class="issuer-badge">A</div>
+            <div><div class="card-name">Amex Gold</div><div class="card-issuer-name">Amex</div></div>
+          </div>
+          <div><div class="status-badge status-badge--karl">Fee Due</div></div>
+        </div>
+        <div class="card-content">
+          <div class="card-row"><span>Limit</span><span class="card-row-value">$25,000</span></div>
+          <div class="card-row"><span>Fee due</span><span class="card-row-value" style="font-weight:bold;">Apr 1 (16d)</span></div>
+          <div class="card-row"><span>Opened</span><span class="card-row-value">Apr 2021</span></div>
+        </div>
+      </div>
+
+      <!-- Card 3: Promo expiring -->
+      <div class="card-tile card-tile--karl" style="position:relative;">
+        <span class="rune-corner rune-tl" aria-hidden="true">ᚠ</span>
+        <span class="rune-corner rune-tr" aria-hidden="true">ᚱ</span>
+        <span class="rune-corner rune-bl" aria-hidden="true">ᛁ</span>
+        <span class="rune-corner rune-br" aria-hidden="true">ᚾ</span>
+        <div class="card-header">
+          <div class="card-issuer-row">
+            <div class="issuer-badge">C</div>
+            <div><div class="card-name">Freedom Flex</div><div class="card-issuer-name">Chase</div></div>
+          </div>
+          <div><div class="status-badge status-badge--karl">Bonus</div></div>
+        </div>
+        <div class="card-content">
+          <div class="card-row"><span>Limit</span><span class="card-row-value">$5,000</span></div>
+          <div class="card-row"><span>Bonus</span><span class="card-row-value" style="font-weight:bold;">Apr 28 (43d)</span></div>
+          <div class="card-row"><span>Opened</span><span class="card-row-value">Jan 2024</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="ann"><strong>Note:</strong> all grid cards share identical bling treatment. No per-card variation. The gold treatment is tier-wide, not card-specific.</p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SECTION F — Mobile 375px
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2 class="section-title">F — Mobile 375px Layout</h2>
+    <p class="section-desc">
+      Karl bling is fully mobile-responsive. Corner runes scale down gracefully.
+      Single-column card grid. Touch devices: hover glow suppressed
+      (<code>@media (hover: none)</code> already in karl-bling.css from #1086).
+    </p>
+
+    <div class="mobile-frame">
+      <div class="mobile-frame-header">375px viewport — Karl tier</div>
+
+      <!-- Nav hint -->
+      <div style="border:1px solid; padding:8px; font-size:12px; text-align:center;">
+        [ Tab bar — The Howl · Active · All ]
+      </div>
+
+      <!-- Mobile card grid (single column) -->
+      <div class="card-grid--mobile">
+
+        <!-- Mobile card 1 -->
+        <div class="card-tile card-tile--karl" style="position:relative;">
+          <span class="rune-corner rune-tl" aria-hidden="true" style="font-size:9px;">ᚠ</span>
+          <span class="rune-corner rune-tr" aria-hidden="true" style="font-size:9px;">ᚱ</span>
+          <span class="rune-corner rune-bl" aria-hidden="true" style="font-size:9px;">ᛁ</span>
+          <span class="rune-corner rune-br" aria-hidden="true" style="font-size:9px;">ᚾ</span>
+          <div class="card-header">
+            <div class="card-issuer-row">
+              <div class="issuer-badge" style="width:28px;height:28px;font-size:13px;">C</div>
+              <div>
+                <div class="card-name" style="font-size:13px;">Sapphire Preferred</div>
+                <div class="card-issuer-name" style="font-size:11px;">Chase</div>
+              </div>
+            </div>
+            <div class="status-badge status-badge--karl" style="font-size:10px;">Active</div>
+          </div>
+          <div class="card-content">
+            <div class="card-row" style="font-size:12px;"><span>Limit</span><span>$10,000</span></div>
+            <div class="card-row" style="font-size:12px;"><span>Annual fee</span><span>$95</span></div>
+            <div class="card-row" style="font-size:12px;"><span>Opened</span><span>Jun 2022</span></div>
+          </div>
+        </div>
+
+        <!-- Mobile card 2 -->
+        <div class="card-tile card-tile--karl" style="position:relative;">
+          <span class="rune-corner rune-tl" aria-hidden="true" style="font-size:9px;">ᚠ</span>
+          <span class="rune-corner rune-tr" aria-hidden="true" style="font-size:9px;">ᚱ</span>
+          <span class="rune-corner rune-bl" aria-hidden="true" style="font-size:9px;">ᛁ</span>
+          <span class="rune-corner rune-br" aria-hidden="true" style="font-size:9px;">ᚾ</span>
+          <div class="card-header">
+            <div class="card-issuer-row">
+              <div class="issuer-badge" style="width:28px;height:28px;font-size:13px;">A</div>
+              <div>
+                <div class="card-name" style="font-size:13px;">Amex Gold</div>
+                <div class="card-issuer-name" style="font-size:11px;">American Express</div>
+              </div>
+            </div>
+            <div class="status-badge status-badge--karl" style="font-size:10px;">Fee Due</div>
+          </div>
+          <div class="card-content">
+            <div class="card-row" style="font-size:12px;"><span>Limit</span><span>$25,000</span></div>
+            <div class="card-row" style="font-size:12px;"><span>Fee due</span><span style="font-weight:bold;">Apr 1 (16d)</span></div>
+            <div class="card-row" style="font-size:12px;"><span>Opened</span><span>Apr 2021</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <p class="ann">
+      <strong>Touch note:</strong> On touch devices (<code>@media (hover: none)</code>),
+      <code>.karl-bling-card:hover</code> animation is suppressed — already handled in karl-bling.css.
+      Rune corners remain visible. Gold border resting state preserved.
+    </p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SECTION G — State matrix
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2 class="section-title">G — State Matrix</h2>
+
+    <table class="spec-table">
+      <thead>
+        <tr>
+          <th>Tier</th>
+          <th>Rune corners</th>
+          <th>Card border (resting)</th>
+          <th>Card border (hover)</th>
+          <th>Hover animation</th>
+          <th>Badge gold accent</th>
+          <th>Reduced-motion</th>
+          <th>Touch device</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Thrall (free)</td>
+          <td>Hidden</td>
+          <td>Default (--border)</td>
+          <td>Existing .card-chain glow</td>
+          <td>None</td>
+          <td>None</td>
+          <td>N/A</td>
+          <td>N/A</td>
+        </tr>
+        <tr>
+          <td>Trial</td>
+          <td>Visible, normal weight, ~0.30 opacity gold</td>
+          <td>rgba(212,165,32,0.14)</td>
+          <td>rgba(212,165,32,0.30)</td>
+          <td>karl-gold-glow-soft 3.2s</td>
+          <td>Gold border, no bg tint</td>
+          <td>animation: none; static gold border preserved</td>
+          <td>animation: none; border preserved</td>
+        </tr>
+        <tr>
+          <td>Karl</td>
+          <td>Visible, bold weight, ~0.55 opacity gold</td>
+          <td>rgba(212,165,32,0.30)</td>
+          <td>rgba(212,165,32,0.55) + 0 0 1px rgba(212,165,32,0.25)</td>
+          <td>karl-gold-glow 2.8s</td>
+          <td>Gold border + rgba(212,165,32,0.07) bg tint</td>
+          <td>animation: none; static gold border preserved</td>
+          <td>animation: none; border preserved</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SECTION H — Implementation notes for FiremanDecko
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2 class="section-title">H — Implementation Notes (FiremanDecko)</h2>
+
+    <table class="spec-table">
+      <thead>
+        <tr><th>File</th><th>Change</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>development/frontend/src/components/dashboard/CardTile.tsx</code></td>
+          <td>
+            Add four <code>&lt;span aria-hidden="true" className="karl-rune-corner karl-rune-tl"&gt;ᚠ&lt;/span&gt;</code>
+            (and tr/bl/br variants) inside the outer <code>motion.div</code>, before the <code>&lt;Link&gt;</code>.
+            Add <code>karl-bling-card</code> class to the <code>motion.div</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>development/frontend/src/components/dashboard/StatusBadge.tsx</code></td>
+          <td>
+            Pass <code>className</code> prop addition: when entitlement hook indicates karl or trial,
+            append <code>karl-bling-badge-status</code> to the Badge className.
+            Use <code>useIsKarlOrTrial()</code> hook (already exists in hooks/).
+          </td>
+        </tr>
+        <tr>
+          <td><code>development/frontend/src/app/karl-bling.css</code></td>
+          <td>
+            Add new rules:<br/>
+            1. <code>[data-tier="karl"] .karl-rune-corner</code> and <code>[data-tier="trial"] .karl-rune-corner</code>
+            — visibility, color, font-size, position values.<br/>
+            Default: <code>.karl-rune-corner { display: none; }</code> (hidden for thrall).<br/>
+            2. <code>[data-tier="karl"] .karl-bling-badge-status</code> and
+            <code>[data-tier="trial"] .karl-bling-badge-status</code>
+            — badge gold border + background tint for Karl.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="note" style="margin-top:12px;">
+      <strong>CSS cascade note:</strong> <code>data-tier</code> is set on <code>&lt;html&gt;</code> by
+      EntitlementContext (wired in #1086). No per-component JS branching needed beyond adding the CSS
+      class names. The cascade handles tier visibility. <code>useIsKarlOrTrial()</code> is used only
+      for the badge class injection in StatusBadge.
+    </p>
+
+    <p class="note">
+      <strong>Accessibility:</strong> All rune corner spans are <code>aria-hidden="true"</code> — purely decorative.
+      The Karl badge gold treatment does not change badge text, role, or tooltip content.
+      WCAG 2.1 AA: colour contrast of rune glyphs is not required as they are decorative (aria-hidden).
+      Glow animation: <code>prefers-reduced-motion</code> suppresses all keyframe animations — already
+      handled in karl-bling.css from #1086; only the new rune/badge rules need confirming they add no animation.
+    </p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SECTION I — Acceptance criteria checklist
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2 class="section-title">I — Acceptance Criteria Coverage</h2>
+
+    <ul class="checklist">
+      <li>Card borders show gold glow ring on hover for Karl and trial users — <em>Sections A, B: .karl-bling-card hover via karl-bling.css</em></li>
+      <li>Elder Futhark runic Unicode accents in card corners (Karl and trial) — <em>Sections A, C: four corner runes, aria-hidden</em></li>
+      <li>Special Karl card skin — cosmetic variant with enhanced gold styling (not a flip animation) — <em>Sections A–E: CSS-only overlay on existing CardTile</em></li>
+      <li>Karl-specific status badge styling (gold-accented) — <em>Section D: .karl-bling-badge-status</em></li>
+      <li>All card bling visible for both Karl and trial users — <em>Section G: state matrix covers both tiers</em></li>
+      <li>Mobile responsive at 375px+ — <em>Section F: mobile frame</em></li>
+      <li>Reduced-motion: glow hover disabled, static gold border fallback — <em>Sections B (reduced-motion col), G: prefers-reduced-motion</em></li>
+    </ul>
+  </section>
+
+
+</main>
+</body>
+</html>

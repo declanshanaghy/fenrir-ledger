@@ -336,3 +336,89 @@
     animation: none;
   }
 }
+
+/* ── Karl: card rune corner accents ─────────────────────────────────────── */
+/*
+ * .karl-rune-corner — four Elder Futhark runes positioned in card corners.
+ * Hidden by default (thrall tier). Revealed via data-tier cascade.
+ * aria-hidden="true" — purely decorative, not announced by screen readers.
+ *
+ * Rune assignment (matches #1086 constants):
+ *   top-left:     ᚠ  fehu    (wealth)
+ *   top-right:    ᚱ  raidho  (journey)
+ *   bottom-left:  ᛁ  isa     (ice/stillness)
+ *   bottom-right: ᚾ  naudiz  (need/constraint)
+ *
+ * Issue: #1088
+ */
+.karl-rune-corner {
+  display: none;
+  position: absolute;
+  font-size: 10px;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.karl-rune-tl { top: 5px;    left: 6px;  }
+.karl-rune-tr { top: 5px;    right: 6px; }
+.karl-rune-bl { bottom: 5px; left: 6px;  }
+.karl-rune-br { bottom: 5px; right: 6px; }
+
+/* Karl: full intensity runes */
+[data-tier="karl"] .karl-rune-corner {
+  display: block;
+  font-weight: bold;
+  color: rgba(212, 165, 32, 0.55);
+}
+
+/* Trial: lighter presence */
+[data-tier="trial"] .karl-rune-corner {
+  display: block;
+  font-weight: normal;
+  color: rgba(212, 165, 32, 0.30);
+}
+
+/* Mobile: shrink runes to 9px at ≤375px */
+@media (max-width: 375px) {
+  .karl-rune-corner {
+    font-size: 9px;
+  }
+}
+
+/* ── Karl: card resting gold border ─────────────────────────────────────── */
+/*
+ * Resting state gold border tint for karl-bling-card tiles.
+ * Hover glow already handled above via .karl-bling-card:hover.
+ *
+ * Issue: #1088
+ */
+[data-tier="karl"] .karl-bling-card {
+  border-color: rgba(212, 165, 32, 0.30);
+}
+
+[data-tier="trial"] .karl-bling-card {
+  border-color: rgba(212, 165, 32, 0.14);
+}
+
+/* ── Karl: status badge gold accent ─────────────────────────────────────── */
+/*
+ * .karl-bling-badge-status — gold-tinted border + subtle bg for Karl/Trial.
+ * Applied conditionally via useIsKarlOrTrial() in StatusBadge.tsx.
+ *
+ * Karl:  gold border + very subtle gold background tint
+ * Trial: gold border only (no bg tint)
+ *
+ * Badge variant (color-coded by CardStatus) is preserved — only border/tint.
+ * No animation on the badge.
+ *
+ * Issue: #1088
+ */
+[data-tier="karl"] .karl-bling-badge-status {
+  border-color: rgba(212, 165, 32, 0.50) !important;
+  background-color: rgba(212, 165, 32, 0.07) !important;
+}
+
+[data-tier="trial"] .karl-bling-badge-status {
+  border-color: rgba(212, 165, 32, 0.25) !important;
+}
