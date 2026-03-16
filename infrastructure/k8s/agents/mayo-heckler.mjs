@@ -3230,7 +3230,7 @@ export function createHecklerEngine(agentName = "Agent") {
         currentHecklerName = randomMayoName();
         escalationLevel = 0;
         const entrance = pick(NEW_HECKLER_ENTRANCES).replace(/\{prev\}/g, previousName);
-        events.push({ type: "mayo-entrance", text: entrance });
+        events.push({ type: "mayo-entrance", text: entrance, name: currentHecklerName });
         const openers = [
           "Right so — " + previousName + " is GONE but I'm HERE!! MAYO FOR SAM!!",
           "Name's " + currentHecklerName + " and I'm HERE for Sam!! " + previousName + " couldn't hack it!!",

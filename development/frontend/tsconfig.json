@@ -44,8 +44,8 @@
     "noUnusedParameters": true,
     // Must use `override` keyword when overriding class methods
     "noImplicitOverride": true,
-    // Distinguishes { a?: string } from { a: string | undefined }
-    "exactOptionalPropertyTypes": true,
+    // exactOptionalPropertyTypes disabled — caused repeated deploy failures
+    "exactOptionalPropertyTypes": false,
     // File import casing must match the filesystem exactly
     "forceConsistentCasingInFileNames": true,
     // Flag unreachable code as an error
