@@ -102,3 +102,29 @@ FiremanDecko writes tests alongside implementation. Loki augments gaps only.
 - **Minimal Footprint:** No unnecessary dependencies
 - **Graceful Degradation:** Handle failures cleanly
 - **Implement What Is Designed:** Change the ADR first if something needs changing
+
+## Decree Complete (UNBREAKABLE)
+
+Every session MUST end with this structured block as the **final output**. No text after it.
+
+```
+᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
+ISSUE: #<issue-number>
+VERDICT: DONE
+PR: <pr-url or N/A>
+SUMMARY:
+- <what was implemented — 1 bullet per logical change>
+- <...>
+CHECKS:
+- tsc: PASS or FAIL
+- build: PASS or FAIL
+SEAL: FiremanDecko · ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ · Principal Engineer
+SIGNOFF: Forged in fire, tempered by craft
+᛭᛭᛭ END DECREE ᛭᛭᛭
+```
+
+Rules:
+- VERDICT is always `DONE` for FiremanDecko (implementation complete)
+- CHECKS must reflect actual verify.sh results from this session
+- SEAL rune signature is fixed: `ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ`
+- Omit PR line if no PR was created (use `N/A`)

@@ -18,9 +18,12 @@ import { dirname, join, resolve } from "path";
 import { fileURLToPath } from "url";
 import { createHecklerEngine, AGENT_NAMES } from "../../../../infrastructure/k8s/agents/mayo-heckler.mjs";
 import { sanitizeText, sanitizeToolOutput } from "./sanitize-chronicle.mjs";
-
-// Resolve script directory for relative asset paths (ESM-safe)
-const __scriptDir = dirname(fileURLToPath(import.meta.url));
+import {
+  AGENT_SIGNOFFS,
+  AGENT_CALLBACK_QUOTES,
+  AGENT_CALLBACK_RUNES,
+  parseDecreeBlock,
+} from "./agent-identity.mjs";
 
 // Resolve script directory for relative asset paths (ESM-safe)
 const __scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -1071,41 +1074,25 @@ const hecklerEngine = createHecklerEngine(agentName);
 const totalTestsWritten = vitestCounts.total + playwrightCount;
 
 // ---------------------------------------------------------------------------
-// Agent callbacks — declaration to Odin (shared by HTML and MDX paths)
+// Agent callbacks — sourced from agent-identity.mjs (canonical source of truth)
 // ---------------------------------------------------------------------------
-const AGENT_CALLBACKS = {
-  FiremanDecko: {
-    quote: "The forge cools, the steel holds. What was broken has been reforged stronger than before.",
-    signoff: "Forged in fire, tempered by craft",
-    runes: "ᚠ ᛁ ᚱ ᛖ ᛗ ᚨ ᚾ",
-  },
-  Loki: {
-    quote: "Every seam tested, every thread pulled. The trickster finds no fault — and that itself is suspicious.",
-    signoff: "Tested by chaos, proven by order",
-    runes: "ᛚ ᛟ ᚲ ᛁ",
-  },
-  Luna: {
-    quote: "The branches of Yggdrasil have been shaped. What the eye sees, the hand shall build.",
-    signoff: "Woven from moonlight, anchored in structure",
-    runes: "ᛚ ᚢ ᚾ ᚨ",
-  },
-  Freya: {
-    quote: "The vision is set, the path illuminated. Brisingamen's light guides the way forward.",
-    signoff: "Guarded by wisdom, driven by purpose",
-    runes: "ᚠ ᚱ ᛖ ᛃ ᚨ",
-  },
-  Heimdall: {
-    quote: "The bridge holds. No shadow passes unseen, no weakness unguarded.",
-    signoff: "Watched from the rainbow bridge",
-    runes: "ᚺ ᛖ ᛁ ᛗ ᛞ ᚨ ᛚ ᛚ",
-  },
+const agentCallback = {
+  quote:   AGENT_CALLBACK_QUOTES[agentName]  ?? AGENT_CALLBACK_QUOTES._fallback  ?? "The task is done. The wolf's chain holds another day.",
+  signoff: AGENT_SIGNOFFS[agentName]          ?? AGENT_SIGNOFFS._fallback          ?? "Sealed by the pack",
+  runes:   AGENT_CALLBACK_RUNES[agentName]    ?? AGENT_CALLBACK_RUNES._fallback    ?? "ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ",
 };
 
-const agentCallback = AGENT_CALLBACKS[agentName] || {
-  quote: "The task is done. The wolf's chain holds another day.",
-  signoff: "Sealed by the pack",
-  runes: "ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ",
-};
+// ---------------------------------------------------------------------------
+// Decree Complete parser — scan all turns for ᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭ block
+// ---------------------------------------------------------------------------
+let decree = null;
+for (const t of turns) {
+  for (const text of t.texts) {
+    const parsed = parseDecreeBlock(text);
+    if (parsed) { decree = parsed; break; }
+  }
+  if (decree) break;
+}
 
 // ---------------------------------------------------------------------------
 // Build MDX (--publish mode)
@@ -1516,6 +1503,45 @@ ${commits.map(c => `<div className="commit-item"><span className="msg">${mdxEsc(
   const mdxCallbackRunes = agentCallback.runes;
   const mdxCallbackQuote = mdxEsc(agentCallback.quote);
   const mdxCallbackSignoff = mdxEsc(agentCallback.signoff);
+
+  // Build decree-complete block for MDX if present
+  let mdxDecreeCompleteMarkup = "";
+  if (decree) {
+    const dVerdictColor = decree.verdict === "PASS" ? "var(--teal-asgard)" : decree.verdict === "FAIL" ? "var(--fire-muspel)" : "var(--amber-hati)";
+    const dChecks = decree.checks.length > 0
+      ? decree.checks.map(c => {
+          const ok = /pass|ok|complete|delivered|approved|secured|done/i.test(c.result);
+          const fail = /fail|error|missing/i.test(c.result);
+          const cc = ok ? "var(--teal-asgard)" : fail ? "var(--fire-muspel)" : "var(--text-rune)";
+          return `<div className="decree-check"><span className="decree-check-name">${mdxEsc(c.name)}</span><span className="decree-check-result" style={{color:"${cc}"}}>${mdxEsc(c.result)}</span></div>`;
+        }).join("\n")
+      : "";
+    const dSummary = decree.summary.length > 0
+      ? `<ul className="decree-summary">${decree.summary.map(s => `<li>${mdxEsc(s)}</li>`).join("")}</ul>`
+      : "";
+    const dPr = decree.pr ? `<div className="decree-field"><span className="decree-label">PR:</span> <a href="${mdxEsc(decree.pr)}" target="_blank" rel="noopener">${mdxEsc(decree.pr)}</a></div>` : "";
+    mdxDecreeCompleteMarkup = `
+<div className="decree-complete">
+<div className="decree-complete-header">
+<div className="decree-complete-runes">᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭</div>
+<div className="decree-complete-verdict" style={{color:"${dVerdictColor}"}}>${mdxEsc(decree.verdict ?? "COMPLETE")}</div>
+</div>
+<div className="decree-complete-body">
+<div className="decree-field"><span className="decree-label">Issue:</span> #${mdxEsc(decree.issue ?? issueNum)}</div>
+${dPr}
+${dSummary}
+${dChecks}
+<div className="decree-seal-line">
+<span className="decree-seal-runes">${mdxEsc(decree.sealRunes ?? agentCallback.runes)}</span>
+<span className="decree-seal-agent">${mdxEsc(decree.sealAgent ?? agentName)}</span>
+<span className="decree-seal-title">${mdxEsc(decree.sealTitle ?? agentTitle)}</span>
+</div>
+<div className="decree-signoff">${mdxEsc(decree.signoff ?? agentCallback.signoff)}</div>
+</div>
+<div className="decree-complete-footer">᛭᛭᛭ END DECREE ᛭᛭᛭</div>
+</div>`;
+  }
+
   const mdxCallbackMarkup = `
 <div className="agent-callback">
 <div className="callback-runes">${mdxCallbackRunes}</div>
@@ -1523,7 +1549,8 @@ ${commits.map(c => `<div className="commit-item"><span className="msg">${mdxEsc(
 <div className="callback-quote">&quot;${mdxCallbackQuote}&quot;</div>
 <div className="callback-blood-seal">ᛊ ${mdxCallbackSignoff} · ${mdxEsc(agentTitle)} · Issue #${issueNum} ᛊ</div>
 <div className="callback-wolf">🐺</div>
-</div>`;
+</div>
+${mdxDecreeCompleteMarkup}`;
 
   const mdx = `---
 title: "${mdxTitle.replace(/"/g, '\\"')}"
@@ -1906,6 +1933,45 @@ if (verdict) {
 }
 
 // Agent callback — use shared agentCallback resolved above
+// Render structured decree block if agent emitted one
+let decreeHtmlFragment = "";
+if (decree) {
+  const verdictColor = decree.verdict === "PASS" ? "var(--teal-asgard)" : decree.verdict === "FAIL" ? "var(--fire-muspel)" : "var(--amber-hati)";
+  const checksHtml = decree.checks.length > 0
+    ? decree.checks.map(c => {
+        const ok = /pass|ok|complete|delivered|approved|secured|done/i.test(c.result);
+        const fail = /fail|error|missing/i.test(c.result);
+        const chkColor = ok ? "var(--teal-asgard)" : fail ? "var(--fire-muspel)" : "var(--text-rune)";
+        return `<div class="decree-check"><span class="decree-check-name">${esc(c.name)}</span><span class="decree-check-result" style="color:${chkColor}">${esc(c.result)}</span></div>`;
+      }).join("")
+    : "";
+  const summaryHtml = decree.summary.length > 0
+    ? `<ul class="decree-summary">${decree.summary.map(s => `<li>${esc(s)}</li>`).join("")}</ul>`
+    : "";
+  const prHtml = decree.pr ? `<div class="decree-field"><span class="decree-label">PR:</span> <a href="${esc(decree.pr)}" target="_blank" rel="noopener">${esc(decree.pr)}</a></div>` : "";
+  decreeHtmlFragment = `
+<div class="decree-complete">
+  <div class="decree-complete-header">
+    <div class="decree-complete-runes">᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭</div>
+    <div class="decree-complete-verdict" style="color:${verdictColor}">${esc(decree.verdict ?? "COMPLETE")}</div>
+  </div>
+  <div class="decree-complete-body">
+    <div class="decree-field"><span class="decree-label">Issue:</span> #${esc(decree.issue ?? issueNum)}</div>
+    ${prHtml}
+    ${summaryHtml}
+    ${checksHtml}
+    <div class="decree-seal-line">
+      <span class="decree-seal-runes">${esc(decree.sealRunes ?? agentCallback.runes)}</span>
+      <span class="decree-seal-agent">${esc(decree.sealAgent ?? agentName)}</span>
+      <span class="decree-seal-title">${esc(decree.sealTitle ?? agentTitle)}</span>
+    </div>
+    <div class="decree-signoff">${esc(decree.signoff ?? agentCallback.signoff)}</div>
+  </div>
+  <div class="decree-complete-footer">᛭᛭᛭ END DECREE ᛭᛭᛭</div>
+</div>
+`;
+}
+
 html += `
 <div class="agent-callback">
   <div class="callback-runes">${agentCallback.runes}</div>
@@ -1915,6 +1981,7 @@ html += `
   <div class="callback-blood-seal">ᛊ ${esc(agentCallback.signoff)} · ${esc(agentTitle)} · Issue #${issueNum} ᛊ</div>
   <div class="callback-wolf">🐺</div>
 </div>
+${decreeHtmlFragment}
 `;
 
 html += `
