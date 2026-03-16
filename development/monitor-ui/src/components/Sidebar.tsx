@@ -10,9 +10,11 @@ interface Props {
   onSelectSession: (sessionId: string) => void;
   onAvatarClick?: (agentKey: string) => void;
   onOdinClick?: () => void;
+  onTogglePinSession?: (sessionId: string) => void;
+  pinnedSessionIds?: Set<string>;
 }
 
-export function Sidebar({ jobs, activeSessionId, quote, onSelectSession, onAvatarClick, onOdinClick }: Props) {
+export function Sidebar({ jobs, activeSessionId, quote, onSelectSession, onAvatarClick, onOdinClick, onTogglePinSession, pinnedSessionIds }: Props) {
   const { theme, setTheme } = useTheme();
 
   return (
@@ -62,6 +64,8 @@ export function Sidebar({ jobs, activeSessionId, quote, onSelectSession, onAvata
               isActive={job.sessionId === activeSessionId}
               onClick={() => onSelectSession(job.sessionId)}
               onAvatarClick={onAvatarClick}
+              isPinned={pinnedSessionIds?.has(job.sessionId) ?? false}
+              onTogglePin={onTogglePinSession ? () => onTogglePinSession(job.sessionId) : undefined}
             />
           ))
         )}

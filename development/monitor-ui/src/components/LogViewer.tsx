@@ -24,6 +24,12 @@ function SessionHeader({ job, wsState, isPinned = false, onTogglePin, showPin = 
   const shortId = job.sessionId.length > 8
     ? job.sessionId.slice(-8)
     : job.sessionId;
+  const [confirmingUnpin, setConfirmingUnpin] = useState(false);
+
+  // Reset confirmation state when pin state changes externally
+  useEffect(() => {
+    setConfirmingUnpin(false);
+  }, [isPinned]);
 
   return (
     <div
@@ -67,15 +73,33 @@ function SessionHeader({ job, wsState, isPinned = false, onTogglePin, showPin = 
         <StatusBadge state={wsState} />
         <CopySessionIdButton sessionId={job.sessionId} />
         {showPin && onTogglePin && (
-          <button
-            className={`pin-btn${isPinned ? " pinned" : ""}`}
-            onClick={onTogglePin}
-            title={isPinned ? "Unpin from Odin\u2019s memory" : "Pin to Odin\u2019s memory"}
-            aria-label={isPinned ? "Unpin from Odin\u2019s memory" : "Pin to Odin\u2019s memory"}
-            aria-pressed={isPinned}
-          >
-            <PinIcon filled={isPinned} />
-          </button>
+          confirmingUnpin ? (
+            <button
+              className="pin-btn pin-btn-confirming"
+              onClick={() => { onTogglePin(); setConfirmingUnpin(false); }}
+              onBlur={() => setConfirmingUnpin(false)}
+              title="Confirm: remove from Odin\u2019s memory"
+              aria-label="Confirm unpin"
+            >
+              <span className="pin-confirm-label">✕ unpin?</span>
+            </button>
+          ) : (
+            <button
+              className={`pin-btn${isPinned ? " pinned" : ""}`}
+              onClick={() => {
+                if (isPinned) {
+                  setConfirmingUnpin(true);
+                } else {
+                  onTogglePin();
+                }
+              }}
+              title={isPinned ? "Unpin from Odin\u2019s memory" : "Pin to Odin\u2019s memory"}
+              aria-label={isPinned ? "Unpin from Odin\u2019s memory" : "Pin to Odin\u2019s memory"}
+              aria-pressed={isPinned}
+            >
+              <PinIcon filled={isPinned} />
+            </button>
+          )
         )}
       </span>
     </div>

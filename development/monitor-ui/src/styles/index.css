@@ -389,9 +389,40 @@ body {
   .pin-btn { min-width: 1.6rem; min-height: 1.6rem; }
 }
 
-/* ── Pin badge in card sidebar ── */
-.card-pin-badge {
-  font-size: 0.7rem; line-height: 1; margin-left: 0.15rem;
+/* ── Pin toggle button in card sidebar ── */
+.card-pin-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 1px 3px; margin-left: auto;
+  background: transparent; border: 1px solid transparent;
+  border-radius: 2px; color: var(--text-void); cursor: pointer;
+  line-height: 1; transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.card-pin-btn:hover {
+  color: var(--gold-bright); border-color: var(--gold-dim-border);
+}
+.card-pin-btn.pinned {
+  color: var(--gold); border-color: var(--gold-dim-border);
+}
+.card-pin-btn.pinned:hover {
+  color: var(--error-strong); border-color: var(--error-strong);
+}
+.card-pin-btn.confirming {
+  color: var(--error-strong); border-color: var(--error-strong);
+  background: rgba(239, 68, 68, 0.08);
+}
+.card-pin-confirm-text {
+  font-size: 0.55rem; font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+/* ── Header pin confirm label ── */
+.pin-btn-confirming {
+  color: var(--error-strong) !important; border-color: var(--error-strong) !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+.pin-confirm-label {
+  font-size: 0.6rem; font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
 }
 .copy-session-btn {
   display: flex; align-items: center; justify-content: center;
