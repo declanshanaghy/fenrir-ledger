@@ -3,14 +3,16 @@
 /**
  * HeilungModal — Easter Egg #10: Heilung Krigsgaldr.
  *
+ * Issue #1068 — Norse restyle: single-column 7-section layout, Elder Futhark rune bands,
+ * Old Norse title (Cinzel Decorative), click-to-play video portal with rune frame,
+ * gold Wikipedia links, ᛉ Algiz close button, wolf seal inscription, Framer Motion entry.
+ *
  * Trigger: Ctrl+Shift+L (all platforms). Skip if form field focused.
- * Displays a 2-column modal with band profile (left) and YouTube embed (right).
- *
  * Repeatable — no one-time gate, no localStorage tracking.
- * No auto-dismiss timer. User dismisses via ESC, backdrop click, or X button.
+ * No auto-dismiss timer. User dismisses via ESC, backdrop click, ᛉ button, or HEIÐR button.
  *
- * Desktop: CSS grid grid-cols-2 (~900px max-width)
- * Mobile: flex flex-col — video on top, info below
+ * Layout: single-column flex-col stack (7 sections). max-width: 680px.
+ * Mobile: padding scales down, dismiss button full-width. min-viewport: 375px.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -19,20 +21,39 @@ import { motion, AnimatePresence } from "framer-motion";
 /** YouTube video ID for Heilung — Krigsgaldr LIFA */
 const HEILUNG_VIDEO_ID = "QRg_8NNPTD8";
 
+/** Elder Futhark 22-rune sequence (forward) */
+const FUTHARK_FORWARD = "ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ";
+/** Elder Futhark 22-rune sequence (reversed) — mirrors top band */
+const FUTHARK_REVERSED = "ᛟ ᛞ ᛜ ᛚ ᛗ ᛖ ᛒ ᛏ ᛈ ᛇ ᛃ ᛁ ᚾ ᚺ ᚹ ᚷ ᚲ ᚱ ᚨ ᚦ ᚢ ᚠ";
+
+/** Corner runes for the video portal frame */
+const CORNER_RUNES = ["ᚠ", "ᛖ", "ᚾ", "ᚱ"] as const;
+
 export function HeilungModal() {
   const [visible, setVisible] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const dismiss = useCallback(() => setVisible(false), []);
+  const dismiss = useCallback(() => {
+    setPlaying(false);
+    setVisible(false);
+  }, []);
+
+  // Focus the Algiz close button when modal opens (WCAG focus trap entry point)
+  useEffect(() => {
+    if (visible) {
+      // Small delay to allow Framer Motion entry animation to start
+      const t = setTimeout(() => closeButtonRef.current?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [visible]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Ctrl+Shift+L (all platforms)
+      // Ctrl+Shift+L / Meta+Shift+L — toggle modal
       if (e.key === "L" && e.shiftKey && (e.metaKey || e.ctrlKey)) {
-        // Skip if a form field has focus
         const tag = (e.target as HTMLElement | null)?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-
         e.preventDefault();
         setVisible((v) => !v);
         return;
@@ -48,167 +69,318 @@ export function HeilungModal() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [visible, dismiss]);
 
+  // Handle click/keydown on the video portal thumbnail
+  function handlePortalActivate(e: React.MouseEvent | React.KeyboardEvent) {
+    if (
+      e.type === "keydown" &&
+      (e as React.KeyboardEvent).key !== "Enter" &&
+      (e as React.KeyboardEvent).key !== " "
+    ) {
+      return;
+    }
+    e.preventDefault();
+    setPlaying(true);
+  }
+
   return (
     <AnimatePresence>
       {visible && (
-        /* Backdrop */
+        /* ── Backdrop ───────────────────────────────────────────── */
         <motion.div
           key="heilung-backdrop"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-[500] flex items-center justify-center p-4"
-          style={{ background: "rgba(7, 7, 13, 0.95)", backdropFilter: "blur(6px)" }}
+          transition={{ duration: 0.4, ease: "easeIn" }}
+          className="fixed inset-0 flex items-center justify-center p-4"
+          style={{
+            zIndex: 9653,
+            background: "rgba(7, 7, 13, 0.95)",
+            backdropFilter: "blur(6px)",
+          }}
           onClick={dismiss}
-          aria-label="Heilung modal backdrop"
+          aria-label="Heilung modal backdrop — click to close"
         >
-          {/* Modal container — stop click propagation so backdrop-click only fires on backdrop */}
+          {/* ── Modal shell ─────────────────────────────────────── */}
           <motion.div
             key="heilung-modal"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.92 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="relative w-full rounded-lg overflow-hidden"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+              y: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+              exit: { duration: 0.22, ease: "easeIn" },
+            }}
+            className="relative w-full flex flex-col heilung-modal-shell"
             style={{
-              maxWidth: "900px",
-              background: "#07070d",
-              border: "1px solid rgba(201, 146, 10, 0.35)",
+              maxWidth: "680px",
+              maxHeight: "calc(100vh - 4rem)",
+              overflowY: "auto",
+              WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"],
+              background: "hsl(var(--egg-bg))",
+              border: "1px solid hsl(var(--egg-border))",
             }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
-            aria-label="Heilung — Amplified History"
+            aria-labelledby="heilung-title"
           >
-            {/* Close button */}
+
+            {/* ── Algiz close button (ᛉ) ───────────────────────── */}
             <button
+              ref={closeButtonRef}
               onClick={dismiss}
-              aria-label="Close Heilung modal"
-              className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-white/10"
-              style={{ color: "#c9920a" }}
+              aria-label="Close — return from the wolf's hall"
+              className="absolute top-2 right-2 z-10 flex items-center justify-center transition-colors heilung-algiz-btn"
+              style={{
+                width: "2.75rem",
+                height: "2.75rem",
+                fontSize: "1.4rem",
+                color: "hsl(var(--egg-accent))",
+                background: "none",
+                border: "1px solid hsl(var(--egg-border))",
+                cursor: "pointer",
+              }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <span aria-hidden="true">ᛉ</span>
             </button>
 
-            {/* 2-column layout: mobile stacks (video top, info bottom); desktop side-by-side */}
-            <div className="flex flex-col md:grid md:grid-cols-2">
+            {/* ── Section 1: Rune band (top) ────────────────────── */}
+            <motion.div
+              aria-hidden="true"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, ease: "easeIn", delay: 0.4 }}
+              className="heilung-rune-band heilung-rune-band--top"
+            >
+              {FUTHARK_FORWARD}
+            </motion.div>
 
-              {/* LEFT COLUMN — Band Profile (shown below video on mobile) */}
-              <div
-                className="p-6 md:p-8 order-2 md:order-1 flex flex-col gap-4"
-                style={{ borderRight: "1px solid rgba(201, 146, 10, 0.15)" }}
+            {/* ── Section 2: Title block ────────────────────────── */}
+            <div className="heilung-title-block">
+              <h1
+                id="heilung-title"
+                aria-label="Heyra Stríðsgaldr — Hear the War-Chant"
+                className="heilung-norse-title"
               >
-                {/* Heading */}
-                <div>
-                  <h2
-                    className="text-3xl font-bold tracking-wider uppercase"
-                    style={{
-                      fontFamily: "'Cinzel Decorative', var(--font-display), serif",
-                      color: "#c9920a",
-                      letterSpacing: "0.12em",
-                    }}
-                  >
-                    HEILUNG
-                  </h2>
-                  <p
-                    className="mt-1 text-sm italic"
-                    style={{ color: "rgba(201, 146, 10, 0.65)" }}
-                  >
-                    Amplified History
-                  </p>
+                Heyra Stríðsgaldr
+              </h1>
+              <div aria-hidden="true" className="heilung-title-rune-row">
+                ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ
+              </div>
+              <div aria-hidden="true" className="heilung-subtitle">
+                HEILUNG · Amplified History
+              </div>
+            </div>
+
+            {/* ── Rune divider (1) ──────────────────────────────── */}
+            <div aria-hidden="true" className="heilung-rune-divider">
+              · ᛉ · ᚠ · ᛉ ·
+            </div>
+
+            {/* ── Section 3: Wolf's invitation ─────────────────── */}
+            <section aria-label="Wolf's invitation" className="heilung-wolf-invitation">
+              <p>
+                Before there were words, there was the war-cry. Before iron was forged, the drums
+                spoke. Hear now the song that stirred the blood of warriors beneath the branches
+                of{" "}
+                <a
+                  href="https://en.wikipedia.org/wiki/Yggdrasil"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Yggdrasil on Wikipedia"
+                  className="heilung-wiki-link"
+                >
+                  Yggdrasil
+                </a>{" "}
+                —{" "}
+                <a
+                  href="https://en.wikipedia.org/wiki/Futha"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Krigsgaldr on Wikipedia"
+                  className="heilung-wiki-link"
+                >
+                  <span className="heilung-gold-term">Krigsgaldr</span>
+                </a>
+                , the war-chant of{" "}
+                <a
+                  href="https://en.wikipedia.org/wiki/Heilung"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Heilung on Wikipedia"
+                  className="heilung-wiki-link"
+                >
+                  <span className="heilung-gold-term">Heilung</span>
+                </a>
+                . Let the old voices fill thy skull.
+              </p>
+              <p>
+                Three throats carry what the age of iron sought to silence. They speak in root and
+                bone, in the tongue of those who burned beneath the stars before{" "}
+                <a
+                  href="https://en.wikipedia.org/wiki/Ragnar%C3%B6k"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Ragnarök on Wikipedia"
+                  className="heilung-wiki-link"
+                >
+                  <span className="heilung-gold-term">Ragnarök</span>
+                </a>{" "}
+                was a name for anything. Fenrir remembers.
+              </p>
+            </section>
+
+            {/* ── Rune divider (2) ──────────────────────────────── */}
+            <div aria-hidden="true" className="heilung-rune-divider">
+              · ᛉ · ᚠ · ᛉ ·
+            </div>
+
+            {/* ── Section 4: Video portal ───────────────────────── */}
+            <div className="heilung-video-portal-section">
+              <div aria-hidden="true" className="heilung-portal-label">
+                ᛊᛖᛖ ᚦᛖ ᛊᛟᚾᚷ
+              </div>
+
+              {/* Rune-framed portal */}
+              <div className="heilung-video-portal-frame">
+                {/* Corner runes */}
+                <div className="heilung-portal-corners" aria-hidden="true">
+                  {CORNER_RUNES.map((rune, i) => (
+                    <motion.span
+                      key={rune}
+                      className={`heilung-corner-rune heilung-corner-rune--${i}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.6 }}
+                      transition={{
+                        duration: 0.4,
+                        ease: "easeIn",
+                        delay: 0.8 + i * 0.05,
+                      }}
+                      aria-hidden="true"
+                    >
+                      {rune}
+                    </motion.span>
+                  ))}
                 </div>
 
-                {/* Bio */}
-                <p className="text-sm leading-relaxed" style={{ color: "#d4cfc4" }}>
-                  Heilung (&ldquo;healing&rdquo;) is a Norse experimental folk group formed in
-                  Copenhagen, 2014. Their music draws from runic inscriptions, Iron Age texts,
-                  and Viking Age artifacts &mdash; what they call &ldquo;amplified history from
-                  early medieval northern Europe.&rdquo;
-                </p>
-
-                {/* Members */}
-                <div>
-                  <h3
-                    className="text-xs font-semibold uppercase tracking-widest mb-3"
-                    style={{ color: "rgba(201, 146, 10, 0.55)" }}
-                  >
-                    Members
-                  </h3>
-                  <ul className="flex flex-col gap-2">
-                    {[
-                      {
-                        name: "Kai Uwe Faust",
-                        role: "Vocals — throat singing, Germanic chanting",
-                      },
-                      {
-                        name: "Christopher Juul",
-                        role: "Producer, percussion",
-                      },
-                      {
-                        name: "Maria Franz",
-                        role: "Vocals — traditional Norwegian techniques",
-                      },
-                    ].map(({ name, role }) => (
-                      <li key={name} className="flex flex-col">
-                        <span
-                          className="text-sm font-medium"
-                          style={{ color: "#e8e4d4" }}
-                        >
-                          {name}
+                {/* Video portal inner — thumbnail or iframe */}
+                <div className="heilung-video-portal-inner">
+                  {playing ? (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${HEILUNG_VIDEO_ID}?autoplay=1&rel=0`}
+                      title="Heilung — Krigsgaldr LIFA"
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                      className="w-full h-full"
+                      style={{ border: "none", display: "block" }}
+                    />
+                  ) : (
+                    /* Fallback: <a> wraps the portal for no-JS navigation */
+                    <a
+                      href={`https://www.youtube.com/watch?v=${HEILUNG_VIDEO_ID}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      style={{ display: "contents" }}
+                    >
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Watch Heilung — Krigsgaldr LIFA on YouTube"
+                        className="heilung-thumbnail-btn"
+                        onClick={handlePortalActivate}
+                        onKeyDown={handlePortalActivate}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`https://img.youtube.com/vi/${HEILUNG_VIDEO_ID}/hqdefault.jpg`}
+                          alt=""
+                          className="heilung-thumbnail-img"
+                        />
+                        <span aria-hidden="true" className="heilung-play-overlay">
+                          ▶
                         </span>
-                        <span
-                          className="text-xs"
-                          style={{ color: "rgba(232, 228, 212, 0.5)" }}
-                        >
-                          {role}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                      </div>
+                    </a>
+                  )}
                 </div>
+              </div>
 
-                {/* Link */}
+              <p className="heilung-video-caption" aria-hidden="true">
+                Heilung — Krigsgaldr LIFA
+              </p>
+            </div>
+
+            {/* ── Rune divider (3) ──────────────────────────────── */}
+            <div aria-hidden="true" className="heilung-rune-divider">
+              · ᛉ · ᚠ · ᛉ ·
+            </div>
+
+            {/* ── Section 5: Band lore ──────────────────────────── */}
+            <div className="heilung-band-lore">
+              <div aria-hidden="true" className="heilung-band-lore-label">
+                OF THE BAND
+              </div>
+              <p>
+                <a
+                  href="https://en.wikipedia.org/wiki/Heilung"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Heilung on Wikipedia"
+                  className="heilung-wiki-link"
+                >
+                  <span className="heilung-gold-term">Heilung</span>
+                </a>{" "}
+                — the word means healing in the old tongue. Three voices from Copenhagen, born in
+                2014, conjured from runic inscription, Iron Age text, and Viking Age artifact. They
+                call their work amplified history. I call it memory that refused to die.
+              </p>
+
+              {/* External link row */}
+              <div className="heilung-external-link-row">
                 <a
                   href="https://www.amplifiedhistory.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm underline underline-offset-2 transition-opacity hover:opacity-80 mt-auto"
-                  style={{ color: "#c9920a" }}
+                  aria-label="amplifiedhistory.com, opens in new tab"
+                  className="heilung-external-link"
                 >
-                  amplifiedhistory.com
+                  amplifiedhistory.com ↗
                 </a>
               </div>
-
-              {/* RIGHT COLUMN — Embedded YouTube Video (shown on top on mobile) */}
-              <div className="p-4 md:p-6 order-1 md:order-2 flex flex-col justify-center">
-                <div className="w-full aspect-video rounded-lg overflow-hidden">
-                  <iframe
-                    ref={iframeRef}
-                    src={`https://www.youtube.com/embed/${HEILUNG_VIDEO_ID}?autoplay=1&rel=0`}
-                    title="Heilung — Krigsgaldr LIFA"
-                    allow="autoplay; encrypted-media"
-                    allowFullScreen
-                    className="w-full h-full"
-                    style={{ border: "none" }}
-                  />
-                </div>
-              </div>
             </div>
+
+            {/* ── Section 6: Wolf seal + dismiss ───────────────── */}
+            <div className="heilung-seal-block">
+              <p
+                aria-label="Fenrir seal — The wolf remembers what the world forgot"
+                className="heilung-wolf-seal"
+              >
+                ᚠᛖᚾᚱᛁᚱ — The wolf remembers what the world forgot — ᚠᛖᚾᚱᛁᚱ
+              </p>
+              <button
+                onClick={dismiss}
+                aria-label="Dismiss — honour given"
+                className="heilung-dismiss-btn"
+              >
+                HEIÐR
+              </button>
+            </div>
+
+            {/* ── Section 7: Rune band (bottom) ────────────────── */}
+            <motion.div
+              aria-hidden="true"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, ease: "easeIn", delay: 0.4 }}
+              className="heilung-rune-band heilung-rune-band--bottom"
+            >
+              {FUTHARK_REVERSED}
+            </motion.div>
+
           </motion.div>
         </motion.div>
       )}
