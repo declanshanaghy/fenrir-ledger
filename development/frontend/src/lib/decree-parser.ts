@@ -58,27 +58,27 @@ export function parseDecreeBlock(text: string | null | undefined): DecreeBlock |
   const match = text.match(blockRe);
   if (!match) return null;
 
-  const body = match[1];
+  const body: string = match[1] ?? "";
 
   // ISSUE: #NNNN
   const issueMatch = body.match(/^ISSUE:\s*#?(\d+)/m);
-  const issue = issueMatch ? issueMatch[1] : null;
+  const issue: string | null = issueMatch?.[1] ?? null;
 
   // VERDICT: <label>
   const verdictMatch = body.match(/^VERDICT:\s*(.+)$/m);
-  const verdict = verdictMatch ? verdictMatch[1].trim() : null;
+  const verdict: string | null = verdictMatch ? (verdictMatch[1]?.trim() ?? null) : null;
 
   // PR: <url or N/A or none>
   const prMatch = body.match(/^PR:\s*(.+)$/m);
-  const prRaw = prMatch ? prMatch[1].trim() : null;
-  const pr =
+  const prRaw: string | null = prMatch ? (prMatch[1]?.trim() ?? null) : null;
+  const pr: string | null =
     prRaw && prRaw !== "N/A" && prRaw !== "none" && prRaw !== "-"
       ? prRaw
       : null;
 
   // SUMMARY: bullet list (lines starting with - or *)
   const summaryMatch = body.match(/^SUMMARY:\s*\n((?:\s*[-*]\s*.+\n?)+)/m);
-  const summary: string[] = summaryMatch
+  const summary: string[] = summaryMatch?.[1]
     ? summaryMatch[1]
         .split("\n")
         .map(l => l.replace(/^\s*[-*]\s*/, "").trim())
@@ -87,7 +87,7 @@ export function parseDecreeBlock(text: string | null | undefined): DecreeBlock |
 
   // CHECKS: list of "name: result" entries — stop at SEAL:, SIGNOFF:, or end delimiter
   const checksMatch = body.match(/^CHECKS:\s*\n([\s\S]*?)(?=^(?:SEAL|SIGNOFF):\s|᛭᛭᛭\s*END DECREE)/m);
-  const checks: DecreeCheck[] = checksMatch
+  const checks: DecreeCheck[] = checksMatch?.[1]
     ? checksMatch[1]
         .split("\n")
         .map(l => l.replace(/^\s*[-*]?\s*/, "").trim())
@@ -95,7 +95,7 @@ export function parseDecreeBlock(text: string | null | undefined): DecreeBlock |
         .map(l => {
           const cp = l.match(/^(.+?):\s*(.+)$/);
           return cp
-            ? { name: cp[1].trim(), result: cp[2].trim() }
+            ? { name: cp[1]?.trim() ?? l, result: cp[2]?.trim() ?? "" }
             : { name: l, result: "" };
         })
     : [];
@@ -105,7 +105,7 @@ export function parseDecreeBlock(text: string | null | undefined): DecreeBlock |
   let sealAgent: string | null = null;
   let sealRunes: string | null = null;
   let sealTitle: string | null = null;
-  if (sealMatch) {
+  if (sealMatch?.[1]) {
     const parts = sealMatch[1].split("·").map(p => p.trim());
     sealAgent = parts[0] ?? null;
     sealRunes = parts[1] ?? null;
@@ -114,7 +114,7 @@ export function parseDecreeBlock(text: string | null | undefined): DecreeBlock |
 
   // SIGNOFF: text
   const signoffMatch = body.match(/^SIGNOFF:\s*(.+)$/m);
-  const signoff = signoffMatch ? signoffMatch[1].trim() : null;
+  const signoff: string | null = signoffMatch ? (signoffMatch[1]?.trim() ?? null) : null;
 
   // Require at least issue or verdict to be a valid decree
   if (!issue && !verdict) return null;
