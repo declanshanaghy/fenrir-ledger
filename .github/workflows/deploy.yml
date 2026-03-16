@@ -125,7 +125,7 @@ jobs:
           MONITOR=$(check "^development/monitor/")
           MONITOR_UI=$(check "^development/monitor-ui/")
           HELM_ODIN=$(check "^infrastructure/helm/odin-throne/")
-          INFRA=$(check "^infrastructure/(terraform|monitoring)/")
+          INFRA=$(check "^infrastructure/.*\.tf$|^infrastructure/firestore/")
           REDIS=$(check "^infrastructure/k8s/app/redis-statefulset\.yaml$")
           UMAMI=$(check "^infrastructure/helm/umami/")
           echo "app=$APP" >> "$GITHUB_OUTPUT"
