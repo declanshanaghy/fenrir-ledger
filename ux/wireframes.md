@@ -43,6 +43,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Monitor UI — All-Father's Decree Norse Inscription (Issue #1020)
+
+| File | Description |
+|------|-------------|
+| [wireframes/monitor-ui/decree-inscription.html](wireframes/monitor-ui/decree-inscription.html) | Enhanced NorseTablet decree rendering — 10 sections: scope overview (3 change areas: header, section body, Odin's seal), full desktop wireframe (FiremanDecko variant with 2-column section grid, all collapse states, expanded Issue Details, royal seal), decree header anatomy table (6 zones: agent rune [A], title [B], subtitle+issue [C], full rune name [D], chevron [E], agent-color left border [F]), section body inline formatting (code spans, Wikipedia gold links, code blocks — no dangerouslySetInnerHTML), Odin's royal seal anatomy (runic band + Othalan medallion + divider + command quote + attribution), collapsed vs expanded section state comparison, all 5 agent variants (FiremanDecko/Loki/Luna/Freya/Heimdall — rune, color, first-rune), mobile 375px layout with responsive breakpoints table, WCAG 2.1 AA accessibility spec, component change summary (LogViewer.tsx + index.css only, constants.ts unchanged). Interaction spec: [decree-inscription-interaction-spec.md](wireframes/monitor-ui/decree-inscription-interaction-spec.md). |
+
+---
+
 ## Monitor UI — Norse Verdict Inscription (Issue #1019)
 
 | File | Description |
