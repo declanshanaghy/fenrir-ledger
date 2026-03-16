@@ -1,8 +1,8 @@
 /**
- * HeilungModal — Component tests
+ * HeilungModal — Component tests (Issue #1068 Norse restyle)
  *
- * Validates the restored working state: trigger key, dismiss interactions,
- * content (HEILUNG title, Amplified History, band members, YouTube embed).
+ * Validates: trigger key, dismiss interactions, Norse content, Wikipedia links,
+ * click-to-play video portal, Algiz close button, HEIÐR dismiss, accessibility.
  *
  * Uses standard Vitest + Testing Library matchers (no jest-dom).
  */
@@ -19,7 +19,9 @@ vi.mock("framer-motion", () => {
   function makeTag(tag: string) {
     return React.forwardRef(
       (
-        { children, initial, animate, exit, transition, variants, ...rest }: {
+        {
+          children, initial, animate, exit, transition, variants, ...rest
+        }: {
           children?: React.ReactNode;
           initial?: unknown; animate?: unknown; exit?: unknown;
           transition?: unknown; variants?: unknown;
@@ -30,7 +32,7 @@ vi.mock("framer-motion", () => {
     );
   }
 
-  const motion = { div: makeTag("div") };
+  const motion = { div: makeTag("div"), span: makeTag("span") };
 
   return {
     motion,
@@ -48,7 +50,7 @@ function triggerHeilungKey() {
 
 describe("HeilungModal", () => {
   beforeEach(() => {
-    document.body.style.overflow = "";
+    vi.useFakeTimers();
   });
 
   // ── Open / close mechanics ───────────────────────────────────────────────
@@ -88,10 +90,17 @@ describe("HeilungModal", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("closes on X close button", () => {
+  it("closes on Algiz close button (ᛉ)", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    fireEvent.click(screen.getByLabelText("Close Heilung modal"));
+    fireEvent.click(screen.getByLabelText("Close — return from the wolf's hall"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("closes on HEIÐR dismiss button", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    fireEvent.click(screen.getByLabelText("Dismiss — honour given"));
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
@@ -126,67 +135,6 @@ describe("HeilungModal", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  // ── Content ──────────────────────────────────────────────────────────────
-
-  it("renders HEILUNG title", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    expect(screen.getByText("HEILUNG")).toBeDefined();
-  });
-
-  it("renders Amplified History subtitle", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    expect(screen.getByText("Amplified History")).toBeDefined();
-  });
-
-  it("renders bio text", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    expect(screen.getByText(/Heilung.*healing.*Norse experimental/i)).toBeDefined();
-  });
-
-  it("renders all three band members", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    expect(screen.getByText("Kai Uwe Faust")).toBeDefined();
-    expect(screen.getByText("Maria Franz")).toBeDefined();
-    expect(screen.getByText("Christopher Juul")).toBeDefined();
-  });
-
-  it("renders amplifiedhistory.com link", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    const link = screen.getByRole("link") as HTMLAnchorElement;
-    expect(link.getAttribute("href")).toBe("https://www.amplifiedhistory.com");
-    expect(link.getAttribute("target")).toBe("_blank");
-  });
-
-  it("renders YouTube iframe with correct src and title", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    const iframe = screen.getByTitle("Heilung — Krigsgaldr LIFA") as HTMLIFrameElement;
-    expect(iframe).toBeDefined();
-    expect(iframe.getAttribute("src")).toContain("QRg_8NNPTD8");
-    expect(iframe.getAttribute("src")).toContain("autoplay=1");
-  });
-
-  // ── Accessibility ────────────────────────────────────────────────────────
-
-  it("dialog has aria-modal='true'", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    const dialog = screen.getByRole("dialog");
-    expect(dialog.getAttribute("aria-modal")).toBe("true");
-  });
-
-  it("dialog has aria-label='Heilung — Amplified History'", () => {
-    render(<HeilungModal />);
-    act(() => triggerHeilungKey());
-    const dialog = screen.getByRole("dialog");
-    expect(dialog.getAttribute("aria-label")).toBe("Heilung — Amplified History");
-  });
-
   it("does not open when Ctrl+Shift+L is pressed in a TEXTAREA", () => {
     render(
       <div>
@@ -217,5 +165,169 @@ describe("HeilungModal", () => {
       });
     });
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  // ── Content ──────────────────────────────────────────────────────────────
+
+  it("renders Old Norse title 'Heyra Stríðsgaldr'", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    expect(screen.getByText("Heyra Stríðsgaldr")).toBeDefined();
+  });
+
+  it("renders Norse title with correct aria-label (with English translation)", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const title = screen.getByLabelText("Heyra Stríðsgaldr — Hear the War-Chant");
+    expect(title).toBeDefined();
+  });
+
+  it("renders HEILUNG · Amplified History subtitle", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    expect(screen.getByText("HEILUNG · Amplified History")).toBeDefined();
+  });
+
+  it("renders wolf's invitation copy with Fenrir reference", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    expect(screen.getByText(/Fenrir remembers/)).toBeDefined();
+  });
+
+  it("renders Wolf's invitation section with correct aria-label", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    expect(screen.getByLabelText("Wolf's invitation")).toBeDefined();
+  });
+
+  it("renders wolf seal inscription with aria-label", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    expect(
+      screen.getByLabelText("Fenrir seal — The wolf remembers what the world forgot")
+    ).toBeDefined();
+  });
+
+  it("renders HEIÐR dismiss button", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    expect(screen.getByText("HEIÐR")).toBeDefined();
+  });
+
+  // ── Wikipedia links ───────────────────────────────────────────────────────
+
+  it("renders Wikipedia link for Yggdrasil", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const link = screen.getByLabelText("Yggdrasil on Wikipedia") as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe("https://en.wikipedia.org/wiki/Yggdrasil");
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+  });
+
+  it("renders Wikipedia link for Heilung", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const links = screen.getAllByLabelText("Heilung on Wikipedia") as HTMLAnchorElement[];
+    expect(links.length).toBeGreaterThan(0);
+    expect(links[0].getAttribute("href")).toBe("https://en.wikipedia.org/wiki/Heilung");
+  });
+
+  it("renders Wikipedia link for Ragnarök", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const link = screen.getByLabelText("Ragnarök on Wikipedia") as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toContain("Ragnar");
+  });
+
+  it("renders amplifiedhistory.com external link", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const link = screen.getByLabelText("amplifiedhistory.com, opens in new tab") as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe("https://www.amplifiedhistory.com");
+    expect(link.getAttribute("target")).toBe("_blank");
+  });
+
+  // ── Video portal (click-to-play) ──────────────────────────────────────────
+
+  it("shows thumbnail portal button initially (not iframe)", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
+    expect(portalBtn).toBeDefined();
+    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).toBeNull();
+  });
+
+  it("shows YouTube thumbnail image in portal state A", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const img = document.querySelector(".heilung-thumbnail-img") as HTMLImageElement | null;
+    expect(img).not.toBeNull();
+    expect(img!.getAttribute("src")).toContain("QRg_8NNPTD8");
+  });
+
+  it("clicking portal thumbnail shows iframe (state B)", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
+    act(() => { fireEvent.click(portalBtn); });
+    const iframe = screen.getByTitle("Heilung — Krigsgaldr LIFA") as HTMLIFrameElement;
+    expect(iframe).toBeDefined();
+    expect(iframe.getAttribute("src")).toContain("autoplay=1");
+    expect(iframe.getAttribute("src")).toContain("QRg_8NNPTD8");
+  });
+
+  it("Enter key on portal thumbnail shows iframe", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
+    act(() => { fireEvent.keyDown(portalBtn, { key: "Enter" }); });
+    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeDefined();
+  });
+
+  it("Space key on portal thumbnail shows iframe", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
+    act(() => { fireEvent.keyDown(portalBtn, { key: " " }); });
+    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeDefined();
+  });
+
+  it("dismissing modal resets video to thumbnail state", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
+    act(() => { fireEvent.click(portalBtn); });
+    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeDefined();
+
+    fireEvent.click(screen.getByLabelText("Close — return from the wolf's hall"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    act(() => triggerHeilungKey());
+    expect(screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube")).toBeDefined();
+    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).toBeNull();
+  });
+
+  // ── Accessibility ─────────────────────────────────────────────────────────
+
+  it("dialog has role='dialog' and aria-modal='true'", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+  });
+
+  it("dialog is named by heilung-title element (aria-labelledby)", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.getAttribute("aria-labelledby")).toBe("heilung-title");
+  });
+
+  it("Algiz close button has correct aria-label", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const btn = screen.getByLabelText("Close — return from the wolf's hall");
+    expect(btn).toBeDefined();
   });
 });

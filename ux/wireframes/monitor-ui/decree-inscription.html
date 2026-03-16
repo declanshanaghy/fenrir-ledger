@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: All-Father's Decree — Issue #1020</title>
+  <style>
+    /* ── Layout CSS only — no colors, backgrounds, decorative borders ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 24px; max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    h2 { font-size: 17px; font-weight: 700; margin: 32px 0 8px; border-bottom: 1px solid; padding-bottom: 6px; }
+    h3 { font-size: 14px; font-weight: 700; margin: 20px 0 6px; }
+    p, li { line-height: 1.5; margin-bottom: 6px; }
+    ul { padding-left: 20px; margin-bottom: 10px; }
+    .note { font-style: italic; font-size: 12px; border-left: 3px solid; padding-left: 8px; margin: 8px 0 12px; }
+    .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
+    .section-box { border: 1px solid; padding: 16px; }
+    .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .spec-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+    .spec-table th, .spec-table td { border: 1px solid; padding: 6px 8px; text-align: left; vertical-align: top; }
+    .spec-table th { font-weight: 700; }
+    .tag { display: inline-block; border: 1px solid; padding: 1px 6px; font-size: 11px; margin: 2px; }
+    hr { border: none; border-top: 1px solid; margin: 32px 0; }
+    .viewport-label { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+    /* Component wireframe containers */
+    .wf-container { border: 2px solid; padding: 0; margin: 16px 0; max-width: 860px; }
+    .wf-container.mobile { max-width: 375px; }
+    /* Norse Tablet outer shell */
+    .wf-tablet { border: 2px solid; /* agent-color replaces this in implementation */ }
+    .wf-tablet-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid;
+      cursor: pointer;
+    }
+    .wf-tablet-header-rune { font-size: 18px; font-weight: 700; min-width: 22px; text-align: center; }
+    .wf-tablet-header-body { flex: 1; }
+    .wf-tablet-header-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .wf-tablet-header-subtitle { font-size: 11px; margin-top: 2px; }
+    .wf-tablet-header-chevron { font-size: 16px; }
+    .wf-tablet-body { padding: 16px; }
+    /* Decree grid of sub-inscriptions */
+    .decree-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .decree-section { border: 1px solid; }
+    .decree-section-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; cursor: pointer;
+      border-bottom: 1px dashed;
+    }
+    .decree-section-glyph { font-size: 16px; font-weight: 700; min-width: 20px; }
+    .decree-section-title { font-size: 12px; font-weight: 700; flex: 1; }
+    .decree-section-chevron { font-size: 14px; }
+    .decree-section-body { padding: 10px 12px; font-size: 12px; line-height: 1.6; }
+    .decree-section-body.collapsed { display: none; }
+    /* Inline body formatting */
+    .decree-body-code { font-family: monospace; font-size: 11px; border: 1px solid; padding: 1px 4px; }
+    .decree-body-link { text-decoration: underline; font-weight: 700; }
+    .decree-body-block { font-family: monospace; font-size: 11px; border: 1px solid; padding: 6px 8px; margin: 6px 0; display: block; white-space: pre-wrap; }
+    /* Odin's royal seal */
+    .decree-seal { border: 2px solid; margin: 16px 0 4px; padding: 16px; text-align: center; }
+    .decree-seal-runic-band { font-size: 13px; letter-spacing: 4px; margin-bottom: 8px; }
+    .decree-seal-medallion {
+      width: 64px; height: 64px; border: 2px solid;
+      border-radius: 50%; /* NOTE: border-radius permitted on seal shape — it's structural, not decorative */
+      margin: 8px auto;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 700;
+    }
+    .decree-seal-divider { margin: 8px 0; font-size: 12px; letter-spacing: 2px; }
+    .decree-seal-command { font-size: 13px; font-style: italic; max-width: 460px; margin: 8px auto; line-height: 1.6; }
+    .decree-seal-attribution { font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-top: 8px; }
+    .decree-seal-title-runes { font-size: 11px; letter-spacing: 2px; margin-top: 3px; }
+    /* Agent variants row */
+    .agent-variant { border: 1px solid; padding: 10px; margin: 8px 0; display: flex; align-items: flex-start; gap: 12px; }
+    .agent-variant-accent { width: 4px; align-self: stretch; border: 1px solid; }
+    .agent-variant-body { flex: 1; }
+    .agent-variant-name { font-weight: 700; font-size: 13px; }
+    .agent-variant-rune { font-size: 16px; margin-left: 6px; }
+    .agent-variant-meta { font-size: 11px; margin-top: 3px; }
+    /* Annotation callouts */
+    .callout {
+      border: 1px dashed;
+      padding: 6px 10px;
+      font-size: 11px;
+      margin: 6px 0;
+      display: flex;
+      gap: 8px;
+    }
+    .callout::before { content: "→"; font-weight: 700; flex-shrink: 0; }
+    /* Two-column layout for wide sections */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 700px) {
+      .two-col { grid-template-columns: 1fr; }
+      .section-grid { grid-template-columns: 1fr; }
+      .decree-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>All-Father's Decree — Norse Inscription</h1>
+<p>Issue #1020 · Monitor UI · Luna wireframe</p>
+<p class="note">Structure only — no colors, backgrounds, or theme styling. Implementation reads AGENT_COLORS and AGENT_RUNE_NAMES from <code>constants.ts</code>.</p>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 1 — SCOPE OVERVIEW
+     ════════════════════════════════════════════════════════════════ -->
+<h2>1 — Scope Overview</h2>
+
+<p>The <strong>NorseTablet</strong> component already parses the prompt into sections. This issue enhances three areas:</p>
+
+<table class="spec-table">
+  <thead><tr><th>Area</th><th>Current State</th><th>Target State</th><th>File(s)</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Decree header</td>
+      <td>Hardcoded ᚠ rune, plain text title, no accent border</td>
+      <td>Agent's rune from <code>AGENT_RUNE_NAMES</code>, agent-color accent border, rune-flanked ALL-CAPS title</td>
+      <td>LogViewer.tsx, index.css</td>
+    </tr>
+    <tr>
+      <td>Section body content</td>
+      <td>Raw string — no inline formatting, no links</td>
+      <td>Inline code spans, Wikipedia links in gold for Norse terms, <code>WIKI_LINKS</code> from constants.ts</td>
+      <td>LogViewer.tsx</td>
+    </tr>
+    <tr>
+      <td>Odin's royal seal</td>
+      <td>Simple <code>nt-rune-sig</code> block with rune text + quote</td>
+      <td>Medallion seal: runic band top, circular medallion with Odin rune ᛟ, command quote, attribution + title runes</td>
+      <td>LogViewer.tsx, index.css</td>
+    </tr>
+  </tbody>
+</table>
+
+<p class="note">Section parsing logic (<code>parseDecreeSections</code>) and <code>DecreeSection</code> collapse behaviour are UNCHANGED — only styling and data binding are enhanced.</p>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 2 — FULL DECREE WIREFRAME (DESKTOP, FiremanDecko)
+     ════════════════════════════════════════════════════════════════ -->
+<h2>2 — Full Decree Wireframe (Desktop ≥1024px, FiremanDecko variant)</h2>
+
+<div class="viewport-label">Desktop — 860px container width shown</div>
+
+<div class="wf-container">
+  <!-- Outer Norse Tablet -->
+  <div class="wf-tablet">
+
+    <!-- ── A: Decree Header ── -->
+    <div class="wf-tablet-header">
+      <div class="wf-tablet-header-rune" title="Agent's rune from AGENT_RUNE_NAMES[agentKey]">ᚠ</div>
+      <div class="wf-tablet-header-body">
+        <div class="wf-tablet-header-title">THE ALL-FATHER'S DECREE UNTO FIREMANDECKO</div>
+        <div class="wf-tablet-header-subtitle">Issue #1020 · Principal Engineer · ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ</div>
+      </div>
+      <div class="wf-tablet-header-rune" title="Same agent rune mirrored on right">ᚠ</div>
+      <div class="wf-tablet-header-chevron">›</div>
+    </div>
+
+    <!-- ── B: Decree Body ── -->
+    <div class="wf-tablet-body">
+
+      <!-- Sub-inscription grid -->
+      <div class="decree-grid">
+
+        <!-- Section: collapsed (default state for most sections) -->
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᛁ</span>
+            <span class="decree-section-title">Hear Me, Agent</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <!-- body hidden when collapsed -->
+          <div class="decree-section-body collapsed">
+            <p>You are <span class="decree-body-code">firemandecko</span>…</p>
+          </div>
+        </div>
+
+        <!-- Section: collapsed -->
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᚺ</span>
+            <span class="decree-section-title">The Sacred Ground</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <div class="decree-section-body collapsed"></div>
+        </div>
+
+        <!-- Section: collapsed -->
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᚲ</span>
+            <span class="decree-section-title">Consecrate Thy Forge</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <div class="decree-section-body collapsed"></div>
+        </div>
+
+        <!-- Section: collapsed -->
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᚾ</span>
+            <span class="decree-section-title">The Norns' Ledger</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <div class="decree-section-body collapsed"></div>
+        </div>
+
+        <!-- Section: collapsed -->
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᚷ</span>
+            <span class="decree-section-title">The Chain of Gleipnir</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <div class="decree-section-body collapsed"></div>
+        </div>
+
+        <!-- Section: collapsed -->
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᛗ</span>
+            <span class="decree-section-title">Trial by Fire</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <div class="decree-section-body collapsed"></div>
+        </div>
+
+        <!-- Section: collapsed -->
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᛏ</span>
+            <span class="decree-section-title">The Gjallarhorn Boundary</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <div class="decree-section-body collapsed"></div>
+        </div>
+
+        <!-- Section: collapsed -->
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᚱ</span>
+            <span class="decree-section-title">Consult the Runes</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <div class="decree-section-body collapsed"></div>
+        </div>
+
+        <!-- Section: THE WOUND IN YGGDRASIL — DEFAULT EXPANDED (Issue Details) — full width -->
+        <div class="decree-section" style="grid-column: 1 / -1;">
+          <div class="decree-section-header" style="border-bottom: 1px solid;">
+            <span class="decree-section-glyph">ᛃ</span>
+            <span class="decree-section-title">The Wound in Yggdrasil — Issue Details</span>
+            <span class="decree-section-chevron" style="transform: rotate(90deg);">›</span>
+          </div>
+          <!-- EXPANDED — shows formatted body with inline elements -->
+          <div class="decree-section-body">
+            <p><strong>## Description</strong></p>
+            <p>The All-Father's Decree renders as a wall of raw monospace text inside a collapsible NorseTablet. It deserves the ceremony of a royal decree — carved in stone, handed through
+              <a class="decree-body-link" href="https://en.wikipedia.org/wiki/Huginn_and_Muninn" title="Wikipedia: Huginn and Muninn">Huginn and Muninn</a>
+              to the agent.</p>
+            <p><strong>## Current Behavior</strong></p>
+            <p>The NorseTablet component (<span class="decree-body-code">LogViewer.tsx:344</span>) renders the raw prompt as a single div.</p>
+            <p><strong>## Acceptance Criteria</strong></p>
+            <ul>
+              <li>Decree prompt parsed into collapsible sub-inscriptions</li>
+              <li>Each section has Elder Futhark glyph + Norse-reworded title</li>
+              <li>Sections default collapsed except "Issue Details"</li>
+              <li>Agent rune + accent color in decree header</li>
+              <li>Odin's royal seal at bottom</li>
+              <li>Norse terms linked to
+                <a class="decree-body-link" href="https://en.wikipedia.org/wiki/Wikipedia" title="Wikipedia">Wikipedia</a>
+                in gold
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Step sections (collapsed) -->
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᚠ</span>
+            <span class="decree-section-title">Take Up Mjölnir</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <div class="decree-section-body collapsed"></div>
+        </div>
+
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᛒ</span>
+            <span class="decree-section-title">Walk the Bifröst</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <div class="decree-section-body collapsed"></div>
+        </div>
+
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᛖ</span>
+            <span class="decree-section-title">Present Thy Offering</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <div class="decree-section-body collapsed"></div>
+        </div>
+
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᛞ</span>
+            <span class="decree-section-title">Pass the Torch</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+          <div class="decree-section-body collapsed"></div>
+        </div>
+
+      </div><!-- /decree-grid -->
+
+      <!-- ── C: Odin's Royal Seal ── -->
+      <div class="decree-seal" role="complementary" aria-label="Odin's royal seal">
+        <div class="decree-seal-runic-band" aria-hidden="true">ᛟ ᛞ ᛁ ᚾ · ᚨ ᛚ ᛚ ᚠ ᚨ ᚦ ᛖ ᚱ · ᚢ ᛏ ᚷ ᚨ ᚱ ᛞ</div>
+        <div class="decree-seal-medallion" aria-hidden="true">ᛟ</div>
+        <div class="decree-seal-divider" aria-hidden="true">— ᚨ —</div>
+        <div class="decree-seal-command">
+          "By mine eye that sees all
+          <a class="decree-body-link" href="https://en.wikipedia.org/wiki/Norse_cosmology#Nine_worlds" title="Wikipedia: Nine Worlds">Nine Realms</a>
+          — I command thee to this task. Fail not.
+          <a class="decree-body-link" href="https://en.wikipedia.org/wiki/Fenrir" title="Wikipedia: Fenrir">Fenrir</a>
+          hungers."
+        </div>
+        <div class="decree-seal-attribution">Odin · All-Father ·
+          <a class="decree-body-link" href="https://en.wikipedia.org/wiki/Asgard" title="Wikipedia: Asgard">Asgard</a>
+        </div>
+        <div class="decree-seal-title-runes" aria-hidden="true">ᛟᛞᛁᚾ ᚨᛚᛚᚠᚨᚦᛖᚱ</div>
+      </div>
+
+    </div><!-- /wf-tablet-body -->
+  </div><!-- /wf-tablet -->
+</div><!-- /wf-container -->
+
+<div class="callout">Left/right border of the outer <code>.norse-tablet</code> uses <code>border-left: 3px solid var(--agent-color)</code> — value comes from <code>AGENT_COLORS[agentKey]</code>. The header background gradient should also use the same color at low opacity.</div>
+<div class="callout">The two runes flanking the title in the header come from <code>AGENT_RUNE_NAMES[agentKey][0]</code> (first character). For FiremanDecko that is ᚠ (Fehu). For Loki: ᛚ. For Luna: ᛚ. For Freya: ᚠ. For Heimdall: ᚺ.</div>
+<div class="callout">The decree subtitle line shows the full rune name string from <code>AGENT_RUNE_NAMES[agentKey]</code> — e.g. ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ for FiremanDecko.</div>
+<div class="callout">Grid is 2-column on desktop (≥600px). On mobile it collapses to 1-column. "Issue Details" section spans full width at all breakpoints (<code>grid-column: 1 / -1</code>).</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 3 — DECREE HEADER ANATOMY
+     ════════════════════════════════════════════════════════════════ -->
+<h2>3 — Decree Header Anatomy</h2>
+
+<div class="wf-container">
+  <div style="padding: 16px;">
+    <div class="wf-tablet-header" style="border: 1px solid; padding: 10px 14px;">
+      <div class="wf-tablet-header-rune">
+        [A]
+      </div>
+      <div class="wf-tablet-header-body">
+        <div class="wf-tablet-header-title">[B] THE ALL-FATHER'S DECREE UNTO [AGENT_NAME]</div>
+        <div class="wf-tablet-header-subtitle">[C] Issue #NNN · [Agent Title] · [D] AGENT_RUNE_NAMES[agentKey]</div>
+      </div>
+      <div class="wf-tablet-header-rune">[A]</div>
+      <div class="wf-tablet-header-chevron">[E]</div>
+    </div>
+    <div style="border-left: 3px solid; height: 40px; display: flex; align-items: center; padding-left: 12px; font-size: 12px;">
+      [F] Agent-color left accent border (3px, solid, var(--agent-color))
+    </div>
+  </div>
+</div>
+
+<table class="spec-table">
+  <thead><tr><th>Zone</th><th>Content</th><th>Source</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>[A] Agent rune</td><td>First character of <code>AGENT_RUNE_NAMES[agentKey]</code></td><td><code>constants.ts</code></td><td>18px, bold. Appears on both left and right of title.</td></tr>
+    <tr><td>[B] Title text</td><td>"THE ALL-FATHER'S DECREE UNTO {AGENT_NAME_UPPER}"</td><td>Derived from <code>agentKey</code></td><td>Uppercase, letter-spacing 1px. Existing text already correct — only rune needs updating.</td></tr>
+    <tr><td>[C] Subtitle — issue</td><td>"Issue #{N} · {AGENT_TITLES[agentKey]}"</td><td><code>constants.ts</code>, parsed from prompt text</td><td>11px, secondary. Extracted same as current <code>issueMatch</code>.</td></tr>
+    <tr><td>[D] Rune name</td><td>Full <code>AGENT_RUNE_NAMES[agentKey]</code> string</td><td><code>constants.ts</code></td><td>Appears after · in subtitle line. E.g. ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ</td></tr>
+    <tr><td>[E] Chevron</td><td>›</td><td>Existing</td><td>Rotates 90° when open. No change.</td></tr>
+    <tr><td>[F] Accent border</td><td>Left border 3px solid <code>AGENT_COLORS[agentKey]</code></td><td><code>constants.ts</code></td><td>Applied via <code>style</code> prop on <code>.norse-tablet</code> — do not hardcode in CSS.</td></tr>
+  </tbody>
+</table>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 4 — SECTION BODY INLINE FORMATTING
+     ════════════════════════════════════════════════════════════════ -->
+<h2>4 — Section Body: Inline Formatting</h2>
+
+<p class="note">The raw prompt text is preserved in full — inline formatting is applied on top of it, not instead of it. No content is removed or truncated.</p>
+
+<div class="two-col">
+
+  <!-- 4a: Code spans -->
+  <div>
+    <h3>4a — Code Spans</h3>
+    <p>Shell commands, file paths, and backtick-wrapped terms are rendered as code spans:</p>
+    <div class="wf-container">
+      <div style="padding: 12px;">
+        <p style="font-size: 12px; line-height: 1.7;">
+          Run <span class="decree-body-code">git branch --show-current</span> and
+          <span class="decree-body-code">node -v</span> and
+          <span class="decree-body-code">ls package.json</span>
+        </p>
+        <p style="font-size: 12px; line-height: 1.7; margin-top: 8px;">
+          Verify at: <span class="decree-body-code">development/frontend/package.json</span>
+        </p>
+      </div>
+    </div>
+    <div class="callout">Match pattern: backtick-wrapped text <code>`...`</code> → <code>&lt;code class="decree-body-code"&gt;</code>. Also apply to patterns matching file paths like <code>path/to/file.ts</code> and shell commands on their own line.</div>
+  </div>
+
+  <!-- 4b: Wikipedia links -->
+  <div>
+    <h3>4b — Norse Term Wikipedia Links</h3>
+    <p>Terms in <code>WIKI_LINKS</code> are linked in gold wherever they appear in any section body:</p>
+    <div class="wf-container">
+      <div style="padding: 12px;">
+        <p style="font-size: 12px; line-height: 1.7;">
+          From the roots of
+          <a class="decree-body-link">Yggdrasil</a>,
+          across the
+          <a class="decree-body-link">Bifröst</a>,
+          into
+          <a class="decree-body-link">Valhalla</a>
+          and the
+          <a class="decree-body-link">Nine Worlds</a>
+        </p>
+      </div>
+    </div>
+    <div class="callout">Links open in <code>target="_blank" rel="noopener noreferrer"</code>. Link text is gold (<code>var(--gold)</code>), underlined. The <code>WIKI_LINKS</code> map in <code>constants.ts</code> is the single source of truth — no hardcoding in component.</div>
+    <div class="callout">Matching is case-sensitive and whole-word. "Bifröst" should not match "Bifröst-adjacent". Apply all WIKI_LINKS entries on every render of <code>DecreeSectionBody</code>.</div>
+  </div>
+
+</div>
+
+<!-- 4c: Block formatting -->
+<h3>4c — Code Block Formatting</h3>
+<p>Multi-line command blocks (lines starting with <code>cd</code>, <code>git</code>, <code>gh</code>, <code>bash</code>, <code>npm</code>, <code>node</code>, or indented by 4+ spaces) are rendered as code blocks:</p>
+
+<div class="wf-container">
+  <div style="padding: 12px;">
+    <code class="decree-body-block">cd /workspace/repo && git add -A && git commit -m 'wip: ...' && git push origin ux/issue-1020-decree-inscription</code>
+    <code class="decree-body-block">cd /workspace/repo && bash quality/scripts/verify.sh --step tsc</code>
+  </div>
+</div>
+
+<div class="callout">These blocks render inside the section body — they preserve line breaks and use monospace. They should NOT be syntax-highlighted (no color). Existing raw text content stays but code lines are wrapped in <code>&lt;code class="decree-body-block"&gt;</code>.</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 5 — ODIN'S ROYAL SEAL ANATOMY
+     ════════════════════════════════════════════════════════════════ -->
+<h2>5 — Odin's Royal Seal Anatomy</h2>
+
+<p>The seal appears below the decree grid in <code>.norse-tablet-body</code>. It replaces the existing <code>.nt-rune-sig</code> block with a more ceremonial layout.</p>
+
+<div class="wf-container" style="max-width: 520px;">
+  <div style="padding: 20px;">
+    <div class="decree-seal" role="complementary" aria-label="Odin's royal seal">
+      <div class="decree-seal-runic-band" aria-hidden="true">ᛟ ᛞ ᛁ ᚾ · ᚨ ᛚ ᛚ ᚠ ᚨ ᚦ ᛖ ᚱ · ᚢ ᛏ ᚷ ᚨ ᚱ ᛞ</div>
+      <!-- NOTE: The runic band spells "ODIN · ALLFATHER · UTGARD" in Elder Futhark transliteration -->
+      <div class="decree-seal-medallion" role="img" aria-label="Odin's rune — Othalan">ᛟ</div>
+      <div class="decree-seal-divider" aria-hidden="true">— ᚨ —</div>
+      <div class="decree-seal-command">
+        "By mine eye that sees all
+        <a class="decree-body-link" href="https://en.wikipedia.org/wiki/Norse_cosmology#Nine_worlds">Nine Realms</a>
+        — I command thee to this task. Fail not.
+        <a class="decree-body-link" href="https://en.wikipedia.org/wiki/Fenrir">Fenrir</a>
+        hungers."
+      </div>
+      <div class="decree-seal-attribution">Odin · All-Father</div>
+      <div class="decree-seal-title-runes" aria-hidden="true">ᛟᛞᛁᚾ ᚨᛚᛚᚠᚨᚦᛖᚱ</div>
+    </div>
+  </div>
+</div>
+
+<table class="spec-table">
+  <thead><tr><th>Zone</th><th>Content</th><th>CSS Class (new)</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Runic band (top)</td><td>Elder Futhark: ᛟ ᛞ ᛁ ᚾ · ᚨ ᛚ ᛚ ᚠ ᚨ ᚦ ᛖ ᚱ · ᚢ ᛏ ᚷ ᚨ ᚱ ᛞ</td><td><code>decree-seal-runic-band</code></td><td>Spells "ODIN · ALLFATHER · UTGARD". Letter-spacing 4px. <code>aria-hidden="true"</code>.</td></tr>
+    <tr><td>Medallion</td><td>ᛟ (Othalan — Odin's rune of heritage and divine sovereignty)</td><td><code>decree-seal-medallion</code></td><td>64×64 circular border. <code>role="img"</code>, <code>aria-label="Odin's rune — Othalan"</code>. Centered.</td></tr>
+    <tr><td>Divider</td><td>— ᚨ — (Ansuz — Odin's breath, the rune of gods)</td><td><code>decree-seal-divider</code></td><td><code>aria-hidden="true"</code>.</td></tr>
+    <tr><td>Command quote</td><td>"By mine eye…" (existing text, keep as-is)</td><td><code>decree-seal-command</code></td><td>Norse terms linked. <code>max-width: 460px</code>, centered, italic.</td></tr>
+    <tr><td>Attribution</td><td>"Odin · All-Father"</td><td><code>decree-seal-attribution</code></td><td>11px, bold, letter-spacing 1px. Visible to screen readers — no <code>aria-hidden</code>.</td></tr>
+    <tr><td>Title runes</td><td>ᛟᛞᛁᚾ ᚨᛚᛚᚠᚨᚦᛖᚱ</td><td><code>decree-seal-title-runes</code></td><td><code>aria-hidden="true"</code>. Decorative only.</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">The medallion's circular border is structural (it's a seal medallion shape), not decorative. <code>border-radius: 50%</code> is appropriate here and matches the existing <code>.error-tablet-seal</code> pattern in the codebase.</div>
+<div class="callout">The <code>.nt-rune-sig</code> and related classes (<code>.nt-rune-sig-agent-runes</code>, <code>.nt-rune-sig-divider</code>, etc.) should be REPLACED by the new <code>.decree-seal-*</code> classes. Do not keep both sets unless needed elsewhere — check before removing.</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 6 — SECTION STATE: COLLAPSED vs EXPANDED
+     ════════════════════════════════════════════════════════════════ -->
+<h2>6 — Section States: Collapsed vs Expanded</h2>
+
+<div class="two-col">
+
+  <!-- Collapsed state -->
+  <div>
+    <h3>Collapsed (default)</h3>
+    <div class="wf-container">
+      <div class="decree-section" style="margin: 0; border: 0;">
+        <div class="decree-section-header" style="border: 1px solid;">
+          <span class="decree-section-glyph">ᚷ</span>
+          <span class="decree-section-title">The Chain of Gleipnir</span>
+          <span class="decree-section-chevron">›</span>
+        </div>
+        <!-- body not rendered when collapsed -->
+      </div>
+    </div>
+    <p class="note">Only header row visible. Chevron points right (›).</p>
+  </div>
+
+  <!-- Expanded state -->
+  <div>
+    <h3>Expanded (click toggles)</h3>
+    <div class="wf-container">
+      <div class="decree-section" style="margin: 0; border: 0;">
+        <div class="decree-section-header" style="border: 1px solid; border-bottom: 1px dashed;">
+          <span class="decree-section-glyph">ᛃ</span>
+          <span class="decree-section-title">The Wound in Yggdrasil</span>
+          <span class="decree-section-chevron" style="transform: rotate(90deg);">›</span>
+        </div>
+        <div class="decree-section-body">
+          <p>Issue #1020 content…</p>
+          <p>Norse terms like <a class="decree-body-link">Yggdrasil</a> and <a class="decree-body-link">Bifröst</a> are gold links.</p>
+          <code class="decree-body-block">gh issue view 1020 --comments</code>
+        </div>
+      </div>
+    </div>
+    <p class="note">Chevron points down (rotated 90°). Body fades in. Bottom fade-out mask hides overflow.</p>
+  </div>
+</div>
+
+<div class="callout">The outer <code>.norse-tablet</code> collapse/expand toggle remains unchanged — it wraps the entire decree including all sub-inscriptions and the seal.</div>
+<div class="callout">"Issue Details" section (<code>ᛃ The Wound in Yggdrasil</code>) defaults to <code>defaultOpen: true</code> — already implemented in <code>parseDecreeSections</code>. No change needed there.</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 7 — ALL 5 AGENT VARIANTS
+     ════════════════════════════════════════════════════════════════ -->
+<h2>7 — All 5 Agent Variants</h2>
+
+<p>Each agent uses their own rune, color, and title. The decree structure is identical; only these values change.</p>
+
+<div class="agent-variant">
+  <div class="agent-variant-accent"></div>
+  <div class="agent-variant-body">
+    <div class="agent-variant-name">FiremanDecko <span class="agent-variant-rune">ᚠ</span></div>
+    <div class="agent-variant-meta">
+      <span class="tag">AGENT_COLORS: #4ecdc4</span>
+      <span class="tag">AGENT_RUNE_NAMES: ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ</span>
+      <span class="tag">AGENT_TITLES: Principal Engineer</span>
+      <span class="tag">First rune: ᚠ (Fehu)</span>
+    </div>
+    <div style="margin-top: 4px; font-size: 12px;">Title: <em>THE ALL-FATHER'S DECREE UNTO FIREMANDECKO</em></div>
+  </div>
+</div>
+
+<div class="agent-variant">
+  <div class="agent-variant-accent"></div>
+  <div class="agent-variant-body">
+    <div class="agent-variant-name">Loki <span class="agent-variant-rune">ᛚ</span></div>
+    <div class="agent-variant-meta">
+      <span class="tag">AGENT_COLORS: #a78bfa</span>
+      <span class="tag">AGENT_RUNE_NAMES: ᛚᛟᚲᛁ</span>
+      <span class="tag">AGENT_TITLES: QA Tester</span>
+      <span class="tag">First rune: ᛚ (Laguz)</span>
+    </div>
+    <div style="margin-top: 4px; font-size: 12px;">Title: <em>THE ALL-FATHER'S DECREE UNTO LOKI</em></div>
+  </div>
+</div>
+
+<div class="agent-variant">
+  <div class="agent-variant-accent"></div>
+  <div class="agent-variant-body">
+    <div class="agent-variant-name">Luna <span class="agent-variant-rune">ᛚ</span></div>
+    <div class="agent-variant-meta">
+      <span class="tag">AGENT_COLORS: #6b8afd</span>
+      <span class="tag">AGENT_RUNE_NAMES: ᛚᚢᚾᚨ</span>
+      <span class="tag">AGENT_TITLES: UX Designer</span>
+      <span class="tag">First rune: ᛚ (Laguz)</span>
+    </div>
+    <div style="margin-top: 4px; font-size: 12px;">Title: <em>THE ALL-FATHER'S DECREE UNTO LUNA</em></div>
+  </div>
+</div>
+
+<div class="agent-variant">
+  <div class="agent-variant-accent"></div>
+  <div class="agent-variant-body">
+    <div class="agent-variant-name">Freya <span class="agent-variant-rune">ᚠ</span></div>
+    <div class="agent-variant-meta">
+      <span class="tag">AGENT_COLORS: #f0b429</span>
+      <span class="tag">AGENT_RUNE_NAMES: ᚠᚱᛖᛃᚨ</span>
+      <span class="tag">AGENT_TITLES: Product Owner</span>
+      <span class="tag">First rune: ᚠ (Fehu)</span>
+    </div>
+    <div style="margin-top: 4px; font-size: 12px;">Title: <em>THE ALL-FATHER'S DECREE UNTO FREYA</em></div>
+  </div>
+</div>
+
+<div class="agent-variant">
+  <div class="agent-variant-accent"></div>
+  <div class="agent-variant-body">
+    <div class="agent-variant-name">Heimdall <span class="agent-variant-rune">ᚺ</span></div>
+    <div class="agent-variant-meta">
+      <span class="tag">AGENT_COLORS: #ef4444</span>
+      <span class="tag">AGENT_RUNE_NAMES: ᚺᛖᛁᛗᛞᚨᛚᛚ</span>
+      <span class="tag">AGENT_TITLES: Security Specialist</span>
+      <span class="tag">First rune: ᚺ (Hagalaz)</span>
+    </div>
+    <div style="margin-top: 4px; font-size: 12px;">Title: <em>THE ALL-FATHER'S DECREE UNTO HEIMDALL</em></div>
+  </div>
+</div>
+
+<div class="callout">Agent key is extracted from the prompt text using the existing regex <code>/^You are (\w+)/</code> and lowercased. Falls back to <code>_fallback</code> for unknown keys. The fallback rune for unknown agents is ᚨ (from <code>AGENT_RUNE_NAMES._fallback = "ᚨᛊᚷᚨᚱᛞ"</code>).</div>
+<div class="callout">Loki and Luna share the same first rune (ᛚ) but have different agent colors — the left-border accent color differentiates them visually.</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 8 — MOBILE 375px LAYOUT
+     ════════════════════════════════════════════════════════════════ -->
+<h2>8 — Mobile Layout (375px)</h2>
+
+<div class="viewport-label">Mobile — 375px viewport</div>
+
+<div class="wf-container mobile">
+  <div class="wf-tablet">
+
+    <!-- Header: stacks rune + title + chevron -->
+    <div class="wf-tablet-header" style="flex-wrap: wrap; gap: 4px;">
+      <div class="wf-tablet-header-rune" style="font-size: 16px;">ᚠ</div>
+      <div class="wf-tablet-header-body" style="min-width: 0;">
+        <div class="wf-tablet-header-title" style="font-size: 11px;">THE ALL-FATHER'S DECREE UNTO FIREMANDECKO</div>
+        <div class="wf-tablet-header-subtitle" style="font-size: 10px;">Issue #1020 · ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ</div>
+      </div>
+      <div class="wf-tablet-header-rune" style="font-size: 16px;">ᚠ</div>
+      <div class="wf-tablet-header-chevron">›</div>
+    </div>
+
+    <div class="wf-tablet-body" style="padding: 10px;">
+
+      <!-- 1-column grid on mobile -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᛁ</span>
+            <span class="decree-section-title" style="font-size: 11px;">Hear Me, Agent</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+        </div>
+
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᚺ</span>
+            <span class="decree-section-title" style="font-size: 11px;">The Sacred Ground</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+        </div>
+
+        <!-- Issue Details — expanded, full width by default -->
+        <div class="decree-section">
+          <div class="decree-section-header" style="border-bottom: 1px dashed;">
+            <span class="decree-section-glyph">ᛃ</span>
+            <span class="decree-section-title" style="font-size: 11px;">The Wound in Yggdrasil</span>
+            <span class="decree-section-chevron" style="transform: rotate(90deg);">›</span>
+          </div>
+          <div class="decree-section-body" style="font-size: 11px; padding: 8px 10px;">
+            <p>Issue #1020 — decree inscription…</p>
+            <p><a class="decree-body-link">Yggdrasil</a> and <a class="decree-body-link">Bifröst</a></p>
+          </div>
+        </div>
+
+        <div class="decree-section">
+          <div class="decree-section-header">
+            <span class="decree-section-glyph">ᚠ</span>
+            <span class="decree-section-title" style="font-size: 11px;">Take Up Mjölnir</span>
+            <span class="decree-section-chevron">›</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Seal — compact on mobile -->
+      <div class="decree-seal" style="padding: 12px; margin-top: 12px;">
+        <div class="decree-seal-runic-band" style="font-size: 11px; letter-spacing: 2px;">ᛟ ᛞ ᛁ ᚾ · ᚨ ᛚ ᛚ ᚠ ᚨ ᚦ ᛖ ᚱ</div>
+        <div class="decree-seal-medallion" style="width: 48px; height: 48px; font-size: 18px;">ᛟ</div>
+        <div class="decree-seal-divider">— ᚨ —</div>
+        <div class="decree-seal-command" style="font-size: 12px;">"By mine eye… Fail not. Fenrir hungers."</div>
+        <div class="decree-seal-attribution" style="font-size: 10px;">Odin · All-Father</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<table class="spec-table" style="margin-top: 16px;">
+  <thead><tr><th>Breakpoint</th><th>Grid</th><th>Header font</th><th>Section title font</th><th>Seal medallion</th></tr></thead>
+  <tbody>
+    <tr><td>Mobile &lt;600px</td><td>1-column</td><td>11px title / 10px subtitle</td><td>11px</td><td>48×48px</td></tr>
+    <tr><td>Tablet 600–1023px</td><td>1-column</td><td>12px / 11px</td><td>12px</td><td>56×56px</td></tr>
+    <tr><td>Desktop ≥1024px</td><td>2-column</td><td>13px / 11px</td><td>12px</td><td>64×64px</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">The header title MUST NOT overflow on mobile. If the agent name is long (e.g. "FIREMANDECKO"), the title wraps to 2 lines. Use <code>word-break: break-word</code> on <code>.wf-tablet-header-title</code>.</div>
+<div class="callout">The Agent title row ("Principal Engineer") may be hidden on mobile if space is needed — mark it with <code>class="tablet-header-role"</code> and <code>display: none</code> below 600px.</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 9 — ACCESSIBILITY SPEC
+     ════════════════════════════════════════════════════════════════ -->
+<h2>9 — Accessibility (WCAG 2.1 AA)</h2>
+
+<table class="spec-table">
+  <thead><tr><th>Element</th><th>Requirement</th></tr></thead>
+  <tbody>
+    <tr><td>Decree header (toggle)</td><td><code>role="button"</code> or <code>&lt;button&gt;</code>. <code>aria-expanded</code> reflects open/closed state. <code>aria-controls</code> points to body wrapper id.</td></tr>
+    <tr><td>Rune characters</td><td><code>aria-hidden="true"</code> on all decorative rune spans. The visible title text carries the accessible label.</td></tr>
+    <tr><td>Section headers (toggles)</td><td>Each <code>.decree-section-header</code> must be keyboard-focusable (tab-stop). <code>aria-expanded</code> on each. Enter/Space should toggle.</td></tr>
+    <tr><td>Wikipedia links</td><td>All <code>&lt;a&gt;</code> tags: <code>target="_blank"</code> with <code>rel="noopener noreferrer"</code>. <code>title</code> attribute describes destination: "Wikipedia: {term}".</td></tr>
+    <tr><td>Odin's seal</td><td><code>role="complementary"</code>, <code>aria-label="Odin's royal seal"</code> on outer element. Medallion: <code>role="img"</code>, <code>aria-label="Odin's rune — Othalan"</code>.</td></tr>
+    <tr><td>Code spans &amp; blocks</td><td>Use <code>&lt;code&gt;</code> element — semantic, no aria needed.</td></tr>
+    <tr><td>Accent border</td><td>Color alone MUST NOT be the only differentiator between agents — the rune name text in the subtitle also identifies the agent.</td></tr>
+    <tr><td>Section body text</td><td>Minimum contrast 4.5:1 against background at any contrast setting.</td></tr>
+  </tbody>
+</table>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 10 — COMPONENT CHANGE SUMMARY
+     ════════════════════════════════════════════════════════════════ -->
+<h2>10 — Component Change Summary for FiremanDecko</h2>
+
+<table class="spec-table">
+  <thead><tr><th>File</th><th>Change</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>LogViewer.tsx</code></td>
+      <td>
+        <strong>NorseTablet</strong>: (1) derive <code>agentKey</code> (lowercase) from parsed name,
+        (2) look up <code>AGENT_RUNE_NAMES[agentKey]</code> for rune chars,
+        (3) look up <code>AGENT_COLORS[agentKey]</code> for border style,
+        (4) pass rune[0] to left/right header rune spans,
+        (5) pass full rune name to subtitle,
+        (6) replace <code>nt-rune-sig</code> block with <code>decree-seal-*</code> structure.
+        <br/><br/>
+        <strong>DecreeSection → DecreeSectionBody</strong>: new sub-component that (1) applies Wikipedia links via <code>WIKI_LINKS</code>,
+        (2) applies code span / code block formatting to raw text before render.
+        The new component wraps the body string — no changes to section parsing or collapse logic.
+      </td>
+    </tr>
+    <tr>
+      <td><code>index.css</code></td>
+      <td>
+        Add <code>.decree-seal</code>, <code>.decree-seal-runic-band</code>, <code>.decree-seal-medallion</code>,
+        <code>.decree-seal-divider</code>, <code>.decree-seal-command</code>, <code>.decree-seal-attribution</code>,
+        <code>.decree-seal-title-runes</code>.
+        Update <code>.norse-tablet</code> to accept <code>border-left</code> via inline style (no CSS override needed).
+        Add responsive overrides at 600px and 375px for <code>.decree-seal-medallion</code> size and
+        <code>.decree-grid</code> column count.
+      </td>
+    </tr>
+    <tr>
+      <td><code>constants.ts</code></td>
+      <td>No changes required — all needed constants already exist: <code>AGENT_RUNE_NAMES</code>, <code>AGENT_COLORS</code>, <code>AGENT_TITLES</code>, <code>WIKI_LINKS</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">The <code>DecreeSectionBody</code> sub-component should NOT use <code>dangerouslySetInnerHTML</code>. Instead, build a React render tree by splitting the raw text on regex matches and inserting React elements for each code span, link, and block. This avoids XSS risk since prompt text comes from a trusted K8s source, but the pattern is cleaner and safer regardless.</div>
+<div class="callout">Do NOT remove the existing <code>.nt-rune-sig*</code> CSS classes until you confirm they are not used elsewhere in the codebase. Check via <code>grep -r "nt-rune-sig" development/</code> before deletion.</div>
+<div class="callout">The outer <code>.norse-tablet</code> collapse/expand and auto-scroll auto-collapse behaviours are unchanged. <code>useEffect</code> timer (3s → collapse when autoScroll) stays as-is.</div>
+
+<hr />
+<p style="font-size: 11px;">Luna · UX Designer · Issue #1020 · 2026-03-16</p>
+
+</body>
+</html>

@@ -43,6 +43,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Monitor UI — All-Father's Decree Norse Inscription (Issue #1020)
+
+| File | Description |
+|------|-------------|
+| [wireframes/monitor-ui/decree-inscription.html](wireframes/monitor-ui/decree-inscription.html) | Enhanced NorseTablet decree rendering — 10 sections: scope overview (3 change areas: header, section body, Odin's seal), full desktop wireframe (FiremanDecko variant with 2-column section grid, all collapse states, expanded Issue Details, royal seal), decree header anatomy table (6 zones: agent rune [A], title [B], subtitle+issue [C], full rune name [D], chevron [E], agent-color left border [F]), section body inline formatting (code spans, Wikipedia gold links, code blocks — no dangerouslySetInnerHTML), Odin's royal seal anatomy (runic band + Othalan medallion + divider + command quote + attribution), collapsed vs expanded section state comparison, all 5 agent variants (FiremanDecko/Loki/Luna/Freya/Heimdall — rune, color, first-rune), mobile 375px layout with responsive breakpoints table, WCAG 2.1 AA accessibility spec, component change summary (LogViewer.tsx + index.css only, constants.ts unchanged). Interaction spec: [decree-inscription-interaction-spec.md](wireframes/monitor-ui/decree-inscription-interaction-spec.md). |
+
+---
+
 ## Monitor UI — Norse Verdict Inscription (Issue #1019)
 
 | File | Description |
@@ -208,6 +216,7 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 | Loki Mode (Easter Egg #3) | [wireframes/easter-eggs/loki-mode.html](wireframes/easter-eggs/loki-mode.html) | Side-by-side normal vs active states, scrambled card grid, random realm badges, toast, timer, footer trigger |
 | Gleipnir Hunt Complete | [wireframes/easter-eggs/gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) | Fragment 4 (7th card save) + Fragment 6 (15s Valhalla idle) triggers, Gleipnir reward entry, DEF-001 fix |
 | Heilung Modal Restyled (Issue #955) | [wireframes/heilung/heilung-modal.html](wireframes/heilung/heilung-modal.html) | Restyle Heilung easter egg dialog in wolf's voice: wolf-rise animation (600ms saga-enter cubic), border-breathe glow pulse, voice stagger reveal, new copy ("INCANTATION FOUND" eyebrow, two-paragraph incantation, "THE VOICES" member list, "HEIÐR" dismiss), font spec (Cinzel Decorative title, Source Serif 4 body, JetBrains Mono labels), mobile 375px full-bleed stack (video top, info bottom). Interaction spec: [wireframes/heilung/interaction-spec.md](wireframes/heilung/interaction-spec.md) |
+| Heilung Modal Norse Restyle (Issue #1068) | [wireframes/heilung/heilung-norse-restyle.html](wireframes/heilung/heilung-norse-restyle.html) | Full Norse aesthetic restyle of Heilung modal: single-column layout replacing 2-column grid, 7 ordered sections (Elder Futhark rune band top, Norse title "Heyra Stríðsgaldr" in Cinzel Decorative, wolf's invitation in Fenrir's voice with gold Wikipedia links, click-to-play YouTube portal framed in rune borders, band lore in Norse voice, reversed Futhark band bottom, Fenrir wolf seal), Algiz rune ᛉ close button replacing X SVG, max-width 680px with max-height + overflow-y auto, desktop + 375px mobile simulation, component delta table vs Issue #955, video portal state machine, WCAG 2.1 AA accessibility delta. Interaction spec: [wireframes/heilung/interaction-spec.md](wireframes/heilung/interaction-spec.md) |
 | **accessibility** | | |
 | Accessibility + UX Polish | [wireframes/accessibility/accessibility-polish.html](wireframes/accessibility/accessibility-polish.html) | Focus ring spec, skip-nav, ARIA landmarks, heading hierarchy, touch target audit, mobile layouts, reduced-motion |
 | Font Size Scale Increase | [wireframes/accessibility/font-size-scale.html](wireframes/accessibility/font-size-scale.html) | Before/after typography hierarchy comparison, component samples (card tile, form, sidebar, Howl panel), Tailwind migration map, exceptions list |
