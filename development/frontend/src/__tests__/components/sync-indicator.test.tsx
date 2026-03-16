@@ -270,11 +270,11 @@ describe("SyncIndicator — Thrall local fenrir:sync event", () => {
     vi.useRealTimers();
   });
 
-  it("Thrall shows brief syncing (ping ring) on fenrir:sync event, then clears", () => {
+  it("Thrall: fenrir:sync event fires but no ping ring shown (ping is Karl-gated)", () => {
     setThrall();
     const { container } = render(<SyncIndicator />);
 
-    // No ping ring initially
+    // No ping ring before event
     expect(container.querySelector(".sync-ping-ring")).toBeNull();
 
     // Dispatch local sync event
@@ -282,10 +282,11 @@ describe("SyncIndicator — Thrall local fenrir:sync event", () => {
       window.dispatchEvent(new CustomEvent("fenrir:sync"));
     });
 
-    // Ping ring appears (localSyncing = true)
-    expect(container.querySelector(".sync-ping-ring")).not.toBeNull();
+    // Even with localSyncing=true, getStateConfig returns showPing=false for Thrall
+    // (the `!isKarlOrTrial` guard in getStateConfig always returns idle config)
+    expect(container.querySelector(".sync-ping-ring")).toBeNull();
 
-    // After 1500ms the local sync clears
+    // After 1500ms still no ping ring
     act(() => vi.advanceTimersByTime(1600));
     expect(container.querySelector(".sync-ping-ring")).toBeNull();
   });
