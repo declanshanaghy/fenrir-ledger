@@ -19,7 +19,9 @@ vi.mock("framer-motion", () => {
   function makeTag(tag: string) {
     return React.forwardRef(
       (
-        { children, initial, animate, exit, transition, variants, ...rest }: {
+        {
+          children, initial, animate, exit, transition, variants, ...rest
+        }: {
           children?: React.ReactNode;
           initial?: unknown; animate?: unknown; exit?: unknown;
           transition?: unknown; variants?: unknown;
@@ -253,7 +255,6 @@ describe("HeilungModal", () => {
     act(() => triggerHeilungKey());
     const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
     expect(portalBtn).toBeDefined();
-    // iframe should NOT be present before clicking
     expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).toBeNull();
   });
 
@@ -294,17 +295,14 @@ describe("HeilungModal", () => {
 
   it("dismissing modal resets video to thumbnail state", () => {
     render(<HeilungModal />);
-    // Open and activate video
     act(() => triggerHeilungKey());
     const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
     act(() => { fireEvent.click(portalBtn); });
     expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeDefined();
 
-    // Dismiss
     fireEvent.click(screen.getByLabelText("Close — return from the wolf's hall"));
     expect(screen.queryByRole("dialog")).toBeNull();
 
-    // Reopen — should be back to thumbnail
     act(() => triggerHeilungKey());
     expect(screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube")).toBeDefined();
     expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).toBeNull();
