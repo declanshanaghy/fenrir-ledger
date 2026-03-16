@@ -2,14 +2,20 @@
 // --------------------------------------------------------------------------
 // sync-secrets.mjs — Audit, validate, and sync secrets for Fenrir Ledger
 //
-// Checks GitHub Actions secrets, K8s agent secrets, and .env.local.
-// Ensures secrets go to the RIGHT destination (GitHub vs K8s) with
-// minimal oversharing.
+// Reads secrets from TWO local sources:
+//   .secrets          — agent/infra secrets (Claude OAuth, GitHub PATs, GCP)
+//   .env.local        — app secrets (Stripe, Google, Anthropic)
+//
+// Syncs to THREE destinations:
+//   GitHub Actions     — deploy workflow uses these
+//   K8s agent-secrets  — fenrir-agents namespace (agent sandbox)
+//   K8s app-secrets    — fenrir-app namespace (production app)
 //
 // Usage:
 //   node scripts/sync-secrets.mjs              # Audit all
 //   node scripts/sync-secrets.mjs --sync       # Sync missing → correct destination
-//   node scripts/sync-secrets.mjs --fix-quotes # Re-sync all, stripping quotes
+//   node scripts/sync-secrets.mjs --fix-all    # Re-sync ALL secrets (clean values)
+//   node scripts/sync-secrets.mjs --verify     # Compare K8s values against local
 // --------------------------------------------------------------------------
 
 import { execSync } from "node:child_process";
@@ -24,20 +30,23 @@ const C = {
 const REPO = "declanshanaghy/fenrir-ledger";
 const REPO_ROOT = execSync("git rev-parse --show-toplevel", { encoding: "utf8" }).trim();
 const ENV_FILE = join(REPO_ROOT, "development", "frontend", ".env.local");
-const K8S_NS = "fenrir-agents";
+const SECRETS_FILE = join(REPO_ROOT, ".secrets");
+const K8S_AGENTS_NS = "fenrir-agents";
+const K8S_APP_NS = "fenrir-app";
 
 // --------------------------------------------------------------------------
 // Secret definitions — each secret has exactly ONE destination
+// envVar = key name in .env.local, secretsVar = key name in .secrets
 // --------------------------------------------------------------------------
 const SECRETS = [
   // --- GitHub only: GCP infrastructure (deploy workflow) ---
-  { name: "GCP_PROJECT_ID",       dest: "github", group: "GCP Infra",   envVar: null },
-  { name: "GCP_SA_KEY",           dest: "github", group: "GCP Infra",   envVar: null },
-  { name: "GCP_REGION",           dest: "github", group: "GCP Infra",   envVar: null },
-  { name: "GCP_ZONE",             dest: "github", group: "GCP Infra",   envVar: null },
-  { name: "GKE_CLUSTER_NAME",     dest: "github", group: "GCP Infra",   envVar: null },
-  { name: "TF_VAR_BILLING_ACCOUNT_ID", dest: "github", group: "Terraform", envVar: null },
-  { name: "TF_VAR_UPTIME_CHECK_HOST",  dest: "github", group: "Terraform", envVar: null },
+  { name: "GCP_PROJECT_ID",       dest: "github", group: "GCP Infra" },
+  { name: "GCP_SA_KEY",           dest: "github", group: "GCP Infra" },
+  { name: "GCP_REGION",           dest: "github", group: "GCP Infra" },
+  { name: "GCP_ZONE",             dest: "github", group: "GCP Infra" },
+  { name: "GKE_CLUSTER_NAME",     dest: "github", group: "GCP Infra" },
+  { name: "TF_VAR_BILLING_ACCOUNT_ID", dest: "github", group: "Terraform" },
+  { name: "TF_VAR_UPTIME_CHECK_HOST",  dest: "github", group: "Terraform" },
 
   // --- GitHub only: Docker build-args (baked at build time) ---
   { name: "NEXT_PUBLIC_GOOGLE_CLIENT_ID", dest: "github", group: "Build Args", envVar: "NEXT_PUBLIC_GOOGLE_CLIENT_ID" },
@@ -51,17 +60,25 @@ const SECRETS = [
   { name: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", dest: "github", group: "App Secrets", envVar: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" },
   { name: "STRIPE_WEBHOOK_SECRET",          dest: "github", group: "App Secrets", envVar: "STRIPE_WEBHOOK_SECRET" },
   { name: "STRIPE_PRICE_ID",               dest: "github", group: "App Secrets", envVar: "STRIPE_PRICE_ID" },
-  { name: "KV_REST_API_URL",               dest: "github", group: "App Secrets", envVar: "KV_REST_API_URL" },
-  { name: "KV_REST_API_TOKEN",             dest: "github", group: "App Secrets", envVar: "KV_REST_API_TOKEN" },
 
   // --- GitHub → K8s agent secrets (deploy workflow creates agent-secrets) ---
-  { name: "CLAUDE_CODE_OAUTH_TOKEN", dest: "github", group: "Agent Sandbox", envVar: "CLAUDE_CODE_OAUTH_TOKEN" },
-  { name: "GH_TOKEN_AGENTS",         dest: "github", group: "Agent Sandbox", envVar: "GITHUB_FINE_GRAINED_PAT" },
+  { name: "CLAUDE_CODE_OAUTH_TOKEN", dest: "github", group: "Agent Sandbox", secretsVar: "CLAUDE_CODE_OAUTH_TOKEN" },
+  { name: "GH_TOKEN_AGENTS",         dest: "github", group: "Agent Sandbox", secretsVar: "GITHUB_TOKEN_PAT_FINE_GRAINED" },
 
-  // --- K8s only: agent-secrets (also set via deploy workflow, but verify independently) ---
-  { name: "anthropic-api-key",   dest: "k8s", group: "K8s Agent", envVar: "FENRIR_ANTHROPIC_API_KEY", k8sSecret: "agent-secrets" },
-  { name: "gh-token",            dest: "k8s", group: "K8s Agent", envVar: "GITHUB_FINE_GRAINED_PAT",  k8sSecret: "agent-secrets" },
-  { name: "claude-oauth-token",  dest: "k8s", group: "K8s Agent", envVar: "CLAUDE_CODE_OAUTH_TOKEN",  k8sSecret: "agent-secrets" },
+  // --- K8s agent-secrets (fenrir-agents namespace) ---
+  { name: "anthropic-api-key",   dest: "k8s-agents", group: "K8s Agent Secrets", envVar: "FENRIR_ANTHROPIC_API_KEY", k8sSecret: "agent-secrets" },
+  { name: "gh-token",            dest: "k8s-agents", group: "K8s Agent Secrets", secretsVar: "GITHUB_TOKEN_PAT_FINE_GRAINED",  k8sSecret: "agent-secrets" },
+  { name: "claude-oauth-token",  dest: "k8s-agents", group: "K8s Agent Secrets", secretsVar: "CLAUDE_CODE_OAUTH_TOKEN",  k8sSecret: "agent-secrets" },
+
+  // --- K8s fenrir-app-secrets (fenrir-app namespace) ---
+  { name: "FENRIR_ANTHROPIC_API_KEY",  dest: "k8s-app", group: "K8s App Secrets", envVar: "FENRIR_ANTHROPIC_API_KEY", k8sSecret: "fenrir-app-secrets" },
+  { name: "GOOGLE_CLIENT_SECRET",      dest: "k8s-app", group: "K8s App Secrets", envVar: "GOOGLE_CLIENT_SECRET", k8sSecret: "fenrir-app-secrets" },
+  { name: "GOOGLE_PICKER_API_KEY",     dest: "k8s-app", group: "K8s App Secrets", envVar: "GOOGLE_PICKER_API_KEY", k8sSecret: "fenrir-app-secrets" },
+  { name: "ENTITLEMENT_ENCRYPTION_KEY", dest: "k8s-app", group: "K8s App Secrets", envVar: "ENTITLEMENT_ENCRYPTION_KEY", k8sSecret: "fenrir-app-secrets" },
+  { name: "STRIPE_SECRET_KEY",         dest: "k8s-app", group: "K8s App Secrets", envVar: "STRIPE_SECRET_KEY", k8sSecret: "fenrir-app-secrets" },
+  { name: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", dest: "k8s-app", group: "K8s App Secrets", envVar: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", k8sSecret: "fenrir-app-secrets" },
+  { name: "STRIPE_WEBHOOK_SECRET",     dest: "k8s-app", group: "K8s App Secrets", envVar: "STRIPE_WEBHOOK_SECRET", k8sSecret: "fenrir-app-secrets" },
+  { name: "STRIPE_PRICE_ID",           dest: "k8s-app", group: "K8s App Secrets", envVar: "STRIPE_PRICE_ID", k8sSecret: "fenrir-app-secrets" },
 ];
 
 // --------------------------------------------------------------------------
@@ -72,16 +89,15 @@ function sh(cmd) {
   catch { return ""; }
 }
 
-function parseEnvFile() {
-  if (!existsSync(ENV_FILE)) return {};
+function parseKeyValueFile(filePath) {
+  if (!existsSync(filePath)) return {};
   const vars = {};
-  for (const line of readFileSync(ENV_FILE, "utf8").split("\n")) {
+  for (const line of readFileSync(filePath, "utf8").split("\n")) {
     if (!line || line.startsWith("#")) continue;
     const eq = line.indexOf("=");
     if (eq < 0) continue;
     const key = line.slice(0, eq);
     let val = line.slice(eq + 1);
-    // Strip surrounding quotes
     if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
       val = val.slice(1, -1);
     }
@@ -95,61 +111,81 @@ function mask(val) {
   return val.slice(0, 4) + "*".repeat(Math.min(val.length - 8, 20)) + val.slice(-4);
 }
 
+function resolveLocalValue(s, envVars, secretsVars) {
+  if (s.envVar && envVars[s.envVar]) return envVars[s.envVar];
+  if (s.secretsVar && secretsVars[s.secretsVar]) return secretsVars[s.secretsVar];
+  return null;
+}
+
+function getK8sSecretData(secretName, namespace) {
+  const json = sh(`kubectl get secret ${secretName} -n ${namespace} -o json`);
+  if (!json) return {};
+  try {
+    const data = JSON.parse(json).data || {};
+    const result = {};
+    for (const [k, v] of Object.entries(data)) {
+      result[k] = Buffer.from(v, "base64").toString();
+    }
+    return result;
+  } catch { return {}; }
+}
+
 // --------------------------------------------------------------------------
 // Audit
 // --------------------------------------------------------------------------
-function audit(envVars) {
-  // Get existing GitHub secrets
+function audit(envVars, secretsVars) {
   const ghSecrets = new Set(sh(`gh secret list --repo ${REPO}`).split("\n").map(l => l.split("\t")[0]).filter(Boolean));
+  const k8sAgentKeys = getK8sSecretData("agent-secrets", K8S_AGENTS_NS);
+  const k8sAppKeys = getK8sSecretData("fenrir-app-secrets", K8S_APP_NS);
 
-  // Get existing K8s secret keys
-  let k8sKeys = {};
-  const k8sJson = sh(`kubectl get secret agent-secrets -n ${K8S_NS} -o json`);
-  if (k8sJson) {
-    try {
-      const data = JSON.parse(k8sJson).data || {};
-      for (const [k, v] of Object.entries(data)) {
-        k8sKeys[k] = Buffer.from(v, "base64").toString();
-      }
-    } catch {}
-  }
-
-  // Group secrets by group
   const groups = {};
   for (const s of SECRETS) {
     (groups[s.group] = groups[s.group] || []).push(s);
   }
 
   const syncable = [];
-  let totalMissing = 0;
-  let totalPresent = 0;
+  let totalMissing = 0, totalPresent = 0, totalMismatch = 0;
 
   for (const [group, secrets] of Object.entries(groups)) {
     console.log(`\n${C.bold}${group}${C.r} ${C.dim}(→ ${secrets[0].dest})${C.r}`);
 
     for (const s of secrets) {
       let present = false;
-      let value = null;
+      let remoteValue = null;
 
       if (s.dest === "github") {
         present = ghSecrets.has(s.name);
-      } else if (s.dest === "k8s") {
-        value = k8sKeys[s.name] || null;
-        present = !!value;
+      } else if (s.dest === "k8s-agents") {
+        remoteValue = k8sAgentKeys[s.name] || null;
+        present = !!remoteValue;
+      } else if (s.dest === "k8s-app") {
+        remoteValue = k8sAppKeys[s.name] || null;
+        present = !!remoteValue;
       }
 
-      if (present) {
-        const extra = value ? ` ${C.dim}(${mask(value)})${C.r}` : "";
+      const localVal = resolveLocalValue(s, envVars, secretsVars);
+      let mismatch = false;
+      if (present && remoteValue && localVal && remoteValue !== localVal) {
+        mismatch = true;
+        totalMismatch++;
+      }
+
+      if (present && !mismatch) {
+        const extra = remoteValue ? ` ${C.dim}(${mask(remoteValue)})${C.r}` : "";
         console.log(`  ${C.green}✓${C.r} ${s.name}${extra}`);
         totalPresent++;
+      } else if (present && mismatch) {
+        console.log(`  ${C.yellow}⚠${C.r} ${s.name} ${C.red}MISMATCH${C.r} ${C.dim}(remote: ${remoteValue.length}b, local: ${localVal.length}b)${C.r}`);
+        syncable.push(s);
+        totalPresent++;
       } else {
-        // Can we sync it?
-        const localVal = s.envVar ? envVars[s.envVar] : null;
         if (localVal) {
-          console.log(`  ${C.yellow}○${C.r} ${s.name} ${C.dim}(missing — syncable from ${s.envVar})${C.r}`);
+          const source = s.envVar && envVars[s.envVar] ? ".env.local" : ".secrets";
+          console.log(`  ${C.yellow}○${C.r} ${s.name} ${C.dim}(missing — syncable from ${source})${C.r}`);
           syncable.push(s);
-        } else if (s.envVar) {
-          console.log(`  ${C.red}✗${C.r} ${s.name} ${C.dim}(missing — ${s.envVar} not in .env.local)${C.r}`);
+        } else if (s.envVar || s.secretsVar) {
+          const files = [s.envVar && ".env.local", s.secretsVar && ".secrets"].filter(Boolean).join(" / ");
+          console.log(`  ${C.red}✗${C.r} ${s.name} ${C.dim}(missing — not in ${files})${C.r}`);
         } else {
           console.log(`  ${C.red}✗${C.r} ${s.name} ${C.dim}(infrastructure — set manually)${C.r}`);
         }
@@ -158,126 +194,143 @@ function audit(envVars) {
     }
   }
 
-  // Stale GitHub secrets
   const requiredGh = new Set(SECRETS.filter(s => s.dest === "github").map(s => s.name));
   const stale = [...ghSecrets].filter(s => !requiredGh.has(s));
   if (stale.length) {
-    console.log(`\n${C.yellow}Stale GitHub secrets (not in deploy.yml):${C.r}`);
+    console.log(`\n${C.yellow}Stale GitHub secrets (not in SECRETS list):${C.r}`);
     for (const s of stale) console.log(`  ${C.dim}${s}${C.r}`);
   }
 
-  // Validate .env.local values
   let issues = 0;
+  const allLocal = { ...secretsVars, ...envVars };
   for (const s of SECRETS) {
-    if (!s.envVar) continue;
-    const val = envVars[s.envVar];
+    const varName = s.envVar || s.secretsVar;
+    if (!varName) continue;
+    const val = allLocal[varName];
     if (!val) continue;
-    if (val.startsWith(" ") || val.endsWith(" ")) {
-      console.log(`\n  ${C.red}✗${C.r} ${s.envVar} has leading/trailing whitespace`);
+    if (val.startsWith(" ") || val.endsWith(" ") || val.endsWith("\n") || val.endsWith("\r")) {
+      console.log(`  ${C.red}✗${C.r} ${varName} has leading/trailing whitespace or newline`);
       issues++;
     }
     if (val.includes('"') || val.includes("'")) {
-      console.log(`\n  ${C.red}✗${C.r} ${s.envVar} contains embedded quotes — will contaminate secrets`);
+      console.log(`  ${C.red}✗${C.r} ${varName} contains embedded quotes — will contaminate secrets`);
       issues++;
     }
   }
 
-  console.log(`\n${C.bold}Summary:${C.r} ${totalPresent} present, ${totalMissing} missing, ${issues} value issues`);
-
+  console.log(`\n${C.bold}Summary:${C.r} ${totalPresent} present, ${totalMissing} missing, ${totalMismatch} mismatched, ${issues} value issues`);
   if (syncable.length) {
-    console.log(`\n${C.bold}Syncable:${C.r} ${syncable.map(s => s.name).join(", ")}`);
+    console.log(`\n${C.bold}Syncable/fixable:${C.r} ${syncable.map(s => `${s.name} (→ ${s.dest})`).join(", ")}`);
   }
-
   return syncable;
 }
 
 // --------------------------------------------------------------------------
 // Sync
 // --------------------------------------------------------------------------
-function sync(syncable, envVars) {
-  if (!syncable.length) {
-    console.log(`\n${C.green}Nothing to sync.${C.r}`);
-    return;
-  }
-
+function sync(syncable, envVars, secretsVars) {
+  if (!syncable.length) { console.log(`\n${C.green}Nothing to sync.${C.r}`); return; }
   console.log(`\n${C.bold}Syncing ${syncable.length} secrets...${C.r}`);
+  const k8sGroupsDone = new Set();
 
   for (const s of syncable) {
-    const val = envVars[s.envVar];
-    if (!val) { console.log(`  ${C.red}✗${C.r} ${s.name} — no value`); continue; }
+    const val = resolveLocalValue(s, envVars, secretsVars);
+    if (!val) { console.log(`  ${C.red}✗${C.r} ${s.name} — no local value`); continue; }
 
     if (s.dest === "github") {
       execSync(`printf '%s' "${val.replace(/"/g, '\\"')}" | gh secret set "${s.name}" --repo ${REPO}`, { stdio: "pipe" });
       console.log(`  ${C.green}✓${C.r} ${s.name} → GitHub`);
-    } else if (s.dest === "k8s") {
-      // Rebuild the full agent-secrets with all keys
-      const allK8sSecrets = SECRETS.filter(x => x.dest === "k8s");
-      const args = allK8sSecrets.map(x => {
-        const v = envVars[x.envVar] || "";
-        return `--from-literal=${x.name}="${v.replace(/"/g, '\\"')}"`;
-      }).join(" ");
-      execSync(`kubectl create secret generic agent-secrets --namespace ${K8S_NS} ${args} --dry-run=client -o yaml | kubectl apply -f -`, { stdio: "pipe" });
-      console.log(`  ${C.green}✓${C.r} K8s agent-secrets updated (all 3 keys)`);
-      break; // Only need to do this once for all k8s secrets
+    } else if (s.dest === "k8s-agents" && !k8sGroupsDone.has("k8s-agents")) {
+      syncK8sSecret("agent-secrets", K8S_AGENTS_NS, "k8s-agents", envVars, secretsVars);
+      k8sGroupsDone.add("k8s-agents");
+    } else if (s.dest === "k8s-app" && !k8sGroupsDone.has("k8s-app")) {
+      syncK8sSecret("fenrir-app-secrets", K8S_APP_NS, "k8s-app", envVars, secretsVars);
+      k8sGroupsDone.add("k8s-app");
     }
   }
 }
 
-// --------------------------------------------------------------------------
-// Fix quotes: re-sync all syncable secrets with clean values
-// --------------------------------------------------------------------------
-function fixQuotes(envVars) {
-  console.log(`\n${C.bold}Re-syncing all secrets (stripping quotes)...${C.r}`);
+function syncK8sSecret(secretName, namespace, destKey, envVars, secretsVars) {
+  const groupSecrets = SECRETS.filter(x => x.dest === destKey);
+  const literals = [];
+  for (const x of groupSecrets) {
+    const v = resolveLocalValue(x, envVars, secretsVars) || "";
+    if (!v) { console.log(`  ${C.yellow}!${C.r} ${x.name} — no local value, skipping`); continue; }
+    literals.push(`--from-literal=${x.name}=${v}`);
+  }
+  if (!literals.length) { console.log(`  ${C.red}✗${C.r} No values for ${secretName} — skipping`); return; }
+  execSync(`kubectl create secret generic ${secretName} --namespace ${namespace} ${literals.join(" ")} --dry-run=client -o yaml | kubectl apply -f -`, { stdio: "pipe" });
+  console.log(`  ${C.green}✓${C.r} K8s ${secretName} (${namespace}) → ${literals.length} keys`);
+}
 
-  const ghSecrets = new Set(sh(`gh secret list --repo ${REPO}`).split("\n").map(l => l.split("\t")[0]).filter(Boolean));
+// --------------------------------------------------------------------------
+// Fix all: re-sync ALL secrets with clean values from local files
+// --------------------------------------------------------------------------
+function fixAll(envVars, secretsVars) {
+  console.log(`\n${C.bold}Re-syncing ALL secrets from local files...${C.r}`);
+  for (const s of SECRETS) {
+    if (s.dest !== "github") continue;
+    const val = resolveLocalValue(s, envVars, secretsVars);
+    if (!val) continue;
+    execSync(`printf '%s' "${val.replace(/"/g, '\\"')}" | gh secret set "${s.name}" --repo ${REPO}`, { stdio: "pipe" });
+    console.log(`  ${C.green}✓${C.r} ${s.name} → GitHub`);
+  }
+  syncK8sSecret("agent-secrets", K8S_AGENTS_NS, "k8s-agents", envVars, secretsVars);
+  syncK8sSecret("fenrir-app-secrets", K8S_APP_NS, "k8s-app", envVars, secretsVars);
+}
+
+// --------------------------------------------------------------------------
+// Verify: compare K8s values against local (byte-level)
+// --------------------------------------------------------------------------
+function verify(envVars, secretsVars) {
+  console.log(`\n${C.bold}Verifying K8s secrets match local values...${C.r}`);
+  const k8sAgentKeys = getK8sSecretData("agent-secrets", K8S_AGENTS_NS);
+  const k8sAppKeys = getK8sSecretData("fenrir-app-secrets", K8S_APP_NS);
+  let ok = 0, bad = 0;
 
   for (const s of SECRETS) {
-    if (!s.envVar) continue;
-    const val = envVars[s.envVar];
-    if (!val) continue;
-
-    if (s.dest === "github" && ghSecrets.has(s.name)) {
-      execSync(`printf '%s' "${val.replace(/"/g, '\\"')}" | gh secret set "${s.name}" --repo ${REPO}`, { stdio: "pipe" });
-      console.log(`  ${C.green}✓${C.r} ${s.name} → GitHub`);
+    if (!s.dest.startsWith("k8s")) continue;
+    const localVal = resolveLocalValue(s, envVars, secretsVars);
+    if (!localVal) continue;
+    const remoteVal = s.dest === "k8s-agents" ? k8sAgentKeys[s.name] : k8sAppKeys[s.name];
+    if (!remoteVal) {
+      console.log(`  ${C.red}✗${C.r} ${s.name} (${s.k8sSecret}) — missing from K8s`);
+      bad++; continue;
+    }
+    if (remoteVal === localVal) {
+      console.log(`  ${C.green}✓${C.r} ${s.name} (${s.k8sSecret}) — ${remoteVal.length}b exact match`);
+      ok++;
+    } else {
+      const trimMatch = remoteVal.trim() === localVal.trim();
+      const detail = trimMatch ? "whitespace/newline difference" : "VALUE DIFFERS";
+      console.log(`  ${C.red}✗${C.r} ${s.name} (${s.k8sSecret}) — ${detail} (remote: ${remoteVal.length}b, local: ${localVal.length}b)`);
+      bad++;
     }
   }
-
-  // K8s agent secrets
-  const allK8s = SECRETS.filter(x => x.dest === "k8s");
-  const allHaveValues = allK8s.every(x => envVars[x.envVar]);
-  if (allHaveValues) {
-    const args = allK8s.map(x => {
-      const v = envVars[x.envVar];
-      return `--from-literal=${x.name}="${v.replace(/"/g, '\\"')}"`;
-    }).join(" ");
-    execSync(`kubectl create secret generic agent-secrets --namespace ${K8S_NS} ${args} --dry-run=client -o yaml | kubectl apply -f -`, { stdio: "pipe" });
-    console.log(`  ${C.green}✓${C.r} K8s agent-secrets → all 3 keys`);
-  }
+  console.log(`\n${C.bold}Verify:${C.r} ${ok} match, ${bad} mismatched`);
+  if (bad > 0) console.log(`${C.yellow}Run --fix-all to re-sync from local files${C.r}`);
 }
 
 // --------------------------------------------------------------------------
 // Main
 // --------------------------------------------------------------------------
 const mode = process.argv[2] || "audit";
-const envVars = parseEnvFile();
+const envVars = parseKeyValueFile(ENV_FILE);
+const secretsVars = parseKeyValueFile(SECRETS_FILE);
 
-if (!existsSync(ENV_FILE)) {
-  console.error(`${C.red}Missing: ${ENV_FILE}${C.r}`);
+if (!existsSync(ENV_FILE) && !existsSync(SECRETS_FILE)) {
+  console.error(`${C.red}Missing both ${ENV_FILE} and ${SECRETS_FILE}${C.r}`);
   process.exit(1);
 }
+if (!existsSync(ENV_FILE)) console.log(`${C.yellow}Warning: ${ENV_FILE} not found${C.r}`);
+if (!existsSync(SECRETS_FILE)) console.log(`${C.yellow}Warning: ${SECRETS_FILE} not found${C.r}`);
 
 switch (mode) {
-  case "--sync": {
-    const syncable = audit(envVars);
-    sync(syncable, envVars);
-    break;
-  }
-  case "--fix-quotes":
-    fixQuotes(envVars);
-    break;
+  case "--sync": { const syncable = audit(envVars, secretsVars); sync(syncable, envVars, secretsVars); break; }
+  case "--fix-all": fixAll(envVars, secretsVars); break;
+  case "--verify": verify(envVars, secretsVars); break;
   case "--help": case "-h":
-    console.log(readFileSync(import.meta.filename, "utf8").split("\n").slice(1, 12).map(l => l.replace(/^\/\/ ?/, "")).join("\n"));
+    console.log(readFileSync(import.meta.filename, "utf8").split("\n").slice(1, 19).map(l => l.replace(/^\/\/ ?/, "")).join("\n"));
     break;
-  default:
-    audit(envVars);
+  default: audit(envVars, secretsVars);
 }
