@@ -1,3 +1,11 @@
+/**
+ * Agent identity constants for Fenrir Ledger monitor UI.
+ *
+ * Canonical source for agent identity data (names, runes, signoffs, verdicts):
+ *   .claude/skills/brandify-agent/scripts/agent-identity.mjs
+ *
+ * Keep these in sync when adding or renaming agents.
+ */
 import type { Job } from "./types";
 
 export const AGENT_NAMES: Record<string, string> = {
