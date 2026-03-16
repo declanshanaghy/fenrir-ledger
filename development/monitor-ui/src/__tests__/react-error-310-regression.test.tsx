@@ -32,6 +32,8 @@ vi.mock("../lib/localStorageLogs", () => ({
   downloadLog: vi.fn(),
   appendLogLine: vi.fn(),
   getLog: vi.fn().mockReturnValue("mock log"),
+  getCachedLog: vi.fn().mockReturnValue(null),
+  isPinned: vi.fn().mockReturnValue(false),
 }));
 
 afterEach(cleanup);
@@ -220,13 +222,14 @@ describe("CopySessionIdButton in .header-badges (issue #1036)", () => {
     expect(badges!.querySelector(".copy-session-btn")).not.toBeNull();
   });
 
-  it("copy button and download button both live in header-badges", () => {
+  it("copy button and pin button both live in header-badges when onTogglePin is provided", () => {
+    const onTogglePin = vi.fn();
     const { container } = render(
-      <LogViewer entries={[makeEntry("hello")]} activeJob={MOCK_JOB} wsState="open" />
+      <LogViewer entries={[makeEntry("hello")]} activeJob={MOCK_JOB} wsState="open" onTogglePin={onTogglePin} />
     );
     const badges = container.querySelector(".header-badges");
     expect(badges!.querySelector(".copy-session-btn")).not.toBeNull();
-    expect(badges!.querySelector(".download-log-btn")).not.toBeNull();
+    expect(badges!.querySelector(".pin-btn")).not.toBeNull();
   });
 
   it("no copy button when activeJob is null", () => {
