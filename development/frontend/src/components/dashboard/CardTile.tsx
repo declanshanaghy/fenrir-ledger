@@ -103,12 +103,18 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
      * by @media (prefers-reduced-motion: reduce) in globals.css.
      */
     <motion.div
-      className="card-chain"
+      className="card-chain karl-bling-card"
+      style={{ position: "relative" }}
       {...(!reducedMotion && {
         whileHover: { y: -2 },
         transition: { duration: 0.15, ease: "easeOut" },
       })}
     >
+      {/* Karl-tier runic corner accents — aria-hidden, purely decorative */}
+      <span aria-hidden="true" className="karl-rune-corner karl-rune-tl">ᚠ</span>
+      <span aria-hidden="true" className="karl-rune-corner karl-rune-tr">ᚱ</span>
+      <span aria-hidden="true" className="karl-rune-corner karl-rune-bl">ᛁ</span>
+      <span aria-hidden="true" className="karl-rune-corner karl-rune-br">ᚾ</span>
       <Link href={`/ledger/cards/${card.id}/edit`} className="block group">
         <Card className="h-full border border-secondary cursor-pointer" data-testid="card-tile">
           <CardHeader className="pb-3">
