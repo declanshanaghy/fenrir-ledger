@@ -41,11 +41,10 @@ export function HeilungModal() {
 
   // Focus the Algiz close button when modal opens (WCAG focus trap entry point)
   useEffect(() => {
-    if (visible) {
-      // Small delay to allow Framer Motion entry animation to start
-      const t = setTimeout(() => closeButtonRef.current?.focus(), 50);
-      return () => clearTimeout(t);
-    }
+    if (!visible) return;
+    // Small delay to allow Framer Motion entry animation to start
+    const t = setTimeout(() => closeButtonRef.current?.focus(), 50);
+    return () => clearTimeout(t);
   }, [visible]);
 
   useEffect(() => {
@@ -108,9 +107,8 @@ export function HeilungModal() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{
-              opacity: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
-              y: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
-              exit: { duration: 0.22, ease: "easeIn" },
+              duration: 0.6,
+              ease: [0.16, 1, 0.3, 1],
             }}
             className="relative w-full flex flex-col heilung-modal-shell"
             style={{
