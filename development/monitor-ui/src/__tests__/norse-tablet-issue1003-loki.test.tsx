@@ -272,10 +272,11 @@ describe("AC-3: NorseErrorTablet — variant-aware epic seals (issue #1003)", ()
   });
 });
 
-// ── AC-2: RuneSignatureBlock in NorseTablet via LogViewer ────────────────────
+// ── AC-2: Odin's Royal Seal in NorseTablet via LogViewer ────────────────────
+// Updated in #1020: .nt-rune-sig replaced by .decree-seal (Odin's royal seal).
 
-describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (issue #1003)", () => {
-  it("renders .nt-rune-sig element for a known agentKey", () => {
+describe("AC-2: Odin's Royal Seal — rendered in NorseTablet (issue #1020)", () => {
+  it("renders .decree-seal element for a known agentKey", () => {
     const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -284,10 +285,10 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
         wsState="open"
       />
     );
-    expect(container.querySelector(".nt-rune-sig")).not.toBeNull();
+    expect(container.querySelector(".decree-seal")).not.toBeNull();
   });
 
-  it("RuneSignatureBlock has role=complementary", () => {
+  it(".decree-seal has role=complementary", () => {
     const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -296,13 +297,11 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
         wsState="open"
       />
     );
-    const sig = container.querySelector(".nt-rune-sig");
-    expect(sig?.getAttribute("role")).toBe("complementary");
+    const seal = container.querySelector(".decree-seal");
+    expect(seal?.getAttribute("role")).toBe("complementary");
   });
 
-  it("RuneSignatureBlock aria-label is Odin's seal (unified design, #1059)", () => {
-    // Design updated in #1059: all agents use a unified Odin seal instead of
-    // agent-specific rune signatures. The aria-label is always "Odin's seal".
+  it(".decree-seal aria-label is \"Odin's royal seal\"", () => {
     const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -311,12 +310,11 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
         wsState="open"
       />
     );
-    const sig = container.querySelector(".nt-rune-sig");
-    expect(sig?.getAttribute("aria-label")).toBe("Odin's seal");
+    const seal = container.querySelector(".decree-seal");
+    expect(seal?.getAttribute("aria-label")).toBe("Odin's royal seal");
   });
 
-  it("rune sig shows Odin runes ᛟᛞᛁᚾ (unified design, #1059)", () => {
-    // Design updated in #1059: unified Odin seal replaces agent-specific runes.
+  it(".decree-seal-runic-band contains Odin runic band (ᛟ ᛞ ᛁ ᚾ)", () => {
     const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -325,11 +323,13 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
         wsState="open"
       />
     );
-    const runeEl = container.querySelector(".nt-rune-sig-agent-runes");
-    expect(runeEl?.textContent).toBe("ᛟᛞᛁᚾ");
+    const band = container.querySelector(".decree-seal-runic-band");
+    expect(band).not.toBeNull();
+    expect(band?.textContent).toMatch(/ᛟ/);
+    expect(band?.getAttribute("aria-hidden")).toBe("true");
   });
 
-  it(".nt-rune-sig-agent-runes has aria-hidden=true", () => {
+  it(".decree-seal-medallion has role=img and aria-label", () => {
     const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -338,11 +338,12 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
         wsState="open"
       />
     );
-    const runeEl = container.querySelector(".nt-rune-sig-agent-runes");
-    expect(runeEl?.getAttribute("aria-hidden")).toBe("true");
+    const medallion = container.querySelector(".decree-seal-medallion");
+    expect(medallion?.getAttribute("role")).toBe("img");
+    expect(medallion?.getAttribute("aria-label")).toMatch(/Odin/);
   });
 
-  it(".nt-rune-sig-title-runes has aria-hidden=true when rendered", () => {
+  it(".decree-seal-divider has aria-hidden=true", () => {
     const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -351,27 +352,11 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
         wsState="open"
       />
     );
-    const titleEl = container.querySelector(".nt-rune-sig-title-runes");
-    if (titleEl) {
-      expect(titleEl.getAttribute("aria-hidden")).toBe("true");
-    }
-  });
-
-  it(".nt-rune-sig-divider has aria-hidden=true", () => {
-    const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
-    const { container } = render(
-      <LogViewer
-        entries={[taskEntry]}
-        activeJob={MOCK_JOB_LOKI}
-        wsState="open"
-      />
-    );
-    const divEl = container.querySelector(".nt-rune-sig-divider");
+    const divEl = container.querySelector(".decree-seal-divider");
     expect(divEl?.getAttribute("aria-hidden")).toBe("true");
   });
 
-  it("renders Odin's quote in .nt-rune-sig-quote (unified design, #1059)", () => {
-    // Design updated in #1059: unified Odin seal — quote is Odin's, not agent-specific.
+  it(".decree-seal-command renders Odin's quote mentioning Nine Realms", () => {
     const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -380,18 +365,30 @@ describe("AC-2: RuneSignatureBlock — rune signature rendered in NorseTablet (i
         wsState="open"
       />
     );
-    const quoteEl = container.querySelector(".nt-rune-sig-quote");
-    expect(quoteEl).not.toBeNull();
-    // Odin's quote mentions "Nine Realms"
-    expect(quoteEl?.textContent).toMatch(/Nine Realms/i);
+    const cmd = container.querySelector(".decree-seal-command");
+    expect(cmd).not.toBeNull();
+    expect(cmd?.textContent).toMatch(/Nine Realms/i);
+    expect(cmd?.textContent).toMatch(/Fenrir/i);
+  });
+
+  it(".decree-seal-title-runes has aria-hidden=true", () => {
+    const taskEntry = makeTaskEntry("You are Loki, QA Tester. Fix issue #1003.");
+    const { container } = render(
+      <LogViewer
+        entries={[taskEntry]}
+        activeJob={MOCK_JOB_LOKI}
+        wsState="open"
+      />
+    );
+    const titleRunes = container.querySelector(".decree-seal-title-runes");
+    expect(titleRunes?.getAttribute("aria-hidden")).toBe("true");
   });
 });
 
-// ── AC-4: Unknown agent key falls back to ASGARD ─────────────────────────────
+// ── AC-4: Unknown agent key — seal still renders ──────────────────────────────
 
-describe("AC-4: RuneSignatureBlock — unknown agentKey falls back to ASGARD (issue #1003)", () => {
-  it("unknown agentKey renders Odin runes ᛟᛞᛁᚾ (unified design, #1059)", () => {
-    // Design updated in #1059: unified Odin seal — all agents including unknown show Odin.
+describe("AC-4: Royal Seal — unknown agentKey falls back gracefully (issue #1020)", () => {
+  it("unknown agentKey still renders .decree-seal", () => {
     const taskEntry = makeTaskEntry("You are UnknownAgent. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -400,12 +397,10 @@ describe("AC-4: RuneSignatureBlock — unknown agentKey falls back to ASGARD (is
         wsState="open"
       />
     );
-    const runeEl = container.querySelector(".nt-rune-sig-agent-runes");
-    expect(runeEl?.textContent).toBe("ᛟᛞᛁᚾ");
+    expect(container.querySelector(".decree-seal")).not.toBeNull();
   });
 
-  it("undefined agentKey renders Odin runes ᛟᛞᛁᚾ (unified design, #1059)", () => {
-    // Design updated in #1059: unified Odin seal — all agents show Odin runes.
+  it("undefined agentKey still renders .decree-seal", () => {
     const taskEntry = makeTaskEntry("You are SomeAgent. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -414,12 +409,10 @@ describe("AC-4: RuneSignatureBlock — unknown agentKey falls back to ASGARD (is
         wsState="open"
       />
     );
-    const runeEl = container.querySelector(".nt-rune-sig-agent-runes");
-    expect(runeEl?.textContent).toBe("ᛟᛞᛁᚾ");
+    expect(container.querySelector(".decree-seal")).not.toBeNull();
   });
 
-  it("rune sig quote mentions 'Nine Realms' (Odin's unified seal, #1059)", () => {
-    // Design updated in #1059: Odin's quote replaces agent-specific fallbacks.
+  it("fallback .decree-seal has role=complementary", () => {
     const taskEntry = makeTaskEntry("You are UnknownAgent. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -428,11 +421,11 @@ describe("AC-4: RuneSignatureBlock — unknown agentKey falls back to ASGARD (is
         wsState="open"
       />
     );
-    const quoteEl = container.querySelector(".nt-rune-sig-quote");
-    expect(quoteEl?.textContent).toMatch(/Nine Realms/i);
+    const seal = container.querySelector(".decree-seal");
+    expect(seal?.getAttribute("role")).toBe("complementary");
   });
 
-  it("fallback does not render .nt-rune-sig-title-runes (no title for _fallback)", () => {
+  it(".decree-seal-command always mentions Nine Realms regardless of agent", () => {
     const taskEntry = makeTaskEntry("You are UnknownAgent. Fix issue #1003.");
     const { container } = render(
       <LogViewer
@@ -441,21 +434,8 @@ describe("AC-4: RuneSignatureBlock — unknown agentKey falls back to ASGARD (is
         wsState="open"
       />
     );
-    // _fallback has no AGENT_RUNE_TITLES entry, so element should be absent
-    expect(container.querySelector(".nt-rune-sig-title-runes")).toBeNull();
-  });
-
-  it("ASGARD fallback still renders .nt-rune-sig with role=complementary", () => {
-    const taskEntry = makeTaskEntry("You are UnknownAgent. Fix issue #1003.");
-    const { container } = render(
-      <LogViewer
-        entries={[taskEntry]}
-        activeJob={MOCK_JOB_UNKNOWN}
-        wsState="open"
-      />
-    );
-    const sig = container.querySelector(".nt-rune-sig");
-    expect(sig?.getAttribute("role")).toBe("complementary");
+    const cmd = container.querySelector(".decree-seal-command");
+    expect(cmd?.textContent).toMatch(/Nine Realms/i);
   });
 });
 
