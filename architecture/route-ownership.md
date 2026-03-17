@@ -14,9 +14,11 @@
 | `POST /api/sheets/import` | POST | requireAuth | Import pipeline: fetch CSV + Anthropic call + Zod validation (`maxDuration = 60`) |
 | `POST /api/stripe/checkout` | POST | requireAuth | Create Stripe Checkout session, return redirect URL |
 | `POST /api/stripe/webhook` | POST | Stripe signature only | Process Stripe webhook events — no Bearer auth, secured by SHA-256 HMAC |
-| `GET /api/stripe/membership` | GET | requireAuth | Return cached Stripe entitlement from Vercel KV |
+| `GET /api/stripe/membership` | GET | requireAuth | Return cached Stripe entitlement from Redis KV |
 | `POST /api/stripe/portal` | POST | requireAuth | Create Stripe Customer Portal session, return redirect URL |
 | `POST /api/stripe/unlink` | POST | requireAuth | Cancel Stripe subscription, delete KV entitlement record |
+| `GET /api/sync/pull` | GET | requireAuthz (Karl) | Download all Firestore cards for authenticated user's household; Karl-only |
+| `POST /api/sync/push` | POST | requireAuthz (Karl) | Upload local cards to Firestore with last-write-wins conflict resolution; Karl-only |
 
 ## Environment Variables
 
@@ -30,10 +32,12 @@
 | `STRIPE_WEBHOOK_SECRET` | Next.js (server) | Server-side only | Webhook HMAC signature verification (`/api/stripe/webhook`) |
 | `STRIPE_PRICE_ID` | Next.js (server) | Server-side only | Stripe product price for checkout sessions |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Next.js (client) | Browser-exposed | Future: Stripe.js initialization |
+| `REDIS_URL` | Next.js (server) | Server-side only | In-cluster Redis connection (`redis://redis.fenrir-app.svc.cluster.local:6379`) |
+| `FIRESTORE_PROJECT_ID` | Next.js (server) | Server-side only | GCP project for Firestore cloud sync (`/api/sync/pull`, `/api/sync/push`) |
 
 ## Design Principles
 
-1. **All routes live in Next.js**: With the backend removed, all API routes are Vercel serverless functions.
+1. **All routes live in Next.js**: With the backend removed, all API routes run as GKE pods (Next.js standalone on GKE Autopilot).
 2. **All routes call `requireAuth()` except**: `/api/auth/token` (no token exists yet) and `/api/stripe/webhook` (Stripe sends webhooks — secured by HMAC signature).
 3. **Server-side secrets stay server-side**: No `NEXT_PUBLIC_` prefix on secret values (except publishable keys).
 4. **Graceful degradation**: The app works without auth for anonymous users (localStorage-only mode).

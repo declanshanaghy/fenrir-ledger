@@ -111,8 +111,8 @@ Required variables for local development:
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
 | `STRIPE_PRICE_ID` | Stripe price ID for Karl tier |
-| `KV_REST_API_URL` | KV store REST API URL |
-| `KV_REST_API_TOKEN` | KV store REST API token |
+| `REDIS_URL` | Redis connection URL (in-cluster: `redis://redis.fenrir-app.svc.cluster.local:6379`) |
+| `FIRESTORE_PROJECT_ID` | GCP project ID for Firestore cloud sync (Karl tier) |
 
 ## Dev Server with Stripe
 

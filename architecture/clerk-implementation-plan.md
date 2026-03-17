@@ -3,7 +3,7 @@
 **Status:** Proposed — deferred until GA planning is triggered
 **Author:** FiremanDecko (Principal Engineer)
 **Date:** 2026-03-01
-**ADR:** [adr-clerk-auth.md](adr-clerk-auth.md)
+**ADR:** [ADR-009-clerk-auth.md](adrs/ADR-009-clerk-auth.md)
 
 ---
 
@@ -14,7 +14,7 @@
 - Clerk application created (name: "Fenrir Ledger") with a **Development** instance and a **Production** instance.
 - GitHub OAuth configured in Clerk Dashboard: SSO connections → Add connection → GitHub (Development instance uses Clerk's shared OAuth credentials — no GitHub app needed for dev).
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` obtained from Clerk Dashboard → API Keys.
-- Vercel project environment variables updated with Clerk keys (Production + Preview environments).
+- GKE K8s Secrets updated with Clerk keys (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`) in the `fenrir-app` namespace.
 
 ---
 
