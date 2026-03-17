@@ -146,4 +146,27 @@ describe("Toast dismiss button — issue #1168", () => {
     // No custom closeButtonAriaLabel override — sonner defaults to 'Close toast'
     expect(toasterProps?.closeButtonAriaLabel).toBeUndefined();
   });
+
+  it("AppShell and LedgerShell both render Toaster at position bottom-right", () => {
+    // Toasts must appear at bottom-right to avoid covering primary content.
+    // This is an explicit assertion — not just a lookup filter.
+    capturedToasterProps.length = 0;
+    render(<AppShell><div /></AppShell>);
+    render(<LedgerShell><div /></LedgerShell>);
+    const positions = capturedToasterProps.map((p) => p.position);
+    expect(positions).toContain("bottom-right");
+    expect(positions.filter((pos) => pos === "bottom-right")).toHaveLength(2);
+  });
+
+  it("toastOptions className is font-body on both shells (preserves Norse font styling)", () => {
+    // font-body class applies the Cinzel/runic typography to toast text.
+    // Stripping it would break the Norse war-room aesthetic for the dismiss button.
+    capturedToasterProps.length = 0;
+    render(<AppShell><div /></AppShell>);
+    render(<LedgerShell><div /></LedgerShell>);
+    const classNames = capturedToasterProps.map(
+      (p) => (p.toastOptions as { className?: string } | undefined)?.className
+    );
+    expect(classNames.every((cn) => cn === "font-body")).toBe(true);
+  });
 });
