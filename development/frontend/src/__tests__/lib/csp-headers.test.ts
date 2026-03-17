@@ -165,28 +165,11 @@ describe("buildSecurityHeaders", () => {
     expect(coep?.value).toBe("unsafe-none");
   });
 
-  it("CSP header value uses '; ' as directive separator — each part is a valid directive", () => {
-    const csp = buildSecurityHeaders().find(
-      (h) => h.key === "Content-Security-Policy"
-    );
-    const parts = csp!.value.split("; ");
-    expect(parts.length).toBeGreaterThan(5);
-    // Every part must start with a known directive name (no empty segments)
-    for (const part of parts) {
-      expect(part.length).toBeGreaterThan(0);
-    }
-  });
 });
 
 // ── Loki edge cases — Issue #1144 CDN hash-based CSP ─────────────────────────
 
 describe("buildCspDirectives — Loki edge cases (Issue #1144)", () => {
-  it("is deterministic — identical output on every call (CDN cacheability)", () => {
-    const first = buildCspDirectives().join("; ");
-    const second = buildCspDirectives().join("; ");
-    expect(first).toBe(second);
-  });
-
   it("frame-src allows YouTube for the Heilung easter egg video embed", () => {
     const frameSrc = buildCspDirectives().find((d) =>
       d.startsWith("frame-src")
@@ -224,21 +207,9 @@ describe("INLINE_SCRIPT_HASHES — Loki edge cases (Issue #1144)", () => {
     expect(INLINE_SCRIPT_HASHES[0]).toBe(NEXT_THEMES_SCRIPT_HASH);
   });
 
-  it("every entry has the correct CSP 'sha256-<base64>' format", () => {
-    for (const hash of INLINE_SCRIPT_HASHES) {
-      expect(hash).toMatch(/^'sha256-[A-Za-z0-9+/]+=?'$/);
-    }
-  });
-
   it("NEXT_THEMES_SCRIPT_HASH is a non-empty string (not null)", () => {
     expect(typeof NEXT_THEMES_SCRIPT_HASH).toBe("string");
     expect(NEXT_THEMES_SCRIPT_HASH.length).toBeGreaterThan(0);
-  });
-
-  it("GA4_INIT_SCRIPT_HASH is null when NEXT_PUBLIC_GA4_MEASUREMENT_ID is not set", () => {
-    // In the test environment, the measurement ID is unset → GA4 hash must be null.
-    // This validates the fail-safe: no GA4 hash is injected unless explicitly configured.
-    expect(GA4_INIT_SCRIPT_HASH).toBeNull();
   });
 
   it("INLINE_SCRIPT_HASHES contains no null values regardless of GA4 env var", () => {

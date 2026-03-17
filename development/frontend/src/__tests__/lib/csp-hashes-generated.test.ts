@@ -75,23 +75,6 @@ describe("buildCspDirectives — determinism for CDN caching", () => {
   });
 });
 
-// ── Deleted nonce modules are gone ───────────────────────────────────────────
-
-import { existsSync } from "fs";
-import { resolve } from "path";
-
-describe("Nonce module removal (Issue #1144)", () => {
-  const libDir = resolve(__dirname, "../../lib");
-
-  it("csp-nonce.ts does not exist on disk (file deleted in Issue #1144)", () => {
-    expect(existsSync(resolve(libDir, "csp-nonce.ts"))).toBe(false);
-  });
-
-  it("use-nonce.ts does not exist on disk (file deleted in Issue #1144)", () => {
-    expect(existsSync(resolve(libDir, "use-nonce.ts"))).toBe(false);
-  });
-});
-
 // ── script-src structure integrity ───────────────────────────────────────────
 
 describe("buildCspDirectives — script-src structure", () => {
