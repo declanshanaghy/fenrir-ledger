@@ -33,10 +33,54 @@ import {
   isAnonymousStripeReverseIndex,
   extractStripeCustomerIdFromReverseIndex,
 } from "@/lib/kv/entitlement-store";
+import { getUser, getFirestore } from "@/lib/firebase/firestore";
+import { FIRESTORE_PATHS } from "@/lib/firebase/firestore-types";
 import { log } from "@/lib/logger";
 
 /** 24 hours in seconds - TTL for processed webhook events deduplication cache */
 const WEBHOOK_EVENT_DEDUP_TTL_SECONDS = 24 * 60 * 60;
+
+// ─── Firestore household tier sync ───────────────────────────────────────────
+
+/**
+ * Updates households/{householdId}.tier in Firestore when a subscription
+ * status changes. Best-effort — errors are logged but do NOT fail the webhook
+ * response (Redis is the authoritative billing source; Firestore is derived).
+ *
+ * Only runs for authenticated users (those with a googleSub mapping).
+ *
+ * @param googleSub - Google account immutable ID
+ * @param tier - New tier value ("karl" | "free")
+ */
+async function syncHouseholdTierToFirestore(
+  googleSub: string,
+  tier: "karl" | "free",
+): Promise<void> {
+  try {
+    const user = await getUser(googleSub);
+    if (!user) {
+      log.debug("syncHouseholdTierToFirestore: user not found in Firestore", { googleSub });
+      return;
+    }
+    const db = getFirestore();
+    await db.doc(FIRESTORE_PATHS.household(user.householdId)).update({
+      tier,
+      updatedAt: new Date().toISOString(),
+    });
+    log.debug("syncHouseholdTierToFirestore: household tier updated", {
+      householdId: user.householdId,
+      tier,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error("syncHouseholdTierToFirestore: failed to update Firestore", {
+      googleSub,
+      tier,
+      error: message,
+    });
+    // Best-effort — do not rethrow; Redis remains authoritative
+  }
+}
 
 /** Valid webhook event types we process. */
 const HANDLED_EVENTS = new Set<string>([
@@ -98,6 +142,10 @@ async function handleCheckoutCompleted(
   if (googleSub) {
     // Authenticated path: store under Google sub with reverse index
     await setStripeEntitlement(googleSub, entitlement);
+    // Sync tier to Firestore household (best-effort)
+    if (entitlement.tier === "karl" || entitlement.tier === "free") {
+      await syncHouseholdTierToFirestore(googleSub, entitlement.tier);
+    }
     log.debug("handleCheckoutCompleted returning (authenticated)", {
       status: 200,
       googleSub,
@@ -185,6 +233,10 @@ async function handleSubscriptionUpdated(
     const existing = await getStripeEntitlement(identity);
     entitlement.linkedAt = existing?.linkedAt ?? entitlement.linkedAt;
     await setStripeEntitlement(identity, entitlement);
+    // Sync tier to Firestore household (best-effort)
+    if (tier === "karl" || tier === "free") {
+      await syncHouseholdTierToFirestore(identity, tier);
+    }
     log.debug("handleSubscriptionUpdated returning (authenticated)", {
       status: 200,
       tier,
@@ -254,6 +306,8 @@ async function handleSubscriptionDeleted(
     const existing = await getStripeEntitlement(identity);
     entitlement.linkedAt = existing?.linkedAt ?? entitlement.linkedAt;
     await setStripeEntitlement(identity, entitlement);
+    // Sync tier downgrade to Firestore household (best-effort)
+    await syncHouseholdTierToFirestore(identity, "free");
     log.debug("handleSubscriptionDeleted returning (authenticated)", {
       status: 200,
       tier: "thrall",
