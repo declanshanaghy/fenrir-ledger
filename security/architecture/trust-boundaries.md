@@ -1,7 +1,7 @@
 # Trust Boundaries — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-14 (updated for GKE Autopilot — replaced Vercel references)
+**Last reviewed**: 2026-03-17 (updated for Firestore sync — added Zone 6)
 
 ---
 
@@ -71,6 +71,23 @@ is trusted for payment processing and subscription lifecycle events.
 │  Accessed only from ZONE 2 (server). Browser has no direct   │
 │  access. No user credentials stored in KV.                   │
 └──────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│  ZONE 6: Google Firestore (Trusted Persistent Store)         │
+│                                                              │
+│  - households/{householdId}/cards → FirestoreCard[]          │
+│  - users/{googleSub}              → UserRecord               │
+│  - households/{householdId}       → HouseholdRecord          │
+│                                                              │
+│  Accessed via Firebase Admin SDK from ZONE 2 only. Admin SDK │
+│  bypasses Firestore security rules — all authorization is    │
+│  enforced at the API route layer. Browser has no direct      │
+│  Firestore access.                                           │
+│                                                              │
+│  CRITICAL CONSTRAINT: householdId MUST be derived from the  │
+│  server-side user record (getUser(googleSub).householdId),   │
+│  never from client-supplied request parameters.             │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -90,6 +107,8 @@ is trusted for payment processing and subscription lifecycle events.
 | `GOOGLE_PICKER_API_KEY` | `process.env` (server) | Yes — served on request | Auth-gated; GCP referrer restriction required |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | `process.env` (public) | Yes — by design | OAuth Client ID is public; embedded in auth URL |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `process.env` (public) | Yes — by design | Stripe publishable key is safe for client exposure |
+| `FIRESTORE_PROJECT_ID` | `process.env` (server) | No | GCP project ID for Admin SDK |
+| `FIRESTORE_DATABASE_ID` | `process.env` (server) | No | Firestore database name for Admin SDK |
 | Google `access_token` | `localStorage["fenrir:auth"]` | Yes — same-origin JS | XSS risk; ~1-hour TTL |
 | Google `id_token` | `localStorage["fenrir:auth"]` | Yes — same-origin JS | XSS risk; used as API Bearer token |
 | Google `refresh_token` | `localStorage["fenrir:auth"]` | Yes — same-origin JS | XSS risk; long-lived (no TTL) |

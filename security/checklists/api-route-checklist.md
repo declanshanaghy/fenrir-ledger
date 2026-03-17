@@ -1,7 +1,7 @@
 # API Route Security Checklist — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-14 (updated for GKE Autopilot — replaced Vercel references)
+**Last reviewed**: 2026-03-17 (added Firestore householdId validation rule)
 
 Use this checklist whenever adding, modifying, or reviewing an API route under
 `development/frontend/src/app/api/`.
@@ -87,6 +87,23 @@ Every route handler MUST pass all items in this section before merge.
 
 - [ ] **Routes that call external services (LLM, Google APIs) are rate-limited**
   - Consider per-user rate limits (keyed on `auth.user.sub`) in addition to per-IP
+
+### 5a. Firestore / Household Authorization
+
+Routes that access Firestore on behalf of the authenticated user MUST derive the `householdId`
+from the server-side user record, never from client-supplied inputs.
+
+- [ ] **Routes accessing Firestore household data derive `householdId` from `getUser(auth.user.sub)`**
+  - Pattern:
+    ```typescript
+    const user = await getUser(auth.user.sub);
+    if (!user) return NextResponse.json({ error: "user_not_found" }, { status: 404 });
+    // Use user.householdId — never request.nextUrl.searchParams.get("householdId")
+    ```
+  - If the route receives a `householdId` parameter (e.g., for validation), compare it against
+    `user.householdId` and return 403 if they differ
+  - Override any client-supplied `householdId` on write payloads (e.g., card objects) with the
+    server-derived value before writing to Firestore
 
 ### 6. SSRF Prevention
 
