@@ -19,6 +19,7 @@
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Redis = require("ioredis").default;
+const { Firestore, FieldValue } = require("@google-cloud/firestore");
 import { createInterface } from "node:readline";
 import { parseArgs } from "node:util";
 import { execSync, spawn } from "node:child_process";
@@ -282,10 +283,26 @@ try {
 
 console.log(`${GREEN}Connected to Redis${RESET} ${DIM}(${redisUrl})${RESET}`);
 
+// ── Firestore client ─────────────────────────────────────────────────────────
+
+const FS_PROJECT_ID = "fenrir-ledger-prod";
+const FS_DATABASE_ID = "fenrir-ledger-prod";
+
+let _db = null;
+function getDb() {
+  if (!_db) {
+    _db = new Firestore({ projectId: FS_PROJECT_ID, databaseId: FS_DATABASE_ID });
+  }
+  return _db;
+}
+
 // ── State ────────────────────────────────────────────────────────────────────
 
 let selectedFp = null;       // currently selected fingerprint
 let trialIndex = [];         // cached list from last "list" command: [fingerprint, ...]
+
+let selectedHouseholdId = null;  // currently selected Firestore household
+let householdIndex = [];         // cached list from last "households" command: [householdId, ...]
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -317,6 +334,41 @@ function printTrial(trial, fp, ttl) {
     console.log(`  ${BOLD}Redis TTL:${RESET}    ${ttl}s (${Math.round(ttl / 86400)}d)`);
   }
   console.log();
+}
+
+/** Truncate a Firestore/Clerk ID for display: first-8 … last-4 */
+function shortId(id) {
+  if (!id || id.length <= 16) return id;
+  return `${id.slice(0, 8)}…${id.slice(-4)}`;
+}
+
+/** Generate a 6-char alphanumeric invite code (unambiguous charset). */
+function generateInviteCode() {
+  const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const { randomBytes } = require("crypto");
+  const bytes = randomBytes(6);
+  return Array.from(bytes).map((b) => CHARS[b % CHARS.length]).join("");
+}
+
+/**
+ * Prompt the user for y/N confirmation. Returns true if they type "y".
+ * NOTE: rl must be initialised before this is called (it always is at runtime).
+ */
+async function confirmPrompt(msg) {
+  return new Promise((resolve) => {
+    rl.question(`  ${GOLD}${msg} [y/N]${RESET} `, (ans) => {
+      resolve(ans.trim().toLowerCase() === "y");
+    });
+  });
+}
+
+/** Require a household to be selected; print error and return false if not. */
+function requireHousehold() {
+  if (!selectedHouseholdId) {
+    console.log(`${RED}No household selected.${RESET} Use ${CYAN}households${RESET} then ${CYAN}use-household <N>${RESET} to select one.`);
+    return false;
+  }
+  return true;
 }
 
 async function getTrial(fp) {
@@ -748,6 +800,359 @@ const commands = {
 `);
   },
 
+  // ── Firestore: Household commands ──────────────────────────────────────────
+
+  async households() {
+    const db = getDb();
+    const snap = await db.collection("households").orderBy("createdAt", "desc").limit(50).get();
+    if (snap.empty) { console.log("\n  No households found in Firestore.\n"); return; }
+    householdIndex = snap.docs.map((d) => d.id);
+
+    console.log(`\n  ${BOLD}#   ID              Name                   Owner          Tier   Mbrs  Created${RESET}`);
+    console.log(`  ${DIM}${"─".repeat(80)}${RESET}`);
+    for (let i = 0; i < snap.docs.length; i++) {
+      const d = snap.docs[i];
+      const h = d.data();
+      const sel = d.id === selectedHouseholdId ? `${GOLD}→${RESET}` : " ";
+      const tier = h.tier === "karl" ? `${GOLD}karl${RESET}` : "free";
+      const created = h.createdAt ? new Date(h.createdAt).toLocaleDateString() : "—";
+      console.log(`  ${sel}${String(i + 1).padStart(2)}  ${shortId(d.id).padEnd(16)} ${(h.name || "").substring(0, 20).padEnd(22)} ${shortId(h.ownerId || "").padEnd(14)} ${tier}  ${((h.memberIds || []).length).toString().padStart(2)}    ${created}`);
+    }
+    console.log(`\n  ${DIM}Total: ${snap.docs.length}. Use "use-household <N>" to select.${RESET}\n`);
+  },
+
+  async household(args) {
+    const id = args[0];
+    if (!id) {
+      // Show currently selected if no arg
+      if (!requireHousehold()) return;
+      args = [selectedHouseholdId];
+    }
+    const db = getDb();
+    const docId = args[0];
+    const snap = await db.doc(`households/${docId}`).get();
+    if (!snap.exists) { console.log(`${RED}Household not found: ${docId}${RESET}`); return; }
+    const h = snap.data();
+    const cardSnap = await db.collection(`households/${docId}/cards`).get();
+    const activeCards = cardSnap.docs.filter((d) => !d.data().deletedAt).length;
+    const tier = h.tier === "karl" ? `${GOLD}★ karl${RESET}` : `${DIM}free${RESET}`;
+    const inviteExpired = h.inviteCodeExpiresAt && new Date(h.inviteCodeExpiresAt) < new Date();
+    console.log();
+    console.log(`  ${BOLD}Household:${RESET}        ${docId}`);
+    console.log(`  ${BOLD}Name:${RESET}             ${h.name || "—"}`);
+    console.log(`  ${BOLD}Tier:${RESET}             ${tier}`);
+    console.log(`  ${BOLD}Owner:${RESET}            ${h.ownerId}`);
+    console.log(`  ${BOLD}Members (${(h.memberIds || []).length}):${RESET}      ${(h.memberIds || []).join(", ") || "—"}`);
+    console.log(`  ${BOLD}Invite code:${RESET}      ${h.inviteCode || "—"}  ${inviteExpired ? `${RED}(expired)${RESET}` : `${GREEN}(valid)${RESET}`}  expires ${h.inviteCodeExpiresAt ? new Date(h.inviteCodeExpiresAt).toLocaleDateString() : "—"}`);
+    console.log(`  ${BOLD}Cards (active):${RESET}   ${activeCards} / ${cardSnap.size} total`);
+    console.log(`  ${BOLD}Created:${RESET}          ${h.createdAt || "—"}`);
+    console.log(`  ${BOLD}Updated:${RESET}          ${h.updatedAt || "—"}`);
+    console.log();
+  },
+
+  async use_household(args) {
+    const n = parseInt(args[0], 10);
+    if (isNaN(n) || n < 1 || n > householdIndex.length) {
+      // Maybe it's a raw ID
+      const rawId = args[0];
+      if (rawId && rawId.length >= 8) {
+        const snap = await getDb().doc(`households/${rawId}`).get();
+        if (!snap.exists) { console.log(`${RED}Household not found: ${rawId}${RESET}`); return; }
+        selectedHouseholdId = rawId;
+        console.log(`${GREEN}Selected household:${RESET} ${rawId}`);
+        return;
+      }
+      console.log(`${RED}Invalid selection.${RESET} Run ${CYAN}households${RESET} first, then ${CYAN}use-household <N>${RESET}.`);
+      return;
+    }
+    selectedHouseholdId = householdIndex[n - 1];
+    const snap = await getDb().doc(`households/${selectedHouseholdId}`).get();
+    if (!snap.exists) {
+      console.log(`${RED}Household no longer exists.${RESET} Run ${CYAN}households${RESET} to refresh.`);
+      selectedHouseholdId = null;
+      return;
+    }
+    const h = snap.data();
+    console.log(`\n  ${GREEN}Selected:${RESET} ${selectedHouseholdId}  ${DIM}(${h.name || "unnamed"})${RESET}\n`);
+  },
+
+  async select_household(args) {
+    return commands.use_household(args);
+  },
+
+  async kick(args) {
+    if (!requireHousehold()) return;
+    const userId = args[0];
+    if (!userId) { console.log(`${RED}Usage: kick <clerkUserId>${RESET}`); return; }
+    const db = getDb();
+    const snap = await db.doc(`households/${selectedHouseholdId}`).get();
+    if (!snap.exists) { console.log(`${RED}Household not found.${RESET}`); return; }
+    const h = snap.data();
+    if (h.ownerId === userId) { console.log(`${RED}Cannot kick the owner. Use transfer-owner first.${RESET}`); return; }
+    if (!(h.memberIds || []).includes(userId)) { console.log(`${RED}User ${userId} is not a member of this household.${RESET}`); return; }
+    const confirmed = await confirmPrompt(`Remove ${userId} from household ${shortId(selectedHouseholdId)}?`);
+    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
+    const newMembers = (h.memberIds || []).filter((id) => id !== userId);
+    await db.doc(`households/${selectedHouseholdId}`).update({
+      memberIds: newMembers,
+      updatedAt: new Date().toISOString(),
+    });
+    // Update user's householdId to empty (they've been removed)
+    const userSnap = await db.doc(`users/${userId}`).get();
+    if (userSnap.exists) {
+      await db.doc(`users/${userId}`).update({ householdId: "", updatedAt: new Date().toISOString() });
+    }
+    console.log(`\n  ${RED}Kicked${RESET} ${userId} from household ${shortId(selectedHouseholdId)}\n`);
+  },
+
+  async transfer_owner(args) {
+    if (!requireHousehold()) return;
+    const userId = args[0];
+    if (!userId) { console.log(`${RED}Usage: transfer-owner <clerkUserId>${RESET}`); return; }
+    const db = getDb();
+    const snap = await db.doc(`households/${selectedHouseholdId}`).get();
+    if (!snap.exists) { console.log(`${RED}Household not found.${RESET}`); return; }
+    const h = snap.data();
+    if (!(h.memberIds || []).includes(userId)) { console.log(`${RED}User ${userId} is not a member of this household.${RESET}`); return; }
+    if (h.ownerId === userId) { console.log(`  User is already the owner — nothing to do.`); return; }
+    const confirmed = await confirmPrompt(`Transfer ownership to ${userId}?`);
+    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
+    const now = new Date().toISOString();
+    const batch = db.batch();
+    batch.update(db.doc(`households/${selectedHouseholdId}`), { ownerId: userId, updatedAt: now });
+    const oldOwnerSnap = await db.doc(`users/${h.ownerId}`).get();
+    if (oldOwnerSnap.exists) batch.update(db.doc(`users/${h.ownerId}`), { role: "member", updatedAt: now });
+    const newOwnerSnap = await db.doc(`users/${userId}`).get();
+    if (newOwnerSnap.exists) batch.update(db.doc(`users/${userId}`), { role: "owner", updatedAt: now });
+    await batch.commit();
+    console.log(`\n  ${GOLD}Ownership transferred${RESET} to ${userId}\n`);
+  },
+
+  async set_tier(args) {
+    if (!requireHousehold()) return;
+    const tier = args[0];
+    if (tier !== "free" && tier !== "karl") {
+      console.log(`${RED}Usage: set-tier <free|karl>${RESET}`);
+      return;
+    }
+    const confirmed = await confirmPrompt(`Set tier to "${tier}" for ${shortId(selectedHouseholdId)}?`);
+    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
+    await getDb().doc(`households/${selectedHouseholdId}`).update({
+      tier,
+      updatedAt: new Date().toISOString(),
+    });
+    const badge = tier === "karl" ? `${GOLD}★ karl${RESET}` : `${DIM}free${RESET}`;
+    console.log(`\n  ${GREEN}Tier updated:${RESET} ${badge}\n`);
+  },
+
+  async regen_invite() {
+    if (!requireHousehold()) return;
+    const code = generateInviteCode();
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    await getDb().doc(`households/${selectedHouseholdId}`).update({
+      inviteCode: code,
+      inviteCodeExpiresAt: expiresAt,
+      updatedAt: new Date().toISOString(),
+    });
+    console.log(`\n  ${GREEN}Invite code regenerated:${RESET} ${BOLD}${code}${RESET}`);
+    console.log(`  ${DIM}Expires: ${new Date(expiresAt).toLocaleDateString()}${RESET}\n`);
+  },
+
+  async delete_household(args) {
+    const id = args[0] || selectedHouseholdId;
+    if (!id) { console.log(`${RED}Usage: delete-household <id>${RESET}`); return; }
+    const db = getDb();
+    const snap = await db.doc(`households/${id}`).get();
+    if (!snap.exists) { console.log(`${RED}Household not found: ${id}${RESET}`); return; }
+    const h = snap.data();
+    console.log(`\n  ${RED}${BOLD}WARNING: This permanently deletes household ${shortId(id)} ("${h.name || "unnamed"}") and ALL its cards.${RESET}`);
+    const confirmed = await confirmPrompt(`Type "y" to confirm permanent deletion:`);
+    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
+
+    // Delete all cards in the subcollection first
+    const cards = await db.collection(`households/${id}/cards`).get();
+    const batch = db.batch();
+    cards.docs.forEach((d) => batch.delete(d.ref));
+    batch.delete(db.doc(`households/${id}`));
+    await batch.commit();
+
+    console.log(`  ${RED}✗${RESET} Deleted ${cards.size} cards`);
+    console.log(`  ${RED}✗${RESET} Deleted household ${id}\n`);
+    if (selectedHouseholdId === id) selectedHouseholdId = null;
+  },
+
+  // ── Firestore: User commands ────────────────────────────────────────────────
+
+  async users() {
+    const db = getDb();
+    const snap = await db.collection("users").orderBy("createdAt", "desc").limit(50).get();
+    if (snap.empty) { console.log("\n  No users found in Firestore.\n"); return; }
+
+    console.log(`\n  ${BOLD}  ClerkUserId        Email                          Display name        Role     Household${RESET}`);
+    console.log(`  ${DIM}${"─".repeat(100)}${RESET}`);
+    snap.docs.forEach((d) => {
+      const u = d.data();
+      const roleColor = u.role === "owner" ? GOLD : DIM;
+      console.log(`  ${shortId(d.id).padEnd(20)} ${(u.email || "").substring(0, 30).padEnd(31)} ${(u.displayName || "").substring(0, 18).padEnd(19)} ${roleColor}${(u.role || "").padEnd(8)}${RESET} ${shortId(u.householdId || "")}`);
+    });
+    console.log(`\n  ${DIM}Total: ${snap.size}${RESET}\n`);
+  },
+
+  async user(args) {
+    const id = args[0];
+    if (!id) { console.log(`${RED}Usage: user <clerkUserId>${RESET}`); return; }
+    const snap = await getDb().doc(`users/${id}`).get();
+    if (!snap.exists) { console.log(`${RED}User not found: ${id}${RESET}`); return; }
+    const u = snap.data();
+    console.log();
+    console.log(`  ${BOLD}ClerkUserId:${RESET}  ${id}`);
+    console.log(`  ${BOLD}Email:${RESET}        ${u.email || "—"}`);
+    console.log(`  ${BOLD}Display name:${RESET} ${u.displayName || "—"}`);
+    console.log(`  ${BOLD}Role:${RESET}         ${u.role === "owner" ? `${GOLD}owner${RESET}` : u.role || "—"}`);
+    console.log(`  ${BOLD}Household:${RESET}    ${u.householdId || "—"}`);
+    console.log(`  ${BOLD}Created:${RESET}      ${u.createdAt || "—"}`);
+    console.log(`  ${BOLD}Updated:${RESET}      ${u.updatedAt || "—"}`);
+    console.log();
+  },
+
+  async delete_user(args) {
+    const id = args[0];
+    if (!id) { console.log(`${RED}Usage: delete-user <clerkUserId>${RESET}`); return; }
+    const db = getDb();
+    const snap = await db.doc(`users/${id}`).get();
+    if (!snap.exists) { console.log(`${RED}User not found: ${id}${RESET}`); return; }
+    const u = snap.data();
+    console.log(`\n  ${RED}${BOLD}WARNING: Deletes user ${id} (${u.email || "unknown email"})${RESET}`);
+    console.log(`  ${DIM}The user's household and cards are NOT deleted — kick them first if needed.${RESET}`);
+    const confirmed = await confirmPrompt(`Confirm delete user ${id}?`);
+    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
+    // Remove from household memberIds if present
+    if (u.householdId) {
+      const hSnap = await db.doc(`households/${u.householdId}`).get();
+      if (hSnap.exists) {
+        const h = hSnap.data();
+        const newMembers = (h.memberIds || []).filter((mid) => mid !== id);
+        await db.doc(`households/${u.householdId}`).update({ memberIds: newMembers, updatedAt: new Date().toISOString() });
+      }
+    }
+    await db.doc(`users/${id}`).delete();
+    console.log(`\n  ${RED}✗${RESET} Deleted user ${id}\n`);
+  },
+
+  // ── Firestore: Card commands ────────────────────────────────────────────────
+
+  async cards() {
+    if (!requireHousehold()) return;
+    const db = getDb();
+    const snap = await db.collection(`households/${selectedHouseholdId}/cards`).get();
+    if (snap.empty) { console.log("\n  No cards found for this household.\n"); return; }
+
+    const active = snap.docs.filter((d) => !d.data().deletedAt);
+    const deleted = snap.docs.filter((d) => d.data().deletedAt);
+
+    console.log(`\n  ${BOLD}  ID              Issuer      Card name             Status         Annual fee  Open date${RESET}`);
+    console.log(`  ${DIM}${"─".repeat(90)}${RESET}`);
+    for (const d of active) {
+      const c = d.data();
+      const fee = c.annualFee ? `$${(c.annualFee / 100).toFixed(0)}` : "none";
+      const opened = c.openDate ? new Date(c.openDate).toLocaleDateString() : "—";
+      console.log(`  ${shortId(d.id).padEnd(16)} ${(c.issuerId || "").padEnd(10)} ${(c.cardName || "").substring(0, 20).padEnd(21)} ${(c.status || "").padEnd(14)} ${fee.padEnd(11)} ${opened}`);
+    }
+    if (deleted.length > 0) {
+      console.log(`\n  ${DIM}Soft-deleted (${deleted.length}):${RESET}`);
+      for (const d of deleted) {
+        const c = d.data();
+        console.log(`  ${DIM}${shortId(d.id).padEnd(16)} ${(c.issuerId || "").padEnd(10)} ${(c.cardName || "")} — deleted ${c.deletedAt ? new Date(c.deletedAt).toLocaleDateString() : "?"}${RESET}`);
+      }
+    }
+    console.log(`\n  ${DIM}Active: ${active.length}, Deleted: ${deleted.length}, Total: ${snap.size}${RESET}\n`);
+  },
+
+  async card(args) {
+    if (!requireHousehold()) return;
+    const id = args[0];
+    if (!id) { console.log(`${RED}Usage: card <cardId>${RESET}`); return; }
+    const snap = await getDb().doc(`households/${selectedHouseholdId}/cards/${id}`).get();
+    if (!snap.exists) { console.log(`${RED}Card not found: ${id}${RESET}`); return; }
+    const c = snap.data();
+    const deleted = c.deletedAt ? `${RED} [DELETED ${new Date(c.deletedAt).toLocaleDateString()}]${RESET}` : "";
+    const closed = c.closedAt ? ` ${DIM}[closed ${new Date(c.closedAt).toLocaleDateString()}]${RESET}` : "";
+    console.log();
+    console.log(`  ${BOLD}Card ID:${RESET}      ${id}${deleted}`);
+    console.log(`  ${BOLD}Issuer:${RESET}       ${c.issuerId || "—"}`);
+    console.log(`  ${BOLD}Name:${RESET}         ${c.cardName || "—"}${closed}`);
+    console.log(`  ${BOLD}Status:${RESET}       ${c.status || "—"}`);
+    console.log(`  ${BOLD}Credit limit:${RESET} $${c.creditLimit ? (c.creditLimit / 100).toLocaleString() : "—"}`);
+    console.log(`  ${BOLD}Annual fee:${RESET}   ${c.annualFee ? `$${(c.annualFee / 100).toFixed(0)}` : "none"}${c.annualFeeDate ? `  (due ${new Date(c.annualFeeDate).toLocaleDateString()})` : ""}`);
+    console.log(`  ${BOLD}Open date:${RESET}    ${c.openDate ? new Date(c.openDate).toLocaleDateString() : "—"}`);
+    if (c.signUpBonus) {
+      console.log(`  ${BOLD}Sign-up bonus:${RESET} ${JSON.stringify(c.signUpBonus)}`);
+    }
+    console.log(`  ${BOLD}Notes:${RESET}        ${c.notes || "—"}`);
+    console.log(`  ${BOLD}Household:${RESET}    ${c.householdId || "—"}`);
+    console.log(`  ${BOLD}Created:${RESET}      ${c.createdAt || "—"}`);
+    console.log(`  ${BOLD}Updated:${RESET}      ${c.updatedAt || "—"}`);
+    console.log();
+  },
+
+  async delete_card(args) {
+    if (!requireHousehold()) return;
+    const id = args[0];
+    if (!id) { console.log(`${RED}Usage: delete-card <cardId>${RESET}`); return; }
+    const db = getDb();
+    const snap = await db.doc(`households/${selectedHouseholdId}/cards/${id}`).get();
+    if (!snap.exists) { console.log(`${RED}Card not found: ${id}${RESET}`); return; }
+    const c = snap.data();
+    if (c.deletedAt) { console.log(`${GOLD}Card already soft-deleted.${RESET} Use restore-card to undo, or expunge-card to permanently remove.`); return; }
+    await db.doc(`households/${selectedHouseholdId}/cards/${id}`).update({
+      deletedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    console.log(`\n  ${RED}Soft-deleted:${RESET} ${c.cardName || id}  ${DIM}(use restore-card ${id} to undo)${RESET}\n`);
+  },
+
+  async restore_card(args) {
+    if (!requireHousehold()) return;
+    const id = args[0];
+    if (!id) { console.log(`${RED}Usage: restore-card <cardId>${RESET}`); return; }
+    const db = getDb();
+    const snap = await db.doc(`households/${selectedHouseholdId}/cards/${id}`).get();
+    if (!snap.exists) { console.log(`${RED}Card not found: ${id}${RESET}`); return; }
+    const c = snap.data();
+    if (!c.deletedAt) { console.log(`${DIM}Card is not soft-deleted — nothing to restore.${RESET}`); return; }
+    await db.doc(`households/${selectedHouseholdId}/cards/${id}`).update({
+      deletedAt: FieldValue.delete(),
+      updatedAt: new Date().toISOString(),
+    });
+    console.log(`\n  ${GREEN}Restored:${RESET} ${c.cardName || id}\n`);
+  },
+
+  async expunge_card(args) {
+    if (!requireHousehold()) return;
+    const id = args[0];
+    if (!id) { console.log(`${RED}Usage: expunge-card <cardId>${RESET}`); return; }
+    const db = getDb();
+    const snap = await db.doc(`households/${selectedHouseholdId}/cards/${id}`).get();
+    if (!snap.exists) { console.log(`${RED}Card not found: ${id}${RESET}`); return; }
+    const c = snap.data();
+    console.log(`\n  ${RED}${BOLD}WARNING: Permanently deletes "${c.cardName || id}" — cannot be undone.${RESET}`);
+    const confirmed = await confirmPrompt(`Confirm expunge card ${id}?`);
+    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
+    await db.doc(`households/${selectedHouseholdId}/cards/${id}`).delete();
+    console.log(`\n  ${RED}✗${RESET} Permanently deleted card ${id}\n`);
+  },
+
+  async card_count() {
+    if (!requireHousehold()) return;
+    const snap = await getDb().collection(`households/${selectedHouseholdId}/cards`).get();
+    const active = snap.docs.filter((d) => !d.data().deletedAt).length;
+    const deleted = snap.docs.filter((d) => !!d.data().deletedAt).length;
+    console.log(`\n  ${BOLD}Card count for ${shortId(selectedHouseholdId)}:${RESET}`);
+    console.log(`  ${GREEN}Active:${RESET}  ${active}`);
+    console.log(`  ${RED}Deleted:${RESET} ${deleted}`);
+    console.log(`  ${BOLD}Total:${RESET}   ${snap.size}\n`);
+  },
+
   help() {
     if (selectedFp) {
       console.log(`
@@ -770,20 +1175,44 @@ const commands = {
   ${BOLD}No trial selected${RESET} — start here:
   ${DIM}${"─".repeat(50)}${RESET}
 
-  ${CYAN}list${RESET}                   List all trials (pick by number)
-  ${CYAN}use <N|fingerprint>${RESET}    Select a trial
-  ${CYAN}create <fingerprint>${RESET}    Create a new trial
-  ${CYAN}identity${RESET}               How to find your fingerprint
+  ${CYAN}list${RESET}                          List all trials (pick by number)
+  ${CYAN}use <N|fingerprint>${RESET}           Select a trial
+  ${CYAN}create <fingerprint>${RESET}           Create a new trial
+  ${CYAN}identity${RESET}                      How to find your fingerprint
 
-  ${BOLD}Browse${RESET}
-  ${CYAN}keys${RESET}                   All Redis key prefixes
-  ${CYAN}entitlements${RESET}            Stripe entitlement cache
-  ${CYAN}stripe-customers${RESET}       Stripe customers
-  ${CYAN}stripe-subs${RESET}            Stripe subscriptions
-  ${CYAN}delete-customer <id>${RESET}    Delete Stripe customer (cus_xxx)
-  ${CYAN}cancel-sub <id>${RESET}         Cancel subscription (sub_xxx)
-  ${CYAN}reconnect${RESET}              Reconnect port-forward
-  ${CYAN}quit${RESET}                   Exit
+  ${BOLD}Redis / Stripe${RESET}
+  ${CYAN}keys${RESET}                          All Redis key prefixes
+  ${CYAN}entitlements${RESET}                   Stripe entitlement cache
+  ${CYAN}stripe-customers${RESET}              Stripe customers
+  ${CYAN}stripe-subs${RESET}                   Stripe subscriptions
+  ${CYAN}delete-customer <cus_xxx>${RESET}      Delete Stripe customer
+  ${CYAN}cancel-sub <sub_xxx>${RESET}           Cancel subscription
+  ${CYAN}reconnect${RESET}                     Reconnect port-forward
+
+  ${BOLD}Firestore — Households${RESET}
+  ${CYAN}households${RESET}                    List all households (paginated, 50)
+  ${CYAN}household [id]${RESET}                Show household details
+  ${CYAN}use-household <N|id>${RESET}          Select a household
+  ${CYAN}kick <userId>${RESET}                 Remove member from selected household
+  ${CYAN}transfer-owner <userId>${RESET}       Transfer ownership
+  ${CYAN}set-tier <free|karl>${RESET}          Change subscription tier
+  ${CYAN}regen-invite${RESET}                  Regenerate invite code
+  ${CYAN}delete-household [id]${RESET}         Permanently delete household + cards
+
+  ${BOLD}Firestore — Users${RESET}
+  ${CYAN}users${RESET}                         List all users (paginated, 50)
+  ${CYAN}user <clerkUserId>${RESET}            Show user details
+  ${CYAN}delete-user <clerkUserId>${RESET}     Delete user document
+
+  ${BOLD}Firestore — Cards${RESET}  ${DIM}(requires use-household first)${RESET}
+  ${CYAN}cards${RESET}                         List cards for selected household
+  ${CYAN}card <cardId>${RESET}                 Show card details
+  ${CYAN}card-count${RESET}                    Count active/deleted cards
+  ${CYAN}delete-card <cardId>${RESET}          Soft-delete a card (sets deletedAt)
+  ${CYAN}restore-card <cardId>${RESET}         Restore a soft-deleted card
+  ${CYAN}expunge-card <cardId>${RESET}         Permanently delete a card
+
+  ${CYAN}quit${RESET}                          Exit
 `);
     }
   },
@@ -792,11 +1221,20 @@ const commands = {
 // ── Tab completion ───────────────────────────────────────────────────────────
 
 const ALL_COMMANDS = [
+  // Trial / Redis
   "list", "use", "status", "set", "shift", "reset", "expire",
   "convert", "unconvert", "create", "delete",
   "stripe-customers", "stripe-subs", "delete-customer", "cancel-sub",
   "flush-entitlement", "nuke",
   "keys", "entitlements", "identity", "reconnect",
+  // Firestore — Household
+  "households", "household", "use-household", "select-household",
+  "kick", "transfer-owner", "set-tier", "regen-invite", "delete-household",
+  // Firestore — User
+  "users", "user", "delete-user",
+  // Firestore — Card
+  "cards", "card", "delete-card", "restore-card", "expunge-card", "card-count",
+  // Meta
   "help", "quit", "exit",
 ];
 
@@ -818,6 +1256,14 @@ function completer(line) {
     return [hits, arg];
   }
 
+  // For "use-household" / "select-household", complete with household index numbers
+  if ((cmd === "use-household" || cmd === "select-household") && householdIndex.length > 0) {
+    const arg = parts[1] || "";
+    const nums = householdIndex.map((_, i) => String(i + 1));
+    const hits = nums.filter((n) => n.startsWith(arg));
+    return [hits, arg];
+  }
+
   return [[], line];
 }
 
@@ -825,7 +1271,8 @@ function completer(line) {
 
 function prompt() {
   const sel = selectedFp ? ` ${GOLD}${shortFp(selectedFp)}${RESET}` : "";
-  return `${BOLD}spear${RESET}${sel}${BOLD}>${RESET} `;
+  const hh = selectedHouseholdId ? ` ${CYAN}hh:${shortId(selectedHouseholdId)}${RESET}` : "";
+  return `${BOLD}spear${RESET}${sel}${hh}${BOLD}>${RESET} `;
 }
 
 const rl = createInterface({
