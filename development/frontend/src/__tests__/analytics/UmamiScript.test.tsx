@@ -22,7 +22,6 @@ vi.mock("next/script", () => ({
       data-src={props.src as string}
       data-website-id={props["data-website-id"] as string}
       data-strategy={props.strategy as string}
-      nonce={props.nonce as string | undefined}
     />
   ),
 }));
@@ -74,18 +73,15 @@ describe("UmamiScript", () => {
     ).toBe("afterInteractive");
   });
 
-  it("forwards nonce when provided", () => {
-    const { getByTestId } = render(
-      <UmamiScript websiteId="test-uuid-1234" nonce="abc123" />
-    );
-    expect(getByTestId("umami-script").getAttribute("nonce")).toBe("abc123");
-  });
-
-  it("omits nonce attribute when not provided", () => {
+  it("does not accept a nonce prop (hash-based CSP — Issue #1144)", () => {
+    // UmamiScript no longer accepts a nonce prop. The hash-based CSP approach
+    // (Issue #1144) makes nonces unnecessary. External scripts are allowed by
+    // their origin in script-src (analytics.fenrirledger.com).
+    // This test documents the new interface — passing nonce is a type error.
     const { getByTestId } = render(
       <UmamiScript websiteId="test-uuid-1234" />
     );
-    // nonce should be null or empty (not set)
+    // No nonce attribute should be present on the rendered script
     const nonce = getByTestId("umami-script").getAttribute("nonce");
     expect(nonce === null || nonce === "").toBe(true);
   });
