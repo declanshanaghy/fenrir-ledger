@@ -1,0 +1,77 @@
+# --------------------------------------------------------------------------
+# n8n — GCE Ingress (standalone, applied separately from Helm)
+#
+# This ingress routes marketing.fenrirledger.com → n8n ClusterIP service.
+# It uses the shared fenrir-app-ip static IP (same IP used by the main
+# Fenrir Ledger app + marketing DNS A-record from issue #1231).
+#
+# Use this file if the 8gears Helm chart's built-in ingress does not support
+# GKE-specific annotations, or as an override/patch on top of the Helm-managed
+# ingress.
+#
+# Apply:
+#   kubectl apply -f infrastructure/k8s/n8n/managed-certificate.yaml -n fenrir-analytics
+#   kubectl apply -f infrastructure/k8s/n8n/ingress-patch.yaml -n fenrir-analytics
+#
+# Verify:
+#   kubectl get ingress -n fenrir-analytics
+#   kubectl describe managedcertificate n8n-cert -n fenrir-analytics
+# --------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: n8n
+  namespace: fenrir-analytics
+  labels:
+    app.kubernetes.io/name: n8n
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: analytics
+  annotations:
+    # Shared static IP — marketing.fenrirledger.com DNS points here (issue #1231)
+    kubernetes.io/ingress.global-static-ip-name: "fenrir-app-ip"
+    # GKE ManagedCertificate for TLS (see managed-certificate.yaml)
+    networking.gke.io/managed-certificates: "n8n-cert"
+    # Allow HTTP during cert provisioning; GKE redirects to HTTPS once cert is active
+    kubernetes.io/ingress.allow-http: "true"
+    # BackendConfig for health check tuning
+    cloud.google.com/backend-config: '{"default":"n8n-backend-config"}'
+    kubernetes.io/ingress.class: "gce"
+spec:
+  rules:
+    - host: marketing.fenrirledger.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                # Service name matches Helm release name (helm install n8n ...)
+                name: n8n
+                port:
+                  number: 80
+---
+# --------------------------------------------------------------------------
+# BackendConfig — health check tuning for n8n
+# n8n serves HTTP on port 5678; /healthz is available after startup.
+# --------------------------------------------------------------------------
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: n8n-backend-config
+  namespace: fenrir-analytics
+  labels:
+    app.kubernetes.io/name: n8n
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: analytics
+spec:
+  healthCheck:
+    checkIntervalSec: 15
+    timeoutSec: 5
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: /healthz
+    port: 5678
+  timeoutSec: 30
+  connectionDraining:
+    drainingTimeoutSec: 60

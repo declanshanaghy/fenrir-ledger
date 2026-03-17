@@ -1,0 +1,97 @@
+# --------------------------------------------------------------------------
+# n8n Workflow Automation — Helm Values
+#
+# Chart: oci://ghcr.io/8gears/n8n
+# Namespace: fenrir-analytics
+#
+# Deploy:
+#   helm upgrade --install n8n oci://ghcr.io/8gears/n8n \
+#     -n fenrir-analytics \
+#     -f infrastructure/k8s/n8n/values.yaml
+#
+# GKE supplementary resources (apply separately before/after helm install):
+#   kubectl apply -f infrastructure/k8s/n8n/namespace.yaml
+#   kubectl apply -f infrastructure/k8s/n8n/managed-certificate.yaml
+# --------------------------------------------------------------------------
+
+# -- n8n Application Config -----------------------------------------------
+# Maps to N8N_* environment variables injected into the n8n container.
+n8n:
+  host: "marketing.fenrirledger.com"
+  protocol: "https"
+  port: 5678
+  editorBaseUrl: "https://marketing.fenrirledger.com/"
+  webhookTunnelUrl: "https://marketing.fenrirledger.com/"
+
+# -- Database (SQLite) -----------------------------------------------------
+# n8n defaults to SQLite when no external DB is configured.
+# SQLite DB file lives in N8N_USER_FOLDER (/home/node/.n8n), persisted via PVC.
+db:
+  type: sqlite
+
+# -- Environment Variables -------------------------------------------------
+# Explicit N8N_* env vars — these supplement n8n.* config above.
+env:
+  N8N_HOST: "marketing.fenrirledger.com"
+  N8N_PROTOCOL: "https"
+  N8N_PORT: "5678"
+  N8N_EDITOR_BASE_URL: "https://marketing.fenrirledger.com/"
+  WEBHOOK_URL: "https://marketing.fenrirledger.com/"
+  N8N_USER_FOLDER: "/home/node/.n8n"
+  # Disable diagnostics/telemetry in production
+  N8N_DIAGNOSTICS_ENABLED: "false"
+  N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+
+# -- Persistence (1Gi PVC for SQLite DB + workflow storage) ----------------
+persistence:
+  enabled: true
+  storageClass: standard-rwo
+  size: 1Gi
+  mountPath: /home/node/.n8n
+  accessModes:
+    - ReadWriteOnce
+
+# -- Resources (mirrors Umami analytics pattern) ---------------------------
+resources:
+  requests:
+    cpu: "250m"
+    memory: "512Mi"
+    ephemeral-storage: "128Mi"
+  limits:
+    cpu: "250m"
+    memory: "512Mi"
+    ephemeral-storage: "256Mi"
+
+# -- Service ---------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 5678
+
+# -- Ingress ---------------------------------------------------------------
+# GCE Ingress uses the shared fenrir-app-ip static IP (marketing.fenrirledger.com
+# DNS A-record already points to this IP via infrastructure/dns.tf).
+# ManagedCertificate is created separately in managed-certificate.yaml.
+ingress:
+  enabled: true
+  className: "gce"
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "fenrir-app-ip"
+    networking.gke.io/managed-certificates: "n8n-cert"
+    kubernetes.io/ingress.allow-http: "true"
+    cloud.google.com/backend-config: '{"default":"n8n-backend-config"}'
+  hosts:
+    - host: marketing.fenrirledger.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []  # TLS handled by GKE ManagedCertificate (n8n-cert)
+
+# -- Replica ---------------------------------------------------------------
+replicaCount: 1
+
+# -- Image -----------------------------------------------------------------
+image:
+  repository: n8nio/n8n
+  tag: latest
+  pullPolicy: IfNotPresent
