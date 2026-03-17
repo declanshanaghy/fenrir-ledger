@@ -20,15 +20,19 @@
  * Error responses:
  *   400 — invalid request body
  *   401 — not authenticated
- *   403 — user is not Karl tier (Thrall or free trial)
+ *   403 — user is not Karl tier (Thrall or free trial), or householdId does
+ *          not match the authenticated user's household (IDOR guard)
  *   500 — internal error
  *
- * Issue #1122
+ * Security: household membership is verified via requireAuthz() before any
+ * Firestore access. The authz-resolved householdId is used for all Firestore
+ * operations — never the raw client-supplied body value — to prevent IDOR.
+ *
+ * Issue #1122, #1193
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/require-auth";
-import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
+import { requireAuthz } from "@/lib/auth/authz";
 import { getAllFirestoreCards, setCards } from "@/lib/firebase/firestore";
 import { mergeCardsWithStats } from "@/lib/sync/sync-engine";
 import { log } from "@/lib/logger";
@@ -37,34 +41,7 @@ import type { Card } from "@/lib/types";
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/sync/push called");
 
-  const auth = await requireAuth(request);
-  if (!auth.ok) return auth.response;
-
-  const googleSub = auth.user.sub;
-
-  // Karl-only gate: no sync for Thrall or free-trial users
-  const entitlement = await getStripeEntitlement(googleSub);
-  const isKarl = entitlement?.tier === "karl" && entitlement?.active === true;
-
-  if (!isKarl) {
-    const currentTier = entitlement?.tier ?? "thrall";
-    log.debug("POST /api/sync/push returning", {
-      status: 403,
-      reason: "not_karl",
-      currentTier,
-    });
-    return NextResponse.json(
-      {
-        error: "forbidden",
-        error_description:
-          "Cloud sync is a Karl-tier feature. Upgrade to Karl to enable sync.",
-        current_tier: currentTier,
-      },
-      { status: 403 },
-    );
-  }
-
-  // Parse body
+  // Parse body first — householdId is required for the membership check in requireAuthz
   let body: unknown;
   try {
     body = await request.json();
@@ -104,11 +81,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // requireAuthz: authentication + user resolution + household membership + Karl tier
+  // If the caller-supplied householdId does not match the user's actual household,
+  // requireAuthz returns 403 before Firestore is ever accessed.
+  const authz = await requireAuthz(request, { householdId, tier: "karl" });
+  if (!authz.ok) return authz.response;
+
+  // Use the authz-resolved householdId — never the raw body value — to prevent IDOR
+  const verifiedHouseholdId = authz.firestoreUser.householdId;
+
   const localCards = cards as Card[];
 
   try {
     // Fetch all remote cards (including tombstones) for LWW merge
-    const remoteCards = await getAllFirestoreCards(householdId);
+    const remoteCards = await getAllFirestoreCards(verifiedHouseholdId);
 
     // Merge: per-card last-write-wins
     const { merged, stats } = mergeCardsWithStats(localCards, remoteCards);
@@ -118,7 +104,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     log.debug("POST /api/sync/push returning", {
       status: 200,
-      householdId,
+      householdId: verifiedHouseholdId,
       ...stats,
     });
 
@@ -131,7 +117,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    log.error("POST /api/sync/push internal error", { householdId, error: message });
+    log.error("POST /api/sync/push internal error", { householdId: verifiedHouseholdId, error: message });
     return NextResponse.json(
       { error: "internal_error", error_description: "Sync failed due to a server error." },
       { status: 500 },

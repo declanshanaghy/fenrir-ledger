@@ -3,8 +3,9 @@
  *
  * Validates:
  *   - 401 when no auth header
- *   - 403 for Thrall users
+ *   - 403 for Thrall users (requireAuthz tier gate)
  *   - 403 for free-trial users (Karl-only gate)
+ *   - 403 for cross-household access (IDOR guard — household membership check)
  *   - 400 for invalid/missing body fields
  *   - 200 with merged cards for Karl users
  *   - Tombstone propagation in the push response
@@ -13,20 +14,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Card } from "@/lib/types";
 
-// ── Mock: require-auth ─────────────────────────────────────────────────────
+// ── Mock: authz ────────────────────────────────────────────────────────────
 
-const mockRequireAuth = vi.hoisted(() => vi.fn());
+const mockRequireAuthz = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/auth/require-auth", () => ({
-  requireAuth: mockRequireAuth,
-}));
-
-// ── Mock: entitlement-store ────────────────────────────────────────────────
-
-const mockGetStripeEntitlement = vi.hoisted(() => vi.fn());
-
-vi.mock("@/lib/kv/entitlement-store", () => ({
-  getStripeEntitlement: mockGetStripeEntitlement,
+vi.mock("@/lib/auth/authz", () => ({
+  requireAuthz: mockRequireAuthz,
 }));
 
 // ── Mock: Firestore ────────────────────────────────────────────────────────
@@ -80,6 +73,15 @@ function makeRequest(body: unknown): NextRequest {
   });
 }
 
+/** Authz success result for a Karl user belonging to the given household. */
+function authzKarlSuccess(householdId = "hh-test") {
+  return {
+    ok: true as const,
+    user: { sub: "google-user-123", email: "test@example.com" },
+    firestoreUser: { householdId },
+  };
+}
+
 // ── Setup ─────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
@@ -92,7 +94,7 @@ beforeEach(() => {
 
 describe("POST /api/sync/push — auth", () => {
   it("returns 401 when not authenticated", async () => {
-    mockRequireAuth.mockResolvedValue({
+    mockRequireAuthz.mockResolvedValue({
       ok: false,
       response: new Response(
         JSON.stringify({ error: "missing_token" }),
@@ -106,15 +108,14 @@ describe("POST /api/sync/push — auth", () => {
 });
 
 describe("POST /api/sync/push — Karl gate", () => {
-  beforeEach(() => {
-    mockRequireAuth.mockResolvedValue({
-      ok: true,
-      user: { sub: "google-user-123", email: "test@example.com" },
-    });
-  });
-
   it("returns 403 for Thrall users (no entitlement)", async () => {
-    mockGetStripeEntitlement.mockResolvedValue(null);
+    mockRequireAuthz.mockResolvedValue({
+      ok: false,
+      response: new Response(
+        JSON.stringify({ error: "forbidden", current_tier: "thrall" }),
+        { status: 403 }
+      ),
+    });
     const res = await POST(makeRequest({ householdId: "hh", cards: [] }));
     expect(res.status).toBe(403);
     const body = await res.json() as { error: string; current_tier: string };
@@ -123,14 +124,25 @@ describe("POST /api/sync/push — Karl gate", () => {
   });
 
   it("returns 403 for inactive Karl subscription", async () => {
-    mockGetStripeEntitlement.mockResolvedValue({ tier: "karl", active: false });
+    mockRequireAuthz.mockResolvedValue({
+      ok: false,
+      response: new Response(
+        JSON.stringify({ error: "forbidden" }),
+        { status: 403 }
+      ),
+    });
     const res = await POST(makeRequest({ householdId: "hh", cards: [] }));
     expect(res.status).toBe(403);
   });
 
   it("returns 403 for free-trial users (no sync during trial)", async () => {
-    // Trial users don't have a karl entitlement
-    mockGetStripeEntitlement.mockResolvedValue({ tier: "thrall", active: false });
+    mockRequireAuthz.mockResolvedValue({
+      ok: false,
+      response: new Response(
+        JSON.stringify({ error: "forbidden", current_tier: "thrall" }),
+        { status: 403 }
+      ),
+    });
     const res = await POST(makeRequest({ householdId: "hh", cards: [] }));
     expect(res.status).toBe(403);
     const body = await res.json() as { error: string; current_tier: string };
@@ -139,14 +151,6 @@ describe("POST /api/sync/push — Karl gate", () => {
 });
 
 describe("POST /api/sync/push — validation", () => {
-  beforeEach(() => {
-    mockRequireAuth.mockResolvedValue({
-      ok: true,
-      user: { sub: "google-user-123", email: "test@example.com" },
-    });
-    mockGetStripeEntitlement.mockResolvedValue({ tier: "karl", active: true });
-  });
-
   it("returns 400 when body is not valid JSON", async () => {
     const req = new NextRequest("http://localhost/api/sync/push", {
       method: "POST",
@@ -179,11 +183,7 @@ describe("POST /api/sync/push — validation", () => {
 
 describe("POST /api/sync/push — merge and response", () => {
   beforeEach(() => {
-    mockRequireAuth.mockResolvedValue({
-      ok: true,
-      user: { sub: "google-user-123", email: "test@example.com" },
-    });
-    mockGetStripeEntitlement.mockResolvedValue({ tier: "karl", active: true });
+    mockRequireAuthz.mockResolvedValue(authzKarlSuccess("hh-test"));
   });
 
   it("returns 200 with merged cards when both sides empty", async () => {

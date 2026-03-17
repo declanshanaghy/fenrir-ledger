@@ -7,32 +7,25 @@
  *   Fix: requireAuthz() now verifies caller's household membership before any Firestore access.
  *   The route returns 403 when the caller is not a member of the requested household.
  *
- * SEV-002 (CRITICAL, unfixed): POST /api/sync/push — IDOR via client-supplied body householdId
- *   When SEV-002 fix lands: update assertions to expect 403 on cross-household access.
+ * SEV-002 (FIXED in #1193): POST /api/sync/push — IDOR via client-supplied body householdId
+ *   Fix: requireAuthz() now verifies caller's household membership before any Firestore access.
+ *   The route returns 403 when the caller is not a member of the requested household.
  *
  * SEV-003 (HIGH): GET /api/household/invite/validate — email (PII) in members array
  *   When SEV-003 fix lands: update assertion to expect email to be absent from members.
  *
- * Issue #1126, #1192
+ * Issue #1126, #1192, #1193
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Card } from "@/lib/types";
 import { NextRequest } from "next/server";
 
-// ── Mocks: authz (pull route uses requireAuthz after fix) ───────────────────
+// ── Mocks: authz (both routes use requireAuthz after fix) ────────────────────
 
-const mockRequireAuthzPull = vi.hoisted(() => vi.fn());
+const mockRequireAuthz = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/auth/authz", () => ({ requireAuthz: mockRequireAuthzPull }));
-
-// ── Mocks: push route (still uses requireAuth + entitlement directly) ────────
-
-const mockRequireAuthPush = vi.hoisted(() => vi.fn());
-const mockGetEntitlementPush = vi.hoisted(() => vi.fn());
-
-vi.mock("@/lib/auth/require-auth", () => ({ requireAuth: mockRequireAuthPush }));
-vi.mock("@/lib/kv/entitlement-store", () => ({ getStripeEntitlement: mockGetEntitlementPush }));
+vi.mock("@/lib/auth/authz", () => ({ requireAuthz: mockRequireAuthz }));
 
 // ── Mocks: Firestore ─────────────────────────────────────────────────────────
 
@@ -84,7 +77,7 @@ beforeEach(() => {
 describe("SEV-001 — FIXED: GET /api/sync/pull blocks cross-household access", () => {
   it("returns 403 when caller requests a household they do not belong to", async () => {
     // requireAuthz detects household mismatch and returns 403 before Firestore is accessed
-    mockRequireAuthzPull.mockResolvedValue({
+    mockRequireAuthz.mockResolvedValue({
       ok: false,
       response: new Response(
         JSON.stringify({
@@ -108,13 +101,21 @@ describe("SEV-001 — FIXED: GET /api/sync/pull blocks cross-household access", 
   });
 });
 
-// ── SEV-002: IDOR in POST /api/sync/push ────────────────────────────────────
+// ── SEV-002: IDOR in POST /api/sync/push — FIXED (#1193) ────────────────────
 
-describe("SEV-002 — IDOR: POST /api/sync/push accepts arbitrary householdId from body", () => {
-  it("passes client-supplied body householdId to Firestore without membership check", async () => {
-    mockRequireAuthPush.mockResolvedValue({ ok: true, user: { sub: "attacker-user-sub" } });
-    mockGetEntitlementPush.mockResolvedValue({ tier: "karl", active: true });
-    mockGetAllFirestoreCards.mockResolvedValue([makeCard()]);
+describe("SEV-002 — FIXED: POST /api/sync/push blocks cross-household access", () => {
+  it("returns 403 when caller supplies a householdId they do not belong to", async () => {
+    // requireAuthz detects household mismatch and returns 403 before Firestore is accessed
+    mockRequireAuthz.mockResolvedValue({
+      ok: false,
+      response: new Response(
+        JSON.stringify({
+          error: "forbidden",
+          error_description: "You do not have access to the requested household.",
+        }),
+        { status: 403 },
+      ),
+    });
 
     const req = new NextRequest("http://localhost/api/sync/push", {
       method: "POST",
@@ -122,15 +123,13 @@ describe("SEV-002 — IDOR: POST /api/sync/push accepts arbitrary householdId fr
         "Content-Type": "application/json",
         Authorization: "Bearer attacker-token",
       },
-      body: JSON.stringify({ householdId: "victim-household", cards: [] }),
+      body: JSON.stringify({ householdId: "victim-household", cards: [makeCard()] }),
     });
 
     const res = await pushPOST(req);
 
-    // IDOR documented: the route returns 200 using the attacker-supplied householdId
-    // without verifying the caller belongs to "victim-household".
-    // EXPECTED AFTER FIX: this should return 403 when caller is not a member of victim-household.
-    expect(res.status).toBe(200);
-    expect(mockGetAllFirestoreCards).toHaveBeenCalledWith("victim-household");
+    // IDOR is fixed: cross-household requests are blocked at authz, not at Firestore
+    expect(res.status).toBe(403);
+    expect(mockGetAllFirestoreCards).not.toHaveBeenCalled();
   });
 });
