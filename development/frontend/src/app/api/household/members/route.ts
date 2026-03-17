@@ -30,7 +30,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { log } from "@/lib/logger";
-import { getUser, getHousehold, getUsersByHouseholdId } from "@/lib/firebase/firestore";
+import { getUser, getHousehold, getUsersByHouseholdId, ensureSoloHousehold } from "@/lib/firebase/firestore";
 
 const MAX_HOUSEHOLD_MEMBERS = 3;
 
@@ -42,12 +42,21 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const userId = auth.user.sub;
 
-  const callerUser = await getUser(userId);
+  let callerUser = await getUser(userId);
   if (!callerUser) {
-    return NextResponse.json(
-      { error: "user_not_found", error_description: "User record not found. Sign in again." },
-      { status: 404 },
-    );
+    // First sign-in: bootstrap a solo household atomically, then continue normal flow.
+    log.debug("GET /api/household/members: user not found, bootstrapping solo household", { userId });
+    const bootstrapped = await ensureSoloHousehold({
+      clerkUserId: userId,
+      email: auth.user.email,
+      displayName: auth.user.name,
+    });
+    callerUser = bootstrapped.user;
+    log.debug("GET /api/household/members: solo household bootstrapped", {
+      userId,
+      householdId: bootstrapped.household.id,
+      created: bootstrapped.created,
+    });
   }
 
   const household = await getHousehold(callerUser.householdId);
