@@ -276,8 +276,13 @@ export function useCloudSync(): CloudSyncState {
     if (!isKarlOrTrial) return;
 
     const handleOffline = () => setStatus("offline");
-    const handleOnline = () =>
-      setStatus((prev) => (prev === "offline" ? "idle" : prev));
+    const handleOnline = () => {
+      setStatus((prev) => {
+        if (prev !== "offline") return prev;
+        // Restore to syncing if an active sync was interrupted by going offline
+        return isSyncingRef.current ? "syncing" : "idle";
+      });
+    };
 
     if (!navigator.onLine) setStatus("offline");
 
