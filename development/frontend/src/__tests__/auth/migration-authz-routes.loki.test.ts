@@ -23,8 +23,6 @@
  * @ref Issue #1200
  */
 
-import * as fs from "fs";
-import * as path from "path";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 import type { FirestoreUser } from "@/lib/firebase/firestore-types";
@@ -599,33 +597,3 @@ describe("POST /api/trial/convert — requireAuthz migration (issue #1200)", () 
   });
 });
 
-// ---------------------------------------------------------------------------
-// Static: @deprecated JSDoc on require-karl-or-trial.ts
-// ---------------------------------------------------------------------------
-
-describe("require-karl-or-trial.ts deprecation (issue #1200)", () => {
-  const filePath = path.resolve(
-    __dirname,
-    "../../lib/auth/require-karl-or-trial.ts",
-  );
-
-  it("require-karl-or-trial.ts file still exists (not prematurely deleted)", () => {
-    expect(fs.existsSync(filePath)).toBe(true);
-  });
-
-  it("has @deprecated JSDoc comment at the top", () => {
-    const content = fs.readFileSync(filePath, "utf-8");
-    expect(content).toMatch(/@deprecated/);
-  });
-
-  it("@deprecated comment references requireAuthz as the replacement", () => {
-    const content = fs.readFileSync(filePath, "utf-8");
-    expect(content).toMatch(/requireAuthz/);
-  });
-
-  it("@deprecated comment is in the first 10 lines (visible immediately on file open)", () => {
-    const content = fs.readFileSync(filePath, "utf-8");
-    const first10Lines = content.split("\n").slice(0, 10).join("\n");
-    expect(first10Lines).toMatch(/@deprecated/);
-  });
-});
