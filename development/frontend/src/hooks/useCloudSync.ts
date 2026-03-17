@@ -364,6 +364,11 @@ export function useCloudSync(): CloudSyncState {
     setErrorCode(null);
     setRetryIn(null);
 
+    // Tracks whether migration failed so we can fall back AFTER finally releases the lock.
+    // (Setting this inside catch and calling performSync inside finally creates a race
+    // where finally clears syncInProgressRef.current while performSync is already running.)
+    let migrationFailed = false;
+
     try {
       const result = await runMigration(householdId, idToken);
 
@@ -404,16 +409,16 @@ export function useCloudSync(): CloudSyncState {
         })
       );
     } catch {
-      // Migration failed — fall back to regular performSync
-      // (keeps local data safe; cloud sync will retry via the normal path)
-      syncInProgressRef.current = false;
-
-      // Ensure flag is not set so migration retries next sign-in
-      // markMigrated() is only called inside runMigration on success, so we're safe.
-      void performSync();
-      return;
+      // Migration failed — will fall back to regular performSync after lock is released.
+      // (markMigrated() is only called on success, so migration retries next sign-in.)
+      migrationFailed = true;
     } finally {
       syncInProgressRef.current = false;
+    }
+
+    if (migrationFailed) {
+      // Fallback after finally releases the lock — performSync can now acquire it cleanly.
+      void performSync();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isKarl, performSync]);
