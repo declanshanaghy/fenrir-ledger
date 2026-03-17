@@ -9,7 +9,7 @@ How to verify the app is running on the GKE Ingress hostname.
 
 ```bash
 gcloud container clusters get-credentials fenrir-autopilot \
-  --zone us-central1-a \
+  --region us-central1 \
   --project fenrir-ledger-prod
 ```
 

@@ -168,9 +168,11 @@ architecture/
 └── route-ownership.md         # Route placement reference
 
 development/
-├── implementation-plan.md         # What was built and how
-├── qa-handoff.md                  # Handoff notes for Loki
-└── frontend/                      # Next.js project root (Vercel Root Directory)
+├── docs/                          # Engineering documentation
+│   ├── implementation-plan.md     # What was built and how
+│   ├── qa-handoff.md              # Handoff notes for Loki
+│   └── setup-guide.md             # Local dev setup guide
+└── frontend/                      # Next.js project root (GKE deployment)
     └── src/                       # Next.js source code
 
 quality/
@@ -203,20 +205,20 @@ Work flows through two commands:
 
 | Mode | Flag | Description |
 |------|------|-------------|
-| **Remote (default)** | `--remote` or no flag | Dispatches to Depot cloud sandboxes via `depot claude`. Fire-and-forget: the orchestrator spawns the worker and polls `depot claude list-sessions --output json` for completion. Workers are stateless and disposable -- git push is the checkpoint. |
-| **Local** | `--local` | Runs in a local background worktree at `<repo-root>/.claude/worktrees/`. Used for development or when Depot is unavailable. |
+| **Remote (default)** | `--remote` or no flag | Dispatches to GKE Autopilot Jobs (`fenrir-agents` namespace) via `dispatch-job.sh`. Fire-and-forget: the orchestrator spawns the worker as a K8s Job and monitors via `kubectl` / Cloud Logging. Workers are stateless and disposable -- git push is the checkpoint. |
+| **Local** | `--local` | Runs in a local background worktree at `<repo-root>/.claude/worktrees/`. Used for development or when the GKE cluster is unavailable. |
 
 Remote mode requires:
-- `CLAUDE_CODE_OAUTH_TOKEN` -- subscription auth for Claude on remote workers
-- `DEPOT_ORG_ID` -- Depot organization identifier
+- `CLAUDE_CODE_OAUTH_TOKEN` -- subscription auth for Claude on remote workers (stored in K8s Secret `agent-secrets`)
+- `GH_TOKEN` -- fine-grained PAT for git operations (stored in K8s Secret `agent-secrets`)
 - Git credentials accessible to the worker (for push)
 
-The orchestrator holds all secrets. Workers receive only Claude auth and git credentials.
+The orchestrator holds all secrets. Workers receive only Claude auth and git credentials injected via Workload Identity.
 
 ### How it works
 
 1. **Plan**: `/plan-w-team "add CSV export"` -- Freya interviews Odin, Luna wireframes (if UI), then files 1-5 GitHub Issues to Project #1.
-2. **Execute**: `/fire-next-up` -- picks the top unblocked issue from "Up Next", claims it (moves to In Progress), determines the agent chain from the `type:` label, and dispatches. Default is remote (Depot).
+2. **Execute**: `/fire-next-up` -- picks the top unblocked issue from "Up Next", claims it (moves to In Progress), determines the agent chain from the `type:` label, and dispatches. Default is remote (GKE).
 3. **Batch**: `/fire-next-up --batch 3` -- picks top 3 unblocked issues and runs chains in parallel.
 4. **Resume**: `/fire-next-up --resume #N` -- detects where an interrupted chain left off (via issue comments) and spawns the next agent.
 5. **Peek**: `/fire-next-up --peek` -- shows the prioritized queue without dispatching.
@@ -256,6 +258,6 @@ Issues created by `/plan-w-team` may include `Blocked by #N` in their body. `/fi
 
 **Local mode**: Each agent chain runs in an isolated background worktree at `<repo-root>/.claude/worktrees/`. All worktrees must be at this level -- no nesting (worktrees inside worktrees). The chain orchestrator creates the worktree, spawns agents sequentially on the same branch, and each agent commits and pushes before handing off.
 
-**Remote mode (default)**: Each agent chain runs in a Depot cloud sandbox. The sandbox is stateless -- it clones the repo, checks out the branch, runs the agent, and pushes. No local worktree is created.
+**Remote mode (default)**: Each agent chain runs in a GKE Autopilot Job (`fenrir-agents` namespace). The Job is stateless -- it clones the repo, checks out the branch, runs the agent, and pushes. No local worktree is created.
 
 In both modes, agents post structured handoff comments on the GitHub Issue (e.g. `## FiremanDecko -> Loki Handoff`) so the next agent in the chain can read context via `gh issue view <N> --comments`.

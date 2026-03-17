@@ -43,6 +43,9 @@ This single command sets up everything: Node deps, environment files, GKE auth, 
 - [docs/frontend-qa-handoff.md](docs/frontend-qa-handoff.md) — Feature flag registry + Patreon API route guards.
 - [docs/QA-SPRINT-5.md](docs/QA-SPRINT-5.md) — Sprint 5 QA report: Google Sheets import + LCARS easter egg.
 - [docs/LOKI-TEST-PLAN-anon-auth.md](docs/LOKI-TEST-PLAN-anon-auth.md) — Test plan: anonymous-first auth + cloud sync upsell.
+- [docs/qa-handoff-agent-monitor.md](docs/qa-handoff-agent-monitor.md) — QA handoff: Agent Monitor SPA (issue #743).
+- [docs/qa-handoff-umami-deployment.md](docs/qa-handoff-umami-deployment.md) — QA handoff: Umami analytics deployment (issue #781).
+- [docs/github-workflows.md](docs/github-workflows.md) — CI/CD pipeline diagrams and Odin's Throne deploy monitor.
 
 ## Scripts
 

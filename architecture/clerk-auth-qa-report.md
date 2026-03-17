@@ -322,7 +322,7 @@ This design is ready for GA sprint planning. QA will validate implementation whe
 ---
 
 **Related Documents:**
-- [ADR-007: Clerk as Auth Platform](adr-clerk-auth.md)
+- [ADR-009: Clerk as Auth Platform](ADR-009-clerk-auth.md)
 - [Implementation Plan: Clerk Auth Integration](clerk-implementation-plan.md)
 - [Backlog Item: idp-testing-alternative.md](../product/backlog/idp-testing-alternative.md)
 - [Product Brief: Authentication section](../product-design-brief.md#constraints-until-ga)
