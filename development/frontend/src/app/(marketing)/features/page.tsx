@@ -571,8 +571,8 @@ function TierDivider() {
 
 function SmartImportSafetyCallout() {
   return (
-    <div className="border-b border-border">
-      <div className="max-w-[1100px] mx-auto px-6 pb-8">
+    <div>
+      <div className="max-w-[1100px] mx-auto px-6">
         <DataSafetyBanner
           variant="inline"
           ariaLabel="Smart Import data safety"

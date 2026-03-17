@@ -264,7 +264,7 @@ function InlineBanner({
   return (
     <div
       className={[
-        "border border-border p-5 flex gap-4 items-start max-[480px]:flex-col",
+        "p-5 flex gap-4 items-start max-[480px]:flex-col",
         className,
       ]
         .filter(Boolean)
