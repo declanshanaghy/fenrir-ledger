@@ -224,4 +224,29 @@ describe("GET /api/household/members", () => {
     const body = await res.json() as { error: string };
     expect(body.error).toBe("household_not_found");
   });
+
+  // ── Loki edge cases (issue #1159) ────────────────────────────────────────────
+
+  it("returns 200 when concurrent request already created household (created: false)", async () => {
+    // Race condition: two simultaneous first-sign-in requests. The second one
+    // finds the household was already created by the first (created: false).
+    // The route must still succeed — never depend on the created flag for correctness.
+    mockGetUser.mockResolvedValue(null);
+    mockEnsureSoloHousehold.mockResolvedValue({
+      user: ownerUserDoc,
+      household: { ...baseHousehold, memberIds: [OWNER_ID] },
+      created: false, // ← already existed when we got there (race)
+    });
+    mockGetHousehold.mockResolvedValue({ ...baseHousehold, memberIds: [OWNER_ID] });
+    mockGetUsersByHouseholdId.mockResolvedValue([ownerUserDoc]);
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { householdId: string; isOwner: boolean; isSolo: boolean };
+    expect(body.householdId).toBe(HOUSEHOLD_ID);
+    expect(body.isOwner).toBe(true);
+    expect(body.isSolo).toBe(true);
+    // ensureSoloHousehold must have been called (getUser returned null)
+    expect(mockEnsureSoloHousehold).toHaveBeenCalledOnce();
+  });
 });
