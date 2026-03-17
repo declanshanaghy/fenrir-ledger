@@ -95,10 +95,13 @@ describe("SEV-001 — IDOR: GET /api/sync/pull accepts arbitrary householdId", (
   });
 });
 
-// ── SEV-002: IDOR in POST /api/sync/push ────────────────────────────────────
+// ── SEV-002: IDOR in POST /api/sync/push — FIXED (issue #1193) ───────────────
 
-describe("SEV-002 — IDOR: POST /api/sync/push accepts arbitrary householdId from body", () => {
-  it("passes client-supplied body householdId to Firestore without membership check", async () => {
+describe("SEV-002 — IDOR FIXED: POST /api/sync/push now verifies household membership", () => {
+  it("returns 403 when caller is not a member of the requested household", async () => {
+    // The push route now uses requireAuthz({ householdId, tier: "karl" }).
+    // requireAuthz calls getUser(sub) — mocked to return undefined (attacker has no user doc),
+    // so the route returns 403 before ever reaching Firestore.
     karlAuth("attacker-user-sub");
     mockGetAllFirestoreCardsPull.mockResolvedValue([makeCard()]);
 
@@ -113,10 +116,9 @@ describe("SEV-002 — IDOR: POST /api/sync/push accepts arbitrary householdId fr
 
     const res = await pushPOST(req);
 
-    // IDOR documented: the route returns 200 using the attacker-supplied householdId
-    // without verifying the caller belongs to "victim-household".
-    // EXPECTED AFTER FIX: this should return 403 when caller is not a member of victim-household.
-    expect(res.status).toBe(200);
-    expect(mockGetAllFirestoreCardsPull).toHaveBeenCalledWith("victim-household");
+    // FIXED: route now returns 403 — attacker cannot read or overwrite victim's cards.
+    expect(res.status).toBe(403);
+    // Firestore must NOT be queried with the victim's householdId.
+    expect(mockGetAllFirestoreCardsPull).not.toHaveBeenCalledWith("victim-household");
   });
 });
