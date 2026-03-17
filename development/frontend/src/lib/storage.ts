@@ -256,6 +256,17 @@ export function initializeHousehold(householdId: string): Household {
 
 /**
  * Reads ALL cards for a given household from localStorage, including soft-deleted ones.
+ * Public sync helper — exposed for the cloud sync service which needs tombstones.
+ * For UI-facing reads, use getCards(householdId) which filters deletedAt.
+ *
+ * @param householdId - The household to read cards for
+ */
+export function getRawAllCards(householdId: string): Card[] {
+  return getAllCards(householdId);
+}
+
+/**
+ * Reads ALL cards for a given household from localStorage, including soft-deleted ones.
  * Private raw helper — use getCards(householdId) for UI-facing reads.
  *
  * @param householdId - The household to read cards for
@@ -288,7 +299,7 @@ export function setAllCards(householdId: string, cards: Card[]): void {
 
   try {
     localStorage.setItem(cardsKey(householdId), JSON.stringify(cards));
-    window.dispatchEvent(new CustomEvent("fenrir:sync"));
+    window.dispatchEvent(new CustomEvent("fenrir:sync", { detail: { householdId } }));
   } catch (err) {
     console.error("[FenrirLedger] Failed to save cards:", err);
     throw new Error("Failed to save cards. Storage may be full.");

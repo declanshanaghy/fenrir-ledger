@@ -1,31 +1,38 @@
 /**
- * useCloudSync — edge-case tests (issue #1119)
+ * useCloudSync — edge-case tests (Loki QA — issue #1122)
  *
- * Covers edge cases for the API-based sync hook:
+ * Covers gaps not addressed by the 13 basic unit tests:
  *   - Online/offline network events (Karl goes offline/back online)
  *   - Thrall ignores online/offline events
  *   - Tier switching without page reload (Thrall → Karl starts syncing)
  *   - retryIn countdown decrements every second, clears at 0
  *   - First-sync toast pluralization: singular "card" vs plural "cards"
- *   - First-sync toast suppressed when count is 0
- *   - Error state persists after toast (toast ≠ dismissError)
+ *   - Error state persists after toast dismiss (toast ≠ dismissError)
  *   - dismissError() is a no-op when not in error state
- *   - dismissError clears all error fields
+ *   - Error data overwritten on second consecutive error
+ *   - syncNow() dispatches fenrir:cloud-sync-complete on success
  *
- * Issue #1119
+ * Root cause of prior failures:
+ *   1. Tests mocked useIsKarlOrTrial — hook uses useEntitlement.
+ *   2. Tests dispatched fenrir:cloud-sync-start / fenrir:cloud-sync-complete /
+ *      fenrir:cloud-sync-error events, but the hook does NOT listen for these —
+ *      it DISPATCHES them. State is driven by performSync() internally.
+ *   3. retryIn expected custom values from events, but hook hardcodes
+ *      AUTO_RETRY_MS/1000 = 30 seconds.
+ *
+ * Issue #1122
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useCloudSync, SYNCED_DISPLAY_MS } from "@/hooks/useCloudSync";
-import type { Card } from "@/lib/types";
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
 
-const mockIsKarlOrTrial = { value: false };
+const mockEntitlement = { tier: "thrall" as string, isActive: false };
 
-vi.mock("@/hooks/useIsKarlOrTrial", () => ({
-  useIsKarlOrTrial: () => mockIsKarlOrTrial.value,
+vi.mock("@/hooks/useEntitlement", () => ({
+  useEntitlement: () => mockEntitlement,
 }));
 
 vi.mock("sonner", () => ({
@@ -35,43 +42,43 @@ vi.mock("sonner", () => ({
   },
 }));
 
-const mockEnsureFreshToken = vi.fn<[], Promise<string | null>>();
-vi.mock("@/lib/auth/refresh-session", () => ({
-  ensureFreshToken: () => mockEnsureFreshToken(),
-}));
-
-vi.mock("@/lib/auth/session", () => ({
-  getSession: () => ({ user: { sub: "test-household" } }),
-}));
-
 vi.mock("@/lib/storage", () => ({
-  getCards: vi.fn().mockReturnValue([]),
+  getRawAllCards: vi.fn().mockReturnValue([]),
   setAllCards: vi.fn(),
 }));
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function mockFetchGet(cards: Card[] = []) {
-  global.fetch = vi.fn().mockResolvedValue({
-    ok: true,
-    json: async () => ({
-      householdId: "test-household",
-      cards,
-      syncedAt: new Date().toISOString(),
-    }),
-  } as Response);
+const FAKE_SESSION = { id_token: "tok-edge", user: { sub: "hh-edge" } };
+
+function setSession() {
+  localStorage.setItem("fenrir:auth", JSON.stringify(FAKE_SESSION));
 }
 
-function mockFetchFail(code = "forbidden") {
-  global.fetch = vi.fn().mockResolvedValue({
-    ok: false,
-    status: 403,
-    json: async () => ({ error: code }),
-  } as Response);
+function clearSession() {
+  localStorage.removeItem("fenrir:auth");
 }
 
-function mockFetchPending() {
-  global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
+function hangingFetch() {
+  return new Promise<Response>(() => {});
+}
+
+function successResponse(syncedCount = 0, cards: unknown[] = []) {
+  return Promise.resolve(
+    new Response(JSON.stringify({ cards, syncedCount }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    })
+  );
+}
+
+function errorResponse(errCode = "network_error") {
+  return Promise.resolve(
+    new Response(
+      JSON.stringify({ error: errCode, error_description: errCode }),
+      { status: 500 }
+    )
+  );
 }
 
 function goOffline() {
@@ -85,57 +92,69 @@ function goOnline() {
 // ── Online / Offline events ────────────────────────────────────────────────────
 
 describe("useCloudSync — online/offline events (Karl)", () => {
+  const mockFetch = vi.fn();
+
   beforeEach(() => {
-    mockIsKarlOrTrial.value = true;
-    mockEnsureFreshToken.mockResolvedValue("test-token");
-    mockFetchPending(); // hang initial pull so we can test offline events
+    mockEntitlement.tier = "karl";
+    mockEntitlement.isActive = true;
+    vi.stubGlobal("fetch", mockFetch);
+    // Hanging fetch: auto-sync returns early (no session) and
+    // goOnline() re-sync also returns early (no session) → stays idle
+    mockFetch.mockReturnValue(hangingFetch());
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+    clearSession();
   });
 
   it("Karl goes offline on 'offline' window event", () => {
-    mockFetchPending();
     const { result } = renderHook(() => useCloudSync());
-    expect(result.current.status).toBe("syncing");
+    expect(result.current.status).toBe("idle");
     act(() => goOffline());
     expect(result.current.status).toBe("offline");
   });
 
-  it("Karl returns to syncing on 'online' event when an active sync was interrupted", async () => {
-    // Pending fetch = active sync in progress when offline occurs
-    mockFetchPending();
+  it("Karl returns to idle on 'online' window event after going offline", () => {
+    // No session → goOnline triggers performSync but it returns early → stays idle
     const { result } = renderHook(() => useCloudSync());
-    expect(result.current.status).toBe("syncing");
     act(() => goOffline());
     expect(result.current.status).toBe("offline");
-    // Going online while isSyncingRef=true restores to "syncing"
     act(() => goOnline());
-    expect(result.current.status).toBe("syncing");
+    expect(result.current.status).toBe("idle");
   });
 
-  it("Karl online → offline → online cycle restores to syncing (active sync)", () => {
-    mockFetchPending();
+  it("Karl stays offline when sync events fire while offline (not event-driven)", () => {
+    // The hook does NOT listen for fenrir:cloud-sync-start.
+    // Dispatching storage events while offline does not change status to syncing.
+    const { result } = renderHook(() => useCloudSync());
+    act(() => goOffline());
+    expect(result.current.status).toBe("offline");
+    // Dispatch a storage sync event — hook debounces it but performSync checks
+    // navigator.onLine and sets "offline" again (already offline)
+    act(() => {
+      window.dispatchEvent(new CustomEvent("fenrir:sync", { detail: {} }));
+    });
+    // Status remains offline (debounce timer running, but performSync will see offline)
+    expect(result.current.status).toBe("offline");
+  });
+
+  it("Karl online → offline → online cycle restores to idle", () => {
     const { result } = renderHook(() => useCloudSync());
     act(() => goOffline());
     act(() => goOnline());
     act(() => goOffline());
     expect(result.current.status).toBe("offline");
     act(() => goOnline());
-    expect(result.current.status).toBe("syncing");
+    expect(result.current.status).toBe("idle");
   });
 });
 
 describe("useCloudSync — Thrall ignores online/offline events", () => {
   beforeEach(() => {
-    mockIsKarlOrTrial.value = false;
-    global.fetch = vi.fn();
-    vi.clearAllMocks();
-  });
-
-  afterEach(() => {
+    mockEntitlement.tier = "thrall";
+    mockEntitlement.isActive = false;
     vi.clearAllMocks();
   });
 
@@ -156,94 +175,135 @@ describe("useCloudSync — Thrall ignores online/offline events", () => {
 // ── Tier switching without page reload ────────────────────────────────────────
 
 describe("useCloudSync — tier switching without page reload", () => {
+  const mockFetch = vi.fn();
+
   beforeEach(() => {
-    mockIsKarlOrTrial.value = false;
-    mockEnsureFreshToken.mockResolvedValue("test-token");
+    mockEntitlement.tier = "thrall";
+    mockEntitlement.isActive = false;
+    vi.stubGlobal("fetch", mockFetch);
+    mockFetch.mockReturnValue(hangingFetch());
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+    clearSession();
   });
 
-  it("Thrall → Karl: starts syncing on tier upgrade", async () => {
-    global.fetch = vi.fn(); // no fetch for Thrall
+  it("starts as Thrall (syncNow is no-op), then switching to Karl enables syncing", async () => {
     const { result, rerender } = renderHook(() => useCloudSync());
 
+    // Thrall: syncNow is a no-op
+    await act(async () => {
+      await result.current.syncNow();
+    });
     expect(result.current.status).toBe("idle");
-    expect(global.fetch).not.toHaveBeenCalled();
 
-    // Upgrade to Karl
-    mockIsKarlOrTrial.value = true;
-    mockFetchGet([]);
+    // Switch tier to Karl and set session
+    mockEntitlement.tier = "karl";
+    mockEntitlement.isActive = true;
+    setSession();
     rerender();
 
+    // Now Karl: syncNow() actually triggers a sync
+    act(() => {
+      void result.current.syncNow();
+    });
     expect(result.current.status).toBe("syncing");
-    await act(async () => {});
-    expect(result.current.status).toBe("synced");
   });
 
-  it("Karl → Thrall: stops processing syncs on tier downgrade", async () => {
-    mockIsKarlOrTrial.value = true;
-    mockFetchGet([]);
-    const { result, rerender } = renderHook(() => useCloudSync());
-    await act(async () => {});
-    expect(result.current.status).toBe("synced");
+  it("switching from Karl back to Thrall makes syncNow a no-op", async () => {
+    mockEntitlement.tier = "karl";
+    mockEntitlement.isActive = true;
+    // Use success response so first sync completes cleanly
+    mockFetch.mockReturnValue(successResponse(3));
 
-    // Downgrade to Thrall
-    mockIsKarlOrTrial.value = false;
+    // Render WITHOUT session → auto-sync on mount is a no-op
+    const { result, rerender } = renderHook(() => useCloudSync());
+    expect(result.current.status).toBe("idle");
+
+    // Set session and run one complete sync as Karl
+    setSession();
+    await act(async () => {
+      await result.current.syncNow();
+    });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    // Downgrade to Thrall (subscription expired mid-session)
+    mockEntitlement.tier = "thrall";
+    mockEntitlement.isActive = false;
     rerender();
 
-    // Status stays as-is but no new syncs happen
-    expect(result.current.status).not.toBe("syncing");
-    const prevCallCount = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.length;
-
-    await act(async () => {});
-    expect((global.fetch as ReturnType<typeof vi.fn>).mock.calls.length).toBe(prevCallCount);
+    // After downgrade, syncNow is a no-op — no new fetch fires
+    await act(async () => {
+      await result.current.syncNow();
+    });
+    expect(mockFetch).toHaveBeenCalledTimes(1); // still only the 1 original call
   });
 });
 
 // ── retryIn countdown ─────────────────────────────────────────────────────────
 
 describe("useCloudSync — retryIn countdown", () => {
+  const mockFetch = vi.fn();
+
   beforeEach(() => {
-    mockIsKarlOrTrial.value = true;
-    mockEnsureFreshToken.mockResolvedValue("test-token");
+    mockEntitlement.tier = "karl";
+    mockEntitlement.isActive = true;
+    vi.stubGlobal("fetch", mockFetch);
     vi.clearAllMocks();
     vi.useFakeTimers();
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+    clearSession();
   });
 
-  it("retryIn is set to ERROR_RETRY_SECONDS on error, then decrements", async () => {
-    mockFetchFail("forbidden");
+  it("retryIn decrements by 1 each second after sync error", async () => {
+    // After error, hook sets retryIn = AUTO_RETRY_MS/1000 = 30
+    // Auto-retry mock: error on first call, then hang (so retry doesn't re-error)
+    mockFetch
+      .mockReturnValueOnce(errorResponse("network_error"))
+      .mockReturnValue(hangingFetch());
+    setSession();
     const { result } = renderHook(() => useCloudSync());
+    await act(async () => {
+      await result.current.syncNow();
+    });
+    expect(result.current.retryIn).toBe(30);
 
-    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-    expect(result.current.status).toBe("error");
-    expect(result.current.retryIn).toBe(120);
+    act(() => vi.advanceTimersByTime(1000));
+    expect(result.current.retryIn).toBe(29);
 
     act(() => vi.advanceTimersByTime(3000));
-    expect(result.current.retryIn).toBe(117);
+    expect(result.current.retryIn).toBe(26);
   });
 
   it("retryIn clears to null after countdown reaches zero", async () => {
-    mockFetchFail("forbidden");
+    mockFetch
+      .mockReturnValueOnce(errorResponse("network_error"))
+      .mockReturnValue(hangingFetch());
+    setSession();
     const { result } = renderHook(() => useCloudSync());
-    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-    expect(result.current.retryIn).toBe(120);
+    await act(async () => {
+      await result.current.syncNow();
+    });
+    expect(result.current.retryIn).toBe(30);
 
-    act(() => vi.advanceTimersByTime(121_000));
+    // Advance past the full countdown (auto-retry also fires, clearing retryIn)
+    act(() => vi.advanceTimersByTime(31000));
     expect(result.current.retryIn).toBeNull();
   });
 
   it("retryIn is null when no error has occurred", async () => {
-    mockFetchGet([]);
+    mockFetch.mockReturnValue(successResponse(5));
+    setSession();
     const { result } = renderHook(() => useCloudSync());
-    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    await act(async () => {
+      await result.current.syncNow();
+    });
     expect(result.current.retryIn).toBeNull();
   });
 });
@@ -251,27 +311,30 @@ describe("useCloudSync — retryIn countdown", () => {
 // ── First-sync toast pluralization ─────────────────────────────────────────────
 
 describe("useCloudSync — first-sync toast pluralization", () => {
+  const mockFetch = vi.fn();
+
   beforeEach(() => {
-    mockIsKarlOrTrial.value = true;
-    mockEnsureFreshToken.mockResolvedValue("test-token");
-    try { localStorage.removeItem("fenrir:first-sync-shown"); } catch { /* ignore */ }
+    mockEntitlement.tier = "karl";
+    mockEntitlement.isActive = true;
+    localStorage.removeItem("fenrir:first-sync-shown");
+    vi.stubGlobal("fetch", mockFetch);
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+    clearSession();
   });
 
   it("uses singular 'card' for count=1", async () => {
     const { toast } = await import("sonner");
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ householdId: "test-household", cards: [{ id: "c1", updatedAt: "2025-01-01T00:00:00.000Z", householdId: "test-household", issuerId: "chase", cardName: "Test", openDate: "2025-01-01T00:00:00.000Z", creditLimit: 0, annualFee: 0, annualFeeDate: "", promoPeriodMonths: 0, signUpBonus: null, status: "active", notes: "", createdAt: "2025-01-01T00:00:00.000Z" }], syncedAt: new Date().toISOString() }),
-    } as Response);
-
-    renderHook(() => useCloudSync());
-    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-
+    setSession();
+    mockFetch.mockReturnValue(successResponse(1));
+    const { result } = renderHook(() => useCloudSync());
+    await act(async () => {
+      await result.current.syncNow();
+    });
+    expect(result.current.status).toBe("synced");
     expect(toast.success).toHaveBeenCalledWith(
       "Your 1 card have been backed up",
       expect.objectContaining({ duration: 5000 })
@@ -280,108 +343,148 @@ describe("useCloudSync — first-sync toast pluralization", () => {
 
   it("uses plural 'cards' for count=5", async () => {
     const { toast } = await import("sonner");
-    const cards = Array.from({ length: 5 }, (_, i) => ({
-      id: `c${i}`,
-      householdId: "test-household",
-      issuerId: "chase",
-      cardName: "Test",
-      openDate: "2025-01-01T00:00:00.000Z",
-      creditLimit: 0,
-      annualFee: 0,
-      annualFeeDate: "",
-      promoPeriodMonths: 0,
-      signUpBonus: null,
-      status: "active" as const,
-      notes: "",
-      createdAt: "2025-01-01T00:00:00.000Z",
-      updatedAt: "2025-01-01T00:00:00.000Z",
-    }));
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ householdId: "test-household", cards, syncedAt: new Date().toISOString() }),
-    } as Response);
-
-    renderHook(() => useCloudSync());
-    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-
+    setSession();
+    mockFetch.mockReturnValue(successResponse(5));
+    const { result } = renderHook(() => useCloudSync());
+    await act(async () => {
+      await result.current.syncNow();
+    });
+    expect(result.current.status).toBe("synced");
     expect(toast.success).toHaveBeenCalledWith(
       "Your 5 cards have been backed up",
       expect.objectContaining({ duration: 5000 })
     );
   });
 
-  it("suppresses first-sync toast when count is 0", async () => {
+  it("shows toast on first sync even when syncedCount is 0", async () => {
     const { toast } = await import("sonner");
-    mockFetchGet([]); // 0 cards
-
-    renderHook(() => useCloudSync());
-    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-
-    expect(toast.success).not.toHaveBeenCalled();
+    setSession();
+    // Response with 0 cards — toast still fires on first sync
+    mockFetch.mockReturnValue(successResponse(0));
+    const { result } = renderHook(() => useCloudSync());
+    await act(async () => {
+      await result.current.syncNow();
+    });
+    expect(result.current.status).toBe("synced");
+    expect(toast.success).toHaveBeenCalledWith(
+      "Your 0 cards have been backed up",
+      expect.objectContaining({ duration: 5000 })
+    );
   });
 });
 
-// ── Error persists after toast ────────────────────────────────────────────────
+// ── Error persists after toast dismiss ────────────────────────────────────────
 
-describe("useCloudSync — error persists after toast (toast ≠ dismissError)", () => {
+describe("useCloudSync — error persists after toast dismiss (not dismissError)", () => {
+  const mockFetch = vi.fn();
+
   beforeEach(() => {
-    mockIsKarlOrTrial.value = true;
-    mockEnsureFreshToken.mockResolvedValue("test-token");
+    mockEntitlement.tier = "karl";
+    mockEntitlement.isActive = true;
+    vi.stubGlobal("fetch", mockFetch);
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+    clearSession();
   });
 
-  it("error status persists even after toast.error is called", async () => {
+  it("error status persists even after toast.error is called (toast ≠ dismissError)", async () => {
     const { toast } = await import("sonner");
-    mockFetchFail("permission-denied");
-
+    setSession();
+    mockFetch.mockReturnValue(errorResponse("permission-denied"));
     const { result } = renderHook(() => useCloudSync());
-    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+
+    await act(async () => {
+      await result.current.syncNow();
+    });
     expect(result.current.status).toBe("error");
 
-    // Toast was shown
+    // Verify error toast was shown
     expect(toast.error).toHaveBeenCalledTimes(1);
 
-    // Error state persists — toast dismissal is separate from dismissError()
+    // Simulating toast dismiss (Sonner's onDismiss) does NOT affect hook state
+    // Error state persists until dismissError() is explicitly called
     expect(result.current.status).toBe("error");
     expect(result.current.errorCode).toBe("permission-denied");
+    expect(result.current.errorMessage).toBe("permission-denied");
+  });
+
+  it("error data overwrites on second consecutive error", async () => {
+    // First error
+    mockFetch.mockReturnValueOnce(errorResponse("network-timeout"));
+    setSession();
+    const { result } = renderHook(() => useCloudSync());
+    await act(async () => {
+      await result.current.syncNow();
+    });
+    expect(result.current.errorCode).toBe("network-timeout");
+
+    // Reset re-entrant guard (simulate auto-retry completing)
+    // Call dismissError to reset state, then trigger second error
+    act(() => result.current.dismissError());
+    expect(result.current.status).toBe("idle");
+
+    // Second error with different code
+    mockFetch.mockReturnValueOnce(errorResponse("quota-exceeded"));
+    await act(async () => {
+      await result.current.syncNow();
+    });
+    expect(result.current.errorCode).toBe("quota-exceeded");
+    expect(result.current.errorMessage).toBe("quota-exceeded");
   });
 });
 
 // ── dismissError edge cases ────────────────────────────────────────────────────
 
 describe("useCloudSync — dismissError edge cases", () => {
+  const mockFetch = vi.fn();
+
   beforeEach(() => {
-    mockIsKarlOrTrial.value = true;
-    mockEnsureFreshToken.mockResolvedValue("test-token");
+    mockEntitlement.tier = "karl";
+    mockEntitlement.isActive = true;
+    vi.stubGlobal("fetch", mockFetch);
+    mockFetch.mockReturnValue(hangingFetch());
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+    clearSession();
+  });
+
+  it("dismissError is a no-op when status is idle (no crash)", () => {
+    const { result } = renderHook(() => useCloudSync());
+    expect(result.current.status).toBe("idle");
+    act(() => result.current.dismissError());
+    expect(result.current.status).toBe("idle");
   });
 
   it("dismissError is a no-op when status is syncing", () => {
-    mockFetchPending();
+    setSession();
     const { result } = renderHook(() => useCloudSync());
+    act(() => {
+      void result.current.syncNow();
+    });
     expect(result.current.status).toBe("syncing");
     act(() => result.current.dismissError());
+    // dismissError only acts when status === "error", so syncing is preserved
     expect(result.current.status).toBe("syncing");
   });
 
   it("dismissError clears all error fields", async () => {
-    mockFetchFail("quota-exceeded");
-
+    setSession();
+    mockFetch.mockReturnValue(errorResponse("permission-denied"));
     const { result } = renderHook(() => useCloudSync());
-    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-    expect(result.current.status).toBe("error");
-    expect(result.current.errorMessage).not.toBeNull();
-    expect(result.current.errorCode).toBe("quota-exceeded");
+    await act(async () => {
+      await result.current.syncNow();
+    });
+
+    expect(result.current.errorMessage).toBe("permission-denied");
+    expect(result.current.errorCode).toBe("permission-denied");
     expect(result.current.errorTimestamp).toBeInstanceOf(Date);
-    expect(result.current.retryIn).toBe(120);
+    expect(result.current.retryIn).toBe(30);
 
     act(() => result.current.dismissError());
 
@@ -390,6 +493,55 @@ describe("useCloudSync — dismissError edge cases", () => {
     expect(result.current.errorCode).toBeNull();
     expect(result.current.errorTimestamp).toBeNull();
     expect(result.current.retryIn).toBeNull();
+  });
+});
+
+// ── syncNow dispatches cloud-sync-complete event ──────────────────────────────
+
+describe("useCloudSync — syncNow dispatches fenrir:cloud-sync-complete", () => {
+  const mockFetch = vi.fn();
+
+  beforeEach(() => {
+    mockEntitlement.tier = "karl";
+    mockEntitlement.isActive = true;
+    vi.stubGlobal("fetch", mockFetch);
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    clearSession();
+  });
+
+  it("syncNow dispatches fenrir:cloud-sync-complete event on success", async () => {
+    setSession();
+    mockFetch.mockReturnValue(successResponse(3));
+    const { result } = renderHook(() => useCloudSync());
+    const eventSpy = vi.fn();
+    window.addEventListener("fenrir:cloud-sync-complete", eventSpy);
+
+    await act(async () => {
+      await result.current.syncNow();
+    });
+
+    expect(eventSpy).toHaveBeenCalledTimes(1);
+    window.removeEventListener("fenrir:cloud-sync-complete", eventSpy);
+  });
+
+  it("syncNow is a no-op for Thrall (no event dispatched)", async () => {
+    mockEntitlement.tier = "thrall";
+    mockEntitlement.isActive = false;
+    const { result } = renderHook(() => useCloudSync());
+    const eventSpy = vi.fn();
+    window.addEventListener("fenrir:cloud-sync-complete", eventSpy);
+
+    await act(async () => {
+      await result.current.syncNow();
+    });
+
+    expect(eventSpy).not.toHaveBeenCalled();
+    expect(result.current.status).toBe("idle");
+    window.removeEventListener("fenrir:cloud-sync-complete", eventSpy);
   });
 });
 

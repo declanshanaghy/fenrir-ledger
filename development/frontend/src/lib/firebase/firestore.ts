@@ -128,6 +128,22 @@ export async function getCards(householdId: string): Promise<FirestoreCard[]> {
 }
 
 /**
+ * Fetches ALL cards for a household including soft-deleted (tombstoned) ones.
+ * Used by the sync push route to get the full remote state for LWW merge.
+ * Ordered by createdAt ascending.
+ */
+export async function getAllFirestoreCards(
+  householdId: string
+): Promise<FirestoreCard[]> {
+  const db = getFirestore();
+  const snap = await db
+    .collection(FIRESTORE_PATHS.cards(householdId))
+    .orderBy("createdAt", "asc")
+    .get();
+  return snap.docs.map((d) => d.data() as FirestoreCard);
+}
+
+/**
  * Writes a single card document (create or update).
  */
 export async function setCard(card: Card): Promise<void> {
