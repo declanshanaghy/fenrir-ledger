@@ -7,7 +7,16 @@ interface CollapsedGroup {
   count: number;
   representative: LogEntry;
 }
-type DisplayEntry = LogEntry | CollapsedGroup;
+
+/** Groups the "Starting Claude Code" header + subsequent KV raw lines into a collapsible */
+interface StartupGroup {
+  _startup: true;
+  key: string;
+  headerEntry: LogEntry;
+  metaEntries: LogEntry[];
+}
+
+type DisplayEntry = LogEntry | CollapsedGroup | StartupGroup;
 
 /** Returns a collapse key for entries that can be grouped, or null if not collapsible */
 function collapseKey(entry: LogEntry): string | null {
@@ -20,12 +29,32 @@ function collapseKey(entry: LogEntry): string | null {
   return null;
 }
 
-/** Pre-processes entries: groups consecutive same-key entries into CollapsedGroup */
+/** Pre-processes entries: groups consecutive same-key entries into CollapsedGroup, and
+ *  groups the "Starting Claude Code" header + following KV raw lines into a StartupGroup */
 function groupConsecutiveEntries(entries: LogEntry[]): DisplayEntry[] {
   const result: DisplayEntry[] = [];
   let i = 0;
   while (i < entries.length) {
     const entry = entries[i]!;
+
+    // Detect startup block: entrypoint-header "Starting Claude Code" + following KV raw lines
+    if (entry.type === "entrypoint-header" && entry.text === "Starting Claude Code") {
+      const metaEntries: LogEntry[] = [];
+      let k = i + 1;
+      while (k < entries.length) {
+        const next = entries[k]!;
+        if (next.type === "raw" && /^(Model|Session|Working directory|Branch):\s*/.test(next.text ?? "")) {
+          metaEntries.push(next);
+          k++;
+        } else {
+          break;
+        }
+      }
+      result.push({ _startup: true, key: `startup-${entry.id}`, headerEntry: entry, metaEntries });
+      i = k;
+      continue;
+    }
+
     const key = collapseKey(entry);
     if (!key) {
       result.push(entry);
@@ -328,6 +357,9 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
           </div>
         )}
         {displayEntries.map((item) => {
+          if ("_startup" in item) {
+            return <StartupBlock key={item.key} group={item} />;
+          }
           if ("_collapsed" in item) {
             return (
               <LogLine
@@ -939,6 +971,45 @@ function CopySessionIdButton({ sessionId }: { sessionId: string }) {
     >
       {copied ? <CheckIcon /> : <ClipboardIcon />}
     </button>
+  );
+}
+
+function StartupBlock({ group }: { group: StartupGroup }) {
+  const [open, setOpen] = useState(false);
+
+  const modelEntry = group.metaEntries.find((e) => /^Model:\s*/.test(e.text ?? ""));
+  const sessionEntry = group.metaEntries.find((e) => /^Session:\s*/.test(e.text ?? ""));
+  const model = modelEntry?.text?.replace(/^Model:\s*/, "").trim() ?? "";
+  const session = sessionEntry?.text?.replace(/^Session:\s*/, "").trim() ?? "";
+  const shortSession = session.length > 24 ? session.slice(0, 24) + "\u2026" : session;
+
+  return (
+    <div className={`ep-group ${open ? "open" : ""}`}>
+      <div className="ep-group-header" onClick={() => setOpen(!open)} role="button" tabIndex={0} aria-expanded={open} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen((o) => !o); } }}>
+        <span className="ep-group-chevron">{"\u203A"}</span>
+        <span className="ep-group-title">Starting Claude Code</span>
+        <span className="ep-group-meta">
+          {model && <span className="ep-group-meta-item"><span className="ep-group-meta-key">Model:</span> {model}</span>}
+          {shortSession && <span className="ep-group-meta-item"><span className="ep-group-meta-key">Session:</span> {shortSession}</span>}
+        </span>
+      </div>
+      <div className="ep-group-body-wrap">
+        <div className="ep-group-body">
+          <div className="ep-info-card">
+            {group.metaEntries.map((e) => {
+              const kvMatch = /^([^:]+):\s*(.+)$/.exec(e.text ?? "");
+              return (
+                <div key={e.id} className="ep-info">
+                  {kvMatch
+                    ? <><span className="ep-info-key">{kvMatch[1]}:</span> {kvMatch[2]}</>
+                    : e.text}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
