@@ -177,9 +177,10 @@ interface Props {
   onTogglePin?: () => void;
   onAvatarClick?: (agentKey: string) => void;
   replayedFromCache?: boolean;
+  isConnecting?: boolean;
 }
 
-export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin, onAvatarClick, replayedFromCache }: Props) {
+export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin, onAvatarClick, replayedFromCache, isConnecting }: Props) {
   const termRef = useRef<HTMLDivElement>(null);
   const [fixtureSpeed, setFixtureSpeed] = useState(1);
   const [fixturePaused, setFixturePaused] = useState(false);
@@ -269,9 +270,11 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
   }
 
   // TTL-expired sessions get the full-pane Norse error tablet — unless we have
-  // cached data to display instead (replayedFromCache), in which case fall through
-  // to the normal log terminal.
-  if (isTtlExpired && streamError && !replayedFromCache) {
+  // cached data to display instead (replayedFromCache) or the connection is still
+  // being established (isConnecting), in which case fall through to the log terminal.
+  // Guarding on !isConnecting prevents a red flash on the frame(s) before the first
+  // log-line or cache replay arrives.
+  if (isTtlExpired && streamError && !replayedFromCache && !isConnecting) {
     return (
       <main className="content" aria-label="Log viewer">
         <SessionHeader
@@ -286,7 +289,7 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
   }
 
   // Node-unreachable / kubelet-timeout errors get the same Norse error tablet treatment
-  if (isNodeUnreachable && streamError && !replayedFromCache) {
+  if (isNodeUnreachable && streamError && !replayedFromCache && !isConnecting) {
     return (
       <main className="content" aria-label="Log viewer">
         <SessionHeader
@@ -318,6 +321,12 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
         aria-label="Session logs"
         onScroll={handleScroll}
       >
+        {isConnecting && entries.length === 0 && (
+          <div className="session-connecting" aria-label="Connecting to session" aria-live="polite">
+            <span className="connecting-spinner" aria-hidden="true" />
+            <span>Awaiting the Norns\u2026</span>
+          </div>
+        )}
         {displayEntries.map((item) => {
           if ("_collapsed" in item) {
             return (

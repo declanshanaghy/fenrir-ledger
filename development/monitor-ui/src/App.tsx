@@ -39,6 +39,7 @@ export function App() {
     isNodeUnreachable,
     streamError,
     replayedFromCache,
+    isConnecting,
   } = useLogStream();
 
   // Tracks the sessionId we currently have an active WS subscription for.
@@ -279,6 +280,7 @@ export function App() {
             onTogglePin={handleTogglePin}
             onAvatarClick={setProfileAgent}
             replayedFromCache={replayedFromCache}
+            isConnecting={isConnecting}
             onSetSpeed={(speed) => {
               if (activeSessionId) {
                 send({ type: "set-speed", sessionId: activeSessionId, speed });

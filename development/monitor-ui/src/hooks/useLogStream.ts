@@ -87,6 +87,11 @@ export function useLogStream() {
   const [streamError, setStreamError] = useState<string | null>(null);
   const [streamEnded, setStreamEnded] = useState(false);
   const [replayedFromCache, setReplayedFromCache] = useState(false);
+  // isConnecting: true from the moment clearEntries() is called (session selected)
+  // until the first WS data arrives or cache replay begins. Used to suppress
+  // the error tablet during the brief connection window (prevents red flash).
+  const [isConnecting, _setIsConnecting] = useState(false);
+  const isConnectingRef = useRef(false);
   const replayFromCacheRef = useRef<ReplayFn | null>(null);
   const taskPromptBuffer = useRef<string[]>([]);
   const inTaskPrompt = useRef(false);
@@ -94,6 +99,11 @@ export function useLogStream() {
   // Tracks how many live log-line messages to skip after a cache replay.
   // Set to N after replaying N cached lines so the re-streamed duplicates are ignored.
   const liveSkipRef = useRef(0);
+
+  const setIsConnecting = useCallback((v: boolean) => {
+    isConnectingRef.current = v;
+    _setIsConnecting(v);
+  }, []);
 
   const setActiveSessionId = useCallback((id: string | null) => {
     activeSessionIdRef.current = id;
@@ -110,7 +120,8 @@ export function useLogStream() {
     setStreamError(null);
     setStreamEnded(false);
     setReplayedFromCache(false);
-  }, []);
+    setIsConnecting(true);
+  }, [setIsConnecting]);
 
   /** Expose liveSkipRef setter so callers can set the skip count after replaying cache. */
   const setLiveSkipCount = useCallback((n: number) => {
@@ -388,6 +399,10 @@ export function useLogStream() {
         liveSkipRef.current--;
         return;
       }
+      // First live log-line clears the connecting state
+      if (isConnectingRef.current) {
+        setIsConnecting(false);
+      }
       // Persist raw line to localStorage for download / future revisits
       if (activeSessionIdRef.current) {
         appendLogLine(activeSessionIdRef.current, line);
@@ -395,6 +410,10 @@ export function useLogStream() {
       processRawLogLine(line);
     } else if (msg.type === "stream-error") {
       liveSkipRef.current = 0; // stop skipping on error
+      // Clear connecting state — we now know the stream status
+      if (isConnectingRef.current) {
+        setIsConnecting(false);
+      }
       // If the session has cached data in localStorage, fall back to it immediately
       // rather than showing the error tablet. This handles pinned sessions whose
       // pods have been cleaned up (TTL expired).
@@ -410,6 +429,10 @@ export function useLogStream() {
       ]);
     } else if (msg.type === "stream-end") {
       liveSkipRef.current = 0; // stop skipping on end
+      // Clear connecting state on stream end
+      if (isConnectingRef.current) {
+        setIsConnecting(false);
+      }
       setStreamEnded(true);
       setEntries((prev) => {
         // Mark any open batch as complete before adding stream-end
@@ -424,7 +447,7 @@ export function useLogStream() {
         { id: nextId(), type: "verdict", verdictResult: msg.result },
       ]);
     }
-  }, [processRawLogLine]);
+  }, [processRawLogLine, setIsConnecting]);
 
   /**
    * Replay cached JSONL from localStorage for a pinned session (CACHE_PREFIX).
@@ -435,6 +458,10 @@ export function useLogStream() {
   const replayFromCache = useCallback((sessionId: string) => {
     const content = getCachedLog(sessionId);
     if (!content) return;
+    // Cache replay provides content immediately — clear connecting state
+    if (isConnectingRef.current) {
+      setIsConnecting(false);
+    }
     setReplayedFromCache(true);
     const lines = content.split("\n");
     for (const line of lines) {
@@ -446,7 +473,7 @@ export function useLogStream() {
       ...prev,
       { id: nextId(), type: "system", detail: "replayed from Odin\u2019s memory (pinned cache)" },
     ]);
-  }, [processRawLogLine]);
+  }, [processRawLogLine, setIsConnecting]);
 
   // Keep ref in sync so handleMessage can invoke replayFromCache without
   // a circular useCallback dependency.
@@ -484,5 +511,6 @@ export function useLogStream() {
     isTtlExpired,
     isNodeUnreachable,
     replayedFromCache,
+    isConnecting,
   };
 }
