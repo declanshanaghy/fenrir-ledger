@@ -18,7 +18,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireAuthz } from "@/lib/auth/authz";
 import { stripe } from "@/lib/stripe/api";
 import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
 import { rateLimit } from "@/lib/rate-limit";
@@ -46,14 +46,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Require Google authentication (ADR-008)
-  const auth = await requireAuth(request);
-  if (!auth.ok) {
-    log.debug("POST /api/stripe/portal returning", { status: 401, reason: "auth failed" });
-    return auth.response;
+  // Require Google authentication (ADR-015)
+  const authz = await requireAuthz(request, {});
+  if (!authz.ok) {
+    log.debug("POST /api/stripe/portal returning", { reason: "authz failed" });
+    return authz.response;
   }
 
-  const googleSub = auth.user.sub;
+  const googleSub = authz.user.sub;
 
   // Look up the Stripe entitlement to get the customer ID
   const entitlement = await getStripeEntitlement(googleSub);

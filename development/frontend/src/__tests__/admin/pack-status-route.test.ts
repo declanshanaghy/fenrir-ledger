@@ -12,8 +12,9 @@ import { NextRequest } from "next/server";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-vi.mock("@/lib/auth/require-auth", () => ({
-  requireAuth: vi.fn(),
+const mockRequireAuthz = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth/authz", () => ({
+  requireAuthz: mockRequireAuthz,
 }));
 
 vi.mock("@/lib/admin/auth", () => ({
@@ -28,7 +29,6 @@ vi.mock("@/lib/logger", () => ({
   log: { debug: vi.fn(), error: vi.fn() },
 }));
 
-import { requireAuth } from "@/lib/auth/require-auth";
 import { isAdmin } from "@/lib/admin/auth";
 import { getPackStatus } from "@/lib/admin/pack-status";
 import { GET } from "@/app/api/admin/pack-status/route";
@@ -80,7 +80,7 @@ describe("GET /api/admin/pack-status", () => {
   // ═══════════════════════════════════════════════════════════════════════
 
   it("returns 401 when not authenticated", async () => {
-    vi.mocked(requireAuth).mockResolvedValue({
+    mockRequireAuthz.mockResolvedValue({
       ok: false,
       response: NextResponse.json(
         { error: "missing_token", error_description: "Not authenticated" },
@@ -97,9 +97,10 @@ describe("GET /api/admin/pack-status", () => {
   // ═══════════════════════════════════════════════════════════════════════
 
   it("returns 403 when authenticated but not admin", async () => {
-    vi.mocked(requireAuth).mockResolvedValue({
+    mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: { ...ADMIN_USER, email: "loki@fenrir.dev" },
+      firestoreUser: { clerkUserId: ADMIN_USER.sub, email: "loki@fenrir.dev", displayName: "Loki", householdId: "hh-1", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
     });
     vi.mocked(isAdmin).mockReturnValue(false);
 
@@ -116,9 +117,10 @@ describe("GET /api/admin/pack-status", () => {
   // ═══════════════════════════════════════════════════════════════════════
 
   it("returns pack status data for admin user", async () => {
-    vi.mocked(requireAuth).mockResolvedValue({
+    mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: ADMIN_USER,
+      firestoreUser: { clerkUserId: ADMIN_USER.sub, email: ADMIN_USER.email, displayName: ADMIN_USER.name, householdId: "hh-admin", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
     });
     vi.mocked(isAdmin).mockReturnValue(true);
     vi.mocked(getPackStatus).mockResolvedValue(MOCK_PACK_STATUS);
@@ -139,9 +141,10 @@ describe("GET /api/admin/pack-status", () => {
   // ═══════════════════════════════════════════════════════════════════════
 
   it("returns 500 when getPackStatus throws", async () => {
-    vi.mocked(requireAuth).mockResolvedValue({
+    mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: ADMIN_USER,
+      firestoreUser: { clerkUserId: ADMIN_USER.sub, email: ADMIN_USER.email, displayName: ADMIN_USER.name, householdId: "hh-admin", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
     });
     vi.mocked(isAdmin).mockReturnValue(true);
     vi.mocked(getPackStatus).mockRejectedValue(new Error("GitHub API down"));
@@ -158,9 +161,10 @@ describe("GET /api/admin/pack-status", () => {
   // ═══════════════════════════════════════════════════════════════════════
 
   it("returns correct JSON structure", async () => {
-    vi.mocked(requireAuth).mockResolvedValue({
+    mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: ADMIN_USER,
+      firestoreUser: { clerkUserId: ADMIN_USER.sub, email: ADMIN_USER.email, displayName: ADMIN_USER.name, householdId: "hh-admin", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
     });
     vi.mocked(isAdmin).mockReturnValue(true);
     vi.mocked(getPackStatus).mockResolvedValue(MOCK_PACK_STATUS);

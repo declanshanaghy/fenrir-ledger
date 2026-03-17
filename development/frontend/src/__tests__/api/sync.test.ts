@@ -165,11 +165,11 @@ describe("GET /api/sync — Karl user", () => {
     expect(body.cards).toHaveLength(0);
   });
 
-  it("returns 404 when user record not in Firestore", async () => {
+  it("returns 403 when user record not in Firestore", async () => {
     mockGetUser.mockResolvedValue(null);
 
     const res = await GET(makeGetRequest());
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(403);
   });
 
   it("queries getCards with the correct householdId", async () => {

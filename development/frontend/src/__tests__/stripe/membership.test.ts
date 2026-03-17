@@ -2,13 +2,14 @@
  * Unit tests for membership route handlers
  */
 
-import { describe, it, expect, beforeEach, vi, Mock } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 import { GET } from "@/app/api/stripe/membership/route";
 
 // Mock the dependencies
-vi.mock("@/lib/auth/require-auth", () => ({
-  requireAuth: vi.fn(),
+const mockRequireAuthz = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth/authz", () => ({
+  requireAuthz: mockRequireAuthz,
 }));
 
 vi.mock("@/lib/stripe/api", () => ({
@@ -34,7 +35,6 @@ vi.mock("@/lib/rate-limit", () => ({
   rateLimit: vi.fn().mockReturnValue({ success: true }),
 }));
 
-import { requireAuth } from "@/lib/auth/require-auth";
 import { stripe } from "@/lib/stripe/api";
 import {
   getStripeEntitlement,
@@ -56,12 +56,10 @@ describe("GET /api/stripe/membership", () => {
     vi.setSystemTime(new Date("2024-01-15T10:00:00Z"));
 
     // Default auth success
-    (requireAuth as Mock).mockResolvedValue({
+    mockRequireAuthz.mockResolvedValue({
       ok: true,
-      user: {
-        sub: mockGoogleSub,
-        email: "test@example.com",
-      },
+      user: { sub: mockGoogleSub, email: "test@example.com", name: "Test User", picture: "" },
+      firestoreUser: { clerkUserId: mockGoogleSub, email: "test@example.com", displayName: "Test User", householdId: "hh-test", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
     });
   });
 
@@ -295,7 +293,7 @@ describe("GET /api/stripe/membership", () => {
 
   describe("Authentication and rate limiting", () => {
     it("should return 401 when authentication fails", async () => {
-      (requireAuth as Mock).mockResolvedValue({
+      mockRequireAuthz.mockResolvedValue({
         ok: false,
         response: NextResponse.json(
           { error: "unauthorized", error_description: "Invalid token" },

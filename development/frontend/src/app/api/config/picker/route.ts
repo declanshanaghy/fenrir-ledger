@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/require-auth";
-import { requireKarlOrTrial } from "@/lib/auth/require-karl-or-trial";
+import { requireAuthz } from "@/lib/auth/authz";
 import { log } from "@/lib/logger";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   log.debug("GET /api/config/picker called");
 
-  const auth = await requireAuth(request);
-  if (!auth.ok) {
-    log.debug("GET /api/config/picker returning", { status: 401, reason: "auth failed" });
-    return auth.response;
-  }
-
-  // Verify caller has Karl tier subscription or active trial (#559, #982)
-  const karl = await requireKarlOrTrial(auth.user, request);
-  if (!karl.ok) {
-    log.debug("GET /api/config/picker returning", { status: 402, reason: "karl or trial required" });
-    return karl.response;
+  // Verify caller is authenticated and has Karl tier or active trial (ADR-015, #559, #982)
+  const authz = await requireAuthz(request, { tier: "karl-or-trial" });
+  if (!authz.ok) {
+    log.debug("GET /api/config/picker returning", { reason: "authz failed" });
+    return authz.response;
   }
 
   const pickerApiKey = process.env.GOOGLE_PICKER_API_KEY;

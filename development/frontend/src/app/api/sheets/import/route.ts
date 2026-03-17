@@ -3,8 +3,7 @@ import type { SheetImportError } from "@/lib/sheets/types";
 import { importFromSheet } from "@/lib/sheets/import-pipeline";
 import { importFromCsv } from "@/lib/sheets/csv-import-pipeline";
 import { importFromFile } from "@/lib/sheets/file-import-pipeline";
-import { requireAuth } from "@/lib/auth/require-auth";
-import { requireKarlOrTrial } from "@/lib/auth/require-karl-or-trial";
+import { requireAuthz } from "@/lib/auth/authz";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import type { FileFormat } from "@/components/sheets/CsvUpload";
@@ -21,22 +20,15 @@ function errorResponse(code: SheetImportError["code"], message: string, status: 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/sheets/import called");
 
-  // Verify caller is authenticated (ADR-008)
-  const auth = await requireAuth(request);
-  if (!auth.ok) {
-    log.debug("POST /api/sheets/import returning", { status: 401, reason: "auth failed" });
-    return auth.response;
-  }
-
-  // Verify caller has Karl tier subscription or active trial (#892)
-  const karlOrTrial = await requireKarlOrTrial(auth.user, request);
-  if (!karlOrTrial.ok) {
-    log.debug("POST /api/sheets/import returning", { status: 402, reason: "karl or trial required" });
-    return karlOrTrial.response;
+  // Verify caller is authenticated and has Karl tier or active trial (ADR-015)
+  const authz = await requireAuthz(request, { tier: "karl-or-trial" });
+  if (!authz.ok) {
+    log.debug("POST /api/sheets/import returning", { reason: "authz failed" });
+    return authz.response;
   }
 
   // Apply per-user rate limiting: 5 uploads per hour (GHSA-4r6h, GHSA-5pgg)
-  const rateLimitKey = `sheets:import:${auth.user.sub}`;
+  const rateLimitKey = `sheets:import:${authz.user.sub}`;
   const { success, remaining } = rateLimit(rateLimitKey, {
     limit: 5,
     windowMs: 3_600_000, // 1 hour

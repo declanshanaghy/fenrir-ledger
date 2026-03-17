@@ -15,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireAuthz } from "@/lib/auth/authz";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import { isValidFingerprint } from "@/lib/trial-utils";
@@ -42,9 +42,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Require authentication (ADR-008)
-  const auth = await requireAuth(request);
-  if (!auth.ok) return auth.response;
+  // Require authentication (ADR-015)
+  const authz = await requireAuthz(request, {});
+  if (!authz.ok) return authz.response;
 
   // Parse and validate body
   let fingerprint: string;

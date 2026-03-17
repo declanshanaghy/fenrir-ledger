@@ -135,9 +135,9 @@ describe("POST /api/household/invite", () => {
     expect(body.error).toBe("invalid_action");
   });
 
-  it("returns 404 when user not found", async () => {
+  it("returns 403 when user not found", async () => {
     mockGetUser.mockResolvedValue(null);
     const res = await POST(makeRequest({ action: "regenerate" }));
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(403);
   });
 });

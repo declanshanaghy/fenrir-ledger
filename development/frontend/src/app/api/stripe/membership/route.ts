@@ -19,7 +19,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireAuthz } from "@/lib/auth/authz";
 import { getStripeEntitlement, setStripeEntitlement, migrateStripeEntitlement } from "@/lib/kv/entitlement-store";
 import { stripe } from "@/lib/stripe/api";
 import { rateLimit } from "@/lib/rate-limit";
@@ -47,14 +47,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Require Google authentication (ADR-008)
-  const auth = await requireAuth(request);
-  if (!auth.ok) {
-    log.debug("GET /api/stripe/membership returning", { status: 401, reason: "auth failed" });
-    return auth.response;
+  // Require Google authentication (ADR-015)
+  const authz = await requireAuthz(request, {});
+  if (!authz.ok) {
+    log.debug("GET /api/stripe/membership returning", { reason: "authz failed" });
+    return authz.response;
   }
 
-  const googleSub = auth.user.sub;
+  const googleSub = authz.user.sub;
 
   // Fetch cached entitlement from Vercel KV
   let cached = await getStripeEntitlement(googleSub);
