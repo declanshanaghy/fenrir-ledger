@@ -542,6 +542,23 @@ body {
 .empty-state .empty-title { font-family: 'Cinzel', serif; font-size: 1.2rem; }
 .empty-state .empty-sub { font-size: 0.85rem; font-style: italic; }
 
+/* ── Session connecting / loading state ──────────── */
+.session-connecting {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.6rem 0.2rem;
+  color: var(--text-void); font-size: 0.75rem; font-style: italic;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.connecting-spinner {
+  display: inline-block; width: 12px; height: 12px; flex-shrink: 0;
+  border: 2px solid var(--rune-border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 /* ── Entrypoint lines ──────────────────────────── */
 .ep-header {
   font-family: 'Cinzel', serif; font-size: 0.8rem;
