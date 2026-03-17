@@ -109,6 +109,23 @@ All tests are for the main frontend app (`development/frontend/`) only.
 
 **Rule of thumb:** If the test breaks when someone edits a config file, copy, infrastructure template, or refactors a script — it should NOT exist. Only test code that RUNS.
 
+### Banned Pattern Examples (learned from cull — do NOT recreate)
+
+The following pattern types were found in this repo and deleted (issue #1253). If you are about
+to write something that looks like this, STOP. File a question on the issue instead.
+
+- **Vacuous assertion** (`gke/gke-api-routes.test.ts`): `expect(true).toBe(true)`.
+  Route structure is verified by running the server, not by asserting `true`.
+- **Infrastructure YAML** (`gke/pod-disruption-budget.test.ts`, `chronicles/chronicle-1048-loki-qa.test.ts`, `chronicles/chronicle-agent-css.test.ts`): `readFileSync` on
+  YAML files + string asserts. Helm/K8s manifests are not code — don't test them.
+- **CSS string assertion** (`chronicles/chronicle-norse-css.test.ts`, `chronicles/chronicle-agent-css.test.ts`, `chronicles/chronicle-1050-mdx-heckler.test.ts`, `chronicles/chronicle-norse-loki-qa.test.ts`, `karl-bling/loki-karl-header-badge.test.ts`): `readFileSync`
+  on a `.css` file + `toContain('.some-class')`. CSS classes are not behaviour.
+- **Source file content** (`chronicles/chronicle-1050-mdx-heckler-edge.test.ts`, `chronicles/chronicle-decree-loki-qa.test.ts`): `readFileSync`
+  on a `.ts` or `.mjs` file + `toContain('functionName')`. This tests that you typed the code,
+  not that the code works.
+- **Static page copy** (`components/marketing-navbar.test.tsx`, `components/marketing-nav-links.test.tsx`, `components/marketing-nav-links-loki.test.tsx`, `pages/features-section-order-loki.test.tsx`): `screen.getByText('Sign In')`.
+  Copy changes. Section order changes. These tests break on copywriter edits.
+
 ### Rules
 
 1. **Derive every assertion from acceptance criteria** — never from current code behavior

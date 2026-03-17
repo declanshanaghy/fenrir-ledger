@@ -78,6 +78,26 @@ FiremanDecko writes tests alongside implementation. Loki augments gaps only.
 - **Never write Playwright E2E tests** — that's Loki's domain (and he writes few)
 - **Never write tests for monitor-ui** — `development/monitor-ui/` has no test infrastructure
 
+### Banned Test Patterns (UNBREAKABLE — do not write these)
+
+Read `.claude/agents/loki.md` § "Banned Test Categories" for the full list.
+The summary for implementation sessions:
+
+- Never `readFileSync` a `.css`, `.yaml`, `.yml`, `.ts`, or `.mjs` file in a test
+  and assert on its string content. That is not a test.
+- Never write `expect(true).toBe(true)` or any tautological assertion.
+- Never test Helm/K8s/Terraform YAML structure — it is config, not code.
+- Never test marketing page copy, section order, or heading text.
+- Never assert on CSS class names in rendered output.
+
+If you're unsure whether a test is valid: ask yourself "would this test fail if I
+introduced a logic bug but did not change any config or text?" If the answer is NO,
+don't write it.
+
+These patterns were found and deleted from this repo (issue #1253):
+`chronicles/chronicle-agent-css.test.ts` (CSS string), `gke/gke-api-routes.test.ts` (vacuous),
+`components/marketing-navbar.test.tsx` (static copy), `chronicles/chronicle-1050-mdx-heckler.test.ts` (CSS string).
+
 ## Technical Standards
 
 - Full type annotations on all function signatures
