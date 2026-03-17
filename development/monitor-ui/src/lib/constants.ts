@@ -49,8 +49,9 @@ export const AGENT_COLORS: Record<string, string> = {
   loki: "#a78bfa",
   luna: "#6b8afd",
   freya: "#f0b429",
-  heimdall: "#ef4444",
+  heimdall: "#8B5E3C",
   odin: "#c9920a",
+  unknown: "#ef4444",
 };
 
 export const AGENT_RUNE_NAMES: Record<string, string> = {
