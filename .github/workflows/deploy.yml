@@ -461,6 +461,46 @@ jobs:
         with:
           version: 'v3.20.1'
 
+      - name: Pre-adopt bootstrap resources for Helm
+        # Namespaces and SAs may have been created outside Helm (kubectl apply).
+        # Helm refuses to adopt resources missing its ownership metadata.
+        # This step idempotently adds the required labels/annotations so that
+        # `helm upgrade --install` succeeds regardless of how resources were created.
+        run: |
+          RELEASE_NAME=fenrir-bootstrap
+          RELEASE_NS=default
+
+          adopt() {
+            local kind=$1 name=$2 ns=${3:-}
+            local ns_flag=""
+            [ -n "$ns" ] && ns_flag="-n $ns"
+            if kubectl get "$kind" "$name" $ns_flag &>/dev/null; then
+              kubectl annotate "$kind" "$name" $ns_flag \
+                "meta.helm.sh/release-name=$RELEASE_NAME" \
+                "meta.helm.sh/release-namespace=$RELEASE_NS" \
+                --overwrite
+              kubectl label "$kind" "$name" $ns_flag \
+                "app.kubernetes.io/managed-by=Helm" \
+                --overwrite
+              echo "✅ adopted $kind/$name${ns:+ in $ns}"
+            else
+              echo "⏭️  $kind/$name${ns:+ in $ns} not found — skipping"
+            fi
+          }
+
+          # Namespaces
+          adopt namespace fenrir-app
+          adopt namespace fenrir-agents
+          adopt namespace fenrir-analytics
+          adopt namespace fenrir-monitor
+
+          # ServiceAccounts
+          adopt serviceaccount fenrir-app-sa    fenrir-app
+          adopt serviceaccount fenrir-agents-sa fenrir-agents
+
+          # Secrets
+          adopt secret agent-secrets fenrir-agents
+
       - name: Deploy bootstrap chart
         run: |
           helm upgrade --install fenrir-bootstrap \
