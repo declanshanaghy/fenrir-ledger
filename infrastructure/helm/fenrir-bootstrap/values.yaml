@@ -1,0 +1,31 @@
+# --------------------------------------------------------------------------
+# fenrir-bootstrap — default values
+# Override in values-prod.yaml for production GCP service account emails.
+# --------------------------------------------------------------------------
+
+namespaces:
+  app: fenrir-app
+  agents: fenrir-agents
+  analytics: fenrir-analytics
+
+serviceAccounts:
+  app:
+    name: fenrir-app-sa
+    gcpServiceAccount: fenrir-app-workload@fenrir-ledger-prod.iam.gserviceaccount.com
+  agents:
+    name: fenrir-agents-sa
+    gcpServiceAccount: fenrir-agents-workload@fenrir-ledger-prod.iam.gserviceaccount.com
+
+resourceQuotas:
+  agents:
+    pods: "8"
+    cpu: "16"
+    memory: 32Gi
+
+# Agent secret keys — real values are populated by the /manage-secrets skill
+# via kubectl patch or helm upgrade --set. PLACEHOLDER ensures the Secret
+# resource exists for workload binding without committing real credentials.
+agentSecrets:
+  anthropicApiKey: "PLACEHOLDER"
+  ghToken: "PLACEHOLDER"
+  claudeOauthToken: "PLACEHOLDER"

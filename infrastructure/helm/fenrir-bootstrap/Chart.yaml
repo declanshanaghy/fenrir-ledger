@@ -1,0 +1,6 @@
+apiVersion: v2
+name: fenrir-bootstrap
+description: Cluster bootstrap — namespaces, service accounts, resource quotas, network policies
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

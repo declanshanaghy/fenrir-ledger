@@ -86,7 +86,7 @@ jobs:
   #   monitor-ui — development/monitor-ui/
   #   helm-odin  — infrastructure/helm/odin-throne/
   #   infra      — infrastructure/terraform/, infrastructure/monitoring/
-  #   redis      — infrastructure/k8s/app/redis-statefulset.yaml
+  #   bootstrap  — infrastructure/helm/fenrir-bootstrap/
   #   umami      — infrastructure/helm/umami/
   # --------------------------------------------------------------------------
   detect-changes:
@@ -99,7 +99,7 @@ jobs:
       monitor-ui: ${{ steps.filter.outputs.monitor-ui }}
       helm-odin: ${{ steps.filter.outputs.helm-odin }}
       infra: ${{ steps.filter.outputs.infra }}
-      redis: ${{ steps.filter.outputs.redis }}
+      bootstrap: ${{ steps.filter.outputs.bootstrap }}
       umami: ${{ steps.filter.outputs.umami }}
     steps:
       - name: Checkout code
@@ -117,7 +117,7 @@ jobs:
             echo "monitor-ui=true" >> "$GITHUB_OUTPUT"
             echo "helm-odin=true" >> "$GITHUB_OUTPUT"
             echo "infra=true" >> "$GITHUB_OUTPUT"
-            echo "redis=true" >> "$GITHUB_OUTPUT"
+            echo "bootstrap=true" >> "$GITHUB_OUTPUT"
             echo "umami=true" >> "$GITHUB_OUTPUT"
             echo "### Manual dispatch — building all services" >> $GITHUB_STEP_SUMMARY
             exit 0
@@ -130,7 +130,7 @@ jobs:
           MONITOR_UI=$(check "^development/monitor-ui/")
           HELM_ODIN=$(check "^infrastructure/helm/odin-throne/")
           INFRA=$(check "^infrastructure/.*\.tf$|^infrastructure/firestore/")
-          REDIS=$(check "^infrastructure/k8s/app/redis-statefulset\.yaml$")
+          BOOTSTRAP=$(check "^infrastructure/helm/fenrir-bootstrap/")
           UMAMI=$(check "^infrastructure/helm/umami/")
           echo "app=$APP" >> "$GITHUB_OUTPUT"
           echo "k8s-app=$K8S_APP" >> "$GITHUB_OUTPUT"
@@ -138,7 +138,7 @@ jobs:
           echo "monitor-ui=$MONITOR_UI" >> "$GITHUB_OUTPUT"
           echo "helm-odin=$HELM_ODIN" >> "$GITHUB_OUTPUT"
           echo "infra=$INFRA" >> "$GITHUB_OUTPUT"
-          echo "redis=$REDIS" >> "$GITHUB_OUTPUT"
+          echo "bootstrap=$BOOTSTRAP" >> "$GITHUB_OUTPUT"
           echo "umami=$UMAMI" >> "$GITHUB_OUTPUT"
           echo "### Changed Services" >> $GITHUB_STEP_SUMMARY
           echo "| Service | Changed |" >> $GITHUB_STEP_SUMMARY
@@ -149,7 +149,7 @@ jobs:
           echo "| monitor-ui | $MONITOR_UI |" >> $GITHUB_STEP_SUMMARY
           echo "| helm-odin | $HELM_ODIN |" >> $GITHUB_STEP_SUMMARY
           echo "| infra | $INFRA |" >> $GITHUB_STEP_SUMMARY
-          echo "| redis | $REDIS |" >> $GITHUB_STEP_SUMMARY
+          echo "| bootstrap | $BOOTSTRAP |" >> $GITHUB_STEP_SUMMARY
           echo "| umami | $UMAMI |" >> $GITHUB_STEP_SUMMARY
 
   # --------------------------------------------------------------------------
@@ -425,12 +425,13 @@ jobs:
           retention-days: 7
 
   # --------------------------------------------------------------------------
-  # Job 3a: Deploy Redis to GKE (fenrir-app namespace)
+  # Job 3a: Bootstrap cluster — namespaces, SAs, quotas, network policies
+  # Runs before all other deploy jobs. Idempotent via helm upgrade --install.
   # --------------------------------------------------------------------------
-  deploy-redis:
-    name: Deploy Redis
-    needs: detect-changes
-    if: ${{ !inputs.skip_deploy && needs.detect-changes.outputs.redis == 'true' }}
+  deploy-bootstrap:
+    name: Deploy Bootstrap
+    needs: [detect-changes]
+    if: ${{ !inputs.skip_deploy }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -455,31 +456,32 @@ jobs:
           location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Ensure fenrir-app namespace and service account
-        run: |
-          kubectl create namespace fenrir-app --dry-run=client -o yaml | kubectl apply -f -
-          kubectl create serviceaccount fenrir-app-sa \
-            --namespace=fenrir-app --dry-run=client -o yaml | kubectl apply -f -
-          kubectl annotate serviceaccount fenrir-app-sa \
-            --namespace=fenrir-app --overwrite \
-            iam.gke.io/gcp-service-account=fenrir-app-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.20.1'
 
-      - name: Apply Redis StatefulSet
+      - name: Deploy bootstrap chart
         run: |
-          kubectl apply -f infrastructure/k8s/app/redis-statefulset.yaml
+          helm upgrade --install fenrir-bootstrap \
+            ./infrastructure/helm/fenrir-bootstrap \
+            -f ./infrastructure/helm/fenrir-bootstrap/values-prod.yaml \
+            --wait \
+            --timeout=3m
 
-      - name: Wait for Redis ready
+      - name: Verify bootstrap
         run: |
-          kubectl rollout status statefulset/redis \
-            --namespace=fenrir-app \
-            --timeout=120s
+          echo "### Bootstrap Deploy" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get namespaces fenrir-app fenrir-agents fenrir-analytics >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
   # --------------------------------------------------------------------------
   # Job 3b: Deploy Fenrir App to GKE
   # --------------------------------------------------------------------------
   deploy-fenrir-app:
     name: Deploy Fenrir App
-    needs: [test-app, build-and-push, detect-changes]
+    needs: [test-app, build-and-push, detect-changes, deploy-bootstrap]
     if: >-
       always() && !inputs.skip_deploy &&
       (needs.build-and-push.result == 'success' ||
@@ -650,7 +652,7 @@ jobs:
   # --------------------------------------------------------------------------
   deploy-umami:
     name: Deploy Umami
-    needs: detect-changes
+    needs: [detect-changes, deploy-bootstrap]
     if: ${{ !inputs.skip_deploy && needs.detect-changes.outputs.umami == 'true' }}
     runs-on: ubuntu-latest
     permissions:
@@ -730,7 +732,7 @@ jobs:
   # --------------------------------------------------------------------------
   deploy-odin-throne:
     name: Deploy Odin's Throne
-    needs: [build-and-push-monitor, build-and-push-monitor-ui, detect-changes]
+    needs: [build-and-push-monitor, build-and-push-monitor-ui, detect-changes, deploy-bootstrap]
     if: >-
       always() && !inputs.skip_deploy &&
       (needs.build-and-push-monitor.result == 'success' ||
