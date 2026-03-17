@@ -20,6 +20,7 @@ import { StripeSettings } from "@/components/entitlement/StripeSettings";
 import { track } from "@/lib/analytics/track";
 import { TrialSettingsSection } from "@/components/trial/TrialSettingsSection";
 import { HouseholdSettingsSection } from "@/components/household/HouseholdSettingsSection";
+import { SyncSettingsSection } from "@/components/sync/SyncSettingsSection";
 import type { DashboardTab } from "@/lib/constants";
 import {
   GleipnirMountainRoots,
@@ -204,8 +205,9 @@ export default function SettingsPage() {
           <HouseholdSettingsSection />
         </div>
 
-        {/* Right column: Settings controls */}
+        {/* Right column: Sync + settings controls */}
         <div className="flex flex-col gap-6">
+          <SyncSettingsSection />
           <RestoreTabGuides />
         </div>
       </div>
