@@ -1,70 +1,66 @@
-# Infrastructure — FiremanDecko's Forge
+# Infrastructure — Fenrir Ledger on GKE Autopilot
 
-GKE Autopilot infrastructure for Fenrir Ledger: Terraform, Kubernetes manifests, agent sandbox, and operational runbooks.
+GKE Autopilot infrastructure for Fenrir Ledger: Terraform manages cloud resources, Helm manages Kubernetes workloads, and GitHub Actions orchestrates every deployment.
+
+---
+
+## Quick Reference
+
+| What | Tool | Namespace | Files |
+|---|---|---|---|
+| Cloud infrastructure (cluster, DNS, CDN, IAM) | Terraform | — | `*.tf` |
+| Cluster bootstrap (namespaces, RBAC, quotas) | Helm | cluster-wide | `helm/fenrir-bootstrap/` |
+| Next.js app + Redis | Helm | `fenrir-app` | `helm/fenrir-app/` |
+| Odin's Throne monitor | Helm | `fenrir-monitor` | `helm/odin-throne/` |
+| Umami analytics + PostgreSQL | Helm | `fenrir-analytics` | `helm/umami/` |
+| Agent sandbox Jobs | Shell script | `fenrir-agents` | `k8s/agents/dispatch-job.sh` |
+| CI/CD pipeline | GitHub Actions | — | `.github/workflows/deploy.yml` |
+
+---
+
+## Sub-Documents (`docs/`)
+
+- **[Architecture Overview](docs/architecture-overview.md)** — Top-level map: what runs in GKE, what lives in Terraform, namespace layout, and how everything connects.
+
+- **[Helm Charts](docs/helm-charts.md)** — All 4 Helm charts (`fenrir-bootstrap`, `fenrir-app`, `odin-throne`, `umami`): what each deploys, key values, upgrade commands, and how `values-prod.yaml` differs from `values.yaml`.
+
+- **[Agent Sandbox](docs/agent-sandbox.md)** — How agent GKE Jobs work: `dispatch-job.sh` flow, the sandbox container, job-template placeholders, secrets, job lifecycle, and log retrieval.
+
+- **[Terraform](docs/terraform.md)** — Every `.tf` file documented: GKE cluster, DNS, CDN, Firestore, Artifact Registry, IAM. How to run `terraform apply` locally and in CI.
+
+- **[Deployment Pipeline](docs/deployment-pipeline.md)** — `deploy.yml` change detection matrix, which jobs run on which path changes, how secrets are wired, and rollback procedures.
+
+- **[Legacy Manifests](docs/legacy-manifests.md)** — What was in `k8s/app/` and `k8s/namespaces.yaml`, why they were deleted, and what `k8s/agents/` is (still active, not managed by Helm).
 
 ---
 
 ## Getting Started
 
 ```bash
-# Authenticate and set up GKE access
+# Set up kubectl access to the GKE cluster
 bash scripts/gke-setup.sh
 
-# Verify the app is running
-cat infrastructure/SMOKE-TEST.md
+# Verify the cluster is healthy
+cat SMOKE-TEST.md
 ```
 
-## Key Files
+---
 
-| File | Purpose |
-|------|---------|
-| `main.tf` | Terraform provider configuration and GCP API enablement |
-| `gke.tf` | GKE Autopilot cluster definition |
-| `iam.tf` | Workload Identity bindings for app and agent service accounts |
-| `network.tf` | VPC, subnets, and firewall rules |
-| `monitoring.tf` | Cloud Monitoring uptime checks and alert policies |
-| `cdn-monitoring.tf` | Cloud CDN monitoring and alert policies |
-| `firestore.tf` | Firestore database and IAM for cloud sync |
-| `artifact-registry.tf` | Google Artifact Registry for container images |
-| `dns.tf` | Cloud DNS managed zone configuration |
-| `variables.tf` | Terraform input variables |
-| `outputs.tf` | Terraform output values |
-| `SMOKE-TEST.md` | Manual verification steps: Ingress IP, health check, pod status |
+## ADRs (`adrs/`)
 
-## Kubernetes Manifests
+Architecture decisions that shaped this infrastructure:
 
-### App (`k8s/app/`)
+- [ADR-001: Vercel → GKE Autopilot](adrs/ADR-001-vercel-to-gke-autopilot.md)
+- [ADR-002: Next.js Standalone Docker Builds](adrs/ADR-002-standalone-docker-builds.md)
+- [ADR-003: Helm for K8s Manifest Management](adrs/ADR-003-helm-k8s-manifest-management.md)
+- [ADR-004: GKE Jobs for Agent Execution](adrs/ADR-004-gke-jobs-agent-execution.md)
+- [ADR-005: In-cluster Redis (over Vercel KV)](adrs/ADR-005-redis-over-vercel-kv.md)
+- [ADR-006: Self-Hosted Umami Analytics](adrs/ADR-006-umami-self-hosted-analytics.md)
+- [ADR-007: Cloud DNS + Google-Managed Certs](adrs/ADR-007-gcloud-dns-managed-certs.md)
 
-Next.js standalone app running in the `fenrir-app` namespace.
+---
 
-- `deployment.yaml` — App Deployment with rolling update strategy
-- `service.yaml` — ClusterIP service
-- `ingress.yaml` — Google-managed load balancer with SSL cert
-- [k8s/app/RUNBOOK.md](k8s/app/RUNBOOK.md) — Rollback, scaling, and health check procedures
+## Operational Runbooks
 
-### Agents (`k8s/agents/`)
-
-Ephemeral GKE Jobs for Claude Code agent execution in the `fenrir-agents` namespace.
-
-- `Dockerfile` — Agent sandbox container image
-- `entrypoint.sh` — Clone, setup, and run Claude Code
-- `job-template.yaml` — K8s Job spec template
-- `dispatch-job.sh` — Script to generate and apply Job manifests
-- `agent-logs.mjs` — Stream and parse agent JSONL logs
-- [k8s/agents/README.md](k8s/agents/README.md) — Full setup and monitoring guide
-
-### Namespaces (`k8s/namespaces.yaml`)
-
-Defines `fenrir-app` and `fenrir-agents` namespaces with RBAC, ResourceQuota, and NetworkPolicy.
-
-## ADRs (`infrastructure/adrs/`)
-
-Infrastructure Architecture Decision Records:
-
-- [ADR-001: Vercel to GKE Autopilot](adrs/ADR-001-vercel-to-gke-autopilot.md) — Full migration from Vercel serverless to GKE Autopilot. **Accepted, current.**
-- [ADR-002: Standalone Docker Builds](adrs/ADR-002-standalone-docker-builds.md) — Next.js standalone output for multi-stage Docker builds. **Accepted, current.**
-- [ADR-003: Helm K8s Manifest Management](adrs/ADR-003-helm-k8s-manifest-management.md) — Helm for templating K8s manifests. **Accepted, current.**
-- [ADR-004: GKE Jobs for Agent Execution](adrs/ADR-004-gke-jobs-agent-execution.md) — GKE Autopilot Jobs superseding Depot for agent sandbox execution. **Accepted, current.**
-- [ADR-005: Redis over Vercel KV](adrs/ADR-005-redis-over-vercel-kv.md) — In-cluster Redis StatefulSet replacing Vercel KV. **Accepted, current.**
-- [ADR-006: Umami Self-Hosted Analytics](adrs/ADR-006-umami-self-hosted-analytics.md) — Self-hosted Umami for privacy-first analytics. **Accepted, current.**
-- [ADR-007: gcloud DNS + Managed Certs](adrs/ADR-007-gcloud-dns-managed-certs.md) — Google-managed SSL certs and Cloud DNS. **Accepted, current.**
+- [SMOKE-TEST.md](SMOKE-TEST.md) — Manual verification: Ingress IP, health check, pod status, Helm releases
+- [k8s/agents/README.md](k8s/agents/README.md) — Agent sandbox setup and monitoring guide
