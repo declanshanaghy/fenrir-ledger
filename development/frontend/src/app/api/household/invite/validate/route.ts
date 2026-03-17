@@ -8,7 +8,7 @@
  *   householdId: string,
  *   householdName: string,
  *   memberCount: number,
- *   members: Array<{ displayName: string, email: string, role: string }>,
+ *   members: Array<{ displayName: string, role: string }>,
  *   userCardCount: number,
  * }
  *
@@ -98,11 +98,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Fetch member display info
+  // Fetch member display info — email intentionally omitted (PII, SEV-003)
   const memberUsers = await getUsersByHouseholdId(household.id);
   const members = memberUsers.map((m) => ({
     displayName: m.displayName,
-    email: m.email,
     role: m.role,
   }));
 

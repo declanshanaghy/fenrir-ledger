@@ -3,29 +3,26 @@
  *
  * Validates:
  *   - 401 when no auth header
- *   - 403 for Thrall / trial users (Karl-only gate)
+ *   - 403 for Thrall / trial users (Karl-only gate, via requireAuthz)
+ *   - 403 when householdId does not match user's household (IDOR, SEV-001)
  *   - 400 for missing householdId query param
  *   - 200 with all cards including tombstones
  *   - activeCount reflects only non-tombstoned cards
+ *   - Firestore is always called with authz.firestoreUser.householdId (never raw param)
+ *
+ * Issue #1199
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Card } from "@/lib/types";
+import type { FirestoreUser } from "@/lib/firebase/firestore-types";
 
-// ── Mock: require-auth ─────────────────────────────────────────────────────
+// ── Mock: requireAuthz ─────────────────────────────────────────────────────
 
-const mockRequireAuth = vi.hoisted(() => vi.fn());
+const mockRequireAuthz = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/auth/require-auth", () => ({
-  requireAuth: mockRequireAuth,
-}));
-
-// ── Mock: entitlement-store ────────────────────────────────────────────────
-
-const mockGetStripeEntitlement = vi.hoisted(() => vi.fn());
-
-vi.mock("@/lib/kv/entitlement-store", () => ({
-  getStripeEntitlement: mockGetStripeEntitlement,
+vi.mock("@/lib/auth/authz", () => ({
+  requireAuthz: mockRequireAuthz,
 }));
 
 // ── Mock: Firestore ────────────────────────────────────────────────────────
@@ -66,6 +63,33 @@ function makeCard(overrides: Partial<Card> = {}): Card {
   };
 }
 
+function makeFirestoreUser(householdId = "hh-test"): FirestoreUser {
+  return {
+    clerkUserId: "google-123",
+    email: "test@example.com",
+    displayName: "Test User",
+    householdId,
+    role: "owner",
+    createdAt: "2025-01-01T00:00:00.000Z",
+    updatedAt: "2025-01-01T00:00:00.000Z",
+  };
+}
+
+function authzSuccess(householdId = "hh-test") {
+  return {
+    ok: true as const,
+    user: { sub: "google-123", email: "test@example.com" },
+    firestoreUser: makeFirestoreUser(householdId),
+  };
+}
+
+function authzFailure(status: number, error: string) {
+  return {
+    ok: false as const,
+    response: new Response(JSON.stringify({ error }), { status }),
+  };
+}
+
 function makeRequest(householdId?: string): NextRequest {
   const url = householdId
     ? `http://localhost/api/sync/pull?householdId=${householdId}`
@@ -85,71 +109,71 @@ beforeEach(() => {
 
 // ── Tests ─────────────────────────────────────────────────────────────────
 
+describe("GET /api/sync/pull — missing householdId (checked before auth)", () => {
+  it("returns 400 when householdId query param is missing", async () => {
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(400);
+    const body = await res.json() as { error: string };
+    expect(body.error).toBe("missing_param");
+    // requireAuthz should not be called at all
+    expect(mockRequireAuthz).not.toHaveBeenCalled();
+  });
+});
+
 describe("GET /api/sync/pull — auth", () => {
   it("returns 401 when not authenticated", async () => {
-    mockRequireAuth.mockResolvedValue({
-      ok: false,
-      response: new Response(JSON.stringify({ error: "missing_token" }), { status: 401 }),
-    });
+    mockRequireAuthz.mockResolvedValue(authzFailure(401, "missing_token"));
     const res = await GET(makeRequest("hh-test"));
     expect(res.status).toBe(401);
   });
 });
 
 describe("GET /api/sync/pull — Karl gate", () => {
-  beforeEach(() => {
-    mockRequireAuth.mockResolvedValue({
-      ok: true,
-      user: { sub: "google-123", email: "test@example.com" },
-    });
-  });
-
-  it("returns 403 for Thrall user (no entitlement)", async () => {
-    mockGetStripeEntitlement.mockResolvedValue(null);
-    const res = await GET(makeRequest("hh-test"));
-    expect(res.status).toBe(403);
-    const body = await res.json() as { error: string; current_tier: string };
-    expect(body.error).toBe("forbidden");
-    expect(body.current_tier).toBe("thrall");
-  });
-
-  it("returns 403 for inactive Karl subscription", async () => {
-    mockGetStripeEntitlement.mockResolvedValue({ tier: "karl", active: false });
-    const res = await GET(makeRequest("hh-test"));
-    expect(res.status).toBe(403);
-  });
-
-  it("returns 403 for free-trial users (no sync during trial)", async () => {
-    mockGetStripeEntitlement.mockResolvedValue({ tier: "thrall", active: false });
+  it("returns 403 for Thrall / non-Karl user", async () => {
+    mockRequireAuthz.mockResolvedValue(authzFailure(403, "forbidden"));
     const res = await GET(makeRequest("hh-test"));
     expect(res.status).toBe(403);
   });
 });
 
-describe("GET /api/sync/pull — validation", () => {
-  beforeEach(() => {
-    mockRequireAuth.mockResolvedValue({
-      ok: true,
-      user: { sub: "google-123", email: "test@example.com" },
-    });
-    mockGetStripeEntitlement.mockResolvedValue({ tier: "karl", active: true });
+describe("GET /api/sync/pull — IDOR protection (SEV-001)", () => {
+  it("returns 403 when householdId does not match user's household", async () => {
+    // requireAuthz detects the household_mismatch and returns 403
+    mockRequireAuthz.mockResolvedValue(authzFailure(403, "forbidden"));
+
+    const res = await GET(makeRequest("another-household-id"));
+    expect(res.status).toBe(403);
   });
 
-  it("returns 400 when householdId query param is missing", async () => {
-    const res = await GET(makeRequest());
-    expect(res.status).toBe(400);
-    const body = await res.json() as { error: string };
-    expect(body.error).toBe("missing_param");
+  it("requireAuthz is called with the supplied householdId for membership check", async () => {
+    mockRequireAuthz.mockResolvedValue(authzSuccess("hh-test"));
+    mockGetAllFirestoreCards.mockResolvedValue([]);
+
+    await GET(makeRequest("hh-test"));
+
+    expect(mockRequireAuthz).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ householdId: "hh-test", tier: "karl" }),
+    );
+  });
+
+  it("Firestore is called with authz.firestoreUser.householdId, not the raw query param", async () => {
+    // The user's real household is "real-hh", but query param says "hh-test".
+    // After requireAuthz succeeds, the route must use firestoreUser.householdId.
+    mockRequireAuthz.mockResolvedValue(authzSuccess("real-hh"));
+    mockGetAllFirestoreCards.mockResolvedValue([]);
+
+    await GET(makeRequest("hh-test"));
+
+    // Must use "real-hh" (firestoreUser.householdId), not "hh-test" (raw param)
+    expect(mockGetAllFirestoreCards).toHaveBeenCalledWith("real-hh");
+    expect(mockGetAllFirestoreCards).not.toHaveBeenCalledWith("hh-test");
   });
 });
 
 describe("GET /api/sync/pull — response", () => {
   beforeEach(() => {
-    mockRequireAuth.mockResolvedValue({
-      ok: true,
-      user: { sub: "google-123", email: "test@example.com" },
-    });
-    mockGetStripeEntitlement.mockResolvedValue({ tier: "karl", active: true });
+    mockRequireAuthz.mockResolvedValue(authzSuccess("hh-test"));
   });
 
   it("returns 200 with empty cards when Firestore is empty", async () => {
@@ -193,10 +217,5 @@ describe("GET /api/sync/pull — response", () => {
     expect(res.status).toBe(500);
     const body = await res.json() as { error: string };
     expect(body.error).toBe("internal_error");
-  });
-
-  it("passes householdId to getAllFirestoreCards", async () => {
-    await GET(makeRequest("my-household-id"));
-    expect(mockGetAllFirestoreCards).toHaveBeenCalledWith("my-household-id");
   });
 });

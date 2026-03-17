@@ -18,49 +18,21 @@
  * Error responses:
  *   400 — missing householdId
  *   401 — not authenticated
- *   403 — user is not Karl tier (Thrall or free trial)
+ *   403 — household mismatch (IDOR) or user is not Karl tier
  *   500 — internal error
  *
- * Issue #1122
+ * Issue #1122, #1199
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/require-auth";
-import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
+import { requireAuthz } from "@/lib/auth/authz";
 import { getAllFirestoreCards } from "@/lib/firebase/firestore";
 import { log } from "@/lib/logger";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   log.debug("GET /api/sync/pull called");
 
-  const auth = await requireAuth(request);
-  if (!auth.ok) return auth.response;
-
-  const googleSub = auth.user.sub;
-
-  // Karl-only gate: no sync for Thrall or free-trial users
-  const entitlement = await getStripeEntitlement(googleSub);
-  const isKarl = entitlement?.tier === "karl" && entitlement?.active === true;
-
-  if (!isKarl) {
-    const currentTier = entitlement?.tier ?? "thrall";
-    log.debug("GET /api/sync/pull returning", {
-      status: 403,
-      reason: "not_karl",
-      currentTier,
-    });
-    return NextResponse.json(
-      {
-        error: "forbidden",
-        error_description:
-          "Cloud sync is a Karl-tier feature. Upgrade to Karl to enable sync.",
-        current_tier: currentTier,
-      },
-      { status: 403 },
-    );
-  }
-
-  // Validate query param
+  // Validate query param before auth so we can return 400 immediately
   const householdId = request.nextUrl.searchParams.get("householdId");
   if (!householdId) {
     return NextResponse.json(
@@ -72,13 +44,21 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // Auth + household membership + Karl-tier gate in one call.
+  // Passes householdId so requireAuthz verifies it matches the user's own household,
+  // closing the IDOR vector (SEV-001).
+  const authz = await requireAuthz(request, { tier: "karl", householdId });
+  if (!authz.ok) return authz.response;
+
   try {
-    const cards = await getAllFirestoreCards(householdId);
+    // ALWAYS use authz.firestoreUser.householdId — never the caller-supplied param.
+    const verifiedHouseholdId = authz.firestoreUser.householdId;
+    const cards = await getAllFirestoreCards(verifiedHouseholdId);
     const activeCount = cards.filter((c) => !c.deletedAt).length;
 
     log.debug("GET /api/sync/pull returning", {
       status: 200,
-      householdId,
+      householdId: verifiedHouseholdId,
       total: cards.length,
       activeCount,
     });
@@ -89,7 +69,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    log.error("GET /api/sync/pull internal error", { householdId, error: message });
+    log.error("GET /api/sync/pull internal error", { error: message });
     return NextResponse.json(
       { error: "internal_error", error_description: "Pull failed due to a server error." },
       { status: 500 },

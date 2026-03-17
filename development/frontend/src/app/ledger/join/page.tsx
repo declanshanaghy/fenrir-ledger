@@ -39,7 +39,7 @@ interface HouseholdPreview {
   householdId: string;
   householdName: string;
   memberCount: number;
-  members: Array<{ displayName: string; email: string; role: string }>;
+  members: Array<{ displayName: string; role: string }>;
   userCardCount: number;
 }
 
@@ -633,9 +633,9 @@ export default function JoinHouseholdPage() {
             <div className="text-xs text-muted-foreground font-body">
               Current members ({preview.memberCount}/{MAX_MEMBERS}):
               <div className="flex flex-wrap gap-1 mt-1">
-                {preview.members.map((m) => (
+                {preview.members.map((m, index) => (
                   <span
-                    key={m.email}
+                    key={index}
                     className="inline-flex items-center gap-1 border border-border px-2 py-1 text-[11px] font-body text-foreground"
                   >
                     <span
