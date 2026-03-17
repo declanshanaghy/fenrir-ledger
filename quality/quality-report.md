@@ -120,51 +120,37 @@ Total nav-related Vitest tests: 39. All passing.
 
 ## Loki QA Critique
 
-_Bite sharpened. Chains weighed. Last hunt: 2026-03-12 09:51 PDT_
+_Bite sharpened. Chains weighed. Last hunt: 2026-03-17_
 _Weapon: `quality/scripts/loki-critique.sh`_
 
-### Summary — The Hunt Continues
+### Summary — The Pack is Lean
 
 | Metric | Value |
 |--------|-------|
-| Total E2E spec files | 27 |
-| Total E2E tests | 159 |
-| Flagged files | 5 🔴 _packs of bloat_ |
-| Critical violations (>15 tests/file) | 3 ⚔️ _mortal wounds_ |
-| Bloat warnings | 4 |
-| Bloat exposure (% of files flagged) | 19% |
-| Overall health | **🐺 WARNING — THE WOLF WATCHES** |
+| Total E2E spec files | 8 |
+| Total E2E tests | ~20 |
+| Flagged files | 0 ✅ _no bloat_ |
+| Critical violations (>15 tests/file) | 0 |
+| Bloat warnings | 0 |
+| Bloat exposure (% of files flagged) | 0% |
+| Overall health | **✅ LEAN — WITHIN BUDGET** |
 
-### Flagged Files
+### Active Suites
 
-| Suite | Tests | Finding |
-|-------|-------|---------|
-| `quality/test-suites/trial-expiry-modal/trial-expiry-modal.spec.ts` | 28 | BLOAT: >15 tests in one file — split by sub-feature |
-| `quality/test-suites/trial-state/trial-state.spec.ts` | 20 | BLOAT: >15 tests in one file |
-| `quality/test-suites/settings-cleanup/settings-cleanup.spec.ts` | 17 | BLOAT: >15 tests in one file |
-| `quality/test-suites/trust-safety/marketing-pages-trust-messaging.spec.ts` | 15 | WARNING: at threshold (15 tests) |
-| `quality/test-suites/trial-panel-nudge/trial-panel-nudge.spec.ts` | 12 | WARNING: >10 tests in one file |
-| `quality/test-suites/gke-migration/gke-migration.spec.ts` | 5 | NOTE: consolidated from issue-682/ — now properly placed |
+| Suite | Spec Files | Approx Tests |
+|-------|-----------|--------------|
+| `quality/test-suites/auth/` | auth-callback.spec.ts, sign-in.spec.ts | ~8 |
+| `quality/test-suites/auth-returnto/` | auth-returnto.spec.ts | ~6 |
+| `quality/test-suites/card-lifecycle/` | add-card.spec.ts, close-card.spec.ts, delete-card.spec.ts, edit-card.spec.ts, wizard-save.spec.ts | ~5 |
 
-### Bloat Pattern Breakdown — Fangs Sink Deep
+All suites are within the 10-test-per-file soft limit and below the 15-test hard limit.
+No issue-scoped directories, no CSS measurement tests, no static content assertions.
 
-**🐁 Issue-scoped directories** — _Easy prey, left scattered. Consolidate._
-- `issue-682/` (5 tests) — ✅ Consolidated into `gke-migration/gke-migration.spec.ts`.
+### Historical Note — Audit #610
 
-**Oversized suites** (split or cull):
-- `trial-expiry-modal/` (28 tests) — split by sub-feature (modal display, timer logic, dismissal)
-- `trial-state/` (20 tests) — split API contract tests from integration patterns
-- `settings-cleanup/` (17 tests) — split by settings area
-
-### Consolidation Recommendations
-
-1. **Merge `issue-682/`** — 5 GKE migration tests that overlap with `gke-migration/`. Consolidate into `gke-migration/gke-migration.spec.ts`.
-
-2. **Split `trial-expiry-modal/`** — 28 tests is nearly double the hard limit. Split into `trial-expiry-modal/modal-display.spec.ts` and `trial-expiry-modal/timer-logic.spec.ts`.
-
-3. **Split `trial-state/`** — 20 tests covering API contracts and integration patterns. Separate API tests into Vitest integration tests where possible.
-
-4. **Split `settings-cleanup/`** — 17 tests across multiple settings areas. Split by sub-feature or move pure logic tests to Vitest.
+The extensive bloat audit (issue #610, 2026-03-12) removed 104 tests from 27 spec files,
+culled 15+ suite directories, and migrated static/logic tests to Vitest. The previous
+critique (27 files, 159 tests, 5 flagged) is superseded by the current lean state.
 
 ### Rules Enforced — The Pack's Law
 
