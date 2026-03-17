@@ -50,6 +50,39 @@ import type { Card } from "@/lib/types";
 export const SYNCED_DISPLAY_MS = 3000;
 
 /**
+ * Error messages / substrings that indicate a transient connection failure
+ * rather than a persistent error (e.g. Firestore "Connection closed." in CI,
+ * browser "Failed to fetch" when the server is unreachable).
+ *
+ * These errors degrade to "offline" status (silent, no toast) instead of
+ * "error" status (visible, with toast + retry indicator).
+ *
+ * Issue #1189 — Firestore "Connection closed." breaks E2E auth-callback tests
+ */
+export const CONNECTION_ERROR_SUBSTRINGS: readonly string[] = [
+  "Connection closed",
+  "connection closed",
+  "Failed to fetch",
+  "failed to fetch",
+  "NetworkError",
+  "Network request failed",
+  "network error",
+  "ECONNREFUSED",
+  "ECONNRESET",
+  "fetch failed",
+];
+
+/**
+ * Returns true if the given error message looks like a transient connection
+ * failure (network unreachable, server closed connection, Firestore gRPC drop).
+ *
+ * @internal — exported only for unit testing
+ */
+export function isConnectionError(message: string): boolean {
+  return CONNECTION_ERROR_SUBSTRINGS.some((substr) => message.includes(substr));
+}
+
+/**
  * Debounce delay for auto-sync on card changes (ms).
  *
  * Increased from 2s → 10s in Issue #1172 to prevent over-eager syncing.
@@ -284,6 +317,19 @@ export function useCloudSync(): CloudSyncState {
       const typedErr = err as Error & { code?: string };
       const msg = typedErr.message ?? "Cloud sync failed.";
       const code = typedErr.code ?? "network_error";
+
+      // Connection-level failures (Firestore "Connection closed.", browser
+      // "Failed to fetch", gRPC drop in CI) degrade silently to "offline".
+      // No toast, no error state — they are transient and self-healing.
+      // Issue #1189.
+      if (isConnectionError(msg)) {
+        console.warn("[Fenrir] Cloud sync offline — connection unavailable:", msg);
+        setStatus("offline");
+        // No auto-retry timer: connectivity restoration triggers re-sync via
+        // the "online" event listener already wired in the useEffect above.
+        return;
+      }
+
       const retryInSeconds = Math.round(AUTO_RETRY_MS / 1000);
 
       setErrorMessage(msg);
@@ -436,8 +482,14 @@ export function useCloudSync(): CloudSyncState {
 
     const handleOnline = () => {
       setStatus("idle");
-      // Re-sync when connectivity is restored
-      void performSync();
+      // Re-sync when connectivity is restored. Swallow connection errors since
+      // the device may still be settling its network connection (Issue #1189).
+      void performSync().catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (isConnectionError(msg)) {
+          setStatus("offline");
+        }
+      });
     };
 
     if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -501,9 +553,24 @@ export function useCloudSync(): CloudSyncState {
     const wasKarl = prevIsKarlRef.current;
     prevIsKarlRef.current = isKarl;
 
-    // Trigger migration-aware sync when transitioning non-Karl → Karl
+    // Trigger migration-aware sync when transitioning non-Karl → Karl.
+    // Belt-and-suspenders: wrap the void call so that any error that escapes
+    // handleLoginTransition's internal try/catch is caught here rather than
+    // propagating as an unhandled rejection (Issue #1189).
     if (isKarl && !wasKarl) {
-      void handleLoginTransition();
+      void handleLoginTransition().catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (isConnectionError(msg)) {
+          console.warn("[Fenrir] Cloud sync offline (login transition):", msg);
+          setStatus("offline");
+        } else {
+          console.error("[Fenrir] Cloud sync login transition error:", msg);
+          setStatus("error");
+          setErrorMessage(msg);
+          setErrorCode("login_transition_error");
+          setErrorTimestamp(new Date());
+        }
+      });
     }
   }, [isKarl, handleLoginTransition]);
 
