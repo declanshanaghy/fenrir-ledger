@@ -33,8 +33,8 @@ spec:
   # Auto-delete completed/failed Jobs after 30 minutes
   ttlSecondsAfterFinished: 1800
 
-  # Max runtime: 60 minutes — prevents runaway agents
-  activeDeadlineSeconds: 3600
+  # Max runtime: 120 minutes — prevents runaway agents
+  activeDeadlineSeconds: 7200
 
   # Retry on failure — covers transient scheduling delays (Autopilot node scale-up)
   # Exponential backoff: 10s, 20s, 40s, 80s, 160s (~5 min total)
