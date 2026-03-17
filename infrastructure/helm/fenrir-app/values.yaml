@@ -23,6 +23,8 @@ app:
     NODE_ENV: "production"
     PORT: "3000"
     HOSTNAME: "0.0.0.0"
+    FIRESTORE_PROJECT_ID: "fenrir-ledger-prod"
+    NEXT_PUBLIC_UMAMI_WEBSITE_ID: "ce25059e-57c4-44f9-ad92-389d2bd15e4d"
 
   resources:
     requests:
