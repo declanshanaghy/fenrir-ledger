@@ -119,7 +119,7 @@ describe("useCloudSync / handleLoginTransition — AC-1: Thrall user", () => {
   });
 });
 
-describe("useCloudSync / handleLoginTransition — AC-2: already migrated delegates to performSync", () => {
+describe("useCloudSync / handleLoginTransition — AC-2: already migrated delegates to performPull", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
@@ -139,7 +139,16 @@ describe("useCloudSync / handleLoginTransition — AC-2: already migrated delega
   });
 
   it("does not call runMigration when fenrir:migrated is set", async () => {
-    mockFetch.mockReturnValue(successSyncResponse(2));
+    // Issue #1239: already-migrated users get performPull (GET /api/sync/pull),
+    // NOT performSync (POST /api/sync/push). Login-time sync is pull-only.
+    mockFetch.mockReturnValue(
+      Promise.resolve(
+        new Response(JSON.stringify({ cards: [], activeCount: 2 }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+    );
     setSession();
 
     await act(async () => {
@@ -148,8 +157,11 @@ describe("useCloudSync / handleLoginTransition — AC-2: already migrated delega
 
     // runMigration must NOT be called
     expect(mockRunMigration).not.toHaveBeenCalled();
-    // But performSync (fetch) IS called
-    expect(mockFetch).toHaveBeenCalledWith("/api/sync/push", expect.anything());
+    // Issue #1239: already-migrated login uses performPull (GET), not performSync (POST)
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/sync/pull"),
+      expect.objectContaining({ method: "GET" })
+    );
   });
 });
 

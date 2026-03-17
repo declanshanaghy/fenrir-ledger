@@ -277,38 +277,39 @@ describe("useCloudSync — retryIn countdown", () => {
     clearSession();
   });
 
-  it("retryIn decrements by 1 each second after sync error", async () => {
-    // After error, hook sets retryIn = AUTO_RETRY_MS/1000 = 30
-    // Auto-retry mock: error on first call, then hang (so retry doesn't re-error)
+  it("retryIn is null after sync error (auto-retry removed in #1239)", async () => {
+    // Issue #1239: auto-retry was removed. retryIn is always null — no countdown.
     mockFetch
       .mockReturnValueOnce(errorResponse("network_error"))
       .mockReturnValue(hangingFetch());
-    setSession();
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
       await result.current.syncNow();
     });
-    expect(result.current.retryIn).toBe(30);
+    expect(result.current.retryIn).toBeNull();
 
+    // Advancing time does not change retryIn — countdown was removed
     act(() => vi.advanceTimersByTime(1000));
-    expect(result.current.retryIn).toBe(29);
+    expect(result.current.retryIn).toBeNull();
 
     act(() => vi.advanceTimersByTime(3000));
-    expect(result.current.retryIn).toBe(26);
+    expect(result.current.retryIn).toBeNull();
   });
 
-  it("retryIn clears to null after countdown reaches zero", async () => {
+  it("retryIn stays null after error even with time passing (#1239)", async () => {
+    // Issue #1239: no auto-retry timer means retryIn never counts down from 30.
     mockFetch
       .mockReturnValueOnce(errorResponse("network_error"))
       .mockReturnValue(hangingFetch());
-    setSession();
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
       await result.current.syncNow();
     });
-    expect(result.current.retryIn).toBe(30);
+    expect(result.current.retryIn).toBeNull();
 
-    // Advance past the full countdown (auto-retry also fires, clearing retryIn)
+    // No countdown — retryIn stays null permanently
     act(() => vi.advanceTimersByTime(31000));
     expect(result.current.retryIn).toBeNull();
   });
@@ -345,9 +346,9 @@ describe("useCloudSync — first-sync toast pluralization", () => {
   it("uses singular 'card has been' for count=1 (restore direction)", async () => {
     // getRawAllCards returns [] (empty local), syncedCount=1 → restore from cloud
     const { toast } = await import("sonner");
-    setSession();
     mockFetch.mockReturnValue(successResponse(1));
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
       await result.current.syncNow();
     });
@@ -361,9 +362,9 @@ describe("useCloudSync — first-sync toast pluralization", () => {
   it("uses plural 'cards have been' for count=5 (restore direction)", async () => {
     // getRawAllCards returns [] (empty local), syncedCount=5 → restore from cloud
     const { toast } = await import("sonner");
-    setSession();
     mockFetch.mockReturnValue(successResponse(5));
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
       await result.current.syncNow();
     });
@@ -378,9 +379,9 @@ describe("useCloudSync — first-sync toast pluralization", () => {
     // getRawAllCards returns [] (empty local), syncedCount=0 → no restore (nothing pulled)
     // Falls through to "backed up" since isRestoring = (0===0 && 0>0) = false
     const { toast } = await import("sonner");
-    setSession();
     mockFetch.mockReturnValue(successResponse(0));
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
       await result.current.syncNow();
     });
@@ -411,9 +412,9 @@ describe("useCloudSync — error persists after toast dismiss (not dismissError)
 
   it("error status persists even after toast.error is called (toast ≠ dismissError)", async () => {
     const { toast } = await import("sonner");
-    setSession();
     mockFetch.mockReturnValue(errorResponse("permission-denied"));
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
 
     await act(async () => {
       await result.current.syncNow();
@@ -433,8 +434,8 @@ describe("useCloudSync — error persists after toast dismiss (not dismissError)
   it("error data overwrites on second consecutive error", async () => {
     // First error
     mockFetch.mockReturnValueOnce(errorResponse("network-timeout"));
-    setSession();
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
       await result.current.syncNow();
     });
@@ -493,9 +494,9 @@ describe("useCloudSync — dismissError edge cases", () => {
   });
 
   it("dismissError clears all error fields", async () => {
-    setSession();
     mockFetch.mockReturnValue(errorResponse("permission-denied"));
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
       await result.current.syncNow();
     });
@@ -503,7 +504,7 @@ describe("useCloudSync — dismissError edge cases", () => {
     expect(result.current.errorMessage).toBe("permission-denied");
     expect(result.current.errorCode).toBe("permission-denied");
     expect(result.current.errorTimestamp).toBeInstanceOf(Date);
-    expect(result.current.retryIn).toBe(30);
+    expect(result.current.retryIn).toBeNull(); // auto-retry removed in #1239
 
     act(() => result.current.dismissError());
 
