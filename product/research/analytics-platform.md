@@ -3,6 +3,7 @@
 **Issue:** #745
 **Date:** 2026-03-14
 **Author:** FiremanDecko (Principal Engineer)
+**Status:** Superseded — **Umami** was selected and deployed (not Plausible). Umami is live in production at `analytics.fenrirledger.com`. See git history for implementation. This document records the original evaluation; Umami was chosen for its simpler PostgreSQL-only infrastructure and same Next.js stack as Fenrir Ledger.
 
 ## Context
 
