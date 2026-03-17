@@ -19,27 +19,52 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 
 ### UX Artifacts (Luna's domain)
 
+#### Core Design Docs
+
+- [README.md](README.md) -- This file: design system manifesto and complete index
 - [theme-system.md](theme-system.md) -- Color palette, typography, CSS custom properties, Tailwind config extensions
 - [wireframes.md](wireframes.md) -- Layout specs, component hierarchy, responsive breakpoints, z-index table, wireframe index
 - [interactions.md](interactions.md) -- Animation philosophy, saga-enter stagger, status ring, Howl panel, easter egg keyframes
 - [easter-eggs.md](easter-eggs.md) -- All hidden references: Gleipnir Hunt, Konami Howl, Loki Mode, console ASCII, and more
 - [easter-egg-modal.md](easter-egg-modal.md) -- Shared modal template for all easter egg discovery moments
-- [multi-idp-interaction-spec.md](multi-idp-interaction-spec.md) -- Interaction spec: multi-IDP sign-in dialog (planned Clerk integration)
-- [karl-upsell-interaction-spec.md](karl-upsell-interaction-spec.md) -- Interaction spec: Karl upsell dialog + Valhalla tab gating
 - [light-theme-stone.md](light-theme-stone.md) -- Light theme: Stone/Marble redesign (cool grey-blues, marble whites)
 - [light-theme-lightning.md](light-theme-lightning.md) -- Light theme: Lightning Norse overhaul (pure white, ice-blue, extreme contrast)
 - [audit-report.md](audit-report.md) -- UX audit report: ux/ vs current app (2026-03-12)
-- [interactions/import-workflow-v2.md](interactions/import-workflow-v2.md) -- Interaction spec: import wizard three-path workflow
 - [ux-assets/mermaid-style-guide.md](ux-assets/mermaid-style-guide.md) -- Mermaid diagram conventions for all pack members
 
-### Wireframes (59 HTML5 documents — audited 2026-03-14)
+#### Interaction Specs (top-level)
+
+- [multi-idp-interaction-spec.md](multi-idp-interaction-spec.md) -- Multi-IDP sign-in dialog (planned Clerk integration)
+- [karl-upsell-interaction-spec.md](karl-upsell-interaction-spec.md) -- Karl upsell dialog + Valhalla tab gating
+- [interactions/import-workflow-v2.md](interactions/import-workflow-v2.md) -- Import wizard three-path workflow
+
+#### Interaction Specs (in wireframe directories)
+
+- [wireframes/cards/karl-card-bling-interaction-spec.md](wireframes/cards/karl-card-bling-interaction-spec.md) -- Karl card bling: CSS-only cosmetic overlay, rune corners, hover glow
+- [wireframes/cards/trash-tab-interaction-spec.md](wireframes/cards/trash-tab-interaction-spec.md) -- Trash tab: soft-delete, restore, expunge flows
+- [wireframes/chrome/sidebar-removal-interaction-spec.md](wireframes/chrome/sidebar-removal-interaction-spec.md) -- Sidebar removal, dropdown settings, rotary theme toggle
+- [wireframes/chrome/profile-dropdown-interaction-spec.md](wireframes/chrome/profile-dropdown-interaction-spec.md) -- Profile dropdown redesign: consistent icon-left row pattern
+- [wireframes/chrome/dashboard-tab-headers-interaction-spec.md](wireframes/chrome/dashboard-tab-headers-interaction-spec.md) -- Dashboard tab headers, tooltips, empty states
+- [wireframes/chronicles/interaction-spec.md](wireframes/chronicles/interaction-spec.md) -- Chronicle Norse MDX components: collapsibles, animations, responsive
+- [wireframes/heilung/interaction-spec.md](wireframes/heilung/interaction-spec.md) -- Heilung modal: Norse restyle, video portal, rune bands
+- [wireframes/household/household-interaction-spec.md](wireframes/household/household-interaction-spec.md) -- Household invite code flow: settings, join, merge confirmation
+- [wireframes/monitor-ui/agent-profile-modal-interaction-spec.md](wireframes/monitor-ui/agent-profile-modal-interaction-spec.md) -- Agent profile modal: focus management, keyboard, backdrop
+- [wireframes/monitor-ui/decree-inscription-interaction-spec.md](wireframes/monitor-ui/decree-inscription-interaction-spec.md) -- All-Father's Decree Norse inscription: collapse/expand, Wikipedia links
+- [wireframes/monitor-ui/loki-error-boundary-interaction-spec.md](wireframes/monitor-ui/loki-error-boundary-interaction-spec.md) -- Loki error boundary tablet: state machine, retry flow
+- [wireframes/monitor-ui/norse-tablet-rune-signatures-interaction-spec.md](wireframes/monitor-ui/norse-tablet-rune-signatures-interaction-spec.md) -- Norse tablet rune signatures, Wikipedia links, epic seals
+- [wireframes/monitor-ui/theme-switcher-interaction-spec.md](wireframes/monitor-ui/theme-switcher-interaction-spec.md) -- Monitor UI theme switcher: light/dark toggle, CSS variable strategy
+- [wireframes/monitor-ui/session-header-title-interaction-spec.md](wireframes/monitor-ui/session-header-title-interaction-spec.md) -- Session header descriptive title: issue title resolution
+- [wireframes/monitor-ui/verdict-inscription-interaction-spec.md](wireframes/monitor-ui/verdict-inscription-interaction-spec.md) -- Norse verdict inscription: detection, agent variants, carve-in animation
+- [wireframes/sync/sync-interaction-spec.md](wireframes/sync/sync-interaction-spec.md) -- Cloud sync UX: indicator states, settings section, tier gating
+
+### Wireframes (78 HTML5 documents — synced 2026-03-17)
 
 | Category | Files |
 |----------|-------|
 | app | [dashboard-tabs.html](wireframes/app/dashboard-tabs.html), [howl-karl-tier.html](wireframes/app/howl-karl-tier.html), [valhalla.html](wireframes/app/valhalla.html), [valhalla-karl-gated.html](wireframes/app/valhalla-karl-gated.html) |
 | chrome | [sidebar-removal-dropdown-settings.html](wireframes/chrome/sidebar-removal-dropdown-settings.html), [topbar.html](wireframes/chrome/topbar.html), [profile-dropdown-avatar-right.html](wireframes/chrome/profile-dropdown-avatar-right.html), [profile-dropdown-redesign.html](wireframes/chrome/profile-dropdown-redesign.html), [howl-panel.html](wireframes/chrome/howl-panel.html), [footer.html](wireframes/chrome/footer.html), [button-feedback-states.html](wireframes/chrome/button-feedback-states.html), [dashboard-tab-headers.html](wireframes/chrome/dashboard-tab-headers.html) |
 | trial | [trial-start.html](wireframes/trial/trial-start.html), [trial-status.html](wireframes/trial/trial-status.html), [trial-expiry.html](wireframes/trial/trial-expiry.html), [trial-feature-gates.html](wireframes/trial/trial-feature-gates.html) |
-| cards | [add-card.html](wireframes/cards/add-card.html), [wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html) |
+| cards | [add-card.html](wireframes/cards/add-card.html), [wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html), [karl-card-bling.html](wireframes/cards/karl-card-bling.html), [trash-tab.html](wireframes/cards/trash-tab.html) |
 | auth | [sign-in.html](wireframes/auth/sign-in.html), [multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html), [migration-prompt.html](wireframes/auth/migration-prompt.html), [upsell-banner.html](wireframes/auth/upsell-banner.html) |
 | notifications | [ragnarok-threshold.html](wireframes/notifications/ragnarok-threshold.html), [card-count-milestones.html](wireframes/notifications/card-count-milestones.html) |
 | modals | [about-modal.html](wireframes/modals/about-modal.html) |
@@ -47,9 +72,13 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 | accessibility | [accessibility-polish.html](wireframes/accessibility/accessibility-polish.html), [font-size-scale.html](wireframes/accessibility/font-size-scale.html) |
 | stripe-direct | [stripe-settings.html](wireframes/stripe-direct/stripe-settings.html), [sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html), [upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html), [anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html), [karl-upsell-dialog.html](wireframes/stripe-direct/karl-upsell-dialog.html), [karl-upsell-dialog-artwork.html](wireframes/stripe-direct/karl-upsell-dialog-artwork.html) |
 | marketing-site | [static-site-footer.html](wireframes/marketing-site/static-site-footer.html), [layout-shell.html](wireframes/marketing-site/layout-shell.html), [home-page.html](wireframes/marketing-site/home-page.html), [features.html](wireframes/marketing-site/features.html), [pricing.html](wireframes/marketing-site/pricing.html), [about.html](wireframes/marketing-site/about.html), [about-mobile.html](wireframes/marketing-site/about-mobile.html), [theme-variants.html](wireframes/marketing-site/theme-variants.html), [data-safety-banner.html](wireframes/marketing-site/data-safety-banner.html), [trust-placements.html](wireframes/marketing-site/trust-placements.html), [free-trial.html](wireframes/marketing-site/free-trial.html), [nav-font-648.html](wireframes/marketing-site/nav-font-648.html) |
-| chronicles | [chronicle-index.html](wireframes/chronicles/chronicle-index.html), [chronicle-article.html](wireframes/chronicles/chronicle-article.html), [chronicle-field-report.html](wireframes/chronicles/chronicle-field-report.html), [theme-variants.html](wireframes/chronicles/theme-variants.html) |
+| chronicles | [chronicle-index.html](wireframes/chronicles/chronicle-index.html), [chronicle-article.html](wireframes/chronicles/chronicle-article.html), [chronicle-field-report.html](wireframes/chronicles/chronicle-field-report.html), [theme-variants.html](wireframes/chronicles/theme-variants.html), [chronicle-agent-page-shell.html](wireframes/chronicles/chronicle-agent-page-shell.html), [norse-components-catalog.html](wireframes/chronicles/norse-components-catalog.html) |
 | import | [import-method-selection.html](wireframes/import/import-method-selection.html), [csv-upload.html](wireframes/import/csv-upload.html), [safety-banner.html](wireframes/import/safety-banner.html) |
 | wizard-animations | [step-indicator.html](wireframes/wizard-animations/step-indicator.html), [step-transitions.html](wireframes/wizard-animations/step-transitions.html), [mobile-layout.html](wireframes/wizard-animations/mobile-layout.html) |
+| heilung | [heilung-modal.html](wireframes/heilung/heilung-modal.html), [heilung-norse-restyle.html](wireframes/heilung/heilung-norse-restyle.html) |
+| household | [settings-household.html](wireframes/household/settings-household.html), [join-household.html](wireframes/household/join-household.html), [merge-confirmation.html](wireframes/household/merge-confirmation.html) |
+| monitor-ui | [agent-profile-modal.html](wireframes/monitor-ui/agent-profile-modal.html), [decree-inscription.html](wireframes/monitor-ui/decree-inscription.html), [loki-error-boundary.html](wireframes/monitor-ui/loki-error-boundary.html), [norse-mist-tool-blocks.html](wireframes/monitor-ui/norse-mist-tool-blocks.html), [norse-tablet-rune-signatures.html](wireframes/monitor-ui/norse-tablet-rune-signatures.html), [session-header-title.html](wireframes/monitor-ui/session-header-title.html), [theme-switcher.html](wireframes/monitor-ui/theme-switcher.html), [verdict-inscription.html](wireframes/monitor-ui/verdict-inscription.html) |
+| sync | [sync-indicator-states.html](wireframes/sync/sync-indicator-states.html), [sync-settings-section.html](wireframes/sync/sync-settings-section.html) |
 
 ### Cross-Domain References
 
@@ -105,7 +134,7 @@ All sprints (1--5) shipped. The Saga Ledger design system is fully implemented. 
 | Artifact | Status |
 |----------|--------|
 | Theme system (colors, fonts, tokens) | Implemented |
-| 59 wireframes (audited 2026-03-14) | Implemented (Multi-IDP Clerk: Planned) |
+| 78 wireframes (synced 2026-03-17) | Implemented (Multi-IDP Clerk: Planned) |
 | All 11 easter eggs | Implemented |
 | Stripe Direct integration | Implemented |
 | Anonymous-first auth model | Implemented |
@@ -113,6 +142,10 @@ All sprints (1--5) shipped. The Saga Ledger design system is fully implemented. 
 | Light theme (Stone/Marble + Lightning Norse) | Implemented |
 | Chronicles (Prose Edda) | Implemented |
 | Import wizard | Implemented |
+| Cloud data sync (Firestore) | Implemented |
+| Household invite flow | In progress |
+| Monitor UI Norse components | Implemented |
+| Trash tab | In progress |
 
 ---
 
