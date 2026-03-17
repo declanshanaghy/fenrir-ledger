@@ -21,11 +21,13 @@ vi.mock("@/lib/auth/require-auth", () => ({
 const mockGetUser = vi.fn();
 const mockGetHousehold = vi.fn();
 const mockGetUsersByHouseholdId = vi.fn();
+const mockEnsureSoloHousehold = vi.fn();
 
 vi.mock("@/lib/firebase/firestore", () => ({
   getUser: (...args: unknown[]) => mockGetUser(...args),
   getHousehold: (...args: unknown[]) => mockGetHousehold(...args),
   getUsersByHouseholdId: (...args: unknown[]) => mockGetUsersByHouseholdId(...args),
+  ensureSoloHousehold: (...args: unknown[]) => mockEnsureSoloHousehold(...args),
 }));
 
 import { GET } from "@/app/api/household/members/route";
@@ -162,9 +164,64 @@ describe("GET /api/household/members", () => {
     expect(body.members[0]?.role).toBe("owner");
   });
 
-  it("returns 404 when user not found", async () => {
+  // ── Bootstrap path tests (issue #1159) ──────────────────────────────────────
+
+  it("bootstraps a solo household when user doc not found (first sign-in)", async () => {
     mockGetUser.mockResolvedValue(null);
+    mockEnsureSoloHousehold.mockResolvedValue({
+      user: ownerUserDoc,
+      household: { ...baseHousehold, memberIds: [OWNER_ID] },
+      created: true,
+    });
+    mockGetHousehold.mockResolvedValue({ ...baseHousehold, memberIds: [OWNER_ID] });
+    mockGetUsersByHouseholdId.mockResolvedValue([ownerUserDoc]);
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+
+    // ensureSoloHousehold must be called with sub, email, name from auth token
+    expect(mockEnsureSoloHousehold).toHaveBeenCalledWith({
+      clerkUserId: OWNER_ID,
+      email: "thor@example.com",
+      displayName: "Thorvald",
+    });
+
+    const body = await res.json() as {
+      householdId: string;
+      isSolo: boolean;
+      isOwner: boolean;
+      memberCount: number;
+    };
+    expect(body.householdId).toBe(HOUSEHOLD_ID);
+    expect(body.isSolo).toBe(true);
+    expect(body.isOwner).toBe(true);
+    expect(body.memberCount).toBe(1);
+  });
+
+  it("does not duplicate user when bootstrap called for existing user (idempotent)", async () => {
+    // Simulate a second request: getUser returns the existing doc (bootstrap not needed)
+    mockGetUser.mockResolvedValue(ownerUserDoc);
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+
+    // ensureSoloHousehold must NOT be called — user already exists
+    expect(mockEnsureSoloHousehold).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when household doc missing after bootstrap", async () => {
+    mockGetUser.mockResolvedValue(null);
+    mockEnsureSoloHousehold.mockResolvedValue({
+      user: ownerUserDoc,
+      household: { ...baseHousehold, memberIds: [OWNER_ID] },
+      created: true,
+    });
+    // Simulate a corrupt state where household doc doesn't exist post-bootstrap
+    mockGetHousehold.mockResolvedValue(null);
+
     const res = await GET(makeRequest());
     expect(res.status).toBe(404);
+    const body = await res.json() as { error: string };
+    expect(body.error).toBe("household_not_found");
   });
 });
