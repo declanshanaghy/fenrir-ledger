@@ -40,7 +40,7 @@ Next.js standalone app running in the `fenrir-app` namespace.
 - `deployment.yaml` — App Deployment with rolling update strategy
 - `service.yaml` — ClusterIP service
 - `ingress.yaml` — Google-managed load balancer with SSL cert
-- `RUNBOOK.md` — Rollback, scaling, and health check procedures
+- [k8s/app/RUNBOOK.md](k8s/app/RUNBOOK.md) — Rollback, scaling, and health check procedures
 
 ### Agents (`k8s/agents/`)
 
@@ -51,7 +51,7 @@ Ephemeral GKE Jobs for Claude Code agent execution in the `fenrir-agents` namesp
 - `job-template.yaml` — K8s Job spec template
 - `dispatch-job.sh` — Script to generate and apply Job manifests
 - `agent-logs.mjs` — Stream and parse agent JSONL logs
-- `README.md` — Full setup and monitoring guide
+- [k8s/agents/README.md](k8s/agents/README.md) — Full setup and monitoring guide
 
 ### Namespaces (`k8s/namespaces.yaml`)
 

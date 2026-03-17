@@ -1,5 +1,7 @@
 # QA Handoff -- Feature Flag Registry + Patreon API Route Guards
 
+> **Historical record.** Patreon has been fully removed from the codebase. All Patreon API routes, components, and library code are deleted. Stripe Direct (ADR-010) is the sole subscription platform. This document is preserved as a record of the transition sprint.
+
 ## What was implemented
 
 **Story 1 of the Stripe Direct pivot**: Phase 1 feature flagging system using
