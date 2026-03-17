@@ -33,4 +33,5 @@ These are the Sprint 1-3 ADRs:
 - [clerk-implementation-plan.md](clerk-implementation-plan.md) -- 5-phase Clerk auth integration plan. Deferred until GA planning.
 - [clerk-auth-qa-report.md](clerk-auth-qa-report.md) -- Loki's QA validation of the Clerk ADR and implementation plan.
 - [n8n-reddit-automation.md](n8n-reddit-automation.md) -- n8n Reddit automation workflows technical research.
+- [umami-api-integration.md](umami-api-integration.md) -- Umami analytics API research, n8n workflow design, PostgreSQL schema for the marketing metrics loop (issue #1180).
 - [route-ownership.md](route-ownership.md) -- Route placement table: all routes in Next.js (Vercel).
