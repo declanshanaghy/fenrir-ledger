@@ -30,21 +30,21 @@
 <table><tr>
 <td align="center" width="33%">
 
-ᚠ **<a href="https://app.fenrirledger.com/ledger" target="_blank" rel="noopener">Enter the Ledger</a>** ᚠ
+ᚠ **<a href="https://fenrirledger.com/ledger" target="_blank" rel="noopener">Enter the Ledger</a>** ᚠ
 
 *Name your chains before they name you.*
 
 </td>
 <td align="center" width="33%">
 
-ᚱ **<a href="https://app.fenrirledger.com" target="_blank" rel="noopener">Marketing Site</a>** ᚱ
+ᚱ **<a href="https://fenrirledger.com" target="_blank" rel="noopener">Marketing Site</a>** ᚱ
 
 *Read the runes. Know what hunts next.*
 
 </td>
 <td align="center" width="33%">
 
-ᛟ **<a href="https://app.fenrirledger.com/chronicles" target="_blank" rel="noopener">Session Chronicles</a>** ᛟ
+ᛟ **<a href="https://fenrirledger.com/chronicles" target="_blank" rel="noopener">Session Chronicles</a>** ᛟ
 
 *Every session forged in fire, recorded in runes.*
 
