@@ -39,18 +39,31 @@ const GOOGLE_PICKER_SCRIPT_HASHES = [
  * - data: URIs for fonts (some Google Fonts use data: encoding)
  * - Google Picker inline scripts via SHA-256 hash allowlist (Issue #527)
  */
-export function buildCspDirectives(): string[] {
+export function buildCspDirectives(nonce?: string): string[] {
   return [
     // Default: only same-origin
     "default-src 'self'",
 
-    // Scripts: self + inline script hashes + Google Picker hashes + allowed CDNs
+    // Scripts: self + nonce (for Next.js RSC inline scripts) + hashes (for known
+    // static inline scripts like next-themes) + Google Picker hashes + allowed CDNs.
+    //
+    // Why both nonce AND hashes? (Issue #1184)
+    // Next.js App Router streams RSC data as dynamic inline <script> tags whose
+    // content varies per request — they cannot be pre-hashed. A per-request nonce
+    // covers these. Known static inline scripts (next-themes, GA4 init) use hashes
+    // so they work even if rendered outside middleware (e.g. static generation).
+    //
+    // CDN impact: the nonce makes CSP vary per request, but only for HTML pages.
+    // Static assets (/_next/static/*) bypass middleware and get immutable caching.
+    // Marketing pages get s-maxage via Cache-Control (CDN caches the response body
+    // and strips/replaces CSP on cache hit if configured, or serves origin headers).
+    //
     // In development, Next.js HMR / React Fast Refresh requires 'unsafe-eval'.
-    // Inline script hashes replace the previous per-request nonce (Issue #1144).
     // Google Picker inline script hashes are allowlisted for Issue #527.
     // https://www.googletagmanager.com is required for the external GA4 loader script.
     [
       "script-src 'self'",
+      ...(nonce ? [`'nonce-${nonce}'`] : []),
       ...INLINE_SCRIPT_HASHES,
       ...(process.env.NODE_ENV !== "production" ? ["'unsafe-eval'"] : []),
       ...GOOGLE_PICKER_SCRIPT_HASHES,
@@ -105,16 +118,9 @@ export interface SecurityHeader {
   value: string;
 }
 
-/** Security headers applied to every response. */
+/** Security headers applied to every response (excludes CSP — set by middleware). */
 export function buildSecurityHeaders(): SecurityHeader[] {
-  const cspDirectives = buildCspDirectives();
-  const ContentSecurityPolicy = cspDirectives.join("; ");
-
   return [
-    {
-      key: "Content-Security-Policy",
-      value: ContentSecurityPolicy,
-    },
     {
       key: "X-Frame-Options",
       value: "DENY",

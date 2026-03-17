@@ -37,11 +37,18 @@ describe("buildCspDirectives — hash-based CSP", () => {
     expect(scriptSrc).toMatch(/'sha256-[A-Za-z0-9+/=]+=?'/);
   });
 
-  it("script-src does NOT contain 'nonce-' (no per-request nonce)", () => {
+  it("script-src does NOT contain nonce when called without one", () => {
     const scriptSrc = buildCspDirectives().find((d) =>
       d.startsWith("script-src")
     );
     expect(scriptSrc).not.toContain("nonce-");
+  });
+
+  it("script-src contains nonce when one is provided", () => {
+    const scriptSrc = buildCspDirectives("test-nonce-123").find((d) =>
+      d.startsWith("script-src")
+    );
+    expect(scriptSrc).toContain("'nonce-test-nonce-123'");
   });
 
   it("script-src does NOT contain 'unsafe-inline' in production", () => {
@@ -110,17 +117,10 @@ describe("buildSecurityHeaders", () => {
     }
   });
 
-  it("includes Content-Security-Policy header", () => {
+  it("does NOT include Content-Security-Policy (CSP is set per-request in middleware)", () => {
     const headers = buildSecurityHeaders();
     const csp = headers.find((h) => h.key === "Content-Security-Policy");
-    expect(csp).toBeDefined();
-    expect(csp!.value).toContain("default-src 'self'");
-  });
-
-  it("CSP header has no nonce", () => {
-    const headers = buildSecurityHeaders();
-    const csp = headers.find((h) => h.key === "Content-Security-Policy");
-    expect(csp!.value).not.toContain("nonce-");
+    expect(csp).toBeUndefined();
   });
 
   it("includes X-Frame-Options: DENY", () => {
