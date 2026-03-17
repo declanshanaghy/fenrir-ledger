@@ -23,10 +23,18 @@ import type { Card } from "@/lib/types";
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
 
-const mockIsKarlOrTrial = { value: false };
+const mockEntitlement = { tier: "thrall" as string, isActive: false };
 
-vi.mock("@/hooks/useIsKarlOrTrial", () => ({
-  useIsKarlOrTrial: () => mockIsKarlOrTrial.value,
+vi.mock("@/hooks/useEntitlement", () => ({
+  useEntitlement: () => mockEntitlement,
+}));
+
+// Issue #1172: useCloudSync gates on auth status — mock AuthContext to avoid
+// "useAuthContext must be used within <AuthProvider>" in unit tests
+const mockAuthContext = { status: "authenticated" as string };
+
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuthContext: () => mockAuthContext,
 }));
 
 vi.mock("sonner", () => ({
@@ -46,7 +54,7 @@ vi.mock("@/lib/auth/session", () => ({
 }));
 
 vi.mock("@/lib/storage", () => ({
-  getCards: vi.fn().mockReturnValue([]),
+  getRawAllCards: vi.fn().mockReturnValue([]),
   setAllCards: vi.fn(),
 }));
 
@@ -54,18 +62,25 @@ vi.mock("@/lib/storage", () => ({
 
 const TEST_HOUSEHOLD = "test-household-adv";
 
+const FAKE_SESSION = {
+  id_token: "test-id-token-adv",
+  user: { sub: TEST_HOUSEHOLD },
+};
+
 function setupKarl() {
-  mockIsKarlOrTrial.value = true;
+  mockEntitlement.tier = "karl";
+  mockEntitlement.isActive = true;
   mockEnsureFreshToken.mockResolvedValue("test-id-token");
+  localStorage.setItem("fenrir:auth", JSON.stringify(FAKE_SESSION));
 }
 
+// The hook POSTs to /api/sync/push and expects { cards, syncedCount } in the response.
 function mockFetchGet(cards: Card[] = []) {
   global.fetch = vi.fn().mockResolvedValue({
     ok: true,
     json: async () => ({
-      householdId: TEST_HOUSEHOLD,
       cards,
-      syncedAt: new Date().toISOString(),
+      syncedCount: cards.length,
     }),
   } as Response);
 }
@@ -78,14 +93,12 @@ function mockFetchGetFail(code = "forbidden") {
   } as Response);
 }
 
-function mockFetchPut(written = 3) {
+function mockFetchPut(syncedCount = 3) {
   global.fetch = vi.fn().mockResolvedValue({
     ok: true,
     json: async () => ({
-      householdId: TEST_HOUSEHOLD,
-      written,
-      skipped: 0,
-      syncedAt: new Date().toISOString(),
+      cards: [],
+      syncedCount,
     }),
   } as Response);
 }
@@ -102,7 +115,8 @@ function mockFetchPutFail(code = "server_error") {
 
 describe("useCloudSync — initial state (Thrall/idle)", () => {
   beforeEach(() => {
-    mockIsKarlOrTrial.value = false;
+    mockEntitlement.tier = "thrall";
+    mockEntitlement.isActive = false;
     global.fetch = vi.fn();
   });
 
@@ -206,11 +220,11 @@ describe("useCloudSync — auto-retry fires after 120s error timeout", () => {
       await Promise.resolve();
     });
 
-    // Should have triggered a push (PUT) and landed in synced
-    const putCalls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
-      (c: unknown[]) => (c[1] as RequestInit)?.method === "PUT"
+    // Should have triggered a retry (POST to /api/sync/push)
+    const postCalls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
+      (c: unknown[]) => (c[1] as RequestInit)?.method === "POST"
     );
-    expect(putCalls.length).toBeGreaterThanOrEqual(1);
+    expect(postCalls.length).toBeGreaterThanOrEqual(1);
   });
 
   it("auto-retry transitions error → syncing → error if retry also fails", async () => {
@@ -319,7 +333,7 @@ describe("useCloudSync — multiple fenrir:cards-changed events debounce to one 
     // Set up PUT mock
     mockFetchPut(1);
 
-    // Fire 5 rapid events within the 2s debounce window
+    // Fire 5 rapid events within the debounce window
     act(() => {
       for (let i = 0; i < 5; i++) {
         window.dispatchEvent(
@@ -328,19 +342,21 @@ describe("useCloudSync — multiple fenrir:cards-changed events debounce to one 
       }
     });
 
-    // Advance past debounce
+    // Advance past AUTO_SYNC_DEBOUNCE_MS (10s) to trigger the debounced push
     await act(async () => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(11_000);
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    const putCalls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
-      (c: unknown[]) => (c[1] as RequestInit)?.method === "PUT"
+    const postCalls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
+      (c: unknown[]) => (c[1] as RequestInit)?.method === "POST"
     );
 
-    // Only 1 PUT despite 5 events
-    expect(putCalls.length).toBe(1);
+    // Only 1 POST despite 5 events (initial sync POST + 1 debounced POST = 2 total,
+    // but the initial sync already ran before mockFetchPut was set — count POST calls
+    // made AFTER the events, which should be exactly 1)
+    expect(postCalls.length).toBe(1);
   });
 });
 
