@@ -151,7 +151,7 @@ In the old songs, [Loki](https://en.wikipedia.org/wiki/Loki) is father to [Fenri
 **Owns:**
 - Test suites ([quality/test-suites/](quality/test-suites/)) — Playwright E2E, Vitest unit
 - Quality reports ([quality/quality-report.md](quality/quality-report.md)) — the verdict that determines ship/no-ship
-- Test plans ([quality/test-plan.md](quality/test-plan.md)) — the chaos scheduled in advance
+- Issue templates ([quality/issue-template.md](quality/issue-template.md)) — canonical schema for filing defects and routing agent chains
 - Defect tracking — every bug is a GitHub Issue filed immediately
 
 **Weapon of Choice:**
@@ -170,7 +170,7 @@ In the old songs, [Loki](https://en.wikipedia.org/wiki/Loki) is father to [Fenri
 **Owns:**
 - Security audits and reports ([security/reports/](security/reports/)) — the audit trail that never gets deleted
 - Security architecture ([security/architecture/](security/architecture/)) — threat model, data flows, auth architecture, trust boundaries
-- Security checklists and advisories ([security/advisories/](security/advisories/))
+- Security checklists ([security/checklists/](security/checklists/))
 - Auth standard enforcement — every API handler under `development/frontend/src/app/api/` must call `requireAuth(request)`
 
 **Weapon of Choice:**
@@ -218,7 +218,7 @@ graph LR
 
 > *"Before a single rune of code is carved, I draw the bones. Every screen is a ritual space — every interaction, a step in the dance between wolf and wanderer."*
 
-- [UX README](ux/README.md) — Index of all design artifacts, wireframes (59 HTML5 docs), and implementation status
+- [UX README](ux/README.md) — Index of all design artifacts, wireframes (78 HTML5 documents), and implementation status
 - [Theme System](ux/theme-system.md) — The runes of color and shadow I have woven into the wolf's skin
 - [Wireframes](ux/wireframes.md) — Bones of every screen, drawn before steel is poured
 - [Interactions](ux/interactions.md) — How the wolf moves when touched, precise as tides beneath Mani's gaze
@@ -229,7 +229,7 @@ graph LR
 
 > *"What I build, I build to endure Ragnarok. Every beam is load-tested, every joint fire-hardened. Read these blueprints — they are the skeleton on which all iron hangs."*
 
-- [Architecture README](architecture/README.md) — Index of system design, ADRs (001–011), and pipeline docs
+- [Architecture README](architecture/README.md) — Index of system design, ADRs (001–015), and pipeline docs
 - [Development README](development/README.md) — Source code layout, setup guide, QA handoffs, and deploy scripts
 - [System Design](architecture/system-design.md) — The load-bearing bones of this hall, forged to outlast the age
 - [ADRs](architecture/adrs/) — Every decision struck in fire, recorded so none may undo them lightly
@@ -244,6 +244,9 @@ graph LR
 - [Security README](security/README.md) — Index of all audits, architecture, checklists, and open findings
 - [Threat Model](security/architecture/threat-model.md) — Assets, threat actors, attack surfaces, and mitigations
 - [Auth Architecture](security/architecture/auth-architecture.md) — OAuth PKCE flow, session model, JWKS verification, Stripe auth
+- [Data Flow Diagrams](security/architecture/data-flow-diagrams.md) — Security-focused flows: OAuth, CSV/URL import, Stripe, Firestore sync; trust boundaries
+- [Trust Boundaries](security/architecture/trust-boundaries.md) — Six trust zones, secret locations, and cross-boundary data constraints
+- [Firestore Sync Audit](security/reports/2026-03-17-firestore-sync-audit.md) — 2026-03-17: IDOR fixes (PRs #1203, #1207); 1 HIGH + 3 MEDIUM open
 - [External Pen Test](security/reports/2026-03-09-external-pentest.md) — Consolidated penetration test (4 parallel audits)
 
 ---
@@ -256,6 +259,7 @@ graph LR
 - [Test Suites](quality/test-suites/) — Every trap I have laid to catch the careless and the overconfident
 - [Quality Report](quality/quality-report.md) — My verdict on what stands and what crumbles to ash
 - [Test Guidelines](quality/test-guidelines.md) — Pyramid rules, bloat detection, migration rules
+- [Issue Template](quality/issue-template.md) — Canonical defect schema, label taxonomy, and agent chain routing
 
 ---
 
