@@ -110,6 +110,7 @@ locals {
     "roles/logging.admin",                 # Cloud Logging config
     "roles/monitoring.admin",              # Cloud Monitoring config
     "roles/certificatemanager.editor",     # Managed SSL certs
+    "roles/firebaserules.admin",           # Firebase Security Rules (Firestore)
   ]
 }
 
