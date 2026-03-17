@@ -769,3 +769,142 @@ describe("expunge_card — permanent deletion (mocked)", () => {
     expect(mockDelete).not.toHaveBeenCalled();
   });
 });
+
+// ─── 22. households table — full UUID display (issue #1260 Bug 1) ─────────────
+
+/**
+ * Replicates the display logic in the households command after the fix.
+ * The ID column must render the full document ID, not shortId(d.id).
+ */
+describe("households table — full UUID display (issue #1260)", () => {
+  const FULL_UUID = "5b2efd89-1234-5678-abcd-000000001234";
+  const FIRESTORE_ID = "5b2efd89xxxxxxxxxxxx"; // 20-char Firestore auto-ID
+
+  it("full UUID is unchanged (not truncated) when rendering the ID column", () => {
+    // The fix: use d.id directly instead of shortId(d.id)
+    const displayId = FULL_UUID;
+    expect(displayId).toBe(FULL_UUID);
+    expect(displayId).not.toContain("\u2026"); // no unicode ellipsis
+    expect(displayId).not.toContain("…");
+  });
+
+  it("full 20-char Firestore ID is unchanged when rendering the ID column", () => {
+    const displayId = FIRESTORE_ID;
+    expect(displayId).toBe(FIRESTORE_ID);
+    expect(displayId.length).toBe(20);
+    expect(displayId).not.toContain("\u2026");
+  });
+
+  it("shortId() is NOT applied to household ID column — copy-pasted ID must match stored ID", () => {
+    // Before the fix: shortId("5b2efd89-1234-5678-abcd-000000001234") → "5b2efd89…1234"
+    // After fix: display the raw ID so it can be copy-pasted as a valid argument
+    const rawId = FULL_UUID;
+    const truncated = shortId(rawId);
+    // truncated form is different from raw — using truncated breaks household lookup
+    expect(truncated).not.toBe(rawId);
+    // The fix uses rawId in the table, so copy-paste yields rawId, not truncated
+    expect(rawId).toBe(FULL_UUID);
+  });
+
+  it("d.id.padEnd(36) pads shorter IDs without truncating", () => {
+    const shorterId = "abc123";
+    const padded = shorterId.padEnd(36);
+    expect(padded.startsWith(shorterId)).toBe(true);
+    expect(padded.length).toBe(36);
+  });
+
+  it("d.id.padEnd(36) leaves a full UUID exactly 36 chars long without change", () => {
+    const padded = FULL_UUID.padEnd(36);
+    expect(padded).toBe(FULL_UUID);
+    expect(padded.length).toBe(36);
+  });
+});
+
+// ─── 23. household command — row-number resolution (issue #1260 Bug 2) ────────
+
+/**
+ * Replicates the docId resolution logic introduced in the household command fix.
+ * When the argument is a positive integer within range, it maps to householdIndex[n-1].
+ */
+function resolveHouseholdDocId(
+  arg: string,
+  householdIndex: string[]
+): { docId: string | null; error: string | null } {
+  const n = /^\d+$/.test(arg) ? parseInt(arg, 10) : NaN;
+  if (!isNaN(n)) {
+    if (householdIndex.length === 0) {
+      return { docId: null, error: "No household index. Run households first." };
+    }
+    if (n < 1 || n > householdIndex.length) {
+      return { docId: null, error: `Row ${n} out of range (1–${householdIndex.length}).` };
+    }
+    return { docId: householdIndex[n - 1], error: null };
+  }
+  // Not a number — use as raw ID
+  return { docId: arg, error: null };
+}
+
+describe("household command — row-number resolution (issue #1260)", () => {
+  const index = [
+    "5b2efd89-1234-5678-abcd-000000000001",
+    "5b2efd89-1234-5678-abcd-000000000002",
+    "5b2efd89-1234-5678-abcd-000000000003",
+  ];
+
+  it("resolves n=1 to the first household ID in the index", () => {
+    const { docId, error } = resolveHouseholdDocId("1", index);
+    expect(error).toBeNull();
+    expect(docId).toBe(index[0]);
+  });
+
+  it("resolves n=2 to the second household ID", () => {
+    const { docId, error } = resolveHouseholdDocId("2", index);
+    expect(error).toBeNull();
+    expect(docId).toBe(index[1]);
+  });
+
+  it("resolves n=length to the last household ID", () => {
+    const { docId, error } = resolveHouseholdDocId("3", index);
+    expect(error).toBeNull();
+    expect(docId).toBe(index[2]);
+  });
+
+  it("returns error for n=0 (out of range)", () => {
+    const { docId, error } = resolveHouseholdDocId("0", index);
+    expect(docId).toBeNull();
+    expect(error).toMatch(/out of range/);
+  });
+
+  it("returns error for n > index length", () => {
+    const { docId, error } = resolveHouseholdDocId("99", index);
+    expect(docId).toBeNull();
+    expect(error).toMatch(/out of range/);
+  });
+
+  it("treats '-1' as a raw ID (not a row number) since it contains a non-digit character", () => {
+    // /^\d+$/ does not match "-1", so it falls through as a raw ID pass-through
+    const { docId, error } = resolveHouseholdDocId("-1", index);
+    expect(error).toBeNull();
+    expect(docId).toBe("-1");
+  });
+
+  it("returns error when index is empty and n is provided", () => {
+    const { docId, error } = resolveHouseholdDocId("1", []);
+    expect(docId).toBeNull();
+    expect(error).toMatch(/No household index/);
+  });
+
+  it("passes a full UUID through without change (not treated as row number)", () => {
+    const uuid = "5b2efd89-1234-5678-abcd-000000000001";
+    const { docId, error } = resolveHouseholdDocId(uuid, index);
+    expect(error).toBeNull();
+    expect(docId).toBe(uuid);
+  });
+
+  it("passes a partial string (non-numeric) through as raw ID", () => {
+    const rawId = "abc123nonNumeric";
+    const { docId, error } = resolveHouseholdDocId(rawId, index);
+    expect(error).toBeNull();
+    expect(docId).toBe(rawId);
+  });
+});

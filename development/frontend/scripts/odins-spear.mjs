@@ -893,8 +893,9 @@ const commands = {
     const db = getDb();
     let docId = args[0];
 
-    // Resolve row number (e.g. "household 1") from last households listing
-    const n = parseInt(docId, 10);
+    // Resolve row number (e.g. "household 1") from last households listing.
+    // Only treat as row number if the argument is purely numeric (no letters/dashes).
+    const n = /^\d+$/.test(docId) ? parseInt(docId, 10) : NaN;
     if (!isNaN(n)) {
       if (householdIndex.length === 0) {
         console.log(`${RED}No household index.${RESET} Run ${CYAN}households${RESET} first, then ${CYAN}household <N>${RESET}.`);
