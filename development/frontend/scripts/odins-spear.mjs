@@ -870,15 +870,15 @@ const commands = {
     if (snap.empty) { console.log("\n  No households found in Firestore.\n"); return; }
     householdIndex = snap.docs.map((d) => d.id);
 
-    console.log(`\n  ${BOLD}#   ID              Name                   Owner          Tier   Mbrs  Created${RESET}`);
-    console.log(`  ${DIM}${"─".repeat(80)}${RESET}`);
+    console.log(`\n  ${BOLD}#   ID                                    Name                   Owner          Tier   Mbrs  Created${RESET}`);
+    console.log(`  ${DIM}${"─".repeat(100)}${RESET}`);
     for (let i = 0; i < snap.docs.length; i++) {
       const d = snap.docs[i];
       const h = d.data();
       const sel = d.id === selectedHouseholdId ? `${GOLD}→${RESET}` : " ";
       const tier = h.tier === "karl" ? `${GOLD}karl${RESET}` : "free";
       const created = h.createdAt ? new Date(h.createdAt).toLocaleDateString() : "—";
-      console.log(`  ${sel}${String(i + 1).padStart(2)}  ${shortId(d.id).padEnd(16)} ${(h.name || "").substring(0, 20).padEnd(22)} ${shortId(h.ownerId || "").padEnd(14)} ${tier}  ${((h.memberIds || []).length).toString().padStart(2)}    ${created}`);
+      console.log(`  ${sel}${String(i + 1).padStart(2)}  ${d.id.padEnd(36)} ${(h.name || "").substring(0, 20).padEnd(22)} ${shortId(h.ownerId || "").padEnd(14)} ${tier}  ${((h.memberIds || []).length).toString().padStart(2)}    ${created}`);
     }
     console.log(`\n  ${DIM}Total: ${snap.docs.length}. Use "use-household <N>" to select.${RESET}\n`);
   },
@@ -891,7 +891,22 @@ const commands = {
       args = [selectedHouseholdId];
     }
     const db = getDb();
-    const docId = args[0];
+    let docId = args[0];
+
+    // Resolve row number (e.g. "household 1") from last households listing
+    const n = parseInt(docId, 10);
+    if (!isNaN(n)) {
+      if (householdIndex.length === 0) {
+        console.log(`${RED}No household index.${RESET} Run ${CYAN}households${RESET} first, then ${CYAN}household <N>${RESET}.`);
+        return;
+      }
+      if (n < 1 || n > householdIndex.length) {
+        console.log(`${RED}Row ${n} out of range (1–${householdIndex.length}).${RESET} Run ${CYAN}households${RESET} to see the list.`);
+        return;
+      }
+      docId = householdIndex[n - 1];
+    }
+
     const snap = await db.doc(`households/${docId}`).get();
     if (!snap.exists) { console.log(`${RED}Household not found: ${docId}${RESET}`); return; }
     const h = snap.data();
