@@ -92,6 +92,7 @@ export function AppShell({ children }: AppShellProps) {
       )}
       <Toaster
         position="bottom-right"
+        closeButton
         toastOptions={{
           className: "font-body",
           style: {
