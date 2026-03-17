@@ -42,6 +42,27 @@ env:
   N8N_DIAGNOSTICS_ENABLED: "false"
   N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
 
+# -- Secret Injection (n8n-secrets) ----------------------------------------
+# The K8s Secret `n8n-secrets` in the `analytics` namespace is provisioned
+# by Odin via `/manage-secrets` (scripts/sync-secrets.mjs) after deploy.
+#
+# Required keys in n8n-secrets:
+#   ANTHROPIC_API_KEY   — sourced from FENRIR_ANTHROPIC_API_KEY in .env.local
+#   GMAIL_CLIENT_ID     — Google OAuth2 client ID for freyafenrir@gmail.com
+#   GMAIL_CLIENT_SECRET — Google OAuth2 client secret
+#   GMAIL_REFRESH_TOKEN — Gmail OAuth2 refresh token
+#
+# Gmail OAuth setup (one-time, run locally before first n8n deploy):
+#   1. Go to Google Cloud Console → APIs & Services → Credentials
+#   2. Create OAuth 2.0 Client ID (type: Web application)
+#   3. Add authorized redirect URI: https://marketing.fenrirledger.com/rest/oauth2-credential/callback
+#   4. Copy Client ID + Client Secret into .env.local as GMAIL_CLIENT_ID / GMAIL_CLIENT_SECRET
+#   5. Use n8n UI to complete OAuth flow → obtain refresh token → add to .env.local as GMAIL_REFRESH_TOKEN
+#   6. Run `/manage-secrets sync` to push all four keys into the n8n-secrets K8s Secret
+extraEnvFrom:
+  - secretRef:
+      name: n8n-secrets
+
 # -- Persistence (1Gi PVC for SQLite DB + workflow storage) ----------------
 persistence:
   enabled: true

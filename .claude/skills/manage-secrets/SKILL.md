@@ -62,6 +62,23 @@ node "$REPO_ROOT/scripts/sync-secrets.mjs" <flag>
 | GitHub Actions Secrets | — | `gh secret set` |
 | K8s `fenrir-app-secrets` | `fenrir-app` | Deploy workflow + this script |
 | K8s `agent-secrets` | `fenrir-agents` | Deploy workflow + this script |
+| K8s `n8n-secrets` | `fenrir-analytics` | This script (manual trigger by Odin) |
+
+### n8n Secrets Manifest
+
+`n8n-secrets` in `fenrir-analytics` namespace — referenced by n8n Helm values via `extraEnvFrom.secretRef`.
+
+| Key in K8s Secret | Source var in `.env.local` | Purpose |
+|-------------------|---------------------------|---------|
+| `ANTHROPIC_API_KEY` | `FENRIR_ANTHROPIC_API_KEY` | Claude API for n8n AI nodes |
+| `GMAIL_CLIENT_ID` | `GMAIL_CLIENT_ID` | Gmail OAuth2 client ID for freyafenrir@gmail.com |
+| `GMAIL_CLIENT_SECRET` | `GMAIL_CLIENT_SECRET` | Gmail OAuth2 client secret |
+| `GMAIL_REFRESH_TOKEN` | `GMAIL_REFRESH_TOKEN` | Gmail OAuth2 refresh token |
+
+**To provision n8n-secrets after deploy:**
+```
+/manage-secrets sync   # pushes all k8s-n8n entries from .env.local → analytics namespace
+```
 
 ### Common Scenarios
 
