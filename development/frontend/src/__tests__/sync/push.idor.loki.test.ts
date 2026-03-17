@@ -69,10 +69,9 @@ describe("POST /api/sync/push — card-embedded householdId injection (#1193)", 
    *
    * Expected: all cards written to Firestore must have householdId === verifiedHouseholdId.
    *
-   * SKIPPED: defect confirmed — see GitHub Issue #1208.
-   * Re-enable once FiremanDecko sanitises localCards householdId fields.
+   * Fixed in Issue #1208: FiremanDecko sanitises localCards householdId fields.
    */
-  it.skip("all cards written to Firestore use the verified householdId, not embedded card values", async () => {
+  it("all cards written to Firestore use the verified householdId, not embedded card values", async () => {
     mockRequireAuthz.mockResolvedValue({
       ok: true as const,
       user: { sub: "attacker-sub" },
@@ -121,10 +120,9 @@ describe("POST /api/sync/push — card-embedded householdId injection (#1193)", 
    * Verify the response body also returns cards with the verified householdId,
    * ensuring the client is not returned cards marked as belonging to another household.
    *
-   * SKIPPED: defect confirmed — see GitHub Issue #1208.
-   * Re-enable once FiremanDecko sanitises localCards householdId fields.
+   * Fixed in Issue #1208: FiremanDecko sanitises localCards householdId fields.
    */
-  it.skip("response cards contain only the verified householdId, not injected values", async () => {
+  it("response cards contain only the verified householdId, not injected values", async () => {
     mockRequireAuthz.mockResolvedValue({
       ok: true as const,
       user: { sub: "attacker-sub" },

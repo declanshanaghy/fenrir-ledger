@@ -28,7 +28,7 @@
  * Firestore access. The authz-resolved householdId is used for all Firestore
  * operations — never the raw client-supplied body value — to prevent IDOR.
  *
- * Issue #1122, #1193
+ * Issue #1122, #1193, #1208
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -90,7 +90,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // Use the authz-resolved householdId — never the raw body value — to prevent IDOR
   const verifiedHouseholdId = authz.firestoreUser.householdId;
 
-  const localCards = cards as Card[];
+  // Sanitize card-level householdId to prevent second-order IDOR (Issue #1208):
+  // An attacker can pass their own valid householdId at the top level (passing authz)
+  // while embedding a victim's householdId inside individual cards. setCards() uses
+  // card.householdId for Firestore path resolution, so any unsanitized card that wins
+  // LWW merge would be written to the victim's Firestore path.
+  const localCards = (cards as Card[]).map((card) => ({
+    ...card,
+    householdId: verifiedHouseholdId,
+  }));
 
   try {
     // Fetch all remote cards (including tombstones) for LWW merge
