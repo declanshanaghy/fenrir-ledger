@@ -68,7 +68,9 @@ resource "google_dns_record_set" "apex" {
   managed_zone = google_dns_managed_zone.app.name
   project      = var.project_id
   type         = "A"
-  ttl          = 300
+  # TTL lowered to 60s pre-CDN for fast DNS-level rollback.
+  # Raise to 3600s after CDN stability is confirmed (issue #1209).
+  ttl = 60
 
   rrdatas = [google_compute_global_address.app_ip.address]
 }
@@ -78,7 +80,9 @@ resource "google_dns_record_set" "www" {
   managed_zone = google_dns_managed_zone.app.name
   project      = var.project_id
   type         = "A"
-  ttl          = 300
+  # TTL lowered to 60s pre-CDN for fast DNS-level rollback.
+  # Raise to 3600s after CDN stability is confirmed (issue #1209).
+  ttl = 60
 
   rrdatas = [google_compute_global_address.app_ip.address]
 }
@@ -105,7 +109,9 @@ resource "google_dns_record_set" "analytics" {
   managed_zone = google_dns_managed_zone.app.name
   project      = var.project_id
   type         = "A"
-  ttl          = 300
+  # TTL lowered to 60s pre-CDN for fast DNS-level rollback.
+  # Raise to 3600s after CDN stability is confirmed (issue #1209).
+  ttl = 60
 
   rrdatas = [google_compute_global_address.umami_ip.address]
 }
@@ -126,7 +132,9 @@ resource "google_dns_record_set" "monitor" {
   managed_zone = google_dns_managed_zone.app.name
   project      = var.project_id
   type         = "A"
-  ttl          = 300
+  # TTL lowered to 60s pre-CDN for fast DNS-level rollback.
+  # Raise to 3600s after CDN stability is confirmed (issue #1209).
+  ttl = 60
 
   rrdatas = [google_compute_global_address.monitor_ip.address]
 }
