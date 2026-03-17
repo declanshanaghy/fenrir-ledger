@@ -100,6 +100,11 @@ vi.mock("@/contexts/RagnarokContext", () => ({
   useRagnarok: () => ({ ragnarokActive: false }),
 }));
 
+// Issue #1172: useCloudSync now calls useAuthContext — mock to prevent "must be within AuthProvider" throw
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuthContext: () => ({ status: "anonymous", session: null, householdId: "", signOut: vi.fn() }),
+}));
+
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe("LedgerShell — Layout structure", () => {

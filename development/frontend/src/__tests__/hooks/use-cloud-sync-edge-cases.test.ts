@@ -35,6 +35,13 @@ vi.mock("@/hooks/useEntitlement", () => ({
   useEntitlement: () => mockEntitlement,
 }));
 
+// Issue #1172: useCloudSync now gates on auth status — mock AuthContext
+const mockAuthContext = { status: "authenticated" as string };
+
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuthContext: () => mockAuthContext,
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
@@ -125,18 +132,18 @@ describe("useCloudSync — online/offline events (Karl)", () => {
     expect(result.current.status).toBe("idle");
   });
 
-  it("Karl stays offline when sync events fire while offline (not event-driven)", () => {
-    // The hook does NOT listen for fenrir:cloud-sync-start.
-    // Dispatching storage events while offline does not change status to syncing.
+  it("Karl stays offline when card-changed events fire while offline", () => {
+    // Issue #1172: hook listens to "fenrir:cards-changed" (not "fenrir:sync").
+    // Dispatching while offline schedules a debounce, but performSync checks
+    // navigator.onLine and sets "offline" again — status stays offline.
     const { result } = renderHook(() => useCloudSync());
     act(() => goOffline());
     expect(result.current.status).toBe("offline");
-    // Dispatch a storage sync event — hook debounces it but performSync checks
-    // navigator.onLine and sets "offline" again (already offline)
+    // Dispatch a card-changed event — hook debounces it but performSync will see offline
     act(() => {
-      window.dispatchEvent(new CustomEvent("fenrir:sync", { detail: {} }));
+      window.dispatchEvent(new CustomEvent("fenrir:cards-changed", { detail: {} }));
     });
-    // Status remains offline (debounce timer running, but performSync will see offline)
+    // Status remains offline
     expect(result.current.status).toBe("offline");
   });
 
@@ -326,7 +333,8 @@ describe("useCloudSync — first-sync toast pluralization", () => {
     clearSession();
   });
 
-  it("uses singular 'card' for count=1", async () => {
+  it("uses singular 'card has been' for count=1 (restore direction)", async () => {
+    // getRawAllCards returns [] (empty local), syncedCount=1 → restore from cloud
     const { toast } = await import("sonner");
     setSession();
     mockFetch.mockReturnValue(successResponse(1));
@@ -336,12 +344,13 @@ describe("useCloudSync — first-sync toast pluralization", () => {
     });
     expect(result.current.status).toBe("synced");
     expect(toast.success).toHaveBeenCalledWith(
-      "Your 1 card have been backed up",
+      "Your 1 card has been restored from cloud",
       expect.objectContaining({ duration: 5000 })
     );
   });
 
-  it("uses plural 'cards' for count=5", async () => {
+  it("uses plural 'cards have been' for count=5 (restore direction)", async () => {
+    // getRawAllCards returns [] (empty local), syncedCount=5 → restore from cloud
     const { toast } = await import("sonner");
     setSession();
     mockFetch.mockReturnValue(successResponse(5));
@@ -351,15 +360,16 @@ describe("useCloudSync — first-sync toast pluralization", () => {
     });
     expect(result.current.status).toBe("synced");
     expect(toast.success).toHaveBeenCalledWith(
-      "Your 5 cards have been backed up",
+      "Your 5 cards have been restored from cloud",
       expect.objectContaining({ duration: 5000 })
     );
   });
 
-  it("shows toast on first sync even when syncedCount is 0", async () => {
+  it("shows 'backed up' toast when syncedCount is 0 (neither direction)", async () => {
+    // getRawAllCards returns [] (empty local), syncedCount=0 → no restore (nothing pulled)
+    // Falls through to "backed up" since isRestoring = (0===0 && 0>0) = false
     const { toast } = await import("sonner");
     setSession();
-    // Response with 0 cards — toast still fires on first sync
     mockFetch.mockReturnValue(successResponse(0));
     const { result } = renderHook(() => useCloudSync());
     await act(async () => {

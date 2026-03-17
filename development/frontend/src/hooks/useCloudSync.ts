@@ -30,11 +30,13 @@
  *
  * Issue #1122 — wired to real API routes
  * Issue #1125 — initial state machine design
+ * Issue #1172 — auth gating, restore vs backup message, push loop fix
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useEntitlement } from "@/hooks/useEntitlement";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { getRawAllCards, setAllCards } from "@/lib/storage";
 import type { FenrirSession } from "@/lib/types";
 import type { Card } from "@/lib/types";
@@ -46,8 +48,14 @@ import type { Card } from "@/lib/types";
 /** How long to show the "synced" success state before returning to idle (ms) */
 export const SYNCED_DISPLAY_MS = 3000;
 
-/** Debounce delay for auto-sync on save (ms) — prevents syncing on every keystroke */
-const AUTO_SYNC_DEBOUNCE_MS = 2000;
+/**
+ * Debounce delay for auto-sync on card changes (ms).
+ *
+ * Increased from 2s → 10s in Issue #1172 to prevent over-eager syncing.
+ * The listener is now "fenrir:cards-changed" (user-initiated writes only),
+ * NOT "fenrir:sync" (which fires on every write including internal sync merges).
+ */
+export const AUTO_SYNC_DEBOUNCE_MS = 10_000;
 
 /** Delay before auto-retry after a sync error (ms) */
 const AUTO_RETRY_MS = 30_000;
@@ -114,11 +122,22 @@ function getSession(): FenrirSession | null {
  *
  * Karl-only: for Thrall and free-trial users status is always "idle"
  * and all sync controls are no-ops.
+ *
+ * Auth-gated (Issue #1172): sync does NOT fire while auth is in "loading" state.
+ * This prevents the race where a cached Karl entitlement triggers a pull before
+ * the session token has been validated/refreshed by AuthContext.
  */
 export function useCloudSync(): CloudSyncState {
   const { tier, isActive } = useEntitlement();
+  const { status: authStatus } = useAuthContext();
+
+  // Auth must be confirmed before we attempt any sync.
+  // During "loading", the session token may be expired and awaiting refresh.
+  const isAuthenticated = authStatus === "authenticated";
+
   // Karl-only: no sync for Thrall or free-trial users (#1122 acceptance criterion)
-  const isKarl = tier === "karl" && isActive;
+  // Also gated on isAuthenticated to prevent pre-auth sync (#1172)
+  const isKarl = isAuthenticated && tier === "karl" && isActive;
 
   const [status, setStatus] = useState<CloudSyncStatus>("idle");
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
@@ -132,7 +151,7 @@ export function useCloudSync(): CloudSyncState {
   const prevIsKarlRef = useRef<boolean>(false);
   /** Prevents re-entrant sync calls */
   const syncInProgressRef = useRef<boolean>(false);
-  /** Debounce timer for auto-sync on save */
+  /** Debounce timer for auto-sync on card changes */
   const autoSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Auto-retry timer */
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -173,8 +192,10 @@ export function useCloudSync(): CloudSyncState {
     }
 
     try {
-      // Gather all local cards including tombstones
+      // Gather all local cards including tombstones.
+      // Snapshot the local active count BEFORE sync to determine message direction.
       const localCards = getRawAllCards(householdId);
+      const localActiveCount = localCards.filter((c) => !c.deletedAt).length;
 
       const response = await fetch("/api/sync/push", {
         method: "POST",
@@ -206,9 +227,9 @@ export function useCloudSync(): CloudSyncState {
         syncedCount: number;
       };
 
-      // Apply merged result back to localStorage.
-      // Suppress re-triggering auto-sync by setting the in-progress flag
-      // before setAllCards (which dispatches fenrir:sync).
+      // Apply merged result back to localStorage using setAllCards.
+      // setAllCards dispatches "fenrir:sync" (NOT "fenrir:cards-changed") so the
+      // auto-sync debounce listener is not triggered — no push loop. (#1172)
       setAllCards(householdId, mergedCards);
 
       const wasFirstSync =
@@ -225,13 +246,32 @@ export function useCloudSync(): CloudSyncState {
         } catch {
           // localStorage full — skip
         }
-        toast.success(
-          `Your ${syncedCount} card${syncedCount !== 1 ? "s" : ""} have been backed up`,
-          {
-            description: "Yggdrasil guards your ledger.",
-            duration: 5000,
-          }
-        );
+
+        // Determine sync direction for the correct user-facing message (#1172):
+        //   "restored from cloud" — local was empty, cards came from Firestore
+        //   "backed up"          — local had cards that were pushed to Firestore
+        const isRestoring = localActiveCount === 0 && syncedCount > 0;
+        const plural = syncedCount !== 1;
+        const verb = plural ? "have" : "has";
+        const cardWord = plural ? "cards" : "card";
+
+        if (isRestoring) {
+          toast.success(
+            `Your ${syncedCount} ${cardWord} ${verb} been restored from cloud`,
+            {
+              description: "Yggdrasil guards your ledger.",
+              duration: 5000,
+            }
+          );
+        } else {
+          toast.success(
+            `Your ${syncedCount} ${cardWord} ${verb} been backed up`,
+            {
+              description: "Yggdrasil guards your ledger.",
+              duration: 5000,
+            }
+          );
+        }
       }
 
       window.dispatchEvent(
@@ -310,14 +350,20 @@ export function useCloudSync(): CloudSyncState {
   }, [isKarl, performSync]);
 
   // ---------------------------------------------------------------------------
-  // Auto-sync on save: debounced listener on fenrir:sync events
+  // Auto-sync on card changes: debounced listener on fenrir:cards-changed
+  //
+  // Issue #1172 — listen to "fenrir:cards-changed" (user-initiated writes only),
+  // NOT "fenrir:sync" (which fires on every setAllCards including internal merge
+  // writes). This breaks the push loop where performSync→setAllCards→fenrir:sync
+  // →debounce→performSync would repeat indefinitely.
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
     if (!isKarl) return;
 
-    const handleStorageSync = () => {
-      // Debounce: rapid saves coalesce into a single sync
+    const handleCardsChanged = () => {
+      // Debounce: rapid saves coalesce into a single sync.
+      // Skip entirely if a sync is already in progress.
       if (autoSyncTimerRef.current) {
         clearTimeout(autoSyncTimerRef.current);
       }
@@ -329,9 +375,9 @@ export function useCloudSync(): CloudSyncState {
       }, AUTO_SYNC_DEBOUNCE_MS);
     };
 
-    window.addEventListener("fenrir:sync", handleStorageSync);
+    window.addEventListener("fenrir:cards-changed", handleCardsChanged);
     return () => {
-      window.removeEventListener("fenrir:sync", handleStorageSync);
+      window.removeEventListener("fenrir:cards-changed", handleCardsChanged);
       if (autoSyncTimerRef.current) {
         clearTimeout(autoSyncTimerRef.current);
         autoSyncTimerRef.current = null;
@@ -341,6 +387,9 @@ export function useCloudSync(): CloudSyncState {
 
   // ---------------------------------------------------------------------------
   // Sync on login: auto-pull when Karl user signs in
+  //
+  // Issue #1172: isKarl now includes isAuthenticated, so this transition
+  // correctly fires only after auth is confirmed (not from stale cache).
   // ---------------------------------------------------------------------------
 
   useEffect(() => {

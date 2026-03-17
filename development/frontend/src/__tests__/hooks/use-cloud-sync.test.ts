@@ -29,6 +29,13 @@ vi.mock("@/hooks/useEntitlement", () => ({
   useEntitlement: () => mockEntitlement,
 }));
 
+// Issue #1172: useCloudSync now gates on auth status — mock AuthContext
+const mockAuthContext = { status: "authenticated" as string };
+
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuthContext: () => mockAuthContext,
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
@@ -241,8 +248,9 @@ describe("useCloudSync — first-sync toast", () => {
       await result.current.syncNow();
     });
     expect(result.current.status).toBe("synced");
+    // Local was empty (getRawAllCards returns []), cloud had 12 cards → restore direction
     expect(toast.success).toHaveBeenCalledWith(
-      "Your 12 cards have been backed up",
+      "Your 12 cards have been restored from cloud",
       expect.objectContaining({ duration: 5000 })
     );
   });
