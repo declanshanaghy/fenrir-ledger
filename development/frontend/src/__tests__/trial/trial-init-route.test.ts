@@ -37,10 +37,10 @@ vi.mock("@/lib/logger", () => ({
   log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-// requireAuth: by default resolves to an authenticated user. Override per-test for 401 cases.
-const mockRequireAuth = vi.fn();
-vi.mock("@/lib/auth/require-auth", () => ({
-  requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
+// requireAuthz: by default resolves to an authenticated user. Override per-test for 401 cases.
+const mockRequireAuthz = vi.fn();
+vi.mock("@/lib/auth/authz", () => ({
+  requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
 }));
 
 // ── Import route handler after mocks ──────────────────────────────────────────
@@ -63,12 +63,14 @@ function makeRequest(body: Record<string, unknown> = {}, token = "valid-token"):
   });
 }
 
+const MOCK_FIRESTORE_USER = { clerkUserId: "google-sub-123", email: "test@test.com", displayName: "Test User", householdId: "hh-test", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" };
+
 function authOk() {
-  mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: "google-sub-123" } });
+  mockRequireAuthz.mockResolvedValue({ ok: true, user: { sub: "google-sub-123" }, firestoreUser: MOCK_FIRESTORE_USER });
 }
 
 function authFail() {
-  mockRequireAuth.mockResolvedValue({
+  mockRequireAuthz.mockResolvedValue({
     ok: false,
     response: new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 }),
   });

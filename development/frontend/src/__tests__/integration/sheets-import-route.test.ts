@@ -10,16 +10,10 @@ import { NextRequest } from "next/server";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-// Mock requireAuth
-const mockRequireAuth = vi.fn();
-vi.mock("@/lib/auth/require-auth", () => ({
-  requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
-}));
-
-// Mock requireKarlOrTrial
-const mockRequireKarlOrTrial = vi.fn();
-vi.mock("@/lib/auth/require-karl-or-trial", () => ({
-  requireKarlOrTrial: (...args: unknown[]) => mockRequireKarlOrTrial(...args),
+// Mock requireAuthz
+const mockRequireAuthz = vi.fn();
+vi.mock("@/lib/auth/authz", () => ({
+  requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
 }));
 
 // Mock rate limiter
@@ -69,10 +63,19 @@ let POST: typeof import("@/app/api/sheets/import/route").POST;
 
 // ── Setup ────────────────────────────────────────────────────────────────────
 
+const MOCK_FIRESTORE_USER = {
+  clerkUserId: MOCK_USER.sub,
+  email: MOCK_USER.email,
+  displayName: "Test User",
+  householdId: "hh-test",
+  role: "owner" as const,
+  createdAt: "2024-01-01T00:00:00Z",
+  updatedAt: "2024-01-01T00:00:00Z",
+};
+
 beforeEach(async () => {
-  // Auth passes by default
-  mockRequireAuth.mockResolvedValue({ ok: true, user: MOCK_USER });
-  mockRequireKarlOrTrial.mockResolvedValue({ ok: true });
+  // Auth + tier pass by default
+  mockRequireAuthz.mockResolvedValue({ ok: true, user: MOCK_USER, firestoreUser: MOCK_FIRESTORE_USER });
 
   // Dynamic import so mocks are in place
   const mod = await import("@/app/api/sheets/import/route");
@@ -88,7 +91,7 @@ afterEach(() => {
 describe("/api/sheets/import — Auth & tier gating", () => {
   it("returns 401 when auth fails", async () => {
     const { NextResponse } = await import("next/server");
-    mockRequireAuth.mockResolvedValueOnce({
+    mockRequireAuthz.mockResolvedValueOnce({
       ok: false,
       response: NextResponse.json(
         { error: "missing_token", error_description: "Missing auth token" },
@@ -102,10 +105,10 @@ describe("/api/sheets/import — Auth & tier gating", () => {
 
   it("returns 402 when Karl/trial check fails", async () => {
     const { NextResponse } = await import("next/server");
-    mockRequireKarlOrTrial.mockResolvedValueOnce({
+    mockRequireAuthz.mockResolvedValueOnce({
       ok: false,
       response: NextResponse.json(
-        { error: { code: "SUBSCRIPTION_REQUIRED", message: "Karl tier required" } },
+        { error: "subscription_required", required_tier: "karl", current_tier: "thrall", message: "Upgrade to Karl or start a free trial." },
         { status: 402 }
       ),
     });

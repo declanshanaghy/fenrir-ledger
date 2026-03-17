@@ -10,14 +10,9 @@ import { NextRequest } from "next/server";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockRequireAuth = vi.fn();
-vi.mock("@/lib/auth/require-auth", () => ({
-  requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
-}));
-
-const mockRequireKarlOrTrial = vi.fn();
-vi.mock("@/lib/auth/require-karl-or-trial", () => ({
-  requireKarlOrTrial: (...args: unknown[]) => mockRequireKarlOrTrial(...args),
+const mockRequireAuthz = vi.fn();
+vi.mock("@/lib/auth/authz", () => ({
+  requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -38,15 +33,23 @@ function makeRequest(headers: Record<string, string> = {}): NextRequest {
   });
 }
 
-const MOCK_USER = { sub: "user-123", email: "test@test.com" };
+const MOCK_USER = { sub: "user-123", email: "test@test.com", name: "Test User", picture: "" };
+const MOCK_FIRESTORE_USER = {
+  clerkUserId: "user-123",
+  email: "test@test.com",
+  displayName: "Test User",
+  householdId: "hh-test",
+  role: "owner" as const,
+  createdAt: "2024-01-01T00:00:00Z",
+  updatedAt: "2024-01-01T00:00:00Z",
+};
 
 let GET: typeof import("@/app/api/config/picker/route").GET;
 
 // ── Setup ────────────────────────────────────────────────────────────────────
 
 beforeEach(async () => {
-  mockRequireAuth.mockResolvedValue({ ok: true, user: MOCK_USER });
-  mockRequireKarlOrTrial.mockResolvedValue({ ok: true });
+  mockRequireAuthz.mockResolvedValue({ ok: true, user: MOCK_USER, firestoreUser: MOCK_FIRESTORE_USER });
   process.env.GOOGLE_PICKER_API_KEY = "test-picker-key-abc";
 
   const mod = await import("@/app/api/config/picker/route");
@@ -63,7 +66,7 @@ afterEach(() => {
 describe("/api/config/picker — Auth & tier gating", () => {
   it("returns 401 when auth fails", async () => {
     const { NextResponse } = await import("next/server");
-    mockRequireAuth.mockResolvedValueOnce({
+    mockRequireAuthz.mockResolvedValueOnce({
       ok: false,
       response: NextResponse.json(
         { error: "missing_token", error_description: "Missing auth token" },
@@ -77,7 +80,7 @@ describe("/api/config/picker — Auth & tier gating", () => {
 
   it("returns 402 when Karl/trial check fails (Thrall user, no trial)", async () => {
     const { NextResponse } = await import("next/server");
-    mockRequireKarlOrTrial.mockResolvedValueOnce({
+    mockRequireAuthz.mockResolvedValueOnce({
       ok: false,
       response: NextResponse.json(
         {
@@ -98,7 +101,7 @@ describe("/api/config/picker — Auth & tier gating", () => {
 
   it("returns 402 when trial has expired", async () => {
     const { NextResponse } = await import("next/server");
-    mockRequireKarlOrTrial.mockResolvedValueOnce({
+    mockRequireAuthz.mockResolvedValueOnce({
       ok: false,
       response: NextResponse.json(
         {
@@ -116,8 +119,8 @@ describe("/api/config/picker — Auth & tier gating", () => {
   });
 
   it("returns 200 for trial user with active trial (#982)", async () => {
-    // requireKarlOrTrial returns ok:true for active trial users
-    mockRequireKarlOrTrial.mockResolvedValueOnce({ ok: true });
+    // requireAuthz returns ok:true for active trial users
+    mockRequireAuthz.mockResolvedValueOnce({ ok: true, user: MOCK_USER, firestoreUser: MOCK_FIRESTORE_USER });
 
     const res = await GET(makeRequest({ "x-trial-fingerprint": "valid-fingerprint-abc123" }));
     expect(res.status).toBe(200);
@@ -126,7 +129,7 @@ describe("/api/config/picker — Auth & tier gating", () => {
   });
 
   it("returns 200 for Karl-tier user", async () => {
-    mockRequireKarlOrTrial.mockResolvedValueOnce({ ok: true });
+    mockRequireAuthz.mockResolvedValueOnce({ ok: true, user: MOCK_USER, firestoreUser: MOCK_FIRESTORE_USER });
 
     const res = await GET(makeRequest());
     expect(res.status).toBe(200);
@@ -134,15 +137,14 @@ describe("/api/config/picker — Auth & tier gating", () => {
     expect(data.pickerApiKey).toBe("test-picker-key-abc");
   });
 
-  it("passes request to requireKarlOrTrial so trial header is readable", async () => {
-    mockRequireKarlOrTrial.mockResolvedValueOnce({ ok: true });
+  it("calls requireAuthz with tier: karl-or-trial so trial header is readable", async () => {
     const req = makeRequest({ "x-trial-fingerprint": "fp-xyz" });
 
     await GET(req);
 
-    expect(mockRequireKarlOrTrial).toHaveBeenCalledWith(
-      MOCK_USER,
-      expect.objectContaining({ headers: expect.anything() }),
+    expect(mockRequireAuthz).toHaveBeenCalledWith(
+      expect.anything(),
+      { tier: "karl-or-trial" },
     );
   });
 });

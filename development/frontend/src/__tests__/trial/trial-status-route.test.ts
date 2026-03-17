@@ -41,9 +41,9 @@ vi.mock("@/lib/logger", () => ({
   log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const mockRequireAuth = vi.fn();
-vi.mock("@/lib/auth/require-auth", () => ({
-  requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
+const mockRequireAuthz = vi.fn();
+vi.mock("@/lib/auth/authz", () => ({
+  requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
 }));
 
 // ── Import route handler after mocks ──────────────────────────────────────────
@@ -66,12 +66,14 @@ function makeRequest(body: Record<string, unknown> = {}, token = "valid-token"):
   });
 }
 
+const MOCK_FIRESTORE_USER = { clerkUserId: "google-sub-123", email: "test@test.com", displayName: "Test User", householdId: "hh-test", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" };
+
 function authOk() {
-  mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: "google-sub-123" } });
+  mockRequireAuthz.mockResolvedValue({ ok: true, user: { sub: "google-sub-123" }, firestoreUser: MOCK_FIRESTORE_USER });
 }
 
 function authFail() {
-  mockRequireAuth.mockResolvedValue({
+  mockRequireAuthz.mockResolvedValue({
     ok: false,
     response: new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 }),
   });
@@ -179,9 +181,10 @@ describe("POST /api/trial/status", () => {
     mockRedis.set.mockResolvedValueOnce("OK"); // initTrial writes new trial
 
     // Auth user simulates a canceled Stripe customer — no difference at this route level
-    mockRequireAuth.mockResolvedValue({
+    mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: { sub: "google-sub-canceled-stripe", email: "user@example.com" },
+      firestoreUser: { ...MOCK_FIRESTORE_USER, clerkUserId: "google-sub-canceled-stripe", email: "user@example.com" },
     });
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));

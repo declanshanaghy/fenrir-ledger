@@ -7,8 +7,9 @@ import { GET } from '@/app/api/stripe/membership/route';
 import { NextRequest } from 'next/server';
 
 // Mock dependencies
-vi.mock('@/lib/auth/require-auth', () => ({
-  requireAuth: vi.fn(),
+const mockRequireAuthz = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/auth/authz', () => ({
+  requireAuthz: mockRequireAuthz,
 }));
 
 vi.mock('@/lib/kv/entitlement-store', () => ({
@@ -41,7 +42,6 @@ vi.mock('@/lib/logger', () => ({
   },
 }));
 
-import { requireAuth } from '@/lib/auth/require-auth';
 import * as kvStore from '@/lib/kv/entitlement-store';
 import { stripe } from '@/lib/stripe/api';
 
@@ -64,15 +64,11 @@ describe('GET /api/stripe/membership', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(requireAuth).mockResolvedValue({
+    mockRequireAuthz.mockResolvedValue({
       ok: true,
-      user: {
-        sub: mockGoogleSub,
-        email: 'test@example.com',
-        name: 'Test User',
-        picture: 'https://example.com/picture.jpg',
-      },
-    } as any);
+      user: { sub: mockGoogleSub, email: 'test@example.com', name: 'Test User', picture: 'https://example.com/picture.jpg' },
+      firestoreUser: { clerkUserId: mockGoogleSub, email: 'test@example.com', displayName: 'Test User', householdId: 'hh-test', role: 'owner' as const, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+    });
   });
 
   describe('Backfill cancellation data', () => {
@@ -284,10 +280,10 @@ describe('GET /api/stripe/membership', () => {
     it('should return 401 when authentication fails', async () => {
       const mockResponse = new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 }) as any;
 
-      vi.mocked(requireAuth).mockResolvedValue({
+      mockRequireAuthz.mockResolvedValueOnce({
         ok: false,
         response: mockResponse,
-      } as any);
+      });
 
       const request = createMockRequest();
       const response = await GET(request);

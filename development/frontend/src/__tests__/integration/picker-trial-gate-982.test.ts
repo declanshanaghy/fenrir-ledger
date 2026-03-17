@@ -1,12 +1,12 @@
 /**
  * Loki QA augmentation tests — issue #982
  *
- * Regression guard: /api/config/picker MUST use requireKarlOrTrial,
+ * Regression guard: /api/config/picker MUST use requireAuthz with tier: karl-or-trial,
  * not requireKarl. Trial users must receive 200, not 402.
  *
  * Gaps covered beyond FiremanDecko's existing tests:
  *  1. Hook returns null + no key when route returns 402 (trial-blocked user)
- *  2. Route does NOT call requireKarl (regression guard via mock assertion)
+ *  2. Route calls requireAuthz with { tier: "karl-or-trial" } (regression guard)
  *  3. Empty-string GOOGLE_PICKER_API_KEY is treated as unconfigured (500)
  *  4. Trial user receives the actual pickerApiKey value in the response body
  *  5. Karl user response body contains pickerApiKey (not just status 200)
@@ -20,22 +20,10 @@ import { renderHook, waitFor } from "@testing-library/react";
 
 // ── Route handler mocks ──────────────────────────────────────────────────────
 
-const mockRequireAuth = vi.fn();
-vi.mock("@/lib/auth/require-auth", () => ({
-  requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
-}));
-
-// requireKarlOrTrial is the CORRECT guard — it must be called
-const mockRequireKarlOrTrial = vi.fn();
-vi.mock("@/lib/auth/require-karl-or-trial", () => ({
-  requireKarlOrTrial: (...args: unknown[]) => mockRequireKarlOrTrial(...args),
-}));
-
-// requireKarl must NOT be imported by the picker route (regression guard)
-// If the route still imports requireKarl, this mock will tell us via spy
-const mockRequireKarl = vi.fn();
-vi.mock("@/lib/auth/require-karl", () => ({
-  requireKarl: (...args: unknown[]) => mockRequireKarl(...args),
+// requireAuthz is the CORRECT guard — it must be called with tier: "karl-or-trial"
+const mockRequireAuthz = vi.fn();
+vi.mock("@/lib/auth/authz", () => ({
+  requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -81,11 +69,11 @@ let GET: typeof import("@/app/api/config/picker/route").GET;
 
 // ── Setup ────────────────────────────────────────────────────────────────────
 
+const MOCK_FIRESTORE_USER = { clerkUserId: MOCK_USER.sub, email: MOCK_USER.email, displayName: "Trial User", householdId: "hh-trial", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" };
+
 beforeEach(async () => {
   // Default: authenticated + Karl-or-trial passes
-  mockRequireAuth.mockResolvedValue({ ok: true, user: MOCK_USER });
-  mockRequireKarlOrTrial.mockResolvedValue({ ok: true });
-  mockRequireKarl.mockResolvedValue({ ok: true }); // should never be called
+  mockRequireAuthz.mockResolvedValue({ ok: true, user: MOCK_USER, firestoreUser: MOCK_FIRESTORE_USER });
   process.env.GOOGLE_PICKER_API_KEY = PICKER_KEY;
 
   const mod = await import("@/app/api/config/picker/route");
@@ -104,26 +92,26 @@ afterEach(() => {
 
 // ── Regression guard ─────────────────────────────────────────────────────────
 
-describe("Regression guard — picker route MUST use requireKarlOrTrial not requireKarl (#982)", () => {
-  it("calls requireKarlOrTrial (not requireKarl) for every request", async () => {
+describe("Regression guard — picker route MUST use requireAuthz with tier: karl-or-trial (#982, ADR-015)", () => {
+  it("calls requireAuthz with { tier: 'karl-or-trial' } for every request", async () => {
     await GET(makeRouteRequest());
 
-    expect(mockRequireKarlOrTrial).toHaveBeenCalledOnce();
-    // requireKarl must NOT be called — regression guard
-    expect(mockRequireKarl).not.toHaveBeenCalled();
+    expect(mockRequireAuthz).toHaveBeenCalledOnce();
+    expect(mockRequireAuthz).toHaveBeenCalledWith(
+      expect.anything(),
+      { tier: "karl-or-trial" },
+    );
   });
 
-  it("calls requireKarlOrTrial even when auth fails early (no bypass)", async () => {
+  it("returns 401 when auth fails", async () => {
     const { NextResponse } = await import("next/server");
-    mockRequireAuth.mockResolvedValueOnce({
+    mockRequireAuthz.mockResolvedValueOnce({
       ok: false,
       response: NextResponse.json({ error: "unauthorized" }, { status: 401 }),
     });
 
-    await GET(makeRouteRequest());
-
-    // requireKarl must never be called, even in error paths
-    expect(mockRequireKarl).not.toHaveBeenCalled();
+    const res = await GET(makeRouteRequest());
+    expect(res.status).toBe(401);
   });
 });
 
@@ -131,9 +119,7 @@ describe("Regression guard — picker route MUST use requireKarlOrTrial not requ
 
 describe("Trial user — route returns 200 + pickerApiKey (#982 core fix)", () => {
   it("returns pickerApiKey value (not just 200) for active trial user", async () => {
-    // requireKarlOrTrial returns ok:true because user has active trial
-    mockRequireKarlOrTrial.mockResolvedValueOnce({ ok: true });
-
+    // Default beforeEach mock: requireAuthz returns ok:true (trial user passes karl-or-trial)
     const res = await GET(
       makeRouteRequest({ "x-trial-fingerprint": "abc123fingerprint456" }),
     );
@@ -145,16 +131,15 @@ describe("Trial user — route returns 200 + pickerApiKey (#982 core fix)", () =
     expect(body.pickerApiKey.length).toBeGreaterThan(0);
   });
 
-  it("trial user's fingerprint header is forwarded to requireKarlOrTrial", async () => {
+  it("request headers are forwarded to requireAuthz (tier gate can inspect fingerprint)", async () => {
     const fingerprint = "trial-fingerprint-xyz789";
-    mockRequireKarlOrTrial.mockResolvedValueOnce({ ok: true });
 
     await GET(makeRouteRequest({ "x-trial-fingerprint": fingerprint }));
 
-    // Verify requireKarlOrTrial received user + request (so it can read the header)
-    expect(mockRequireKarlOrTrial).toHaveBeenCalledWith(
-      MOCK_USER,
+    // requireAuthz receives the full request object so the tier gate can read headers
+    expect(mockRequireAuthz).toHaveBeenCalledWith(
       expect.objectContaining({ headers: expect.anything() }),
+      { tier: "karl-or-trial" },
     );
   });
 });
@@ -163,8 +148,7 @@ describe("Trial user — route returns 200 + pickerApiKey (#982 core fix)", () =
 
 describe("Karl subscriber — existing behavior preserved", () => {
   it("returns pickerApiKey value (not just 200) for Karl subscriber", async () => {
-    mockRequireKarlOrTrial.mockResolvedValueOnce({ ok: true });
-
+    // Default beforeEach mock: requireAuthz returns ok:true (Karl passes karl-or-trial)
     const res = await GET(makeRouteRequest());
 
     expect(res.status).toBe(200);
@@ -178,7 +162,7 @@ describe("Karl subscriber — existing behavior preserved", () => {
 describe("Free-tier user (no trial) — blocked with 402", () => {
   it("returns 402 with subscription_required error body for free-tier user", async () => {
     const { NextResponse } = await import("next/server");
-    mockRequireKarlOrTrial.mockResolvedValueOnce({
+    mockRequireAuthz.mockResolvedValueOnce({
       ok: false,
       response: NextResponse.json(
         {

@@ -17,9 +17,9 @@ vi.mock("@/lib/logger", () => ({
   log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const mockRequireAuth = vi.fn();
-vi.mock("@/lib/auth/require-auth", () => ({
-  requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
+const mockRequireAuthz = vi.fn();
+vi.mock("@/lib/auth/authz", () => ({
+  requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
 }));
 
 const mockJoinHouseholdTransaction = vi.fn();
@@ -47,9 +47,10 @@ function makeRequest(body: Record<string, unknown> = {}): NextRequest {
 describe("POST /api/household/join — Loki edge cases", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRequireAuth.mockResolvedValue({
+    mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: { sub: "user_owner", email: "owner@example.com", name: "Thor", picture: "" },
+      firestoreUser: { clerkUserId: "user_owner", email: "owner@example.com", displayName: "Thor", householdId: "hh-solo", role: "owner" as const, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
     });
   });
 

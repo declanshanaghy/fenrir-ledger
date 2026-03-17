@@ -116,13 +116,13 @@ beforeEach(() => {
 
 // ── PUT 404: user not found ────────────────────────────────────────────────────
 
-describe("PUT /api/sync — 404 when user not in Firestore", () => {
-  it("returns 404 when getUser returns null", async () => {
+describe("PUT /api/sync — 403 when user not in Firestore", () => {
+  it("returns 403 when getUser returns null", async () => {
     mockGetUser.mockResolvedValue(null);
     const res = await PUT(makePutRequest({ cards: [] }));
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(403);
     const body = await res.json() as { error: string };
-    expect(body.error).toBe("user_not_found");
+    expect(body.error).toBe("forbidden");
   });
 
   it("does not call getCards when user not found", async () => {
