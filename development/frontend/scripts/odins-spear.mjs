@@ -20,10 +20,14 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Redis = require("ioredis").default;
 const { Firestore, FieldValue } = require("@google-cloud/firestore");
+const { GoogleAuth, OAuth2Client } = require("google-auth-library");
 import { createInterface } from "node:readline";
 import { parseArgs } from "node:util";
 import { execSync, spawn } from "node:child_process";
 import { createConnection } from "node:net";
+import { readFileSync, existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 // ── Stripe ───────────────────────────────────────────────────────────────────
 
@@ -282,6 +286,64 @@ try {
 }
 
 console.log(`${GREEN}Connected to Redis${RESET} ${DIM}(${redisUrl})${RESET}`);
+
+// ── Google ADC authentication ─────────────────────────────────────────────────
+
+/**
+ * Ensure Google Application Default Credentials are valid before startup.
+ *
+ * Priority order:
+ *   1. Existing valid ADC → proceed silently
+ *   2. Cached refresh_token in ADC JSON → refresh silently
+ *   3. No usable credentials → open browser via gcloud auth application-default login
+ *
+ * Throws if gcloud is not installed or auth ultimately fails.
+ */
+async function ensureAuthenticated() {
+  // 1. Try existing ADC — if valid, return early
+  try {
+    const auth = new GoogleAuth({ scopes: ["https://www.googleapis.com/auth/cloud-platform"] });
+    const client = await auth.getClient();
+    await client.getAccessToken();
+    return; // credentials valid, proceed silently
+  } catch { /* fall through to refresh or browser flow */ }
+
+  // 2. Check for refresh_token in ADC JSON
+  const adcPath = join(homedir(), ".config", "gcloud", "application_default_credentials.json");
+  if (existsSync(adcPath)) {
+    try {
+      const adc = JSON.parse(readFileSync(adcPath, "utf-8"));
+      if (adc.refresh_token) {
+        const oauth2 = new OAuth2Client(adc.client_id, adc.client_secret);
+        oauth2.setCredentials({ refresh_token: adc.refresh_token });
+        const tokenResponse = await oauth2.getAccessToken();
+        if (tokenResponse.token) {
+          process.env.GOOGLE_APPLICATION_CREDENTIALS = adcPath;
+          return; // silently refreshed
+        }
+      }
+    } catch { /* refresh_token expired or invalid — fall through to browser */ }
+  }
+
+  // 3. Fall back to browser flow via gcloud
+  console.log(`\n${GOLD}Opening browser for Google authentication...${RESET}`);
+  console.log(`${DIM}Complete the auth in your browser. The auth code will appear in this terminal if prompted.${RESET}\n`);
+  execSync("gcloud auth application-default login", { stdio: "inherit" });
+}
+
+try {
+  await ensureAuthenticated();
+} catch (err) {
+  const msg = err.message || String(err);
+  if (/gcloud/.test(msg) || /ENOENT/.test(msg) || /not found/.test(msg)) {
+    console.error(`\n${RED}gcloud CLI not found.${RESET} Install it from https://cloud.google.com/sdk/docs/install`);
+  } else if (/cancelled|cancel|abort/i.test(msg)) {
+    console.error(`\n${RED}Authentication cancelled.${RESET} Odin's Spear requires Google credentials to access Firestore.`);
+  } else {
+    console.error(`\n${RED}Authentication failed:${RESET} ${msg}`);
+  }
+  process.exit(1);
+}
 
 // ── Firestore client ─────────────────────────────────────────────────────────
 
