@@ -65,7 +65,7 @@ output "dns_nameservers" {
 
 output "firestore_database_name" {
   description = "Firestore database name"
-  value       = google_firestore_database.default.name
+  value       = google_firestore_database.main.name
 }
 
 output "firestore_project_id" {

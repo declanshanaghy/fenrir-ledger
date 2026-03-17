@@ -48,7 +48,8 @@ export function getFirestore(): Firestore {
     );
   }
 
-  _firestore = new Firestore({ projectId });
+  const databaseId = process.env.FIRESTORE_DATABASE_ID || "(default)";
+  _firestore = new Firestore({ projectId, databaseId });
   return _firestore;
 }
 
