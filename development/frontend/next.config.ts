@@ -1,6 +1,7 @@
 // Next.js configuration for Fenrir Ledger
 import type { NextConfig } from "next";
 import { buildSecurityHeaders } from "./src/lib/csp-headers";
+import { CACHE_CONTROL } from "./src/lib/cache-headers";
 
 /**
  * Next.js Configuration
@@ -29,11 +30,29 @@ const nextConfig: NextConfig = {
     const securityHeaders = buildSecurityHeaders();
     return [
       {
-        // Apply to all routes except Next.js internals and static assets.
-        // Mirrors the middleware matcher pattern.
+        // Security headers — apply to all routes except Next.js internals and
+        // static assets. Mirrors the middleware matcher pattern.
         source:
           "/((?!_next/static|_next/image|favicon.ico|icon.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
         headers: securityHeaders,
+      },
+      // ── Cache-Control for static assets (Issue #1145) ──────────────────────
+      // These paths are excluded from the middleware matcher, so their
+      // Cache-Control is set here instead of in middleware.ts.
+      {
+        // Content-hashed filenames — safe to cache for 1 year at both browser and edge
+        source: "/_next/static/:path*",
+        headers: [{ key: "Cache-Control", value: CACHE_CONTROL.STATIC_IMMUTABLE }],
+      },
+      {
+        // Next.js image optimisation — 24h browser TTL + 24h edge TTL
+        source: "/_next/image",
+        headers: [{ key: "Cache-Control", value: CACHE_CONTROL.IMAGE }],
+      },
+      {
+        // Root-level static assets: favicons, icons, images
+        source: "/:path*\\.(ico|svg|png)",
+        headers: [{ key: "Cache-Control", value: CACHE_CONTROL.STATIC_ASSET }],
       },
     ];
   },
