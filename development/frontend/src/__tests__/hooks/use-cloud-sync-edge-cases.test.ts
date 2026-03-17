@@ -54,6 +54,15 @@ vi.mock("@/lib/storage", () => ({
   setAllCards: vi.fn(),
 }));
 
+// Treat all tests in this file as post-migration: hasMigrated() returns true
+// so handleLoginTransition delegates to regular performSync without attempting
+// a migration API call. This prevents the migration from consuming mock fetch
+// responses that are meant for the sync flows under test.
+vi.mock("@/lib/sync/migration", () => ({
+  hasMigrated: () => true,
+  runMigration: vi.fn(),
+}));
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 const FAKE_SESSION = { id_token: "tok-edge", user: { sub: "hh-edge" } };
