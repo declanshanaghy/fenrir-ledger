@@ -25,17 +25,43 @@ export function parseBranchTitle(branch: string, step: string): string {
 }
 
 /**
+ * Parse a session ID into a human-readable title.
+ * Session IDs follow the pattern: issue-<N>-step<S>-<agent>-<uuid>
+ *
+ * Examples:
+ *   "issue-1200-step1-firemandecko-fe9c6b6d" → "Issue #1200 – Step 1"
+ *   "issue-987-step2-luna-abc12345"           → "Issue #987 – Step 2"
+ *
+ * Returns null if the session ID does not match the expected pattern.
+ */
+export function parseSessionIdTitle(sessionId: string): string | null {
+  const match = /^issue-(\d+)-step(\d+)-/i.exec(sessionId);
+  if (!match) return null;
+  return `Issue #${match[1]} – Step ${match[2]}`;
+}
+
+/**
  * Resolve the display title for a session using priority order:
  *   1. issueTitle (from K8s annotation fenrir/pr-title or fenrir/issue-title)
- *   2. branchName parse fallback
- *   3. Raw sessionId (existing behavior, graceful degradation)
+ *   2. branchName parse (only if branch contains an issue pattern)
+ *   3. sessionId parse (issue-<N>-step<S>-<agent>-<uuid> pattern)
+ *   4. Raw branchName or sessionId (graceful degradation)
  */
 export function resolveSessionTitle(job: DisplayJob): string {
   if (job.issueTitle) {
     return `Issue #${job.issue} – ${job.issueTitle} – Step ${job.step}`;
   }
   if (job.branchName) {
-    return parseBranchTitle(job.branchName, job.step);
+    const fromBranch = parseBranchTitle(job.branchName, job.step);
+    // parseBranchTitle returns the raw branch name when no issue pattern found
+    if (fromBranch !== job.branchName) {
+      return fromBranch;
+    }
   }
-  return job.sessionId;
+  // Branch had no issue pattern — try to extract from session ID
+  const fromSessionId = parseSessionIdTitle(job.sessionId);
+  if (fromSessionId) {
+    return fromSessionId;
+  }
+  return job.branchName ?? job.sessionId;
 }
