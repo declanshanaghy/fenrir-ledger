@@ -109,6 +109,7 @@ export function LedgerShell({ children }: LedgerShellProps) {
 
       <Toaster
         position="bottom-right"
+        closeButton
         toastOptions={{
           className: "font-body",
           style: {

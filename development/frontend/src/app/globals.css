@@ -625,6 +625,50 @@ body.konami-shake-mobile {
   font-family: var(--font-source-serif), serif;
 }
 
+/* ── Toast Close Button (Runic Dismiss) ────────────────────
+ * Sonner's [data-close-button] — styled as the Algiz rune ᛉ.
+ * Touch target: 44×44px (WCAG 2.5.5 Level AAA).
+ * Gold on hover to match Norse war-room theme.
+ * ─────────────────────────────────────────────────────────── */
+[data-sonner-toast][data-styled=true] [data-close-button] {
+  width: 44px;
+  height: 44px;
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+[data-sonner-toast][data-styled=true] [data-close-button]:hover {
+  background: hsl(var(--card));
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary));
+}
+
+[data-sonner-toast][data-styled=true] [data-close-button]:focus-visible {
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.5);
+  outline: none;
+}
+
+/* Hide sonner's default SVG X; inject Algiz rune ᛉ via ::after */
+[data-sonner-toast][data-styled=true] [data-close-button] svg {
+  display: none;
+}
+
+[data-sonner-toast][data-styled=true] [data-close-button]::after {
+  content: 'ᛉ';
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* Reduced motion: disable close button transition */
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toast][data-styled=true] [data-close-button] {
+    transition: none;
+  }
+}
+
 /* ── Ragnarok Threshold Mode ──────────────────────────────── */
 .ragnarok-overlay {
   position: fixed;
