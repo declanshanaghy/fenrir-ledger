@@ -1,7 +1,7 @@
 # Security Data Flow Diagrams — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-14 (updated for GKE Autopilot — replaced Vercel references)
+**Last reviewed**: 2026-03-17 (added Firestore sync flows — sections 7 and 8)
 
 Trust boundary notation:
 - `[TB]` — Trust boundary crossing (browser ↔ server)
@@ -268,3 +268,59 @@ Browser (authenticated)
 | Stripe checkout | None (Stripe SDK) | None | None | requireAuth |
 | Stripe webhook | None | None | None | N/A (SHA-256 HMAC) |
 | Stripe membership | None | None | None (KV only) | requireAuth |
+| Firestore sync pull | None | None | None (Firestore) | requireAuth + Karl tier |
+| Firestore sync push | None | None (Zod validated) | None (Firestore) | requireAuth + Karl tier |
+
+---
+
+## 7. Firestore Cloud Sync — Pull Flow (`GET /api/sync/pull`)
+
+```
+Browser (Karl-tier, authenticated)
+  │
+  ├─ GET /api/sync/pull?householdId=<IGNORED>  [TB]
+  │    Authorization: Bearer <id_token>
+  │    requireAuth() → verified Google user { sub }
+  │    Karl tier check via getStripeEntitlement(sub) → Upstash Redis
+  │    if not Karl → 403
+  │
+  │    getUser(sub)           ← Admin SDK, Firestore Zone 6
+  │    user.householdId       ← server-authoritative; client-supplied householdId IGNORED
+  │
+  │    getAllFirestoreCards(user.householdId)  ← Admin SDK reads cards collection
+  │
+  └─ return { cards: FirestoreCard[] } → browser
+```
+
+**Trust boundary crossings**: 1 (browser → API route)
+**IDOR protection**: `householdId` derived server-side from `getUser(sub)` — not from request params (fixed PR #1203)
+**Auth check**: requireAuth + Karl tier check
+
+---
+
+## 8. Firestore Cloud Sync — Push Flow (`POST /api/sync/push`)
+
+```
+Browser (Karl-tier, authenticated)
+  │
+  ├─ POST /api/sync/push  [TB]
+  │    Authorization: Bearer <id_token>
+  │    Body: { cards: Card[] }      ← householdId in body IGNORED
+  │    requireAuth() → verified Google user { sub }
+  │    Karl tier check via getStripeEntitlement(sub) → Upstash Redis
+  │    if not Karl → 403
+  │
+  │    getUser(sub)           ← Admin SDK
+  │    user.householdId       ← server-authoritative
+  │
+  │    getAllFirestoreCards(user.householdId)   ← read remote state
+  │    mergeCardsWithStats(localCards, remoteCards)  ← 3-way merge
+  │    merged cards have householdId overridden to user.householdId
+  │    setCards(merged)        ← Admin SDK batch write
+  │
+  └─ return { cards: merged, stats } → browser
+```
+
+**Trust boundary crossings**: 1 (browser → API route)
+**IDOR protection**: `householdId` derived server-side; cards' `householdId` overridden before write (fixed PR #1207)
+**Injection surface**: Card array validated via Zod before merge
