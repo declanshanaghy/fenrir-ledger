@@ -15,6 +15,16 @@ If Playwright tests are needed:
   cd /workspace/repo && npx playwright install chromium 2>/dev/null || true
   ln -sf /workspace/repo/development/frontend/node_modules /workspace/repo/quality/node_modules 2>/dev/null || true
 
+**Step 1b — Check for prior work on this branch (UNBREAKABLE):**
+cd /workspace/repo && git fetch origin && git log origin/main..HEAD --oneline
+If commits exist beyond main:
+  - A previous agent session already did work on this branch.
+  - Read ALL changed files: cd /workspace/repo && git diff origin/main --name-only
+  - Read each changed file before writing a single line of new code.
+  - Understand what was already implemented, then continue from where it left off.
+  - DO NOT rewrite or redo work that is already committed. Pick up from the current state.
+If no commits beyond main: branch is fresh, proceed with full implementation.
+
 TODO TRACKING (UNBREAKABLE):
 Use TodoWrite to plan and track ALL work. Create todos at the START of the session
 covering every numbered step. Update each todo to in_progress when you start it and
