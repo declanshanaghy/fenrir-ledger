@@ -69,6 +69,8 @@ function setSession() {
 
 function clearSession() {
   localStorage.removeItem("fenrir:auth");
+  // Clear migration flag to prevent cross-test pollution from markMigrated() (#1239)
+  localStorage.removeItem("fenrir:migrated");
 }
 
 function hangingFetch() {
@@ -201,10 +203,10 @@ describe("Bug 2 — Restore vs backup message direction", () => {
     const { toast } = await import("sonner");
     // Simulate fresh sign-in: local storage wiped, 4 cards in Firestore
     mockGetRawAllCards.mockReturnValue([]); // empty local
-    setSession();
     mockFetch.mockReturnValue(successResponse(4));
 
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull/runMigration on mount returns early
     await act(async () => {
       await result.current.syncNow();
     });
@@ -224,10 +226,10 @@ describe("Bug 2 — Restore vs backup message direction", () => {
       { id: "c2", deletedAt: undefined },
       { id: "c3", deletedAt: undefined },
     ]);
-    setSession();
     mockFetch.mockReturnValue(successResponse(3));
 
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull/runMigration on mount returns early
     await act(async () => {
       await result.current.syncNow();
     });
@@ -243,10 +245,10 @@ describe("Bug 2 — Restore vs backup message direction", () => {
     const { toast } = await import("sonner");
     // Local is empty, Firestore returns 5 cards
     mockGetRawAllCards.mockReturnValue([]);
-    setSession();
     mockFetch.mockReturnValue(successResponse(5));
 
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull/runMigration on mount returns early
     await act(async () => {
       await result.current.syncNow();
     });
@@ -260,10 +262,10 @@ describe("Bug 2 — Restore vs backup message direction", () => {
   it("uses singular 'card has been' for count=1 restore", async () => {
     const { toast } = await import("sonner");
     mockGetRawAllCards.mockReturnValue([]);
-    setSession();
     mockFetch.mockReturnValue(successResponse(1));
 
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull/runMigration on mount returns early
     await act(async () => {
       await result.current.syncNow();
     });
@@ -277,10 +279,10 @@ describe("Bug 2 — Restore vs backup message direction", () => {
   it("uses singular 'card has been' for count=1 backup (local had 1 card)", async () => {
     const { toast } = await import("sonner");
     mockGetRawAllCards.mockReturnValue([{ id: "c1", deletedAt: undefined }]);
-    setSession();
     mockFetch.mockReturnValue(successResponse(1));
 
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull/runMigration on mount returns early
     await act(async () => {
       await result.current.syncNow();
     });
