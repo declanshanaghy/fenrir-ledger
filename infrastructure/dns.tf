@@ -116,6 +116,18 @@ resource "google_dns_record_set" "analytics" {
   rrdatas = [google_compute_global_address.umami_ip.address]
 }
 
+resource "google_dns_record_set" "marketing" {
+  name         = "marketing.${var.domain}."
+  managed_zone = google_dns_managed_zone.app.name
+  project      = var.project_id
+  type         = "A"
+  # TTL lowered to 60s pre-CDN for fast DNS-level rollback.
+  # Raise to 3600s after CDN stability is confirmed (issue #1209).
+  ttl = 60
+
+  rrdatas = [google_compute_global_address.app_ip.address]
+}
+
 # --------------------------------------------------------------------------
 # Static Global IP — Odin's Throne (monitor.fenrirledger.com)
 # --------------------------------------------------------------------------
