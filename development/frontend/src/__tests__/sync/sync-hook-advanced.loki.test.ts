@@ -154,6 +154,7 @@ describe("useCloudSync — initial state (Thrall/idle)", () => {
 
 describe("useCloudSync — syncNow() is a no-op when offline", () => {
   beforeEach(() => {
+    localStorage.removeItem("fenrir:migrated"); // prevent cross-test pollution (#1239)
     setupKarl();
     try { localStorage.setItem("fenrir:first-sync-shown", "true"); } catch { /* ignore */ }
   });
@@ -189,6 +190,7 @@ describe("useCloudSync — syncNow() is a no-op when offline", () => {
 
 describe("useCloudSync — auto-retry fires after 120s error timeout", () => {
   beforeEach(() => {
+    localStorage.removeItem("fenrir:migrated"); // prevent cross-test pollution (#1239)
     setupKarl();
     vi.useFakeTimers();
     try { localStorage.setItem("fenrir:first-sync-shown", "true"); } catch { /* ignore */ }
@@ -199,7 +201,7 @@ describe("useCloudSync — auto-retry fires after 120s error timeout", () => {
     vi.clearAllMocks();
   });
 
-  it("auto-retry transitions error → syncing → synced after 120s", async () => {
+  it("Issue #1239: no auto-retry after error — status stays error after 120s", async () => {
     // Initial mount fails
     mockFetchGetFail("forbidden");
     const { result } = renderHook(() => useCloudSync());
@@ -210,24 +212,20 @@ describe("useCloudSync — auto-retry fires after 120s error timeout", () => {
     });
     expect(result.current.status).toBe("error");
 
-    // Set up PUT to succeed on retry
-    mockFetchPut(2);
-
-    // Advance past the 120-second retry window
+    // Issue #1239: auto-retry was removed. Advancing time does NOT trigger a retry.
     await act(async () => {
       vi.advanceTimersByTime(121_000);
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    // Should have triggered a retry (POST to /api/sync/push)
-    const postCalls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
-      (c: unknown[]) => (c[1] as RequestInit)?.method === "POST"
-    );
-    expect(postCalls.length).toBeGreaterThanOrEqual(1);
+    // Status still error — no auto-retry
+    expect(result.current.status).toBe("error");
+    // retryIn always null — no countdown (#1239)
+    expect(result.current.retryIn).toBeNull();
   });
 
-  it("auto-retry transitions error → syncing → error if retry also fails", async () => {
+  it("Issue #1239: error persists after 120s — retry only via card edit or syncNow", async () => {
     // Initial mount fails
     mockFetchGetFail("permission-denied");
     const { result } = renderHook(() => useCloudSync());
@@ -238,17 +236,16 @@ describe("useCloudSync — auto-retry fires after 120s error timeout", () => {
     });
     expect(result.current.status).toBe("error");
 
-    // Retry will also fail
-    mockFetchPutFail("server_error");
-
+    // No auto-retry after 120s (#1239 removed this behavior)
     await act(async () => {
       vi.advanceTimersByTime(121_000);
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    // Still in error state after failed retry
+    // Still in error state — no automatic retry
     expect(result.current.status).toBe("error");
+    expect(result.current.retryIn).toBeNull();
   });
 });
 
@@ -256,6 +253,7 @@ describe("useCloudSync — auto-retry fires after 120s error timeout", () => {
 
 describe("useCloudSync — fenrir:cards-changed ignored when offline", () => {
   beforeEach(() => {
+    localStorage.removeItem("fenrir:migrated"); // prevent cross-test pollution (#1239)
     setupKarl();
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try { localStorage.setItem("fenrir:first-sync-shown", "true"); } catch { /* ignore */ }
@@ -312,6 +310,7 @@ describe("useCloudSync — fenrir:cards-changed ignored when offline", () => {
 
 describe("useCloudSync — multiple fenrir:cards-changed events debounce to one PUT", () => {
   beforeEach(() => {
+    localStorage.removeItem("fenrir:migrated"); // prevent cross-test pollution (#1239)
     setupKarl();
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try { localStorage.setItem("fenrir:first-sync-shown", "true"); } catch { /* ignore */ }
@@ -364,6 +363,7 @@ describe("useCloudSync — multiple fenrir:cards-changed events debounce to one 
 
 describe("useCloudSync — sync success sets lastSyncedAt and cardCount", () => {
   beforeEach(() => {
+    localStorage.removeItem("fenrir:migrated"); // prevent cross-test pollution (#1239)
     setupKarl();
     try { localStorage.setItem("fenrir:first-sync-shown", "true"); } catch { /* ignore */ }
   });

@@ -59,6 +59,8 @@ function setSession() {
 
 function clearSession() {
   localStorage.removeItem("fenrir:auth");
+  // Clear migration flag to prevent cross-test pollution from markMigrated() (#1239)
+  localStorage.removeItem("fenrir:migrated");
 }
 
 /** A fetch that never resolves — keeps the hook in "syncing" state */
@@ -156,23 +158,23 @@ describe("useCloudSync — Karl: state transitions", () => {
   });
 
   it("transitions syncing → error on failed fetch", async () => {
-    setSession();
     mockFetch.mockReturnValue(errorResponse("permission-denied"));
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
       await result.current.syncNow();
     });
     expect(result.current.status).toBe("error");
     expect(result.current.errorCode).toBe("permission-denied");
     expect(result.current.errorTimestamp).toBeInstanceOf(Date);
-    // retryIn is AUTO_RETRY_MS/1000 = 30 seconds (hardcoded in hook)
-    expect(result.current.retryIn).toBe(30);
+    // retryIn is always null — auto-retry removed in Issue #1239
+    expect(result.current.retryIn).toBeNull();
   });
 
   it("dismissError clears error → idle", async () => {
-    setSession();
     mockFetch.mockReturnValue(errorResponse());
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
       await result.current.syncNow();
     });
@@ -241,9 +243,9 @@ describe("useCloudSync — first-sync toast", () => {
 
   it("shows first-sync toast on first synced transition", async () => {
     const { toast } = await import("sonner");
-    setSession();
     mockFetch.mockReturnValue(successResponse(12));
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
       await result.current.syncNow();
     });
@@ -258,9 +260,9 @@ describe("useCloudSync — first-sync toast", () => {
   it("does not show toast on subsequent syncs (localStorage guard)", async () => {
     const { toast } = await import("sonner");
     localStorage.setItem("fenrir:first-sync-shown", "true");
-    setSession();
     mockFetch.mockReturnValue(successResponse(12));
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull/runMigration on mount returns early
     await act(async () => {
       await result.current.syncNow();
     });
@@ -286,9 +288,9 @@ describe("useCloudSync — error toast", () => {
 
   it("shows error toast on sync failure", async () => {
     const { toast } = await import("sonner");
-    setSession();
     mockFetch.mockReturnValue(errorResponse());
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
       await result.current.syncNow();
     });
@@ -296,7 +298,8 @@ describe("useCloudSync — error toast", () => {
     expect(toast.error).toHaveBeenCalledWith(
       "Sync failed",
       expect.objectContaining({
-        description: "Your cards are safe locally. We'll retry shortly.",
+        // Issue #1239: message updated — no auto-retry, user must edit a card
+        description: "Your cards are safe locally. Retry by editing a card.",
       })
     );
   });

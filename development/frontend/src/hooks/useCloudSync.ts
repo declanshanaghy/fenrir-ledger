@@ -14,23 +14,23 @@
  *   errorMessage — Human-readable error description (null if no error)
  *   errorCode    — Machine-readable code e.g. "permission-denied" (null if no error)
  *   errorTimestamp — When the error occurred (null if no error)
- *   retryIn      — Seconds until auto-retry (null if not applicable)
+ *   retryIn      — Always null (auto-retry removed in Issue #1239)
  *   syncNow      — Trigger a manual sync (no-op for non-Karl)
- *   dismissError — Clear visible error state (does not stop background retries)
+ *   dismissError — Clear visible error state
  *
  * State transitions:
  *   idle → syncing: syncNow() called (Karl only)
  *   syncing → synced: fenrir:cloud-sync-complete event
  *   syncing → error: fenrir:cloud-sync-error event
  *   synced → idle: after SYNCED_DISPLAY_MS elapsed
- *   error → syncing: syncNow() or auto-retry fires
  *   error → idle: dismissError()
  *   * → offline: navigator.onLine = false
- *   offline → idle/syncing: navigator.onLine = true
+ *   offline → idle: navigator.onLine = true (no push on reconnect — Issue #1239)
  *
  * Issue #1122 — wired to real API routes
  * Issue #1125 — initial state machine design
  * Issue #1172 — auth gating, restore vs backup message, push loop fix
+ * Issue #1239 — lock push to card create/edit only (remove online/retry/login push)
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -57,9 +57,6 @@ export const SYNCED_DISPLAY_MS = 3000;
  * NOT "fenrir:sync" (which fires on every write including internal sync merges).
  */
 export const AUTO_SYNC_DEBOUNCE_MS = 10_000;
-
-/** Delay before auto-retry after a sync error (ms) */
-const AUTO_RETRY_MS = 30_000;
 
 /** localStorage key to prevent repeat first-sync confirmation toast */
 const LS_FIRST_SYNC_SHOWN = "fenrir:first-sync-shown";
@@ -118,6 +115,31 @@ function getSession(): FenrirSession | null {
 }
 
 // ---------------------------------------------------------------------------
+// LWW merge helper (used by performPull)
+// ---------------------------------------------------------------------------
+
+/**
+ * Last-write-wins merge of local and cloud card arrays.
+ * For each card ID, keeps the version with the most recent updatedAt.
+ * Cards absent from one side are included unconditionally.
+ */
+function lwwMerge(local: Card[], cloud: Card[]): Card[] {
+  const merged = new Map<string, Card>();
+  for (const card of local) merged.set(card.id, card);
+  for (const card of cloud) {
+    const existing = merged.get(card.id);
+    if (!existing) {
+      merged.set(card.id, card);
+    } else {
+      const localTime = new Date(existing.updatedAt ?? existing.createdAt).getTime();
+      const cloudTime = new Date(card.updatedAt ?? card.createdAt).getTime();
+      if (cloudTime >= localTime) merged.set(card.id, card);
+    }
+  }
+  return Array.from(merged.values());
+}
+
+// ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
@@ -130,6 +152,11 @@ function getSession(): FenrirSession | null {
  * Auth-gated (Issue #1172): sync does NOT fire while auth is in "loading" state.
  * This prevents the race where a cached Karl entitlement triggers a pull before
  * the session token has been validated/refreshed by AuthContext.
+ *
+ * Push trigger (Issue #1239): POST /api/sync/push fires ONLY from
+ * fenrir:cards-changed (user-initiated card writes) and syncNow().
+ * Online reconnect and error auto-retry no longer trigger push.
+ * Login transition uses pull-only (GET /api/sync/pull).
  */
 export function useCloudSync(): CloudSyncState {
   const { tier, isActive } = useEntitlement();
@@ -157,17 +184,18 @@ export function useCloudSync(): CloudSyncState {
   const syncInProgressRef = useRef<boolean>(false);
   /** Debounce timer for auto-sync on card changes */
   const autoSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** Auto-retry timer */
-  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ---------------------------------------------------------------------------
-  // Core sync function (internal)
+  // Core push function (internal)
   // ---------------------------------------------------------------------------
 
   /**
    * Performs the actual push→merge→apply sync cycle against /api/sync/push.
    * Dispatches cloud sync events so other listeners can react.
    * Returns early (no-op) if already in progress or offline.
+   *
+   * Issue #1239: Called ONLY from fenrir:cards-changed listener (debounced)
+   * and syncNow() (manual). Not called on online reconnect, login, or error retry.
    */
   const performSync = useCallback(async (): Promise<void> => {
     if (!isKarl) return;
@@ -189,12 +217,6 @@ export function useCloudSync(): CloudSyncState {
     setErrorCode(null);
     setErrorTimestamp(null);
     setRetryIn(null);
-
-    // Cancel any pending retry
-    if (retryTimerRef.current) {
-      clearTimeout(retryTimerRef.current);
-      retryTimerRef.current = null;
-    }
 
     try {
       // Gather all local cards including tombstones.
@@ -288,17 +310,16 @@ export function useCloudSync(): CloudSyncState {
       const typedErr = err as Error & { code?: string };
       const msg = typedErr.message ?? "Cloud sync failed.";
       const code = typedErr.code ?? "network_error";
-      const retryInSeconds = Math.round(AUTO_RETRY_MS / 1000);
 
       setErrorMessage(msg);
       setErrorCode(code);
       setErrorTimestamp(new Date());
-      setRetryIn(retryInSeconds);
+      setRetryIn(null);
       setStatus("error");
 
       // Non-blocking error toast
       toast.error("Sync failed", {
-        description: "Your cards are safe locally. We'll retry shortly.",
+        description: "Your cards are safe locally. Retry by editing a card.",
         duration: Infinity,
         action: {
           label: "Settings",
@@ -310,15 +331,12 @@ export function useCloudSync(): CloudSyncState {
 
       window.dispatchEvent(
         new CustomEvent(EVT_CLOUD_SYNC_ERROR, {
-          detail: { errorMessage: msg, errorCode: code, retryIn: retryInSeconds },
+          detail: { errorMessage: msg, errorCode: code, retryIn: null },
         })
       );
 
-      // Schedule auto-retry
-      retryTimerRef.current = setTimeout(() => {
-        retryTimerRef.current = null;
-        void performSync();
-      }, AUTO_RETRY_MS);
+      // Issue #1239: No auto-retry timer. The next push fires only when
+      // the user edits a card (fenrir:cards-changed) or calls syncNow().
     } finally {
       syncInProgressRef.current = false;
     }
@@ -326,10 +344,115 @@ export function useCloudSync(): CloudSyncState {
   }, [isKarl]);
 
   // ---------------------------------------------------------------------------
+  // Pull-on-login (Issue #1239)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Fetches Firestore cards and merges them into localStorage using LWW.
+   * Called on login transition when migration is already done.
+   * Does NOT push local cards to Firestore — read-only from cloud perspective.
+   */
+  const performPull = useCallback(async (): Promise<void> => {
+    if (!isKarl) return;
+    if (syncInProgressRef.current) return;
+
+    const session = getSession();
+    if (!session?.id_token || !session?.user?.sub) return;
+
+    const householdId = session.user.sub;
+    const idToken = session.id_token;
+
+    syncInProgressRef.current = true;
+    setStatus("syncing");
+    setErrorMessage(null);
+    setErrorCode(null);
+    setErrorTimestamp(null);
+    setRetryIn(null);
+
+    try {
+      const response = await fetch(
+        `/api/sync/pull?householdId=${encodeURIComponent(householdId)}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        // Pull failed — stay idle rather than showing an error (non-critical path)
+        setStatus("idle");
+        return;
+      }
+
+      const { cards: cloudCards, activeCount } = (await response.json()) as {
+        cards: Card[];
+        activeCount: number;
+      };
+
+      // LWW merge: cloud cards win ties (most recent updatedAt)
+      const localCards = getRawAllCards(householdId);
+      const localActiveCount = localCards.filter((c) => !c.deletedAt).length;
+      const mergedCards = lwwMerge(localCards, cloudCards);
+
+      // Apply merged result — uses setAllCards (not saveCard) so fenrir:cards-changed
+      // is not dispatched and no push loop is created.
+      setAllCards(householdId, mergedCards);
+
+      const wasFirstSync =
+        typeof localStorage !== "undefined" &&
+        localStorage.getItem(LS_FIRST_SYNC_SHOWN) !== "true";
+
+      setLastSyncedAt(new Date());
+      setCardCount(activeCount);
+      setStatus("synced");
+
+      if (wasFirstSync) {
+        try {
+          localStorage.setItem(LS_FIRST_SYNC_SHOWN, "true");
+        } catch {
+          // localStorage full — skip
+        }
+
+        const isRestoring = localActiveCount === 0 && activeCount > 0;
+        const plural = activeCount !== 1;
+        const verb = plural ? "have" : "has";
+        const cardWord = plural ? "cards" : "card";
+
+        if (isRestoring) {
+          toast.success(
+            `Your ${activeCount} ${cardWord} ${verb} been restored from cloud`,
+            { description: "Yggdrasil guards your ledger.", duration: 5000 }
+          );
+        } else {
+          toast.success(
+            `Your ${activeCount} ${cardWord} ${verb} been backed up`,
+            { description: "Yggdrasil guards your ledger.", duration: 5000 }
+          );
+        }
+      }
+
+      window.dispatchEvent(
+        new CustomEvent(EVT_CLOUD_SYNC_COMPLETE, {
+          detail: { cardCount: activeCount },
+        })
+      );
+    } catch {
+      // Network error or parse failure — stay idle (non-critical pull-on-login path)
+      setStatus("idle");
+    } finally {
+      syncInProgressRef.current = false;
+    }
+  }, [isKarl]);
+
+  // ---------------------------------------------------------------------------
   // Migration + login sync
   //
   // Issue #1124: On first Karl sign-in, run the one-time localStorage →
   // Firestore migration before falling through to regular sync.
+  // Issue #1239: On subsequent sign-ins (hasMigrated=true), pull from cloud
+  // instead of pushing — no push on login.
   // ---------------------------------------------------------------------------
 
   /**
@@ -343,7 +466,7 @@ export function useCloudSync(): CloudSyncState {
    *   - Dispatches fenrir:cloud-sync-complete for UI listeners.
    *   - On migration error: falls back to regular performSync.
    *
-   * If already migrated: delegates to regular performSync.
+   * If already migrated (Issue #1239): calls performPull() — pull-only, no push.
    */
   const handleLoginTransition = useCallback(async (): Promise<void> => {
     if (!isKarl) return;
@@ -356,12 +479,12 @@ export function useCloudSync(): CloudSyncState {
     const idToken = session.id_token;
 
     if (hasMigrated()) {
-      // Already migrated on a previous sign-in — run normal sync
-      void performSync();
+      // Already migrated on a previous sign-in — pull from cloud (no push)
+      void performPull();
       return;
     }
 
-    // First Karl sign-in: run migration
+    // First Karl sign-in: run migration (push+merge — correct for initial sync)
     syncInProgressRef.current = true;
     setStatus("syncing");
     setErrorMessage(null);
@@ -425,10 +548,13 @@ export function useCloudSync(): CloudSyncState {
       void performSync();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isKarl, performSync]);
+  }, [isKarl, performSync, performPull]);
 
   // ---------------------------------------------------------------------------
   // Online / offline detection
+  //
+  // Issue #1239: handleOnline no longer calls performSync.
+  // Network reconnect ≠ cards changed. Push fires only from fenrir:cards-changed.
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
@@ -439,9 +565,8 @@ export function useCloudSync(): CloudSyncState {
     };
 
     const handleOnline = () => {
+      // Restore to idle — do NOT push. No card data changed on reconnect. (#1239)
       setStatus("idle");
-      // Re-sync when connectivity is restored
-      void performSync();
     };
 
     if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -454,7 +579,7 @@ export function useCloudSync(): CloudSyncState {
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
     };
-  }, [isKarl, performSync]);
+  }, [isKarl]);
 
   // ---------------------------------------------------------------------------
   // Auto-sync on card changes: debounced listener on fenrir:cards-changed
@@ -463,6 +588,8 @@ export function useCloudSync(): CloudSyncState {
   // NOT "fenrir:sync" (which fires on every setAllCards including internal merge
   // writes). This breaks the push loop where performSync→setAllCards→fenrir:sync
   // →debounce→performSync would repeat indefinitely.
+  //
+  // Issue #1239 — this is the SOLE automatic push trigger. Nothing else pushes.
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
@@ -499,13 +626,14 @@ export function useCloudSync(): CloudSyncState {
   // correctly fires only after auth is confirmed (not from stale cache).
   // Issue #1124: handleLoginTransition runs migration on first sign-in,
   // then falls through to regular performSync on subsequent sign-ins.
+  // Issue #1239: subsequent sign-ins now use pull-only (performPull).
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
     const wasKarl = prevIsKarlRef.current;
     prevIsKarlRef.current = isKarl;
 
-    // Trigger migration-aware sync when transitioning non-Karl → Karl
+    // Trigger migration-aware pull/push when transitioning non-Karl → Karl
     if (isKarl && !wasKarl) {
       void handleLoginTransition();
     }
@@ -517,7 +645,6 @@ export function useCloudSync(): CloudSyncState {
 
   useEffect(() => {
     return () => {
-      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
       if (autoSyncTimerRef.current) clearTimeout(autoSyncTimerRef.current);
     };
   }, []);
@@ -563,16 +690,12 @@ export function useCloudSync(): CloudSyncState {
 
   const dismissError = useCallback((): void => {
     if (status !== "error") return;
-    if (retryTimerRef.current) {
-      clearTimeout(retryTimerRef.current);
-      retryTimerRef.current = null;
-    }
     setErrorMessage(null);
     setErrorCode(null);
     setErrorTimestamp(null);
     setRetryIn(null);
     setStatus("idle");
-    // Background retries stopped — user explicitly dismissed
+    // User explicitly dismissed — next push fires on next card change
   }, [status]);
 
   return {
