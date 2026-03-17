@@ -6,13 +6,13 @@ import { CACHE_CONTROL } from "./src/lib/cache-headers";
 /**
  * Next.js Configuration
  *
- * Security headers are set as static response headers via headers() so that
- * Cloud CDN can cache HTML pages. Hash-based CSP (pre-computed at build time
- * by scripts/compute-csp-hashes.mjs) keeps the Content-Security-Policy header
- * identical across all requests — a requirement for CDN caching.
+ * Non-CSP security headers are set as static response headers via headers().
+ * CSP is set per-request in middleware (src/middleware.ts) with a nonce for
+ * Next.js RSC inline scripts + hashes for known static inline scripts.
  *
- * Previously, CSP was injected per-request in middleware with a unique nonce.
- * That approach prevented CDN caching (Issue #1144). See ADR for the migration.
+ * Issue #1184: Pure hash-based CSP (Issue #1144) broke Next.js RSC streaming
+ * because dynamic inline <script> tags can't be pre-hashed. Restored nonce
+ * in middleware while keeping hashes for known static scripts.
  */
 
 const nextConfig: NextConfig = {
@@ -24,14 +24,14 @@ const nextConfig: NextConfig = {
   // in parent directories. This is the frontend directory itself.
   outputFileTracingRoot: __dirname,
 
-  // Static security headers — same on every response, enabling CDN caching.
-  // Middleware (src/middleware.ts) handles only canonical redirects.
+  // Non-CSP security headers — static, same on every response.
+  // CSP is set per-request in middleware (needs nonce for RSC scripts).
   async headers() {
     const securityHeaders = buildSecurityHeaders();
     return [
       {
-        // Security headers — apply to all routes except Next.js internals and
-        // static assets. Mirrors the middleware matcher pattern.
+        // Non-CSP security headers — apply to all routes except Next.js internals
+        // and static assets. CSP is set in middleware, not here.
         source:
           "/((?!_next/static|_next/image|favicon.ico|icon.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
         headers: securityHeaders,

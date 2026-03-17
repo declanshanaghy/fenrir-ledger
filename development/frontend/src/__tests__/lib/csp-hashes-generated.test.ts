@@ -63,14 +63,10 @@ describe("buildCspDirectives — determinism for CDN caching", () => {
     expect(second).toBe(third);
   });
 
-  it("buildSecurityHeaders CSP value is deterministic across calls", async () => {
-    const { buildSecurityHeaders } = await import("@/lib/csp-headers");
-    const csp1 = buildSecurityHeaders().find(
-      (h) => h.key === "Content-Security-Policy"
-    )!.value;
-    const csp2 = buildSecurityHeaders().find(
-      (h) => h.key === "Content-Security-Policy"
-    )!.value;
+  it("buildCspDirectives with same nonce is deterministic", async () => {
+    const { buildCspDirectives } = await import("@/lib/csp-headers");
+    const csp1 = buildCspDirectives("fixed-nonce").join("; ");
+    const csp2 = buildCspDirectives("fixed-nonce").join("; ");
     expect(csp1).toBe(csp2);
   });
 });
@@ -96,10 +92,8 @@ describe("buildCspDirectives — script-src structure", () => {
   });
 
   it("full CSP string uses semicolons as directive separators", async () => {
-    const { buildSecurityHeaders } = await import("@/lib/csp-headers");
-    const csp = buildSecurityHeaders().find(
-      (h) => h.key === "Content-Security-Policy"
-    )!.value;
+    const { buildCspDirectives } = await import("@/lib/csp-headers");
+    const csp = buildCspDirectives().join("; ");
     // Directives must be '; ' separated for browser compliance
     expect(csp).toContain("; ");
     expect(csp.split("; ").length).toBeGreaterThan(5);

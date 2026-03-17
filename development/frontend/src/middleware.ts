@@ -14,16 +14,20 @@
  *  - The guard verifies the Google id_token JWT against Google's JWKS public keys.
  *  - /api/auth/token is exempt (token exchange endpoint -- no token exists yet).
  *
- * CSP (Issue #1144):
- *  - Nonce-based CSP has been replaced with hash-based CSP for CDN compatibility.
- *  - Security headers are now set as static headers in next.config.ts via headers().
- *  - This middleware no longer generates nonces or sets CSP headers.
+ * CSP (Issue #1184 — fix for #1144):
+ *  - Hybrid nonce + hash CSP. A per-request nonce covers Next.js RSC inline
+ *    scripts (dynamic, can't be pre-hashed). Pre-computed hashes cover known
+ *    static inline scripts (next-themes, GA4 init).
+ *  - The nonce is set on the request headers so Next.js can read it and attach
+ *    it to RSC streaming <script> tags.
+ *  - Non-CSP security headers remain as static headers in next.config.ts.
  *
  * See ADR-005 for the auth architecture. See ADR-008 for API route auth.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { getCacheControlForPath } from "@/lib/cache-headers";
+import { buildCspDirectives } from "@/lib/csp-headers";
 
 export function middleware(request: NextRequest) {
   const { hostname, protocol, pathname, search } = request.nextUrl;
@@ -44,16 +48,42 @@ export function middleware(request: NextRequest) {
   }
 
   // -----------------------------------------------------------------------
+  // CSP with per-request nonce — Issue #1184 (fix for #1144)
+  //
+  // Next.js App Router streams RSC data as inline <script> tags whose content
+  // varies per request. These cannot be pre-hashed. A per-request nonce covers
+  // them. Next.js reads the nonce from the request's Content-Security-Policy
+  // header and attaches it to all inline <script> tags it generates.
+  //
+  // Known static inline scripts (next-themes, GA4 init) also get hashes so
+  // they work regardless of nonce presence.
+  // -----------------------------------------------------------------------
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const cspDirectives = buildCspDirectives(nonce);
+  const cspHeaderValue = cspDirectives.join("; ");
+
+  // Set CSP on request headers so Next.js can read the nonce
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("Content-Security-Policy", cspHeaderValue);
+
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+
+  // Set CSP on response headers for the browser to enforce
+  response.headers.set("Content-Security-Policy", cspHeaderValue);
+
+  // -----------------------------------------------------------------------
   // Cache-Control headers — Issue #1145
   // Apply per-route CDN TTL rules. Static asset paths (_next/static,
   // _next/image, ico/svg/png) are excluded from the middleware matcher and
   // get their Cache-Control from next.config.ts headers() instead.
   // -----------------------------------------------------------------------
   const cacheControl = getCacheControlForPath(pathname);
-  const response = NextResponse.next();
   if (cacheControl) {
     response.headers.set("Cache-Control", cacheControl);
   }
+
   return response;
 }
 
