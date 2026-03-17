@@ -31,6 +31,7 @@
  * Issue #1122 — wired to real API routes
  * Issue #1125 — initial state machine design
  * Issue #1172 — auth gating, restore vs backup message, push loop fix
+ * Issue #1210 — skipLoginSync option + module-level guard (settings page loop)
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -63,6 +64,22 @@ const AUTO_RETRY_MS = 30_000;
 
 /** localStorage key to prevent repeat first-sync confirmation toast */
 const LS_FIRST_SYNC_SHOWN = "fenrir:first-sync-shown";
+
+// ---------------------------------------------------------------------------
+// Module-level sync guard (Issue #1210)
+// ---------------------------------------------------------------------------
+
+/**
+ * Prevents concurrent push calls when useCloudSync is mounted in multiple
+ * components simultaneously (e.g. SyncIndicator in the layout AND
+ * SyncStatusCard on the settings page). Only one network request at a time,
+ * regardless of how many hook instances are active.
+ *
+ * This is a module-level variable (not a ref) so it is shared across all
+ * hook instances within the same browser page. It is safe because this hook
+ * is "use client" — the module is never shared between server requests.
+ */
+let _syncGlobalInProgress = false;
 
 // ---------------------------------------------------------------------------
 // Event types
@@ -121,6 +138,26 @@ function getSession(): FenrirSession | null {
 // Hook
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Hook options
+// ---------------------------------------------------------------------------
+
+export interface UseCloudSyncOptions {
+  /**
+   * When true, suppresses the automatic login-transition sync
+   * (the non-Karl → Karl event that fires handleLoginTransition).
+   *
+   * Use this in "display + manual-sync-only" contexts such as the settings
+   * page, where the layout's SyncIndicator already handles the login sync
+   * and a second hook instance must not fire a duplicate push.
+   *
+   * Defaults to false (auto-sync on login transition is enabled).
+   *
+   * Issue #1210
+   */
+  skipLoginSync?: boolean;
+}
+
 /**
  * useCloudSync — returns cloud sync state + actions.
  *
@@ -130,8 +167,15 @@ function getSession(): FenrirSession | null {
  * Auth-gated (Issue #1172): sync does NOT fire while auth is in "loading" state.
  * This prevents the race where a cached Karl entitlement triggers a pull before
  * the session token has been validated/refreshed by AuthContext.
+ *
+ * skipLoginSync (Issue #1210): when the hook is used in a settings/display
+ * context alongside the layout's SyncIndicator, pass { skipLoginSync: true }
+ * to prevent a second automatic push on login. The layout instance is
+ * responsible for the initial migration-aware sync; the settings instance is
+ * responsible only for surfacing status and handling manual "Sync Now" clicks.
  */
-export function useCloudSync(): CloudSyncState {
+export function useCloudSync(opts?: UseCloudSyncOptions): CloudSyncState {
+  const skipLoginSync = opts?.skipLoginSync ?? false;
   const { tier, isActive } = useEntitlement();
   const { status: authStatus } = useAuthContext();
 
@@ -172,6 +216,9 @@ export function useCloudSync(): CloudSyncState {
   const performSync = useCallback(async (): Promise<void> => {
     if (!isKarl) return;
     if (syncInProgressRef.current) return;
+    // Module-level guard: prevent concurrent pushes from multiple hook instances
+    // (e.g. SyncIndicator in layout + SyncStatusCard on settings page). (#1210)
+    if (_syncGlobalInProgress) return;
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       setStatus("offline");
       return;
@@ -184,6 +231,7 @@ export function useCloudSync(): CloudSyncState {
     const idToken = session.id_token;
 
     syncInProgressRef.current = true;
+    _syncGlobalInProgress = true; // (#1210) block other instances while this fetch runs
     setStatus("syncing");
     setErrorMessage(null);
     setErrorCode(null);
@@ -321,6 +369,7 @@ export function useCloudSync(): CloudSyncState {
       }, AUTO_RETRY_MS);
     } finally {
       syncInProgressRef.current = false;
+      _syncGlobalInProgress = false; // (#1210) release module-level lock
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isKarl]);
@@ -499,9 +548,24 @@ export function useCloudSync(): CloudSyncState {
   // correctly fires only after auth is confirmed (not from stale cache).
   // Issue #1124: handleLoginTransition runs migration on first sign-in,
   // then falls through to regular performSync on subsequent sign-ins.
+  // Issue #1210: skipLoginSync suppresses this effect when the hook is used
+  // in a "display + manual-sync-only" context (e.g. settings page).
+  //   - The layout's SyncIndicator (skipLoginSync: false / default) owns the
+  //     login-transition sync. It fires once when the user signs in.
+  //   - The settings page's SyncStatusCard (skipLoginSync: true) must NOT fire
+  //     a second concurrent push — it is responsible only for surfacing status
+  //     and forwarding explicit "Sync Now" button clicks.
+  //   - prevIsKarlRef is still updated when skipped so that if skipLoginSync
+  //     ever changes to false the ref holds the correct current value.
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
+    if (skipLoginSync) {
+      // Keep ref current; do NOT fire handleLoginTransition.
+      prevIsKarlRef.current = isKarl;
+      return;
+    }
+
     const wasKarl = prevIsKarlRef.current;
     prevIsKarlRef.current = isKarl;
 
@@ -509,7 +573,7 @@ export function useCloudSync(): CloudSyncState {
     if (isKarl && !wasKarl) {
       void handleLoginTransition();
     }
-  }, [isKarl, handleLoginTransition]);
+  }, [skipLoginSync, isKarl, handleLoginTransition]);
 
   // ---------------------------------------------------------------------------
   // Cleanup on unmount

@@ -107,8 +107,12 @@ function ThrallUpsellCard({
 // ---------------------------------------------------------------------------
 
 function SyncStatusCard({ isTrial }: { isTrial: boolean }) {
+  // skipLoginSync: true — the layout's SyncIndicator already handles the
+  // login-transition sync. This instance is display-only + manual "Sync Now".
+  // Without this flag, both hook instances would fire a push on page load,
+  // causing the 2× push loop reported in Issue #1210.
   const { status, lastSyncedAt, cardCount, errorMessage, errorCode, errorTimestamp, retryIn, syncNow, dismissError } =
-    useCloudSync();
+    useCloudSync({ skipLoginSync: true });
 
   const syncNowLabel =
     status === "syncing"
