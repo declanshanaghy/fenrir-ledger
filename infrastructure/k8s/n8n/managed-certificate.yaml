@@ -1,0 +1,24 @@
+# --------------------------------------------------------------------------
+# n8n — GKE ManagedCertificate
+#
+# Provisions a Google-managed TLS certificate for marketing.fenrirledger.com.
+# Referenced by the GCE Ingress via annotation:
+#   networking.gke.io/managed-certificates: "n8n-cert"
+#
+# DNS prerequisite: marketing.fenrirledger.com A-record must point to
+# fenrir-app-ip before cert provisioning will succeed (issue #1231 — done).
+#
+# Apply: kubectl apply -f infrastructure/k8s/n8n/managed-certificate.yaml -n fenrir-analytics
+# --------------------------------------------------------------------------
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: n8n-cert
+  namespace: fenrir-analytics
+  labels:
+    app.kubernetes.io/name: n8n
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: analytics
+spec:
+  domains:
+    - marketing.fenrirledger.com
