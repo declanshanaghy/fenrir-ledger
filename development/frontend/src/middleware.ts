@@ -23,6 +23,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { getCacheControlForPath } from "@/lib/cache-headers";
 
 export function middleware(request: NextRequest) {
   const { hostname, protocol, pathname, search } = request.nextUrl;
@@ -42,7 +43,18 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  // -----------------------------------------------------------------------
+  // Cache-Control headers — Issue #1145
+  // Apply per-route CDN TTL rules. Static asset paths (_next/static,
+  // _next/image, ico/svg/png) are excluded from the middleware matcher and
+  // get their Cache-Control from next.config.ts headers() instead.
+  // -----------------------------------------------------------------------
+  const cacheControl = getCacheControlForPath(pathname);
+  const response = NextResponse.next();
+  if (cacheControl) {
+    response.headers.set("Cache-Control", cacheControl);
+  }
+  return response;
 }
 
 /**
