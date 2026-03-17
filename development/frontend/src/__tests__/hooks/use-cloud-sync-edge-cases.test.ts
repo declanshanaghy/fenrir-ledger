@@ -25,7 +25,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useCloudSync, SYNCED_DISPLAY_MS } from "@/hooks/useCloudSync";
+import { useCloudSync, SYNCED_DISPLAY_MS, _resetSyncGuardForTesting } from "@/hooks/useCloudSync";
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
 
@@ -111,6 +111,7 @@ describe("useCloudSync — online/offline events (Karl)", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
     vi.stubGlobal("fetch", mockFetch);
@@ -169,6 +170,7 @@ describe("useCloudSync — online/offline events (Karl)", () => {
 
 describe("useCloudSync — Thrall ignores online/offline events", () => {
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "thrall";
     mockEntitlement.isActive = false;
     vi.clearAllMocks();
@@ -194,6 +196,7 @@ describe("useCloudSync — tier switching without page reload", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "thrall";
     mockEntitlement.isActive = false;
     vi.stubGlobal("fetch", mockFetch);
@@ -264,6 +267,7 @@ describe("useCloudSync — retryIn countdown", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
     vi.stubGlobal("fetch", mockFetch);
@@ -330,6 +334,7 @@ describe("useCloudSync — first-sync toast pluralization", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
     localStorage.removeItem("fenrir:first-sync-shown");
@@ -398,6 +403,7 @@ describe("useCloudSync — error persists after toast dismiss (not dismissError)
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
     vi.stubGlobal("fetch", mockFetch);
@@ -461,6 +467,7 @@ describe("useCloudSync — dismissError edge cases", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
     vi.stubGlobal("fetch", mockFetch);
@@ -521,6 +528,7 @@ describe("useCloudSync — syncNow dispatches fenrir:cloud-sync-complete", () =>
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
     vi.stubGlobal("fetch", mockFetch);

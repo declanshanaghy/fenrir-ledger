@@ -19,7 +19,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useCloudSync, SYNCED_DISPLAY_MS } from "@/hooks/useCloudSync";
+import { useCloudSync, SYNCED_DISPLAY_MS, _resetSyncGuardForTesting } from "@/hooks/useCloudSync";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -90,6 +90,7 @@ function errorResponse(errCode = "sync_error") {
 
 describe("useCloudSync — Thrall: always idle", () => {
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "thrall";
     mockEntitlement.isActive = false;
   });
@@ -112,6 +113,7 @@ describe("useCloudSync — Karl: state transitions", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
     localStorage.removeItem("fenrir:first-sync-shown");
@@ -227,6 +229,7 @@ describe("useCloudSync — first-sync toast", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
     localStorage.removeItem("fenrir:first-sync-shown");
@@ -273,6 +276,7 @@ describe("useCloudSync — error toast", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
     vi.stubGlobal("fetch", mockFetch);

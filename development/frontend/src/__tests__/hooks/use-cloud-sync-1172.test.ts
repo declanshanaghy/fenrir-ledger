@@ -26,7 +26,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useCloudSync, AUTO_SYNC_DEBOUNCE_MS } from "@/hooks/useCloudSync";
+import { useCloudSync, AUTO_SYNC_DEBOUNCE_MS, _resetSyncGuardForTesting } from "@/hooks/useCloudSync";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -90,6 +90,7 @@ describe("Bug 1 — Auth gating: sync does not fire before auth is confirmed", (
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
     vi.stubGlobal("fetch", mockFetch);
@@ -184,6 +185,7 @@ describe("Bug 2 — Restore vs backup message direction", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockAuthContext.status = "authenticated";
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
@@ -298,6 +300,7 @@ describe("Bug 3 — Push loop prevention", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    _resetSyncGuardForTesting();
     mockAuthContext.status = "authenticated";
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;

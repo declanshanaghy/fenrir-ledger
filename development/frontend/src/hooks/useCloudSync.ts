@@ -651,3 +651,20 @@ export function useCloudSync(opts?: UseCloudSyncOptions): CloudSyncState {
     dismissError,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Test utilities (not for production use)
+// ---------------------------------------------------------------------------
+
+/**
+ * Resets the module-level sync guard.
+ *
+ * Call this in beforeEach when testing hooks that use _syncGlobalInProgress.
+ * In production this guard is reset automatically in the performSync finally
+ * block; in tests a hanging fetch may leave it set across test boundaries.
+ *
+ * @internal — test use only
+ */
+export function _resetSyncGuardForTesting(): void {
+  _syncGlobalInProgress = false;
+}
