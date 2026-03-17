@@ -481,6 +481,8 @@ describe("Issue #1239 AC-4 — No auto-retry push after sync error", () => {
     act(() => result.current.dismissError());
     expect(result.current.status).toBe("idle");
 
+    // Reset call history so we count only the POST triggered by cards-changed
+    mockFetch.mockReset();
     mockFetch.mockReturnValue(pushResponse(1));
     act(() => {
       window.dispatchEvent(new CustomEvent(EVT_CARDS_CHANGED));
