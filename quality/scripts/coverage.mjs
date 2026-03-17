@@ -256,6 +256,13 @@ async function main() {
   if (unitOnly) {
     log("Running in --unit-only mode (Vitest coverage only)");
     runUnitCoverage();
+    log("Generating quality report...");
+    const qualityScript = path.join(__dirname, "quality-report.mjs");
+    try {
+      run(`node "${qualityScript}"`, { cwd: REPO_ROOT });
+    } catch {
+      log("Quality report generation had warnings");
+    }
     log("Done! Open quality/reports/coverage/vitest/index.html to view the report.");
     return;
   }
@@ -308,6 +315,15 @@ async function main() {
     run(`node "${indexScript}"`, { cwd: REPO_ROOT });
   } catch {
     log("Index generation had warnings — master index may still be valid");
+  }
+
+  // Generate quality report
+  log("Generating quality report...");
+  const qualityScript = path.join(__dirname, "quality-report.mjs");
+  try {
+    run(`node "${qualityScript}"`, { cwd: REPO_ROOT });
+  } catch {
+    log("Quality report generation had warnings — report may still be valid");
   }
 
   log("Done! Open quality/reports/coverage/index.html to view all reports.");
