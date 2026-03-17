@@ -27,12 +27,12 @@ export const AGENT_TITLES: Record<string, string> = {
 };
 
 export const AGENT_AVATARS: Record<string, string> = {
-  firemandecko: "/agents/fireman-decko-dark.png",
-  loki: "/agents/loki-dark.png",
-  luna: "/agents/luna-dark.png",
-  freya: "/agents/freya-dark.png",
-  heimdall: "/agents/heimdall-dark.png",
-  odin: "/agents/odin-dark.png",
+  firemandecko: "/profiles/fireman-decko-dark.png",
+  loki: "/profiles/loki-dark.png",
+  luna: "/profiles/luna-dark.png",
+  freya: "/profiles/freya-dark.png",
+  heimdall: "/profiles/heimdall-dark.png",
+  odin: "/profiles/odin-dark.png",
 };
 
 export const AGENT_LIGHT_AVATARS: Record<string, string> = {
