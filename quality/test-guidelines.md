@@ -16,7 +16,7 @@ What belongs where. Loki must follow this when writing or reviewing tests.
 |-------|--------|-------|---------|
 | Unit | Vitest | ~500+ | ~2s |
 | Integration | Vitest + happy-dom | ~300+ | ~3s |
-| E2E | Playwright | ~159 | ~6min |
+| E2E | Playwright | ~20 | ~1min |
 
 ### Global E2E Cap (UNBREAKABLE)
 
@@ -196,23 +196,14 @@ mockRequireAuth.mockResolvedValueOnce({
 8. **No structural DOM assertions.** Landmark presence, aria-label existence, and tag structure belong in integration tests. E2E tests should focus on user interactions and navigation.
 9. **Critical integrations are non-negotiable.** Always keep E2E coverage for: OAuth flows (sign-in, callback, returnto), Stripe integration (checkout, webhook, portal), card CRUD (add, edit, delete), data persistence (localStorage), dashboard navigation, and a11y gates (dialog, landmarks). Delete or trim low-value suites first (static content, CSS measurements, regression suites) before cutting critical path tests.
 
-### Current E2E suites (23 files, ~154 tests)
+### Current E2E suites (8 files, ~20 tests)
 
 | Category | Suites | Tests |
 |----------|--------|-------|
-| Auth | auth/, auth-returnto/, stale-auth-nudge/ | ~15 |
-| Dashboard | dashboard-tabs/ | ~2 |
-| Cards | card-lifecycle/ (add, edit, close, delete, wizard-save) | ~7 |
-| Settings | settings-gate/, settings-reset/, settings-cleanup/ | ~27 |
-| Theme | theme-toggle/ | ~1 |
-| A11y | dialog-a11y/ | ~3 |
-| Admin | admin-console/ | ~7 |
-| Trial | trial-expiry-modal/, trial-panel-nudge/, trial-state/, trial-toast-badge/ | ~62 |
-| GKE | gke-migration/, issue-682/ | ~10 |
-| Features | features/ (skoll-dark-border) | ~5 |
-| Trust | trust-safety/ | ~15 |
+| Auth | auth/ (auth-callback, sign-in), auth-returnto/ | ~8 |
+| Cards | card-lifecycle/ (add, edit, close, delete, wizard-save) | ~12 |
 
-> **Removed (Issue #929):** `accessibility/a11y.spec.ts`, `dashboard/dashboard.spec.ts`, `layout/footer.spec.ts`, `layout/topbar.spec.ts` — static content checks migrated to Vitest component tests.
+> **Removed (Issue #610 audit + Issue #929):** Extensive cleanup of bloated/static/duplicated suites. Removed: `accessibility/`, `dashboard/`, `layout/`, `settings-*/`, `trial-*/`, `gke-migration/`, `issue-682/`, `trust-safety/`, `admin-console/`, `features/`, `theme-toggle/`, `dialog-a11y/`, `stale-auth-nudge/`, and more. Static content checks migrated to Vitest component tests; logic tests migrated to Vitest unit/integration.
 
 All E2E routes use `/ledger` for app pages (marketing pages own `/`).
 Infrastructure runs on GKE Autopilot.
