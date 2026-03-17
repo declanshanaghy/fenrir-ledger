@@ -68,6 +68,8 @@ function setSession() {
 
 function clearSession() {
   localStorage.removeItem("fenrir:auth");
+  // Clear migration flag to prevent cross-test pollution from markMigrated() (#1239)
+  localStorage.removeItem("fenrir:migrated");
 }
 
 function successResponse(syncedCount = 0, cards: unknown[] = []) {
@@ -126,7 +128,6 @@ describe("Bug 3 fix — setAllCards receives merged cards from server (not saveC
   });
 
   it("setAllCards is NOT called when sync fails (no partial overwrite)", async () => {
-    setSession();
     mockFetch.mockReturnValue(
       Promise.resolve(
         new Response(JSON.stringify({ error: "permission-denied", error_description: "Forbidden" }), {
@@ -136,6 +137,7 @@ describe("Bug 3 fix — setAllCards receives merged cards from server (not saveC
     );
 
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull/runMigration on mount returns early
     await act(async () => {
       await result.current.syncNow();
     });
@@ -191,10 +193,10 @@ describe("Bug 2 fix — first-sync toast suppressed after fenrir:first-sync-show
   });
 
   it("second sync still updates status and cardCount even without toast", async () => {
-    setSession();
     mockFetch.mockReturnValue(successResponse(5));
 
     const { result } = renderHook(() => useCloudSync());
+    setSession(); // Set AFTER renderHook so performPull/runMigration on mount returns early
 
     // First sync sets the flag
     await act(async () => {
@@ -310,8 +312,10 @@ describe("Sync on re-login — fires sync even when first-sync-shown already set
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
     mockGetRawAllCards.mockReturnValue([]);
-    // Mark first-sync as already shown (simulates returning user)
+    // Simulates returning user: first-sync-shown AND migrated are already set
     localStorage.setItem("fenrir:first-sync-shown", "true");
+    // Issue #1239: already-migrated users get performPull on re-login (not runMigration)
+    localStorage.setItem("fenrir:migrated", "true");
     vi.stubGlobal("fetch", mockFetch);
     vi.clearAllMocks();
   });
@@ -330,7 +334,15 @@ describe("Sync on re-login — fires sync even when first-sync-shown already set
 
     expect(mockFetch).not.toHaveBeenCalled();
 
-    mockFetch.mockReturnValue(successResponse(10));
+    // Issue #1239: re-login calls performPull (GET /api/sync/pull), not performSync (POST)
+    mockFetch.mockReturnValue(
+      Promise.resolve(
+        new Response(JSON.stringify({ cards: [], activeCount: 10 }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+    );
     setSession();
     mockAuthContext.status = "authenticated";
     rerender();
@@ -339,7 +351,7 @@ describe("Sync on re-login — fires sync even when first-sync-shown already set
       await Promise.resolve();
     });
 
-    // Sync should have fired
+    // Sync should have fired (performPull)
     expect(mockFetch).toHaveBeenCalledTimes(1);
     // No toast because first-sync-shown is already set
     expect(toast.success).not.toHaveBeenCalled();
