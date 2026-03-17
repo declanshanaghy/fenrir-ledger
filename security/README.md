@@ -4,7 +4,7 @@ Owned by **Heimdall** (`.claude/agents/heimdall.md`).
 
 This directory contains all security documentation for the Fenrir Ledger project: audit reports, architecture diagrams, checklists, and advisories.
 
-## Current State (as of 2026-03-14)
+## Current State (as of 2026-03-17)
 
 - **Infrastructure**: GKE Autopilot (not Vercel). See `infrastructure/k8s/app/` for deployment manifests.
 - **Subscription platform**: Stripe Direct only. Patreon has been fully removed.
@@ -12,6 +12,7 @@ This directory contains all security documentation for the Fenrir Ledger project
 - **Stripe webhook**: SHA-256 HMAC via `stripe.webhooks.constructEvent()`.
 - **CSP**: Includes all required Google and Stripe domains.
 - **KV store**: Upstash Redis, configured via `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
+- **Firestore sync (NEW — issue #1126)**: **2 CRITICAL IDOR vulnerabilities** in `/api/sync/pull` and `/api/sync/push` — client-supplied `householdId` not verified against auth'd user's household. Issues filed. See report below.
 - **Open findings**: 3 LOW (distributed rate limiting, webhook deduplication, email validation), 3 INFO (trust chain comment, KV delete race, publishable key monitoring).
 
 ---
@@ -20,6 +21,7 @@ This directory contains all security documentation for the Fenrir Ledger project
 
 | Date | Scope | Risk Summary | Status | Path |
 |------|-------|-------------|--------|------|
+| 2026-03-17 | **Firestore Sync & Household Data Access** (issue #1126) | **2C / 1H / 3M / 3L / 3I** | **[Active] CRITICAL IDOR in sync/pull + sync/push — requires immediate fix** | [reports/2026-03-17-firestore-sync-audit.md](reports/2026-03-17-firestore-sync-audit.md) |
 | 2026-03-10 | **Comprehensive External Pen Test** — Consolidated from 4 parallel audits (#470–473) | **1C / 1H / 3M / 3L / 5I** | **[Active] CRITICAL Next.js CVEs require immediate patching; HIGH SheetJS unpatched — see issues** | [reports/2026-03-09-external-pentest.md](reports/2026-03-09-external-pentest.md) |
 | 2026-03-02 | Google API Integration | 0C / 3H / 3M / 3L / 3I | Active — findings partially open | [reports/2026-03-02-google-api-integration.md](reports/2026-03-02-google-api-integration.md) |
 | 2026-03-04 | Stripe Direct Integration | 0C / 0H / 0M / 3L / 3I | Active — CRITICAL/MEDIUM resolved | [reports/2026-03-04-stripe-direct-integration.md](reports/2026-03-04-stripe-direct-integration.md) |
