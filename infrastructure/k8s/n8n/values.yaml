@@ -12,6 +12,8 @@
 # GKE supplementary resources (apply separately before/after helm install):
 #   kubectl apply -f infrastructure/k8s/n8n/namespace.yaml
 #   kubectl apply -f infrastructure/k8s/n8n/managed-certificate.yaml
+#   kubectl apply -f infrastructure/k8s/n8n/oauth2-proxy.yaml     # issue #1233
+#   kubectl apply -f infrastructure/k8s/n8n/ingress-patch.yaml    # issue #1233
 # --------------------------------------------------------------------------
 
 # -- n8n Application Config -----------------------------------------------
@@ -69,23 +71,15 @@ service:
   targetPort: 5678
 
 # -- Ingress ---------------------------------------------------------------
-# GCE Ingress uses the shared fenrir-app-ip static IP (marketing.fenrirledger.com
-# DNS A-record already points to this IP via infrastructure/dns.tf).
-# ManagedCertificate is created separately in managed-certificate.yaml.
+# The 8gears Helm chart's built-in ingress is DISABLED. Ingress is managed
+# entirely by infrastructure/k8s/n8n/ingress-patch.yaml, which routes
+# marketing.fenrirledger.com → n8n-oauth2-proxy → n8n (issue #1233).
+# Apply order:
+#   kubectl apply -f managed-certificate.yaml -n fenrir-analytics
+#   kubectl apply -f oauth2-proxy.yaml        -n fenrir-analytics
+#   kubectl apply -f ingress-patch.yaml       -n fenrir-analytics
 ingress:
-  enabled: true
-  className: "gce"
-  annotations:
-    kubernetes.io/ingress.global-static-ip-name: "fenrir-app-ip"
-    networking.gke.io/managed-certificates: "n8n-cert"
-    kubernetes.io/ingress.allow-http: "true"
-    cloud.google.com/backend-config: '{"default":"n8n-backend-config"}'
-  hosts:
-    - host: marketing.fenrirledger.com
-      paths:
-        - path: /
-          pathType: Prefix
-  tls: []  # TLS handled by GKE ManagedCertificate (n8n-cert)
+  enabled: false
 
 # -- Replica ---------------------------------------------------------------
 replicaCount: 1

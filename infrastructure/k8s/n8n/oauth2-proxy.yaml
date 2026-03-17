@@ -1,0 +1,147 @@
+# --------------------------------------------------------------------------
+# n8n — oauth2-proxy (Google OAuth protection for marketing.fenrirledger.com)
+#
+# Deploys a standalone oauth2-proxy Deployment + Service in the
+# fenrir-analytics namespace. All traffic to marketing.fenrirledger.com is
+# routed through this proxy before reaching the n8n service.
+#
+# Pattern mirrors the Umami oauth2-proxy sidecar (infrastructure/helm/umami/)
+# but as a separate Deployment since n8n uses an external Helm chart
+# (oci://ghcr.io/8gears/n8n) that cannot have sidecars injected.
+#
+# Secrets (create imperatively before applying — NEVER commit values):
+#   kubectl create secret generic n8n-oauth2-proxy-secrets \
+#     -n fenrir-analytics \
+#     --from-literal=GOOGLE_CLIENT_ID=<id> \
+#     --from-literal=GOOGLE_CLIENT_SECRET=<secret> \
+#     --from-literal=OAUTH2_PROXY_COOKIE_SECRET=<32-byte-base64>
+#
+#   kubectl create secret generic n8n-oauth2-proxy-emails \
+#     -n fenrir-analytics \
+#     --from-file=emails.txt=<path/to/emails.txt>
+#
+# emails.txt format: one admin email address per line.
+#
+# Apply:
+#   kubectl apply -f infrastructure/k8s/n8n/oauth2-proxy.yaml -n fenrir-analytics
+# --------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n-oauth2-proxy
+  namespace: fenrir-analytics
+  labels:
+    app.kubernetes.io/name: n8n-oauth2-proxy
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: analytics
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: n8n-oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: n8n-oauth2-proxy
+        app.kubernetes.io/part-of: fenrir-ledger
+        app.kubernetes.io/component: analytics
+    spec:
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: oauth2-proxy-emails
+          secret:
+            secretName: n8n-oauth2-proxy-emails
+            items:
+              - key: emails.txt
+                path: emails.txt
+      containers:
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --provider=google
+            - --client-id=$(GOOGLE_CLIENT_ID)
+            - --client-secret=$(GOOGLE_CLIENT_SECRET)
+            - --cookie-secret=$(OAUTH2_PROXY_COOKIE_SECRET)
+            - --authenticated-emails-file=/etc/oauth2-proxy/emails.txt
+            # Upstream is the n8n ClusterIP service (port 80 → n8n container 5678)
+            - --upstream=http://n8n.fenrir-analytics.svc.cluster.local:80
+            - --http-address=0.0.0.0:4180
+            - --redirect-url=https://marketing.fenrirledger.com/oauth2/callback
+            - --cookie-domain=marketing.fenrirledger.com
+            - --cookie-secure=true
+            - --cookie-samesite=lax
+            # Allow n8n webhook paths through without auth so external services
+            # can POST to webhooks (e.g. payment callbacks, Slack events).
+            # Adjust paths as needed for your workflow triggers.
+            - --skip-auth-route=POST=^/webhook/
+            - --skip-auth-route=GET=^/webhook/
+          ports:
+            - name: oauth2-proxy
+              containerPort: 4180
+              protocol: TCP
+          env:
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-oauth2-proxy-secrets
+                  key: GOOGLE_CLIENT_ID
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-oauth2-proxy-secrets
+                  key: GOOGLE_CLIENT_SECRET
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-oauth2-proxy-secrets
+                  key: OAUTH2_PROXY_COOKIE_SECRET
+          volumeMounts:
+            - name: oauth2-proxy-emails
+              mountPath: /etc/oauth2-proxy
+              readOnly: true
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+              ephemeral-storage: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+              ephemeral-storage: "128Mi"
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 4180
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 4180
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n-oauth2-proxy
+  namespace: fenrir-analytics
+  labels:
+    app.kubernetes.io/name: n8n-oauth2-proxy
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: analytics
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: n8n-oauth2-proxy
+  ports:
+    - name: oauth2-proxy
+      port: 4180
+      targetPort: 4180
+      protocol: TCP

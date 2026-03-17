@@ -1,21 +1,22 @@
 # --------------------------------------------------------------------------
 # n8n — GCE Ingress (standalone, applied separately from Helm)
 #
-# This ingress routes marketing.fenrirledger.com → n8n ClusterIP service.
+# Routes marketing.fenrirledger.com → n8n-oauth2-proxy → n8n service.
+# All traffic passes through oauth2-proxy (Google OAuth, admin-only) before
+# reaching the n8n UI. See oauth2-proxy.yaml for the proxy Deployment.
+#
 # It uses the shared fenrir-app-ip static IP (same IP used by the main
 # Fenrir Ledger app + marketing DNS A-record from issue #1231).
 #
-# Use this file if the 8gears Helm chart's built-in ingress does not support
-# GKE-specific annotations, or as an override/patch on top of the Helm-managed
-# ingress.
-#
-# Apply:
+# Apply order:
 #   kubectl apply -f infrastructure/k8s/n8n/managed-certificate.yaml -n fenrir-analytics
+#   kubectl apply -f infrastructure/k8s/n8n/oauth2-proxy.yaml -n fenrir-analytics
 #   kubectl apply -f infrastructure/k8s/n8n/ingress-patch.yaml -n fenrir-analytics
 #
 # Verify:
 #   kubectl get ingress -n fenrir-analytics
 #   kubectl describe managedcertificate n8n-cert -n fenrir-analytics
+#   curl -I https://marketing.fenrirledger.com/   # should redirect to Google OAuth
 # --------------------------------------------------------------------------
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -33,7 +34,7 @@ metadata:
     networking.gke.io/managed-certificates: "n8n-cert"
     # Allow HTTP during cert provisioning; GKE redirects to HTTPS once cert is active
     kubernetes.io/ingress.allow-http: "true"
-    # BackendConfig for health check tuning
+    # BackendConfig points to oauth2-proxy health check (/ping on port 4180)
     cloud.google.com/backend-config: '{"default":"n8n-backend-config"}'
     kubernetes.io/ingress.class: "gce"
 spec:
@@ -45,14 +46,17 @@ spec:
             pathType: Prefix
             backend:
               service:
-                # Service name matches Helm release name (helm install n8n ...)
-                name: n8n
+                # Route to oauth2-proxy — it authenticates via Google OAuth then
+                # proxies to http://n8n.fenrir-analytics.svc.cluster.local:80
+                name: n8n-oauth2-proxy
                 port:
-                  number: 80
+                  number: 4180
 ---
 # --------------------------------------------------------------------------
-# BackendConfig — health check tuning for n8n
-# n8n serves HTTP on port 5678; /healthz is available after startup.
+# BackendConfig — health check for n8n-oauth2-proxy
+#
+# GCE load balancer probes the oauth2-proxy /ping endpoint (unauthenticated)
+# rather than the n8n /healthz, since oauth2-proxy is now the first hop.
 # --------------------------------------------------------------------------
 apiVersion: cloud.google.com/v1
 kind: BackendConfig
@@ -70,8 +74,8 @@ spec:
     healthyThreshold: 1
     unhealthyThreshold: 3
     type: HTTP
-    requestPath: /healthz
-    port: 5678
+    requestPath: /ping
+    port: 4180
   timeoutSec: 30
   connectionDraining:
     drainingTimeoutSec: 60
