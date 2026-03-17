@@ -21,6 +21,15 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: gke-managed-system
+    # Allow GCP Load Balancer health check probers
+    - from:
+        - ipBlock:
+            cidr: 130.211.0.0/22
+        - ipBlock:
+            cidr: 35.191.0.0/16
+      ports:
+        - protocol: TCP
+          port: 3000
     # Block traffic from fenrir-agents (implicit deny for unlisted namespaces)
 ---
 # Restrict agent pods to egress-only: DNS + 80/443
