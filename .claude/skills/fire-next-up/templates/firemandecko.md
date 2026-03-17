@@ -50,11 +50,13 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - **NEVER write tests for monitor-ui (Odin's Throne).** `development/monitor-ui/` has NO test
   infrastructure — no vitest, no testing-library, no __tests__/ directory. Tests are frontend-only.
 
-**Step 4 — Full verify: tsc + build (each = separate Bash tool call + separate todo):**
+**Step 4 — Full verify: tsc + build + Vitest (each = separate Bash tool call + separate todo):**
   cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc
   cd <REPO_ROOT> && bash quality/scripts/verify.sh --step build
-On failure: fix, commit+push, re-run that step. Repeat until green.
-Do NOT run tests — the full test suite runs via CI on PR push.
+  cd <REPO_ROOT>/development/frontend && npx vitest run --reporter=verbose
+On failure: fix ALL failing tests (yours AND pre-existing), commit+push, re-run.
+Do NOT proceed to handoff with ANY failing Vitest tests.
+Do NOT run Playwright E2E tests — Vitest only. E2E runs via CI.
 Update each verify todo as you complete it.
 
 **Step 5 — Rebase + final push:**

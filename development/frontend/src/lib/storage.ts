@@ -44,6 +44,25 @@ function isBrowser(): boolean {
   return typeof window !== "undefined";
 }
 
+// ─── Cloud sync notification ──────────────────────────────────────────────────
+
+/**
+ * Dispatches "fenrir:cards-changed" after a user-initiated card write.
+ * useCloudSync listens for this event and schedules a debounced push to Firestore.
+ *
+ * NOT called from setAllCards() directly — only from user-facing write functions
+ * (saveCard, deleteCard, restoreCard, expungeCard, expungeAllCards, closeCard)
+ * so that the hook's internal merge writes don't trigger an infinite sync loop.
+ *
+ * Detail: { householdId: string }
+ */
+function notifyCardsChanged(householdId: string): void {
+  if (!isBrowser()) return;
+  window.dispatchEvent(
+    new CustomEvent("fenrir:cards-changed", { detail: { householdId } })
+  );
+}
+
 // ─── Per-household key builders ───────────────────────────────────────────────
 
 /**
@@ -406,6 +425,7 @@ export function saveCard(card: Card): void {
     // Insert new
     setAllCards(card.householdId, [...all, cardWithStatus]);
   }
+  notifyCardsChanged(card.householdId);
 }
 
 /**
@@ -428,6 +448,7 @@ export function deleteCard(householdId: string, id: string): void {
   const updated = [...all];
   updated[index] = { ...card, deletedAt: new Date().toISOString() };
   setAllCards(householdId, updated);
+  notifyCardsChanged(householdId);
 }
 
 // ─── Trash Operations ─────────────────────────────────────────────────────────
@@ -475,6 +496,7 @@ export function restoreCard(householdId: string, cardId: string): Card | undefin
   const updated = [...all];
   updated[index] = restored;
   setAllCards(householdId, updated);
+  notifyCardsChanged(householdId);
   return restored;
 }
 
@@ -491,6 +513,7 @@ export function expungeCard(householdId: string, cardId: string): void {
   const filtered = all.filter((c) => !(c.id === cardId && c.householdId === householdId));
   if (filtered.length === all.length) return; // Card not found — no-op
   setAllCards(householdId, filtered);
+  notifyCardsChanged(householdId);
 }
 
 /**
@@ -503,6 +526,7 @@ export function expungeAllCards(householdId: string): void {
   const all = getAllCards(householdId);
   const filtered = all.filter((c) => !(c.householdId === householdId && !!c.deletedAt));
   setAllCards(householdId, filtered);
+  notifyCardsChanged(householdId);
 }
 
 /**
@@ -550,4 +574,5 @@ export function closeCard(
 
   updated[index] = closedCard;
   setAllCards(householdId, updated);
+  notifyCardsChanged(householdId);
 }

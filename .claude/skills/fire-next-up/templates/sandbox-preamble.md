@@ -30,13 +30,14 @@ After every logical chunk of implementation work (~5-10 min or 1-3 files changed
 Do NOT batch all changes into one commit at the end. Sessions can die at any time —
 uncommitted work is lost work.
 
-VERIFY — tsc + build ONLY (UNBREAKABLE):
-Agents run tsc and build. The FULL test suite runs via CI on every PR push.
-Do NOT run `verify.sh --step test` for the full suite — CI is the authority.
-Loki runs only his NEW feature tests, not the full suite.
+VERIFY — tsc + build + Vitest (UNBREAKABLE):
+All agents run tsc, build, AND the full Vitest suite before handoff.
+Do NOT run Playwright E2E tests — Vitest only. E2E runs via CI.
   cd /workspace/repo && bash quality/scripts/verify.sh --step tsc
   cd /workspace/repo && bash quality/scripts/verify.sh --step build
+  cd /workspace/repo/development/frontend && npx vitest run --reporter=verbose
 On failure: fix, commit+push, re-run that step. Repeat until green.
+Do NOT proceed to handoff with ANY failing Vitest tests.
 
 STRICT SCOPE (UNBREAKABLE):
 Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,
