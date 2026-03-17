@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { getRawAllCards, setAllCards } from "@/lib/storage";
+import { hasMigrated, runMigration } from "@/lib/sync/migration";
 import type { FenrirSession } from "@/lib/types";
 import type { Card } from "@/lib/types";
 
@@ -321,6 +322,103 @@ export function useCloudSync(): CloudSyncState {
   }, [isKarl]);
 
   // ---------------------------------------------------------------------------
+  // Migration + login sync
+  //
+  // Issue #1124: On first Karl sign-in, run the one-time localStorage →
+  // Firestore migration before falling through to regular sync.
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Runs on the non-Karl → Karl transition (sign-in or upgrade).
+   *
+   * If the user has not yet been migrated (fenrir:migrated flag absent):
+   *   - Runs runMigration() which pushes local cards, merges with cloud (LWW),
+   *     applies merged result to localStorage, and marks the flag.
+   *   - Shows an appropriate toast: "restored from cloud" or "backed up".
+   *   - Also sets LS_FIRST_SYNC_SHOWN so performSync won't re-show a toast.
+   *   - Dispatches fenrir:cloud-sync-complete for UI listeners.
+   *   - On migration error: falls back to regular performSync.
+   *
+   * If already migrated: delegates to regular performSync.
+   */
+  const handleLoginTransition = useCallback(async (): Promise<void> => {
+    if (!isKarl) return;
+    if (syncInProgressRef.current) return;
+
+    const session = getSession();
+    if (!session?.id_token || !session?.user?.sub) return;
+
+    const householdId = session.user.sub;
+    const idToken = session.id_token;
+
+    if (hasMigrated()) {
+      // Already migrated on a previous sign-in — run normal sync
+      void performSync();
+      return;
+    }
+
+    // First Karl sign-in: run migration
+    syncInProgressRef.current = true;
+    setStatus("syncing");
+    setErrorMessage(null);
+    setErrorCode(null);
+    setRetryIn(null);
+
+    try {
+      const result = await runMigration(householdId, idToken);
+
+      setLastSyncedAt(new Date());
+      setCardCount(result.cardCount);
+      setStatus("synced");
+
+      // Show migration toast when cards were actually involved
+      if (result.ran && result.cardCount > 0) {
+        const plural = result.cardCount !== 1;
+        const verb = plural ? "have" : "has";
+        const cardWord = plural ? "cards" : "card";
+
+        if (result.direction === "download") {
+          toast.success(
+            `Your ${result.cardCount} ${cardWord} ${verb} been restored from cloud`,
+            { description: "Yggdrasil guards your ledger.", duration: 5000 }
+          );
+        } else {
+          // "upload" or "merge" — user's local cards were backed up
+          toast.success(
+            `Your ${result.cardCount} ${cardWord} ${verb} been backed up to the cloud`,
+            { description: "Yggdrasil guards your ledger.", duration: 5000 }
+          );
+        }
+      }
+
+      // Suppress the first-sync toast in subsequent performSync calls
+      try {
+        localStorage.setItem(LS_FIRST_SYNC_SHOWN, "true");
+      } catch {
+        // localStorage full — ignore
+      }
+
+      window.dispatchEvent(
+        new CustomEvent(EVT_CLOUD_SYNC_COMPLETE, {
+          detail: { cardCount: result.cardCount },
+        })
+      );
+    } catch {
+      // Migration failed — fall back to regular performSync
+      // (keeps local data safe; cloud sync will retry via the normal path)
+      syncInProgressRef.current = false;
+
+      // Ensure flag is not set so migration retries next sign-in
+      // markMigrated() is only called inside runMigration on success, so we're safe.
+      void performSync();
+      return;
+    } finally {
+      syncInProgressRef.current = false;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isKarl, performSync]);
+
+  // ---------------------------------------------------------------------------
   // Online / offline detection
   // ---------------------------------------------------------------------------
 
@@ -386,21 +484,23 @@ export function useCloudSync(): CloudSyncState {
   }, [isKarl, performSync]);
 
   // ---------------------------------------------------------------------------
-  // Sync on login: auto-pull when Karl user signs in
+  // Sync on login: migration-aware sign-in handler
   //
   // Issue #1172: isKarl now includes isAuthenticated, so this transition
   // correctly fires only after auth is confirmed (not from stale cache).
+  // Issue #1124: handleLoginTransition runs migration on first sign-in,
+  // then falls through to regular performSync on subsequent sign-ins.
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
     const wasKarl = prevIsKarlRef.current;
     prevIsKarlRef.current = isKarl;
 
-    // Trigger sync when transitioning from non-Karl → Karl (sign-in / upgrade)
+    // Trigger migration-aware sync when transitioning non-Karl → Karl
     if (isKarl && !wasKarl) {
-      void performSync();
+      void handleLoginTransition();
     }
-  }, [isKarl, performSync]);
+  }, [isKarl, handleLoginTransition]);
 
   // ---------------------------------------------------------------------------
   // Cleanup on unmount
