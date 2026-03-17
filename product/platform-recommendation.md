@@ -154,6 +154,8 @@ graph TD
 
 ## What "Done" Looks Like
 
+**Status (2026-03-17):** All five Stripe API routes are confirmed present in the codebase (`/api/stripe/checkout`, `/api/stripe/webhook`, `/api/stripe/membership`, `/api/stripe/portal`, `/api/stripe/unlink`). Core Stripe Direct integration has shipped.
+
 The Stripe Direct migration is complete when:
 
 - [ ] Stripe Checkout flow works end-to-end: click subscribe -> pay -> entitlement granted
