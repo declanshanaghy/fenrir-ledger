@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Sync Settings Section — Issue #1125</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 24px; max-width: 1060px; }
+
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    h2 { font-size: 16px; font-weight: 700; margin-bottom: 8px; border-bottom: 2px solid; padding-bottom: 4px; }
+    h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    p.note { font-size: 12px; font-style: italic; margin-top: 6px; }
+    p.label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+
+    .section { margin-bottom: 48px; }
+    .row { display: flex; gap: 24px; flex-wrap: wrap; }
+    .col { flex: 1; min-width: 240px; }
+
+    .frame { border: 1px solid; padding: 16px; position: relative; }
+    .frame-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; border-bottom: 1px dashed; padding-bottom: 6px; }
+
+    .annotation { border-left: 3px solid; padding-left: 10px; margin-top: 8px; font-size: 12px; }
+    .annotation p { margin-bottom: 4px; }
+
+    /* Settings card shell */
+    .settings-card { border: 1px solid; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .settings-card-heading { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+    .settings-card-body { font-size: 13px; line-height: 1.6; }
+
+    /* Button styles (structural only) */
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1.5px solid; font-size: 13px; font-weight: 600; cursor: pointer; min-height: 44px; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; min-height: 36px; }
+    .btn-disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Status row */
+    .status-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid; flex-shrink: 0; }
+    .status-text { flex: 1; }
+    .status-meta { font-size: 11px; opacity: 0.7; }
+
+    /* Upsell block */
+    .upsell-block { border: 1.5px solid; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .upsell-icon { font-size: 18px; font-weight: 700; }
+    .upsell-title { font-size: 14px; font-weight: 700; }
+    .upsell-body { font-size: 13px; line-height: 1.6; }
+    .upsell-features { list-style: none; padding: 0; font-size: 12px; display: flex; flex-direction: column; gap: 4px; }
+    .upsell-features li::before { content: "— "; }
+
+    /* Error block */
+    .error-block { border: 1.5px solid; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+    .error-title { font-size: 12px; font-weight: 700; }
+    .error-detail { font-size: 11px; font-family: monospace; line-height: 1.6; }
+
+    /* Divider */
+    .divider { border-top: 1px solid; margin: 12px 0; }
+
+    /* Two-column settings shell sim */
+    .settings-shell { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border: 1px dashed; padding: 16px; }
+    .settings-col-label { font-size: 10px; font-weight: 700; text-transform: uppercase; border-bottom: 1px dashed; padding-bottom: 4px; margin-bottom: 12px; }
+
+    /* Table */
+    table { border-collapse: collapse; width: 100%; font-size: 12px; }
+    th, td { border: 1px solid; padding: 6px 10px; text-align: left; vertical-align: top; }
+    th { font-weight: 700; }
+
+    /* Timestamp block */
+    .ts-block { display: flex; align-items: baseline; gap: 8px; font-size: 12px; }
+    .ts-label { font-weight: 600; }
+    .ts-value { opacity: 0.8; }
+
+    /* Progress bar sim */
+    .progress-bar { border: 1px solid; height: 4px; width: 100%; position: relative; overflow: hidden; }
+    .progress-fill { height: 100%; width: 40%; border-right: 2px solid; }
+
+    @media (max-width: 600px) {
+      .settings-shell { grid-template-columns: 1fr; }
+      .row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <header style="margin-bottom: 32px; border-bottom: 2px solid; padding-bottom: 16px;">
+    <h1>Sync — Settings Section Wireframe</h1>
+    <p style="margin-top: 6px;">Issue #1125 · Route: <code>/ledger/settings</code> · Luna · 2026-03-16</p>
+    <p class="note">Wireframe: layout and structure only. No theme colors applied. Companion to sync-indicator-states.html.</p>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION A: Settings Page Shell — where sync card lives
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section A: Settings Page Shell">
+    <h2>A — Settings Page Context (desktop 2-col layout)</h2>
+    <p class="note">The sync section card drops into the RIGHT column of the existing two-column Settings layout. Left column already has: Stripe subscription, Trial status, Household. Right column currently has: Restore Tab Guides. Sync card is added ABOVE Tab Guides in the right column.</p>
+
+    <div class="settings-shell" style="margin-top: 16px;">
+      <!-- Left column -->
+      <div>
+        <div class="settings-col-label">Left column (existing)</div>
+        <div style="border: 1px dashed; padding: 10px; margin-bottom: 8px; font-size: 12px; opacity: 0.5;">StripeSettings</div>
+        <div style="border: 1px dashed; padding: 10px; margin-bottom: 8px; font-size: 12px; opacity: 0.5;">TrialSettingsSection</div>
+        <div style="border: 1px dashed; padding: 10px; font-size: 12px; opacity: 0.5;">HouseholdSettingsSection</div>
+      </div>
+      <!-- Right column -->
+      <div>
+        <div class="settings-col-label">Right column (extended)</div>
+        <div style="border: 2px solid; padding: 10px; margin-bottom: 8px; font-size: 12px; font-weight: 700;">← NEW: SyncSettingsSection (this wireframe)</div>
+        <div style="border: 1px dashed; padding: 10px; font-size: 12px; opacity: 0.5;">RestoreTabGuides (existing)</div>
+      </div>
+    </div>
+
+    <div class="annotation" style="margin-top: 12px;">
+      <p><strong>Mobile:</strong> Single-column stacked. Sync section appears after Household, before Tab Guides — same reading order as desktop left→right→right columns mapped to top→bottom.</p>
+      <p><strong>Component name suggestion:</strong> <code>SyncSettingsSection</code> — mirrors pattern of <code>HouseholdSettingsSection</code>, <code>TrialSettingsSection</code>.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION B: Thrall View — Karl Upsell
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section B: Thrall Upsell View">
+    <h2>B — Thrall View: "Cloud Sync — Karl Feature" Upsell</h2>
+    <p class="note">Shown when <code>useEntitlement().tier === "thrall"</code> (and not in active trial). No sync controls. Pure upsell + feature explanation.</p>
+
+    <div class="row" style="margin-top: 16px;">
+      <!-- Desktop card -->
+      <div class="col">
+        <div class="frame">
+          <div class="frame-label">Thrall — sync settings card</div>
+          <div class="settings-card">
+            <!-- Heading row -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <!-- Rune corners (karl-bling-card — omit for Thrall) -->
+              <div class="settings-card-heading">Cloud Sync</div>
+              <!-- Lock icon indicator -->
+              <span style="border: 1px solid; padding: 1px 5px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em;">KARL</span>
+            </div>
+
+            <!-- Upsell block -->
+            <div class="upsell-block">
+              <div class="upsell-icon">☁</div>
+              <div class="upsell-title">Back up your ledger to Yggdrasil</div>
+              <div class="upsell-body">
+                Cloud Sync is a Karl feature. Upgrade to keep your cards safe across devices
+                and restore them if you clear your browser.
+              </div>
+              <ul class="upsell-features">
+                <li>Automatic cloud backup on every save</li>
+                <li>Restore cards on any device</li>
+                <li>Sync across your household</li>
+                <li>Full sync history in Settings</li>
+              </ul>
+              <div>
+                <button type="button" class="btn" aria-label="Upgrade to Karl to unlock Cloud Sync">
+                  Upgrade to Karl
+                </button>
+              </div>
+            </div>
+          </div>
+          <p class="note">No sync status, no "Sync Now" button, no error display. Lock badge "KARL" next to heading.</p>
+          <p class="note">"Upgrade to Karl" button → Stripe Checkout (reuses <code>subscribeStripe()</code> from EntitlementContext).</p>
+        </div>
+      </div>
+
+      <!-- Trial user variant -->
+      <div class="col">
+        <div class="frame">
+          <div class="frame-label">Trial user — sync settings card</div>
+          <div class="settings-card">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="settings-card-heading">Cloud Sync</div>
+              <span style="border: 1px solid; padding: 1px 5px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em;">TRIAL</span>
+            </div>
+            <!-- Trial: show sync as active (trial includes Karl features) -->
+            <div style="font-size: 13px; line-height: 1.6;">
+              Cloud Sync is active during your trial. Your cards are backed up.
+            </div>
+            <!-- Status row shown during trial -->
+            <div class="status-row">
+              <div class="status-dot" style="background: currentColor;"></div>
+              <div class="status-text">
+                <div>Last synced: <strong>2 minutes ago</strong></div>
+                <div class="status-meta">Syncing automatically on every save</div>
+              </div>
+            </div>
+            <!-- Trial sync controls (same as Karl) -->
+            <div>
+              <button type="button" class="btn btn-sm">Sync Now</button>
+            </div>
+            <div style="border-top: 1px dashed; padding-top: 10px; font-size: 12px; opacity: 0.7;">
+              Cloud Sync will remain active if you upgrade before your trial ends.
+            </div>
+          </div>
+          <p class="note">Trial users experience Karl-tier sync. "TRIAL" badge instead of "KARL". Sync controls are fully active. Upgrade nudge at bottom.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION C: Karl View — Sync Status (healthy)
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section C: Karl View — Healthy">
+    <h2>C — Karl View: Sync Status (healthy / last synced)</h2>
+
+    <div class="row" style="margin-top: 16px;">
+
+      <!-- Synced — healthy state -->
+      <div class="col">
+        <div class="frame">
+          <div class="frame-label">Karl — synced (healthy)</div>
+          <div class="settings-card">
+            <!-- Karl rune corners — visual hint for engineer -->
+            <!-- [karl-bling-card class, rune spans omitted in wireframe] -->
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div class="settings-card-heading">Cloud Sync</div>
+              <!-- Optional: live indicator dot (mini) -->
+              <div class="status-dot" style="background: currentColor;" title="synced"></div>
+            </div>
+
+            <!-- Last synced timestamp -->
+            <div class="ts-block">
+              <span class="ts-label">Last synced:</span>
+              <span class="ts-value">Today at 3:41 PM</span>
+            </div>
+            <div class="ts-block">
+              <span class="ts-label">Cards backed up:</span>
+              <span class="ts-value">47 cards</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Sync Now CTA -->
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button type="button" class="btn btn-sm" aria-label="Sync cards to cloud now">
+                ☁ Sync Now
+              </button>
+              <span style="font-size: 12px; opacity: 0.6;">Syncs automatically on every save</span>
+            </div>
+          </div>
+          <p class="note">"Sync Now" triggers a manual <code>useCloudSync().syncNow()</code> call. Button disabled during active sync (state → syncing).</p>
+          <p class="note">Timestamp format: "Today at H:MM AM/PM" or relative (engineer discretion). Use <code>Intl.DateTimeFormat</code>.</p>
+        </div>
+      </div>
+
+      <!-- Syncing in progress -->
+      <div class="col">
+        <div class="frame">
+          <div class="frame-label">Karl — syncing (in progress)</div>
+          <div class="settings-card">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div class="settings-card-heading">Cloud Sync</div>
+              <div class="status-dot" title="syncing"></div>
+            </div>
+
+            <div class="ts-block">
+              <span class="ts-label">Syncing…</span>
+            </div>
+            <!-- Indeterminate progress bar -->
+            <div>
+              <div class="progress-bar" role="progressbar" aria-label="Sync in progress" aria-valuenow="indeterminate">
+                <div class="progress-fill"></div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button type="button" class="btn btn-sm btn-disabled" disabled aria-label="Sync in progress" aria-disabled="true">
+                ☁ Sync Now
+              </button>
+              <span style="font-size: 12px; opacity: 0.6;">In progress…</span>
+            </div>
+          </div>
+          <p class="note">"Sync Now" button disabled while syncing. Progress bar: indeterminate (CSS animation). Reduced-motion: static fill instead of animation.</p>
+        </div>
+      </div>
+
+      <!-- Offline state -->
+      <div class="col">
+        <div class="frame">
+          <div class="frame-label">Karl — offline</div>
+          <div class="settings-card">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div class="settings-card-heading">Cloud Sync</div>
+              <div class="status-dot" style="opacity: 0.35;" title="offline"></div>
+            </div>
+
+            <div style="font-size: 13px; line-height: 1.6;">
+              You're offline. Sync will resume automatically when you reconnect.
+            </div>
+
+            <div class="ts-block">
+              <span class="ts-label">Last synced:</span>
+              <span class="ts-value">Yesterday at 6:12 PM</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button type="button" class="btn btn-sm btn-disabled" disabled aria-label="Sync unavailable — offline" aria-disabled="true">
+                ☁ Sync Now
+              </button>
+              <span style="font-size: 12px; opacity: 0.6;">No network connection</span>
+            </div>
+          </div>
+          <p class="note">"Sync Now" disabled while offline. Body copy explains why. Last synced timestamp still shown.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION D: Karl View — Error State
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section D: Karl View — Error">
+    <h2>D — Karl View: Sync Error State</h2>
+    <p class="note">Shown when <code>useCloudSync().status === "error"</code>. Full error details visible in Settings — supplements the non-blocking toast.</p>
+
+    <div class="row" style="margin-top: 16px;">
+
+      <!-- Error with detail -->
+      <div class="col">
+        <div class="frame">
+          <div class="frame-label">Karl — error (with detail)</div>
+          <div class="settings-card">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div class="settings-card-heading">Cloud Sync</div>
+              <!-- Error dot -->
+              <div class="status-dot" style="border-width: 2px;" title="error"></div>
+            </div>
+
+            <!-- Error block -->
+            <div class="error-block" role="alert">
+              <div class="error-title">Last sync failed</div>
+              <div class="error-detail">
+                Error: Firestore write failed (permission-denied)<br />
+                Failed at: Today at 3:44 PM<br />
+                Retrying in: 2 minutes
+              </div>
+              <div>
+                <p style="font-size: 12px;">Your cards are safe locally and will sync when the issue resolves.</p>
+              </div>
+            </div>
+
+            <div class="ts-block">
+              <span class="ts-label">Last successful sync:</span>
+              <span class="ts-value">Today at 3:41 PM</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Actions: retry + dismiss -->
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-sm" aria-label="Retry cloud sync now">
+                Retry Now
+              </button>
+              <button type="button" class="btn btn-sm" style="border-style: dashed;" aria-label="Dismiss sync error">
+                Dismiss Error
+              </button>
+            </div>
+          </div>
+          <p class="note">Error block: error type, timestamp, auto-retry countdown. "Retry Now" calls <code>syncNow()</code> immediately. "Dismiss Error" clears the error state visually but does not stop retries.</p>
+          <p class="note"><code>role="alert"</code> on error block so screen readers announce it on first render.</p>
+        </div>
+      </div>
+
+      <!-- Error — condensed (no error detail available) -->
+      <div class="col">
+        <div class="frame">
+          <div class="frame-label">Karl — error (no detail)</div>
+          <div class="settings-card">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div class="settings-card-heading">Cloud Sync</div>
+              <div class="status-dot" style="border-width: 2px;" title="error"></div>
+            </div>
+
+            <div class="error-block" role="alert">
+              <div class="error-title">Sync failed</div>
+              <div style="font-size: 13px;">Could not reach Yggdrasil. Your cards are safe locally.</div>
+            </div>
+
+            <div class="ts-block">
+              <span class="ts-label">Last synced:</span>
+              <span class="ts-value">Yesterday at 9:00 AM</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn btn-sm">Retry Now</button>
+              <button type="button" class="btn btn-sm" style="border-style: dashed;">Dismiss</button>
+            </div>
+          </div>
+          <p class="note">Fallback when error message isn't parseable. Generic Norse copy. Same structure.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION E: Mobile 375px Layout
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section E: Mobile Layout">
+    <h2>E — Mobile 375px Layout</h2>
+    <p class="note">Single-column. Full-width card. Sync section stacked below Household, above Tab Guides. All buttons full-width on mobile (min-height 44px touch target).</p>
+
+    <div style="max-width: 375px; margin-top: 16px;">
+      <div class="frame">
+        <div class="frame-label">Mobile — Karl synced state (375px)</div>
+        <div class="settings-card">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div class="settings-card-heading">Cloud Sync</div>
+            <div class="status-dot" style="background: currentColor;" title="synced"></div>
+          </div>
+
+          <div class="ts-block">
+            <span class="ts-label">Last synced:</span>
+            <span class="ts-value">Today at 3:41 PM</span>
+          </div>
+          <div class="ts-block">
+            <span class="ts-label">Cards:</span>
+            <span class="ts-value">47 backed up</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Full-width button on mobile -->
+          <button type="button" class="btn" style="width: 100%; justify-content: center;" aria-label="Sync cards to cloud now">
+            ☁ Sync Now
+          </button>
+          <p style="font-size: 11px; opacity: 0.6; text-align: center;">Syncs automatically on every save</p>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px;" class="frame">
+        <div class="frame-label">Mobile — Thrall upsell (375px)</div>
+        <div class="settings-card">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="settings-card-heading">Cloud Sync</div>
+            <span style="border: 1px solid; padding: 1px 5px; font-size: 10px; font-weight: 700;">KARL</span>
+          </div>
+          <div class="upsell-body">Back up your ledger to Yggdrasil. Upgrade to Karl.</div>
+          <ul class="upsell-features">
+            <li>Automatic cloud backup</li>
+            <li>Restore on any device</li>
+            <li>Household sync</li>
+          </ul>
+          <button type="button" class="btn" style="width: 100%; justify-content: center;">
+            Upgrade to Karl
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotation" style="margin-top: 12px;">
+      <p><strong>Touch targets:</strong> All buttons min-height 44px (already in existing Settings buttons via <code>min-h-[44px]</code> class). Full-width on mobile for Sync Now and Upgrade CTA.</p>
+      <p><strong>Error on mobile:</strong> Error block stacks vertically. "Retry Now" + "Dismiss" buttons stacked (full-width) rather than inline.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION F: State × Tier Matrix
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section F: State Matrix">
+    <h2>F — State × Tier Matrix</h2>
+
+    <table style="margin-top: 12px;">
+      <thead>
+        <tr>
+          <th>Tier</th>
+          <th>Sync status</th>
+          <th>Card heading</th>
+          <th>Body content</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Thrall</strong></td>
+          <td>n/a</td>
+          <td>Cloud Sync <code>[KARL]</code> badge</td>
+          <td>Upsell copy + feature list</td>
+          <td>Upgrade to Karl CTA</td>
+        </tr>
+        <tr>
+          <td><strong>Trial</strong></td>
+          <td>synced / syncing / offline / error</td>
+          <td>Cloud Sync <code>[TRIAL]</code> badge</td>
+          <td>Same as Karl + "upgrade before trial ends" note</td>
+          <td>Sync Now (active)</td>
+        </tr>
+        <tr>
+          <td><strong>Karl</strong></td>
+          <td>synced</td>
+          <td>Cloud Sync (no badge / Karl rune corners)</td>
+          <td>Last synced timestamp + card count</td>
+          <td>Sync Now (enabled)</td>
+        </tr>
+        <tr>
+          <td><strong>Karl</strong></td>
+          <td>syncing</td>
+          <td>Cloud Sync</td>
+          <td>Progress bar</td>
+          <td>Sync Now (disabled)</td>
+        </tr>
+        <tr>
+          <td><strong>Karl</strong></td>
+          <td>offline</td>
+          <td>Cloud Sync</td>
+          <td>Offline message + last synced</td>
+          <td>Sync Now (disabled)</td>
+        </tr>
+        <tr>
+          <td><strong>Karl</strong></td>
+          <td>error</td>
+          <td>Cloud Sync</td>
+          <td>Error block (type, time, retry countdown)</td>
+          <td>Retry Now + Dismiss</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION G: Accessibility Requirements
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section G: Accessibility">
+    <h2>G — Accessibility (WCAG 2.1 AA)</h2>
+
+    <div class="row" style="margin-top: 16px;">
+      <div class="col">
+        <div class="frame">
+          <h3>ARIA roles</h3>
+          <ul style="list-style: disc; padding-left: 20px; font-size: 13px; line-height: 2;">
+            <li>Error block: <code>role="alert"</code> — announces on first render</li>
+            <li>Sync progress bar: <code>role="progressbar" aria-label="Sync in progress"</code></li>
+            <li>"Sync Now" disabled state: <code>aria-disabled="true" disabled</code></li>
+            <li>Status dot in heading: decorative — <code>aria-hidden="true"</code></li>
+            <li>Upsell feature list: semantic <code>&lt;ul&gt;</code></li>
+            <li>Settings card section: <code>&lt;section aria-label="Cloud Sync"&gt;</code></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="frame">
+          <h3>Focus &amp; keyboard</h3>
+          <ul style="list-style: disc; padding-left: 20px; font-size: 13px; line-height: 2;">
+            <li>All buttons keyboard-focusable with visible focus ring (<code>focus-visible:ring-2</code>)</li>
+            <li>Tab order: heading → timestamp → Sync Now button (natural DOM order)</li>
+            <li>Error block injected into DOM — focus does NOT auto-move to it (not a dialog)</li>
+            <li>Progress bar is non-interactive — skip in tab order (<code>tabindex="-1"</code>)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION H: Component Summary
+  ═══════════════════════════════════════════════════════ -->
+  <section class="section" aria-label="Section H: Component Summary">
+    <h2>H — Component Change Summary (for FiremanDecko)</h2>
+
+    <table style="margin-top: 12px;">
+      <thead>
+        <tr>
+          <th>File / Component</th>
+          <th>Action</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>settings/page.tsx</code></td>
+          <td>Add <code>&lt;SyncSettingsSection /&gt;</code> to right column, above <code>RestoreTabGuides</code></td>
+          <td>Import new component</td>
+        </tr>
+        <tr>
+          <td>New: <code>components/sync/SyncSettingsSection.tsx</code></td>
+          <td>Create</td>
+          <td>Reads <code>useEntitlement().tier</code> + <code>useCloudSync()</code>. Renders Thrall upsell or Karl sync status. Includes "Sync Now" + error handling.</td>
+        </tr>
+        <tr>
+          <td>New: <code>hooks/useCloudSync.ts</code></td>
+          <td>Create (or extend existing)</td>
+          <td>Returns <code>{ status, lastSyncedAt, cardCount, errorMessage, syncNow }</code>. Status: "idle" | "syncing" | "synced" | "offline" | "error".</td>
+        </tr>
+        <tr>
+          <td><code>SyncIndicator.tsx</code></td>
+          <td>Consume same <code>useCloudSync()</code> hook</td>
+          <td>See sync-indicator-states.html for dot state spec.</td>
+        </tr>
+        <tr>
+          <td>Toast system</td>
+          <td>Trigger first-sync + error toasts</td>
+          <td>Likely from <code>useCloudSync</code> hook effects or from <code>SyncSettingsSection</code> mount.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer style="margin-top: 48px; border-top: 2px solid; padding-top: 12px; font-size: 11px;">
+    Luna · ux/wireframes/sync/sync-settings-section.html · Issue #1125
+  </footer>
+
+</body>
+</html>
