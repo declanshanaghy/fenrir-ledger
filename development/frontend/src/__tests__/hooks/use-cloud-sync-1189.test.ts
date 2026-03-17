@@ -22,6 +22,10 @@ import {
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
+// vi.mock factories are hoisted to the top of the file, so variables must be
+// declared with vi.hoisted() to be accessible inside the factory.
+const mockToast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
+
 const mockEntitlement = { tier: "karl" as string, isActive: true };
 
 vi.mock("@/hooks/useEntitlement", () => ({
@@ -34,7 +38,6 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuthContext: () => mockAuthContext,
 }));
 
-const mockToast = { success: vi.fn(), error: vi.fn() };
 vi.mock("sonner", () => ({ toast: mockToast }));
 
 vi.mock("@/lib/storage", () => ({
