@@ -14,17 +14,15 @@
  *  - The guard verifies the Google id_token JWT against Google's JWKS public keys.
  *  - /api/auth/token is exempt (token exchange endpoint -- no token exists yet).
  *
- * CSP Nonce:
- *  - Generate a unique nonce per request for Content Security Policy.
- *  - Inject nonce into request headers for use in layout/scripts.
- *  - Build CSP header with nonce and inject into response.
+ * CSP (Issue #1144):
+ *  - Nonce-based CSP has been replaced with hash-based CSP for CDN compatibility.
+ *  - Security headers are now set as static headers in next.config.ts via headers().
+ *  - This middleware no longer generates nonces or sets CSP headers.
  *
  * See ADR-005 for the auth architecture. See ADR-008 for API route auth.
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { generateNonce } from "@/lib/csp-nonce";
-import { buildSecurityHeaders } from "@/lib/csp-headers";
 
 export function middleware(request: NextRequest) {
   const { hostname, protocol, pathname, search } = request.nextUrl;
@@ -44,22 +42,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  const nonce = generateNonce();
-
-  // Forward nonce to server components via request headers (accessible via headers() in layouts).
-  // Response headers set on NextResponse.next() go to the browser but are NOT accessible via
-  // headers() in Server Components — only headers forwarded through request are.
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-nonce-csp", nonce);
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
-
-  // Build security headers with nonce and inject into response
-  const securityHeaders = buildSecurityHeaders(nonce);
-  securityHeaders.forEach((header) => {
-    response.headers.set(header.key, header.value);
-  });
-
-  return response;
+  return NextResponse.next();
 }
 
 /**

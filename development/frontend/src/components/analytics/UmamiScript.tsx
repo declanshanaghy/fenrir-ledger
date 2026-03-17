@@ -5,17 +5,15 @@
  * Umami respects Do Not Track by default. No PII is collected.
  *
  * @param websiteId  The Umami website UUID. Pass undefined/empty to suppress rendering.
- * @param nonce      Optional CSP nonce forwarded from the server.
  */
 
 import Script from "next/script";
 
 interface UmamiScriptProps {
   websiteId?: string | undefined;
-  nonce?: string | undefined;
 }
 
-export function UmamiScript({ websiteId, nonce }: UmamiScriptProps) {
+export function UmamiScript({ websiteId }: UmamiScriptProps) {
   if (!websiteId) return null;
 
   return (
@@ -24,7 +22,6 @@ export function UmamiScript({ websiteId, nonce }: UmamiScriptProps) {
       src="https://analytics.fenrirledger.com/script.js"
       data-website-id={websiteId}
       strategy="afterInteractive"
-      {...(nonce ? { nonce } : {})}
     />
   );
 }

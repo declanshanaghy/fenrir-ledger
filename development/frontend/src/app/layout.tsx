@@ -30,7 +30,6 @@ import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { EntitlementProvider } from "@/contexts/EntitlementContext";
 import { RagnarokProvider } from "@/contexts/RagnarokContext";
-import { getNonce } from "@/lib/use-nonce";
 import "./globals.css";
 
 // ── Fonts ────────────────────────────────────────────────────────────────────
@@ -82,13 +81,11 @@ export const metadata: Metadata = {
 
 // ── Layout ────────────────────────────────────────────────────────────────────
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const nonce = await getNonce();
-
   return (
     <html
       lang="en"
@@ -107,7 +104,6 @@ export default async function RootLayout({
           enableSystem
           themes={["light", "dark"]}
           storageKey="fenrir-theme"
-          {...(nonce ? { nonce } : {})}
         >
           {/* AuthProvider — anonymous-first. No redirects. Resolves householdId for all users. */}
           <AuthProvider>
@@ -122,18 +118,17 @@ export default async function RootLayout({
             </EntitlementProvider>
           </AuthProvider>
         </ThemeProvider>
-        {/* GA4 — only rendered when NEXT_PUBLIC_GA4_MEASUREMENT_ID is set */}
+        {/* GA4 — only rendered when NEXT_PUBLIC_GA4_MEASUREMENT_ID is set.
+            Hash of the inline init script is pre-computed by scripts/compute-csp-hashes.mjs. */}
         {process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID && (
           <>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID}`}
               strategy="afterInteractive"
-              nonce={nonce}
             />
             <Script
               id="ga4-init"
               strategy="afterInteractive"
-              nonce={nonce}
             >
               {`
                 window.dataLayer = window.dataLayer || [];
@@ -149,7 +144,6 @@ export default async function RootLayout({
             No PII is collected (Umami default behaviour). */}
         <UmamiScript
           websiteId={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-          nonce={nonce}
         />
       </body>
     </html>
