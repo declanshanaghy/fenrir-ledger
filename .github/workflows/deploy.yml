@@ -77,7 +77,7 @@ jobs:
   #
   # Outputs (8):
   #   app        — development/frontend/, Dockerfile, package*.json
-  #   k8s-app    — infrastructure/k8s/app/  (triggers build-app AND deploy-app)
+  #   k8s-app    — infrastructure/k8s/app/ OR infrastructure/helm/fenrir-app/ (triggers deploy-app)
   #   monitor    — development/monitor/
   #   monitor-ui — development/monitor-ui/
   #   helm-odin  — infrastructure/helm/odin-throne/
@@ -121,7 +121,7 @@ jobs:
           CHANGED=$(git diff --name-only HEAD~1 HEAD)
           check() { echo "$CHANGED" | grep -qE "$1" && echo "true" || echo "false"; }
           APP=$(check "^development/frontend/|^Dockerfile$|^package\.json$|^package-lock\.json$")
-          K8S_APP=$(check "^infrastructure/k8s/app/")
+          K8S_APP=$(check "^infrastructure/k8s/app/|^infrastructure/helm/fenrir-app/")
           MONITOR=$(check "^development/monitor/")
           MONITOR_UI=$(check "^development/monitor-ui/")
           HELM_ODIN=$(check "^infrastructure/helm/odin-throne/")
