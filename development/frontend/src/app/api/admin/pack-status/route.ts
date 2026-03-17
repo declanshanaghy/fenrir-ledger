@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireAuthz } from "@/lib/auth/authz";
 import { isAdmin } from "@/lib/admin/auth";
 import { getPackStatus } from "@/lib/admin/pack-status";
 import { log } from "@/lib/logger";
@@ -18,14 +18,14 @@ import { log } from "@/lib/logger";
 export async function GET(request: NextRequest): Promise<NextResponse> {
   log.debug("GET /api/admin/pack-status called");
 
-  // Require authentication (ADR-008)
-  const auth = await requireAuth(request);
-  if (!auth.ok) return auth.response;
+  // Require authentication (ADR-015)
+  const authz = await requireAuthz(request, {});
+  if (!authz.ok) return authz.response;
 
   // Admin whitelist check
-  if (!isAdmin(auth.user.email)) {
+  if (!isAdmin(authz.user.email)) {
     log.debug("GET /api/admin/pack-status — non-admin denied", {
-      email: auth.user.email,
+      email: authz.user.email,
     });
     return NextResponse.json(
       {

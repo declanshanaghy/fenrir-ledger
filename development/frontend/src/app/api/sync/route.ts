@@ -21,65 +21,30 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireAuthz } from "@/lib/auth/authz";
 import { log } from "@/lib/logger";
-import { getUser } from "@/lib/firebase/firestore";
 import { getCards, setCards } from "@/lib/firebase/firestore";
-import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
 import type { Card } from "@/lib/types";
-
-// ─── Karl gate ────────────────────────────────────────────────────────────────
-
-/**
- * Returns true if the Google sub maps to an active Karl subscription.
- * Checks Redis entitlement (the authoritative billing source).
- */
-async function isKarl(googleSub: string): Promise<boolean> {
-  try {
-    const entitlement = await getStripeEntitlement(googleSub);
-    return !!(entitlement && entitlement.tier === "karl" && entitlement.active);
-  } catch {
-    return false;
-  }
-}
 
 // ─── GET /api/sync ────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   log.debug("GET /api/sync called");
 
-  const auth = await requireAuth(request);
-  if (!auth.ok) return auth.response;
+  const authz = await requireAuthz(request, { tier: "karl" });
+  if (!authz.ok) return authz.response;
 
-  const userId = auth.user.sub;
-
-  if (!(await isKarl(userId))) {
-    log.debug("GET /api/sync returning", { status: 403, reason: "not_karl" });
-    return NextResponse.json(
-      { error: "forbidden", error_description: "Cloud sync requires a Karl subscription." },
-      { status: 403 }
-    );
-  }
-
-  const user = await getUser(userId);
-  if (!user) {
-    log.debug("GET /api/sync returning", { status: 404, reason: "user_not_found" });
-    return NextResponse.json(
-      { error: "user_not_found", error_description: "User record not found. Sign in again." },
-      { status: 404 }
-    );
-  }
-
-  const cards = await getCards(user.householdId);
+  const { householdId } = authz.firestoreUser;
+  const cards = await getCards(householdId);
   const syncedAt = new Date().toISOString();
 
   log.debug("GET /api/sync returning", {
     status: 200,
-    householdId: user.householdId,
+    householdId,
     cardCount: cards.length,
   });
 
-  return NextResponse.json({ householdId: user.householdId, cards, syncedAt });
+  return NextResponse.json({ householdId, cards, syncedAt });
 }
 
 // ─── PUT /api/sync ────────────────────────────────────────────────────────────
@@ -87,18 +52,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 export async function PUT(request: NextRequest): Promise<NextResponse> {
   log.debug("PUT /api/sync called");
 
-  const auth = await requireAuth(request);
-  if (!auth.ok) return auth.response;
-
-  const userId = auth.user.sub;
-
-  if (!(await isKarl(userId))) {
-    log.debug("PUT /api/sync returning", { status: 403, reason: "not_karl" });
-    return NextResponse.json(
-      { error: "forbidden", error_description: "Cloud sync requires a Karl subscription." },
-      { status: 403 }
-    );
-  }
+  const authz = await requireAuthz(request, { tier: "karl" });
+  if (!authz.ok) return authz.response;
 
   let body: { cards?: unknown };
   try {
@@ -118,17 +73,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
   }
 
   const submittedCards = body.cards as Card[];
-
-  const user = await getUser(userId);
-  if (!user) {
-    log.debug("PUT /api/sync returning", { status: 404, reason: "user_not_found" });
-    return NextResponse.json(
-      { error: "user_not_found", error_description: "User record not found. Sign in again." },
-      { status: 404 }
-    );
-  }
-
-  const householdId = user.householdId;
+  const householdId = authz.firestoreUser.householdId;
 
   // Fetch current Firestore cards to apply last-write-wins
   const existingCards = await getCards(householdId);

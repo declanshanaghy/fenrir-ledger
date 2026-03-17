@@ -19,10 +19,9 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireAuthz } from "@/lib/auth/authz";
 import { log } from "@/lib/logger";
 import {
-  getUser,
   getHousehold,
   regenerateInviteCode,
 } from "@/lib/firebase/firestore";
@@ -32,10 +31,8 @@ const MAX_HOUSEHOLD_MEMBERS = 3;
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/household/invite called");
 
-  const auth = await requireAuth(request);
-  if (!auth.ok) return auth.response;
-
-  const userId = auth.user.sub;
+  const authz = await requireAuthz(request, {});
+  if (!authz.ok) return authz.response;
 
   let body: unknown;
   try {
@@ -69,13 +66,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const user = await getUser(userId);
-  if (!user) {
-    return NextResponse.json(
-      { error: "user_not_found", error_description: "User record not found. Sign in again." },
-      { status: 404 },
-    );
-  }
+  const user = authz.firestoreUser;
 
   if (user.role !== "owner") {
     log.debug("POST /api/household/invite returning", { status: 403, reason: "not_owner" });

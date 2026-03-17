@@ -19,7 +19,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireAuthz } from "@/lib/auth/authz";
 import { stripe } from "@/lib/stripe/api";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
@@ -50,14 +50,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Require Google authentication — anonymous checkout is not supported.
   // Anonymous users are redirected to sign-in first by the frontend.
-  const auth = await requireAuth(request);
-  if (!auth.ok) {
-    log.debug("POST /api/stripe/checkout returning", { status: 401, reason: "auth required" });
-    return auth.response;
+  const authz = await requireAuthz(request, {});
+  if (!authz.ok) {
+    log.debug("POST /api/stripe/checkout returning", { reason: "authz failed" });
+    return authz.response;
   }
 
-  const customerEmail = auth.user.email;
-  const googleSub = auth.user.sub;
+  const customerEmail = authz.user.email;
+  const googleSub = authz.user.sub;
   log.debug("POST /api/stripe/checkout: authenticated user", { googleSub, customerEmail });
 
   const priceId = process.env.STRIPE_PRICE_ID;

@@ -1,4 +1,9 @@
 /**
+ * @deprecated Use requireAuthz(request, { tier: "karl-or-trial" }) from "@/lib/auth/authz"
+ * instead. This module will be removed in a future cleanup sprint.
+ */
+
+/**
  * requireKarlOrTrial — route-level guard for Karl tier OR active trial.
  *
  * Allows access to Google Sheets import for:
