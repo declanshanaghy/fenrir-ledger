@@ -1,7 +1,7 @@
 # Threat Model — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-14 (updated for GKE Autopilot — replaced Vercel references)
+**Last reviewed**: 2026-03-17 (added Firestore sync assets and attack surfaces)
 **Methodology**: STRIDE-lite with OWASP Top 10 mapping
 
 ---
@@ -22,6 +22,8 @@
 | Card portfolio data | MEDIUM | localStorage per-user | Financial metadata exposure (no PAN/CVV stored) |
 | User PII (email, name, picture) | MEDIUM | localStorage["fenrir:auth"].user | Identity exposure |
 | Stripe entitlements in KV | MEDIUM | Upstash Redis | Attacker can grant or revoke subscription tier |
+| Card portfolio in Firestore | HIGH | Firestore per-household collection | Attacker can read/overwrite any household's full card portfolio if IDOR present |
+| Household membership in Firestore | MEDIUM | Firestore households collection | Attacker can enumerate members, manipulate household composition |
 
 ---
 
@@ -116,13 +118,24 @@
 | Drive token theft via XSS | Information Disclosure | CSP | Medium — stored in localStorage |
 | Malicious spreadsheet content | Tampering | Zod validation, LLM security rules | Low |
 
-### 3.5 Stripe Subscription
+### 3.5 Firestore Cloud Sync
+
+| Attack | STRIDE | Mitigation | Residual Risk |
+|--------|--------|-----------|---------------|
+| IDOR: read other household's cards | Information Disclosure | `householdId` derived from `getUser(sub)` server-side (fixed PR #1203, #1207) | Low |
+| IDOR: overwrite other household's cards | Tampering | `householdId` enforced server-side before write (fixed PR #1207) | Low |
+| PII leakage via invite validate | Information Disclosure | None currently — `email` returned to invite holders (SEV-003 open) | Medium |
+| Rate-limit bypass on sync routes | DoS / Cost amplification | None currently (SEV-005 open) | Medium |
+| Admin SDK bypasses Firestore rules | Elevation of Privilege | Defense-in-depth gap; mitigated by API-layer auth checks | Medium |
+| Invite code enumeration | Spoofing | 32^6 ≈ 1B combinations; rate limiting absent (SEV-004 open) | Low |
+
+### 3.6 Stripe Subscription
 
 | Attack | STRIDE | Mitigation | Residual Risk |
 |--------|--------|-----------|---------------|
 | Webhook forgery | Spoofing | SHA-256 HMAC via `stripe.webhooks.constructEvent()` | Low |
 | Webhook replay | Tampering | Not implemented (open — SEV-005 from 2026-03-04 report) | Low (KV writes idempotent currently) |
-| Open redirect post-checkout | Tampering | `APP_BASE_URL`/`VERCEL_URL` only (fixed SEV-002) | Low |
+| Open redirect post-checkout | Tampering | `APP_BASE_URL` only (fixed SEV-002) | Low |
 | Unlimited checkout session creation | DoS | In-memory rate limit (10/min) | Medium — not distributed (SEV-004) |
 | Entitlement tampering via KV error | Tampering | Partial-delete race condition (SEV-008) | Low (non-blocking) |
 | STRIPE_SECRET_KEY exposure | Information Disclosure | Server env only, never logged or serialized | Low |

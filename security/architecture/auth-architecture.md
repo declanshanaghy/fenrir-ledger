@@ -1,7 +1,7 @@
 # Auth Architecture — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-14 (updated for GKE Autopilot — replaced Vercel references)
+**Last reviewed**: 2026-03-17 (added Firestore sync auth model — Section 10)
 **References**: ADR-005, ADR-006, ADR-008, ADR-010
 
 ---
@@ -431,6 +431,55 @@ used by Odin's Throne (removed in issue #933).
 | Cookie flags | `secure=true`, `samesite=lax` |
 | Health check bypass | `--skip-auth-route` per service (e.g. `/healthz`) |
 | No custom session tokens | Removed handrolled HMAC-SHA256 sessions (issue #933) |
+
+---
+
+## 10. Firestore Cloud Sync Authorization Model
+
+### 10.1 Overview
+
+Cloud card sync was introduced in issue #1119. Karl-tier users can sync their card portfolio
+across devices via Firestore. All Firestore access is through the Firebase Admin SDK from
+the Next.js server — the browser has no direct Firestore access.
+
+**Critical constraint:** The Admin SDK bypasses Firestore security rules entirely.
+All authorization is enforced at the API route layer. This means a broken access control bug
+in an API route has no database-layer backstop.
+
+### 10.2 Sync Routes
+
+| Route | Method | Auth | Household ID Source |
+|---|---|---|---|
+| `/api/sync` | GET / PUT | requireAuth + Karl tier | Server: `getUser(googleSub).householdId` |
+| `/api/sync/pull` | GET | requireAuth + Karl tier | **Server** (fixed in PR #1203 — was client-supplied) |
+| `/api/sync/push` | POST | requireAuth + Karl tier | **Server** (fixed in PR #1207 — was client-supplied) |
+| `/api/household/invite` | GET | requireAuth + owner role | Server: `user.householdId` |
+| `/api/household/invite/validate` | GET | requireAuth | Derived from invite code lookup |
+| `/api/household/join` | POST | requireAuth | Derived from invite code lookup |
+| `/api/household/members` | GET | requireAuth | Server: `user.householdId` |
+
+### 10.3 Mandatory Pattern for Firestore Sync Routes
+
+```typescript
+// REQUIRED pattern — never trust householdId from request body or query params:
+const auth = await requireAuth(request);
+if (!auth.ok) return auth.response;
+
+const user = await getUser(auth.user.sub);  // fetch from Firestore via Admin SDK
+if (!user) return NextResponse.json({ error: "user_not_found" }, { status: 404 });
+
+// Use server-derived householdId ONLY:
+const cards = await getCards(user.householdId);
+```
+
+Any route that accepts a `householdId` from the client (query param or request body) MUST
+validate it against `user.householdId` and return 403 if they differ, or simply ignore the
+client value and use `user.householdId` exclusively.
+
+### 10.4 Tier Enforcement
+
+Sync routes check `getStripeEntitlement(googleSub)` from Upstash Redis and return 403 with
+`{ error: "karl_required", current_tier: "thrall" }` for non-Karl users.
 
 ---
 
