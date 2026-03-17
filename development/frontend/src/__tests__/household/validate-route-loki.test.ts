@@ -165,17 +165,16 @@ describe("GET /api/household/invite/validate — Loki edge cases", () => {
     expect(body).not.toHaveProperty("inviteCode");
   });
 
-  // SEV-003 (HIGH) — documented by Heimdall audit issue #1126
-  // The validate endpoint currently leaks member email (PII) to any invite-code holder.
-  // EXPECTED AFTER FIX: email should be absent from the members array response.
-  it("SEV-003: members array currently exposes email field (PII leakage — pending fix in #1194)", async () => {
+  // SEV-003 (HIGH) — fixed in #1199
+  // The validate endpoint previously leaked member email (PII) to any invite-code holder.
+  // Fixed: email is now stripped from the members array response.
+  it("SEV-003: members array does NOT expose email field (PII stripped — fixed in #1199)", async () => {
     const res = await GET(makeRequest("X7K2NP"));
     expect(res.status).toBe(200);
     const body = await res.json() as {
       members: Array<{ displayName: string; email?: string; role: string }>;
     };
-    // Document current vulnerable state: email IS present in the response.
-    // This assertion will need to be inverted (expect email to be absent) when SEV-003 is fixed.
-    expect(body.members[0]).toHaveProperty("email");
+    // Email must be absent from each member in the response.
+    expect(body.members[0]).not.toHaveProperty("email");
   });
 });
