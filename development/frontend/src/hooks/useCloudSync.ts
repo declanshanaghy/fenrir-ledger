@@ -80,6 +80,9 @@ const EVT_CLOUD_SYNC_COMPLETE = "fenrir:cloud-sync-complete";
  */
 const EVT_CLOUD_SYNC_ERROR = "fenrir:cloud-sync-error";
 
+/** Custom event name fired when cards change — triggers debounced cloud push */
+export const EVT_CARDS_CHANGED = "fenrir:cards-changed";
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -184,6 +187,7 @@ export function useCloudSync(): CloudSyncState {
     setStatus("syncing");
     setErrorMessage(null);
     setErrorCode(null);
+    setErrorTimestamp(null);
     setRetryIn(null);
 
     // Cancel any pending retry
@@ -478,9 +482,9 @@ export function useCloudSync(): CloudSyncState {
       }, AUTO_SYNC_DEBOUNCE_MS);
     };
 
-    window.addEventListener("fenrir:cards-changed", handleCardsChanged);
+    window.addEventListener(EVT_CARDS_CHANGED, handleCardsChanged);
     return () => {
-      window.removeEventListener("fenrir:cards-changed", handleCardsChanged);
+      window.removeEventListener(EVT_CARDS_CHANGED, handleCardsChanged);
       if (autoSyncTimerRef.current) {
         clearTimeout(autoSyncTimerRef.current);
         autoSyncTimerRef.current = null;
