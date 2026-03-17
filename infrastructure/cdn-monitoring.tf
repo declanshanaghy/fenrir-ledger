@@ -360,19 +360,24 @@ resource "google_monitoring_alert_policy" "cdn_cache_hit_ratio_low" {
 
     condition_monitoring_query_language {
       query    = <<-EOT
-        fetch https_lb_rule
-        | metric 'loadbalancing.googleapis.com/https/request_count'
-        | filter resource.project_id == '${var.project_id}'
-        | group_by [metric.cache_result], [value: sum(value.request_count)]
-        | within 1m
-        | pivot metric.cache_result, value
-        | {
-            ratio: div(
-              pick_any[HIT] ?? 0,
-              add(pick_any[HIT] ?? 0, add(pick_any[MISS] ?? 0, pick_any[REVALIDATED] ?? 0))
-            )
-          }
-        | condition ratio < 0.5
+        {
+          fetch https_lb_rule
+          | metric 'loadbalancing.googleapis.com/https/request_count'
+          | filter (resource.project_id == '${var.project_id}') && (metric.cache_result == 'HIT')
+          | align rate(1m)
+          | every 1m
+          | group_by [], [hits: sum(value.request_count)]
+          ;
+          fetch https_lb_rule
+          | metric 'loadbalancing.googleapis.com/https/request_count'
+          | filter resource.project_id == '${var.project_id}'
+          | align rate(1m)
+          | every 1m
+          | group_by [], [total: sum(value.request_count)]
+        }
+        | join
+        | value: div(val(0), val(1))
+        | condition val < 0.5
       EOT
       duration = "600s" # 10 minutes
       trigger {
