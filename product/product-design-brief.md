@@ -98,11 +98,10 @@ unchained.
 - Avatar tooltip: *"The wolf runs unnamed."*
 - No dropdown in anonymous state; the avatar is non-interactive until sign-in ships.
 
-### Signed-In State (future — unlocks cloud sync)
+### Signed-In State
 
-Once OIDC authentication ships at GA, a signed-in user's header shows their Google
-identity. The gap between anonymous and signed-in must feel like an upgrade, not a
-correction.
+A signed-in user authenticates via Google OIDC. Cloud sync via Firestore is live.
+The gap between anonymous and signed-in must feel like an upgrade, not a correction.
 
 | Element | Source | Fallback |
 |---------|--------|----------|
@@ -195,9 +194,9 @@ The mythology rewards exploration. It never blocks a task.
 | Empty states | Edda quotes + myth context | The emotional hook that makes the brand memorable |
 | Easter eggs | Discoverable, not obtrusive | Reward exploration; never break task flow |
 | Wikipedia enrichment | `.myth-link` class on Norse proper nouns | Faint gold dotted underline + `cursor: help` links curious users to myth context; see `mythology-map.md` |
-| Authentication model | Anonymous-first; login is optional cloud-sync upsell | Zero friction on first use; no login gate in MVP; householdId is a locally-generated UUID |
+| Authentication model | Anonymous-first; login is optional cloud-sync upsell | Zero friction on first use; no login gate; householdId is a locally-generated UUID; Google OIDC + Firestore sync is live |
 | Anonymous identity display | Rune ᛟ avatar in header; non-interactive | The wolf runs unnamed — present and powerful, not broken or incomplete |
-| Signed-in identity display (future) | Avatar + name in header; rune ᛟ fallback | Trust signal: the wolf knows who roams the hall; upgrade state, not required state |
+| Signed-in identity display | Avatar + name in header; rune ᛟ fallback | Trust signal: the wolf knows who roams the hall; upgrade state, not required state |
 
 ---
 
