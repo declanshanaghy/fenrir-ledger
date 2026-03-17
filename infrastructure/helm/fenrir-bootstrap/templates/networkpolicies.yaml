@@ -1,0 +1,82 @@
+---
+# Block traffic from fenrir-agents into fenrir-app namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-from-agents
+  namespace: {{ .Values.namespaces.app }}
+  labels:
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/managed-by: helm
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow traffic from within fenrir-app namespace
+    - from:
+        - podSelector: {}
+    # Allow traffic from GKE ingress/gateway
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gke-managed-system
+    # Block traffic from fenrir-agents (implicit deny for unlisted namespaces)
+---
+# Restrict agent pods to egress-only: DNS + 80/443
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agents-egress-only
+  namespace: {{ .Values.namespaces.agents }}
+  labels:
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/managed-by: helm
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []  # No inbound traffic to agent pods
+  egress:
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow outbound HTTPS (for API calls, package downloads)
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+    # Allow outbound HTTP
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 80
+---
+# Isolate analytics namespace — allow internal traffic + ingress, deny cross-namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: analytics-isolation
+  namespace: {{ .Values.namespaces.analytics }}
+  labels:
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/managed-by: helm
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow traffic from within fenrir-analytics namespace
+    - from:
+        - podSelector: {}
+    # Allow traffic from GKE ingress/gateway
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gke-managed-system
+    # Block traffic from fenrir-agents and fenrir-app (implicit deny for unlisted namespaces)

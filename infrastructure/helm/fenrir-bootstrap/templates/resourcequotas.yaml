@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: agents-quota
+  namespace: {{ .Values.namespaces.agents }}
+  labels:
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/managed-by: helm
+spec:
+  hard:
+    pods: {{ .Values.resourceQuotas.agents.pods | quote }}
+    requests.cpu: {{ .Values.resourceQuotas.agents.cpu | quote }}
+    requests.memory: {{ .Values.resourceQuotas.agents.memory }}
+    limits.cpu: {{ .Values.resourceQuotas.agents.cpu | quote }}
+    limits.memory: {{ .Values.resourceQuotas.agents.memory }}

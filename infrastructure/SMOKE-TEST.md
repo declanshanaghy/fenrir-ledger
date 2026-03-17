@@ -13,6 +13,15 @@ gcloud container clusters get-credentials fenrir-autopilot \
   --project fenrir-ledger-prod
 ```
 
+## 0. Bootstrap cluster (first-time setup)
+
+Apply namespaces, service accounts, resource quotas, and network policies:
+
+```bash
+helm upgrade --install fenrir-bootstrap ./infrastructure/helm/fenrir-bootstrap \
+  -f ./infrastructure/helm/fenrir-bootstrap/values-prod.yaml
+```
+
 ## 1. Get the Ingress hostname
 
 ```bash
@@ -120,12 +129,12 @@ If CDN is causing issues (stale content, incorrect caching, errors), follow thes
 
 ```bash
 # 1. Edit the Helm values to disable CDN
-#    Set cdn.enabled: false in infrastructure/k8s/helm/values.yaml
+#    Set cdn.enabled: false in infrastructure/helm/fenrir-app/values.yaml
 
 # 2. Apply the Helm upgrade
-helm upgrade fenrir-app infrastructure/k8s/helm/ \
+helm upgrade fenrir-app ./infrastructure/helm/fenrir-app \
   --namespace fenrir-app \
-  --reuse-values \
+  -f ./infrastructure/helm/fenrir-app/values-prod.yaml \
   --set cdn.enabled=false
 
 # 3. Verify BackendConfig no longer has CDN block

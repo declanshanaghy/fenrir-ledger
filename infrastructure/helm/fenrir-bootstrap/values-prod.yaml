@@ -1,0 +1,9 @@
+# --------------------------------------------------------------------------
+# fenrir-bootstrap — production overrides
+# --------------------------------------------------------------------------
+
+serviceAccounts:
+  app:
+    gcpServiceAccount: fenrir-app-workload@fenrir-ledger-prod.iam.gserviceaccount.com
+  agents:
+    gcpServiceAccount: fenrir-agents-workload@fenrir-ledger-prod.iam.gserviceaccount.com
