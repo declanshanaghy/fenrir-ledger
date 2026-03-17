@@ -35,6 +35,10 @@
 #                                        MUST be exactly 16, 24, or 32 bytes — see oauth2-proxy docs
 #   ODINS_THRONE_CLIENT_ID            — Google OAuth client ID for Odin's Throne
 #   ODINS_THRONE_CLIENT_SECRET        — Google OAuth client secret for Odin's Throne
+#
+# Required IAM permissions on the GCP_SA_KEY service account:
+#   compute.urlMaps.invalidateCache — needed for post-deploy CDN cache invalidation
+#   Grant via: roles/compute.networkAdmin  OR  a custom role with only this permission
 # --------------------------------------------------------------------------
 
 name: Deploy to GKE
@@ -593,6 +597,53 @@ jobs:
           kubectl get pods -n fenrir-app -l app.kubernetes.io/name=fenrir-app >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           kubectl rollout status deployment/fenrir-app -n fenrir-app --timeout=60s
+
+      # --------------------------------------------------------------------------
+      # Post-deploy CDN cache invalidation — HTML pages only.
+      # Static assets (/_next/static/*) are content-hashed; they never need invalidation.
+      #
+      # URL map name is discovered dynamically from the GKE Ingress annotation
+      # kubernetes.io/ingress.global-static-ip-name, then resolved to the URL map
+      # that GKE creates automatically when an Ingress with class "gce" is applied.
+      # GKE names the URL map after the Ingress: k8s2-um-<hash>-<namespace>-<name>-<hash>
+      # We discover it by listing URL maps and matching the ingress name pattern.
+      #
+      # Required IAM permission on the GitHub Actions service account (GCP_SA_KEY):
+      #   compute.urlMaps.invalidateCache  (roles/compute.networkAdmin covers this,
+      #   or create a custom role with just this permission for least-privilege)
+      # --------------------------------------------------------------------------
+      - name: Invalidate CDN cache (HTML pages)
+        continue-on-error: true
+        run: |
+          # Discover the URL map created by GKE for the fenrir-app Ingress.
+          # GKE auto-creates a URL map named like: k8s2-um-<cluster-hash>-fenrir-app-fenrir-app-<suffix>
+          # We match by namespace+ingress name to find the right one.
+          URL_MAP=$(gcloud compute url-maps list \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --format="value(name)" \
+            --filter="name~fenrir-app" \
+            2>/dev/null | head -1)
+
+          if [ -z "$URL_MAP" ]; then
+            echo "::warning::CDN invalidation skipped — no URL map matching 'fenrir-app' found. Deploy succeeded."
+            exit 0
+          fi
+
+          echo "Invalidating CDN cache on URL map: $URL_MAP (paths: / and HTML pages)"
+
+          # Invalidate HTML pages. Static assets (/_next/static/*) are content-hashed
+          # and intentionally excluded — they never need invalidation.
+          gcloud compute url-maps invalidate-cdn-cache "$URL_MAP" \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --path "/*" \
+            --async \
+            && echo "::notice::CDN invalidation request submitted for $URL_MAP" \
+            || echo "::warning::CDN invalidation failed for $URL_MAP — deploy still succeeded."
+
+          echo "### CDN Cache Invalidation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL Map:** \`$URL_MAP\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Path:** \`/*\` (HTML pages; /_next/static/* excluded as content-hashed)" >> $GITHUB_STEP_SUMMARY
 
   # --------------------------------------------------------------------------
   # Job 3c: Deploy Umami analytics to GKE
