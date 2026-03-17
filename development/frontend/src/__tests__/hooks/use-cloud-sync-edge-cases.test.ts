@@ -1,24 +1,24 @@
 /**
- * useCloudSync — edge-case tests (Loki QA — issue #1125)
+ * useCloudSync — edge-case tests (issue #1119)
  *
- * Covers gaps not addressed by FiremanDecko's 13 unit tests:
+ * Covers edge cases for the API-based sync hook:
  *   - Online/offline network events (Karl goes offline/back online)
  *   - Thrall ignores online/offline events
- *   - Tier switching without page reload (Thrall → Karl starts listening)
+ *   - Tier switching without page reload (Thrall → Karl starts syncing)
  *   - retryIn countdown decrements every second, clears at 0
  *   - First-sync toast pluralization: singular "card" vs plural "cards"
- *   - First-sync toast suppressed when cardCount is null
- *   - Error state persists after toast dismiss (toast ≠ dismissError)
+ *   - First-sync toast suppressed when count is 0
+ *   - Error state persists after toast (toast ≠ dismissError)
  *   - dismissError() is a no-op when not in error state
- *   - Error data overwritten on second error event
- *   - syncNow() dispatches fenrir:cloud-sync-start event
+ *   - dismissError clears all error fields
  *
- * Issue #1125
+ * Issue #1119
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useCloudSync, SYNCED_DISPLAY_MS } from "@/hooks/useCloudSync";
+import type { Card } from "@/lib/types";
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
 
@@ -35,28 +35,43 @@ vi.mock("sonner", () => ({
   },
 }));
 
+const mockEnsureFreshToken = vi.fn<[], Promise<string | null>>();
+vi.mock("@/lib/auth/refresh-session", () => ({
+  ensureFreshToken: () => mockEnsureFreshToken(),
+}));
+
+vi.mock("@/lib/auth/session", () => ({
+  getSession: () => ({ user: { sub: "test-household" } }),
+}));
+
+vi.mock("@/lib/storage", () => ({
+  getCards: vi.fn().mockReturnValue([]),
+  setAllCards: vi.fn(),
+}));
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function dispatchSyncStart() {
-  window.dispatchEvent(new CustomEvent("fenrir:cloud-sync-start", { detail: {} }));
+function mockFetchGet(cards: Card[] = []) {
+  global.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      householdId: "test-household",
+      cards,
+      syncedAt: new Date().toISOString(),
+    }),
+  } as Response);
 }
 
-function dispatchSyncComplete(cardCount = 10) {
-  window.dispatchEvent(
-    new CustomEvent("fenrir:cloud-sync-complete", { detail: { cardCount } })
-  );
+function mockFetchFail(code = "forbidden") {
+  global.fetch = vi.fn().mockResolvedValue({
+    ok: false,
+    status: 403,
+    json: async () => ({ error: code }),
+  } as Response);
 }
 
-function dispatchSyncError(
-  errorMessage = "Cloud sync failed.",
-  errorCode = "permission-denied",
-  retryIn = 60
-) {
-  window.dispatchEvent(
-    new CustomEvent("fenrir:cloud-sync-error", {
-      detail: { errorMessage, errorCode, retryIn },
-    })
-  );
+function mockFetchPending() {
+  global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
 }
 
 function goOffline() {
@@ -72,48 +87,55 @@ function goOnline() {
 describe("useCloudSync — online/offline events (Karl)", () => {
   beforeEach(() => {
     mockIsKarlOrTrial.value = true;
+    mockEnsureFreshToken.mockResolvedValue("test-token");
+    mockFetchPending(); // hang initial pull so we can test offline events
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
     vi.clearAllMocks();
   });
 
   it("Karl goes offline on 'offline' window event", () => {
+    mockFetchPending();
     const { result } = renderHook(() => useCloudSync());
-    expect(result.current.status).toBe("idle");
+    expect(result.current.status).toBe("syncing");
     act(() => goOffline());
     expect(result.current.status).toBe("offline");
   });
 
-  it("Karl returns to idle on 'online' window event after going offline", () => {
+  it("Karl returns to syncing on 'online' event when an active sync was interrupted", async () => {
+    // Pending fetch = active sync in progress when offline occurs
+    mockFetchPending();
     const { result } = renderHook(() => useCloudSync());
+    expect(result.current.status).toBe("syncing");
     act(() => goOffline());
     expect(result.current.status).toBe("offline");
+    // Going online while isSyncingRef=true restores to "syncing"
     act(() => goOnline());
-    expect(result.current.status).toBe("idle");
-  });
-
-  it("Karl ignores sync events while offline", () => {
-    const { result } = renderHook(() => useCloudSync());
-    act(() => goOffline());
-    act(() => dispatchSyncStart());
-    // Still offline — sync event processed but status should be syncing
-    // (the hook doesn't block events when offline, it just has offline status from network)
-    // After sync-start dispatched while offline, status moves to syncing
     expect(result.current.status).toBe("syncing");
   });
 
-  it("Karl online → offline → online cycle restores to idle", () => {
+  it("Karl online → offline → online cycle restores to syncing (active sync)", () => {
+    mockFetchPending();
     const { result } = renderHook(() => useCloudSync());
     act(() => goOffline());
     act(() => goOnline());
     act(() => goOffline());
     expect(result.current.status).toBe("offline");
     act(() => goOnline());
-    expect(result.current.status).toBe("idle");
+    expect(result.current.status).toBe("syncing");
   });
 });
 
 describe("useCloudSync — Thrall ignores online/offline events", () => {
   beforeEach(() => {
     mockIsKarlOrTrial.value = false;
+    global.fetch = vi.fn();
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
     vi.clearAllMocks();
   });
 
@@ -136,45 +158,48 @@ describe("useCloudSync — Thrall ignores online/offline events", () => {
 describe("useCloudSync — tier switching without page reload", () => {
   beforeEach(() => {
     mockIsKarlOrTrial.value = false;
+    mockEnsureFreshToken.mockResolvedValue("test-token");
     vi.clearAllMocks();
   });
 
-  it("starts as Thrall (ignores sync events), then switching to Karl starts processing events", () => {
-    const { result, rerender } = renderHook(() => useCloudSync());
-
-    // Thrall: events ignored
-    act(() => dispatchSyncStart());
-    expect(result.current.status).toBe("idle");
-
-    // Switch tier to Karl (simulates token refresh or context update)
-    mockIsKarlOrTrial.value = true;
-    rerender();
-
-    // Now Karl: events processed
-    act(() => dispatchSyncStart());
-    expect(result.current.status).toBe("syncing");
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
-  it("switching from Karl back to Thrall stops processing events", () => {
-    mockIsKarlOrTrial.value = true;
+  it("Thrall → Karl: starts syncing on tier upgrade", async () => {
+    global.fetch = vi.fn(); // no fetch for Thrall
     const { result, rerender } = renderHook(() => useCloudSync());
 
-    act(() => dispatchSyncStart());
-    expect(result.current.status).toBe("syncing");
+    expect(result.current.status).toBe("idle");
+    expect(global.fetch).not.toHaveBeenCalled();
 
-    // Complete the sync so we're in synced state
-    act(() => dispatchSyncComplete());
+    // Upgrade to Karl
+    mockIsKarlOrTrial.value = true;
+    mockFetchGet([]);
+    rerender();
+
+    expect(result.current.status).toBe("syncing");
+    await act(async () => {});
+    expect(result.current.status).toBe("synced");
+  });
+
+  it("Karl → Thrall: stops processing syncs on tier downgrade", async () => {
+    mockIsKarlOrTrial.value = true;
+    mockFetchGet([]);
+    const { result, rerender } = renderHook(() => useCloudSync());
+    await act(async () => {});
     expect(result.current.status).toBe("synced");
 
-    // Downgrade to Thrall (subscription expired mid-session)
+    // Downgrade to Thrall
     mockIsKarlOrTrial.value = false;
     rerender();
 
-    // After downgrade, further events should be ignored
-    // (status stays whatever it was — hook returns idle from this point)
-    act(() => dispatchSyncStart());
-    // Still should not process new events
+    // Status stays as-is but no new syncs happen
     expect(result.current.status).not.toBe("syncing");
+    const prevCallCount = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.length;
+
+    await act(async () => {});
+    expect((global.fetch as ReturnType<typeof vi.fn>).mock.calls.length).toBe(prevCallCount);
   });
 });
 
@@ -183,41 +208,42 @@ describe("useCloudSync — tier switching without page reload", () => {
 describe("useCloudSync — retryIn countdown", () => {
   beforeEach(() => {
     mockIsKarlOrTrial.value = true;
+    mockEnsureFreshToken.mockResolvedValue("test-token");
     vi.clearAllMocks();
     vi.useFakeTimers();
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
-  it("retryIn decrements by 1 each second", () => {
+  it("retryIn is set to ERROR_RETRY_SECONDS on error, then decrements", async () => {
+    mockFetchFail("forbidden");
     const { result } = renderHook(() => useCloudSync());
-    act(() => dispatchSyncStart());
-    act(() => dispatchSyncError("failed", "network", 10));
-    expect(result.current.retryIn).toBe(10);
 
-    act(() => vi.advanceTimersByTime(1000));
-    expect(result.current.retryIn).toBe(9);
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(result.current.status).toBe("error");
+    expect(result.current.retryIn).toBe(120);
 
     act(() => vi.advanceTimersByTime(3000));
-    expect(result.current.retryIn).toBe(6);
+    expect(result.current.retryIn).toBe(117);
   });
 
-  it("retryIn clears to null after countdown reaches zero", () => {
+  it("retryIn clears to null after countdown reaches zero", async () => {
+    mockFetchFail("forbidden");
     const { result } = renderHook(() => useCloudSync());
-    act(() => dispatchSyncStart());
-    act(() => dispatchSyncError("failed", "network", 3));
-    expect(result.current.retryIn).toBe(3);
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(result.current.retryIn).toBe(120);
 
-    act(() => vi.advanceTimersByTime(4000));
+    act(() => vi.advanceTimersByTime(121_000));
     expect(result.current.retryIn).toBeNull();
   });
 
-  it("retryIn is null when no error has occurred", () => {
+  it("retryIn is null when no error has occurred", async () => {
+    mockFetchGet([]);
     const { result } = renderHook(() => useCloudSync());
-    act(() => dispatchSyncStart());
-    act(() => dispatchSyncComplete());
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
     expect(result.current.retryIn).toBeNull();
   });
 });
@@ -227,11 +253,8 @@ describe("useCloudSync — retryIn countdown", () => {
 describe("useCloudSync — first-sync toast pluralization", () => {
   beforeEach(() => {
     mockIsKarlOrTrial.value = true;
-    try {
-      localStorage.removeItem("fenrir:first-sync-shown");
-    } catch {
-      // ignore
-    }
+    mockEnsureFreshToken.mockResolvedValue("test-token");
+    try { localStorage.removeItem("fenrir:first-sync-shown"); } catch { /* ignore */ }
     vi.clearAllMocks();
   });
 
@@ -241,10 +264,14 @@ describe("useCloudSync — first-sync toast pluralization", () => {
 
   it("uses singular 'card' for count=1", async () => {
     const { toast } = await import("sonner");
-    const { result } = renderHook(() => useCloudSync());
-    act(() => dispatchSyncStart());
-    act(() => dispatchSyncComplete(1));
-    expect(result.current.status).toBe("synced");
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ householdId: "test-household", cards: [{ id: "c1", updatedAt: "2025-01-01T00:00:00.000Z", householdId: "test-household", issuerId: "chase", cardName: "Test", openDate: "2025-01-01T00:00:00.000Z", creditLimit: 0, annualFee: 0, annualFeeDate: "", promoPeriodMonths: 0, signUpBonus: null, status: "active", notes: "", createdAt: "2025-01-01T00:00:00.000Z" }], syncedAt: new Date().toISOString() }),
+    } as Response);
+
+    renderHook(() => useCloudSync());
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+
     expect(toast.success).toHaveBeenCalledWith(
       "Your 1 card have been backed up",
       expect.objectContaining({ duration: 5000 })
@@ -253,70 +280,74 @@ describe("useCloudSync — first-sync toast pluralization", () => {
 
   it("uses plural 'cards' for count=5", async () => {
     const { toast } = await import("sonner");
-    const { result } = renderHook(() => useCloudSync());
-    act(() => dispatchSyncStart());
-    act(() => dispatchSyncComplete(5));
-    expect(result.current.status).toBe("synced");
+    const cards = Array.from({ length: 5 }, (_, i) => ({
+      id: `c${i}`,
+      householdId: "test-household",
+      issuerId: "chase",
+      cardName: "Test",
+      openDate: "2025-01-01T00:00:00.000Z",
+      creditLimit: 0,
+      annualFee: 0,
+      annualFeeDate: "",
+      promoPeriodMonths: 0,
+      signUpBonus: null,
+      status: "active" as const,
+      notes: "",
+      createdAt: "2025-01-01T00:00:00.000Z",
+      updatedAt: "2025-01-01T00:00:00.000Z",
+    }));
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ householdId: "test-household", cards, syncedAt: new Date().toISOString() }),
+    } as Response);
+
+    renderHook(() => useCloudSync());
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+
     expect(toast.success).toHaveBeenCalledWith(
       "Your 5 cards have been backed up",
       expect.objectContaining({ duration: 5000 })
     );
   });
 
-  it("suppresses first-sync toast when cardCount is null (no count in event)", async () => {
+  it("suppresses first-sync toast when count is 0", async () => {
     const { toast } = await import("sonner");
-    const { result } = renderHook(() => useCloudSync());
-    act(() => dispatchSyncStart());
-    // dispatch complete without cardCount
-    act(() => {
-      window.dispatchEvent(
-        new CustomEvent("fenrir:cloud-sync-complete", { detail: {} })
-      );
-    });
-    expect(result.current.status).toBe("synced");
-    // Toast should NOT fire when count is null
+    mockFetchGet([]); // 0 cards
+
+    renderHook(() => useCloudSync());
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+
     expect(toast.success).not.toHaveBeenCalled();
   });
 });
 
-// ── Error persists after toast dismiss ────────────────────────────────────────
+// ── Error persists after toast ────────────────────────────────────────────────
 
-describe("useCloudSync — error persists after toast dismiss (not dismissError)", () => {
+describe("useCloudSync — error persists after toast (toast ≠ dismissError)", () => {
   beforeEach(() => {
     mockIsKarlOrTrial.value = true;
+    mockEnsureFreshToken.mockResolvedValue("test-token");
     vi.clearAllMocks();
   });
 
-  it("error status persists even after toast.error is called (toast ≠ dismissError)", async () => {
-    const { toast } = await import("sonner");
-    const { result } = renderHook(() => useCloudSync());
-
-    act(() => dispatchSyncStart());
-    act(() => dispatchSyncError());
-    expect(result.current.status).toBe("error");
-
-    // Verify error toast was shown
-    expect(toast.error).toHaveBeenCalledTimes(1);
-
-    // Simulate toast dismissed by user (Sonner's onDismiss fires) — does NOT affect hook state
-    // Error state should persist until dismissError() is explicitly called
-    expect(result.current.status).toBe("error");
-    expect(result.current.errorCode).toBe("permission-denied");
-    expect(result.current.errorMessage).toBe("Cloud sync failed.");
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
-  it("error data overwrites on second consecutive error event", () => {
-    const { result } = renderHook(() => useCloudSync());
-    act(() => dispatchSyncStart());
-    act(() => dispatchSyncError("First error", "network-timeout", 60));
-    expect(result.current.errorCode).toBe("network-timeout");
-    expect(result.current.retryIn).toBe(60);
+  it("error status persists even after toast.error is called", async () => {
+    const { toast } = await import("sonner");
+    mockFetchFail("permission-denied");
 
-    // Second error fires (auto-retry fails again)
-    act(() => dispatchSyncError("Second error", "quota-exceeded", 300));
-    expect(result.current.errorCode).toBe("quota-exceeded");
-    expect(result.current.retryIn).toBe(300);
-    expect(result.current.errorMessage).toBe("Second error");
+    const { result } = renderHook(() => useCloudSync());
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(result.current.status).toBe("error");
+
+    // Toast was shown
+    expect(toast.error).toHaveBeenCalledTimes(1);
+
+    // Error state persists — toast dismissal is separate from dismissError()
+    expect(result.current.status).toBe("error");
+    expect(result.current.errorCode).toBe("permission-denied");
   });
 });
 
@@ -325,31 +356,30 @@ describe("useCloudSync — error persists after toast dismiss (not dismissError)
 describe("useCloudSync — dismissError edge cases", () => {
   beforeEach(() => {
     mockIsKarlOrTrial.value = true;
+    mockEnsureFreshToken.mockResolvedValue("test-token");
     vi.clearAllMocks();
   });
 
-  it("dismissError is a no-op when status is idle (no crash)", () => {
-    const { result } = renderHook(() => useCloudSync());
-    expect(result.current.status).toBe("idle");
-    act(() => result.current.dismissError());
-    expect(result.current.status).toBe("idle");
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   it("dismissError is a no-op when status is syncing", () => {
+    mockFetchPending();
     const { result } = renderHook(() => useCloudSync());
-    act(() => dispatchSyncStart());
     expect(result.current.status).toBe("syncing");
     act(() => result.current.dismissError());
     expect(result.current.status).toBe("syncing");
   });
 
-  it("dismissError clears all error fields", () => {
-    const { result } = renderHook(() => useCloudSync());
-    act(() => dispatchSyncStart());
-    act(() => dispatchSyncError("test error", "permission-denied", 120));
+  it("dismissError clears all error fields", async () => {
+    mockFetchFail("quota-exceeded");
 
-    expect(result.current.errorMessage).toBe("test error");
-    expect(result.current.errorCode).toBe("permission-denied");
+    const { result } = renderHook(() => useCloudSync());
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(result.current.status).toBe("error");
+    expect(result.current.errorMessage).not.toBeNull();
+    expect(result.current.errorCode).toBe("quota-exceeded");
     expect(result.current.errorTimestamp).toBeInstanceOf(Date);
     expect(result.current.retryIn).toBe(120);
 
@@ -360,43 +390,6 @@ describe("useCloudSync — dismissError edge cases", () => {
     expect(result.current.errorCode).toBeNull();
     expect(result.current.errorTimestamp).toBeNull();
     expect(result.current.retryIn).toBeNull();
-  });
-});
-
-// ── syncNow dispatches event ───────────────────────────────────────────────────
-
-describe("useCloudSync — syncNow dispatches fenrir:cloud-sync-start", () => {
-  beforeEach(() => {
-    mockIsKarlOrTrial.value = true;
-    vi.clearAllMocks();
-  });
-
-  it("syncNow dispatches fenrir:cloud-sync-start event", async () => {
-    const { result } = renderHook(() => useCloudSync());
-    const eventSpy = vi.fn();
-    window.addEventListener("fenrir:cloud-sync-start", eventSpy);
-
-    await act(async () => {
-      await result.current.syncNow();
-    });
-
-    expect(eventSpy).toHaveBeenCalledTimes(1);
-    window.removeEventListener("fenrir:cloud-sync-start", eventSpy);
-  });
-
-  it("syncNow is a no-op for Thrall (no event dispatched)", async () => {
-    mockIsKarlOrTrial.value = false;
-    const { result } = renderHook(() => useCloudSync());
-    const eventSpy = vi.fn();
-    window.addEventListener("fenrir:cloud-sync-start", eventSpy);
-
-    await act(async () => {
-      await result.current.syncNow();
-    });
-
-    expect(eventSpy).not.toHaveBeenCalled();
-    expect(result.current.status).toBe("idle");
-    window.removeEventListener("fenrir:cloud-sync-start", eventSpy);
   });
 });
 
