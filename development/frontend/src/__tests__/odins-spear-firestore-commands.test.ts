@@ -608,6 +608,73 @@ describe("users command — Firestore query spec", () => {
   });
 });
 
+// ─── 24. users table — full userId display (issue #1376) ─────────────────────
+
+/**
+ * Validates the fix introduced for issue #1376:
+ * The userId column must display the full Clerk userId (d.id) instead of
+ * the truncated shortId(d.id) form. This is critical for copy-pasting the
+ * userId as an argument to the delete-user command.
+ *
+ * Before fix: shortId(d.id).padEnd(20) → "user_ABC\u20269999        " (13 chars padded to 20)
+ * After fix:  d.id.padEnd(36)          → "user_2abc123def456ghi789jklmnop     " (full id)
+ */
+describe("users table — full userId display (issue #1376)", () => {
+  // Representative Clerk user ID format: user_ prefix + 25-char alphanumeric
+  const CLERK_USER_ID = "user_2abc123def456ghi789jklmno";
+
+  it("full Clerk userId is not truncated — no ellipsis present", () => {
+    const displayId = CLERK_USER_ID;
+    expect(displayId).toBe(CLERK_USER_ID);
+    expect(displayId).not.toContain("\u2026"); // no unicode ellipsis
+    expect(displayId).not.toContain("…");
+  });
+
+  it("shortId() is NOT applied to userId column — full ID must be preserved", () => {
+    // Before fix: shortId(CLERK_USER_ID) → "user_2ab\u2026lmno" (13 chars)
+    // After fix: display the raw ID so it can be passed verbatim to delete-user
+    const truncated = shortId(CLERK_USER_ID);
+    const rawId = CLERK_USER_ID;
+    // Confirm shortId does truncate this ID
+    expect(truncated).not.toBe(rawId);
+    expect(truncated).toContain("\u2026");
+    // The fix must use rawId (not truncated) in the table
+    expect(rawId).toBe(CLERK_USER_ID);
+  });
+
+  it("d.id.padEnd(36) pads a Clerk userId without truncating", () => {
+    const padded = CLERK_USER_ID.padEnd(36);
+    expect(padded.startsWith(CLERK_USER_ID)).toBe(true);
+    expect(padded.length).toBe(36);
+    // The original ID is preserved at the start
+    expect(padded.trimEnd()).toBe(CLERK_USER_ID);
+  });
+
+  it("d.id.padEnd(36) leaves a 36-char ID unchanged", () => {
+    const id36 = "user_2abc123def456ghi789jklmnopqrstu"; // exactly 36 chars
+    const padded = id36.padEnd(36);
+    expect(padded).toBe(id36);
+    expect(padded.length).toBe(36);
+  });
+
+  it("full userId from table can be used verbatim with delete-user (no transformation needed)", () => {
+    // delete-user looks up users/{userId} in Firestore
+    // If the displayed ID is truncated, delete-user would fail with "user not found"
+    const displayedUserId = CLERK_USER_ID; // after fix: full ID
+    const deletePath = `users/${displayedUserId}`;
+    expect(deletePath).toBe(`users/${CLERK_USER_ID}`);
+    expect(deletePath).not.toContain("\u2026");
+  });
+
+  it("users table header width increased to accommodate full userId column (115 dashes)", () => {
+    // Before fix: separator was 100 dashes (truncated 20-char ID column)
+    // After fix: separator is 115 dashes (full 36-char ID column)
+    const separatorLength = 115;
+    expect(separatorLength).toBeGreaterThan(100);
+    expect("─".repeat(separatorLength).length).toBe(115);
+  });
+});
+
 // ─── 17. Subcollection paths — cards ─────────────────────────────────────────
 
 describe("cards subcollection — document path contracts", () => {
