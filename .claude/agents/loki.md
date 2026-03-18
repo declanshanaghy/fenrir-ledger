@@ -168,6 +168,85 @@ When in a worktree: run tests against the provided port (not 9653), read
 PASS requires: code review passes, build passes, tsc passes, GH Actions pass,
 AND new Playwright tests written and passing.
 
+## GitHub Actions Authoring
+
+Loki owns CI/CD pipeline quality. When writing or reviewing `.github/workflows/` files:
+
+### Structure Rules
+
+- **Every step must have a `name:`** — no anonymous `uses:` blocks. Names appear in the Actions UI and are the only way to diagnose failures quickly.
+- **Consistent naming across all jobs:**
+  - `Checkout` — `actions/checkout`
+  - `Authenticate to GCP` — `google-github-actions/auth`
+  - `Setup gcloud CLI` — `google-github-actions/setup-gcloud`
+  - `Get GKE credentials` — `google-github-actions/get-gke-credentials`
+  - `Setup Helm` — `azure/setup-helm`
+  - `Setup Buildx` — `docker/setup-buildx-action`
+  - `Setup Node.js` — `actions/setup-node`
+  - `Setup Terraform` — `hashicorp/setup-terraform`
+- **Each deploy job must have an `Ensure namespace` step** before syncing secrets or running Helm.
+- **Step order within a deploy job:**
+  1. Checkout
+  2. Authenticate to GCP
+  3. Setup gcloud CLI
+  4. Get GKE credentials
+  5. Setup Helm (if needed)
+  6. Ensure namespace
+  7. Sync secrets
+  8. Login to external registries (GHCR, etc.)
+  9. Helm deploy(s)
+  10. Verify rollout / Summary
+
+### Namespace Isolation
+
+Every service has its own namespace. The bootstrap job adopts all of them:
+
+| Section | Namespace |
+|---------|-----------|
+| App | `fenrir-app` |
+| Agents | `fenrir-agents` |
+| Odin's Throne | `fenrir-monitor` |
+| Analytics | `fenrir-analytics` |
+| Marketing Engine | `fenrir-marketing` |
+
+When adding a new service: add its namespace to both the `Pre-adopt bootstrap resources` step AND the `Verify namespaces` step in the `namespaces` job.
+
+### Permissions
+
+Jobs pulling from GHCR (e.g., external Helm charts via `oci://ghcr.io/`) need `packages: read` in their `permissions:` block, plus a `helm registry login ghcr.io` step using `GITHUB_TOKEN`.
+
+### Conditional Logic
+
+- `workflow_dispatch` runs must set ALL service flags to `true` in detect-changes (so manual triggers deploy everything).
+- Use `--dry-run=client -o yaml | kubectl apply -f -` for idempotent kubectl creates.
+- Helm deploys use `--wait --timeout=Xm` — always include both.
+- `continue-on-error: true` is acceptable only for non-critical steps (e.g., CDN invalidation).
+
+### PASS Criteria for Workflow Changes
+
+A PR modifying `.github/workflows/` is PASS when:
+- All steps have `name:` fields
+- Step order matches the canonical order above
+- No namespace is missing from the bootstrap adopt + verify lists
+- New external registry pulls have GHCR auth + `packages: read`
+- Workflow runs end-to-end green (check via `gh run view`)
+
+### Reviewing Workflow Runs
+
+```bash
+# List recent runs
+gh run list --workflow=deploy.yml --limit=5 --json databaseId,status,conclusion,displayTitle,url
+
+# View a specific run
+gh run view <run-id>
+
+# Watch live
+gh run watch <run-id>
+
+# View failed job logs
+gh run view <run-id> --log-failed
+```
+
 ## Responsibilities
 
 ### Deployment Scripts (Idempotent)
